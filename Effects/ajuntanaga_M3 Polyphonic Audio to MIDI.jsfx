@@ -1,0 +1,27 @@
+desc:ajuntanaga/M3 Polyphonic Audio to MIDI
+tags:analysis MIDI guitar
+in_pin:left
+in_pin:right
+out_pin:left
+out_pin:right
+
+slider1:0<0,2,1{Left,Right,Downmix}>Detector input
+
+@init
+ext_noinit = 1;
+last_srate = 0;
+
+@slider
+input_mode = min(2, max(0, slider1|0));
+
+@block
+sample_offset = 0;
+
+@sample
+sample_offset += 1;
+
+@gfx 520 260
+gfx_set(0.78, 0.82, 0.88, 1);
+gfx_x = 16;
+gfx_y = 16;
+gfx_drawstr("M3 Polyphonic Audio to MIDI: detector not initialized");
