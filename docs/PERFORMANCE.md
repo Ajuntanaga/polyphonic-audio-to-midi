@@ -92,3 +92,66 @@ for those result files is
 The final 48 kHz eight-open-string PASS panel is
 `build/evidence/task-05-48000-case-5104-pass.png`, SHA-256
 `357a4d05f59d2179659ac9e96934ec6c51bd07fc71d3d5d4b30ed6fb2b36b9c9`.
+
+## Task 6 bounded multi-rate bank
+
+The required test-first failure was observed before production optimization.
+The first interface run failed to compile because the test-only
+`m3_bank_process_reference()` path did not exist; its panel is
+`build/evidence/task-06-reference-interface-red.png`, SHA-256
+`94b831eb431c2fe23b50bb6c4c8dbdbda53197389a641eef0dd8539ff4d92b24`.
+After the full-rate reference compiled, assertion 6105 failed with 440 cell
+updates per 48 kHz input sample against the fixed maximum of 45. The blank gray
+selector-only capture from that run is not counted as evidence; the observer's
+numeric result was the authority.
+
+Production now creates causal streams at `sr`, `sr/2`, `sr/4`, and `sr/8`.
+Every divide-by-two stage is preceded by two cascaded second-order low-pass
+sections at normalized cutoff `0.20`. Resonators use fixed routing until the
+bank is reinitialized. A `0.16` assignment threshold leaves transition-band
+headroom, and cells near the lowest-rate edge are promoted one stream when
+needed. At 44.1 kHz, pitch cells use `sr/4` or faster; this avoids the marginal
+lowest band at the minimum supported rate while remaining substantially below
+the original full-rate work.
+
+The final harmonic allocation is adaptive rather than a uniform truncation:
+requested notes through MIDI 52 retain six partials for missing-fundamental
+evidence, MIDI 53..75 use four, MIDI 76 and above use three, and analysis-only
+guard notes use three. This change was required by regression assertion 4104:
+a uniform four-partial bank confused missing-fundamental E2 with E3. With the
+adaptive allocation, all 18 Task 4 detector cases and all 18 Task 5 selector
+cases passed again at 44.1, 48, and 96 kHz.
+
+Task 6 cases use a bounded four-partial tonal synthetic source for chord
+equivalence. This avoids the subharmonic ambiguity produced by pure-sine chords
+while retaining deterministic amplitudes and phases. The reference bank uses
+the same adaptive cell allocation at full input rate, so assertions 6101 and
+6102 isolate rate-pyramid distortion rather than conflating it with a different
+harmonic model. The equivalence floor is `0.00001`, matching the alias probes'
+finite-window floor.
+
+Final measured results:
+
+| Rate | Worst open-string salience delta | Cases 6101–6106 |
+| ---: | ---: | --- |
+| 44,100 Hz | 0.019250096364574 | 6 PASS |
+| 48,000 Hz | 0.020745752092474 | 6 PASS |
+| 96,000 Hz | 0.013100931661116 | 6 PASS |
+
+At the required 48 kHz MIDI 32..84 work point, 251 cells are enabled and the
+bank averages 44.75 cell updates per input sample. The full-rate RED baseline
+was 440, so the measured update count fell by about 89.8% without exceeding the
+45-update assertion. The 17 kHz/48 kHz and 21 kHz/96 kHz alias probes passed,
+as did both rate-state sentinels at every matrix rate.
+
+All 18 final Task 6 result files report PASS. The SHA-256 of their lexically
+ordered `sha256sum` output is
+`b5155c896c3c52b95957c38ce86852b8cd289b5bd38baad9b50f15cbb98a38f5`.
+The production validator also rejects any call to the test-only reference path.
+
+The guarded launcher was separately hardened after GUI launches pulled the
+active desktop to workspace 5. It records the launch workspace, keeps REAPER
+windows assigned to workspace 5, restores only a target-workspace focus steal,
+does not override a third workspace selected by the user, and now polls for a
+short bounded interval after process exit to catch GNOME's delayed focus race.
+No current workspace was forcibly changed while adding the post-exit fix.

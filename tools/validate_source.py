@@ -75,6 +75,8 @@ def validate_tree(root: pathlib.Path) -> list[str]:
 
     text = effect.read_text(encoding="utf-8")
     errors = [f"missing {token}" for token in REQUIRED if token not in text]
+    if "m3_bank_process_reference(" in text:
+        errors.append("test-only reference call in production effect")
 
     sliders = re.findall(r"(?m)^slider(\d+):", text)
     if len(sliders) != len(set(sliders)):

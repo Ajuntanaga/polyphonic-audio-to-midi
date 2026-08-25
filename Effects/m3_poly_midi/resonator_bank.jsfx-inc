@@ -2,6 +2,39 @@
 M3_BANK_HEADER = 64;
 M3_BANK_CELL_SIZE = 8;
 
+// The realtime bank uses four filtered streams: sr, sr/2, sr/4, and sr/8.
+// Its state and candidate/harmonic routing table stay inside the fixed region
+// between M3_RATE_BASE and M3_RESONATOR_BASE.
+M3_RATE_GUARD_LOW_OFFSET = 0;
+M3_RATE_INPUT_SAMPLES_OFFSET = 1;
+M3_RATE_CELL_UPDATES_OFFSET = 2;
+M3_RATE_ENABLED_CELLS_OFFSET = 3;
+M3_RATE_B0_OFFSET = 4;
+M3_RATE_B1_OFFSET = 5;
+M3_RATE_B2_OFFSET = 6;
+M3_RATE_A1_OFFSET = 7;
+M3_RATE_A2_OFFSET = 8;
+M3_RATE_SAMPLE_BASE = 16;
+M3_RATE_EMIT_BASE = 20;
+M3_RATE_FAST_DECAY_BASE = 24;
+M3_RATE_SLOW_DECAY_BASE = 28;
+M3_RATE_STAGE_BASE = 32;
+M3_RATE_STAGE_STRIDE = 5;
+M3_RATE_ASSIGNMENT_BASE = 64;
+M3_RATE_ASSIGNMENT_WORDS = M3_MAX_CANDIDATES * M3_MAX_HARMONICS;
+M3_RATE_GUARD_HIGH_OFFSET = M3_RATE_ASSIGNMENT_BASE + M3_RATE_ASSIGNMENT_WORDS;
+M3_RATE_WORDS = M3_RATE_GUARD_HIGH_OFFSET + 1;
+M3_RATE_FILTER_CUTOFF = 0.20;
+M3_RATE_ASSIGNMENT_CUTOFF = 0.16;
+M3_RATE_LOW_SR_ASSIGNMENT_CUTOFF = 0.12;
+M3_RATE_LOW_STREAM_EDGE = 0.13;
+
+// Low notes retain six partials for missing-fundamental evidence. Midrange
+// notes use four and expensive upper notes use three. The eight-harmonic cell
+// layout remains stable while the adaptive allocation stays under the budget.
+M3_RATE_LOW_NOTE_MAX = 52;
+M3_RATE_HIGH_NOTE_MIN = 76;
+
 // Each cell stores oscillator cos/sin, rotation cos/sin,
 // fast correlation real/imaginary, and slow correlation real/imaginary.
 function m3_bank_cell(base, candidate, harmonic) (
@@ -14,10 +47,20 @@ function m3_bank_enabled(base, candidate, harmonic) local(cell) (
   abs(cell[2]) + abs(cell[3]) > 0;
 );
 
-function m3_bank_init(base, sr, min_note, max_note, a4)
-local(candidate, harmonic, note, frequency, rotation, cell, requested_min,
-      requested_max, requested_count, guard_capacity, analysis_min,
-      analysis_max) (
+function m3_bank_uses_partial(base, candidate, harmonic)
+local(note, requested_candidate, partial_count) (
+  note = base[1] + candidate;
+  requested_candidate = candidate >= base[10] && candidate <= base[11];
+  partial_count = !requested_candidate ? 3
+                : note <= M3_RATE_LOW_NOTE_MAX ? 6
+                : note >= M3_RATE_HIGH_NOTE_MIN ? 3
+                : 4;
+  harmonic < partial_count;
+);
+
+function m3_bank_init_common(base, sr, min_note, max_note, a4)
+local(requested_min, requested_max, requested_count, guard_capacity,
+      analysis_min, analysis_max) (
   m3_zero(base, M3_BANK_HEADER + M3_MAX_CANDIDATES * M3_MAX_HARMONICS * M3_BANK_CELL_SIZE);
   requested_min = floor(m3_clamp(min_note, 0, 127));
   requested_max = floor(m3_clamp(
@@ -47,6 +90,46 @@ local(candidate, harmonic, note, frequency, rotation, cell, requested_min,
   base[9] = requested_max;
   base[10] = requested_min - analysis_min;
   base[11] = requested_max - analysis_min;
+);
+
+function m3_rate_assignment_offset(candidate, harmonic) (
+  M3_RATE_ASSIGNMENT_BASE + candidate * M3_MAX_HARMONICS + harmonic;
+);
+
+function m3_rate_init(sr)
+local(cutoff_tangent, normalization, level, level_rate) (
+  m3_zero(M3_RATE_BASE, M3_RATE_WORDS);
+
+  cutoff_tangent = tan($pi * M3_RATE_FILTER_CUTOFF);
+  normalization = 1 / (
+    1 + sqrt(2) * cutoff_tangent + cutoff_tangent * cutoff_tangent
+  );
+  M3_RATE_BASE[M3_RATE_B0_OFFSET] =
+    cutoff_tangent * cutoff_tangent * normalization;
+  M3_RATE_BASE[M3_RATE_B1_OFFSET] =
+    2 * M3_RATE_BASE[M3_RATE_B0_OFFSET];
+  M3_RATE_BASE[M3_RATE_B2_OFFSET] =
+    M3_RATE_BASE[M3_RATE_B0_OFFSET];
+  M3_RATE_BASE[M3_RATE_A1_OFFSET] =
+    2 * (cutoff_tangent * cutoff_tangent - 1) * normalization;
+  M3_RATE_BASE[M3_RATE_A2_OFFSET] =
+    (1 - sqrt(2) * cutoff_tangent + cutoff_tangent * cutoff_tangent) *
+    normalization;
+
+  level = 0;
+  loop(4,
+    level_rate = max(1, sr / (2 ^ level));
+    M3_RATE_BASE[M3_RATE_FAST_DECAY_BASE + level] =
+      exp(-1 / (0.008 * level_rate));
+    M3_RATE_BASE[M3_RATE_SLOW_DECAY_BASE + level] =
+      exp(-1 / (0.035 * level_rate));
+    level += 1;
+  );
+);
+
+function m3_bank_init_reference(base, sr, min_note, max_note, a4)
+local(candidate, harmonic, note, frequency, rotation, cell) (
+  m3_bank_init_common(base, sr, min_note, max_note, a4);
 
   candidate = 0;
   loop(base[4],
@@ -55,12 +138,56 @@ local(candidate, harmonic, note, frequency, rotation, cell, requested_min,
     loop(M3_MAX_HARMONICS,
       frequency = m3_midi_to_hz(note, base[3]) * (harmonic + 1);
       cell = m3_bank_cell(base, candidate, harmonic);
+      m3_bank_uses_partial(base, candidate, harmonic) &&
       frequency <= 0.45 * base[0] ? (
         rotation = 2 * $pi * frequency / base[0];
         cell[0] = 1;
         cell[1] = 0;
         cell[2] = cos(rotation);
         cell[3] = sin(rotation);
+      );
+      harmonic += 1;
+    );
+    candidate += 1;
+  );
+);
+
+function m3_bank_init(base, sr, min_note, max_note, a4)
+local(candidate, harmonic, note, frequency, assignment_cutoff, level,
+      low_stream_edge, low_stream_min_harmonic, level_rate, rotation, cell) (
+  m3_bank_init_common(base, sr, min_note, max_note, a4);
+  m3_rate_init(base[0]);
+  assignment_cutoff = base[0] < 46000
+    ? M3_RATE_LOW_SR_ASSIGNMENT_CUTOFF
+    : M3_RATE_ASSIGNMENT_CUTOFF;
+  low_stream_edge = base[0] < 46000 ? 0 : M3_RATE_LOW_STREAM_EDGE;
+  low_stream_min_harmonic = base[0] < 46000 ? 0 : 2;
+
+  candidate = 0;
+  loop(base[4],
+    note = base[1] + candidate;
+    harmonic = 0;
+    loop(M3_MAX_HARMONICS,
+      frequency = m3_midi_to_hz(note, base[3]) * (harmonic + 1);
+      cell = m3_bank_cell(base, candidate, harmonic);
+      m3_bank_uses_partial(base, candidate, harmonic) &&
+      frequency <= M3_RATE_FILTER_CUTOFF * base[0] ? (
+        level = 0;
+        frequency <= assignment_cutoff * base[0] / 2 ? level = 1;
+        frequency <= assignment_cutoff * base[0] / 4 ? level = 2;
+        frequency <= assignment_cutoff * base[0] / 8 ? level = 3;
+        harmonic >= low_stream_min_harmonic && level == 3 &&
+        frequency > low_stream_edge * base[0] / 8 ? level = 2;
+        base[0] < 46000 && harmonic >= 2 && level == 2 &&
+        frequency > 0.09 * base[0] / 4 ? level = 1;
+        level_rate = base[0] / (2 ^ level);
+        rotation = 2 * $pi * frequency / level_rate;
+        cell[0] = 1;
+        cell[1] = 0;
+        cell[2] = cos(rotation);
+        cell[3] = sin(rotation);
+        M3_RATE_BASE[m3_rate_assignment_offset(candidate, harmonic)] = level;
+        M3_RATE_BASE[M3_RATE_ENABLED_CELLS_OFFSET] += 1;
       );
       harmonic += 1;
     );
@@ -89,25 +216,123 @@ local(candidate, harmonic, cell, magnitude_squared, scale) (
   );
 );
 
-function m3_bank_process(base, sample)
-local(candidate, harmonic, cell, next_cos, next_sin, fast_mix, slow_mix) (
+function m3_bank_update_cell(cell, sample, fast_decay, slow_decay)
+local(next_cos, next_sin, fast_mix, slow_mix) (
+  next_cos = cell[0] * cell[2] - cell[1] * cell[3];
+  next_sin = cell[1] * cell[2] + cell[0] * cell[3];
+  cell[0] = next_cos;
+  cell[1] = next_sin;
+  fast_mix = 1 - fast_decay;
+  slow_mix = 1 - slow_decay;
+  cell[4] = fast_decay * cell[4] + fast_mix * sample * next_cos;
+  cell[5] = fast_decay * cell[5] - fast_mix * sample * next_sin;
+  cell[6] = slow_decay * cell[6] + slow_mix * sample * next_cos;
+  cell[7] = slow_decay * cell[7] - slow_mix * sample * next_sin;
+);
+
+function m3_rate_biquad(state, sample)
+local(output) (
+  output = M3_RATE_BASE[M3_RATE_B0_OFFSET] * sample + state[0];
+  state[0] = M3_RATE_BASE[M3_RATE_B1_OFFSET] * sample -
+             M3_RATE_BASE[M3_RATE_A1_OFFSET] * output + state[1];
+  state[1] = M3_RATE_BASE[M3_RATE_B2_OFFSET] * sample -
+             M3_RATE_BASE[M3_RATE_A2_OFFSET] * output;
+  !m3_isfinite(output) ? (
+    state[0] = 0;
+    state[1] = 0;
+    output = 0;
+  );
+  output;
+);
+
+function m3_rate_filter_stage(stage, sample, output_level)
+local(state, filtered) (
+  state = M3_RATE_BASE + M3_RATE_STAGE_BASE + stage * M3_RATE_STAGE_STRIDE;
+  filtered = m3_rate_biquad(state + 1, sample);
+  filtered = m3_rate_biquad(state + 3, filtered);
+  state[0] += 1;
+  state[0] >= 2 ? (
+    state[0] = 0;
+    M3_RATE_BASE[M3_RATE_SAMPLE_BASE + output_level] = filtered;
+    M3_RATE_BASE[M3_RATE_EMIT_BASE + output_level] = 1;
+    1;
+  ) : 0;
+);
+
+function m3_rate_process(sample) (
+  M3_RATE_BASE[M3_RATE_SAMPLE_BASE] = sample;
+  M3_RATE_BASE[M3_RATE_EMIT_BASE] = 1;
+  M3_RATE_BASE[M3_RATE_EMIT_BASE + 1] = 0;
+  M3_RATE_BASE[M3_RATE_EMIT_BASE + 2] = 0;
+  M3_RATE_BASE[M3_RATE_EMIT_BASE + 3] = 0;
+
+  m3_rate_filter_stage(0, sample, 1) ? (
+    m3_rate_filter_stage(
+      1,
+      M3_RATE_BASE[M3_RATE_SAMPLE_BASE + 1],
+      2
+    ) ? (
+      m3_rate_filter_stage(
+        2,
+        M3_RATE_BASE[M3_RATE_SAMPLE_BASE + 2],
+        3
+      );
+    );
+  );
+);
+
+function m3_bank_process_full(base, sample)
+local(candidate, harmonic, cell) (
   !m3_isfinite(sample) ? sample = 0;
-  fast_mix = 1 - base[5];
-  slow_mix = 1 - base[6];
   candidate = 0;
   loop(base[4],
     harmonic = 0;
     loop(M3_MAX_HARMONICS,
       cell = m3_bank_cell(base, candidate, harmonic);
       m3_bank_enabled(base, candidate, harmonic) ? (
-        next_cos = cell[0] * cell[2] - cell[1] * cell[3];
-        next_sin = cell[1] * cell[2] + cell[0] * cell[3];
-        cell[0] = next_cos;
-        cell[1] = next_sin;
-        cell[4] = base[5] * cell[4] + fast_mix * sample * next_cos;
-        cell[5] = base[5] * cell[5] - fast_mix * sample * next_sin;
-        cell[6] = base[6] * cell[6] + slow_mix * sample * next_cos;
-        cell[7] = base[6] * cell[7] - slow_mix * sample * next_sin;
+        m3_bank_update_cell(cell, sample, base[5], base[6]);
+      );
+      harmonic += 1;
+    );
+    candidate += 1;
+  );
+
+  base[7] += 1;
+  base[7] >= 4096 ? (
+    m3_bank_renormalize(base);
+    base[7] = 0;
+  );
+);
+
+function m3_bank_process_reference(base, sample) (
+  m3_bank_process_full(base, sample);
+);
+
+function m3_bank_process(base, sample)
+local(candidate, harmonic, cell, level, fast_decay, slow_decay) (
+  !m3_isfinite(sample) ? sample = 0;
+  M3_RATE_BASE[M3_RATE_INPUT_SAMPLES_OFFSET] += 1;
+  m3_rate_process(sample);
+
+  candidate = 0;
+  loop(base[4],
+    harmonic = 0;
+    loop(M3_MAX_HARMONICS,
+      cell = m3_bank_cell(base, candidate, harmonic);
+      m3_bank_uses_partial(base, candidate, harmonic) &&
+      m3_bank_enabled(base, candidate, harmonic) ? (
+        level = M3_RATE_BASE[m3_rate_assignment_offset(candidate, harmonic)];
+        M3_RATE_BASE[M3_RATE_EMIT_BASE + level] ? (
+          fast_decay = M3_RATE_BASE[M3_RATE_FAST_DECAY_BASE + level];
+          slow_decay = M3_RATE_BASE[M3_RATE_SLOW_DECAY_BASE + level];
+          m3_bank_update_cell(
+            cell,
+            M3_RATE_BASE[M3_RATE_SAMPLE_BASE + level],
+            fast_decay,
+            slow_decay
+          );
+          M3_RATE_BASE[M3_RATE_CELL_UPDATES_OFFSET] += 1;
+        );
       );
       harmonic += 1;
     );

@@ -106,6 +106,33 @@ class SourceContractTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("missing import", result.stdout + result.stderr)
 
+    def test_validator_rejects_test_reference_call_in_production_effect(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / "ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace(
+                    "@sample\n",
+                    "@sample\nm3_bank_process_reference(M3_RESONATOR_BASE, 0);\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("test-only reference", result.stdout + result.stderr)
+
     def test_disposable_staging_never_targets_live_profile(self):
         result = subprocess.run(
             [

@@ -22,6 +22,12 @@ CASE_SLIDER = {
     5104: "9",
     5105: "10",
     5106: "11",
+    6101: "12",
+    6102: "13",
+    6103: "14",
+    6104: "15",
+    6105: "16",
+    6106: "17",
 }
 
 
@@ -50,7 +56,7 @@ def prepare_project(
     if rate not in RATE_SLIDER:
         raise ValueError("rate must be exactly 44100, 48000, or 96000")
     if case_id not in CASE_SLIDER:
-        raise ValueError("case ID must be one of 4101..4106 or 5101..5106")
+        raise ValueError("case ID must be one of 4101..4106, 5101..5106, or 6101..6106")
 
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     markers = [index for index, line in enumerate(lines) if FX_MARKER in line]

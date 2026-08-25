@@ -20,7 +20,8 @@ local expected_case = tonumber(case_text)
 local valid_rate = expected_rate == 44100 or expected_rate == 48000 or expected_rate == 96000
 local valid_case = expected_case and (
   (expected_case >= 4101 and expected_case <= 4106) or
-  (expected_case >= 5101 and expected_case <= 5106)
+  (expected_case >= 5101 and expected_case <= 5106) or
+  (expected_case >= 6101 and expected_case <= 6106)
 )
 
 if project_path:sub(1, #disposable_prefix) ~= disposable_prefix or
@@ -58,10 +59,9 @@ local function write_result(status, detail)
   handle:write("project=", project_path, "\n")
   handle:write("expected_rate=", expected_rate, "\n")
   handle:write("expected_case=", expected_case, "\n")
-  for index = 0, 6 do
+  for index = 0, 31 do
     handle:write("gmem_", index, "=", tostring(reaper.gmem_read(index) or 0), "\n")
   end
-  handle:write("gmem_15=", tostring(reaper.gmem_read(15) or 0), "\n")
   handle:write(
     "elapsed_seconds=",
     string.format("%.6f", reaper.time_precise() - started),
