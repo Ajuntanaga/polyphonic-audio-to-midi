@@ -1,5 +1,9 @@
 desc:ajuntanaga/M3 Polyphonic Audio to MIDI
 tags:analysis MIDI guitar
+
+import m3_poly_midi/constants.jsfx-inc
+import m3_poly_midi/pitch_math.jsfx-inc
+
 in_pin:left
 in_pin:right
 out_pin:left

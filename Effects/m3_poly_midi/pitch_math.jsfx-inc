@@ -1,0 +1,20 @@
+@init
+function m3_clamp(x, lo, hi) (
+  min(hi, max(lo, x));
+);
+
+function m3_isfinite(x) (
+  x == x && abs(x) < 10 ^ 30;
+);
+
+function m3_midi_to_hz(note, a4) (
+  a4 * 2 ^ ((note - 69) / 12);
+);
+
+function m3_zero(base, count) local(i) (
+  i = 0;
+  loop(count,
+    base[i] = 0;
+    i += 1;
+  );
+);

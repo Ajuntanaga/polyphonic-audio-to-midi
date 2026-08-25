@@ -1,0 +1,46 @@
+desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
+tags:test MIDI analysis
+options:gmem=m3_poly_midi_tests_v1
+in_pin:none
+out_pin:none
+
+import ../m3_poly_midi/constants.jsfx-inc
+import ../m3_poly_midi/pitch_math.jsfx-inc
+
+@init
+M3_TEST_MAGIC = 0x4D335431;
+
+function m3_test_near(id, actual, expected, tolerance) local(delta) (
+  gmem[2] += 1;
+  delta = abs(actual - expected);
+  (!m3_isfinite(actual) || delta > tolerance) && gmem[3] == 0 ? (
+    gmem[1] = -1;
+    gmem[3] = id;
+    gmem[4] = actual;
+    gmem[5] = expected;
+  );
+);
+
+gmem[0] = M3_TEST_MAGIC;
+gmem[1] = 1;
+gmem[2] = 0;
+gmem[3] = 0;
+gmem[4] = 0;
+gmem[5] = 0;
+
+m3_test_near(2101, m3_midi_to_hz(69, 440), 440, 0.000001);
+m3_test_near(2102, m3_midi_to_hz(32, 440), 51.9131, 0.01);
+gmem[1] == 1 ? gmem[1] = 2;
+
+@gfx 440 180
+gfx_set(0.80, 0.84, 0.90, 1);
+gfx_x = 16;
+gfx_y = 16;
+gmem[1] == 2 ? gfx_drawstr("PASS") :
+gmem[1] == -1 ? gfx_drawstr("FAIL") : gfx_drawstr("RUNNING");
+gfx_x = 16;
+gfx_y = 44;
+gfx_printf("Assertions: %d", gmem[2]);
+gfx_x = 16;
+gfx_y = 68;
+gfx_printf("Failed assertion ID: %d", gmem[3]);
