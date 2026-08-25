@@ -84,8 +84,79 @@ def workspace_index(workspace_number: int) -> int:
 def move_reaper_windows_once(
     environment: dict[str, str],
     workspace_number: int,
+    background: bool = False,
+    excluded_window_ids: set[str] | None = None,
 ) -> int:
     target = str(workspace_index(workspace_number))
+    excluded = excluded_window_ids or set()
+    listing = None
+    for attempt in range(3):
+        listing = subprocess.run(
+            [str(WMCTRL), "-l", "-x"],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if listing.returncode == 0:
+            break
+        if "BadWindow" not in listing.stderr or attempt == 2:
+            break
+        time.sleep(0.02)
+    assert listing is not None
+    if listing.returncode != 0:
+        if "BadWindow" in listing.stderr:
+            return 0
+        detail = listing.stderr.strip() or f"exit status {listing.returncode}"
+        raise RuntimeError(f"could not list GUI windows: {detail}")
+
+    placed = 0
+    for line in listing.stdout.splitlines():
+        fields = line.split(None, 4)
+        if len(fields) < 4 or fields[2].lower() != "reaper.reaper":
+            continue
+        window_id, current_desktop = fields[0], fields[1]
+        if window_id in excluded:
+            continue
+        touched = False
+        if background:
+            result = subprocess.run(
+                [str(WMCTRL), "-ir", window_id, "-b", "add,hidden"],
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                detail = result.stderr.strip() or f"exit status {result.returncode}"
+                raise RuntimeError(
+                    f"could not background REAPER window {window_id}: {detail}"
+                )
+            touched = True
+        if current_desktop == target:
+            if touched:
+                placed += 1
+            continue
+        result = subprocess.run(
+            [str(WMCTRL), "-ir", window_id, "-t", target],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip() or f"exit status {result.returncode}"
+            raise RuntimeError(
+                f"could not move REAPER window {window_id} to workspace "
+                f"{workspace_number}: {detail}"
+            )
+        touched = True
+        if touched:
+            placed += 1
+    return placed
+
+
+def reaper_window_ids(environment: dict[str, str]) -> set[str]:
     listing = None
     for attempt in range(3):
         listing = subprocess.run(
@@ -103,31 +174,14 @@ def move_reaper_windows_once(
     assert listing is not None
     if listing.returncode != 0:
         detail = listing.stderr.strip() or f"exit status {listing.returncode}"
-        raise RuntimeError(f"could not list GUI windows: {detail}")
+        raise RuntimeError(f"could not snapshot existing REAPER windows: {detail}")
 
-    moved = 0
+    window_ids = set()
     for line in listing.stdout.splitlines():
         fields = line.split(None, 4)
-        if len(fields) < 4 or fields[2].lower() != "reaper.reaper":
-            continue
-        window_id, current_desktop = fields[0], fields[1]
-        if current_desktop == target:
-            continue
-        result = subprocess.run(
-            [str(WMCTRL), "-ir", window_id, "-t", target],
-            env=environment,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        if result.returncode != 0:
-            detail = result.stderr.strip() or f"exit status {result.returncode}"
-            raise RuntimeError(
-                f"could not move REAPER window {window_id} to workspace "
-                f"{workspace_number}: {detail}"
-            )
-        moved += 1
-    return moved
+        if len(fields) >= 4 and fields[2].lower() == "reaper.reaper":
+            window_ids.add(fields[0])
+    return window_ids
 
 
 def _workspace_state(listing_text: str) -> tuple[set[int], int]:
@@ -251,6 +305,7 @@ def run_gui_guarded(
 ) -> int:
     original_workspace = require_workspace(environment, workspace_number)
     target_workspace = workspace_index(workspace_number)
+    preexisting_reaper_windows = reaper_window_ids(environment)
     preserve_until = time.monotonic() + 3.0
 
     def preserve_launch_focus() -> None:
@@ -269,13 +324,26 @@ def run_gui_guarded(
         )
         return result
 
-    process = subprocess.Popen(command, env=environment, start_new_session=True)
+    process = subprocess.Popen(
+        command,
+        env=environment,
+        start_new_session=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     try:
         while process.poll() is None:
-            move_reaper_windows_once(environment, workspace_number)
+            move_reaper_windows_once(
+                environment,
+                workspace_number,
+                background=True,
+                excluded_window_ids=preexisting_reaper_windows,
+            )
             preserve_launch_focus()
             try:
-                result = process.wait(timeout=0.25)
+                poll_seconds = 0.02 if time.monotonic() <= preserve_until else 0.10
+                result = process.wait(timeout=poll_seconds)
                 preserve_launch_focus()
                 return finish(result)
             except subprocess.TimeoutExpired:
@@ -335,6 +403,7 @@ def guarded_command(
         str(cpu),
         str(REAPER),
         "-newinst",
+        "-noactivate",
         "-cfgfile",
         str(profile),
         "-nosplash",

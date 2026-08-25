@@ -179,10 +179,14 @@ Every GUI launch must use `python3 tools/run_guarded_reaper.py --gui --workspace
 workspace 5 (wmctrl desktop index 4), fixed memory/CPU/swap/task limits, one-core
 affinity, low CPU/I/O priority, preflight memory/load/thermal checks, clean
 interrupt handling, and a bounded retry only for the observed transient X11
-`BadWindow` teardown race. It records the user's active workspace and restores
-only a focus steal to workspace 5, including a short post-exit settling window;
-it never overrides a third workspace the user selected. Other workspace
-failures still refuse immediately.
+`BadWindow` teardown race. GUI tests use `-noactivate`, detached standard
+streams, hidden test windows, and 20 ms startup placement. A pre-launch snapshot
+excludes already-open REAPER windows. The guard records the user's active
+workspace and restores only a focus steal to workspace 5, including a short
+post-exit settling window; it never overrides a third workspace the user
+selected. Repeated destroyed-window snapshots defer to the next bounded poll;
+other workspace failures still refuse immediately. A live 10 ms observation
+kept workspace 1 active for the full launch and left no REAPER process behind.
 
 ## Exact resume action
 

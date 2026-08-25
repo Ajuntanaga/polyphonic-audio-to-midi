@@ -154,7 +154,14 @@ active desktop to workspace 5. It records the launch workspace, keeps REAPER
 windows assigned to workspace 5, restores only a target-workspace focus steal,
 does not override a third workspace selected by the user, and now polls for a
 short bounded interval after process exit to catch GNOME's delayed focus race.
-No current workspace was forcibly changed while adding the post-exit fix.
+Disposable GUI runs now add REAPER's supported `-noactivate` option, detach
+standard streams, hide the disposable windows, and poll placement every 20 ms
+during startup. A pre-launch snapshot excludes every already-open REAPER window
+so a user's session is never hidden or moved. Repeated `BadWindow` snapshots
+caused by rapidly destroyed test windows are deferred to the next bounded poll
+instead of aborting the run. A monitored launch sampled the active desktop every
+10 ms; it stayed on workspace 1 throughout, the test window reached workspace
+5, and no REAPER process or window remained afterward.
 
 ## Task 7 M3 distinct-string feasibility
 

@@ -86,6 +86,7 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertIn("CPUQuota=50%", result.stdout)
         self.assertIn("taskset -c", result.stdout)
         self.assertIn(str(PROFILE), result.stdout)
+        self.assertIn("-noactivate", result.stdout)
 
     def test_keyboard_interrupt_returns_shell_status_without_traceback(self):
         with (
@@ -258,6 +259,63 @@ class GuardedReaperTests(unittest.TestCase):
             ]
         )
 
+    def test_reaper_window_snapshot_collects_only_existing_reaper_ids(self):
+        listing = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=0,
+            stdout=(
+                "0x0480000a  1 reaper.REAPER workstation Existing REAPER\n"
+                "0x03a00007  1 codex.Codex workstation Codex\n"
+                "0x04a00011  4 reaper.REAPER workstation Other REAPER\n"
+            ),
+            stderr="",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            return_value=listing,
+        ):
+            window_ids = GUARDED_REAPER.reaper_window_ids({})
+
+        self.assertEqual(window_ids, {"0x0480000a", "0x04a00011"})
+
+    def test_background_workspace_mover_ignores_preexisting_reaper_window(self):
+        listing = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=0,
+            stdout=(
+                "0x0480000a  0 reaper.REAPER workstation User session\n"
+                "0x04a00011  1 reaper.REAPER workstation Disposable test\n"
+            ),
+            stderr="",
+        )
+        hidden = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-ir", "0x04a00011", "-b", "add,hidden"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        moved = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-ir", "0x04a00011", "-t", "4"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=[listing, hidden, moved],
+        ) as run:
+            count = GUARDED_REAPER.move_reaper_windows_once(
+                {},
+                5,
+                background=True,
+                excluded_window_ids={"0x0480000a"},
+            )
+
+        self.assertEqual(count, 1)
+        self.assertNotIn("0x0480000a", str(run.call_args_list[1:]))
+
     def test_workspace_mover_retries_a_transient_destroyed_window(self):
         bad_window = subprocess.CompletedProcess(
             args=["/usr/bin/wmctrl", "-l", "-x"],
@@ -280,6 +338,122 @@ class GuardedReaperTests(unittest.TestCase):
 
         self.assertEqual(count, 0)
         self.assertEqual(run.call_count, 2)
+
+    def test_workspace_mover_defers_after_repeated_transient_destroyed_windows(self):
+        bad_window = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=1,
+            stdout="",
+            stderr="X Error of failed request: BadWindow (invalid Window parameter)",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=[bad_window, bad_window, bad_window],
+        ) as run:
+            count = GUARDED_REAPER.move_reaper_windows_once({}, 5)
+
+        self.assertEqual(count, 0)
+        self.assertEqual(run.call_count, 3)
+
+    def test_background_workspace_mover_hides_before_placing_reaper(self):
+        listing = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=0,
+            stdout="0x0480000a  1 reaper.REAPER workstation M3 harness\n",
+            stderr="",
+        )
+        hidden = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-ir", "0x0480000a", "-b", "add,hidden"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        moved = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-ir", "0x0480000a", "-t", "4"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=[listing, hidden, moved],
+        ) as run:
+            count = GUARDED_REAPER.move_reaper_windows_once(
+                {},
+                5,
+                background=True,
+            )
+
+        self.assertEqual(count, 1)
+        run.assert_has_calls(
+            [
+                mock.call(
+                    [
+                        "/usr/bin/wmctrl",
+                        "-ir",
+                        "0x0480000a",
+                        "-b",
+                        "add,hidden",
+                    ],
+                    env={},
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                ),
+                mock.call(
+                    ["/usr/bin/wmctrl", "-ir", "0x0480000a", "-t", "4"],
+                    env={},
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                ),
+            ]
+        )
+
+    def test_gui_launch_detaches_standard_streams(self):
+        process = mock.Mock()
+        process.poll.return_value = 0
+        process.returncode = 0
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "require_workspace",
+                return_value=1,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "settle_launch_workspace",
+                return_value=0,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "restore_launch_workspace",
+                return_value=False,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "reaper_window_ids",
+                return_value=set(),
+            ),
+            mock.patch.object(
+                GUARDED_REAPER.subprocess,
+                "Popen",
+                return_value=process,
+            ) as popen,
+        ):
+            result = GUARDED_REAPER.run_gui_guarded(["reaper"], {}, 5)
+
+        self.assertEqual(result, 0)
+        popen.assert_called_once_with(
+            ["reaper"],
+            env={},
+            start_new_session=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     def test_workspace_mover_refuses_nontransient_listing_errors(self):
         denied = subprocess.CompletedProcess(
