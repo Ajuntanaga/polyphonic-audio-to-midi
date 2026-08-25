@@ -3,6 +3,7 @@ tags:analysis MIDI guitar
 
 import m3_poly_midi/constants.jsfx-inc
 import m3_poly_midi/pitch_math.jsfx-inc
+import m3_poly_midi/conditioning.jsfx-inc
 
 in_pin:left
 in_pin:right
@@ -13,7 +14,9 @@ slider1:0<0,2,1{Left,Right,Downmix}>Detector input
 
 @init
 ext_noinit = 1;
-last_srate = 0;
+last_srate = srate;
+input_trim_gain = 1;
+m3_condition_init(M3_CONDITION_BASE, srate);
 
 @slider
 input_mode = min(2, max(0, slider1|0));
@@ -22,6 +25,13 @@ input_mode = min(2, max(0, slider1|0));
 sample_offset = 0;
 
 @sample
+detector_in = input_mode == 0 ? spl0
+            : input_mode == 1 ? spl1
+            : (spl0 + spl1) * 0.7071067811865476;
+conditioned = m3_condition_process(
+  M3_CONDITION_BASE,
+  detector_in * input_trim_gain
+);
 sample_offset += 1;
 
 @gfx 520 260

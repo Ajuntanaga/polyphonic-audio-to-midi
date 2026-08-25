@@ -6,6 +6,7 @@ out_pin:none
 
 import ../m3_poly_midi/constants.jsfx-inc
 import ../m3_poly_midi/pitch_math.jsfx-inc
+import ../m3_poly_midi/conditioning.jsfx-inc
 
 @init
 M3_TEST_MAGIC = 0x4D335431;
@@ -21,6 +22,85 @@ function m3_test_near(id, actual, expected, tolerance) local(delta) (
   );
 );
 
+function m3_test_lte(id, actual, maximum) (
+  gmem[2] += 1;
+  (!m3_isfinite(actual) || actual > maximum) && gmem[3] == 0 ? (
+    gmem[1] = -1;
+    gmem[3] = id;
+    gmem[4] = actual;
+    gmem[5] = maximum;
+  );
+);
+
+function m3_test_gte(id, actual, minimum) (
+  gmem[2] += 1;
+  (!m3_isfinite(actual) || actual < minimum) && gmem[3] == 0 ? (
+    gmem[1] = -1;
+    gmem[3] = id;
+    gmem[4] = actual;
+    gmem[5] = minimum;
+  );
+);
+
+function m3_test_condition_rate(test_sr)
+local(base, count, y, phase, phase_step, x, input_energy, output_energy, gain_db) (
+  base = M3_CONDITION_BASE;
+
+  m3_condition_init(base, test_sr);
+  count = floor(0.5 * test_sr);
+  y = 0;
+  loop(count,
+    y = m3_condition_process(base, 1);
+  );
+  m3_test_lte(3101, abs(y), 0.001);
+
+  m3_condition_init(base, test_sr);
+  phase = 0;
+  phase_step = 2 * $pi * 51.9131 / test_sr;
+  count = floor(0.25 * test_sr);
+  loop(count,
+    x = sin(phase);
+    m3_condition_process(base, x);
+    phase += phase_step;
+    phase >= 2 * $pi ? phase -= 2 * $pi;
+  );
+  input_energy = 0;
+  output_energy = 0;
+  count = floor(0.5 * test_sr);
+  loop(count,
+    x = sin(phase);
+    y = m3_condition_process(base, x);
+    input_energy += x * x;
+    output_energy += y * y;
+    phase += phase_step;
+    phase >= 2 * $pi ? phase -= 2 * $pi;
+  );
+  gain_db = 10 * log10(
+    max(output_energy, 0.000000000001) /
+    max(input_energy, 0.000000000001)
+  );
+  m3_test_gte(3102, gain_db, -0.5);
+
+  m3_condition_init(base, test_sr);
+  y = m3_condition_process(base, 10 ^ 31);
+  m3_test_near(3103, abs(y) + abs(base[15] - 1), 0, 0.000001);
+
+  m3_condition_init(base, test_sr);
+  m3_condition_process(base, 1);
+  count = floor(0.25 * test_sr);
+  loop(count,
+    m3_condition_process(base, 0);
+  );
+  m3_test_gte(3104, base[14], 0.36);
+
+  m3_condition_init(base, test_sr);
+  count = floor(2 * test_sr);
+  loop(count,
+    m3_condition_process(base, 0);
+  );
+  m3_test_lte(3105, 10 * log10(max(base[12], 0.000000000001)), -100);
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
@@ -30,6 +110,9 @@ gmem[5] = 0;
 
 m3_test_near(2101, m3_midi_to_hz(69, 440), 440, 0.000001);
 m3_test_near(2102, m3_midi_to_hz(32, 440), 51.9131, 0.01);
+m3_test_condition_rate(48000);
+m3_test_condition_rate(44100);
+m3_test_condition_rate(96000);
 gmem[1] == 1 ? gmem[1] = 2;
 
 @gfx 440 180

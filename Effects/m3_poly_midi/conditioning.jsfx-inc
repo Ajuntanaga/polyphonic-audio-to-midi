@@ -1,0 +1,42 @@
+@init
+// base[0] DC pole; base[1] fast-energy coefficient.
+// base[2] slow-energy coefficient; base[3] noise-rise coefficient.
+// base[4] peak/clip release coefficient; base[5..7] reserved.
+// base[8] previous input; base[9] previous DC-blocked output.
+// base[10] fast energy; base[11] slow energy; base[12] noise floor.
+// base[13] peak envelope; base[14] clip envelope; base[15] invalid-input latch.
+// base[16..31] reserved.
+function m3_condition_init(base, sample_rate) local(sr) (
+  sr = max(1, sample_rate);
+  base[0] = exp(-2 * $pi * 15 / sr);
+  base[1] = exp(-1 / (0.005 * sr));
+  base[2] = exp(-1 / (0.100 * sr));
+  base[3] = exp(-1 / (2.000 * sr));
+  base[4] = exp(-1 / (0.250 * sr));
+  m3_zero(base + 5, 27);
+);
+
+function m3_condition_process(base, x) local(y, power, fast, slow, noise) (
+  !m3_isfinite(x) ? (
+    x = 0;
+    base[15] = 1;
+  );
+
+  y = x - base[8] + base[0] * base[9];
+  base[8] = x;
+  base[9] = y;
+
+  power = y * y;
+  fast = base[1] * base[10] + (1 - base[1]) * power;
+  slow = base[2] * base[11] + (1 - base[2]) * power;
+  noise = fast < base[11] * 1.5 + 0.000000000001
+        ? base[3] * base[12] + (1 - base[3]) * fast
+        : base[12];
+
+  base[10] = fast;
+  base[11] = slow;
+  base[12] = max(0.000000000001, noise);
+  base[13] = max(abs(x), base[13] * base[4]);
+  base[14] = max(abs(x) >= 0.999, base[14] * base[4]);
+  y;
+);
