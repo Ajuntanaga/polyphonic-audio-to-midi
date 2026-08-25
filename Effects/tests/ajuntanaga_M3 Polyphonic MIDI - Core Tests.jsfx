@@ -2,7 +2,7 @@ desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
 tags:test MIDI analysis
 options:gmem=m3_poly_midi_tests_v1
 slider1:0<0,2,1{48 kHz,44.1 kHz,96 kHz}>Bounded resonator test rate
-slider2:0<0,17,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards}>Bounded detector test case
+slider2:0<0,23,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards,7101 M3 Opens,7102 Open Voicing,7103 Impossible Chromatic,7104 Feasible Four Notes,7105 Below Range,7106 General Bypass}>Bounded detector test case
 in_pin:none
 out_pin:none
 
@@ -11,6 +11,7 @@ import ../m3_poly_midi/pitch_math.jsfx-inc
 import ../m3_poly_midi/conditioning.jsfx-inc
 import ../m3_poly_midi/resonator_bank.jsfx-inc
 import ../m3_poly_midi/salience_selector.jsfx-inc
+import ../m3_poly_midi/m3_profile.jsfx-inc
 
 @init
 M3_TEST_MAGIC = 0x4D335431;
@@ -20,6 +21,8 @@ M3_TEST_REFERENCE_SELECTION_BASE = 57000;
 M3_TEST_RATE_NOTE_BASE = 58000;
 M3_TEST_RATE_GAIN_BASE = 58008;
 M3_TEST_RATE_PHASE_BASE = 58016;
+M3_TEST_PROFILE_OPEN_BASE = 58100;
+M3_TEST_PROFILE_NOTE_BASE = 58108;
 
 function m3_test_near(id, actual, expected, tolerance) local(delta) (
   gmem[2] += 1;
@@ -731,6 +734,145 @@ local(index, note, production_index, reference_index, delta, max_delta,
   );
 );
 
+function m3_test_profile_guard_start() (
+  M3_M3_SCRATCH_BASE[-1] = 1234567;
+  M3_M3_SCRATCH_BASE[512] = 7654321;
+);
+
+function m3_test_profile_guard_error() (
+  abs(M3_M3_SCRATCH_BASE[-1] - 1234567) +
+  abs(M3_M3_SCRATCH_BASE[512] - 7654321);
+);
+
+function m3_test_profile_open_error(open_base) (
+  abs(open_base[0] - M3_M3_OPEN_0) +
+  abs(open_base[1] - M3_M3_OPEN_1) +
+  abs(open_base[2] - M3_M3_OPEN_2) +
+  abs(open_base[3] - M3_M3_OPEN_3) +
+  abs(open_base[4] - M3_M3_OPEN_4) +
+  abs(open_base[5] - M3_M3_OPEN_5) +
+  abs(open_base[6] - M3_M3_OPEN_6) +
+  abs(open_base[7] - M3_M3_OPEN_7);
+);
+
+function m3_test_profile_case(case_id)
+local(index, feasible, error, selected_count) (
+  m3_zero(M3_TEST_PROFILE_OPEN_BASE, 8);
+  m3_zero(M3_TEST_PROFILE_NOTE_BASE, 8);
+  m3_profile_load(M3_TEST_PROFILE_OPEN_BASE);
+
+  case_id == 7101 ? (
+    m3_test_near(
+      7101,
+      m3_test_profile_open_error(M3_TEST_PROFILE_OPEN_BASE),
+      0,
+      0
+    );
+  );
+
+  case_id == 7102 ? (
+    index = 0;
+    loop(8,
+      M3_TEST_PROFILE_NOTE_BASE[index] = M3_TEST_PROFILE_OPEN_BASE[index];
+      index += 1;
+    );
+    m3_test_profile_guard_start();
+    feasible = m3_voicing_feasible(
+      M3_TEST_PROFILE_NOTE_BASE,
+      8,
+      0,
+      M3_M3_SCRATCH_BASE
+    );
+    error = abs(feasible - 1) + m3_test_profile_guard_error();
+    m3_test_near(7102, error, 0, 0);
+  );
+
+  case_id == 7103 ? (
+    index = 0;
+    loop(8,
+      M3_TEST_PROFILE_NOTE_BASE[index] = 32 + index;
+      index += 1;
+    );
+    m3_test_profile_guard_start();
+    feasible = m3_voicing_feasible(
+      M3_TEST_PROFILE_NOTE_BASE,
+      8,
+      24,
+      M3_M3_SCRATCH_BASE
+    );
+    error = abs(feasible) + m3_test_profile_guard_error();
+    m3_test_near(7103, error, 0, 0);
+  );
+
+  case_id == 7104 ? (
+    M3_TEST_PROFILE_NOTE_BASE[0] = 44;
+    M3_TEST_PROFILE_NOTE_BASE[1] = 48;
+    M3_TEST_PROFILE_NOTE_BASE[2] = 52;
+    M3_TEST_PROFILE_NOTE_BASE[3] = 56;
+    m3_test_profile_guard_start();
+    feasible = m3_voicing_feasible(
+      M3_TEST_PROFILE_NOTE_BASE,
+      4,
+      24,
+      M3_M3_SCRATCH_BASE
+    );
+    error = abs(feasible - 1) + m3_test_profile_guard_error();
+    m3_test_near(7104, error, 0, 0);
+  );
+
+  case_id == 7105 ? (
+    M3_TEST_PROFILE_NOTE_BASE[0] = 31;
+    m3_test_profile_guard_start();
+    feasible = m3_voicing_feasible(
+      M3_TEST_PROFILE_NOTE_BASE,
+      1,
+      24,
+      M3_M3_SCRATCH_BASE
+    );
+    M3_SELECTION_BASE[0] = 31;
+    M3_SELECTION_BASE[1] = 0.25;
+    M3_SELECTION_BASE[2] = 0.25;
+    M3_SELECTION_BASE[3] = 0;
+    M3_SELECTION_BASE[4] = 44;
+    M3_SELECTION_BASE[5] = 0.90;
+    M3_SELECTION_BASE[6] = 0.75;
+    M3_SELECTION_BASE[7] = 0;
+    selected_count = m3_profile_filter_selected(
+      M3_PROFILE_MODE_M3,
+      M3_SELECTION_BASE,
+      2,
+      24,
+      M3_TEST_PROFILE_NOTE_BASE,
+      M3_M3_SCRATCH_BASE
+    );
+    error = abs(feasible) +
+            abs(selected_count - 1) +
+            abs(M3_SELECTION_BASE[0] - 44) +
+            m3_test_profile_guard_error();
+    m3_test_near(7105, error, 0, 0);
+  );
+
+  case_id == 7106 ? (
+    M3_SELECTION_BASE[0] = 31;
+    M3_SELECTION_BASE[1] = 0.75;
+    M3_SELECTION_BASE[2] = 0.50;
+    M3_SELECTION_BASE[3] = 0;
+    m3_test_profile_guard_start();
+    selected_count = m3_profile_filter_selected(
+      M3_PROFILE_MODE_GENERAL,
+      M3_SELECTION_BASE,
+      1,
+      24,
+      M3_TEST_PROFILE_NOTE_BASE,
+      M3_M3_SCRATCH_BASE
+    );
+    error = abs(selected_count - 1) +
+            abs(M3_SELECTION_BASE[0] - 31) +
+            m3_test_profile_guard_error();
+    m3_test_near(7106, error, 0, 0);
+  );
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
@@ -751,12 +893,14 @@ loop(16,
   test_diagnostic_index += 1;
 );
 test_bank_rate = slider1 == 1 ? 44100 : slider1 == 2 ? 96000 : 48000;
-test_case_index = min(17, max(0, slider2|0));
+test_case_index = min(23, max(0, slider2|0));
 test_bank_case_id = test_case_index < 6
   ? 4101 + test_case_index
   : test_case_index < 12
     ? 5101 + test_case_index - 6
-    : 6101 + test_case_index - 12;
+    : test_case_index < 18
+      ? 6101 + test_case_index - 12
+      : 7101 + test_case_index - 18;
 gmem[6] = test_bank_rate;
 gmem[15] = test_bank_case_id;
 
@@ -771,8 +915,10 @@ test_bank_case_id < 5000 ? (
   m3_test_bank_case(test_bank_rate, test_bank_case_id);
 ) : test_bank_case_id < 6000 ? (
   m3_test_selection_case(test_bank_rate, test_bank_case_id);
-) : (
+) : test_bank_case_id < 7000 ? (
   m3_test_multi_rate_case(test_bank_rate, test_bank_case_id);
+) : (
+  m3_test_profile_case(test_bank_case_id);
 );
 gmem[1] == 1 ? gmem[1] = 2;
 

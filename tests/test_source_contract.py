@@ -10,6 +10,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
+PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -83,6 +84,20 @@ class SourceContractTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_profile_scratch_contract(self):
+        constants = parse_integer_assignments(CONSTANTS)
+        profile = parse_integer_assignments(PROFILE)
+        self.assertEqual(profile.get("M3_PROFILE_DP_ROW_SIZE"), 256)
+        self.assertEqual(profile.get("M3_PROFILE_DP_WORDS"), 512)
+        self.assertEqual(
+            profile["M3_PROFILE_DP_WORDS"],
+            2 * profile["M3_PROFILE_DP_ROW_SIZE"],
+        )
+        self.assertLess(
+            profile["M3_PROFILE_DP_WORDS"],
+            constants["M3_VOICE_BASE"] - constants["M3_M3_SCRATCH_BASE"],
+        )
 
     def test_validator_checks_auxiliary_import_graph(self):
         with tempfile.TemporaryDirectory() as temporary:

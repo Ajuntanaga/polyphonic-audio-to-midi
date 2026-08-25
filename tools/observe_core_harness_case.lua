@@ -21,7 +21,8 @@ local valid_rate = expected_rate == 44100 or expected_rate == 48000 or expected_
 local valid_case = expected_case and (
   (expected_case >= 4101 and expected_case <= 4106) or
   (expected_case >= 5101 and expected_case <= 5106) or
-  (expected_case >= 6101 and expected_case <= 6106)
+  (expected_case >= 6101 and expected_case <= 6106) or
+  (expected_case >= 7101 and expected_case <= 7106)
 )
 
 if project_path:sub(1, #disposable_prefix) ~= disposable_prefix or

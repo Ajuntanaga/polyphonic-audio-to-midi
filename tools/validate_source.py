@@ -18,6 +18,7 @@ EFFECT_NAME = "ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
 CORE_IMPORTS = (
     "m3_poly_midi/constants.jsfx-inc",
     "m3_poly_midi/pitch_math.jsfx-inc",
+    "m3_poly_midi/m3_profile.jsfx-inc",
 )
 
 
@@ -99,6 +100,17 @@ def validate_tree(root: pathlib.Path) -> list[str]:
         for token in FORBIDDEN_RT
         if token in realtime
     )
+
+    block = section(text, "block")
+    selection_call = "m3_select_voices("
+    profile_call = "m3_profile_filter_selected("
+    if selection_call not in block:
+        errors.append("production block does not select voices")
+    if profile_call not in block:
+        errors.append("production block does not filter the selected M3 voicing")
+    if selection_call in block and profile_call in block:
+        if block.index(selection_call) > block.index(profile_call):
+            errors.append("M3 profile filtering must follow voice selection")
     return errors
 
 

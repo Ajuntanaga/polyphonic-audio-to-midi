@@ -155,3 +155,41 @@ windows assigned to workspace 5, restores only a target-workspace focus steal,
 does not override a third workspace selected by the user, and now polls for a
 short bounded interval after process exit to catch GNOME's delayed focus race.
 No current workspace was forcibly changed while adding the post-exit fix.
+
+## Task 7 M3 distinct-string feasibility
+
+The required behavioral RED was observed in real REAPER before the production
+profile existed. A zero-result interface scaffold reached assertion 7101 with
+three assertions total and reported an aggregate open-note error of 368. The
+preserved machine result is `build/evidence/task-07-profile-red-7101.txt`,
+SHA-256
+`8aa336e939f82225d9e52e211ca88fd89cd36a1b27f469c1eb0252759cd25b60`.
+
+The production profile loads the exact low-to-high open notes
+`32,36,40,44,48,52,56,60`. A note receives one bit for every string on which
+its fret delta is between zero and the configured maximum. Feasibility uses
+two fixed 256-word reachability rows and examines at most eight notes, 256
+used-string masks, and eight string bits per note. The two guard words around
+the 512-word working region remained unchanged in every feasibility case.
+
+M3 filtering runs after bounded voice selection. If a set cannot map to
+distinct strings, the lowest-confidence selected cell is removed with a
+bounded stable compaction and feasibility is retried at most eight times.
+Case 7105 verifies both that MIDI 31 is infeasible and that a lower-confidence
+MIDI 31 is removed while legal MIDI 44 remains. General Tonal mode returns the
+selected set without calling the feasibility matcher; its user-facing mode
+control remains part of the later final parameter-surface task.
+
+Cases 7101–7106 passed at 44.1, 48, and 96 kHz in 18 separate guarded
+workspace-5 launches. Every result contains three assertions, suite state `2`,
+and failed assertion ID `0`. The SHA-256 of the lexically ordered `sha256sum`
+output for the 18 result files is
+`6096b227cca280fd720c8420be467aedf7b80a7aafd7e243898ebbf3239429d7`.
+
+A proportional cross-layer regression reran cases 4104, 5104, 6102, and 6105
+at all three rates: missing-fundamental detection, eight-open-string selection,
+multi-rate selection equivalence, and the hard work bound all remained green.
+Across the Task 7 and regression launches, preflights remained near 28 GiB of
+available memory, load stayed below 3.3, and readable temperature stayed at or
+below 73 C. Each launch started from workspace 4, assigned REAPER to workspace
+5, restored workspace 4 afterward, and left no REAPER process running.

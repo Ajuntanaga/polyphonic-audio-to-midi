@@ -6,6 +6,7 @@ import m3_poly_midi/pitch_math.jsfx-inc
 import m3_poly_midi/conditioning.jsfx-inc
 import m3_poly_midi/resonator_bank.jsfx-inc
 import m3_poly_midi/salience_selector.jsfx-inc
+import m3_poly_midi/m3_profile.jsfx-inc
 
 in_pin:left
 in_pin:right
@@ -18,6 +19,9 @@ slider1:0<0,2,1{Left,Right,Downmix}>Detector input
 ext_noinit = 1;
 last_srate = srate;
 input_trim_gain = 1;
+profile_mode = M3_PROFILE_MODE_M3;
+profile_max_fret = 24;
+m3_profile_load(M3_CONFIG_BASE + M3_PROFILE_OPEN_OFFSET);
 m3_condition_init(M3_CONDITION_BASE, srate);
 m3_bank_init(M3_RESONATOR_BASE, srate, 32, 84, 440);
 M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.20;
@@ -33,6 +37,24 @@ m3_salience_update(
   M3_RESONATOR_BASE,
   M3_SALIENCE_BASE,
   M3_CONDITION_BASE[12]
+);
+selected_voice_count = m3_select_voices(
+  M3_RESONATOR_BASE,
+  M3_SALIENCE_BASE,
+  32,
+  53,
+  M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET],
+  M3_MAX_VOICES,
+  440,
+  M3_SELECTION_BASE
+);
+selected_voice_count = m3_profile_filter_selected(
+  profile_mode,
+  M3_SELECTION_BASE,
+  selected_voice_count,
+  profile_max_fret,
+  M3_CONFIG_BASE + M3_PROFILE_NOTE_WORK_OFFSET,
+  M3_M3_SCRATCH_BASE
 );
 
 @sample

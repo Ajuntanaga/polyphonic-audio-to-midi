@@ -28,6 +28,12 @@ CASE_SLIDER = {
     6104: "15",
     6105: "16",
     6106: "17",
+    7101: "18",
+    7102: "19",
+    7103: "20",
+    7104: "21",
+    7105: "22",
+    7106: "23",
 }
 
 
@@ -56,7 +62,10 @@ def prepare_project(
     if rate not in RATE_SLIDER:
         raise ValueError("rate must be exactly 44100, 48000, or 96000")
     if case_id not in CASE_SLIDER:
-        raise ValueError("case ID must be one of 4101..4106, 5101..5106, or 6101..6106")
+        raise ValueError(
+            "case ID must be one of 4101..4106, 5101..5106, "
+            "6101..6106, or 7101..7106"
+        )
 
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     markers = [index for index, line in enumerate(lines) if FX_MARKER in line]
@@ -75,6 +84,8 @@ def prepare_project(
     lines[state_index] = indentation + " ".join(state) + newline
 
     output_directory.mkdir(parents=True, exist_ok=True)
+    result_directory = BUILD / "evidence" / f"task-{case_id // 1000:02d}-results"
+    result_directory.mkdir(parents=True, exist_ok=True)
     destination = output_directory / f"core-harness-{rate}-case-{case_id}.RPP"
     temporary = destination.with_suffix(".RPP.tmp")
     temporary.write_text("".join(lines), encoding="utf-8")

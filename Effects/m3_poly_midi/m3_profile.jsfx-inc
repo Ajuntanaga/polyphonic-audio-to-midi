@@ -1,0 +1,150 @@
+@init
+M3_PROFILE_MODE_M3 = 0;
+M3_PROFILE_MODE_GENERAL = 1;
+M3_PROFILE_OPEN_OFFSET = 32;
+M3_PROFILE_NOTE_WORK_OFFSET = 40;
+M3_PROFILE_DP_ROW_SIZE = 256;
+M3_PROFILE_DP_WORDS = 512;
+
+function m3_profile_load(open_base) (
+  m3_profile_open_base = open_base;
+  open_base[0] = M3_M3_OPEN_0;
+  open_base[1] = M3_M3_OPEN_1;
+  open_base[2] = M3_M3_OPEN_2;
+  open_base[3] = M3_M3_OPEN_3;
+  open_base[4] = M3_M3_OPEN_4;
+  open_base[5] = M3_M3_OPEN_5;
+  open_base[6] = M3_M3_OPEN_6;
+  open_base[7] = M3_M3_OPEN_7;
+);
+
+function m3_note_string_mask(note, max_fret, open_base)
+local(string_index, delta, mask, fret_limit) (
+  mask = 0;
+  fret_limit = floor(max_fret);
+  m3_isfinite(note) && m3_isfinite(max_fret) && fret_limit >= 0 ? (
+    string_index = 0;
+    loop(8,
+      delta = note - open_base[string_index];
+      delta >= 0 && delta <= fret_limit
+        ? mask |= (1 << string_index);
+      string_index += 1;
+    );
+  );
+  mask;
+);
+
+function m3_voicing_feasible(note_base, note_count, max_fret, scratch_base)
+local(count, current_row, next_row, note_index, playable, used_mask,
+      string_index, string_bit, next_mask, temporary_row, any_reachable) (
+  count = floor(note_count);
+  !m3_isfinite(note_count) || count < 0 || count > M3_MAX_VOICES ? 0 : (
+    m3_zero(scratch_base, M3_PROFILE_DP_WORDS);
+    current_row = scratch_base;
+    next_row = scratch_base + M3_PROFILE_DP_ROW_SIZE;
+    current_row[0] = 1;
+
+    note_index = 0;
+    loop(count,
+      m3_zero(next_row, M3_PROFILE_DP_ROW_SIZE);
+      playable = m3_note_string_mask(
+        note_base[note_index],
+        max_fret,
+        m3_profile_open_base
+      );
+      used_mask = 0;
+      loop(M3_PROFILE_DP_ROW_SIZE,
+        current_row[used_mask] ? (
+          string_index = 0;
+          loop(8,
+            string_bit = 1 << string_index;
+            (playable & string_bit) && !(used_mask & string_bit) ? (
+              next_mask = used_mask | string_bit;
+              next_row[next_mask] = 1;
+            );
+            string_index += 1;
+          );
+        );
+        used_mask += 1;
+      );
+      temporary_row = current_row;
+      current_row = next_row;
+      next_row = temporary_row;
+      note_index += 1;
+    );
+
+    any_reachable = 0;
+    used_mask = 0;
+    loop(M3_PROFILE_DP_ROW_SIZE,
+      current_row[used_mask] ? any_reachable = 1;
+      used_mask += 1;
+    );
+    any_reachable;
+  );
+);
+
+function m3_profile_filter_selected(profile_mode, selection_base,
+                                    selected_count, max_fret,
+                                    note_work_base, scratch_base)
+local(count, accepted, attempt, note_index, lowest_index, lowest_confidence,
+      confidence, shift_index, source_cell, destination_cell, cleared_cell) (
+  count = min(M3_MAX_VOICES, max(0, floor(selected_count)));
+  profile_mode == M3_PROFILE_MODE_GENERAL ? count : (
+    accepted = 0;
+    attempt = 0;
+    loop(M3_MAX_VOICES,
+      !accepted ? (
+        note_index = 0;
+        loop(count,
+          note_work_base[note_index] =
+            selection_base[note_index * M3_SELECTION_CELL_SIZE];
+          note_index += 1;
+        );
+        m3_voicing_feasible(
+          note_work_base,
+          count,
+          max_fret,
+          scratch_base
+        ) ? (
+          accepted = 1;
+        ) : count > 0 ? (
+          lowest_index = 0;
+          lowest_confidence = 10 ^ 30;
+          note_index = 0;
+          loop(count,
+            confidence = selection_base[
+              note_index * M3_SELECTION_CELL_SIZE + 1
+            ];
+            !m3_isfinite(confidence) || confidence < lowest_confidence ? (
+              lowest_confidence = confidence;
+              lowest_index = note_index;
+            );
+            note_index += 1;
+          );
+
+          shift_index = lowest_index;
+          loop(max(0, count - lowest_index - 1),
+            destination_cell = selection_base +
+                               shift_index * M3_SELECTION_CELL_SIZE;
+            source_cell = destination_cell + M3_SELECTION_CELL_SIZE;
+            destination_cell[0] = source_cell[0];
+            destination_cell[1] = source_cell[1];
+            destination_cell[2] = source_cell[2];
+            destination_cell[3] = source_cell[3];
+            shift_index += 1;
+          );
+          count -= 1;
+          cleared_cell = selection_base + count * M3_SELECTION_CELL_SIZE;
+          cleared_cell[0] = 0;
+          cleared_cell[1] = 0;
+          cleared_cell[2] = 0;
+          cleared_cell[3] = 0;
+        ) : (
+          accepted = 1;
+        );
+      );
+      attempt += 1;
+    );
+    count;
+  );
+);
