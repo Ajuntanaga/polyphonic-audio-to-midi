@@ -299,3 +299,45 @@ The smoke script dirtied its disposable project while swapping FX, so its close
 request waited on an unseen save prompt and the launcher enforced the 60-second
 termination bound. This is not a clean host-sequence result; Task 11 still owns
 VSTi routing, dry-path, MIDI capture, and safe-bypass integration.
+
+## Task 10 telemetry, UI, serialization, and fault evidence
+
+The required RED was observed in real REAPER at 48 kHz before the telemetry
+reader was made generation-safe. Assertion 10101 failed with three assertions,
+observed aggregate error 87, and failed ID 10101. The original observer result
+had SHA-256
+`2d36f7973607e5cc6310aba3d878877b18204fff23f53be456371b50b768e5cd`;
+the preserved compact evidence record is
+`build/evidence/task-10-telemetry-red-10101.txt`, SHA-256
+`c025e01d67f2723e670df7e30748defc9615a7f28a0895c8c9137b44e2e42297`.
+
+The final Task 10 matrix is cases 10101–10106 at 44.1, 48, and 96 kHz. All 18
+guarded results passed with three assertions, suite state `2`, and failed ID
+`0`. The SHA-256 of the lexically ordered `sha256sum` output is
+`56768676bb073d9bba8e84e38322ff01e3692959a41f4ba1e9c2634e26969b47`.
+Preflights stayed above 30 GiB available memory; observed load remained below
+0.9 and temperature peaked at 58 C. Workspace 1 stayed active, each disposable
+window was hidden on workspace 5, and no REAPER process remained.
+
+Post-matrix regressions passed at 48 kHz for 4104, 5104, 6102, 6105, 7102,
+7105, 8102/block 128, 9101, 9104, and 9109. One 9109 preflight safely refused a
+transient X11 `BadDrawable`; the immediate bounded retry passed. This was a
+launcher diagnostic, not a JSFX failure.
+
+The audio side publishes 40 fixed words at the last sample of each block:
+generation, fault, overload, peak, noise, clip, commit milliseconds, active
+count, and eight four-word note cells. It alternates the two reserved buffers,
+marks the write with an odd generation, and publishes an even generation only
+after the copy is complete. The UI copies no more than 40 words and accepts
+only equal nonzero even generations. A fixed twelve-name table occupies 12 of
+the remaining 24 UI-local words, keeping all UI storage inside the reserved
+64-word region.
+
+`time_precise()` appears exactly twice in the sample path, at the first and
+last samples. Three consecutive measurements above half the block deadline set
+the overload flag. This is a guard indicator, not the long-run p99 benchmark;
+Task 12 owns external performance measurement. The production-load smoke passed
+enabled/online, two inputs, two outputs, and all fifteen named controls, then
+saved and closed only its disposable project. Its result is
+`build/evidence/task-10-production-smoke.txt`, SHA-256
+`321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.

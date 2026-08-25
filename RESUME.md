@@ -1,18 +1,17 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T12:07:52-07:00
+Updated: 2026-08-25T12:32:03-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified implementation commit: `186608f` (`feat: emit sample-offset
-  MIDI with lifecycle cleanup`).
+- Last verified implementation commit: `ca9a256` (`feat: add safe telemetry
+  and compact JSFX UI`).
 - Latest stability commit: `821ba22` (`fix: background guarded REAPER
   launches`).
-- Current task: Task 10, safe telemetry, compact UI, serialization, and visible
-  fault/overload states.
-- Tasks 1–9 are verified and committed.
-- Local result: 41 Python tests pass and `python3 tools/validate_source.py .`
+- Current task: Task 11, disposable REAPER host integration.
+- Tasks 1–10 are verified and committed.
+- Local result: 45 Python tests pass and `python3 tools/validate_source.py .`
   reports `source contract: ok`.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
@@ -152,6 +151,31 @@ Updated: 2026-08-25T12:07:52-07:00
 - Matrix preflights stayed above 30 GiB available memory, below load 1.2, and
   at or below 59 C. Workspace 1 stayed active and no REAPER process remained.
 
+## Verified Task 10 evidence
+
+- Expected RED: the complete 10101–10106 harness plus a permissive telemetry
+  scaffold reached assertion 10101 in real REAPER at 48 kHz. It had three
+  assertions and aggregate error 87. The raw observer result SHA-256 was
+  `2d36f7973607e5cc6310aba3d878877b18204fff23f53be456371b50b768e5cd`;
+  compact preserved evidence
+  `build/evidence/task-10-telemetry-red-10101.txt` has SHA-256
+  `c025e01d67f2723e670df7e30748defc9615a7f28a0895c8c9137b44e2e42297`.
+- Final telemetry matrix: cases 10101–10106 passed at 44.1, 48, and 96 kHz in
+  18 hidden guarded workspace-5 launches. Every result had three assertions,
+  suite state `2`, and failed assertion ID `0`.
+- The SHA-256 of the lexically ordered `sha256sum` output for all 18 results is
+  `56768676bb073d9bba8e84e38322ff01e3692959a41f4ba1e9c2634e26969b47`.
+- Cases 4104, 5104, 6102, 6105, 7102, 7105, 8102/block 128, 9101, 9104, and
+  9109 passed again at 48 kHz. A transient X11 `BadDrawable` caused one safe
+  preflight refusal before the bounded 9109 retry passed.
+- The production-load smoke passed enabled and online with two inputs, two
+  outputs, and all fifteen named controls, then saved and closed only its
+  disposable project. Result `build/evidence/task-10-production-smoke.txt`,
+  SHA-256
+  `321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.
+- Matrix preflights stayed above 30 GiB available memory, below load 0.9, and
+  at or below 58 C. Workspace 1 stayed active and no REAPER process remained.
+
 ## Current implementation and tuning
 
 - The production bank uses fixed eight-word cells, causal 8 ms/35 ms complex
@@ -180,6 +204,15 @@ Updated: 2026-08-25T12:07:52-07:00
   for rate, stop, hard reconfiguration, and explicit Panic; `@sample` performs
   streaming analysis, one-time MIDI output, and the optional two-assignment dry
   mute. Incoming MIDI is untouched.
+- Telemetry alternates two fixed 40-word snapshots, marks in-progress writes
+  odd, and publishes only completed even generations. The 64-word UI region
+  holds one snapshot plus a fixed twelve-note-name table. `@gfx` reads only the
+  published snapshot and cannot write detector/lifecycle memory.
+- Input trim ramps over 64 samples. Project serialization contains only
+  `saved_schema_version=1`; active notes and detector state are discarded on
+  load. Fault codes 1–5 disable detection, preserve available dry audio, and
+  use reachable note-off cleanup. Two sample-edge `time_precise()` calls feed
+  the three-block half-deadline overload indicator.
 - Requested pitch bounds are stored separately from analysis-only guard
   semitones. Production remains requested MIDI 32..84.
 - Final Task 4 score coefficients are harmonic mean `0.85`, minimum-three
@@ -190,10 +223,10 @@ Updated: 2026-08-25T12:07:52-07:00
   protection, bounded insertion sort, and 117 words inside the 256-word fixed
   selection region.
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
-  rate/case RPPs. Its eight behavioral tests cover correct slider state and
+  rate/case RPPs. Its nine behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
 - `tools/observe_core_harness_case.lua` accepts only the exact disposable Task
-  4–9 case path shape, including mandatory collision-free block identity for
+  4–10 case path shape, including mandatory collision-free block identity for
   Task 8, removes only that case's old result, publishes atomically, and exits
   REAPER. It does not analyze audio or emit performance MIDI.
 - `docs/PERFORMANCE.md` records all measured coefficient, guard, and matrix
@@ -217,24 +250,17 @@ kept workspace 1 active for the full launch and left no REAPER process behind.
 
 ## Exact resume action
 
-1. Add Task 10 assertions 10101–10106 before creating
-   `m3_poly_midi/telemetry_ui.jsfx-inc`: reject odd/inconsistent snapshots,
-   bound active notes, expose invalid-input faults, serialize config only, and
-   preserve available dry audio for unsupported channel state.
-2. Preserve a real-REAPER RED at assertion 10101 before implementing telemetry.
-3. Add double-buffered odd/even generation publication. The audio side writes
-   fixed telemetry only; `@gfx` copies at most 64 words and accepts equal even
-   generations.
-4. Draw the compact 520x260 status, input/noise meters, and up to eight note
-   rows. UI code must not mutate audio-state regions.
-5. Smooth input trim over 64 samples, apply sensitivity/response at the next
-   analysis update, and serialize only schema/config. Never serialize active
-   voices or detector memory.
-6. Add visible fault codes and bounded overload measurement using
-   `time_precise()` only at block edges. Preserve dry audio on unsupported
-   channel/fault paths and perform reachable MIDI cleanup.
-7. Run 10101–10106, prior proportional regressions, serialization/source
-   contracts, and the hidden workspace-5 guard before committing Task 10.
+1. Add the Task 11 staging RED: require the disposable profile to include the
+   production effect, constants module, and test runner under `Scripts/`, while
+   still refusing `reaper-kb.ini` and the live profile.
+2. Implement dependency-free staging for only the approved Effects, Scripts,
+   Data, and test-results trees.
+3. Add the bounded signal-source and MIDI-capture JSFX plus the disposable
+   three-FX runner. Keep every launch hidden on workspace 5.
+4. Run the host sequence before creating Safe Bypass. Require exact ordered
+   MIDI, dry-path identity, panic/reconfigure note-offs, and a clean exit.
+5. Create Safe Bypass only after that host sequence passes, then document the
+   verified host boundary. Do not install into the persistent REAPER profile.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
