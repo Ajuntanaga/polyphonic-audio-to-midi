@@ -1,16 +1,18 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T09:46:14-07:00
+Updated: 2026-08-25T10:41:18-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified commit: `0cb1c97` (`feat: select bounded polyphonic pitch sets`)
-- Current task: Task 6, multi-rate resonator optimization.
-- Tasks 4 and 5 are verified and committed. The working tree was clean
-  immediately after the Task 5 commit; this recovery update is the only intended
-  follow-on change.
-- Local result: 18 Python tests pass and `python3 tools/validate_source.py .`
+- Last verified implementation commit: `d383c3c` (`perf: add bounded multi-rate
+  resonator bank`).
+- Latest stability commit: `bf72bab` (`fix: settle workspace after REAPER
+  exits`), following `51bede8` (`fix: preserve workspace during guarded REAPER
+  launch`).
+- Current task: Task 7, M3 profile and distinct-string feasibility.
+- Tasks 1–6 are verified and committed.
+- Local result: 25 Python tests pass and `python3 tools/validate_source.py .`
   reports `source contract: ok`.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
@@ -61,10 +63,42 @@ Updated: 2026-08-25T09:46:14-07:00
   they are not an end-to-end chord-audio accuracy claim. That remains gated by
   later synthetic and separately authorized clean-DI metrics.
 
+## Verified Task 6 evidence
+
+- Expected interface RED: `m3_bank_process_reference()` was undefined in real
+  REAPER. Evidence `build/evidence/task-06-reference-interface-red.png`,
+  SHA-256
+  `94b831eb431c2fe23b50bb6c4c8dbdbda53197389a641eef0dd8539ff4d92b24`.
+- Behavioral RED: assertion 6105 measured 440 full-rate cell updates per input
+  sample against a maximum of 45. The observer's numeric result is authoritative;
+  the attempted gray GUI capture is not evidence.
+- Final Task 6 matrix: cases 6101–6106 passed at 44.1, 48, and 96 kHz in 18
+  separate guarded launches. The SHA-256 of the lexically ordered `sha256sum`
+  output is
+  `b5155c896c3c52b95957c38ce86852b8cd289b5bd38baad9b50f15cbb98a38f5`.
+- Worst open-string salience deltas were `0.019250096364574` at 44.1 kHz,
+  `0.020745752092474` at 48 kHz, and `0.013100931661116` at 96 kHz, all below
+  the `0.03` bound.
+- At 48 kHz over MIDI 32..84, 251 cells averaged 44.75 updates per input
+  sample, about 89.8% below the 440-update full-rate baseline.
+- The final adaptive multi-rate implementation also passed all 18 Task 4 and
+  all 18 Task 5 regression cases at 44.1, 48, and 96 kHz. Their refreshed
+  result digests are
+  `c3793e0626760661340b6b1da5be0433ebb1f232b7369ff74448af07d1e6ab4d`
+  and
+  `5b199fb184c853421338f011266788c903a8ea6a9ce990e5ed21162daa2519ca`.
+
 ## Current implementation and tuning
 
-- The correctness bank uses fixed eight-word cells, causal 8 ms/35 ms complex
+- The production bank uses fixed eight-word cells, causal 8 ms/35 ms complex
   correlations, 4096-sample oscillator renormalization, and no allocation.
+- Four causal streams run at `sr`, `sr/2`, `sr/4`, and `sr/8`, with two
+  second-order low-pass sections before each divide-by-two stage. Rate routing
+  is fixed until reinitialization and uses a `0.16` threshold plus edge
+  promotion. At 44.1 kHz, pitch cells use `sr/4` or faster.
+- Harmonic allocation is bounded and adaptive: six partials through MIDI 52,
+  four through MIDI 75, three at MIDI 76 and above, and three for analysis-only
+  guard notes. This preserves the missing-fundamental E2 regression.
 - Requested pitch bounds are stored separately from analysis-only guard
   semitones. Production remains requested MIDI 32..84.
 - Final Task 4 score coefficients are harmonic mean `0.85`, minimum-three
@@ -77,8 +111,8 @@ Updated: 2026-08-25T09:46:14-07:00
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
   rate/case RPPs. Its four behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
-- `tools/observe_core_harness_case.lua` accepts only the exact disposable Task 4
-  or Task 5 case path shape, removes only that case's old result, publishes
+- `tools/observe_core_harness_case.lua` accepts only the exact disposable Task
+  4, 5, or 6 case path shape, removes only that case's old result, publishes
   atomically, and exits REAPER. It does not analyze audio or emit performance
   MIDI.
 - `docs/PERFORMANCE.md` records all measured coefficient, guard, and matrix
@@ -87,28 +121,31 @@ Updated: 2026-08-25T09:46:14-07:00
 ## Guarded REAPER boundary
 
 Every GUI launch must use `python3 tools/run_guarded_reaper.py --gui --workspace
-5` with only `build/reaper-test/reaper.ini`. Commit `5a80e95` enforces GNOME
+5` with only `build/reaper-test/reaper.ini`. The guarded launcher enforces GNOME
 workspace 5 (wmctrl desktop index 4), fixed memory/CPU/swap/task limits, one-core
 affinity, low CPU/I/O priority, preflight memory/load/thermal checks, clean
 interrupt handling, and a bounded retry only for the observed transient X11
-`BadWindow` teardown race. Other workspace failures still refuse immediately.
+`BadWindow` teardown race. It records the user's active workspace and restores
+only a focus steal to workspace 5, including a short post-exit settling window;
+it never overrides a third workspace the user selected. Other workspace
+failures still refuse immediately.
 
 ## Exact resume action
 
-1. Retain the current full-rate update as test-callable
-   `m3_bank_process_reference()` and add assertions 6101–6106 before changing
-   production bank work: salience equivalence, Task 5 selection equivalence,
-   17/21 kHz alias rejection, no more than 45 cell updates per 48 kHz input
-   sample, and octave-rate guard words.
-2. Preserve the expected RED at assertion 6105 while the functional reference
-   cases remain green.
-3. Implement four fixed streams at `sr`, `sr/2`, `sr/4`, and `sr/8` with two
-   specified low-pass biquads before each divide-by-two stage. Assign every
-   harmonic cell to exactly one safe level and keep the public `m3_bank_*`
-   interface unchanged.
-4. Run assertions 6101–6106 at 44.1, 48, and 96 kHz under the unchanged guard,
-   record enabled cells, average updates/sample, and worst salience delta, then
-   commit as `perf: add bounded multi-rate resonator bank` only when green.
+1. Add Task 7 assertions 7101–7106 before creating the production profile:
+   exact open notes `32,36,40,44,48,52,56,60`; all opens feasible at fret 0;
+   chromatic notes 32..39 infeasible at fret 24; 44,48,52,56 feasible at fret
+   24; note 31 infeasible in M3 mode; General Tonal mode bypasses the filter.
+2. Preserve a real REAPER RED at assertion 7101.
+3. Create `Effects/m3_poly_midi/m3_profile.jsfx-inc` with
+   `m3_profile_load`, `m3_note_string_mask`, and bounded two-row/256-mask
+   `m3_voicing_feasible`. The maximum loop count is `8 * 256 * 8`; scratch
+   guard words must remain unchanged.
+4. Apply feasibility only in M3 mode after selection and before lifecycle
+   updates. If needed, remove the lowest-confidence candidate and retry at most
+   eight times; General Tonal mode bypasses feasibility.
+5. Run assertions 7101–7106 at 44.1, 48, and 96 kHz under the guarded launcher,
+   then commit as `feat: validate M3 eight-string voicings` only when green.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
