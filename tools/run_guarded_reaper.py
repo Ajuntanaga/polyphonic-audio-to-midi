@@ -191,6 +191,29 @@ def restore_launch_workspace(
     return True
 
 
+def settle_launch_workspace(
+    environment: dict[str, str],
+    original_workspace: int,
+    target_workspace: int,
+    polls: int = 10,
+    interval_seconds: float = 0.05,
+) -> int:
+    if original_workspace == target_workspace:
+        return 0
+    poll_count = max(1, polls)
+    restored_count = 0
+    for poll_index in range(poll_count):
+        if restore_launch_workspace(
+            environment,
+            original_workspace,
+            target_workspace,
+        ):
+            restored_count += 1
+        if poll_index + 1 < poll_count and interval_seconds > 0:
+            time.sleep(interval_seconds)
+    return restored_count
+
+
 def require_workspace(environment: dict[str, str], workspace_number: int) -> int:
     if not WMCTRL.is_file() or not os.access(WMCTRL, os.X_OK):
         raise RuntimeError(f"workspace guard is unavailable: {WMCTRL}")
@@ -238,6 +261,14 @@ def run_gui_guarded(
                 target_workspace,
             )
 
+    def finish(result: int) -> int:
+        settle_launch_workspace(
+            environment,
+            original_workspace,
+            target_workspace,
+        )
+        return result
+
     process = subprocess.Popen(command, env=environment, start_new_session=True)
     try:
         while process.poll() is None:
@@ -246,11 +277,11 @@ def run_gui_guarded(
             try:
                 result = process.wait(timeout=0.25)
                 preserve_launch_focus()
-                return result
+                return finish(result)
             except subprocess.TimeoutExpired:
                 pass
         preserve_launch_focus()
-        return process.returncode
+        return finish(process.returncode)
     except KeyboardInterrupt:
         stop_process_group(process, signal.SIGINT)
         raise

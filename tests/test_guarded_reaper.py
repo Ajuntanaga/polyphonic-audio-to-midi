@@ -179,6 +179,41 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertFalse(changed)
         run.assert_not_called()
 
+    def test_post_exit_settle_catches_delayed_focus_steal(self):
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "restore_launch_workspace",
+                side_effect=[False, False, True, False],
+            ) as restore,
+            mock.patch.object(GUARDED_REAPER.time, "sleep") as sleep,
+        ):
+            restored = GUARDED_REAPER.settle_launch_workspace(
+                {},
+                1,
+                4,
+                polls=4,
+                interval_seconds=0.05,
+            )
+
+        self.assertEqual(restored, 1)
+        self.assertEqual(restore.call_count, 4)
+        self.assertEqual(sleep.call_count, 3)
+
+    def test_post_exit_settle_is_noop_when_launch_started_on_target(self):
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "restore_launch_workspace",
+            ) as restore,
+            mock.patch.object(GUARDED_REAPER.time, "sleep") as sleep,
+        ):
+            restored = GUARDED_REAPER.settle_launch_workspace({}, 4, 4)
+
+        self.assertEqual(restored, 0)
+        restore.assert_not_called()
+        sleep.assert_not_called()
+
     def test_workspace_mover_targets_only_reaper_windows(self):
         listing = subprocess.CompletedProcess(
             args=["/usr/bin/wmctrl", "-l", "-x"],
