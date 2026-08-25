@@ -1,18 +1,18 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T10:41:18-07:00
+Updated: 2026-08-25T11:00:49-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified implementation commit: `d383c3c` (`perf: add bounded multi-rate
-  resonator bank`).
+- Last verified implementation commit: `8b7a0f5` (`feat: validate M3
+  eight-string voicings`).
 - Latest stability commit: `bf72bab` (`fix: settle workspace after REAPER
   exits`), following `51bede8` (`fix: preserve workspace during guarded REAPER
   launch`).
-- Current task: Task 7, M3 profile and distinct-string feasibility.
-- Tasks 1–6 are verified and committed.
-- Local result: 25 Python tests pass and `python3 tools/validate_source.py .`
+- Current task: Task 8, independent note lifecycles and ordered event queue.
+- Tasks 1–7 are verified and committed.
+- Local result: 27 Python tests pass and `python3 tools/validate_source.py .`
   reports `source contract: ok`.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
@@ -88,6 +88,24 @@ Updated: 2026-08-25T10:41:18-07:00
   and
   `5b199fb184c853421338f011266788c903a8ea6a9ce990e5ed21162daa2519ca`.
 
+## Verified Task 7 evidence
+
+- Expected RED: a zero-result profile scaffold reached assertion 7101 in real
+  REAPER with three assertions and observed open-note error 368. Preserved
+  result `build/evidence/task-07-profile-red-7101.txt`, SHA-256
+  `8aa336e939f82225d9e52e211ca88fd89cd36a1b27f469c1eb0252759cd25b60`.
+- Final profile matrix: cases 7101–7106 passed at 44.1, 48, and 96 kHz in 18
+  separate guarded workspace-5 launches. Every result had three assertions,
+  suite state `2`, and failed assertion ID `0`.
+- The SHA-256 of the lexically ordered `sha256sum` output for all 18 Task 7
+  results is
+  `6096b227cca280fd720c8420be467aedf7b80a7aafd7e243898ebbf3239429d7`.
+- Cases 4104, 5104, 6102, and 6105 were rerun at all three rates as a
+  proportional cross-layer regression; all 12 passed.
+- During these launches, available memory stayed near 28 GiB, load stayed
+  below 3.3, and readable temperature stayed at or below 73 C. Workspace 4 was
+  restored after each workspace-5 run and no REAPER process remained.
+
 ## Current implementation and tuning
 
 - The production bank uses fixed eight-word cells, causal 8 ms/35 ms complex
@@ -99,6 +117,14 @@ Updated: 2026-08-25T10:41:18-07:00
 - Harmonic allocation is bounded and adaptive: six partials through MIDI 52,
   four through MIDI 75, three at MIDI 76 and above, and three for analysis-only
   guard notes. This preserves the missing-fundamental E2 regression.
+- The M3 profile loads exact open notes `32,36,40,44,48,52,56,60`. Its
+  distinct-string matcher uses two fixed 256-word reachability rows and at most
+  `8 * 256 * 8` transitions per feasibility pass. Scratch guard words remain
+  outside the 512-word working region.
+- Production now filters selected M3 sets before the future lifecycle stage.
+  Infeasible sets lose the lowest-confidence candidate and retry at most eight
+  times; General Tonal mode bypasses the matcher. The user-facing mode control
+  remains scheduled for Task 9.
 - Requested pitch bounds are stored separately from analysis-only guard
   semitones. Production remains requested MIDI 32..84.
 - Final Task 4 score coefficients are harmonic mean `0.85`, minimum-three
@@ -109,10 +135,10 @@ Updated: 2026-08-25T10:41:18-07:00
   protection, bounded insertion sort, and 117 words inside the 256-word fixed
   selection region.
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
-  rate/case RPPs. Its four behavioral tests cover correct slider state and
+  rate/case RPPs. Its six behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
 - `tools/observe_core_harness_case.lua` accepts only the exact disposable Task
-  4, 5, or 6 case path shape, removes only that case's old result, publishes
+  4, 5, 6, or 7 case path shape, removes only that case's old result, publishes
   atomically, and exits REAPER. It does not analyze audio or emit performance
   MIDI.
 - `docs/PERFORMANCE.md` records all measured coefficient, guard, and matrix
@@ -132,20 +158,23 @@ failures still refuse immediately.
 
 ## Exact resume action
 
-1. Add Task 7 assertions 7101–7106 before creating the production profile:
-   exact open notes `32,36,40,44,48,52,56,60`; all opens feasible at fret 0;
-   chromatic notes 32..39 infeasible at fret 24; 44,48,52,56 feasible at fret
-   24; note 31 infeasible in M3 mode; General Tonal mode bypasses the filter.
-2. Preserve a real REAPER RED at assertion 7101.
-3. Create `Effects/m3_poly_midi/m3_profile.jsfx-inc` with
-   `m3_profile_load`, `m3_note_string_mask`, and bounded two-row/256-mask
-   `m3_voicing_feasible`. The maximum loop count is `8 * 256 * 8`; scratch
-   guard words must remain unchanged.
-4. Apply feasibility only in M3 mode after selection and before lifecycle
-   updates. If needed, remove the lowest-confidence candidate and retry at most
-   eight times; General Tonal mode bypasses feasibility.
-5. Run assertions 7101–7106 at 44.1, 48, and 96 kHz under the guarded launcher,
-   then commit as `feat: validate M3 eight-string voicings` only when green.
+1. Add Task 8 assertions 8101–8111 before creating `lifecycle.jsfx-inc`:
+   threshold silence, one-shot note-on/off persistence, dropout tolerance,
+   ordered replacement, eight-note cap, release-all, note-off-priority overflow,
+   same-pitch collapse, and fixed/dynamic velocity bounds.
+2. Preserve the first real-REAPER lifecycle RED, expected at 8102 or the
+   earliest new assertion.
+3. Allocate eight fixed words for each of 128 pitches and an event header plus
+   sixteen five-word transition cells. Implement only bounded OFF, ATTACK, ON,
+   and RELEASE state transitions.
+4. Keep note-offs higher priority than note-ons when the 16-event queue is
+   full, and sort at most 16 events by sample offset, type (off before on), then
+   pitch.
+5. Use the specified response mapping and dynamic-velocity formula; fixed
+   velocity must be exact. Run assertions 8101–8111 at block sizes 32, 64, 128,
+   and 256, with zero active notes after every case.
+6. Commit as `feat: track independent note lifecycles` only when all lifecycle
+   and prior proportional regressions are green.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
