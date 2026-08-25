@@ -1,0 +1,111 @@
+@init
+M3_SALIENCE_BASE_THRESHOLD_OFFSET = 128;
+M3_SALIENCE_CLIPPED_OFFSET = 129;
+M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET = 130;
+
+function m3_harmonic_weight(harmonic) (
+  harmonic == 0 ? 1.00 :
+  harmonic == 1 ? 0.72 :
+  harmonic == 2 ? 0.55 :
+  harmonic == 3 ? 0.42 :
+  harmonic == 4 ? 0.34 :
+  harmonic == 5 ? 0.28 :
+  harmonic == 6 ? 0.24 : 0.20;
+);
+
+function m3_salience_update(bank_base, salience_base, noise)
+local(candidate, harmonic, candidate_count, weight, weight_sum, energy,
+      weighted_energy, neighbor_energy, normalized, weighted_normalized,
+      first_three_min, first_three_count, missing_weighted, missing_weights,
+      missing_sum, missing_square_sum, missing_count, missing_mean,
+      missing_variance, missing_deviation, missing_support, harmonic_mean,
+      neighbor_fundamental, neighbor_ratio, score, epsilon, base_threshold,
+      clipped) (
+  m3_zero(salience_base, M3_MAX_CANDIDATES);
+  epsilon = 0.000000000001;
+  noise = max(epsilon, noise);
+  candidate_count = bank_base[4];
+
+  candidate = 0;
+  loop(candidate_count,
+    harmonic = 0;
+    weight_sum = 0;
+    weighted_normalized = 0;
+    weighted_energy = 0;
+    first_three_min = 1;
+    first_three_count = 0;
+    missing_weighted = 0;
+    missing_weights = 0;
+    missing_sum = 0;
+    missing_square_sum = 0;
+    missing_count = 0;
+
+    loop(M3_MAX_HARMONICS,
+      m3_bank_enabled(bank_base, candidate, harmonic) ? (
+        weight = m3_harmonic_weight(harmonic);
+        energy = m3_bank_energy(bank_base, candidate, harmonic);
+        neighbor_energy = max(
+          m3_bank_energy(bank_base, candidate - 1, harmonic),
+          m3_bank_energy(bank_base, candidate + 1, harmonic)
+        );
+        normalized = energy / (energy + noise + neighbor_energy + epsilon);
+        weighted_normalized += weight * normalized;
+        weighted_energy += weight * energy;
+        weight_sum += weight;
+
+        harmonic < 3 ? (
+          first_three_min = min(first_three_min, normalized);
+          first_three_count += 1;
+        );
+
+        harmonic >= 1 && harmonic <= 4 ? (
+          missing_weighted += weight * normalized;
+          missing_weights += weight;
+          missing_sum += normalized;
+          missing_square_sum += normalized * normalized;
+          missing_count += 1;
+        );
+      );
+      harmonic += 1;
+    );
+
+    harmonic_mean = weight_sum > 0 ? weighted_normalized / weight_sum : 0;
+    first_three_min = first_three_count > 0 ? first_three_min : 0;
+    missing_mean = missing_count > 0 ? missing_sum / missing_count : 0;
+    missing_variance = missing_count > 0
+      ? max(0, missing_square_sum / missing_count - missing_mean * missing_mean)
+      : 0;
+    missing_deviation = sqrt(missing_variance);
+    missing_support = missing_weights > 0
+      ? (missing_weighted / missing_weights) *
+        (1 - min(1, missing_deviation / 0.25))
+      : 0;
+    neighbor_fundamental = max(
+      m3_bank_energy(bank_base, candidate - 1, 0),
+      m3_bank_energy(bank_base, candidate + 1, 0)
+    );
+    neighbor_ratio = neighbor_fundamental / (weighted_energy + epsilon);
+    score = m3_clamp(
+      0.85 * harmonic_mean +
+      0.05 * first_three_min +
+      0.10 * missing_support -
+      0.03 * neighbor_ratio,
+      0,
+      1
+    );
+    salience_base[candidate] = score;
+    candidate += 1;
+  );
+
+  base_threshold = m3_clamp(
+    salience_base[M3_SALIENCE_BASE_THRESHOLD_OFFSET],
+    0,
+    1
+  );
+  clipped = salience_base[M3_SALIENCE_CLIPPED_OFFSET] > 0;
+  salience_base[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET] = m3_clamp(
+    base_threshold + (clipped ? 0.08 : 0),
+    0,
+    1
+  );
+);

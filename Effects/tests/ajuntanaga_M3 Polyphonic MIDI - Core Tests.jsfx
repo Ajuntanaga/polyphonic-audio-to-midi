@@ -1,12 +1,16 @@
 desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
 tags:test MIDI analysis
 options:gmem=m3_poly_midi_tests_v1
+slider1:0<0,2,1{48 kHz,44.1 kHz,96 kHz}>Bounded resonator test rate
+slider2:0<0,5,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping}>Bounded resonator test case
 in_pin:none
 out_pin:none
 
 import ../m3_poly_midi/constants.jsfx-inc
 import ../m3_poly_midi/pitch_math.jsfx-inc
 import ../m3_poly_midi/conditioning.jsfx-inc
+import ../m3_poly_midi/resonator_bank.jsfx-inc
+import ../m3_poly_midi/salience_selector.jsfx-inc
 
 @init
 M3_TEST_MAGIC = 0x4D335431;
@@ -101,21 +105,153 @@ local(base, count, y, phase, phase_step, x, input_energy, output_energy, gain_db
   m3_test_lte(3105, 10 * log10(max(base[12], 0.000000000001)), -100);
 );
 
+function m3_test_best_note(bank_base, salience_base)
+local(min_note, candidate_count, candidate, last_candidate, best_note,
+      best_score, score) (
+  min_note = bank_base[1];
+  candidate_count = bank_base[4];
+  candidate = max(0, bank_base[10]);
+  last_candidate = min(candidate_count - 1, bank_base[11]);
+  best_note = min_note + candidate;
+  best_score = -1;
+  loop(max(0, last_candidate - candidate + 1),
+    score = salience_base[candidate];
+    score > best_score ? (
+      best_score = score;
+      best_note = min_note + candidate;
+    );
+    candidate += 1;
+  );
+  test_best_score = best_score;
+  best_note;
+);
+
+function m3_test_bank_tone(test_sr, note, cents, duration, missing_fundamental,
+                           test_min_note, test_max_note)
+local(frequency, phase, phase_step, sample_index, sample_count, attack_samples,
+      attack, sample, best_note) (
+  m3_bank_init(
+    M3_RESONATOR_BASE,
+    test_sr,
+    test_min_note,
+    test_max_note,
+    440
+  );
+  frequency = m3_midi_to_hz(note, 440) * 2 ^ (cents / 1200);
+  phase = 0;
+  phase_step = 2 * $pi * frequency / test_sr;
+  sample_index = 0;
+  sample_count = floor(duration * test_sr);
+  attack_samples = max(1, floor(0.005 * test_sr));
+  loop(sample_count,
+    attack = sample_index < attack_samples
+           ? 0.5 - 0.5 * cos($pi * sample_index / attack_samples)
+           : 1;
+    missing_fundamental
+      ? sample = attack * 0.18 * (
+          sin(2 * phase) + sin(3 * phase) + sin(4 * phase) +
+          sin(5 * phase) + sin(6 * phase)
+        )
+      : sample = attack * 0.8 * sin(phase);
+    m3_bank_process(M3_RESONATOR_BASE, sample);
+    phase += phase_step;
+    phase >= 2 * $pi ? phase -= 2 * $pi;
+    sample_index += 1;
+  );
+  M3_SALIENCE_BASE[128] = 0.20;
+  M3_SALIENCE_BASE[129] = 0;
+  m3_salience_update(M3_RESONATOR_BASE, M3_SALIENCE_BASE, 0.000000000001);
+  best_note = m3_test_best_note(M3_RESONATOR_BASE, M3_SALIENCE_BASE);
+  best_note;
+);
+
+function m3_test_bank_silence(test_sr)
+local(sample_count, best_note) (
+  m3_bank_init(M3_RESONATOR_BASE, test_sr, 32, 32, 440);
+  sample_count = floor(0.300 * test_sr);
+  loop(sample_count,
+    m3_bank_process(M3_RESONATOR_BASE, 0);
+  );
+  M3_SALIENCE_BASE[128] = 0.20;
+  M3_SALIENCE_BASE[129] = 0;
+  m3_salience_update(M3_RESONATOR_BASE, M3_SALIENCE_BASE, 0.000000000001);
+  best_note = m3_test_best_note(M3_RESONATOR_BASE, M3_SALIENCE_BASE);
+  m3_test_lte(4105, test_best_score, M3_SALIENCE_BASE[130]);
+);
+
+function m3_test_bank_clipped_impulse(test_sr)
+local(sample_count, best_note, threshold_error, excess_score) (
+  m3_bank_init(M3_RESONATOR_BASE, test_sr, 32, 32, 440);
+  m3_bank_process(M3_RESONATOR_BASE, 1);
+  sample_count = floor(0.300 * test_sr) - 1;
+  loop(sample_count,
+    m3_bank_process(M3_RESONATOR_BASE, 0);
+  );
+  M3_SALIENCE_BASE[128] = 0.20;
+  M3_SALIENCE_BASE[129] = 1;
+  m3_salience_update(M3_RESONATOR_BASE, M3_SALIENCE_BASE, 0.000000000001);
+  best_note = m3_test_best_note(M3_RESONATOR_BASE, M3_SALIENCE_BASE);
+  threshold_error = abs(M3_SALIENCE_BASE[130] - 0.28);
+  excess_score = max(0, test_best_score - M3_SALIENCE_BASE[130]);
+  m3_test_near(4106, threshold_error + excess_score, 0, 0.000001);
+);
+
+function m3_test_bank_case(test_sr, case_id) local(best_note) (
+  case_id == 4101 ? (
+    best_note = m3_test_bank_tone(test_sr, 32, 0, 0.300, 0, 32, 60);
+    m3_test_near(
+      4107,
+      abs(M3_RESONATOR_BASE[1] - 31) +
+      abs(M3_RESONATOR_BASE[2] - 61) +
+      abs(M3_RESONATOR_BASE[8] - 32) +
+      abs(M3_RESONATOR_BASE[9] - 60),
+      0,
+      0
+    );
+    m3_test_near(4101, best_note, 32, 0);
+  );
+
+  case_id == 4102 ? (
+    best_note = m3_test_bank_tone(test_sr, 40, 0, 0.045, 0, 32, 52);
+    m3_test_near(4102, best_note, 40, 0);
+  );
+
+  case_id == 4103 ? (
+    best_note = m3_test_bank_tone(test_sr, 69, 35, 0.300, 0, 32, 72);
+    m3_test_near(4103, best_note, 69, 0);
+  );
+
+  case_id == 4104 ? (
+    best_note = m3_test_bank_tone(test_sr, 40, 0, 0.300, 1, 32, 60);
+    m3_test_near(4104, best_note, 40, 0);
+  );
+
+  case_id == 4105 ? m3_test_bank_silence(test_sr);
+  case_id == 4106 ? m3_test_bank_clipped_impulse(test_sr);
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
 gmem[3] = 0;
 gmem[4] = 0;
 gmem[5] = 0;
+test_bank_rate = slider1 == 1 ? 44100 : slider1 == 2 ? 96000 : 48000;
+test_bank_case_id = 4101 + min(5, max(0, slider2|0));
+gmem[6] = test_bank_rate;
+gmem[15] = test_bank_case_id;
 
 m3_test_near(2101, m3_midi_to_hz(69, 440), 440, 0.000001);
 m3_test_near(2102, m3_midi_to_hz(32, 440), 51.9131, 0.01);
-m3_test_condition_rate(48000);
-m3_test_condition_rate(44100);
-m3_test_condition_rate(96000);
+test_bank_case_id == 4101 ? (
+  m3_test_condition_rate(48000);
+  m3_test_condition_rate(44100);
+  m3_test_condition_rate(96000);
+);
+m3_test_bank_case(test_bank_rate, test_bank_case_id);
 gmem[1] == 1 ? gmem[1] = 2;
 
-@gfx 440 180
+@gfx 440 220
 gfx_set(0.80, 0.84, 0.90, 1);
 gfx_x = 16;
 gfx_y = 16;
@@ -127,3 +263,15 @@ gfx_printf("Assertions: %d", gmem[2]);
 gfx_x = 16;
 gfx_y = 68;
 gfx_printf("Failed assertion ID: %d", gmem[3]);
+gfx_x = 16;
+gfx_y = 92;
+gfx_printf("Observed: %.6f", gmem[4]);
+gfx_x = 16;
+gfx_y = 116;
+gfx_printf("Expected: %.6f", gmem[5]);
+gfx_x = 16;
+gfx_y = 140;
+gfx_printf("Resonator rate: %d Hz", gmem[6]);
+gfx_x = 16;
+gfx_y = 164;
+gfx_printf("Resonator case: %d", gmem[15]);

@@ -4,6 +4,8 @@ tags:analysis MIDI guitar
 import m3_poly_midi/constants.jsfx-inc
 import m3_poly_midi/pitch_math.jsfx-inc
 import m3_poly_midi/conditioning.jsfx-inc
+import m3_poly_midi/resonator_bank.jsfx-inc
+import m3_poly_midi/salience_selector.jsfx-inc
 
 in_pin:left
 in_pin:right
@@ -17,12 +19,21 @@ ext_noinit = 1;
 last_srate = srate;
 input_trim_gain = 1;
 m3_condition_init(M3_CONDITION_BASE, srate);
+m3_bank_init(M3_RESONATOR_BASE, srate, 32, 84, 440);
+M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.20;
 
 @slider
 input_mode = min(2, max(0, slider1|0));
 
 @block
 sample_offset = 0;
+M3_SALIENCE_BASE[M3_SALIENCE_CLIPPED_OFFSET] =
+  M3_CONDITION_BASE[14] > 0.01;
+m3_salience_update(
+  M3_RESONATOR_BASE,
+  M3_SALIENCE_BASE,
+  M3_CONDITION_BASE[12]
+);
 
 @sample
 detector_in = input_mode == 0 ? spl0
@@ -32,6 +43,7 @@ conditioned = m3_condition_process(
   M3_CONDITION_BASE,
   detector_in * input_trim_gain
 );
+m3_bank_process(M3_RESONATOR_BASE, conditioned);
 sample_offset += 1;
 
 @gfx 520 260
