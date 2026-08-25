@@ -2,9 +2,11 @@
 import argparse
 import os
 import pathlib
+import signal
 import shlex
 import subprocess
 import sys
+import time
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -13,6 +15,7 @@ DISPOSABLE_PROFILE = (ROOT / "build/reaper-test/reaper.ini").resolve()
 MIN_AVAILABLE_MIB = 4096.0
 MAX_LOAD_ONE = 12.0
 MAX_TEMPERATURE_C = 90.0
+WMCTRL = pathlib.Path("/usr/bin/wmctrl")
 
 
 def available_memory_mib() -> float:
@@ -72,6 +75,127 @@ def runtime_environment(gui: bool) -> dict[str, str]:
     return environment
 
 
+def workspace_index(workspace_number: int) -> int:
+    if workspace_number < 1:
+        raise ValueError("workspace numbers are one-based and must be positive")
+    return workspace_number - 1
+
+
+def move_reaper_windows_once(
+    environment: dict[str, str],
+    workspace_number: int,
+) -> int:
+    target = str(workspace_index(workspace_number))
+    listing = None
+    for attempt in range(3):
+        listing = subprocess.run(
+            [str(WMCTRL), "-l", "-x"],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if listing.returncode == 0:
+            break
+        if "BadWindow" not in listing.stderr or attempt == 2:
+            break
+        time.sleep(0.02)
+    assert listing is not None
+    if listing.returncode != 0:
+        detail = listing.stderr.strip() or f"exit status {listing.returncode}"
+        raise RuntimeError(f"could not list GUI windows: {detail}")
+
+    moved = 0
+    for line in listing.stdout.splitlines():
+        fields = line.split(None, 4)
+        if len(fields) < 4 or fields[2].lower() != "reaper.reaper":
+            continue
+        window_id, current_desktop = fields[0], fields[1]
+        if current_desktop == target:
+            continue
+        result = subprocess.run(
+            [str(WMCTRL), "-ir", window_id, "-t", target],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip() or f"exit status {result.returncode}"
+            raise RuntimeError(
+                f"could not move REAPER window {window_id} to workspace "
+                f"{workspace_number}: {detail}"
+            )
+        moved += 1
+    return moved
+
+
+def require_workspace(environment: dict[str, str], workspace_number: int) -> None:
+    if not WMCTRL.is_file() or not os.access(WMCTRL, os.X_OK):
+        raise RuntimeError(f"workspace guard is unavailable: {WMCTRL}")
+    target = workspace_index(workspace_number)
+    listing = subprocess.run(
+        [str(WMCTRL), "-d"],
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if listing.returncode != 0:
+        detail = listing.stderr.strip() or f"exit status {listing.returncode}"
+        raise RuntimeError(f"could not list workspaces: {detail}")
+    indices = {
+        int(fields[0])
+        for line in listing.stdout.splitlines()
+        if (fields := line.split()) and fields[0].isdigit()
+    }
+    if target not in indices:
+        raise RuntimeError(
+            f"workspace {workspace_number} is unavailable; refusing to open REAPER"
+        )
+
+
+def stop_process_group(process: subprocess.Popen[bytes], first_signal: int) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, first_signal)
+        process.wait(timeout=5)
+        return
+    except (ProcessLookupError, subprocess.TimeoutExpired):
+        pass
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=5)
+    except (ProcessLookupError, subprocess.TimeoutExpired):
+        pass
+
+
+def run_gui_guarded(
+    command: list[str],
+    environment: dict[str, str],
+    workspace_number: int,
+) -> int:
+    require_workspace(environment, workspace_number)
+    process = subprocess.Popen(command, env=environment, start_new_session=True)
+    try:
+        while process.poll() is None:
+            move_reaper_windows_once(environment, workspace_number)
+            try:
+                return process.wait(timeout=0.25)
+            except subprocess.TimeoutExpired:
+                pass
+        return process.returncode
+    except KeyboardInterrupt:
+        stop_process_group(process, signal.SIGINT)
+        raise
+    except (OSError, RuntimeError):
+        stop_process_group(process, signal.SIGTERM)
+        raise
+
+
 def guarded_command(
     profile: pathlib.Path,
     reaper_arguments: list[str],
@@ -129,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--gui", action="store_true")
+    parser.add_argument("--workspace", type=int, default=5)
     parser.add_argument("--profile", type=pathlib.Path)
     parser.add_argument("--timeout-seconds", type=int, default=45)
     parser.add_argument("--available-mib", type=float)
@@ -174,6 +299,9 @@ def main(argv: list[str] | None = None) -> int:
     if not 1 <= args.timeout_seconds <= 300:
         print("guardrail refusal: timeout must be between 1 and 300 seconds", file=sys.stderr)
         return 2
+    if not 1 <= args.workspace <= 32:
+        print("guardrail refusal: workspace must be between 1 and 32", file=sys.stderr)
+        return 2
 
     reaper_arguments = list(args.reaper_args)
     if reaper_arguments[:1] == ["--"]:
@@ -185,11 +313,19 @@ def main(argv: list[str] | None = None) -> int:
 
     command = guarded_command(profile, reaper_arguments, args.timeout_seconds)
     if args.dry_run:
+        if args.gui:
+            print(f"guarded GUI workspace: {args.workspace}")
         print(shlex.join(command))
         return 0
 
     try:
-        completed = subprocess.run(command, env=runtime_environment(args.gui), check=False)
+        environment = runtime_environment(args.gui)
+        if args.gui:
+            return run_gui_guarded(command, environment, args.workspace)
+        completed = subprocess.run(command, env=environment, check=False)
+    except KeyboardInterrupt:
+        print("guarded REAPER interrupted", file=sys.stderr)
+        return 130
     except (OSError, RuntimeError) as exc:
         print(f"guardrail refusal: {exc}", file=sys.stderr)
         return 2
