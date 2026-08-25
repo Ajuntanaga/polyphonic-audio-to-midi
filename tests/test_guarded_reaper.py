@@ -115,6 +115,70 @@ class GuardedReaperTests(unittest.TestCase):
     def test_workspace_five_maps_to_wmctrl_desktop_four(self):
         self.assertEqual(GUARDED_REAPER.workspace_index(5), 4)
 
+    def test_workspace_requirement_returns_the_active_workspace(self):
+        listing = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-d"],
+            returncode=0,
+            stdout=(
+                "0  - DG: 1920x1080 VP: 0,0 WA: 0,0 1920x1080 One\n"
+                "1  * DG: 1920x1080 VP: 0,0 WA: 0,0 1920x1080 Two\n"
+                "4  - DG: 1920x1080 VP: 0,0 WA: 0,0 1920x1080 Five\n"
+            ),
+            stderr="",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            return_value=listing,
+        ):
+            active = GUARDED_REAPER.require_workspace({}, 5)
+
+        self.assertEqual(active, 1)
+
+    def test_launch_focus_restore_returns_from_target_to_original_workspace(self):
+        restored = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-s", "1"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "active_workspace_index",
+                return_value=4,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER.subprocess,
+                "run",
+                return_value=restored,
+            ) as run,
+        ):
+            changed = GUARDED_REAPER.restore_launch_workspace({}, 1, 4)
+
+        self.assertTrue(changed)
+        run.assert_called_once_with(
+            ["/usr/bin/wmctrl", "-s", "1"],
+            env={},
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+    def test_launch_focus_restore_does_not_override_a_third_workspace(self):
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "active_workspace_index",
+                return_value=2,
+            ),
+            mock.patch.object(GUARDED_REAPER.subprocess, "run") as run,
+        ):
+            changed = GUARDED_REAPER.restore_launch_workspace({}, 1, 4)
+
+        self.assertFalse(changed)
+        run.assert_not_called()
+
     def test_workspace_mover_targets_only_reaper_windows(self):
         listing = subprocess.CompletedProcess(
             args=["/usr/bin/wmctrl", "-l", "-x"],

@@ -130,10 +130,25 @@ def move_reaper_windows_once(
     return moved
 
 
-def require_workspace(environment: dict[str, str], workspace_number: int) -> None:
-    if not WMCTRL.is_file() or not os.access(WMCTRL, os.X_OK):
-        raise RuntimeError(f"workspace guard is unavailable: {WMCTRL}")
-    target = workspace_index(workspace_number)
+def _workspace_state(listing_text: str) -> tuple[set[int], int]:
+    indices: set[int] = set()
+    active: list[int] = []
+    for line in listing_text.splitlines():
+        fields = line.split()
+        if len(fields) < 2 or not fields[0].isdigit():
+            continue
+        index = int(fields[0])
+        indices.add(index)
+        if fields[1] == "*":
+            active.append(index)
+    if len(active) != 1:
+        raise RuntimeError(
+            "could not identify exactly one active workspace; refusing GUI launch"
+        )
+    return indices, active[0]
+
+
+def _workspace_listing(environment: dict[str, str]) -> str:
     listing = subprocess.run(
         [str(WMCTRL), "-d"],
         env=environment,
@@ -144,15 +159,48 @@ def require_workspace(environment: dict[str, str], workspace_number: int) -> Non
     if listing.returncode != 0:
         detail = listing.stderr.strip() or f"exit status {listing.returncode}"
         raise RuntimeError(f"could not list workspaces: {detail}")
-    indices = {
-        int(fields[0])
-        for line in listing.stdout.splitlines()
-        if (fields := line.split()) and fields[0].isdigit()
-    }
+    return listing.stdout
+
+
+def active_workspace_index(environment: dict[str, str]) -> int:
+    _, active = _workspace_state(_workspace_listing(environment))
+    return active
+
+
+def restore_launch_workspace(
+    environment: dict[str, str],
+    original_workspace: int,
+    target_workspace: int,
+) -> bool:
+    if original_workspace == target_workspace:
+        return False
+    if active_workspace_index(environment) != target_workspace:
+        return False
+    restored = subprocess.run(
+        [str(WMCTRL), "-s", str(original_workspace)],
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if restored.returncode != 0:
+        detail = restored.stderr.strip() or f"exit status {restored.returncode}"
+        raise RuntimeError(
+            f"could not restore workspace {original_workspace + 1}: {detail}"
+        )
+    return True
+
+
+def require_workspace(environment: dict[str, str], workspace_number: int) -> int:
+    if not WMCTRL.is_file() or not os.access(WMCTRL, os.X_OK):
+        raise RuntimeError(f"workspace guard is unavailable: {WMCTRL}")
+    target = workspace_index(workspace_number)
+    indices, active = _workspace_state(_workspace_listing(environment))
     if target not in indices:
         raise RuntimeError(
             f"workspace {workspace_number} is unavailable; refusing to open REAPER"
         )
+    return active
 
 
 def stop_process_group(process: subprocess.Popen[bytes], first_signal: int) -> None:
@@ -178,15 +226,30 @@ def run_gui_guarded(
     environment: dict[str, str],
     workspace_number: int,
 ) -> int:
-    require_workspace(environment, workspace_number)
+    original_workspace = require_workspace(environment, workspace_number)
+    target_workspace = workspace_index(workspace_number)
+    preserve_until = time.monotonic() + 3.0
+
+    def preserve_launch_focus() -> None:
+        if time.monotonic() <= preserve_until:
+            restore_launch_workspace(
+                environment,
+                original_workspace,
+                target_workspace,
+            )
+
     process = subprocess.Popen(command, env=environment, start_new_session=True)
     try:
         while process.poll() is None:
             move_reaper_windows_once(environment, workspace_number)
+            preserve_launch_focus()
             try:
-                return process.wait(timeout=0.25)
+                result = process.wait(timeout=0.25)
+                preserve_launch_focus()
+                return result
             except subprocess.TimeoutExpired:
                 pass
+        preserve_launch_focus()
         return process.returncode
     except KeyboardInterrupt:
         stop_process_group(process, signal.SIGINT)
