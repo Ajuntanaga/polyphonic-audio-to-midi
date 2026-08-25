@@ -1,15 +1,16 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T09:21:30-07:00
+Updated: 2026-08-25T09:46:14-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified commit: `42443ac` (`feat: add streaming harmonic salience bank`)
-- Current task: Task 5, bounded polyphonic selection and harmonic explain-away.
-- Task 4 is verified and committed. The working tree was clean immediately after
-  its commit; this recovery update is the only intended follow-on change.
-- Local result: 17 Python tests pass and `python3 tools/validate_source.py .`
+- Last verified commit: `0cb1c97` (`feat: select bounded polyphonic pitch sets`)
+- Current task: Task 6, multi-rate resonator optimization.
+- Tasks 4 and 5 are verified and committed. The working tree was clean
+  immediately after the Task 5 commit; this recovery update is the only intended
+  follow-on change.
+- Local result: 18 Python tests pass and `python3 tools/validate_source.py .`
   reports `source contract: ok`.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
@@ -30,13 +31,35 @@ Updated: 2026-08-25T09:21:30-07:00
 - Case 4101 ran 19 assertions at each rate; cases 4102–4106 ran three assertions
   each. The SHA-256 of the lexically ordered `sha256sum` output for all 18 result
   files is
-  `fc1b8b40f04aa88066ea67baeec0cba43eef2d97e186797b2947da6dbd53c944`.
+  `8c154e597dae4d2ef9dddbd2cecb9e87ed6968258651e8517f8d2f880a81306b`.
 - Final 44.1 kHz case-4101 PASS panel:
   `build/evidence/task-04-44100-case-4101.png`, SHA-256
   `f9d9181172ba9414e88236aed596bad987a36d3222f16844b06f43ed755948f2`.
 - During the final matrix, preflights remained far inside the fixed stops:
   about 29 GiB available memory, load below 3.7, and readable temperature no
   higher than 73 C. No REAPER process remained afterward.
+
+## Verified Task 5 evidence
+
+- Expected interface RED: `m3_select_voices` was undefined in real REAPER.
+  Evidence `build/evidence/task-05-selector-interface-red.png`, SHA-256
+  `aa3a2cbc770ec7ede0f57fc85e05d72522cf0182b3f87281c18045984f7c4c87`.
+- Expected behavioral RED: a bounded zero-result scaffold compiled and failed
+  assertion 5102. Evidence
+  `build/evidence/task-05-selector-behavior-red-5102.png`, SHA-256
+  `8bb0fbe08b62204aeea00f884c7b73458f5b3deb9ac8d1c776698d0aa8eef205`.
+- Final selector matrix: cases 5101–5106 passed at 44.1, 48, and 96 kHz in
+  18 separate disposable workspace-5 launches. Every run had three assertions,
+  suite state `2`, and failed assertion ID `0`.
+- The SHA-256 of the lexically ordered `sha256sum` output for all 18 Task 5
+  result files is
+  `ed8e57aa646282cc8abe76d5672c7905d6c59a373edc9c2232d0b0dcf9026ff8`.
+- Final eight-open-string selector panel:
+  `build/evidence/task-05-48000-case-5104-pass.png`, SHA-256
+  `357a4d05f59d2179659ac9e96934ec6c51bd07fc71d3d5d4b30ed6fb2b36b9c9`.
+- These are selector-layer tests over salience and per-harmonic energy cells;
+  they are not an end-to-end chord-audio accuracy claim. That remains gated by
+  later synthetic and separately authorized clean-DI metrics.
 
 ## Current implementation and tuning
 
@@ -47,12 +70,17 @@ Updated: 2026-08-25T09:21:30-07:00
 - Final Task 4 score coefficients are harmonic mean `0.85`, minimum-three
   `0.05`, missing-fundamental support `0.10`, and neighbor penalty `0.03`.
   Decays, harmonic weights, and base threshold `0.20` remain unchanged.
+- The selector uses at most eight fixed iterations, four words per output cell,
+  `0.18` harmonic residual attenuation, `0.35` independent-fundamental
+  protection, bounded insertion sort, and 117 words inside the 256-word fixed
+  selection region.
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
-  rate/case RPPs. Its three behavioral tests cover correct slider state and
+  rate/case RPPs. Its four behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
-- `tools/observe_core_harness_case.lua` accepts only the exact disposable case
-  path shape, removes only that case's old result, publishes atomically, and
-  exits REAPER. It does not analyze audio or emit performance MIDI.
+- `tools/observe_core_harness_case.lua` accepts only the exact disposable Task 4
+  or Task 5 case path shape, removes only that case's old result, publishes
+  atomically, and exits REAPER. It does not analyze audio or emit performance
+  MIDI.
 - `docs/PERFORMANCE.md` records all measured coefficient, guard, and matrix
   evidence.
 
@@ -67,19 +95,20 @@ interrupt handling, and a bounded retry only for the observed transient X11
 
 ## Exact resume action
 
-1. Add the exact Task 5 assertions 5101–5106 before modifying selection code:
-   suppress E2 harmonic ghosts; select E2+B2; select G#1+C2+E2; select all eight
-   open strings; preserve a true note at -24 dB; and cap `max_voices=3` without
-   touching selection guard words.
-2. Run the bounded disposable suite and preserve the expected earliest RED
-   (`5102`, or the earliest new assertion) before implementation.
-3. Implement `m3_select_voices(...)` in `salience_selector.jsfx-inc` with a
-   fixed eight-iteration cap, residual explain-away, independent-fundamental
-   protection, fixed selection cells, and bounded insertion sort.
-4. Run assertions 5101–5106 under the unchanged workspace-5 guard, rerun all
-   local tests and source validation, then commit as
-   `feat: select bounded polyphonic pitch sets` only when every required case is
-   green.
+1. Retain the current full-rate update as test-callable
+   `m3_bank_process_reference()` and add assertions 6101–6106 before changing
+   production bank work: salience equivalence, Task 5 selection equivalence,
+   17/21 kHz alias rejection, no more than 45 cell updates per 48 kHz input
+   sample, and octave-rate guard words.
+2. Preserve the expected RED at assertion 6105 while the functional reference
+   cases remain green.
+3. Implement four fixed streams at `sr`, `sr/2`, `sr/4`, and `sr/8` with two
+   specified low-pass biquads before each divide-by-two stage. Assign every
+   harmonic cell to exactly one safe level and keep the public `m3_bank_*`
+   interface unchanged.
+4. Run assertions 6101–6106 at 44.1, 48, and 96 kHz under the unchanged guard,
+   record enabled cells, average updates/sample, and worst salience delta, then
+   commit as `perf: add bounded multi-rate resonator bank` only when green.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
