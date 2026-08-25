@@ -9,6 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 BUILD = (ROOT / "build").resolve()
 FX_MARKER = '<JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""'
 RATE_SLIDER = {48000: "0", 44100: "1", 96000: "2"}
+BLOCK_SLIDER = {32: "0", 64: "1", 128: "2", 256: "3"}
 CASE_SLIDER = {
     4101: "0",
     4102: "1",
@@ -34,6 +35,17 @@ CASE_SLIDER = {
     7104: "21",
     7105: "22",
     7106: "23",
+    8101: "24",
+    8102: "25",
+    8103: "26",
+    8104: "27",
+    8105: "28",
+    8106: "29",
+    8107: "30",
+    8108: "31",
+    8109: "32",
+    8110: "33",
+    8111: "34",
 }
 
 
@@ -42,6 +54,7 @@ def prepare_project(
     output_directory: pathlib.Path,
     rate: int,
     case_id: int,
+    block_size: int | None = None,
 ) -> pathlib.Path:
     source = source.resolve()
     output_directory = output_directory.resolve()
@@ -64,8 +77,13 @@ def prepare_project(
     if case_id not in CASE_SLIDER:
         raise ValueError(
             "case ID must be one of 4101..4106, 5101..5106, "
-            "6101..6106, or 7101..7106"
+            "6101..6106, 7101..7106, or 8101..8111"
         )
+    task_eight = 8101 <= case_id <= 8111
+    if task_eight and block_size not in BLOCK_SLIDER:
+        raise ValueError("Task 8 requires block size 32, 64, 128, or 256")
+    if not task_eight and block_size is not None:
+        raise ValueError("block size is valid only for Task 8 cases")
 
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     markers = [index for index, line in enumerate(lines) if FX_MARKER in line]
@@ -77,16 +95,26 @@ def prepare_project(
     indentation = state_line[: len(state_line) - len(state_line.lstrip())]
     newline = "\n" if state_line.endswith("\n") else ""
     state = state_line.strip().split()
-    if len(state) < 2:
-        raise ValueError("core harness FX state has fewer than two slider fields")
+    required_fields = 3 if task_eight else 2
+    if len(state) < required_fields:
+        raise ValueError(
+            f"core harness FX state has fewer than {required_fields} slider fields"
+        )
     state[0] = RATE_SLIDER[rate]
     state[1] = CASE_SLIDER[case_id]
+    if task_eight:
+        state[2] = BLOCK_SLIDER[block_size]
     lines[state_index] = indentation + " ".join(state) + newline
 
     output_directory.mkdir(parents=True, exist_ok=True)
     result_directory = BUILD / "evidence" / f"task-{case_id // 1000:02d}-results"
     result_directory.mkdir(parents=True, exist_ok=True)
-    destination = output_directory / f"core-harness-{rate}-case-{case_id}.RPP"
+    project_name = (
+        f"core-harness-{rate}-block-{block_size}-case-{case_id}.RPP"
+        if task_eight
+        else f"core-harness-{rate}-case-{case_id}.RPP"
+    )
+    destination = output_directory / project_name
     temporary = destination.with_suffix(".RPP.tmp")
     temporary.write_text("".join(lines), encoding="utf-8")
     os.replace(temporary, destination)
@@ -101,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=pathlib.Path, required=True)
     parser.add_argument("--rate", type=int, required=True)
     parser.add_argument("--case-id", type=int, required=True)
+    parser.add_argument("--block-size", type=int)
     args = parser.parse_args(argv)
     try:
         destination = prepare_project(
@@ -108,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
             args.output_dir,
             args.rate,
             args.case_id,
+            args.block_size,
         )
     except (OSError, ValueError) as exc:
         print(f"preparer refusal: {exc}", file=sys.stderr)

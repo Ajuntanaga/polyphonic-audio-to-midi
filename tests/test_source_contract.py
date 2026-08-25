@@ -11,6 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
 PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
+LIFECYCLE = ROOT / "Effects/m3_poly_midi/lifecycle.jsfx-inc"
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -97,6 +98,22 @@ class SourceContractTests(unittest.TestCase):
         self.assertLess(
             profile["M3_PROFILE_DP_WORDS"],
             constants["M3_VOICE_BASE"] - constants["M3_M3_SCRATCH_BASE"],
+        )
+
+    def test_lifecycle_memory_contract(self):
+        constants = parse_integer_assignments(CONSTANTS)
+        lifecycle = parse_integer_assignments(LIFECYCLE)
+        self.assertEqual(lifecycle.get("M3_VOICE_CELL_SIZE"), 8)
+        self.assertEqual(lifecycle.get("M3_EVENT_HEADER_SIZE"), 2)
+        self.assertEqual(lifecycle.get("M3_EVENT_CELL_SIZE"), 5)
+        self.assertLessEqual(
+            128 * lifecycle["M3_VOICE_CELL_SIZE"],
+            constants["M3_EVENT_BASE"] - constants["M3_VOICE_BASE"],
+        )
+        self.assertLessEqual(
+            lifecycle["M3_EVENT_HEADER_SIZE"] +
+            constants["M3_MAX_EVENTS"] * lifecycle["M3_EVENT_CELL_SIZE"],
+            constants["M3_TELEMETRY_A_BASE"] - constants["M3_EVENT_BASE"],
         )
 
     def test_validator_checks_auxiliary_import_graph(self):

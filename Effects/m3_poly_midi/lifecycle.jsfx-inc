@@ -1,0 +1,388 @@
+@init
+M3_LIFECYCLE_STATE_OFF = 0;
+M3_LIFECYCLE_STATE_ATTACK = 1;
+M3_LIFECYCLE_STATE_ON = 2;
+M3_LIFECYCLE_STATE_RELEASE = 3;
+
+M3_VOICE_CELL_SIZE = 8;
+M3_VOICE_STATE_OFFSET = 0;
+M3_VOICE_CONFIDENCE_OFFSET = 1;
+M3_VOICE_ENERGY_OFFSET = 2;
+M3_VOICE_FIRST_EVIDENCE_OFFSET = 3;
+M3_VOICE_LAST_EVIDENCE_OFFSET = 4;
+M3_VOICE_STATE_ENTER_OFFSET = 5;
+M3_VOICE_VELOCITY_OFFSET = 6;
+M3_VOICE_ACTIVE_OFFSET = 7;
+
+M3_EVENT_COUNT_OFFSET = 0;
+M3_EVENT_OVERFLOW_OFFSET = 1;
+M3_EVENT_HEADER_SIZE = 2;
+M3_EVENT_CELL_SIZE = 5;
+M3_EVENT_TYPE_OFFSET = 0;
+M3_EVENT_NOTE_OFFSET = 1;
+M3_EVENT_VELOCITY_OFFSET = 2;
+M3_EVENT_SAMPLE_OFFSET = 3;
+M3_EVENT_SEQUENCE_OFFSET = 4;
+M3_EVENT_TYPE_OFF = 0;
+M3_EVENT_TYPE_ON = 1;
+
+M3_VELOCITY_MODE_FIXED = 0;
+M3_VELOCITY_MODE_DYNAMIC = 1;
+M3_LIFECYCLE_VELOCITY_FLOOR = 10 ^ (-60 / 20);
+M3_LIFECYCLE_VELOCITY_CEILING = 10 ^ (-6 / 20);
+
+M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET = 0;
+M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET = 1;
+M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET = 2;
+M3_LIFECYCLE_ON_THRESHOLD_OFFSET = 3;
+M3_LIFECYCLE_OFF_THRESHOLD_OFFSET = 4;
+
+function m3_lifecycle_event_cell(event_base, index) (
+  event_base + M3_EVENT_HEADER_SIZE + index * M3_EVENT_CELL_SIZE;
+);
+
+function m3_lifecycle_clear_voice(cell) (
+  cell[0] = 0;
+  cell[1] = 0;
+  cell[2] = 0;
+  cell[3] = 0;
+  cell[4] = 0;
+  cell[5] = 0;
+  cell[6] = 0;
+  cell[7] = 0;
+);
+
+function m3_lifecycle_reset_events(event_base) (
+  event_base[M3_EVENT_COUNT_OFFSET] = 0;
+  event_base[M3_EVENT_OVERFLOW_OFFSET] = 0;
+);
+
+function m3_lifecycle_response(response, test_sr, response_base)
+local(value, rate) (
+  value = m3_clamp(response, 0, 1);
+  rate = max(1, test_sr);
+  response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET] =
+    max(1, floor((4 + value * 18) * rate / 1000 + 0.5));
+  response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET] =
+    max(1, floor((18 + value * 42) * rate / 1000 + 0.5));
+  response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET] =
+    max(1, floor((6 + value * 18) * rate / 1000 + 0.5));
+  response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] = 0.52 + value * 0.12;
+  response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET] =
+    response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] - 0.14;
+);
+
+function m3_lifecycle_velocity(attack_energy, velocity_mode, fixed_velocity)
+local(amplitude, normalized, velocity) (
+  velocity_mode == M3_VELOCITY_MODE_FIXED ? (
+    velocity = floor(m3_clamp(fixed_velocity, 1, 127) + 0.5);
+  ) : (
+    amplitude = sqrt(max(0, attack_energy));
+    normalized = m3_clamp(
+      (amplitude - M3_LIFECYCLE_VELOCITY_FLOOR) /
+      max(
+        0.000000001,
+        M3_LIFECYCLE_VELOCITY_CEILING -
+        M3_LIFECYCLE_VELOCITY_FLOOR
+      ),
+      0,
+      1
+    );
+    velocity = 1 + floor(126 * normalized);
+  );
+  velocity;
+);
+
+function m3_lifecycle_queue_event(event_base, event_type, note, velocity,
+                                  block_offset)
+local(count, target_index, accepted, index, cell, latest_on_index,
+      latest_on_sequence) (
+  count = min(
+    M3_MAX_EVENTS,
+    max(0, floor(event_base[M3_EVENT_COUNT_OFFSET]))
+  );
+  target_index = -1;
+  accepted = 0;
+
+  count < M3_MAX_EVENTS ? (
+    target_index = count;
+    count += 1;
+    accepted = 1;
+  ) : (
+    event_base[M3_EVENT_OVERFLOW_OFFSET] = 1;
+    event_type == M3_EVENT_TYPE_OFF ? (
+      latest_on_index = -1;
+      latest_on_sequence = -1;
+      index = 0;
+      loop(count,
+        cell = m3_lifecycle_event_cell(event_base, index);
+        cell[M3_EVENT_TYPE_OFFSET] == M3_EVENT_TYPE_ON &&
+        cell[M3_EVENT_SEQUENCE_OFFSET] > latest_on_sequence ? (
+          latest_on_index = index;
+          latest_on_sequence = cell[M3_EVENT_SEQUENCE_OFFSET];
+        );
+        index += 1;
+      );
+      latest_on_index >= 0 ? (
+        target_index = latest_on_index;
+        accepted = 1;
+      );
+    );
+  );
+
+  accepted ? (
+    m3_lifecycle_sequence += 1;
+    cell = m3_lifecycle_event_cell(event_base, target_index);
+    cell[M3_EVENT_TYPE_OFFSET] = event_type;
+    cell[M3_EVENT_NOTE_OFFSET] = floor(m3_clamp(note, 0, 127) + 0.5);
+    cell[M3_EVENT_VELOCITY_OFFSET] = event_type == M3_EVENT_TYPE_ON
+      ? floor(m3_clamp(velocity, 1, 127) + 0.5)
+      : 0;
+    cell[M3_EVENT_SAMPLE_OFFSET] = max(0, floor(block_offset));
+    cell[M3_EVENT_SEQUENCE_OFFSET] = m3_lifecycle_sequence;
+    event_base[M3_EVENT_COUNT_OFFSET] = count;
+  );
+  accepted;
+);
+
+function m3_lifecycle_sort_events(event_base)
+local(count, index, position, moving, cell, previous, should_move,
+      key_type, key_note, key_velocity, key_offset, key_sequence) (
+  count = min(
+    M3_MAX_EVENTS,
+    max(0, floor(event_base[M3_EVENT_COUNT_OFFSET]))
+  );
+  index = 1;
+  loop(max(0, count - 1),
+    cell = m3_lifecycle_event_cell(event_base, index);
+    key_type = cell[M3_EVENT_TYPE_OFFSET];
+    key_note = cell[M3_EVENT_NOTE_OFFSET];
+    key_velocity = cell[M3_EVENT_VELOCITY_OFFSET];
+    key_offset = cell[M3_EVENT_SAMPLE_OFFSET];
+    key_sequence = cell[M3_EVENT_SEQUENCE_OFFSET];
+    position = index;
+    moving = 1;
+    loop(index,
+      moving && position > 0 ? (
+        previous = m3_lifecycle_event_cell(event_base, position - 1);
+        should_move = previous[M3_EVENT_SAMPLE_OFFSET] > key_offset ||
+          (previous[M3_EVENT_SAMPLE_OFFSET] == key_offset &&
+           previous[M3_EVENT_TYPE_OFFSET] > key_type) ||
+          (previous[M3_EVENT_SAMPLE_OFFSET] == key_offset &&
+           previous[M3_EVENT_TYPE_OFFSET] == key_type &&
+           previous[M3_EVENT_NOTE_OFFSET] > key_note);
+        should_move ? (
+          cell = m3_lifecycle_event_cell(event_base, position);
+          cell[0] = previous[0];
+          cell[1] = previous[1];
+          cell[2] = previous[2];
+          cell[3] = previous[3];
+          cell[4] = previous[4];
+          position -= 1;
+        ) : (
+          moving = 0;
+        );
+      );
+    );
+    cell = m3_lifecycle_event_cell(event_base, position);
+    cell[M3_EVENT_TYPE_OFFSET] = key_type;
+    cell[M3_EVENT_NOTE_OFFSET] = key_note;
+    cell[M3_EVENT_VELOCITY_OFFSET] = key_velocity;
+    cell[M3_EVENT_SAMPLE_OFFSET] = key_offset;
+    cell[M3_EVENT_SEQUENCE_OFFSET] = key_sequence;
+    index += 1;
+  );
+  count;
+);
+
+function m3_lifecycle_init(voice_base, event_base) (
+  m3_zero(voice_base, 128 * M3_VOICE_CELL_SIZE);
+  m3_zero(
+    event_base,
+    M3_EVENT_HEADER_SIZE + M3_MAX_EVENTS * M3_EVENT_CELL_SIZE
+  );
+  m3_lifecycle_sequence = 0;
+);
+
+function m3_lifecycle_update(voice_base, event_base, selection_base,
+                             selected_count, absolute_sample, block_offset,
+                             attack_samples, release_samples, dropout_samples,
+                             on_threshold, off_threshold, velocity_mode,
+                             fixed_velocity)
+local(candidate_count, now, output_offset, attack_limit, release_limit,
+      dropout_limit, on_level, off_level, note, cell, selection_index,
+      selection_cell, selection_note, evidence_present, evidence_confidence,
+      evidence_energy, candidate_confidence, candidate_energy, state, elapsed,
+      queued, active_count, velocity) (
+  m3_lifecycle_reset_events(event_base);
+  candidate_count = min(
+    M3_MAX_VOICES,
+    max(0, floor(selected_count))
+  );
+  now = max(0, floor(absolute_sample));
+  output_offset = max(0, floor(block_offset));
+  attack_limit = max(0, floor(attack_samples));
+  release_limit = max(0, floor(release_samples));
+  dropout_limit = max(0, floor(dropout_samples));
+  on_level = m3_clamp(on_threshold, 0, 1);
+  off_level = min(on_level, m3_clamp(off_threshold, 0, 1));
+
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    evidence_present = 0;
+    evidence_confidence = 0;
+    evidence_energy = 0;
+    selection_index = 0;
+    loop(candidate_count,
+      selection_cell = selection_base +
+                       selection_index * M3_SELECTION_CELL_SIZE;
+      selection_note = floor(selection_cell[0] + 0.5);
+      selection_note == note &&
+      m3_isfinite(selection_cell[1]) &&
+      m3_isfinite(selection_cell[2]) ? (
+        candidate_confidence = max(0, selection_cell[1]);
+        candidate_energy = max(0, selection_cell[2]);
+        !evidence_present || candidate_confidence > evidence_confidence
+          ? evidence_confidence = candidate_confidence;
+        evidence_energy = max(evidence_energy, candidate_energy);
+        evidence_present = 1;
+      );
+      selection_index += 1;
+    );
+
+    state = floor(cell[M3_VOICE_STATE_OFFSET]);
+    state == M3_LIFECYCLE_STATE_OFF ? (
+      evidence_present && evidence_confidence >= on_level ? (
+        cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ATTACK;
+        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+        cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = now;
+        cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
+        cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
+      );
+    ) : state == M3_LIFECYCLE_STATE_ATTACK ? (
+      evidence_present && evidence_confidence >= on_level ? (
+        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+        cell[M3_VOICE_ENERGY_OFFSET] = max(
+          cell[M3_VOICE_ENERGY_OFFSET],
+          evidence_energy
+        );
+        cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
+      ) : (
+        m3_lifecycle_clear_voice(cell);
+      );
+    ) : state == M3_LIFECYCLE_STATE_ON ? (
+      evidence_present && evidence_confidence >= off_level ? (
+        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+        cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
+      ) : (
+        elapsed = now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET];
+        elapsed > dropout_limit ? (
+          cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_RELEASE;
+          cell[M3_VOICE_STATE_ENTER_OFFSET] =
+            cell[M3_VOICE_LAST_EVIDENCE_OFFSET] + dropout_limit;
+          now - cell[M3_VOICE_STATE_ENTER_OFFSET] >= release_limit ? (
+            queued = m3_lifecycle_queue_event(
+              event_base,
+              M3_EVENT_TYPE_OFF,
+              note,
+              0,
+              output_offset
+            );
+            queued ? m3_lifecycle_clear_voice(cell);
+          );
+        );
+      );
+    ) : state == M3_LIFECYCLE_STATE_RELEASE ? (
+      evidence_present && evidence_confidence >= off_level ? (
+        cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
+        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+        cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
+        cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
+      ) : (
+        now - cell[M3_VOICE_STATE_ENTER_OFFSET] >= release_limit ? (
+          queued = m3_lifecycle_queue_event(
+            event_base,
+            M3_EVENT_TYPE_OFF,
+            note,
+            0,
+            output_offset
+          );
+          queued ? m3_lifecycle_clear_voice(cell);
+        );
+      );
+    ) : (
+      m3_lifecycle_clear_voice(cell);
+    );
+    note += 1;
+  );
+
+  active_count = 0;
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    cell[M3_VOICE_ACTIVE_OFFSET] ? active_count += 1;
+    note += 1;
+  );
+
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+    cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+    now - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] >= attack_limit &&
+    active_count < M3_MAX_VOICES ? (
+      velocity = m3_lifecycle_velocity(
+        cell[M3_VOICE_ENERGY_OFFSET],
+        velocity_mode,
+        fixed_velocity
+      );
+      queued = m3_lifecycle_queue_event(
+        event_base,
+        M3_EVENT_TYPE_ON,
+        note,
+        velocity,
+        output_offset
+      );
+      queued ? (
+        cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
+        cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
+        cell[M3_VOICE_VELOCITY_OFFSET] = velocity;
+        cell[M3_VOICE_ACTIVE_OFFSET] = 1;
+        active_count += 1;
+      );
+    );
+    note += 1;
+  );
+
+  m3_lifecycle_sort_events(event_base);
+  event_base[M3_EVENT_COUNT_OFFSET];
+);
+
+function m3_lifecycle_release_all(voice_base, event_base, block_offset)
+local(note, cell, queued, output_offset) (
+  m3_lifecycle_reset_events(event_base);
+  output_offset = max(0, floor(block_offset));
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    cell[M3_VOICE_ACTIVE_OFFSET] ? (
+      queued = m3_lifecycle_queue_event(
+        event_base,
+        M3_EVENT_TYPE_OFF,
+        note,
+        0,
+        output_offset
+      );
+      queued ? m3_lifecycle_clear_voice(cell);
+    ) : (
+      m3_lifecycle_clear_voice(cell);
+    );
+    note += 1;
+  );
+  m3_lifecycle_sort_events(event_base);
+  event_base[M3_EVENT_COUNT_OFFSET];
+);

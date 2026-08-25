@@ -193,3 +193,55 @@ Across the Task 7 and regression launches, preflights remained near 28 GiB of
 available memory, load stayed below 3.3, and readable temperature stayed at or
 below 73 C. Each launch started from workspace 4, assigned REAPER to workspace
 5, restored workspace 4 afterward, and left no REAPER process running.
+
+## Task 8 independent lifecycles and event queue
+
+The required persistence RED was observed in real REAPER with the complete
+8101–8111 harness present and a zero-result lifecycle ABI scaffold. At 48 kHz
+and block size 64, assertion 8102 failed with three assertions total and an
+aggregate error of 64. The preserved result is
+`build/evidence/task-08-lifecycle-red-8102.txt`, SHA-256
+`421def10592db36a72b2697beea40573336ab6c663068ab6c77ca5f26e0e24a8`.
+
+The lifecycle module assigns eight fixed words to each of 128 MIDI pitches:
+state, confidence, energy, first-evidence sample, last-evidence sample,
+state-enter sample, velocity, and active flag. Its event region contains a
+two-word count/overflow header followed by sixteen five-word cells for type,
+note, velocity, sample offset, and sequence number. The footprints are 1,024
+voice words and 82 event words, both within their preallocated regions.
+
+OFF, ATTACK, ON, and RELEASE transitions use separate on/off thresholds,
+continuous attack evidence, a bounded dropout tolerance, and delayed release.
+Loss transitions are processed before ready attacks, so released slots are
+available to replacements without exceeding eight active flags. A full queue
+rejects additional note-ons. A required note-off replaces the queued note-on
+with the latest sequence number, and a bounded insertion sort orders at most
+sixteen cells by sample offset, note-off before note-on, then pitch.
+
+Fast response maps to 4 ms attack, 18 ms release, 6 ms dropout, on threshold
+0.52, and off threshold 0.38. Millisecond values are converted to the nearest
+integer sample. The first green sweep exposed a harness-only floating-point
+expectation error: raw `floor(0.004 * 48000)` evaluated to 191 while the intended
+nearest-sample mapping is 192. The harness expectation was corrected to use
+nearest-integer conversion; production lifecycle behavior and coefficients
+were unchanged.
+
+Fixed velocity is clamped to the exact integer setting. Dynamic velocity uses
+the specified square-root energy mapping with named amplitude bounds
+`10^(-60/20)` and `10^(-6/20)`, producing values in 1..127. Cases 8110 and 8111
+verify exact fixed velocity and increasing bounded dynamic velocity.
+
+Cases 8101–8111 passed at 48 kHz with simulated block sizes 32, 64, 128, and
+256: 44 separate guarded workspace-5 launches, three assertions per result,
+suite state `2`, failed assertion ID `0`, and zero active notes after every
+case. The SHA-256 of the lexically ordered `sha256sum` output for all 44 result
+files is
+`c4698e0d4571f9a53c37d7d0d1524226e78f1787025e55b84b4e52e818deb6ea`.
+
+Cases 4104, 5104, 6102, 6105, 7102, and 7105 then passed again at 48 kHz as a
+six-case cross-layer regression. During Task 8 launches, available memory
+remained near 28 GiB, load stayed below 3.8, and readable temperature stayed at
+or below 73 C. The launcher restored whichever user workspace was active
+(workspace 4 early in the matrix and workspace 1 later) and left no REAPER
+process running. This task validates lifecycle events in fixed memory; actual
+MIDI encoding and host emission remain Task 9.

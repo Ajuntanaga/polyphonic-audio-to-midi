@@ -2,7 +2,8 @@ desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
 tags:test MIDI analysis
 options:gmem=m3_poly_midi_tests_v1
 slider1:0<0,2,1{48 kHz,44.1 kHz,96 kHz}>Bounded resonator test rate
-slider2:0<0,23,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards,7101 M3 Opens,7102 Open Voicing,7103 Impossible Chromatic,7104 Feasible Four Notes,7105 Below Range,7106 General Bypass}>Bounded detector test case
+slider2:0<0,34,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards,7101 M3 Opens,7102 Open Voicing,7103 Impossible Chromatic,7104 Feasible Four Notes,7105 Below Range,7106 General Bypass,8101 Below Threshold,8102 One Note-On,8103 Dropout,8104 One Note-Off,8105 Replacement Order,8106 Eight Active,8107 Release All,8108 Overflow Priority,8109 Same Pitch,8110 Fixed Velocity,8111 Dynamic Velocity}>Bounded detector test case
+slider3:2<0,3,1{32,64,128,256}>Lifecycle test block size
 in_pin:none
 out_pin:none
 
@@ -12,6 +13,7 @@ import ../m3_poly_midi/conditioning.jsfx-inc
 import ../m3_poly_midi/resonator_bank.jsfx-inc
 import ../m3_poly_midi/salience_selector.jsfx-inc
 import ../m3_poly_midi/m3_profile.jsfx-inc
+import ../m3_poly_midi/lifecycle.jsfx-inc
 
 @init
 M3_TEST_MAGIC = 0x4D335431;
@@ -23,6 +25,7 @@ M3_TEST_RATE_GAIN_BASE = 58008;
 M3_TEST_RATE_PHASE_BASE = 58016;
 M3_TEST_PROFILE_OPEN_BASE = 58100;
 M3_TEST_PROFILE_NOTE_BASE = 58108;
+M3_TEST_LIFECYCLE_RESPONSE_BASE = 58200;
 
 function m3_test_near(id, actual, expected, tolerance) local(delta) (
   gmem[2] += 1;
@@ -873,6 +876,433 @@ local(index, feasible, error, selected_count) (
   );
 );
 
+function m3_test_lifecycle_reset() (
+  m3_lifecycle_init(M3_VOICE_BASE, M3_EVENT_BASE);
+  m3_zero(
+    M3_SELECTION_BASE,
+    M3_MAX_VOICES * M3_SELECTION_CELL_SIZE
+  );
+);
+
+function m3_test_lifecycle_select(index, note, confidence, energy)
+local(cell) (
+  cell = M3_SELECTION_BASE + index * M3_SELECTION_CELL_SIZE;
+  cell[0] = note;
+  cell[1] = confidence;
+  cell[2] = energy;
+  cell[3] = 0;
+);
+
+function m3_test_lifecycle_event(index) (
+  M3_EVENT_BASE + M3_EVENT_HEADER_SIZE + index * M3_EVENT_CELL_SIZE;
+);
+
+function m3_test_lifecycle_active_count()
+local(note, cell, count) (
+  note = 0;
+  count = 0;
+  loop(128,
+    cell = M3_VOICE_BASE + note * M3_VOICE_CELL_SIZE;
+    cell[M3_VOICE_ACTIVE_OFFSET] ? count += 1;
+    note += 1;
+  );
+  count;
+);
+
+function m3_test_lifecycle_event_type_count(event_type)
+local(index, event, count) (
+  index = 0;
+  count = 0;
+  loop(M3_EVENT_BASE[M3_EVENT_COUNT_OFFSET],
+    event = m3_test_lifecycle_event(index);
+    event[M3_EVENT_TYPE_OFFSET] == event_type ? count += 1;
+    index += 1;
+  );
+  count;
+);
+
+function m3_test_lifecycle_boundary(sample_count, block_size) (
+  floor((sample_count + block_size - 1) / block_size) * block_size;
+);
+
+function m3_test_lifecycle_update_default(selected_count, absolute_sample,
+                                          block_offset, attack_samples,
+                                          release_samples, dropout_samples,
+                                          velocity_mode, fixed_velocity) (
+  m3_lifecycle_update(
+    M3_VOICE_BASE,
+    M3_EVENT_BASE,
+    M3_SELECTION_BASE,
+    selected_count,
+    absolute_sample,
+    block_offset,
+    attack_samples,
+    release_samples,
+    dropout_samples,
+    M3_TEST_LIFECYCLE_RESPONSE_BASE[M3_LIFECYCLE_ON_THRESHOLD_OFFSET],
+    M3_TEST_LIFECYCLE_RESPONSE_BASE[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET],
+    velocity_mode,
+    fixed_velocity
+  );
+);
+
+function m3_test_lifecycle_case(test_sr, test_block_size, case_id)
+local(attack_samples, release_samples, dropout_samples, attack_time,
+      release_time, event_offset, event_count, cleanup_count, error, event,
+      second_event, old_cell, new_cell, index, transition_time,
+      first_loss_time, off_time, off_count, on_count, velocity_low,
+      velocity_high) (
+  m3_lifecycle_response(
+    0,
+    test_sr,
+    M3_TEST_LIFECYCLE_RESPONSE_BASE
+  );
+  attack_samples = M3_TEST_LIFECYCLE_RESPONSE_BASE[
+    M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET
+  ];
+  release_samples = M3_TEST_LIFECYCLE_RESPONSE_BASE[
+    M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET
+  ];
+  dropout_samples = M3_TEST_LIFECYCLE_RESPONSE_BASE[
+    M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET
+  ];
+  attack_time = m3_test_lifecycle_boundary(attack_samples, test_block_size);
+  release_time = m3_test_lifecycle_boundary(release_samples, test_block_size);
+  event_offset = max(0, test_block_size - 1);
+
+  case_id == 8101 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.51, 0.25);
+    event_count = m3_test_lifecycle_update_default(
+      1, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count += m3_test_lifecycle_update_default(
+      1, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error = event_count + cleanup_count + m3_test_lifecycle_active_count() +
+            abs(attack_samples - max(1, floor(0.004 * test_sr + 0.5))) +
+            abs(release_samples - max(1, floor(0.018 * test_sr + 0.5))) +
+            abs(dropout_samples - max(1, floor(0.006 * test_sr + 0.5))) +
+            abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
+              M3_LIFECYCLE_ON_THRESHOLD_OFFSET
+            ] - 0.52) +
+            abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
+              M3_LIFECYCLE_OFF_THRESHOLD_OFFSET
+            ] - 0.38);
+    m3_test_near(8101, error, 0, 0);
+  );
+
+  case_id == 8102 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.80, 0.25);
+    m3_test_lifecycle_update_default(
+      1, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      1, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    event = m3_test_lifecycle_event(0);
+    error = abs(event_count - 1) +
+            abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_ON) +
+            abs(event[M3_EVENT_NOTE_OFFSET] - 60) +
+            abs(m3_test_lifecycle_active_count() - 1);
+    event_count = m3_test_lifecycle_update_default(
+      1, attack_time + test_block_size, event_offset,
+      attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += event_count + abs(cleanup_count - 1) +
+             m3_test_lifecycle_active_count();
+    m3_test_near(8102, error, 0, 0);
+  );
+
+  case_id == 8103 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.80, 0.25);
+    m3_test_lifecycle_update_default(
+      1, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      1, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    error = abs(event_count - 1);
+    m3_zero(
+      M3_SELECTION_BASE,
+      M3_MAX_VOICES * M3_SELECTION_CELL_SIZE
+    );
+    event_count = m3_test_lifecycle_update_default(
+      0, attack_time + dropout_samples - 1, event_offset,
+      attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    m3_test_lifecycle_select(0, 60, 0.80, 0.25);
+    event_count += m3_test_lifecycle_update_default(
+      1, attack_time + dropout_samples, event_offset,
+      attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    error += event_count + abs(m3_test_lifecycle_active_count() - 1);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 1) + m3_test_lifecycle_active_count();
+    m3_test_near(8103, error, 0, 0);
+  );
+
+  case_id == 8104 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.80, 0.25);
+    m3_test_lifecycle_update_default(
+      1, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      1, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    error = abs(event_count - 1);
+    m3_zero(
+      M3_SELECTION_BASE,
+      M3_MAX_VOICES * M3_SELECTION_CELL_SIZE
+    );
+    first_loss_time = attack_time + dropout_samples + 1;
+    event_count = m3_test_lifecycle_update_default(
+      0, first_loss_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    off_time = first_loss_time + release_time;
+    event_count += m3_test_lifecycle_update_default(
+      0, off_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    event = m3_test_lifecycle_event(0);
+    error += abs(event_count - 1) +
+             abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_OFF) +
+             abs(event[M3_EVENT_NOTE_OFFSET] - 60) +
+             m3_test_lifecycle_active_count();
+    event_count = m3_test_lifecycle_update_default(
+      0, off_time + test_block_size, event_offset,
+      attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    error += event_count;
+    m3_test_near(8104, error, 0, 0);
+  );
+
+  case_id == 8105 ? (
+    m3_test_lifecycle_reset();
+    old_cell = M3_VOICE_BASE + 60 * M3_VOICE_CELL_SIZE;
+    old_cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_RELEASE;
+    old_cell[M3_VOICE_STATE_ENTER_OFFSET] = 0;
+    old_cell[M3_VOICE_ACTIVE_OFFSET] = 1;
+    new_cell = M3_VOICE_BASE + 61 * M3_VOICE_CELL_SIZE;
+    new_cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ATTACK;
+    new_cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = 0;
+    new_cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = 0;
+    new_cell[M3_VOICE_ENERGY_OFFSET] = 0.25;
+    m3_test_lifecycle_select(0, 61, 0.80, 0.25);
+    transition_time = max(attack_time, release_time);
+    event_count = m3_test_lifecycle_update_default(
+      1, transition_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    event = m3_test_lifecycle_event(0);
+    second_event = m3_test_lifecycle_event(1);
+    error = abs(event_count - 2) +
+            abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_OFF) +
+            abs(event[M3_EVENT_NOTE_OFFSET] - 60) +
+            abs(event[M3_EVENT_SAMPLE_OFFSET] - event_offset) +
+            abs(second_event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_ON) +
+            abs(second_event[M3_EVENT_NOTE_OFFSET] - 61) +
+            abs(second_event[M3_EVENT_SAMPLE_OFFSET] - event_offset) +
+            abs(m3_test_lifecycle_active_count() - 1);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 1) + m3_test_lifecycle_active_count();
+    m3_test_near(8105, error, 0, 0);
+  );
+
+  case_id == 8106 ? (
+    m3_test_lifecycle_reset();
+    index = 0;
+    loop(8,
+      m3_test_lifecycle_select(index, 40 + index, 0.80, 0.25);
+      index += 1;
+    );
+    m3_test_lifecycle_update_default(
+      8, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      8, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    error = abs(event_count - 8) +
+            abs(m3_test_lifecycle_active_count() - 8);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 8) + m3_test_lifecycle_active_count();
+    m3_test_near(8106, error, 0, 0);
+  );
+
+  case_id == 8107 ? (
+    m3_test_lifecycle_reset();
+    index = 0;
+    loop(8,
+      old_cell = M3_VOICE_BASE + (40 + index) * M3_VOICE_CELL_SIZE;
+      old_cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
+      old_cell[M3_VOICE_ACTIVE_OFFSET] = 1;
+      old_cell[M3_VOICE_VELOCITY_OFFSET] = 64;
+      index += 1;
+    );
+    event_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, event_offset
+    );
+    error = abs(event_count - 8) + m3_test_lifecycle_active_count();
+    index = 0;
+    loop(8,
+      event = m3_test_lifecycle_event(index);
+      error += abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_OFF) +
+               abs(event[M3_EVENT_NOTE_OFFSET] - (40 + index));
+      index += 1;
+    );
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += cleanup_count;
+    m3_test_near(8107, error, 0, 0);
+  );
+
+  case_id == 8108 ? (
+    m3_test_lifecycle_reset();
+    event_count = 0;
+    index = 0;
+    loop(M3_MAX_EVENTS,
+      event_count += m3_lifecycle_queue_event(
+        M3_EVENT_BASE,
+        M3_EVENT_TYPE_ON,
+        index,
+        64,
+        event_offset
+      );
+      index += 1;
+    );
+    cleanup_count = m3_lifecycle_queue_event(
+      M3_EVENT_BASE,
+      M3_EVENT_TYPE_ON,
+      100,
+      64,
+      event_offset
+    );
+    transition_time = m3_lifecycle_queue_event(
+      M3_EVENT_BASE,
+      M3_EVENT_TYPE_OFF,
+      60,
+      0,
+      event_offset
+    );
+    m3_lifecycle_sort_events(M3_EVENT_BASE);
+    off_count = m3_test_lifecycle_event_type_count(M3_EVENT_TYPE_OFF);
+    on_count = m3_test_lifecycle_event_type_count(M3_EVENT_TYPE_ON);
+    event = m3_test_lifecycle_event(0);
+    error = abs(event_count - M3_MAX_EVENTS) + cleanup_count +
+            abs(transition_time - 1) +
+            abs(M3_EVENT_BASE[M3_EVENT_COUNT_OFFSET] - M3_MAX_EVENTS) +
+            abs(M3_EVENT_BASE[M3_EVENT_OVERFLOW_OFFSET] - 1) +
+            abs(off_count - 1) + abs(on_count - 15) +
+            abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_OFF) +
+            abs(event[M3_EVENT_NOTE_OFFSET] - 60) +
+            m3_test_lifecycle_active_count();
+    m3_test_near(8108, error, 0, 0);
+  );
+
+  case_id == 8109 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.70, 0.16);
+    m3_test_lifecycle_select(1, 60, 0.90, 0.25);
+    m3_test_lifecycle_update_default(
+      2, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      2, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 64
+    );
+    event = m3_test_lifecycle_event(0);
+    error = abs(event_count - 1) +
+            abs(event[M3_EVENT_TYPE_OFFSET] - M3_EVENT_TYPE_ON) +
+            abs(event[M3_EVENT_NOTE_OFFSET] - 60) +
+            abs(m3_test_lifecycle_active_count() - 1);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 1) + m3_test_lifecycle_active_count();
+    m3_test_near(8109, error, 0, 0);
+  );
+
+  case_id == 8110 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.80, 0.25);
+    m3_test_lifecycle_update_default(
+      1, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_FIXED, 37
+    );
+    event_count = m3_test_lifecycle_update_default(
+      1, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_FIXED, 37
+    );
+    event = m3_test_lifecycle_event(0);
+    error = abs(event_count - 1) +
+            abs(event[M3_EVENT_VELOCITY_OFFSET] - 37);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 1) + m3_test_lifecycle_active_count();
+    m3_test_near(8110, error, 0, 0);
+  );
+
+  case_id == 8111 ? (
+    m3_test_lifecycle_reset();
+    m3_test_lifecycle_select(0, 60, 0.80, 10 ^ (-60 / 10));
+    m3_test_lifecycle_select(1, 61, 0.80, 10 ^ (-6 / 10));
+    m3_test_lifecycle_update_default(
+      2, 0, 0, attack_samples, release_samples, dropout_samples,
+      M3_VELOCITY_MODE_DYNAMIC, 64
+    );
+    event_count = m3_test_lifecycle_update_default(
+      2, attack_time, event_offset, attack_samples, release_samples,
+      dropout_samples, M3_VELOCITY_MODE_DYNAMIC, 64
+    );
+    event = m3_test_lifecycle_event(0);
+    second_event = m3_test_lifecycle_event(1);
+    velocity_low = event[M3_EVENT_VELOCITY_OFFSET];
+    velocity_high = second_event[M3_EVENT_VELOCITY_OFFSET];
+    error = abs(event_count - 2) +
+            (velocity_low < 1 || velocity_low > 127 ? 1 : 0) +
+            (velocity_high < 1 || velocity_high > 127 ? 1 : 0) +
+            (velocity_high <= velocity_low ? 1 : 0);
+    cleanup_count = m3_lifecycle_release_all(
+      M3_VOICE_BASE, M3_EVENT_BASE, 0
+    );
+    error += abs(cleanup_count - 2) + m3_test_lifecycle_active_count();
+    m3_test_near(8111, error, 0, 0);
+  );
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
@@ -893,16 +1323,23 @@ loop(16,
   test_diagnostic_index += 1;
 );
 test_bank_rate = slider1 == 1 ? 44100 : slider1 == 2 ? 96000 : 48000;
-test_case_index = min(23, max(0, slider2|0));
+test_block_size = slider3 == 0 ? 32
+                : slider3 == 1 ? 64
+                : slider3 == 2 ? 128
+                : 256;
+test_case_index = min(34, max(0, slider2|0));
 test_bank_case_id = test_case_index < 6
   ? 4101 + test_case_index
   : test_case_index < 12
     ? 5101 + test_case_index - 6
     : test_case_index < 18
       ? 6101 + test_case_index - 12
-      : 7101 + test_case_index - 18;
+      : test_case_index < 24
+        ? 7101 + test_case_index - 18
+        : 8101 + test_case_index - 24;
 gmem[6] = test_bank_rate;
 gmem[15] = test_bank_case_id;
+gmem[30] = test_block_size;
 
 m3_test_near(2101, m3_midi_to_hz(69, 440), 440, 0.000001);
 m3_test_near(2102, m3_midi_to_hz(32, 440), 51.9131, 0.01);
@@ -917,8 +1354,14 @@ test_bank_case_id < 5000 ? (
   m3_test_selection_case(test_bank_rate, test_bank_case_id);
 ) : test_bank_case_id < 7000 ? (
   m3_test_multi_rate_case(test_bank_rate, test_bank_case_id);
-) : (
+) : test_bank_case_id < 8000 ? (
   m3_test_profile_case(test_bank_case_id);
+) : (
+  m3_test_lifecycle_case(
+    test_bank_rate,
+    test_block_size,
+    test_bank_case_id
+  );
 );
 gmem[1] == 1 ? gmem[1] = 2;
 
