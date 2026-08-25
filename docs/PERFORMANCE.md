@@ -55,7 +55,40 @@ pitch-math assertions plus their selected detector assertion.
 
 The SHA-256 of the lexically ordered `sha256sum` output for the 18 machine-readable
 result files is
-`fc1b8b40f04aa88066ea67baeec0cba43eef2d97e186797b2947da6dbd53c944`.
+`8c154e597dae4d2ef9dddbd2cecb9e87ed6968258651e8517f8d2f880a81306b`.
 The 44.1 kHz case-4101 PASS screenshot is
 `build/evidence/task-04-44100-case-4101.png`, SHA-256
 `f9d9181172ba9414e88236aed596bad987a36d3222f16844b06f43ed755948f2`.
+
+## Task 5 bounded selection
+
+The required RED cycle was observed twice in real REAPER. The first run reached
+the new case but could not compile because `m3_select_voices` did not exist;
+`build/evidence/task-05-selector-interface-red.png` has SHA-256
+`aa3a2cbc770ec7ede0f57fc85e05d72522cf0182b3f87281c18045984f7c4c87`.
+A bounded zero-result interface scaffold then compiled and failed assertion 5102;
+`build/evidence/task-05-selector-behavior-red-5102.png` has SHA-256
+`8bb0fbe08b62204aeea00f884c7b73458f5b3deb9ac8d1c776698d0aa8eef205`.
+
+Task 5 tests the layer named by its interface: candidate salience and fixed
+per-harmonic bank-energy cells. Its fixtures explicitly distinguish independent
+true fundamentals from harmonic-confusion candidates, include a true candidate
+with an energy ratio of `10^(-24/10)`, and place sentinels on both boundaries of
+the fixed selection region. These are selector tests, not an end-to-end claim
+about chord recovery from audio; that remains part of the later synthetic and
+authorized clean-DI metric gates.
+
+The implementation caps selection at eight iterations, stores four fixed words
+per result, attenuates near-integer harmonic residuals by `0.18`, protects a
+candidate when its fundamental energy exceeds `0.35` of its weighted harmonic
+energy, and uses bounded insertion sort. Exact-octave gating uses the already
+validated rounded harmonic number because the direct floating-point ratio can
+land infinitesimally below `2.0`.
+
+Cases 5101–5106 passed at 44.1, 48, and 96 kHz in 18 separate guarded
+workspace-5 launches. The SHA-256 of the lexically ordered `sha256sum` output
+for those result files is
+`ed8e57aa646282cc8abe76d5672c7905d6c59a373edc9c2232d0b0dcf9026ff8`.
+The final 48 kHz eight-open-string PASS panel is
+`build/evidence/task-05-48000-case-5104-pass.png`, SHA-256
+`357a4d05f59d2179659ac9e96934ec6c51bd07fc71d3d5d4b30ed6fb2b36b9c9`.

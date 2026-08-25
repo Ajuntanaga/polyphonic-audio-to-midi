@@ -18,7 +18,10 @@ local rate_text, case_text = project_name:match(
 local expected_rate = tonumber(rate_text)
 local expected_case = tonumber(case_text)
 local valid_rate = expected_rate == 44100 or expected_rate == 48000 or expected_rate == 96000
-local valid_case = expected_case and expected_case >= 4101 and expected_case <= 4106
+local valid_case = expected_case and (
+  (expected_case >= 4101 and expected_case <= 4106) or
+  (expected_case >= 5101 and expected_case <= 5106)
+)
 
 if project_path:sub(1, #disposable_prefix) ~= disposable_prefix or
    not valid_rate or not valid_case then
@@ -30,7 +33,8 @@ if project_path:sub(1, #disposable_prefix) ~= disposable_prefix or
   return
 end
 
-local result_path = root .. "/build/evidence/task-04-results/" ..
+local task_number = math.floor(expected_case / 1000)
+local result_path = root .. "/build/evidence/task-0" .. task_number .. "-results/" ..
                     expected_rate .. "-case-" .. expected_case .. ".txt"
 local temporary_result_path = result_path .. ".tmp"
 os.remove(result_path)

@@ -2,6 +2,10 @@
 M3_SALIENCE_BASE_THRESHOLD_OFFSET = 128;
 M3_SALIENCE_CLIPPED_OFFSET = 129;
 M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET = 130;
+M3_SELECTION_CELL_SIZE = 4;
+M3_SELECTION_RESULT_WORDS = M3_MAX_VOICES * M3_SELECTION_CELL_SIZE;
+M3_SELECTION_RESIDUAL_OFFSET = M3_SELECTION_RESULT_WORDS;
+M3_SELECTION_WORK_WORDS = M3_SELECTION_RESULT_WORDS + M3_MAX_CANDIDATES;
 
 function m3_harmonic_weight(harmonic) (
   harmonic == 0 ? 1.00 :
@@ -108,4 +112,158 @@ local(candidate, harmonic, candidate_count, weight, weight_sum, energy,
     0,
     1
   );
+);
+
+function m3_selection_weighted_energy(bank_base, bank_candidate)
+local(harmonic, energy) (
+  energy = 0;
+  harmonic = 0;
+  loop(M3_MAX_HARMONICS,
+    energy += m3_harmonic_weight(harmonic) *
+              m3_bank_energy(bank_base, bank_candidate, harmonic);
+    harmonic += 1;
+  );
+  energy;
+);
+
+function m3_selection_sort(selection_base, selected_count)
+local(index, previous, key_note, key_confidence, key_energy, key_onset,
+      previous_note, previous_onset, move_previous, destination) (
+  index = 1;
+  loop(max(0, min(M3_MAX_VOICES, selected_count) - 1),
+    key_note = selection_base[index * M3_SELECTION_CELL_SIZE];
+    key_confidence = selection_base[index * M3_SELECTION_CELL_SIZE + 1];
+    key_energy = selection_base[index * M3_SELECTION_CELL_SIZE + 2];
+    key_onset = selection_base[index * M3_SELECTION_CELL_SIZE + 3];
+    previous = index - 1;
+    move_previous = 1;
+    loop(index,
+      move_previous ? (
+        previous_note = selection_base[previous * M3_SELECTION_CELL_SIZE];
+        previous_onset = selection_base[previous * M3_SELECTION_CELL_SIZE + 3];
+        move_previous = previous_onset > key_onset ||
+                        (previous_onset == key_onset && previous_note > key_note);
+        move_previous ? (
+          destination = (previous + 1) * M3_SELECTION_CELL_SIZE;
+          selection_base[destination] = previous_note;
+          selection_base[destination + 1] =
+            selection_base[previous * M3_SELECTION_CELL_SIZE + 1];
+          selection_base[destination + 2] =
+            selection_base[previous * M3_SELECTION_CELL_SIZE + 2];
+          selection_base[destination + 3] = previous_onset;
+          previous -= 1;
+        );
+      );
+    );
+    destination = (previous + 1) * M3_SELECTION_CELL_SIZE;
+    selection_base[destination] = key_note;
+    selection_base[destination + 1] = key_confidence;
+    selection_base[destination + 2] = key_energy;
+    selection_base[destination + 3] = key_onset;
+    index += 1;
+  );
+);
+
+function m3_select_voices(bank_base, salience_base, min_note, candidate_count,
+                          threshold, max_voices, a4, selection_base)
+local(residual_base, iteration_count, active, selected_count, candidate,
+      note, bank_candidate, score, best_index, best_score, selected_note,
+      selected_bank_candidate, selected_cell, weighted_energy, ratio,
+      rounded_ratio, near_integer, fundamental_energy, preserve_candidate) (
+  !m3_isfinite(min_note) ? min_note = 0;
+  !m3_isfinite(candidate_count) ? candidate_count = 0;
+  !m3_isfinite(threshold) ? threshold = 1;
+  !m3_isfinite(max_voices) ? max_voices = 0;
+  !m3_isfinite(a4) ? a4 = 440;
+  min_note = floor(m3_clamp(min_note, 0, 127));
+  candidate_count = floor(m3_clamp(
+    candidate_count,
+    0,
+    min(M3_MAX_CANDIDATES, 128 - min_note)
+  ));
+  threshold = m3_clamp(threshold, 0, 1);
+  iteration_count = floor(m3_clamp(max_voices, 0, M3_MAX_VOICES));
+  a4 = max(1, a4);
+  residual_base = selection_base + M3_SELECTION_RESIDUAL_OFFSET;
+  m3_zero(selection_base, M3_SELECTION_WORK_WORDS);
+
+  candidate = 0;
+  loop(candidate_count,
+    note = min_note + candidate;
+    bank_candidate = note - bank_base[1];
+    score = bank_candidate >= 0 && bank_candidate < bank_base[4]
+      ? salience_base[bank_candidate]
+      : 0;
+    !m3_isfinite(score) ? score = 0;
+    residual_base[candidate] = m3_clamp(score, 0, 1);
+    candidate += 1;
+  );
+
+  selected_count = 0;
+  active = 1;
+  loop(iteration_count,
+    active ? (
+      best_index = -1;
+      best_score = -1;
+      candidate = 0;
+      loop(candidate_count,
+        score = residual_base[candidate];
+        score > best_score ? (
+          best_score = score;
+          best_index = candidate;
+        );
+        candidate += 1;
+      );
+
+      best_index >= 0 && best_score >= threshold && best_score > 0 ? (
+        selected_note = min_note + best_index;
+        selected_bank_candidate = selected_note - bank_base[1];
+        weighted_energy = m3_selection_weighted_energy(
+          bank_base,
+          selected_bank_candidate
+        );
+        !m3_isfinite(weighted_energy) ? weighted_energy = 0;
+        selected_cell = selection_base +
+                        selected_count * M3_SELECTION_CELL_SIZE;
+        selected_cell[0] = selected_note;
+        selected_cell[1] = best_score;
+        selected_cell[2] = weighted_energy;
+        selected_cell[3] = 0;
+        selected_count += 1;
+        residual_base[best_index] = 0;
+
+        candidate = 0;
+        loop(candidate_count,
+          candidate != best_index && residual_base[candidate] > 0 ? (
+            note = min_note + candidate;
+            ratio = m3_midi_to_hz(note, a4) /
+                    m3_midi_to_hz(selected_note, a4);
+            rounded_ratio = floor(ratio + 0.5);
+            near_integer = abs(ratio - rounded_ratio) < 0.025;
+            near_integer && rounded_ratio >= 2 ? (
+              bank_candidate = note - bank_base[1];
+              weighted_energy = m3_selection_weighted_energy(
+                bank_base,
+                bank_candidate
+              );
+              fundamental_energy = m3_bank_energy(
+                bank_base,
+                bank_candidate,
+                0
+              );
+              !m3_isfinite(weighted_energy) ? weighted_energy = 0;
+              !m3_isfinite(fundamental_energy) ? fundamental_energy = 0;
+              preserve_candidate = fundamental_energy >
+                                   0.35 * weighted_energy;
+              !preserve_candidate ? residual_base[candidate] *= 0.18;
+            );
+          );
+          candidate += 1;
+        );
+      ) : active = 0;
+    );
+  );
+
+  m3_selection_sort(selection_base, selected_count);
+  selected_count;
 );

@@ -2,7 +2,7 @@ desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
 tags:test MIDI analysis
 options:gmem=m3_poly_midi_tests_v1
 slider1:0<0,2,1{48 kHz,44.1 kHz,96 kHz}>Bounded resonator test rate
-slider2:0<0,5,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping}>Bounded resonator test case
+slider2:0<0,11,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap}>Bounded detector test case
 in_pin:none
 out_pin:none
 
@@ -230,6 +230,194 @@ function m3_test_bank_case(test_sr, case_id) local(best_note) (
   case_id == 4106 ? m3_test_bank_clipped_impulse(test_sr);
 );
 
+function m3_test_expected(index, note) (
+  M3_UI_LOCAL_BASE[24 + index] = note;
+);
+
+function m3_test_selection_exact(id, selected_count, expected_count)
+local(index, error, confidence, energy, onset) (
+  error = abs(selected_count - expected_count);
+  index = 0;
+  loop(expected_count,
+    error += abs(
+      M3_SELECTION_BASE[index * 4] - M3_UI_LOCAL_BASE[24 + index]
+    );
+    confidence = M3_SELECTION_BASE[index * 4 + 1];
+    energy = M3_SELECTION_BASE[index * 4 + 2];
+    onset = M3_SELECTION_BASE[index * 4 + 3];
+    error += (!m3_isfinite(confidence) || confidence <= 0) ? 1 : 0;
+    error += (!m3_isfinite(energy) || energy <= 0) ? 1 : 0;
+    error += abs(onset);
+    index += 1;
+  );
+  m3_test_near(id, error, 0, 0);
+);
+
+function m3_test_selection_fixture_init(test_sr, test_min_note, test_max_note) (
+  m3_bank_init(
+    M3_RESONATOR_BASE,
+    test_sr,
+    test_min_note,
+    test_max_note,
+    440
+  );
+  m3_zero(M3_SALIENCE_BASE, M3_MAX_CANDIDATES);
+  m3_zero(M3_UI_LOCAL_BASE, 32);
+);
+
+function m3_test_fixture_harmonic(note, harmonic, energy)
+local(bank_candidate, cell) (
+  bank_candidate = note - M3_RESONATOR_BASE[1];
+  cell = m3_bank_cell(M3_RESONATOR_BASE, bank_candidate, harmonic);
+  cell[4] = 0;
+  cell[5] = 0;
+  cell[6] = sqrt(max(0, energy) / 0.65);
+  cell[7] = 0;
+);
+
+function m3_test_fixture_candidate(note, score, energy, independent)
+local(bank_candidate, harmonic, fundamental_energy, other_energy) (
+  bank_candidate = note - M3_RESONATOR_BASE[1];
+  M3_SALIENCE_BASE[bank_candidate] = score;
+  fundamental_energy = independent ? energy : 0.05 * energy;
+  other_energy = independent ? 0.08 * energy : 0.80 * energy;
+  m3_test_fixture_harmonic(note, 0, fundamental_energy);
+  harmonic = 1;
+  loop(M3_MAX_HARMONICS - 1,
+    m3_test_fixture_harmonic(note, harmonic, other_energy);
+    harmonic += 1;
+  );
+);
+
+function m3_test_selection_fixture_run(test_min_note, test_max_note, max_voices)
+local(requested_count, selected_count) (
+  requested_count = test_max_note - test_min_note + 1;
+  selected_count = m3_select_voices(
+    M3_RESONATOR_BASE,
+    M3_SALIENCE_BASE,
+    test_min_note,
+    requested_count,
+    0.20,
+    max_voices,
+    440,
+    M3_SELECTION_BASE
+  );
+  selected_count;
+);
+
+function m3_test_selection_case(test_sr, case_id)
+local(selected_count, bank_index, error) (
+  case_id == 5101 ? (
+    m3_test_selection_fixture_init(test_sr, 32, 64);
+    m3_test_fixture_candidate(40, 0.95, 1.00, 1);
+    m3_test_fixture_candidate(52, 0.80, 0.50, 0);
+    m3_test_fixture_candidate(59, 0.75, 0.40, 0);
+    m3_test_expected(0, 40);
+    selected_count = m3_test_selection_fixture_run(32, 64, 8);
+    m3_test_selection_exact(5101, selected_count, 1);
+  );
+
+  case_id == 5102 ? (
+    m3_test_selection_fixture_init(test_sr, 32, 64);
+    m3_test_fixture_candidate(40, 0.85, 1.00, 1);
+    m3_test_fixture_candidate(47, 0.95, 0.50, 1);
+    m3_test_fixture_candidate(52, 0.80, 0.50, 0);
+    m3_test_fixture_candidate(59, 0.75, 0.40, 0);
+    m3_test_expected(0, 40);
+    m3_test_expected(1, 47);
+    selected_count = m3_test_selection_fixture_run(32, 64, 8);
+    m3_test_selection_exact(5102, selected_count, 2);
+  );
+
+  case_id == 5103 ? (
+    m3_test_selection_fixture_init(test_sr, 32, 64);
+    m3_test_fixture_candidate(32, 0.95, 1.00, 1);
+    m3_test_fixture_candidate(36, 0.90, 0.80, 1);
+    m3_test_fixture_candidate(40, 0.85, 0.60, 1);
+    m3_test_fixture_candidate(44, 0.82, 0.50, 0);
+    m3_test_fixture_candidate(48, 0.78, 0.45, 0);
+    m3_test_fixture_candidate(51, 0.72, 0.40, 0);
+    m3_test_fixture_candidate(52, 0.74, 0.42, 0);
+    m3_test_fixture_candidate(55, 0.68, 0.35, 0);
+    m3_test_fixture_candidate(59, 0.64, 0.30, 0);
+    m3_test_expected(0, 32);
+    m3_test_expected(1, 36);
+    m3_test_expected(2, 40);
+    selected_count = m3_test_selection_fixture_run(32, 64, 8);
+    m3_test_selection_exact(5103, selected_count, 3);
+  );
+
+  case_id == 5104 ? (
+    m3_test_selection_fixture_init(test_sr, 32, 72);
+    m3_test_fixture_candidate(32, 0.95, 1.00, 1);
+    m3_test_fixture_candidate(36, 0.91, 0.90, 1);
+    m3_test_fixture_candidate(40, 0.87, 0.80, 1);
+    m3_test_fixture_candidate(44, 0.83, 0.70, 1);
+    m3_test_fixture_candidate(48, 0.79, 0.60, 1);
+    m3_test_fixture_candidate(52, 0.75, 0.50, 1);
+    m3_test_fixture_candidate(56, 0.71, 0.40, 1);
+    m3_test_fixture_candidate(60, 0.67, 0.30, 1);
+    m3_test_fixture_candidate(63, 0.66, 0.30, 0);
+    m3_test_fixture_candidate(67, 0.62, 0.25, 0);
+    m3_test_fixture_candidate(71, 0.58, 0.20, 0);
+    m3_test_expected(0, 32);
+    m3_test_expected(1, 36);
+    m3_test_expected(2, 40);
+    m3_test_expected(3, 44);
+    m3_test_expected(4, 48);
+    m3_test_expected(5, 52);
+    m3_test_expected(6, 56);
+    m3_test_expected(7, 60);
+    selected_count = m3_test_selection_fixture_run(32, 72, 8);
+    m3_test_selection_exact(5104, selected_count, 8);
+  );
+
+  case_id == 5105 ? (
+    m3_test_selection_fixture_init(test_sr, 32, 64);
+    m3_test_fixture_candidate(40, 0.95, 1.00, 1);
+    m3_test_fixture_candidate(47, 0.82, 0.25, 1);
+    m3_test_fixture_candidate(52, 0.60, 10 ^ (-24 / 10), 1);
+    m3_test_fixture_candidate(57, 0.55, 0.063, 1);
+    m3_test_fixture_candidate(59, 0.80, 0.50, 0);
+    m3_test_fixture_candidate(64, 0.75, 0.40, 0);
+    m3_test_expected(0, 40);
+    m3_test_expected(1, 47);
+    m3_test_expected(2, 52);
+    m3_test_expected(3, 57);
+    selected_count = m3_test_selection_fixture_run(32, 64, 8);
+    m3_test_selection_exact(5105, selected_count, 4);
+  );
+
+  case_id == 5106 ? (
+    m3_bank_init(M3_RESONATOR_BASE, test_sr, 32, 60, 440);
+    m3_zero(M3_SALIENCE_BASE, M3_MAX_CANDIDATES);
+    bank_index = 32 - M3_RESONATOR_BASE[1];
+    M3_SALIENCE_BASE[bank_index] = 0.90;
+    M3_SALIENCE_BASE[36 - M3_RESONATOR_BASE[1]] = 0.80;
+    M3_SALIENCE_BASE[40 - M3_RESONATOR_BASE[1]] = 0.70;
+    M3_SALIENCE_BASE[43 - M3_RESONATOR_BASE[1]] = 0.60;
+    M3_SELECTION_BASE[-1] = 1234567;
+    M3_M3_SCRATCH_BASE[0] = 7654321;
+    selected_count = m3_select_voices(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      32,
+      29,
+      0.20,
+      3,
+      440,
+      M3_SELECTION_BASE
+    );
+    error = abs(selected_count - 3) +
+            abs(M3_SELECTION_BASE[0] - 32) +
+            abs(M3_SELECTION_BASE[4] - 36) +
+            abs(M3_SELECTION_BASE[8] - 40) +
+            abs(M3_SELECTION_BASE[-1] - 1234567) +
+            abs(M3_M3_SCRATCH_BASE[0] - 7654321);
+    m3_test_near(5106, error, 0, 0);
+  );
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
@@ -237,7 +425,10 @@ gmem[3] = 0;
 gmem[4] = 0;
 gmem[5] = 0;
 test_bank_rate = slider1 == 1 ? 44100 : slider1 == 2 ? 96000 : 48000;
-test_bank_case_id = 4101 + min(5, max(0, slider2|0));
+test_case_index = min(11, max(0, slider2|0));
+test_bank_case_id = test_case_index < 6
+  ? 4101 + test_case_index
+  : 5101 + test_case_index - 6;
 gmem[6] = test_bank_rate;
 gmem[15] = test_bank_case_id;
 
@@ -248,7 +439,9 @@ test_bank_case_id == 4101 ? (
   m3_test_condition_rate(44100);
   m3_test_condition_rate(96000);
 );
-m3_test_bank_case(test_bank_rate, test_bank_case_id);
+test_bank_case_id < 5000
+  ? m3_test_bank_case(test_bank_rate, test_bank_case_id)
+  : m3_test_selection_case(test_bank_rate, test_bank_case_id);
 gmem[1] == 1 ? gmem[1] = 2;
 
 @gfx 440 220

@@ -9,7 +9,20 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 BUILD = (ROOT / "build").resolve()
 FX_MARKER = '<JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""'
 RATE_SLIDER = {48000: "0", 44100: "1", 96000: "2"}
-CASE_SLIDER = {4101: "0", 4102: "1", 4103: "2", 4104: "3", 4105: "4", 4106: "5"}
+CASE_SLIDER = {
+    4101: "0",
+    4102: "1",
+    4103: "2",
+    4104: "3",
+    4105: "4",
+    4106: "5",
+    5101: "6",
+    5102: "7",
+    5103: "8",
+    5104: "9",
+    5105: "10",
+    5106: "11",
+}
 
 
 def prepare_project(
@@ -37,7 +50,7 @@ def prepare_project(
     if rate not in RATE_SLIDER:
         raise ValueError("rate must be exactly 44100, 48000, or 96000")
     if case_id not in CASE_SLIDER:
-        raise ValueError("case ID must be between 4101 and 4106")
+        raise ValueError("case ID must be one of 4101..4106 or 5101..5106")
 
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     markers = [index for index, line in enumerate(lines) if FX_MARKER in line]
