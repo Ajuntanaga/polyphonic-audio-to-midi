@@ -1,19 +1,18 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T11:25:21-07:00
+Updated: 2026-08-25T12:07:52-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified implementation commit: `544276a` (`feat: track independent
-  note lifecycles`).
-- Latest stability commit: `bf72bab` (`fix: settle workspace after REAPER
-  exits`), following `51bede8` (`fix: preserve workspace during guarded REAPER
-  launch`).
-- Current task: Task 9, production host, sample-offset MIDI, and reachable
-  cleanup.
-- Tasks 1–8 are verified and committed.
-- Local result: 29 Python tests pass and `python3 tools/validate_source.py .`
+- Last verified implementation commit: `186608f` (`feat: emit sample-offset
+  MIDI with lifecycle cleanup`).
+- Latest stability commit: `821ba22` (`fix: background guarded REAPER
+  launches`).
+- Current task: Task 10, safe telemetry, compact UI, serialization, and visible
+  fault/overload states.
+- Tasks 1–9 are verified and committed.
+- Local result: 41 Python tests pass and `python3 tools/validate_source.py .`
   reports `source contract: ok`.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
@@ -129,6 +128,30 @@ Updated: 2026-08-25T11:25:21-07:00
   temperature stayed at or below 73 C. The runner restored the user-selected
   workspace (4 early, 1 later) and left no REAPER process running.
 
+## Verified Task 9 evidence
+
+- Expected RED: the complete 9101–9109 host harness plus a zero-result emitter
+  scaffold reached assertion 9101 in real REAPER at 48 kHz. It had three
+  assertions and aggregate error 322. Preserved result
+  `build/evidence/task-09-midi-host-red-9101.txt`, SHA-256
+  `bb4045cf18175e0ce8684c10b75a220e0faf21bb9f62a3f44d5341d0c17664e7`.
+- Final host matrix: cases 9101–9109 passed at 44.1, 48, and 96 kHz in 27
+  hidden guarded workspace-5 launches. Every result had three assertions,
+  suite state `2`, and failed assertion ID `0`.
+- The SHA-256 of the lexically ordered `sha256sum` output for all 27 results is
+  `1a20321b3c6bb43ae671dc306f4ecc326f0ef286fa25faa333cd1c45d52a40e9`.
+- Cases 4104, 5104, 6102, 6105, 7102, 7105, and 8102/block 128 passed again at
+  48 kHz as a seven-case detector-through-lifecycle regression.
+- A separate disposable load smoke instantiated the production JSFX enabled
+  and online with two inputs, two outputs, and all fifteen named controls in
+  order. Result `build/evidence/task-09-production-smoke.txt`, SHA-256
+  `321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.
+  The script dirtied the disposable project while swapping FX, so the guard
+  enforced its 60-second termination bound rather than producing a clean host
+  close; Task 11 still owns host-sequence and VSTi-routing proof.
+- Matrix preflights stayed above 30 GiB available memory, below load 1.2, and
+  at or below 59 C. Workspace 1 stayed active and no REAPER process remained.
+
 ## Current implementation and tuning
 
 - The production bank uses fixed eight-word cells, causal 8 ms/35 ms complex
@@ -144,15 +167,19 @@ Updated: 2026-08-25T11:25:21-07:00
   distinct-string matcher uses two fixed 256-word reachability rows and at most
   `8 * 256 * 8` transitions per feasibility pass. Scratch guard words remain
   outside the 512-word working region.
-- Production now filters selected M3 sets before the future lifecycle stage.
-  Infeasible sets lose the lowest-confidence candidate and retry at most eight
-  times; General Tonal mode bypasses the matcher. The user-facing mode control
-  remains scheduled for Task 9.
+- Production filters selected M3 sets before lifecycle updates. Infeasible sets
+  lose the lowest-confidence candidate and retry at most eight times; the final
+  stable mode control exposes M3 Eight-String and General Tonal behavior.
 - The lifecycle module stores eight fixed words for each of 128 pitches and an
   82-word ordered event queue. It implements OFF/ATTACK/ON/RELEASE hysteresis,
   eight-active-note enforcement, same-pitch collapse, release-all cleanup,
-  note-off-priority overflow, and fixed/dynamic velocity. MIDI encoding and
-  host emission are not implemented yet.
+  note-off-priority overflow, and fixed/dynamic velocity. The emitter encodes
+  channel 1–16 events, clamps block offsets, and sends each event once.
+- The production effect has the frozen fifteen-slider surface. `@slider` only
+  clamps and stages settings. `@block` performs reachable panic-before-reset
+  for rate, stop, hard reconfiguration, and explicit Panic; `@sample` performs
+  streaming analysis, one-time MIDI output, and the optional two-assignment dry
+  mute. Incoming MIDI is untouched.
 - Requested pitch bounds are stored separately from analysis-only guard
   semitones. Production remains requested MIDI 32..84.
 - Final Task 4 score coefficients are harmonic mean `0.85`, minimum-three
@@ -163,10 +190,10 @@ Updated: 2026-08-25T11:25:21-07:00
   protection, bounded insertion sort, and 117 words inside the 256-word fixed
   selection region.
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
-  rate/case RPPs. Its seven behavioral tests cover correct slider state and
+  rate/case RPPs. Its eight behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
 - `tools/observe_core_harness_case.lua` accepts only the exact disposable Task
-  4–8 case path shape, including mandatory collision-free block identity for
+  4–9 case path shape, including mandatory collision-free block identity for
   Task 8, removes only that case's old result, publishes atomically, and exits
   REAPER. It does not analyze audio or emit performance MIDI.
 - `docs/PERFORMANCE.md` records all measured coefficient, guard, and matrix
@@ -190,25 +217,24 @@ kept workspace 1 active for the full launch and left no REAPER process behind.
 
 ## Exact resume action
 
-1. Add Task 9 assertions 9101–9109 before creating `midi_emitter.jsfx-inc`:
-   channel 1/16 encoding, event-offset bounds, rate-change and transport-stop
-   cleanup, explicit Panic, duplicate prevention, input selection, and
-   block-boundary mode reconfiguration.
-2. Preserve the real-REAPER RED at assertion 9101 before implementing the
-   emitter.
-3. Add the final stable 15-slider parameter surface exactly as specified; never
-   renumber it afterward. `@slider` may clamp and set a reconfigure flag but may
-   not rebuild detector memory.
-4. In `@block`, panic before rate/reset/reload/transport-stop reinitialization,
-   apply pending reconfiguration, reset block/event cursors, and keep
-   `ext_noinit=1`.
-5. Emit each ordered event once from `@sample` with its in-block offset. Never
-   call `midirecv`; leave incoming MIDI untouched. Dry passthrough must contain
-   no audio assignments when enabled and only the two explicit zero assignments
-   when muted.
-6. Document reachable versus abrupt cleanup in `docs/MIDI-LIFECYCLE.md`, run
-   assertions 9101–9109 plus source-contract checks, then commit as
-   `feat: emit sample-offset MIDI with lifecycle cleanup` only when green.
+1. Add Task 10 assertions 10101–10106 before creating
+   `m3_poly_midi/telemetry_ui.jsfx-inc`: reject odd/inconsistent snapshots,
+   bound active notes, expose invalid-input faults, serialize config only, and
+   preserve available dry audio for unsupported channel state.
+2. Preserve a real-REAPER RED at assertion 10101 before implementing telemetry.
+3. Add double-buffered odd/even generation publication. The audio side writes
+   fixed telemetry only; `@gfx` copies at most 64 words and accepts equal even
+   generations.
+4. Draw the compact 520x260 status, input/noise meters, and up to eight note
+   rows. UI code must not mutate audio-state regions.
+5. Smooth input trim over 64 samples, apply sensitivity/response at the next
+   analysis update, and serialize only schema/config. Never serialize active
+   voices or detector memory.
+6. Add visible fault codes and bounded overload measurement using
+   `time_precise()` only at block edges. Preserve dry audio on unsupported
+   channel/fault paths and perform reachable MIDI cleanup.
+7. Run 10101–10106, prior proportional regressions, serialization/source
+   contracts, and the hidden workspace-5 guard before committing Task 10.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
