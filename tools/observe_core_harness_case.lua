@@ -30,7 +30,8 @@ local valid_case = expected_case and (
   (expected_case >= 6101 and expected_case <= 6106) or
   (expected_case >= 7101 and expected_case <= 7106) or
   (expected_case >= 8101 and expected_case <= 8111) or
-  (expected_case >= 9101 and expected_case <= 9109)
+  (expected_case >= 9101 and expected_case <= 9109) or
+  (expected_case >= 10101 and expected_case <= 10106)
 )
 local task_eight = expected_case and expected_case >= 8101 and expected_case <= 8111
 local valid_block = expected_block == 32 or expected_block == 64 or
@@ -54,8 +55,9 @@ local result_name = task_eight and (
 ) or (
   expected_rate .. "-case-" .. expected_case .. ".txt"
 )
-local result_path = root .. "/build/evidence/task-0" .. task_number ..
-                    "-results/" .. result_name
+local result_path = root .. "/build/evidence/" ..
+                    string.format("task-%02d-results", task_number) ..
+                    "/" .. result_name
 local temporary_result_path = result_path .. ".tmp"
 os.remove(result_path)
 os.remove(temporary_result_path)

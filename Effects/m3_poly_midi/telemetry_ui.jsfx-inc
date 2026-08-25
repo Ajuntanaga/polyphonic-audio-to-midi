@@ -1,0 +1,290 @@
+@init
+M3_TELEMETRY_GENERATION_OFFSET = 0;
+M3_TELEMETRY_FAULT_OFFSET = 1;
+M3_TELEMETRY_OVERLOAD_OFFSET = 2;
+M3_TELEMETRY_PEAK_OFFSET = 3;
+M3_TELEMETRY_NOISE_OFFSET = 4;
+M3_TELEMETRY_CLIPPED_OFFSET = 5;
+M3_TELEMETRY_LAST_MS_OFFSET = 6;
+M3_TELEMETRY_ACTIVE_COUNT_OFFSET = 7;
+M3_TELEMETRY_HEADER_WORDS = 8;
+M3_TELEMETRY_NOTE_CELL_SIZE = 4;
+M3_TELEMETRY_NOTE_PITCH_OFFSET = 0;
+M3_TELEMETRY_NOTE_CONFIDENCE_OFFSET = 1;
+M3_TELEMETRY_NOTE_ONSET_MS_OFFSET = 2;
+M3_TELEMETRY_NOTE_VELOCITY_OFFSET = 3;
+M3_TELEMETRY_MAX_NOTES = 8;
+M3_TELEMETRY_WORDS = 40;
+
+M3_FAULT_OK = 0;
+M3_FAULT_UNSUPPORTED_CHANNELS = 1;
+M3_FAULT_INVALID_SAMPLES = 2;
+M3_FAULT_CORRUPT_BOUNDS = 3;
+M3_FAULT_EVENT_OVERFLOW = 4;
+M3_FAULT_MEMORY_CONTRACT = 5;
+
+M3_UI_NOTE_NAME_BASE = M3_UI_LOCAL_BASE + M3_TELEMETRY_WORDS;
+M3_UI_NOTE_NAME_BASE[0] = "C";
+M3_UI_NOTE_NAME_BASE[1] = "C#";
+M3_UI_NOTE_NAME_BASE[2] = "D";
+M3_UI_NOTE_NAME_BASE[3] = "D#";
+M3_UI_NOTE_NAME_BASE[4] = "E";
+M3_UI_NOTE_NAME_BASE[5] = "F";
+M3_UI_NOTE_NAME_BASE[6] = "F#";
+M3_UI_NOTE_NAME_BASE[7] = "G";
+M3_UI_NOTE_NAME_BASE[8] = "G#";
+M3_UI_NOTE_NAME_BASE[9] = "A";
+M3_UI_NOTE_NAME_BASE[10] = "A#";
+M3_UI_NOTE_NAME_BASE[11] = "B";
+
+function m3_telemetry_generation_valid(generation_before, generation_after)
+local(first, second) (
+  first = floor(generation_before);
+  second = floor(generation_after);
+  first > 0 && first == second && !(first & 1);
+);
+
+function m3_telemetry_note_cell(base, index) (
+  base + M3_TELEMETRY_HEADER_WORDS +
+  index * M3_TELEMETRY_NOTE_CELL_SIZE;
+);
+
+function m3_telemetry_publish(dst_base, generation, fault, overload, peak,
+                              noise, clipped, last_ms, voice_base)
+local(completed_generation, writing_generation, index, note, cell,
+      output_cell, active_count, onset_ms, safe_rate) (
+  completed_generation = max(0, floor(generation));
+  completed_generation & 1 ? completed_generation += 1;
+  writing_generation = completed_generation + 1;
+  dst_base[M3_TELEMETRY_GENERATION_OFFSET] = writing_generation;
+
+  index = 1;
+  loop(M3_TELEMETRY_WORDS - 1,
+    dst_base[index] = 0;
+    index += 1;
+  );
+  dst_base[M3_TELEMETRY_FAULT_OFFSET] = floor(m3_clamp(fault, 0, 5));
+  dst_base[M3_TELEMETRY_OVERLOAD_OFFSET] = overload ? 1 : 0;
+  dst_base[M3_TELEMETRY_PEAK_OFFSET] = m3_isfinite(peak) ? max(0, peak) : 0;
+  dst_base[M3_TELEMETRY_NOISE_OFFSET] =
+    m3_isfinite(noise) ? max(0, noise) : 0;
+  dst_base[M3_TELEMETRY_CLIPPED_OFFSET] = clipped ? 1 : 0;
+  dst_base[M3_TELEMETRY_LAST_MS_OFFSET] =
+    m3_isfinite(last_ms) ? max(0, last_ms) : 0;
+
+  safe_rate = max(1, srate);
+  active_count = 0;
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    cell[M3_VOICE_ACTIVE_OFFSET] &&
+    active_count < M3_TELEMETRY_MAX_NOTES ? (
+      output_cell = m3_telemetry_note_cell(dst_base, active_count);
+      output_cell[M3_TELEMETRY_NOTE_PITCH_OFFSET] = note;
+      output_cell[M3_TELEMETRY_NOTE_CONFIDENCE_OFFSET] = m3_clamp(
+        cell[M3_VOICE_CONFIDENCE_OFFSET],
+        0,
+        1
+      );
+      onset_ms = (
+        max(0, absolute_sample - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET]) *
+        1000 / safe_rate
+      );
+      output_cell[M3_TELEMETRY_NOTE_ONSET_MS_OFFSET] = onset_ms;
+      output_cell[M3_TELEMETRY_NOTE_VELOCITY_OFFSET] = floor(m3_clamp(
+        cell[M3_VOICE_VELOCITY_OFFSET],
+        1,
+        127
+      ) + 0.5);
+      active_count += 1;
+    );
+    note += 1;
+  );
+  dst_base[M3_TELEMETRY_ACTIVE_COUNT_OFFSET] = active_count;
+
+  completed_generation = writing_generation + 1;
+  dst_base[M3_TELEMETRY_GENERATION_OFFSET] = completed_generation;
+  m3_telemetry_published_base = dst_base;
+  completed_generation;
+);
+
+function m3_telemetry_read(published_base, ui_base)
+local(generation_before, generation_after, index, accepted) (
+  generation_before = floor(
+    published_base[M3_TELEMETRY_GENERATION_OFFSET]
+  );
+  accepted = 0;
+  generation_before > 0 && !(generation_before & 1) ? (
+    index = 0;
+    loop(M3_TELEMETRY_WORDS,
+      ui_base[index] = published_base[index];
+      index += 1;
+    );
+    generation_after = floor(
+      published_base[M3_TELEMETRY_GENERATION_OFFSET]
+    );
+    accepted = m3_telemetry_generation_valid(
+      generation_before,
+      generation_after
+    );
+  );
+  accepted;
+);
+
+function m3_host_memory_contract_ok() (
+  M3_CONFIG_BASE == 0 &&
+  M3_CONDITION_BASE >= 256 &&
+  M3_RATE_BASE > M3_CONDITION_BASE &&
+  M3_RESONATOR_BASE > M3_RATE_BASE &&
+  M3_SALIENCE_BASE > M3_RESONATOR_BASE &&
+  M3_SELECTION_BASE > M3_SALIENCE_BASE &&
+  M3_M3_SCRATCH_BASE > M3_SELECTION_BASE &&
+  M3_VOICE_BASE > M3_M3_SCRATCH_BASE &&
+  M3_EVENT_BASE > M3_VOICE_BASE &&
+  M3_TELEMETRY_A_BASE > M3_EVENT_BASE &&
+  M3_TELEMETRY_B_BASE > M3_TELEMETRY_A_BASE &&
+  M3_UI_LOCAL_BASE > M3_TELEMETRY_B_BASE &&
+  M3_UI_LOCAL_BASE + 64 <= M3_MEMORY_END;
+);
+
+function m3_host_fault_code(channel_count, invalid_samples, corrupt_bounds,
+                            event_overflow, memory_contract_ok)
+local(channels) (
+  channels = floor(channel_count);
+  !memory_contract_ok ? M3_FAULT_MEMORY_CONTRACT :
+  event_overflow ? M3_FAULT_EVENT_OVERFLOW :
+  corrupt_bounds ? M3_FAULT_CORRUPT_BOUNDS :
+  invalid_samples ? M3_FAULT_INVALID_SAMPLES :
+  channels < 1 || channels > 2 ? M3_FAULT_UNSUPPORTED_CHANNELS :
+  M3_FAULT_OK;
+);
+
+function m3_host_fault_cleanup(fault, voice_base, event_base, block_offset) (
+  fault ? m3_lifecycle_release_all(
+    voice_base,
+    event_base,
+    block_offset
+  ) : 0;
+);
+
+function m3_host_detection_enabled(channel_count, fault)
+local(channels) (
+  channels = floor(channel_count);
+  fault == M3_FAULT_OK && channels >= 1 && channels <= 2;
+);
+
+function m3_host_available_dry(sample, dry_passthrough) (
+  dry_passthrough ? sample : 0;
+);
+
+function m3_state_prepare_serialization(schema_version, output_base) (
+  output_base[0] = max(1, floor(schema_version));
+  1;
+);
+
+function m3_ui_draw(ui_base)
+local(fault, overload, clipped, peak, noise, active_count, meter_width,
+      row, cell, note, pitch_class, octave, confidence, onset_ms, velocity,
+      y) (
+  fault = floor(ui_base[M3_TELEMETRY_FAULT_OFFSET]);
+  overload = ui_base[M3_TELEMETRY_OVERLOAD_OFFSET] != 0;
+  clipped = ui_base[M3_TELEMETRY_CLIPPED_OFFSET] != 0;
+  peak = m3_clamp(ui_base[M3_TELEMETRY_PEAK_OFFSET], 0, 1);
+  noise = m3_clamp(ui_base[M3_TELEMETRY_NOISE_OFFSET], 0, 1);
+  active_count = min(
+    M3_TELEMETRY_MAX_NOTES,
+    max(0, floor(ui_base[M3_TELEMETRY_ACTIVE_COUNT_OFFSET]))
+  );
+
+  gfx_set(0.035, 0.045, 0.060, 1);
+  gfx_rect(0, 0, gfx_w, gfx_h, 1);
+  gfx_setfont(1, "Arial", 14);
+  fault ? gfx_set(1.00, 0.26, 0.24, 1) :
+  overload || clipped ? gfx_set(1.00, 0.68, 0.12, 1) :
+  gfx_set(0.30, 0.90, 0.56, 1);
+  gfx_x = 16;
+  gfx_y = 12;
+  fault == M3_FAULT_UNSUPPORTED_CHANNELS
+    ? gfx_drawstr("FAULT: unsupported channels") :
+  fault == M3_FAULT_INVALID_SAMPLES
+    ? gfx_drawstr("FAULT: invalid input samples") :
+  fault == M3_FAULT_CORRUPT_BOUNDS
+    ? gfx_drawstr("FAULT: corrupt note bounds") :
+  fault == M3_FAULT_EVENT_OVERFLOW
+    ? gfx_drawstr("FAULT: MIDI event overflow") :
+  fault == M3_FAULT_MEMORY_CONTRACT
+    ? gfx_drawstr("FAULT: memory contract") :
+  overload ? gfx_drawstr("OVERLOAD: analysis throttled") :
+  clipped ? gfx_drawstr("CLIP: reduce input trim") :
+  gfx_drawstr("READY: realtime polyphonic MIDI");
+
+  gfx_set(0.16, 0.19, 0.24, 1);
+  gfx_rect(16, 40, 228, 9, 1);
+  gfx_rect(276, 40, 228, 9, 1);
+  meter_width = floor(228 * sqrt(peak));
+  clipped ? gfx_set(1.00, 0.68, 0.12, 1) :
+            gfx_set(0.28, 0.76, 0.96, 1);
+  gfx_rect(16, 40, meter_width, 9, 1);
+  gfx_set(0.42, 0.50, 0.62, 1);
+  gfx_rect(276, 40, floor(228 * sqrt(noise)), 9, 1);
+  gfx_set(0.64, 0.70, 0.78, 1);
+  gfx_x = 16;
+  gfx_y = 53;
+  gfx_printf("Input %.1f%%", peak * 100);
+  gfx_x = 276;
+  gfx_y = 53;
+  gfx_printf("Noise %.1f%%   Commit %.3f ms",
+             noise * 100,
+             ui_base[M3_TELEMETRY_LAST_MS_OFFSET]);
+
+  gfx_set(0.52, 0.59, 0.70, 1);
+  gfx_x = 16;
+  gfx_y = 76;
+  gfx_drawstr("NOTE       MIDI     CONFIDENCE     ONSET TO COMMIT     VELOCITY");
+  row = 0;
+  loop(active_count,
+    cell = m3_telemetry_note_cell(ui_base, row);
+    note = floor(m3_clamp(
+      cell[M3_TELEMETRY_NOTE_PITCH_OFFSET],
+      0,
+      127
+    ) + 0.5);
+    pitch_class = note % 12;
+    octave = floor(note / 12) - 1;
+    confidence = m3_clamp(
+      cell[M3_TELEMETRY_NOTE_CONFIDENCE_OFFSET],
+      0,
+      1
+    );
+    onset_ms = max(0, cell[M3_TELEMETRY_NOTE_ONSET_MS_OFFSET]);
+    velocity = floor(m3_clamp(
+      cell[M3_TELEMETRY_NOTE_VELOCITY_OFFSET],
+      1,
+      127
+    ) + 0.5);
+    y = 98 + row * 19;
+    row & 1 ? gfx_set(0.070, 0.088, 0.115, 1) :
+              gfx_set(0.055, 0.070, 0.092, 1);
+    gfx_rect(12, y - 3, 496, 18, 1);
+    gfx_set(0.84, 0.88, 0.94, 1);
+    gfx_x = 16;
+    gfx_y = y;
+    gfx_printf(
+      "%s%d          %3d          %5.1f%%              %7.2f ms             %3d",
+      (ui_base + M3_TELEMETRY_WORDS)[pitch_class],
+      octave,
+      note,
+      confidence * 100,
+      onset_ms,
+      velocity
+    );
+    row += 1;
+  );
+  active_count == 0 ? (
+    gfx_set(0.38, 0.44, 0.53, 1);
+    gfx_x = 16;
+    gfx_y = 102;
+    gfx_drawstr("Listening for tonal input...");
+  );
+  1;
+);

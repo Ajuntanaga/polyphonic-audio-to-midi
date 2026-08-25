@@ -13,6 +13,7 @@ CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
 PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
 LIFECYCLE = ROOT / "Effects/m3_poly_midi/lifecycle.jsfx-inc"
 MIDI_EMITTER = ROOT / "Effects/m3_poly_midi/midi_emitter.jsfx-inc"
+TELEMETRY_UI = ROOT / "Effects/m3_poly_midi/telemetry_ui.jsfx-inc"
 PRODUCTION = ROOT / "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
 
 
@@ -189,6 +190,38 @@ class SourceContractTests(unittest.TestCase):
         assignments = re.findall(r"(?m)^\s*(spl[01])\s*=\s*([^;]+);", text)
         self.assertEqual(assignments, [("spl0", "0"), ("spl1", "0")])
 
+    def test_production_telemetry_and_state_are_section_bounded(self):
+        text = PRODUCTION.read_text(encoding="utf-8")
+        block = re.search(
+            r"(?ms)^@block[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+        sample = re.search(
+            r"(?ms)^@sample[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+        serialize_match = re.search(
+            r"(?ms)^@serialize[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        )
+        gfx = re.search(
+            r"(?ms)^@gfx[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+
+        self.assertIn("m3_poly_midi/telemetry_ui.jsfx-inc", text)
+        self.assertIsNotNone(serialize_match)
+        serialize = serialize_match.group(1)
+        self.assertIn("file_var(0, saved_schema_version);", serialize)
+        self.assertNotIn("M3_VOICE_BASE", serialize)
+        self.assertNotIn("M3_EVENT_BASE", serialize)
+        self.assertIn("input_trim_remaining = 64;", block)
+        self.assertEqual(sample.count("time_precise("), 2)
+        self.assertNotIn("time_precise(", block)
+        self.assertIn("m3_telemetry_publish(", sample)
+        self.assertIn("m3_telemetry_read(", gfx)
+        self.assertIn("m3_ui_draw(", gfx)
+
     def test_validator_checks_auxiliary_import_graph(self):
         with tempfile.TemporaryDirectory() as temporary:
             fixture_root = pathlib.Path(temporary)
@@ -314,6 +347,61 @@ class SourceContractTests(unittest.TestCase):
             )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("dry audio assignment contract", result.stdout + result.stderr)
+
+    def test_validator_rejects_gfx_write_to_detector_memory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / PRODUCTION.name
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace(
+                    "@gfx 520 260\n",
+                    "@gfx 520 260\nM3_CONDITION_BASE[0] = 1;\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("gfx writes protected detector memory", result.stderr)
+
+    def test_validator_rejects_transient_voice_serialization(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / PRODUCTION.name
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace(
+                    "file_var(0, saved_schema_version);",
+                    "file_var(0, saved_schema_version);\n"
+                    "file_var(0, active_note_flags);",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("serialization must contain only", result.stderr)
 
     def test_disposable_staging_never_targets_live_profile(self):
         result = subprocess.run(

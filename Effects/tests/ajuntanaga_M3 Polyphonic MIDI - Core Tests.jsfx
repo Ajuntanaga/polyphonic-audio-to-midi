@@ -2,7 +2,7 @@ desc:ajuntanaga/M3 Polyphonic MIDI - Core Tests
 tags:test MIDI analysis
 options:gmem=m3_poly_midi_tests_v1
 slider1:0<0,2,1{48 kHz,44.1 kHz,96 kHz}>Bounded resonator test rate
-slider2:0<0,43,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards,7101 M3 Opens,7102 Open Voicing,7103 Impossible Chromatic,7104 Feasible Four Notes,7105 Below Range,7106 General Bypass,8101 Below Threshold,8102 One Note-On,8103 Dropout,8104 One Note-Off,8105 Replacement Order,8106 Eight Active,8107 Release All,8108 Overflow Priority,8109 Same Pitch,8110 Fixed Velocity,8111 Dynamic Velocity,9101 Channel 1 Note-On,9102 Channel 16 Note-Off,9103 Offset Bounds,9104 Rate Cleanup,9105 Stop Cleanup,9106 Panic Cleanup,9107 No Duplicate On,9108 Input Select,9109 Mode Bounds}>Bounded detector test case
+slider2:0<0,49,1{4101 G#1,4102 E2 Fast,4103 A4 +35c,4104 Missing Fundamental,4105 Silence,4106 Clipping,5101 E2 Ghosts,5102 E2+B2,5103 G#1+C2+E2,5104 Eight Opens,5105 Quiet True Note,5106 Three-Voice Cap,6101 Open Equivalence,6102 Selection Equivalence,6103 17 kHz Alias,6104 21 kHz Alias,6105 Work Bound,6106 Rate Guards,7101 M3 Opens,7102 Open Voicing,7103 Impossible Chromatic,7104 Feasible Four Notes,7105 Below Range,7106 General Bypass,8101 Below Threshold,8102 One Note-On,8103 Dropout,8104 One Note-Off,8105 Replacement Order,8106 Eight Active,8107 Release All,8108 Overflow Priority,8109 Same Pitch,8110 Fixed Velocity,8111 Dynamic Velocity,9101 Channel 1 Note-On,9102 Channel 16 Note-Off,9103 Offset Bounds,9104 Rate Cleanup,9105 Stop Cleanup,9106 Panic Cleanup,9107 No Duplicate On,9108 Input Select,9109 Mode Bounds,10101 Odd Snapshot,10102 Changed Snapshot,10103 Eight-Note Snapshot,10104 Invalid Input Fault,10105 Schema-Only State,10106 Unsupported Channels}>Bounded detector test case
 slider3:2<0,3,1{32,64,128,256}>Lifecycle test block size
 in_pin:none
 out_pin:none
@@ -15,6 +15,7 @@ import ../m3_poly_midi/salience_selector.jsfx-inc
 import ../m3_poly_midi/m3_profile.jsfx-inc
 import ../m3_poly_midi/lifecycle.jsfx-inc
 import ../m3_poly_midi/midi_emitter.jsfx-inc
+import ../m3_poly_midi/telemetry_ui.jsfx-inc
 
 @init
 M3_TEST_MAGIC = 0x4D335431;
@@ -29,6 +30,9 @@ M3_TEST_PROFILE_NOTE_BASE = 58108;
 M3_TEST_LIFECYCLE_RESPONSE_BASE = 58200;
 M3_TEST_MIDI_ENCODE_BASE = 58216;
 M3_TEST_BOUNDS_BASE = 58224;
+M3_TEST_TELEMETRY_SOURCE_BASE = 58300;
+M3_TEST_TELEMETRY_UI_BASE = 58364;
+M3_TEST_SERIALIZATION_BASE = 58432;
 
 function m3_test_near(id, actual, expected, tolerance) local(delta) (
   gmem[2] += 1;
@@ -1510,6 +1514,132 @@ local(error, encoded, event, second_event, count, reason, captured_count,
   );
 );
 
+function m3_test_telemetry_reset() (
+  m3_zero(M3_TEST_TELEMETRY_SOURCE_BASE, M3_TELEMETRY_WORDS);
+  m3_zero(M3_TEST_TELEMETRY_UI_BASE, M3_TELEMETRY_WORDS);
+  m3_zero(M3_TEST_SERIALIZATION_BASE, 8);
+  m3_test_lifecycle_reset();
+);
+
+function m3_test_telemetry_case(test_sr, case_id)
+local(accepted, valid, generation, active_count, index, note, cell, fault,
+      cleanup_count, word_count, detection_enabled, dry_sample, error) (
+  case_id == 10101 ? (
+    m3_test_telemetry_reset();
+    M3_TEST_TELEMETRY_SOURCE_BASE[M3_TELEMETRY_GENERATION_OFFSET] = 3;
+    M3_TEST_TELEMETRY_UI_BASE[M3_TELEMETRY_GENERATION_OFFSET] = 88;
+    accepted = m3_telemetry_read(
+      M3_TEST_TELEMETRY_SOURCE_BASE,
+      M3_TEST_TELEMETRY_UI_BASE
+    );
+    error = accepted + m3_telemetry_generation_valid(3, 3) + abs(
+      M3_TEST_TELEMETRY_UI_BASE[M3_TELEMETRY_GENERATION_OFFSET] - 88
+    );
+    m3_test_near(10101, error, 0, 0);
+  );
+
+  case_id == 10102 ? (
+    m3_test_telemetry_reset();
+    valid = m3_telemetry_generation_valid(2, 4);
+    error = valid +
+            abs(m3_telemetry_generation_valid(2, 2) - 1) +
+            m3_telemetry_generation_valid(0, 0);
+    m3_test_near(10102, error, 0, 0);
+  );
+
+  case_id == 10103 ? (
+    m3_test_telemetry_reset();
+    index = 0;
+    loop(10,
+      note = 40 + index;
+      m3_test_host_seed_active(note, 80 + index);
+      cell = M3_VOICE_BASE + note * M3_VOICE_CELL_SIZE;
+      cell[M3_VOICE_CONFIDENCE_OFFSET] = 0.90 - index * 0.01;
+      cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = index * 10;
+      index += 1;
+    );
+    absolute_sample = 1000;
+    generation = m3_telemetry_publish(
+      M3_TEST_TELEMETRY_SOURCE_BASE,
+      0,
+      M3_FAULT_OK,
+      0,
+      0.75,
+      0.01,
+      0,
+      1.25,
+      M3_VOICE_BASE
+    );
+    accepted = m3_telemetry_read(
+      M3_TEST_TELEMETRY_SOURCE_BASE,
+      M3_TEST_TELEMETRY_UI_BASE
+    );
+    active_count = M3_TEST_TELEMETRY_UI_BASE[
+      M3_TELEMETRY_ACTIVE_COUNT_OFFSET
+    ];
+    error = max(0, active_count - M3_TELEMETRY_MAX_NOTES) +
+            abs(active_count - M3_TELEMETRY_MAX_NOTES) +
+            abs(accepted - 1) + (generation <= 0 ? 1 : 0);
+    m3_test_near(10103, error, 0, 0);
+  );
+
+  case_id == 10104 ? (
+    m3_test_telemetry_reset();
+    m3_test_host_seed_active(60, 100);
+    fault = m3_host_fault_code(2, 1, 0, 0, 1);
+    cleanup_count = m3_host_fault_cleanup(
+      fault,
+      M3_VOICE_BASE,
+      M3_EVENT_BASE,
+      0
+    );
+    generation = m3_telemetry_publish(
+      M3_TEST_TELEMETRY_SOURCE_BASE,
+      0,
+      fault,
+      0,
+      1,
+      0,
+      1,
+      0,
+      M3_VOICE_BASE
+    );
+    accepted = m3_telemetry_read(
+      M3_TEST_TELEMETRY_SOURCE_BASE,
+      M3_TEST_TELEMETRY_UI_BASE
+    );
+    error = abs(cleanup_count - 1) + m3_test_lifecycle_active_count();
+    error += abs(fault - M3_FAULT_INVALID_SAMPLES) + abs(
+      accepted * M3_TEST_TELEMETRY_UI_BASE[M3_TELEMETRY_FAULT_OFFSET] -
+      M3_FAULT_INVALID_SAMPLES
+    );
+    m3_test_near(10104, error, 0, 0);
+  );
+
+  case_id == 10105 ? (
+    m3_test_telemetry_reset();
+    m3_test_host_seed_active(60, 101);
+    M3_TEST_SERIALIZATION_BASE[1] = 97531;
+    word_count = m3_state_prepare_serialization(
+      1,
+      M3_TEST_SERIALIZATION_BASE
+    );
+    error = abs(word_count - 1) +
+            abs(M3_TEST_SERIALIZATION_BASE[0] - 1) +
+            abs(M3_TEST_SERIALIZATION_BASE[1] - 97531);
+    m3_test_near(10105, error, 0, 0);
+  );
+
+  case_id == 10106 ? (
+    fault = m3_host_fault_code(3, 0, 0, 0, 1);
+    detection_enabled = m3_host_detection_enabled(3, fault);
+    dry_sample = m3_host_available_dry(0.25, 1);
+    error = abs(fault - M3_FAULT_UNSUPPORTED_CHANNELS) +
+            abs(detection_enabled) + abs(dry_sample - 0.25);
+    m3_test_near(10106, error, 0, 0);
+  );
+);
+
 gmem[0] = M3_TEST_MAGIC;
 gmem[1] = 1;
 gmem[2] = 0;
@@ -1534,7 +1664,7 @@ test_block_size = slider3 == 0 ? 32
                 : slider3 == 1 ? 64
                 : slider3 == 2 ? 128
                 : 256;
-test_case_index = min(43, max(0, slider2|0));
+test_case_index = min(49, max(0, slider2|0));
 test_bank_case_id = test_case_index < 6
   ? 4101 + test_case_index
   : test_case_index < 12
@@ -1545,7 +1675,9 @@ test_bank_case_id = test_case_index < 6
         ? 7101 + test_case_index - 18
         : test_case_index < 35
           ? 8101 + test_case_index - 24
-          : 9101 + test_case_index - 35;
+          : test_case_index < 44
+            ? 9101 + test_case_index - 35
+            : 10101 + test_case_index - 44;
 gmem[6] = test_bank_rate;
 gmem[15] = test_bank_case_id;
 gmem[30] = test_block_size;
@@ -1571,12 +1703,14 @@ test_bank_case_id < 5000 ? (
     test_block_size,
     test_bank_case_id
   );
-) : (
+) : test_bank_case_id < 10000 ? (
   m3_test_host_case(
     test_bank_rate,
     test_block_size,
     test_bank_case_id
   );
+) : (
+  m3_test_telemetry_case(test_bank_rate, test_bank_case_id);
 );
 gmem[1] == 1 ? gmem[1] = 2;
 

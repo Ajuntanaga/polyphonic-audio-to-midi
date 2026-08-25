@@ -21,6 +21,17 @@ CORE_IMPORTS = (
     "m3_poly_midi/m3_profile.jsfx-inc",
     "m3_poly_midi/lifecycle.jsfx-inc",
     "m3_poly_midi/midi_emitter.jsfx-inc",
+    "m3_poly_midi/telemetry_ui.jsfx-inc",
+)
+GFX_PROTECTED_BASES = (
+    "M3_CONDITION_BASE",
+    "M3_RATE_BASE",
+    "M3_RESONATOR_BASE",
+    "M3_SALIENCE_BASE",
+    "M3_SELECTION_BASE",
+    "M3_M3_SCRATCH_BASE",
+    "M3_VOICE_BASE",
+    "M3_EVENT_BASE",
 )
 EXPECTED_SLIDERS = (
     "slider1:0<0,2,1{Left,Right,Downmix}>Detector input",
@@ -76,7 +87,7 @@ def validate_modules(effects: pathlib.Path) -> list[str]:
     errors = []
     for module in sorted(effects.rglob("*.jsfx-inc")):
         text = module.read_text(encoding="utf-8")
-        forbidden = FILE_CALLS + ("printf(", "while(", "pdc_")
+        forbidden = FILE_CALLS + ("while(", "pdc_")
         if module.name != "telemetry_ui.jsfx-inc":
             forbidden += ("gfx_",)
         errors.extend(
@@ -84,6 +95,11 @@ def validate_modules(effects: pathlib.Path) -> list[str]:
             for token in forbidden
             if token in text
         )
+        if re.search(r"(?<!gfx_)printf\(", text):
+            errors.append(
+                "forbidden module token printf(: "
+                f"{module.relative_to(effects)}"
+            )
     return errors
 
 
@@ -126,6 +142,19 @@ def validate_tree(root: pathlib.Path) -> list[str]:
     if "midirecv(" in text:
         errors.append("production effect consumes incoming MIDI")
 
+    serialize = section(text, "serialize")
+    serialized_variables = re.findall(
+        r"file_var\(\s*0\s*,\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)",
+        serialize,
+    )
+    if serialized_variables != ["saved_schema_version"]:
+        errors.append("serialization must contain only saved_schema_version")
+    without_serialize = text.replace(serialize, "", 1) if serialize else text
+    if "file_var(" in without_serialize or "file_avail(" in without_serialize:
+        errors.append("serialization calls exist outside @serialize")
+    if "saved_schema_version = 1;" not in serialize:
+        errors.append("serialization schema version is not fixed at 1")
+
     slider = section(text, "slider")
     if "m3_bank_init(" in slider or "m3_host_reset_detector(" in slider:
         errors.append("slider section rebuilds detector")
@@ -153,6 +182,22 @@ def validate_tree(root: pathlib.Path) -> list[str]:
     sample = section(text, "sample")
     if "m3_midi_emit_event(" not in sample:
         errors.append("production sample path does not emit lifecycle MIDI")
+    if sample.count("time_precise(") != 2 or "time_precise(" in block:
+        errors.append("overload timing must use two sample-only time_precise calls")
+    if "m3_telemetry_publish(" not in sample:
+        errors.append("production sample path does not publish telemetry")
+
+    gfx = section(text, "gfx")
+    if "m3_telemetry_read(" not in gfx or "m3_ui_draw(" not in gfx:
+        errors.append("production gfx path does not read and draw telemetry")
+    for protected_base in GFX_PROTECTED_BASES:
+        if re.search(
+            rf"\b{protected_base}\s*\[[^\]]+\]\s*[+\-*/|&]?=",
+            gfx,
+        ):
+            errors.append(
+                f"production gfx writes protected detector memory: {protected_base}"
+            )
     assignments = re.findall(r"(?m)^\s*(spl[01])\s*=\s*([^;]+);", text)
     if assignments != [("spl0", "0"), ("spl1", "0")]:
         errors.append("production dry audio assignment contract is not exact")
