@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI
 
-Status: Tasks 1–7 verified; Task 8 in progress; not installed.
+Status: Tasks 1–8 verified; Task 9 in progress; not installed.
 
 Source-editable real-time polyphonic audio-to-MIDI for REAPER. The approved
 design is linked from the implementation plan. Production code is JSFX/EEL2;
