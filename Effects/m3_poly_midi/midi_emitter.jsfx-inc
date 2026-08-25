@@ -1,0 +1,147 @@
+@init
+M3_MIDI_ENCODE_STATUS_OFFSET = 0;
+M3_MIDI_ENCODE_NOTE_OFFSET = 1;
+M3_MIDI_ENCODE_VELOCITY_OFFSET = 2;
+M3_MIDI_ENCODE_SAMPLE_OFFSET = 3;
+M3_MIDI_ENCODE_WORDS = 4;
+M3_MIDI_ENCODE_WORK_OFFSET = 80;
+
+M3_HOST_CLEANUP_RATE = 1;
+M3_HOST_CLEANUP_STOP = 2;
+M3_HOST_CLEANUP_RECONFIGURE = 4;
+M3_HOST_CLEANUP_PANIC = 8;
+M3_HOST_BOUNDS_LOW_OFFSET = 0;
+M3_HOST_BOUNDS_HIGH_OFFSET = 1;
+
+function m3_midi_encode_event(event_base, index, channel, block_size,
+                              output_base)
+local(count, event_index, event, channel_index, event_type, status, note,
+      velocity, output_offset, safe_block_size) (
+  m3_zero(output_base, M3_MIDI_ENCODE_WORDS);
+  count = min(
+    M3_MAX_EVENTS,
+    max(0, floor(event_base[M3_EVENT_COUNT_OFFSET]))
+  );
+  event_index = floor(index);
+  event_index < 0 || event_index >= count ? 0 : (
+    event = m3_lifecycle_event_cell(event_base, event_index);
+    channel_index = (floor(m3_clamp(channel, 1, 16) + 0.5) - 1) & 15;
+    event_type = floor(event[M3_EVENT_TYPE_OFFSET]);
+    status = (event_type == M3_EVENT_TYPE_ON ? 0x90 : 0x80) |
+             channel_index;
+    note = floor(m3_clamp(event[M3_EVENT_NOTE_OFFSET], 0, 127) + 0.5);
+    velocity = event_type == M3_EVENT_TYPE_ON
+      ? floor(m3_clamp(event[M3_EVENT_VELOCITY_OFFSET], 1, 127) + 0.5)
+      : 0;
+    safe_block_size = max(1, floor(block_size));
+    output_offset = floor(m3_clamp(
+      event[M3_EVENT_SAMPLE_OFFSET],
+      0,
+      safe_block_size - 1
+    ));
+
+    output_base[M3_MIDI_ENCODE_STATUS_OFFSET] = status;
+    output_base[M3_MIDI_ENCODE_NOTE_OFFSET] = note;
+    output_base[M3_MIDI_ENCODE_VELOCITY_OFFSET] = velocity;
+    output_base[M3_MIDI_ENCODE_SAMPLE_OFFSET] = output_offset;
+    1;
+  );
+);
+
+function m3_midi_emit_event(event_base, index, channel)
+local(encoded, output_base) (
+  output_base = M3_CONFIG_BASE + M3_MIDI_ENCODE_WORK_OFFSET;
+  encoded = m3_midi_encode_event(
+    event_base,
+    index,
+    channel,
+    samplesblock,
+    output_base
+  );
+  encoded ? midisend(
+    output_base[M3_MIDI_ENCODE_SAMPLE_OFFSET],
+    output_base[M3_MIDI_ENCODE_STATUS_OFFSET],
+    output_base[M3_MIDI_ENCODE_NOTE_OFFSET],
+    output_base[M3_MIDI_ENCODE_VELOCITY_OFFSET]
+  );
+  encoded;
+);
+
+function m3_midi_queue_panic(voice_base, event_base, block_offset) (
+  m3_lifecycle_release_all(voice_base, event_base, block_offset);
+);
+
+function m3_midi_panic(voice_base, channel, block_offset)
+local(count, index) (
+  count = m3_midi_queue_panic(
+    voice_base,
+    M3_EVENT_BASE,
+    block_offset
+  );
+  index = 0;
+  loop(count,
+    m3_midi_emit_event(M3_EVENT_BASE, index, channel);
+    index += 1;
+  );
+  m3_lifecycle_reset_events(M3_EVENT_BASE);
+  count;
+);
+
+function m3_host_cleanup_reason(previous_rate, current_rate,
+                                previous_play_state, current_play_state,
+                                reconfigure_pending, panic_requested)
+local(reason, was_running, is_stopped) (
+  reason = 0;
+  previous_rate > 0 && abs(previous_rate - current_rate) > 0.5
+    ? reason |= M3_HOST_CLEANUP_RATE;
+  was_running = previous_play_state == 1 || previous_play_state == 5;
+  is_stopped = current_play_state == 0 ||
+               current_play_state == 2 ||
+               current_play_state == 6;
+  was_running && is_stopped ? reason |= M3_HOST_CLEANUP_STOP;
+  reconfigure_pending ? reason |= M3_HOST_CLEANUP_RECONFIGURE;
+  panic_requested ? reason |= M3_HOST_CLEANUP_PANIC;
+  reason;
+);
+
+function m3_host_select_input(input_mode, left, right)
+local(mode) (
+  mode = floor(m3_clamp(input_mode, 0, 2));
+  mode == 0 ? left :
+  mode == 1 ? right :
+  (left + right) * 0.7071067811865476;
+);
+
+function m3_host_clamp_bounds(requested_low, requested_high, output_base)
+local(first, second) (
+  first = floor(m3_clamp(requested_low, 24, 108) + 0.5);
+  second = floor(m3_clamp(requested_high, 24, 108) + 0.5);
+  output_base[M3_HOST_BOUNDS_LOW_OFFSET] = min(first, second);
+  output_base[M3_HOST_BOUNDS_HIGH_OFFSET] = max(first, second);
+  output_base[M3_HOST_BOUNDS_HIGH_OFFSET] -
+  output_base[M3_HOST_BOUNDS_LOW_OFFSET] + 1;
+);
+
+function m3_host_apply_bounds(profile_mode, requested_low, requested_high,
+                              output_base) (
+  profile_mode == M3_PROFILE_MODE_M3 ? (
+    output_base[M3_HOST_BOUNDS_LOW_OFFSET] = 32;
+    output_base[M3_HOST_BOUNDS_HIGH_OFFSET] = 84;
+    53;
+  ) : (
+    m3_host_clamp_bounds(requested_low, requested_high, output_base);
+  );
+);
+
+function m3_host_reset_detector(test_sr, min_note, max_note, a4) (
+  m3_condition_init(M3_CONDITION_BASE, test_sr);
+  m3_bank_init(M3_RESONATOR_BASE, test_sr, min_note, max_note, a4);
+  m3_zero(
+    M3_SALIENCE_BASE,
+    M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET + 1
+  );
+  m3_zero(M3_SELECTION_BASE, M3_SELECTION_WORK_WORDS);
+  m3_zero(M3_M3_SCRATCH_BASE, M3_PROFILE_DP_WORDS);
+  m3_lifecycle_init(M3_VOICE_BASE, M3_EVENT_BASE);
+  1;
+);

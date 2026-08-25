@@ -29,7 +29,8 @@ local valid_case = expected_case and (
   (expected_case >= 5101 and expected_case <= 5106) or
   (expected_case >= 6101 and expected_case <= 6106) or
   (expected_case >= 7101 and expected_case <= 7106) or
-  (expected_case >= 8101 and expected_case <= 8111)
+  (expected_case >= 8101 and expected_case <= 8111) or
+  (expected_case >= 9101 and expected_case <= 9109)
 )
 local task_eight = expected_case and expected_case >= 8101 and expected_case <= 8111
 local valid_block = expected_block == 32 or expected_block == 64 or

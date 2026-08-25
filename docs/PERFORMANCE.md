@@ -251,4 +251,51 @@ remained near 28 GiB, load stayed below 3.8, and readable temperature stayed at
 or below 73 C. The launcher restored whichever user workspace was active
 (workspace 4 early in the matrix and workspace 1 later) and left no REAPER
 process running. This task validates lifecycle events in fixed memory; actual
-MIDI encoding and host emission remain Task 9.
+MIDI encoding and host emission are validated separately below.
+
+## Task 9 production host and reachable MIDI cleanup
+
+The complete 9101–9109 harness first ran with a bounded zero-result host
+scaffold. At 48 kHz, assertion 9101 failed with three assertions and aggregate
+encoding error 322. The preserved result is
+`build/evidence/task-09-midi-host-red-9101.txt`, SHA-256
+`bb4045cf18175e0ce8684c10b75a220e0faf21bb9f62a3f44d5341d0c17664e7`.
+
+The shared emitter encodes channel 1 and channel 16 status bytes, clamps pitch,
+velocity, and block offsets, and emits each ordered event once. Reachable
+sample-rate, transport-stop, hard-reconfiguration, and explicit-Panic paths
+queue every active pitch as a note-off on the previously active channel before
+clearing detector state. The final reset explicitly clears conditioner,
+resonator/rate, all salience metadata, selection work, M3 scratch, voice, and
+event regions. The emitter source SHA-256 is
+`dbcb5da8a0c81b8095a12975323b1b0ddfb58b1946b9065196e8a9ad6f60718c`.
+
+The production effect now has the frozen fifteen-slider surface. Slider code
+only clamps and stages settings; the block path performs panic-before-reset and
+the sample path performs bounded streaming analysis plus one-time MIDI
+emission. Incoming MIDI is never consumed. Dry passthrough has exactly two
+possible audio assignments, both zeroing outputs only in muted mode. The
+standalone validator rejects slider-side rebuilds, `midirecv`, altered slider
+numbering, additional audio assignments, missing cleanup/reset ordering, and
+the prior file/UI/PDC hazards.
+
+Cases 9101–9109 passed at 44.1, 48, and 96 kHz in 27 hidden guarded
+workspace-5 launches. Every result contains three assertions, suite state `2`,
+and failed assertion ID `0`. The SHA-256 of the lexically ordered `sha256sum`
+output is
+`1a20321b3c6bb43ae671dc306f4ecc326f0ef286fa25faa333cd1c45d52a40e9`.
+Preflights stayed above 30 GiB available memory, below load 1.2, and at or below
+59 C. Workspace 1 remained active and no REAPER process remained afterward.
+Cases 4104, 5104, 6102, 6105, 7102, 7105, and 8102/block 128 then passed again
+at 48 kHz as a seven-case detector-through-lifecycle regression after the host
+module was imported.
+
+A separate disposable production-load smoke instantiated the production JSFX
+enabled and online with two inputs, two outputs, and all fifteen named controls
+in order (18 total host parameters including REAPER-provided parameters). Its
+result is `build/evidence/task-09-production-smoke.txt`, SHA-256
+`321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.
+The smoke script dirtied its disposable project while swapping FX, so its close
+request waited on an unseen save prompt and the launcher enforced the 60-second
+termination bound. This is not a clean host-sequence result; Task 11 still owns
+VSTi routing, dry-path, MIDI capture, and safe-bypass integration.

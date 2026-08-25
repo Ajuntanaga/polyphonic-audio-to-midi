@@ -12,6 +12,8 @@ REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
 PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
 LIFECYCLE = ROOT / "Effects/m3_poly_midi/lifecycle.jsfx-inc"
+MIDI_EMITTER = ROOT / "Effects/m3_poly_midi/midi_emitter.jsfx-inc"
+PRODUCTION = ROOT / "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -116,6 +118,77 @@ class SourceContractTests(unittest.TestCase):
             constants["M3_TELEMETRY_A_BASE"] - constants["M3_EVENT_BASE"],
         )
 
+    def test_midi_emitter_contract(self):
+        self.assertTrue(
+            MIDI_EMITTER.is_file(),
+            f"missing {MIDI_EMITTER.relative_to(ROOT)}",
+        )
+        emitter = MIDI_EMITTER.read_text(encoding="utf-8")
+        for interface in (
+            "m3_midi_encode_event(",
+            "m3_midi_emit_event(",
+            "m3_midi_queue_panic(",
+            "m3_midi_panic(",
+            "m3_host_cleanup_reason(",
+            "m3_host_select_input(",
+            "m3_host_apply_bounds(",
+            "m3_host_reset_detector(",
+        ):
+            self.assertIn(interface, emitter)
+
+    def test_production_parameter_surface_is_stable(self):
+        expected = [
+            "slider1:0<0,2,1{Left,Right,Downmix}>Detector input",
+            "slider2:0<0,1,1{M3 Eight-String,General Tonal}>Mode",
+            "slider3:440<400,480,0.1>A4 reference (Hz)",
+            "slider4:0<-24,24,0.1>Input trim (dB)",
+            "slider5:50<0,100,1>Sensitivity",
+            "slider6:25<0,100,1>Response (Fast to Stable)",
+            "slider7:32<24,108,1>Lowest MIDI note",
+            "slider8:84<24,108,1>Highest MIDI note",
+            "slider9:8<1,8,1>Maximum polyphony",
+            "slider10:24<0,36,1>M3 maximum fret",
+            "slider11:1<0,1,1{Fixed,Dynamic}>Velocity mode",
+            "slider12:100<1,127,1>Fixed velocity",
+            "slider13:1<1,16,1>MIDI channel",
+            "slider14:0<0,1,1{Ready,Panic}>Panic",
+            "slider15:1<0,1,1{Muted,Pass through}>Dry audio",
+        ]
+        actual = re.findall(r"(?m)^slider\d+:.*$", PRODUCTION.read_text(encoding="utf-8"))
+        self.assertEqual(actual, expected)
+
+    def test_production_host_lifecycle_is_block_bounded(self):
+        text = PRODUCTION.read_text(encoding="utf-8")
+        slider = re.search(
+            r"(?ms)^@slider[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+        block = re.search(
+            r"(?ms)^@block[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+        sample = re.search(
+            r"(?ms)^@sample[^\n]*\n(.*?)(?=^@|\Z)",
+            text,
+        ).group(1)
+
+        self.assertIn("ext_noinit = 1;", text)
+        self.assertIn("m3_poly_midi/lifecycle.jsfx-inc", text)
+        self.assertIn("m3_poly_midi/midi_emitter.jsfx-inc", text)
+        self.assertNotIn("m3_bank_init(", slider)
+        self.assertNotIn("m3_host_reset_detector(", slider)
+        self.assertIn("m3_midi_panic(", block)
+        self.assertIn("m3_host_reset_detector(", block)
+        self.assertLess(
+            block.index("m3_midi_panic("),
+            block.index("m3_host_reset_detector("),
+        )
+        self.assertIn("m3_midi_emit_event(", sample)
+        self.assertNotIn("midirecv(", text)
+
+        assignments = re.findall(r"(?m)^\s*(spl[01])\s*=\s*([^;]+);", text)
+        self.assertEqual(assignments, [("spl0", "0"), ("spl1", "0")])
+
     def test_validator_checks_auxiliary_import_graph(self):
         with tempfile.TemporaryDirectory() as temporary:
             fixture_root = pathlib.Path(temporary)
@@ -164,6 +237,83 @@ class SourceContractTests(unittest.TestCase):
             )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("test-only reference", result.stdout + result.stderr)
+
+    def test_validator_rejects_detector_rebuild_in_slider_section(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / PRODUCTION.name
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace(
+                    "@slider\n",
+                    "@slider\nm3_host_reset_detector(srate, 32, 84, 440);\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("slider section rebuilds detector", result.stdout + result.stderr)
+
+    def test_validator_rejects_consuming_incoming_midi(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / PRODUCTION.name
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace(
+                    "@block\n",
+                    "@block\nmidirecv(offset, status, data1, data2);\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("production effect consumes incoming MIDI", result.stdout + result.stderr)
+
+    def test_validator_rejects_extra_dry_audio_assignment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture_root = pathlib.Path(temporary)
+            shutil.copytree(ROOT / "Effects", fixture_root / "Effects")
+            production = fixture_root / "Effects" / PRODUCTION.name
+            text = production.read_text(encoding="utf-8")
+            production.write_text(
+                text.replace("@sample\n", "@sample\nspl0 = spl0;\n", 1),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/validate_source.py"),
+                    str(fixture_root),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("dry audio assignment contract", result.stdout + result.stderr)
 
     def test_disposable_staging_never_targets_live_profile(self):
         result = subprocess.run(

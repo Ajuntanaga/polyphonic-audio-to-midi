@@ -46,6 +46,15 @@ CASE_SLIDER = {
     8109: "32",
     8110: "33",
     8111: "34",
+    9101: "35",
+    9102: "36",
+    9103: "37",
+    9104: "38",
+    9105: "39",
+    9106: "40",
+    9107: "41",
+    9108: "42",
+    9109: "43",
 }
 
 
@@ -77,7 +86,7 @@ def prepare_project(
     if case_id not in CASE_SLIDER:
         raise ValueError(
             "case ID must be one of 4101..4106, 5101..5106, "
-            "6101..6106, 7101..7106, or 8101..8111"
+            "6101..6106, 7101..7106, 8101..8111, or 9101..9109"
         )
     task_eight = 8101 <= case_id <= 8111
     if task_eight and block_size not in BLOCK_SLIDER:

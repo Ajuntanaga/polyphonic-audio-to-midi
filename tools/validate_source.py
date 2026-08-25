@@ -19,6 +19,25 @@ CORE_IMPORTS = (
     "m3_poly_midi/constants.jsfx-inc",
     "m3_poly_midi/pitch_math.jsfx-inc",
     "m3_poly_midi/m3_profile.jsfx-inc",
+    "m3_poly_midi/lifecycle.jsfx-inc",
+    "m3_poly_midi/midi_emitter.jsfx-inc",
+)
+EXPECTED_SLIDERS = (
+    "slider1:0<0,2,1{Left,Right,Downmix}>Detector input",
+    "slider2:0<0,1,1{M3 Eight-String,General Tonal}>Mode",
+    "slider3:440<400,480,0.1>A4 reference (Hz)",
+    "slider4:0<-24,24,0.1>Input trim (dB)",
+    "slider5:50<0,100,1>Sensitivity",
+    "slider6:25<0,100,1>Response (Fast to Stable)",
+    "slider7:32<24,108,1>Lowest MIDI note",
+    "slider8:84<24,108,1>Highest MIDI note",
+    "slider9:8<1,8,1>Maximum polyphony",
+    "slider10:24<0,36,1>M3 maximum fret",
+    "slider11:1<0,1,1{Fixed,Dynamic}>Velocity mode",
+    "slider12:100<1,127,1>Fixed velocity",
+    "slider13:1<1,16,1>MIDI channel",
+    "slider14:0<0,1,1{Ready,Panic}>Panic",
+    "slider15:1<0,1,1{Muted,Pass through}>Dry audio",
 )
 
 
@@ -79,9 +98,12 @@ def validate_tree(root: pathlib.Path) -> list[str]:
     if "m3_bank_process_reference(" in text:
         errors.append("test-only reference call in production effect")
 
+    slider_lines = re.findall(r"(?m)^slider\d+:.*$", text)
     sliders = re.findall(r"(?m)^slider(\d+):", text)
     if len(sliders) != len(set(sliders)):
         errors.append("duplicate slider number")
+    if tuple(slider_lines) != EXPECTED_SLIDERS:
+        errors.append("production slider surface differs from the stable contract")
 
     imports = re.findall(r"(?m)^import\s+(.+?)\s*$", text)
     for core_import in CORE_IMPORTS:
@@ -101,6 +123,13 @@ def validate_tree(root: pathlib.Path) -> list[str]:
         if token in realtime
     )
 
+    if "midirecv(" in text:
+        errors.append("production effect consumes incoming MIDI")
+
+    slider = section(text, "slider")
+    if "m3_bank_init(" in slider or "m3_host_reset_detector(" in slider:
+        errors.append("slider section rebuilds detector")
+
     block = section(text, "block")
     selection_call = "m3_select_voices("
     profile_call = "m3_profile_filter_selected("
@@ -111,6 +140,22 @@ def validate_tree(root: pathlib.Path) -> list[str]:
     if selection_call in block and profile_call in block:
         if block.index(selection_call) > block.index(profile_call):
             errors.append("M3 profile filtering must follow voice selection")
+    panic_call = "m3_midi_panic("
+    reset_call = "m3_host_reset_detector("
+    if panic_call not in block:
+        errors.append("production block does not perform reachable MIDI cleanup")
+    if reset_call not in block:
+        errors.append("production block does not perform bounded detector reset")
+    if panic_call in block and reset_call in block:
+        if block.index(panic_call) > block.index(reset_call):
+            errors.append("MIDI cleanup must precede detector reset")
+
+    sample = section(text, "sample")
+    if "m3_midi_emit_event(" not in sample:
+        errors.append("production sample path does not emit lifecycle MIDI")
+    assignments = re.findall(r"(?m)^\s*(spl[01])\s*=\s*([^;]+);", text)
+    if assignments != [("spl0", "0"), ("spl1", "0")]:
+        errors.append("production dry audio assignment contract is not exact")
     return errors
 
 

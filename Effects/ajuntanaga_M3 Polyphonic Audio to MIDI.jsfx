@@ -7,6 +7,8 @@ import m3_poly_midi/conditioning.jsfx-inc
 import m3_poly_midi/resonator_bank.jsfx-inc
 import m3_poly_midi/salience_selector.jsfx-inc
 import m3_poly_midi/m3_profile.jsfx-inc
+import m3_poly_midi/lifecycle.jsfx-inc
+import m3_poly_midi/midi_emitter.jsfx-inc
 
 in_pin:left
 in_pin:right
@@ -14,23 +16,177 @@ out_pin:left
 out_pin:right
 
 slider1:0<0,2,1{Left,Right,Downmix}>Detector input
+slider2:0<0,1,1{M3 Eight-String,General Tonal}>Mode
+slider3:440<400,480,0.1>A4 reference (Hz)
+slider4:0<-24,24,0.1>Input trim (dB)
+slider5:50<0,100,1>Sensitivity
+slider6:25<0,100,1>Response (Fast to Stable)
+slider7:32<24,108,1>Lowest MIDI note
+slider8:84<24,108,1>Highest MIDI note
+slider9:8<1,8,1>Maximum polyphony
+slider10:24<0,36,1>M3 maximum fret
+slider11:1<0,1,1{Fixed,Dynamic}>Velocity mode
+slider12:100<1,127,1>Fixed velocity
+slider13:1<1,16,1>MIDI channel
+slider14:0<0,1,1{Ready,Panic}>Panic
+slider15:1<0,1,1{Muted,Pass through}>Dry audio
 
 @init
 ext_noinit = 1;
-last_srate = srate;
-input_trim_gain = 1;
+last_srate = 0;
+last_play_state = play_state;
+slider_profile_mode = -1;
+
+input_mode = 0;
 profile_mode = M3_PROFILE_MODE_M3;
+a4_reference = 440;
+input_trim_gain = 1;
+sensitivity = 50;
+response = 0.25;
+detector_min_note = 32;
+detector_max_note = 84;
+max_polyphony = M3_MAX_VOICES;
 profile_max_fret = 24;
+velocity_mode = M3_VELOCITY_MODE_DYNAMIC;
+fixed_velocity = 100;
+midi_channel = 1;
+dry_passthrough = 1;
+
+requested_input_mode = input_mode;
+requested_profile_mode = profile_mode;
+requested_a4_reference = a4_reference;
+requested_input_trim_gain = input_trim_gain;
+requested_sensitivity = sensitivity;
+requested_response = response;
+requested_min_note = detector_min_note;
+requested_max_note = detector_max_note;
+requested_max_polyphony = max_polyphony;
+requested_profile_max_fret = profile_max_fret;
+requested_velocity_mode = velocity_mode;
+requested_fixed_velocity = fixed_velocity;
+requested_midi_channel = midi_channel;
+requested_dry_passthrough = dry_passthrough;
+
+reconfigure_pending = 1;
+panic_requested = 0;
+sample_offset = 0;
+absolute_sample = 0;
+event_count = 0;
+emitted_event_count = 0;
+host_bounds_base = M3_CONFIG_BASE + 88;
+lifecycle_response_base = M3_CONFIG_BASE + 96;
+
 m3_profile_load(M3_CONFIG_BASE + M3_PROFILE_OPEN_OFFSET);
-m3_condition_init(M3_CONDITION_BASE, srate);
-m3_bank_init(M3_RESONATOR_BASE, srate, 32, 84, 440);
-M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.20;
+m3_lifecycle_init(M3_VOICE_BASE, M3_EVENT_BASE);
 
 @slider
-input_mode = min(2, max(0, slider1|0));
+requested_input_mode = floor(m3_clamp(slider1, 0, 2));
+requested_profile_mode = floor(m3_clamp(slider2, 0, 1));
+
+requested_profile_mode != slider_profile_mode ? (
+  m3_host_apply_bounds(
+    requested_profile_mode,
+    slider7,
+    slider8,
+    host_bounds_base
+  );
+  slider_profile_mode = requested_profile_mode;
+) : (
+  m3_host_clamp_bounds(slider7, slider8, host_bounds_base);
+);
+
+slider1 = requested_input_mode;
+slider2 = requested_profile_mode;
+slider3 = m3_clamp(slider3, 400, 480);
+slider4 = m3_clamp(slider4, -24, 24);
+slider5 = floor(m3_clamp(slider5, 0, 100) + 0.5);
+slider6 = floor(m3_clamp(slider6, 0, 100) + 0.5);
+slider7 = host_bounds_base[M3_HOST_BOUNDS_LOW_OFFSET];
+slider8 = host_bounds_base[M3_HOST_BOUNDS_HIGH_OFFSET];
+slider9 = floor(m3_clamp(slider9, 1, M3_MAX_VOICES) + 0.5);
+slider10 = floor(m3_clamp(slider10, 0, 36) + 0.5);
+slider11 = floor(m3_clamp(slider11, 0, 1));
+slider12 = floor(m3_clamp(slider12, 1, 127) + 0.5);
+slider13 = floor(m3_clamp(slider13, 1, 16) + 0.5);
+slider15 = floor(m3_clamp(slider15, 0, 1));
+
+requested_a4_reference = slider3;
+requested_input_trim_gain = 10 ^ (slider4 / 20);
+requested_sensitivity = slider5;
+requested_response = slider6 / 100;
+requested_min_note = slider7;
+requested_max_note = slider8;
+requested_max_polyphony = slider9;
+requested_profile_max_fret = slider10;
+requested_velocity_mode = slider11;
+requested_fixed_velocity = slider12;
+requested_midi_channel = slider13;
+requested_dry_passthrough = slider15;
+
+hard_configuration_changed =
+  requested_input_mode != input_mode ||
+  requested_profile_mode != profile_mode ||
+  requested_a4_reference != a4_reference ||
+  requested_min_note != detector_min_note ||
+  requested_max_note != detector_max_note ||
+  requested_max_polyphony != max_polyphony ||
+  requested_profile_max_fret != profile_max_fret ||
+  requested_midi_channel != midi_channel;
+hard_configuration_changed ? reconfigure_pending = 1;
+panic_requested = panic_requested || slider14 >= 0.5;
+slider14 = 0;
 
 @block
+block_cleanup_reason = m3_host_cleanup_reason(
+  last_srate,
+  srate,
+  last_play_state,
+  play_state,
+  reconfigure_pending,
+  panic_requested
+);
+
+block_cleanup_reason ? (
+  cleanup_event_count = m3_midi_panic(M3_VOICE_BASE, midi_channel, 0);
+);
+
+input_mode = requested_input_mode;
+profile_mode = requested_profile_mode;
+a4_reference = requested_a4_reference;
+input_trim_gain = requested_input_trim_gain;
+sensitivity = requested_sensitivity;
+response = requested_response;
+detector_min_note = requested_min_note;
+detector_max_note = requested_max_note;
+max_polyphony = requested_max_polyphony;
+profile_max_fret = requested_profile_max_fret;
+velocity_mode = requested_velocity_mode;
+fixed_velocity = requested_fixed_velocity;
+midi_channel = requested_midi_channel;
+dry_passthrough = requested_dry_passthrough;
+
+block_cleanup_reason ? (
+  m3_host_reset_detector(
+    srate,
+    detector_min_note,
+    detector_max_note,
+    a4_reference
+  );
+  absolute_sample = 0;
+  reconfigure_pending = 0;
+  panic_requested = 0;
+);
+
 sample_offset = 0;
+event_count = 0;
+emitted_event_count = 0;
+m3_lifecycle_reset_events(M3_EVENT_BASE);
+
+M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = m3_clamp(
+  0.40 - 0.004 * sensitivity,
+  0.05,
+  0.40
+);
 M3_SALIENCE_BASE[M3_SALIENCE_CLIPPED_OFFSET] =
   M3_CONDITION_BASE[14] > 0.01;
 m3_salience_update(
@@ -41,11 +197,11 @@ m3_salience_update(
 selected_voice_count = m3_select_voices(
   M3_RESONATOR_BASE,
   M3_SALIENCE_BASE,
-  32,
-  53,
-  M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET],
-  M3_MAX_VOICES,
-  440,
+  detector_min_note,
+  detector_max_note - detector_min_note + 1,
+  M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
+  max_polyphony,
+  a4_reference,
   M3_SELECTION_BASE
 );
 selected_voice_count = m3_profile_filter_selected(
@@ -57,19 +213,52 @@ selected_voice_count = m3_profile_filter_selected(
   M3_M3_SCRATCH_BASE
 );
 
+m3_lifecycle_response(response, srate, lifecycle_response_base);
+event_count = m3_lifecycle_update(
+  M3_VOICE_BASE,
+  M3_EVENT_BASE,
+  M3_SELECTION_BASE,
+  selected_voice_count,
+  absolute_sample,
+  0,
+  lifecycle_response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+  lifecycle_response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+  lifecycle_response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+  lifecycle_response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET],
+  lifecycle_response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET],
+  velocity_mode,
+  fixed_velocity
+);
+
+last_srate = srate;
+last_play_state = play_state;
+
 @sample
-detector_in = input_mode == 0 ? spl0
-            : input_mode == 1 ? spl1
-            : (spl0 + spl1) * 0.7071067811865476;
+detector_in = m3_host_select_input(input_mode, spl0, spl1);
 conditioned = m3_condition_process(
   M3_CONDITION_BASE,
   detector_in * input_trim_gain
 );
 m3_bank_process(M3_RESONATOR_BASE, conditioned);
+
+event_i = emitted_event_count;
+new_event_count = max(0, event_count - emitted_event_count);
+loop(new_event_count,
+  m3_midi_emit_event(M3_EVENT_BASE, event_i, midi_channel);
+  event_i += 1;
+);
+emitted_event_count = event_count;
+
+!dry_passthrough ? (
+  spl0 = 0;
+  spl1 = 0;
+);
+
 sample_offset += 1;
+absolute_sample += 1;
 
 @gfx 520 260
 gfx_set(0.78, 0.82, 0.88, 1);
 gfx_x = 16;
 gfx_y = 16;
-gfx_drawstr("M3 Polyphonic Audio to MIDI: detector not initialized");
+gfx_drawstr("M3 Polyphonic Audio to MIDI: realtime MIDI host active");
