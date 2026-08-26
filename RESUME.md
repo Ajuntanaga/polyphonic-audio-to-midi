@@ -1,17 +1,16 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T17:16:13-07:00
+Updated: 2026-08-25T17:17:42-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last committed implementation: `ca9a256` (`feat: add safe telemetry and
-  compact JSFX UI`). Task 11 is verified in the current worktree and awaits its
-  implementation commit.
+- Last verified implementation commit: `1f0186c` (`feat: verify polyphonic
+  VSTi host integration`).
 - Latest stability commit: `821ba22` (`fix: background guarded REAPER
   launches`).
 - Current task: Task 12, synthetic metrics only. Clean-DI input remains gated.
-- Tasks 1–10 are verified and committed. Task 11 disposable-host evidence is
+- Tasks 1–11 are verified and committed. Task 11 disposable-host evidence is
   accepted and preserved below.
 - Fresh current-tree result: all 53 Python tests pass,
   `python3 tools/validate_source.py .` reports `source contract: ok`, Python
@@ -302,14 +301,12 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Commit the verified Task 11 implementation, tests, and documentation, then
-   update this file with the implementation commit hash.
-2. Update the two canonical Obsidian project notes with the committed Task 11
+1. Update the two canonical Obsidian project notes with the committed Task 11
    state and evidence hashes.
-3. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
+2. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
    duplicate-note, note-count, onset, and release summaries from the committed
    manifest/evidence path.
-4. Keep clean-DI audio, live guitar/interface input, persistent installation,
+3. Keep clean-DI audio, live guitar/interface input, persistent installation,
    live projects, REAPER MCP, and native fallback behind their existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
