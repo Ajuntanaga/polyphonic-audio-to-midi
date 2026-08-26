@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T17:17:42-07:00
+Updated: 2026-08-25T17:20:35-07:00
 
 ## Authoritative state
 
@@ -15,6 +15,10 @@ Updated: 2026-08-25T17:17:42-07:00
 - Fresh current-tree result: all 53 Python tests pass,
   `python3 tools/validate_source.py .` reports `source contract: ok`, Python
   tools compile, and `git diff --check` is clean.
+- The canonical Obsidian implementation-plan and project notes are synchronized
+  to Task 12 with implementation `1f0186c`, checkpoint `d3df2bf`, Task 11
+  evidence hashes, and unchanged gates. Obsidian was not running, so the CLI
+  refused and the notes were saved directly as Markdown without opening the app.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
   fallback was used.
@@ -301,12 +305,10 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Update the two canonical Obsidian project notes with the committed Task 11
-   state and evidence hashes.
-2. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
+1. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
    duplicate-note, note-count, onset, and release summaries from the committed
    manifest/evidence path.
-3. Keep clean-DI audio, live guitar/interface input, persistent installation,
+2. Keep clean-DI audio, live guitar/interface input, persistent installation,
    live projects, REAPER MCP, and native fallback behind their existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
