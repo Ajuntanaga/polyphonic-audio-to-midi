@@ -1,0 +1,236 @@
+desc:ajuntanaga/M3 Polyphonic MIDI - Signal Source
+tags:test generator MIDI analysis
+options:gmem=m3_poly_midi_tests_v1
+in_pin:none
+out_pin:left
+out_pin:right
+
+@init
+M3_INTEGRATION_COMMAND = 100;
+M3_INTEGRATION_CASE = 101;
+M3_INTEGRATION_STATE = 102;
+M3_INTEGRATION_RATE = 103;
+M3_INTEGRATION_ONSET = 104;
+M3_INTEGRATION_RELEASE = 105;
+M3_INTEGRATION_NOTE_COUNT = 106;
+M3_INTEGRATION_NOTE_BASE = 107;
+M3_INTEGRATION_COUNTER = 128;
+M3_INTEGRATION_REFERENCE = 129;
+M3_INTEGRATION_DETUNE = 115;
+M3_INTEGRATION_MISSING_FUNDAMENTAL = 116;
+M3_INTEGRATION_NOISE_GAIN = 117;
+M3_INTEGRATION_DC_GAIN = 118;
+M3_INTEGRATION_HUM_50_GAIN = 119;
+M3_INTEGRATION_HUM_60_GAIN = 120;
+M3_INTEGRATION_CLIP = 121;
+M3_INTEGRATION_STAGGER = 122;
+M3_INTEGRATION_ACK = 123;
+M3_INTEGRATION_INIT_COUNT = 124;
+M3_INTEGRATION_READY = 125;
+M3_INTEGRATION_HEARTBEAT = 126;
+M3_INTEGRATION_GAIN_BASE = 160;
+M3_INTEGRATION_REFERENCE_RING = 4096;
+M3_INTEGRATION_REFERENCE_CAPACITY = 2048;
+M3_INTEGRATION_WARMUP_SECONDS = 0.500;
+
+M3_INTEGRATION_IDLE = 0;
+M3_INTEGRATION_ARMED = 1;
+M3_INTEGRATION_RUNNING = 2;
+M3_INTEGRATION_COMPLETE = 3;
+M3_INTEGRATION_FAULT = -1;
+
+M3_SOURCE_PHASE_BASE = 0;
+m3_source_last_command = -1;
+m3_source_counter_active = 0;
+m3_source_seed = 0x13579BDF;
+m3_source_hum_50_phase = 0;
+m3_source_hum_60_phase = 0;
+m3_source_ready_blocks = 0;
+gmem[M3_INTEGRATION_ACK] = 0;
+gmem[M3_INTEGRATION_READY] = 0;
+gmem[M3_INTEGRATION_HEARTBEAT] = 0;
+gmem[M3_INTEGRATION_INIT_COUNT] += 1;
+
+function m3_source_clamp(value, minimum, maximum) (
+  min(maximum, max(minimum, value));
+);
+
+function m3_source_midi_to_hz(note, detune_cents) (
+  440 * 2 ^ ((note - 69 + detune_cents / 100) / 12);
+);
+
+function m3_source_xorshift()
+local(value) (
+  value = floor(m3_source_seed);
+  value ^= value << 13;
+  value ^= value >> 17;
+  value ^= value << 5;
+  value &= 0x7FFFFFFF;
+  m3_source_seed = max(1, value);
+  m3_source_seed / 1073741824 - 1;
+);
+
+function m3_source_envelope(now, onset, attack, sustain, release)
+local(position, release_start) (
+  release_start = onset + attack + sustain;
+  now < onset ? 0 :
+  now < onset + attack ? (
+    position = (now - onset) / max(1, attack);
+    0.5 - 0.5 * cos($pi * position);
+  ) : now < release_start ? 1 :
+  now < release_start + release ? (
+    position = (now - release_start) / max(1, release);
+    0.5 + 0.5 * cos($pi * position);
+  ) : 0;
+);
+
+@block
+m3_source_block_offset = 0;
+gmem[M3_INTEGRATION_HEARTBEAT] += 1;
+m3_source_ready_blocks += 1;
+gmem[M3_INTEGRATION_STATE] == M3_INTEGRATION_IDLE &&
+m3_source_ready_blocks >= 4 ? (
+  gmem[M3_INTEGRATION_READY] = gmem[M3_INTEGRATION_INIT_COUNT];
+);
+m3_source_command = floor(gmem[M3_INTEGRATION_COMMAND]);
+m3_source_command != m3_source_last_command &&
+gmem[M3_INTEGRATION_STATE] == M3_INTEGRATION_ARMED ? (
+  m3_source_last_command = m3_source_command;
+  m3_source_note_count = min(
+    8,
+    max(0, floor(gmem[M3_INTEGRATION_NOTE_COUNT]))
+  );
+  m3_source_wait_samples = max(
+    1,
+    floor(M3_INTEGRATION_WARMUP_SECONDS * srate + 0.5)
+  );
+  m3_source_attack_samples = max(1, floor(0.005 * srate + 0.5));
+  m3_source_sustain_samples = max(1, floor(0.300 * srate + 0.5));
+  m3_source_release_samples = max(1, floor(0.020 * srate + 0.5));
+  m3_source_stagger_samples = max(
+    0,
+    floor(gmem[M3_INTEGRATION_STAGGER])
+  );
+  m3_source_last_stagger = max(0, m3_source_note_count - 1) *
+                           m3_source_stagger_samples;
+  m3_source_end_sample = m3_source_wait_samples +
+                         m3_source_attack_samples +
+                         m3_source_sustain_samples +
+                         m3_source_release_samples +
+                         m3_source_last_stagger;
+  gmem[M3_INTEGRATION_RATE] = srate;
+  gmem[M3_INTEGRATION_ONSET] = m3_source_wait_samples;
+  gmem[M3_INTEGRATION_RELEASE] = m3_source_wait_samples +
+                                 m3_source_attack_samples +
+                                 m3_source_sustain_samples +
+                                 m3_source_last_stagger;
+  gmem[M3_INTEGRATION_COUNTER] = 0;
+  gmem[M3_INTEGRATION_REFERENCE] = 0;
+  m3_source_index = 0;
+  loop(8,
+    M3_SOURCE_PHASE_BASE[m3_source_index] = 0;
+    m3_source_index += 1;
+  );
+  m3_source_seed = 0x13579BDF ^ floor(gmem[M3_INTEGRATION_CASE]);
+  m3_source_hum_50_phase = 0;
+  m3_source_hum_60_phase = 0;
+  m3_source_counter_active = 1;
+  gmem[M3_INTEGRATION_ACK] = m3_source_command;
+  gmem[M3_INTEGRATION_STATE] = M3_INTEGRATION_RUNNING;
+);
+
+@sample
+m3_source_generated = 0;
+m3_source_now = max(0, floor(gmem[M3_INTEGRATION_COUNTER]));
+gmem[M3_INTEGRATION_STATE] == M3_INTEGRATION_RUNNING ? (
+  m3_source_active_count = 0;
+  m3_source_index = 0;
+  loop(m3_source_note_count,
+    m3_source_onset = m3_source_wait_samples +
+                      m3_source_index * m3_source_stagger_samples;
+    m3_source_envelope_value = m3_source_envelope(
+      m3_source_now,
+      m3_source_onset,
+      m3_source_attack_samples,
+      m3_source_sustain_samples,
+      m3_source_release_samples
+    );
+    m3_source_envelope_value > 0 ? (
+      m3_source_active_count += 1;
+      m3_source_note = floor(
+        m3_source_clamp(
+          gmem[M3_INTEGRATION_NOTE_BASE + m3_source_index],
+          0,
+          127
+        ) + 0.5
+      );
+      m3_source_frequency = m3_source_midi_to_hz(
+        m3_source_note,
+        gmem[M3_INTEGRATION_DETUNE]
+      );
+      m3_source_phase = M3_SOURCE_PHASE_BASE[m3_source_index];
+      m3_source_voice = 0;
+      m3_source_harmonic = 1;
+      loop(8,
+        m3_source_enabled_harmonic =
+          !(gmem[M3_INTEGRATION_MISSING_FUNDAMENTAL] &&
+            m3_source_harmonic == 1) &&
+          m3_source_harmonic * m3_source_frequency < 0.45 * srate;
+        m3_source_enabled_harmonic ? (
+          m3_source_voice += sin(
+            m3_source_harmonic * m3_source_phase
+          ) / m3_source_harmonic;
+        );
+        m3_source_harmonic += 1;
+      );
+      m3_source_gain = max(
+        0,
+        gmem[M3_INTEGRATION_GAIN_BASE + m3_source_index]
+      );
+      m3_source_generated += 0.25 * m3_source_envelope_value *
+                             m3_source_gain * m3_source_voice;
+      m3_source_phase += 2 * $pi * m3_source_frequency / max(1, srate);
+      m3_source_phase >= 2 * $pi ? m3_source_phase -= 2 * $pi;
+      M3_SOURCE_PHASE_BASE[m3_source_index] = m3_source_phase;
+    );
+    m3_source_index += 1;
+  );
+  m3_source_generated /= max(1, m3_source_active_count);
+
+  m3_source_generated += gmem[M3_INTEGRATION_NOISE_GAIN] *
+                         m3_source_xorshift();
+  m3_source_generated += gmem[M3_INTEGRATION_DC_GAIN];
+  m3_source_generated += gmem[M3_INTEGRATION_HUM_50_GAIN] *
+                         sin(m3_source_hum_50_phase);
+  m3_source_generated += gmem[M3_INTEGRATION_HUM_60_GAIN] *
+                         sin(m3_source_hum_60_phase);
+  m3_source_hum_50_phase += 2 * $pi * 50 / max(1, srate);
+  m3_source_hum_60_phase += 2 * $pi * 60 / max(1, srate);
+  m3_source_hum_50_phase >= 2 * $pi ? m3_source_hum_50_phase -= 2 * $pi;
+  m3_source_hum_60_phase >= 2 * $pi ? m3_source_hum_60_phase -= 2 * $pi;
+  gmem[M3_INTEGRATION_CLIP] ? (
+    m3_source_generated = m3_source_clamp(
+      4 * m3_source_generated,
+      -0.80,
+      0.80
+    );
+  );
+  m3_source_now >= m3_source_end_sample ? (
+    m3_source_generated = 0;
+    gmem[M3_INTEGRATION_STATE] = M3_INTEGRATION_COMPLETE;
+  );
+);
+
+gmem[M3_INTEGRATION_REFERENCE] = m3_source_generated;
+m3_source_block_offset < M3_INTEGRATION_REFERENCE_CAPACITY ? (
+  gmem[M3_INTEGRATION_REFERENCE_RING + m3_source_block_offset] =
+    m3_source_generated;
+) : (
+  gmem[M3_INTEGRATION_STATE] = M3_INTEGRATION_FAULT;
+);
+spl0 = m3_source_generated;
+spl1 = m3_source_generated;
+m3_source_counter_active ? (
+  gmem[M3_INTEGRATION_COUNTER] = m3_source_now + 1;
+);
+m3_source_block_offset += 1;

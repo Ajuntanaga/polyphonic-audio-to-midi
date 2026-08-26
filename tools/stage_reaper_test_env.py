@@ -23,12 +23,53 @@ def stage(root: pathlib.Path, output: pathlib.Path) -> None:
     if _overlaps_live_profile(output):
         raise ValueError("refusing to stage into, below, or above live REAPER profile")
 
+    effects = root / "Effects"
+    scripts = root / "Scripts"
+    cases = root / "tests" / "fixtures" / "synthetic_cases.tsv"
+    if not effects.is_dir():
+        raise ValueError(f"missing Effects tree: {effects}")
+    if not scripts.is_dir():
+        raise ValueError(f"missing Scripts tree: {scripts}")
+    if not cases.is_file():
+        raise ValueError(f"missing synthetic case manifest: {cases}")
+
     output.mkdir(parents=True, exist_ok=True)
+    for relative in (
+        pathlib.Path("Effects"),
+        pathlib.Path("Scripts"),
+        pathlib.Path("Data/m3_poly_midi"),
+        pathlib.Path("test-results"),
+    ):
+        destination = output / relative
+        if destination.is_dir():
+            shutil.rmtree(destination)
+        elif destination.exists():
+            destination.unlink()
+
+    for disposable_cache in ("reaper-kb.ini", "reaper-jsfx.ini"):
+        cache_path = output / disposable_cache
+        if cache_path.exists():
+            cache_path.unlink()
+
     (output / "reaper.ini").write_text(
-        "[reaper]\nnewprojdo=0\nsaveFlags=0\n",
+        "[reaper]\n"
+        "linux_audio_bsize=128\n"
+        "linux_audio_bufs=2\n"
+        "linux_audio_mode=3\n"
+        "linux_audio_nch_in=0\n"
+        "linux_audio_nch_out=2\n"
+        "linux_audio_srate=48000\n"
+        "newprojdo=0\n"
+        "saveFlags=0\n"
+        "warnmaxram64=0\n",
         encoding="utf-8",
     )
-    shutil.copytree(root / "Effects", output / "Effects", dirs_exist_ok=True)
+    shutil.copytree(effects, output / "Effects")
+    shutil.copytree(scripts, output / "Scripts")
+    data = output / "Data" / "m3_poly_midi"
+    data.mkdir(parents=True)
+    shutil.copy2(cases, data / cases.name)
+    (output / "test-results").mkdir()
 
 
 def main(argv: list[str] | None = None) -> int:

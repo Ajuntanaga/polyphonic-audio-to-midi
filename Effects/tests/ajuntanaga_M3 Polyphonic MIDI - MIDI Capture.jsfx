@@ -1,0 +1,78 @@
+desc:ajuntanaga/M3 Polyphonic MIDI - MIDI Capture
+tags:test MIDI capture analysis
+options:gmem=m3_poly_midi_tests_v1
+in_pin:left
+in_pin:right
+out_pin:left
+out_pin:right
+
+@init
+M3_CAPTURE_COUNTER = 128;
+M3_CAPTURE_EVENT_COUNT = 256;
+M3_CAPTURE_OVERFLOW = 257;
+M3_CAPTURE_EVENT_BASE = 258;
+M3_CAPTURE_EVENT_CELL_SIZE = 5;
+M3_CAPTURE_MAX_EVENTS = 256;
+M3_CAPTURE_DRY_ERROR = 2048;
+M3_CAPTURE_DRY_COUNT = 2049;
+M3_CAPTURE_REFERENCE_RING = 4096;
+M3_CAPTURE_REFERENCE_CAPACITY = 2048;
+
+@block
+m3_capture_sample_offset = 0;
+while(midirecv(
+  m3_capture_offset,
+  m3_capture_status,
+  m3_capture_note,
+  m3_capture_velocity
+)) (
+  m3_capture_message_type = m3_capture_status & 0xF0;
+  m3_capture_message_type >= 0x80 &&
+  m3_capture_message_type <= 0xE0 ? (
+    m3_capture_count = min(
+      M3_CAPTURE_MAX_EVENTS,
+      max(0, floor(gmem[M3_CAPTURE_EVENT_COUNT]))
+    );
+    m3_capture_count < M3_CAPTURE_MAX_EVENTS ? (
+      m3_capture_cell = M3_CAPTURE_EVENT_BASE +
+                        m3_capture_count * M3_CAPTURE_EVENT_CELL_SIZE;
+      gmem[m3_capture_cell] = max(
+        0,
+        floor(gmem[M3_CAPTURE_COUNTER]) - samplesblock +
+        floor(m3_capture_offset)
+      );
+      gmem[m3_capture_cell + 1] = floor(m3_capture_offset);
+      gmem[m3_capture_cell + 2] = floor(m3_capture_status);
+      gmem[m3_capture_cell + 3] = floor(m3_capture_note);
+      gmem[m3_capture_cell + 4] = floor(m3_capture_velocity);
+      gmem[M3_CAPTURE_EVENT_COUNT] = m3_capture_count + 1;
+    ) : (
+      gmem[M3_CAPTURE_OVERFLOW] = 1;
+    );
+  );
+  midisend(
+    m3_capture_offset,
+    m3_capture_status,
+    m3_capture_note,
+    m3_capture_velocity
+  );
+);
+
+@sample
+m3_capture_sample_offset < M3_CAPTURE_REFERENCE_CAPACITY ? (
+  m3_capture_reference = gmem[
+    M3_CAPTURE_REFERENCE_RING + m3_capture_sample_offset
+  ];
+  m3_capture_error = max(
+    abs(spl0 - m3_capture_reference),
+    abs(spl1 - m3_capture_reference)
+  );
+  gmem[M3_CAPTURE_DRY_ERROR] = max(
+    gmem[M3_CAPTURE_DRY_ERROR],
+    m3_capture_error
+  );
+  gmem[M3_CAPTURE_DRY_COUNT] += 1;
+) : (
+  gmem[M3_CAPTURE_OVERFLOW] = 1;
+);
+m3_capture_sample_offset += 1;

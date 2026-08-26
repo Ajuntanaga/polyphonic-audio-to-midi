@@ -297,8 +297,8 @@ result is `build/evidence/task-09-production-smoke.txt`, SHA-256
 `321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.
 The smoke script dirtied its disposable project while swapping FX, so its close
 request waited on an unseen save prompt and the launcher enforced the 60-second
-termination bound. This is not a clean host-sequence result; Task 11 still owns
-VSTi routing, dry-path, MIDI capture, and safe-bypass integration.
+termination bound. This was not a clean host-sequence result; the Task 11
+section below supersedes that integration boundary.
 
 ## Task 10 telemetry, UI, serialization, and fault evidence
 
@@ -341,3 +341,82 @@ enabled/online, two inputs, two outputs, and all fifteen named controls, then
 saved and closed only its disposable project. Its result is
 `build/evidence/task-10-production-smoke.txt`, SHA-256
 `321e87851cbda022d3744f5cc8d1df8530a1a113ca863e0ee4b693780d087173`.
+
+## Task 11 disposable host, VSTi, and safety evidence
+
+The accepted disposable chain was synthetic Signal Source -> production M3
+detector -> MIDI Capture -> ReaSynth -> Synth Output Probe. The alternate
+profile was staged from the repository into `build/reaper-test`; the staging
+tool refuses any output at, below, or above the live REAPER profile and copies
+only approved Effects, Scripts, Data, and result trees. Every GUI launch used
+the guarded nonactivating workspace-5 path.
+
+The accepted 48 kHz run completed 13 cases. Mono E2 produced exactly two MIDI
+events, the E2/B2 dyad produced exactly four, and the full eight-string chord
+plus all ten repeated safety cases produced exactly sixteen each. Capture
+reported zero overflow and no missing, unexpected, duplicate, or hanging
+notes. Normal mono/dyad/chord dry-path error was at most
+`3.3306690738754696e-16`. ReaSynth peak was `0.411787–0.427885` for the normal
+cases and `0.182015` for every safety case, so MIDI routing reached a real
+downstream VSTi and produced nonzero audio in all thirteen cases.
+
+The full-chord note-on evidence times, measured from the manifest's synthetic
+onset at sample 24000, were:
+
+| Note | MIDI | Evidence time |
+| --- | ---: | ---: |
+| C4 | 60 | 41.333 ms |
+| C3 | 48 | 54.667 ms |
+| G#2 | 44 | 60.000 ms |
+| G#3 | 56 | 89.333 ms |
+| E3 | 52 | 134.667 ms |
+| E2 | 40 | 150.667 ms |
+| G#1 | 32 | 177.333 ms |
+| C2 | 36 | 177.333 ms |
+
+The separate mono E2 case committed at `49.333 ms`; the dyad committed E2 at
+`49.333 ms` and B2 at `68.000 ms`. These are causal detector evidence times in
+the synthetic dummy-audio host, not hardware round-trip measurements. They
+make the low-frequency tradeoff explicit: the lowest M3 strings need materially
+more waveform evidence than the upper strings. The JSFX has no lookahead and
+declares no PDC.
+
+Each safety trial first proved all eight notes active, then requested Panic.
+All eight note-offs arrived in `1.750–5.333 ms`, below the 500 ms gate, with no
+note-on after the Panic event boundary. The tenth trial then executed the actual
+`ajuntanaga_M3 Polyphonic MIDI - Safe Bypass.lua` file with `dofile`. That script
+requires exactly one matching detector on the selected track, records its GUID
+and sensitivity, sets sensitivity to zero, requests Panic, waits 50 ms, disables
+the same detector, and restores sensitivity while it remains disabled. Only
+after the runner observed ten passing trials and the disabled detector did it
+delete the detector in the disposable track. ReaSynth and the output probe
+remained present.
+
+The first longer host attempts exposed a process-count guard that was too tight
+for this REAPER instance: the kernel recorded a cgroup fork rejection at
+TasksMax 32. A regression test now requires TasksMax 64. CPU remains limited to
+50% of one logical core; MemoryHigh/MemoryMax remain 384/512 MiB; swap remains
+64 MiB; CPU/I/O weights remain 10; nice remains 10; I/O remains idle class; and
+the wall timeout remains hard. The accepted run produced no later cgroup
+rejection. Immediately afterward, about 30 GiB was available, swap use was
+negligible, memory/I/O/full-CPU pressure was zero, temperature was generally
+40–44 C after a 51 C immediate peak, and no REAPER process remained.
+
+The preserved accepted files are
+`build/evidence/task-11-results/{events.tsv,summary.tsv,safety.tsv,phase.log}`.
+Their SHA-256 values are
+`cf3a128ab1442055039bb39eeef434a50630cd30c7ee8b32a5242d20194d987a`,
+`96fbad6c2e175ecfc7060b96c9a69aa0e34c9c9e4edc7f692f7d870ba45db2d2`,
+`1eedf2e3deb52f54687dbe9ebd50f762f543be84bdb1c164c2de467d83e0e92d`,
+and `e616554dbe23678dcc3b3426a506e195b1875c5ed7e57c2d81b3900278decd30`
+for events, summary, safety, and phase respectively.
+
+NeuralNote was used only as an architectural reference. Its published Basic
+Pitch-derived pipeline uses CQT/harmonic stacking, ONNX Runtime, RTNeural, and a
+non-causal event algorithm; its own README describes the current plug-in as not
+real-time. No NeuralNote code, model, binary, or dependency is present here.
+
+Task 11 proves the isolated synthetic host and safety sequence. It does not
+prove live-guitar accuracy, clean-DI metrics, audio-interface round-trip
+latency, audible monitoring, or long-run p99 deadline behavior. Task 12 may
+continue with synthetic metrics; clean-DI input remains separately gated.

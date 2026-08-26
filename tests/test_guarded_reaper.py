@@ -2,6 +2,7 @@ import importlib.util
 import pathlib
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -50,6 +51,35 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("available memory", result.stdout + result.stderr)
 
+    def test_completion_requires_the_final_exact_sentinel(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            completion = pathlib.Path(temporary) / "phase.log"
+            self.assertFalse(GUARDED_REAPER.completion_published(completion))
+            completion.write_text("suite-finish\ntrailing\n", encoding="utf-8")
+            self.assertFalse(GUARDED_REAPER.completion_published(completion))
+            completion.write_text("script-start\nsuite-finish\n", encoding="utf-8")
+            self.assertTrue(GUARDED_REAPER.completion_published(completion))
+
+    def test_unexpected_completion_file_is_refused(self):
+        result = self.run_runner(
+            "--dry-run",
+            "--gui",
+            "--profile",
+            str(PROFILE),
+            "--completion-file",
+            "/tmp/not-the-m3-completion-file",
+            "--available-mib",
+            "32000",
+            "--load-one",
+            "2.5",
+            "--temperature-c",
+            "72",
+            "--",
+            "-new",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unexpected completion file", result.stdout + result.stderr)
+
     def test_live_profile_is_refused(self):
         result = self.run_runner(
             "--dry-run",
@@ -84,6 +114,7 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("MemoryMax=512M", result.stdout)
         self.assertIn("CPUQuota=50%", result.stdout)
+        self.assertIn("TasksMax=64", result.stdout)
         self.assertIn("taskset -c", result.stdout)
         self.assertIn(str(PROFILE), result.stdout)
         self.assertIn("-noactivate", result.stdout)
@@ -454,6 +485,64 @@ class GuardedReaperTests(unittest.TestCase):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+
+    def test_gui_completion_closes_only_the_disposable_process(self):
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.wait.side_effect = subprocess.TimeoutExpired(
+            cmd="reaper",
+            timeout=GUARDED_REAPER.COMPLETION_GRACE_SECONDS,
+        )
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "require_workspace",
+                return_value=1,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "settle_launch_workspace",
+                return_value=0,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "restore_launch_workspace",
+                return_value=False,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "reaper_window_ids",
+                return_value=set(),
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "move_reaper_windows_once",
+                return_value=0,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "completion_published",
+                return_value=True,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "stop_process_group",
+            ) as stop,
+            mock.patch.object(
+                GUARDED_REAPER.subprocess,
+                "Popen",
+                return_value=process,
+            ),
+        ):
+            result = GUARDED_REAPER.run_gui_guarded(
+                ["reaper"],
+                {},
+                5,
+                GUARDED_REAPER.COMPLETION_FILE,
+            )
+
+        self.assertEqual(result, 0)
+        stop.assert_called_once_with(process, GUARDED_REAPER.signal.SIGTERM)
 
     def test_workspace_mover_refuses_nontransient_listing_errors(self):
         denied = subprocess.CompletedProcess(

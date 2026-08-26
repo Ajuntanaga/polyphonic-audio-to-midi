@@ -83,7 +83,7 @@ local function write_result(status, detail)
     handle:write("expected_block=", expected_block, "\n")
   end
   handle:write("expected_case=", expected_case, "\n")
-  for index = 0, 31 do
+  for index = 0, 244 do
     handle:write("gmem_", index, "=", tostring(reaper.gmem_read(index) or 0), "\n")
   end
   handle:write(

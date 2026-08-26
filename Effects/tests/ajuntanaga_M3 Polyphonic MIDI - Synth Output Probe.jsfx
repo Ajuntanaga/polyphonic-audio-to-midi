@@ -1,0 +1,18 @@
+desc:ajuntanaga/M3 Polyphonic MIDI - Synth Output Probe
+tags:test audio MIDI analysis
+options:gmem=m3_poly_midi_tests_v1
+in_pin:left
+in_pin:right
+out_pin:left
+out_pin:right
+
+@init
+M3_SYNTH_OUTPUT_PEAK = 2100;
+M3_SYNTH_OUTPUT_COUNT = 2101;
+
+@sample
+gmem[M3_SYNTH_OUTPUT_PEAK] = max(
+  gmem[M3_SYNTH_OUTPUT_PEAK],
+  max(abs(spl0), abs(spl1))
+);
+gmem[M3_SYNTH_OUTPUT_COUNT] += 1;

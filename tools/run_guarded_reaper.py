@@ -12,6 +12,11 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 DISPOSABLE_PROFILE = (ROOT / "build/reaper-test/reaper.ini").resolve()
+COMPLETION_FILE = (
+    ROOT / "build/reaper-test/test-results/phase.log"
+).resolve()
+COMPLETION_SENTINEL = "suite-finish"
+COMPLETION_GRACE_SECONDS = 0.75
 MIN_AVAILABLE_MIB = 4096.0
 MAX_LOAD_ONE = 12.0
 MAX_TEMPERATURE_C = 90.0
@@ -53,6 +58,14 @@ def preflight_errors(
             f"temperature {temperature_c:.1f} C is at or above {MAX_TEMPERATURE_C:.1f} C"
         )
     return errors
+
+
+def completion_published(path: pathlib.Path) -> bool:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (FileNotFoundError, OSError, UnicodeError):
+        return False
+    return bool(lines) and lines[-1] == COMPLETION_SENTINEL
 
 
 def runtime_environment(gui: bool) -> dict[str, str]:
@@ -302,6 +315,7 @@ def run_gui_guarded(
     command: list[str],
     environment: dict[str, str],
     workspace_number: int,
+    completion_file: pathlib.Path | None = None,
 ) -> int:
     original_workspace = require_workspace(environment, workspace_number)
     target_workspace = workspace_index(workspace_number)
@@ -341,6 +355,17 @@ def run_gui_guarded(
                 excluded_window_ids=preexisting_reaper_windows,
             )
             preserve_launch_focus()
+            if completion_file is not None and completion_published(completion_file):
+                try:
+                    result = process.wait(timeout=COMPLETION_GRACE_SECONDS)
+                    return finish(result)
+                except subprocess.TimeoutExpired:
+                    stop_process_group(process, signal.SIGTERM)
+                    print(
+                        "guarded REAPER completion observed; "
+                        "closed disposable instance after grace period"
+                    )
+                    return finish(0)
             try:
                 poll_seconds = 0.02 if time.monotonic() <= preserve_until else 0.10
                 result = process.wait(timeout=poll_seconds)
@@ -379,7 +404,7 @@ def guarded_command(
         "--property=CPUQuota=50%",
         "--property=CPUWeight=10",
         "--property=IOWeight=10",
-        "--property=TasksMax=32",
+        "--property=TasksMax=64",
         "--",
         "/usr/bin/timeout",
         "--signal=TERM",
@@ -418,6 +443,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gui", action="store_true")
     parser.add_argument("--workspace", type=int, default=5)
     parser.add_argument("--profile", type=pathlib.Path)
+    parser.add_argument("--completion-file", type=pathlib.Path)
     parser.add_argument("--timeout-seconds", type=int, default=45)
     parser.add_argument("--available-mib", type=float)
     parser.add_argument("--load-one", type=float)
@@ -459,6 +485,21 @@ def main(argv: list[str] | None = None) -> int:
     if not REAPER.is_file() or not os.access(REAPER, os.X_OK):
         print(f"guardrail refusal: REAPER executable is unusable: {REAPER}", file=sys.stderr)
         return 2
+    completion_file = None
+    if args.completion_file is not None:
+        completion_file = args.completion_file.resolve()
+        if completion_file != COMPLETION_FILE:
+            print(
+                f"guardrail refusal: unexpected completion file: {completion_file}",
+                file=sys.stderr,
+            )
+            return 2
+        if not args.gui:
+            print(
+                "guardrail refusal: completion monitoring requires --gui",
+                file=sys.stderr,
+            )
+            return 2
     if not 1 <= args.timeout_seconds <= 300:
         print("guardrail refusal: timeout must be between 1 and 300 seconds", file=sys.stderr)
         return 2
@@ -478,13 +519,30 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         if args.gui:
             print(f"guarded GUI workspace: {args.workspace}")
+        if completion_file is not None:
+            print(f"guarded completion file: {completion_file}")
         print(shlex.join(command))
         return 0
+
+    if completion_file is not None:
+        try:
+            completion_file.unlink(missing_ok=True)
+        except OSError as exc:
+            print(
+                f"guardrail refusal: could not clear completion file: {exc}",
+                file=sys.stderr,
+            )
+            return 2
 
     try:
         environment = runtime_environment(args.gui)
         if args.gui:
-            return run_gui_guarded(command, environment, args.workspace)
+            return run_gui_guarded(
+                command,
+                environment,
+                args.workspace,
+                completion_file,
+            )
         completed = subprocess.run(command, env=environment, check=False)
     except KeyboardInterrupt:
         print("guarded REAPER interrupted", file=sys.stderr)

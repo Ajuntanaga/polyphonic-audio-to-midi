@@ -1,18 +1,21 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T12:32:03-07:00
+Updated: 2026-08-25T17:16:13-07:00
 
 ## Authoritative state
 
 - Branch: `main`
-- Last verified implementation commit: `ca9a256` (`feat: add safe telemetry
-  and compact JSFX UI`).
+- Last committed implementation: `ca9a256` (`feat: add safe telemetry and
+  compact JSFX UI`). Task 11 is verified in the current worktree and awaits its
+  implementation commit.
 - Latest stability commit: `821ba22` (`fix: background guarded REAPER
   launches`).
-- Current task: Task 11, disposable REAPER host integration.
-- Tasks 1–10 are verified and committed.
-- Local result: 45 Python tests pass and `python3 tools/validate_source.py .`
-  reports `source contract: ok`.
+- Current task: Task 12, synthetic metrics only. Clean-DI input remains gated.
+- Tasks 1–10 are verified and committed. Task 11 disposable-host evidence is
+  accepted and preserved below.
+- Fresh current-tree result: all 53 Python tests pass,
+  `python3 tools/validate_source.py .` reports `source contract: ok`, Python
+  tools compile, and `git diff --check` is clean.
 - Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
 - No live guitar, audio interface, live project, download, install, MCP, or native
   fallback was used.
@@ -176,6 +179,50 @@ Updated: 2026-08-25T12:32:03-07:00
 - Matrix preflights stayed above 30 GiB available memory, below load 0.9, and
   at or below 58 C. Workspace 1 stayed active and no REAPER process remained.
 
+## Verified Task 11 evidence
+
+- The staged dummy-audio host chain was Signal Source -> production detector ->
+  MIDI Capture -> ReaSynth -> Synth Output Probe. It used only the disposable
+  `build/reaper-test/reaper.ini` profile in hidden, nonactivating workspace-5
+  launches.
+- The accepted run completed all 13 cases: mono, dyad, the full eight M3 open
+  strings, and ten repeated eight-note Panic trials. Each row passed with exact
+  expected note-on/off coverage, no capture overflow, no duplicate or
+  unexpected notes, and nonzero ReaSynth output. Normal dry-path identity had
+  maximum error `3.3306690738754696e-16`.
+- All ten Panic trials released eight notes within `1.750–5.333 ms`, below the
+  500 ms gate. Trial 10 executed the actual Safe Bypass ReaScript inline. The
+  runner observed the detector disabled after the script's 50 ms cleanup wait,
+  then deleted only that detector after all ten trials passed; ReaSynth and the
+  output probe remained present.
+- Synthetic onset evidence at 48 kHz was: mono E2 `49.333 ms`; dyad E2
+  `49.333 ms` and B2 `68.000 ms`; eight opens C4 `41.333 ms`, C3 `54.667 ms`,
+  G#2 `60.000 ms`, G#3 `89.333 ms`, E3 `134.667 ms`, E2 `150.667 ms`, and
+  G#1/C2 `177.333 ms`. These are causal evidence times, not hardware
+  round-trip latency, and the detector declares neither lookahead nor PDC.
+- Preserved accepted artifacts are
+  `build/evidence/task-11-results/{events.tsv,summary.tsv,safety.tsv,phase.log}`.
+  Their individual SHA-256 values are respectively
+  `cf3a128ab1442055039bb39eeef434a50630cd30c7ee8b32a5242d20194d987a`,
+  `96fbad6c2e175ecfc7060b96c9a69aa0e34c9c9e4edc7f692f7d870ba45db2d2`,
+  `1eedf2e3deb52f54687dbe9ebd50f762f543be84bdb1c164c2de467d83e0e92d`,
+  and `e616554dbe23678dcc3b3426a506e195b1875c5ed7e57c2d81b3900278decd30`.
+- The source/host debugging run exposed one stability boundary: TasksMax 32
+  caused a kernel-recorded cgroup fork rejection. A source test was added and
+  only TasksMax was raised to 64. The 50%-of-one-CPU quota, 384/512 MiB memory
+  bounds, 64 MiB swap cap, low CPU/I/O weights, nice 10, idle I/O class, and
+  hard wall timeout were retained. The accepted run caused no later cgroup
+  rejection; post-run memory and I/O pressure were zero, about 30 GiB remained
+  available, and no REAPER process remained.
+- This is synthetic dummy-audio/VSTi-routing evidence. It is not a live-guitar,
+  clean-DI, audio-interface, audible-output, or performance-readiness claim.
+- A fresh post-documentation rerun against the staged current tree passed core
+  cases 4102 and 9108 at 48 kHz, then passed the complete 13-case/10-trial host
+  chain again. That rerun contained 182 MIDI events, exactly one inline Safe
+  Bypass execution, Panic release times `0.479–2.667 ms`, nonzero ReaSynth
+  output for every case, no remaining REAPER process, no recent cgroup/OOM
+  record, about 30 GiB available memory, and zero memory/I/O pressure.
+
 ## Current implementation and tuning
 
 - The production bank uses fixed eight-word cells, causal 8 ms/35 ms complex
@@ -188,9 +235,10 @@ Updated: 2026-08-25T12:32:03-07:00
   four through MIDI 75, three at MIDI 76 and above, and three for analysis-only
   guard notes. This preserves the missing-fundamental E2 regression.
 - The M3 profile loads exact open notes `32,36,40,44,48,52,56,60`. Its
-  distinct-string matcher uses two fixed 256-word reachability rows and at most
-  `8 * 256 * 8` transitions per feasibility pass. Scratch guard words remain
-  outside the 512-word working region.
+  distinct-string matcher first builds a 16-note bounded shortlist, then uses
+  three fixed 256-word dynamic-programming rows and at most `8 * 256 * 16`
+  transitions per feasibility pass. Scratch guards remain outside the 768-word
+  working region.
 - Production filters selected M3 sets before lifecycle updates. Infeasible sets
   lose the lowest-confidence candidate and retry at most eight times; the final
   stable mode control exposes M3 Eight-String and General Tonal behavior.
@@ -201,9 +249,11 @@ Updated: 2026-08-25T12:32:03-07:00
   channel 1–16 events, clamps block offsets, and sends each event once.
 - The production effect has the frozen fifteen-slider surface. `@slider` only
   clamps and stages settings. `@block` performs reachable panic-before-reset
-  for rate, stop, hard reconfiguration, and explicit Panic; `@sample` performs
-  streaming analysis, one-time MIDI output, and the optional two-assignment dry
-  mute. Incoming MIDI is untouched.
+  for rate, stop, hard reconfiguration, and explicit Panic. A fixed signal
+  floor blocks stale silence selection, and a Panic latch prevents same-block
+  detector refill until a quiet block is observed. `@sample` performs streaming
+  analysis, one-time MIDI output, and the optional two-assignment dry mute.
+  Incoming MIDI is untouched.
 - Telemetry alternates two fixed 40-word snapshots, marks in-progress writes
   odd, and publishes only completed even generations. The 64-word UI region
   holds one snapshot plus a fixed twelve-note-name table. `@gfx` reads only the
@@ -220,8 +270,8 @@ Updated: 2026-08-25T12:32:03-07:00
   Decays, harmonic weights, and base threshold `0.20` remain unchanged.
 - The selector uses at most eight fixed iterations, four words per output cell,
   `0.18` harmonic residual attenuation, `0.35` independent-fundamental
-  protection, bounded insertion sort, and 117 words inside the 256-word fixed
-  selection region.
+  protection, a 16-note bounded shortlist, deterministic onset ordering, and
+  234 words inside the 256-word fixed selection region.
 - `tools/prepare_core_harness_project.py` generates only build-local, literal
   rate/case RPPs. Its nine behavioral tests cover correct slider state and
   refusal of source/output paths outside `build/`.
@@ -245,22 +295,22 @@ excludes already-open REAPER windows. The guard records the user's active
 workspace and restores only a focus steal to workspace 5, including a short
 post-exit settling window; it never overrides a third workspace the user
 selected. Repeated destroyed-window snapshots defer to the next bounded poll;
-other workspace failures still refuse immediately. A live 10 ms observation
-kept workspace 1 active for the full launch and left no REAPER process behind.
+other workspace failures still refuse immediately. TasksMax is 64; CPU remains
+limited to 50% of one logical core and memory remains capped at 512 MiB. A live
+10 ms observation kept workspace 1 active for the full launch and left no
+REAPER process behind.
 
 ## Exact resume action
 
-1. Add the Task 11 staging RED: require the disposable profile to include the
-   production effect, constants module, and test runner under `Scripts/`, while
-   still refusing `reaper-kb.ini` and the live profile.
-2. Implement dependency-free staging for only the approved Effects, Scripts,
-   Data, and test-results trees.
-3. Add the bounded signal-source and MIDI-capture JSFX plus the disposable
-   three-FX runner. Keep every launch hidden on workspace 5.
-4. Run the host sequence before creating Safe Bypass. Require exact ordered
-   MIDI, dry-path identity, panic/reconfigure note-offs, and a clean exit.
-5. Create Safe Bypass only after that host sequence passes, then document the
-   verified host boundary. Do not install into the persistent REAPER profile.
+1. Commit the verified Task 11 implementation, tests, and documentation, then
+   update this file with the implementation commit hash.
+2. Update the two canonical Obsidian project notes with the committed Task 11
+   state and evidence hashes.
+3. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
+   duplicate-note, note-count, onset, and release summaries from the committed
+   manifest/evidence path.
+4. Keep clean-DI audio, live guitar/interface input, persistent installation,
+   live projects, REAPER MCP, and native fallback behind their existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.

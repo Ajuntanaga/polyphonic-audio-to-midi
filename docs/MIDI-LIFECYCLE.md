@@ -44,23 +44,42 @@ voice, and event state. New settings are then applied at the same block
 boundary. Slider callbacks only clamp and stage settings; they never rebuild
 real-time memory.
 
+The input gate refuses selection below the fixed `1e-8` fast-energy floor. An
+explicit Panic also latches detection off until a subsequent block's input peak
+falls below `0.0001`. This prevents the same still-ringing block from refilling
+detector and lifecycle state immediately after cleanup.
+
 ## Abrupt boundary
 
-No JSFX can send cleanup MIDI after its callbacks have stopped. Abrupt FX
+No JSFX can send cleanup MIDI after its callbacks have stopped. Abrupt raw FX
 bypass, FX removal, project termination, host failure, or a device failure that
 halts processing can therefore strand a downstream note if REAPER does not
 flush MIDI itself.
 
-Until host flushing and a safe-bypass sequence are verified in the disposable
-integration task, the downstream VSTi must provide its own All Notes Off/Panic
-control. Do not treat the JSFX Panic button as protection against removal or a
-host crash. A host-side safe-bypass script may be added only after the planned
-integration test proves the required callback and routing sequence.
+The verified Safe Bypass ReaScript covers the deliberate detector-bypass path
+while REAPER is still processing. It requires one selected track and exactly
+one matching detector, records that detector's GUID and sensitivity, prevents
+new detections, requests Panic, waits 50 ms for note-off delivery, disables the
+same detector, and restores sensitivity while it remains disabled. It never
+deletes an FX. If identification, Panic, or disable verification fails, it
+reports the failure and does not continue as if bypass succeeded.
+
+That script is not protection against a host crash, power loss, device failure,
+force removal, or any event that stops callbacks before Panic can be delivered.
+The downstream VSTi should still expose an independent All Notes Off/Panic
+control for those abrupt conditions.
 
 ## Current validation boundary
 
 Cases 9101 through 9109 exercise encoding, offset bounds, sample-rate and
 transport cleanup, explicit Panic, duplicate-note prevention, input selection,
-and mode-bound staging through the shared production module. They do not yet
-constitute live-guitar, audio-interface, VSTi-routing, abrupt-bypass, or
+and mode-bound staging through the shared production module. Task 11 then ran
+the disposable Signal Source -> production detector -> MIDI Capture ->
+ReaSynth -> Synth Output Probe chain. Ten eight-note Panic trials passed with
+all note-offs in `1.750–5.333 ms`; the final trial executed the actual Safe
+Bypass file inline and verified disable before the disposable runner's separate
+delete gate.
+
+This validates synthetic VSTi routing and deliberate safe bypass. It does not
+constitute live-guitar, audio-interface, audible-output, host-crash, or
 performance-readiness evidence.

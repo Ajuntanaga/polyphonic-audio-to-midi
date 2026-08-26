@@ -36,6 +36,8 @@ M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET = 1;
 M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET = 2;
 M3_LIFECYCLE_ON_THRESHOLD_OFFSET = 3;
 M3_LIFECYCLE_OFF_THRESHOLD_OFFSET = 4;
+M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS = 0.024;
+M3_LIFECYCLE_M3_ON_MARGIN = 0.08;
 
 function m3_lifecycle_event_cell(event_base, index) (
   event_base + M3_EVENT_HEADER_SIZE + index * M3_EVENT_CELL_SIZE;
@@ -57,19 +59,53 @@ function m3_lifecycle_reset_events(event_base) (
   event_base[M3_EVENT_OVERFLOW_OFFSET] = 0;
 );
 
-function m3_lifecycle_response(response, test_sr, response_base)
-local(value, rate) (
+function m3_lifecycle_response(response, test_sr, selection_threshold,
+                               response_base)
+local(value, rate, base_threshold) (
   value = m3_clamp(response, 0, 1);
   rate = max(1, test_sr);
+  base_threshold = m3_clamp(selection_threshold, 0, 1);
   response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET] =
     max(1, floor((4 + value * 18) * rate / 1000 + 0.5));
   response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET] =
     max(1, floor((18 + value * 42) * rate / 1000 + 0.5));
   response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET] =
     max(1, floor((6 + value * 18) * rate / 1000 + 0.5));
-  response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] = 0.52 + value * 0.12;
+  response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] = m3_clamp(
+    0.43 + 0.70 * base_threshold,
+    0,
+    1
+  );
   response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET] =
-    response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] - 0.14;
+    max(
+      0,
+      response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] - 0.14
+    );
+);
+
+function m3_lifecycle_response_for_profile(profile_mode, response, test_sr,
+                                           selection_threshold,
+                                           response_base)
+local(rate, base_threshold) (
+  m3_lifecycle_response(
+    response,
+    test_sr,
+    selection_threshold,
+    response_base
+  );
+  profile_mode == M3_PROFILE_MODE_M3 ? (
+    rate = max(1, test_sr);
+    base_threshold = m3_clamp(selection_threshold, 0, 1);
+    response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS * rate + 0.5)
+    );
+    response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] =
+      base_threshold +
+      M3_LIFECYCLE_M3_ON_MARGIN * (1 - base_threshold);
+    response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET] = base_threshold;
+  );
+  response_base;
 );
 
 function m3_lifecycle_velocity(attack_energy, velocity_mode, fixed_velocity)

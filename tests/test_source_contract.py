@@ -6,14 +6,32 @@ import sys
 import tempfile
 import unittest
 
+from tools.stage_reaper_test_env import stage
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
 PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
+SELECTOR = ROOT / "Effects/m3_poly_midi/salience_selector.jsfx-inc"
 LIFECYCLE = ROOT / "Effects/m3_poly_midi/lifecycle.jsfx-inc"
 MIDI_EMITTER = ROOT / "Effects/m3_poly_midi/midi_emitter.jsfx-inc"
 TELEMETRY_UI = ROOT / "Effects/m3_poly_midi/telemetry_ui.jsfx-inc"
+SIGNAL_SOURCE = (
+    ROOT / "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - Signal Source.jsfx"
+)
+MIDI_CAPTURE = (
+    ROOT / "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - MIDI Capture.jsfx"
+)
+SYNTH_PROBE = (
+    ROOT / "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - Synth Output Probe.jsfx"
+)
+INTEGRATION_RUNNER = (
+    ROOT / "Scripts/ajuntanaga_M3 Polyphonic MIDI - Run Tests.lua"
+)
+SAFE_BYPASS = (
+    ROOT / "Scripts/ajuntanaga_M3 Polyphonic MIDI - Safe Bypass.lua"
+)
 PRODUCTION = ROOT / "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
 
 
@@ -27,6 +45,178 @@ def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
 
 
 class SourceContractTests(unittest.TestCase):
+    def test_disposable_staging_contains_only_approved_runtime_payload(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+            staged.mkdir()
+            (staged / "reaper-kb.ini").write_text("stale", encoding="utf-8")
+            (staged / "reaper-jsfx.ini").write_text("stale", encoding="utf-8")
+            stage(ROOT, staged)
+
+            self.assertTrue((staged / "reaper.ini").is_file())
+            self.assertTrue(
+                (
+                    staged /
+                    "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
+                ).is_file()
+            )
+            self.assertTrue(
+                (staged / "Effects/m3_poly_midi/constants.jsfx-inc").is_file()
+            )
+            self.assertTrue(
+                (
+                    staged /
+                    "Scripts/ajuntanaga_M3 Polyphonic MIDI - Run Tests.lua"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    staged /
+                    "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - Synth Output Probe.jsfx"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    staged /
+                    "Scripts/ajuntanaga_M3 Polyphonic MIDI - Safe Bypass.lua"
+                ).is_file()
+            )
+            self.assertFalse((staged / "reaper-kb.ini").exists())
+            self.assertFalse((staged / "reaper-jsfx.ini").exists())
+            self.assertEqual(
+                (staged / "reaper.ini").read_text(encoding="utf-8"),
+                "[reaper]\n"
+                "linux_audio_bsize=128\n"
+                "linux_audio_bufs=2\n"
+                "linux_audio_mode=3\n"
+                "linux_audio_nch_in=0\n"
+                "linux_audio_nch_out=2\n"
+                "linux_audio_srate=48000\n"
+                "newprojdo=0\n"
+                "saveFlags=0\n"
+                "warnmaxram64=0\n",
+            )
+            self.assertEqual(
+                (
+                    staged / "Data/m3_poly_midi/synthetic_cases.tsv"
+                ).read_bytes(),
+                (ROOT / "tests/fixtures/synthetic_cases.tsv").read_bytes(),
+            )
+            self.assertTrue((staged / "test-results").is_dir())
+
+    def test_integration_effects_and_runner_use_the_bounded_protocol(self):
+        source = SIGNAL_SOURCE.read_text(encoding="utf-8")
+        capture = MIDI_CAPTURE.read_text(encoding="utf-8")
+        synth_probe = SYNTH_PROBE.read_text(encoding="utf-8")
+        runner = INTEGRATION_RUNNER.read_text(encoding="utf-8")
+
+        self.assertIn("options:gmem=m3_poly_midi_tests_v1", source)
+        self.assertIn("M3_INTEGRATION_REFERENCE_CAPACITY = 2048;", source)
+        self.assertIn("M3_INTEGRATION_WARMUP_SECONDS = 0.500;", source)
+        self.assertIn("m3_source_harmonic * m3_source_frequency < 0.45 * srate", source)
+        self.assertIn("spl0 = m3_source_generated;", source)
+        self.assertIn("spl1 = m3_source_generated;", source)
+        self.assertIn("options:gmem=m3_poly_midi_tests_v1", capture)
+        self.assertIn("M3_CAPTURE_MAX_EVENTS = 256;", capture)
+        self.assertIn("while(midirecv(", capture)
+        self.assertIn("gmem[M3_CAPTURE_DRY_ERROR]", capture)
+        self.assertIn("options:gmem=m3_poly_midi_tests_v1", synth_probe)
+        self.assertIn("M3_SYNTH_OUTPUT_PEAK = 2100;", synth_probe)
+        self.assertIn("gmem[M3_SYNTH_OUTPUT_PEAK]", synth_probe)
+        self.assertIn("local index = reaper.CountTracks(0)", runner)
+        self.assertIn("Signal Source", runner)
+        self.assertIn("Audio to MIDI", runner)
+        self.assertIn("MIDI Capture", runner)
+        self.assertIn("ReaSynth (Cockos)", runner)
+        self.assertIn("Synth Output Probe", runner)
+        self.assertIn('result_directory .. "/events.tsv"', runner)
+        self.assertIn('result_directory .. "/summary.tsv"', runner)
+        self.assertIn('result_directory .. "/safety.tsv"', runner)
+        self.assertIn("local CASE_TIMEOUT_SECONDS = 10", runner)
+        self.assertIn("local PANIC_TRIALS_REQUIRED = 10", runner)
+        self.assertIn("local PANIC_OFF_TIMEOUT_SECONDS = 0.500", runner)
+        self.assertIn("local SAFE_BYPASS_TIMEOUT_SECONDS = 0.500", runner)
+        self.assertIn("reaper.OnPlayButton()", runner)
+        self.assertIn("reaper.defer(poll_case)", runner)
+        self.assertIn("reaper.TrackFX_SetParam(track, detector_fx, 5, 0)", runner)
+        self.assertIn("reaper.TrackFX_SetParam(track, detector_fx, 13, 1)", runner)
+        self.assertIn("local function prime_detector_for_case()", runner)
+        self.assertIn("local function capture_request_sample(case)", runner)
+        self.assertIn("panic_sample = capture_request_sample(case)", runner)
+        self.assertIn("panic_event_index = snapshot.count", runner)
+        self.assertIn("index >= panic_event_index", runner)
+        self.assertIn(
+            "if state == STATE_COMPLETE and not panic_started_at then",
+            runner,
+        )
+        self.assertIn(
+            "prime_detector_for_case()\n  reaper.OnPlayButton()",
+            runner,
+        )
+        self.assertIn("pcall(dofile, safe_bypass_path)", runner)
+        self.assertIn(
+            "not reaper.TrackFX_GetEnabled(track, detector_fx)",
+            runner,
+        )
+        self.assertNotIn(
+            "reaper.TrackFX_SetEnabled(track, detector_fx, false)",
+            runner,
+        )
+        self.assertIn("reaper.TrackFX_Delete(track, detector_fx)", runner)
+        self.assertIn("panic_trials_passed == PANIC_TRIALS_REQUIRED", runner)
+        self.assertIn(
+            'if status == "pass" then\n    case_forced_reason = nil',
+            runner,
+        )
+        self.assertNotIn('status == "pass" and nil or reason', runner)
+        self.assertIn('reaper.GetSetProjectInfo(0, "DIRTY", 0, true)', runner)
+        self.assertNotIn("reaper.Main_SaveProject", runner)
+        self.assertNotIn('"RENDER_STATS"', runner)
+        self.assertLess(
+            runner.index("atomic_write(summary_path, summary_lines)"),
+            runner.index('write_phase("suite-finish")'),
+        )
+
+    def test_synthetic_manifest_includes_real_polyphonic_cases(self):
+        manifest = (ROOT / "tests/fixtures/synthetic_cases.tsv").read_text(
+            encoding="utf-8"
+        )
+        rows = manifest.splitlines()
+        expected = (
+            "2\t48000\t128\tm3\t40,47\t0\t0\t0,-3\t-120\t-120\t0\t0\t"
+            "50\t40,47",
+            "3\t48000\t128\tm3\t32,36,40,44,48,52,56,60\t0\t0\t"
+            "0,0,0,0,0,0,0,0\t-120\t-120\t0\t0\t"
+            "80\t32,36,40,44,48,52,56,60",
+        )
+        for row in expected:
+            self.assertIn(row, rows)
+
+    def test_safe_bypass_panics_before_delayed_disable_without_delete(self):
+        script = SAFE_BYPASS.read_text(encoding="utf-8")
+        self.assertIn("local SAFE_BYPASS_DELAY_SECONDS = 0.050", script)
+        self.assertIn("reaper.TrackFX_GetFXGUID(track, detector_fx)", script)
+        self.assertIn(
+            "reaper.TrackFX_SetParam(track, detector_fx, 4, 0)",
+            script,
+        )
+        self.assertIn(
+            "reaper.TrackFX_SetParam(track, detector_fx, 13, 1)",
+            script,
+        )
+        self.assertIn("reaper.defer(disable_detector)", script)
+        self.assertIn(
+            "reaper.TrackFX_SetEnabled(track, current_fx, false)",
+            script,
+        )
+        self.assertIn(
+            "reaper.TrackFX_SetParam(\n"
+            "    track, current_fx, 4, original_sensitivity\n"
+            "  )",
+            script,
+        )
+        self.assertNotIn("TrackFX_Delete", script)
+
     def test_all_jsfx_imports_resolve(self):
         missing = []
         sources = sorted((ROOT / "Effects").rglob("*.jsfx"))
@@ -93,14 +283,30 @@ class SourceContractTests(unittest.TestCase):
         constants = parse_integer_assignments(CONSTANTS)
         profile = parse_integer_assignments(PROFILE)
         self.assertEqual(profile.get("M3_PROFILE_DP_ROW_SIZE"), 256)
-        self.assertEqual(profile.get("M3_PROFILE_DP_WORDS"), 512)
+        self.assertEqual(profile.get("M3_PROFILE_DP_WORDS"), 768)
         self.assertEqual(
             profile["M3_PROFILE_DP_WORDS"],
-            2 * profile["M3_PROFILE_DP_ROW_SIZE"],
+            3 * profile["M3_PROFILE_DP_ROW_SIZE"],
         )
-        self.assertLess(
+        self.assertLessEqual(
             profile["M3_PROFILE_DP_WORDS"],
             constants["M3_VOICE_BASE"] - constants["M3_M3_SCRATCH_BASE"],
+        )
+
+    def test_m3_selection_shortlist_stays_inside_fixed_workspace(self):
+        constants = parse_integer_assignments(CONSTANTS)
+        selector = parse_integer_assignments(SELECTOR)
+        self.assertEqual(selector.get("M3_SELECTION_INTERNAL_CANDIDATES"), 16)
+        self.assertEqual(selector.get("M3_SELECTION_RESULT_WORDS"), 64)
+        self.assertEqual(selector.get("M3_SELECTION_RESIDUAL_OFFSET"), 64)
+        self.assertEqual(
+            selector.get("M3_SELECTION_PROFILE_RESIDUAL_OFFSET"),
+            149,
+        )
+        self.assertEqual(selector.get("M3_SELECTION_WORK_WORDS"), 234)
+        self.assertLessEqual(
+            selector["M3_SELECTION_WORK_WORDS"],
+            constants["M3_M3_SCRATCH_BASE"] - constants["M3_SELECTION_BASE"],
         )
 
     def test_lifecycle_memory_contract(self):
@@ -132,10 +338,14 @@ class SourceContractTests(unittest.TestCase):
             "m3_midi_panic(",
             "m3_host_cleanup_reason(",
             "m3_host_select_input(",
+            "m3_host_signal_present(",
+            "m3_host_panic_hold_next(",
             "m3_host_apply_bounds(",
             "m3_host_reset_detector(",
         ):
             self.assertIn(interface, emitter)
+        self.assertIn("M3_HOST_MIN_SIGNAL_ENERGY = 0.00000001;", emitter)
+        self.assertIn("M3_HOST_PANIC_RELEASE_PEAK = 0.0001;", emitter)
 
     def test_production_parameter_surface_is_stable(self):
         expected = [
@@ -179,6 +389,20 @@ class SourceContractTests(unittest.TestCase):
         self.assertNotIn("m3_bank_init(", slider)
         self.assertNotIn("m3_host_reset_detector(", slider)
         self.assertIn("m3_midi_panic(", block)
+        self.assertIn(
+            "panic_hold = m3_host_panic_hold_next(\n"
+            "  panic_hold, panic_requested, block_input_peak\n"
+            ");",
+            block,
+        )
+        self.assertIn("!panic_hold", block)
+        self.assertIn(
+            "analysis_signal_present = m3_host_signal_present(\n"
+            "    M3_CONDITION_BASE[10]\n"
+            "  );",
+            block,
+        )
+        self.assertIn("analysis_signal_present ? (", block)
         self.assertIn("m3_host_reset_detector(", block)
         self.assertLess(
             block.index("m3_midi_panic("),

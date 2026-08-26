@@ -33,6 +33,11 @@ M3_TEST_BOUNDS_BASE = 58224;
 M3_TEST_TELEMETRY_SOURCE_BASE = 58300;
 M3_TEST_TELEMETRY_UI_BASE = 58364;
 M3_TEST_SERIALIZATION_BASE = 58432;
+M3_TEST_REALTIME_MAX_CONFIDENCE_BASE = 59000;
+M3_TEST_REALTIME_EIGHT_PHASE_BASE = 59200;
+M3_TEST_REALTIME_EIGHT_STEP_BASE = 59208;
+M3_TEST_REALTIME_EIGHT_ON_BASE = 59216;
+M3_TEST_REALTIME_EIGHT_SALIENCE_BASE = 59224;
 
 function m3_test_near(id, actual, expected, tolerance) local(delta) (
   gmem[2] += 1;
@@ -184,6 +189,711 @@ local(frequency, phase, phase_step, sample_index, sample_count, attack_samples,
   best_note;
 );
 
+function m3_test_realtime_e2_on_error(test_sr)
+local(block_size, onset_samples, attack_samples, signal_samples,
+      total_samples, block_count, block_index, sample_index, block_sample,
+      phase, phase_step, envelope, position, source, harmonic,
+      conditioned, selected_count, selection_index, selection_cell,
+      e2_candidate, e2_score, max_e2_score, max_e2_confidence,
+      selected_e2_blocks, response_base, event_count, event_index, event,
+      on_count, wrong_on_count, absolute_sample, note, max_wrong_confidence,
+      max_wrong_note, open_index, open_energy, max_open_fundamental,
+      max_selected_count) (
+  block_size = 128;
+  onset_samples = max(1, floor(0.100 * test_sr + 0.5));
+  attack_samples = max(1, floor(0.005 * test_sr + 0.5));
+  signal_samples = max(1, floor(0.080 * test_sr + 0.5));
+  total_samples = onset_samples + signal_samples;
+  block_count = floor((total_samples + block_size - 1) / block_size);
+
+  m3_profile_load(M3_CONFIG_BASE + M3_PROFILE_OPEN_OFFSET);
+  m3_host_reset_detector(test_sr, 32, 84, 440);
+  response_base = M3_TEST_LIFECYCLE_RESPONSE_BASE;
+  m3_lifecycle_response_for_profile(
+    M3_PROFILE_MODE_M3,
+    0,
+    test_sr,
+    0.20,
+    response_base
+  );
+
+  sample_index = 0;
+  absolute_sample = 0;
+  phase = 0;
+  phase_step = 2 * $pi * m3_midi_to_hz(40, 440) / test_sr;
+  max_e2_score = 0;
+  max_e2_confidence = 0;
+  selected_e2_blocks = 0;
+  on_count = 0;
+  wrong_on_count = 0;
+  max_selected_count = 0;
+  m3_zero(M3_TEST_REALTIME_MAX_CONFIDENCE_BASE, 128);
+
+  block_index = 0;
+  loop(block_count,
+    M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.20;
+    M3_SALIENCE_BASE[M3_SALIENCE_CLIPPED_OFFSET] =
+      M3_CONDITION_BASE[14] > 0.01;
+    m3_salience_update(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      M3_CONDITION_BASE[12]
+    );
+    e2_candidate = 40 - M3_RESONATOR_BASE[1];
+    e2_score = M3_SALIENCE_BASE[e2_candidate];
+    max_e2_score = max(max_e2_score, e2_score);
+
+    selected_count = m3_select_profile_candidates(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      32,
+      53,
+      M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
+      M3_SELECTION_INTERNAL_CANDIDATES,
+      M3_SELECTION_BASE
+    );
+    selected_count = m3_profile_filter_selected(
+      M3_PROFILE_MODE_M3,
+      M3_SELECTION_BASE,
+      selected_count,
+      M3_MAX_VOICES,
+      24,
+      M3_CONFIG_BASE + M3_PROFILE_NOTE_WORK_OFFSET,
+      M3_M3_SCRATCH_BASE
+    );
+    max_selected_count = max(max_selected_count, selected_count);
+    selection_index = 0;
+    loop(selected_count,
+      selection_cell = M3_SELECTION_BASE +
+                       selection_index * M3_SELECTION_CELL_SIZE;
+      M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[selection_cell[0]] = max(
+        M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[selection_cell[0]],
+        selection_cell[1]
+      );
+      selection_cell[0] == 40 ? (
+        max_e2_confidence = max(max_e2_confidence, selection_cell[1]);
+        selected_e2_blocks += 1;
+      );
+      selection_index += 1;
+    );
+
+    event_count = m3_lifecycle_update(
+      M3_VOICE_BASE,
+      M3_EVENT_BASE,
+      M3_SELECTION_BASE,
+      selected_count,
+      absolute_sample,
+      0,
+      response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET],
+      response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET],
+      M3_VELOCITY_MODE_FIXED,
+      100
+    );
+    event_index = 0;
+    loop(event_count,
+      event = m3_lifecycle_event_cell(M3_EVENT_BASE, event_index);
+      event[M3_EVENT_TYPE_OFFSET] == M3_EVENT_TYPE_ON ? (
+        on_count < 8 ? gmem[22 + on_count] =
+          event[M3_EVENT_NOTE_OFFSET] * 10 +
+          M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[event[M3_EVENT_NOTE_OFFSET]];
+        on_count += 1;
+        event[M3_EVENT_NOTE_OFFSET] != 40 ? wrong_on_count += 1;
+      );
+      event_index += 1;
+    );
+
+    block_sample = 0;
+    loop(block_size,
+      sample_index < onset_samples ? (
+        source = 0;
+      ) : (
+        position = sample_index - onset_samples;
+        envelope = position < attack_samples
+          ? 0.5 - 0.5 * cos($pi * position / attack_samples)
+          : 1;
+        source = 0;
+        harmonic = 1;
+        loop(8,
+          source += sin(harmonic * phase) / harmonic;
+          harmonic += 1;
+        );
+        source *= 0.25 * envelope;
+        phase += phase_step;
+        phase >= 2 * $pi ? phase -= 2 * $pi;
+      );
+      conditioned = m3_condition_process(M3_CONDITION_BASE, source);
+      m3_bank_process(M3_RESONATOR_BASE, conditioned);
+      sample_index += 1;
+      block_sample += 1;
+    );
+    absolute_sample += block_size;
+    block_index += 1;
+  );
+
+  gmem[16] = max_e2_score;
+  gmem[17] = max_e2_confidence;
+  gmem[18] = response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET];
+  gmem[19] = selected_e2_blocks;
+  gmem[20] = on_count;
+  gmem[21] = wrong_on_count;
+  gmem[62] = max_selected_count;
+  max_wrong_confidence = 0;
+  max_wrong_note = 0;
+  note = 32;
+  loop(53,
+    note != 40 &&
+    M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note] > max_wrong_confidence ? (
+      max_wrong_confidence = M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note];
+      max_wrong_note = note;
+    );
+    note += 1;
+  );
+  gmem[11] = max_wrong_note;
+  gmem[12] = max_wrong_confidence;
+  max_open_fundamental = 0;
+  open_index = 0;
+  loop(8,
+    note = 32 + 4 * open_index;
+    open_energy = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    );
+    max_open_fundamental = max(max_open_fundamental, open_energy);
+    open_index += 1;
+  );
+  open_index = 0;
+  loop(8,
+    note = 32 + 4 * open_index;
+    gmem[96 + open_index] = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    ) / max(0.000000000001, max_open_fundamental);
+    open_index += 1;
+  );
+  abs(on_count - 1) + wrong_on_count;
+);
+
+function m3_test_realtime_e2_b2_on_error(test_sr)
+local(block_size, onset_samples, attack_samples, signal_samples,
+      total_samples, block_count, block_index, sample_index, block_sample,
+      phase_e2, phase_b2, step_e2, step_b2, envelope, position, source,
+      harmonic, voice_e2, voice_b2, gain_b2, conditioned, selected_count,
+      selection_index, selection_cell, response_base, event_count,
+      event_index, event, on_e2_count, on_b2_count, wrong_on_count,
+      absolute_sample, note, max_wrong_confidence, max_wrong_note,
+      candidate_e2, candidate_b2, candidate_b3, weighted_e2, weighted_b2,
+      weighted_b3, diagnostic_index, diagnostic_cell, max_selected_count) (
+  block_size = 128;
+  onset_samples = max(1, floor(0.100 * test_sr + 0.5));
+  attack_samples = max(1, floor(0.005 * test_sr + 0.5));
+  signal_samples = max(1, floor(0.100 * test_sr + 0.5));
+  total_samples = onset_samples + signal_samples;
+  block_count = floor((total_samples + block_size - 1) / block_size);
+
+  m3_profile_load(M3_CONFIG_BASE + M3_PROFILE_OPEN_OFFSET);
+  m3_host_reset_detector(test_sr, 32, 84, 440);
+  response_base = M3_TEST_LIFECYCLE_RESPONSE_BASE;
+  m3_lifecycle_response_for_profile(
+    M3_PROFILE_MODE_M3,
+    0,
+    test_sr,
+    0.20,
+    response_base
+  );
+
+  sample_index = 0;
+  absolute_sample = 0;
+  phase_e2 = 0;
+  phase_b2 = 0;
+  step_e2 = 2 * $pi * m3_midi_to_hz(40, 440) / test_sr;
+  step_b2 = 2 * $pi * m3_midi_to_hz(47, 440) / test_sr;
+  gain_b2 = 10 ^ (-3 / 20);
+  on_e2_count = 0;
+  on_b2_count = 0;
+  wrong_on_count = 0;
+  max_selected_count = 0;
+  candidate_e2 = 40 - M3_RESONATOR_BASE[1];
+  candidate_b2 = 47 - M3_RESONATOR_BASE[1];
+  candidate_b3 = 59 - M3_RESONATOR_BASE[1];
+  m3_zero(M3_TEST_REALTIME_MAX_CONFIDENCE_BASE, 128);
+
+  block_index = 0;
+  loop(block_count,
+    M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.20;
+    M3_SALIENCE_BASE[M3_SALIENCE_CLIPPED_OFFSET] =
+      M3_CONDITION_BASE[14] > 0.01;
+    m3_salience_update(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      M3_CONDITION_BASE[12]
+    );
+    gmem[32] = max(gmem[32], M3_SALIENCE_BASE[candidate_e2]);
+    gmem[33] = max(gmem[33], M3_SALIENCE_BASE[candidate_b2]);
+    gmem[34] = max(gmem[34], M3_SALIENCE_BASE[candidate_b3]);
+    selected_count = m3_select_profile_candidates(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      32,
+      53,
+      M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
+      M3_SELECTION_INTERNAL_CANDIDATES,
+      M3_SELECTION_BASE
+    );
+    selected_count = m3_profile_filter_selected(
+      M3_PROFILE_MODE_M3,
+      M3_SELECTION_BASE,
+      selected_count,
+      M3_MAX_VOICES,
+      24,
+      M3_CONFIG_BASE + M3_PROFILE_NOTE_WORK_OFFSET,
+      M3_M3_SCRATCH_BASE
+    );
+    max_selected_count = max(max_selected_count, selected_count);
+    selection_index = 0;
+    loop(selected_count,
+      selection_cell = M3_SELECTION_BASE +
+                       selection_index * M3_SELECTION_CELL_SIZE;
+      M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[selection_cell[0]] = max(
+        M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[selection_cell[0]],
+        selection_cell[1]
+      );
+      selection_index += 1;
+    );
+
+    event_count = m3_lifecycle_update(
+      M3_VOICE_BASE,
+      M3_EVENT_BASE,
+      M3_SELECTION_BASE,
+      selected_count,
+      absolute_sample,
+      0,
+      response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET],
+      response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET],
+      M3_VELOCITY_MODE_FIXED,
+      100
+    );
+    event_index = 0;
+    loop(event_count,
+      event = m3_lifecycle_event_cell(M3_EVENT_BASE, event_index);
+      event[M3_EVENT_TYPE_OFFSET] == M3_EVENT_TYPE_ON ? (
+        note = event[M3_EVENT_NOTE_OFFSET];
+        note == 40 ? on_e2_count += 1 :
+        note == 47 ? on_b2_count += 1 : (
+          wrong_on_count == 0 ? (
+            gmem[35] = absolute_sample;
+            gmem[36] = M3_SALIENCE_BASE[candidate_e2];
+            gmem[37] = M3_SALIENCE_BASE[candidate_b2];
+            gmem[38] = M3_SALIENCE_BASE[candidate_b3];
+            gmem[39] = selected_count;
+            diagnostic_index = 0;
+            loop(min(4, selected_count),
+              diagnostic_cell = M3_SELECTION_BASE +
+                                diagnostic_index * M3_SELECTION_CELL_SIZE;
+              gmem[40 + diagnostic_index * 2] = diagnostic_cell[0];
+              gmem[41 + diagnostic_index * 2] = diagnostic_cell[1];
+              diagnostic_index += 1;
+            );
+            weighted_e2 = m3_selection_weighted_energy(
+              M3_RESONATOR_BASE,
+              candidate_e2
+            );
+            weighted_b2 = m3_selection_weighted_energy(
+              M3_RESONATOR_BASE,
+              candidate_b2
+            );
+            weighted_b3 = m3_selection_weighted_energy(
+              M3_RESONATOR_BASE,
+              candidate_b3
+            );
+            gmem[48] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_e2,
+              0
+            ) / max(0.000000000001, weighted_e2);
+            gmem[49] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_b2,
+              0
+            ) / max(0.000000000001, weighted_b2);
+            gmem[50] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_b3,
+              0
+            ) / max(0.000000000001, weighted_b3);
+            gmem[51] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_e2,
+              0
+            );
+            gmem[52] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_b2,
+              0
+            );
+            gmem[53] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              candidate_b3,
+              0
+            );
+            gmem[54] = weighted_e2;
+            gmem[55] = weighted_b2;
+            gmem[56] = weighted_b3;
+            gmem[57] = M3_SALIENCE_BASE[
+              M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET
+            ];
+          );
+          wrong_on_count += 1;
+        );
+      );
+      event_index += 1;
+    );
+
+    block_sample = 0;
+    loop(block_size,
+      sample_index < onset_samples ? (
+        source = 0;
+      ) : (
+        position = sample_index - onset_samples;
+        envelope = position < attack_samples
+          ? 0.5 - 0.5 * cos($pi * position / attack_samples)
+          : 1;
+        voice_e2 = 0;
+        voice_b2 = 0;
+        harmonic = 1;
+        loop(8,
+          voice_e2 += sin(harmonic * phase_e2) / harmonic;
+          voice_b2 += sin(harmonic * phase_b2) / harmonic;
+          harmonic += 1;
+        );
+        source = 0.125 * envelope * (voice_e2 + gain_b2 * voice_b2);
+        phase_e2 += step_e2;
+        phase_b2 += step_b2;
+        phase_e2 >= 2 * $pi ? phase_e2 -= 2 * $pi;
+        phase_b2 >= 2 * $pi ? phase_b2 -= 2 * $pi;
+      );
+      conditioned = m3_condition_process(M3_CONDITION_BASE, source);
+      m3_bank_process(M3_RESONATOR_BASE, conditioned);
+      sample_index += 1;
+      block_sample += 1;
+    );
+    absolute_sample += block_size;
+    block_index += 1;
+  );
+
+  max_wrong_confidence = 0;
+  max_wrong_note = 0;
+  note = 32;
+  loop(53,
+    note != 40 && note != 47 &&
+    M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note] > max_wrong_confidence ? (
+      max_wrong_confidence = M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note];
+      max_wrong_note = note;
+    );
+    note += 1;
+  );
+  gmem[24] = on_e2_count;
+  gmem[25] = on_b2_count;
+  gmem[26] = wrong_on_count;
+  gmem[27] = max_wrong_note;
+  gmem[28] = max_wrong_confidence;
+  gmem[63] = max_selected_count;
+  abs(on_e2_count - 1) + abs(on_b2_count - 1) + wrong_on_count;
+);
+
+function m3_test_realtime_eight_opens_error(test_sr)
+local(block_size, onset_samples, attack_samples, signal_samples,
+      total_samples, block_count, block_index, sample_index, block_sample,
+      envelope, position, source, voice, voice_index, note, frequency, phase,
+      harmonic, conditioned, selected_count, selection_index, selection_cell,
+      response_base, event_count, event_index, event, absolute_sample,
+      wrong_on_count, max_wrong_confidence, max_wrong_note,
+      max_selected_count, error, max_open_fundamental, open_energy,
+      wrong_candidate, wrong_weighted_energy, scan_candidate,
+      max_candidate_fundamental) (
+  block_size = 128;
+  onset_samples = max(1, floor(0.100 * test_sr + 0.5));
+  attack_samples = max(1, floor(0.005 * test_sr + 0.5));
+  signal_samples = max(1, floor(0.300 * test_sr + 0.5));
+  total_samples = onset_samples + signal_samples;
+  block_count = floor((total_samples + block_size - 1) / block_size);
+
+  m3_profile_load(M3_CONFIG_BASE + M3_PROFILE_OPEN_OFFSET);
+  m3_host_reset_detector(test_sr, 32, 84, 440);
+  response_base = M3_TEST_LIFECYCLE_RESPONSE_BASE;
+  m3_lifecycle_response_for_profile(
+    M3_PROFILE_MODE_M3,
+    0,
+    test_sr,
+    0.08,
+    response_base
+  );
+  m3_zero(M3_TEST_REALTIME_MAX_CONFIDENCE_BASE, 128);
+  m3_zero(M3_TEST_REALTIME_EIGHT_PHASE_BASE, 8);
+  m3_zero(M3_TEST_REALTIME_EIGHT_ON_BASE, 8);
+  m3_zero(M3_TEST_REALTIME_EIGHT_SALIENCE_BASE, 8);
+
+  voice_index = 0;
+  loop(8,
+    note = 32 + 4 * voice_index;
+    M3_TEST_REALTIME_EIGHT_STEP_BASE[voice_index] =
+      2 * $pi * m3_midi_to_hz(note, 440) / test_sr;
+    voice_index += 1;
+  );
+  sample_index = 0;
+  absolute_sample = 0;
+  wrong_on_count = 0;
+  max_selected_count = 0;
+
+  block_index = 0;
+  loop(block_count,
+    M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = 0.08;
+    M3_SALIENCE_BASE[M3_SALIENCE_CLIPPED_OFFSET] =
+      M3_CONDITION_BASE[14] > 0.01;
+    m3_salience_update(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      M3_CONDITION_BASE[12]
+    );
+    voice_index = 0;
+    loop(8,
+      note = 32 + 4 * voice_index;
+      M3_TEST_REALTIME_EIGHT_SALIENCE_BASE[voice_index] = max(
+        M3_TEST_REALTIME_EIGHT_SALIENCE_BASE[voice_index],
+        M3_SALIENCE_BASE[note - M3_RESONATOR_BASE[1]]
+      );
+      voice_index += 1;
+    );
+
+    selected_count = m3_select_profile_candidates(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      32,
+      53,
+      M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
+      M3_SELECTION_INTERNAL_CANDIDATES,
+      M3_SELECTION_BASE
+    );
+    selected_count = m3_profile_filter_selected(
+      M3_PROFILE_MODE_M3,
+      M3_SELECTION_BASE,
+      selected_count,
+      M3_MAX_VOICES,
+      24,
+      M3_CONFIG_BASE + M3_PROFILE_NOTE_WORK_OFFSET,
+      M3_M3_SCRATCH_BASE
+    );
+    max_selected_count = max(max_selected_count, selected_count);
+    selection_index = 0;
+    loop(selected_count,
+      selection_cell = M3_SELECTION_BASE +
+                       selection_index * M3_SELECTION_CELL_SIZE;
+      note = selection_cell[0];
+      M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note] = max(
+        M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note],
+        selection_cell[1]
+      );
+      selection_index += 1;
+    );
+
+    event_count = m3_lifecycle_update(
+      M3_VOICE_BASE,
+      M3_EVENT_BASE,
+      M3_SELECTION_BASE,
+      selected_count,
+      absolute_sample,
+      0,
+      response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+      response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET],
+      response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET],
+      M3_VELOCITY_MODE_FIXED,
+      100
+    );
+    event_index = 0;
+    loop(event_count,
+      event = m3_lifecycle_event_cell(M3_EVENT_BASE, event_index);
+      event[M3_EVENT_TYPE_OFFSET] == M3_EVENT_TYPE_ON ? (
+        note = event[M3_EVENT_NOTE_OFFSET];
+        note >= 32 && note <= 60 && (note - 32) % 4 == 0 ? (
+          M3_TEST_REALTIME_EIGHT_ON_BASE[(note - 32) / 4] += 1;
+        ) : (
+          wrong_on_count == 0 ? (
+            wrong_candidate = note - M3_RESONATOR_BASE[1];
+            wrong_weighted_energy = m3_selection_weighted_energy(
+              M3_RESONATOR_BASE,
+              wrong_candidate
+            );
+            gmem[58] = m3_bank_energy(
+              M3_RESONATOR_BASE,
+              wrong_candidate,
+              0
+            );
+            gmem[59] = wrong_weighted_energy;
+            gmem[60] = gmem[58] /
+              max(0.000000000001, wrong_weighted_energy);
+            max_candidate_fundamental = 0;
+            scan_candidate = 0;
+            loop(53,
+              max_candidate_fundamental = max(
+                max_candidate_fundamental,
+                m3_bank_energy(M3_RESONATOR_BASE, scan_candidate, 0)
+              );
+              scan_candidate += 1;
+            );
+            gmem[61] = gmem[58] /
+              max(0.000000000001, max_candidate_fundamental);
+          );
+          wrong_on_count += 1;
+        );
+      );
+      event_index += 1;
+    );
+
+    block_sample = 0;
+    loop(block_size,
+      sample_index < onset_samples ? (
+        source = 0;
+      ) : (
+        position = sample_index - onset_samples;
+        envelope = position < attack_samples
+          ? 0.5 - 0.5 * cos($pi * position / attack_samples)
+          : 1;
+        source = 0;
+        voice_index = 0;
+        loop(8,
+          note = 32 + 4 * voice_index;
+          frequency = m3_midi_to_hz(note, 440);
+          phase = M3_TEST_REALTIME_EIGHT_PHASE_BASE[voice_index];
+          voice = 0;
+          harmonic = 1;
+          loop(8,
+            harmonic * frequency < 0.45 * test_sr ? (
+              voice += sin(harmonic * phase) / harmonic;
+            );
+            harmonic += 1;
+          );
+          source += voice;
+          phase += M3_TEST_REALTIME_EIGHT_STEP_BASE[voice_index];
+          phase >= 2 * $pi ? phase -= 2 * $pi;
+          M3_TEST_REALTIME_EIGHT_PHASE_BASE[voice_index] = phase;
+          voice_index += 1;
+        );
+        source *= 0.25 * envelope / 8;
+      );
+      conditioned = m3_condition_process(M3_CONDITION_BASE, source);
+      m3_bank_process(M3_RESONATOR_BASE, conditioned);
+      sample_index += 1;
+      block_sample += 1;
+    );
+    absolute_sample += block_size;
+    block_index += 1;
+  );
+
+  error = wrong_on_count;
+  voice_index = 0;
+  loop(8,
+    error += abs(M3_TEST_REALTIME_EIGHT_ON_BASE[voice_index] - 1);
+    gmem[64 + voice_index] =
+      M3_TEST_REALTIME_EIGHT_SALIENCE_BASE[voice_index];
+    note = 32 + 4 * voice_index;
+    gmem[72 + voice_index] =
+      M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note];
+    gmem[81 + voice_index] =
+      M3_TEST_REALTIME_EIGHT_ON_BASE[voice_index];
+    voice_index += 1;
+  );
+  max_wrong_confidence = 0;
+  max_wrong_note = 0;
+  note = 32;
+  loop(53,
+    !((note >= 32 && note <= 60 && (note - 32) % 4 == 0)) &&
+    M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note] > max_wrong_confidence ? (
+      max_wrong_confidence = M3_TEST_REALTIME_MAX_CONFIDENCE_BASE[note];
+      max_wrong_note = note;
+    );
+    note += 1;
+  );
+  gmem[80] = response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET];
+  gmem[89] = wrong_on_count;
+  gmem[90] = max_wrong_note;
+  gmem[91] = max_wrong_confidence;
+  gmem[92] = max_selected_count;
+  gmem[93] = M3_CONDITION_BASE[14];
+  gmem[94] = M3_CONDITION_BASE[12];
+  gmem[95] = selected_count;
+  selection_index = 0;
+  loop(8,
+    selection_cell = M3_SELECTION_BASE +
+                     selection_index * M3_SELECTION_CELL_SIZE;
+    selection_index < selected_count ? (
+      gmem[112 + selection_index * 2] = selection_cell[0];
+      gmem[113 + selection_index * 2] = selection_cell[1];
+    ) : (
+      gmem[112 + selection_index * 2] = 0;
+      gmem[113 + selection_index * 2] = 0;
+    );
+    selection_index += 1;
+  );
+  note = 32;
+  loop(53,
+    gmem[128 + note - 32] =
+      M3_SALIENCE_BASE[note - M3_RESONATOR_BASE[1]];
+    note += 1;
+  );
+  max_open_fundamental = 0;
+  voice_index = 0;
+  loop(8,
+    note = 32 + 4 * voice_index;
+    open_energy = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    );
+    max_open_fundamental = max(max_open_fundamental, open_energy);
+    voice_index += 1;
+  );
+  voice_index = 0;
+  loop(8,
+    note = 32 + 4 * voice_index;
+    gmem[104 + voice_index] = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    ) / max(0.000000000001, max_open_fundamental);
+    gmem[181 + voice_index] = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    ) / max(
+      0.000000000001,
+      m3_selection_weighted_energy(
+        M3_RESONATOR_BASE,
+        note - M3_RESONATOR_BASE[1]
+      )
+    );
+    voice_index += 1;
+  );
+  note = 32;
+  loop(53,
+    gmem[192 + note - 32] = m3_bank_energy(
+      M3_RESONATOR_BASE,
+      note - M3_RESONATOR_BASE[1],
+      0
+    );
+    note += 1;
+  );
+  error;
+);
+
 function m3_test_bank_silence(test_sr)
 local(sample_count, best_note) (
   m3_bank_init(M3_RESONATOR_BASE, test_sr, 32, 32, 440);
@@ -232,16 +942,33 @@ function m3_test_bank_case(test_sr, case_id) local(best_note) (
 
   case_id == 4102 ? (
     best_note = m3_test_bank_tone(test_sr, 40, 0, 0.045, 0, 32, 52);
-    m3_test_near(4102, best_note, 40, 0);
+    gmem[13] = test_best_score;
+    gmem[14] = M3_SALIENCE_BASE[40 - M3_RESONATOR_BASE[1]];
+    gmem[31] = best_note;
+    m3_test_near(
+      4102,
+      abs(best_note - 40) +
+      m3_test_realtime_e2_on_error(test_sr) +
+      m3_test_realtime_e2_b2_on_error(test_sr) +
+      m3_test_realtime_eight_opens_error(test_sr),
+      0,
+      0
+    );
   );
 
   case_id == 4103 ? (
     best_note = m3_test_bank_tone(test_sr, 69, 35, 0.300, 0, 32, 72);
+    gmem[13] = test_best_score;
+    gmem[14] = M3_SALIENCE_BASE[69 - M3_RESONATOR_BASE[1]];
+    gmem[31] = best_note;
     m3_test_near(4103, best_note, 69, 0);
   );
 
   case_id == 4104 ? (
     best_note = m3_test_bank_tone(test_sr, 40, 0, 0.300, 1, 32, 60);
+    gmem[13] = test_best_score;
+    gmem[14] = M3_SALIENCE_BASE[40 - M3_RESONATOR_BASE[1]];
+    gmem[31] = best_note;
     m3_test_near(4104, best_note, 40, 0);
   );
 
@@ -637,7 +1364,8 @@ local(candidate, harmonic, enabled) (
 function m3_test_multi_rate_case(test_sr, case_id)
 local(index, note, production_index, reference_index, delta, max_delta,
       variant, voice_count, selection_error, alias_score, sample_count,
-      average_updates, enabled_cells, guard_error) (
+      average_updates, enabled_cells, guard_error, selected_count,
+      parent_probe_excess, work_measure) (
   case_id == 6101 ? (
     voice_count = m3_test_rate_case_setup(3);
     m3_test_rate_process_pair(test_sr, voice_count, 0.300, 32, 60);
@@ -722,9 +1450,35 @@ local(index, note, production_index, reference_index, delta, max_delta,
     );
     average_updates = M3_RATE_BASE[M3_RATE_CELL_UPDATES_OFFSET] /
                       max(1, M3_RATE_BASE[M3_RATE_INPUT_SAMPLES_OFFSET]);
+    index = 0;
+    loop(53,
+      M3_SALIENCE_BASE[index] = 0.50;
+      index += 1;
+    );
+    m3_selection_shared_parent_probes = 999999;
+    selected_count = m3_select_voices(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      32,
+      53,
+      0.20,
+      8,
+      440,
+      M3_SELECTION_BASE
+    );
+    parent_probe_excess = max(
+      0,
+      m3_selection_shared_parent_probes - 53 * 5
+    );
+    work_measure = max(
+      average_updates,
+      45 + parent_probe_excess + abs(selected_count - 8)
+    );
     gmem[8] = average_updates;
     gmem[9] = enabled_cells;
-    m3_test_lte(6105, average_updates, 45);
+    gmem[10] = m3_selection_shared_parent_probes;
+    gmem[11] = selected_count;
+    m3_test_lte(6105, work_measure, 45);
   );
 
   case_id == 6106 ? (
@@ -746,12 +1500,12 @@ local(index, note, production_index, reference_index, delta, max_delta,
 
 function m3_test_profile_guard_start() (
   M3_M3_SCRATCH_BASE[-1] = 1234567;
-  M3_M3_SCRATCH_BASE[512] = 7654321;
+  M3_M3_SCRATCH_BASE[768] = 7654321;
 );
 
 function m3_test_profile_guard_error() (
   abs(M3_M3_SCRATCH_BASE[-1] - 1234567) +
-  abs(M3_M3_SCRATCH_BASE[512] - 7654321);
+  abs(M3_M3_SCRATCH_BASE[768] - 7654321);
 );
 
 function m3_test_profile_open_error(open_base) (
@@ -851,6 +1605,7 @@ local(index, feasible, error, selected_count) (
       M3_PROFILE_MODE_M3,
       M3_SELECTION_BASE,
       2,
+      M3_MAX_VOICES,
       24,
       M3_TEST_PROFILE_NOTE_BASE,
       M3_M3_SCRATCH_BASE
@@ -872,6 +1627,7 @@ local(index, feasible, error, selected_count) (
       M3_PROFILE_MODE_GENERAL,
       M3_SELECTION_BASE,
       1,
+      M3_MAX_VOICES,
       24,
       M3_TEST_PROFILE_NOTE_BASE,
       M3_M3_SCRATCH_BASE
@@ -962,6 +1718,7 @@ local(attack_samples, release_samples, dropout_samples, attack_time,
   m3_lifecycle_response(
     0,
     test_sr,
+    0.20,
     M3_TEST_LIFECYCLE_RESPONSE_BASE
   );
   attack_samples = M3_TEST_LIFECYCLE_RESPONSE_BASE[
@@ -997,11 +1754,27 @@ local(attack_samples, release_samples, dropout_samples, attack_time,
             abs(dropout_samples - max(1, floor(0.006 * test_sr + 0.5))) +
             abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
               M3_LIFECYCLE_ON_THRESHOLD_OFFSET
-            ] - 0.52) +
+            ] - 0.57) +
             abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
               M3_LIFECYCLE_OFF_THRESHOLD_OFFSET
-            ] - 0.38);
-    m3_test_near(8101, error, 0, 0);
+            ] - 0.43);
+    m3_lifecycle_response_for_profile(
+      M3_PROFILE_MODE_M3,
+      0,
+      test_sr,
+      0.20,
+      M3_TEST_LIFECYCLE_RESPONSE_BASE
+    );
+    error += abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
+                   M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET
+                 ] - max(1, floor(0.024 * test_sr + 0.5))) +
+             abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
+                   M3_LIFECYCLE_ON_THRESHOLD_OFFSET
+                 ] - 0.264) +
+             abs(M3_TEST_LIFECYCLE_RESPONSE_BASE[
+                   M3_LIFECYCLE_OFF_THRESHOLD_OFFSET
+                 ] - 0.20);
+    m3_test_near(8101, error, 0, 0.000000000001);
   );
 
   case_id == 8102 ? (
@@ -1450,7 +2223,12 @@ local(error, encoded, event, second_event, count, reason, captured_count,
 
   case_id == 9107 ? (
     m3_test_lifecycle_reset();
-    m3_lifecycle_response(0, test_sr, M3_TEST_LIFECYCLE_RESPONSE_BASE);
+    m3_lifecycle_response(
+      0,
+      test_sr,
+      0.20,
+      M3_TEST_LIFECYCLE_RESPONSE_BASE
+    );
     attack_samples = M3_TEST_LIFECYCLE_RESPONSE_BASE[
       M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET
     ];
@@ -1492,7 +2270,25 @@ local(error, encoded, event, second_event, count, reason, captured_count,
             abs(
               m3_host_select_input(2, 0.25, -0.50) +
               0.25 * 0.7071067811865476
-            );
+            ) +
+            abs(m3_host_signal_present(0)) +
+            abs(m3_host_signal_present(
+              M3_HOST_MIN_SIGNAL_ENERGY * 0.5
+            )) +
+            abs(m3_host_signal_present(M3_HOST_MIN_SIGNAL_ENERGY) - 1) +
+            abs(m3_host_signal_present(
+              M3_HOST_MIN_SIGNAL_ENERGY * 2
+            ) - 1) +
+            abs(m3_host_panic_hold_next(0, 1, 0) - 1) +
+            abs(m3_host_panic_hold_next(
+              1, 0, M3_HOST_PANIC_RELEASE_PEAK * 2
+            ) - 1) +
+            abs(m3_host_panic_hold_next(
+              1, 0, M3_HOST_PANIC_RELEASE_PEAK * 0.5
+            )) +
+            abs(m3_host_panic_hold_next(
+              0, 0, M3_HOST_PANIC_RELEASE_PEAK * 2
+            ));
     m3_test_near(9108, error, 0, 0.000000001);
   );
 
@@ -1655,7 +2451,7 @@ gmem[12] = 0;
 gmem[13] = 0;
 gmem[14] = 0;
 test_diagnostic_index = 16;
-loop(16,
+loop(229,
   gmem[test_diagnostic_index] = 0;
   test_diagnostic_index += 1;
 );

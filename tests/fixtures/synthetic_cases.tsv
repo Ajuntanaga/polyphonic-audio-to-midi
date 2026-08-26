@@ -1,0 +1,4 @@
+case_id	sample_rate	block_size	mode	notes	detune_cents	missing_fundamental	gains_db	noise_db	hum_db	clip	stagger_ms	sensitivity	expected
+1	48000	128	m3	40	0	0	0	-120	-120	0	0	50	40
+2	48000	128	m3	40,47	0	0	0,-3	-120	-120	0	0	50	40,47
+3	48000	128	m3	32,36,40,44,48,52,56,60	0	0	0,0,0,0,0,0,0,0	-120	-120	0	0	80	32,36,40,44,48,52,56,60

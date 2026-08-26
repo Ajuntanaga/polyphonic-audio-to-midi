@@ -12,6 +12,8 @@ M3_HOST_CLEANUP_RECONFIGURE = 4;
 M3_HOST_CLEANUP_PANIC = 8;
 M3_HOST_BOUNDS_LOW_OFFSET = 0;
 M3_HOST_BOUNDS_HIGH_OFFSET = 1;
+M3_HOST_MIN_SIGNAL_ENERGY = 0.00000001;
+M3_HOST_PANIC_RELEASE_PEAK = 0.0001;
 
 function m3_midi_encode_event(event_base, index, channel, block_size,
                               output_base)
@@ -110,6 +112,20 @@ local(mode) (
   mode == 0 ? left :
   mode == 1 ? right :
   (left + right) * 0.7071067811865476;
+);
+
+function m3_host_signal_present(fast_energy) (
+  m3_isfinite(fast_energy) &&
+  fast_energy >= M3_HOST_MIN_SIGNAL_ENERGY;
+);
+
+function m3_host_panic_hold_next(current_hold, panic_requested,
+                                 previous_block_peak) (
+  panic_requested ? 1 :
+  current_hold && (
+    !m3_isfinite(previous_block_peak) ||
+    abs(previous_block_peak) >= M3_HOST_PANIC_RELEASE_PEAK
+  );
 );
 
 function m3_host_clamp_bounds(requested_low, requested_high, output_base)

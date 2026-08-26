@@ -4,7 +4,11 @@ M3_PROFILE_MODE_GENERAL = 1;
 M3_PROFILE_OPEN_OFFSET = 32;
 M3_PROFILE_NOTE_WORK_OFFSET = 40;
 M3_PROFILE_DP_ROW_SIZE = 256;
-M3_PROFILE_DP_WORDS = 512;
+M3_PROFILE_DP_SCORE_OFFSET = 0;
+M3_PROFILE_DP_LOW_CODE_OFFSET = 256;
+M3_PROFILE_DP_HIGH_CODE_OFFSET = 512;
+M3_PROFILE_DP_WORDS = 768;
+M3_PROFILE_NOTE_CODE_RADIX = 128;
 
 function m3_profile_load(open_base) (
   m3_profile_open_base = open_base;
@@ -83,68 +87,155 @@ local(count, current_row, next_row, note_index, playable, used_mask,
   );
 );
 
-function m3_profile_filter_selected(profile_mode, selection_base,
-                                    selected_count, max_fret,
-                                    note_work_base, scratch_base)
-local(count, accepted, attempt, note_index, lowest_index, lowest_confidence,
-      confidence, shift_index, source_cell, destination_cell, cleared_cell) (
-  count = min(M3_MAX_VOICES, max(0, floor(selected_count)));
-  profile_mode == M3_PROFILE_MODE_GENERAL ? count : (
-    accepted = 0;
-    attempt = 0;
-    loop(M3_MAX_VOICES,
-      !accepted ? (
-        note_index = 0;
-        loop(count,
-          note_work_base[note_index] =
-            selection_base[note_index * M3_SELECTION_CELL_SIZE];
-          note_index += 1;
-        );
-        m3_voicing_feasible(
-          note_work_base,
-          count,
-          max_fret,
-          scratch_base
-        ) ? (
-          accepted = 1;
-        ) : count > 0 ? (
-          lowest_index = 0;
-          lowest_confidence = 10 ^ 30;
-          note_index = 0;
-          loop(count,
-            confidence = selection_base[
-              note_index * M3_SELECTION_CELL_SIZE + 1
-            ];
-            !m3_isfinite(confidence) || confidence < lowest_confidence ? (
-              lowest_confidence = confidence;
-              lowest_index = note_index;
-            );
-            note_index += 1;
-          );
+function m3_profile_popcount8(mask)
+local(value) (
+  value = floor(max(0, mask));
+  (value & 1) +
+  ((value >> 1) & 1) +
+  ((value >> 2) & 1) +
+  ((value >> 3) & 1) +
+  ((value >> 4) & 1) +
+  ((value >> 5) & 1) +
+  ((value >> 6) & 1) +
+  ((value >> 7) & 1);
+);
 
-          shift_index = lowest_index;
-          loop(max(0, count - lowest_index - 1),
-            destination_cell = selection_base +
-                               shift_index * M3_SELECTION_CELL_SIZE;
-            source_cell = destination_cell + M3_SELECTION_CELL_SIZE;
-            destination_cell[0] = source_cell[0];
-            destination_cell[1] = source_cell[1];
-            destination_cell[2] = source_cell[2];
-            destination_cell[3] = source_cell[3];
-            shift_index += 1;
+function m3_profile_filter_selected(profile_mode, selection_base,
+                                    selected_count, max_voices, max_fret,
+                                    note_work_base, scratch_base)
+local(candidate_count, limit, score_base, low_code_base, high_code_base,
+      candidate_index, candidate_cell, note, confidence, playable, used_mask,
+      state_score, string_index, string_bit, next_mask, next_score,
+      next_low_code, next_high_code, code_power, best_mask, best_score,
+      state_count, encoded, digit, work_base, output_count, found,
+      source_index, source_cell, destination_cell) (
+  candidate_count = min(
+    M3_SELECTION_INTERNAL_CANDIDATES,
+    max(0, floor(selected_count))
+  );
+  limit = min(M3_MAX_VOICES, max(0, floor(max_voices)));
+  profile_mode == M3_PROFILE_MODE_GENERAL ? min(candidate_count, limit) : (
+    score_base = scratch_base + M3_PROFILE_DP_SCORE_OFFSET;
+    low_code_base = scratch_base + M3_PROFILE_DP_LOW_CODE_OFFSET;
+    high_code_base = scratch_base + M3_PROFILE_DP_HIGH_CODE_OFFSET;
+    m3_zero(scratch_base, M3_PROFILE_DP_WORDS);
+    used_mask = 1;
+    loop(M3_PROFILE_DP_ROW_SIZE - 1,
+      score_base[used_mask] = -1;
+      used_mask += 1;
+    );
+
+    candidate_index = 0;
+    loop(candidate_count,
+      candidate_cell = selection_base +
+                       candidate_index * M3_SELECTION_CELL_SIZE;
+      note = floor(candidate_cell[0] + 0.5);
+      confidence = candidate_cell[1];
+      playable = m3_note_string_mask(
+        note,
+        max_fret,
+        m3_profile_open_base
+      );
+      m3_isfinite(confidence) && confidence > 0 && playable ? (
+        used_mask = M3_PROFILE_DP_ROW_SIZE - 1;
+        loop(M3_PROFILE_DP_ROW_SIZE,
+          state_score = score_base[used_mask];
+          state_count = m3_profile_popcount8(used_mask);
+          state_score >= 0 && state_count < limit ? (
+            string_index = 0;
+            loop(8,
+              string_bit = 1 << string_index;
+              (playable & string_bit) && !(used_mask & string_bit) ? (
+                next_mask = used_mask | string_bit;
+                next_score = state_score + confidence;
+                next_score > score_base[next_mask] + 0.000000000001 ? (
+                  next_low_code = low_code_base[used_mask];
+                  next_high_code = high_code_base[used_mask];
+                  string_index < 4 ? (
+                    code_power =
+                      M3_PROFILE_NOTE_CODE_RADIX ^ string_index;
+                    next_low_code += (note + 1) * code_power;
+                  ) : (
+                    code_power =
+                      M3_PROFILE_NOTE_CODE_RADIX ^ (string_index - 4);
+                    next_high_code += (note + 1) * code_power;
+                  );
+                  score_base[next_mask] = next_score;
+                  low_code_base[next_mask] = next_low_code;
+                  high_code_base[next_mask] = next_high_code;
+                );
+              );
+              string_index += 1;
+            );
           );
-          count -= 1;
-          cleared_cell = selection_base + count * M3_SELECTION_CELL_SIZE;
-          cleared_cell[0] = 0;
-          cleared_cell[1] = 0;
-          cleared_cell[2] = 0;
-          cleared_cell[3] = 0;
-        ) : (
-          accepted = 1;
+          used_mask -= 1;
         );
       );
-      attempt += 1;
+      candidate_index += 1;
     );
-    count;
+
+    best_mask = 0;
+    best_score = 0;
+    used_mask = 1;
+    loop(M3_PROFILE_DP_ROW_SIZE - 1,
+      score_base[used_mask] > best_score + 0.000000000001 ? (
+        best_score = score_base[used_mask];
+        best_mask = used_mask;
+      );
+      used_mask += 1;
+    );
+
+    work_base = selection_base + M3_SELECTION_RESIDUAL_OFFSET;
+    output_count = 0;
+    string_index = 0;
+    loop(8,
+      string_bit = 1 << string_index;
+      best_mask & string_bit ? (
+        string_index < 4 ? (
+          encoded = low_code_base[best_mask];
+          code_power = M3_PROFILE_NOTE_CODE_RADIX ^ string_index;
+        ) : (
+          encoded = high_code_base[best_mask];
+          code_power =
+            M3_PROFILE_NOTE_CODE_RADIX ^ (string_index - 4);
+        );
+        digit = floor(encoded / code_power) %
+                M3_PROFILE_NOTE_CODE_RADIX;
+        note = digit - 1;
+        found = 0;
+        source_index = 0;
+        loop(candidate_count,
+          !found ? (
+            source_cell = selection_base +
+                          source_index * M3_SELECTION_CELL_SIZE;
+            floor(source_cell[0] + 0.5) == note ? (
+              destination_cell = work_base + output_count * 3;
+              destination_cell[0] = note;
+              destination_cell[1] = source_cell[1];
+              destination_cell[2] = source_cell[2];
+              output_count += 1;
+              found = 1;
+            );
+          );
+          source_index += 1;
+        );
+      );
+      string_index += 1;
+    );
+
+    m3_zero(selection_base, M3_SELECTION_RESULT_WORDS);
+    candidate_index = 0;
+    loop(output_count,
+      source_cell = work_base + candidate_index * 3;
+      destination_cell = selection_base +
+                         candidate_index * M3_SELECTION_CELL_SIZE;
+      destination_cell[0] = source_cell[0];
+      destination_cell[1] = source_cell[1];
+      destination_cell[2] = source_cell[2];
+      destination_cell[3] = 0;
+      candidate_index += 1;
+    );
+    m3_selection_sort(selection_base, output_count);
+    output_count;
   );
 );
