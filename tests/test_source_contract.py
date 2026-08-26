@@ -33,6 +33,8 @@ SAFE_BYPASS = (
     ROOT / "Scripts/ajuntanaga_M3 Polyphonic MIDI - Safe Bypass.lua"
 )
 PRODUCTION = ROOT / "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
+HOST_CASES = ROOT / "tests/fixtures/host_cases.tsv"
+SYNTHETIC_CASES = ROOT / "tests/fixtures/synthetic_cases.tsv"
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -100,9 +102,29 @@ class SourceContractTests(unittest.TestCase):
                 (
                     staged / "Data/m3_poly_midi/synthetic_cases.tsv"
                 ).read_bytes(),
-                (ROOT / "tests/fixtures/synthetic_cases.tsv").read_bytes(),
+                HOST_CASES.read_bytes(),
             )
             self.assertTrue((staged / "test-results").is_dir())
+
+    def test_disposable_staging_can_select_full_synthetic_matrix(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+
+            stage(ROOT, staged, case_set="synthetic")
+
+            self.assertEqual(
+                (
+                    staged / "Data/m3_poly_midi/synthetic_cases.tsv"
+                ).read_bytes(),
+                SYNTHETIC_CASES.read_bytes(),
+            )
+
+    def test_disposable_staging_refuses_an_unknown_case_set(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+
+            with self.assertRaisesRegex(ValueError, "case set"):
+                stage(ROOT, staged, case_set="recorded")
 
     def test_integration_effects_and_runner_use_the_bounded_protocol(self):
         source = SIGNAL_SOURCE.read_text(encoding="utf-8")
@@ -177,10 +199,8 @@ class SourceContractTests(unittest.TestCase):
             runner.index('write_phase("suite-finish")'),
         )
 
-    def test_synthetic_manifest_includes_real_polyphonic_cases(self):
-        manifest = (ROOT / "tests/fixtures/synthetic_cases.tsv").read_text(
-            encoding="utf-8"
-        )
+    def test_host_manifest_includes_real_polyphonic_cases(self):
+        manifest = HOST_CASES.read_text(encoding="utf-8")
         rows = manifest.splitlines()
         expected = (
             "2\t48000\t128\tm3\t40,47\t0\t0\t0,-3\t-120\t-120\t0\t0\t"

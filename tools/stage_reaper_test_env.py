@@ -17,7 +17,11 @@ def _overlaps_live_profile(output: pathlib.Path) -> bool:
     )
 
 
-def stage(root: pathlib.Path, output: pathlib.Path) -> None:
+def stage(
+    root: pathlib.Path,
+    output: pathlib.Path,
+    case_set: str = "host",
+) -> None:
     root = root.resolve()
     output = output.resolve()
     if _overlaps_live_profile(output):
@@ -25,7 +29,13 @@ def stage(root: pathlib.Path, output: pathlib.Path) -> None:
 
     effects = root / "Effects"
     scripts = root / "Scripts"
-    cases = root / "tests" / "fixtures" / "synthetic_cases.tsv"
+    case_files = {
+        "host": root / "tests" / "fixtures" / "host_cases.tsv",
+        "synthetic": root / "tests" / "fixtures" / "synthetic_cases.tsv",
+    }
+    if case_set not in case_files:
+        raise ValueError(f"unknown disposable case set: {case_set}")
+    cases = case_files[case_set]
     if not effects.is_dir():
         raise ValueError(f"missing Effects tree: {effects}")
     if not scripts.is_dir():
@@ -68,7 +78,7 @@ def stage(root: pathlib.Path, output: pathlib.Path) -> None:
     shutil.copytree(scripts, output / "Scripts")
     data = output / "Data" / "m3_poly_midi"
     data.mkdir(parents=True)
-    shutil.copy2(cases, data / cases.name)
+    shutil.copy2(cases, data / "synthetic_cases.tsv")
     (output / "test-results").mkdir()
 
 
@@ -76,6 +86,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Stage an alternate REAPER test profile")
     parser.add_argument("--reaper", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--case-set",
+        choices=("host", "synthetic"),
+        default="host",
+    )
     args = parser.parse_args(argv)
 
     reaper = args.reaper.resolve()
@@ -84,7 +99,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
-        stage(pathlib.Path(__file__).resolve().parents[1], args.output)
+        stage(
+            pathlib.Path(__file__).resolve().parents[1],
+            args.output,
+            args.case_set,
+        )
     except (OSError, ValueError) as exc:
         print(str(exc), file=sys.stderr)
         return 1

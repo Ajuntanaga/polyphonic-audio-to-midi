@@ -258,7 +258,7 @@ def summarize(
 
 
 def _parse_note_sequence(value: str) -> list[int]:
-    if not value.strip():
+    if value.strip() in ("", "-"):
         return []
     return [int(token) for token in value.split(",")]
 

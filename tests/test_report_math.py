@@ -426,6 +426,51 @@ class ReportMathTests(unittest.TestCase):
             self.assertIn("| Onset p50 | 11.000 samples |", rendered)
             self.assertIn("| Chord completion p95 | 60.000 samples |", rendered)
 
+    def test_cli_treats_dash_note_sentinel_as_silence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = pathlib.Path(temporary)
+            cases = directory / "cases.tsv"
+            events = directory / "events.tsv"
+            report = directory / "report.md"
+            cases.write_text(
+                "case_id\tsample_rate\tblock_size\tmode\tnotes\t"
+                "detune_cents\tmissing_fundamental\tgains_db\tnoise_db\t"
+                "hum_db\tclip\tstagger_ms\texpected\n"
+                "3\t48000\t128\tsilence\t-\t0\t0\t0\t-120\t-120\t"
+                "0\t0\t-\n",
+                encoding="utf-8",
+            )
+            events.write_text(
+                "case_id\tabsolute_sample\toffset\tstatus\tnote\tvelocity\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/summarize_results.py",
+                    "--events",
+                    str(events),
+                    "--cases",
+                    str(cases),
+                    "--out",
+                    str(report),
+                    "--fail-below-precision",
+                    "0.98",
+                    "--fail-below-recall",
+                    "0.98",
+                ],
+                cwd=pathlib.Path(__file__).resolve().parents[1],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            rendered = report.read_text(encoding="utf-8")
+            self.assertIn("| Silence events | 0 |", rendered)
+            self.assertIn("| Precision | 1.000000 |", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()
