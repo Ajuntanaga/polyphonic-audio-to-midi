@@ -1,13 +1,52 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-28T22:14:04-07:00
+Updated: 2026-08-29T00:26:15-07:00
+
+## Native Tasks 1-9 sealed checkpoint
+
+- Branch `main` is sealed through `cc938f7` (`test: add disposable CLAP
+  capability probe`). Native plan Tasks 1-9 are complete in commits
+  `c682664`, `52ba588`, `b208f83`, `9e0ba74`, `facd070`, `bbae558`,
+  `546ae84`, `ff7e330`, and `cc938f7`.
+- The only retrieved dependency is the official CLAP `1.2.10` header tree at
+  commit `195b42a004144fab0b3cf95e9c067187d15365b7`, copied with its license and
+  exact provenance/checksum manifest. No VST3 SDK or fallback was retrieved.
+- The bounded C++17 core foundation, minimal CLAP lifecycle/ports, exact
+  parameter and versioned-state surfaces, ordered MIDI/fail-closed cleanup,
+  prepared detector-configuration publication, build-local host guard, and
+  disposable capability probe are implemented. The probe-only processor and
+  report markers are excluded from the production build.
+- Latest offline verification is green: 44 normal native tests, the same 44
+  tests under AddressSanitizer/UndefinedBehaviorSanitizer, 114 Python tests,
+  both source validators, Python bytecode compilation, and Git whitespace
+  checks. The staged capability ReaScript matches its repository source
+  byte-for-byte.
+- Build-local artifact SHA-256 values are
+  `4a9b8ff7e0febf7120c91319db5ec49837d35a0908f0b35919a09376329d3840`
+  for `M3_Polyphonic_Audio_to_MIDI.clap` and
+  `2dedbd2532c84c5d6522b0dd28f7143ba3bfd800cddbb672d7cd355c3e2a9066`
+  for `M3_Polyphonic_Audio_to_MIDI_Probe.clap`. Both are x86-64 ELF shared
+  objects; only the probe artifact contains `M3_CLAP_PROBE_REPORT`.
+- **Hard stop:** Task 10 has not run. No REAPER application process was
+  started by Tasks 1-9, no capability result is claimed, and no host evidence
+  has been sealed. The four planned rows remain 48 kHz at block sizes 32, 64,
+  128, and 256.
+- Exact next action, only after a separate explicit Task 10 guarded-launch
+  authorization: run `python3 tools/run_native_clap_probe.py` once. The runner
+  is serial and resumable and must use the disposable profile, build-local
+  probe, background workspace 5, 50% of one CPU, 512 MiB memory, 64 tasks,
+  low priority, pressure refusal, and hard timeouts. Do not run an unguarded or
+  automatic retry.
+- Clean-DI/hardware input, live projects, REAPER MCP, detector-port Tasks
+  11+, production-host validation, performance measurement, persistent
+  installation, MPE, and a custom GUI remain separately gated.
 
 ## Authoritative state
 
-- Branch: `main`. The Task 13 terminal JSFX implementation checkpoint is
-  `0be04d3` (`feat: complete polyphonic JSFX experiment and record native
-  gate`); its predecessor is `8a1332d` (`test: generate deterministic
-  synthetic matrix`).
+- Branch: `main`. The current native capability checkpoint is `cc938f7`. The
+  retained Task 13 terminal JSFX checkpoint is `0be04d3` (`feat: complete
+  polyphonic JSFX experiment and record native gate`); its predecessor is
+  `8a1332d` (`test: generate deterministic synthetic matrix`).
 - The approved native CLAP design was introduced at `3ac7dcb` (`docs: approve
   native CLAP architecture`). Its authoritative written specification is
   `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
@@ -18,8 +57,9 @@ Updated: 2026-08-28T22:14:04-07:00
   `4cb0a1daf31e34dfc853cffba0c0e4e57c5ec7eb8a00e47cfe6cd16cbc9c25b2`.
   It defines 24 TDD tasks, 149 executable checkboxes, and explicit dependency,
   capability-host, production-host, performance, clean-DI, and installation
-  gates. No CLAP header, native source, build artifact, or REAPER launch was
-  created by the planning authorization.
+  gates. At that planning-only checkpoint, no CLAP header, native source,
+  build artifact, or REAPER launch had yet been created; the newer Tasks 1-9
+  checkpoint above supersedes that implementation state.
 - Current runtime fingerprint:
   `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
 - The deterministic synthetic manifest is byte-identical to its generator and
@@ -45,24 +85,22 @@ Updated: 2026-08-28T22:14:04-07:00
 - Current 48 kHz core cases 12101–12118 and case 4102 pass; case 4102 also
   passes at 44.1 kHz. At 96 kHz, its new 32+56 regression detects one false
   MIDI 44, so 96 kHz is independently not release-ready.
-- Fresh current-tree checks: all 90 Python tests pass,
-  `python3 tools/validate_source.py .` reports `source contract: ok`,
-  and no diagnostic or benchmark gmem instrumentation remains in production or
-  the Lua runner.
-- The canonical ResearchOS project dashboard and native implementation-plan
-  note are synchronized to this planning gate. The task-local `RESUME.md`
-  remains authoritative and the vault remains a non-Git dashboard/index.
-- Every REAPER instance ran serially, backgrounded on workspace 5, under the
-  50%-of-one-core and 512 MiB limits. No REAPER process remains.
-- Decision: the native-design amendment and implementation plan are written;
-  the JSFX detector remains stopped and uninstalled. Exact resume action is to
-  request authorization for inline plan Tasks 1-9, including retrieval of only
-  official CLAP `1.2.10` headers at commit
-  `195b42a004144fab0b3cf95e9c067187d15365b7`, then stop before any REAPER
-  launch. The word `Proceed` authorizes that named gate when it is presented.
-- Clean-DI recording/input, persistent installation, live projects, REAPER MCP,
-  dependency retrieval, native implementation, and every future REAPER launch
-  remain separately gated and were not used by planning.
+- Fresh current-tree checks: all 114 Python tests, 44 native tests, and the
+  same 44 native tests under sanitizers pass; both source validators report
+  green. Probe-only diagnostics remain excluded from the production artifact.
+- The task-local `RESUME.md` remains authoritative. The canonical ResearchOS
+  project dashboard and native implementation-plan note are synchronized as a
+  human-facing, non-Git index.
+- Every earlier JSFX-evidence REAPER instance ran serially, backgrounded on
+  workspace 5, under the 50%-of-one-core and 512 MiB limits. Tasks 1-9 added
+  no REAPER launch, and no REAPER application process remains.
+- Decision: native plan Tasks 1-9 are complete and sealed; the JSFX detector
+  remains stopped and uninstalled. Exact resume action is to present Task 10's
+  four-row guarded capability-host gate and wait for separate explicit
+  authorization before the first REAPER launch.
+- Clean-DI recording/input, persistent installation, live projects, REAPER
+  MCP, detector-port Tasks 11+, and every future REAPER launch remain
+  separately gated.
 
 ## Approved native-design amendment
 
