@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T05:37:43-07:00
+Updated: 2026-08-29T05:54:16-07:00
 
-## VST3 Tasks 1-4 sealed — neutral extraction next
+## VST3 Tasks 1-5 sealed — state-image extraction next
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -55,6 +55,17 @@ Updated: 2026-08-29T05:37:43-07:00
   ELF with the expected `clap_entry`; no `.vst3` bundle exists. The final guard
   snapshot recorded 32398 MiB available, load 0.87, 38 C, and zero memory-full
   and I/O-full PSI.
+- Task 5 is sealed at commit `c85d9ab` (`refactor: extract format-neutral
+  parameter contract`). One host-free constexpr table now owns all sixteen
+  IDs, ranges, defaults, increments, update classes, persistence/list/read-only
+  metadata, and exact VST3 step counts. It also owns finite canonicalization,
+  plain/normalized conversion, config application, and bounded text conversion.
+- CLAP flag/type mapping is isolated in `clap_parameter_bridge`; the shared
+  header/source contain no CLAP include and the compiled neutral object has no
+  CLAP or Steinberg symbol. The exact state image remains compatible. Debug and
+  ASan/UBSan runs each pass 48 tests, all 133 Python tests pass, and the final
+  guard snapshot recorded 31996 MiB available, load 1.65, 57 C, and zero
+  memory-full and I/O-full PSI.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -93,9 +104,10 @@ Updated: 2026-08-29T05:37:43-07:00
   `.cpp`, `.vst3` bundle, persistent M3 plug-in copy, or REAPER process exists.
   No VST3 build, live profile/project, hardware-input, or REAPER action has
   occurred under the VST3 plan.
-- Gates D2 and the Task 4 build foundation passed at `9851237` and `282ba18`.
-  The next action is Task 5's format-neutral parameter contract extraction;
-  it needs no dependency network access or REAPER launch.
+- Gates D2 and the Task 4 build foundation passed at `9851237` and `282ba18`;
+  Task 5 neutral parameters passed at `c85d9ab`. The next action is Task 6's
+  state-image/host-stream separation; it needs no dependency network access or
+  REAPER launch.
 
 ## Approved VST3 design and sealed implementation plan
 
