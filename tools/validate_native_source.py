@@ -42,7 +42,6 @@ UNAPPROVED_DEPENDENCIES = (
 )
 UNAPPROVED_BUILD_TOKENS = (
     "-march=native",
-    "cmake",
     "ninja",
     "juce",
     "iplug2",

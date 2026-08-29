@@ -64,7 +64,11 @@ class NativeBuildContractTests(unittest.TestCase):
             ".pt",
             ".tflite",
         )
-        roots = (ROOT / "native", ROOT / "third_party")
+        # The pinned VST3 SDK has its own exact-revision and lexical-hash
+        # contract.  Scan only project-authored native code and the smaller
+        # CLAP header dependency here so innocent upstream spellings do not
+        # masquerade as project dependency use.
+        roots = (ROOT / "native", ROOT / "third_party/clap")
         for source_root in roots:
             if not source_root.exists():
                 continue
@@ -73,32 +77,44 @@ class NativeBuildContractTests(unittest.TestCase):
                 for token in forbidden:
                     self.assertNotIn(token, text, f"{token!r} found in {path}")
 
-    def test_native_build_rules_use_only_the_approved_toolchain(self):
-        forbidden = ("-march=native", "cmake", "ninja", "juce", "iplug2")
-        for path in sorted((ROOT / "native").glob("*Makefile")) if (ROOT / "native").exists() else ():
-            text = path.read_text(encoding="utf-8").lower()
-            for token in forbidden:
-                self.assertNotIn(token, text, f"{token!r} found in {path}")
-
-    def test_native_makefile_declares_hardened_explicit_targets(self):
+    def test_native_makefile_is_a_thin_guarded_cmake_wrapper(self):
         text = (ROOT / "native/Makefile").read_text(encoding="utf-8")
-        for flag in (
-            "-std=c++17",
-            "-Wall",
-            "-Wextra",
-            "-Wpedantic",
-            "-Wconversion",
-            "-Wshadow",
-            "-Werror",
-            "-fno-exceptions",
-            "-fno-rtti",
-            "-fstack-protector-strong",
-            "-ffile-prefix-map=$(ROOT)=.",
-            "-fmacro-prefix-map=$(ROOT)=.",
+        for forbidden in (
+            "$(CXX)",
+            "g++ ",
+            "clang++ ",
+            "$(wildcard",
+            "curl ",
+            "wget ",
+            "git clone",
+            "FetchContent",
         ):
-            self.assertIn(flag, text)
-        for target in ("test:", "sanitize:", "tsan:", "probe:", "production:", "benchmark:"):
-            self.assertIn(target, text)
+            self.assertNotIn(forbidden, text)
+
+        for target in ("test", "sanitize", "tsan", "probe", "production", "benchmark"):
+            with self.subTest(target=target):
+                result = subprocess.run(
+                    ["make", "-n", "-C", "native", "-j1", target],
+                    cwd=ROOT,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("tools/run_guarded_native_build.py", result.stdout)
+                self.assertIn("cmake -S", result.stdout)
+                self.assertIn("cmake --build", result.stdout)
+                self.assertIn("-j1", result.stdout)
+
+        clean = subprocess.run(
+            ["make", "-n", "-C", "native", "-j1", "clean"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(clean.returncode, 0, clean.stdout + clean.stderr)
+        self.assertNotIn("run_guarded_native_build.py", clean.stdout)
 
     def test_vendored_clap_headers_have_exact_upstream_and_hashes(self):
         upstream = (CLAP / "UPSTREAM.md").read_text(encoding="utf-8")

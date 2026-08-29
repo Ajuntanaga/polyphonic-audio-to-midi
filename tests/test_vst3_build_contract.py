@@ -1,4 +1,5 @@
 import hashlib
+import json
 import pathlib
 import re
 import shutil
@@ -58,6 +59,143 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIsNotNone(match, first_line)
         version = tuple(int(part) for part in match.groups())
         self.assertGreaterEqual(version, (3, 25, 0))
+
+    def test_cmake_build_graph_is_explicit_offline_and_hardened(self):
+        root_cmake = ROOT / "CMakeLists.txt"
+        compiler_options = ROOT / "cmake/M3CompilerOptions.cmake"
+        sdk_setup = ROOT / "cmake/M3Vst3Sdk.cmake"
+        for path in (root_cmake, compiler_options, sdk_setup):
+            self.assertTrue(path.is_file(), f"required CMake source is absent: {path}")
+
+        build_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (root_cmake, compiler_options, sdk_setup)
+        )
+        for forbidden in (
+            r"\bfile\s*\(\s*GLOB",
+            r"\baux_source_directory\s*\(",
+            r"\bFetchContent\b",
+            r"\bExternalProject_Add\b",
+            r"\bfile\s*\(\s*DOWNLOAD",
+            r"\b-march=native\b",
+        ):
+            self.assertIsNone(re.search(forbidden, build_text, re.IGNORECASE), forbidden)
+        for required in (
+            "CMAKE_CXX_STANDARD 17",
+            "SMTG_ENABLE_VSTGUI_SUPPORT OFF",
+            "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF",
+            "SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF",
+            "SMTG_CREATE_PLUGIN_LINK OFF",
+            "m3_native_tests",
+            "m3_clap_history",
+            "m3_vst3_probe",
+            "m3_vst3_production",
+            "m3_vst3_benchmark",
+            "m3_validate_production",
+        ):
+            self.assertIn(required, build_text)
+
+        authored_cpp = {
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "native").rglob("*.cpp")
+        }
+        for relative in authored_cpp:
+            self.assertIn(relative, build_text, f"source is not explicit: {relative}")
+
+        cmake = shutil.which("cmake")
+        self.assertIsNotNone(cmake)
+        (ROOT / "build/vst3").mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix="contract-", dir=ROOT / "build/vst3"
+        ) as temporary:
+            build_dir = pathlib.Path(temporary)
+            configure = subprocess.run(
+                [
+                    cmake,
+                    "-S",
+                    str(ROOT),
+                    "-B",
+                    str(build_dir),
+                    "-DCMAKE_BUILD_TYPE=Debug",
+                    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                configure.returncode,
+                0,
+                configure.stdout + configure.stderr,
+            )
+            cache = (build_dir / "CMakeCache.txt").read_text(encoding="utf-8")
+            for setting in (
+                "SMTG_ENABLE_VSTGUI_SUPPORT:BOOL=OFF",
+                "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES:BOOL=OFF",
+                "SMTG_ENABLE_VST3_HOSTING_EXAMPLES:BOOL=OFF",
+                "SMTG_CREATE_PLUGIN_LINK:BOOL=OFF",
+            ):
+                self.assertIn(setting, cache)
+
+            target_help = subprocess.run(
+                [cmake, "--build", str(build_dir), "--target", "help", "-j1"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                target_help.returncode,
+                0,
+                target_help.stdout + target_help.stderr,
+            )
+            for target in (
+                "m3_native_tests",
+                "m3_clap_history",
+                "m3_vst3_probe",
+                "m3_vst3_production",
+                "m3_vst3_benchmark",
+                "m3_validate_production",
+            ):
+                self.assertIn(target, target_help.stdout)
+
+            commands = json.loads(
+                (build_dir / "compile_commands.json").read_text(encoding="utf-8")
+            )
+            project_commands = [
+                row["command"]
+                for row in commands
+                if "/native/" in row["file"]
+                and "/third_party/" not in row["file"]
+            ]
+            self.assertTrue(project_commands)
+            for command in project_commands:
+                for flag in (
+                    "-std=c++17",
+                    "-Wall",
+                    "-Wextra",
+                    "-Wpedantic",
+                    "-Wconversion",
+                    "-Wshadow",
+                    "-Werror",
+                    "-fno-exceptions",
+                    "-fno-rtti",
+                    "-fstack-protector-strong",
+                    "-fvisibility=hidden",
+                ):
+                    self.assertIn(flag, command)
+                self.assertNotIn("-march=native", command)
+
+            for target in ("m3_native_tests", "m3_clap_history"):
+                link_command = (
+                    build_dir / f"CMakeFiles/{target}.dir/link.txt"
+                ).read_text(encoding="utf-8")
+                for flag in (
+                    "-Wl,-z,relro",
+                    "-Wl,-z,now",
+                    "-Wl,--no-undefined",
+                    "-Wl,--build-id=none",
+                ):
+                    self.assertIn(flag, link_command)
 
     def test_identity_header_exposes_the_locked_sdk_independent_contract(self):
         self.assertTrue(IDENTITY_HEADER.is_file(), "vst3_ids.hpp is absent")
@@ -299,6 +437,19 @@ class Vst3BuildContractTests(unittest.TestCase):
                     any("network build token" in error for error in errors),
                     errors,
                 )
+
+    def test_source_validator_accepts_the_offline_cmake_wrapper(self):
+        errors = self.validation_errors(
+            [
+                (
+                    "native/Makefile",
+                    "cmake -S /repo -B /repo/build/vst3/debug\n"
+                    "cmake --build /repo/build/vst3/debug -j1\n",
+                )
+            ],
+            sdk_present=True,
+        )
+        self.assertEqual(errors, [])
 
     def test_source_validator_keeps_vst3_code_out_of_the_clap_adapter_directory(self):
         errors = self.validation_errors(
