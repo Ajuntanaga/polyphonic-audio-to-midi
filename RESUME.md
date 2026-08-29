@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T05:12:08-07:00
+Updated: 2026-08-29T05:37:43-07:00
 
-## VST3 Tasks 1-3 sealed — all remaining plan gates authorized
+## VST3 Tasks 1-4 sealed — neutral extraction next
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -36,6 +36,25 @@ Updated: 2026-08-29T05:12:08-07:00
   Task 3 snapshot had about 32 GiB available memory, zero swap/full pressure,
   45 C temperature, no REAPER process, no VST3 `.cpp`, and no bundle or
   persistent plug-in copy.
+- Task 4 is sealed at commit `282ba18` (`build: add guarded VST3 CMake
+  foundation`). The authoritative source graph is now explicit CMake 3.25+
+  with C++17, strict warnings, disabled exceptions/RTTI, hidden symbols,
+  RELRO/NOW/no-undefined, reproducible prefix/build-ID flags, VSTGUI and SDK
+  examples disabled, and no download or source-glob construct. The official
+  validator and module-info utility are excluded from the default build.
+- `native/Makefile` is now only a serial wrapper. Every non-clean build/test
+  command passes through `tools/run_guarded_native_build.py`, which refuses at
+  the approved memory/load/temperature/PSI thresholds; rejects package,
+  network, recursive, parallel, and repository-escape commands; and applies a
+  one-CPU quota, 1536/2048 MiB memory high/max, 256 MiB swap max, 128-task
+  limit, nice 15, idle I/O priority, wall timeout, and atomic before/after JSON.
+- Fresh committed-state verification passes the same 44 native tests in both
+  debug and ASan/UBSan builds, the focused VST3/guard suite 20/20, all 133
+  Python tests, the native source validator, and Git whitespace checks. The
+  excluded `m3_clap_history` CMake target also links as a build-local x86-64
+  ELF with the expected `clap_entry`; no `.vst3` bundle exists. The final guard
+  snapshot recorded 32398 MiB available, load 0.87, 38 C, and zero memory-full
+  and I/O-full PSI.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -74,9 +93,9 @@ Updated: 2026-08-29T05:12:08-07:00
   `.cpp`, `.vst3` bundle, persistent M3 plug-in copy, or REAPER process exists.
   No VST3 build, live profile/project, hardware-input, or REAPER action has
   occurred under the VST3 plan.
-- Gate D2 passed at `9851237`. The next action is Task 4's guarded CMake build
-  foundation; no dependency network access is needed for later build/test
-  commands.
+- Gates D2 and the Task 4 build foundation passed at `9851237` and `282ba18`.
+  The next action is Task 5's format-neutral parameter contract extraction;
+  it needs no dependency network access or REAPER launch.
 
 ## Approved VST3 design and sealed implementation plan
 
