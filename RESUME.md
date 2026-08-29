@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-28T21:51:51-07:00
+Updated: 2026-08-28T22:14:04-07:00
 
 ## Authoritative state
 
@@ -12,8 +12,14 @@ Updated: 2026-08-28T21:51:51-07:00
   native CLAP architecture`). Its authoritative written specification is
   `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
   The architecture and written specification were both approved on 2026-08-28.
-  No native implementation plan, dependency, or source has been authorized or
-  created.
+  The authorized native implementation plan is now
+  `docs/superpowers/plans/2026-08-28-native-clap-polyphonic-audio-to-midi.md`.
+  Its SHA-256 is
+  `4cb0a1daf31e34dfc853cffba0c0e4e57c5ec7eb8a00e47cfe6cd16cbc9c25b2`.
+  It defines 24 TDD tasks, 149 executable checkboxes, and explicit dependency,
+  capability-host, production-host, performance, clean-DI, and installation
+  gates. No CLAP header, native source, build artifact, or REAPER launch was
+  created by the planning authorization.
 - Current runtime fingerprint:
   `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
 - The deterministic synthetic manifest is byte-identical to its generator and
@@ -43,21 +49,20 @@ Updated: 2026-08-28T21:51:51-07:00
   `python3 tools/validate_source.py .` reports `source contract: ok`,
   and no diagnostic or benchmark gmem instrumentation remains in production or
   the Lua runner.
-- The canonical ResearchOS project dashboard, design indexes,
-  implementation-plan index, and Systems index are synchronized to the native
-  design-approved gate. Obsidian was closed, so `obsidian help` correctly
-  refused; the notes were saved directly as valid Markdown/YAML. The vault is
-  not a Git repository.
+- The canonical ResearchOS project dashboard and native implementation-plan
+  note are synchronized to this planning gate. The task-local `RESUME.md`
+  remains authoritative and the vault remains a non-Git dashboard/index.
 - Every REAPER instance ran serially, backgrounded on workspace 5, under the
   50%-of-one-core and 512 MiB limits. No REAPER process remains.
-- Decision: the native-design amendment is written and the JSFX detector remains
-  stopped and uninstalled. The written specification is approved. Exact resume
-  action is to request explicit authorization for native implementation
-  planning only. Do not invoke an implementation-planning workflow or begin a
-  port under the completed design-only authorization.
+- Decision: the native-design amendment and implementation plan are written;
+  the JSFX detector remains stopped and uninstalled. Exact resume action is to
+  request authorization for inline plan Tasks 1-9, including retrieval of only
+  official CLAP `1.2.10` headers at commit
+  `195b42a004144fab0b3cf95e9c067187d15365b7`, then stop before any REAPER
+  launch. The word `Proceed` authorizes that named gate when it is presented.
 - Clean-DI recording/input, persistent installation, live projects, REAPER MCP,
-  downloads, native implementation planning, and native implementation remain
-  separately gated and were not used.
+  dependency retrieval, native implementation, and every future REAPER launch
+  remain separately gated and were not used by planning.
 
 ## Approved native-design amendment
 
