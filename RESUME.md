@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T02:13:50-07:00
+Updated: 2026-08-29T02:50:34-07:00
 
-## VST3 adapter-correction design approved — written specification pending review
+## VST3 design approved — TDD implementation plan sealed, source not begun
 
 - On 2026-08-29 the user approved replacing the failed CLAP production path
   with one Linux x86-64 VST3 effect built over the preserved format-neutral
@@ -10,8 +10,16 @@ Updated: 2026-08-29T02:13:50-07:00
   `docs/superpowers/specs/2026-08-29-native-vst3-adapter-correction-design.md`.
   Its initial design commit is `35f8a88`; the host-authoritative rate revision
   is `ba1302b` (`docs: make VST3 rate host-authoritative`). The current
-  specification SHA-256 is
-  `4fa4cf04815c735c465abd68ee0532ce58b91979c0d4a04f8081708672d60a8b`.
+  written specification was approved by the user via `Continue on` on
+  2026-08-29. Its current SHA-256 is
+  `bf27a627432bb360b7e123300e01edb80228b1de0d71331d5d5e968f6d43e4d5`.
+- The replacement test-driven implementation plan is
+  `docs/superpowers/plans/2026-08-29-native-vst3-polyphonic-audio-to-midi.md`.
+  It was written and self-reviewed at commit `9390763`
+  (`docs: plan native VST3 implementation`); its SHA-256 is
+  `b7dbe1a7eb3a93ba4e06575dc88c45f800191adc5e6e6ef530a7bdc51e768de3`.
+  The plan has 24 ordered tasks, 152 executable checkboxes, ten named gates,
+  exact files/interfaces/commands/commits, and no unresolved placeholder.
 - The selected adapter is Steinberg's official non-distributable
   `SingleComponentEffect`: one host object owns processing, generic parameters,
   state, and prepared-configuration publication. There is no custom GUI,
@@ -38,11 +46,21 @@ Updated: 2026-08-29T02:13:50-07:00
 - 96 kHz remains a hard release gate with native-rate processing and the same
   64-host-sample cadence. The existing 96 kHz 32+56 false MIDI-44 regression
   is not waived by an adapter probe and must pass before release.
-- No SDK was retrieved, no VST3 or detector source was written, no dependency
-  was installed, no REAPER process was launched, and no persistent path or live
-  project was touched. The written specification is now ready for user review;
-  after approval, the next design artifact is a new VST3 TDD implementation
-  plan, not direct implementation or resumption of old CLAP Tasks 11-24.
+- The stable descriptive identity is
+  `com.ajuntanaga.m3-polyphonic-audio-to-midi`. The locked production, probe,
+  and benchmark FUIDs are respectively
+  `4A1BA42F-6D70-4609-8B52-450C3842F11F`,
+  `6F62F8B1-B8A1-4872-A0D9-2C3C274421D8`, and
+  `28713895-1CCA-47EC-919F-6CC1BCB88A8F`; they must not be regenerated.
+- The planning preflight passed 44 native tests and 114 Python tests under
+  low-priority serial execution. CMake remains absent; the read-only package
+  candidate is exactly `4.2.3-2ubuntu2`. No SDK was retrieved, no VST3 or
+  detector source was written, no dependency was installed, no REAPER process
+  was launched, and no persistent path or live project was touched.
+- The next permitted action after user approval of the exact plan is inline
+  Task 1 only: add the SDK-independent identity header and its local tests and
+  baseline documentation. Task 1 must stop at Gate T1 before any CMake
+  installation. SDK retrieval remains a later, separately authorized Gate D2.
 
 ## Task 10 CLAP capability gate failed — hard stop
 
@@ -172,11 +190,12 @@ Updated: 2026-08-29T02:13:50-07:00
 - Every earlier JSFX-evidence REAPER instance ran serially, backgrounded on
   workspace 5, under the 50%-of-one-core and 512 MiB limits. Tasks 1-9 added
   no REAPER launch, and no REAPER application process remains.
-- Decision: native plan Tasks 1-9 remain complete and sealed, but Task 10's
-  capability gate failed at its first row. The JSFX detector remains stopped
-  and uninstalled. The VST3 adapter correction is now approved and written;
-  exact resume action is to review/seal its specification and then write a new
-  VST3 TDD implementation plan. Do not retry CLAP or start old Task 11.
+- Decision: native CLAP plan Tasks 1-9 remain complete and sealed, but Task
+  10's capability gate failed at its first row. The JSFX detector remains
+  stopped and uninstalled. The VST3 correction specification is approved and
+  its replacement TDD plan is sealed at `9390763`; exact resume action is plan
+  approval followed by inline VST3 Task 1 only. Do not retry CLAP or start old
+  Task 11.
 - Clean-DI recording/input, persistent installation, live projects, REAPER
   MCP, detector-port Tasks 11+, and every future REAPER launch remain
   separately gated.
@@ -484,26 +503,33 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Recover the failed Task 10 evidence directory and verify its seven-file
-   manifest digest before any discussion of a next implementation.
-2. Review and seal
-   `docs/superpowers/specs/2026-08-29-native-vst3-adapter-correction-design.md`,
-   then write a new VST3 TDD implementation plan. Do not retry the CLAP
-   capability row, launch its remaining blocks, modify the CLAP adapter,
-   retrieve a VST3 SDK, or begin old Task 11 under this design-only gate.
-3. The future VST3 capability plan must retain the approved twenty-row matrix:
-   44.1/48/88.2/96 kHz by blocks 32/64/128/256/512, serial, guarded,
-   workspace 5, and stopped after the first invalid or failed row. Runtime
-   sample rate remains host-supplied rather than selected by the plug-in.
-4. Keep clean-DI/live input, performance work, persistent installation, live
-   projects, custom GUI work, and REAPER MCP behind their existing gates.
+1. Verify commit `9390763` and the specification/plan SHA-256 values recorded
+   above. The failed CLAP Task 10 evidence remains immutable historical input;
+   do not retry it or begin old CLAP Task 11.
+2. Obtain user approval of the exact replacement plan, then execute inline
+   Task 1 only from
+   `docs/superpowers/plans/2026-08-29-native-vst3-polyphonic-audio-to-midi.md`.
+   Task 1 is SDK-independent and must not install, retrieve, build, or launch
+   REAPER.
+3. Stop at Gate T1. Installing exact CMake package `4.2.3-2ubuntu2` requires
+   separately explicit authority. Even after a successful tool gate, stop at
+   Gate D2 for separate authorization before retrieving the exact SDK tree.
+4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
+   32/64/128/256/512 capability matrix, serial guarded background launches on
+   workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
+5. Keep every REAPER launch, clean-DI/live input, performance run, persistent
+   installation, live project, custom GUI, and REAPER MCP behind its named
+   gate.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
 
 ## Still-gated actions
 
-- VST3 SDK retrieval or adapter implementation
+- VST3 plan Task 1 until exact-plan approval
+- CMake installation at Gate T1
+- VST3 SDK retrieval at Gate D2
+- VST3 adapter implementation after its prerequisite gates
 - persistent REAPER Effects or Scripts installation
 - live guitar or audio-interface testing
 - live-project modification
