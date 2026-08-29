@@ -10,7 +10,6 @@
 
 #include "fake_clap_host.hpp"
 #include "m3/parameter_contract.hpp"
-#include "state_codec.hpp"
 #include "test_support.hpp"
 
 namespace {

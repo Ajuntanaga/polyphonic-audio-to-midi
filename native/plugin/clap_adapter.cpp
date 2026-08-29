@@ -15,11 +15,11 @@
 
 #include "dry_path.hpp"
 #include "clap_parameter_bridge.hpp"
+#include "clap_state_stream.hpp"
 #include "m3/constants.hpp"
 #include "m3/parameter_contract.hpp"
 #include "midi_pipeline.hpp"
 #include "prepared_config_exchange.hpp"
-#include "state_codec.hpp"
 #if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
 #include "probe_processor.hpp"
 #endif
@@ -435,7 +435,8 @@ void CLAP_ABI params_flush(const clap_plugin_t* plugin,
 bool CLAP_ABI state_save(const clap_plugin_t* plugin,
                          const clap_ostream_t* stream) noexcept {
   const Adapter* adapter = Adapter::from(plugin);
-  return adapter != nullptr && m3::save_state(adapter->main_config, stream);
+  return adapter != nullptr &&
+         m3::save_clap_state(adapter->main_config, stream);
 }
 
 bool CLAP_ABI state_load(const clap_plugin_t* plugin,
@@ -445,7 +446,7 @@ bool CLAP_ABI state_load(const clap_plugin_t* plugin,
     return false;
   }
   m3::PersistentConfig candidate;
-  if (!m3::load_state(stream, candidate)) {
+  if (!m3::load_clap_state(stream, candidate)) {
     return false;
   }
   bool published = false;

@@ -32,12 +32,14 @@ enable_testing()
 
 set(M3_NATIVE_CORE_SOURCES
     native/src/parameter_contract.cpp
+    native/src/state_image.cpp
 )
 
 set(M3_NATIVE_PLUGIN_SOURCES
     native/plugin/clap_adapter.cpp
     native/plugin/clap_entry.cpp
     native/plugin/clap_parameter_bridge.cpp
+    native/plugin/clap_state_stream.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
     native/plugin/prepared_config_exchange.cpp
@@ -57,6 +59,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_prepared_config_exchange.cpp
     native/tests/test_probe_processor.cpp
     native/tests/test_state_codec.cpp
+    native/tests/test_state_image.cpp
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
 )
@@ -80,6 +83,7 @@ set(M3_CLAP_HISTORY_SOURCES
     native/plugin/clap_adapter.cpp
     native/plugin/clap_entry.cpp
     native/plugin/clap_parameter_bridge.cpp
+    native/plugin/clap_state_stream.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
     native/plugin/prepared_config_exchange.cpp
