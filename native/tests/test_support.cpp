@@ -40,14 +40,34 @@ void release(void* memory) noexcept {
 
 void* operator new(std::size_t size) { return allocate(size); }
 void* operator new[](std::size_t size) { return allocate(size); }
+void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+  return allocate(size);
+}
+void* operator new[](std::size_t size, const std::nothrow_t&) noexcept {
+  return allocate(size);
+}
 void operator delete(void* memory) noexcept { release(memory); }
 void operator delete[](void* memory) noexcept { release(memory); }
 void operator delete(void* memory, std::size_t) noexcept { release(memory); }
 void operator delete[](void* memory, std::size_t) noexcept { release(memory); }
+void operator delete(void* memory, const std::nothrow_t&) noexcept {
+  release(memory);
+}
+void operator delete[](void* memory, const std::nothrow_t&) noexcept {
+  release(memory);
+}
 void* operator new(std::size_t size, std::align_val_t alignment) {
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
 void* operator new[](std::size_t size, std::align_val_t alignment) {
+  return allocate_aligned(size, static_cast<std::size_t>(alignment));
+}
+void* operator new(std::size_t size, std::align_val_t alignment,
+                   const std::nothrow_t&) noexcept {
+  return allocate_aligned(size, static_cast<std::size_t>(alignment));
+}
+void* operator new[](std::size_t size, std::align_val_t alignment,
+                     const std::nothrow_t&) noexcept {
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
 void operator delete(void* memory, std::align_val_t) noexcept { release(memory); }
@@ -56,6 +76,14 @@ void operator delete(void* memory, std::size_t, std::align_val_t) noexcept {
   release(memory);
 }
 void operator delete[](void* memory, std::size_t, std::align_val_t) noexcept {
+  release(memory);
+}
+void operator delete(void* memory, std::align_val_t,
+                     const std::nothrow_t&) noexcept {
+  release(memory);
+}
+void operator delete[](void* memory, std::align_val_t,
+                       const std::nothrow_t&) noexcept {
   release(memory);
 }
 
