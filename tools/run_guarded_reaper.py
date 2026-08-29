@@ -20,6 +20,7 @@ COMPLETION_GRACE_SECONDS = 0.75
 MIN_AVAILABLE_MIB = 4096.0
 MAX_LOAD_ONE = 12.0
 MAX_TEMPERATURE_C = 90.0
+MAX_CPU_SECONDS = 45
 WMCTRL = pathlib.Path("/usr/bin/wmctrl")
 
 
@@ -94,6 +95,10 @@ def workspace_index(workspace_number: int) -> int:
     return workspace_number - 1
 
 
+def transient_window_listing_error(stderr: str) -> bool:
+    return "BadWindow" in stderr or "BadDrawable" in stderr
+
+
 def move_reaper_windows_once(
     environment: dict[str, str],
     workspace_number: int,
@@ -113,12 +118,12 @@ def move_reaper_windows_once(
         )
         if listing.returncode == 0:
             break
-        if "BadWindow" not in listing.stderr or attempt == 2:
+        if not transient_window_listing_error(listing.stderr) or attempt == 2:
             break
         time.sleep(0.02)
     assert listing is not None
     if listing.returncode != 0:
-        if "BadWindow" in listing.stderr:
+        if transient_window_listing_error(listing.stderr):
             return 0
         detail = listing.stderr.strip() or f"exit status {listing.returncode}"
         raise RuntimeError(f"could not list GUI windows: {detail}")
@@ -181,7 +186,7 @@ def reaper_window_ids(environment: dict[str, str]) -> set[str]:
         )
         if listing.returncode == 0:
             break
-        if "BadWindow" not in listing.stderr or attempt == 2:
+        if not transient_window_listing_error(listing.stderr) or attempt == 2:
             break
         time.sleep(0.02)
     assert listing is not None
@@ -389,7 +394,7 @@ def guarded_command(
     timeout_seconds: int,
 ) -> list[str]:
     cpu = max(os.sched_getaffinity(0))
-    cpu_seconds = max(5, min(timeout_seconds, 30))
+    cpu_seconds = max(5, min(timeout_seconds, MAX_CPU_SECONDS))
     unit = f"m3-poly-guarded-{os.getpid()}"
     return [
         "/usr/bin/systemd-run",

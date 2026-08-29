@@ -243,6 +243,14 @@ detection_enabled ? (
   analysis_signal_present = m3_host_signal_present(
     M3_CONDITION_BASE[10]
   );
+  analysis_signal_present ? (
+    m3_general_acquisition_samples = min(
+      srate,
+      m3_general_acquisition_samples + samplesblock
+    );
+  ) : (
+    m3_general_acquisition_samples = 0;
+  );
   M3_SALIENCE_BASE[M3_SALIENCE_BASE_THRESHOLD_OFFSET] = m3_clamp(
     0.40 - 0.004 * sensitivity,
     0.05,
@@ -256,27 +264,40 @@ detection_enabled ? (
     M3_CONDITION_BASE[12]
   );
   analysis_signal_present ? (
-    profile_mode == M3_PROFILE_MODE_M3 ? (
-      selected_voice_count = m3_select_profile_candidates(
-        M3_RESONATOR_BASE,
-        M3_SALIENCE_BASE,
-        detector_min_note,
-        detector_max_note - detector_min_note + 1,
-        M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
-        M3_SELECTION_INTERNAL_CANDIDATES,
-        M3_SELECTION_BASE
-      );
-    ) : (
-      selected_voice_count = m3_select_voices(
-        M3_RESONATOR_BASE,
-        M3_SALIENCE_BASE,
-        detector_min_note,
-        detector_max_note - detector_min_note + 1,
-        M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
-        max_polyphony,
-        a4_reference,
-        M3_SELECTION_BASE
-      );
+    selected_voice_local_energy_ratio =
+      profile_mode == M3_PROFILE_MODE_M3
+      ? M3_SELECTION_M3_LOCAL_ENERGY_RATIO
+      : M3_SELECTION_GENERAL_LOCAL_ENERGY_RATIO;
+    selected_voice_allow_fundamental_dominance =
+      profile_mode == M3_PROFILE_MODE_M3 ? 0 : 1;
+    selected_voice_candidate_limit =
+      profile_mode == M3_PROFILE_MODE_M3
+      ? M3_SELECTION_INTERNAL_CANDIDATES
+      : M3_MAX_VOICES;
+    selected_voice_count = m3_select_voices(
+      M3_RESONATOR_BASE,
+      M3_SALIENCE_BASE,
+      detector_min_note,
+      detector_max_note - detector_min_note + 1,
+      M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
+      selected_voice_candidate_limit,
+      a4_reference,
+      selected_voice_local_energy_ratio,
+      selected_voice_allow_fundamental_dominance,
+      samplesblock,
+      srate,
+      M3_SELECTION_BASE
+    );
+    selected_voice_acquisition_seconds =
+      profile_mode == M3_PROFILE_MODE_M3
+      ? M3_SELECTION_M3_ACQUISITION_SECONDS
+      : M3_SELECTION_GENERAL_ACQUISITION_SECONDS;
+    general_acquisition_ready =
+      m3_general_acquisition_samples >=
+        selected_voice_acquisition_seconds * srate;
+    !general_acquisition_ready ? (
+      selected_voice_count = 0;
+      m3_zero(M3_SELECTION_BASE, M3_SELECTION_RESULT_WORDS);
     );
     selected_voice_count = m3_profile_filter_selected(
       profile_mode,
@@ -290,7 +311,17 @@ detection_enabled ? (
   ) : (
     selected_voice_count = 0;
     m3_zero(M3_SELECTION_BASE, M3_SELECTION_RESULT_WORDS);
+    m3_zero(
+      M3_SALIENCE_BASE + M3_SELECTION_SMOOTHED_ENERGY_OFFSET,
+      M3_MAX_CANDIDATES
+    );
   );
+
+  m3_lifecycle_attack_admission = analysis_signal_present &&
+    m3_lifecycle_attack_admission_allowed(
+      M3_CONDITION_BASE[10],
+      M3_CONDITION_BASE[11]
+    );
 
   m3_lifecycle_response_for_profile(
     profile_mode,
@@ -299,6 +330,24 @@ detection_enabled ? (
     M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],
     lifecycle_response_base
   );
+  m3_lifecycle_attack_hysteresis = 1;
+  m3_lifecycle_attack_bridge_samples = 2 * samplesblock;
+  m3_lifecycle_attack_evidence_step_samples = samplesblock;
+  m3_lifecycle_min_attack_energy = profile_mode == M3_PROFILE_MODE_GENERAL
+    ? M3_LIFECYCLE_GENERAL_MIN_ATTACK_ENERGY
+    : 0;
+  m3_lifecycle_general_octave_guard =
+    profile_mode == M3_PROFILE_MODE_GENERAL;
+  m3_lifecycle_m3_low_string_guard =
+    profile_mode == M3_PROFILE_MODE_M3;
+  m3_lifecycle_m3_octave_confirmation =
+    profile_mode == M3_PROFILE_MODE_M3;
+  m3_lifecycle_m3_low_open_fast_attack =
+    profile_mode == M3_PROFILE_MODE_M3;
+  m3_lifecycle_reserve_lower_attacks =
+    profile_mode == M3_PROFILE_MODE_GENERAL &&
+    max_polyphony < M3_MAX_VOICES;
+  m3_lifecycle_max_active_voices = max_polyphony;
   event_count = m3_lifecycle_update(
     M3_VOICE_BASE,
     M3_EVENT_BASE,
@@ -314,6 +363,7 @@ detection_enabled ? (
     velocity_mode,
     fixed_velocity
   );
+
   M3_EVENT_BASE[M3_EVENT_OVERFLOW_OFFSET] ? (
     event_overflow_latched = 1;
     fault_cleanup_pending = 1;

@@ -108,6 +108,131 @@ class PrepareCoreHarnessProjectTests(unittest.TestCase):
             )
             self.assertEqual(lines[marker + 1].split()[:4], ["2", "9", "-", "-"])
 
+    def test_prepares_task_twelve_shared_partial_case_without_shifting_old_cases(self):
+        with tempfile.TemporaryDirectory(dir=BUILD) as temporary:
+            temporary_path = pathlib.Path(temporary)
+            source = temporary_path / "source.RPP"
+            output_directory = temporary_path / "prepared"
+            source.write_text(
+                """<REAPER_PROJECT 0.1 \"7.79/linux-x86_64\" 1777600000
+  <TRACK
+    <FXCHAIN
+      <JS \"tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx\" \"\"
+        - - - -
+      >
+    >
+  >
+>
+""",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(PREPARER),
+                    "--source",
+                    str(source),
+                    "--output-dir",
+                    str(output_directory),
+                    "--rate",
+                    "48000",
+                    "--case-id",
+                    "12101",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            prepared = output_directory / "core-harness-48000-case-12101.RPP"
+            lines = prepared.read_text(encoding="utf-8").splitlines()
+            marker = next(
+                index
+                for index, line in enumerate(lines)
+                if '<JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""'
+                in line
+            )
+            self.assertEqual(lines[marker + 1].split()[:4], ["0", "50", "-", "-"])
+
+    def test_prepares_task_twelve_lifecycle_tail_case(self):
+        with tempfile.TemporaryDirectory(dir=BUILD) as temporary:
+            temporary_path = pathlib.Path(temporary)
+            source = temporary_path / "source.RPP"
+            output_directory = temporary_path / "prepared"
+            source.write_text(
+                """<REAPER_PROJECT 0.1 "7.79/linux-x86_64" 1777600000
+  <TRACK
+    <FXCHAIN
+      <JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""
+        - - - -
+      >
+    >
+  >
+>
+""",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(PREPARER),
+                    "--source",
+                    str(source),
+                    "--output-dir",
+                    str(output_directory),
+                    "--rate",
+                    "48000",
+                    "--case-id",
+                    "12106",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            prepared = output_directory / "core-harness-48000-case-12106.RPP"
+            lines = prepared.read_text(encoding="utf-8").splitlines()
+            marker = next(
+                index
+                for index, line in enumerate(lines)
+                if '<JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""'
+                in line
+            )
+            self.assertEqual(lines[marker + 1].split()[:4], ["0", "55", "-", "-"])
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(PREPARER),
+                    "--source",
+                    str(source),
+                    "--output-dir",
+                    str(output_directory),
+                    "--rate",
+                    "48000",
+                    "--case-id",
+                    "12118",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            prepared = output_directory / "core-harness-48000-case-12118.RPP"
+            lines = prepared.read_text(encoding="utf-8").splitlines()
+            marker = next(
+                index
+                for index, line in enumerate(lines)
+                if '<JS "tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx" ""'
+                in line
+            )
+            self.assertEqual(lines[marker + 1].split()[:4], ["0", "67", "-", "-"])
+
     def test_prepares_task_six_case_slider_state(self):
         with tempfile.TemporaryDirectory(dir=BUILD) as temporary:
             temporary_path = pathlib.Path(temporary)

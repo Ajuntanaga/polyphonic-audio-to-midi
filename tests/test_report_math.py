@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 from tools.summarize_results import (
+    evaluate_performance,
     match_note_events,
     percentile,
     score_notes,
@@ -13,6 +14,40 @@ from tools.summarize_results import (
 
 
 class ReportMathTests(unittest.TestCase):
+    def test_performance_thresholds_accept_exact_boundaries(self):
+        errors = evaluate_performance(
+            {
+                "single_median_ms": 25.0,
+                "single_p95_ms": 45.0,
+                "chord_median_ms": 40.0,
+                "chord_p95_ms": 65.0,
+                "cpu_p99_deadline_fraction": 0.25,
+                "cpu_max_deadline_fraction": 0.50,
+                "retune_delta_ms": 5.0,
+                "hanging_notes": 0,
+            }
+        )
+
+        self.assertEqual(errors, [])
+
+    def test_performance_thresholds_reject_each_overrun(self):
+        failing = (
+            ("single_median_ms", 25.001),
+            ("single_p95_ms", 45.001),
+            ("chord_median_ms", 40.001),
+            ("chord_p95_ms", 65.001),
+            ("cpu_p99_deadline_fraction", 0.250001),
+            ("cpu_max_deadline_fraction", 0.500001),
+            ("retune_delta_ms", 5.001),
+            ("hanging_notes", 1),
+        )
+
+        for field, value in failing:
+            with self.subTest(field=field):
+                errors = evaluate_performance({field: value})
+                self.assertTrue(errors)
+                self.assertIn(field, errors[0])
+
     def test_percentile_uses_linear_interpolation(self):
         values = [10, 20, 30, 40]
 

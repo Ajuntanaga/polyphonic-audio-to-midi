@@ -7,6 +7,35 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 
+PERFORMANCE_MAXIMUMS = {
+    "single_median_ms": 25.0,
+    "single_p95_ms": 45.0,
+    "chord_median_ms": 40.0,
+    "chord_p95_ms": 65.0,
+    "cpu_p99_deadline_fraction": 0.25,
+    "cpu_max_deadline_fraction": 0.50,
+    "retune_delta_ms": 5.0,
+    "hanging_notes": 0.0,
+}
+
+
+def evaluate_performance(
+    metrics: Mapping[str, float | int],
+) -> list[str]:
+    errors: list[str] = []
+    for field, maximum in PERFORMANCE_MAXIMUMS.items():
+        if field not in metrics:
+            continue
+        value = float(metrics[field])
+        if not math.isfinite(value):
+            errors.append(f"{field} must be finite")
+        elif value > maximum:
+            errors.append(
+                f"{field} {value:.6f} exceeds maximum {maximum:.6f}"
+            )
+    return errors
+
+
 def percentile(values: Iterable[float], q: float) -> float:
     ordered = sorted(float(value) for value in values)
     if not ordered:

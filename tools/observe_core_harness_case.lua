@@ -31,7 +31,8 @@ local valid_case = expected_case and (
   (expected_case >= 7101 and expected_case <= 7106) or
   (expected_case >= 8101 and expected_case <= 8111) or
   (expected_case >= 9101 and expected_case <= 9109) or
-  (expected_case >= 10101 and expected_case <= 10106)
+  (expected_case >= 10101 and expected_case <= 10106) or
+  (expected_case >= 12101 and expected_case <= 12118)
 )
 local task_eight = expected_case and expected_case >= 8101 and expected_case <= 8111
 local valid_block = expected_block == 32 or expected_block == 64 or
@@ -119,7 +120,15 @@ local function poll()
   local actual_rate = rounded_gmem(6)
   local actual_case = rounded_gmem(15)
   local actual_block = rounded_gmem(30)
-  local expected_assertions = expected_case == 4101 and 19 or 3
+  local expected_assertions = expected_case == 4101 and 19 or
+                              expected_case == 5102 and 4 or
+                              expected_case == 12108 and 6 or
+                              expected_case == 12110 and 8 or
+                              expected_case == 12114 and 12 or
+                              expected_case == 12117 and 6 or
+                              expected_case == 12113 and 5 or
+                              expected_case == 12115 and 7 or
+                              expected_case == 12118 and 4 or 3
   local matching_block = not task_eight or actual_block == expected_block
 
   if magic == expected_magic and state == -1 and

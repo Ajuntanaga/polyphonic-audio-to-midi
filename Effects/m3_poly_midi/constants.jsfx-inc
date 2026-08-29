@@ -1,5 +1,5 @@
 @init
-M3_MAX_CANDIDATES = 85; // MIDI 24..108 inclusive
+M3_MAX_CANDIDATES = 87; // MIDI 24..108 plus one guard semitone per edge
 M3_MAX_HARMONICS = 8;
 M3_MAX_VOICES = 8;
 M3_MAX_EVENTS = 16;

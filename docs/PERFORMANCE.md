@@ -3,6 +3,71 @@
 This file records only measured changes made while executing the approved test
 plan. It is not a claim that the detector is performance-ready.
 
+## Task 13 terminal JSFX gate — 2026-08-28
+
+Decision: `native amendment required`. The JSFX remains unshipped and was not
+installed. A native design or implementation requires separate explicit
+approval.
+
+The terminal measurements used REAPER 7.79 on host `CipherPixy`, Linux
+7.0.0-30-generic x86-64, AMD Ryzen 7 7730U (8 cores/16 threads). Every launch
+used the disposable profile, dummy audio, workspace 5, 48 kHz, a 128-sample
+block, UI closed, and the guarded 50%-of-one-logical-CPU / 512 MiB limits.
+Percentiles use the repository's linearly interpolated percentile function.
+
+### Accuracy and latency
+
+The final capture at
+`build/test-results/task13-v232-final-jsfx-48k128-slice` contains 45 M3 rows
+plus three general-mode diagnostic rows. The M3 rows measured below are eight
+single open strings, twelve dyads, twelve triads, twelve four-note chords, and
+the eight-open-string chord.
+
+| Metric | Result | Gate | Status |
+| --- | ---: | ---: | --- |
+| Cases / expected notes | 45 / 124 | — | measured |
+| Precision / recall / F1 | 1.000 / 1.000 / 1.000 | >= 0.980 | PASS |
+| Duplicate note-ons / hanging notes | 0 / 0 | 0 / 0 | PASS |
+| Single median / P95 | 21.333 / 40.133 ms | <= 25 / 45 ms | PASS |
+| Three/four-note completion median / P95 | 78.667 / 99.600 ms | <= 40 / 65 ms | FAIL |
+
+Key hashes are `5a2d0b4c9ced2f8f97248bdf164118ed3882307adcc41c976f429b363ff88dd3`
+for `cases.tsv`, `a695ebdc5ac641bf3f51b16cfd0f48dca08f3723f717e296bde003bb437c2f2a`
+for `events.tsv`, `7310407205db0c7e29269f4a044a47e398289215dfdcec114a8a7a183a511050`
+for `summary.tsv`, and
+`93b7549aebc11e1cb9201effa67a8d2b3c556d269da79d7b66736546548e495b`
+for `safety.tsv`. The full-capture `partial-report.md`, which also includes the
+three general diagnostics, is
+`902c4f96935511bc3181fadb395beed0ab689cbe9662d790f124bff11daac649`.
+
+### Audio-thread deadline
+
+A benchmark-only staged copy timed the complete production block path from the
+start of `@block` through the last sample. Its eight-open-string source buffer
+was precomputed before measurement. Each run discarded 100 warm-up blocks and
+then recorded 10,000 consecutive blocks. The benchmark hooks were removed by
+restaging afterward and do not exist in production source.
+
+| Run | Median | P95 | P99 | Maximum | Blocks > 0.50 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| A | 0.588229 | 1.181451 | 19.909088 | 20.577708 | 10,000 / 10,000 |
+| B | 0.594384 | 1.178591 | 19.914089 | 20.711463 | 10,000 / 10,000 |
+
+The required limits are P99 <= `0.25` and maximum <= `0.50`. Both repeated
+runs fail even at the median, so the result is not attributable only to the
+large scheduling spikes. Raw tables remain at
+`build/test-results/task13-performance-48k128-10000/{run-a,run-b}/block-times.tsv`.
+Their SHA-256 values are
+`30da3aa4a3cf0d19bd63fa7f4d8ea6d54b3f4cf9adf30c01058f48e4f0527122`
+and
+`d608a7039be77f0e0939cfcaab50e00ebbe38dec45f4135d8ecdc15d5fb1e9ab`.
+
+Because UI-closed 48 kHz/128 already exceeds the hard limit, the larger
+sample-rate/block/UI matrix and ReaTune delta comparison were not run. They
+cannot reverse this terminal row. The current 48 kHz core cases 12101–12118
+pass; case 4102 passes at 44.1 and 48 kHz but has a separate 96 kHz false MIDI
+44 in the 32+56 regression. Clean-DI and live-input gates remain unopened.
+
 ## Task 4 correctness baseline
 
 | Assertion | Constant | Before | After | Evidence |

@@ -1,6 +1,7 @@
 # M3 Polyphonic Audio to MIDI
 
-Status: Tasks 1–11 verified; Task 12 synthetic metrics next; not installed.
+Status: experimental JSFX accuracy gate passes, but chord-latency and deadline
+gates fail; native design amendment required; not installed.
 
 Source-editable, causal, real-time polyphonic audio-to-MIDI for REAPER and a
 downstream VSTi. Production detection and MIDI generation are JSFX/EEL2. Lua is
@@ -30,10 +31,18 @@ pipeline is an offline transcription design with a greater-than-one-second
 low-bin CQT path and a non-causal event algorithm. This project instead uses a
 bounded causal resonator/selector/lifecycle path intended for live playing.
 
-This is synthetic dummy-audio evidence, not a live-guitar or audible hardware
-claim. Persistent installation, live projects, audio-interface input, clean-DI
-metrics, and long-run deadline/latency measurements remain gated. Do not treat
-the current build as performance-ready. The fresh local source gate is 53 tests
-plus a clean standalone contract. See [docs/TESTING.md](docs/TESTING.md) for the
-isolated verification boundary and
+Task 13 reached a terminal JSFX result at 48 kHz/128 samples. The final M3 slice
+has 100% precision/recall over 45 cases and 124 notes, and open-string latency
+passes. Three/four-note completion is `78.667/99.600 ms` median/P95, however,
+and two 10,000-block dense-chord runs consumed about 59% of the deadline at
+median with every block above the 50% hard limit. The JSFX is therefore not
+performance-ready and must not be installed. See
+[docs/PERFORMANCE.md](docs/PERFORMANCE.md) for hashes and the recorded
+`native amendment required` decision.
+
+This remains synthetic dummy-audio evidence, not a live-guitar or audible
+hardware claim. Persistent installation, live projects, audio-interface input,
+clean-DI metrics, and native implementation remain separately gated. The fresh
+local source gate is 90 tests plus a clean standalone contract. See
+[docs/TESTING.md](docs/TESTING.md) for the isolated verification boundary and
 [docs/MIDI-LIFECYCLE.md](docs/MIDI-LIFECYCLE.md) for cleanup behavior.

@@ -115,6 +115,7 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertIn("MemoryMax=512M", result.stdout)
         self.assertIn("CPUQuota=50%", result.stdout)
         self.assertIn("TasksMax=64", result.stdout)
+        self.assertIn("--cpu=45:45", result.stdout)
         self.assertIn("taskset -c", result.stdout)
         self.assertIn(str(PROFILE), result.stdout)
         self.assertIn("-noactivate", result.stdout)
@@ -364,6 +365,32 @@ class GuardedReaperTests(unittest.TestCase):
             GUARDED_REAPER.subprocess,
             "run",
             side_effect=[bad_window, stable_listing],
+        ) as run:
+            count = GUARDED_REAPER.move_reaper_windows_once({}, 5)
+
+        self.assertEqual(count, 0)
+        self.assertEqual(run.call_count, 2)
+
+    def test_workspace_mover_retries_a_transient_bad_drawable(self):
+        bad_drawable = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=1,
+            stdout="",
+            stderr=(
+                "X Error of failed request: BadDrawable "
+                "(invalid Pixmap or Window parameter)"
+            ),
+        )
+        stable_listing = subprocess.CompletedProcess(
+            args=["/usr/bin/wmctrl", "-l", "-x"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=[bad_drawable, stable_listing],
         ) as run:
             count = GUARDED_REAPER.move_reaper_windows_once({}, 5)
 

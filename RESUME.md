@@ -1,27 +1,49 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-25T17:20:35-07:00
+Updated: 2026-08-28T18:09:32-07:00
 
 ## Authoritative state
 
-- Branch: `main`
-- Last verified implementation commit: `1f0186c` (`feat: verify polyphonic
-  VSTi host integration`).
-- Latest stability commit: `821ba22` (`fix: background guarded REAPER
-  launches`).
-- Current task: Task 12, synthetic metrics only. Clean-DI input remains gated.
-- Tasks 1–11 are verified and committed. Task 11 disposable-host evidence is
-  accepted and preserved below.
-- Fresh current-tree result: all 53 Python tests pass,
-  `python3 tools/validate_source.py .` reports `source contract: ok`, Python
-  tools compile, and `git diff --check` is clean.
-- The canonical Obsidian implementation-plan and project notes are synchronized
-  to Task 12 with implementation `1f0186c`, checkpoint `d3df2bf`, Task 11
-  evidence hashes, and unchanged gates. Obsidian was not running, so the CLI
-  refused and the notes were saved directly as Markdown without opening the app.
-- Disposable profile: `build/reaper-test`; persistent REAPER profile untouched.
-- No live guitar, audio interface, live project, download, install, MCP, or native
-  fallback was used.
+- Branch: `main`. This file belongs to the Task 13 terminal checkpoint; its
+  committed predecessor is `8a1332d` (`test: generate deterministic synthetic
+  matrix`).
+- Current runtime fingerprint:
+  `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
+- The deterministic synthetic manifest is byte-identical to its generator and
+  has SHA-256
+  `683a72b34aaf01354fad11c0479ce03bd28a6b24bc7e5f3ae61dafca7bc67725`.
+- Final 48 kHz/128-sample evidence is
+  `build/test-results/task13-v232-final-jsfx-48k128-slice`. Within that 48-case
+  capture, all 45 M3 cases and 124 expected M3 notes pass with precision,
+  recall, and F1 `1.0`, zero false positives, false negatives, duplicates, or
+  hanging notes. `events.tsv` SHA-256 is
+  `a695ebdc5ac641bf3f51b16cfd0f48dca08f3723f717e296bde003bb437c2f2a`.
+- Single-open latency passes at `21.333 ms` median and `40.133 ms` P95. The
+  required three/four-note chord gate fails at `78.667 ms` median and
+  `99.600 ms` P95 against limits of `40/65 ms`.
+- Two independent 10,000-block 48 kHz/128-sample dense-M3 deadline runs failed
+  decisively. Run A was `0.588229` median, `1.181451` P95, `19.909088` P99,
+  and `20.577708` maximum deadline fraction; Run B was `0.594384`, `1.178591`,
+  `19.914089`, and `20.711463`. Every block in both runs exceeded the `0.50`
+  hard limit. Raw hashes are
+  `30da3aa4a3cf0d19bd63fa7f4d8ea6d54b3f4cf9adf30c01058f48e4f0527122`
+  and
+  `d608a7039be77f0e0939cfcaab50e00ebbe38dec45f4135d8ecdc15d5fb1e9ab`.
+- Current 48 kHz core cases 12101–12118 and case 4102 pass; case 4102 also
+  passes at 44.1 kHz. At 96 kHz, its new 32+56 regression detects one false
+  MIDI 44, so 96 kHz is independently not release-ready.
+- Fresh current-tree checks: all 90 Python tests pass,
+  `python3 tools/validate_source.py .` reports `source contract: ok`,
+  and no diagnostic or benchmark gmem instrumentation remains in production or
+  the Lua runner.
+- Every REAPER instance ran serially, backgrounded on workspace 5, under the
+  50%-of-one-core and 512 MiB limits. No REAPER process remains.
+- Decision: `native amendment required`. Stop JSFX detector implementation and
+  do not install it. Exact resume action is to request explicit approval for a
+  new native-design amendment; approval starts design work only, not a port.
+- Clean-DI recording/input, persistent installation, live projects, REAPER MCP,
+  downloads, and native implementation remain separately gated and were not
+  used.
 
 ## Verified Task 4 evidence
 

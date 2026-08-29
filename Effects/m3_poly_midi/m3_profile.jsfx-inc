@@ -9,6 +9,9 @@ M3_PROFILE_DP_LOW_CODE_OFFSET = 256;
 M3_PROFILE_DP_HIGH_CODE_OFFSET = 512;
 M3_PROFILE_DP_WORDS = 768;
 M3_PROFILE_NOTE_CODE_RADIX = 128;
+M3_PROFILE_OPEN_CHORD_MIN_OPENS = 2;
+M3_PROFILE_FRETTED_NOTE_PENALTY = 0.60;
+M3_PROFILE_FRET_PENALTY = 0.005;
 
 function m3_profile_load(open_base) (
   m3_profile_open_base = open_base;
@@ -100,6 +103,17 @@ local(value) (
   ((value >> 7) & 1);
 );
 
+function m3_profile_open_note(note)
+local(string_index, found) (
+  found = 0;
+  string_index = 0;
+  loop(8,
+    note == m3_profile_open_base[string_index] ? found = 1;
+    string_index += 1;
+  );
+  found;
+);
+
 function m3_profile_filter_selected(profile_mode, selection_base,
                                     selected_count, max_voices, max_fret,
                                     note_work_base, scratch_base)
@@ -108,13 +122,14 @@ local(candidate_count, limit, score_base, low_code_base, high_code_base,
       state_score, string_index, string_bit, next_mask, next_score,
       next_low_code, next_high_code, code_power, best_mask, best_score,
       state_count, encoded, digit, work_base, output_count, found,
-      source_index, source_cell, destination_cell) (
+      source_index, source_cell, destination_cell,
+      open_candidate_count, fret, assignment_penalty) (
   candidate_count = min(
     M3_SELECTION_INTERNAL_CANDIDATES,
     max(0, floor(selected_count))
   );
   limit = min(M3_MAX_VOICES, max(0, floor(max_voices)));
-  profile_mode == M3_PROFILE_MODE_GENERAL ? min(candidate_count, limit) : (
+  profile_mode == M3_PROFILE_MODE_GENERAL ? candidate_count : (
     score_base = scratch_base + M3_PROFILE_DP_SCORE_OFFSET;
     low_code_base = scratch_base + M3_PROFILE_DP_LOW_CODE_OFFSET;
     high_code_base = scratch_base + M3_PROFILE_DP_HIGH_CODE_OFFSET;
@@ -123,6 +138,16 @@ local(candidate_count, limit, score_base, low_code_base, high_code_base,
     loop(M3_PROFILE_DP_ROW_SIZE - 1,
       score_base[used_mask] = -1;
       used_mask += 1;
+    );
+
+    open_candidate_count = 0;
+    candidate_index = 0;
+    loop(candidate_count,
+      candidate_cell = selection_base +
+                       candidate_index * M3_SELECTION_CELL_SIZE;
+      note = floor(candidate_cell[0] + 0.5);
+      m3_profile_open_note(note) ? open_candidate_count += 1;
+      candidate_index += 1;
     );
 
     candidate_index = 0;
@@ -147,7 +172,15 @@ local(candidate_count, limit, score_base, low_code_base, high_code_base,
               string_bit = 1 << string_index;
               (playable & string_bit) && !(used_mask & string_bit) ? (
                 next_mask = used_mask | string_bit;
-                next_score = state_score + confidence;
+                fret = note - m3_profile_open_base[string_index];
+                assignment_penalty =
+                  (open_candidate_count >= M3_PROFILE_OPEN_CHORD_MIN_OPENS ||
+                   note > M3_M3_OPEN_7) &&
+                  fret > 0
+                  ? M3_PROFILE_FRETTED_NOTE_PENALTY +
+                    M3_PROFILE_FRET_PENALTY * fret
+                  : 0;
+                next_score = state_score + confidence - assignment_penalty;
                 next_score > score_base[next_mask] + 0.000000000001 ? (
                   next_low_code = low_code_base[used_mask];
                   next_high_code = high_code_base[used_mask];

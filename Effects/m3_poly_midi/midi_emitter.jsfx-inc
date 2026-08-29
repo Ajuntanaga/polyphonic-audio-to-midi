@@ -154,10 +154,11 @@ function m3_host_reset_detector(test_sr, min_note, max_note, a4) (
   m3_bank_init(M3_RESONATOR_BASE, test_sr, min_note, max_note, a4);
   m3_zero(
     M3_SALIENCE_BASE,
-    M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET + 1
+    M3_SELECTION_SMOOTHED_ENERGY_OFFSET + M3_MAX_CANDIDATES
   );
   m3_zero(M3_SELECTION_BASE, M3_SELECTION_WORK_WORDS);
   m3_zero(M3_M3_SCRATCH_BASE, M3_PROFILE_DP_WORDS);
   m3_lifecycle_init(M3_VOICE_BASE, M3_EVENT_BASE);
+  m3_general_acquisition_samples = 0;
   1;
 );

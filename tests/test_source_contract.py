@@ -35,6 +35,8 @@ SAFE_BYPASS = (
 PRODUCTION = ROOT / "Effects/ajuntanaga_M3 Polyphonic Audio to MIDI.jsfx"
 HOST_CASES = ROOT / "tests/fixtures/host_cases.tsv"
 SYNTHETIC_CASES = ROOT / "tests/fixtures/synthetic_cases.tsv"
+CORE_TESTS = ROOT / "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx"
+CORE_OBSERVER = ROOT / "tools/observe_core_harness_case.lua"
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -106,18 +108,68 @@ class SourceContractTests(unittest.TestCase):
             )
             self.assertTrue((staged / "test-results").is_dir())
 
-    def test_disposable_staging_can_select_full_synthetic_matrix(self):
+    def test_disposable_staging_selects_only_a_bounded_synthetic_batch(self):
         with tempfile.TemporaryDirectory() as temporary:
             staged = pathlib.Path(temporary) / "reaper-test"
 
-            stage(ROOT, staged, case_set="synthetic")
+            stage(
+                ROOT,
+                staged,
+                case_set="synthetic",
+                sample_rate=48000,
+                block_size=128,
+                case_offset=0,
+                case_limit=2,
+            )
 
             self.assertEqual(
                 (
                     staged / "Data/m3_poly_midi/synthetic_cases.tsv"
-                ).read_bytes(),
-                SYNTHETIC_CASES.read_bytes(),
+                ).read_text(encoding="utf-8").splitlines(),
+                [
+                    "case_id\tsample_rate\tblock_size\tmode\tnotes\t"
+                    "detune_cents\tmissing_fundamental\tgains_db\t"
+                    "noise_db\thum_db\tclip\tstagger_ms\texpected",
+                    "7\t48000\t128\tgeneral\t24\t0\t0\t0\t-120\t"
+                    "-120\t0\t0\t24",
+                    "19\t48000\t128\tgeneral\t25\t0\t0\t0\t-120\t"
+                    "-120\t0\t0\t25",
+                ],
             )
+
+    def test_synthetic_batch_controls_profile_rate_block_and_offset(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+
+            stage(
+                ROOT,
+                staged,
+                case_set="synthetic",
+                sample_rate=44100,
+                block_size=32,
+                case_offset=1,
+                case_limit=2,
+            )
+
+            profile = (staged / "reaper.ini").read_text(encoding="utf-8")
+            rows = (
+                staged / "Data/m3_poly_midi/synthetic_cases.tsv"
+            ).read_text(encoding="utf-8").splitlines()
+            self.assertIn("linux_audio_bsize=32\n", profile)
+            self.assertIn("linux_audio_srate=44100\n", profile)
+            self.assertEqual([row.split("\t", 1)[0] for row in rows[1:]], ["13", "25"])
+
+    def test_synthetic_batch_refuses_more_than_thirty_two_cases(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+
+            with self.assertRaisesRegex(ValueError, "case limit"):
+                stage(
+                    ROOT,
+                    staged,
+                    case_set="synthetic",
+                    case_limit=33,
+                )
 
     def test_disposable_staging_refuses_an_unknown_case_set(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -135,6 +187,11 @@ class SourceContractTests(unittest.TestCase):
         self.assertIn("options:gmem=m3_poly_midi_tests_v1", source)
         self.assertIn("M3_INTEGRATION_REFERENCE_CAPACITY = 2048;", source)
         self.assertIn("M3_INTEGRATION_WARMUP_SECONDS = 0.500;", source)
+        self.assertIn("M3_INTEGRATION_BLOCK_SIZE = 127;", source)
+        self.assertIn(
+            "gmem[M3_INTEGRATION_BLOCK_SIZE] = samplesblock;",
+            source,
+        )
         self.assertIn("m3_source_harmonic * m3_source_frequency < 0.45 * srate", source)
         self.assertIn("spl0 = m3_source_generated;", source)
         self.assertIn("spl1 = m3_source_generated;", source)
@@ -155,9 +212,13 @@ class SourceContractTests(unittest.TestCase):
         self.assertIn('result_directory .. "/summary.tsv"', runner)
         self.assertIn('result_directory .. "/safety.tsv"', runner)
         self.assertIn("local CASE_TIMEOUT_SECONDS = 10", runner)
+        self.assertIn("local MATRIX_CASE_TIMEOUT_SECONDS = 20", runner)
         self.assertIn("local PANIC_TRIALS_REQUIRED = 10", runner)
         self.assertIn("local PANIC_OFF_TIMEOUT_SECONDS = 0.500", runner)
         self.assertIn("local SAFE_BYPASS_TIMEOUT_SECONDS = 0.500", runner)
+        self.assertIn("local ACTUAL_BLOCK = 127", runner)
+        self.assertIn("local cases, host_mode = read_cases(manifest_path)", runner)
+        self.assertIn("if host_mode then\n  append_panic_trials(cases)", runner)
         self.assertIn("reaper.OnPlayButton()", runner)
         self.assertIn("reaper.defer(poll_case)", runner)
         self.assertIn("reaper.TrackFX_SetParam(track, detector_fx, 5, 0)", runner)
@@ -254,7 +315,7 @@ class SourceContractTests(unittest.TestCase):
         constants = parse_integer_assignments(CONSTANTS)
 
         expected = {
-            "M3_MAX_CANDIDATES": 85,
+            "M3_MAX_CANDIDATES": 87,
             "M3_MAX_HARMONICS": 8,
             "M3_MAX_VOICES": 8,
             "M3_MAX_EVENTS": 16,
@@ -324,10 +385,556 @@ class SourceContractTests(unittest.TestCase):
             149,
         )
         self.assertEqual(selector.get("M3_SELECTION_WORK_WORDS"), 234)
+        self.assertEqual(selector.get("M3_SELECTION_SMOOTHED_ENERGY_OFFSET"), 256)
+        self.assertEqual(selector.get("M3_SELECTION_RAW_ENERGY_OFFSET"), 343)
+        self.assertLessEqual(
+            selector["M3_SELECTION_RAW_ENERGY_OFFSET"] +
+            constants["M3_MAX_CANDIDATES"],
+            constants["M3_SELECTION_BASE"] - constants["M3_SALIENCE_BASE"],
+        )
         self.assertLessEqual(
             selector["M3_SELECTION_WORK_WORDS"],
             constants["M3_M3_SCRATCH_BASE"] - constants["M3_SELECTION_BASE"],
         )
+
+    def test_general_selector_has_bounded_shared_partial_regressions(self):
+        selector = SELECTOR.read_text(encoding="utf-8")
+        profile = PROFILE.read_text(encoding="utf-8")
+        core_tests = CORE_TESTS.read_text(encoding="utf-8")
+        observer = CORE_OBSERVER.read_text(encoding="utf-8")
+        self.assertIn("M3_SELECTION_GENERAL_LOCAL_ENERGY_RATIO = 1.05;", selector)
+        self.assertIn("M3_SELECTION_M3_LOCAL_ENERGY_RATIO = 1.05;", selector)
+        self.assertIn(
+            "M3_SELECTION_GENERAL_PLATEAU_ENERGY_RATIO = 1.00;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_LOW_OPEN_NOTE = 32;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_LOW_OPEN_ENERGY_RATIO = 0.90;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_PLATEAU_FUNDAMENTAL_RATIO = 0.98;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_PLATEAU_CONFIDENCE_FLOOR = 0.30;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_PLATEAU_MIN_NOTE = 32;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_PLATEAU_MAX_NOTE = 35;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_M3_FUNDAMENTAL_PLATEAU_RATIO = 0.85;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_M3_MISSING_FUNDAMENTAL_RATIO = 0.15;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_MISSING_FUNDAMENTAL_RATIO = 0.10;",
+            selector,
+        )
+        self.assertIn("M3_PROFILE_OPEN_CHORD_MIN_OPENS = 2;", profile)
+        self.assertIn("M3_PROFILE_FRETTED_NOTE_PENALTY = 0.60;", profile)
+        self.assertIn("M3_PROFILE_FRET_PENALTY = 0.005;", profile)
+        self.assertIn("function m3_profile_open_note(note)", profile)
+        self.assertIn(
+            "next_score = state_score + confidence - assignment_penalty;",
+            profile,
+        )
+        self.assertIn("note > M3_M3_OPEN_7", profile)
+        self.assertIn(
+            "M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_SCORE_RATIO = 0.90;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_ROOT_RATIO = 0.15;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_MISSING_ROOT_PROBE_COUNT = 9;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_MISSING_MIN_GLOBAL_ENERGY_RATIO = 0.65;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_MISSING_FUNDAMENTAL_PARENT_ENERGY_RATIO = 0.80;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_MISSING_MIN_NOTE = 32;",
+            selector,
+        )
+        self.assertIn("M3_SELECTION_SHARED_FUNDAMENTAL_RATIO = 0.40;", selector)
+        self.assertIn(
+            "M3_SELECTION_SHARED_FIFTH_FUNDAMENTAL_RATIO = 0.30;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_SHARED_FUNDAMENTAL_RATIO = 0.60;",
+            selector,
+        )
+        self.assertIn(
+            "M3_SELECTION_GENERAL_OCTAVE_WEIGHTED_RATIO = 0.40;",
+            selector,
+        )
+        self.assertIn(
+            "function m3_selection_downweight_general_octave_aliases(",
+            selector,
+        )
+        self.assertIn("function m3_selection_contains_note(", selector)
+        self.assertIn("dense_context_count >= 2", selector)
+        self.assertIn(
+            "function m3_selection_downweight_missing_fundamental_aliases(",
+            selector,
+        )
+        self.assertIn(
+            "function m3_selection_downweight_missing_fundamental_lower_aliases(",
+            selector,
+        )
+        self.assertIn("M3_SELECTION_FUNDAMENTAL_DOMINANCE_RATIO = 0.80;", selector)
+        self.assertIn("M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR = 0.10;", selector)
+        self.assertIn("M3_SELECTION_ENERGY_SMOOTH_SECONDS = 0.008;", selector)
+        self.assertIn("M3_SELECTION_GENERAL_ACQUISITION_SECONDS = 0.002;", selector)
+        self.assertIn("M3_SELECTION_M3_ACQUISITION_SECONDS = 0.002;", selector)
+        self.assertIn("fundamental_local_peak", selector)
+        self.assertIn("function m3_selection_shared_partial_interval(", selector)
+        self.assertIn(
+            "function m3_selection_general_quiet_interval(interval)",
+            selector,
+        )
+        self.assertIn(
+            "shared_partial && !general_quiet_interval ? (",
+            selector,
+        )
+        self.assertIn(
+            "general_quiet_interval = allow_fundamental_dominance &&\n"
+            "              (general_quiet_context ||",
+            selector,
+        )
+        production = PRODUCTION.read_text(encoding="utf-8")
+        self.assertIn(
+            "profile_mode == M3_PROFILE_MODE_M3\n"
+            "      ? M3_SELECTION_M3_ACQUISITION_SECONDS\n"
+            "      : M3_SELECTION_GENERAL_ACQUISITION_SECONDS",
+            production,
+        )
+        self.assertIn(
+            "profile_mode == M3_PROFILE_MODE_M3\n"
+            "      ? M3_SELECTION_M3_LOCAL_ENERGY_RATIO\n"
+            "      : M3_SELECTION_GENERAL_LOCAL_ENERGY_RATIO",
+            production,
+        )
+        self.assertIn(
+            "selected_voice_allow_fundamental_dominance =\n"
+            "      profile_mode == M3_PROFILE_MODE_M3 ? 0 : 1;",
+            production,
+        )
+        self.assertIn(
+            "selected_voice_local_energy_ratio,\n"
+            "      selected_voice_allow_fundamental_dominance,\n"
+            "      samplesblock,\n"
+            "      srate,",
+            production,
+        )
+        self.assertIn("case_id == 12101", core_tests)
+        self.assertIn("case_id == 12102", core_tests)
+        self.assertIn("case_id == 12103", core_tests)
+        self.assertIn("case_id == 12104", core_tests)
+        self.assertIn("case_id == 12105", core_tests)
+        self.assertIn("case_id == 12106", core_tests)
+        self.assertIn("case_id == 12107", core_tests)
+        self.assertIn("case_id == 12108", core_tests)
+        self.assertIn("case_id == 12109", core_tests)
+        self.assertIn("case_id == 12110", core_tests)
+        self.assertIn("case_id == 12111", core_tests)
+        self.assertIn("case_id == 12112", core_tests)
+        self.assertIn("case_id == 12113", core_tests)
+        self.assertIn("case_id == 12114", core_tests)
+        self.assertIn("case_id == 12115", core_tests)
+        self.assertIn("case_id == 12116", core_tests)
+        self.assertIn("case_id == 12117", core_tests)
+        self.assertIn("case_id == 12118", core_tests)
+        self.assertIn(
+            "(test_bank_case_id >= 12101 && test_bank_case_id <= 12103)",
+            core_tests,
+        )
+        self.assertIn(
+            "(test_bank_case_id >= 12107 && test_bank_case_id <= 12108)",
+            core_tests,
+        )
+        self.assertIn("function m3_test_realtime_select_m3(", core_tests)
+        self.assertIn(
+            "m3_test_realtime_single_on_error(test_sr, 32, 1)",
+            core_tests,
+        )
+        self.assertIn(
+            "m3_test_realtime_single_on_error(test_sr, 48, 1)",
+            core_tests,
+        )
+        lifecycle = LIFECYCLE.read_text(encoding="utf-8")
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_OCTAVE_ENERGY_RATIO = 0.70;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_OCTAVE_GUARD_MAX_PARENT_NOTE = 84;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_HARMONIC_ENERGY_RATIO = 0.55;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT = 5;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_STALE_ATTACK_DROPOUT_MULTIPLIER = 11;",
+            lifecycle,
+        )
+        self.assertEqual(
+            lifecycle.count(
+                "energy_decay = exp(-elapsed / max(1, stale_attack_limit));"
+            ),
+            2,
+        )
+        self.assertGreaterEqual(
+            lifecycle.count(
+                "energy_decay * cell[M3_VOICE_ENERGY_OFFSET]"
+            ),
+            2,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_ATTACK_ADMISSION_SLOW_RATIO = 0.10;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_STACK_SPAN_SEMITONES = 28;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_attack_admission_allowed(",
+            lifecycle,
+        )
+        self.assertIn("function m3_lifecycle_snapshot_active(", lifecycle)
+        self.assertIn(
+            "m3_lifecycle_attack_admission = analysis_signal_present &&",
+            production,
+        )
+        self.assertIn("function m3_lifecycle_octave_alias_blocked(", lifecycle)
+        self.assertIn("stacked_octave_context", lifecycle)
+        self.assertIn(
+            "function m3_lifecycle_general_stacked_context(",
+            lifecycle,
+        )
+        self.assertIn(
+            "note - m3_lifecycle_context_anchor_lowest_note <=",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_context_anchor_lowest_note = 128;",
+            lifecycle,
+        )
+        self.assertIn(
+            "max(attack_bridge_limit, attack_dropout_limit)",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_general_harmonic_alias_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_general_shared_octave_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_general_octave_guard =\n"
+            "    profile_mode == M3_PROFILE_MODE_GENERAL;",
+            production,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE = 24;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_LOW_STRING_MAX_NOTE = 35;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_LOW_OPEN_NOTE = 32;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_FAST_OPEN_ATTACK_SECONDS = 0.002;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_GUARDED_OPEN_ATTACK_SECONDS = 0.005;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_FAST_OPEN_CONFIDENCE_FLOOR = 0.52;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_open_attack_samples(note, confidence)",
+            lifecycle,
+        )
+        self.assertIn("note == M3_M3_OPEN_4 &&", lifecycle)
+        self.assertIn(
+            "M3_LIFECYCLE_M3_LOW_CHORD_ATTACK_SECONDS = 0.040;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_low_chord_context(",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_chord_attack_samples = max(",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_OPEN_CONFIDENCE_FLOOR = 0.50;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_OPEN_52_CONFIDENCE_FLOOR = 0.48;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_open_confidence_allowed(",
+            lifecycle,
+        )
+        self.assertIn("note == M3_M3_OPEN_2 ||", lifecycle)
+        self.assertIn(
+            "M3_LIFECYCLE_M3_MIN_DROPOUT_SECONDS = 0.024;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_low_string_conflict(",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_string_guard =\n"
+            "    profile_mode == M3_PROFILE_MODE_M3;",
+            production,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_open_fast_attack =\n"
+            "    profile_mode == M3_PROFILE_MODE_M3;",
+            production,
+        )
+        self.assertIn("m3_lifecycle_attack_hysteresis = 1;", production)
+        self.assertIn(
+            "m3_lifecycle_attack_bridge_samples = 2 * samplesblock;",
+            production,
+        )
+        self.assertIn(
+            "m3_lifecycle_attack_evidence_step_samples = samplesblock;",
+            production,
+        )
+        self.assertIn(
+            "? min(max(0, elapsed), attack_evidence_step_limit)",
+            lifecycle,
+        )
+        self.assertIn(
+            "? min(attack_limit, attack_evidence_step_limit)",
+            lifecycle,
+        )
+        self.assertIn(
+            "evidence_energy >= 2 * m3_lifecycle_min_attack_energy",
+            lifecycle,
+        )
+        self.assertIn(
+            "note_attack_limit = max(note_attack_limit, dropout_limit);",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_reserve_lower_attacks =\n"
+            "    profile_mode == M3_PROFILE_MODE_GENERAL &&\n"
+            "    max_polyphony < M3_MAX_VOICES;",
+            production,
+        )
+        self.assertIn(
+            "active_count + lower_attack_count < active_limit",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_CAPPED_ATTACK_SECONDS = 0.060;",
+            lifecycle,
+        )
+        self.assertIn(
+            "note_attack_limit = max(\n"
+            "          note_attack_limit,\n"
+            "          m3_lifecycle_general_capped_attack_samples",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_chord_context(note, m3_high_open_context) ? (",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_chord_attack_samples",
+            lifecycle,
+        )
+        self.assertIn("highest_active_note > note &&", lifecycle)
+        self.assertIn(
+            "attack_dropout_limit = m3_lifecycle_reserve_lower_attacks",
+            lifecycle,
+        )
+        self.assertIn("elapsed > attack_dropout_limit ? (", lifecycle)
+        self.assertGreaterEqual(
+            lifecycle.count("now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET] <="),
+            2,
+        )
+        self.assertIn("replacement_note = highest_active_note;", lifecycle)
+        self.assertIn(
+            "event_base[M3_EVENT_COUNT_OFFSET] <= M3_MAX_EVENTS - 2",
+            lifecycle,
+        )
+        self.assertIn("general_quiet_context =", selector)
+        self.assertIn(
+            "M3_SELECTION_GENERAL_QUIET_CONFIDENCE_FLOOR = 0.30;",
+            selector,
+        )
+        self.assertIn(
+            "residual_base[candidate] = max(\n"
+            "                residual_base[candidate],\n"
+            "                M3_SELECTION_GENERAL_QUIET_CONFIDENCE_FLOOR",
+            selector,
+        )
+        self.assertIn("octave_chord_context =", selector)
+        self.assertIn(
+            "!m3_lifecycle_attack_hysteresis ? (\n"
+            "            cell[M3_VOICE_CONFIDENCE_OFFSET] = 0;",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_low_open_fast_attack &&\n"
+            "      m3_lifecycle_m3_open_note(note)",
+            lifecycle,
+        )
+        self.assertGreaterEqual(
+            lifecycle.count("m3_lifecycle_m3_open_note(note)"),
+            2,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS = 0.009;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_LOW_OPEN_CONFIDENCE_FLOOR = 0.44;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_HIGH_OPEN_ATTACK_SECONDS = 0.009;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_GENERAL_MIN_ATTACK_SECONDS = 0.008;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_PARENT_CONFIRMATION_BLOCKS = 6;",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_MATURE_PARENT_ENERGY_RATIO = 0.80;",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_mature_parent_alias_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "!m3_lifecycle_m3_mature_parent_alias_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_LIFECYCLE_M3_MULTI_PARENT_ENERGY_RATIO = 0.80;",
+            lifecycle,
+        )
+        self.assertIn("function m3_lifecycle_m3_open_note(note)", lifecycle)
+        self.assertIn(
+            "function m3_lifecycle_m3_adjacent_shadow_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "m3_lifecycle_m3_open_note(neighbor_note) &&",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_parent_unconfirmed(",
+            lifecycle,
+        )
+        self.assertIn(
+            "function m3_lifecycle_m3_multi_parent_alias_blocked(",
+            lifecycle,
+        )
+        self.assertIn(
+            "M3_SELECTION_SHARED_PARTIAL_FACTOR = 0.25;",
+            selector,
+        )
+        self.assertIn(
+            "m3_lifecycle_max_active_voices = max_polyphony;",
+            production,
+        )
+        self.assertIn(
+            "profile_mode == M3_PROFILE_MODE_GENERAL ? candidate_count : (",
+            profile,
+        )
+        self.assertIn(
+            "selected_voice_candidate_limit =\n"
+            "      profile_mode == M3_PROFILE_MODE_M3\n"
+            "      ? M3_SELECTION_INTERNAL_CANDIDATES\n"
+            "      : M3_MAX_VOICES;",
+            production,
+        )
+        self.assertIn(
+            "candidate_count = min(\n"
+            "    M3_MAX_VOICES,\n"
+            "    max(0, floor(selected_count))\n"
+            "  );",
+            lifecycle,
+        )
+        self.assertIn(
+            "iteration_count = floor(m3_clamp(\n"
+            "    max_voices,\n"
+            "    0,\n"
+            "    M3_SELECTION_INTERNAL_CANDIDATES\n"
+            "  ));",
+            selector,
+        )
+        self.assertIn(
+            "M3_SALIENCE_BASE[M3_SALIENCE_EFFECTIVE_THRESHOLD_OFFSET],\n"
+            "      selected_voice_candidate_limit,",
+            production,
+        )
+        self.assertIn(
+            "expected_case >= 12101 and expected_case <= 12118",
+            observer,
+        )
+        self.assertIn("expected_case == 5102 and 4 or", observer)
+        self.assertIn("expected_case == 12108 and 6 or", observer)
+        self.assertIn("expected_case == 12110 and 8 or", observer)
+        self.assertIn("expected_case == 12114 and 12 or", observer)
+        self.assertIn("expected_case == 12113 and 5 or", observer)
+        self.assertIn("expected_case == 12115 and 7 or", observer)
+        self.assertIn("expected_case == 12117 and 6 or", observer)
+        self.assertIn("expected_case == 12118 and 4 or 3", observer)
 
     def test_lifecycle_memory_contract(self):
         constants = parse_integer_assignments(CONSTANTS)
@@ -335,6 +942,11 @@ class SourceContractTests(unittest.TestCase):
         self.assertEqual(lifecycle.get("M3_VOICE_CELL_SIZE"), 8)
         self.assertEqual(lifecycle.get("M3_EVENT_HEADER_SIZE"), 2)
         self.assertEqual(lifecycle.get("M3_EVENT_CELL_SIZE"), 5)
+        self.assertEqual(lifecycle.get("M3_LIFECYCLE_SUB_GSHARP_MAX_NOTE"), 31)
+        self.assertIn(
+            "M3_LIFECYCLE_M3_MIN_RELEASE_SECONDS = 0.048;",
+            LIFECYCLE.read_text(encoding="utf-8"),
+        )
         self.assertLessEqual(
             128 * lifecycle["M3_VOICE_CELL_SIZE"],
             constants["M3_EVENT_BASE"] - constants["M3_VOICE_BASE"],

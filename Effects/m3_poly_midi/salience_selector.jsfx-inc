@@ -11,9 +11,39 @@ M3_SELECTION_WORK_WORDS = 234;
 M3_SALIENCE_GLOBAL_ENERGY_FLOOR = 0.001;
 M3_SELECTION_SHARED_PARENT_SCORE_RATIO = 0.65;
 M3_SELECTION_SHARED_ENERGY_RATIO = 0.50;
-M3_SELECTION_SHARED_PARTIAL_FACTOR = 0.45;
+M3_SELECTION_SHARED_PARTIAL_FACTOR = 0.25;
 M3_SELECTION_HARMONIC_PARENT_COUNT = 5;
 M3_SELECTION_PROFILE_MIN_FUNDAMENTAL_RATIO = 0.15;
+M3_SELECTION_GENERAL_LOCAL_ENERGY_RATIO = 1.05;
+M3_SELECTION_M3_LOCAL_ENERGY_RATIO = 1.05;
+M3_SELECTION_GENERAL_PLATEAU_ENERGY_RATIO = 1.00;
+M3_SELECTION_GENERAL_PLATEAU_FUNDAMENTAL_RATIO = 0.98;
+M3_SELECTION_GENERAL_PLATEAU_CONFIDENCE_FLOOR = 0.30;
+M3_SELECTION_GENERAL_QUIET_CONFIDENCE_FLOOR = 0.30;
+M3_SELECTION_GENERAL_PLATEAU_MIN_NOTE = 32;
+M3_SELECTION_GENERAL_PLATEAU_MAX_NOTE = 35;
+M3_SELECTION_GENERAL_LOW_OPEN_NOTE = 32;
+M3_SELECTION_GENERAL_LOW_OPEN_ENERGY_RATIO = 0.90;
+M3_SELECTION_M3_FUNDAMENTAL_PLATEAU_RATIO = 0.85;
+M3_SELECTION_M3_MISSING_FUNDAMENTAL_RATIO = 0.15;
+M3_SELECTION_GENERAL_MISSING_FUNDAMENTAL_RATIO = 0.10;
+M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_ROOT_RATIO = 0.15;
+M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_SCORE_RATIO = 0.90;
+M3_SELECTION_MISSING_ROOT_PROBE_COUNT = 9;
+M3_SELECTION_GENERAL_MISSING_MIN_GLOBAL_ENERGY_RATIO = 0.65;
+M3_SELECTION_MISSING_FUNDAMENTAL_PARENT_ENERGY_RATIO = 0.80;
+M3_SELECTION_GENERAL_MISSING_MIN_NOTE = 32;
+M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR = 0.10;
+M3_SELECTION_SHARED_FUNDAMENTAL_RATIO = 0.40;
+M3_SELECTION_SHARED_FIFTH_FUNDAMENTAL_RATIO = 0.30;
+M3_SELECTION_GENERAL_SHARED_FUNDAMENTAL_RATIO = 0.60;
+M3_SELECTION_GENERAL_OCTAVE_WEIGHTED_RATIO = 0.40;
+M3_SELECTION_FUNDAMENTAL_DOMINANCE_RATIO = 0.80;
+M3_SELECTION_SMOOTHED_ENERGY_OFFSET = 256;
+M3_SELECTION_RAW_ENERGY_OFFSET = 343;
+M3_SELECTION_ENERGY_SMOOTH_SECONDS = 0.008;
+M3_SELECTION_GENERAL_ACQUISITION_SECONDS = 0.002;
+M3_SELECTION_M3_ACQUISITION_SECONDS = 0.002;
 
 function m3_harmonic_weight(harmonic) (
   harmonic == 0 ? 1.00 :
@@ -168,6 +198,44 @@ function m3_selection_harmonic_parent_interval(index) (
   index == 3 ? 31 : 36;
 );
 
+function m3_selection_missing_root_interval(index) (
+  index == 0 ? 5 :
+  index == 1 ? 7 :
+  index == 2 ? 12 :
+  index == 3 ? 16 :
+  index == 4 ? 19 :
+  index == 5 ? 24 :
+  index == 6 ? 28 :
+  index == 7 ? 31 : 36;
+);
+
+function m3_selection_shared_partial_interval(interval) (
+  interval = abs(floor(interval + 0.5));
+  interval == 3 || interval == 4 || interval == 5 ||
+  interval == 7 || interval == 8 || interval == 9 ||
+  interval == 10 || interval == 12 || interval == 15 ||
+  interval == 16 || interval == 17 || interval == 19 ||
+  interval == 22 || interval == 24 || interval == 28 ||
+  interval == 31 || interval == 34 || interval == 36;
+);
+
+function m3_selection_general_quiet_interval(interval) (
+  interval = abs(floor(interval + 0.5));
+  interval == 5 || interval == 10 || interval == 17;
+);
+
+function m3_selection_contains_note(selection_base, selected_count, note)
+local(index, cell, found) (
+  found = 0;
+  index = 0;
+  loop(max(0, floor(selected_count)),
+    cell = selection_base + index * M3_SELECTION_CELL_SIZE;
+    floor(cell[0] + 0.5) == floor(note + 0.5) ? found = 1;
+    index += 1;
+  );
+  found;
+);
+
 function m3_selection_downweight_shared_partials(
   bank_base, residual_base, min_note, candidate_count, threshold
 )
@@ -217,6 +285,193 @@ local(candidate, note, score, parent_probe, parent_interval, parent,
   );
 );
 
+function m3_selection_downweight_general_octave_aliases(
+  bank_base, salience_base, residual_base, min_note, candidate_count,
+  threshold
+)
+local(candidate, parent, score, bank_candidate, parent_bank_candidate,
+      fundamental_energy, parent_fundamental_energy,
+      parent_residual_score, parent_score, weighted_energy,
+      parent_weighted_energy, octave_energy_alias, octave_chord_context,
+      stacked_octave_context) (
+  candidate = 12;
+  loop(max(0, candidate_count - 12),
+    parent = candidate - 12;
+    score = residual_base[candidate];
+    bank_candidate = min_note + candidate - bank_base[1];
+    parent_bank_candidate = min_note + parent - bank_base[1];
+    parent_residual_score = residual_base[parent];
+    parent_score = max(
+      parent_residual_score,
+      salience_base[parent_bank_candidate]
+    );
+    score >= threshold && parent_score >= threshold ? (
+      fundamental_energy = m3_bank_energy(
+        bank_base,
+        bank_candidate,
+        0
+      );
+      parent_fundamental_energy = m3_bank_energy(
+        bank_base,
+        parent_bank_candidate,
+        0
+      );
+      weighted_energy = salience_base[
+        M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate
+      ];
+      parent_weighted_energy = salience_base[
+        M3_SELECTION_SMOOTHED_ENERGY_OFFSET + parent_bank_candidate
+      ];
+      octave_energy_alias = parent_weighted_energy > 0 &&
+        weighted_energy <=
+          M3_SELECTION_GENERAL_OCTAVE_WEIGHTED_RATIO *
+            parent_weighted_energy;
+      octave_chord_context = parent + 17 < candidate_count &&
+        residual_base[parent + 7] >= threshold &&
+        residual_base[parent + 17] >= threshold;
+      stacked_octave_context = parent + 8 < candidate_count &&
+        residual_base[parent + 4] >= threshold &&
+        residual_base[parent + 8] >= threshold;
+      !octave_chord_context && !stacked_octave_context &&
+      ((parent_residual_score >= threshold &&
+        fundamental_energy <=
+         M3_SELECTION_GENERAL_SHARED_FUNDAMENTAL_RATIO *
+           parent_fundamental_energy) ||
+       octave_energy_alias) ? (
+        residual_base[candidate] = min(
+          M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR * score,
+          0.99 * threshold
+        );
+      );
+    );
+    candidate += 1;
+  );
+);
+
+function m3_selection_downweight_missing_fundamental_lower_aliases(
+  bank_base, salience_base, residual_base, min_note, candidate_count,
+  max_raw_energy, threshold
+)
+local(candidate, score, probe, interval, missing_candidate,
+      missing_note, missing_bank_candidate, missing_score,
+      missing_weighted_energy, missing_fundamental_energy,
+      missing_root) (
+  candidate = 0;
+  loop(candidate_count,
+    score = residual_base[candidate];
+    missing_root = 0;
+    score >= threshold ? (
+      probe = 0;
+      loop(M3_SELECTION_MISSING_ROOT_PROBE_COUNT,
+        interval = m3_selection_missing_root_interval(probe);
+        missing_candidate = candidate + interval;
+        missing_candidate < candidate_count ? (
+          missing_note = min_note + missing_candidate;
+          missing_bank_candidate = missing_note - bank_base[1];
+          missing_score = salience_base[missing_bank_candidate];
+          missing_note >= M3_SELECTION_GENERAL_MISSING_MIN_NOTE &&
+          missing_score >= threshold &&
+          score <=
+              M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_SCORE_RATIO *
+                missing_score ? (
+            missing_weighted_energy = salience_base[
+              M3_SELECTION_RAW_ENERGY_OFFSET + missing_bank_candidate
+            ];
+            missing_fundamental_energy = m3_bank_energy(
+              bank_base,
+              missing_bank_candidate,
+              0
+            );
+            missing_weighted_energy > 0 &&
+            missing_weighted_energy >=
+                M3_SELECTION_GENERAL_MISSING_MIN_GLOBAL_ENERGY_RATIO *
+                  max_raw_energy &&
+            missing_fundamental_energy <=
+                M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_ROOT_RATIO *
+                  missing_weighted_energy ? (
+              missing_root = 1;
+            );
+          );
+        );
+        probe += 1;
+      );
+      missing_root ? (
+        residual_base[candidate] = min(
+          M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR * score,
+          0.99 * threshold
+        );
+      );
+    );
+    candidate += 1;
+  );
+);
+
+function m3_selection_downweight_missing_fundamental_aliases(
+  bank_base, salience_base, residual_base, min_note, candidate_count,
+  max_raw_energy, threshold
+)
+local(candidate, score, parent_probe, parent_interval, parent,
+      candidate_note, candidate_bank_candidate, candidate_weighted_energy,
+      parent_note, parent_bank_candidate, parent_score,
+      parent_weighted_energy, parent_fundamental_energy,
+      missing_parent) (
+  candidate = 0;
+  loop(candidate_count,
+    score = residual_base[candidate];
+    missing_parent = 0;
+    score >= threshold ? (
+      candidate_note = min_note + candidate;
+      candidate_bank_candidate = candidate_note - bank_base[1];
+      candidate_weighted_energy = salience_base[
+        M3_SELECTION_RAW_ENERGY_OFFSET + candidate_bank_candidate
+      ];
+      parent_probe = 0;
+      loop(M3_SELECTION_MISSING_ROOT_PROBE_COUNT,
+        parent_interval = m3_selection_missing_root_interval(
+          parent_probe
+        );
+        parent = candidate - parent_interval;
+        parent >= 0 ? (
+          parent_score = residual_base[parent];
+          parent_note = min_note + parent;
+          parent_bank_candidate = parent_note - bank_base[1];
+          parent_note >= M3_SELECTION_GENERAL_MISSING_MIN_NOTE &&
+          parent_score >= threshold ? (
+            parent_weighted_energy = salience_base[
+              M3_SELECTION_RAW_ENERGY_OFFSET + parent_bank_candidate
+            ];
+            parent_fundamental_energy = m3_bank_energy(
+              bank_base,
+              parent_bank_candidate,
+              0
+            );
+            parent_weighted_energy > 0 &&
+            parent_weighted_energy >=
+                M3_SELECTION_GENERAL_MISSING_MIN_GLOBAL_ENERGY_RATIO *
+                  max_raw_energy &&
+            parent_weighted_energy >=
+                M3_SELECTION_MISSING_FUNDAMENTAL_PARENT_ENERGY_RATIO *
+                  candidate_weighted_energy &&
+            parent_fundamental_energy <=
+                M3_SELECTION_MISSING_FUNDAMENTAL_ALIAS_ROOT_RATIO *
+                  parent_weighted_energy ? (
+              missing_parent = 1;
+            );
+          );
+        );
+        parent_probe += 1;
+      );
+      missing_parent ? (
+        residual_base[candidate] = min(
+          M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR * score,
+          0.99 * threshold
+        );
+      );
+    );
+    candidate += 1;
+  );
+);
+
 function m3_selection_sort(selection_base, selected_count)
 local(index, previous, key_note, key_confidence, key_energy, key_onset,
       previous_note, previous_onset, move_previous, destination) (
@@ -256,16 +511,37 @@ local(index, previous, key_note, key_confidence, key_energy, key_onset,
 );
 
 function m3_select_voices(bank_base, salience_base, min_note, candidate_count,
-                          threshold, max_voices, a4, selection_base)
+                          threshold, max_voices, a4, local_energy_ratio,
+                          allow_fundamental_dominance,
+                          smoothing_block_size, smoothing_sample_rate,
+                          selection_base)
 local(residual_base, iteration_count, active, selected_count, candidate,
       note, bank_candidate, score, best_index, best_score, selected_note,
-      selected_bank_candidate, selected_cell, weighted_energy, ratio,
-      rounded_ratio, near_integer, fundamental_energy, preserve_candidate) (
+      selected_bank_candidate, selected_cell, weighted_energy,
+      shared_partial, shared_fifth, strict_local_energy_peak,
+      fundamental_energy, preserve_candidate,
+      selected_fundamental_energy, shared_fundamental_ratio,
+      previous_energy, next_energy, local_energy_peak, smoothing_coefficient,
+      smoothed_energy, previous_fundamental, next_fundamental,
+      fundamental_local_peak, fundamental_local_ratio,
+      candidate_local_energy_ratio, plateau_eligible,
+      selected_confidence, m3_energy_plateau,
+      m3_missing_fundamental,
+      general_missing_fundamental,
+      instant_weighted_energy, max_raw_energy, residual_eligible,
+      general_quiet_interval, general_quiet_distance,
+      general_quiet_context, general_dense_context,
+      dense_context_count, dense_probe, dense_candidate, dense_note) (
   !m3_isfinite(min_note) ? min_note = 0;
   !m3_isfinite(candidate_count) ? candidate_count = 0;
   !m3_isfinite(threshold) ? threshold = 1;
   !m3_isfinite(max_voices) ? max_voices = 0;
   !m3_isfinite(a4) ? a4 = 440;
+  !m3_isfinite(local_energy_ratio) ? local_energy_ratio = 1;
+  !m3_isfinite(allow_fundamental_dominance) ?
+    allow_fundamental_dominance = 0;
+  !m3_isfinite(smoothing_block_size) ? smoothing_block_size = 1;
+  !m3_isfinite(smoothing_sample_rate) ? smoothing_sample_rate = 1;
   min_note = floor(m3_clamp(min_note, 0, 127));
   candidate_count = floor(m3_clamp(
     candidate_count,
@@ -273,21 +549,160 @@ local(residual_base, iteration_count, active, selected_count, candidate,
     min(M3_MAX_CANDIDATES, 128 - min_note)
   ));
   threshold = m3_clamp(threshold, 0, 1);
-  iteration_count = floor(m3_clamp(max_voices, 0, M3_MAX_VOICES));
+  iteration_count = floor(m3_clamp(
+    max_voices,
+    0,
+    M3_SELECTION_INTERNAL_CANDIDATES
+  ));
   a4 = max(1, a4);
+  local_energy_ratio = m3_clamp(local_energy_ratio, 0.5, 4);
+  allow_fundamental_dominance = allow_fundamental_dominance >= 0.5;
+  smoothing_block_size = max(1, floor(smoothing_block_size));
+  smoothing_sample_rate = max(1, smoothing_sample_rate);
   residual_base = selection_base + M3_SELECTION_RESIDUAL_OFFSET;
   m3_zero(selection_base, M3_SELECTION_WORK_WORDS);
+
+  smoothing_coefficient = exp(
+    -smoothing_block_size /
+    (M3_SELECTION_ENERGY_SMOOTH_SECONDS * smoothing_sample_rate)
+  );
+  max_raw_energy = 0;
+  bank_candidate = 0;
+  loop(bank_base[4],
+    weighted_energy = m3_selection_weighted_energy(
+      bank_base,
+      bank_candidate
+    );
+    salience_base[
+      M3_SELECTION_RAW_ENERGY_OFFSET + bank_candidate
+    ] = weighted_energy;
+    max_raw_energy = max(max_raw_energy, weighted_energy);
+    smoothed_energy = salience_base[
+      M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate
+    ];
+    salience_base[
+      M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate
+    ] = smoothing_coefficient * smoothed_energy +
+        (1 - smoothing_coefficient) * weighted_energy;
+    bank_candidate += 1;
+  );
 
   candidate = 0;
   loop(candidate_count,
     note = min_note + candidate;
+    plateau_eligible = allow_fundamental_dominance &&
+                       note >= M3_SELECTION_GENERAL_PLATEAU_MIN_NOTE &&
+                       note <= M3_SELECTION_GENERAL_PLATEAU_MAX_NOTE;
+    candidate_local_energy_ratio =
+      allow_fundamental_dominance &&
+      note == M3_SELECTION_GENERAL_LOW_OPEN_NOTE
+      ? M3_SELECTION_GENERAL_LOW_OPEN_ENERGY_RATIO
+      : plateau_eligible
+        ? M3_SELECTION_GENERAL_PLATEAU_ENERGY_RATIO
+        : local_energy_ratio;
+    fundamental_local_ratio = plateau_eligible
+      ? M3_SELECTION_GENERAL_PLATEAU_FUNDAMENTAL_RATIO
+      : 1;
     bank_candidate = note - bank_base[1];
     score = bank_candidate >= 0 && bank_candidate < bank_base[4]
       ? salience_base[bank_candidate]
       : 0;
     !m3_isfinite(score) ? score = 0;
-    residual_base[candidate] = m3_clamp(score, 0, 1);
+    weighted_energy = salience_base[
+      M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate
+    ];
+    instant_weighted_energy = bank_candidate >= 0 &&
+                              bank_candidate < bank_base[4]
+      ? salience_base[
+          M3_SELECTION_RAW_ENERGY_OFFSET + bank_candidate
+        ]
+      : 0;
+    previous_energy = bank_candidate > 0
+      ? salience_base[
+          M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate - 1
+        ]
+      : 0;
+    next_energy = bank_candidate + 1 < bank_base[4]
+      ? salience_base[
+          M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate + 1
+        ]
+      : 0;
+    local_energy_peak = weighted_energy >=
+                          candidate_local_energy_ratio * previous_energy &&
+                        weighted_energy >=
+                          candidate_local_energy_ratio * next_energy;
+    fundamental_energy = m3_bank_energy(bank_base, bank_candidate, 0);
+    previous_fundamental = m3_bank_energy(
+      bank_base,
+      bank_candidate - 1,
+      0
+    );
+    next_fundamental = m3_bank_energy(
+      bank_base,
+      bank_candidate + 1,
+      0
+    );
+    fundamental_local_peak = fundamental_energy >=
+                               fundamental_local_ratio * previous_fundamental &&
+                             fundamental_energy >=
+                               fundamental_local_ratio * next_fundamental;
+    m3_energy_plateau = weighted_energy >=
+                          M3_SELECTION_M3_FUNDAMENTAL_PLATEAU_RATIO *
+                            previous_energy &&
+                        weighted_energy >=
+                          M3_SELECTION_M3_FUNDAMENTAL_PLATEAU_RATIO *
+                            next_energy;
+    m3_missing_fundamental = weighted_energy > 0 &&
+      fundamental_energy <=
+        M3_SELECTION_M3_MISSING_FUNDAMENTAL_RATIO * weighted_energy;
+    general_missing_fundamental =
+      note >= M3_SELECTION_GENERAL_MISSING_MIN_NOTE &&
+      instant_weighted_energy > 0 &&
+      instant_weighted_energy >=
+        M3_SELECTION_GENERAL_MISSING_MIN_GLOBAL_ENERGY_RATIO *
+          max_raw_energy &&
+      fundamental_energy <=
+        M3_SELECTION_GENERAL_MISSING_FUNDAMENTAL_RATIO *
+          instant_weighted_energy;
+    residual_eligible = allow_fundamental_dominance
+      ? local_energy_peak &&
+        (fundamental_local_peak || general_missing_fundamental)
+      : (fundamental_local_peak && m3_energy_plateau) ||
+        (m3_missing_fundamental && local_energy_peak);
+    residual_base[candidate] = residual_eligible
+      ? m3_clamp(score, 0, 1)
+      : 0;
     candidate += 1;
+  );
+
+  m3_selection_downweight_general_octave_aliases(
+    bank_base,
+    salience_base,
+    residual_base,
+    min_note,
+    candidate_count,
+    threshold
+  );
+
+  allow_fundamental_dominance ? (
+    m3_selection_downweight_missing_fundamental_lower_aliases(
+      bank_base,
+      salience_base,
+      residual_base,
+      min_note,
+      candidate_count,
+      max_raw_energy,
+      threshold
+    );
+    m3_selection_downweight_missing_fundamental_aliases(
+      bank_base,
+      salience_base,
+      residual_base,
+      min_note,
+      candidate_count,
+      max_raw_energy,
+      threshold
+    );
   );
 
   m3_selection_downweight_shared_partials(
@@ -325,7 +740,14 @@ local(residual_base, iteration_count, active, selected_count, candidate,
         selected_cell = selection_base +
                         selected_count * M3_SELECTION_CELL_SIZE;
         selected_cell[0] = selected_note;
-        selected_cell[1] = best_score;
+        selected_confidence = allow_fundamental_dominance &&
+                              selected_note >=
+                                M3_SELECTION_GENERAL_PLATEAU_MIN_NOTE &&
+                              selected_note <=
+                                M3_SELECTION_GENERAL_PLATEAU_MAX_NOTE
+          ? max(best_score, M3_SELECTION_GENERAL_PLATEAU_CONFIDENCE_FLOOR)
+          : best_score;
+        selected_cell[1] = selected_confidence;
         selected_cell[2] = weighted_energy;
         selected_cell[3] = 0;
         selected_count += 1;
@@ -335,11 +757,55 @@ local(residual_base, iteration_count, active, selected_count, candidate,
         loop(candidate_count,
           candidate != best_index && residual_base[candidate] > 0 ? (
             note = min_note + candidate;
-            ratio = m3_midi_to_hz(note, a4) /
-                    m3_midi_to_hz(selected_note, a4);
-            rounded_ratio = floor(ratio + 0.5);
-            near_integer = abs(ratio - rounded_ratio) < 0.025;
-            near_integer && rounded_ratio >= 2 ? (
+            shared_partial = m3_selection_shared_partial_interval(
+              note - selected_note
+            );
+            general_quiet_distance = abs(note - selected_note);
+            general_dense_context = 0;
+            allow_fundamental_dominance && note > selected_note ? (
+              dense_context_count = 0;
+              dense_probe = 1;
+              loop(3,
+                dense_candidate = candidate - 4 * dense_probe;
+                dense_note = note - 4 * dense_probe;
+                dense_candidate >= 0 &&
+                (residual_base[dense_candidate] >= threshold ||
+                 m3_selection_contains_note(
+                   selection_base,
+                   selected_count,
+                   dense_note
+                 )) ? dense_context_count += 1;
+                dense_probe += 1;
+              );
+              general_dense_context = dense_context_count >= 2;
+            );
+            general_quiet_context = allow_fundamental_dominance &&
+              note > selected_note && (
+                general_dense_context ||
+                (general_quiet_distance == 7 &&
+                 candidate + 10 < candidate_count &&
+                 residual_base[candidate + 5] >= threshold &&
+                 residual_base[candidate + 10] >= threshold) ||
+                (general_quiet_distance == 12 &&
+                 candidate >= 5 &&
+                 candidate + 5 < candidate_count &&
+                 residual_base[candidate - 5] >= threshold &&
+                 residual_base[candidate + 5] >= threshold)
+              );
+            general_quiet_context ? (
+              residual_base[candidate] = max(
+                residual_base[candidate],
+                M3_SELECTION_GENERAL_QUIET_CONFIDENCE_FLOOR
+              );
+            );
+            general_quiet_interval = allow_fundamental_dominance &&
+              (general_quiet_context ||
+               ((general_quiet_distance == 17 || selected_count >= 2) &&
+                m3_selection_general_quiet_interval(
+                  general_quiet_distance
+                )));
+            shared_partial && !general_quiet_interval ? (
+              shared_fifth = abs(note - selected_note) == 7;
               bank_candidate = note - bank_base[1];
               weighted_energy = m3_selection_weighted_energy(
                 bank_base,
@@ -352,9 +818,53 @@ local(residual_base, iteration_count, active, selected_count, candidate,
               );
               !m3_isfinite(weighted_energy) ? weighted_energy = 0;
               !m3_isfinite(fundamental_energy) ? fundamental_energy = 0;
-              preserve_candidate = fundamental_energy >
-                                   0.82 * weighted_energy;
-              !preserve_candidate ? residual_base[candidate] *= 0.18;
+              selected_fundamental_energy = m3_bank_energy(
+                bank_base,
+                selected_bank_candidate,
+                0
+              );
+              !m3_isfinite(selected_fundamental_energy) ?
+                selected_fundamental_energy = 0;
+              shared_fundamental_ratio = shared_fifth
+                ? M3_SELECTION_SHARED_FIFTH_FUNDAMENTAL_RATIO
+                : M3_SELECTION_SHARED_FUNDAMENTAL_RATIO;
+              allow_fundamental_dominance ? (
+                shared_fundamental_ratio = max(
+                  shared_fundamental_ratio,
+                  M3_SELECTION_GENERAL_SHARED_FUNDAMENTAL_RATIO
+                );
+              );
+              strict_local_energy_peak = 1;
+              shared_fifth && !allow_fundamental_dominance ? (
+                weighted_energy = salience_base[
+                  M3_SELECTION_SMOOTHED_ENERGY_OFFSET + bank_candidate
+                ];
+                previous_energy = bank_candidate > 0
+                  ? salience_base[
+                      M3_SELECTION_SMOOTHED_ENERGY_OFFSET +
+                      bank_candidate - 1
+                    ]
+                  : 0;
+                next_energy = bank_candidate + 1 < bank_base[4]
+                  ? salience_base[
+                      M3_SELECTION_SMOOTHED_ENERGY_OFFSET +
+                      bank_candidate + 1
+                    ]
+                  : 0;
+                strict_local_energy_peak = weighted_energy >=
+                    local_energy_ratio * previous_energy &&
+                  weighted_energy >= local_energy_ratio * next_energy;
+              );
+              preserve_candidate = strict_local_energy_peak &&
+                fundamental_energy >
+                  shared_fundamental_ratio * selected_fundamental_energy;
+              !preserve_candidate ? (
+                residual_base[candidate] = min(
+                  M3_SELECTION_SHARED_PARTIAL_RESIDUAL_FACTOR *
+                    residual_base[candidate],
+                  0.99 * threshold
+                );
+              );
             );
           );
           candidate += 1;

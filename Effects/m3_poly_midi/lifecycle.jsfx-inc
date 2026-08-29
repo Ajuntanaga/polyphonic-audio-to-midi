@@ -36,8 +36,64 @@ M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET = 1;
 M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET = 2;
 M3_LIFECYCLE_ON_THRESHOLD_OFFSET = 3;
 M3_LIFECYCLE_OFF_THRESHOLD_OFFSET = 4;
-M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS = 0.024;
+M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS = 0.009;
+M3_LIFECYCLE_M3_MIN_RELEASE_SECONDS = 0.048;
+M3_LIFECYCLE_M3_MIN_DROPOUT_SECONDS = 0.024;
 M3_LIFECYCLE_M3_ON_MARGIN = 0.08;
+M3_LIFECYCLE_GENERAL_ON_MARGIN = 0.23;
+M3_LIFECYCLE_GENERAL_MIN_ATTACK_SECONDS = 0.008;
+M3_LIFECYCLE_GENERAL_MIN_DROPOUT_SECONDS = 0.024;
+M3_LIFECYCLE_GENERAL_MIN_RELEASE_SECONDS = 0.048;
+M3_LIFECYCLE_GENERAL_CAPPED_ATTACK_SECONDS = 0.060;
+M3_LIFECYCLE_GENERAL_MIN_ATTACK_ENERGY = 0.0002;
+M3_LIFECYCLE_GENERAL_OCTAVE_ENERGY_RATIO = 0.70;
+M3_LIFECYCLE_GENERAL_OCTAVE_GUARD_MAX_PARENT_NOTE = 84;
+M3_LIFECYCLE_GENERAL_HARMONIC_ENERGY_RATIO = 0.55;
+M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT = 5;
+M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE = 24;
+M3_LIFECYCLE_M3_LOW_STRING_MAX_NOTE = 35;
+M3_LIFECYCLE_M3_LOW_OPEN_NOTE = 32;
+M3_LIFECYCLE_M3_FAST_OPEN_ATTACK_SECONDS = 0.002;
+M3_LIFECYCLE_M3_GUARDED_OPEN_ATTACK_SECONDS = 0.005;
+M3_LIFECYCLE_M3_HIGH_OPEN_ATTACK_SECONDS = 0.009;
+M3_LIFECYCLE_M3_LOW_CHORD_ATTACK_SECONDS = 0.040;
+M3_LIFECYCLE_M3_OPEN_CONFIDENCE_FLOOR = 0.50;
+M3_LIFECYCLE_M3_LOW_OPEN_CONFIDENCE_FLOOR = 0.44;
+M3_LIFECYCLE_M3_OPEN_52_CONFIDENCE_FLOOR = 0.48;
+M3_LIFECYCLE_M3_FAST_OPEN_CONFIDENCE_FLOOR = 0.52;
+M3_LIFECYCLE_M3_OCTAVE_CONFIRMATION_BLOCKS = 3;
+M3_LIFECYCLE_M3_PARENT_CONFIRMATION_BLOCKS = 6;
+M3_LIFECYCLE_M3_MATURE_PARENT_ENERGY_RATIO = 0.80;
+M3_LIFECYCLE_M3_MULTI_PARENT_ENERGY_RATIO = 0.80;
+M3_LIFECYCLE_SUB_GSHARP_MAX_NOTE = 31;
+M3_LIFECYCLE_SUB_GSHARP_MIN_ATTACK_SECONDS = 0.004;
+M3_LIFECYCLE_STALE_ATTACK_DROPOUT_MULTIPLIER = 11;
+M3_LIFECYCLE_ATTACK_ADMISSION_SLOW_RATIO = 0.10;
+M3_LIFECYCLE_GENERAL_STACK_SPAN_SEMITONES = 28;
+
+function m3_lifecycle_attack_admission_allowed(fast_energy, slow_energy)
+local(safe_fast, safe_slow) (
+  !m3_isfinite(fast_energy) || !m3_isfinite(slow_energy) ? 0 : (
+    safe_fast = max(0, fast_energy);
+    safe_slow = max(0, slow_energy);
+    safe_fast > 0 &&
+      (safe_slow <= 0 ||
+       safe_fast >= M3_LIFECYCLE_ATTACK_ADMISSION_SLOW_RATIO * safe_slow);
+  );
+);
+
+function m3_lifecycle_snapshot_active(note)
+local(safe_note, word, bit) (
+  safe_note = floor(note);
+  safe_note < 0 || safe_note > 127 ? 0 : (
+    word = floor(safe_note / 32);
+    bit = 1 << (safe_note - 32 * word);
+    word == 0 ? (m3_lifecycle_active_snapshot_0 & bit) != 0 :
+    word == 1 ? (m3_lifecycle_active_snapshot_1 & bit) != 0 :
+    word == 2 ? (m3_lifecycle_active_snapshot_2 & bit) != 0 :
+                (m3_lifecycle_active_snapshot_3 & bit) != 0;
+  );
+);
 
 function m3_lifecycle_event_cell(event_base, index) (
   event_base + M3_EVENT_HEADER_SIZE + index * M3_EVENT_CELL_SIZE;
@@ -57,6 +113,332 @@ function m3_lifecycle_clear_voice(cell) (
 function m3_lifecycle_reset_events(event_base) (
   event_base[M3_EVENT_COUNT_OFFSET] = 0;
   event_base[M3_EVENT_OVERFLOW_OFFSET] = 0;
+);
+
+function m3_lifecycle_general_stacked_context(voice_base, note)
+local(within_span) (
+  within_span = m3_lifecycle_context_anchor_lowest_note < 128 &&
+    note - m3_lifecycle_context_anchor_lowest_note <=
+      M3_LIFECYCLE_GENERAL_STACK_SPAN_SEMITONES;
+  note >= 8 && within_span ? (
+    m3_lifecycle_snapshot_active(note - 4) &&
+      m3_lifecycle_snapshot_active(note - 8);
+  ) : 0;
+);
+
+function m3_lifecycle_octave_alias_blocked(voice_base, note, energy)
+local(parent_cell, parent_energy, parent_state, fifth_parent,
+      upper_context, octave_chord_context, stacked_octave_context) (
+  m3_lifecycle_general_octave_guard && note >= 12 &&
+  note - 12 <= M3_LIFECYCLE_GENERAL_OCTAVE_GUARD_MAX_PARENT_NOTE ? (
+    parent_cell = voice_base + (note - 12) * M3_VOICE_CELL_SIZE;
+    parent_energy = max(0, parent_cell[M3_VOICE_ENERGY_OFFSET]);
+    parent_state = floor(parent_cell[M3_VOICE_STATE_OFFSET]);
+    octave_chord_context = 0;
+    stacked_octave_context = 0;
+    note + 5 < 128 ? (
+      fifth_parent = voice_base + (note - 5) * M3_VOICE_CELL_SIZE;
+      upper_context = voice_base + (note + 5) * M3_VOICE_CELL_SIZE;
+      octave_chord_context = fifth_parent[M3_VOICE_ACTIVE_OFFSET] &&
+        upper_context[M3_VOICE_ACTIVE_OFFSET];
+    );
+    stacked_octave_context = m3_lifecycle_general_stacked_context(
+      voice_base,
+      note
+    );
+    !octave_chord_context && !stacked_octave_context &&
+    parent_energy > 0 && (
+      parent_state == M3_LIFECYCLE_STATE_ATTACK ||
+      (parent_cell[M3_VOICE_ACTIVE_OFFSET] &&
+       max(0, energy) <=
+         M3_LIFECYCLE_GENERAL_OCTAVE_ENERGY_RATIO * parent_energy)
+    );
+  ) : 0;
+);
+
+function m3_lifecycle_general_harmonic_parent_interval(index) (
+  index == 0 ? 19 :
+  index == 1 ? 24 :
+  index == 2 ? 31 :
+  index == 3 ? 32 : 36;
+);
+
+function m3_lifecycle_general_harmonic_alias_blocked(
+  voice_base, note, energy
+)
+local(probe, interval, parent_note, parent_cell, parent_energy,
+      parent_state, blocked) (
+  blocked = 0;
+  m3_lifecycle_general_octave_guard &&
+  !m3_lifecycle_general_stacked_context(voice_base, note) ? (
+    probe = 0;
+    loop(M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT,
+      interval = m3_lifecycle_general_harmonic_parent_interval(probe);
+      parent_note = note - interval;
+      parent_note >= 0 ? (
+        parent_cell = voice_base + parent_note * M3_VOICE_CELL_SIZE;
+        parent_energy = max(0, parent_cell[M3_VOICE_ENERGY_OFFSET]);
+        parent_state = floor(parent_cell[M3_VOICE_STATE_OFFSET]);
+        !blocked && parent_energy > 0 && (
+          parent_state == M3_LIFECYCLE_STATE_ATTACK ||
+          (parent_cell[M3_VOICE_ACTIVE_OFFSET] &&
+           max(0, energy) <=
+             M3_LIFECYCLE_GENERAL_HARMONIC_ENERGY_RATIO * parent_energy)
+        ) ? blocked = 1;
+      );
+      probe += 1;
+    );
+  );
+  blocked;
+);
+
+function m3_lifecycle_general_shared_octave_blocked(voice_base, note)
+local(octave_parent, fifth_parent, upper_context) (
+  m3_lifecycle_general_octave_guard && note >= 12 && note + 5 < 128 ? (
+    octave_parent = voice_base + (note - 12) * M3_VOICE_CELL_SIZE;
+    fifth_parent = voice_base + (note - 5) * M3_VOICE_CELL_SIZE;
+    upper_context = voice_base + (note + 5) * M3_VOICE_CELL_SIZE;
+    octave_parent[M3_VOICE_ACTIVE_OFFSET] &&
+    fifth_parent[M3_VOICE_ACTIVE_OFFSET] &&
+    !upper_context[M3_VOICE_ACTIVE_OFFSET];
+  ) : 0;
+);
+
+function m3_lifecycle_m3_octave_unconfirmed(voice_base, note, cell)
+local(parent_cell) (
+  m3_lifecycle_m3_octave_confirmation && note >= 12 ? (
+    parent_cell = voice_base + (note - 12) * M3_VOICE_CELL_SIZE;
+    parent_cell[M3_VOICE_ACTIVE_OFFSET] &&
+    cell[M3_VOICE_VELOCITY_OFFSET] <
+      M3_LIFECYCLE_M3_OCTAVE_CONFIRMATION_BLOCKS;
+  ) : 0;
+);
+
+function m3_lifecycle_m3_open_note(note) (
+  note == M3_M3_OPEN_0 || note == M3_M3_OPEN_1 ||
+  note == M3_M3_OPEN_2 || note == M3_M3_OPEN_3 ||
+  note == M3_M3_OPEN_4 || note == M3_M3_OPEN_5 ||
+  note == M3_M3_OPEN_6 || note == M3_M3_OPEN_7;
+);
+
+function m3_lifecycle_m3_parent_unconfirmed(voice_base, note, now)
+local(probe, interval, parent_note, parent_cell, parent_state,
+      confirmation_samples, blocked) (
+  blocked = 0;
+  m3_lifecycle_m3_octave_confirmation ? (
+    confirmation_samples =
+      M3_LIFECYCLE_M3_PARENT_CONFIRMATION_BLOCKS *
+      max(1, floor(m3_lifecycle_attack_evidence_step_samples));
+    probe = 0;
+    loop(M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT + 1,
+      interval = probe == 0
+        ? 12
+        : m3_lifecycle_general_harmonic_parent_interval(probe - 1);
+      parent_note = note - interval;
+      parent_note >= 0 ? (
+        parent_cell = voice_base + parent_note * M3_VOICE_CELL_SIZE;
+        parent_state = floor(parent_cell[M3_VOICE_STATE_OFFSET]);
+        !blocked && (
+          (parent_state == M3_LIFECYCLE_STATE_ATTACK &&
+           ((note != M3_M3_OPEN_6 && note != M3_M3_OPEN_7) ||
+            now - parent_cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] <
+              confirmation_samples)) ||
+          (parent_cell[M3_VOICE_ACTIVE_OFFSET] &&
+           now - parent_cell[M3_VOICE_STATE_ENTER_OFFSET] <
+             confirmation_samples)
+        ) ? blocked = 1;
+      );
+      probe += 1;
+    );
+  );
+  blocked;
+);
+
+function m3_lifecycle_m3_mature_parent_alias_blocked(
+  voice_base, note, energy, now, active_count
+)
+local(probe, interval, parent_note, parent_cell, parent_energy,
+      confirmation_samples, blocked) (
+  blocked = 0;
+  m3_lifecycle_m3_octave_confirmation &&
+  max(0, floor(active_count)) < 3 ? (
+    confirmation_samples =
+      M3_LIFECYCLE_M3_PARENT_CONFIRMATION_BLOCKS *
+      max(1, floor(m3_lifecycle_attack_evidence_step_samples));
+    probe = 0;
+    loop(M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT + 1,
+      interval = probe == 0
+        ? 12
+        : m3_lifecycle_general_harmonic_parent_interval(probe - 1);
+      parent_note = note - interval;
+      parent_note >= 0 ? (
+        parent_cell = voice_base + parent_note * M3_VOICE_CELL_SIZE;
+        parent_energy = max(
+          0,
+          parent_cell[M3_VOICE_ENERGY_OFFSET]
+        );
+        !blocked && parent_cell[M3_VOICE_ACTIVE_OFFSET] &&
+        parent_energy > 0 &&
+        now - parent_cell[M3_VOICE_STATE_ENTER_OFFSET] >=
+          confirmation_samples &&
+        max(0, energy) <
+          M3_LIFECYCLE_M3_MATURE_PARENT_ENERGY_RATIO * parent_energy ? (
+          blocked = 1;
+        );
+      );
+      probe += 1;
+    );
+  );
+  blocked;
+);
+
+function m3_lifecycle_m3_open_confidence_allowed(note, confidence) (
+  !m3_lifecycle_m3_low_open_fast_attack ||
+  !m3_lifecycle_m3_open_note(note) ||
+  note == M3_M3_OPEN_2 ||
+  confidence >= (note == M3_M3_OPEN_0 || note == M3_M3_OPEN_1
+    ? M3_LIFECYCLE_M3_LOW_OPEN_CONFIDENCE_FLOOR
+    : note == M3_M3_OPEN_5
+      ? M3_LIFECYCLE_M3_OPEN_52_CONFIDENCE_FLOOR
+      : M3_LIFECYCLE_M3_OPEN_CONFIDENCE_FLOOR);
+);
+
+function m3_lifecycle_m3_open_attack_samples(note, confidence) (
+  (note == M3_M3_OPEN_6 || note == M3_M3_OPEN_7)
+    ? m3_lifecycle_m3_high_open_attack_samples
+    : note == M3_M3_OPEN_4 &&
+      confidence >= M3_LIFECYCLE_M3_FAST_OPEN_CONFIDENCE_FLOOR
+      ? m3_lifecycle_m3_fast_open_attack_samples
+      : m3_lifecycle_m3_guarded_open_attack_samples;
+);
+
+function m3_lifecycle_m3_adjacent_open_chromatic(note) (
+  m3_lifecycle_m3_octave_confirmation &&
+  (note == M3_M3_OPEN_0 + 1 || note == M3_M3_OPEN_1 + 1 ||
+   note == M3_M3_OPEN_2 + 1 || note == M3_M3_OPEN_3 + 1 ||
+   note == M3_M3_OPEN_4 + 1 || note == M3_M3_OPEN_5 + 1 ||
+   note == M3_M3_OPEN_6 + 1 || note == M3_M3_OPEN_7 + 1);
+);
+
+function m3_lifecycle_m3_adjacent_shadow_blocked(voice_base, note, now)
+local(cell, candidate_confidence, neighbor_note, neighbor_cell,
+      neighbor_state, confirmation_samples, blocked) (
+  blocked = 0;
+  m3_lifecycle_m3_octave_confirmation ? (
+    confirmation_samples =
+      M3_LIFECYCLE_M3_PARENT_CONFIRMATION_BLOCKS *
+      max(1, floor(m3_lifecycle_attack_evidence_step_samples));
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    candidate_confidence = max(0, cell[M3_VOICE_CONFIDENCE_OFFSET]);
+    neighbor_note = max(0, note - 1);
+    loop(2,
+      neighbor_note != note && neighbor_note >= 0 && neighbor_note < 128 ? (
+        neighbor_cell = voice_base + neighbor_note * M3_VOICE_CELL_SIZE;
+        neighbor_state = floor(neighbor_cell[M3_VOICE_STATE_OFFSET]);
+        !blocked && (
+          (neighbor_cell[M3_VOICE_ACTIVE_OFFSET] &&
+           ((m3_lifecycle_m3_open_note(neighbor_note) &&
+             !m3_lifecycle_m3_open_note(note)) ||
+            neighbor_cell[M3_VOICE_CONFIDENCE_OFFSET] >=
+              candidate_confidence)) ||
+          (neighbor_state == M3_LIFECYCLE_STATE_ATTACK &&
+           ((m3_lifecycle_m3_open_note(neighbor_note) &&
+             !m3_lifecycle_m3_open_note(note)) ||
+            neighbor_cell[M3_VOICE_CONFIDENCE_OFFSET] >
+              candidate_confidence + 0.02) &&
+           !(m3_lifecycle_m3_open_note(note) &&
+             !m3_lifecycle_m3_open_note(neighbor_note) &&
+             now - neighbor_cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] >=
+               confirmation_samples))
+        ) ? blocked = 1;
+      );
+      neighbor_note = note + 1;
+    );
+  );
+  blocked;
+);
+
+function m3_lifecycle_m3_multi_parent_alias_blocked(
+  voice_base, note, energy
+)
+local(probe, interval, parent_note, parent_cell, parent_state,
+      parent_count, parent_energy, blocked) (
+  blocked = 0;
+  m3_lifecycle_m3_octave_confirmation ? (
+    parent_count = 0;
+    parent_energy = 0;
+    probe = 0;
+    loop(M3_LIFECYCLE_GENERAL_HARMONIC_PARENT_COUNT + 1,
+      interval = probe == 0
+        ? 12
+        : m3_lifecycle_general_harmonic_parent_interval(probe - 1);
+      parent_note = note - interval;
+      parent_note >= 0 ? (
+        parent_cell = voice_base + parent_note * M3_VOICE_CELL_SIZE;
+        parent_state = floor(parent_cell[M3_VOICE_STATE_OFFSET]);
+        parent_state == M3_LIFECYCLE_STATE_ATTACK ||
+        parent_cell[M3_VOICE_ACTIVE_OFFSET] ? (
+          parent_count += 1;
+          parent_energy += max(
+            0,
+            parent_cell[M3_VOICE_ENERGY_OFFSET]
+          );
+        );
+      );
+      probe += 1;
+    );
+    blocked = !m3_lifecycle_m3_open_note(note) &&
+      parent_count >= 2 && parent_energy > 0 &&
+      max(0, energy) <=
+        M3_LIFECYCLE_M3_MULTI_PARENT_ENERGY_RATIO * parent_energy;
+  );
+  blocked;
+);
+
+function m3_lifecycle_m3_low_string_conflict(voice_base, note)
+local(probe, cell, conflict) (
+  conflict = 0;
+  m3_lifecycle_m3_low_string_guard &&
+  note >= M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE &&
+  note <= M3_LIFECYCLE_M3_LOW_STRING_MAX_NOTE ? (
+    probe = M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE;
+    loop(
+      M3_LIFECYCLE_M3_LOW_STRING_MAX_NOTE -
+      M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE + 1,
+      probe != note ? (
+        cell = voice_base + probe * M3_VOICE_CELL_SIZE;
+        floor(cell[M3_VOICE_STATE_OFFSET]) == M3_LIFECYCLE_STATE_ON ? (
+          conflict = 1;
+        );
+      );
+      probe += 1;
+    );
+  );
+  conflict;
+);
+
+function m3_lifecycle_m3_high_open_context(voice_base)
+local(probe, note, cell, context) (
+  context = 0;
+  probe = 2;
+  loop(6,
+    note = M3_M3_OPEN_0 + 4 * probe;
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    !context && (
+      cell[M3_VOICE_ACTIVE_OFFSET] ||
+      floor(cell[M3_VOICE_STATE_OFFSET]) == M3_LIFECYCLE_STATE_ATTACK
+    ) ? context = 1;
+    probe += 1;
+  );
+  context;
+);
+
+function m3_lifecycle_m3_low_chord_context(note, high_open_context) (
+  m3_lifecycle_m3_octave_confirmation &&
+  note >= M3_LIFECYCLE_M3_LOW_STRING_MIN_NOTE &&
+  note <= M3_LIFECYCLE_M3_LOW_STRING_MAX_NOTE &&
+  !m3_lifecycle_m3_open_note(note) &&
+  high_open_context;
 );
 
 function m3_lifecycle_response(response, test_sr, selection_threshold,
@@ -81,6 +463,26 @@ local(value, rate, base_threshold) (
       0,
       response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] - 0.14
     );
+  m3_lifecycle_sub_gsharp_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_SUB_GSHARP_MIN_ATTACK_SECONDS * rate + 0.5)
+  );
+  m3_lifecycle_m3_fast_open_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_M3_FAST_OPEN_ATTACK_SECONDS * rate + 0.5)
+  );
+  m3_lifecycle_m3_guarded_open_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_M3_GUARDED_OPEN_ATTACK_SECONDS * rate + 0.5)
+  );
+  m3_lifecycle_m3_high_open_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_M3_HIGH_OPEN_ATTACK_SECONDS * rate + 0.5)
+  );
+  m3_lifecycle_m3_low_chord_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_M3_LOW_CHORD_ATTACK_SECONDS * rate + 0.5)
+  );
 );
 
 function m3_lifecycle_response_for_profile(profile_mode, response, test_sr,
@@ -93,16 +495,46 @@ local(rate, base_threshold) (
     selection_threshold,
     response_base
   );
+  rate = max(1, test_sr);
+  m3_lifecycle_general_capped_attack_samples = max(
+    1,
+    floor(M3_LIFECYCLE_GENERAL_CAPPED_ATTACK_SECONDS * rate + 0.5)
+  );
   profile_mode == M3_PROFILE_MODE_M3 ? (
-    rate = max(1, test_sr);
     base_threshold = m3_clamp(selection_threshold, 0, 1);
     response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET] = max(
       response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
       floor(M3_LIFECYCLE_M3_MIN_ATTACK_SECONDS * rate + 0.5)
     );
+    response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_M3_MIN_RELEASE_SECONDS * rate + 0.5)
+    );
+    response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_M3_MIN_DROPOUT_SECONDS * rate + 0.5)
+    );
     response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] =
       base_threshold +
       M3_LIFECYCLE_M3_ON_MARGIN * (1 - base_threshold);
+    response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET] = base_threshold;
+  ) : (
+    base_threshold = m3_clamp(selection_threshold, 0, 1);
+    response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_ATTACK_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_GENERAL_MIN_ATTACK_SECONDS * rate + 0.5)
+    );
+    response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_RELEASE_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_GENERAL_MIN_RELEASE_SECONDS * rate + 0.5)
+    );
+    response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET] = max(
+      response_base[M3_LIFECYCLE_DROPOUT_SAMPLES_OFFSET],
+      floor(M3_LIFECYCLE_GENERAL_MIN_DROPOUT_SECONDS * rate + 0.5)
+    );
+    response_base[M3_LIFECYCLE_ON_THRESHOLD_OFFSET] =
+      base_threshold +
+      M3_LIFECYCLE_GENERAL_ON_MARGIN * (1 - base_threshold);
     response_base[M3_LIFECYCLE_OFF_THRESHOLD_OFFSET] = base_threshold;
   );
   response_base;
@@ -238,6 +670,16 @@ function m3_lifecycle_init(voice_base, event_base) (
     M3_EVENT_HEADER_SIZE + M3_MAX_EVENTS * M3_EVENT_CELL_SIZE
   );
   m3_lifecycle_sequence = 0;
+  m3_lifecycle_capped_admission_note = -1;
+  m3_lifecycle_m3_octave_confirmation = 0;
+  m3_lifecycle_attack_admission = 1;
+  m3_lifecycle_attack_evidence_step_samples = 0;
+  m3_lifecycle_active_snapshot_0 = 0;
+  m3_lifecycle_active_snapshot_1 = 0;
+  m3_lifecycle_active_snapshot_2 = 0;
+  m3_lifecycle_active_snapshot_3 = 0;
+  m3_lifecycle_active_snapshot_lowest_note = 128;
+  m3_lifecycle_context_anchor_lowest_note = 128;
 );
 
 function m3_lifecycle_update(voice_base, event_base, selection_base,
@@ -249,7 +691,15 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
       dropout_limit, on_level, off_level, note, cell, selection_index,
       selection_cell, selection_note, evidence_present, evidence_confidence,
       evidence_energy, candidate_confidence, candidate_energy, state, elapsed,
-      queued, active_count, velocity) (
+      queued, active_count, velocity, note_attack_limit,
+      attack_sustain_level, low_string_conflict,
+      active_limit, lower_attack_count, attack_bridge_limit,
+      attack_evidence_step_limit,
+      highest_active_note, activation_available, replacement_note,
+      replacement_cell, replacement_probe, attack_dropout_limit,
+      stale_attack_limit, energy_decay,
+      ceiling_candidate_count, startup_mature_count,
+      startup_ceiling_note, m3_high_open_context) (
   m3_lifecycle_reset_events(event_base);
   candidate_count = min(
     M3_MAX_VOICES,
@@ -260,8 +710,31 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
   attack_limit = max(0, floor(attack_samples));
   release_limit = max(0, floor(release_samples));
   dropout_limit = max(0, floor(dropout_samples));
+  attack_dropout_limit = m3_lifecycle_reserve_lower_attacks
+    ? max(dropout_limit, m3_lifecycle_general_capped_attack_samples)
+    : dropout_limit;
+  stale_attack_limit = max(
+    attack_limit,
+    M3_LIFECYCLE_STALE_ATTACK_DROPOUT_MULTIPLIER * dropout_limit
+  );
   on_level = m3_clamp(on_threshold, 0, 1);
   off_level = min(on_level, m3_clamp(off_threshold, 0, 1));
+  attack_sustain_level = m3_lifecycle_attack_hysteresis
+    ? off_level
+    : on_level;
+  attack_bridge_limit = max(
+    0,
+    floor(m3_lifecycle_attack_bridge_samples)
+  );
+  attack_evidence_step_limit = max(
+    0,
+    floor(m3_lifecycle_attack_evidence_step_samples)
+  );
+  active_limit = floor(m3_clamp(
+    m3_lifecycle_max_active_voices,
+    1,
+    M3_MAX_VOICES
+  ));
 
   note = 0;
   loop(128,
@@ -287,31 +760,79 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
       selection_index += 1;
     );
 
+    low_string_conflict = evidence_present &&
+      m3_lifecycle_m3_low_string_conflict(voice_base, note);
     state = floor(cell[M3_VOICE_STATE_OFFSET]);
     state == M3_LIFECYCLE_STATE_OFF ? (
-      evidence_present && evidence_confidence >= on_level ? (
-        cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ATTACK;
-        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
-        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
-        cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = now;
-        cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
-        cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
+      cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] < 0 ? (
+        !evidence_present ?
+          cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = 0;
+      ) : (
+        m3_lifecycle_attack_admission &&
+        !low_string_conflict &&
+        evidence_present && evidence_confidence >= on_level ? (
+          cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ATTACK;
+          cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+          cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+          cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = now;
+          cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
+          cell[M3_VOICE_STATE_ENTER_OFFSET] =
+            attack_evidence_step_limit > 0 &&
+            (m3_lifecycle_min_attack_energy <= 0 ||
+             evidence_energy >= 2 * m3_lifecycle_min_attack_energy)
+            ? min(attack_limit, attack_evidence_step_limit)
+            : 0;
+          cell[M3_VOICE_VELOCITY_OFFSET] = 1;
+        );
       );
     ) : state == M3_LIFECYCLE_STATE_ATTACK ? (
-      evidence_present && evidence_confidence >= on_level ? (
-        cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
+      !m3_lifecycle_attack_admission ||
+      now - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] >= stale_attack_limit ? (
+        m3_lifecycle_clear_voice(cell);
+        cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] = -1;
+      ) : low_string_conflict ? (
+        m3_lifecycle_clear_voice(cell);
+      ) : evidence_present && evidence_confidence >= attack_sustain_level ? (
+        elapsed = now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET];
+        attack_bridge_limit > 0 && elapsed > attack_bridge_limit ? (
+          cell[M3_VOICE_VELOCITY_OFFSET] = 1;
+        ) : (
+          cell[M3_VOICE_STATE_ENTER_OFFSET] +=
+            attack_evidence_step_limit > 0
+            ? min(max(0, elapsed), attack_evidence_step_limit)
+            : max(0, elapsed);
+          cell[M3_VOICE_VELOCITY_OFFSET] = min(
+            M3_LIFECYCLE_M3_OCTAVE_CONFIRMATION_BLOCKS,
+            max(1, floor(cell[M3_VOICE_VELOCITY_OFFSET])) + 1
+          );
+        );
+        cell[M3_VOICE_CONFIDENCE_OFFSET] = m3_lifecycle_attack_hysteresis
+          ? max(cell[M3_VOICE_CONFIDENCE_OFFSET], evidence_confidence)
+          : evidence_confidence;
         cell[M3_VOICE_ENERGY_OFFSET] = max(
           cell[M3_VOICE_ENERGY_OFFSET],
           evidence_energy
         );
         cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
       ) : (
-        m3_lifecycle_clear_voice(cell);
+        elapsed = now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET];
+        elapsed > attack_dropout_limit ? (
+          m3_lifecycle_clear_voice(cell);
+        ) : (
+          !m3_lifecycle_attack_hysteresis ? (
+            cell[M3_VOICE_CONFIDENCE_OFFSET] = 0;
+          );
+        );
       );
     ) : state == M3_LIFECYCLE_STATE_ON ? (
       evidence_present && evidence_confidence >= off_level ? (
+        elapsed = max(0, now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET]);
+        energy_decay = exp(-elapsed / max(1, stale_attack_limit));
         cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
-        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+        cell[M3_VOICE_ENERGY_OFFSET] = max(
+          evidence_energy,
+          energy_decay * cell[M3_VOICE_ENERGY_OFFSET]
+        );
         cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
       ) : (
         elapsed = now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET];
@@ -333,9 +854,14 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
       );
     ) : state == M3_LIFECYCLE_STATE_RELEASE ? (
       evidence_present && evidence_confidence >= off_level ? (
+        elapsed = max(0, now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET]);
+        energy_decay = exp(-elapsed / max(1, stale_attack_limit));
         cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
         cell[M3_VOICE_CONFIDENCE_OFFSET] = evidence_confidence;
-        cell[M3_VOICE_ENERGY_OFFSET] = evidence_energy;
+        cell[M3_VOICE_ENERGY_OFFSET] = max(
+          evidence_energy,
+          energy_decay * cell[M3_VOICE_ENERGY_OFFSET]
+        );
         cell[M3_VOICE_LAST_EVIDENCE_OFFSET] = now;
         cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
       ) : (
@@ -357,41 +883,298 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
   );
 
   active_count = 0;
+  highest_active_note = -1;
+  m3_lifecycle_active_snapshot_0 = 0;
+  m3_lifecycle_active_snapshot_1 = 0;
+  m3_lifecycle_active_snapshot_2 = 0;
+  m3_lifecycle_active_snapshot_3 = 0;
+  m3_lifecycle_active_snapshot_lowest_note = 128;
+  m3_lifecycle_context_anchor_lowest_note = 128;
   note = 0;
   loop(128,
     cell = voice_base + note * M3_VOICE_CELL_SIZE;
-    cell[M3_VOICE_ACTIVE_OFFSET] ? active_count += 1;
-    note += 1;
-  );
-
-  note = 0;
-  loop(128,
-    cell = voice_base + note * M3_VOICE_CELL_SIZE;
-    cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
-    cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
-    now - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET] >= attack_limit &&
-    active_count < M3_MAX_VOICES ? (
-      velocity = m3_lifecycle_velocity(
-        cell[M3_VOICE_ENERGY_OFFSET],
-        velocity_mode,
-        fixed_velocity
+    cell[M3_VOICE_ACTIVE_OFFSET] ? (
+      active_count += 1;
+      highest_active_note = note;
+      m3_lifecycle_active_snapshot_lowest_note = min(
+        m3_lifecycle_active_snapshot_lowest_note,
+        note
       );
-      queued = m3_lifecycle_queue_event(
-        event_base,
-        M3_EVENT_TYPE_ON,
-        note,
-        velocity,
-        output_offset
-      );
-      queued ? (
-        cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
-        cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
-        cell[M3_VOICE_VELOCITY_OFFSET] = velocity;
-        cell[M3_VOICE_ACTIVE_OFFSET] = 1;
-        active_count += 1;
+      note < 32 ? m3_lifecycle_active_snapshot_0 |= 1 << note :
+      note < 64 ? m3_lifecycle_active_snapshot_1 |= 1 << (note - 32) :
+      note < 96 ? m3_lifecycle_active_snapshot_2 |= 1 << (note - 64) :
+                  m3_lifecycle_active_snapshot_3 |= 1 << (note - 96);
+    );
+    cell[M3_VOICE_ACTIVE_OFFSET] ||
+    (cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+     cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+     cell[M3_VOICE_ENERGY_OFFSET] >= m3_lifecycle_min_attack_energy &&
+     now >= cell[M3_VOICE_LAST_EVIDENCE_OFFSET] &&
+     now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET] <=
+       max(attack_bridge_limit, attack_dropout_limit)) ? (
+      m3_lifecycle_context_anchor_lowest_note = min(
+        m3_lifecycle_context_anchor_lowest_note,
+        note
       );
     );
     note += 1;
+  );
+
+  ceiling_candidate_count = 0;
+  startup_mature_count = 0;
+  startup_ceiling_note = -1;
+  m3_lifecycle_reserve_lower_attacks ? (
+    m3_lifecycle_capped_admission_note >= 0 ? (
+      ceiling_candidate_count = 0;
+      note = 0;
+      loop(128,
+        note <= m3_lifecycle_capped_admission_note ? (
+          cell = voice_base + note * M3_VOICE_CELL_SIZE;
+          cell[M3_VOICE_ACTIVE_OFFSET] ||
+          (cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+           cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+           cell[M3_VOICE_ENERGY_OFFSET] >=
+             m3_lifecycle_min_attack_energy &&
+           !m3_lifecycle_octave_alias_blocked(
+             voice_base,
+             note,
+             cell[M3_VOICE_ENERGY_OFFSET]
+           ) &&
+           !m3_lifecycle_general_harmonic_alias_blocked(
+             voice_base,
+             note,
+             cell[M3_VOICE_ENERGY_OFFSET]
+           ) &&
+           !m3_lifecycle_general_shared_octave_blocked(voice_base, note) &&
+           !m3_lifecycle_m3_low_string_conflict(voice_base, note)) ? (
+            ceiling_candidate_count += 1;
+          );
+        );
+        note += 1;
+      );
+      ceiling_candidate_count < active_limit ? (
+        m3_lifecycle_capped_admission_note = -1;
+      );
+    );
+    active_count == 0 ? (
+      startup_mature_count = 0;
+      startup_ceiling_note = -1;
+      note = 0;
+      loop(128,
+        cell = voice_base + note * M3_VOICE_CELL_SIZE;
+        note_attack_limit =
+          m3_lifecycle_m3_low_open_fast_attack &&
+          m3_lifecycle_m3_open_note(note)
+          ? min(
+              attack_limit,
+              m3_lifecycle_m3_open_attack_samples(
+                note,
+                cell[M3_VOICE_CONFIDENCE_OFFSET]
+              )
+            )
+          : note <= M3_LIFECYCLE_SUB_GSHARP_MAX_NOTE
+            ? max(attack_limit, m3_lifecycle_sub_gsharp_attack_samples)
+            : attack_limit;
+        cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+        cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+        m3_lifecycle_m3_open_confidence_allowed(
+          note,
+          cell[M3_VOICE_CONFIDENCE_OFFSET]
+        ) &&
+        cell[M3_VOICE_ENERGY_OFFSET] >= m3_lifecycle_min_attack_energy &&
+        now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET] <=
+          attack_dropout_limit &&
+        !m3_lifecycle_octave_alias_blocked(
+          voice_base,
+          note,
+          cell[M3_VOICE_ENERGY_OFFSET]
+        ) &&
+        !m3_lifecycle_general_harmonic_alias_blocked(
+          voice_base,
+          note,
+          cell[M3_VOICE_ENERGY_OFFSET]
+        ) &&
+        !m3_lifecycle_general_shared_octave_blocked(voice_base, note) &&
+        !m3_lifecycle_m3_low_string_conflict(voice_base, note) &&
+        (attack_bridge_limit > 0
+          ? cell[M3_VOICE_STATE_ENTER_OFFSET]
+          : now - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET]) >=
+            note_attack_limit ? (
+          startup_mature_count += 1;
+          startup_mature_count <= active_limit ? (
+            startup_ceiling_note = note;
+          );
+        );
+        note += 1;
+      );
+      startup_mature_count > active_limit ? (
+        m3_lifecycle_capped_admission_note =
+          m3_lifecycle_capped_admission_note < 0
+          ? startup_ceiling_note
+          : min(
+              m3_lifecycle_capped_admission_note,
+              startup_ceiling_note
+            );
+      );
+    );
+  ) : (
+    m3_lifecycle_capped_admission_note = -1;
+  );
+  lower_attack_count = 0;
+  m3_high_open_context = m3_lifecycle_m3_high_open_context(voice_base);
+  note = 0;
+  loop(128,
+    cell = voice_base + note * M3_VOICE_CELL_SIZE;
+    note_attack_limit =
+      m3_lifecycle_m3_low_open_fast_attack &&
+      m3_lifecycle_m3_open_note(note)
+      ? min(
+          attack_limit,
+          m3_lifecycle_m3_open_attack_samples(
+            note,
+            cell[M3_VOICE_CONFIDENCE_OFFSET]
+          )
+        )
+      : note <= M3_LIFECYCLE_SUB_GSHARP_MAX_NOTE
+        ? max(attack_limit, m3_lifecycle_sub_gsharp_attack_samples)
+        : attack_limit;
+    m3_lifecycle_m3_low_chord_context(note, m3_high_open_context) ? (
+      note_attack_limit = max(
+        note_attack_limit,
+        m3_lifecycle_m3_low_chord_attack_samples
+      );
+    );
+    m3_lifecycle_m3_adjacent_open_chromatic(note) ? (
+      note_attack_limit = max(
+        note_attack_limit,
+        m3_lifecycle_m3_low_chord_attack_samples
+      );
+    );
+    m3_lifecycle_reserve_lower_attacks ? (
+      highest_active_note > note ? (
+        note_attack_limit = max(note_attack_limit, dropout_limit);
+      ) : (
+        note_attack_limit = max(
+          note_attack_limit,
+          m3_lifecycle_general_capped_attack_samples
+        );
+      );
+    );
+    cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+    m3_lifecycle_m3_open_confidence_allowed(
+      note,
+      cell[M3_VOICE_CONFIDENCE_OFFSET]
+    ) &&
+    !m3_lifecycle_octave_alias_blocked(
+      voice_base,
+      note,
+      cell[M3_VOICE_ENERGY_OFFSET]
+    ) &&
+    !m3_lifecycle_general_harmonic_alias_blocked(
+      voice_base,
+      note,
+      cell[M3_VOICE_ENERGY_OFFSET]
+    ) &&
+    !m3_lifecycle_general_shared_octave_blocked(voice_base, note) &&
+    !m3_lifecycle_m3_low_string_conflict(voice_base, note) &&
+    !m3_lifecycle_m3_octave_unconfirmed(voice_base, note, cell) &&
+    !m3_lifecycle_m3_parent_unconfirmed(voice_base, note, now) &&
+    !m3_lifecycle_m3_mature_parent_alias_blocked(
+      voice_base,
+      note,
+      cell[M3_VOICE_ENERGY_OFFSET],
+      now,
+      active_count
+    ) &&
+    !m3_lifecycle_m3_adjacent_shadow_blocked(voice_base, note, now) &&
+    !m3_lifecycle_m3_multi_parent_alias_blocked(
+      voice_base,
+      note,
+      cell[M3_VOICE_ENERGY_OFFSET]
+    ) &&
+    (m3_lifecycle_capped_admission_note < 0 ||
+     note <= m3_lifecycle_capped_admission_note) &&
+    cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+    cell[M3_VOICE_ENERGY_OFFSET] >= m3_lifecycle_min_attack_energy &&
+    (cell[M3_VOICE_LAST_EVIDENCE_OFFSET] == now ||
+     (m3_lifecycle_attack_hysteresis &&
+      now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET] <=
+        attack_bridge_limit)) &&
+    (attack_bridge_limit > 0
+      ? cell[M3_VOICE_STATE_ENTER_OFFSET]
+      : now - cell[M3_VOICE_FIRST_EVIDENCE_OFFSET]) >=
+        note_attack_limit ? (
+      activation_available =
+        active_count + lower_attack_count < active_limit;
+      replacement_note = -1;
+      !activation_available &&
+      m3_lifecycle_reserve_lower_attacks &&
+      active_count >= active_limit &&
+      highest_active_note > note &&
+      event_base[M3_EVENT_COUNT_OFFSET] <= M3_MAX_EVENTS - 2 ? (
+        replacement_note = highest_active_note;
+        replacement_cell = voice_base +
+          replacement_note * M3_VOICE_CELL_SIZE;
+        queued = m3_lifecycle_queue_event(
+          event_base,
+          M3_EVENT_TYPE_OFF,
+          replacement_note,
+          0,
+          output_offset
+        );
+        queued ? (
+          m3_lifecycle_clear_voice(replacement_cell);
+          active_count -= 1;
+          activation_available = 1;
+          highest_active_note = -1;
+          replacement_probe = 0;
+          loop(128,
+            replacement_cell = voice_base +
+              replacement_probe * M3_VOICE_CELL_SIZE;
+            replacement_cell[M3_VOICE_ACTIVE_OFFSET] ?
+              highest_active_note = replacement_probe;
+            replacement_probe += 1;
+          );
+        );
+      );
+      activation_available ? (
+        velocity = m3_lifecycle_velocity(
+          cell[M3_VOICE_ENERGY_OFFSET],
+          velocity_mode,
+          fixed_velocity
+        );
+        queued = m3_lifecycle_queue_event(
+          event_base,
+          M3_EVENT_TYPE_ON,
+          note,
+          velocity,
+          output_offset
+        );
+        queued ? (
+          cell[M3_VOICE_STATE_OFFSET] = M3_LIFECYCLE_STATE_ON;
+          cell[M3_VOICE_STATE_ENTER_OFFSET] = now;
+          cell[M3_VOICE_VELOCITY_OFFSET] = velocity;
+          cell[M3_VOICE_ACTIVE_OFFSET] = 1;
+          active_count += 1;
+          highest_active_note = max(highest_active_note, note);
+        );
+      );
+    );
+    m3_lifecycle_reserve_lower_attacks &&
+    cell[M3_VOICE_STATE_OFFSET] == M3_LIFECYCLE_STATE_ATTACK &&
+    cell[M3_VOICE_CONFIDENCE_OFFSET] >= on_level &&
+    cell[M3_VOICE_ENERGY_OFFSET] >= m3_lifecycle_min_attack_energy &&
+    (cell[M3_VOICE_LAST_EVIDENCE_OFFSET] == now ||
+     (m3_lifecycle_attack_hysteresis &&
+      now - cell[M3_VOICE_LAST_EVIDENCE_OFFSET] <=
+        attack_bridge_limit)) ? (
+      lower_attack_count += 1;
+    );
+    note += 1;
+  );
+
+  active_count >= active_limit ? (
+    m3_lifecycle_capped_admission_note = -1;
   );
 
   m3_lifecycle_sort_events(event_base);
@@ -401,6 +1184,7 @@ local(candidate_count, now, output_offset, attack_limit, release_limit,
 function m3_lifecycle_release_all(voice_base, event_base, block_offset)
 local(note, cell, queued, output_offset) (
   m3_lifecycle_reset_events(event_base);
+  m3_lifecycle_capped_admission_note = -1;
   output_offset = max(0, floor(block_offset));
   note = 0;
   loop(128,

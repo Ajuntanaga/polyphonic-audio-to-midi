@@ -92,3 +92,16 @@ assertions above.
 This procedure proves synthetic dummy-audio behavior. It does not authorize or
 prove persistent installation, live guitar/audio-interface input, clean-DI
 metrics, live-project modification, audible monitoring, or REAPER MCP use.
+
+## Task 13 terminal evidence
+
+The current JSFX is accuracy-green at 48 kHz/128 samples but is not eligible for
+installation. The authoritative synthetic slice is
+`build/test-results/task13-v232-final-jsfx-48k128-slice`. Repeated 10,000-block
+deadline tables are under
+`build/test-results/task13-performance-48k128-10000/`. Exact metrics and hashes
+are in `docs/PERFORMANCE.md`.
+
+Do not continue JSFX tuning, run live input, install persistently, or begin a
+native port from this checkpoint. The next allowed technical action is a new
+native-design amendment after explicit user approval.

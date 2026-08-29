@@ -18,6 +18,7 @@ local SOURCE_ACK = 123
 local SOURCE_INIT_COUNT = 124
 local SOURCE_READY = 125
 local SOURCE_HEARTBEAT = 126
+local ACTUAL_BLOCK = 127
 local SAMPLE_COUNTER = 128
 local NOTE_GAIN_BASE = 160
 local CAPTURE_COUNT = 256
@@ -34,6 +35,7 @@ local STATE_ARMED = 1
 local STATE_COMPLETE = 3
 local STATE_FAULT = -1
 local CASE_TIMEOUT_SECONDS = 10
+local MATRIX_CASE_TIMEOUT_SECONDS = 20
 local SOURCE_READY_TIMEOUT_SECONDS = 3
 local TRANSPORT_STOP_TIMEOUT_SECONDS = 3
 local RELEASE_SETTLE_SECONDS = 0.35
@@ -66,7 +68,7 @@ end
 
 local function parse_number_list(text)
   local values = {}
-  if not text or text == "" then
+  if not text or text == "" or text == "-" then
     return values
   end
   for _, token in ipairs(split(text, ",")) do
@@ -84,6 +86,13 @@ local function read_cases(path)
   local handle = assert(io.open(path, "r"))
   local header_line = assert(handle:read("*l"), "empty case manifest")
   local headers = split(header_line, "\t")
+  local host_mode = false
+  for _, header in ipairs(headers) do
+    if header == "sensitivity" then
+      host_mode = true
+      break
+    end
+  end
   local cases = {}
   for line in handle:lines() do
     if line ~= "" and line:sub(1, 1) ~= "#" then
@@ -108,7 +117,7 @@ local function read_cases(path)
   end
   handle:close()
   assert(#cases > 0, "case manifest contains no cases")
-  return cases
+  return cases, host_mode
 end
 
 local function atomic_write(path, lines)
@@ -134,6 +143,9 @@ local function expected_text(case)
   for _, note in ipairs(case.expected_list) do
     notes[#notes + 1] = tostring(math.floor(note + 0.5))
   end
+  if #notes == 0 then
+    return "-"
+  end
   return table.concat(notes, ",")
 end
 
@@ -158,8 +170,47 @@ local function append_panic_trials(cases)
   end
 end
 
-local function configure_case(case, generation, case_track, case_detector_fx)
+local function configure_case(
+  case,
+  generation,
+  case_track,
+  case_detector_fx,
+  host_mode
+)
   local gains = parse_number_list(case.gains_db)
+  local mode = case.mode or ""
+  local general_mode = mode == "general" or mode == "release" or
+                       mode == "silence" or mode == "noise" or
+                       mode == "hum50" or mode == "hum60" or mode == "dc" or
+                       mode:match("^general:poly=%d+$") ~= nil
+  assert(general_mode or mode == "m3", "unsupported case mode: " .. mode)
+  local maximum_polyphony = tonumber(mode:match("^general:poly=(%d+)$")) or 8
+  assert(
+    maximum_polyphony >= 1 and maximum_polyphony <= 8,
+    "maximum polyphony must be between 1 and 8"
+  )
+  local noise_gain = db_to_gain(case.noise_db)
+  local dc_gain = 0
+  local hum_50_gain = db_to_gain(case.hum_db)
+  local hum_60_gain = hum_50_gain
+  if not host_mode then
+    hum_50_gain = 0
+    hum_60_gain = 0
+    if mode == "silence" then
+      noise_gain = 0
+    elseif mode == "noise" then
+      -- noise_gain already carries the requested level
+    elseif mode == "hum50" then
+      noise_gain = 0
+      hum_50_gain = db_to_gain(case.hum_db)
+    elseif mode == "hum60" then
+      noise_gain = 0
+      hum_60_gain = db_to_gain(case.hum_db)
+    elseif mode == "dc" then
+      dc_gain = noise_gain
+      noise_gain = 0
+    end
+  end
   reaper.gmem_write(CASE_ID, case.case_id)
   reaper.gmem_write(NOTE_COUNT, #case.notes_list)
   for index = 0, 7 do
@@ -173,11 +224,10 @@ local function configure_case(case, generation, case_track, case_detector_fx)
     MISSING_FUNDAMENTAL,
     tonumber(case.missing_fundamental) or 0
   )
-  reaper.gmem_write(NOISE_GAIN, db_to_gain(case.noise_db))
-  reaper.gmem_write(DC_GAIN, 0)
-  local hum_gain = db_to_gain(case.hum_db)
-  reaper.gmem_write(HUM_50_GAIN, hum_gain)
-  reaper.gmem_write(HUM_60_GAIN, hum_gain)
+  reaper.gmem_write(NOISE_GAIN, noise_gain)
+  reaper.gmem_write(DC_GAIN, dc_gain)
+  reaper.gmem_write(HUM_50_GAIN, hum_50_gain)
+  reaper.gmem_write(HUM_60_GAIN, hum_60_gain)
   reaper.gmem_write(CLIP, tonumber(case.clip) or 0)
   reaper.gmem_write(
     STAGGER_SAMPLES,
@@ -195,8 +245,28 @@ local function configure_case(case, generation, case_track, case_detector_fx)
   reaper.TrackFX_SetParam(
     case_track,
     case_detector_fx,
+    1,
+    general_mode and 1 or 0
+  )
+  reaper.TrackFX_SetParam(
+    case_track,
+    case_detector_fx,
     4,
-    tonumber(case.sensitivity) or 50
+    tonumber(case.sensitivity) or 80
+  )
+  reaper.TrackFX_SetParam(
+    case_track,
+    case_detector_fx,
+    5,
+    0
+  )
+  reaper.TrackFX_SetParam(case_track, case_detector_fx, 6, host_mode and 32 or 24)
+  reaper.TrackFX_SetParam(case_track, case_detector_fx, 7, host_mode and 84 or 108)
+  reaper.TrackFX_SetParam(
+    case_track,
+    case_detector_fx,
+    8,
+    maximum_polyphony
   )
   reaper.TrackFX_SetParam(
     case_track,
@@ -208,13 +278,15 @@ local function configure_case(case, generation, case_track, case_detector_fx)
   reaper.gmem_write(COMMAND, generation)
 end
 
-local cases = read_cases(manifest_path)
-append_panic_trials(cases)
+local cases, host_mode = read_cases(manifest_path)
+if host_mode then
+  append_panic_trials(cases)
+end
 local event_lines = {
   "case_id\tabsolute_sample\toffset\tstatus\tnote\tvelocity",
 }
 local summary_lines = {
-  "case_id\tstatus\treason\tactual_rate\tsensitivity" ..
+  "case_id\tstatus\treason\tactual_rate\tactual_block\tsensitivity" ..
   "\tonset_sample\trelease_sample" ..
   "\texpected\tevent_count\toverflow\tdry_max_error\tdry_samples" ..
   "\tsynth_peak\tsynth_samples",
@@ -263,6 +335,8 @@ local function record_case(case, forced_reason)
   local active = {}
   local observed_on = {}
   local observed_off = {}
+  local on_counts = {}
+  local off_counts = {}
   for index = 0, count - 1 do
     local cell = CAPTURE_EVENT_BASE + index * CAPTURE_EVENT_WORDS
     local absolute_sample = math.floor(reaper.gmem_read(cell) or 0)
@@ -281,9 +355,11 @@ local function record_case(case, forced_reason)
     local kind = status & 0xF0
     if kind == 0x90 and velocity > 0 then
       observed_on[note] = true
+      on_counts[note] = (on_counts[note] or 0) + 1
       active[note] = true
     elseif kind == 0x80 or (kind == 0x90 and velocity == 0) then
       observed_off[note] = true
+      off_counts[note] = (off_counts[note] or 0) + 1
       active[note] = nil
     end
   end
@@ -314,6 +390,10 @@ local function record_case(case, forced_reason)
   if actual_rate ~= case.sample_rate then
     reasons[#reasons + 1] = "sample-rate-" .. actual_rate
   end
+  local actual_block = math.floor(reaper.gmem_read(ACTUAL_BLOCK) or 0)
+  if actual_block ~= case.block_size then
+    reasons[#reasons + 1] = "block-size-" .. actual_block
+  end
   local expected = {}
   for _, raw_note in ipairs(case.expected_list) do
     local note = math.floor(raw_note + 0.5)
@@ -323,6 +403,12 @@ local function record_case(case, forced_reason)
     end
     if not observed_off[note] then
       reasons[#reasons + 1] = "missing-off-" .. note
+    end
+    if (on_counts[note] or 0) > 1 then
+      reasons[#reasons + 1] = "duplicate-on-" .. note
+    end
+    if (off_counts[note] or 0) > 1 then
+      reasons[#reasons + 1] = "duplicate-off-" .. note
     end
   end
   for note in pairs(observed_on) do
@@ -341,7 +427,8 @@ local function record_case(case, forced_reason)
     status,
     reason,
     actual_rate,
-    tonumber(case.sensitivity) or 50,
+    actual_block,
+    tonumber(case.sensitivity) or 80,
     math.floor(reaper.gmem_read(ONSET_SAMPLE) or 0),
     math.floor(reaper.gmem_read(RELEASE_SAMPLE) or 0),
     expected_text(case),
@@ -546,15 +633,17 @@ local function finish_suite()
   end
   finished = true
   reaper.OnStopButton()
-  if panic_trials_passed ~= PANIC_TRIALS_REQUIRED then
-    failures[#failures + 1] = string.format(
-      "panic trials %d/%d",
-      panic_trials_passed,
-      PANIC_TRIALS_REQUIRED
-    )
-  end
-  if not safe_delete_passed then
-    failures[#failures + 1] = "safe detector delete gate not reached"
+  if host_mode then
+    if panic_trials_passed ~= PANIC_TRIALS_REQUIRED then
+      failures[#failures + 1] = string.format(
+        "panic trials %d/%d",
+        panic_trials_passed,
+        PANIC_TRIALS_REQUIRED
+      )
+    end
+    if not safe_delete_passed then
+      failures[#failures + 1] = "safe detector delete gate not reached"
+    end
   end
   clean_track()
   if undo_open then
@@ -633,7 +722,13 @@ poll_source_ready = function()
   local playing = (reaper.GetPlayState() & 1) ~= 0
   if playing and init_count > 0 and ready == init_count and heartbeat >= 4 then
     case_init_count = init_count
-    configure_case(case, command_generation, track, detector_fx)
+    configure_case(
+      case,
+      command_generation,
+      track,
+      detector_fx,
+      host_mode
+    )
     write_phase(string.format(
       "case-%d-source-ready init=%d heartbeat=%d",
       case.case_id,
@@ -718,6 +813,8 @@ poll_case = function()
     reaper.gmem_read(SOURCE_INIT_COUNT) or 0
   )
   local now = reaper.time_precise()
+  local case_timeout_seconds = host_mode and CASE_TIMEOUT_SECONDS or
+                               MATRIX_CASE_TIMEOUT_SECONDS
   if state == STATE_FAULT then
     reaper.OnStopButton()
     record_case(case, "source-fault")
@@ -737,7 +834,7 @@ poll_case = function()
     return
   end
   if ack ~= command_generation then
-    if now - case_started >= CASE_TIMEOUT_SECONDS then
+    if now - case_started >= case_timeout_seconds then
       reaper.OnStopButton()
       record_case(case, "source-not-acknowledged")
       finish_suite()
@@ -812,7 +909,7 @@ poll_case = function()
       return
     end
   end
-  if now - case_started >= CASE_TIMEOUT_SECONDS then
+  if now - case_started >= case_timeout_seconds then
     reaper.OnStopButton()
     record_case(case, "timeout")
     finish_suite()
