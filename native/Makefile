@@ -13,6 +13,7 @@ SANITIZE_CXXFLAGS := $(COMMON_CXXFLAGS) -O1 -g3 -DM3_TESTING \
 TSAN_CXXFLAGS := $(COMMON_CXXFLAGS) -O1 -g3 -DM3_TESTING \
 	-fsanitize=thread -fno-omit-frame-pointer
 PRODUCTION_CXXFLAGS := $(COMMON_CXXFLAGS) -O3 -DNDEBUG -fPIC -fvisibility=hidden
+PROBE_CXXFLAGS := $(PRODUCTION_CXXFLAGS) -DM3_PROBE_BUILD
 SHARED_LDFLAGS := -shared -Wl,-z,relro,-z,now -Wl,--no-undefined -Wl,--build-id=none
 
 CORE_SOURCES := $(sort $(wildcard $(NATIVE_DIR)/src/*.cpp))
@@ -50,7 +51,7 @@ tsan:
 probe:
 	@test -f $(NATIVE_DIR)/plugin/clap_entry.cpp
 	@mkdir -p $(dir $(PROBE_ARTIFACT))
-	$(CXX) $(COMMON_CPPFLAGS) $(PRODUCTION_CXXFLAGS) -DM3_PROBE_BUILD $(CORE_SOURCES) $(PROBE_PLUGIN_SOURCES) $(SHARED_LDFLAGS) -lm -o $(PROBE_ARTIFACT)
+	$(CXX) $(COMMON_CPPFLAGS) $(PROBE_CXXFLAGS) $(CORE_SOURCES) $(PROBE_PLUGIN_SOURCES) $(SHARED_LDFLAGS) -lm -o $(PROBE_ARTIFACT)
 
 production:
 	@test -f $(NATIVE_DIR)/plugin/clap_entry.cpp

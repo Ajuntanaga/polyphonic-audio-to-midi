@@ -1,0 +1,72 @@
+desc:ajuntanaga/M3 Native CLAP Capability Source
+tags:test generator MIDI analysis
+options:gmem=m3_poly_midi_tests_v1
+in_pin:none
+out_pin:left
+out_pin:right
+
+@init
+M3_CAPABILITY_COMMAND = 2200;
+M3_CAPABILITY_ACTIVE = 2201;
+M3_CAPABILITY_FAULT = 2202;
+M3_CAPABILITY_ACTUAL_RATE = 2203;
+M3_CAPABILITY_ACTUAL_BLOCK = 2204;
+M3_CAPABILITY_REFERENCE_LEFT = 8192;
+M3_CAPABILITY_REFERENCE_RIGHT = 8704;
+M3_CAPABILITY_REFERENCE_CAPACITY = 512;
+M3_CAPTURE_COUNTER = 128;
+
+m3_capability_last_command = -1;
+m3_capability_silent = 0;
+gmem[M3_CAPABILITY_ACTIVE] = 1;
+gmem[M3_CAPABILITY_FAULT] = 0;
+gmem[M3_CAPTURE_COUNTER] = 0;
+
+@block
+m3_capability_block_offset = 0;
+gmem[M3_CAPABILITY_ACTUAL_RATE] = srate;
+gmem[M3_CAPABILITY_ACTUAL_BLOCK] = samplesblock;
+samplesblock < 32 ? (
+  gmem[M3_CAPABILITY_FAULT] = 1;
+) : (
+  m3_capability_command = floor(gmem[M3_CAPABILITY_COMMAND]);
+  m3_capability_command != m3_capability_last_command ? (
+    m3_capability_last_command = m3_capability_command;
+    m3_capability_command == 1 ? (
+      m3_capability_silent = 0;
+      midisend(4, 0x90, 67 | (101 << 8));
+      midisend(8, 0xB0, 119 | (1 << 8));
+      midisend(9, 0x90, 65 | (99 << 8));
+      midisend(11, 0xB0, 1 | (64 << 8));
+      midisend(20, 0x80, 67);
+      midisend(21, 0x80, 65);
+    );
+    m3_capability_command == 2 ? (
+      m3_capability_silent = 0;
+      midisend(8, 0xB0, 119 | (2 << 8));
+    );
+    m3_capability_command == 3 ? (
+      m3_capability_silent = 1;
+    );
+  );
+);
+
+@sample
+m3_capability_left = m3_capability_silent ? 0 :
+  -0.375 + (m3_capability_block_offset + 1) * 0.001953125;
+m3_capability_right = m3_capability_silent ? 0 :
+  0.4375 - (m3_capability_block_offset + 1) * 0.00146484375;
+
+m3_capability_block_offset < M3_CAPABILITY_REFERENCE_CAPACITY ? (
+  gmem[M3_CAPABILITY_REFERENCE_LEFT + m3_capability_block_offset] =
+    m3_capability_left;
+  gmem[M3_CAPABILITY_REFERENCE_RIGHT + m3_capability_block_offset] =
+    m3_capability_right;
+) : (
+  gmem[M3_CAPABILITY_FAULT] = 1;
+);
+
+spl0 = m3_capability_left;
+spl1 = m3_capability_right;
+gmem[M3_CAPTURE_COUNTER] += 1;
+m3_capability_block_offset += 1;

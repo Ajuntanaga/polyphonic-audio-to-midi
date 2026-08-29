@@ -19,6 +19,9 @@
 #include "parameter_contract.hpp"
 #include "prepared_config_exchange.hpp"
 #include "state_codec.hpp"
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+#include "probe_processor.hpp"
+#endif
 
 namespace {
 
@@ -75,6 +78,9 @@ struct Adapter final {
     plugin.process = &plugin_process;
     plugin.get_extension = &plugin_get_extension;
     plugin.on_main_thread = &plugin_on_main_thread;
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+    probe_processor.record_create();
+#endif
   }
 
   static Adapter* from(const clap_plugin_t* plugin_pointer) noexcept {
@@ -132,6 +138,9 @@ struct Adapter final {
   std::uint32_t max_frames{};
   std::atomic<bool> panic_requested{false};
   std::atomic<std::uint32_t> panic_offset{0};
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  m3::ProbeProcessor probe_processor{};
+#endif
 #if defined(M3_TESTING)
   m3::VoiceTransition test_transition{};
   std::uint32_t test_transition_frames{};
@@ -530,11 +539,20 @@ bool Adapter::plugin_init(const clap_plugin_t* plugin_pointer) noexcept {
         self->host->get_extension(self->host, CLAP_EXT_PARAMS));
   }
   self->lifecycle = Lifecycle::initialized;
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  self->probe_processor.record_init();
+#endif
   return true;
 }
 
 void Adapter::plugin_destroy(const clap_plugin_t* plugin_pointer) noexcept {
   Adapter* self = from(plugin_pointer);
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  if (self != nullptr) {
+    self->probe_processor.record_destroy();
+    static_cast<void>(self->probe_processor.write_report());
+  }
+#endif
   delete self;
 }
 
@@ -560,6 +578,12 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
   if (!self->midi_pipeline.activate(requested_max_frames)) {
     return false;
   }
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  if (!self->probe_processor.record_activate()) {
+    self->midi_pipeline.deactivate();
+    return false;
+  }
+#endif
   self->sample_rate = requested_sample_rate;
   self->min_frames = requested_min_frames;
   self->max_frames = requested_max_frames;
@@ -603,6 +627,9 @@ void Adapter::plugin_deactivate(const clap_plugin_t* plugin_pointer) noexcept {
     self->pending_audio_structural = false;
     self->release_channel_pending = false;
     self->reconfiguration_pending.store(false, std::memory_order_release);
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+    self->probe_processor.record_deactivate();
+#endif
   }
 }
 
@@ -612,6 +639,9 @@ bool Adapter::plugin_start_processing(const clap_plugin_t* plugin_pointer) noexc
     return false;
   }
   self->lifecycle = Lifecycle::processing;
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  self->probe_processor.record_start();
+#endif
   return true;
 }
 
@@ -619,6 +649,9 @@ void Adapter::plugin_stop_processing(const clap_plugin_t* plugin_pointer) noexce
   Adapter* self = from(plugin_pointer);
   if (self != nullptr && self->lifecycle == Lifecycle::processing) {
     self->lifecycle = Lifecycle::active;
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+    self->probe_processor.record_stop();
+#endif
   }
 }
 
@@ -629,6 +662,9 @@ void Adapter::plugin_reset(const clap_plugin_t* plugin_pointer) noexcept {
        self->lifecycle == Lifecycle::processing)) {
     self->midi_pipeline.request_reset();
     latch_status(*self, m3::Status::panic_hold);
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+    self->probe_processor.record_reset();
+#endif
   }
 }
 
@@ -642,6 +678,13 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
   }
 
   self->midi_pipeline.begin_block();
+#if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
+  self->probe_processor.record_process(*process);
+  if (!self->probe_processor.queue_trigger_transitions(
+          self->midi_pipeline, process->in_events, process->frames_count)) {
+    latch_status(*self, m3::Status::invalid_input_or_state);
+  }
+#endif
   synchronize_audio_request(*self);
 
   if (!self->release_channel_pending) {

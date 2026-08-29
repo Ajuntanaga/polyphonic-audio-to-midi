@@ -37,6 +37,12 @@ HOST_CASES = ROOT / "tests/fixtures/host_cases.tsv"
 SYNTHETIC_CASES = ROOT / "tests/fixtures/synthetic_cases.tsv"
 CORE_TESTS = ROOT / "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - Core Tests.jsfx"
 CORE_OBSERVER = ROOT / "tools/observe_core_harness_case.lua"
+NATIVE_CAPABILITY_SOURCE = (
+    ROOT / "Effects/tests/ajuntanaga_M3 Native CLAP Capability Source.jsfx"
+)
+NATIVE_CAPABILITY_RUNNER = (
+    ROOT / "Scripts/tests/ajuntanaga_M3 Native CLAP Capability.lua"
+)
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -49,6 +55,50 @@ def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
 
 
 class SourceContractTests(unittest.TestCase):
+    def test_native_capability_probe_sources_are_bounded_and_exact(self):
+        source = NATIVE_CAPABILITY_SOURCE.read_text(encoding="utf-8")
+        runner = NATIVE_CAPABILITY_RUNNER.read_text(encoding="utf-8")
+        capture = MIDI_CAPTURE.read_text(encoding="utf-8")
+
+        self.assertIn("options:gmem=m3_poly_midi_tests_v1", source)
+        self.assertIn("samplesblock < 32", source)
+        self.assertIn("midisend(4, 0x90, 67 | (101 << 8))", source)
+        self.assertIn("midisend(8, 0xB0, 119 | (1 << 8))", source)
+        self.assertIn("midisend(9, 0x90, 65 | (99 << 8))", source)
+        self.assertIn("midisend(11, 0xB0, 1 | (64 << 8))", source)
+        self.assertIn("midisend(20, 0x80, 67)", source)
+        self.assertIn("midisend(21, 0x80, 65)", source)
+        self.assertIn("spl0 = m3_capability_left", source)
+        self.assertIn("spl1 = m3_capability_right", source)
+        self.assertIn("M3_CAPABILITY_REFERENCE_LEFT = 8192", source)
+        self.assertIn("M3_CAPABILITY_REFERENCE_RIGHT = 8704", source)
+        self.assertNotIn("rand(", source)
+
+        self.assertIn("gmem[M3_CAPABILITY_ACTIVE] ?", capture)
+        self.assertIn("abs(spl0 - m3_capture_reference_left)", capture)
+        self.assertIn("abs(spl1 - m3_capture_reference_right)", capture)
+
+        for contract in (
+            'TrackFX_AddByName(track, "CLAP: M3 Polyphonic Audio to MIDI Probe"',
+            'TrackFX_GetNamedConfigParm(track, probe_fx, "pdc")',
+            "local EXPECTED_PARAMETER_COUNT = 16",
+            "local PERSISTENT_PARAMETER_COUNT = 14",
+            "reaper.GetTrackStateChunk",
+            "reaper.SetTrackStateChunk",
+            "reaper.TrackFX_Delete(track, probe_fx)",
+            'write_phase("suite-finish")',
+            'atomic_write(result_directory .. "/capability.tsv"',
+            'atomic_write(result_directory .. "/events.tsv"',
+            'atomic_write(result_directory .. "/state.tsv"',
+        ):
+            self.assertIn(contract, runner)
+        finish = runner.index("local function finish_after_report()")
+        report_read = runner.index("local report = io.open(probe_report_path", finish)
+        suite_finish = runner.index('write_phase("suite-finish")', report_read)
+        self.assertLess(report_read, suite_finish)
+        self.assertIn("reaper.defer(poll_report)", runner)
+        self.assertNotIn(".config/REAPER", runner)
+
     def test_disposable_staging_contains_only_approved_runtime_payload(self):
         with tempfile.TemporaryDirectory() as temporary:
             staged = pathlib.Path(temporary) / "reaper-test"

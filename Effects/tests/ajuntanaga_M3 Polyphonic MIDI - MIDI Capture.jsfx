@@ -17,6 +17,10 @@ M3_CAPTURE_DRY_ERROR = 2048;
 M3_CAPTURE_DRY_COUNT = 2049;
 M3_CAPTURE_REFERENCE_RING = 4096;
 M3_CAPTURE_REFERENCE_CAPACITY = 2048;
+M3_CAPABILITY_ACTIVE = 2201;
+M3_CAPABILITY_REFERENCE_LEFT = 8192;
+M3_CAPABILITY_REFERENCE_RIGHT = 8704;
+M3_CAPABILITY_REFERENCE_CAPACITY = 512;
 
 @block
 m3_capture_sample_offset = 0;
@@ -59,13 +63,25 @@ while(midirecv(
 );
 
 @sample
-m3_capture_sample_offset < M3_CAPTURE_REFERENCE_CAPACITY ? (
-  m3_capture_reference = gmem[
-    M3_CAPTURE_REFERENCE_RING + m3_capture_sample_offset
-  ];
+m3_capture_capacity = gmem[M3_CAPABILITY_ACTIVE] ?
+  M3_CAPABILITY_REFERENCE_CAPACITY : M3_CAPTURE_REFERENCE_CAPACITY;
+m3_capture_sample_offset < m3_capture_capacity ? (
+  gmem[M3_CAPABILITY_ACTIVE] ? (
+    m3_capture_reference_left = gmem[
+      M3_CAPABILITY_REFERENCE_LEFT + m3_capture_sample_offset
+    ];
+    m3_capture_reference_right = gmem[
+      M3_CAPABILITY_REFERENCE_RIGHT + m3_capture_sample_offset
+    ];
+  ) : (
+    m3_capture_reference_left = gmem[
+      M3_CAPTURE_REFERENCE_RING + m3_capture_sample_offset
+    ];
+    m3_capture_reference_right = m3_capture_reference_left;
+  );
   m3_capture_error = max(
-    abs(spl0 - m3_capture_reference),
-    abs(spl1 - m3_capture_reference)
+    abs(spl0 - m3_capture_reference_left),
+    abs(spl1 - m3_capture_reference_right)
   );
   gmem[M3_CAPTURE_DRY_ERROR] = max(
     gmem[M3_CAPTURE_DRY_ERROR],
