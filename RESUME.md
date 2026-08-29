@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T05:02:20-07:00
+Updated: 2026-08-29T05:12:08-07:00
 
-## VST3 Tasks 1-2 sealed — all remaining plan gates authorized
+## VST3 Tasks 1-3 sealed — all remaining plan gates authorized
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -19,13 +19,31 @@ Updated: 2026-08-29T05:02:20-07:00
   125 Python tests at the unchanged Task 2 checkpoint. No REAPER process was
   present; the tests ran serially at low priority after an unrelated io24 test
   process completed and the ACPI temperature fell.
+- Task 3 is sealed at commit `9851237` (`build: vendor pinned VST3 SDK
+  3.8.1`). The official root tag and all four root gitlinks/submodule HEADs
+  match the approved revisions exactly. The retained 24 MiB source-only tree
+  contains 1,003 manifest-covered files under only `base`, `cmake`,
+  `pluginterfaces`, and `public.sdk`, with no `.git`, root `doc`, `tutorials`,
+  or `vstgui4` content.
+- `third_party/vst3sdk/SHA256SUMS` has SHA-256
+  `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`;
+  all 1,003 entries pass offline verification. The SDK contract suite passes
+  11/11 and the native source validator passes. `.gitattributes` preserves the
+  byte-exact upstream whitespace and intentional short Setext heading while
+  keeping project-authored files under the normal Git whitespace check.
+- Retrieval ran once into ignored `build/vendor/vst3sdk-src` under low CPU and
+  idle I/O priority. No automatic retry or alternate SDK was used. The final
+  Task 3 snapshot had about 32 GiB available memory, zero swap/full pressure,
+  45 C temperature, no REAPER process, no VST3 `.cpp`, and no bundle or
+  persistent plug-in copy.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
   migration identities and baseline`). The user separately opened Gate T1 by
   naming exact package `cmake=4.2.3-2ubuntu2` with
   `--no-install-recommends` for Task 2 only. Task 2 is sealed at `21f544b`
-  (`docs: record authorized VST3 CMake prerequisite`). Task 3 was not entered.
+  (`docs: record authorized VST3 CMake prerequisite`). Task 3 was subsequently
+  authorized and sealed at `9851237` as recorded above.
 - Task 1 added the SDK-independent production/probe/benchmark identities and
   stable metadata in `native/vst3/vst3_ids.hpp`, ten focused build-contract
   tests, the reusable source-boundary validator seam, and
@@ -52,12 +70,13 @@ Updated: 2026-08-29T05:02:20-07:00
   installed 4.2.3-2ubuntu2`. Only required automatic dependencies
   `cmake-data`, `libjsoncpp26`, and `librhash1` accompanied it. Swap use and
   full pressure remained zero.
-- No Steinberg SDK, SDK-dependent VST3 `.cpp`, `.vst3` bundle, persistent M3
-  plug-in copy, or REAPER process exists. No SDK/network retrieval, VST3
-  build, live profile/project, hardware-input, or REAPER action occurred.
-- Gate D2 is now open under the user's explicit all-gates authorization. The
-  next action is Task 3's exact official SDK root and four pinned submodule
-  revisions; no alternate dependency or retry is permitted.
+- The exact approved Steinberg SDK is now vendored, but no SDK-dependent VST3
+  `.cpp`, `.vst3` bundle, persistent M3 plug-in copy, or REAPER process exists.
+  No VST3 build, live profile/project, hardware-input, or REAPER action has
+  occurred under the VST3 plan.
+- Gate D2 passed at `9851237`. The next action is Task 4's guarded CMake build
+  foundation; no dependency network access is needed for later build/test
+  commands.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -116,8 +135,8 @@ Updated: 2026-08-29T05:02:20-07:00
   above; detector source remains untouched and no dependency, SDK, or host
   action occurred.
 - Task 2 subsequently installed only that exact CMake package under separately
-  explicit authority and stopped at Gate D2. SDK retrieval remains separately
-  unauthorized.
+  explicit authority and stopped at Gate D2. The later `Authorize all` opened
+  D2, and exact SDK retrieval was sealed at `9851237`.
 
 ## Task 10 CLAP capability gate failed — hard stop
 
@@ -560,17 +579,18 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 2 commit `21f544b`, the two current Task 2 file hashes, the exact
-   installed CMake/dpkg state, and the specification/plan hashes recorded
-   above. The failed CLAP Task 10 evidence remains immutable historical input;
-   do not retry it or begin old CLAP Task 11.
-2. Remain stopped at Gate D2 unless the user separately and explicitly
-   authorizes network retrieval and vendoring of Task 3's exact Steinberg VST3
-   SDK root and four submodule commits. General `proceed`, `resume`, continuous
-   execution, and Gate T1 authority are not Gate D2 authority.
-3. If Gate D2 is explicitly opened, execute only plan Task 3, verify and record
-   the exact license/revisions/hashes, then stop at Gate N3. Do not begin
-   neutral extraction or Task 4 under SDK-retrieval authority.
+1. Verify Task 3 commit `9851237`, SDK manifest SHA-256
+   `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`,
+   all 1,003 manifest entries, exact installed CMake/dpkg state, and the
+   specification/plan hashes recorded above. The failed CLAP Task 10 evidence
+   remains immutable historical input; do not retry it or begin old CLAP Task
+   11.
+2. All remaining named gates are authorized. Execute Task 4 next under its
+   serial guarded-build/TDD steps; do not perform dependency network access or
+   start a REAPER process.
+3. Continue through Tasks 5-7 one extraction at a time. Gate N3 permits Task 8
+   only after every existing test remains green and production VST3 target
+   dependencies contain no CLAP source.
 4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
    32/64/128/256/512 capability matrix, serial guarded background launches on
    workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
@@ -581,14 +601,12 @@ REAPER process behind.
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
 
-## Still-gated actions
+## Remaining plan actions and prerequisite gates
 
-- VST3 plan Task 3 and exact VST3 SDK retrieval at Gate D2
-- VST3 adapter implementation after its prerequisite gates
-- persistent REAPER Effects or Scripts installation
-- live guitar or audio-interface testing
-- live-project modification
-- REAPER MCP installation
-- CLAP retry or remaining Task 10 rows
-- detector-port Task 11 and all downstream native implementation
-- custom native GUI design or implementation
+- VST3 plan Tasks 4-24 are authorized but remain ordered and evidence-gated.
+- Persistent VST3 installation at I9 remains conditional on every required
+  release gate being green.
+- Clean-DI/live guitar execution at D8 remains conditional on suitable input
+  material being available.
+- Live-project modification, REAPER MCP installation, CLAP retry/remaining
+  Task 10 rows, and custom native GUI work remain outside this authorization.
