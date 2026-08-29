@@ -86,6 +86,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF",
             "SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF",
             "SMTG_CREATE_PLUGIN_LINK OFF",
+            "SMTG_CREATE_MODULE_INFO OFF",
             "m3_native_tests",
             "m3_clap_history",
             "m3_vst3_probe",
@@ -134,6 +135,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES:BOOL=OFF",
                 "SMTG_ENABLE_VST3_HOSTING_EXAMPLES:BOOL=OFF",
                 "SMTG_CREATE_PLUGIN_LINK:BOOL=OFF",
+                "SMTG_CREATE_MODULE_INFO:BOOL=OFF",
             ):
                 self.assertIn(setting, cache)
 
@@ -185,7 +187,44 @@ class Vst3BuildContractTests(unittest.TestCase):
                     self.assertIn(flag, command)
                 self.assertNotIn("-march=native", command)
 
-            for target in ("m3_native_tests", "m3_clap_history"):
+            probe_commands = [
+                row
+                for row in commands
+                if "-DM3_VST3_PROBE_BUILD" in row["command"]
+            ]
+            self.assertEqual(
+                {
+                    pathlib.Path(row["file"]).relative_to(ROOT).as_posix()
+                    for row in probe_commands
+                },
+                {
+                    "native/src/generated_note_ledger.cpp",
+                    "native/src/parameter_contract.cpp",
+                    "native/src/state_image.cpp",
+                    "native/vst3/vst3_component.cpp",
+                    "native/vst3/vst3_factory.cpp",
+                    (
+                        "third_party/vst3sdk/public.sdk/source/main/"
+                        "linuxmain.cpp"
+                    ),
+                    (
+                        "third_party/vst3sdk/public.sdk/source/vst/"
+                        "vstsinglecomponenteffect.cpp"
+                    ),
+                },
+            )
+            for row in probe_commands:
+                self.assertNotIn("third_party/clap/include", row["command"])
+                self.assertNotIn("-DM3_TESTING", row["command"])
+
+            self.assertNotIn("add_custom_target(m3_vst3_probe", build_text)
+            self.assertIn("smtg_add_vst3plugin(m3_vst3_probe", build_text)
+
+            for target in (
+                "m3_native_tests",
+                "m3_clap_history",
+                "m3_vst3_probe",
+            ):
                 link_command = (
                     build_dir / f"CMakeFiles/{target}.dir/link.txt"
                 ).read_text(encoding="utf-8")
@@ -382,21 +421,21 @@ class Vst3BuildContractTests(unittest.TestCase):
             actual_digest = hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
             self.assertEqual(actual_digest, expected_digest, relative)
 
-        self.assertEqual(list(ROOT.rglob("*.vst3")), [])
+        persistent_bundles = [
+            path
+            for path in ROOT.rglob("*.vst3")
+            if not path.relative_to(ROOT).as_posix().startswith("build/")
+        ]
+        self.assertEqual(persistent_bundles, [])
 
         vst3_root = ROOT / "native/vst3"
-        cpp_sources = list(vst3_root.glob("*.cpp")) if vst3_root.exists() else []
-        self.assertEqual(cpp_sources, [])
-
-        sdk_include = re.compile(
-            r"(?m)^\s*#\s*include\s*[<\"](?:pluginterfaces|public\.sdk)/"
+        cpp_sources = {
+            path.name for path in vst3_root.glob("*.cpp")
+        } if vst3_root.exists() else set()
+        self.assertEqual(
+            cpp_sources,
+            {"vst3_component.cpp", "vst3_factory.cpp"},
         )
-        for path in sorted(vst3_root.glob("*")) if vst3_root.exists() else ():
-            if path.is_file():
-                self.assertIsNone(
-                    sdk_include.search(path.read_text(encoding="utf-8")),
-                    f"SDK include crossed Gate D2 in {path}",
-                )
 
     def test_source_validator_accepts_the_sdk_independent_identity_header(self):
         errors = self.validation_errors(
@@ -423,6 +462,19 @@ class Vst3BuildContractTests(unittest.TestCase):
                     [("native/vst3/bad_boundary.cpp", source)]
                 )
                 self.assertTrue(any(label in error for error in errors), errors)
+
+    def test_source_validator_allows_the_official_vst3_view_interface(self):
+        errors = self.validation_errors(
+            [
+                (
+                    "native/vst3/vst3_component.hpp",
+                    "#include <pluginterfaces/gui/iplugview.h>\n"
+                    "Steinberg::IPlugView* create_view();\n",
+                )
+            ],
+            sdk_present=True,
+        )
+        self.assertEqual(errors, [])
 
     def test_source_validator_rejects_networked_build_rules(self):
         cases = (

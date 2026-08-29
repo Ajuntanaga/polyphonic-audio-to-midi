@@ -38,7 +38,8 @@ UNAPPROVED_DEPENDENCIES = (
     ".pt",
     "vstgui",
     "juce",
-    "iplug",
+    "iplug2",
+    "iplug_include_in_plug_src.h",
 )
 UNAPPROVED_BUILD_TOKENS = (
     "-march=native",
