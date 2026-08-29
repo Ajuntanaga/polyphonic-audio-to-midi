@@ -120,6 +120,149 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertIn(str(PROFILE), result.stdout)
         self.assertIn("-noactivate", result.stdout)
 
+    def test_native_clap_environment_requires_exact_build_local_paths(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            clap_path = root / "build/native/clap"
+            clap_path.mkdir(parents=True)
+            artifact = clap_path / "M3_Polyphonic_Audio_to_MIDI_Probe.clap"
+            artifact.write_bytes(b"probe")
+            report = root / "build/reaper-test/test-results/probe-native.tsv"
+            report.parent.mkdir(parents=True)
+            profile = root / "build/reaper-test/reaper.ini"
+            profile.write_text("[reaper]\n", encoding="utf-8")
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_CLAP_DIR", clap_path),
+                mock.patch.object(GUARDED_REAPER, "PROBE_ARTIFACT", artifact),
+                mock.patch.object(GUARDED_REAPER, "PROBE_REPORT", report),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            ):
+                resolved_clap, resolved_report = (
+                    GUARDED_REAPER.validate_native_clap_environment(
+                        clap_path,
+                        report,
+                        profile,
+                    )
+                )
+                self.assertEqual(resolved_clap, clap_path)
+                self.assertEqual(resolved_report, report)
+                with self.assertRaisesRegex(ValueError, "build-local CLAP path"):
+                    GUARDED_REAPER.validate_native_clap_environment(
+                        root / "outside",
+                        report,
+                        profile,
+                    )
+                with self.assertRaisesRegex(ValueError, "probe report"):
+                    GUARDED_REAPER.validate_native_clap_environment(
+                        clap_path,
+                        root / "wrong.tsv",
+                        profile,
+                    )
+
+    def test_native_clap_environment_refuses_missing_or_escaping_artifact(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            clap_path = root / "build/native/clap"
+            clap_path.mkdir(parents=True)
+            artifact = clap_path / "M3_Polyphonic_Audio_to_MIDI_Probe.clap"
+            report = root / "build/reaper-test/test-results/probe-native.tsv"
+            report.parent.mkdir(parents=True)
+            profile = root / "build/reaper-test/reaper.ini"
+            profile.write_text("[reaper]\n", encoding="utf-8")
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_CLAP_DIR", clap_path),
+                mock.patch.object(GUARDED_REAPER, "PROBE_ARTIFACT", artifact),
+                mock.patch.object(GUARDED_REAPER, "PROBE_REPORT", report),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            ):
+                with self.assertRaisesRegex(ValueError, "probe artifact is missing"):
+                    GUARDED_REAPER.validate_native_clap_environment(
+                        clap_path,
+                        report,
+                        profile,
+                    )
+                outside = root / "outside-probe.clap"
+                outside.write_bytes(b"outside")
+                artifact.symlink_to(outside)
+                with self.assertRaisesRegex(ValueError, "escapes"):
+                    GUARDED_REAPER.validate_native_clap_environment(
+                        clap_path,
+                        report,
+                        profile,
+                    )
+
+    def test_native_clap_environment_is_injected_before_command_separator(self):
+        command = GUARDED_REAPER.guarded_command(
+            PROFILE,
+            ["-new"],
+            45,
+            GUARDED_REAPER.BUILD_CLAP_DIR,
+            GUARDED_REAPER.PROBE_REPORT,
+        )
+        separator = command.index("--")
+        clap_setting = f"--setenv=CLAP_PATH={GUARDED_REAPER.BUILD_CLAP_DIR}"
+        report_setting = (
+            f"--setenv=M3_CLAP_PROBE_REPORT={GUARDED_REAPER.PROBE_REPORT}"
+        )
+        self.assertLess(command.index(clap_setting), separator)
+        self.assertLess(command.index(report_setting), separator)
+        self.assertNotIn("HOME=", " ".join(command))
+        self.assertNotIn(
+            str(pathlib.Path.home() / ".config/REAPER"), " ".join(command)
+        )
+
+    def test_native_clap_arguments_require_profile_and_report_together(self):
+        without_profile = self.run_runner(
+            "--dry-run",
+            "--clap-path",
+            str(GUARDED_REAPER.BUILD_CLAP_DIR),
+            "--probe-report",
+            str(GUARDED_REAPER.PROBE_REPORT),
+            "--available-mib",
+            "32000",
+            "--load-one",
+            "2.5",
+            "--temperature-c",
+            "72",
+        )
+        self.assertNotEqual(without_profile.returncode, 0)
+        self.assertIn("--profile is required", without_profile.stderr)
+
+        without_report = self.run_runner(
+            "--dry-run",
+            "--profile",
+            str(PROFILE),
+            "--clap-path",
+            str(GUARDED_REAPER.BUILD_CLAP_DIR),
+            "--available-mib",
+            "32000",
+            "--load-one",
+            "2.5",
+            "--temperature-c",
+            "72",
+        )
+        self.assertNotEqual(without_report.returncode, 0)
+        self.assertIn("must be used together", without_report.stderr)
+
+    def test_caller_cannot_override_profile_or_instance_isolation(self):
+        for override in ("-cfgfile", "-cfgfile=/tmp/live.ini", "-nonewinst"):
+            with self.subTest(override=override):
+                result = self.run_runner(
+                    "--dry-run",
+                    "--profile",
+                    str(PROFILE),
+                    "--available-mib",
+                    "32000",
+                    "--load-one",
+                    "2.5",
+                    "--temperature-c",
+                    "72",
+                    "--",
+                    override,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("may not override", result.stdout + result.stderr)
+
     def test_keyboard_interrupt_returns_shell_status_without_traceback(self):
         with (
             mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),

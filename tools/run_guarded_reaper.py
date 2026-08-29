@@ -12,6 +12,13 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 DISPOSABLE_PROFILE = (ROOT / "build/reaper-test/reaper.ini").resolve()
+BUILD_CLAP_DIR = (ROOT / "build/native/clap").resolve()
+PROBE_ARTIFACT = (
+    BUILD_CLAP_DIR / "M3_Polyphonic_Audio_to_MIDI_Probe.clap"
+).resolve()
+PROBE_REPORT = (
+    ROOT / "build/reaper-test/test-results/probe-native.tsv"
+).resolve()
 COMPLETION_FILE = (
     ROOT / "build/reaper-test/test-results/phase.log"
 ).resolve()
@@ -59,6 +66,45 @@ def preflight_errors(
             f"temperature {temperature_c:.1f} C is at or above {MAX_TEMPERATURE_C:.1f} C"
         )
     return errors
+
+
+def validate_native_clap_environment(
+    clap_path: pathlib.Path,
+    probe_report: pathlib.Path,
+    profile: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    resolved_profile = profile.resolve()
+    if resolved_profile != DISPOSABLE_PROFILE:
+        raise ValueError(
+            f"native CLAP injection requires the disposable profile: {resolved_profile}"
+        )
+    resolved_clap = clap_path.resolve()
+    if resolved_clap != BUILD_CLAP_DIR or not resolved_clap.is_dir():
+        raise ValueError(
+            f"unexpected build-local CLAP path: {resolved_clap}; "
+            f"required {BUILD_CLAP_DIR}"
+        )
+    if not PROBE_ARTIFACT.is_file():
+        raise ValueError(f"probe artifact is missing: {PROBE_ARTIFACT}")
+    resolved_artifact = PROBE_ARTIFACT.resolve()
+    if BUILD_CLAP_DIR not in resolved_artifact.parents:
+        raise ValueError(
+            f"probe artifact escapes the build-local CLAP directory: {resolved_artifact}"
+        )
+    resolved_report = probe_report.resolve()
+    if resolved_report != PROBE_REPORT:
+        raise ValueError(
+            f"unexpected probe report path: {resolved_report}; required {PROBE_REPORT}"
+        )
+    return resolved_clap, resolved_report
+
+
+def overrides_instance_isolation(argument: str) -> bool:
+    normalized = argument.lower()
+    return any(
+        normalized == flag or normalized.startswith(f"{flag}=")
+        for flag in ("-nonewinst", "--nonewinst", "-cfgfile", "--cfgfile")
+    )
 
 
 def completion_published(path: pathlib.Path) -> bool:
@@ -392,11 +438,13 @@ def guarded_command(
     profile: pathlib.Path,
     reaper_arguments: list[str],
     timeout_seconds: int,
+    clap_path: pathlib.Path | None = None,
+    probe_report: pathlib.Path | None = None,
 ) -> list[str]:
     cpu = max(os.sched_getaffinity(0))
     cpu_seconds = max(5, min(timeout_seconds, MAX_CPU_SECONDS))
     unit = f"m3-poly-guarded-{os.getpid()}"
-    return [
+    systemd_options = [
         "/usr/bin/systemd-run",
         "--user",
         "--scope",
@@ -410,6 +458,13 @@ def guarded_command(
         "--property=CPUWeight=10",
         "--property=IOWeight=10",
         "--property=TasksMax=64",
+    ]
+    if clap_path is not None:
+        systemd_options.append(f"--setenv=CLAP_PATH={clap_path}")
+    if probe_report is not None:
+        systemd_options.append(f"--setenv=M3_CLAP_PROBE_REPORT={probe_report}")
+    return [
+        *systemd_options,
         "--",
         "/usr/bin/timeout",
         "--signal=TERM",
@@ -448,6 +503,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gui", action="store_true")
     parser.add_argument("--workspace", type=int, default=5)
     parser.add_argument("--profile", type=pathlib.Path)
+    parser.add_argument("--clap-path", type=pathlib.Path)
+    parser.add_argument("--probe-report", type=pathlib.Path)
     parser.add_argument("--completion-file", type=pathlib.Path)
     parser.add_argument("--timeout-seconds", type=int, default=45)
     parser.add_argument("--available-mib", type=float)
@@ -487,6 +544,24 @@ def main(argv: list[str] | None = None) -> int:
     if not profile.is_file():
         print(f"guardrail refusal: disposable profile is missing: {profile}", file=sys.stderr)
         return 2
+    clap_path = None
+    probe_report = None
+    if args.clap_path is not None or args.probe_report is not None:
+        if args.clap_path is None or args.probe_report is None:
+            print(
+                "guardrail refusal: --clap-path and --probe-report must be used together",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            clap_path, probe_report = validate_native_clap_environment(
+                args.clap_path,
+                args.probe_report,
+                profile,
+            )
+        except ValueError as exc:
+            print(f"guardrail refusal: {exc}", file=sys.stderr)
+            return 2
     if not REAPER.is_file() or not os.access(REAPER, os.X_OK):
         print(f"guardrail refusal: REAPER executable is unusable: {REAPER}", file=sys.stderr)
         return 2
@@ -515,17 +590,25 @@ def main(argv: list[str] | None = None) -> int:
     reaper_arguments = list(args.reaper_args)
     if reaper_arguments[:1] == ["--"]:
         reaper_arguments = reaper_arguments[1:]
-    forbidden = {"-cfgfile", "-nonewinst"}
-    if any(argument.lower() in forbidden for argument in reaper_arguments):
+    if any(overrides_instance_isolation(argument) for argument in reaper_arguments):
         print("guardrail refusal: REAPER arguments may not override instance/profile isolation", file=sys.stderr)
         return 2
 
-    command = guarded_command(profile, reaper_arguments, args.timeout_seconds)
+    command = guarded_command(
+        profile,
+        reaper_arguments,
+        args.timeout_seconds,
+        clap_path,
+        probe_report,
+    )
     if args.dry_run:
         if args.gui:
             print(f"guarded GUI workspace: {args.workspace}")
         if completion_file is not None:
             print(f"guarded completion file: {completion_file}")
+        if clap_path is not None:
+            print(f"guarded CLAP path: {clap_path}")
+            print(f"guarded probe report: {probe_report}")
         print(shlex.join(command))
         return 0
 
