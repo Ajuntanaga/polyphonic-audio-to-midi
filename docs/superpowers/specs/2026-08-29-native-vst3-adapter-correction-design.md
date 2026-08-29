@@ -2,6 +2,7 @@
 
 Date: 2026-08-29
 Architecture approved in chat: 2026-08-29
+Host-authoritative sample-rate correction approved in chat: 2026-08-29
 Written specification review: pending user review
 Document status: design-only amendment; implementation remains separately gated
 
@@ -201,9 +202,17 @@ host/contract fault rather than a supported automation path.
 ### 6.1 Setup and activation
 
 - `initialize()` registers busses and parameter metadata only.
-- `setupProcessing()` accepts 44.1, 48, and 96 kHz as release-qualified rates,
-  validates a finite positive rate, and rejects a zero or greater-than-16384
-  maximum block size.
+- `setupProcessing()` treats the host's `ProcessSetup::sampleRate` as the sole
+  runtime sample rate. The plug-in has no sample-rate control, preferred-rate
+  override, or fixed-rate conversion path.
+- The adapter accepts a finite positive host rate whenever bounded
+  configuration preparation produces finite, numerically valid coefficients.
+  It does not whitelist only the release-matrix rates. It rejects invalid or
+  numerically unsafe preparation and a zero or greater-than-16384 maximum
+  block size before activation.
+- When the host changes project rate, the inactive setup/activation sequence
+  prepares a new complete coefficient set from that rate. Persistent settings
+  remain unchanged, detector transients reset, and no resampling is introduced.
 - Realtime, prefetch, and offline modes use the same bounded algorithm; offline
   mode does not enable a slower or higher-quality path.
 - `setActive(true)` allocates all detector, transition, and configuration
@@ -315,30 +324,37 @@ path and latch their specific Status value. No fault silently reduces pitch
 range, polyphony, harmonic work, sample rate, decision frequency, or validation
 thresholds.
 
-## 9. 96 kHz and block-size contract
+## 9. Host sample-rate and block-size contract
 
-96 kHz is a mandatory operating and release gate, not a best-effort mode.
+The host owns the project sample rate. The plug-in follows the finite positive
+rate supplied during VST3 setup; it does not choose, force, or silently convert
+it. The named rates below are mandatory verification points, not a runtime
+whitelist.
 
 - Audio and detector input remain at the host's native rate; there is no hidden
   downsampling, resampling, lookahead, or additional buffering.
-- Decision cadence remains 64 samples at 44.1, 48, and 96 kHz.
-- Adapter unit/fake-host coverage includes 44.1, 48, and 96 kHz.
-- The guarded minimal REAPER capability matrix is exactly ten serial rows:
-  sample rates `48000` and `96000`, each at block sizes
+- Decision cadence remains 64 host samples at every accepted host rate.
+- Adapter unit/fake-host coverage includes exact points 44.1, 48, 88.2, and
+  96 kHz plus invalid-rate and non-matrix finite-rate preparation cases.
+- The guarded minimal REAPER capability matrix is exactly twenty serial rows:
+  sample rates `44100`, `48000`, `88200`, and `96000`, each at block sizes
   `32, 64, 128, 256, 512`.
-- Rows run in lexical plan order beginning at 48 kHz/block 32 and stop after
-  the first invalid, timed-out, pressure-aborted, or failed row. No automatic
-  retry is allowed.
+- Rows run in ascending rate/block order beginning at 44.1 kHz/block 32 and
+  stop after the first invalid, timed-out, pressure-aborted, or failed row. No
+  automatic retry is allowed.
 - Block size 512 is a host-test row. Separately, every REAPER child remains
   capped at 512 MiB of memory by the existing stability guard.
 - The known 96 kHz `32+56` false MIDI-44 regression is an independent hard
   detector-release blocker. A green adapter capability probe cannot waive it.
 
 The native detector gate must later pass the complete frozen correctness
-matrix at 44.1, 48, and 96 kHz. The performance gate must include the strictest
-96 kHz/block-32 callback deadline. Any callback at or above 50% of its deadline
-stops the experiment and requires another design amendment; no buffering or
-quality reduction may conceal the failure.
+matrix at 44.1, 48, 88.2, and 96 kHz. The performance matrix covers all four
+verification rates and includes 96 kHz/block 32, the strictest deadline among
+them. Any callback at or above 50% of its deadline stops the experiment and
+requires another design amendment; no fixed-rate conversion, buffering, or
+quality reduction may conceal the failure. Other finite host rates remain
+host-driven and must satisfy the same bounded preparation and safety contracts
+before any broader release claim is made.
 
 ## 10. Dependency, build, packaging, and licensing
 
@@ -429,10 +445,11 @@ the REAPER probe identifies those parameters by stable ID/name and does not
 require REAPER's total host-facing parameter count to equal sixteen because
 the host may add its own controls.
 
-The ten-row 48/96 kHz by 32/64/128/256/512 matrix requires one fresh disposable
-profile and one fresh REAPER process per row. Every launch is serial,
-backgrounded, non-activating, placed on workspace 5, forbidden from attaching
-to an existing REAPER process, and run under the existing low-priority guard:
+The twenty-row 44.1/48/88.2/96 kHz by 32/64/128/256/512 matrix requires one
+fresh disposable profile and one fresh REAPER process per row. Every launch is
+serial, backgrounded, non-activating, placed on workspace 5, forbidden from
+attaching to an existing REAPER process, and run under the existing
+low-priority guard:
 
 - 50% of one logical CPU;
 - 384 MiB memory-high and 512 MiB memory maximum;
@@ -464,14 +481,15 @@ That future plan must preserve these gates in order:
 4. **Neutral-extraction gate** — existing tests green before VST3 classes.
 5. **Offline VST3 gate** — fake host, sanitizers, source checks, and Steinberg
    validator green.
-6. **Capability-host gate** — explicit approval for the ten guarded disposable
-   REAPER rows; stop on first failure.
+6. **Capability-host gate** — explicit approval for the twenty guarded
+   disposable REAPER rows; stop on first failure.
 7. **Detector-port gate** — port modules one at a time only after capability is
    green.
-8. **Correctness gate** — frozen oracle plus 44.1/48/96 kHz regression matrix,
-   including the known 96 kHz false-note case.
-9. **Latency/deadline gate** — existing thresholds unchanged; 96 kHz/block 32
-   included and the 50% callback ceiling enforced.
+8. **Correctness gate** — frozen oracle plus 44.1/48/88.2/96 kHz regression
+   matrix, including the known 96 kHz false-note case.
+9. **Latency/deadline gate** — existing thresholds unchanged; all four named
+   rates covered, 96 kHz/block 32 included, and the 50% callback ceiling
+   enforced.
 10. **Production-host gate** — guarded disposable REAPER only.
 11. **Clean-DI/live-input gate** — separately authorized hardware recording
     and input after every synthetic/host gate is green.
@@ -489,9 +507,9 @@ This VST3 design correction is complete when:
 - the exact next action is the separately reviewed TDD implementation plan.
 
 The eventual product is complete only when all future gates pass at 44.1, 48,
-and 96 kHz, including block 512 host coverage, 96 kHz/block 32 performance,
-clean-DI evidence, and fail-closed lifecycle cleanup. A discoverable or locally
-green VST3 bundle alone is not completion.
+88.2, and 96 kHz, including block 512 host coverage, 96 kHz/block 32
+performance, clean-DI evidence, and fail-closed lifecycle cleanup. A
+discoverable or locally green VST3 bundle alone is not completion.
 
 ## 14. Primary references
 

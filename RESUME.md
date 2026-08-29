@@ -23,14 +23,20 @@ Updated: 2026-08-29T02:04:56-07:00
   fixed 64-sample decision cadence, fifteen writable controls, read-only
   Status, fourteen-value state, dry pass/mute, and every existing detector and
   stability threshold remain unchanged.
-- The user explicitly added block size 512 and 96 kHz to the guarded
-  capability design. The exact host matrix is ten serial rows: 48 and 96 kHz,
-  each at blocks 32, 64, 128, 256, and 512. It stops after the first failed,
-  invalid, timed-out, or pressure-aborted row. Separately, the REAPER child
-  memory ceiling remains 512 MiB.
+- The user clarified that sample rate belongs to the host. The plug-in has no
+  sample-rate control, whitelist, preferred-rate override, or hidden resampler;
+  it derives bounded coefficients from the finite positive rate supplied by
+  VST3 setup. The mandatory verification points are 44.1, 48, 88.2, and 96
+  kHz, while other finite host rates remain governed by the same preparation
+  and safety contract rather than being silently converted.
+- The user explicitly added block size 512. The exact host matrix is twenty
+  serial rows: 44.1, 48, 88.2, and 96 kHz, each at blocks 32, 64, 128, 256,
+  and 512. It stops after the first failed, invalid, timed-out, or
+  pressure-aborted row. Separately, the REAPER child memory ceiling remains
+  512 MiB.
 - 96 kHz remains a hard release gate with native-rate processing and the same
-  64-sample cadence. The existing 96 kHz 32+56 false MIDI-44 regression is not
-  waived by an adapter probe and must pass before release.
+  64-host-sample cadence. The existing 96 kHz 32+56 false MIDI-44 regression
+  is not waived by an adapter probe and must pass before release.
 - No SDK was retrieved, no VST3 or detector source was written, no dependency
   was installed, no REAPER process was launched, and no persistent path or live
   project was touched. The written specification is now ready for user review;
@@ -484,9 +490,10 @@ REAPER process behind.
    then write a new VST3 TDD implementation plan. Do not retry the CLAP
    capability row, launch its remaining blocks, modify the CLAP adapter,
    retrieve a VST3 SDK, or begin old Task 11 under this design-only gate.
-3. The future VST3 capability plan must retain the approved ten-row matrix:
-   48/96 kHz by blocks 32/64/128/256/512, serial, guarded, workspace 5, and
-   stopped after the first invalid or failed row.
+3. The future VST3 capability plan must retain the approved twenty-row matrix:
+   44.1/48/88.2/96 kHz by blocks 32/64/128/256/512, serial, guarded,
+   workspace 5, and stopped after the first invalid or failed row. Runtime
+   sample rate remains host-supplied rather than selected by the plug-in.
 4. Keep clean-DI/live input, performance work, persistent installation, live
    projects, custom GUI work, and REAPER MCP behind their existing gates.
 
