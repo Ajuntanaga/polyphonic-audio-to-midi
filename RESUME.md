@@ -1,8 +1,24 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T04:47:21-07:00
+Updated: 2026-08-29T05:02:20-07:00
 
-## VST3 Tasks 1-2 sealed — stopped at SDK Gate D2
+## VST3 Tasks 1-2 sealed — all remaining plan gates authorized
+
+- On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
+  Gate D2, the user explicitly said `Authorize all`. This authorizes every
+  remaining named gate and action in the approved 24-task native VST3 plan:
+  D2, N3, O4, C5, N6, P7, D8, and I9, including the plan's bounded network,
+  build, disposable-host, benchmark, clean-DI, and final installation phases.
+- This authority does not weaken any pressure guard, stop-on-first-failure
+  rule, immutable-evidence boundary, or acceptance threshold. It does not add
+  unrelated package changes, REAPER MCP installation, live-project mutation,
+  CLAP retries, or work outside the approved plan. Gate D8 still requires
+  suitable input material before it can execute, and I9 remains conditional on
+  every prerequisite release gate being green.
+- Fresh post-authorization baseline verification passed 44 native tests and
+  125 Python tests at the unchanged Task 2 checkpoint. No REAPER process was
+  present; the tests ran serially at low priority after an unrelated io24 test
+  process completed and the ACPI temperature fell.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -39,10 +55,9 @@ Updated: 2026-08-29T04:47:21-07:00
 - No Steinberg SDK, SDK-dependent VST3 `.cpp`, `.vst3` bundle, persistent M3
   plug-in copy, or REAPER process exists. No SDK/network retrieval, VST3
   build, live profile/project, hardware-input, or REAPER action occurred.
-- Hard stop: Gate D2 is closed. The only next possible action is separately
-  explicit authorization for Task 3's exact official SDK root and four pinned
-  submodule revisions. General `proceed`, `resume`, continuous execution, or
-  CMake authority is not SDK-retrieval authority.
+- Gate D2 is now open under the user's explicit all-gates authorization. The
+  next action is Task 3's exact official SDK root and four pinned submodule
+  revisions; no alternate dependency or retry is permitted.
 
 ## Approved VST3 design and sealed implementation plan
 
