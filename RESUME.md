@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T06:23:41-07:00
+Updated: 2026-08-29T06:54:06-07:00
 
-## VST3 Tasks 1-7 sealed — Gate N3 open for minimal VST3 lifecycle
+## VST3 Tasks 1-8 sealed — generic VST3 parameters and state next
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -92,6 +92,31 @@ Updated: 2026-08-29T06:23:41-07:00
   excluded historical CLAP target pass. Neutral source and the compiled ledger
   object contain no CLAP or Steinberg dependency. The final snapshots recorded
   about 31692 MiB available, load 2.02, 68 C, and zero full memory/I/O PSI.
+- Task 8 is sealed at commit `d757877` (`feat: add minimal VST3 lifecycle and
+  bus adapter`). The build-local probe now exposes exactly one
+  non-distributable combined `SingleComponentEffect` class under the locked
+  probe identity, with one default-active stereo input/output, no event input,
+  one default-active sixteen-channel event output, no editor, and zero declared
+  latency or tail.
+- The component accepts only paired stereo layouts, finite positive host rates,
+  blocks through 16384 samples, and float32/float64 processing. Its in-place and
+  out-of-place dry pass/mute paths are bit-exact for finite input; NaN/Inf and
+  null/shared/unsupported layouts fail closed while zeroing safely addressable
+  output. Repeated processing, invalid-layout handling, and processing-state
+  transitions perform no allocation after activation.
+- The debug probe is an x86-64 Linux VST3 bundle under ignored `build/` with
+  SHA-256 `ecff02d3b0a2ecea556d22a1a5ec15ba5ba00ea61769d6fc1d8e85d48ba747b5`.
+  Dynamic symbols include `GetPluginFactory`, `ModuleEntry`, and `ModuleExit`;
+  compiled identity storage contains the probe FUID and neither production nor
+  benchmark FUID. Its source graph contains only the three neutral core files,
+  the two VST3 adapter files, and Steinberg's official combined-component and
+  Linux-entry sources—no CLAP source or header.
+- Debug and ASan/UBSan runs each pass 66 tests; all 134 Python tests, the
+  native source validator, Git whitespace checks, and the excluded historical
+  CLAP target pass. The final guarded sanitizer snapshot recorded about 32.2
+  GiB available, load 1.07, 41 C, and zero memory-full and I/O-full PSI. No
+  REAPER process was launched, and no persistent plug-in copy, live project,
+  or hardware input was touched.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -126,16 +151,16 @@ Updated: 2026-08-29T06:23:41-07:00
   installed 4.2.3-2ubuntu2`. Only required automatic dependencies
   `cmake-data`, `libjsoncpp26`, and `librhash1` accompanied it. Swap use and
   full pressure remained zero.
-- The exact approved Steinberg SDK is now vendored, but no SDK-dependent VST3
-  `.cpp`, `.vst3` bundle, persistent M3 plug-in copy, or REAPER process exists.
-  No VST3 build, live profile/project, hardware-input, or REAPER action has
-  occurred under the VST3 plan.
+- The exact approved Steinberg SDK is vendored and Task 8 has produced only the
+  ignored build-local probe bundle. No persistent M3 plug-in copy or REAPER
+  process exists, and no live profile/project, hardware input, or REAPER action
+  has occurred under the VST3 plan.
 - Gates D2 and the Task 4 build foundation passed at `9851237` and `282ba18`;
   Task 5 neutral parameters passed at `c85d9ab`, and Task 6 neutral state
   images passed at `42859f7`. Task 7's neutral generated-note ledger passed at
-  `5c77caf`, opening Gate N3. The next action is Task 8's offline minimal VST3
-  factory, combined lifecycle, busses, and dry-audio slice; it needs no
-  dependency network access or REAPER launch.
+  `5c77caf`, opening Gate N3, and Task 8's minimal VST3 lifecycle passed at
+  `d757877`. The next action is Task 9's offline generic VST3 parameter and
+  exact-state bridge; it needs no dependency network access or REAPER launch.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -644,12 +669,13 @@ REAPER process behind.
    specification/plan hashes recorded above. The failed CLAP Task 10 evidence
    remains immutable historical input; do not retry it or begin old CLAP Task
    11.
-2. Tasks 4-7 are sealed at `282ba18`, `c85d9ab`, `42859f7`, and `5c77caf`.
-   Gate N3 is open: execute Task 8's offline minimal VST3 lifecycle/bus/dry
-   slice next under guarded serial TDD; do not perform dependency network
+2. Tasks 4-8 are sealed at `282ba18`, `c85d9ab`, `42859f7`, `5c77caf`, and
+   `d757877`. Execute Task 9's offline generic VST3 parameter and exact-state
+   bridge next under guarded serial TDD; do not perform dependency network
    access or start a REAPER process.
 3. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
-   probe, and historical adapter source as Task 8 replaces the reserved target.
+   probe, and historical adapter source as later tasks extend the verified
+   minimal VST3 target.
 4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
    32/64/128/256/512 capability matrix, serial guarded background launches on
    workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
@@ -662,7 +688,7 @@ task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 plan Tasks 8-24 are authorized but remain ordered and evidence-gated.
+- VST3 plan Tasks 9-24 are authorized but remain ordered and evidence-gated.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
