@@ -1,6 +1,38 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T00:46:12-07:00
+Updated: 2026-08-29T01:55:51-07:00
+
+## VST3 adapter-correction design approved — written specification pending review
+
+- On 2026-08-29 the user approved replacing the failed CLAP production path
+  with one Linux x86-64 VST3 effect built over the preserved format-neutral
+  C++17 detector core. The authoritative new specification is
+  `docs/superpowers/specs/2026-08-29-native-vst3-adapter-correction-design.md`.
+- The selected adapter is Steinberg's official non-distributable
+  `SingleComponentEffect`: one host object owns processing, generic parameters,
+  state, and prepared-configuration publication. There is no custom GUI,
+  worker, helper process, model runtime, lookahead, or declared latency.
+- The signal contract is guitar audio to generated VST3 NoteOn/NoteOff events
+  to a downstream VSTi. There is one stereo audio input/output, no event input,
+  one sixteen-channel event output, up to eight ordinary discrete notes, and no
+  raw-MIDI passthrough, CC output, MPE, or event merging.
+- M3 tuning remains `G#1 C2 E2 G#2 C3 E3 G#3 C4`; General Tonal mode, the
+  fixed 64-sample decision cadence, fifteen writable controls, read-only
+  Status, fourteen-value state, dry pass/mute, and every existing detector and
+  stability threshold remain unchanged.
+- The user explicitly added block size 512 and 96 kHz to the guarded
+  capability design. The exact host matrix is ten serial rows: 48 and 96 kHz,
+  each at blocks 32, 64, 128, 256, and 512. It stops after the first failed,
+  invalid, timed-out, or pressure-aborted row. Separately, the REAPER child
+  memory ceiling remains 512 MiB.
+- 96 kHz remains a hard release gate with native-rate processing and the same
+  64-sample cadence. The existing 96 kHz 32+56 false MIDI-44 regression is not
+  waived by an adapter probe and must pass before release.
+- No SDK was retrieved, no VST3 or detector source was written, no dependency
+  was installed, no REAPER process was launched, and no persistent path or live
+  project was touched. The written specification is now ready for user review;
+  after approval, the next design artifact is a new VST3 TDD implementation
+  plan, not direct implementation or resumption of old CLAP Tasks 11-24.
 
 ## Task 10 CLAP capability gate failed — hard stop
 
@@ -132,8 +164,9 @@ Updated: 2026-08-29T00:46:12-07:00
   no REAPER launch, and no REAPER application process remains.
 - Decision: native plan Tasks 1-9 remain complete and sealed, but Task 10's
   capability gate failed at its first row. The JSFX detector remains stopped
-  and uninstalled. Exact resume action is to present a separately approved
-  VST3 adapter-correction design gate; do not retry CLAP or start Task 11.
+  and uninstalled. The VST3 adapter correction is now approved and written;
+  exact resume action is to review/seal its specification and then write a new
+  VST3 TDD implementation plan. Do not retry CLAP or start old Task 11.
 - Clean-DI recording/input, persistent installation, live projects, REAPER
   MCP, detector-port Tasks 11+, and every future REAPER launch remain
   separately gated.
@@ -443,10 +476,15 @@ REAPER process behind.
 
 1. Recover the failed Task 10 evidence directory and verify its seven-file
    manifest digest before any discussion of a next implementation.
-2. Present a separately approved VST3 adapter-correction design gate. Do not
-   retry the CLAP capability row, launch blocks 64/128/256, modify the CLAP
-   adapter, retrieve a VST3 SDK, or begin Task 11 under the failed C2 gate.
-3. Keep clean-DI/live input, performance work, persistent installation, live
+2. Review and seal
+   `docs/superpowers/specs/2026-08-29-native-vst3-adapter-correction-design.md`,
+   then write a new VST3 TDD implementation plan. Do not retry the CLAP
+   capability row, launch its remaining blocks, modify the CLAP adapter,
+   retrieve a VST3 SDK, or begin old Task 11 under this design-only gate.
+3. The future VST3 capability plan must retain the approved ten-row matrix:
+   48/96 kHz by blocks 32/64/128/256/512, serial, guarded, workspace 5, and
+   stopped after the first invalid or failed row.
+4. Keep clean-DI/live input, performance work, persistent installation, live
    projects, custom GUI work, and REAPER MCP behind their existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
@@ -454,7 +492,7 @@ task afterward.
 
 ## Still-gated actions
 
-- VST3 adapter design or SDK retrieval
+- VST3 SDK retrieval or adapter implementation
 - persistent REAPER Effects or Scripts installation
 - live guitar or audio-interface testing
 - live-project modification
