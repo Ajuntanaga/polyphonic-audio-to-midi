@@ -1,8 +1,50 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T00:26:15-07:00
+Updated: 2026-08-29T00:46:12-07:00
 
-## Native Tasks 1-9 sealed checkpoint
+## Task 10 CLAP capability gate failed — hard stop
+
+- The user explicitly authorized the four-row Task 10 gate on 2026-08-29.
+  Fresh non-launching preflight passed with about 30 GiB available, load 2.42,
+  temperature 46 C, memory-full PSI 0.00, and I/O-full PSI 0.18. The dry run
+  emitted exactly the planned serial workspace-5 rows for 48 kHz block sizes
+  32, 64, 128, and 256.
+- The real runner launched block 32 only. Its guard returned zero and REAPER
+  completed `suite-finish`, but the runner rejected the capability result and
+  atomically preserved it at
+  `build/test-results/native-clap-probe/batches/32.invalid-20260829T074326Z`.
+  Per Gate C2, blocks 64, 128, and 256 were not launched and no retry was made.
+- `capability.tsv` records `status=fail`, `failure_count=19`, `dry_error=inf`,
+  positive `synth_peak=0.43603515625000033`, zero source fault, and zero capture
+  overflow. The failure labels are `parameter-count`, all fourteen persistent
+  `parameter-not-writable-*` checks, `status-state-persisted`,
+  `scripted-phase-timeout`, `lifecycle-reset`, and `trigger-two-count`.
+- The row did prove discovery and bounded execution: create/init/activate/start,
+  stop/deactivate/destroy, float32 processing, separate host buffers, and both
+  alias/separate activation self-tests passed. The first CC119 trigger reached
+  the plug-in. REAPER did not invoke `reset`; the scripted phase did not reach
+  its eight-event completion condition, so the held-note/second-trigger phase
+  never ran. The empty event transcript and infinite dry-error sentinel are
+  therefore non-completion evidence, not independent measurements.
+- All fourteen state rows remained at their defaults after attempted ReaScript
+  writes. The first sixteen names/ranges/defaults produced no failure labels,
+  but REAPER reported a non-exact total parameter count. This single capture
+  does not distinguish a CLAP-adapter contract error from a REAPER/ReaScript
+  exposure mismatch, so no corrective claim or code change is made.
+- Pressure stayed safe: before/after available memory was 29982.57/29808.68
+  MiB, load 2.12/2.67, temperature 50/49 C, memory-full PSI 0.00/0.00, and
+  I/O-full PSI 0.05/0.03. No REAPER application process remained afterward;
+  PID 118 is Linux's `[oom_reaper]` kernel thread, not the DAW.
+- The lexical seven-file evidence-manifest digest is
+  `12abeeb42c9cf3bf9293540ed952951bfcbeeeaf1e22139af380ac527c837d51`.
+  Individual hashes are recorded in `docs/NATIVE-TESTING.md`.
+- **Decision:** Gate C2 failed. Task 11 and all later detector-port work are
+  blocked. Do not retry this CLAP row, launch the remaining rows, download a
+  VST3 SDK, install anything, or modify the adapter under this authorization.
+  Per the approved plan, the only next design action is a separately approved
+  VST3 adapter correction.
+
+## Native Tasks 1-9 sealed checkpoint — retained pre-gate state
 
 - Branch `main` is sealed through `cc938f7` (`test: add disposable CLAP
   capability probe`). Native plan Tasks 1-9 are complete in commits
@@ -27,24 +69,18 @@ Updated: 2026-08-29T00:26:15-07:00
   `2dedbd2532c84c5d6522b0dd28f7143ba3bfd800cddbb672d7cd355c3e2a9066`
   for `M3_Polyphonic_Audio_to_MIDI_Probe.clap`. Both are x86-64 ELF shared
   objects; only the probe artifact contains `M3_CLAP_PROBE_REPORT`.
-- **Hard stop:** Task 10 has not run. No REAPER application process was
-  started by Tasks 1-9, no capability result is claimed, and no host evidence
-  has been sealed. The four planned rows remain 48 kHz at block sizes 32, 64,
-  128, and 256.
-- Exact next action, only after a separate explicit Task 10 guarded-launch
-  authorization: run `python3 tools/run_native_clap_probe.py` once. The runner
-  is serial and resumable and must use the disposable profile, build-local
-  probe, background workspace 5, 50% of one CPU, 512 MiB memory, 64 tasks,
-  low priority, pressure refusal, and hard timeouts. Do not run an unguarded or
-  automatic retry.
+- This was the authoritative pre-launch state. Task 10 was subsequently
+  authorized and failed at block 32 as recorded above; its remaining rows are
+  no longer launchable under the current plan.
 - Clean-DI/hardware input, live projects, REAPER MCP, detector-port Tasks
   11+, production-host validation, performance measurement, persistent
   installation, MPE, and a custom GUI remain separately gated.
 
 ## Authoritative state
 
-- Branch: `main`. The current native capability checkpoint is `cc938f7`. The
-  retained Task 13 terminal JSFX checkpoint is `0be04d3` (`feat: complete
+- Branch: `main`. The current native implementation checkpoint is `cc938f7`;
+  the newer failed-host gate is recorded by this recovery file. The retained
+  Task 13 terminal JSFX checkpoint is `0be04d3` (`feat: complete
   polyphonic JSFX experiment and record native gate`); its predecessor is
   `8a1332d` (`test: generate deterministic synthetic matrix`).
 - The approved native CLAP design was introduced at `3ac7dcb` (`docs: approve
@@ -94,10 +130,10 @@ Updated: 2026-08-29T00:26:15-07:00
 - Every earlier JSFX-evidence REAPER instance ran serially, backgrounded on
   workspace 5, under the 50%-of-one-core and 512 MiB limits. Tasks 1-9 added
   no REAPER launch, and no REAPER application process remains.
-- Decision: native plan Tasks 1-9 are complete and sealed; the JSFX detector
-  remains stopped and uninstalled. Exact resume action is to present Task 10's
-  four-row guarded capability-host gate and wait for separate explicit
-  authorization before the first REAPER launch.
+- Decision: native plan Tasks 1-9 remain complete and sealed, but Task 10's
+  capability gate failed at its first row. The JSFX detector remains stopped
+  and uninstalled. Exact resume action is to present a separately approved
+  VST3 adapter-correction design gate; do not retry CLAP or start Task 11.
 - Clean-DI recording/input, persistent installation, live projects, REAPER
   MCP, detector-port Tasks 11+, and every future REAPER launch remain
   separately gated.
@@ -405,24 +441,24 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Request explicit authorization for a native implementation plan only.
-2. If granted, invoke the implementation-planning workflow and produce a plan;
-   do not retrieve dependencies, write native source, or launch REAPER during
-   planning.
-3. Keep dependency retrieval, native source, REAPER launches, clean-DI or live
-   input, persistent installation, live projects, and REAPER MCP behind their
-   existing gates.
+1. Recover the failed Task 10 evidence directory and verify its seven-file
+   manifest digest before any discussion of a next implementation.
+2. Present a separately approved VST3 adapter-correction design gate. Do not
+   retry the CLAP capability row, launch blocks 64/128/256, modify the CLAP
+   adapter, retrieve a VST3 SDK, or begin Task 11 under the failed C2 gate.
+3. Keep clean-DI/live input, performance work, persistent installation, live
+   projects, custom GUI work, and REAPER MCP behind their existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
 
 ## Still-gated actions
 
-- dependency download or installation
+- VST3 adapter design or SDK retrieval
 - persistent REAPER Effects or Scripts installation
 - live guitar or audio-interface testing
 - live-project modification
 - REAPER MCP installation
-- native implementation planning or implementation
-- CLAP or VST3 header/SDK retrieval
+- CLAP retry or remaining Task 10 rows
+- detector-port Task 11 and all downstream native implementation
 - custom native GUI design or implementation
