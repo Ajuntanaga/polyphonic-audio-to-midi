@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T02:04:56-07:00
+Updated: 2026-08-29T02:13:50-07:00
 
 ## VST3 adapter-correction design approved — written specification pending review
 
@@ -8,9 +8,10 @@ Updated: 2026-08-29T02:04:56-07:00
   with one Linux x86-64 VST3 effect built over the preserved format-neutral
   C++17 detector core. The authoritative new specification is
   `docs/superpowers/specs/2026-08-29-native-vst3-adapter-correction-design.md`.
-  It is committed at `35f8a88` (`docs: design VST3 adapter correction`) with
-  SHA-256
-  `247b6f99cfb9de6df4d2b2e64f839df9aac93cf58b851d3ceb80509164f82a22`.
+  Its initial design commit is `35f8a88`; the host-authoritative rate revision
+  is `ba1302b` (`docs: make VST3 rate host-authoritative`). The current
+  specification SHA-256 is
+  `4fa4cf04815c735c465abd68ee0532ce58b91979c0d4a04f8081708672d60a8b`.
 - The selected adapter is Steinberg's official non-distributable
   `SingleComponentEffect`: one host object owns processing, generic parameters,
   state, and prepared-configuration publication. There is no custom GUI,
