@@ -1,14 +1,15 @@
 # M3 Polyphonic Audio to MIDI
 
-Status: experimental JSFX accuracy gate passes, but chord-latency and deadline
-gates fail; native design amendment required; not installed.
+Status: terminal JSFX experiment; native CLAP architecture approved and
+documented; written specification awaiting review; not installed.
 
 Source-editable, causal, real-time polyphonic audio-to-MIDI for REAPER and a
-downstream VSTi. Production detection and MIDI generation are JSFX/EEL2. Lua is
-used only for disposable host testing and the guarded Safe Bypass action. The
-M3 profile maps the eight open strings to MIDI `32,36,40,44,48,52,56,60`
-(`G# C E G# C E G# C`, low to high) and emits ordinary discrete MIDI rather
-than MPE.
+downstream VSTi. The current experimental detector is JSFX/EEL2. The approved
+next runtime is a CLAP effect with a format-neutral C++17 core; no native code
+or dependency has been added yet. Lua remains limited to disposable host
+testing and the guarded Safe Bypass action. The M3 profile maps the eight open
+strings to MIDI `32,36,40,44,48,52,56,60` (`G# C E G# C E G# C`, low to high)
+and emits ordinary discrete MIDI rather than MPE.
 
 Task 11 passed a disposable REAPER chain containing the synthetic signal
 source, the production detector, MIDI capture, ReaSynth, and an audio-output
@@ -40,9 +41,17 @@ performance-ready and must not be installed. See
 [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for hashes and the recorded
 `native amendment required` decision.
 
+The approved native amendment selects a Linux x86-64 CLAP track effect, raw
+MIDI 1.0, a single audio-thread detector, a fixed 64-sample decision cadence,
+and REAPER's generic parameter view for the first revision. The committed
+[native CLAP design](docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md)
+is awaiting written-spec review. That approval gate precedes any implementation
+plan, dependency retrieval, or native source work.
+
 This remains synthetic dummy-audio evidence, not a live-guitar or audible
 hardware claim. Persistent installation, live projects, audio-interface input,
-clean-DI metrics, and native implementation remain separately gated. The fresh
-local source gate is 90 tests plus a clean standalone contract. See
+clean-DI metrics, native implementation planning, and native implementation
+remain separately gated. The fresh local source gate is 90 tests plus a clean
+standalone contract. See
 [docs/TESTING.md](docs/TESTING.md) for the isolated verification boundary and
 [docs/MIDI-LIFECYCLE.md](docs/MIDI-LIFECYCLE.md) for cleanup behavior.
