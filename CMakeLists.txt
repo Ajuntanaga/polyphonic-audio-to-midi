@@ -31,6 +31,7 @@ find_package(Threads REQUIRED)
 enable_testing()
 
 set(M3_NATIVE_CORE_SOURCES
+    native/src/generated_note_ledger.cpp
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
 )
@@ -51,6 +52,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/fake_clap_host.cpp
     native/tests/test_clap_lifecycle.cpp
     native/tests/test_fixed_vector.cpp
+    native/tests/test_generated_note_ledger.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
     native/tests/test_parameter_contract.cpp

@@ -184,7 +184,7 @@ M3_TEST(midi_merge_orders_off_input_and_on_at_equal_offsets) {
 M3_TEST(midi_queue_validates_capacity_offsets_and_midi_bounds) {
   m3::MidiPipeline pipeline;
   M3_EXPECT_TRUE(pipeline.activate(16384));
-  M3_EXPECT_EQ(pipeline.capacity(), 4106U);
+  M3_EXPECT_EQ(pipeline.capacity(), 4104U);
   pipeline.begin_block();
   M3_EXPECT_FALSE(pipeline.queue_transition(
       transition(32, m3::TransitionKind::note_on, 60, 100, 1), 32));
@@ -201,6 +201,16 @@ M3_TEST(midi_queue_validates_capacity_offsets_and_midi_bounds) {
       0.0, true, true);
   M3_EXPECT_TRUE(result.invalid_event);
   M3_EXPECT_EQ(output.size(), 0U);
+
+  m3::MidiPipeline bounded;
+  M3_EXPECT_TRUE(bounded.activate(128));
+  bounded.begin_block();
+  output.reset();
+  const m3::MidiProcessResult oversized = bounded.process(
+      129, 1, m3::test::FakeClapHost::empty_input_events(), output.list(),
+      0.0, true, true);
+  M3_EXPECT_TRUE(oversized.invalid_event);
+  M3_EXPECT_FALSE(oversized.detection_allowed);
 }
 
 M3_TEST(midi_failure_never_activates_rejected_on_and_retains_accepted_notes) {

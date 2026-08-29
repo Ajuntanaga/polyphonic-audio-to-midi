@@ -1,138 +1,62 @@
 #include "midi_pipeline.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <new>
-#include <utility>
-
-#include "m3/constants.hpp"
-
-namespace {
-
-constexpr double kQuietPeak = 0.0001;
-
-}  // namespace
+#include <cstdint>
 
 namespace m3 {
 
+struct MidiPipeline::DeliveryContext final {
+  MidiPipeline* pipeline{};
+  const clap_input_events_t* input{};
+  const clap_output_events_t* output{};
+  std::uint32_t frames{};
+  std::uint32_t input_count{};
+  std::uint32_t input_index{};
+  std::uint32_t last_input_offset{};
+  std::uint8_t channel{};
+  bool have_last_input{};
+};
+
 bool MidiPipeline::activate(std::uint32_t max_frames) noexcept {
   deactivate();
-  if (max_frames == 0 || max_frames > kMaxHostFrames) {
-    return false;
-  }
-  const std::size_t ticks =
-      (static_cast<std::size_t>(max_frames) + kDecisionQuantum - 1U) /
-      kDecisionQuantum;
-  if (ticks > (std::numeric_limits<std::size_t>::max() - 10U) /
-                  kMaxTickTransitions) {
-    return false;
-  }
-  const std::size_t requested_capacity =
-      ticks * kMaxTickTransitions + kMaxVoices + 2U;
-  std::unique_ptr<VoiceTransition[]> storage{
-      new (std::nothrow) VoiceTransition[requested_capacity]};
-  if (!storage) {
-    return false;
-  }
-  storage_ = std::move(storage);
-  capacity_ = requested_capacity;
-  max_frames_ = max_frames;
-  return true;
+  return ledger_.activate(max_frames);
 }
 
 void MidiPipeline::deactivate() noexcept {
-  storage_.reset();
-  capacity_ = 0;
-  size_ = 0;
-  max_frames_ = 0;
-  active_ = {};
-  pending_release_ = {};
+  ledger_.deactivate();
   invalid_event_ = false;
-  blocked_ = false;
-  cleanup_requested_ = false;
   channel_panic_required_ = false;
-  cleanup_complete_ = false;
-  panic_hold_ = false;
-  explicit_recovery_ = false;
-  hold_calls_remaining_ = 0;
 }
 
 void MidiPipeline::begin_block() noexcept {
-  size_ = 0;
+  ledger_.begin_block();
   invalid_event_ = false;
-}
-
-bool MidiPipeline::transition_before(const VoiceTransition& left,
-                                     const VoiceTransition& right) noexcept {
-  if (left.sample_offset != right.sample_offset) {
-    return left.sample_offset < right.sample_offset;
-  }
-  if (left.kind != right.kind) {
-    return left.kind == TransitionKind::note_off;
-  }
-  return left.sequence < right.sequence;
 }
 
 bool MidiPipeline::queue_transition(const VoiceTransition& transition,
                                     std::uint32_t frames_count) noexcept {
-  const bool valid_kind = transition.kind == TransitionKind::note_off ||
-                          transition.kind == TransitionKind::note_on;
-  if (!storage_ || size_ >= capacity_ || frames_count == 0 ||
-      frames_count > max_frames_ || transition.sample_offset >= frames_count ||
-      !valid_kind || transition.note > 127U || transition.velocity > 127U) {
+  if (!ledger_.queue_transition(transition, frames_count)) {
     invalid_event_ = true;
     return false;
   }
-  std::size_t position = size_;
-  while (position > 0 && transition_before(transition, storage_[position - 1U])) {
-    storage_[position] = storage_[position - 1U];
-    --position;
-  }
-  storage_[position] = transition;
-  ++size_;
   return true;
 }
 
-bool MidiPipeline::bit(const std::array<std::uint64_t, 2>& bits,
-                       std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  return (bits[word] & (std::uint64_t{1} << shift)) != 0U;
-}
-
-void MidiPipeline::set_bit(std::array<std::uint64_t, 2>& bits,
-                           std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  bits[word] |= std::uint64_t{1} << shift;
-}
-
-void MidiPipeline::clear_bit(std::array<std::uint64_t, 2>& bits,
-                             std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  bits[word] &= ~(std::uint64_t{1} << shift);
-}
-
 bool MidiPipeline::is_active(std::uint8_t note) const noexcept {
-  return note <= 127U && bit(active_, note);
+  return ledger_.is_active(note);
 }
 
 bool MidiPipeline::is_pending_release(std::uint8_t note) const noexcept {
-  return note <= 127U && bit(pending_release_, note);
+  return ledger_.is_pending_release(note);
 }
 
 bool MidiPipeline::request_panic(std::uint32_t offset,
                                  std::uint32_t frames_count) noexcept {
-  panic_hold_ = true;
-  explicit_recovery_ = true;
-  hold_calls_remaining_ = 1;
+  ledger_.request_recovery();
   bool complete = true;
   std::uint32_t sequence = 0;
   for (std::uint16_t note = 0; note < 128; ++note) {
     const auto midi_note = static_cast<std::uint8_t>(note);
-    if (is_active(midi_note) &&
+    if (ledger_.is_active(midi_note) &&
         !queue_transition(VoiceTransition{offset, TransitionKind::note_off,
                                           midi_note, 0, sequence++},
                           frames_count)) {
@@ -140,25 +64,20 @@ bool MidiPipeline::request_panic(std::uint32_t offset,
     }
   }
   if (!complete) {
-    enter_blocked();
+    enter_output_blocked();
   }
   return complete;
 }
 
 void MidiPipeline::request_reset() noexcept {
-  panic_hold_ = true;
-  explicit_recovery_ = true;
-  hold_calls_remaining_ = 1;
-  pending_release_[0] |= active_[0];
-  pending_release_[1] |= active_[1];
-  if (pending_release_[0] != 0U || pending_release_[1] != 0U) {
-    cleanup_requested_ = true;
-  }
+  ledger_.request_release_all();
+  ledger_.request_recovery();
 }
 
 bool MidiPipeline::push_midi(const clap_output_events_t* output,
                              std::uint32_t offset, std::uint8_t status,
-                             std::uint8_t data1, std::uint8_t data2) noexcept {
+                             std::uint8_t data1,
+                             std::uint8_t data2) noexcept {
   if (output == nullptr || output->try_push == nullptr) {
     return false;
   }
@@ -180,67 +99,94 @@ bool MidiPipeline::push_input(const clap_output_events_t* output,
          output->try_push(output, event);
 }
 
-void MidiPipeline::enter_blocked() noexcept {
-  blocked_ = true;
-  cleanup_requested_ = true;
-  cleanup_complete_ = false;
+void MidiPipeline::enter_output_blocked() noexcept {
+  ledger_.report_output_failure();
   channel_panic_required_ = true;
-  pending_release_[0] |= active_[0];
-  pending_release_[1] |= active_[1];
 }
 
-bool MidiPipeline::retry_cleanup(const clap_output_events_t* output,
-                                 std::uint8_t channel) noexcept {
-  if (!cleanup_requested_) {
-    return true;
-  }
-  for (std::uint16_t note = 0; note < 128; ++note) {
-    const auto midi_note = static_cast<std::uint8_t>(note);
-    if (!is_pending_release(midi_note)) {
+bool MidiPipeline::flush_inputs(DeliveryContext& context,
+                                std::uint32_t boundary, bool inclusive,
+                                bool final_flush) noexcept {
+  bool accepted = true;
+  while (context.input_index < context.input_count) {
+    const clap_event_header_t* header =
+        context.input != nullptr && context.input->get != nullptr
+            ? context.input->get(context.input, context.input_index)
+            : nullptr;
+    if (header == nullptr) {
+      invalid_event_ = true;
+      ++context.input_index;
       continue;
     }
-    if (!push_midi(output, 0, static_cast<std::uint8_t>(0x80U | (channel - 1U)),
-                   midi_note, 0)) {
-      enter_blocked();
-      return false;
+    const bool due = final_flush || header->time < boundary ||
+                     (inclusive && header->time == boundary);
+    if (!due) {
+      break;
     }
-    clear_bit(pending_release_, midi_note);
-    clear_bit(active_, midi_note);
-  }
-  if (channel_panic_required_) {
-    const std::uint8_t status =
-        static_cast<std::uint8_t>(0xB0U | (channel - 1U));
-    if (!push_midi(output, 0, status, 123, 0) ||
-        !push_midi(output, 0, status, 120, 0)) {
-      enter_blocked();
-      return false;
+    ++context.input_index;
+    if (header->time >= context.frames ||
+        (context.have_last_input &&
+         header->time < context.last_input_offset)) {
+      invalid_event_ = true;
+      continue;
     }
-    channel_panic_required_ = false;
+    context.last_input_offset = header->time;
+    context.have_last_input = true;
+    if (header->space_id != CLAP_CORE_EVENT_SPACE_ID ||
+        header->type != CLAP_EVENT_MIDI) {
+      continue;
+    }
+    if (header->size < sizeof(clap_event_midi_t)) {
+      invalid_event_ = true;
+      continue;
+    }
+    if (!push_input(context.output, header)) {
+      enter_output_blocked();
+      accepted = false;
+    }
   }
-  cleanup_requested_ = false;
-  cleanup_complete_ = true;
+  return accepted;
+}
+
+bool MidiPipeline::push_generated(
+    void* raw_context, const VoiceTransition& transition) noexcept {
+  auto* context = static_cast<DeliveryContext*>(raw_context);
+  if (context == nullptr || context->pipeline == nullptr) {
+    return false;
+  }
+  MidiPipeline& pipeline = *context->pipeline;
+  const bool include_equal = transition.kind == TransitionKind::note_on;
+  if (!pipeline.flush_inputs(*context, transition.sample_offset, include_equal,
+                             false)) {
+    return false;
+  }
+  const std::uint8_t status = static_cast<std::uint8_t>(
+      (transition.kind == TransitionKind::note_off ? 0x80U : 0x90U) |
+      (context->channel - 1U));
+  const std::uint8_t velocity =
+      transition.kind == TransitionKind::note_off ? 0U : transition.velocity;
+  if (!pipeline.push_midi(context->output, transition.sample_offset, status,
+                          transition.note, velocity)) {
+    pipeline.enter_output_blocked();
+    return false;
+  }
   return true;
 }
 
-void MidiPipeline::finish_hold(double selected_input_peak, bool finite_input,
-                               bool supported_layout) noexcept {
-  if (!panic_hold_) {
-    return;
+bool MidiPipeline::retry_channel_panics(const clap_output_events_t* output,
+                                        std::uint8_t channel) noexcept {
+  if (!channel_panic_required_ || ledger_.release_pending()) {
+    return !channel_panic_required_;
   }
-  if (hold_calls_remaining_ > 0) {
-    --hold_calls_remaining_;
-    return;
+  const std::uint8_t status =
+      static_cast<std::uint8_t>(0xB0U | (channel - 1U));
+  if (!push_midi(output, 0, status, 123, 0) ||
+      !push_midi(output, 0, status, 120, 0)) {
+    enter_output_blocked();
+    return false;
   }
-  if (explicit_recovery_ && !cleanup_requested_ &&
-      (!blocked_ || cleanup_complete_) && finite_input && supported_layout &&
-      std::isfinite(selected_input_peak) && selected_input_peak < kQuietPeak) {
-    panic_hold_ = false;
-    explicit_recovery_ = false;
-    if (blocked_ && cleanup_complete_) {
-      blocked_ = false;
-      cleanup_complete_ = false;
-    }
-  }
+  channel_panic_required_ = false;
+  return true;
 }
 
 MidiProcessResult MidiPipeline::process(
@@ -248,93 +194,43 @@ MidiProcessResult MidiPipeline::process(
     const clap_input_events_t* input, const clap_output_events_t* output,
     double selected_input_peak, bool finite_input,
     bool supported_layout) noexcept {
-  if (!storage_ || frames_count == 0 || frames_count > max_frames_ ||
+  if (frames_count == 0 || frames_count > kMaxHostFrames ||
       one_based_channel == 0 || one_based_channel > 16) {
     invalid_event_ = true;
-    return MidiProcessResult{true, blocked_, panic_hold_, false};
+    return MidiProcessResult{true, ledger_.output_blocked(),
+                             ledger_.panic_hold(), false};
   }
 
-  static_cast<void>(retry_cleanup(output, one_based_channel));
-  std::size_t generated_index = 0;
-  std::uint32_t input_index = 0;
-  const std::uint32_t input_count =
+  DeliveryContext context{};
+  context.pipeline = this;
+  context.input = input;
+  context.output = output;
+  context.frames = frames_count;
+  context.input_count =
       input != nullptr && input->size != nullptr ? input->size(input) : 0U;
+  context.channel = one_based_channel;
 
-  for (std::uint32_t offset = 0; offset < frames_count; ++offset) {
-    while (generated_index < size_ &&
-           storage_[generated_index].sample_offset == offset &&
-           storage_[generated_index].kind == TransitionKind::note_off) {
-      const VoiceTransition& generated = storage_[generated_index++];
-      if (!blocked_) {
-        const bool pushed = push_midi(
-            output, offset,
-            static_cast<std::uint8_t>(0x80U | (one_based_channel - 1U)),
-            generated.note, 0);
-        if (pushed) {
-          clear_bit(active_, generated.note);
-          clear_bit(pending_release_, generated.note);
-        } else {
-          set_bit(pending_release_, generated.note);
-          enter_blocked();
-        }
-      }
-    }
-
-    while (input_index < input_count) {
-      const clap_event_header_t* header =
-          input != nullptr && input->get != nullptr ? input->get(input, input_index)
-                                                   : nullptr;
-      if (header == nullptr) {
-        invalid_event_ = true;
-        ++input_index;
-        continue;
-      }
-      if (header->time > offset) {
-        break;
-      }
-      ++input_index;
-      if (header->time < offset || header->time >= frames_count) {
-        invalid_event_ = true;
-        continue;
-      }
-      if (header->space_id != CLAP_CORE_EVENT_SPACE_ID ||
-          header->type != CLAP_EVENT_MIDI) {
-        continue;
-      }
-      if (header->size < sizeof(clap_event_midi_t)) {
-        invalid_event_ = true;
-        continue;
-      }
-      if (!push_input(output, header)) {
-        enter_blocked();
-      }
-    }
-
-    while (generated_index < size_ &&
-           storage_[generated_index].sample_offset == offset) {
-      const VoiceTransition& generated = storage_[generated_index++];
-      if (generated.kind != TransitionKind::note_on) {
-        invalid_event_ = true;
-        continue;
-      }
-      if (blocked_ || panic_hold_) {
-        continue;
-      }
-      const bool pushed = push_midi(
-          output, offset,
-          static_cast<std::uint8_t>(0x90U | (one_based_channel - 1U)),
-          generated.note, generated.velocity);
-      if (pushed) {
-        set_bit(active_, generated.note);
-      } else {
-        enter_blocked();
-      }
-    }
+  const bool retry_channel_this_call = channel_panic_required_;
+  const NoteDeliveryResult generated = ledger_.deliver(
+      frames_count, NoteEventSink{&context, &push_generated},
+      selected_input_peak, finite_input, supported_layout);
+  if (!generated.detection_allowed && !generated.output_blocked &&
+      !generated.panic_hold) {
+    invalid_event_ = true;
   }
+  if (generated.output_blocked && !channel_panic_required_) {
+    channel_panic_required_ = true;
+  }
+  if (retry_channel_this_call) {
+    static_cast<void>(retry_channel_panics(output, one_based_channel));
+  }
+  static_cast<void>(flush_inputs(context, frames_count, false, true));
 
-  finish_hold(selected_input_peak, finite_input, supported_layout);
-  return MidiProcessResult{invalid_event_, blocked_, panic_hold_,
-                           !invalid_event_ && !blocked_ && !panic_hold_};
+  const bool output_blocked = ledger_.output_blocked();
+  const bool panic_hold = ledger_.panic_hold();
+  return MidiProcessResult{
+      invalid_event_, output_blocked, panic_hold,
+      !invalid_event_ && !output_blocked && !panic_hold};
 }
 
 }  // namespace m3
