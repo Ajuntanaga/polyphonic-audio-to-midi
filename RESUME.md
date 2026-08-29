@@ -1,8 +1,38 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T02:50:34-07:00
+Updated: 2026-08-29T03:15:06-07:00
 
-## VST3 design approved — TDD implementation plan sealed, source not begun
+## VST3 Task 1 sealed — stopped at CMake Gate T1
+
+- The user approved exact-plan inline execution with `Proceed --continuous` on
+  2026-08-29. Only Task 1 was opened. It is sealed at commit `436b396`
+  (`test: seal VST3 migration identities and baseline`); Task 2 was not
+  entered.
+- Task 1 added the SDK-independent production/probe/benchmark identities and
+  stable metadata in `native/vst3/vst3_ids.hpp`, ten focused build-contract
+  tests, the reusable source-boundary validator seam, and
+  `docs/VST3-TESTING.md`. Their SHA-256 values are respectively
+  `40959108a44ab18eb827838fd20a95033d789671cb85858493e108608f0d38d2`,
+  `b873e2e35bd170395a73be6f24d9733a558a746a20921dc6db7824f3b3e131d1`,
+  `22b34d74f919abf36a2bee3e56b38aa09775326cda2c289ea33176e12b1a6fef`,
+  and `296a46bde863dbf12169397bfa6f74eb339f54247ad53ccee5e781e8453a4813`.
+- The exact committed state passes 44 native tests and 124 Python tests; the
+  focused VST3 suite passes 10/10. The source validator, C++17 identity
+  compile, Python compilation, whitespace check, frozen-JSFX comparison, and
+  sealed specification-hash check pass.
+- Final preflight was stable: 32747 MiB available memory, load 0.62,
+  memory-full and I/O-full PSI 0.00, and maximum readable temperature 45 C.
+  Tests ran serially at low CPU and idle I/O priority.
+- CMake is absent and not installed; the read-only package candidate is exactly
+  `4.2.3-2ubuntu2`. No Steinberg SDK, SDK-dependent VST3 `.cpp`, `.vst3`
+  bundle, persistent M3 plug-in copy, or REAPER process exists. No install,
+  retrieval, live profile/project, hardware-input, or REAPER action occurred.
+- Hard stop: Gate T1 is closed. The only next possible action is a separately
+  explicit authorization to install exact CMake package `4.2.3-2ubuntu2` with
+  `--no-install-recommends`. That authority would open Task 2 only. SDK
+  retrieval remains separately closed at Gate D2 even after Task 2.
+
+## Approved VST3 design and sealed implementation plan
 
 - On 2026-08-29 the user approved replacing the failed CLAP production path
   with one Linux x86-64 VST3 effect built over the preserved format-neutral
@@ -52,15 +82,13 @@ Updated: 2026-08-29T02:50:34-07:00
   `4A1BA42F-6D70-4609-8B52-450C3842F11F`,
   `6F62F8B1-B8A1-4872-A0D9-2C3C274421D8`, and
   `28713895-1CCA-47EC-919F-6CC1BCB88A8F`; they must not be regenerated.
-- The planning preflight passed 44 native tests and 114 Python tests under
-  low-priority serial execution. CMake remains absent; the read-only package
-  candidate is exactly `4.2.3-2ubuntu2`. No SDK was retrieved, no VST3 or
-  detector source was written, no dependency was installed, no REAPER process
-  was launched, and no persistent path or live project was touched.
-- The next permitted action after user approval of the exact plan is inline
-  Task 1 only: add the SDK-independent identity header and its local tests and
-  baseline documentation. Task 1 must stop at Gate T1 before any CMake
-  installation. SDK retrieval remains a later, separately authorized Gate D2.
+- The pre-Task-1 planning preflight passed 44 native tests and 114 Python tests
+  under low-priority serial execution. CMake remains absent; the read-only package
+  candidate is exactly `4.2.3-2ubuntu2`. Task 1 subsequently wrote only the
+  SDK-independent identity/source-boundary files recorded above; detector
+  source remains untouched and no dependency, SDK, or host action occurred.
+- Task 1 has now stopped at Gate T1 before any CMake installation. SDK
+  retrieval remains a later, separately authorized Gate D2.
 
 ## Task 10 CLAP capability gate failed — hard stop
 
@@ -193,9 +221,9 @@ Updated: 2026-08-29T02:50:34-07:00
 - Decision: native CLAP plan Tasks 1-9 remain complete and sealed, but Task
   10's capability gate failed at its first row. The JSFX detector remains
   stopped and uninstalled. The VST3 correction specification is approved and
-  its replacement TDD plan is sealed at `9390763`; exact resume action is plan
-  approval followed by inline VST3 Task 1 only. Do not retry CLAP or start old
-  Task 11.
+  its replacement TDD plan is sealed at `9390763`. That historical next action
+  was subsequently completed through VST3 Task 1 at `436b396`; do not retry
+  CLAP or start old Task 11.
 - Clean-DI recording/input, persistent installation, live projects, REAPER
   MCP, detector-port Tasks 11+, and every future REAPER launch remain
   separately gated.
@@ -503,17 +531,17 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify commit `9390763` and the specification/plan SHA-256 values recorded
-   above. The failed CLAP Task 10 evidence remains immutable historical input;
-   do not retry it or begin old CLAP Task 11.
-2. Obtain user approval of the exact replacement plan, then execute inline
-   Task 1 only from
-   `docs/superpowers/plans/2026-08-29-native-vst3-polyphonic-audio-to-midi.md`.
-   Task 1 is SDK-independent and must not install, retrieve, build, or launch
-   REAPER.
-3. Stop at Gate T1. Installing exact CMake package `4.2.3-2ubuntu2` requires
-   separately explicit authority. Even after a successful tool gate, stop at
-   Gate D2 for separate authorization before retrieving the exact SDK tree.
+1. Verify Task 1 commit `436b396`, the four Task 1 hashes, and the
+   specification/plan SHA-256 values recorded above. The failed CLAP Task 10
+   evidence remains immutable historical input; do not retry it or begin old
+   CLAP Task 11.
+2. Remain stopped at Gate T1 unless the user separately and explicitly
+   authorizes installation of exact CMake package `4.2.3-2ubuntu2` with
+   `--no-install-recommends`. General `proceed`, `resume`, or continuous
+   execution is not package-install authority.
+3. If Gate T1 is explicitly opened, execute only plan Task 2, verify and record
+   the exact installed version, then stop at Gate D2. Do not retrieve the
+   Steinberg SDK or begin Task 3 without separate Gate D2 authorization.
 4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
    32/64/128/256/512 capability matrix, serial guarded background launches on
    workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
@@ -526,8 +554,7 @@ task afterward.
 
 ## Still-gated actions
 
-- VST3 plan Task 1 until exact-plan approval
-- CMake installation at Gate T1
+- VST3 plan Task 2 and CMake installation at Gate T1
 - VST3 SDK retrieval at Gate D2
 - VST3 adapter implementation after its prerequisite gates
 - persistent REAPER Effects or Scripts installation
