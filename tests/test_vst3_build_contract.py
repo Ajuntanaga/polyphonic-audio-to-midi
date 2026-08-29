@@ -1,3 +1,4 @@
+import hashlib
 import pathlib
 import re
 import shutil
@@ -11,6 +12,29 @@ from tools import validate_native_source
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 IDENTITY_HEADER = ROOT / "native/vst3/vst3_ids.hpp"
+VST3_SDK_ROOT = ROOT / "third_party/vst3sdk"
+VST3_SDK_REVISIONS = {
+    ".": (
+        "https://github.com/steinbergmedia/vst3sdk.git",
+        "3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96",
+    ),
+    "base": (
+        "https://github.com/steinbergmedia/vst3_base",
+        "fcf9da0bd27a16f7f03773a3a39822f28f5c8477",
+    ),
+    "cmake": (
+        "https://github.com/steinbergmedia/vst3_cmake",
+        "054c9143cbb8d47fc4694e473f2ee3b4d951a8f5",
+    ),
+    "pluginterfaces": (
+        "https://github.com/steinbergmedia/vst3_pluginterfaces",
+        "4f547e8e102b47de4a8b8aaf343c73b700786372",
+    ),
+    "public.sdk": (
+        "https://github.com/steinbergmedia/vst3_public_sdk",
+        "586dc5e6c8012c3e4b01c79389375cbe96bdb1da",
+    ),
+}
 
 
 class Vst3BuildContractTests(unittest.TestCase):
@@ -130,8 +154,96 @@ class Vst3BuildContractTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_dependency_gate_has_not_been_crossed(self):
-        self.assertFalse((ROOT / "third_party/vst3sdk").exists())
+    def test_vendored_vst3_sdk_matches_the_exact_official_contract(self):
+        upstream_path = VST3_SDK_ROOT / "UPSTREAM.md"
+        self.assertTrue(upstream_path.is_file(), "third_party/vst3sdk/UPSTREAM.md is absent")
+
+        expected_children = {
+            "CMakeLists.txt",
+            "LICENSE.txt",
+            "README.md",
+            "SHA256SUMS",
+            "UPSTREAM.md",
+            "base",
+            "cmake",
+            "pluginterfaces",
+            "public.sdk",
+        }
+        self.assertEqual(
+            {path.name for path in VST3_SDK_ROOT.iterdir()},
+            expected_children,
+        )
+        for retained_root in ("base", "cmake", "pluginterfaces", "public.sdk"):
+            self.assertTrue((VST3_SDK_ROOT / retained_root).is_dir())
+        for excluded_root in ("doc", "tutorials", "vstgui4"):
+            self.assertFalse((VST3_SDK_ROOT / excluded_root).exists())
+        self.assertEqual(
+            [path for path in VST3_SDK_ROOT.rglob(".git")],
+            [],
+            "vendored SDK contains Git metadata",
+        )
+
+        license_text = (VST3_SDK_ROOT / "LICENSE.txt").read_text(encoding="utf-8")
+        self.assertIn("Permission is hereby granted, free of charge", license_text)
+
+        upstream = upstream_path.read_text(encoding="utf-8")
+        self.assertRegex(
+            upstream,
+            r"(?m)^Retrieved UTC: `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`$",
+        )
+        self.assertIn("Tag: `v3.8.1_build_84`", upstream)
+        revision_rows = {
+            match.groups()
+            for match in re.finditer(
+                r"(?m)^\| `([^`]+)` \| `([^`]+)` \| `([0-9a-f]{40})` \|$",
+                upstream,
+            )
+        }
+        self.assertEqual(
+            revision_rows,
+            {
+                (path, repository, revision)
+                for path, (repository, revision) in VST3_SDK_REVISIONS.items()
+            },
+        )
+        self.assertIn(
+            "git clone --filter=blob:none --no-checkout "
+            "https://github.com/steinbergmedia/vst3sdk.git "
+            "build/vendor/vst3sdk-src",
+            upstream,
+        )
+        self.assertIn(
+            "git -C build/vendor/vst3sdk-src checkout --detach "
+            "3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96",
+            upstream,
+        )
+        self.assertIn(
+            "git -C build/vendor/vst3sdk-src submodule update --init --depth 1 "
+            "base cmake pluginterfaces public.sdk",
+            upstream,
+        )
+
+        manifest_path = VST3_SDK_ROOT / "SHA256SUMS"
+        self.assertTrue(manifest_path.is_file())
+        manifest_rows = []
+        for line in manifest_path.read_text(encoding="utf-8").splitlines():
+            match = re.fullmatch(r"([0-9a-f]{64})  (third_party/vst3sdk/.+)", line)
+            self.assertIsNotNone(match, line)
+            manifest_rows.append(match.groups())
+        manifest_names = [name for _digest, name in manifest_rows]
+        self.assertEqual(manifest_names, sorted(manifest_names))
+        self.assertEqual(len(manifest_names), len(set(manifest_names)))
+
+        actual_names = sorted(
+            path.relative_to(ROOT).as_posix()
+            for path in VST3_SDK_ROOT.rglob("*")
+            if path.is_file() and path != manifest_path
+        )
+        self.assertEqual(manifest_names, actual_names)
+        for expected_digest, relative in manifest_rows:
+            actual_digest = hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
+            self.assertEqual(actual_digest, expected_digest, relative)
+
         self.assertEqual(list(ROOT.rglob("*.vst3")), [])
 
         vst3_root = ROOT / "native/vst3"
