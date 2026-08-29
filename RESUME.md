@@ -1,36 +1,48 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-29T03:15:06-07:00
+Updated: 2026-08-29T04:47:21-07:00
 
-## VST3 Task 1 sealed — stopped at CMake Gate T1
+## VST3 Tasks 1-2 sealed — stopped at SDK Gate D2
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
-  2026-08-29. Only Task 1 was opened. It is sealed at commit `436b396`
-  (`test: seal VST3 migration identities and baseline`); Task 2 was not
-  entered.
+  2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
+  migration identities and baseline`). The user separately opened Gate T1 by
+  naming exact package `cmake=4.2.3-2ubuntu2` with
+  `--no-install-recommends` for Task 2 only. Task 2 is sealed at `21f544b`
+  (`docs: record authorized VST3 CMake prerequisite`). Task 3 was not entered.
 - Task 1 added the SDK-independent production/probe/benchmark identities and
   stable metadata in `native/vst3/vst3_ids.hpp`, ten focused build-contract
   tests, the reusable source-boundary validator seam, and
-  `docs/VST3-TESTING.md`. Their SHA-256 values are respectively
+  `docs/VST3-TESTING.md`. Their Task-1-seal SHA-256 values were respectively
   `40959108a44ab18eb827838fd20a95033d789671cb85858493e108608f0d38d2`,
   `b873e2e35bd170395a73be6f24d9733a558a746a20921dc6db7824f3b3e131d1`,
   `22b34d74f919abf36a2bee3e56b38aa09775326cda2c289ea33176e12b1a6fef`,
   and `296a46bde863dbf12169397bfa6f74eb339f54247ad53ccee5e781e8453a4813`.
-- The exact committed state passes 44 native tests and 124 Python tests; the
-  focused VST3 suite passes 10/10. The source validator, C++17 identity
+- Task 2 adds one real prerequisite contract to
+  `tests/test_vst3_build_contract.py` and records the exact package evidence in
+  `docs/VST3-TESTING.md`. Their current SHA-256 values are respectively
+  `35a817fbffaf739f9d74fed44b8749cf12ab53a30e395feff189060168791aa2`
+  and `665becd911275f6e066e0b299b791086d7e37f39356470790db0e32a0df359f1`.
+- The exact committed state passes 44 native tests and 125 Python tests; the
+  focused VST3 suite passes 11/11. The source validator, C++17 identity
   compile, Python compilation, whitespace check, frozen-JSFX comparison, and
   sealed specification-hash check pass.
-- Final preflight was stable: 32747 MiB available memory, load 0.62,
-  memory-full and I/O-full PSI 0.00, and maximum readable temperature 45 C.
+- Final Task 2 regression preflight was stable: 32325 MiB available memory,
+  load 1.25, memory-full and I/O-full PSI 0.00, and maximum readable
+  temperature 54 C.
   Tests ran serially at low CPU and idle I/O priority.
-- CMake is absent and not installed; the read-only package candidate is exactly
-  `4.2.3-2ubuntu2`. No Steinberg SDK, SDK-dependent VST3 `.cpp`, `.vst3`
-  bundle, persistent M3 plug-in copy, or REAPER process exists. No install,
-  retrieval, live profile/project, hardware-input, or REAPER action occurred.
-- Hard stop: Gate T1 is closed. The only next possible action is a separately
-  explicit authorization to install exact CMake package `4.2.3-2ubuntu2` with
-  `--no-install-recommends`. That authority would open Task 2 only. SDK
-  retrieval remains separately closed at Gate D2 even after Task 2.
+- `/var/log/apt/history.log` records the approved command exactly from 04:35:35
+  through 04:35:42 PDT. CMake reports `4.2.3`; dpkg reports `install ok
+  installed 4.2.3-2ubuntu2`. Only required automatic dependencies
+  `cmake-data`, `libjsoncpp26`, and `librhash1` accompanied it. Swap use and
+  full pressure remained zero.
+- No Steinberg SDK, SDK-dependent VST3 `.cpp`, `.vst3` bundle, persistent M3
+  plug-in copy, or REAPER process exists. No SDK/network retrieval, VST3
+  build, live profile/project, hardware-input, or REAPER action occurred.
+- Hard stop: Gate D2 is closed. The only next possible action is separately
+  explicit authorization for Task 3's exact official SDK root and four pinned
+  submodule revisions. General `proceed`, `resume`, continuous execution, or
+  CMake authority is not SDK-retrieval authority.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -83,12 +95,14 @@ Updated: 2026-08-29T03:15:06-07:00
   `6F62F8B1-B8A1-4872-A0D9-2C3C274421D8`, and
   `28713895-1CCA-47EC-919F-6CC1BCB88A8F`; they must not be regenerated.
 - The pre-Task-1 planning preflight passed 44 native tests and 114 Python tests
-  under low-priority serial execution. CMake remains absent; the read-only package
-  candidate is exactly `4.2.3-2ubuntu2`. Task 1 subsequently wrote only the
-  SDK-independent identity/source-boundary files recorded above; detector
-  source remains untouched and no dependency, SDK, or host action occurred.
-- Task 1 has now stopped at Gate T1 before any CMake installation. SDK
-  retrieval remains a later, separately authorized Gate D2.
+  under low-priority serial execution. CMake was absent at that checkpoint and
+  the read-only candidate was exactly `4.2.3-2ubuntu2`. Task 1 subsequently
+  wrote only the SDK-independent identity/source-boundary files recorded
+  above; detector source remains untouched and no dependency, SDK, or host
+  action occurred.
+- Task 2 subsequently installed only that exact CMake package under separately
+  explicit authority and stopped at Gate D2. SDK retrieval remains separately
+  unauthorized.
 
 ## Task 10 CLAP capability gate failed — hard stop
 
@@ -531,17 +545,17 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 1 commit `436b396`, the four Task 1 hashes, and the
-   specification/plan SHA-256 values recorded above. The failed CLAP Task 10
-   evidence remains immutable historical input; do not retry it or begin old
-   CLAP Task 11.
-2. Remain stopped at Gate T1 unless the user separately and explicitly
-   authorizes installation of exact CMake package `4.2.3-2ubuntu2` with
-   `--no-install-recommends`. General `proceed`, `resume`, or continuous
-   execution is not package-install authority.
-3. If Gate T1 is explicitly opened, execute only plan Task 2, verify and record
-   the exact installed version, then stop at Gate D2. Do not retrieve the
-   Steinberg SDK or begin Task 3 without separate Gate D2 authorization.
+1. Verify Task 2 commit `21f544b`, the two current Task 2 file hashes, the exact
+   installed CMake/dpkg state, and the specification/plan hashes recorded
+   above. The failed CLAP Task 10 evidence remains immutable historical input;
+   do not retry it or begin old CLAP Task 11.
+2. Remain stopped at Gate D2 unless the user separately and explicitly
+   authorizes network retrieval and vendoring of Task 3's exact Steinberg VST3
+   SDK root and four submodule commits. General `proceed`, `resume`, continuous
+   execution, and Gate T1 authority are not Gate D2 authority.
+3. If Gate D2 is explicitly opened, execute only plan Task 3, verify and record
+   the exact license/revisions/hashes, then stop at Gate N3. Do not begin
+   neutral extraction or Task 4 under SDK-retrieval authority.
 4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
    32/64/128/256/512 capability matrix, serial guarded background launches on
    workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
@@ -554,8 +568,7 @@ task afterward.
 
 ## Still-gated actions
 
-- VST3 plan Task 2 and CMake installation at Gate T1
-- VST3 SDK retrieval at Gate D2
+- VST3 plan Task 3 and exact VST3 SDK retrieval at Gate D2
 - VST3 adapter implementation after its prerequisite gates
 - persistent REAPER Effects or Scripts installation
 - live guitar or audio-interface testing
