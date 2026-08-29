@@ -3,8 +3,8 @@
 Date: 2026-08-29
 Architecture approved in chat: 2026-08-29
 Host-authoritative sample-rate correction approved in chat: 2026-08-29
-Written specification review: pending user review
-Document status: design-only amendment; implementation remains separately gated
+Written specification review: approved by user via "Continue on", 2026-08-29
+Document status: approved architecture; implementation remains separately gated
 
 ## 1. Authority and amendment boundary
 
@@ -467,9 +467,10 @@ correction.
 ## 12. Implementation and validation gates
 
 The old CLAP implementation plan stops at failed Task 10. Its Tasks 11-24 do
-not automatically become VST3 work. After this written specification is
-approved, the next authorized artifact is a new TDD implementation plan that
-maps the preserved core contracts onto the VST3 correction.
+not automatically become VST3 work. The required replacement TDD artifact is
+`docs/superpowers/plans/2026-08-29-native-vst3-polyphonic-audio-to-midi.md`;
+its existence does not approve source execution, dependencies, installs, or
+host launches.
 
 That future plan must preserve these gates in order:
 
@@ -504,7 +505,8 @@ This VST3 design correction is complete when:
 - the task-local `RESUME.md` and ResearchOS dashboard point to it;
 - no SDK, VST3 source, build artifact, REAPER launch, or installation was
   created under design-only authorization; and
-- the exact next action is the separately reviewed TDD implementation plan.
+- the replacement TDD implementation plan is separately reviewed before its
+  first local-only task begins.
 
 The eventual product is complete only when all future gates pass at 44.1, 48,
 88.2, and 96 kHz, including block 512 host coverage, 96 kHz/block 32
