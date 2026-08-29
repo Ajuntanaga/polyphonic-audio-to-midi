@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-28T21:06:56-07:00
+Updated: 2026-08-28T21:51:51-07:00
 
 ## Authoritative state
 
@@ -11,9 +11,9 @@ Updated: 2026-08-28T21:06:56-07:00
 - The approved native CLAP design was introduced at `3ac7dcb` (`docs: approve
   native CLAP architecture`). Its authoritative written specification is
   `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
-  The architecture is approved; the written specification now awaits user
-  review. No native implementation plan, dependency, or source has been
-  authorized or created.
+  The architecture and written specification were both approved on 2026-08-28.
+  No native implementation plan, dependency, or source has been authorized or
+  created.
 - Current runtime fingerprint:
   `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
 - The deterministic synthetic manifest is byte-identical to its generator and
@@ -45,15 +45,16 @@ Updated: 2026-08-28T21:06:56-07:00
   the Lua runner.
 - The canonical ResearchOS project dashboard, design indexes,
   implementation-plan index, and Systems index are synchronized to the native
-  written-spec review gate. Obsidian was closed, so `obsidian help` correctly
+  design-approved gate. Obsidian was closed, so `obsidian help` correctly
   refused; the notes were saved directly as valid Markdown/YAML. The vault is
   not a Git repository.
 - Every REAPER instance ran serially, backgrounded on workspace 5, under the
   50%-of-one-core and 512 MiB limits. No REAPER process remains.
 - Decision: the native-design amendment is written and the JSFX detector remains
-  stopped and uninstalled. Exact resume action is user review of the committed
-  written specification. Do not write an implementation plan or begin a port
-  without a new explicit authorization after that review.
+  stopped and uninstalled. The written specification is approved. Exact resume
+  action is to request explicit authorization for native implementation
+  planning only. Do not invoke an implementation-planning workflow or begin a
+  port under the completed design-only authorization.
 - Clean-DI recording/input, persistent installation, live projects, REAPER MCP,
   downloads, native implementation planning, and native implementation remain
   separately gated and were not used.
@@ -361,11 +362,10 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Review
-   `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
-2. If changes are requested, revise and re-run the specification self-review.
-   If the written specification is explicitly approved, stop and request a new
-   authorization before invoking an implementation-planning workflow.
+1. Request explicit authorization for a native implementation plan only.
+2. If granted, invoke the implementation-planning workflow and produce a plan;
+   do not retrieve dependencies, write native source, or launch REAPER during
+   planning.
 3. Keep dependency retrieval, native source, REAPER launches, clean-DI or live
    input, persistent installation, live projects, and REAPER MCP behind their
    existing gates.

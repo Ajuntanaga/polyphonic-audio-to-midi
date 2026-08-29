@@ -1,7 +1,7 @@
 # M3 Polyphonic Audio to MIDI
 
 Status: terminal JSFX experiment; native CLAP architecture approved and
-documented; written specification awaiting review; not installed.
+documented; written specification approved; not installed.
 
 Source-editable, causal, real-time polyphonic audio-to-MIDI for REAPER and a
 downstream VSTi. The current experimental detector is JSFX/EEL2. The approved
@@ -45,9 +45,9 @@ The approved native amendment selects a Linux x86-64 CLAP track effect, raw
 MIDI 1.0, a single audio-thread detector, a fixed 64-sample decision cadence,
 and REAPER's generic parameter view for the first revision. The committed
 [native CLAP design](docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md)
-was introduced at design checkpoint `3ac7dcb` and is awaiting written-spec
-review. That approval gate precedes any implementation plan, dependency
-retrieval, or native source work.
+was introduced at design checkpoint `3ac7dcb`; the written specification was
+approved on 2026-08-28. Native implementation planning, dependency retrieval,
+and source work remain separately gated.
 
 This remains synthetic dummy-audio evidence, not a live-guitar or audible
 hardware claim. Persistent installation, live projects, audio-interface input,

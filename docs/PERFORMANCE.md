@@ -7,9 +7,9 @@ plan. It is not a claim that the detector is performance-ready.
 
 Task 13 decision at measurement time: `native amendment required`. The JSFX
 remains unshipped and was not installed. The requirement was satisfied by the
-approved CLAP design introduced at checkpoint `3ac7dcb`; the written spec still
-awaits user review, and native planning or implementation remains separately
-gated.
+approved CLAP design introduced at checkpoint `3ac7dcb`; the written spec was
+approved on 2026-08-28, while native planning or implementation remains
+separately gated.
 
 The terminal measurements used REAPER 7.79 on host `CipherPixy`, Linux
 7.0.0-30-generic x86-64, AMD Ryzen 7 7730U (8 cores/16 threads). Every launch

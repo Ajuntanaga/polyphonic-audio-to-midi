@@ -2,7 +2,8 @@
 
 Date: 2026-08-28
 Architecture approved in chat: 2026-08-28
-Document status: written specification awaiting user review
+Written specification approved in chat: 2026-08-28
+Document status: approved; native implementation planning remains separately gated
 
 ## 1. Authority and amendment boundary
 
@@ -26,6 +27,10 @@ The existing JSFX checkpoint remains frozen as a behavioral oracle and usable
 experimental fallback. This amendment does not authorize a native port,
 dependency retrieval, installation, a REAPER launch, clean-DI or hardware
 input, live-project changes, or REAPER MCP.
+
+The user accepted this written specification with `Proceed` on 2026-08-28.
+That closes the native-design amendment only. It does not expand the earlier
+scope into an implementation plan, dependency retrieval, or native source.
 
 ## 2. Reason for the amendment
 
@@ -531,9 +536,10 @@ automatic heavy retry.
 
 ## 14. Completion definition
 
-This design amendment is complete when it is written, self-reviewed, committed,
+This design amendment is complete: it is written, self-reviewed, committed,
 indexed in the ResearchOS vault, and accepted by the user as the written
-specification. That is not native-tool completion.
+specification. That is not native-tool completion or authorization to plan or
+implement it.
 
 A future native implementation may be called performance-ready only after the
 capability, offline, correctness, latency, deadline, lifecycle, and guarded-host
