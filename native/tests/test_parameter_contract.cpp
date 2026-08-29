@@ -9,39 +9,59 @@
 #include <limits>
 
 #include "fake_clap_host.hpp"
-#include "parameter_contract.hpp"
+#include "m3/parameter_contract.hpp"
 #include "state_codec.hpp"
 #include "test_support.hpp"
 
 namespace {
 
 struct ExpectedParameter final {
-  clap_id id;
+  m3::ParameterId id;
   const char* name;
   double minimum;
   double maximum;
+  double increment;
   double default_value;
-  bool stepped;
+  std::int32_t step_count;
+  m3::ParameterUpdateClass update_class;
   bool persistent;
+  bool list;
+  bool read_only;
 };
 
 constexpr ExpectedParameter kExpected[] = {
-    {0x4D330001U, "Detector input", 0.0, 2.0, 0.0, true, true},
-    {0x4D330002U, "Mode", 0.0, 1.0, 0.0, true, true},
-    {0x4D330003U, "A4 reference", 400.0, 480.0, 440.0, false, true},
-    {0x4D330004U, "Input trim", -24.0, 24.0, 0.0, false, true},
-    {0x4D330005U, "Sensitivity", 0.0, 100.0, 50.0, true, true},
-    {0x4D330006U, "Response", 0.0, 100.0, 25.0, true, true},
-    {0x4D330007U, "Lowest MIDI note", 24.0, 108.0, 32.0, true, true},
-    {0x4D330008U, "Highest MIDI note", 24.0, 108.0, 84.0, true, true},
-    {0x4D330009U, "Maximum polyphony", 1.0, 8.0, 8.0, true, true},
-    {0x4D33000AU, "M3 maximum fret", 0.0, 36.0, 24.0, true, true},
-    {0x4D33000BU, "Velocity mode", 0.0, 1.0, 1.0, true, true},
-    {0x4D33000CU, "Fixed velocity", 1.0, 127.0, 100.0, true, true},
-    {0x4D33000DU, "MIDI channel", 1.0, 16.0, 1.0, true, true},
-    {0x4D33000EU, "Panic", 0.0, 1.0, 0.0, true, false},
-    {0x4D33000FU, "Dry audio", 0.0, 1.0, 1.0, true, true},
-    {0x4D33FF01U, "Status", 0.0, 5.0, 0.0, true, false},
+    {0x4D330001U, "Detector input", 0.0, 2.0, 1.0, 0.0, 2,
+     m3::ParameterUpdateClass::structural, true, true, false},
+    {0x4D330002U, "Mode", 0.0, 1.0, 1.0, 0.0, 1,
+     m3::ParameterUpdateClass::structural, true, true, false},
+    {0x4D330003U, "A4 reference", 400.0, 480.0, 0.1, 440.0, 800,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D330004U, "Input trim", -24.0, 24.0, 0.1, 0.0, 480,
+     m3::ParameterUpdateClass::runtime, true, false, false},
+    {0x4D330005U, "Sensitivity", 0.0, 100.0, 1.0, 50.0, 100,
+     m3::ParameterUpdateClass::runtime, true, false, false},
+    {0x4D330006U, "Response", 0.0, 100.0, 1.0, 25.0, 100,
+     m3::ParameterUpdateClass::runtime, true, false, false},
+    {0x4D330007U, "Lowest MIDI note", 24.0, 108.0, 1.0, 32.0, 84,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D330008U, "Highest MIDI note", 24.0, 108.0, 1.0, 84.0, 84,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D330009U, "Maximum polyphony", 1.0, 8.0, 1.0, 8.0, 7,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D33000AU, "M3 maximum fret", 0.0, 36.0, 1.0, 24.0, 36,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D33000BU, "Velocity mode", 0.0, 1.0, 1.0, 1.0, 1,
+     m3::ParameterUpdateClass::runtime, true, true, false},
+    {0x4D33000CU, "Fixed velocity", 1.0, 127.0, 1.0, 100.0, 126,
+     m3::ParameterUpdateClass::runtime, true, false, false},
+    {0x4D33000DU, "MIDI channel", 1.0, 16.0, 1.0, 1.0, 15,
+     m3::ParameterUpdateClass::structural, true, false, false},
+    {0x4D33000EU, "Panic", 0.0, 1.0, 1.0, 0.0, 1,
+     m3::ParameterUpdateClass::action, false, true, false},
+    {0x4D33000FU, "Dry audio", 0.0, 1.0, 1.0, 1.0, 1,
+     m3::ParameterUpdateClass::runtime, true, true, false},
+    {0x4D33FF01U, "Status", 0.0, 5.0, 1.0, 0.0, 5,
+     m3::ParameterUpdateClass::telemetry, false, true, true},
 };
 
 class ParamEvents final {
@@ -105,23 +125,23 @@ const clap_plugin_t* create_plugin(m3::test::FakeClapHost& host) noexcept {
 }  // namespace
 
 M3_TEST(parameter_table_has_exact_stable_public_contract) {
-  M3_EXPECT_EQ(m3::parameter_count(), 16U);
+  M3_EXPECT_EQ(m3::kParameterCount, 16U);
   for (std::size_t index = 0; index < std::size(kExpected); ++index) {
-    const m3::ParameterRecord* record = m3::parameter_record(index);
-    M3_EXPECT_TRUE(record != nullptr);
-    M3_EXPECT_EQ(record->id, kExpected[index].id);
-    M3_EXPECT_TRUE(std::strcmp(record->name, kExpected[index].name) == 0);
-    M3_EXPECT_NEAR(record->minimum, kExpected[index].minimum, 0.0);
-    M3_EXPECT_NEAR(record->maximum, kExpected[index].maximum, 0.0);
-    M3_EXPECT_NEAR(record->default_value, kExpected[index].default_value, 0.0);
-    M3_EXPECT_EQ((record->flags & CLAP_PARAM_IS_STEPPED) != 0U,
-                 kExpected[index].stepped);
-    M3_EXPECT_EQ(record->persistent, kExpected[index].persistent);
-    M3_EXPECT_EQ(record->flags & CLAP_PARAM_IS_AUTOMATABLE, 0U);
-    M3_EXPECT_EQ((record->flags & CLAP_PARAM_IS_READONLY) != 0U,
-                 record->id == m3::kStatusParameterId);
+    const m3::ParameterSpec* spec = m3::parameter_spec(index);
+    M3_EXPECT_TRUE(spec != nullptr);
+    M3_EXPECT_EQ(spec->id, kExpected[index].id);
+    M3_EXPECT_TRUE(std::strcmp(spec->name, kExpected[index].name) == 0);
+    M3_EXPECT_NEAR(spec->minimum, kExpected[index].minimum, 0.0);
+    M3_EXPECT_NEAR(spec->maximum, kExpected[index].maximum, 0.0);
+    M3_EXPECT_NEAR(spec->increment, kExpected[index].increment, 0.0);
+    M3_EXPECT_NEAR(spec->default_value, kExpected[index].default_value, 0.0);
+    M3_EXPECT_EQ(spec->step_count, kExpected[index].step_count);
+    M3_EXPECT_EQ(spec->update_class, kExpected[index].update_class);
+    M3_EXPECT_EQ(spec->persistent, kExpected[index].persistent);
+    M3_EXPECT_EQ(spec->list, kExpected[index].list);
+    M3_EXPECT_EQ(spec->read_only, kExpected[index].read_only);
   }
-  M3_EXPECT_TRUE(m3::parameter_record(16) == nullptr);
+  M3_EXPECT_TRUE(m3::parameter_spec(16) == nullptr);
 }
 
 M3_TEST(parameter_validation_clamps_and_rejects_without_partial_changes) {
@@ -184,6 +204,12 @@ M3_TEST(clap_parameter_extension_mirrors_table_and_applies_boundary_events) {
     M3_EXPECT_TRUE(params->get_info(plugin, index, &info));
     M3_EXPECT_EQ(info.id, kExpected[index].id);
     M3_EXPECT_TRUE(std::strcmp(info.name, kExpected[index].name) == 0);
+    M3_EXPECT_EQ((info.flags & CLAP_PARAM_IS_STEPPED) != 0U,
+                 kExpected[index].step_count != 0);
+    M3_EXPECT_EQ((info.flags & CLAP_PARAM_IS_ENUM) != 0U,
+                 kExpected[index].list);
+    M3_EXPECT_EQ((info.flags & CLAP_PARAM_IS_READONLY) != 0U,
+                 kExpected[index].read_only);
     M3_EXPECT_EQ(info.flags & CLAP_PARAM_IS_AUTOMATABLE, 0U);
   }
 

@@ -14,9 +14,10 @@
 #include <new>
 
 #include "dry_path.hpp"
+#include "clap_parameter_bridge.hpp"
 #include "m3/constants.hpp"
+#include "m3/parameter_contract.hpp"
 #include "midi_pipeline.hpp"
-#include "parameter_contract.hpp"
 #include "prepared_config_exchange.hpp"
 #include "state_codec.hpp"
 #if defined(M3_PROBE_BUILD) || defined(M3_TESTING)
@@ -282,7 +283,7 @@ ParameterBatchResult apply_parameter_events_to(
           frames_count == 0 ? 0 : std::min(header->time, frames_count - 1U);
     } else if (result == m3::ParameterApplyResult::changed) {
       batch.changed = true;
-      const m3::ParameterRecord* record =
+      const m3::ParameterSpec* record =
           m3::find_parameter(event->param_id);
       batch.structural =
           batch.structural ||
@@ -388,24 +389,12 @@ bool stage_for_publication(Adapter& adapter,
 }
 
 std::uint32_t CLAP_ABI params_count(const clap_plugin_t*) noexcept {
-  return static_cast<std::uint32_t>(m3::parameter_count());
+  return static_cast<std::uint32_t>(m3::kParameterCount);
 }
 
 bool CLAP_ABI params_get_info(const clap_plugin_t*, std::uint32_t index,
                               clap_param_info_t* info) noexcept {
-  const m3::ParameterRecord* record = m3::parameter_record(index);
-  if (record == nullptr || info == nullptr) {
-    return false;
-  }
-  *info = {};
-  info->id = record->id;
-  info->flags = record->flags;
-  copy_name(info->name, sizeof(info->name), record->name);
-  info->module[0] = '\0';
-  info->min_value = record->minimum;
-  info->max_value = record->maximum;
-  info->default_value = record->default_value;
-  return true;
+  return info != nullptr && m3::clap_parameter_info(index, *info);
 }
 
 bool CLAP_ABI params_get_value(const clap_plugin_t* plugin, clap_id id,

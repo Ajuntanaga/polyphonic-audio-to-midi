@@ -30,9 +30,14 @@ include(cmake/M3CompilerOptions.cmake)
 find_package(Threads REQUIRED)
 enable_testing()
 
+set(M3_NATIVE_CORE_SOURCES
+    native/src/parameter_contract.cpp
+)
+
 set(M3_NATIVE_PLUGIN_SOURCES
     native/plugin/clap_adapter.cpp
     native/plugin/clap_entry.cpp
+    native/plugin/clap_parameter_bridge.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
     native/plugin/prepared_config_exchange.cpp
@@ -47,6 +52,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
     native/tests/test_parameter_contract.cpp
+    native/tests/test_parameter_normalization.cpp
     native/tests/test_pitch_math.cpp
     native/tests/test_prepared_config_exchange.cpp
     native/tests/test_probe_processor.cpp
@@ -56,6 +62,7 @@ set(M3_NATIVE_TEST_SOURCES
 )
 
 add_executable(m3_native_tests
+    ${M3_NATIVE_CORE_SOURCES}
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_NATIVE_TEST_SOURCES}
 )
@@ -72,13 +79,17 @@ add_test(NAME m3_native_tests COMMAND m3_native_tests)
 set(M3_CLAP_HISTORY_SOURCES
     native/plugin/clap_adapter.cpp
     native/plugin/clap_entry.cpp
+    native/plugin/clap_parameter_bridge.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
     native/plugin/prepared_config_exchange.cpp
     native/plugin/state_codec.cpp
 )
 
-add_library(m3_clap_history MODULE EXCLUDE_FROM_ALL ${M3_CLAP_HISTORY_SOURCES})
+add_library(m3_clap_history MODULE EXCLUDE_FROM_ALL
+    ${M3_NATIVE_CORE_SOURCES}
+    ${M3_CLAP_HISTORY_SOURCES}
+)
 target_include_directories(m3_clap_history PRIVATE
     native/include
     native/plugin

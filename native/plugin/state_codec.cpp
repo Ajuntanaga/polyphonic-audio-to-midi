@@ -76,14 +76,14 @@ bool encode_state(const PersistentConfig& config, StateImage& output) noexcept {
           static_cast<std::uint16_t>(kPersistentParameterCount));
   put_u32(output.data() + 8, static_cast<std::uint32_t>(kPayloadSize));
 
-  const clap_id* ids = persistent_parameter_ids();
+  const ParameterId* ids = persistent_parameter_ids();
   for (std::size_t index = 0; index < kPersistentParameterCount; ++index) {
     double value = 0.0;
     if (!parameter_value(config, Status::ready, ids[index], value) ||
         !std::isfinite(value)) {
       return false;
     }
-    const ParameterRecord* record = find_parameter(ids[index]);
+    const ParameterSpec* record = find_parameter(ids[index]);
     if (record == nullptr || value < record->minimum || value > record->maximum) {
       return false;
     }
@@ -110,7 +110,7 @@ bool decode_state(const std::uint8_t* bytes, std::size_t size,
   }
 
   PersistentConfig candidate;
-  const clap_id* ids = persistent_parameter_ids();
+  const ParameterId* ids = persistent_parameter_ids();
   for (std::size_t index = 0; index < kPersistentParameterCount; ++index) {
     const std::uint8_t* source = bytes + kHeaderSize + index * kRecordSize;
     if (get_u32(source) != ids[index]) {
