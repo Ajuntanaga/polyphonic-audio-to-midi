@@ -4,9 +4,10 @@ Updated: 2026-08-28T18:09:32-07:00
 
 ## Authoritative state
 
-- Branch: `main`. This file belongs to the Task 13 terminal checkpoint; its
-  committed predecessor is `8a1332d` (`test: generate deterministic synthetic
-  matrix`).
+- Branch: `main`. The Task 13 terminal JSFX implementation checkpoint is
+  `0be04d3` (`feat: complete polyphonic JSFX experiment and record native
+  gate`); its predecessor is `8a1332d` (`test: generate deterministic
+  synthetic matrix`).
 - Current runtime fingerprint:
   `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
 - The deterministic synthetic manifest is byte-identical to its generator and
@@ -36,6 +37,10 @@ Updated: 2026-08-28T18:09:32-07:00
   `python3 tools/validate_source.py .` reports `source contract: ok`,
   and no diagnostic or benchmark gmem instrumentation remains in production or
   the Lua runner.
+- The canonical ResearchOS project dashboard, implementation-plan index, and
+  Systems index are synchronized to checkpoint `0be04d3`. Obsidian was closed,
+  so `obsidian help` correctly refused; the notes were saved directly as valid
+  Markdown/YAML. The vault is not a Git repository.
 - Every REAPER instance ran serially, backgrounded on workspace 5, under the
   50%-of-one-core and 512 MiB limits. No REAPER process remains.
 - Decision: `native amendment required`. Stop JSFX detector implementation and
