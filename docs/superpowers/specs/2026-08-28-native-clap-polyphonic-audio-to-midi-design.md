@@ -1,7 +1,7 @@
 # Native CLAP Amendment: Real-Time Polyphonic Audio-to-MIDI for REAPER
 
-Date: 2026-08-28  
-Architecture approved in chat: 2026-08-28  
+Date: 2026-08-28
+Architecture approved in chat: 2026-08-28
 Document status: written specification awaiting user review
 
 ## 1. Authority and amendment boundary

@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-28T18:09:32-07:00
+Updated: 2026-08-28T21:06:56-07:00
 
 ## Authoritative state
 
@@ -8,6 +8,12 @@ Updated: 2026-08-28T18:09:32-07:00
   `0be04d3` (`feat: complete polyphonic JSFX experiment and record native
   gate`); its predecessor is `8a1332d` (`test: generate deterministic
   synthetic matrix`).
+- The approved native CLAP design was introduced at `3ac7dcb` (`docs: approve
+  native CLAP architecture`). Its authoritative written specification is
+  `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
+  The architecture is approved; the written specification now awaits user
+  review. No native implementation plan, dependency, or source has been
+  authorized or created.
 - Current runtime fingerprint:
   `7f2724003de54d623b434abf263e6dae3e571d4064194440094ed4367aa29ac4`.
 - The deterministic synthetic manifest is byte-identical to its generator and
@@ -37,18 +43,41 @@ Updated: 2026-08-28T18:09:32-07:00
   `python3 tools/validate_source.py .` reports `source contract: ok`,
   and no diagnostic or benchmark gmem instrumentation remains in production or
   the Lua runner.
-- The canonical ResearchOS project dashboard, implementation-plan index, and
-  Systems index are synchronized to checkpoint `0be04d3`. Obsidian was closed,
-  so `obsidian help` correctly refused; the notes were saved directly as valid
-  Markdown/YAML. The vault is not a Git repository.
+- The canonical ResearchOS project dashboard, design indexes,
+  implementation-plan index, and Systems index are synchronized to the native
+  written-spec review gate. Obsidian was closed, so `obsidian help` correctly
+  refused; the notes were saved directly as valid Markdown/YAML. The vault is
+  not a Git repository.
 - Every REAPER instance ran serially, backgrounded on workspace 5, under the
   50%-of-one-core and 512 MiB limits. No REAPER process remains.
-- Decision: `native amendment required`. Stop JSFX detector implementation and
-  do not install it. Exact resume action is to request explicit approval for a
-  new native-design amendment; approval starts design work only, not a port.
+- Decision: the native-design amendment is written and the JSFX detector remains
+  stopped and uninstalled. Exact resume action is user review of the committed
+  written specification. Do not write an implementation plan or begin a port
+  without a new explicit authorization after that review.
 - Clean-DI recording/input, persistent installation, live projects, REAPER MCP,
-  downloads, and native implementation remain separately gated and were not
-  used.
+  downloads, native implementation planning, and native implementation remain
+  separately gated and were not used.
+
+## Approved native-design amendment
+
+- Delivery form: one Linux x86-64 CLAP track effect with stable ID
+  `com.ajuntanaga.m3-polyphonic-audio-to-midi`.
+- Runtime: format-neutral C++17 detector core plus a narrow CLAP adapter; no
+  plug-in-owned worker, helper process, model runtime, lookahead, or declared
+  latency.
+- Scheduling: sample-wise conditioning/resonators and a fixed 64-sample
+  salience/selection/lifecycle cadence independent of host block size.
+- MIDI: raw MIDI 1.0 input passthrough and generated discrete output on one
+  configurable channel; MPE remains deferred.
+- Interface: the existing fifteen writable controls through REAPER's generic
+  parameter view plus one read-only Status value. A custom GUI is deferred.
+- Safety: all active-path storage is bounded and prepared outside `process()`;
+  output exhaustion blocks new note-ons, retains pending releases, and keeps
+  dry audio available. Native validation inherits the guarded disposable
+  workspace-5 REAPER boundary.
+- Adapter fallback: a failed minimal CLAP capability probe stops before the
+  detector port. VST3 requires its own approved correction; it is not built in
+  parallel.
 
 ## Verified Task 4 evidence
 
@@ -332,11 +361,14 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Begin Task 12 with synthetic metrics only: derive accuracy, false-positive,
-   duplicate-note, note-count, onset, and release summaries from the committed
-   manifest/evidence path.
-2. Keep clean-DI audio, live guitar/interface input, persistent installation,
-   live projects, REAPER MCP, and native fallback behind their existing gates.
+1. Review
+   `docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md`.
+2. If changes are requested, revise and re-run the specification self-review.
+   If the written specification is explicitly approved, stop and request a new
+   authorization before invoking an implementation-planning workflow.
+3. Keep dependency retrieval, native source, REAPER launches, clean-DI or live
+   input, persistent installation, live projects, and REAPER MCP behind their
+   existing gates.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
@@ -348,4 +380,6 @@ task afterward.
 - live guitar or audio-interface testing
 - live-project modification
 - REAPER MCP installation
-- native fallback design or implementation
+- native implementation planning or implementation
+- CLAP or VST3 header/SDK retrieval
+- custom native GUI design or implementation
