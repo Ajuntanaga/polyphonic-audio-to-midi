@@ -80,6 +80,26 @@ class NativeBuildContractTests(unittest.TestCase):
             for token in forbidden:
                 self.assertNotIn(token, text, f"{token!r} found in {path}")
 
+    def test_native_makefile_declares_hardened_explicit_targets(self):
+        text = (ROOT / "native/Makefile").read_text(encoding="utf-8")
+        for flag in (
+            "-std=c++17",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Wconversion",
+            "-Wshadow",
+            "-Werror",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-fstack-protector-strong",
+            "-ffile-prefix-map=$(ROOT)=.",
+            "-fmacro-prefix-map=$(ROOT)=.",
+        ):
+            self.assertIn(flag, text)
+        for target in ("test:", "sanitize:", "tsan:", "probe:", "production:", "benchmark:"):
+            self.assertIn(target, text)
+
     def test_vendored_clap_headers_have_exact_upstream_and_hashes(self):
         upstream = (CLAP / "UPSTREAM.md").read_text(encoding="utf-8")
         for required in (
