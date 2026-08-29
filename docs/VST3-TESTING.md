@@ -1,6 +1,6 @@
 # Native VST3 Testing
 
-Updated: 2026-08-29T03:14:08-07:00
+Updated: 2026-08-29T04:45:38-07:00
 
 ## Authority and current gate
 
@@ -15,8 +15,10 @@ Updated: 2026-08-29T03:14:08-07:00
 - Plan SHA-256:
   `b7dbe1a7eb3a93ba4e06575dc88c45f800191adc5e6e6ef530a7bdc51e768de3`.
 - The user approved exact-plan execution with `Proceed --continuous` on
-  2026-08-29. That opens Task 1 only. Gate T1 still requires separately
-  explicit authority before a CMake package installation.
+  2026-08-29, opening Task 1 only. They separately opened Gate T1 with the
+  exact instruction `Authorize Gate T1: install CMake 4.2.3-2ubuntu2 with
+  --no-install-recommends for Task 2 only`. That authority does not open Gate
+  D2 or any SDK, build, or REAPER action.
 
 ## Locked identities
 
@@ -63,12 +65,41 @@ PSI 0.00, and maximum readable temperature 52 C. The final exact-state
 regression preflight observed 32747 MiB available, load 0.62, both full-PSI
 values 0.00, and maximum readable temperature 45 C.
 
+## Task 2 CMake tool-gate evidence
+
+1. Before installation, the package candidate remained exactly
+   `4.2.3-2ubuntu2`, CMake was absent, the Git tree was clean, and Task 1's
+   four recorded hashes matched. The guarded preflight observed 32466 MiB
+   available, load 4.38, both full-PSI values 0.00, and maximum readable
+   temperature 64 C.
+2. Noninteractive `sudo` correctly refused without local authentication; no
+   mutation occurred in that attempt. The user then ran the approved command
+   locally. `/var/log/apt/history.log` records exactly
+   `apt-get install --no-install-recommends cmake=4.2.3-2ubuntu2` from
+   04:35:35 through 04:35:42 PDT on 2026-08-29.
+3. The transaction installed `cmake=4.2.3-2ubuntu2` and only its required
+   automatic dependencies: `cmake-data=4.2.3-2ubuntu2`,
+   `libjsoncpp26=1.9.6-5`, and `librhash1=1.4.6-1.1`. No recommended package,
+   compiler, Ninja, Qt, VST package, or SDK was installed by this transaction.
+4. Post-install verification reports `cmake version 4.2.3` and dpkg status
+   `install ok installed 4.2.3-2ubuntu2`. Available memory was 32529 MiB,
+   swap use was zero, load was 0.41, both full-PSI values were 0.00, and the
+   maximum readable temperature was 45 C.
+5. The new prerequisite test has a controlled RED: with `PATH=/nonexistent`,
+   it fails only with `CMake executable is required after Gate T1`. Against
+   the installed environment it passes by executing the real
+   `cmake --version`, parsing the semantic version, and requiring at least 3.25.
+   The existing real source validator and controlled build-rule cases continue
+   to reject downloaders.
+6. Final targeted result: 11 tests, 0 failures. Final regression result: 44
+   native tests and 125 Python tests, 0 failures.
+
 ## Tool and containment state
 
 - Compiler: `g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0`.
-- CMake executable: absent.
-- Read-only CMake package state: not installed; candidate
-  `4.2.3-2ubuntu2`.
+- CMake executable: `/usr/bin/cmake`, version `4.2.3`.
+- CMake package state: `install ok installed 4.2.3-2ubuntu2`; the package
+  candidate remains the same exact version.
 - Failed CLAP capability evidence remains immutable with manifest digest
   `12abeeb42c9cf3bf9293540ed952951bfcbeeeaf1e22139af380ac527c837d51`.
 - No Steinberg SDK tree was retrieved, no SDK-dependent VST3 `.cpp` source or
@@ -78,7 +109,6 @@ values 0.00, and maximum readable temperature 45 C.
 
 ## Decision
 
-Task 1 is locally green and ready to seal. Task 2 is not entered. Stop at Gate
-T1 before installing CMake; approval of Task 1 or continuous local execution
-does not authorize that host-package mutation. Gate D2 remains separately
-closed even after CMake is present.
+Tasks 1 and 2 are locally green. Stop at Gate D2. CMake authority does not
+authorize network retrieval or vendoring of the Steinberg SDK, creation of
+SDK-dependent source, a VST3 build, or any REAPER action.

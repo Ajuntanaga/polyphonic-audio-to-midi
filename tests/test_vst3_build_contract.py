@@ -19,6 +19,22 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIsNotNone(validator, "validate_entries() is absent")
         return validator(entries, sdk_present=sdk_present)
 
+    def test_installed_cmake_meets_the_offline_build_prerequisite(self):
+        cmake = shutil.which("cmake")
+        self.assertIsNotNone(cmake, "CMake executable is required after Gate T1")
+        result = subprocess.run(
+            [cmake, "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        first_line = result.stdout.splitlines()[0] if result.stdout else ""
+        match = re.fullmatch(r"cmake version (\d+)\.(\d+)\.(\d+)", first_line)
+        self.assertIsNotNone(match, first_line)
+        version = tuple(int(part) for part in match.groups())
+        self.assertGreaterEqual(version, (3, 25, 0))
+
     def test_identity_header_exposes_the_locked_sdk_independent_contract(self):
         self.assertTrue(IDENTITY_HEADER.is_file(), "vst3_ids.hpp is absent")
 
