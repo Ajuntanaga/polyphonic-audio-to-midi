@@ -43,6 +43,9 @@ class MidiPipeline final {
   [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
   [[nodiscard]] bool is_active(std::uint8_t note) const noexcept;
   [[nodiscard]] bool is_pending_release(std::uint8_t note) const noexcept;
+  [[nodiscard]] bool cleanup_pending() const noexcept {
+    return cleanup_requested_;
+  }
 
  private:
   static bool transition_before(const VoiceTransition& left,

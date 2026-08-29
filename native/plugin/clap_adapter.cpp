@@ -17,6 +17,7 @@
 #include "m3/constants.hpp"
 #include "midi_pipeline.hpp"
 #include "parameter_contract.hpp"
+#include "prepared_config_exchange.hpp"
 #include "state_codec.hpp"
 
 namespace {
@@ -60,7 +61,8 @@ constexpr clap_plugin_descriptor_t kProbeDescriptor{
 enum class Lifecycle : std::uint8_t { created, initialized, active, processing };
 
 struct Adapter final {
-  explicit Adapter(const clap_host_t* host_pointer) noexcept : host(host_pointer) {
+  explicit Adapter(const clap_host_t* host_pointer) noexcept
+      : host(host_pointer), config_request(main_config, 1) {
     plugin.desc = m3::selected_descriptor();
     plugin.plugin_data = this;
     plugin.init = &plugin_init;
@@ -107,13 +109,29 @@ struct Adapter final {
   std::atomic<m3::Status> status{m3::Status::ready};
   std::atomic<bool> values_dirty{false};
   const clap_host_params_t* host_params{};
-  m3::PersistentConfig config{};
+  m3::PersistentConfig main_config{};
+  m3::AtomicConfigRequest config_request;
+  std::atomic<std::uint64_t> generation_counter{1};
+  std::atomic<std::uint64_t> requested_structural_generation{1};
+  std::atomic<bool> reconfiguration_pending{false};
+  std::uint64_t main_generation{1};
+  m3::PersistentConfig audio_requested_config{};
+  std::uint64_t audio_request_generation{1};
+  m3::PersistentConfig active_config{};
+  m3::PreparedConfigExchange prepared_exchange{};
+  m3::PreparedConfig pending_prepared{};
+  std::uint64_t pending_prepared_generation{};
+  bool prepared_publication_pending{};
+  bool audio_publication_pending{};
+  bool pending_audio_structural{};
   m3::MidiPipeline midi_pipeline{};
+  std::uint8_t release_midi_channel{1};
+  bool release_channel_pending{};
   double sample_rate{};
   std::uint32_t min_frames{};
   std::uint32_t max_frames{};
-  bool panic_requested{};
-  std::uint32_t panic_offset{};
+  std::atomic<bool> panic_requested{false};
+  std::atomic<std::uint32_t> panic_offset{0};
 #if defined(M3_TESTING)
   m3::VoiceTransition test_transition{};
   std::uint32_t test_transition_frames{};
@@ -207,16 +225,32 @@ void publish_runtime_status(Adapter& adapter,
   const m3::Status target =
       midi.output_blocked
           ? m3::Status::midi_output_blocked
-          : (midi.panic_hold ? m3::Status::panic_hold : m3::Status::ready);
+          : (adapter.reconfiguration_pending.load(std::memory_order_acquire)
+                 ? m3::Status::reconfiguring
+                 : (midi.panic_hold ? m3::Status::panic_hold
+                                    : m3::Status::ready));
   if (adapter.status.exchange(target, std::memory_order_acq_rel) != target) {
     mark_values_dirty(adapter);
   }
 }
 
-void apply_parameter_events(Adapter& adapter, const clap_input_events_t* input,
-                            std::uint32_t frames_count) noexcept {
+struct ParameterBatchResult final {
+  bool changed{};
+  bool structural{};
+  bool panic{};
+  std::uint32_t panic_offset{};
+};
+
+std::uint64_t next_generation(Adapter& adapter) noexcept {
+  return adapter.generation_counter.fetch_add(1, std::memory_order_relaxed) + 1U;
+}
+
+ParameterBatchResult apply_parameter_events_to(
+    m3::PersistentConfig& config, const clap_input_events_t* input,
+    std::uint32_t frames_count) noexcept {
+  ParameterBatchResult batch;
   if (input == nullptr || input->size == nullptr || input->get == nullptr) {
-    return;
+    return batch;
   }
   const std::uint32_t count = input->size(input);
   for (std::uint32_t index = 0; index < count; ++index) {
@@ -232,14 +266,116 @@ void apply_parameter_events(Adapter& adapter, const clap_input_events_t* input,
       continue;
     }
     const m3::ParameterApplyResult result =
-        m3::apply_parameter(adapter.config, event->param_id, event->value);
+        m3::apply_parameter(config, event->param_id, event->value);
     if (result == m3::ParameterApplyResult::panic) {
-      adapter.panic_requested = true;
-      adapter.panic_offset =
+      batch.panic = true;
+      batch.panic_offset =
           frames_count == 0 ? 0 : std::min(header->time, frames_count - 1U);
-      mark_values_dirty(adapter);
+    } else if (result == m3::ParameterApplyResult::changed) {
+      batch.changed = true;
+      const m3::ParameterRecord* record =
+          m3::find_parameter(event->param_id);
+      batch.structural =
+          batch.structural ||
+          (record != nullptr &&
+           record->update_class == m3::ParameterUpdateClass::structural);
     }
   }
+  return batch;
+}
+
+void accept_panic(Adapter& adapter,
+                  const ParameterBatchResult& batch) noexcept {
+  if (batch.panic) {
+    adapter.panic_offset.store(batch.panic_offset, std::memory_order_relaxed);
+    adapter.panic_requested.store(true, std::memory_order_release);
+    mark_values_dirty(adapter);
+  }
+}
+
+bool publish_audio_config(Adapter& adapter, bool structural) noexcept {
+  const std::uint64_t generation = next_generation(adapter);
+  if (!adapter.config_request.publish(adapter.audio_requested_config,
+                                      generation)) {
+    adapter.audio_publication_pending = true;
+    adapter.pending_audio_structural =
+        adapter.pending_audio_structural || structural;
+    return false;
+  }
+  adapter.audio_request_generation = generation;
+  adapter.audio_publication_pending = false;
+  if (structural || adapter.pending_audio_structural) {
+    adapter.requested_structural_generation.store(generation,
+                                                  std::memory_order_release);
+    adapter.reconfiguration_pending.store(true, std::memory_order_release);
+    adapter.pending_audio_structural = false;
+    latch_status(adapter, m3::Status::reconfiguring);
+  }
+  mark_values_dirty(adapter);
+  return true;
+}
+
+void synchronize_audio_request(Adapter& adapter) noexcept {
+  if (adapter.audio_publication_pending) {
+    static_cast<void>(publish_audio_config(adapter,
+                                           adapter.pending_audio_structural));
+    if (adapter.audio_publication_pending) {
+      return;
+    }
+  }
+  m3::ConfigRequestSnapshot snapshot;
+  if (adapter.config_request.snapshot(snapshot) &&
+      m3::generation_newer(snapshot.generation,
+                           adapter.audio_request_generation)) {
+    adapter.audio_requested_config = snapshot.config;
+    adapter.audio_request_generation = snapshot.generation;
+  }
+}
+
+void apply_audio_parameter_events(Adapter& adapter,
+                                  const clap_input_events_t* input,
+                                  std::uint32_t frames_count) noexcept {
+  const ParameterBatchResult batch = apply_parameter_events_to(
+      adapter.audio_requested_config, input, frames_count);
+  accept_panic(adapter, batch);
+  if (batch.changed) {
+    static_cast<void>(publish_audio_config(adapter, batch.structural));
+  }
+}
+
+void apply_inactive_parameter_events(Adapter& adapter,
+                                     const clap_input_events_t* input) noexcept {
+  m3::PersistentConfig candidate = adapter.main_config;
+  const ParameterBatchResult batch =
+      apply_parameter_events_to(candidate, input, 0);
+  accept_panic(adapter, batch);
+  if (!batch.changed) {
+    return;
+  }
+  const std::uint64_t generation = next_generation(adapter);
+  if (!adapter.config_request.publish(candidate, generation)) {
+    latch_status(adapter, m3::Status::invalid_input_or_state);
+    return;
+  }
+  adapter.main_config = candidate;
+  adapter.main_generation = generation;
+}
+
+bool stage_for_publication(Adapter& adapter,
+                           const m3::PersistentConfig& config,
+                           std::uint64_t generation) noexcept {
+  if (!m3::stage_prepared_config(config, adapter.sample_rate,
+                                 adapter.pending_prepared)) {
+    latch_status(adapter, m3::Status::invalid_input_or_state);
+    return false;
+  }
+  adapter.pending_prepared_generation = generation;
+  adapter.prepared_publication_pending = true;
+  if (adapter.prepared_exchange.publish(adapter.pending_prepared, generation)) {
+    adapter.prepared_publication_pending = false;
+    return true;
+  }
+  return false;
 }
 
 std::uint32_t CLAP_ABI params_count(const clap_plugin_t*) noexcept {
@@ -267,7 +403,7 @@ bool CLAP_ABI params_get_value(const clap_plugin_t* plugin, clap_id id,
                                double* value) noexcept {
   const Adapter* adapter = Adapter::from(plugin);
   return adapter != nullptr && value != nullptr &&
-         m3::parameter_value(adapter->config,
+         m3::parameter_value(adapter->main_config,
                              adapter->status.load(std::memory_order_acquire), id,
                              *value);
 }
@@ -288,14 +424,20 @@ void CLAP_ABI params_flush(const clap_plugin_t* plugin,
                            const clap_output_events_t*) noexcept {
   Adapter* adapter = Adapter::from(plugin);
   if (adapter != nullptr) {
-    apply_parameter_events(*adapter, input, 0);
+    if (adapter->lifecycle == Lifecycle::active ||
+        adapter->lifecycle == Lifecycle::processing) {
+      synchronize_audio_request(*adapter);
+      apply_audio_parameter_events(*adapter, input, 0);
+    } else {
+      apply_inactive_parameter_events(*adapter, input);
+    }
   }
 }
 
 bool CLAP_ABI state_save(const clap_plugin_t* plugin,
                          const clap_ostream_t* stream) noexcept {
   const Adapter* adapter = Adapter::from(plugin);
-  return adapter != nullptr && m3::save_state(adapter->config, stream);
+  return adapter != nullptr && m3::save_state(adapter->main_config, stream);
 }
 
 bool CLAP_ABI state_load(const clap_plugin_t* plugin,
@@ -308,10 +450,31 @@ bool CLAP_ABI state_load(const clap_plugin_t* plugin,
   if (!m3::load_state(stream, candidate)) {
     return false;
   }
-  adapter->config = candidate;
-  adapter->panic_requested = false;
-  adapter->midi_pipeline.request_reset();
-  adapter->status.store(m3::Status::ready, std::memory_order_release);
+  bool published = false;
+  std::uint64_t generation = 0;
+  for (std::uint32_t attempt = 0; attempt < 3U && !published; ++attempt) {
+    generation = next_generation(*adapter);
+    published = adapter->config_request.publish(candidate, generation);
+  }
+  if (!published) {
+    return false;
+  }
+  adapter->main_config = candidate;
+  adapter->main_generation = generation;
+  adapter->panic_requested.store(false, std::memory_order_release);
+  if (adapter->lifecycle == Lifecycle::active ||
+      adapter->lifecycle == Lifecycle::processing) {
+    adapter->requested_structural_generation.store(
+        generation, std::memory_order_release);
+    adapter->reconfiguration_pending.store(true, std::memory_order_release);
+    static_cast<void>(stage_for_publication(*adapter, candidate, generation));
+    latch_status(*adapter, m3::Status::reconfiguring);
+    if (adapter->prepared_publication_pending) {
+      mark_values_dirty(*adapter);
+    }
+  } else {
+    adapter->status.store(m3::Status::ready, std::memory_order_release);
+  }
   if (adapter->host_params != nullptr && adapter->host_params->rescan != nullptr) {
     adapter->host_params->rescan(adapter->host, CLAP_PARAM_RESCAN_VALUES);
   }
@@ -387,12 +550,34 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
       requested_max_frames > m3::kMaxHostFrames) {
     return false;
   }
+  m3::ConfigRequestSnapshot snapshot;
+  m3::PreparedConfig prepared;
+  if (!self->config_request.snapshot(snapshot) ||
+      !m3::stage_prepared_config(snapshot.config, requested_sample_rate,
+                                 prepared)) {
+    return false;
+  }
   if (!self->midi_pipeline.activate(requested_max_frames)) {
     return false;
   }
   self->sample_rate = requested_sample_rate;
   self->min_frames = requested_min_frames;
   self->max_frames = requested_max_frames;
+  self->main_config = snapshot.config;
+  self->main_generation = snapshot.generation;
+  self->audio_requested_config = snapshot.config;
+  self->audio_request_generation = snapshot.generation;
+  self->active_config = snapshot.config;
+  static_cast<void>(self->prepared_exchange.initialize(prepared,
+                                                       snapshot.generation));
+  self->requested_structural_generation.store(snapshot.generation,
+                                              std::memory_order_release);
+  self->reconfiguration_pending.store(false, std::memory_order_release);
+  self->prepared_publication_pending = false;
+  self->audio_publication_pending = false;
+  self->pending_audio_structural = false;
+  self->release_midi_channel = snapshot.config.midi_channel;
+  self->release_channel_pending = false;
   self->status.store(m3::Status::ready, std::memory_order_release);
   self->lifecycle = Lifecycle::active;
   return true;
@@ -401,11 +586,23 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
 void Adapter::plugin_deactivate(const clap_plugin_t* plugin_pointer) noexcept {
   Adapter* self = from(plugin_pointer);
   if (self != nullptr && self->lifecycle == Lifecycle::active) {
+    m3::ConfigRequestSnapshot snapshot;
+    if (self->config_request.snapshot(snapshot) &&
+        m3::generation_newer(snapshot.generation, self->main_generation)) {
+      self->main_config = snapshot.config;
+      self->main_generation = snapshot.generation;
+    }
     self->lifecycle = Lifecycle::initialized;
     self->sample_rate = 0.0;
     self->min_frames = 0;
     self->max_frames = 0;
     self->midi_pipeline.deactivate();
+    self->prepared_exchange.reset();
+    self->prepared_publication_pending = false;
+    self->audio_publication_pending = false;
+    self->pending_audio_structural = false;
+    self->release_channel_pending = false;
+    self->reconfiguration_pending.store(false, std::memory_order_release);
   }
 }
 
@@ -445,11 +642,40 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
   }
 
   self->midi_pipeline.begin_block();
-  apply_parameter_events(*self, process->in_events, process->frames_count);
-  if (self->panic_requested) {
+  synchronize_audio_request(*self);
+
+  if (!self->release_channel_pending) {
+    m3::PreparedConfigExchange::Claim claim;
+    if (self->prepared_exchange.claim_latest(claim)) {
+      const m3::PersistentConfig adopted = claim.config->requested;
+      const std::uint64_t adopted_generation = claim.generation;
+      self->release_midi_channel = self->active_config.midi_channel;
+      self->midi_pipeline.request_reset();
+      self->release_channel_pending = true;
+      if (self->prepared_exchange.commit(claim)) {
+        m3::copy_structural_config(self->active_config, adopted);
+        const std::uint64_t requested_generation =
+            self->requested_structural_generation.load(
+                std::memory_order_acquire);
+        if (!m3::generation_newer(requested_generation,
+                                  adopted_generation)) {
+          self->reconfiguration_pending.store(false,
+                                              std::memory_order_release);
+        }
+      } else {
+        static_cast<void>(self->prepared_exchange.cancel(claim));
+        self->release_channel_pending = false;
+        latch_status(*self, m3::Status::invalid_input_or_state);
+      }
+    }
+  }
+
+  apply_audio_parameter_events(*self, process->in_events,
+                               process->frames_count);
+  if (self->panic_requested.exchange(false, std::memory_order_acq_rel)) {
     static_cast<void>(self->midi_pipeline.request_panic(
-        self->panic_offset, process->frames_count));
-    self->panic_requested = false;
+        self->panic_offset.load(std::memory_order_relaxed),
+        process->frames_count));
   }
 #if defined(M3_TESTING)
   if (self->test_transition_pending) {
@@ -471,12 +697,12 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
     float64 = exact_float64_layout(input, output);
     if (float32) {
       result = process_typed<float>(input, output, process->frames_count,
-                                    self->config.dry_passthrough,
-                                    self->config.detector_input);
+                                    self->audio_requested_config.dry_passthrough,
+                                    self->active_config.detector_input);
     } else if (float64) {
       result = process_typed<double>(input, output, process->frames_count,
-                                     self->config.dry_passthrough,
-                                     self->config.detector_input);
+                                     self->audio_requested_config.dry_passthrough,
+                                     self->active_config.detector_input);
     }
     exact_layout = process->audio_inputs_count == 1 &&
                    process->audio_outputs_count == 1 &&
@@ -489,10 +715,17 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
   } else if (result.nonfinite_input) {
     latch_status(*self, m3::Status::invalid_input_or_state);
   }
+  const std::uint8_t midi_channel = self->release_channel_pending
+                                        ? self->release_midi_channel
+                                        : self->active_config.midi_channel;
   const m3::MidiProcessResult midi = self->midi_pipeline.process(
-      process->frames_count, self->config.midi_channel, process->in_events,
+      process->frames_count, midi_channel, process->in_events,
       process->out_events, result.selected_peak, !result.nonfinite_input,
       exact_layout);
+  if (self->release_channel_pending &&
+      !self->midi_pipeline.cleanup_pending()) {
+    self->release_channel_pending = false;
+  }
   if (midi.invalid_event) {
     latch_status(*self, m3::Status::invalid_input_or_state);
   }
@@ -525,10 +758,51 @@ const void* Adapter::plugin_get_extension(const clap_plugin_t* plugin_pointer,
 
 void Adapter::plugin_on_main_thread(const clap_plugin_t* plugin_pointer) noexcept {
   Adapter* self = from(plugin_pointer);
-  if (self != nullptr &&
-      self->values_dirty.exchange(false, std::memory_order_acq_rel) &&
-      self->host_params != nullptr && self->host_params->rescan != nullptr) {
+  if (self == nullptr) {
+    return;
+  }
+
+  const bool values_were_dirty =
+      self->values_dirty.exchange(false, std::memory_order_acq_rel);
+  bool retry_callback = false;
+  m3::ConfigRequestSnapshot snapshot;
+  if (!self->config_request.snapshot(snapshot)) {
+    retry_callback = true;
+  } else if (m3::generation_newer(snapshot.generation,
+                                  self->main_generation)) {
+    const bool structural =
+        !m3::structural_config_equal(self->main_config, snapshot.config);
+    self->main_config = snapshot.config;
+    self->main_generation = snapshot.generation;
+    if (structural &&
+        (self->lifecycle == Lifecycle::active ||
+         self->lifecycle == Lifecycle::processing)) {
+      self->requested_structural_generation.store(
+          snapshot.generation, std::memory_order_release);
+      self->reconfiguration_pending.store(true, std::memory_order_release);
+      latch_status(*self, m3::Status::reconfiguring);
+      if (!stage_for_publication(*self, snapshot.config,
+                                 snapshot.generation)) {
+        retry_callback = self->prepared_publication_pending;
+      }
+    }
+  }
+
+  if (self->prepared_publication_pending) {
+    if (self->prepared_exchange.publish(self->pending_prepared,
+                                        self->pending_prepared_generation)) {
+      self->prepared_publication_pending = false;
+    } else {
+      retry_callback = true;
+    }
+  }
+
+  if (values_were_dirty && self->host_params != nullptr &&
+      self->host_params->rescan != nullptr) {
     self->host_params->rescan(self->host, CLAP_PARAM_RESCAN_VALUES);
+  }
+  if (retry_callback) {
+    mark_values_dirty(*self);
   }
 }
 
@@ -561,7 +835,7 @@ const clap_plugin_descriptor_t* probe_descriptor_for_test() noexcept {
 void set_dry_passthrough_for_test(const clap_plugin_t* plugin, bool enabled) noexcept {
   Adapter* adapter = Adapter::from(plugin);
   if (adapter != nullptr) {
-    adapter->config.dry_passthrough = enabled;
+    adapter->audio_requested_config.dry_passthrough = enabled;
   }
 }
 
