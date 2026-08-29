@@ -95,6 +95,12 @@ class FakeProcessBlock final {
   }
 
   clap_process_t* process() noexcept { return &process_; }
+  void set_input_events(const clap_input_events_t* events) noexcept {
+    process_.in_events = events;
+  }
+  void set_output_events(const clap_output_events_t* events) noexcept {
+    process_.out_events = events;
+  }
   clap_audio_buffer_t& input_buffer() noexcept { return input_buffer_; }
   clap_audio_buffer_t& output_buffer() noexcept { return output_buffer_; }
   Sample* input_left() noexcept { return input_left_.data(); }

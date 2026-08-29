@@ -15,6 +15,7 @@
 
 #include "dry_path.hpp"
 #include "m3/constants.hpp"
+#include "midi_pipeline.hpp"
 #include "parameter_contract.hpp"
 #include "state_codec.hpp"
 
@@ -107,10 +108,17 @@ struct Adapter final {
   std::atomic<bool> values_dirty{false};
   const clap_host_params_t* host_params{};
   m3::PersistentConfig config{};
+  m3::MidiPipeline midi_pipeline{};
   double sample_rate{};
   std::uint32_t min_frames{};
   std::uint32_t max_frames{};
   bool panic_requested{};
+  std::uint32_t panic_offset{};
+#if defined(M3_TESTING)
+  m3::VoiceTransition test_transition{};
+  std::uint32_t test_transition_frames{};
+  bool test_transition_pending{};
+#endif
 };
 
 void copy_name(char* destination, std::size_t capacity, const char* source) noexcept {
@@ -189,15 +197,24 @@ void latch_status(Adapter& adapter, m3::Status status) noexcept {
   }
 }
 
-void set_ready_status(Adapter& adapter) noexcept {
-  if (adapter.status.exchange(m3::Status::ready, std::memory_order_acq_rel) !=
-      m3::Status::ready) {
+void publish_runtime_status(Adapter& adapter,
+                            const m3::MidiProcessResult& midi) noexcept {
+  const m3::Status current = adapter.status.load(std::memory_order_acquire);
+  if (current == m3::Status::invalid_input_or_state ||
+      current == m3::Status::unsupported_layout) {
+    return;
+  }
+  const m3::Status target =
+      midi.output_blocked
+          ? m3::Status::midi_output_blocked
+          : (midi.panic_hold ? m3::Status::panic_hold : m3::Status::ready);
+  if (adapter.status.exchange(target, std::memory_order_acq_rel) != target) {
     mark_values_dirty(adapter);
   }
 }
 
-void apply_parameter_events(Adapter& adapter,
-                            const clap_input_events_t* input) noexcept {
+void apply_parameter_events(Adapter& adapter, const clap_input_events_t* input,
+                            std::uint32_t frames_count) noexcept {
   if (input == nullptr || input->size == nullptr || input->get == nullptr) {
     return;
   }
@@ -218,6 +235,8 @@ void apply_parameter_events(Adapter& adapter,
         m3::apply_parameter(adapter.config, event->param_id, event->value);
     if (result == m3::ParameterApplyResult::panic) {
       adapter.panic_requested = true;
+      adapter.panic_offset =
+          frames_count == 0 ? 0 : std::min(header->time, frames_count - 1U);
       mark_values_dirty(adapter);
     }
   }
@@ -269,7 +288,7 @@ void CLAP_ABI params_flush(const clap_plugin_t* plugin,
                            const clap_output_events_t*) noexcept {
   Adapter* adapter = Adapter::from(plugin);
   if (adapter != nullptr) {
-    apply_parameter_events(*adapter, input);
+    apply_parameter_events(*adapter, input, 0);
   }
 }
 
@@ -291,6 +310,7 @@ bool CLAP_ABI state_load(const clap_plugin_t* plugin,
   }
   adapter->config = candidate;
   adapter->panic_requested = false;
+  adapter->midi_pipeline.request_reset();
   adapter->status.store(m3::Status::ready, std::memory_order_release);
   if (adapter->host_params != nullptr && adapter->host_params->rescan != nullptr) {
     adapter->host_params->rescan(adapter->host, CLAP_PARAM_RESCAN_VALUES);
@@ -312,13 +332,16 @@ template <typename Sample>
 m3::DryPathResult process_typed(const clap_audio_buffer_t& input,
                                 clap_audio_buffer_t& output,
                                 std::uint32_t frames,
-                                bool passthrough) noexcept {
+                                bool passthrough,
+                                m3::DetectorInput detector_input) noexcept {
   if constexpr (sizeof(Sample) == sizeof(float)) {
     return m3::process_dry_path(input.data32, input.channel_count, output.data32,
-                                output.channel_count, frames, passthrough);
+                                output.channel_count, frames, passthrough,
+                                detector_input);
   } else {
     return m3::process_dry_path(input.data64, input.channel_count, output.data64,
-                                output.channel_count, frames, passthrough);
+                                output.channel_count, frames, passthrough,
+                                detector_input);
   }
 }
 
@@ -364,6 +387,9 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
       requested_max_frames > m3::kMaxHostFrames) {
     return false;
   }
+  if (!self->midi_pipeline.activate(requested_max_frames)) {
+    return false;
+  }
   self->sample_rate = requested_sample_rate;
   self->min_frames = requested_min_frames;
   self->max_frames = requested_max_frames;
@@ -379,6 +405,7 @@ void Adapter::plugin_deactivate(const clap_plugin_t* plugin_pointer) noexcept {
     self->sample_rate = 0.0;
     self->min_frames = 0;
     self->max_frames = 0;
+    self->midi_pipeline.deactivate();
   }
 }
 
@@ -403,7 +430,8 @@ void Adapter::plugin_reset(const clap_plugin_t* plugin_pointer) noexcept {
   if (self != nullptr &&
       (self->lifecycle == Lifecycle::active ||
        self->lifecycle == Lifecycle::processing)) {
-    set_ready_status(*self);
+    self->midi_pipeline.request_reset();
+    latch_status(*self, m3::Status::panic_hold);
   }
 }
 
@@ -416,36 +444,59 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
     return CLAP_PROCESS_ERROR;
   }
 
-  apply_parameter_events(*self, process->in_events);
-
-  if (process->audio_inputs == nullptr || process->audio_outputs == nullptr ||
-      process->audio_inputs_count == 0 || process->audio_outputs_count == 0) {
-    latch_status(*self, m3::Status::unsupported_layout);
-    return CLAP_PROCESS_CONTINUE;
+  self->midi_pipeline.begin_block();
+  apply_parameter_events(*self, process->in_events, process->frames_count);
+  if (self->panic_requested) {
+    static_cast<void>(self->midi_pipeline.request_panic(
+        self->panic_offset, process->frames_count));
+    self->panic_requested = false;
   }
+#if defined(M3_TESTING)
+  if (self->test_transition_pending) {
+    static_cast<void>(self->midi_pipeline.queue_transition(
+        self->test_transition, self->test_transition_frames));
+    self->test_transition_pending = false;
+  }
+#endif
 
-  const clap_audio_buffer_t& input = process->audio_inputs[0];
-  clap_audio_buffer_t& output = process->audio_outputs[0];
-  const bool float32 = exact_float32_layout(input, output);
-  const bool float64 = exact_float64_layout(input, output);
   m3::DryPathResult result{};
-  if (float32) {
-    result = process_typed<float>(input, output, process->frames_count,
-                                  self->config.dry_passthrough);
-  } else if (float64) {
-    result = process_typed<double>(input, output, process->frames_count,
-                                   self->config.dry_passthrough);
+  bool float32 = false;
+  bool float64 = false;
+  bool exact_layout = false;
+  if (process->audio_inputs != nullptr && process->audio_outputs != nullptr &&
+      process->audio_inputs_count > 0 && process->audio_outputs_count > 0) {
+    const clap_audio_buffer_t& input = process->audio_inputs[0];
+    clap_audio_buffer_t& output = process->audio_outputs[0];
+    float32 = exact_float32_layout(input, output);
+    float64 = exact_float64_layout(input, output);
+    if (float32) {
+      result = process_typed<float>(input, output, process->frames_count,
+                                    self->config.dry_passthrough,
+                                    self->config.detector_input);
+    } else if (float64) {
+      result = process_typed<double>(input, output, process->frames_count,
+                                     self->config.dry_passthrough,
+                                     self->config.detector_input);
+    }
+    exact_layout = process->audio_inputs_count == 1 &&
+                   process->audio_outputs_count == 1 &&
+                   input.channel_count == 2 && output.channel_count == 2 &&
+                   result.channels_processed == 2 && (float32 || float64);
   }
 
-  const bool exact_layout =
-      process->audio_inputs_count == 1 && process->audio_outputs_count == 1 &&
-      input.channel_count == 2 && output.channel_count == 2 &&
-      result.channels_processed == 2 && (float32 || float64);
   if (!exact_layout) {
     latch_status(*self, m3::Status::unsupported_layout);
   } else if (result.nonfinite_input) {
     latch_status(*self, m3::Status::invalid_input_or_state);
   }
+  const m3::MidiProcessResult midi = self->midi_pipeline.process(
+      process->frames_count, self->config.midi_channel, process->in_events,
+      process->out_events, result.selected_peak, !result.nonfinite_input,
+      exact_layout);
+  if (midi.invalid_event) {
+    latch_status(*self, m3::Status::invalid_input_or_state);
+  }
+  publish_runtime_status(*self, midi);
   return CLAP_PROCESS_CONTINUE;
 }
 
@@ -519,6 +570,19 @@ Status adapter_status_for_test(const clap_plugin_t* plugin) noexcept {
   return adapter == nullptr
              ? Status::invalid_input_or_state
              : adapter->status.load(std::memory_order_acquire);
+}
+
+bool queue_transition_for_test(const clap_plugin_t* plugin,
+                               const VoiceTransition& transition,
+                               std::uint32_t frames_count) noexcept {
+  Adapter* adapter = Adapter::from(plugin);
+  if (adapter == nullptr || adapter->test_transition_pending) {
+    return false;
+  }
+  adapter->test_transition = transition;
+  adapter->test_transition_frames = frames_count;
+  adapter->test_transition_pending = true;
+  return true;
 }
 #endif
 
