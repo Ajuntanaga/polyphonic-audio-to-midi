@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include <clap/clap.h>
+#include <clap/ext/params.h>
 
 #include "m3/constants.hpp"
 
@@ -18,6 +19,11 @@ class FakeClapHost final {
   std::uint32_t restart_requests() const noexcept { return restart_requests_; }
   std::uint32_t process_requests() const noexcept { return process_requests_; }
   std::uint32_t callback_requests() const noexcept { return callback_requests_; }
+  std::uint32_t param_rescans() const noexcept { return param_rescans_; }
+  clap_param_rescan_flags param_rescan_flags() const noexcept {
+    return param_rescan_flags_;
+  }
+  std::uint32_t flush_requests() const noexcept { return flush_requests_; }
 
   static const clap_input_events_t* empty_input_events() noexcept;
   static const clap_output_events_t* accepting_output_events() noexcept;
@@ -27,11 +33,19 @@ class FakeClapHost final {
   static void CLAP_ABI request_restart(const clap_host_t*) noexcept;
   static void CLAP_ABI request_process(const clap_host_t*) noexcept;
   static void CLAP_ABI request_callback(const clap_host_t*) noexcept;
+  static void CLAP_ABI params_rescan(const clap_host_t*,
+                                     clap_param_rescan_flags) noexcept;
+  static void CLAP_ABI params_clear(const clap_host_t*, clap_id,
+                                    clap_param_clear_flags) noexcept;
+  static void CLAP_ABI params_request_flush(const clap_host_t*) noexcept;
 
   clap_host_t host_{};
   std::uint32_t restart_requests_{};
   std::uint32_t process_requests_{};
   std::uint32_t callback_requests_{};
+  std::uint32_t param_rescans_{};
+  clap_param_rescan_flags param_rescan_flags_{};
+  std::uint32_t flush_requests_{};
 };
 
 template <typename Sample>

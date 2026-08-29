@@ -1,6 +1,7 @@
 #include "fake_clap_host.hpp"
 
 #include <cstddef>
+#include <cstring>
 
 namespace {
 
@@ -45,7 +46,15 @@ const clap_output_events_t* FakeClapHost::accepting_output_events() noexcept {
 }
 
 const void* CLAP_ABI FakeClapHost::get_extension(const clap_host_t*,
-                                                 const char*) noexcept {
+                                                 const char* id) noexcept {
+  if (id != nullptr && std::strcmp(id, CLAP_EXT_PARAMS) == 0) {
+    static const clap_host_params_t kHostParams{
+        &params_rescan,
+        &params_clear,
+        &params_request_flush,
+    };
+    return &kHostParams;
+  }
   return nullptr;
 }
 
@@ -62,6 +71,21 @@ void CLAP_ABI FakeClapHost::request_process(const clap_host_t* host) noexcept {
 void CLAP_ABI FakeClapHost::request_callback(const clap_host_t* host) noexcept {
   auto* self = static_cast<FakeClapHost*>(host->host_data);
   ++self->callback_requests_;
+}
+
+void CLAP_ABI FakeClapHost::params_rescan(
+    const clap_host_t* host, clap_param_rescan_flags flags) noexcept {
+  auto* self = static_cast<FakeClapHost*>(host->host_data);
+  ++self->param_rescans_;
+  self->param_rescan_flags_ |= flags;
+}
+
+void CLAP_ABI FakeClapHost::params_clear(const clap_host_t*, clap_id,
+                                         clap_param_clear_flags) noexcept {}
+
+void CLAP_ABI FakeClapHost::params_request_flush(const clap_host_t* host) noexcept {
+  auto* self = static_cast<FakeClapHost*>(host->host_data);
+  ++self->flush_requests_;
 }
 
 }  // namespace m3::test

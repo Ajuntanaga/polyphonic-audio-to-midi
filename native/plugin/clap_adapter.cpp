@@ -3,7 +3,10 @@
 #include <clap/ext/audio-ports.h>
 #include <clap/ext/latency.h>
 #include <clap/ext/note-ports.h>
+#include <clap/ext/params.h>
+#include <clap/ext/state.h>
 
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -12,6 +15,8 @@
 
 #include "dry_path.hpp"
 #include "m3/constants.hpp"
+#include "parameter_contract.hpp"
+#include "state_codec.hpp"
 
 namespace {
 
@@ -98,11 +103,14 @@ struct Adapter final {
   clap_plugin_t plugin{};
   const clap_host_t* host{};
   Lifecycle lifecycle{Lifecycle::created};
-  m3::Status status{m3::Status::ready};
+  std::atomic<m3::Status> status{m3::Status::ready};
+  std::atomic<bool> values_dirty{false};
+  const clap_host_params_t* host_params{};
+  m3::PersistentConfig config{};
   double sample_rate{};
   std::uint32_t min_frames{};
   std::uint32_t max_frames{};
-  bool dry_passthrough{true};
+  bool panic_requested{};
 };
 
 void copy_name(char* destination, std::size_t capacity, const char* source) noexcept {
@@ -162,12 +170,143 @@ const clap_plugin_audio_ports_t kAudioPorts{&audio_port_count, &audio_port_get};
 const clap_plugin_note_ports_t kNotePorts{&note_port_count, &note_port_get};
 const clap_plugin_latency_t kLatency{&latency_get};
 
-void latch_status(Adapter& adapter, m3::Status status) noexcept {
-  if (static_cast<std::uint8_t>(status) >
-      static_cast<std::uint8_t>(adapter.status)) {
-    adapter.status = status;
+void mark_values_dirty(Adapter& adapter) noexcept {
+  if (!adapter.values_dirty.exchange(true, std::memory_order_acq_rel) &&
+      adapter.host != nullptr && adapter.host->request_callback != nullptr) {
+    adapter.host->request_callback(adapter.host);
   }
 }
+
+void latch_status(Adapter& adapter, m3::Status status) noexcept {
+  m3::Status current = adapter.status.load(std::memory_order_relaxed);
+  while (static_cast<std::uint8_t>(status) > static_cast<std::uint8_t>(current)) {
+    if (adapter.status.compare_exchange_weak(current, status,
+                                             std::memory_order_release,
+                                             std::memory_order_relaxed)) {
+      mark_values_dirty(adapter);
+      return;
+    }
+  }
+}
+
+void set_ready_status(Adapter& adapter) noexcept {
+  if (adapter.status.exchange(m3::Status::ready, std::memory_order_acq_rel) !=
+      m3::Status::ready) {
+    mark_values_dirty(adapter);
+  }
+}
+
+void apply_parameter_events(Adapter& adapter,
+                            const clap_input_events_t* input) noexcept {
+  if (input == nullptr || input->size == nullptr || input->get == nullptr) {
+    return;
+  }
+  const std::uint32_t count = input->size(input);
+  for (std::uint32_t index = 0; index < count; ++index) {
+    const clap_event_header_t* header = input->get(input, index);
+    if (header == nullptr || header->space_id != CLAP_CORE_EVENT_SPACE_ID ||
+        header->type != CLAP_EVENT_PARAM_VALUE ||
+        header->size < sizeof(clap_event_param_value_t)) {
+      continue;
+    }
+    const auto* event = reinterpret_cast<const clap_event_param_value_t*>(header);
+    if (event->note_id != -1 || event->port_index != -1 || event->channel != -1 ||
+        event->key != -1) {
+      continue;
+    }
+    const m3::ParameterApplyResult result =
+        m3::apply_parameter(adapter.config, event->param_id, event->value);
+    if (result == m3::ParameterApplyResult::panic) {
+      adapter.panic_requested = true;
+      mark_values_dirty(adapter);
+    }
+  }
+}
+
+std::uint32_t CLAP_ABI params_count(const clap_plugin_t*) noexcept {
+  return static_cast<std::uint32_t>(m3::parameter_count());
+}
+
+bool CLAP_ABI params_get_info(const clap_plugin_t*, std::uint32_t index,
+                              clap_param_info_t* info) noexcept {
+  const m3::ParameterRecord* record = m3::parameter_record(index);
+  if (record == nullptr || info == nullptr) {
+    return false;
+  }
+  *info = {};
+  info->id = record->id;
+  info->flags = record->flags;
+  copy_name(info->name, sizeof(info->name), record->name);
+  info->module[0] = '\0';
+  info->min_value = record->minimum;
+  info->max_value = record->maximum;
+  info->default_value = record->default_value;
+  return true;
+}
+
+bool CLAP_ABI params_get_value(const clap_plugin_t* plugin, clap_id id,
+                               double* value) noexcept {
+  const Adapter* adapter = Adapter::from(plugin);
+  return adapter != nullptr && value != nullptr &&
+         m3::parameter_value(adapter->config,
+                             adapter->status.load(std::memory_order_acquire), id,
+                             *value);
+}
+
+bool CLAP_ABI params_value_to_text(const clap_plugin_t*, clap_id id, double value,
+                                   char* output,
+                                   std::uint32_t capacity) noexcept {
+  return m3::parameter_value_to_text(id, value, output, capacity);
+}
+
+bool CLAP_ABI params_text_to_value(const clap_plugin_t*, clap_id id,
+                                   const char* text, double* value) noexcept {
+  return value != nullptr && m3::parameter_text_to_value(id, text, *value);
+}
+
+void CLAP_ABI params_flush(const clap_plugin_t* plugin,
+                           const clap_input_events_t* input,
+                           const clap_output_events_t*) noexcept {
+  Adapter* adapter = Adapter::from(plugin);
+  if (adapter != nullptr) {
+    apply_parameter_events(*adapter, input);
+  }
+}
+
+bool CLAP_ABI state_save(const clap_plugin_t* plugin,
+                         const clap_ostream_t* stream) noexcept {
+  const Adapter* adapter = Adapter::from(plugin);
+  return adapter != nullptr && m3::save_state(adapter->config, stream);
+}
+
+bool CLAP_ABI state_load(const clap_plugin_t* plugin,
+                         const clap_istream_t* stream) noexcept {
+  Adapter* adapter = Adapter::from(plugin);
+  if (adapter == nullptr) {
+    return false;
+  }
+  m3::PersistentConfig candidate;
+  if (!m3::load_state(stream, candidate)) {
+    return false;
+  }
+  adapter->config = candidate;
+  adapter->panic_requested = false;
+  adapter->status.store(m3::Status::ready, std::memory_order_release);
+  if (adapter->host_params != nullptr && adapter->host_params->rescan != nullptr) {
+    adapter->host_params->rescan(adapter->host, CLAP_PARAM_RESCAN_VALUES);
+  }
+  return true;
+}
+
+const clap_plugin_params_t kParams{
+    &params_count,
+    &params_get_info,
+    &params_get_value,
+    &params_value_to_text,
+    &params_text_to_value,
+    &params_flush,
+};
+const clap_plugin_state_t kState{&state_save, &state_load};
 
 template <typename Sample>
 m3::DryPathResult process_typed(const clap_audio_buffer_t& input,
@@ -200,6 +339,10 @@ bool Adapter::plugin_init(const clap_plugin_t* plugin_pointer) noexcept {
   if (self == nullptr || self->lifecycle != Lifecycle::created) {
     return false;
   }
+  if (self->host->get_extension != nullptr) {
+    self->host_params = static_cast<const clap_host_params_t*>(
+        self->host->get_extension(self->host, CLAP_EXT_PARAMS));
+  }
   self->lifecycle = Lifecycle::initialized;
   return true;
 }
@@ -224,7 +367,7 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
   self->sample_rate = requested_sample_rate;
   self->min_frames = requested_min_frames;
   self->max_frames = requested_max_frames;
-  self->status = m3::Status::ready;
+  self->status.store(m3::Status::ready, std::memory_order_release);
   self->lifecycle = Lifecycle::active;
   return true;
 }
@@ -260,7 +403,7 @@ void Adapter::plugin_reset(const clap_plugin_t* plugin_pointer) noexcept {
   if (self != nullptr &&
       (self->lifecycle == Lifecycle::active ||
        self->lifecycle == Lifecycle::processing)) {
-    self->status = m3::Status::ready;
+    set_ready_status(*self);
   }
 }
 
@@ -272,6 +415,8 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
       process->frames_count > self->max_frames) {
     return CLAP_PROCESS_ERROR;
   }
+
+  apply_parameter_events(*self, process->in_events);
 
   if (process->audio_inputs == nullptr || process->audio_outputs == nullptr ||
       process->audio_inputs_count == 0 || process->audio_outputs_count == 0) {
@@ -286,10 +431,10 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
   m3::DryPathResult result{};
   if (float32) {
     result = process_typed<float>(input, output, process->frames_count,
-                                  self->dry_passthrough);
+                                  self->config.dry_passthrough);
   } else if (float64) {
     result = process_typed<double>(input, output, process->frames_count,
-                                   self->dry_passthrough);
+                                   self->config.dry_passthrough);
   }
 
   const bool exact_layout =
@@ -318,10 +463,23 @@ const void* Adapter::plugin_get_extension(const clap_plugin_t* plugin_pointer,
   if (std::strcmp(id, CLAP_EXT_LATENCY) == 0) {
     return &kLatency;
   }
+  if (std::strcmp(id, CLAP_EXT_PARAMS) == 0) {
+    return &kParams;
+  }
+  if (std::strcmp(id, CLAP_EXT_STATE) == 0) {
+    return &kState;
+  }
   return nullptr;
 }
 
-void Adapter::plugin_on_main_thread(const clap_plugin_t*) noexcept {}
+void Adapter::plugin_on_main_thread(const clap_plugin_t* plugin_pointer) noexcept {
+  Adapter* self = from(plugin_pointer);
+  if (self != nullptr &&
+      self->values_dirty.exchange(false, std::memory_order_acq_rel) &&
+      self->host_params != nullptr && self->host_params->rescan != nullptr) {
+    self->host_params->rescan(self->host, CLAP_PARAM_RESCAN_VALUES);
+  }
+}
 
 }  // namespace
 
@@ -352,13 +510,15 @@ const clap_plugin_descriptor_t* probe_descriptor_for_test() noexcept {
 void set_dry_passthrough_for_test(const clap_plugin_t* plugin, bool enabled) noexcept {
   Adapter* adapter = Adapter::from(plugin);
   if (adapter != nullptr) {
-    adapter->dry_passthrough = enabled;
+    adapter->config.dry_passthrough = enabled;
   }
 }
 
 Status adapter_status_for_test(const clap_plugin_t* plugin) noexcept {
   const Adapter* adapter = Adapter::from(plugin);
-  return adapter == nullptr ? Status::invalid_input_or_state : adapter->status;
+  return adapter == nullptr
+             ? Status::invalid_input_or_state
+             : adapter->status.load(std::memory_order_acquire);
 }
 #endif
 
