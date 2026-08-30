@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-30T15:42:26-07:00
+Updated: 2026-08-30T16:18:09-07:00
 
-## VST3 Tasks 1-11 sealed — offline adapter and validator sealing next
+## VST3 Tasks 1-12 sealed — disposable VST3 staging and guards next
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -213,6 +213,43 @@ Updated: 2026-08-30T15:42:26-07:00
   reran green. The final stability check showed about 32 GiB available and
   zero full memory/I/O pressure. No REAPER process, persistent bundle, live
   project, or hardware/input action was used.
+- Task 12 is sealed at commit `7c02188` (`test: seal offline VST3 adapter and
+  validator`). A fixed-seed `0x4D335633` adversarial run now executes 100,000
+  bounded operations across malformed parameter/state/process/layout/event and
+  lifecycle inputs. Its initial RED exposed delivery of a ninth generated
+  voice; the neutral ledger now blocks that event before host delivery and
+  retains the first eight for deterministic cleanup.
+- The real-time gate performs 100,000 process plus stop/start cycles with
+  allocation/deallocation counters and `/proc/self/task` unchanged. The
+  production-source validator now rejects threads, locks, conditions, futures,
+  filesystem/stream/stdio access, network access, sleep/wait, exceptions,
+  RTTI, recursive neutral-core functions, growable containers, CLAP symbols,
+  test identities, report environments, and test schedules.
+- Production and probe are real two-file build-local VST3 bundles with exact
+  official module-info. The production `.so` SHA-256 is
+  `e6f6ebfbe522a1eb3a785db97902296931d8f57c0083904f9b656b770302e37d`,
+  module-info is
+  `7a6247b9d1ccd815c0bf6ff0821a906168e2bb48d755f0e22cd60450734e8738`,
+  and the full bundle digest is
+  `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`.
+- Gate O4 is green. The build-local official Steinberg validator ran exactly
+  once against the canonical production bundle and reported 47 passed, 0
+  failed with classification `pass`, return code zero, and no automatic
+  retry. Its atomic evidence is
+  `build/test-results/vst3-validator/production/{result.json,stdout.txt,stderr.txt}`.
+- Two independent serial builds using `SOURCE_DATE_EPOCH=1788129797` under
+  `build/repro-{a,b}/release` are byte-identical to each other and to the
+  canonical release bundle. Compiler, flags, SDK/module/binary hashes, complete
+  manifests, official-validator hashes, and the one-run record are preserved
+  in `docs/VST3-TESTING.md`.
+- Final Task 12 gates pass 95/95 native tests in debug, ASan/UBSan, and TSan;
+  all 142 Python tests; the native source validator; exact production/probe
+  targets; the retained historical CLAP link target; and Git whitespace
+  validation. One earlier build preflight safely refused at memory-full PSI
+  1.49 before compilation; no limit was loosened, and later pressure returned
+  to zero. The final snapshot had about 30 GiB available, zero swap/full
+  memory/I/O pressure, and no REAPER process. No persistent bundle, live
+  profile/project, or hardware/input action was used.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -257,9 +294,10 @@ Updated: 2026-08-30T15:42:26-07:00
   `5c77caf`, opening Gate N3, and Task 8's minimal VST3 lifecycle passed at
   `d757877`. Task 9's generic parameter and exact-state bridge passed at
   `02ba96f`, Task 10's fail-closed VST3 note delivery passed at `69f3ab3`, and
-  Task 11's bounded host-rate processing lifecycle passed at `db32720`. The
-  next action is Task 12's offline adapter, bundle, adversarial real-time, and
-  official-validator sealing; it does not begin with a REAPER launch.
+  Task 11's bounded host-rate processing lifecycle passed at `db32720`, and
+  Task 12's offline adapter and official-validator seal passed at `7c02188`.
+  The next action is Task 13's disposable VST3 staging/guard extension; it
+  begins with source and dry-run tests, not a REAPER launch.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -397,7 +435,8 @@ Updated: 2026-08-30T15:42:26-07:00
 
 ## Authoritative state
 
-- Branch: `main`. The current VST3 implementation checkpoint is `db32720`;
+- Branch: `main`. The current VST3 implementation feature checkpoint is
+  `7c02188`;
   the older CLAP implementation checkpoint is `cc938f7` and its failed-host
   gate remains recorded below as retained history. The retained
   Task 13 terminal JSFX checkpoint is `0be04d3` (`feat: complete
@@ -441,25 +480,25 @@ Updated: 2026-08-30T15:42:26-07:00
 - Current 48 kHz core cases 12101–12118 and case 4102 pass; case 4102 also
   passes at 44.1 kHz. At 96 kHz, its new 32+56 regression detects one false
   MIDI 44, so 96 kHz is independently not release-ready.
-- Fresh current-tree checks: all 134 Python tests plus 50 subtests and 92
-  native tests in debug, ASan/UBSan, and TSan pass. The native source
-  validator, exact VST3 source graph, Git whitespace checks, build-local probe,
-  and historical CLAP target are green. Probe-only diagnostics remain excluded
-  from the production artifact.
+- Fresh current-tree checks: all 142 Python tests and 95 native tests in debug,
+  ASan/UBSan, and TSan pass. The native source validator, exact production and
+  probe source graphs/bundles, one-run official validator, reproducibility
+  comparison, Git whitespace checks, and historical CLAP target are green.
+  Probe-only diagnostics remain excluded from the production artifact.
 - The task-local `RESUME.md` remains authoritative. The canonical ResearchOS
   project dashboard and native implementation-plan note are synchronized as a
   human-facing, non-Git index.
 - Every earlier JSFX-evidence REAPER instance ran serially, backgrounded on
-  workspace 5, under the 50%-of-one-core and 512 MiB limits. Tasks 1-11 added
+  workspace 5, under the 50%-of-one-core and 512 MiB limits. Tasks 1-12 added
   no REAPER launch, and no REAPER application process remains.
 - Decision: native CLAP plan Tasks 1-9 remain retained, but its Task 10 gate
   failed and must not be retried. The replacement VST3 plan is sealed through
-  Task 11 at `db32720`; continue with VST3 Task 12, not old CLAP Task 12. The
+  Task 12 at `7c02188`; continue with VST3 Task 13, not any old CLAP task. The
   JSFX detector remains stopped and uninstalled.
 - The user's `Authorize all` covers the remaining actions in the approved VST3
   plan only when their ordered prerequisites are reached. Clean-DI input,
   persistent installation, live-project mutation, and REAPER launch have not
-  occurred in Tasks 1-11; REAPER MCP remains outside scope.
+  occurred in Tasks 1-12; REAPER MCP remains outside scope.
 
 ## Approved native-design amendment
 
@@ -764,16 +803,16 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 3 commit `9851237`, SDK manifest SHA-256
+1. Verify Task 12 feature commit `7c02188`, SDK manifest SHA-256
    `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`,
-   all 1,003 manifest entries, exact installed CMake/dpkg state, and the
-   specification/plan hashes recorded above. The failed CLAP Task 10 evidence
-   remains immutable historical input; do not retry it or begin old CLAP Task
-   11.
-2. Tasks 4-8 are sealed at `282ba18`, `c85d9ab`, `42859f7`, `5c77caf`, and
-   `d757877`. Execute Task 9's offline generic VST3 parameter and exact-state
-   bridge next under guarded serial TDD; do not perform dependency network
-   access or start a REAPER process.
+   exact production bundle digest
+   `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`,
+   and the immutable one-run Gate O4 record. The failed CLAP Task 10 evidence
+   remains historical input and must not be retried.
+2. Execute VST3 Task 13 next under guarded serial TDD: extend disposable
+   profile staging and the workspace-5 launcher for exact build-local VST3
+   injection, add the twenty-row fail-closed schedule, and exercise only
+   source, unit, `--check`, and `--dry-run` paths until its ordered launch gate.
 3. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
    probe, and historical adapter source as later tasks extend the verified
    minimal VST3 target.
@@ -789,7 +828,7 @@ task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 plan Tasks 9-24 are authorized but remain ordered and evidence-gated.
+- VST3 plan Tasks 13-24 are authorized but remain ordered and evidence-gated.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
