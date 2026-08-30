@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "m3/parameter_contract.hpp"
 #include "m3/types.hpp"
 
 namespace m3::vst3 {
@@ -31,6 +32,28 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
       Steinberg::TBool state) override;
   Steinberg::tresult PLUGIN_API process(
       Steinberg::Vst::ProcessData& data) override;
+  Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API setComponentState(
+      Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API setEditorState(
+      Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API getEditorState(
+      Steinberg::IBStream* state) override;
+  Steinberg::tresult PLUGIN_API getParamStringByValue(
+      Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue normalized,
+      Steinberg::Vst::String128 text) override;
+  Steinberg::tresult PLUGIN_API getParamValueByString(
+      Steinberg::Vst::ParamID id, Steinberg::Vst::TChar* text,
+      Steinberg::Vst::ParamValue& normalized) override;
+  Steinberg::Vst::ParamValue PLUGIN_API normalizedParamToPlain(
+      Steinberg::Vst::ParamID id,
+      Steinberg::Vst::ParamValue normalized) override;
+  Steinberg::Vst::ParamValue PLUGIN_API plainParamToNormalized(
+      Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue plain) override;
+  Steinberg::tresult PLUGIN_API setParamNormalized(
+      Steinberg::Vst::ParamID id,
+      Steinberg::Vst::ParamValue normalized) override;
   Steinberg::uint32 PLUGIN_API getLatencySamples() override { return 0U; }
   Steinberg::uint32 PLUGIN_API getTailSamples() override {
     return Steinberg::Vst::kNoTail;
@@ -43,6 +66,7 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {
     dry_passthrough_ = enabled;
+    requested_config_.dry_passthrough = enabled;
   }
   [[nodiscard]] Status status_for_test() const noexcept { return status_; }
 #endif
@@ -56,12 +80,19 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
   static void zero_available_output(
       Steinberg::Vst::ProcessData& data) noexcept;
 
+  void apply_requested_config(const PersistentConfig& config) noexcept;
+  void publish_parameter_outputs(
+      Steinberg::Vst::IParameterChanges* output) noexcept;
+
   bool initialized_{};
   bool setup_complete_{};
   bool active_{};
   bool processing_{};
   bool dry_passthrough_{true};
   Status status_{Status::ready};
+  PersistentConfig requested_config_{};
+  PersistentConfig controller_config_{};
+  bool panic_ready_dirty_{};
 };
 
 #if defined(M3_TESTING)

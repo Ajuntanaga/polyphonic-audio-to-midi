@@ -4,14 +4,18 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <new>
 #include <type_traits>
 
 #include "dry_path.hpp"
 #include "m3/constants.hpp"
+#include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/base/fstrdefs.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/vstspeaker.h"
+#include "vst3_parameter_bridge.hpp"
+#include "vst3_state_stream.hpp"
 
 namespace m3::vst3 {
 namespace {
@@ -71,6 +75,16 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
                  Steinberg::Vst::BusInfo::kDefaultActive);
   addEventOutput(STR16("MIDI Output"), kMidiChannels, Steinberg::Vst::kMain,
                  Steinberg::Vst::BusInfo::kDefaultActive);
+  if (!register_vst3_parameters(parameters)) {
+    parameters.removeAll();
+    static_cast<void>(removeAllBusses());
+    static_cast<void>(SingleComponentEffect::terminate());
+    return Steinberg::kOutOfMemory;
+  }
+  requested_config_ = PersistentConfig{};
+  controller_config_ = PersistentConfig{};
+  dry_passthrough_ = requested_config_.dry_passthrough;
+  panic_ready_dirty_ = false;
   initialized_ = true;
   status_ = Status::ready;
 #if defined(M3_TESTING)
@@ -89,6 +103,10 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   }
   initialized_ = false;
   setup_complete_ = false;
+  requested_config_ = PersistentConfig{};
+  controller_config_ = PersistentConfig{};
+  dry_passthrough_ = true;
+  panic_ready_dirty_ = false;
   status_ = Status::ready;
 #if defined(M3_TESTING)
   terminated_count.fetch_add(1U, std::memory_order_relaxed);
@@ -185,17 +203,188 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     status_ = Status::invalid_input_or_state;
     return Steinberg::kInvalidArgument;
   }
+  ParameterBatch parameter_batch;
+  if (!read_last_boundary_values(data.inputParameterChanges, data.numSamples,
+                                 requested_config_, parameter_batch)) {
+    status_ = Status::invalid_input_or_state;
+    publish_parameter_outputs(data.outputParameterChanges);
+    return Steinberg::kInvalidArgument;
+  }
+  if (parameter_batch.changed) {
+    apply_requested_config(parameter_batch.candidate);
+  }
+  if (parameter_batch.panic) {
+    panic_ready_dirty_ = true;
+  }
   if (data.numSamples == 0) {
+    publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kResultOk;
   }
   if (data.symbolicSampleSize == Steinberg::Vst::kSample32) {
-    return process_samples<Steinberg::Vst::Sample32>(data);
+    const Steinberg::tresult result =
+        process_samples<Steinberg::Vst::Sample32>(data);
+    publish_parameter_outputs(data.outputParameterChanges);
+    return result;
   }
   if (data.symbolicSampleSize == Steinberg::Vst::kSample64) {
-    return process_samples<Steinberg::Vst::Sample64>(data);
+    const Steinberg::tresult result =
+        process_samples<Steinberg::Vst::Sample64>(data);
+    publish_parameter_outputs(data.outputParameterChanges);
+    return result;
   }
   status_ = Status::invalid_input_or_state;
   return Steinberg::kInvalidArgument;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::setState(
+    Steinberg::IBStream* state) {
+  if (!initialized_) {
+    return Steinberg::kInvalidArgument;
+  }
+  PersistentConfig candidate;
+  if (!load_vst3_state(state, candidate)) {
+    return Steinberg::kResultFalse;
+  }
+  apply_requested_config(candidate);
+  return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::getState(
+    Steinberg::IBStream* state) {
+  return initialized_ && save_vst3_state(requested_config_, state)
+             ? Steinberg::kResultOk
+             : Steinberg::kResultFalse;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::setComponentState(
+    Steinberg::IBStream* state) {
+  if (!initialized_) {
+    return Steinberg::kInvalidArgument;
+  }
+  PersistentConfig candidate;
+  if (!load_vst3_state(state, candidate) ||
+      !synchronize_vst3_parameters(parameters, candidate, status_)) {
+    return Steinberg::kResultFalse;
+  }
+  controller_config_ = candidate;
+  return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::setEditorState(
+    Steinberg::IBStream* state) {
+  return setComponentState(state);
+}
+
+Steinberg::tresult PLUGIN_API M3Component::getEditorState(
+    Steinberg::IBStream* state) {
+  return initialized_ && save_vst3_state(controller_config_, state)
+             ? Steinberg::kResultOk
+             : Steinberg::kResultFalse;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::getParamStringByValue(
+    Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue normalized,
+    Steinberg::Vst::String128 text) {
+  if (text == nullptr) {
+    return Steinberg::kInvalidArgument;
+  }
+  text[0] = 0;
+  const ParameterSpec* spec = find_parameter(id);
+  double plain = 0.0;
+  char ascii[128]{};
+  if (spec == nullptr ||
+      !canonical_normalized_value(*spec, normalized, plain) ||
+      !parameter_value_to_text(id, plain, ascii,
+                               static_cast<std::uint32_t>(sizeof(ascii)))) {
+    return Steinberg::kResultFalse;
+  }
+  Steinberg::UString(text, 128).fromAscii(ascii);
+  return Steinberg::kResultTrue;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::getParamValueByString(
+    Steinberg::Vst::ParamID id, Steinberg::Vst::TChar* text,
+    Steinberg::Vst::ParamValue& normalized) {
+  const ParameterSpec* spec = find_parameter(id);
+  if (spec == nullptr || text == nullptr) {
+    return Steinberg::kResultFalse;
+  }
+  char ascii[128]{};
+  Steinberg::UString(text, 128).toAscii(
+      ascii, static_cast<Steinberg::int32>(sizeof(ascii)));
+  double plain = 0.0;
+  double candidate = 0.0;
+  if (!parameter_text_to_value(id, ascii, plain) ||
+      !canonical_plain_value(*spec, plain, candidate)) {
+    return Steinberg::kResultFalse;
+  }
+  normalized = candidate;
+  return Steinberg::kResultTrue;
+}
+
+Steinberg::Vst::ParamValue PLUGIN_API
+M3Component::normalizedParamToPlain(
+    Steinberg::Vst::ParamID id,
+    Steinberg::Vst::ParamValue normalized) {
+  const ParameterSpec* spec = find_parameter(id);
+  double plain = std::numeric_limits<double>::quiet_NaN();
+  if (spec != nullptr) {
+    static_cast<void>(canonical_normalized_value(*spec, normalized, plain));
+  }
+  return plain;
+}
+
+Steinberg::Vst::ParamValue PLUGIN_API
+M3Component::plainParamToNormalized(Steinberg::Vst::ParamID id,
+                                    Steinberg::Vst::ParamValue plain) {
+  const ParameterSpec* spec = find_parameter(id);
+  double normalized = std::numeric_limits<double>::quiet_NaN();
+  if (spec != nullptr) {
+    static_cast<void>(canonical_plain_value(*spec, plain, normalized));
+  }
+  return normalized;
+}
+
+Steinberg::tresult PLUGIN_API M3Component::setParamNormalized(
+    Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue normalized) {
+  const ParameterSpec* spec = find_parameter(id);
+  double plain = 0.0;
+  if (!initialized_ || spec == nullptr || spec->read_only ||
+      !canonical_normalized_value(*spec, normalized, plain)) {
+    return Steinberg::kResultFalse;
+  }
+  PersistentConfig candidate = requested_config_;
+  const ParameterApplyResult result = apply_parameter(candidate, id, plain);
+  if (result == ParameterApplyResult::rejected) {
+    return Steinberg::kResultFalse;
+  }
+  Steinberg::Vst::Parameter* parameter = parameters.getParameter(id);
+  if (parameter == nullptr) {
+    return Steinberg::kResultFalse;
+  }
+  if (result == ParameterApplyResult::panic) {
+    panic_ready_dirty_ = true;
+    static_cast<void>(parameter->setNormalized(0.0));
+    return Steinberg::kResultTrue;
+  }
+  apply_requested_config(candidate);
+  controller_config_ = candidate;
+  static_cast<void>(parameter->setNormalized(normalized));
+  return Steinberg::kResultTrue;
+}
+
+void M3Component::apply_requested_config(
+    const PersistentConfig& config) noexcept {
+  requested_config_ = config;
+  dry_passthrough_ = config.dry_passthrough;
+}
+
+void M3Component::publish_parameter_outputs(
+    Steinberg::Vst::IParameterChanges* output) noexcept {
+  if (panic_ready_dirty_ &&
+      push_output_value(output, kPanicParameterId, 0.0, 0)) {
+    panic_ready_dirty_ = false;
+  }
 }
 
 template <typename Sample>

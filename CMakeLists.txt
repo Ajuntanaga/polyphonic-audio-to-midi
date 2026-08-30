@@ -56,6 +56,8 @@ set(M3_NATIVE_PLUGIN_SOURCES
 set(M3_VST3_ADAPTER_SOURCES
     native/vst3/vst3_component.cpp
     native/vst3/vst3_factory.cpp
+    native/vst3/vst3_parameter_bridge.cpp
+    native/vst3/vst3_state_stream.cpp
     third_party/vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
 )
 
@@ -79,6 +81,8 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_vst3_audio.cpp
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
+    native/tests/test_vst3_parameters.cpp
+    native/tests/test_vst3_state.cpp
 )
 
 add_executable(m3_native_tests

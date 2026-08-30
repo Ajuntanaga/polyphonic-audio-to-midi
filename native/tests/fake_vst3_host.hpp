@@ -6,8 +6,10 @@
 #include <type_traits>
 
 #include "m3/constants.hpp"
+#include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
 
 namespace m3::test {
 
@@ -37,6 +39,162 @@ class FakeVst3Host final : public Steinberg::Vst::IHostApplication {
  private:
   Steinberg::uint32 reference_count_{1};
   std::uint32_t query_count_{};
+};
+
+struct FakeVst3ParameterPoint final {
+  Steinberg::int32 offset{};
+  Steinberg::Vst::ParamValue value{};
+};
+
+class FakeVst3ParamValueQueue final
+    : public Steinberg::Vst::IParamValueQueue {
+ public:
+  static constexpr std::size_t kCapacity = 64;
+
+  FakeVst3ParamValueQueue() noexcept = default;
+  FakeVst3ParamValueQueue(const FakeVst3ParamValueQueue&) = delete;
+  FakeVst3ParamValueQueue& operator=(const FakeVst3ParamValueQueue&) = delete;
+
+  void reset(Steinberg::Vst::ParamID id) noexcept;
+  bool append_input(Steinberg::int32 offset,
+                    Steinberg::Vst::ParamValue value) noexcept;
+  void override_point_count(Steinberg::int32 count) noexcept;
+  void clear_point_count_override() noexcept;
+  void reject_get_point(Steinberg::int32 index) noexcept;
+  void reject_add_point(bool reject) noexcept;
+
+  [[nodiscard]] std::size_t stored_point_count() const noexcept {
+    return point_count_;
+  }
+  [[nodiscard]] const FakeVst3ParameterPoint& stored_point(
+      std::size_t index) const noexcept {
+    return points_[index];
+  }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::Vst::ParamID PLUGIN_API getParameterId() override;
+  Steinberg::int32 PLUGIN_API getPointCount() override;
+  Steinberg::tresult PLUGIN_API getPoint(
+      Steinberg::int32 index, Steinberg::int32& sample_offset,
+      Steinberg::Vst::ParamValue& value) override;
+  Steinberg::tresult PLUGIN_API addPoint(
+      Steinberg::int32 sample_offset, Steinberg::Vst::ParamValue value,
+      Steinberg::int32& index) override;
+
+ private:
+  Steinberg::Vst::ParamID id_{};
+  std::array<FakeVst3ParameterPoint, kCapacity> points_{};
+  std::size_t point_count_{};
+  Steinberg::uint32 reference_count_{1};
+  bool point_count_overridden_{};
+  Steinberg::int32 point_count_override_{};
+  Steinberg::int32 rejected_get_point_{-1};
+  bool reject_add_point_{};
+};
+
+class FakeVst3ParameterChanges final
+    : public Steinberg::Vst::IParameterChanges {
+ public:
+  static constexpr std::size_t kCapacity = 32;
+
+  FakeVst3ParameterChanges() noexcept = default;
+  FakeVst3ParameterChanges(const FakeVst3ParameterChanges&) = delete;
+  FakeVst3ParameterChanges& operator=(const FakeVst3ParameterChanges&) =
+      delete;
+
+  void reset() noexcept;
+  FakeVst3ParamValueQueue* append_queue(
+      Steinberg::Vst::ParamID id) noexcept;
+  bool append_input(Steinberg::Vst::ParamID id, Steinberg::int32 offset,
+                    Steinberg::Vst::ParamValue value) noexcept;
+  void override_parameter_count(Steinberg::int32 count) noexcept;
+  void clear_parameter_count_override() noexcept;
+  void return_null_queue(Steinberg::int32 index) noexcept;
+  void reject_add_parameter(bool reject) noexcept;
+  void reject_output_points(bool reject) noexcept;
+
+  [[nodiscard]] std::size_t stored_queue_count() const noexcept {
+    return queue_count_;
+  }
+  [[nodiscard]] FakeVst3ParamValueQueue* stored_queue(
+      std::size_t index) noexcept {
+    return index < queue_count_ ? &queues_[index] : nullptr;
+  }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::int32 PLUGIN_API getParameterCount() override;
+  Steinberg::Vst::IParamValueQueue* PLUGIN_API getParameterData(
+      Steinberg::int32 index) override;
+  Steinberg::Vst::IParamValueQueue* PLUGIN_API addParameterData(
+      const Steinberg::Vst::ParamID& id, Steinberg::int32& index) override;
+
+ private:
+  std::array<FakeVst3ParamValueQueue, kCapacity> queues_{};
+  std::size_t queue_count_{};
+  Steinberg::uint32 reference_count_{1};
+  bool parameter_count_overridden_{};
+  Steinberg::int32 parameter_count_override_{};
+  Steinberg::int32 null_queue_index_{-1};
+  bool reject_add_parameter_{};
+  bool reject_output_points_{};
+};
+
+class FakeVst3Stream final : public Steinberg::IBStream {
+ public:
+  static constexpr std::size_t kCapacity = 512;
+
+  FakeVst3Stream() noexcept = default;
+  FakeVst3Stream(const FakeVst3Stream&) = delete;
+  FakeVst3Stream& operator=(const FakeVst3Stream&) = delete;
+
+  bool set_input(const std::uint8_t* bytes, std::size_t size,
+                 Steinberg::int32 chunk) noexcept;
+  void reset_output(Steinberg::int32 chunk) noexcept;
+  void force_read_result(Steinberg::tresult result,
+                         Steinberg::int32 reported_bytes) noexcept;
+  void force_write_result(Steinberg::tresult result,
+                          Steinberg::int32 reported_bytes) noexcept;
+  void clear_forced_results() noexcept;
+
+  [[nodiscard]] const std::uint8_t* bytes() const noexcept {
+    return bytes_.data();
+  }
+  [[nodiscard]] std::size_t size() const noexcept { return size_; }
+  [[nodiscard]] std::size_t position() const noexcept { return position_; }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::tresult PLUGIN_API read(
+      void* buffer, Steinberg::int32 num_bytes,
+      Steinberg::int32* num_bytes_read) override;
+  Steinberg::tresult PLUGIN_API write(
+      void* buffer, Steinberg::int32 num_bytes,
+      Steinberg::int32* num_bytes_written) override;
+  Steinberg::tresult PLUGIN_API seek(
+      Steinberg::int64 position, Steinberg::int32 mode,
+      Steinberg::int64* result) override;
+  Steinberg::tresult PLUGIN_API tell(Steinberg::int64* position) override;
+
+ private:
+  std::array<std::uint8_t, kCapacity> bytes_{};
+  std::size_t size_{};
+  std::size_t position_{};
+  Steinberg::int32 chunk_{1};
+  Steinberg::uint32 reference_count_{1};
+  bool read_forced_{};
+  bool write_forced_{};
+  Steinberg::tresult forced_read_result_{Steinberg::kResultOk};
+  Steinberg::tresult forced_write_result_{Steinberg::kResultOk};
+  Steinberg::int32 forced_read_bytes_{};
+  Steinberg::int32 forced_write_bytes_{};
 };
 
 template <typename Sample>

@@ -203,6 +203,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/state_image.cpp",
                     "native/vst3/vst3_component.cpp",
                     "native/vst3/vst3_factory.cpp",
+                    "native/vst3/vst3_parameter_bridge.cpp",
+                    "native/vst3/vst3_state_stream.cpp",
                     (
                         "third_party/vst3sdk/public.sdk/source/main/"
                         "linuxmain.cpp"
@@ -434,7 +436,12 @@ class Vst3BuildContractTests(unittest.TestCase):
         } if vst3_root.exists() else set()
         self.assertEqual(
             cpp_sources,
-            {"vst3_component.cpp", "vst3_factory.cpp"},
+            {
+                "vst3_component.cpp",
+                "vst3_factory.cpp",
+                "vst3_parameter_bridge.cpp",
+                "vst3_state_stream.cpp",
+            },
         )
 
     def test_source_validator_accepts_the_sdk_independent_identity_header(self):
