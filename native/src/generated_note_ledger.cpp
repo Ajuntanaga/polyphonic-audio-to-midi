@@ -70,6 +70,7 @@ void GeneratedNoteLedger::deactivate() noexcept {
   max_frames_ = 0;
   active_ = {};
   pending_release_ = {};
+  active_count_ = 0U;
   invalid_transition_ = false;
   output_blocked_ = false;
   cleanup_complete_ = false;
@@ -193,6 +194,9 @@ bool GeneratedNoteLedger::retry_pending_releases(NoteEventSink sink) noexcept {
       enter_blocked();
       return false;
     }
+    if (is_active(midi_note) && active_count_ > 0U) {
+      --active_count_;
+    }
     clear_bit(pending_release_, midi_note);
     clear_bit(active_, midi_note);
   }
@@ -257,6 +261,9 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
           enter_blocked();
           break;
         }
+        if (is_active(event.note) && active_count_ > 0U) {
+          --active_count_;
+        }
         clear_bit(active_, event.note);
         clear_bit(pending_release_, event.note);
         continue;
@@ -268,11 +275,16 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         enter_blocked();
         break;
       }
+      if (active_count_ >= kMaxVoices) {
+        enter_blocked();
+        break;
+      }
       if (!push(sink, event)) {
         enter_blocked();
         break;
       }
       set_bit(active_, event.note);
+      ++active_count_;
     }
   }
 

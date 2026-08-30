@@ -259,6 +259,27 @@ M3_TEST(generated_note_ledger_rejection_never_activates_later_notes) {
   }
 }
 
+M3_TEST(generated_note_ledger_blocks_a_ninth_active_voice_before_delivery) {
+  m3::GeneratedNoteLedger ledger;
+  M3_EXPECT_TRUE(ledger.activate(32));
+  ledger.begin_block();
+  for (std::uint8_t voice = 0; voice < 9U; ++voice) {
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(voice, m3::TransitionKind::note_on,
+                   static_cast<std::uint8_t>(40U + voice), 100, voice),
+        32));
+  }
+  NoteCapture capture;
+  const m3::NoteDeliveryResult result = deliver(ledger, 32, capture, 0.5);
+  M3_EXPECT_TRUE(result.output_blocked);
+  M3_EXPECT_EQ(capture.size(), m3::kMaxVoices);
+  for (std::uint8_t voice = 0; voice < 9U; ++voice) {
+    const std::uint8_t note = static_cast<std::uint8_t>(40U + voice);
+    M3_EXPECT_EQ(ledger.is_active(note), voice < m3::kMaxVoices);
+    M3_EXPECT_EQ(ledger.is_pending_release(note), voice < m3::kMaxVoices);
+  }
+}
+
 M3_TEST(generated_note_ledger_retries_each_cleanup_rejection_in_one_pass) {
   for (std::size_t rejected = 0; rejected < 3; ++rejected) {
     m3::GeneratedNoteLedger ledger;

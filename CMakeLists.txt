@@ -83,12 +83,14 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
     native/tests/test_vst3_audio.cpp
+    native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp
     native/tests/test_vst3_processing.cpp
     native/tests/test_vst3_reconfiguration.cpp
+    native/tests/test_vst3_realtime.cpp
     native/tests/test_vst3_setup.cpp
     native/tests/test_vst3_state.cpp
 )
@@ -163,16 +165,71 @@ target_link_libraries(m3_vst3_probe PRIVATE Threads::Threads sdk m)
 m3_apply_project_options(m3_vst3_probe)
 set_target_properties(m3_vst3_probe PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-# Later tasks replace these remaining reservations with concrete targets.
-add_custom_target(m3_vst3_production
-    COMMAND ${CMAKE_COMMAND} -E echo "m3_vst3_production is reserved for Task 18"
-    VERBATIM
+function(m3_configure_vst3_bundle target package_name)
+    set(bundle "${CMAKE_BINARY_DIR}/VST3/${package_name}.vst3")
+    set(resources "${bundle}/Contents/Resources")
+    set(moduleinfo "${bundle}/Contents/Resources/moduleinfo.json")
+    set_target_properties(${target} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${bundle}/Contents/x86_64-linux"
+        SMTG_PLUGIN_PACKAGE_PATH "${bundle}"
+    )
+    add_dependencies(${target} moduleinfotool)
+    add_custom_command(TARGET ${target} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${bundle}/Contents/x86_64-linux"
+            "${resources}"
+        VERBATIM
+    )
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND $<TARGET_FILE:moduleinfotool>
+            -create
+            -version "${PROJECT_VERSION}"
+            -path "${bundle}"
+            -output "${moduleinfo}"
+        COMMAND $<TARGET_FILE:moduleinfotool>
+            -validate
+            -path "${bundle}"
+        VERBATIM
+    )
+endfunction()
+
+m3_configure_vst3_bundle(
+    m3_vst3_probe
+    "M3_Polyphonic_Audio_to_MIDI_Probe"
 )
+
+smtg_add_vst3plugin(m3_vst3_production
+    PACKAGE_NAME "M3_Polyphonic_Audio_to_MIDI"
+    SOURCES_LIST
+        ${M3_NATIVE_CORE_SOURCES}
+        ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
+        ${M3_VST3_ADAPTER_SOURCES}
+)
+target_compile_definitions(
+    m3_vst3_production PRIVATE M3_VST3_PRODUCTION_BUILD
+)
+target_include_directories(m3_vst3_production PRIVATE
+    native/include
+    native/plugin
+    native/vst3
+)
+target_include_directories(m3_vst3_production SYSTEM BEFORE PRIVATE
+    third_party/vst3sdk
+)
+target_link_libraries(m3_vst3_production PRIVATE Threads::Threads sdk m)
+m3_apply_project_options(m3_vst3_production)
+set_target_properties(m3_vst3_production PROPERTIES EXCLUDE_FROM_ALL TRUE)
+add_dependencies(m3_vst3_production validator)
+m3_configure_vst3_bundle(
+    m3_vst3_production
+    "M3_Polyphonic_Audio_to_MIDI"
+)
+
+# Later tasks replace this remaining benchmark reservation.
 add_custom_target(m3_vst3_benchmark
     COMMAND ${CMAKE_COMMAND} -E echo "m3_vst3_benchmark is reserved for Task 20"
     VERBATIM
 )
-add_custom_target(m3_validate_production
-    COMMAND ${CMAKE_COMMAND} -E echo "m3_validate_production is reserved for Task 21"
-    VERBATIM
-)
+add_custom_target(m3_validate_production)
+add_dependencies(m3_validate_production validator)
+add_dependencies(m3_validate_production m3_vst3_production)

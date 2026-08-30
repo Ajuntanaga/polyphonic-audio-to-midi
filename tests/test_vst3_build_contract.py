@@ -221,13 +221,60 @@ class Vst3BuildContractTests(unittest.TestCase):
                 self.assertNotIn("third_party/clap/include", row["command"])
                 self.assertNotIn("-DM3_TESTING", row["command"])
 
+            production_commands = [
+                row
+                for row in commands
+                if "-DM3_VST3_PRODUCTION_BUILD" in row["command"]
+            ]
+            self.assertEqual(
+                {
+                    pathlib.Path(row["file"]).relative_to(ROOT).as_posix()
+                    for row in production_commands
+                },
+                {
+                    "native/src/generated_note_ledger.cpp",
+                    "native/src/parameter_contract.cpp",
+                    "native/src/state_image.cpp",
+                    "native/plugin/prepared_config_exchange.cpp",
+                    "native/vst3/vst3_component.cpp",
+                    "native/vst3/vst3_event_sink.cpp",
+                    "native/vst3/vst3_factory.cpp",
+                    "native/vst3/vst3_parameter_bridge.cpp",
+                    "native/vst3/vst3_state_stream.cpp",
+                    (
+                        "third_party/vst3sdk/public.sdk/source/main/"
+                        "linuxmain.cpp"
+                    ),
+                    (
+                        "third_party/vst3sdk/public.sdk/source/vst/"
+                        "vstsinglecomponenteffect.cpp"
+                    ),
+                },
+            )
+            for row in production_commands:
+                self.assertNotIn("third_party/clap/include", row["command"])
+                self.assertNotIn("-DM3_TESTING", row["command"])
+                self.assertNotIn("-DM3_VST3_PROBE_BUILD", row["command"])
+
             self.assertNotIn("add_custom_target(m3_vst3_probe", build_text)
             self.assertIn("smtg_add_vst3plugin(m3_vst3_probe", build_text)
+            self.assertNotIn("add_custom_target(m3_vst3_production", build_text)
+            self.assertIn(
+                "smtg_add_vst3plugin(m3_vst3_production", build_text
+            )
+            for required in (
+                "m3_configure_vst3_bundle",
+                "moduleinfotool",
+                "Contents/Resources/moduleinfo.json",
+                "add_dependencies(m3_validate_production validator)",
+            ):
+                self.assertIn(required, build_text)
 
             for target in (
                 "m3_native_tests",
                 "m3_clap_history",
                 "m3_vst3_probe",
+                "m3_vst3_production",
             ):
                 link_command = (
                     build_dir / f"CMakeFiles/{target}.dir/link.txt"
@@ -589,6 +636,55 @@ class Vst3BuildContractTests(unittest.TestCase):
                     any("production reference to test-only FUID" in error for error in errors),
                     errors,
                 )
+
+    def test_source_validator_rejects_realtime_forbidden_production_apis(self):
+        cases = (
+            ("#include <thread>\n", "thread"),
+            ("#include <mutex>\n", "mutex"),
+            ("#include <condition_variable>\n", "condition variable"),
+            ("#include <future>\n", "future"),
+            ("#include <filesystem>\n", "filesystem"),
+            ("#include <iostream>\n", "iostream"),
+            ("#include <cstdio>\n", "stdio"),
+            ("void f() { nanosleep(nullptr, nullptr); }\n", "sleep or wait"),
+            ("void f() { throw 1; }\n", "exception"),
+            ("void f(A* p) { dynamic_cast<B*>(p); }\n", "RTTI"),
+            ("std::vector<int> values;\n", "growable container"),
+            ("void f(clap_process_t* process);\n", "CLAP"),
+            ("void f() { std::getenv(\"M3_REPORT\"); }\n", "report environment"),
+            ("constexpr int kTestSchedule[] = {1};\n", "test schedule"),
+        )
+        for source, label in cases:
+            with self.subTest(label=label):
+                errors = self.validation_errors(
+                    [("native/vst3/bad_realtime.cpp", source)],
+                    sdk_present=True,
+                )
+                self.assertTrue(any(label in error for error in errors), errors)
+
+    def test_source_validator_rejects_recursive_production_core_functions(self):
+        errors = self.validation_errors(
+            [
+                (
+                    "native/src/recursive.cpp",
+                    "int recurse(int value) noexcept {\n"
+                    "  return value > 0 ? recurse(value - 1) : 0;\n"
+                    "}\n",
+                )
+            ],
+            sdk_present=True,
+        )
+        self.assertTrue(any("recursive core function" in error for error in errors), errors)
+
+    def test_realtime_source_rules_do_not_scan_test_or_retained_clap_files(self):
+        entries = [
+            ("native/tests/test_worker.cpp", "#include <thread>\n"),
+            ("native/plugin/clap_adapter.cpp", "void use(clap_process_t*);\n"),
+        ]
+        self.assertEqual(
+            self.validation_errors(entries, sdk_present=True),
+            [],
+        )
 
 
 if __name__ == "__main__":

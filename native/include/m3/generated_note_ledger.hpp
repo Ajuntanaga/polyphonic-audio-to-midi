@@ -74,6 +74,7 @@ class GeneratedNoteLedger final {
   std::uint32_t max_frames_{};
   std::array<std::uint64_t, 2> active_{};
   std::array<std::uint64_t, 2> pending_release_{};
+  std::uint8_t active_count_{};
   bool invalid_transition_{};
   bool output_blocked_{};
   bool cleanup_complete_{};

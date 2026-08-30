@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -80,6 +79,55 @@ bool copy_text(const char* source, char* output,
   }
   std::memcpy(output, source, length + 1U);
   return true;
+}
+
+bool append_unsigned(std::uint32_t value, char* output,
+                     std::size_t capacity, std::size_t& position) noexcept {
+  char reversed[10]{};
+  std::size_t digit_count = 0U;
+  do {
+    reversed[digit_count++] =
+        static_cast<char>('0' + static_cast<char>(value % 10U));
+    value /= 10U;
+  } while (value > 0U && digit_count < std::size(reversed));
+  if (position + digit_count >= capacity) {
+    return false;
+  }
+  while (digit_count > 0U) {
+    output[position++] = reversed[--digit_count];
+  }
+  return true;
+}
+
+bool format_parameter_number(double value, bool one_decimal, char* output,
+                             std::uint32_t capacity) noexcept {
+  if (output == nullptr || capacity == 0U || !std::isfinite(value)) {
+    return false;
+  }
+  char text[32]{};
+  std::size_t position = 0U;
+  const double scale = one_decimal ? 10.0 : 1.0;
+  const long long signed_scaled = std::llround(value * scale);
+  const bool negative = signed_scaled < 0;
+  const auto magnitude = static_cast<std::uint32_t>(
+      negative ? -signed_scaled : signed_scaled);
+  if (negative) {
+    text[position++] = '-';
+  }
+  const std::uint32_t whole = one_decimal ? magnitude / 10U : magnitude;
+  if (!append_unsigned(whole, text, std::size(text), position)) {
+    return false;
+  }
+  if (one_decimal) {
+    if (position + 2U >= std::size(text)) {
+      return false;
+    }
+    text[position++] = '.';
+    text[position++] =
+        static_cast<char>('0' + static_cast<char>(magnitude % 10U));
+  }
+  text[position] = '\0';
+  return copy_text(text, output, capacity);
 }
 
 const char* enum_label(m3::ParameterId id, std::size_t index) noexcept {
@@ -289,10 +337,8 @@ bool parameter_value_to_text(ParameterId id, double value, char* output,
   if (const char* label = enum_label(id, static_cast<std::size_t>(value))) {
     return copy_text(label, output, capacity);
   }
-  const int written = (id == 0x4D330003U || id == 0x4D330004U)
-                          ? std::snprintf(output, capacity, "%.1f", value)
-                          : std::snprintf(output, capacity, "%.0f", value);
-  return written >= 0 && static_cast<std::uint32_t>(written) < capacity;
+  return format_parameter_number(
+      value, id == 0x4D330003U || id == 0x4D330004U, output, capacity);
 }
 
 bool parameter_text_to_value(ParameterId id, const char* text,

@@ -95,6 +95,196 @@ FUID_PATTERNS = (
 )
 IDENTITY_HEADER = "native/vst3/vst3_ids.hpp"
 TEST_ONLY_FUID_SYMBOLS = ("kProbeClassIdWords", "kBenchmarkClassIdWords")
+REALTIME_PRODUCTION_PREFIXES = (
+    "native/include/m3/",
+    "native/src/",
+    "native/vst3/",
+)
+REALTIME_PRODUCTION_FILES = {
+    "native/plugin/dry_path.hpp",
+    "native/plugin/prepared_config_exchange.cpp",
+    "native/plugin/prepared_config_exchange.hpp",
+}
+REALTIME_FORBIDDEN_PATTERNS = (
+    (
+        "thread",
+        re.compile(
+            r"#\s*include\s*[<\"](?:thread|pthread\.h)[>\"]|"
+            r"\bstd::(?:j?thread|this_thread)\b|\bpthread_(?:create|join)\s*\("
+        ),
+    ),
+    (
+        "mutex",
+        re.compile(
+            r"#\s*include\s*[<\"](?:mutex|shared_mutex)[>\"]|"
+            r"\bstd::(?:mutex|recursive_mutex|shared_mutex|timed_mutex|"
+            r"lock_guard|unique_lock|scoped_lock)\b"
+        ),
+    ),
+    (
+        "condition variable",
+        re.compile(
+            r"#\s*include\s*[<\"]condition_variable[>\"]|"
+            r"\bstd::condition_variable(?:_any)?\b"
+        ),
+    ),
+    (
+        "future",
+        re.compile(
+            r"#\s*include\s*[<\"]future[>\"]|"
+            r"\bstd::(?:future|promise|packaged_task|async)\b"
+        ),
+    ),
+    (
+        "filesystem",
+        re.compile(
+            r"#\s*include\s*[<\"]filesystem[>\"]|\bstd::filesystem\b"
+        ),
+    ),
+    (
+        "iostream",
+        re.compile(
+            r"#\s*include\s*[<\"](?:iostream|fstream|sstream)[>\"]|"
+            r"\bstd::(?:cin|cout|cerr|clog|ifstream|ofstream|fstream)\b"
+        ),
+    ),
+    (
+        "stdio",
+        re.compile(
+            r"#\s*include\s*[<\"](?:cstdio|stdio\.h)[>\"]|"
+            r"\b(?:f?printf|snprintf|fopen|fclose|fread|fwrite|fflush)\s*\("
+        ),
+    ),
+    (
+        "sleep or wait",
+        re.compile(
+            r"\b(?:sleep|usleep|nanosleep|sched_yield|waitpid)\s*\(|"
+            r"\.(?:wait|wait_for|wait_until)\s*\("
+        ),
+    ),
+    (
+        "exception",
+        re.compile(
+            r"#\s*include\s*[<\"]exception[>\"]|\b(?:throw|try|catch)\b|"
+            r"\bstd::exception\b"
+        ),
+    ),
+    ("RTTI", re.compile(r"\b(?:dynamic_cast|typeid)\s*[<(]")),
+    (
+        "growable container",
+        re.compile(
+            r"\bstd::(?:vector|deque|list|forward_list|map|multimap|"
+            r"unordered_map|unordered_multimap|set|multiset|unordered_set|"
+            r"unordered_multiset)\s*<"
+        ),
+    ),
+    (
+        "CLAP",
+        re.compile(
+            r"#\s*include\s*[<\"][^>\"]*clap[^>\"]*[>\"]|\bclap_[A-Za-z0-9_]+"
+        ),
+    ),
+    (
+        "report environment",
+        re.compile(
+            r"\b(?:getenv|secure_getenv|setenv|unsetenv|putenv)\s*\(|"
+            r"\bM3_[A-Z0-9_]*REPORT[A-Z0-9_]*\b"
+        ),
+    ),
+    (
+        "test schedule",
+        re.compile(r"\b(?:kTestSchedule|TestSchedule|test_schedule)\b"),
+    ),
+)
+FUNCTION_DEFINITION_PATTERN = re.compile(
+    r"(?m)^[ \t]*(?:[A-Za-z_~][A-Za-z0-9_:<>,*&\[\]~]*[ \t]+)+"
+    r"(?:[A-Za-z_][A-Za-z0-9_]*::)*"
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)[ \t]*"
+    r"\([^;{}]*\)[ \t]*(?:const[ \t]*)?"
+    r"(?:noexcept(?:[ \t]*\([^)]*\))?[ \t]*)?"
+    r"(?:override[ \t]*)?(?:final[ \t]*)?\{"
+)
+
+
+def is_realtime_production_path(relative: str) -> bool:
+    return relative in REALTIME_PRODUCTION_FILES or relative.startswith(
+        REALTIME_PRODUCTION_PREFIXES
+    )
+
+
+def strip_cpp_comments_and_literals(text: str) -> str:
+    output = list(text)
+    index = 0
+    state = "code"
+    while index < len(text):
+        char = text[index]
+        following = text[index + 1] if index + 1 < len(text) else ""
+        if state == "code":
+            if char == "/" and following == "/":
+                output[index] = output[index + 1] = " "
+                index += 2
+                state = "line-comment"
+                continue
+            if char == "/" and following == "*":
+                output[index] = output[index + 1] = " "
+                index += 2
+                state = "block-comment"
+                continue
+            if char == '"':
+                output[index] = " "
+                state = "string"
+            elif char == "'":
+                output[index] = " "
+                state = "character"
+        elif state == "line-comment":
+            if char == "\n":
+                state = "code"
+            else:
+                output[index] = " "
+        elif state == "block-comment":
+            output[index] = " "
+            if char == "*" and following == "/":
+                output[index + 1] = " "
+                index += 2
+                state = "code"
+                continue
+        elif state in {"string", "character"}:
+            output[index] = " "
+            if char == "\\" and following:
+                output[index + 1] = " "
+                index += 2
+                continue
+            if (state == "string" and char == '"') or (
+                state == "character" and char == "'"
+            ):
+                state = "code"
+        index += 1
+    return "".join(output)
+
+
+def recursive_function_names(text: str) -> list[str]:
+    stripped = strip_cpp_comments_and_literals(text)
+    recursive: list[str] = []
+    for match in FUNCTION_DEFINITION_PATTERN.finditer(stripped):
+        depth = 1
+        cursor = match.end()
+        while cursor < len(stripped) and depth > 0:
+            if stripped[cursor] == "{":
+                depth += 1
+            elif stripped[cursor] == "}":
+                depth -= 1
+            cursor += 1
+        if depth != 0:
+            continue
+        name = match.group("name")
+        body = stripped[match.end() : cursor - 1]
+        direct_call = re.search(
+            rf"(?<![.A-Za-z0-9_]){re.escape(name)}\s*\(", body
+        )
+        this_call = re.search(rf"\bthis\s*->\s*{re.escape(name)}\s*\(", body)
+        if direct_call or this_call:
+            recursive.append(name)
+    return recursive
 
 
 def test_only_fuid_allowed(relative: str, symbol: str) -> bool:
@@ -187,6 +377,17 @@ def validate_entries(
                         errors.append(
                             f"production reference to test-only FUID {symbol}: "
                             f"{relative}"
+                        )
+            if is_realtime_production_path(relative):
+                for label, pattern in REALTIME_FORBIDDEN_PATTERNS:
+                    if pattern.search(text):
+                        errors.append(
+                            f"realtime-forbidden {label}: {relative}"
+                        )
+                if relative.startswith(("native/include/m3/", "native/src/")):
+                    for name in recursive_function_names(text):
+                        errors.append(
+                            f"recursive core function {name}: {relative}"
                         )
         if is_build_path(relative):
             for token in NETWORK_BUILD_TOKENS:
