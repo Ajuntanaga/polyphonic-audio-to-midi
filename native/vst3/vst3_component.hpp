@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "m3/generated_note_ledger.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/types.hpp"
 
@@ -69,6 +70,21 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
     requested_config_.dry_passthrough = enabled;
   }
   [[nodiscard]] Status status_for_test() const noexcept { return status_; }
+  void begin_generated_note_block_for_test() noexcept {
+    generated_notes_.begin_block();
+  }
+  bool queue_generated_note_for_test(const VoiceTransition& transition,
+                                     std::uint32_t frames) noexcept {
+    return generated_notes_.queue_transition(transition, frames);
+  }
+  [[nodiscard]] bool generated_note_active_for_test(
+      std::uint8_t note) const noexcept {
+    return generated_notes_.is_active(note);
+  }
+  [[nodiscard]] bool generated_note_pending_for_test(
+      std::uint8_t note) const noexcept {
+    return generated_notes_.is_pending_release(note);
+  }
 #endif
 
  private:
@@ -83,6 +99,10 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
   void apply_requested_config(const PersistentConfig& config) noexcept;
   void publish_parameter_outputs(
       Steinberg::Vst::IParameterChanges* output) noexcept;
+  void deliver_generated_notes(Steinberg::Vst::ProcessData& data,
+                               bool finite_input,
+                               bool supported_layout) noexcept;
+  void request_panic_recovery() noexcept;
 
   bool initialized_{};
   bool setup_complete_{};
@@ -92,6 +112,7 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
   Status status_{Status::ready};
   PersistentConfig requested_config_{};
   PersistentConfig controller_config_{};
+  GeneratedNoteLedger generated_notes_{};
   bool panic_ready_dirty_{};
 };
 
@@ -109,6 +130,15 @@ void set_dry_passthrough_for_test(
     Steinberg::Vst::IAudioProcessor* processor, bool enabled) noexcept;
 [[nodiscard]] Status status_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
+void begin_generated_note_block_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept;
+bool queue_generated_note_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    const VoiceTransition& transition, std::uint32_t frames) noexcept;
+[[nodiscard]] bool generated_note_active_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, std::uint8_t note) noexcept;
+[[nodiscard]] bool generated_note_pending_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, std::uint8_t note) noexcept;
 #endif
 
 }  // namespace m3::vst3

@@ -14,6 +14,7 @@
 #include "pluginterfaces/base/fstrdefs.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/vstspeaker.h"
+#include "vst3_event_sink.hpp"
 #include "vst3_parameter_bridge.hpp"
 #include "vst3_state_stream.hpp"
 
@@ -84,6 +85,7 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   requested_config_ = PersistentConfig{};
   controller_config_ = PersistentConfig{};
   dry_passthrough_ = requested_config_.dry_passthrough;
+  generated_notes_.deactivate();
   panic_ready_dirty_ = false;
   initialized_ = true;
   status_ = Status::ready;
@@ -106,6 +108,7 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   requested_config_ = PersistentConfig{};
   controller_config_ = PersistentConfig{};
   dry_passthrough_ = true;
+  generated_notes_.deactivate();
   panic_ready_dirty_ = false;
   status_ = Status::ready;
 #if defined(M3_TESTING)
@@ -161,6 +164,10 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     if (active_ || processing_) {
       return Steinberg::kResultFalse;
     }
+    if (!generated_notes_.activate(
+            static_cast<std::uint32_t>(processSetup.maxSamplesPerBlock))) {
+      return Steinberg::kOutOfMemory;
+    }
     active_ = true;
     status_ = Status::ready;
     return Steinberg::kResultOk;
@@ -169,6 +176,7 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     return Steinberg::kResultFalse;
   }
   active_ = false;
+  generated_notes_.deactivate();
   return Steinberg::kResultOk;
 }
 
@@ -215,6 +223,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
   }
   if (parameter_batch.panic) {
     panic_ready_dirty_ = true;
+    request_panic_recovery();
   }
   if (data.numSamples == 0) {
     publish_parameter_outputs(data.outputParameterChanges);
@@ -364,6 +373,7 @@ Steinberg::tresult PLUGIN_API M3Component::setParamNormalized(
   }
   if (result == ParameterApplyResult::panic) {
     panic_ready_dirty_ = true;
+    request_panic_recovery();
     static_cast<void>(parameter->setNormalized(0.0));
     return Steinberg::kResultTrue;
   }
@@ -385,6 +395,34 @@ void M3Component::publish_parameter_outputs(
       push_output_value(output, kPanicParameterId, 0.0, 0)) {
     panic_ready_dirty_ = false;
   }
+}
+
+void M3Component::deliver_generated_notes(
+    Steinberg::Vst::ProcessData& data, bool finite_input,
+    bool supported_layout) noexcept {
+  Vst3EventSinkContext context{data.outputEvents,
+                               requested_config_.midi_channel};
+  const NoteDeliveryResult result = generated_notes_.deliver(
+      static_cast<std::uint32_t>(data.numSamples),
+      NoteEventSink{&context, &push_vst3_note}, 0.0, finite_input,
+      supported_layout);
+  if (status_ == Status::unsupported_layout ||
+      status_ == Status::invalid_input_or_state) {
+    return;
+  }
+  if (result.output_blocked) {
+    status_ = Status::midi_output_blocked;
+  } else if (result.panic_hold) {
+    status_ = Status::panic_hold;
+  } else if (status_ == Status::midi_output_blocked ||
+             status_ == Status::panic_hold) {
+    status_ = Status::ready;
+  }
+}
+
+void M3Component::request_panic_recovery() noexcept {
+  generated_notes_.request_release_all();
+  generated_notes_.request_recovery();
 }
 
 template <typename Sample>
@@ -417,7 +455,10 @@ Steinberg::tresult M3Component::process_samples(
   }
   if (!valid_layout) {
     status_ = Status::unsupported_layout;
+    generated_notes_.report_output_failure();
     zero_available_output<Sample>(data);
+    deliver_generated_notes(data, true, false);
+    generated_notes_.begin_block();
     return Steinberg::kResultOk;
   }
 
@@ -427,7 +468,10 @@ Steinberg::tresult M3Component::process_samples(
       DetectorInput::left);
   if (result.nonfinite_input) {
     status_ = Status::invalid_input_or_state;
+    generated_notes_.report_output_failure();
   }
+  deliver_generated_notes(data, !result.nonfinite_input, true);
+  generated_notes_.begin_block();
   return Steinberg::kResultOk;
 }
 
@@ -485,6 +529,35 @@ Status status_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept {
   return processor != nullptr
              ? static_cast<M3Component*>(processor)->status_for_test()
              : Status::invalid_input_or_state;
+}
+
+void begin_generated_note_block_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)->begin_generated_note_block_for_test();
+  }
+}
+
+bool queue_generated_note_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    const VoiceTransition& transition, std::uint32_t frames) noexcept {
+  return processor != nullptr &&
+         static_cast<M3Component*>(processor)->queue_generated_note_for_test(
+             transition, frames);
+}
+
+bool generated_note_active_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, std::uint8_t note) noexcept {
+  return processor != nullptr &&
+         static_cast<M3Component*>(processor)->generated_note_active_for_test(
+             note);
+}
+
+bool generated_note_pending_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, std::uint8_t note) noexcept {
+  return processor != nullptr &&
+         static_cast<M3Component*>(processor)->generated_note_pending_for_test(
+             note);
 }
 #endif
 

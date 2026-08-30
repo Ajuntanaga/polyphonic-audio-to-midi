@@ -202,6 +202,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
                     "native/vst3/vst3_component.cpp",
+                    "native/vst3/vst3_event_sink.cpp",
                     "native/vst3/vst3_factory.cpp",
                     "native/vst3/vst3_parameter_bridge.cpp",
                     "native/vst3/vst3_state_stream.cpp",
@@ -438,6 +439,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             cpp_sources,
             {
                 "vst3_component.cpp",
+                "vst3_event_sink.cpp",
                 "vst3_factory.cpp",
                 "vst3_parameter_bridge.cpp",
                 "vst3_state_stream.cpp",

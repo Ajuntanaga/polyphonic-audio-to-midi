@@ -3,11 +3,13 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
 
 #include "m3/constants.hpp"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
@@ -143,6 +145,55 @@ class FakeVst3ParameterChanges final
   Steinberg::int32 null_queue_index_{-1};
   bool reject_add_parameter_{};
   bool reject_output_points_{};
+};
+
+class FakeVst3EventList final : public Steinberg::Vst::IEventList {
+ public:
+  static constexpr std::size_t kCapacity = 4112;
+
+  FakeVst3EventList() noexcept = default;
+  FakeVst3EventList(const FakeVst3EventList&) = delete;
+  FakeVst3EventList& operator=(const FakeVst3EventList&) = delete;
+
+  void reset() noexcept;
+  void reject_attempt(std::size_t attempt) noexcept;
+
+  [[nodiscard]] std::size_t stored_event_count() const noexcept {
+    return event_count_;
+  }
+  [[nodiscard]] std::size_t add_attempt_count() const noexcept {
+    return add_attempt_count_;
+  }
+  [[nodiscard]] std::size_t get_count_call_count() const noexcept {
+    return get_count_call_count_;
+  }
+  [[nodiscard]] std::size_t get_event_call_count() const noexcept {
+    return get_event_call_count_;
+  }
+  [[nodiscard]] const Steinberg::Vst::Event& stored_event(
+      std::size_t index) const noexcept {
+    return events_[index];
+  }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::int32 PLUGIN_API getEventCount() override;
+  Steinberg::tresult PLUGIN_API getEvent(
+      Steinberg::int32 index, Steinberg::Vst::Event& event) override;
+  Steinberg::tresult PLUGIN_API addEvent(
+      Steinberg::Vst::Event& event) override;
+
+ private:
+  std::array<Steinberg::Vst::Event, kCapacity> events_{};
+  std::size_t event_count_{};
+  std::size_t add_attempt_count_{};
+  std::size_t rejected_attempt_{std::numeric_limits<std::size_t>::max()};
+  std::size_t get_count_call_count_{};
+  std::size_t get_event_call_count_{};
+  Steinberg::uint32 reference_count_{1};
+  bool rejection_used_{};
 };
 
 class FakeVst3Stream final : public Steinberg::IBStream {

@@ -55,6 +55,7 @@ set(M3_NATIVE_PLUGIN_SOURCES
 
 set(M3_VST3_ADAPTER_SOURCES
     native/vst3/vst3_component.cpp
+    native/vst3/vst3_event_sink.cpp
     native/vst3/vst3_factory.cpp
     native/vst3/vst3_parameter_bridge.cpp
     native/vst3/vst3_state_stream.cpp
@@ -79,6 +80,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
     native/tests/test_vst3_audio.cpp
+    native/tests/test_vst3_events.cpp
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp

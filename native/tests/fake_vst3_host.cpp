@@ -291,6 +291,77 @@ FakeVst3ParameterChanges::addParameterData(
   return queue;
 }
 
+void FakeVst3EventList::reset() noexcept {
+  event_count_ = 0;
+  add_attempt_count_ = 0;
+  rejected_attempt_ = std::numeric_limits<std::size_t>::max();
+  get_count_call_count_ = 0;
+  get_event_call_count_ = 0;
+  rejection_used_ = false;
+}
+
+void FakeVst3EventList::reject_attempt(std::size_t attempt) noexcept {
+  rejected_attempt_ = attempt;
+  rejection_used_ = false;
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3EventList::queryInterface(
+    const Steinberg::TUID requested_iid, void** object) {
+  if (object == nullptr) {
+    return Steinberg::kInvalidArgument;
+  }
+  *object = nullptr;
+  if (Steinberg::FUnknownPrivate::iidEqual(requested_iid,
+                                            Steinberg::FUnknown::iid) ||
+      Steinberg::FUnknownPrivate::iidEqual(
+          requested_iid, Steinberg::Vst::IEventList::iid)) {
+    *object = static_cast<Steinberg::Vst::IEventList*>(this);
+    addRef();
+    return Steinberg::kResultOk;
+  }
+  return Steinberg::kNoInterface;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3EventList::addRef() {
+  return ++reference_count_;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3EventList::release() {
+  if (reference_count_ > 0U) {
+    --reference_count_;
+  }
+  return reference_count_;
+}
+
+Steinberg::int32 PLUGIN_API FakeVst3EventList::getEventCount() {
+  ++get_count_call_count_;
+  return static_cast<Steinberg::int32>(event_count_);
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3EventList::getEvent(
+    Steinberg::int32 index, Steinberg::Vst::Event& event) {
+  ++get_event_call_count_;
+  if (index < 0 || static_cast<std::size_t>(index) >= event_count_) {
+    return Steinberg::kResultFalse;
+  }
+  event = events_[static_cast<std::size_t>(index)];
+  return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3EventList::addEvent(
+    Steinberg::Vst::Event& event) {
+  const std::size_t attempt = add_attempt_count_++;
+  if (!rejection_used_ && attempt == rejected_attempt_) {
+    rejection_used_ = true;
+    return Steinberg::kResultFalse;
+  }
+  if (event_count_ >= events_.size()) {
+    return Steinberg::kResultFalse;
+  }
+  events_[event_count_++] = event;
+  return Steinberg::kResultOk;
+}
+
 bool FakeVst3Stream::set_input(const std::uint8_t* bytes, std::size_t size,
                                Steinberg::int32 chunk) noexcept {
   if ((bytes == nullptr && size != 0U) || size > bytes_.size() || chunk <= 0) {
