@@ -1,14 +1,17 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-30T16:18:09-07:00
+Updated: 2026-08-30T16:48:36-07:00
 
-## VST3 Tasks 1-12 sealed — disposable VST3 staging and guards next
+## VST3 Tasks 1-13 sealed — disposable audio-trigger probe next
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
-  remaining named gate and action in the approved 24-task native VST3 plan:
-  D2, N3, O4, C5, N6, P7, D8, and I9, including the plan's bounded network,
-  build, disposable-host, benchmark, clean-DI, and final installation phases.
+  remaining named work in the approved 24-task native VST3 plan, including its
+  bounded network, build, disposable-host, benchmark, clean-DI, and final
+  installation phases. The plan's later Task 15 Gate C5 is an explicit
+  exception: its text requires a fresh authorization for exactly twenty
+  guarded disposable REAPER launches and says prior general authorization does
+  not open that gate.
 - This authority does not weaken any pressure guard, stop-on-first-failure
   rule, immutable-evidence boundary, or acceptance threshold. It does not add
   unrelated package changes, REAPER MCP installation, live-project mutation,
@@ -250,6 +253,33 @@ Updated: 2026-08-30T16:18:09-07:00
   to zero. The final snapshot had about 30 GiB available, zero swap/full
   memory/I/O pressure, and no REAPER process. No persistent bundle, live
   profile/project, or hardware/input action was used.
+- Task 13 is sealed at commit `f3c3fe2` (`test: guard build-local VST3 host
+  matrices`). Disposable staging now permits the exact host-derived rates
+  44.1, 48, 88.2, and 96 kHz and block sizes 32, 64, 128, 256, and 512. Only
+  the disposable `reaper.ini` receives the exact build-local VST3 scan root;
+  stale VST3 and CLAP caches are removed without touching the live profile.
+- The generalized launcher accepts mutually exclusive CLAP or VST3 injection,
+  validates the exact probe bundle, binary, module-info identity, and
+  symlink-free containment, and strips inherited plug-in injection variables
+  without changing `HOME`. Existing workspace-5 isolation, background and
+  nonactivating window handling, 50%-of-one-CPU quota, 384/512 MiB memory
+  high/max, 64 MiB swap, 64-task limit, and bounded CPU/wall time remain.
+- `tools/run_native_vst3_probe.py` defines the exact ordered twenty-row matrix.
+  Every future row gets a fresh disposable profile, unique project, and one
+  guarded process. Input hashes cover the probe binary, bundle, module-info,
+  capability source/script, guard, stager, and runner. Complete rows require
+  the suite sentinel, rate/block identity, before/after pressure, return
+  status, and every expected TSV. Changed or interrupted evidence is renamed
+  invalid and cannot be retried; the first failure, timeout, post-stage
+  preflight abort, or pressure abort stops the tail.
+- Task 13 verification passes 77/77 focused tests, 163/163 repository Python
+  tests, Python compilation, the native source validator, and Git whitespace
+  checks. The real non-launching dry plan printed all twenty rows in order and
+  left zero REAPER processes. One earlier dry-plan preflight correctly refused
+  while system memory-full PSI was elevated; no staging or launch occurred,
+  the limit was not loosened, and the final dry plan passed after active PSI
+  returned to zero. No persistent bundle, live profile/project, hardware/input,
+  or REAPER action was used.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -295,9 +325,10 @@ Updated: 2026-08-30T16:18:09-07:00
   `d757877`. Task 9's generic parameter and exact-state bridge passed at
   `02ba96f`, Task 10's fail-closed VST3 note delivery passed at `69f3ab3`, and
   Task 11's bounded host-rate processing lifecycle passed at `db32720`, and
-  Task 12's offline adapter and official-validator seal passed at `7c02188`.
-  The next action is Task 13's disposable VST3 staging/guard extension; it
-  begins with source and dry-run tests, not a REAPER launch.
+  Task 12's offline adapter and official-validator seal passed at `7c02188`,
+  and Task 13's disposable VST3 staging/guard matrix passed at `f3c3fe2`. The
+  next action is Task 14's offline audio-trigger capability probe; it begins
+  with native RED tests and does not launch REAPER.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -803,22 +834,24 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 12 feature commit `7c02188`, SDK manifest SHA-256
+1. Verify Task 13 feature commit `f3c3fe2`, Task 12 feature commit `7c02188`,
+   SDK manifest SHA-256
    `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`,
    exact production bundle digest
    `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`,
    and the immutable one-run Gate O4 record. The failed CLAP Task 10 evidence
    remains historical input and must not be retried.
-2. Execute VST3 Task 13 next under guarded serial TDD: extend disposable
-   profile staging and the workspace-5 launcher for exact build-local VST3
-   injection, add the twenty-row fail-closed schedule, and exercise only
-   source, unit, `--check`, and `--dry-run` paths until its ordered launch gate.
+2. Execute VST3 Task 14 next under guarded serial TDD: build the test-only
+   audio-trigger processor, offline native tests, bounded JSFX source, and
+   disposable assertion script. Do not launch REAPER in Task 14.
 3. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
    probe, and historical adapter source as later tasks extend the verified
    minimal VST3 target.
-4. Preserve the future twenty-row 44.1/48/88.2/96 kHz by
+4. Preserve but do not execute the future twenty-row 44.1/48/88.2/96 kHz by
    32/64/128/256/512 capability matrix, serial guarded background launches on
    workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
+   Stop at Task 15 Gate C5 and request fresh authorization for exactly those
+   twenty launches; prior general authorization does not open it.
 5. Keep every REAPER launch, clean-DI/live input, performance run, persistent
    installation, live project, custom GUI, and REAPER MCP behind its named
    gate.
@@ -828,7 +861,9 @@ task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 plan Tasks 13-24 are authorized but remain ordered and evidence-gated.
+- VST3 plan Tasks 14-24 remain ordered and evidence-gated. Task 15 Gate C5 is
+  not open until the user explicitly authorizes exactly twenty guarded
+  disposable REAPER launches at that gate.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
