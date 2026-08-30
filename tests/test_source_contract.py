@@ -43,6 +43,7 @@ NATIVE_CAPABILITY_SOURCE = (
 NATIVE_CAPABILITY_RUNNER = (
     ROOT / "Scripts/tests/ajuntanaga_M3 Native CLAP Capability.lua"
 )
+VST3_BUILD_ROOT = (ROOT / "build/vst3/release/VST3").resolve()
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -157,6 +158,50 @@ class SourceContractTests(unittest.TestCase):
                 HOST_CASES.read_bytes(),
             )
             self.assertTrue((staged / "test-results").is_dir())
+
+    def test_vst3_staging_puts_only_the_exact_scan_root_in_disposable_ini(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+            staged.mkdir()
+            for name in (
+                "reaper-vstplugins.ini",
+                "reaper-vstplugins64.ini",
+                "reaper-clapplugins64.ini",
+            ):
+                (staged / name).write_text("stale\n", encoding="utf-8")
+
+            stage(
+                ROOT,
+                staged,
+                sample_rate=88200,
+                block_size=512,
+                vst3_path=VST3_BUILD_ROOT,
+            )
+
+            profile = (staged / "reaper.ini").read_text(encoding="utf-8")
+            self.assertEqual(
+                [line for line in profile.splitlines() if line.startswith("vstpath=")],
+                [f"vstpath={VST3_BUILD_ROOT}"],
+            )
+            self.assertNotIn("CLAP_PATH", profile)
+            self.assertNotIn(str(pathlib.Path.home() / ".config/REAPER"), profile)
+            for name in (
+                "reaper-vstplugins.ini",
+                "reaper-vstplugins64.ini",
+                "reaper-clapplugins64.ini",
+            ):
+                self.assertFalse((staged / name).exists())
+            path_mentions = []
+            for path in staged.rglob("*"):
+                if not path.is_file():
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8")
+                except UnicodeError:
+                    continue
+                if str(VST3_BUILD_ROOT) in text:
+                    path_mentions.append(path.relative_to(staged).as_posix())
+            self.assertEqual(path_mentions, ["reaper.ini"])
 
     def test_disposable_staging_selects_only_a_bounded_synthetic_batch(self):
         with tempfile.TemporaryDirectory() as temporary:

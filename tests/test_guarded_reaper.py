@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import pathlib
 import subprocess
 import sys
@@ -24,6 +25,41 @@ class GuardedReaperTests(unittest.TestCase):
             capture_output=True,
             check=False,
         )
+
+    def create_vst3_layout(self, root: pathlib.Path):
+        vst3_root = root / "build/vst3/release/VST3"
+        bundle = vst3_root / "M3_Polyphonic_Audio_to_MIDI_Probe.vst3"
+        binary = (
+            bundle
+            / "Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI_Probe.so"
+        )
+        moduleinfo = bundle / "Contents/Resources/moduleinfo.json"
+        binary.parent.mkdir(parents=True)
+        moduleinfo.parent.mkdir(parents=True)
+        binary.write_bytes(b"ELF probe fixture\n")
+        moduleinfo.write_text(
+            json.dumps(
+                {
+                    "Factory Info": {"Vendor": "ajuntanaga"},
+                    "Classes": [
+                        {
+                            "CID": "6F62F8B1B8A14872A0D92C3C274421D8",
+                            "Category": "Audio Module Class",
+                            "Name": "M3 Polyphonic Audio to MIDI Probe",
+                            "Sub Categories": ["Fx", "Tools"],
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        profile = root / "build/reaper-test/reaper.ini"
+        profile.parent.mkdir(parents=True)
+        profile.write_text(
+            f"[reaper]\nvstpath={vst3_root}\n", encoding="utf-8"
+        )
+        return vst3_root, bundle, binary, moduleinfo, profile
 
     def test_healthy_preflight_passes(self):
         result = self.run_runner(
@@ -113,12 +149,145 @@ class GuardedReaperTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("MemoryMax=512M", result.stdout)
+        self.assertIn("MemoryHigh=384M", result.stdout)
+        self.assertIn("MemorySwapMax=64M", result.stdout)
         self.assertIn("CPUQuota=50%", result.stdout)
         self.assertIn("TasksMax=64", result.stdout)
         self.assertIn("--cpu=45:45", result.stdout)
         self.assertIn("taskset -c", result.stdout)
         self.assertIn(str(PROFILE), result.stdout)
         self.assertIn("-noactivate", result.stdout)
+
+    def test_native_vst3_environment_requires_exact_bundle_and_profile_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            ):
+                self.assertEqual(
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        vst3_root, profile
+                    ),
+                    vst3_root,
+                )
+                with self.assertRaisesRegex(ValueError, "build-local VST3 path"):
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        root / "outside", profile
+                    )
+                with self.assertRaisesRegex(ValueError, "disposable profile"):
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        vst3_root, root / "other.ini"
+                    )
+
+    def test_native_vst3_environment_refuses_wrong_identity_extra_or_symlink(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            patches = (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            )
+            with patches[0], patches[1], patches[2], patches[3], patches[4]:
+                document = json.loads(moduleinfo.read_text(encoding="utf-8"))
+                document["Classes"][0]["CID"] = (
+                    "4A1BA42F6D7046098B52450C3842F11F"
+                )
+                moduleinfo.write_text(json.dumps(document), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "FUID"):
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        vst3_root, profile
+                    )
+
+                document["Classes"][0]["CID"] = (
+                    "6F62F8B1B8A14872A0D92C3C274421D8"
+                )
+                moduleinfo.write_text(json.dumps(document), encoding="utf-8")
+                extra = bundle / "Contents/extra.txt"
+                extra.write_text("extra\n", encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "file set"):
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        vst3_root, profile
+                    )
+                extra.unlink()
+
+                outside = root / "outside.so"
+                outside.write_bytes(b"outside\n")
+                binary.unlink()
+                binary.symlink_to(outside)
+                with self.assertRaisesRegex(ValueError, "symlink or escapes"):
+                    GUARDED_REAPER.validate_native_vst3_environment(
+                        vst3_root, profile
+                    )
+
+    def test_native_vst3_path_is_profile_only_and_never_mixed_with_clap(self):
+        command = GUARDED_REAPER.guarded_command(
+            PROFILE,
+            ["-new"],
+            45,
+            vst3_path=GUARDED_REAPER.BUILD_VST3_DIR,
+        )
+        rendered = " ".join(command)
+        self.assertNotIn("VST_PATH=", rendered)
+        self.assertNotIn("CLAP_PATH=", rendered)
+        self.assertNotIn("M3_CLAP_PROBE_REPORT", rendered)
+        self.assertNotIn("HOME=", rendered)
+        self.assertNotIn(str(pathlib.Path.home() / ".config/REAPER"), rendered)
+
+        result = self.run_runner(
+            "--dry-run",
+            "--profile",
+            str(PROFILE),
+            "--clap-path",
+            str(GUARDED_REAPER.BUILD_CLAP_DIR),
+            "--probe-report",
+            str(GUARDED_REAPER.PROBE_REPORT),
+            "--vst3-path",
+            str(GUARDED_REAPER.BUILD_VST3_DIR),
+            "--available-mib",
+            "32000",
+            "--load-one",
+            "2.5",
+            "--temperature-c",
+            "72",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("mutually exclusive", result.stdout + result.stderr)
+
+    def test_runtime_environment_drops_inherited_plugin_paths_but_keeps_home(self):
+        source = {
+            "HOME": "/home/example",
+            "CLAP_PATH": "/tmp/untrusted-clap",
+            "VST_PATH": "/tmp/untrusted-vst",
+            "VST3_PATH": "/tmp/untrusted-vst3",
+            "M3_CLAP_PROBE_REPORT": "/tmp/untrusted-report",
+            "DISPLAY": ":9",
+        }
+        sanitized = GUARDED_REAPER.sanitize_plugin_environment(source)
+        self.assertEqual(sanitized["HOME"], "/home/example")
+        self.assertEqual(sanitized["DISPLAY"], ":9")
+        for name in (
+            "CLAP_PATH",
+            "VST_PATH",
+            "VST3_PATH",
+            "M3_CLAP_PROBE_REPORT",
+        ):
+            self.assertNotIn(name, sanitized)
 
     def test_native_clap_environment_requires_exact_build_local_paths(self):
         with tempfile.TemporaryDirectory() as temporary:

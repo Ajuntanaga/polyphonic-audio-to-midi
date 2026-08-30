@@ -7,8 +7,10 @@ import sys
 
 
 LIVE_REAPER = (pathlib.Path.home() / ".config" / "REAPER").resolve()
-ALLOWED_SAMPLE_RATES = (44100, 48000, 96000)
-ALLOWED_BLOCK_SIZES = (32, 64, 128, 256)
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+BUILD_VST3_DIR = (ROOT / "build/vst3/release/VST3").resolve()
+ALLOWED_SAMPLE_RATES = (44100, 48000, 88200, 96000)
+ALLOWED_BLOCK_SIZES = (32, 64, 128, 256, 512)
 MAX_SYNTHETIC_CASES = 32
 
 
@@ -20,6 +22,20 @@ def _overlaps_live_profile(output: pathlib.Path) -> bool:
     )
 
 
+def _validated_vst3_path(vst3_path: pathlib.Path | None) -> pathlib.Path | None:
+    if vst3_path is None:
+        return None
+    if vst3_path.is_symlink():
+        raise ValueError("refusing a symlinked VST3 scan path")
+    resolved = vst3_path.resolve(strict=False)
+    if resolved != BUILD_VST3_DIR or not resolved.is_dir():
+        raise ValueError(
+            f"unexpected build-local VST3 path: {resolved}; "
+            f"required {BUILD_VST3_DIR}"
+        )
+    return resolved
+
+
 def stage(
     root: pathlib.Path,
     output: pathlib.Path,
@@ -28,11 +44,13 @@ def stage(
     block_size: int = 128,
     case_offset: int = 0,
     case_limit: int | None = None,
+    vst3_path: pathlib.Path | None = None,
 ) -> None:
     root = root.resolve()
     output = output.resolve()
     if _overlaps_live_profile(output):
         raise ValueError("refusing to stage into, below, or above live REAPER profile")
+    resolved_vst3 = _validated_vst3_path(vst3_path)
 
     effects = root / "Effects"
     scripts = root / "Scripts"
@@ -75,12 +93,19 @@ def stage(
         elif destination.exists():
             destination.unlink()
 
-    for disposable_cache in ("reaper-kb.ini", "reaper-jsfx.ini"):
+    for disposable_cache in (
+        "reaper-kb.ini",
+        "reaper-jsfx.ini",
+        "reaper-vstplugins.ini",
+        "reaper-vstplugins64.ini",
+        "reaper-clapplugins.ini",
+        "reaper-clapplugins64.ini",
+    ):
         cache_path = output / disposable_cache
         if cache_path.exists():
             cache_path.unlink()
 
-    (output / "reaper.ini").write_text(
+    profile_text = (
         "[reaper]\n"
         f"linux_audio_bsize={block_size}\n"
         "linux_audio_bufs=2\n"
@@ -90,7 +115,12 @@ def stage(
         f"linux_audio_srate={sample_rate}\n"
         "newprojdo=0\n"
         "saveFlags=0\n"
-        "warnmaxram64=0\n",
+    )
+    if resolved_vst3 is not None:
+        profile_text += f"vstpath={resolved_vst3}\n"
+    profile_text += "warnmaxram64=0\n"
+    (output / "reaper.ini").write_text(
+        profile_text,
         encoding="utf-8",
     )
     shutil.copytree(effects, output / "Effects")
@@ -144,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--case-offset", type=int, default=0)
     parser.add_argument("--case-limit", type=int)
+    parser.add_argument("--vst3-path", type=pathlib.Path)
     args = parser.parse_args(argv)
 
     reaper = args.reaper.resolve()
@@ -160,6 +191,7 @@ def main(argv: list[str] | None = None) -> int:
             args.block_size,
             args.case_offset,
             args.case_limit,
+            args.vst3_path,
         )
     except (OSError, ValueError) as exc:
         print(str(exc), file=sys.stderr)

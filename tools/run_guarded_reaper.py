@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import os
 import pathlib
+import re
 import signal
 import shlex
 import subprocess
@@ -19,6 +21,20 @@ PROBE_ARTIFACT = (
 PROBE_REPORT = (
     ROOT / "build/reaper-test/test-results/probe-native.tsv"
 ).resolve()
+BUILD_VST3_DIR = (ROOT / "build/vst3/release/VST3").resolve()
+PROBE_VST3_BUNDLE = (
+    BUILD_VST3_DIR / "M3_Polyphonic_Audio_to_MIDI_Probe.vst3"
+).resolve()
+PROBE_VST3_BINARY = (
+    PROBE_VST3_BUNDLE
+    / "Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI_Probe.so"
+).resolve()
+PROBE_VST3_MODULEINFO = (
+    PROBE_VST3_BUNDLE / "Contents/Resources/moduleinfo.json"
+).resolve()
+PROBE_VST3_FUID = "6F62F8B1B8A14872A0D92C3C274421D8"
+PROBE_VST3_NAME = "M3 Polyphonic Audio to MIDI Probe"
+LIVE_REAPER_PROFILE = (pathlib.Path.home() / ".config/REAPER").resolve()
 COMPLETION_FILE = (
     ROOT / "build/reaper-test/test-results/phase.log"
 ).resolve()
@@ -29,6 +45,12 @@ MAX_LOAD_ONE = 12.0
 MAX_TEMPERATURE_C = 90.0
 MAX_CPU_SECONDS = 45
 WMCTRL = pathlib.Path("/usr/bin/wmctrl")
+PLUGIN_INJECTION_ENVIRONMENT = (
+    "CLAP_PATH",
+    "VST_PATH",
+    "VST3_PATH",
+    "M3_CLAP_PROBE_REPORT",
+)
 
 
 def available_memory_mib() -> float:
@@ -99,6 +121,127 @@ def validate_native_clap_environment(
     return resolved_clap, resolved_report
 
 
+def _inside(path: pathlib.Path, root: pathlib.Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+        return True
+    except ValueError:
+        return False
+
+
+def _normalize_fuid(value: object) -> str:
+    return re.sub(r"[^0-9A-Fa-f]", "", str(value)).upper()
+
+
+def validate_native_vst3_environment(
+    vst3_path: pathlib.Path,
+    profile: pathlib.Path,
+) -> pathlib.Path:
+    resolved_profile = profile.resolve(strict=False)
+    if (
+        profile.is_symlink()
+        or resolved_profile != DISPOSABLE_PROFILE
+        or not resolved_profile.is_file()
+    ):
+        raise ValueError(
+            f"native VST3 injection requires the disposable profile: "
+            f"{resolved_profile}"
+        )
+
+    if vst3_path.is_symlink():
+        raise ValueError("build-local VST3 path is a symlink")
+    resolved_vst3 = vst3_path.resolve(strict=False)
+    if resolved_vst3 != BUILD_VST3_DIR or not resolved_vst3.is_dir():
+        raise ValueError(
+            f"unexpected build-local VST3 path: {resolved_vst3}; "
+            f"required {BUILD_VST3_DIR}"
+        )
+
+    bundle = PROBE_VST3_BUNDLE
+    binary = PROBE_VST3_BINARY
+    moduleinfo = PROBE_VST3_MODULEINFO
+    expected_files = {
+        binary.relative_to(bundle).as_posix(),
+        moduleinfo.relative_to(bundle).as_posix(),
+    }
+    if (
+        bundle.is_symlink()
+        or not bundle.is_dir()
+        or bundle.parent.resolve(strict=False) != resolved_vst3
+        or not _inside(bundle, resolved_vst3)
+    ):
+        raise ValueError(f"probe VST3 bundle is missing, a symlink, or escapes: {bundle}")
+
+    actual_files: set[str] = set()
+    for path in bundle.rglob("*"):
+        if path.is_symlink():
+            raise ValueError(
+                f"probe VST3 member is a symlink or escapes: "
+                f"{path.relative_to(bundle)}"
+            )
+        if path.is_file():
+            if not _inside(path, bundle):
+                raise ValueError(
+                    f"probe VST3 member is a symlink or escapes: "
+                    f"{path.relative_to(bundle)}"
+                )
+            actual_files.add(path.relative_to(bundle).as_posix())
+    if actual_files != expected_files:
+        raise ValueError("probe VST3 bundle file set is not exact")
+    if not binary.is_file() or binary.is_symlink() or not _inside(binary, bundle):
+        raise ValueError("probe VST3 binary is missing, a symlink or escapes")
+    if (
+        not moduleinfo.is_file()
+        or moduleinfo.is_symlink()
+        or not _inside(moduleinfo, bundle)
+    ):
+        raise ValueError("probe VST3 module-info is missing, a symlink or escapes")
+
+    try:
+        source = moduleinfo.read_text(encoding="utf-8")
+        document = json.loads(re.sub(r",(\s*[}\]])", r"\1", source))
+        classes = document["Classes"]
+        class_info = classes[0]
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
+        raise ValueError(f"probe VST3 module-info is invalid: {exc}") from exc
+    if not isinstance(classes, list) or len(classes) != 1 or not isinstance(
+        class_info, dict
+    ):
+        raise ValueError("probe VST3 module-info must contain exactly one class")
+    if _normalize_fuid(class_info.get("CID")) != PROBE_VST3_FUID:
+        raise ValueError("probe VST3 module-info FUID is not the probe identity")
+    if (
+        class_info.get("Name") != PROBE_VST3_NAME
+        or class_info.get("Category") != "Audio Module Class"
+        or class_info.get("Sub Categories") != ["Fx", "Tools"]
+    ):
+        raise ValueError("probe VST3 module-info class metadata is not exact")
+    factory = document.get("Factory Info")
+    if not isinstance(factory, dict) or factory.get("Vendor") != "ajuntanaga":
+        raise ValueError("probe VST3 module-info factory metadata is not exact")
+
+    try:
+        profile_text = resolved_profile.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ValueError(f"disposable profile is unreadable: {exc}") from exc
+    scan_rows = [
+        line
+        for line in profile_text.splitlines()
+        if line.lower().startswith("vstpath")
+    ]
+    if scan_rows != [f"vstpath={resolved_vst3}"]:
+        raise ValueError(
+            "disposable profile VST scan path is not the exact build-local root"
+        )
+    lowered_profile = profile_text.lower()
+    if (
+        str(LIVE_REAPER_PROFILE).lower() in lowered_profile
+        or "clap_path" in lowered_profile
+    ):
+        raise ValueError("disposable profile references a live or CLAP path")
+    return resolved_vst3
+
+
 def overrides_instance_isolation(argument: str) -> bool:
     normalized = argument.lower()
     return any(
@@ -115,6 +258,13 @@ def completion_published(path: pathlib.Path) -> bool:
     return bool(lines) and lines[-1] == COMPLETION_SENTINEL
 
 
+def sanitize_plugin_environment(environment: dict[str, str]) -> dict[str, str]:
+    sanitized = environment.copy()
+    for name in PLUGIN_INJECTION_ENVIRONMENT:
+        sanitized.pop(name, None)
+    return sanitized
+
+
 def runtime_environment(gui: bool) -> dict[str, str]:
     uid = os.getuid()
     runtime = pathlib.Path(f"/run/user/{uid}")
@@ -122,7 +272,7 @@ def runtime_environment(gui: bool) -> dict[str, str]:
     if not bus.exists():
         raise RuntimeError(f"user session bus is unavailable: {bus}")
 
-    environment = os.environ.copy()
+    environment = sanitize_plugin_environment(dict(os.environ))
     environment["XDG_RUNTIME_DIR"] = str(runtime)
     environment["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={bus}"
 
@@ -440,7 +590,10 @@ def guarded_command(
     timeout_seconds: int,
     clap_path: pathlib.Path | None = None,
     probe_report: pathlib.Path | None = None,
+    vst3_path: pathlib.Path | None = None,
 ) -> list[str]:
+    if vst3_path is not None and (clap_path is not None or probe_report is not None):
+        raise ValueError("CLAP and VST3 injection are mutually exclusive")
     cpu = max(os.sched_getaffinity(0))
     cpu_seconds = max(5, min(timeout_seconds, MAX_CPU_SECONDS))
     unit = f"m3-poly-guarded-{os.getpid()}"
@@ -505,6 +658,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--profile", type=pathlib.Path)
     parser.add_argument("--clap-path", type=pathlib.Path)
     parser.add_argument("--probe-report", type=pathlib.Path)
+    parser.add_argument("--vst3-path", type=pathlib.Path)
     parser.add_argument("--completion-file", type=pathlib.Path)
     parser.add_argument("--timeout-seconds", type=int, default=45)
     parser.add_argument("--available-mib", type=float)
@@ -546,6 +700,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     clap_path = None
     probe_report = None
+    vst3_path = None
+    if args.vst3_path is not None and (
+        args.clap_path is not None or args.probe_report is not None
+    ):
+        print(
+            "guardrail refusal: CLAP and VST3 injection are mutually exclusive",
+            file=sys.stderr,
+        )
+        return 2
     if args.clap_path is not None or args.probe_report is not None:
         if args.clap_path is None or args.probe_report is None:
             print(
@@ -557,6 +720,15 @@ def main(argv: list[str] | None = None) -> int:
             clap_path, probe_report = validate_native_clap_environment(
                 args.clap_path,
                 args.probe_report,
+                profile,
+            )
+        except ValueError as exc:
+            print(f"guardrail refusal: {exc}", file=sys.stderr)
+            return 2
+    if args.vst3_path is not None:
+        try:
+            vst3_path = validate_native_vst3_environment(
+                args.vst3_path,
                 profile,
             )
         except ValueError as exc:
@@ -581,7 +753,10 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 2
     if not 1 <= args.timeout_seconds <= 300:
-        print("guardrail refusal: timeout must be between 1 and 300 seconds", file=sys.stderr)
+        print(
+            "guardrail refusal: timeout must be between 1 and 300 seconds",
+            file=sys.stderr,
+        )
         return 2
     if not 1 <= args.workspace <= 32:
         print("guardrail refusal: workspace must be between 1 and 32", file=sys.stderr)
@@ -591,7 +766,11 @@ def main(argv: list[str] | None = None) -> int:
     if reaper_arguments[:1] == ["--"]:
         reaper_arguments = reaper_arguments[1:]
     if any(overrides_instance_isolation(argument) for argument in reaper_arguments):
-        print("guardrail refusal: REAPER arguments may not override instance/profile isolation", file=sys.stderr)
+        print(
+            "guardrail refusal: REAPER arguments may not override "
+            "instance/profile isolation",
+            file=sys.stderr,
+        )
         return 2
 
     command = guarded_command(
@@ -600,6 +779,7 @@ def main(argv: list[str] | None = None) -> int:
         args.timeout_seconds,
         clap_path,
         probe_report,
+        vst3_path,
     )
     if args.dry_run:
         if args.gui:
@@ -609,6 +789,8 @@ def main(argv: list[str] | None = None) -> int:
         if clap_path is not None:
             print(f"guarded CLAP path: {clap_path}")
             print(f"guarded probe report: {probe_report}")
+        if vst3_path is not None:
+            print(f"guarded VST3 profile path: {vst3_path}")
         print(shlex.join(command))
         return 0
 
