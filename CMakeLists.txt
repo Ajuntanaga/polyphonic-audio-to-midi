@@ -41,6 +41,10 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/state_image.cpp
 )
 
+set(M3_NATIVE_SHARED_ADAPTER_SOURCES
+    native/plugin/prepared_config_exchange.cpp
+)
+
 set(M3_NATIVE_PLUGIN_SOURCES
     native/plugin/clap_adapter.cpp
     native/plugin/clap_entry.cpp
@@ -48,7 +52,6 @@ set(M3_NATIVE_PLUGIN_SOURCES
     native/plugin/clap_state_stream.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
-    native/plugin/prepared_config_exchange.cpp
     native/plugin/probe_processor.cpp
     native/plugin/state_codec.cpp
 )
@@ -84,11 +87,15 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp
+    native/tests/test_vst3_processing.cpp
+    native/tests/test_vst3_reconfiguration.cpp
+    native/tests/test_vst3_setup.cpp
     native/tests/test_vst3_state.cpp
 )
 
 add_executable(m3_native_tests
     ${M3_NATIVE_CORE_SOURCES}
+    ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_VST3_ADAPTER_SOURCES}
     ${M3_NATIVE_TEST_SOURCES}
@@ -114,12 +121,12 @@ set(M3_CLAP_HISTORY_SOURCES
     native/plugin/clap_state_stream.cpp
     native/plugin/midi_pipeline.cpp
     native/plugin/parameter_contract.cpp
-    native/plugin/prepared_config_exchange.cpp
     native/plugin/state_codec.cpp
 )
 
 add_library(m3_clap_history MODULE EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
+    ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
     ${M3_CLAP_HISTORY_SOURCES}
 )
 target_include_directories(m3_clap_history PRIVATE
@@ -140,6 +147,7 @@ smtg_add_vst3plugin(m3_vst3_probe
     PACKAGE_NAME "M3_Polyphonic_Audio_to_MIDI_Probe"
     SOURCES_LIST
         ${M3_NATIVE_CORE_SOURCES}
+        ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
         ${M3_VST3_ADAPTER_SOURCES}
 )
 target_compile_definitions(m3_vst3_probe PRIVATE M3_VST3_PROBE_BUILD)

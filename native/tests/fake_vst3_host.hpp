@@ -293,6 +293,17 @@ class FakeVst3ProcessBlock final {
     }
   }
 
+  void fill_silence() noexcept {
+    const std::uint32_t frames =
+        data_.numSamples > 0 ? static_cast<std::uint32_t>(data_.numSamples) : 0U;
+    for (std::uint32_t frame = 0; frame < frames; ++frame) {
+      input_left_[frame] = static_cast<Sample>(0);
+      input_right_[frame] = static_cast<Sample>(0);
+      output_left_[frame] = static_cast<Sample>(-0.75);
+      output_right_[frame] = static_cast<Sample>(0.75);
+    }
+  }
+
   void share_input_channels() noexcept {
     input_channels_[1] = input_channels_[0];
   }

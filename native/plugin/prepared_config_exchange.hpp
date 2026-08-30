@@ -31,6 +31,8 @@ class AtomicConfigRequest final {
 
   bool publish(const PersistentConfig& config,
                std::uint64_t generation) noexcept;
+  void reset(const PersistentConfig& config,
+             std::uint64_t generation) noexcept;
   bool snapshot(ConfigRequestSnapshot& destination,
                 std::uint32_t maximum_attempts = 3) const noexcept;
 
@@ -52,6 +54,8 @@ class AtomicConfigRequest final {
 struct PreparedConfig final {
   PersistentConfig requested{};
   double sample_rate{};
+  double sample_period{};
+  double decision_period{};
 #if defined(M3_TESTING)
   // A wide payload makes torn-slot observations deterministic under stress.
   // Production builds contain only real prepared fields.
@@ -68,6 +72,10 @@ void copy_structural_config(PersistentConfig& destination,
                             const PersistentConfig& source) noexcept;
 void copy_runtime_config(PersistentConfig& destination,
                          const PersistentConfig& source) noexcept;
+
+#if defined(M3_TESTING)
+[[nodiscard]] std::size_t prepared_config_stage_count_for_test() noexcept;
+#endif
 
 enum class PreparedSlotState : std::uint32_t {
   free,

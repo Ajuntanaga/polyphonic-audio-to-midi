@@ -253,6 +253,9 @@ M3_TEST(vst3_component_orders_generated_events_and_never_reads_input_events) {
   block.fill_finite();
   block.data().inputEvents = &input_events;
   block.data().outputEvents = &output_events;
+  m3::test::FakeVst3ParameterChanges channel_changes;
+  M3_EXPECT_TRUE(channel_changes.append_input(0x4D33000DU, 0, 1.0));
+  block.data().inputParameterChanges = &channel_changes;
   begin_notes(instance);
   M3_EXPECT_TRUE(queue_note(
       instance,
@@ -389,7 +392,7 @@ M3_TEST(vst3_output_rejection_blocks_ons_retries_offs_and_preserves_dry_audio) {
     for (std::size_t hold_call = 0; hold_call < 2; ++hold_call) {
       output_events.reset();
       block.configure(kFrames, false);
-      block.fill_finite();
+      block.fill_silence();
       block.data().outputEvents = &output_events;
       begin_notes(instance);
       M3_EXPECT_EQ(instance.processor->process(block.data()),

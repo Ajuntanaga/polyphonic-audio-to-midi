@@ -39,6 +39,17 @@ bool is_process_mode(Steinberg::int32 mode) noexcept {
          mode == Steinberg::Vst::kPrefetch || mode == Steinberg::Vst::kOffline;
 }
 
+bool same_persistent_config(const PersistentConfig& left,
+                            const PersistentConfig& right) noexcept {
+  return structural_config_equal(left, right) &&
+         left.input_trim_db == right.input_trim_db &&
+         left.sensitivity == right.sensitivity &&
+         left.response == right.response &&
+         left.velocity_mode == right.velocity_mode &&
+         left.fixed_velocity == right.fixed_velocity &&
+         left.dry_passthrough == right.dry_passthrough;
+}
+
 }  // namespace
 
 M3Component::M3Component() noexcept {
@@ -82,11 +93,31 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
     static_cast<void>(SingleComponentEffect::terminate());
     return Steinberg::kOutOfMemory;
   }
-  requested_config_ = PersistentConfig{};
+  main_config_ = PersistentConfig{};
   controller_config_ = PersistentConfig{};
-  dry_passthrough_ = requested_config_.dry_passthrough;
+  audio_requested_config_ = PersistentConfig{};
+  active_config_ = PersistentConfig{};
+  pending_structural_config_ = PersistentConfig{};
+  main_generation_ = 1U;
+  setup_generation_ = 0U;
+  active_generation_ = 0U;
+  config_request_.reset(main_config_, main_generation_);
+  setup_prepared_ = {};
+  setup_prepared_valid_ = false;
+  prepared_exchange_.reset();
+  prepared_exchange_initialized_ = false;
+  prepared_claim_pending_ = false;
+  structural_boundary_pending_ = false;
+  release_channel_pending_ = false;
+  release_midi_channel_ = 1U;
   generated_notes_.deactivate();
-  panic_ready_dirty_ = false;
+  processing_started_once_ = false;
+  decision_phase_ = 0U;
+  decision_tick_count_ = 0U;
+  detector_reset_count_ = 0U;
+  panic_ready_dirty_.store(false, std::memory_order_relaxed);
+  panic_requested_.store(false, std::memory_order_relaxed);
+  status_dirty_ = false;
   initialized_ = true;
   status_ = Status::ready;
 #if defined(M3_TESTING)
@@ -105,11 +136,32 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   }
   initialized_ = false;
   setup_complete_ = false;
-  requested_config_ = PersistentConfig{};
+  if (prepared_claim_pending_) {
+    static_cast<void>(prepared_exchange_.cancel(prepared_claim_));
+  }
+  prepared_exchange_.reset();
+  prepared_exchange_initialized_ = false;
+  prepared_claim_pending_ = false;
+  main_config_ = PersistentConfig{};
   controller_config_ = PersistentConfig{};
-  dry_passthrough_ = true;
+  audio_requested_config_ = PersistentConfig{};
+  active_config_ = PersistentConfig{};
+  pending_structural_config_ = PersistentConfig{};
   generated_notes_.deactivate();
-  panic_ready_dirty_ = false;
+  setup_prepared_ = {};
+  setup_prepared_valid_ = false;
+  main_generation_ = 0U;
+  setup_generation_ = 0U;
+  active_generation_ = 0U;
+  decision_phase_ = 0U;
+  decision_tick_count_ = 0U;
+  detector_reset_count_ = 0U;
+  structural_boundary_pending_ = false;
+  release_channel_pending_ = false;
+  processing_started_once_ = false;
+  panic_ready_dirty_.store(false, std::memory_order_relaxed);
+  panic_requested_.store(false, std::memory_order_relaxed);
+  status_dirty_ = false;
   status_ = Status::ready;
 #if defined(M3_TESTING)
   terminated_count.fetch_add(1U, std::memory_order_relaxed);
@@ -148,9 +200,19 @@ Steinberg::tresult PLUGIN_API M3Component::setupProcessing(
       canProcessSampleSize(setup.symbolicSampleSize) != Steinberg::kResultTrue) {
     return Steinberg::kInvalidArgument;
   }
-  const Steinberg::tresult result =
-      SingleComponentEffect::setupProcessing(setup);
+  ConfigRequestSnapshot snapshot;
+  PreparedConfig prepared;
+  if (!config_request_.snapshot(snapshot) ||
+      !stage_prepared_config(snapshot.config, setup.sampleRate, prepared)) {
+    return Steinberg::kInvalidArgument;
+  }
+  const Steinberg::tresult result = SingleComponentEffect::setupProcessing(setup);
   if (result == Steinberg::kResultOk) {
+    setup_prepared_ = prepared;
+    setup_generation_ = snapshot.generation;
+    setup_prepared_valid_ = true;
+    main_config_ = snapshot.config;
+    main_generation_ = snapshot.generation;
     setup_complete_ = true;
   }
   return result;
@@ -164,19 +226,62 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     if (active_ || processing_) {
       return Steinberg::kResultFalse;
     }
-    if (!generated_notes_.activate(
+    ConfigRequestSnapshot snapshot;
+    if (!config_request_.snapshot(snapshot)) {
+      return Steinberg::kInvalidArgument;
+    }
+    PreparedConfig prepared = setup_prepared_;
+    if (!setup_prepared_valid_ || setup_generation_ != snapshot.generation ||
+        prepared.sample_rate != processSetup.sampleRate ||
+        !same_persistent_config(prepared.requested, snapshot.config)) {
+      if (!stage_prepared_config(snapshot.config, processSetup.sampleRate,
+                                 prepared)) {
+        return Steinberg::kInvalidArgument;
+      }
+    }
+    if (!generated_notes_.activate_preserving_pending(
             static_cast<std::uint32_t>(processSetup.maxSamplesPerBlock))) {
       return Steinberg::kOutOfMemory;
     }
+    if (!prepared_exchange_.initialize(prepared, snapshot.generation)) {
+      generated_notes_.release_storage_preserving_pending();
+      return Steinberg::kOutOfMemory;
+    }
+    setup_prepared_ = prepared;
+    setup_generation_ = snapshot.generation;
+    setup_prepared_valid_ = true;
+    prepared_exchange_initialized_ = true;
+    active_generation_ = snapshot.generation;
+    main_config_ = snapshot.config;
+    main_generation_ = snapshot.generation;
+    active_config_ = prepared.requested;
+    copy_runtime_config(active_config_, snapshot.config);
+    audio_requested_config_ = active_config_;
+    structural_boundary_pending_ = false;
+    prepared_claim_pending_ = false;
+    if (!generated_notes_.release_pending()) {
+      release_midi_channel_ = active_config_.midi_channel;
+      release_channel_pending_ = false;
+    }
     active_ = true;
-    status_ = Status::ready;
+    reset_detector_transients();
+    status_ = generated_notes_.panic_hold() ? Status::panic_hold
+                                            : Status::ready;
+    status_dirty_ = false;
     return Steinberg::kResultOk;
   }
   if (!active_ || processing_) {
     return Steinberg::kResultFalse;
   }
+  if (prepared_claim_pending_) {
+    static_cast<void>(prepared_exchange_.cancel(prepared_claim_));
+  }
+  prepared_claim_pending_ = false;
+  prepared_exchange_.reset();
+  prepared_exchange_initialized_ = false;
+  structural_boundary_pending_ = false;
   active_ = false;
-  generated_notes_.deactivate();
+  generated_notes_.release_storage_preserving_pending();
   return Steinberg::kResultOk;
 }
 
@@ -189,43 +294,74 @@ Steinberg::tresult PLUGIN_API M3Component::setProcessing(
     if (processing_) {
       return Steinberg::kResultFalse;
     }
+    reset_detector_transients();
+    if (processing_started_once_ || generated_notes_.release_pending()) {
+      generated_notes_.request_recovery();
+      raise_status(Status::panic_hold);
+    }
     processing_ = true;
+    processing_started_once_ = true;
     return Steinberg::kResultOk;
   }
   if (!processing_) {
     return Steinberg::kResultFalse;
   }
+  generated_notes_.request_release_all();
+  if (generated_notes_.release_pending()) {
+    if (!release_channel_pending_) {
+      release_midi_channel_ = active_config_.midi_channel;
+    }
+    release_channel_pending_ = true;
+  }
+  generated_notes_.request_recovery();
+  reset_detector_transients();
+  raise_status(Status::panic_hold);
   processing_ = false;
   return Steinberg::kResultOk;
 }
 
 Steinberg::tresult PLUGIN_API M3Component::process(
     Steinberg::Vst::ProcessData& data) {
-  if (!processing_ || data.numSamples < 0 ||
+  if (!processing_ || !is_process_mode(data.processMode) ||
+      data.processMode != processSetup.processMode || data.numSamples < 0 ||
       data.numSamples > processSetup.maxSamplesPerBlock ||
       static_cast<std::uint32_t>(data.numSamples) > kMaxHostFrames) {
-    status_ = Status::invalid_input_or_state;
+    raise_status(Status::invalid_input_or_state);
+    generated_notes_.report_output_failure();
+    publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
   if (data.symbolicSampleSize != processSetup.symbolicSampleSize) {
-    status_ = Status::invalid_input_or_state;
+    raise_status(Status::invalid_input_or_state);
+    generated_notes_.report_output_failure();
+    publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
   ParameterBatch parameter_batch;
   if (!read_last_boundary_values(data.inputParameterChanges, data.numSamples,
-                                 requested_config_, parameter_batch)) {
-    status_ = Status::invalid_input_or_state;
+                                 audio_requested_config_, parameter_batch)) {
+    raise_status(Status::invalid_input_or_state);
+    generated_notes_.report_output_failure();
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
   if (parameter_batch.changed) {
-    apply_requested_config(parameter_batch.candidate);
+    if (parameter_batch.structural) {
+      begin_structural_boundary(parameter_batch.candidate);
+    } else {
+      copy_runtime_config(audio_requested_config_, parameter_batch.candidate);
+      copy_runtime_config(active_config_, parameter_batch.candidate);
+    }
   }
-  if (parameter_batch.panic) {
-    panic_ready_dirty_ = true;
+  if (parameter_batch.panic ||
+      panic_requested_.exchange(false, std::memory_order_acq_rel)) {
+    panic_ready_dirty_.store(true, std::memory_order_release);
     request_panic_recovery();
   }
   if (data.numSamples == 0) {
+    if (structural_boundary_pending_) {
+      raise_status(Status::reconfiguring);
+    }
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kResultOk;
   }
@@ -241,7 +377,9 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     publish_parameter_outputs(data.outputParameterChanges);
     return result;
   }
-  status_ = Status::invalid_input_or_state;
+  raise_status(Status::invalid_input_or_state);
+  generated_notes_.report_output_failure();
+  publish_parameter_outputs(data.outputParameterChanges);
   return Steinberg::kInvalidArgument;
 }
 
@@ -254,13 +392,15 @@ Steinberg::tresult PLUGIN_API M3Component::setState(
   if (!load_vst3_state(state, candidate)) {
     return Steinberg::kResultFalse;
   }
-  apply_requested_config(candidate);
-  return Steinberg::kResultOk;
+  return publish_main_config(candidate) ? Steinberg::kResultOk
+                                        : Steinberg::kResultFalse;
 }
 
 Steinberg::tresult PLUGIN_API M3Component::getState(
     Steinberg::IBStream* state) {
-  return initialized_ && save_vst3_state(requested_config_, state)
+  ConfigRequestSnapshot snapshot;
+  return initialized_ && config_request_.snapshot(snapshot) &&
+                 save_vst3_state(snapshot.config, state)
              ? Steinberg::kResultOk
              : Steinberg::kResultFalse;
 }
@@ -362,7 +502,7 @@ Steinberg::tresult PLUGIN_API M3Component::setParamNormalized(
       !canonical_normalized_value(*spec, normalized, plain)) {
     return Steinberg::kResultFalse;
   }
-  PersistentConfig candidate = requested_config_;
+  PersistentConfig candidate = main_config_;
   const ParameterApplyResult result = apply_parameter(candidate, id, plain);
   if (result == ParameterApplyResult::rejected) {
     return Steinberg::kResultFalse;
@@ -372,52 +512,211 @@ Steinberg::tresult PLUGIN_API M3Component::setParamNormalized(
     return Steinberg::kResultFalse;
   }
   if (result == ParameterApplyResult::panic) {
-    panic_ready_dirty_ = true;
-    request_panic_recovery();
+    panic_ready_dirty_.store(true, std::memory_order_release);
+    panic_requested_.store(true, std::memory_order_release);
     static_cast<void>(parameter->setNormalized(0.0));
     return Steinberg::kResultTrue;
   }
-  apply_requested_config(candidate);
+  if (!publish_main_config(candidate)) {
+    return Steinberg::kResultFalse;
+  }
   controller_config_ = candidate;
   static_cast<void>(parameter->setNormalized(normalized));
   return Steinberg::kResultTrue;
 }
 
-void M3Component::apply_requested_config(
+bool M3Component::publish_main_config(
     const PersistentConfig& config) noexcept {
-  requested_config_ = config;
-  dry_passthrough_ = config.dry_passthrough;
+  if (same_persistent_config(main_config_, config)) {
+    main_config_ = config;
+    return true;
+  }
+  const bool structural =
+      !structural_config_equal(main_config_, config);
+  PreparedConfig prepared;
+  if (structural && setup_complete_ &&
+      !stage_prepared_config(config, processSetup.sampleRate, prepared)) {
+    return false;
+  }
+  const std::uint64_t generation = main_generation_ + 1U;
+  if (structural && active_ && prepared_exchange_initialized_ &&
+      !prepared_exchange_.publish(prepared, generation)) {
+    return false;
+  }
+  if (!config_request_.publish(config, generation)) {
+    return false;
+  }
+  main_config_ = config;
+  main_generation_ = generation;
+  if (structural && setup_complete_) {
+    setup_prepared_ = prepared;
+    setup_generation_ = generation;
+    setup_prepared_valid_ = true;
+  }
+  return true;
+}
+
+void M3Component::begin_structural_boundary(
+    const PersistentConfig& config) noexcept {
+  if (structural_boundary_pending_ &&
+      same_persistent_config(pending_structural_config_, config)) {
+    return;
+  }
+  if (prepared_claim_pending_) {
+    static_cast<void>(prepared_exchange_.cancel(prepared_claim_));
+    prepared_claim_pending_ = false;
+  }
+  pending_structural_config_ = config;
+  structural_boundary_pending_ = true;
+  if (!release_channel_pending_) {
+    release_midi_channel_ = active_config_.midi_channel;
+  }
+  release_channel_pending_ = true;
+  generated_notes_.request_release_all();
+  reset_detector_transients();
+  claim_matching_prepared_config();
+}
+
+void M3Component::claim_matching_prepared_config() noexcept {
+  if (!structural_boundary_pending_ || prepared_claim_pending_ ||
+      !prepared_exchange_initialized_) {
+    return;
+  }
+  PreparedConfigExchange::Claim claim;
+  if (!prepared_exchange_.claim_latest(claim)) {
+    raise_status(Status::reconfiguring);
+    return;
+  }
+  const bool matches = claim.config != nullptr &&
+                       claim.config->sample_rate == processSetup.sampleRate &&
+                       structural_config_equal(
+                           claim.config->requested,
+                           pending_structural_config_);
+  if (!matches) {
+    static_cast<void>(prepared_exchange_.cancel(claim));
+    raise_status(Status::reconfiguring);
+    return;
+  }
+  prepared_claim_ = claim;
+  prepared_claim_pending_ = true;
+}
+
+void M3Component::retry_pending_releases(
+    Steinberg::Vst::ProcessData& data) noexcept {
+  const std::uint8_t channel =
+      release_channel_pending_ ? release_midi_channel_
+                               : active_config_.midi_channel;
+  Vst3EventSinkContext context{data.outputEvents, channel};
+  if (!generated_notes_.retry_pending_releases(
+          NoteEventSink{&context, &push_vst3_note})) {
+    raise_status(Status::midi_output_blocked);
+  } else if (!structural_boundary_pending_) {
+    release_channel_pending_ = false;
+  }
+}
+
+void M3Component::commit_prepared_config_if_released() noexcept {
+  if (!structural_boundary_pending_) {
+    return;
+  }
+  if (!prepared_claim_pending_) {
+    claim_matching_prepared_config();
+  }
+  if (!prepared_claim_pending_ || generated_notes_.release_pending()) {
+    raise_status(Status::reconfiguring);
+    return;
+  }
+  const PersistentConfig prepared = prepared_claim_.config->requested;
+  const std::uint64_t generation = prepared_claim_.generation;
+  if (!prepared_exchange_.commit(prepared_claim_)) {
+    static_cast<void>(prepared_exchange_.cancel(prepared_claim_));
+    prepared_claim_pending_ = false;
+    raise_status(Status::invalid_input_or_state);
+    return;
+  }
+  prepared_claim_pending_ = false;
+  active_config_ = prepared;
+  copy_runtime_config(active_config_, pending_structural_config_);
+  audio_requested_config_ = active_config_;
+  active_generation_ = generation;
+  structural_boundary_pending_ = false;
+  release_channel_pending_ = false;
+  if (status_ == Status::reconfiguring) {
+    set_status(Status::ready);
+  }
+}
+
+void M3Component::reset_detector_transients() noexcept {
+  decision_phase_ = 0U;
+  decision_tick_count_ = 0U;
+  ++detector_reset_count_;
+}
+
+void M3Component::advance_decision_phase(std::uint32_t frames) noexcept {
+  const std::uint64_t total =
+      static_cast<std::uint64_t>(decision_phase_) + frames;
+  decision_tick_count_ += total / kDecisionQuantum;
+  decision_phase_ = static_cast<std::uint32_t>(total % kDecisionQuantum);
+}
+
+void M3Component::set_status(Status status) noexcept {
+  if (status_ != status) {
+    status_ = status;
+    status_dirty_ = true;
+  }
+}
+
+void M3Component::raise_status(Status status) noexcept {
+  if (static_cast<std::uint8_t>(status) >
+      static_cast<std::uint8_t>(status_)) {
+    set_status(status);
+  }
+}
+
+void M3Component::update_delivery_status(
+    const NoteDeliveryResult& result) noexcept {
+  if (result.output_blocked) {
+    raise_status(Status::midi_output_blocked);
+  } else if (result.panic_hold) {
+    raise_status(Status::panic_hold);
+  } else if (status_ == Status::midi_output_blocked ||
+             status_ == Status::panic_hold) {
+    set_status(Status::ready);
+  }
 }
 
 void M3Component::publish_parameter_outputs(
     Steinberg::Vst::IParameterChanges* output) noexcept {
-  if (panic_ready_dirty_ &&
+  if (status_dirty_) {
+    const ParameterSpec* spec = find_parameter(kStatusParameterId);
+    const double normalized =
+        spec != nullptr
+            ? plain_to_normalized(*spec, static_cast<double>(status_))
+            : std::numeric_limits<double>::quiet_NaN();
+    if (push_output_value(output, kStatusParameterId, normalized, 0)) {
+      status_dirty_ = false;
+    }
+  }
+  if (panic_ready_dirty_.load(std::memory_order_acquire) &&
       push_output_value(output, kPanicParameterId, 0.0, 0)) {
-    panic_ready_dirty_ = false;
+    panic_ready_dirty_.store(false, std::memory_order_release);
   }
 }
 
 void M3Component::deliver_generated_notes(
     Steinberg::Vst::ProcessData& data, bool finite_input,
-    bool supported_layout) noexcept {
+    bool supported_layout, double selected_peak) noexcept {
   Vst3EventSinkContext context{data.outputEvents,
-                               requested_config_.midi_channel};
-  const NoteDeliveryResult result = generated_notes_.deliver(
+                               active_config_.midi_channel};
+  const NoteDeliveryResult result = generated_notes_.deliver_queued(
       static_cast<std::uint32_t>(data.numSamples),
-      NoteEventSink{&context, &push_vst3_note}, 0.0, finite_input,
+      NoteEventSink{&context, &push_vst3_note}, selected_peak, finite_input,
       supported_layout);
   if (status_ == Status::unsupported_layout ||
       status_ == Status::invalid_input_or_state) {
     return;
   }
-  if (result.output_blocked) {
-    status_ = Status::midi_output_blocked;
-  } else if (result.panic_hold) {
-    status_ = Status::panic_hold;
-  } else if (status_ == Status::midi_output_blocked ||
-             status_ == Status::panic_hold) {
-    status_ = Status::ready;
-  }
+  update_delivery_status(result);
 }
 
 void M3Component::request_panic_recovery() noexcept {
@@ -435,7 +734,8 @@ Steinberg::tresult M3Component::process_samples(
   if (valid_layout) {
     Steinberg::Vst::AudioBusBuffers& input = data.inputs[0];
     Steinberg::Vst::AudioBusBuffers& output = data.outputs[0];
-    valid_layout = input.numChannels == 2 && output.numChannels == 2;
+    valid_layout = input.numChannels == 2 && output.numChannels == 2 &&
+                   (input.silenceFlags & ~Steinberg::uint64{3}) == 0U;
     if constexpr (std::is_same_v<Sample, Steinberg::Vst::Sample32>) {
       input_channels = input.channelBuffers32;
       output_channels = output.channelBuffers32;
@@ -454,23 +754,50 @@ Steinberg::tresult M3Component::process_samples(
                    output_channels[0] != output_channels[1];
   }
   if (!valid_layout) {
-    status_ = Status::unsupported_layout;
+    raise_status(Status::unsupported_layout);
+    if (!release_channel_pending_) {
+      release_midi_channel_ = active_config_.midi_channel;
+    }
+    release_channel_pending_ = true;
     generated_notes_.report_output_failure();
     zero_available_output<Sample>(data);
-    deliver_generated_notes(data, true, false);
+    retry_pending_releases(data);
+    deliver_generated_notes(data, true, false, 0.0);
     generated_notes_.begin_block();
     return Steinberg::kResultOk;
   }
 
+  retry_pending_releases(data);
+  commit_prepared_config_if_released();
+
+  Steinberg::Vst::AudioBusBuffers& input = data.inputs[0];
+  Steinberg::Vst::AudioBusBuffers& output = data.outputs[0];
   const DryPathResult result = process_dry_path(
       input_channels, 2U, output_channels, 2U,
-      static_cast<std::uint32_t>(data.numSamples), dry_passthrough_,
-      DetectorInput::left);
+      static_cast<std::uint32_t>(data.numSamples),
+      audio_requested_config_.dry_passthrough,
+      active_config_.detector_input, input.silenceFlags);
+  output.silenceFlags = result.output_silence_flags;
   if (result.nonfinite_input) {
-    status_ = Status::invalid_input_or_state;
+    raise_status(Status::invalid_input_or_state);
+    if (!release_channel_pending_) {
+      release_midi_channel_ = active_config_.midi_channel;
+    }
+    release_channel_pending_ = true;
     generated_notes_.report_output_failure();
   }
-  deliver_generated_notes(data, !result.nonfinite_input, true);
+  const bool detector_allowed =
+      !result.nonfinite_input && !structural_boundary_pending_ &&
+      !generated_notes_.release_pending() &&
+      !generated_notes_.output_blocked() && !generated_notes_.panic_hold();
+  if (detector_allowed) {
+    advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
+  }
+  if (structural_boundary_pending_) {
+    generated_notes_.begin_block();
+  }
+  deliver_generated_notes(data, !result.nonfinite_input, true,
+                          result.selected_peak);
   generated_notes_.begin_block();
   return Steinberg::kResultOk;
 }
@@ -482,6 +809,7 @@ void M3Component::zero_available_output(
     return;
   }
   Steinberg::Vst::AudioBusBuffers& output = data.outputs[0];
+  output.silenceFlags = 0U;
   const Steinberg::int32 channel_count =
       std::clamp(output.numChannels, Steinberg::int32{0}, Steinberg::int32{2});
   Sample** channels = nullptr;
@@ -558,6 +886,69 @@ bool generated_note_pending_for_test(
   return processor != nullptr &&
          static_cast<M3Component*>(processor)->generated_note_pending_for_test(
              note);
+}
+
+double prepared_sample_rate_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->prepared_sample_rate_for_test()
+             : 0.0;
+}
+
+double prepared_sample_period_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->prepared_sample_period_for_test()
+             : 0.0;
+}
+
+std::size_t transition_capacity_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->transition_capacity_for_test()
+             : 0U;
+}
+
+std::uint32_t decision_phase_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)->decision_phase_for_test()
+             : 0U;
+}
+
+std::uint64_t decision_tick_count_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->decision_tick_count_for_test()
+             : 0U;
+}
+
+std::uint32_t detector_reset_count_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->detector_reset_count_for_test()
+             : 0U;
+}
+
+std::uint64_t active_config_generation_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->active_config_generation_for_test()
+             : 0U;
+}
+
+std::uint8_t active_midi_channel_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->active_midi_channel_for_test()
+             : 0U;
 }
 #endif
 

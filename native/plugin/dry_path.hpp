@@ -12,13 +12,15 @@ struct DryPathResult final {
   bool nonfinite_input{};
   std::uint32_t channels_processed{};
   double selected_peak{};
+  std::uint64_t output_silence_flags{};
 };
 
 template <typename Sample>
 DryPathResult process_dry_path(Sample* const* input, std::uint32_t input_channels,
                                Sample* const* output, std::uint32_t output_channels,
                                std::uint32_t frames, bool passthrough,
-                               DetectorInput detector_input) noexcept {
+                               DetectorInput detector_input,
+                               std::uint64_t input_silence_flags = 0U) noexcept {
   DryPathResult result;
   if (input == nullptr || output == nullptr) {
     return result;
@@ -26,6 +28,7 @@ DryPathResult process_dry_path(Sample* const* input, std::uint32_t input_channel
   const std::uint32_t channel_count =
       std::min<std::uint32_t>(2U, std::min(input_channels, output_channels));
   bool available[2]{};
+  bool nonzero_output[2]{};
   for (std::uint32_t channel = 0; channel < channel_count; ++channel) {
     available[channel] = input[channel] != nullptr && output[channel] != nullptr;
     if (available[channel]) {
@@ -38,7 +41,10 @@ DryPathResult process_dry_path(Sample* const* input, std::uint32_t input_channel
       if (!available[channel]) {
         continue;
       }
-      samples[channel] = input[channel][frame];
+      const bool silent =
+          (input_silence_flags & (std::uint64_t{1} << channel)) != 0U;
+      samples[channel] =
+          silent ? static_cast<Sample>(0) : input[channel][frame];
       if (!std::isfinite(samples[channel])) {
         samples[channel] = static_cast<Sample>(0);
         result.nonfinite_input = true;
@@ -60,7 +66,15 @@ DryPathResult process_dry_path(Sample* const* input, std::uint32_t input_channel
       if (available[channel]) {
         output[channel][frame] =
             passthrough ? samples[channel] : static_cast<Sample>(0);
+        nonzero_output[channel] =
+            nonzero_output[channel] ||
+            (passthrough && samples[channel] != static_cast<Sample>(0));
       }
+    }
+  }
+  for (std::uint32_t channel = 0; channel < channel_count; ++channel) {
+    if (available[channel] && !nonzero_output[channel]) {
+      result.output_silence_flags |= std::uint64_t{1} << channel;
     }
   }
   return result;

@@ -17,6 +17,20 @@ namespace m3 {
 
 bool GeneratedNoteLedger::activate(std::uint32_t max_frames) noexcept {
   deactivate();
+  return allocate_storage(max_frames);
+}
+
+bool GeneratedNoteLedger::activate_preserving_pending(
+    std::uint32_t max_frames) noexcept {
+  storage_.reset();
+  capacity_ = 0;
+  size_ = 0;
+  max_frames_ = 0;
+  invalid_transition_ = false;
+  return allocate_storage(max_frames);
+}
+
+bool GeneratedNoteLedger::allocate_storage(std::uint32_t max_frames) noexcept {
   if (max_frames == 0 || max_frames > kMaxHostFrames) {
     return false;
   }
@@ -38,6 +52,15 @@ bool GeneratedNoteLedger::activate(std::uint32_t max_frames) noexcept {
   capacity_ = requested_capacity;
   max_frames_ = max_frames;
   return true;
+}
+
+void GeneratedNoteLedger::release_storage_preserving_pending() noexcept {
+  request_release_all();
+  storage_.reset();
+  capacity_ = 0;
+  size_ = 0;
+  max_frames_ = 0;
+  invalid_transition_ = false;
 }
 
 void GeneratedNoteLedger::deactivate() noexcept {
@@ -199,6 +222,14 @@ void GeneratedNoteLedger::finish_hold(double selected_peak, bool finite_input,
 NoteDeliveryResult GeneratedNoteLedger::deliver(
     std::uint32_t frames, NoteEventSink sink, double selected_peak,
     bool finite_input, bool supported_layout) noexcept {
+  static_cast<void>(retry_pending_releases(sink));
+  return deliver_queued(frames, sink, selected_peak, finite_input,
+                        supported_layout);
+}
+
+NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
+    std::uint32_t frames, NoteEventSink sink, double selected_peak,
+    bool finite_input, bool supported_layout) noexcept {
   if (!storage_ || frames == 0 || frames > max_frames_) {
     invalid_transition_ = true;
     return NoteDeliveryResult{output_blocked_, panic_hold_, false};
@@ -210,9 +241,7 @@ NoteDeliveryResult GeneratedNoteLedger::deliver(
     }
   }
 
-  const bool was_blocked = output_blocked_;
-  const bool cleanup_succeeded = retry_pending_releases(sink);
-  if (cleanup_succeeded && !was_blocked && !output_blocked_) {
+  if (!release_pending() && !output_blocked_) {
     for (std::size_t index = 0; index < size_; ++index) {
       const VoiceTransition& event = storage_[index];
       if (event.sample_offset >= frames) {

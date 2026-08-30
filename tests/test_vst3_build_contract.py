@@ -201,6 +201,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/generated_note_ledger.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
+                    "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/vst3_component.cpp",
                     "native/vst3/vst3_event_sink.cpp",
                     "native/vst3/vst3_factory.cpp",

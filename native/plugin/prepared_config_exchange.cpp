@@ -4,7 +4,14 @@
 #include <cstring>
 #include <limits>
 
+#include "m3/constants.hpp"
+#include "m3/parameter_contract.hpp"
+
 namespace {
+
+#if defined(M3_TESTING)
+std::atomic<std::size_t> prepared_stage_count{};
+#endif
 
 constexpr std::size_t kDetectorInput = 0;
 constexpr std::size_t kProfileMode = 1;
@@ -32,6 +39,24 @@ double bits_double(std::uint64_t bits) noexcept {
   double value = 0.0;
   std::memcpy(&value, &bits, sizeof(value));
   return value;
+}
+
+bool valid_requested_config(const m3::PersistentConfig& config) noexcept {
+  for (std::size_t index = 0; index < m3::kPersistentParameterCount; ++index) {
+    const m3::ParameterId id = m3::persistent_parameter_ids()[index];
+    const m3::ParameterSpec* spec = m3::find_parameter(id);
+    double value = 0.0;
+    if (spec == nullptr ||
+        !m3::parameter_value(config, m3::Status::ready, id, value)) {
+      return false;
+    }
+    const double canonical = m3::canonical_plain(*spec, value);
+    if (!std::isfinite(value) || !std::isfinite(canonical) ||
+        std::abs(value - canonical) > 1.0e-12) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace
@@ -129,6 +154,17 @@ bool AtomicConfigRequest::publish(const PersistentConfig& config,
   return true;
 }
 
+void AtomicConfigRequest::reset(const PersistentConfig& config,
+                                std::uint64_t generation) noexcept {
+  const std::uint64_t sequence = sequence_.load(std::memory_order_relaxed);
+  const std::uint64_t even_sequence =
+      (sequence & 1U) == 0U ? sequence : sequence + 1U;
+  sequence_.store(even_sequence + 1U, std::memory_order_relaxed);
+  store_fields(config);
+  generation_.store(generation, std::memory_order_relaxed);
+  sequence_.store(even_sequence + 2U, std::memory_order_release);
+}
+
 bool AtomicConfigRequest::snapshot(ConfigRequestSnapshot& destination,
                                    std::uint32_t maximum_attempts) const noexcept {
   for (std::uint32_t attempt = 0; attempt < maximum_attempts; ++attempt) {
@@ -168,17 +204,33 @@ void AtomicConfigRequest::release_writer_for_test() noexcept {
 bool stage_prepared_config(const PersistentConfig& requested,
                            double sample_rate,
                            PreparedConfig& destination) noexcept {
-  if (!std::isfinite(sample_rate) || sample_rate <= 0.0 ||
-      static_cast<std::uint8_t>(requested.detector_input) > 2U ||
-      static_cast<std::uint8_t>(requested.profile_mode) > 1U ||
-      static_cast<std::uint8_t>(requested.velocity_mode) > 1U) {
+#if defined(M3_TESTING)
+  prepared_stage_count.fetch_add(1U, std::memory_order_relaxed);
+#endif
+  if (!std::isfinite(sample_rate) || sample_rate <= 0.0) {
+    return false;
+  }
+  const double sample_period = 1.0 / sample_rate;
+  const double decision_period =
+      static_cast<double>(m3::kDecisionQuantum) / sample_rate;
+  if (!std::isfinite(sample_period) || sample_period <= 0.0 ||
+      !std::isfinite(decision_period) || decision_period <= 0.0 ||
+      !valid_requested_config(requested)) {
     return false;
   }
   destination = {};
   destination.requested = requested;
   destination.sample_rate = sample_rate;
+  destination.sample_period = sample_period;
+  destination.decision_period = decision_period;
   return true;
 }
+
+#if defined(M3_TESTING)
+std::size_t prepared_config_stage_count_for_test() noexcept {
+  return prepared_stage_count.load(std::memory_order_relaxed);
+}
+#endif
 
 bool structural_config_equal(const PersistentConfig& left,
                              const PersistentConfig& right) noexcept {

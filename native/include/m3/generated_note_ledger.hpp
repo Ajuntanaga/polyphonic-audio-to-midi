@@ -27,13 +27,19 @@ class GeneratedNoteLedger final {
   GeneratedNoteLedger& operator=(const GeneratedNoteLedger&) = delete;
 
   bool activate(std::uint32_t max_frames) noexcept;
+  bool activate_preserving_pending(std::uint32_t max_frames) noexcept;
   void deactivate() noexcept;
+  void release_storage_preserving_pending() noexcept;
   void begin_block() noexcept;
   bool queue_transition(const VoiceTransition& transition,
                         std::uint32_t frames) noexcept;
   void request_release_all() noexcept;
   void report_output_failure() noexcept;
   void request_recovery() noexcept;
+  bool retry_pending_releases(NoteEventSink sink) noexcept;
+  NoteDeliveryResult deliver_queued(std::uint32_t frames, NoteEventSink sink,
+                                    double selected_peak, bool finite_input,
+                                    bool supported_layout) noexcept;
   NoteDeliveryResult deliver(std::uint32_t frames, NoteEventSink sink,
                              double selected_peak, bool finite_input,
                              bool supported_layout) noexcept;
@@ -58,9 +64,9 @@ class GeneratedNoteLedger final {
   static bool push(NoteEventSink sink,
                    const VoiceTransition& transition) noexcept;
   void enter_blocked() noexcept;
-  bool retry_pending_releases(NoteEventSink sink) noexcept;
   void finish_hold(double selected_peak, bool finite_input,
                    bool supported_layout) noexcept;
+  bool allocate_storage(std::uint32_t max_frames) noexcept;
 
   std::unique_ptr<VoiceTransition[]> storage_{};
   std::size_t capacity_{};
