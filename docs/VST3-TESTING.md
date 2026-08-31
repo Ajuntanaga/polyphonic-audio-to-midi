@@ -316,6 +316,71 @@ e84591d477131c25565b5ab0d96211e16f13f75b396e4d9defa37befc5091f34  pressure.json
 manifest digest: 98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958
 ```
 
+### Post-seal read-only diagnosis
+
+- The 2026-08-31 diagnosis used only the immutable row, staged sources,
+  installed REAPER API documentation, prior harness evidence, and local system
+  logs. It did not launch REAPER, retry the row, alter the timeout, or edit the
+  probe, adapter, runner, profile, or assertion script.
+- The parameter assertions use the wrong unit domain for the VST3 host
+  surface. The script compares `TrackFX_GetParamEx` values against plain units
+  such as A4 `400..480`, trim `-24..24`, and channel `1..16`, then passes plain
+  values to `TrackFX_SetParam`. REAPER exposed this VST3 surface in normalized
+  `0..1` units. All fourteen `state.tsv` rows exactly match the resulting
+  normalized/default pattern, including A4 `0.5`, trim `0.5`, lowest note
+  `8/84`, highest note `60/84`, and fixed velocity `99/126`; writes greater
+  than one were rejected or left the default. The reporter's diagnostic
+  parameters would have the same unit-domain problem if that phase were
+  reached.
+- The audio/MIDI observer transport was not valid. Five preserved metrics are
+  exact cell-address values: source fault `2202`, capture overflow `257`,
+  output nonfinite `2051`, synth peak `2100`, and dry error
+  `8704 + (32 - 1) = 8735`. Every one of the 96 recorded event rows also
+  follows the address formula exactly: offset is `absolute + 1`, pitch is
+  `absolute + 3`, and velocity is `absolute + 4`. These values are impossible
+  under the JSFX writer ranges and are not plug-in output.
+- The assertion script has no shared-memory magic, source-ready generation,
+  heartbeat/acknowledgement, reset readback, or observer-range gate. It
+  therefore accepted the address value `2049` as `DRY_COUNT >= 320`, accepted
+  address value `256` as a full capture count, and cascaded through several
+  phases using fabricated events before `bypass-held` finally timed out. The
+  established JSFX matrix runner has an init/ready/heartbeat handshake; Task
+  14's VST3 capability harness did not carry that protection forward.
+- The probe diagnostic report remains all `-1` because the lifecycle reporter
+  phase was never reached, not because those diagnostics were proven missing.
+  The exact underlying reason that the shared observer segment produced the
+  address pattern cannot be recovered from this row because no readiness or
+  attachment diagnostic was recorded.
+- `suite-fail` is not the guard's exact completion sentinel and the assertion
+  script closes REAPER only after `suite-finish`. The failure therefore left
+  the disposable process open until the 45-second guard returned 124. The
+  journal records 12.207 CPU-seconds over 45.151 seconds and a 122.2 MB memory
+  peak; the preserved pressure record and cleanup show no host-pressure or
+  crash signature.
+- The current lexical source-contract test still passes despite both defects.
+  This confirms an offline test gap rather than validating the failed runtime
+  path. The sealed row remains `infrastructure-invalid` and proves no
+  production-adapter defect or capability result.
+
+### Recovery boundary
+
+No recovery implementation or launch is authorized by this diagnosis. A
+separately approved, non-launching TDD amendment should first require:
+
+1. an explicit VST3 normalized/plain conversion layer for parameter writes,
+   reads, state assertions, formatted values, and diagnostic counters;
+2. a shared-memory magic/generation/heartbeat/ack handshake, reset readback,
+   legal-range validation, and immediate fail-closed stop before any plug-in
+   assertion when the observer is not ready;
+3. a terminal failure path that closes the disposable instance or publishes a
+   separately classified failure sentinel, so assertion failures become
+   `fail` rather than guard timeouts;
+4. offline tests that inject normalized VST3 values and the exact
+   `gmem_read(index) == index` pattern and prove that neither can advance an
+   audio phase; and
+5. a new evidence namespace and fresh authorization for any later real REAPER
+   validation. The sealed `44100-32` row is never overwritten or retried.
+
 ### Cleanup and decision
 
 - The post-row snapshot recorded 26863.25 MiB available, load 3.16,
@@ -324,5 +389,6 @@ manifest digest: 98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa095
 - `python3 tools/run_native_vst3_probe.py --check` fails closed on the sealed
   invalid first row and nineteen missing tail rows, as required.
 - Gate C5 did not pass. Task 16 and the remaining detector-port/release tasks
-  are blocked. This result authorizes neither a retry nor an adapter, runner,
-  timeout, profile, or assertion-script edit.
+  are blocked. The only safe next design action is a separately approved,
+  non-launching harness-recovery amendment. This result authorizes neither a
+  retry nor an adapter, runner, timeout, profile, or assertion-script edit.

@@ -1,8 +1,39 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-30T17:45:26-07:00
+Updated: 2026-08-31T00:10:24-07:00
 
-## VST3 Task 15 sealed infrastructure-invalid — Task 16 blocked
+## VST3 Task 15 sealed; harness diagnosis complete — Task 16 blocked
+
+- A post-seal read-only diagnosis on 2026-08-31 made no REAPER launch, retry,
+  timeout change, or implementation edit. It confirms VST3 assertion-harness
+  defects sufficient to invalidate the row; it does not adjudicate the sealed
+  production adapter.
+- The script treated REAPER's normalized VST3 parameter values as plain units.
+  All fourteen preserved state rows exactly match the normalized/default
+  pattern, so the parameter/state failures and subsequent configuration were
+  not valid capability assertions. Diagnostic parameters would have the same
+  unit-domain defect if the reporter phase were reached.
+- The observer evidence is an exact memory-address pattern, not audio or MIDI:
+  all 96 event rows match their source cell offsets, while source fault `2202`,
+  capture overflow `257`, output nonfinite `2051`, synth peak `2100`, and dry
+  error `8735` match their cells or final reference address. The script lacked
+  the init/ready/heartbeat handshake used by the established JSFX harness and
+  advanced on those impossible values.
+- `suite-fail` was not the guard's `suite-finish` completion sentinel and the
+  script did not close on failure, so the already-failed row remained open
+  until the 45-second return 124. Local journal evidence records only 12.207
+  CPU-seconds and 122.2 MB peak memory, with no pressure or crash signature.
+- The exact reason the observer attachment yielded address values is not
+  recoverable because the row recorded no readiness/attachment diagnostic.
+  The all-`-1` probe report means the reporter phase was never reached, not
+  that the diagnostics were absent. The existing lexical source-contract test
+  still passes, confirming the offline test gap.
+- Gate C5 remains sealed `infrastructure-invalid`; the first row and nineteen
+  unlaunched rows remain immutable and are not retried. The only safe next
+  action is to draft and separately approve a non-launching TDD recovery
+  amendment for normalized parameter handling, fail-closed observer readiness,
+  terminal failure classification, and exact regression tests. No such
+  implementation is authorized yet.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -903,8 +934,9 @@ REAPER process behind.
    `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`,
    zero remaining REAPER process/window, and unchanged active workspace.
 3. Do not retry 44.1 kHz/block 32 and do not launch the nineteen-row tail.
-   Task 16 remains blocked. The partial assertion values do not authorize a
-   runner, adapter, profile, timeout, or probe edit.
+   Task 16 remains blocked. Use the post-seal diagnosis only to scope a
+   separately approved non-launching harness-recovery amendment; it does not
+   authorize a runner, adapter, profile, timeout, probe, or assertion edit.
 4. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
    probe, and historical adapter source as later tasks extend the verified
    minimal VST3 target.
@@ -918,8 +950,10 @@ task afterward.
 ## Remaining plan actions and prerequisite gates
 
 - VST3 Task 15 is sealed `infrastructure-invalid` after one launched row and a
-  nineteen-row unlaunched tail. Tasks 16-24 are blocked; no retry or corrective
-  implementation is authorized by this evidence.
+  nineteen-row unlaunched tail. The read-only diagnosis confirms normalized
+  parameter-unit misuse, an unguarded observer address pattern, and failure
+  completion misclassification in the harness. Tasks 16-24 are blocked; no
+  retry or corrective implementation is authorized by this evidence.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
