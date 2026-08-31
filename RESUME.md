@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-30T16:48:36-07:00
+Updated: 2026-08-30T17:35:56-07:00
 
-## VST3 Tasks 1-13 sealed — disposable audio-trigger probe next
+## VST3 Tasks 1-14 sealed — Task 15 Gate C5 authorization required
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -280,6 +280,32 @@ Updated: 2026-08-30T16:48:36-07:00
   the limit was not loosened, and the final dry plan passed after active PSI
   returned to zero. No persistent bundle, live profile/project, hardware/input,
   or REAPER action was used.
+- Task 14 is sealed at commit `848bf80` (`test: add audio-triggered VST3
+  capability probe`). The test-only factory selects a separate probe processor
+  while the production factory and source graph remain free of the probe
+  identity, trigger protocol, diagnostics, and capability schedule.
+- The probe decodes only a bounded stereo-audio test code at the fixed
+  64-sample cadence. It emits deterministic ordinary VST3 note-on/off events,
+  validates the complete process contract and every input sample before
+  decoding, latches malformed/overflow conditions, and publishes fixed atomic
+  diagnostics only once per processing start with a four-attempt bound.
+- The disposable JSFX source and ReaScript verify exact VST3 discovery,
+  parameters, write protection, state, dry pass/mute, float32/float64 audio
+  triggering, lifecycle cleanup, deletion silence, and global diagnostics.
+  A disabled reporter is reserved before playback so module-static evidence
+  survives deletion of the tested instance; failure never publishes the suite
+  sentinel or self-closes the disposable host.
+- Fresh Task 14 gates pass 101/101 native tests in debug, ASan/UBSan, and TSan;
+  all 164 repository Python tests; all 30 source contracts; the native source
+  validator; exact probe and production builds; and Git whitespace checks.
+  The official Steinberg validator classifies the probe `pass` with return
+  code zero and no automatic retry. Its bundle digest is
+  `e21f55b673e529feb35620bb80dcc1426671fb066e7a761739f9ed86bcaa4018`.
+- Task 15's non-launching preauthorization gates are green: native debug and
+  sanitizer suites, release probe build, official probe validation, 48 focused
+  guard/runner tests, and a real dry plan containing exactly twenty ordered
+  rows from 44.1 kHz/32 through 96 kHz/512 all pass. The final process scan
+  found zero REAPER processes. Gate C5 remains closed; no row was launched.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -326,9 +352,10 @@ Updated: 2026-08-30T16:48:36-07:00
   `02ba96f`, Task 10's fail-closed VST3 note delivery passed at `69f3ab3`, and
   Task 11's bounded host-rate processing lifecycle passed at `db32720`, and
   Task 12's offline adapter and official-validator seal passed at `7c02188`,
-  and Task 13's disposable VST3 staging/guard matrix passed at `f3c3fe2`. The
-  next action is Task 14's offline audio-trigger capability probe; it begins
-  with native RED tests and does not launch REAPER.
+  Task 13's disposable VST3 staging/guard matrix passed at `f3c3fe2`, and Task
+  14's offline audio-trigger capability probe passed at `848bf80`. The next
+  action is to obtain the exact fresh Task 15 Gate C5 authorization; no REAPER
+  launch is permitted before it.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -834,24 +861,25 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 13 feature commit `f3c3fe2`, Task 12 feature commit `7c02188`,
+1. Verify Task 14 feature commit `848bf80`, Task 13 feature commit `f3c3fe2`,
+   Task 12 feature commit `7c02188`,
    SDK manifest SHA-256
    `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`,
    exact production bundle digest
    `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`,
    and the immutable one-run Gate O4 record. The failed CLAP Task 10 evidence
    remains historical input and must not be retried.
-2. Execute VST3 Task 14 next under guarded serial TDD: build the test-only
-   audio-trigger processor, offline native tests, bounded JSFX source, and
-   disposable assertion script. Do not launch REAPER in Task 14.
-3. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
+2. Stop at Task 15 Gate C5 and request fresh authorization for exactly twenty
+   guarded disposable REAPER launches. Prior general authorization does not
+   open this gate.
+3. Only after that exact authorization, execute the immutable twenty-row
+   44.1/48/88.2/96 kHz by 32/64/128/256/512 matrix once, serially, in fresh
+   disposable profiles, backgrounded on workspace 5, with no retry and an
+   immediate tail stop on the first failure, timeout, invalid evidence, or
+   pressure abort.
+4. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
    probe, and historical adapter source as later tasks extend the verified
    minimal VST3 target.
-4. Preserve but do not execute the future twenty-row 44.1/48/88.2/96 kHz by
-   32/64/128/256/512 capability matrix, serial guarded background launches on
-   workspace 5, host-supplied sample rate, and stop-on-first-failure behavior.
-   Stop at Task 15 Gate C5 and request fresh authorization for exactly those
-   twenty launches; prior general authorization does not open it.
 5. Keep every REAPER launch, clean-DI/live input, performance run, persistent
    installation, live project, custom GUI, and REAPER MCP behind its named
    gate.
@@ -861,7 +889,7 @@ task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 plan Tasks 14-24 remain ordered and evidence-gated. Task 15 Gate C5 is
+- VST3 plan Tasks 15-24 remain ordered and evidence-gated. Task 15 Gate C5 is
   not open until the user explicitly authorizes exactly twenty guarded
   disposable REAPER launches at that gate.
 - Persistent VST3 installation at I9 remains conditional on every required
