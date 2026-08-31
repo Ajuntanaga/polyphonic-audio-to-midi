@@ -44,6 +44,12 @@ NATIVE_CAPABILITY_RUNNER = (
     ROOT / "Scripts/tests/ajuntanaga_M3 Native CLAP Capability.lua"
 )
 VST3_BUILD_ROOT = (ROOT / "build/vst3/release/VST3").resolve()
+VST3_CAPABILITY_SOURCE = (
+    ROOT / "Effects/tests/ajuntanaga_M3 Native VST3 Capability Source.jsfx"
+)
+VST3_CAPABILITY_RUNNER = (
+    ROOT / "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua"
+)
 
 
 def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
@@ -99,6 +105,114 @@ class SourceContractTests(unittest.TestCase):
         self.assertLess(report_read, suite_finish)
         self.assertIn("reaper.defer(poll_report)", runner)
         self.assertNotIn(".config/REAPER", runner)
+
+    def test_native_vst3_capability_is_audio_triggered_bounded_and_exact(self):
+        source = VST3_CAPABILITY_SOURCE.read_text(encoding="utf-8")
+        runner = VST3_CAPABILITY_RUNNER.read_text(encoding="utf-8")
+        capture = MIDI_CAPTURE.read_text(encoding="utf-8")
+
+        for contract in (
+            "desc:ajuntanaga/M3 Native VST3 Capability Source",
+            "options:gmem=m3_poly_midi_tests_v1",
+            "slider1:0<0,5,1>-Phase",
+            "slider2:0<0,1048576,1>-Phase sample",
+            "slider3:0<0,384000,1>-Host sample rate",
+            "slider4:0<0,16384,1>-Host block size",
+            "M3_VST3_COMMAND = 2210",
+            "M3_VST3_PHASE_SAMPLE = 2212",
+            "m3_vst3_left = 0.25",
+            "m3_vst3_right = -0.25",
+            "m3_vst3_left = -0.75",
+            "m3_vst3_right = -0.75",
+            "spl0 = m3_vst3_left",
+            "spl1 = m3_vst3_right",
+        ):
+            self.assertIn(contract, source)
+        for forbidden in (
+            "midisend",
+            "midirecv",
+            "file_",
+            "http_",
+            "tcp_",
+            "while(",
+            "loop(",
+            ".config/REAPER",
+        ):
+            self.assertNotIn(forbidden, source.lower())
+
+        for contract in (
+            "M3_CAPTURE_OUTPUT_PEAK = 2050",
+            "M3_CAPTURE_NONFINITE = 2051",
+            "gmem[M3_CAPTURE_OUTPUT_PEAK] = max",
+            "gmem[M3_CAPTURE_NONFINITE] = 1",
+        ):
+            self.assertIn(contract, capture)
+
+        for contract in (
+            'TrackFX_AddByName(track, "VST3: M3 Polyphonic Audio to MIDI Probe"',
+            'reporter_fx = reaper.TrackFX_AddByName(track, "VST3: M3 Polyphonic Audio to MIDI Probe", false, -1)',
+            'TrackFX_GetNamedConfigParm(track, probe_fx, "fx_type")',
+            'TrackFX_GetNamedConfigParm(track, probe_fx, "is_instrument")',
+            "reaper.TrackFX_GetParamIdent",
+            "reaper.TrackFX_GetParamFromIdent",
+            "reaper.TrackFX_GetParameterStepSizes",
+            "reaper.TrackFX_GetFormattedParamValue",
+            "local PERSISTENT_PARAMETER_COUNT = 14",
+            "reaper.GetTrackStateChunk",
+            "reaper.SetTrackStateChunk",
+            "reaper.TrackFX_SetEnabled(track, probe_fx, false)",
+            "reaper.TrackFX_SetEnabled(track, probe_fx, true)",
+            "reaper.TrackFX_SetEnabled(track, reporter_fx, false)",
+            "reaper.TrackFX_Delete(track, probe_fx)",
+            'atomic_write(result_directory .. "/capability.tsv"',
+            'atomic_write(result_directory .. "/events.tsv"',
+            'atomic_write(result_directory .. "/state.tsv"',
+            'atomic_write(result_directory .. "/probe-vst3.tsv"',
+            'write_phase("suite-finish")',
+            "reaper.Main_OnCommand(40004, 0)",
+        ):
+            self.assertIn(contract, runner)
+        self.assertNotIn("EXPECTED_PARAMETER_COUNT", runner)
+        self.assertNotIn("CLAP:", runner)
+        self.assertNotIn("MIDI trigger", runner)
+        self.assertNotIn(".config/REAPER", runner)
+        self.assertIn(
+            '"phase\\tindex\\tabsolute_sample\\toffset\\ttype\\tchannel\\tpitch\\tvelocity\\tnote_id"',
+            runner,
+        )
+        self.assertIn(
+            '"index\\tstable_id\\tname\\tdefault\\tmutated\\trestored"',
+            runner,
+        )
+        success_gate = runner.index("if #failures == 0 then")
+        suite_finish = runner.index('write_phase("suite-finish")')
+        close_process = runner.index("reaper.Main_OnCommand(40004, 0)")
+        self.assertLess(success_gate, suite_finish)
+        self.assertLess(suite_finish, close_process)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            staged = pathlib.Path(temporary) / "reaper-test"
+            stage(
+                ROOT,
+                staged,
+                sample_rate=44100,
+                block_size=32,
+                vst3_path=VST3_BUILD_ROOT,
+            )
+            self.assertEqual(
+                (
+                    staged
+                    / "Effects/tests/ajuntanaga_M3 Native VST3 Capability Source.jsfx"
+                ).read_bytes(),
+                VST3_CAPABILITY_SOURCE.read_bytes(),
+            )
+            self.assertEqual(
+                (
+                    staged
+                    / "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua"
+                ).read_bytes(),
+                VST3_CAPABILITY_RUNNER.read_bytes(),
+            )
 
     def test_disposable_staging_contains_only_approved_runtime_payload(self):
         with tempfile.TemporaryDirectory() as temporary:

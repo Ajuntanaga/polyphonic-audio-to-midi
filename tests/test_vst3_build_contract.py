@@ -206,6 +206,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/vst3/vst3_event_sink.cpp",
                     "native/vst3/vst3_factory.cpp",
                     "native/vst3/vst3_parameter_bridge.cpp",
+                    "native/vst3/vst3_probe_processor.cpp",
                     "native/vst3/vst3_state_stream.cpp",
                     (
                         "third_party/vst3sdk/public.sdk/source/main/"
@@ -490,6 +491,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 "vst3_event_sink.cpp",
                 "vst3_factory.cpp",
                 "vst3_parameter_bridge.cpp",
+                "vst3_probe_processor.cpp",
                 "vst3_state_stream.cpp",
             },
         )

@@ -724,6 +724,11 @@ void M3Component::request_panic_recovery() noexcept {
   generated_notes_.request_recovery();
 }
 
+bool M3Component::queue_generated_transition(
+    const VoiceTransition& transition, std::uint32_t frames) noexcept {
+  return generated_notes_.queue_transition(transition, frames);
+}
+
 template <typename Sample>
 Steinberg::tresult M3Component::process_samples(
     Steinberg::Vst::ProcessData& data) noexcept {

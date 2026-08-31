@@ -65,6 +65,10 @@ set(M3_VST3_ADAPTER_SOURCES
     third_party/vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
 )
 
+set(M3_VST3_PROBE_PROCESSOR_SOURCES
+    native/vst3/vst3_probe_processor.cpp
+)
+
 set(M3_NATIVE_TEST_SOURCES
     native/tests/fake_clap_host.cpp
     native/tests/fake_vst3_host.cpp
@@ -89,6 +93,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp
     native/tests/test_vst3_processing.cpp
+    native/tests/test_vst3_probe.cpp
     native/tests/test_vst3_reconfiguration.cpp
     native/tests/test_vst3_realtime.cpp
     native/tests/test_vst3_setup.cpp
@@ -100,6 +105,7 @@ add_executable(m3_native_tests
     ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_VST3_ADAPTER_SOURCES}
+    ${M3_VST3_PROBE_PROCESSOR_SOURCES}
     ${M3_NATIVE_TEST_SOURCES}
 )
 target_compile_definitions(m3_native_tests PRIVATE M3_TESTING)
@@ -151,6 +157,7 @@ smtg_add_vst3plugin(m3_vst3_probe
         ${M3_NATIVE_CORE_SOURCES}
         ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
         ${M3_VST3_ADAPTER_SOURCES}
+        ${M3_VST3_PROBE_PROCESSOR_SOURCES}
 )
 target_compile_definitions(m3_vst3_probe PRIVATE M3_VST3_PROBE_BUILD)
 target_include_directories(m3_vst3_probe PRIVATE

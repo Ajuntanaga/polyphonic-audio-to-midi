@@ -15,12 +15,16 @@ M3_CAPTURE_EVENT_CELL_SIZE = 5;
 M3_CAPTURE_MAX_EVENTS = 256;
 M3_CAPTURE_DRY_ERROR = 2048;
 M3_CAPTURE_DRY_COUNT = 2049;
+M3_CAPTURE_OUTPUT_PEAK = 2050;
+M3_CAPTURE_NONFINITE = 2051;
 M3_CAPTURE_REFERENCE_RING = 4096;
 M3_CAPTURE_REFERENCE_CAPACITY = 2048;
 M3_CAPABILITY_ACTIVE = 2201;
 M3_CAPABILITY_REFERENCE_LEFT = 8192;
 M3_CAPABILITY_REFERENCE_RIGHT = 8704;
 M3_CAPABILITY_REFERENCE_CAPACITY = 512;
+gmem[M3_CAPTURE_OUTPUT_PEAK] = 0;
+gmem[M3_CAPTURE_NONFINITE] = 0;
 
 @block
 m3_capture_sample_offset = 0;
@@ -63,6 +67,16 @@ while(midirecv(
 );
 
 @sample
+m3_capture_output_peak = max(abs(spl0), abs(spl1));
+m3_capture_output_peak == m3_capture_output_peak &&
+m3_capture_output_peak < 1000000000000 ? (
+  gmem[M3_CAPTURE_OUTPUT_PEAK] = max(
+    gmem[M3_CAPTURE_OUTPUT_PEAK],
+    m3_capture_output_peak
+  );
+) : (
+  gmem[M3_CAPTURE_NONFINITE] = 1;
+);
 m3_capture_capacity = gmem[M3_CAPABILITY_ACTIVE] ?
   M3_CAPABILITY_REFERENCE_CAPACITY : M3_CAPTURE_REFERENCE_CAPACITY;
 m3_capture_sample_offset < m3_capture_capacity ? (

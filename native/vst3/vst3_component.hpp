@@ -13,7 +13,7 @@
 
 namespace m3::vst3 {
 
-class M3Component final : public Steinberg::Vst::SingleComponentEffect {
+class M3Component : public Steinberg::Vst::SingleComponentEffect {
  public:
   M3Component() noexcept;
   ~M3Component() override;
@@ -113,6 +113,10 @@ class M3Component final : public Steinberg::Vst::SingleComponentEffect {
     return active_config_.midi_channel;
   }
 #endif
+
+ protected:
+  bool queue_generated_transition(const VoiceTransition& transition,
+                                  std::uint32_t frames) noexcept;
 
  private:
   template <typename Sample>

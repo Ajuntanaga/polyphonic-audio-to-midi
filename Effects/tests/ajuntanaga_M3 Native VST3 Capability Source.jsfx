@@ -1,0 +1,132 @@
+desc:ajuntanaga/M3 Native VST3 Capability Source
+tags:test generator audio analysis
+options:gmem=m3_poly_midi_tests_v1
+slider1:0<0,5,1>-Phase
+slider2:0<0,1048576,1>-Phase sample
+slider3:0<0,384000,1>-Host sample rate
+slider4:0<0,16384,1>-Host block size
+slider5:0<0,1,1>-Fault
+in_pin:none
+out_pin:left
+out_pin:right
+
+@init
+M3_CAPABILITY_ACTIVE = 2201;
+M3_CAPABILITY_FAULT = 2202;
+M3_CAPABILITY_ACTUAL_RATE = 2203;
+M3_CAPABILITY_ACTUAL_BLOCK = 2204;
+M3_VST3_COMMAND = 2210;
+M3_VST3_RESET = 2211;
+M3_VST3_PHASE_SAMPLE = 2212;
+M3_CAPABILITY_REFERENCE_LEFT = 8192;
+M3_CAPABILITY_REFERENCE_RIGHT = 8704;
+M3_CAPABILITY_REFERENCE_CAPACITY = 512;
+M3_CAPTURE_COUNTER = 128;
+
+m3_vst3_last_command = -1;
+m3_vst3_last_reset = -1;
+m3_vst3_phase_sample = 0;
+gmem[M3_CAPABILITY_ACTIVE] = 1;
+gmem[M3_CAPABILITY_FAULT] = 0;
+gmem[M3_CAPTURE_COUNTER] = 0;
+
+@block
+m3_vst3_block_offset = 0;
+m3_vst3_command = floor(gmem[M3_VST3_COMMAND]);
+m3_vst3_reset = floor(gmem[M3_VST3_RESET]);
+m3_vst3_command != m3_vst3_last_command ||
+m3_vst3_reset != m3_vst3_last_reset ? (
+  m3_vst3_last_command = m3_vst3_command;
+  m3_vst3_last_reset = m3_vst3_reset;
+  m3_vst3_phase_sample = 0;
+);
+m3_vst3_command < 0 || m3_vst3_command > 5 ||
+samplesblock > M3_CAPABILITY_REFERENCE_CAPACITY ? (
+  gmem[M3_CAPABILITY_FAULT] = 1;
+);
+gmem[M3_CAPABILITY_ACTUAL_RATE] = srate;
+gmem[M3_CAPABILITY_ACTUAL_BLOCK] = samplesblock;
+slider1 = m3_vst3_command;
+slider2 = m3_vst3_phase_sample;
+slider3 = srate;
+slider4 = samplesblock;
+slider5 = gmem[M3_CAPABILITY_FAULT];
+
+@sample
+m3_vst3_dry = (m3_vst3_phase_sample % 31 - 15) / 1024;
+m3_vst3_left = m3_vst3_dry;
+m3_vst3_right = -m3_vst3_dry;
+
+m3_vst3_phase_sample % 64 == 0 ? (
+  m3_vst3_left = 0;
+  m3_vst3_right = 0;
+
+  m3_vst3_command == 1 ? (
+    m3_vst3_phase_sample == 64 ? (
+      m3_vst3_left = 0.25;
+      m3_vst3_right = -0.25;
+    );
+    m3_vst3_phase_sample == 128 ? (
+      m3_vst3_left = -0.5;
+      m3_vst3_right = 0.5;
+    );
+    m3_vst3_phase_sample == 192 ? (
+      m3_vst3_left = 0.75;
+      m3_vst3_right = 0.75;
+    );
+  );
+
+  m3_vst3_command == 2 ? (
+    m3_vst3_phase_sample == 64 ? (
+      m3_vst3_left = -0.25;
+      m3_vst3_right = 0.25;
+    );
+    m3_vst3_phase_sample == 128 ? (
+      m3_vst3_left = 0.5;
+      m3_vst3_right = -0.5;
+    );
+    m3_vst3_phase_sample == 192 ? (
+      m3_vst3_left = -0.75;
+      m3_vst3_right = -0.75;
+    );
+  );
+
+  m3_vst3_command == 4 && m3_vst3_phase_sample == 64 ? (
+    m3_vst3_left = 0.333;
+    m3_vst3_right = -0.125;
+  );
+
+  m3_vst3_command == 5 ? (
+    m3_vst3_phase_sample == 64 ? (
+      m3_vst3_left = 0.25;
+      m3_vst3_right = -0.25;
+    );
+    m3_vst3_phase_sample == 128 ? (
+      m3_vst3_left = -0.5;
+      m3_vst3_right = 0.5;
+    );
+    m3_vst3_phase_sample == 192 ? (
+      m3_vst3_left = 0.75;
+      m3_vst3_right = 0.75;
+    );
+    m3_vst3_phase_sample == 256 ? (
+      m3_vst3_left = 0.25;
+      m3_vst3_right = -0.25;
+    );
+  );
+);
+
+m3_vst3_block_offset < M3_CAPABILITY_REFERENCE_CAPACITY ? (
+  gmem[M3_CAPABILITY_REFERENCE_LEFT + m3_vst3_block_offset] =
+    m3_vst3_left;
+  gmem[M3_CAPABILITY_REFERENCE_RIGHT + m3_vst3_block_offset] =
+    m3_vst3_right;
+) : (
+  gmem[M3_CAPABILITY_FAULT] = 1;
+);
+
+spl0 = m3_vst3_left;
+spl1 = m3_vst3_right;
+gmem[M3_CAPTURE_COUNTER] += 1;
+m3_vst3_phase_sample += 1;
+gmem[M3_VST3_PHASE_SAMPLE] = m3_vst3_phase_sample;
