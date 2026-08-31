@@ -1,39 +1,43 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T00:10:24-07:00
+Updated: 2026-08-31T01:48:58-07:00
 
-## VST3 Task 15 sealed; harness diagnosis complete — Task 16 blocked
+## Task 15 harness recovery implemented and offline-verified — v2 host validation authorization pending; Task 16 blocked
 
-- A post-seal read-only diagnosis on 2026-08-31 made no REAPER launch, retry,
-  timeout change, or implementation edit. It confirms VST3 assertion-harness
-  defects sufficient to invalidate the row; it does not adjudicate the sealed
-  production adapter.
-- The script treated REAPER's normalized VST3 parameter values as plain units.
-  All fourteen preserved state rows exactly match the normalized/default
-  pattern, so the parameter/state failures and subsequent configuration were
-  not valid capability assertions. Diagnostic parameters would have the same
-  unit-domain defect if the reporter phase were reached.
-- The observer evidence is an exact memory-address pattern, not audio or MIDI:
-  all 96 event rows match their source cell offsets, while source fault `2202`,
-  capture overflow `257`, output nonfinite `2051`, synth peak `2100`, and dry
-  error `8735` match their cells or final reference address. The script lacked
-  the init/ready/heartbeat handshake used by the established JSFX harness and
-  advanced on those impossible values.
-- `suite-fail` was not the guard's `suite-finish` completion sentinel and the
-  script did not close on failure, so the already-failed row remained open
-  until the 45-second return 124. Local journal evidence records only 12.207
-  CPU-seconds and 122.2 MB peak memory, with no pressure or crash signature.
-- The exact reason the observer attachment yielded address values is not
-  recoverable because the row recorded no readiness/attachment diagnostic.
-  The all-`-1` probe report means the reporter phase was never reached, not
-  that the diagnostics were absent. The existing lexical source-contract test
-  still passes, confirming the offline test gap.
-- Gate C5 remains sealed `infrastructure-invalid`; the first row and nineteen
-  unlaunched rows remain immutable and are not retried. The only safe next
-  action is to draft and separately approve a non-launching TDD recovery
-  amendment for normalized parameter handling, fail-closed observer readiness,
-  terminal failure classification, and exact regression tests. No such
-  implementation is authorized yet.
+- The user approved the bounded non-launching Task 15 recovery amendment and
+  implementation. It is sealed at `7ca54a5` (`test: repair VST3 capability
+  harness`). No production detector, native adapter, timeout, or REAPER guard
+  policy was changed.
+- The ReaScript now uses REAPER's explicit normalized VST3 read, write, and
+  formatting APIs and converts through the existing plain-unit parameter
+  contract. Probe diagnostics use their exact bounded normalized domains.
+- The JSFX/ReaScript observer transport now requires magic, generation,
+  readiness, heartbeat, reset acknowledgement, exact reset readback, and
+  bounded telemetry/event values. The preserved
+  `gmem_read(index) == index` pattern fails closed as `observer-magic` before
+  any dry-audio, MIDI, plug-in, or state assertion can run.
+- Both `suite-finish` and `suite-fail` are terminal script states that close
+  the disposable REAPER instance. The existing guard sentinel and limits are
+  unchanged; a completed assertion failure can therefore be classified as
+  `fail` rather than becoming a 45-second infrastructure timeout.
+- Any future recovery evidence is isolated under
+  `build/test-results/native-vst3-probe-v2/batches`; the sealed v1 row can
+  neither be adopted nor overwritten. No v2 directory or row has been created.
+- The implementation followed TDD: the initial normalized-API, observer,
+  terminal-close, source-handshake, and evidence-namespace tests failed for
+  the intended missing behavior before the smallest fixes. Fresh verification
+  passes all 168 repository tests and `tools/validate_native_source.py .`.
+  The non-launching preflight also passes with about 25.8 GiB available and
+  zero memory-full/I/O-full pressure.
+- No REAPER process was launched or left running. The seven-file sealed-row
+  manifest remains exactly
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
+  Gate C5 itself remains sealed `infrastructure-invalid`; its first row and
+  nineteen-row tail remain immutable and are never retried.
+- The next safe action is independent review of this offline recovery
+  checkpoint, followed only by a fresh, explicit authorization for a new v2
+  disposable REAPER validation. Task 16 remains blocked until a valid v2 Gate
+  C5 result exists.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every

@@ -362,10 +362,10 @@ manifest digest: 98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa095
   path. The sealed row remains `infrastructure-invalid` and proves no
   production-adapter defect or capability result.
 
-### Recovery boundary
+### Recovery boundary at diagnosis time
 
-No recovery implementation or launch is authorized by this diagnosis. A
-separately approved, non-launching TDD amendment should first require:
+At diagnosis commit `808f76c`, no recovery implementation or launch was
+authorized. The required separately approved, non-launching TDD amendment was:
 
 1. an explicit VST3 normalized/plain conversion layer for parameter writes,
    reads, state assertions, formatted values, and diagnostic counters;
@@ -381,6 +381,36 @@ separately approved, non-launching TDD amendment should first require:
 5. a new evidence namespace and fresh authorization for any later real REAPER
    validation. The sealed `44100-32` row is never overwritten or retried.
 
+### Approved non-launching recovery implementation
+
+- The user subsequently approved that bounded amendment and implementation.
+  Commit `7ca54a5` repairs only the test harness; it changes no production
+  detector, native adapter, timeout, or guarded-launch policy.
+- The assertion script uses `TrackFX_GetParamNormalized`,
+  `TrackFX_SetParamNormalized`, and `TrackFX_FormatParamValueNormalized`, with
+  explicit conversion through the locked plain-unit parameter and diagnostic
+  domains.
+- The source and runner require observer magic, generation, readiness,
+  heartbeat, reset acknowledgement, exact reset readback, and bounded
+  telemetry/event fields. The exact address-pattern regression fails as
+  `observer-magic` before the first plug-in assertion or audio phase.
+- Success and assertion failure both close the disposable instance. The guard
+  still recognizes only its existing `suite-finish` success sentinel; an
+  exited `suite-fail` is validated and classified as `fail`, not left open to
+  become return 124.
+- Future recovery rows are isolated under
+  `build/test-results/native-vst3-probe-v2/batches`. The v2 root remains absent
+  because no REAPER validation has been launched.
+- The implementation adds no dependency, conversion module, guard protocol,
+  retry, or alternate launcher. Shared tables and one observer gate cover the
+  repeated checks while retaining every fail-closed boundary.
+- Fresh offline verification passes 168 repository tests, including execution
+  of the actual Lua runner against normalized-value and address-pattern mocks,
+  plus the native source validator and non-launching host preflight. No REAPER
+  process was launched or left running; full memory and I/O pressure remained
+  zero; and the sealed v1 manifest digest remains
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
+
 ### Cleanup and decision
 
 - The post-row snapshot recorded 26863.25 MiB available, load 3.16,
@@ -389,6 +419,7 @@ separately approved, non-launching TDD amendment should first require:
 - `python3 tools/run_native_vst3_probe.py --check` fails closed on the sealed
   invalid first row and nineteen missing tail rows, as required.
 - Gate C5 did not pass. Task 16 and the remaining detector-port/release tasks
-  are blocked. The only safe next design action is a separately approved,
-  non-launching harness-recovery amendment. This result authorizes neither a
-  retry nor an adapter, runner, timeout, profile, or assertion-script edit.
+  remain blocked. The non-launching harness repair is implemented and
+  offline-verified, but it is not a host result. The only safe next action is
+  independent review followed by fresh, explicit authorization for a new v2
+  disposable REAPER validation; the sealed v1 row is never retried.
