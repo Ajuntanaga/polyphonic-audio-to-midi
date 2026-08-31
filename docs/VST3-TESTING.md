@@ -440,9 +440,12 @@ authorized. The required separately approved, non-launching TDD amendment was:
 - The first default runner invocation launched no REAPER process. It found
   stale staging from v1 and conservatively preserved it at
   `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T091010Z-recovered`.
-  The attempt marker and all seven evidence files are byte-identical to the v1
-  staging/row inputs. This is preserved legacy evidence, not a v2 launch, so no
-  launch authority was consumed.
+  The marker contains the legacy v1 input hashes and no v2 namespace. Its five
+  staged result files (`capability.tsv`, `events.tsv`, `phase.log`,
+  `probe-vst3.tsv`, and `state.tsv`) are byte-identical to the corresponding v1
+  row files. `metadata.json` and `pressure.json` are absent because the stale
+  staging had not reached sealing. This is preserved legacy evidence, not a v2
+  launch, so no launch authority was consumed.
 - TDD commit `a551021` adds `evidence_namespace = native-vst3-probe-v2` to new
   attempt markers and metadata. One shared predicate ignores only a valid
   recovered marker proven to omit that namespace; missing, symlinked,

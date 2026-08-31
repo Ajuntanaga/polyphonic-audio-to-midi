@@ -18,8 +18,10 @@ Updated: 2026-08-31T02:28:22-07:00
 - The first runner invocation launched no REAPER process. It conservatively
   recovered stale v1 staging into
   `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T091010Z-recovered`.
-  Read-only comparison proved that directory is byte-identical legacy v1
-  staging, not a v2 attempt. It remains preserved.
+  Its marker has the legacy v1 input hashes and no v2 namespace; each of its
+  five staged result files is byte-identical to the corresponding sealed v1
+  file. It has no `metadata.json` or `pressure.json` because staging had not
+  reached sealing. It is not a v2 attempt and remains preserved.
 - TDD commit `a551021` (`fix: namespace VST3 recovery evidence`) adds the v2
   namespace to new attempt markers and ignores only a well-formed recovered
   marker proven to be foreign legacy evidence. Missing, malformed, non-object,
