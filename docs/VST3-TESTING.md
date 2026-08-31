@@ -529,8 +529,9 @@ manifest digest: 6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e6
   `TrackFX_AddByName` instantiate value is valid, and REAPER documents both
   `options:gmem=<name>` and C-style hexadecimal literals. Static inspection
   therefore supports no name, range, instantiate, or literal defect.
-- The v2 classifier reads magic, generation, ready, heartbeat, and
-  acknowledgement, but `write_results()` preserves none of their raw values.
+- The sealed v2 classifier read magic, generation, ready, heartbeat, and
+  acknowledgement, but its `write_results()` preserved none of their raw
+  values.
   `observer-magic` means only that the first poll's
   magic/generation/ready/heartbeat tuple was not all zero while magic was
   unequal to `0x4D335633`. The raw magic could have been zero, 2205, another
@@ -551,7 +552,7 @@ manifest digest: 6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e6
   readiness. Both immutable manifest digests remain byte-identical. This
   verifies the current fail-closed classifier, not the missing live boundary.
 
-The minimum evidence-producing amendment is deliberately smaller than a fix:
+The minimum evidence-producing amendment was deliberately smaller than a fix:
 
 1. preserve raw transport snapshots after the initial clear, after FX-chain
    creation, on the first observer poll, and at the terminal verdict;
@@ -564,9 +565,35 @@ The minimum evidence-producing amendment is deliberately smaller than a fix:
    wrong-magic, and valid-ready inputs; and
 5. request separate authority for at most one fresh guarded diagnostic row.
 
-That amendment must not alter the production adapter, add a dependency, force
-track scheduling, relax the boot verdict, or start the 19-row tail. Those
-behavioral choices wait for the diagnostic row to identify the boundary.
+### Offline observer-diagnostic amendment
+
+- The user authorized this non-launching evidence-only amendment. Commit
+  `176923e` records active/fault/rate/block/magic/generation/ready/heartbeat/ack
+  after the initial clear, after FX-chain creation, on the first observer poll,
+  and at the terminal verdict in the existing `capability.tsv`.
+- The same record preserves the previous segment name returned by the initial
+  attach and by a second attach to the unchanged
+  `m3_poly_midi_tests_v1` name. It also records the source FX's exact name,
+  enabled/offline state, parameter count, and existing host-rate/block sliders
+  after setup and at the terminal verdict, independently of gmem.
+- Five focused Lua regressions execute the real capability script and cover
+  zero, exact cell-address, wrong-magic, and valid-ready raw inputs plus a
+  complete failed-boot result. The full low-priority repository run passes
+  172 tests; both source validators pass; `git diff --check` is clean.
+- The amendment changes no production adapter, dependency, scheduling, timeout,
+  observer verdict, runner, guard, or evidence namespace. No REAPER process was
+  launched. Final passive readings were 26079.05 MiB available, load 1.35,
+  44 C, memory-full PSI 0.00, and I/O-full PSI 0.00.
+- Recomputed immutable v1 and v2 seven-file digests remain exactly
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`
+  and
+  `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
+  The sealed rows were not modified, retried, renamed, or adopted.
+
+The implementation does not alter the production adapter, add a dependency,
+force track scheduling, relax the boot verdict, or start the 19-row tail. Task
+16 remains blocked. At most one fresh guarded diagnostic row requires separate
+authority; only its new telemetry can justify any later behavioral amendment.
 
 The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as

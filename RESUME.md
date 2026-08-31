@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T03:29:21-07:00
+Updated: 2026-08-31T04:04:11-07:00
 
-## Task 15 v2 observer diagnosis complete; exact cause unresolved — Task 16 blocked
+## Task 15 v2 diagnostic instrumentation complete offline; host diagnosis still gated — Task 16 blocked
 
 - The user's `continue` freshly authorized exactly the presented twenty-row v2
   Gate C5 matrix once: 44.1, 48, 88.2, and 96 kHz at blocks 32, 64, 128, 256,
@@ -70,21 +70,29 @@ Updated: 2026-08-31T03:29:21-07:00
   deadline. Those differences make a startup race, attachment transition, or
   empty-track scheduling boundary plausible, but none is proven by the
   immutable v2 evidence.
-- The smallest supported next amendment is diagnostic-only and non-launching:
-  preserve raw observer snapshots before/after FX creation and at the first
-  poll, record the named-segment attach round-trip, and record the existing
-  source FX name/enabled/parameter telemetry independently of gmem. Add offline
-  regressions before requesting one fresh guarded diagnostic row. Do not change
-  the production adapter, source scheduling, boot verdict, or full matrix until
-  those observations identify the boundary.
+- The user approved the diagnostic-only non-launching amendment. Commit
+  `176923e` (`test: preserve VST3 observer diagnostics`) now records all nine
+  raw observer fields after clear, after FX creation, at the first observer
+  poll, and at the terminal verdict. It also records both same-name gmem attach
+  returns and the source FX's exact name, enabled/offline state, parameter
+  count, and rate/block sliders after setup and at the terminal verdict.
+- The amendment changes no production source or adapter, dependency, source
+  scheduling, timeout, boot verdict, guard, runner, or evidence namespace. Its
+  focused Lua tests cover zero, exact address-value, wrong-magic, and
+  valid-ready snapshots plus the complete failed-boot diagnostic record.
+  Fresh low-priority verification passes 172 repository tests and both source
+  validators. The v1/v2 evidence digests remain byte-identical, no REAPER
+  process was launched or left running, and the final passive snapshot was
+  26079.05 MiB available, load 1.35, 44 C, and zero full memory/I/O pressure.
 - The user clarified that 96 kHz with host blocks 256-512 is the normal use
   case. Any later capability, latency, and correctness report must call out
   96 kHz/256 and 96 kHz/512 as the primary real-world rows while retaining the
   mandatory full 20-row matrix and the independent 96 kHz false-note gate.
-- Task 16 and Tasks 17-24 remain blocked. The next safe action is a separately
-  approved, non-launching observer-diagnostic amendment with offline tests.
-  Do not launch, retry, alter scheduling, or edit the production adapter from
-  this result.
+- Task 16 and Tasks 17-24 remain blocked. The next possible action is a
+  separately authorized, single guarded diagnostic row using the amended
+  harness. Do not launch the sealed matrix or its nineteen-row tail, retry a
+  sealed row, alter scheduling, or edit the production adapter from this
+  result.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -988,8 +996,9 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify harness-recovery commits `7ca54a5` and `a551021`, then verify the
-   immutable v1 and v2 seven-file manifest digests
+1. Verify harness-recovery commits `7ca54a5` and `a551021` plus observer-
+   diagnostic commit `176923e`, then verify the immutable v1 and v2 seven-file
+   manifest digests
    `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`
    and
    `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
@@ -998,12 +1007,11 @@ REAPER process behind.
    `092345Z`. Do not adopt, delete, rename, overwrite, or retry either one.
 3. Confirm zero REAPER processes/windows, the user's active workspace unchanged,
    and acceptable passive pressure before any further work.
-4. Do not rerun the matrix or launch its nineteen-row tail. Task 16 remains
-   blocked. Read-only observer diagnosis is complete but the exact cause is not
-   recoverable from the sealed row. The only presently safe next task is a
-   separately approved, non-launching diagnostic amendment that records raw
-   transport/attachment/source-FX state and passes offline tests before any
-   fresh one-row host authorization.
+4. Do not rerun the sealed matrix or launch its nineteen-row tail. Task 16
+   remains blocked. The evidence-only instrumentation is complete offline, but
+   the exact live cause remains unknown. Any next execution requires separate
+   authority for at most one fresh guarded diagnostic row; it is not a retry of
+   either sealed row and does not open the tail.
 5. Keep every adapter/probe change, REAPER launch, clean-DI/live input,
    performance run, persistent installation, live project, custom GUI, and
    REAPER MCP behind its named gate.
@@ -1019,8 +1027,9 @@ task afterward.
   failed before any product assertion, Tasks 16-24 are blocked and no retry,
   production-adapter diagnosis, or corrective implementation is authorized by
   the v2 result. Read-only observer diagnosis cannot recover the raw magic or
-  distinguish boot, attachment, scheduling, or compilation; a diagnostic-only
-  offline amendment is the next gated action.
+  distinguish boot, attachment, scheduling, or compilation. The diagnostic-
+  only offline amendment is complete at `176923e`; one separately authorized
+  fresh guarded diagnostic row is the next possible evidence step.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
