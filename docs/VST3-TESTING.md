@@ -616,6 +616,28 @@ authority; only its new telemetry can justify any later behavioral amendment.
   source validators. No v3 REAPER process has launched; the v1/v2 seals remain
   untouched.
 
+### v3 one-shot execution: infrastructure-invalid
+
+- The one authorized 44.1 kHz/block-32 v3 row launched once. The guarded
+  process hit its fixed 45-second cap (`guard_returncode: 124`) before it
+  produced `phase.log`, capability telemetry, event/state evidence, or the
+  native probe report. The runner correctly sealed it as
+  `infrastructure-invalid` at
+  `build/test-results/native-vst3-probe-v3-observer-diagnostic/batches/44100-32.invalid-20260831T113425Z`.
+- The sealed batch contains only `metadata.json` and `pressure.json`; their
+  lexical two-file manifest digest is
+  `4c6fe0dde5c96cacd8d3f5cd7f1f6fe77a7b66fbde40de78067b6c0166ed921a`.
+  The staged attempt marker remains so the v3 root refuses every subsequent
+  invocation. There was no retry and no tail launch.
+- REAPER did scan and cache the exact VST3 probe bundle, but the disposable
+  profile records `faultyproject` and no capability script telemetry. That
+  narrows the result to an incomplete host/project-startup boundary; it neither
+  proves nor refutes the observer diagnosis and cannot justify a product edit.
+- Before/after readings were 25773.08/25772.81 MiB available, 0.71/1.59 load,
+  46/47 C, and zero full memory/I/O PSI. Cleanup left no REAPER process/window
+  and restored workspace 1. The v1/v2 seven-file manifests recomputed to their
+  prior immutable digests exactly. Task 16 remains blocked.
+
 The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
 the primary real-world capability/latency rows, without removing any mandatory

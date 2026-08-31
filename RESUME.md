@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T04:28:54-07:00
+Updated: 2026-08-31T04:36:00-07:00
 
-## Task 15 v3 one-shot observer diagnostic ready; one guarded host row authorized — Task 16 blocked
+## Task 15 v3 one-shot observer diagnostic sealed infrastructure-invalid — Task 16 blocked
 
 - The user's `continue` freshly authorized exactly the presented twenty-row v2
   Gate C5 matrix once: 44.1, 48, 88.2, and 96 kHz at blocks 32, 64, 128, 256,
@@ -108,6 +108,27 @@ Updated: 2026-08-31T04:28:54-07:00
   launch has occurred from v3 and all three v3 roots are absent at this
   checkpoint. The next action is the single guarded row, after a fresh host and
   workspace preflight; stop immediately on any guard refusal or non-pass.
+- The authorized v3 row then ran once at 44.1 kHz/block 32. The guard returned
+  `124` at its fixed 45-second cap before any `phase.log`, `capability.tsv`,
+  `events.tsv`, `state.tsv`, or `probe-vst3.tsv` existed. The runner sealed
+  `build/test-results/native-vst3-probe-v3-observer-diagnostic/batches/44100-32.invalid-20260831T113425Z`
+  as `infrastructure-invalid`; its two-file metadata/pressure manifest digest
+  is `4c6fe0dde5c96cacd8d3f5cd7f1f6fe77a7b66fbde40de78067b6c0166ed921a`.
+- The isolated staging marker remains in place by design and makes v3
+  permanently non-runnable. REAPER's disposable VST cache did discover the
+  exact probe bundle, but its profile records a `faultyproject` and no script
+  telemetry. This is an incomplete host-startup boundary, not evidence of an
+  observer, production detector, adapter, or MIDI defect.
+- Pressure stayed safe: available memory was 25773.08/25772.81 MiB before/after,
+  load was 0.71/1.59, temperature 46/47 C, and both full-pressure PSI values
+  were zero. Post-run checks found zero REAPER processes/windows and workspace
+  1 active. The immutable v1/v2 digests remain exactly
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`
+  and `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
+- The one-row authorization is consumed. Do not delete, alter, recover, retry,
+  or relaunch v3; do not launch the v2 matrix or tail. Task 16 remains blocked.
+  Any later corrective work begins with read-only/offline diagnosis and needs a
+  new, separately authorized execution design before another host launch.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -1023,11 +1044,11 @@ REAPER process behind.
    `092345Z`. Do not adopt, delete, rename, overwrite, or retry either one.
 3. Confirm zero REAPER processes/windows, the user's active workspace unchanged,
    and acceptable passive pressure before any further work.
-4. Do not rerun the sealed matrix or launch its nineteen-row tail. The user's
-   current authorization covers only `--observer-diagnostic-once`: one fresh
-   44.1 kHz/block-32 row in its isolated v3 namespace. It is not a retry of
-   either sealed row and does not open the tail. Stop after the row, whether it
-   passes, fails, or the guard refuses.
+4. Do not rerun the sealed matrix or launch its nineteen-row tail. The sole
+   `--observer-diagnostic-once` authorization is consumed by the sealed v3
+   timeout at `44100-32.invalid-20260831T113425Z`; its staging marker and batch
+   are preservation-only. Any next host execution requires a new design and
+   separate explicit authority.
 5. Keep every adapter/probe change, REAPER launch, clean-DI/live input,
    performance run, persistent installation, live project, custom GUI, and
    REAPER MCP behind its named gate.
