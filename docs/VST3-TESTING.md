@@ -513,3 +513,62 @@ manifest digest: 6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e6
   work is read-only diagnosis of the live JSFX observer attachment/readiness
   boundary; implementation or another host run requires a separately approved
   amendment. The current matrix must not be rerun.
+
+### Post-seal read-only observer diagnosis
+
+- This diagnosis used the immutable v1/v2 rows, staged profile/cache files,
+  exact staged and repository sources, prior working harnesses, the installed
+  REAPER 7.79 API text, and the sealed process journal. It launched no REAPER
+  process, retried no row, and changed no source, profile, timeout, adapter, or
+  evidence.
+- REAPER's staged JSFX cache and recent-FX record contain the exact capability
+  source, so discovery and insertion succeeded. The ReaScript, capability
+  source, MIDI capture, and synth-output observer all name
+  `m3_poly_midi_tests_v1`. Only the capability source writes observer cells
+  2205-2209. The indices are inside the documented gmem range, the negative
+  `TrackFX_AddByName` instantiate value is valid, and REAPER documents both
+  `options:gmem=<name>` and C-style hexadecimal literals. Static inspection
+  therefore supports no name, range, instantiate, or literal defect.
+- The v2 classifier reads magic, generation, ready, heartbeat, and
+  acknowledgement, but `write_results()` preserves none of their raw values.
+  `observer-magic` means only that the first poll's
+  magic/generation/ready/heartbeat tuple was not all zero while magic was
+  unequal to `0x4D335633`. The raw magic could have been zero, 2205, another
+  stale value, or a value from a different attachment state. The row also
+  preserves no named-segment round-trip, source-FX parameter telemetry,
+  independent init marker, or JSFX compile status.
+- The v1 row shows the same source eventually wrote real rate/block telemetry
+  of 44100/32 while untouched observer/event fields followed the exact address
+  pattern. The established synthetic harness differs in two relevant ways: it
+  inserts a short MIDI item on the track and treats incoherent boot readiness
+  as waiting until a three-second deadline. The v2 harness uses
+  an otherwise empty track and classifies the first nonzero wrong magic as
+  immediately invalid. These facts make boot ordering, a named-segment
+  attachment transition, and empty-track scheduling plausible hypotheses;
+  they do not identify one as the cause.
+- Three focused Lua regressions still pass: normalized/plain conversion, exact
+  address-pattern rejection before audio, and acknowledgement-gated observer
+  readiness. Both immutable manifest digests remain byte-identical. This
+  verifies the current fail-closed classifier, not the missing live boundary.
+
+The minimum evidence-producing amendment is deliberately smaller than a fix:
+
+1. preserve raw transport snapshots after the initial clear, after FX-chain
+   creation, on the first observer poll, and at the terminal verdict;
+2. record the gmem named-segment attach return/round-trip without changing the
+   segment name;
+3. record the source FX's exact name, enabled/offline state, parameter count,
+   and its existing rate/block sliders as an observation path independent of
+   gmem;
+4. add offline tests proving every snapshot is present for zero, address-value,
+   wrong-magic, and valid-ready inputs; and
+5. request separate authority for at most one fresh guarded diagnostic row.
+
+That amendment must not alter the production adapter, add a dependency, force
+track scheduling, relax the boot verdict, or start the 19-row tail. Those
+behavioral choices wait for the diagnostic row to identify the boundary.
+
+The user identifies 96 kHz at blocks 256-512 as the normal operating case.
+When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
+the primary real-world capability/latency rows, without removing any mandatory
+44.1/48/88.2/96 kHz row or the independent 96 kHz false-MIDI-44 release gate.

@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T02:28:22-07:00
+Updated: 2026-08-31T03:29:21-07:00
 
-## Task 15 v2 capability failure sealed at observer handshake — Task 16 blocked
+## Task 15 v2 observer diagnosis complete; exact cause unresolved — Task 16 blocked
 
 - The user's `continue` freshly authorized exactly the presented twenty-row v2
   Gate C5 matrix once: 44.1, 48, 88.2, and 96 kHz at blocks 32, 64, 128, 256,
@@ -48,10 +48,43 @@ Updated: 2026-08-31T02:28:22-07:00
   `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
   Check-only adjudication now rejects the sealed v2 invalid row and the missing
   tail, as required.
-- Task 16 and Tasks 17-24 remain blocked. The next safe action is read-only
-  diagnosis of why the live JSFX observer did not expose its magic, followed
-  only by a separately approved offline amendment if the evidence supports
-  one. Do not launch, retry, or edit the production adapter from this result.
+- A subsequent read-only observer diagnosis made no REAPER launch, retry, or
+  source/configuration edit. The staged cache proves that REAPER discovered and
+  inserted the exact capability-source JSFX. The ReaScript and all three JSFX
+  observers use the same `m3_poly_midi_tests_v1` segment; their indices are
+  valid; and no other repository effect writes cells 2205-2209. No static
+  naming, address-range, insertion-call, or hexadecimal-literal defect is
+  supported by the sources or REAPER's documented APIs.
+- The v2 row records only `observer-magic`, not the raw magic, generation,
+  ready, heartbeat, acknowledgement, attachment state, source-FX parameter
+  state, or JSFX compile state. It therefore proves only that the first live
+  observer poll's magic/generation/ready/heartbeat tuple was not all zero while
+  magic differed from `0x4D335633`; the raw magic itself could have been zero
+  or another value. The row cannot distinguish the earlier cell-address
+  pattern from a boot-order, attachment, track-scheduling, compilation, or
+  other pre-product host boundary.
+- The v1 row proves that the same source later processed real 44.1 kHz,
+  32-sample blocks while other observer values followed the exact cell-address
+  pattern. The established synthetic harness instead places a short MIDI item
+  on its track and waits for a coherent ready/heartbeat tuple until its
+  deadline. Those differences make a startup race, attachment transition, or
+  empty-track scheduling boundary plausible, but none is proven by the
+  immutable v2 evidence.
+- The smallest supported next amendment is diagnostic-only and non-launching:
+  preserve raw observer snapshots before/after FX creation and at the first
+  poll, record the named-segment attach round-trip, and record the existing
+  source FX name/enabled/parameter telemetry independently of gmem. Add offline
+  regressions before requesting one fresh guarded diagnostic row. Do not change
+  the production adapter, source scheduling, boot verdict, or full matrix until
+  those observations identify the boundary.
+- The user clarified that 96 kHz with host blocks 256-512 is the normal use
+  case. Any later capability, latency, and correctness report must call out
+  96 kHz/256 and 96 kHz/512 as the primary real-world rows while retaining the
+  mandatory full 20-row matrix and the independent 96 kHz false-note gate.
+- Task 16 and Tasks 17-24 remain blocked. The next safe action is a separately
+  approved, non-launching observer-diagnostic amendment with offline tests.
+  Do not launch, retry, alter scheduling, or edit the production adapter from
+  this result.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -966,9 +999,11 @@ REAPER process behind.
 3. Confirm zero REAPER processes/windows, the user's active workspace unchanged,
    and acceptable passive pressure before any further work.
 4. Do not rerun the matrix or launch its nineteen-row tail. Task 16 remains
-   blocked. The only presently safe next task is read-only diagnosis of the
-   JSFX observer attachment/readiness failure; any implementation requires a
-   separately approved amendment and fresh tests before any new host gate.
+   blocked. Read-only observer diagnosis is complete but the exact cause is not
+   recoverable from the sealed row. The only presently safe next task is a
+   separately approved, non-launching diagnostic amendment that records raw
+   transport/attachment/source-FX state and passes offline tests before any
+   fresh one-row host authorization.
 5. Keep every adapter/probe change, REAPER launch, clean-DI/live input,
    performance run, persistent installation, live project, custom GUI, and
    REAPER MCP behind its named gate.
@@ -983,7 +1018,9 @@ task afterward.
   `observer-magic`; nineteen rows remain unlaunched. Because the observer gate
   failed before any product assertion, Tasks 16-24 are blocked and no retry,
   production-adapter diagnosis, or corrective implementation is authorized by
-  the v2 result.
+  the v2 result. Read-only observer diagnosis cannot recover the raw magic or
+  distinguish boot, attachment, scheduling, or compilation; a diagnostic-only
+  offline amendment is the next gated action.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
