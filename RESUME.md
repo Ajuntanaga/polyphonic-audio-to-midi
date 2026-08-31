@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-30T17:35:56-07:00
+Updated: 2026-08-30T17:45:26-07:00
 
-## VST3 Tasks 1-14 sealed — Task 15 Gate C5 authorization required
+## VST3 Task 15 sealed infrastructure-invalid — Task 16 blocked
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -305,7 +305,37 @@ Updated: 2026-08-30T17:35:56-07:00
   sanitizer suites, release probe build, official probe validation, 48 focused
   guard/runner tests, and a real dry plan containing exactly twenty ordered
   rows from 44.1 kHz/32 through 96 kHz/512 all pass. The final process scan
-  found zero REAPER processes. Gate C5 remains closed; no row was launched.
+  found zero REAPER processes. This was the final state before Gate C5
+  authorization; no row had yet been launched.
+- In direct response to the exact Gate C5 scope, the user said `Proceed` on
+  2026-08-30. This freshly authorized exactly twenty guarded disposable REAPER
+  launches once, retaining workspace 5, serial execution, hard resource
+  ceilings, stop-on-first-failure, immutable evidence, and no retry.
+- The immediate launch preflight passed with 26782.62 MiB available, load
+  1.34, temperature 55 C, memory-full and I/O-full PSI 0.00, workspace 5
+  present, workspace 1 active, and no REAPER process or window.
+- Gate C5 launched only its first row, 44.1 kHz/block 32. The guarded process
+  reached its 45-second timeout and returned 124. The runner classified the
+  row `infrastructure-invalid`, atomically preserved it at
+  `build/test-results/native-vst3-probe/batches/44100-32.invalid-20260831T004349Z`,
+  stopped the remaining nineteen rows, and made no retry.
+- `phase.log` ends in `suite-fail`, not `suite-finish`; `capability.tsv`
+  reports status `fail` with 77 assertion labels; and every probe lifecycle,
+  format, buffer, rate/block, and trigger diagnostic remains `-1`. Those
+  partial TSV values are invalid non-completion evidence, not product
+  capability measurements or a proven adapter diagnosis.
+- The seven-file lexical evidence-manifest digest is
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
+  Exact file hashes and the runtime input hashes are recorded in
+  `docs/VST3-TESTING.md` and the immutable row metadata.
+- Cleanup is green: the after snapshot recorded 26863.25 MiB available, load
+  3.16, temperature 59 C, and zero full memory/I/O pressure. Zero REAPER
+  processes/windows remain, workspace 1 is still active, and workspace 5
+  remains present. The check-only adjudicator fails closed on the sealed
+  invalid first row and nineteen unlaunched rows, as required.
+- **Decision:** Gate C5 did not pass. Task 16 and all remaining detector-port
+  and release work are blocked. The infrastructure-invalid result authorizes
+  no retry and no adapter, runner, profile, timeout, or assertion-script edit.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -353,9 +383,9 @@ Updated: 2026-08-30T17:35:56-07:00
   Task 11's bounded host-rate processing lifecycle passed at `db32720`, and
   Task 12's offline adapter and official-validator seal passed at `7c02188`,
   Task 13's disposable VST3 staging/guard matrix passed at `f3c3fe2`, and Task
-  14's offline audio-trigger capability probe passed at `848bf80`. The next
-  action is to obtain the exact fresh Task 15 Gate C5 authorization; no REAPER
-  launch is permitted before it.
+  14's offline audio-trigger capability probe passed at `848bf80`. Task 15
+  then sealed its first and only launched row infrastructure-invalid. Task 16
+  is blocked; do not retry or edit from this result without new direction.
 
 ## Approved VST3 design and sealed implementation plan
 
@@ -869,14 +899,12 @@ REAPER process behind.
    `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`,
    and the immutable one-run Gate O4 record. The failed CLAP Task 10 evidence
    remains historical input and must not be retried.
-2. Stop at Task 15 Gate C5 and request fresh authorization for exactly twenty
-   guarded disposable REAPER launches. Prior general authorization does not
-   open this gate.
-3. Only after that exact authorization, execute the immutable twenty-row
-   44.1/48/88.2/96 kHz by 32/64/128/256/512 matrix once, serially, in fresh
-   disposable profiles, backgrounded on workspace 5, with no retry and an
-   immediate tail stop on the first failure, timeout, invalid evidence, or
-   pressure abort.
+2. Verify the immutable Gate C5 invalid row, its manifest digest
+   `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`,
+   zero remaining REAPER process/window, and unchanged active workspace.
+3. Do not retry 44.1 kHz/block 32 and do not launch the nineteen-row tail.
+   Task 16 remains blocked. The partial assertion values do not authorize a
+   runner, adapter, profile, timeout, or probe edit.
 4. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
    probe, and historical adapter source as later tasks extend the verified
    minimal VST3 target.
@@ -889,9 +917,9 @@ task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 plan Tasks 15-24 remain ordered and evidence-gated. Task 15 Gate C5 is
-  not open until the user explicitly authorizes exactly twenty guarded
-  disposable REAPER launches at that gate.
+- VST3 Task 15 is sealed `infrastructure-invalid` after one launched row and a
+  nineteen-row unlaunched tail. Tasks 16-24 are blocked; no retry or corrective
+  implementation is authorized by this evidence.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input

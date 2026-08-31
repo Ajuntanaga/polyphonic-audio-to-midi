@@ -255,8 +255,10 @@ No second validator invocation was made during final verification.
 - The retained official VST3 SDK source tree remains offline and manifest
   verified. Production and probe bundles exist only under ignored build-local
   roots; no persistent plug-in path was touched.
-- No REAPER process was launched or left running. No live profile, project,
-  hardware input, or Obsidian integration was changed.
+- Through the Task 12 seal, no REAPER process had been launched or left
+  running. No live profile, project, hardware input, or Obsidian integration
+  was changed. The later authorized Task 15 disposable launch is recorded
+  separately below.
 
 ## Decision
 
@@ -265,3 +267,62 @@ satisfied by the single official-validator pass and reproducible exact bundle.
 The next ordered work is Task 13's disposable VST3 staging/guard extension.
 It does not authorize attachment to an existing REAPER instance, a live
 profile or project, persistent installation, or hardware input.
+
+## Task 15 Gate C5 infrastructure-invalid decision
+
+### Authorization and preflight
+
+- In direct response to the exact Gate C5 request, the user said `Proceed` on
+  2026-08-30. That fresh response authorized exactly the presented twenty
+  guarded disposable REAPER launches once; it did not weaken the serial,
+  workspace-5, stop-on-first-failure, pressure, or no-retry rules.
+- Every required non-launching gate passed before authority: 101 native tests
+  in debug, ASan/UBSan, and TSan; the release probe build; official probe
+  validation; 164 repository Python tests; 48 focused guard/runner tests; the
+  native source validator; and the exact twenty-row dry plan.
+- Immediately before launch, available memory was 26782.62 MiB, load was
+  1.34, maximum readable temperature was 55 C, and memory-full and I/O-full
+  PSI were both 0.00. Workspace 5 existed, workspace 1 remained active, and
+  no REAPER process or window existed.
+
+### Executed row and sealed evidence
+
+- The runner launched only the first row, 44.1 kHz/block 32, in the fresh
+  disposable profile on workspace 5. The guard reached its 45-second timeout
+  and returned 124. Per Gate C5, the other nineteen rows were not launched and
+  no retry occurred.
+- The authoritative decision is `infrastructure-invalid`. The immutable row
+  is
+  `build/test-results/native-vst3-probe/batches/44100-32.invalid-20260831T004349Z`.
+  `metadata.json` records return code 124, the exact eight runtime input
+  hashes, and these validation errors: missing terminal `suite-finish`,
+  non-pass capability status, nonzero capability/probe failure counts, and
+  non-pass return/classification metadata.
+- The partial script reached `suite-fail`, reported 77 assertion labels, and
+  left every probe lifecycle/format/trigger diagnostic at `-1`. Its dry,
+  source, capture, output, and event values are therefore incomplete invalid
+  evidence, not measurements of product capability and not an adapter defect
+  diagnosis.
+- The seven-file lexical evidence manifest is:
+
+```text
+f4faaf23493b485ddcc687762c7f1840c6330ba9fa120fdb6b4b33a95b5e1a72  capability.tsv
+705c756efc056ed6c05ee802a50711427871b953317ea1dda1566f1e40355a17  events.tsv
+2540414e8691440cb06b6bf7e8565b5fcc3f3be9ef4166498b5aa9b5562d2297  metadata.json
+1a082d5dad5bf47d299b2db25ca46fa5d3e734483fad25150e67cafcdac4332f  phase.log
+e84591d477131c25565b5ab0d96211e16f13f75b396e4d9defa37befc5091f34  pressure.json
+76956496d2240ccb78d9d6de6ef0abb6911e13b5a8ec1be86d895eaebaca7dbe  probe-vst3.tsv
+02d8646e43cc0ea80b11f2257ca1689fdfcf6fd8494d36973dc967c528287015  state.tsv
+manifest digest: 98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958
+```
+
+### Cleanup and decision
+
+- The post-row snapshot recorded 26863.25 MiB available, load 3.16,
+  temperature 59 C, and memory-full/I/O-full PSI 0.00. Cleanup left zero
+  REAPER processes and windows, workspace 1 active, and workspace 5 present.
+- `python3 tools/run_native_vst3_probe.py --check` fails closed on the sealed
+  invalid first row and nineteen missing tail rows, as required.
+- Gate C5 did not pass. Task 16 and the remaining detector-port/release tasks
+  are blocked. This result authorizes neither a retry nor an adapter, runner,
+  timeout, profile, or assertion-script edit.
