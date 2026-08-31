@@ -126,6 +126,133 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
             ).resolve(),
         )
 
+    def test_observer_diagnostic_scope_is_fixed_and_restores_v2_paths(self):
+        original = (
+            PROBE_RUNNER.STAGING_ROOT,
+            PROBE_RUNNER.PROFILE,
+            PROBE_RUNNER.STAGING_RESULTS,
+            PROBE_RUNNER.COMPLETION_FILE,
+            PROBE_RUNNER.PROBE_SCRIPT,
+            PROBE_RUNNER.PROJECT_ROOT,
+            PROBE_RUNNER.BATCH_ROOT,
+            PROBE_RUNNER.EVIDENCE_NAMESPACE,
+        )
+        with PROBE_RUNNER.observer_diagnostic_scope():
+            self.assertEqual(
+                PROBE_RUNNER.OBSERVER_DIAGNOSTIC_ROW, (44100, 32)
+            )
+            self.assertEqual(
+                PROBE_RUNNER.EVIDENCE_NAMESPACE,
+                "native-vst3-probe-v3-observer-diagnostic",
+            )
+            self.assertEqual(
+                PROBE_RUNNER.BATCH_ROOT,
+                (
+                    PROBE_RUNNER.ROOT
+                    / "build/test-results/"
+                    "native-vst3-probe-v3-observer-diagnostic/batches"
+                ).resolve(),
+            )
+            command = PROBE_RUNNER.guard_command(
+                *PROBE_RUNNER.OBSERVER_DIAGNOSTIC_ROW,
+                dry_run=True,
+            )
+            self.assertIn(str(PROBE_RUNNER.PROFILE), command)
+            self.assertIn(str(PROBE_RUNNER.COMPLETION_FILE), command)
+            self.assertIn(str(PROBE_RUNNER.PROJECT_ROOT), " ".join(command))
+        with self.assertRaisesRegex(RuntimeError, "restore"):
+            with PROBE_RUNNER.observer_diagnostic_scope():
+                raise RuntimeError("restore")
+        self.assertEqual(
+            (
+                PROBE_RUNNER.STAGING_ROOT,
+                PROBE_RUNNER.PROFILE,
+                PROBE_RUNNER.STAGING_RESULTS,
+                PROBE_RUNNER.COMPLETION_FILE,
+                PROBE_RUNNER.PROBE_SCRIPT,
+                PROBE_RUNNER.PROJECT_ROOT,
+                PROBE_RUNNER.BATCH_ROOT,
+                PROBE_RUNNER.EVIDENCE_NAMESPACE,
+            ),
+            original,
+        )
+
+    def test_observer_diagnostic_runs_one_row_and_never_a_tail(self):
+        observed = []
+
+        def run_row(sample_rate, block_size):
+            observed.append(
+                (
+                    sample_rate,
+                    block_size,
+                    PROBE_RUNNER.EVIDENCE_NAMESPACE,
+                    PROBE_RUNNER.BATCH_ROOT,
+                    PROBE_RUNNER.STAGING_RESULTS,
+                )
+            )
+            return "completed"
+
+        with (
+            mock.patch.object(
+                PROBE_RUNNER,
+                "observer_diagnostic_freshness_errors",
+                return_value=[],
+            ),
+            mock.patch.object(PROBE_RUNNER, "run_row", side_effect=run_row),
+        ):
+            self.assertEqual(PROBE_RUNNER.run_observer_diagnostic(), "completed")
+
+        self.assertEqual(
+            observed,
+            [
+                (
+                    44100,
+                    32,
+                    "native-vst3-probe-v3-observer-diagnostic",
+                    PROBE_RUNNER.OBSERVER_DIAGNOSTIC_BATCH_ROOT,
+                    PROBE_RUNNER.OBSERVER_DIAGNOSTIC_STAGING_RESULTS,
+                )
+            ],
+        )
+        self.assertEqual(PROBE_RUNNER.EVIDENCE_NAMESPACE, "native-vst3-probe-v2")
+
+    def test_observer_diagnostic_refuses_any_existing_staging_artifact(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staging = pathlib.Path(temporary) / "observer-staging"
+            staging.mkdir()
+            with (
+                mock.patch.object(
+                    PROBE_RUNNER, "OBSERVER_DIAGNOSTIC_STAGING_ROOT", staging
+                ),
+                mock.patch.object(PROBE_RUNNER, "run_row") as run,
+                mock.patch.object(
+                    PROBE_RUNNER, "recover_pending_batches"
+                ) as recover_pending,
+                mock.patch.object(
+                    PROBE_RUNNER, "recover_staging_partial"
+                ) as recover_staging,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "fresh observer"):
+                    PROBE_RUNNER.run_observer_diagnostic()
+            run.assert_not_called()
+            recover_pending.assert_not_called()
+            recover_staging.assert_not_called()
+
+    def test_observer_diagnostic_refuses_broken_staging_symlink(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            staging = root / "observer-staging"
+            staging.symlink_to(root / "outside")
+            with (
+                mock.patch.object(
+                    PROBE_RUNNER, "OBSERVER_DIAGNOSTIC_STAGING_ROOT", staging
+                ),
+                mock.patch.object(PROBE_RUNNER, "run_row") as run,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "symlinked"):
+                    PROBE_RUNNER.run_observer_diagnostic()
+            run.assert_not_called()
+
     def test_preflight_refuses_existing_reaper_and_every_pressure_boundary(self):
         healthy = self.healthy_snapshot()
         self.assertEqual(PROBE_RUNNER.stability_errors(healthy, set()), [])
@@ -612,6 +739,36 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
         stage_call.assert_not_called()
         write_project.assert_not_called()
         run_matrix.assert_not_called()
+
+    def test_observer_diagnostic_cli_never_delegates_to_v2_matrix(self):
+        healthy = self.healthy_snapshot()
+        with (
+            mock.patch.object(
+                PROBE_RUNNER, "current_stability_snapshot", return_value=healthy
+            ),
+            mock.patch.object(PROBE_RUNNER, "reaper_pids", return_value=set()),
+            mock.patch.object(
+                PROBE_RUNNER,
+                "observer_diagnostic_guard_command",
+                return_value=["guard", "--dry-run"],
+            ) as plan,
+            mock.patch.object(
+                PROBE_RUNNER, "run_observer_diagnostic", return_value="completed"
+            ) as diagnostic,
+            mock.patch.object(PROBE_RUNNER, "run_matrix") as matrix,
+        ):
+            self.assertEqual(
+                PROBE_RUNNER.main(["--observer-diagnostic-once", "--dry-run"]),
+                0,
+            )
+            self.assertEqual(PROBE_RUNNER.main(["--observer-diagnostic-once"]), 0)
+            self.assertEqual(
+                PROBE_RUNNER.main(["--observer-diagnostic-once", "--check"]),
+                2,
+            )
+        plan.assert_called_once_with(dry_run=True)
+        diagnostic.assert_called_once_with()
+        matrix.assert_not_called()
 
     def test_default_execution_delegates_to_serial_matrix(self):
         healthy = self.healthy_snapshot()

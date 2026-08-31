@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Mapping
+from contextlib import contextmanager
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -67,6 +68,23 @@ PROJECT_ROOT = (ROOT / "build/native-vst3-probe-projects").resolve()
 GUARD = (ROOT / "tools/run_guarded_reaper.py").resolve()
 STAGER = (ROOT / "tools/stage_reaper_test_env.py").resolve()
 BATCH_ROOT = (ROOT / "build/test-results/native-vst3-probe-v2/batches").resolve()
+OBSERVER_DIAGNOSTIC_ROW = (44100, 32)
+OBSERVER_DIAGNOSTIC_NAMESPACE = "native-vst3-probe-v3-observer-diagnostic"
+OBSERVER_DIAGNOSTIC_STAGING_ROOT = ROOT / "build/reaper-test-observer-diagnostic"
+OBSERVER_DIAGNOSTIC_PROFILE = OBSERVER_DIAGNOSTIC_STAGING_ROOT / "reaper.ini"
+OBSERVER_DIAGNOSTIC_STAGING_RESULTS = OBSERVER_DIAGNOSTIC_STAGING_ROOT / "test-results"
+OBSERVER_DIAGNOSTIC_COMPLETION_FILE = OBSERVER_DIAGNOSTIC_STAGING_RESULTS / "phase.log"
+OBSERVER_DIAGNOSTIC_PROBE_SCRIPT = (
+    OBSERVER_DIAGNOSTIC_STAGING_ROOT
+    / "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua"
+)
+OBSERVER_DIAGNOSTIC_PROJECT_ROOT = (
+    ROOT / "build/native-vst3-probe-v3-observer-diagnostic-projects"
+)
+OBSERVER_DIAGNOSTIC_BATCH_ROOT = (
+    ROOT / "build/test-results/native-vst3-probe-v3-observer-diagnostic/batches"
+)
+OBSERVER_DIAGNOSTIC_EVIDENCE_ROOT = OBSERVER_DIAGNOSTIC_BATCH_ROOT.parent
 MAX_MEMORY_FULL_PRESSURE_AVG10 = 0.25
 MAX_IO_FULL_PRESSURE_AVG10 = 2.0
 EXPECTED_RESULT_FILES = (
@@ -102,6 +120,61 @@ EVENTS_HEADER = (
     "note_id"
 )
 STATE_HEADER = "index\tstable_id\tname\tdefault\tmutated\trestored"
+
+
+@contextmanager
+def observer_diagnostic_scope():
+    names = (
+        "STAGING_ROOT",
+        "PROFILE",
+        "STAGING_RESULTS",
+        "COMPLETION_FILE",
+        "PROBE_SCRIPT",
+        "PROJECT_ROOT",
+        "BATCH_ROOT",
+        "EVIDENCE_NAMESPACE",
+    )
+    original = {name: globals()[name] for name in names}
+    globals().update(
+        {
+            "STAGING_ROOT": OBSERVER_DIAGNOSTIC_STAGING_ROOT,
+            "PROFILE": OBSERVER_DIAGNOSTIC_PROFILE,
+            "STAGING_RESULTS": OBSERVER_DIAGNOSTIC_STAGING_RESULTS,
+            "COMPLETION_FILE": OBSERVER_DIAGNOSTIC_COMPLETION_FILE,
+            "PROBE_SCRIPT": OBSERVER_DIAGNOSTIC_PROBE_SCRIPT,
+            "PROJECT_ROOT": OBSERVER_DIAGNOSTIC_PROJECT_ROOT,
+            "BATCH_ROOT": OBSERVER_DIAGNOSTIC_BATCH_ROOT,
+            "EVIDENCE_NAMESPACE": OBSERVER_DIAGNOSTIC_NAMESPACE,
+        }
+    )
+    try:
+        yield
+    finally:
+        globals().update(original)
+
+
+def _path_has_symlink_component(path: pathlib.Path) -> bool:
+    candidate = path
+    while True:
+        if candidate.is_symlink():
+            return True
+        if candidate == candidate.parent:
+            return False
+        candidate = candidate.parent
+
+
+def observer_diagnostic_freshness_errors() -> list[str]:
+    errors: list[str] = []
+    for root in (
+        OBSERVER_DIAGNOSTIC_STAGING_ROOT,
+        OBSERVER_DIAGNOSTIC_PROJECT_ROOT,
+        OBSERVER_DIAGNOSTIC_EVIDENCE_ROOT,
+    ):
+        if _path_has_symlink_component(root):
+            errors.append(f"observer diagnostic root is symlinked: {root}")
+        elif root.exists():
+            errors.append(f"observer diagnostic root already exists: {root}")
+    return errors
 
 
 @dataclasses.dataclass(frozen=True)
@@ -534,10 +607,10 @@ def prior_invalid_attempts(
         return []
     label = row_label(sample_rate, block_size)
     attempts = sorted(BATCH_ROOT.glob(f"{label}.invalid-*"))
-    return [attempt for attempt in attempts if _blocks_v2(attempt)]
+    return [attempt for attempt in attempts if _blocks_current_namespace(attempt)]
 
 
-def _blocks_v2(attempt: pathlib.Path) -> bool:
+def _blocks_current_namespace(attempt: pathlib.Path) -> bool:
     if "-recovered" not in attempt.name:
         return True
     marker = attempt / STAGING_ATTEMPT_NAME
@@ -587,6 +660,11 @@ def planned_guard_commands(dry_run: bool = False) -> list[list[str]]:
         guard_command(sample_rate, block_size, dry_run=dry_run)
         for sample_rate, block_size in MATRIX
     ]
+
+
+def observer_diagnostic_guard_command(dry_run: bool = False) -> list[str]:
+    with observer_diagnostic_scope():
+        return guard_command(*OBSERVER_DIAGNOSTIC_ROW, dry_run=dry_run)
 
 
 def _snapshot_with_overrides(
@@ -798,7 +876,10 @@ def run_matrix() -> dict[tuple[int, int], str]:
     recovered_pending = recover_pending_batches()
     recovered_staging = recover_staging_partial()
     recovered = [str(path) for path in recovered_pending]
-    if recovered_staging is not None and _blocks_v2(recovered_staging):
+    if (
+        recovered_staging is not None
+        and _blocks_current_namespace(recovered_staging)
+    ):
         recovered.append(str(recovered_staging))
     if recovered:
         raise RuntimeError(
@@ -817,6 +898,18 @@ def run_matrix() -> dict[tuple[int, int], str]:
             )
         outcomes[(sample_rate, block_size)] = run_row(sample_rate, block_size)
     return outcomes
+
+
+def run_observer_diagnostic() -> str:
+    freshness_errors = observer_diagnostic_freshness_errors()
+    if freshness_errors:
+        raise RuntimeError(
+            "fresh observer diagnostic required; no retry: "
+            + "; ".join(freshness_errors)
+        )
+    with observer_diagnostic_scope():
+        sample_rate, block_size = OBSERVER_DIAGNOSTIC_ROW
+        return run_row(sample_rate, block_size)
 
 
 def check_batches() -> list[str]:
@@ -847,6 +940,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--observer-diagnostic-once", action="store_true")
     parser.add_argument("--available-mib", type=float)
     parser.add_argument("--load-one", type=float)
     parser.add_argument("--temperature-c", type=float)
@@ -857,6 +951,13 @@ def main(argv: list[str] | None = None) -> int:
     if sum((args.check_only, args.check, args.dry_run)) > 1:
         print(
             "native VST3 probe refusal: choose only one check mode",
+            file=sys.stderr,
+        )
+        return 2
+    if args.observer_diagnostic_once and (args.check_only or args.check):
+        print(
+            "native VST3 probe refusal: observer diagnostic only supports "
+            "one guarded row or its dry run",
             file=sys.stderr,
         )
         return 2
@@ -881,6 +982,13 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.dry_run:
+            if args.observer_diagnostic_once:
+                command = observer_diagnostic_guard_command(dry_run=True)
+                print(
+                    "native VST3 observer diagnostic 44100/32: "
+                    f"{shlex.join(command)}"
+                )
+                return 0
             for (sample_rate, block_size), command in zip(
                 MATRIX, planned_guard_commands(dry_run=True)
             ):
@@ -899,6 +1007,10 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 1
             print("native VST3 probe check: twenty immutable rows are complete")
+            return 0
+        if args.observer_diagnostic_once:
+            outcome = run_observer_diagnostic()
+            print(f"native VST3 observer diagnostic 44100/32: {outcome}")
             return 0
         outcomes = run_matrix()
     except (OSError, RuntimeError, ValueError) as exc:

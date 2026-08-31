@@ -14,6 +14,7 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
 DISPOSABLE_PROFILE = (ROOT / "build/reaper-test/reaper.ini").resolve()
+OBSERVER_DIAGNOSTIC_PROFILE = ROOT / "build/reaper-test-observer-diagnostic/reaper.ini"
 BUILD_CLAP_DIR = (ROOT / "build/native/clap").resolve()
 PROBE_ARTIFACT = (
     BUILD_CLAP_DIR / "M3_Polyphonic_Audio_to_MIDI_Probe.clap"
@@ -38,6 +39,19 @@ LIVE_REAPER_PROFILE = (pathlib.Path.home() / ".config/REAPER").resolve()
 COMPLETION_FILE = (
     ROOT / "build/reaper-test/test-results/phase.log"
 ).resolve()
+OBSERVER_DIAGNOSTIC_COMPLETION_FILE = (
+    ROOT / "build/reaper-test-observer-diagnostic/test-results/phase.log"
+)
+OBSERVER_DIAGNOSTIC_PROJECT = (
+    ROOT
+    / "build/native-vst3-probe-v3-observer-diagnostic-projects/"
+    "M3-Native-VST3-44100-32.RPP"
+)
+OBSERVER_DIAGNOSTIC_SCRIPT = (
+    ROOT
+    / "build/reaper-test-observer-diagnostic/Scripts/tests/"
+    "ajuntanaga_M3 Native VST3 Capability.lua"
+)
 COMPLETION_SENTINEL = "suite-finish"
 COMPLETION_GRACE_SECONDS = 0.75
 MIN_AVAILABLE_MIB = 4096.0
@@ -51,6 +65,28 @@ PLUGIN_INJECTION_ENVIRONMENT = (
     "VST3_PATH",
     "M3_CLAP_PROBE_REPORT",
 )
+
+
+def path_has_symlink_component(path: pathlib.Path) -> bool:
+    candidate = path if path.is_absolute() else pathlib.Path.cwd() / path
+    while True:
+        if candidate.is_symlink():
+            return True
+        if candidate == candidate.parent:
+            return False
+        candidate = candidate.parent
+
+
+def disposable_vst3_profiles() -> tuple[pathlib.Path, pathlib.Path]:
+    return DISPOSABLE_PROFILE, OBSERVER_DIAGNOSTIC_PROFILE
+
+
+def completion_file_for_profile(profile: pathlib.Path) -> pathlib.Path | None:
+    if profile == DISPOSABLE_PROFILE:
+        return COMPLETION_FILE
+    if profile == OBSERVER_DIAGNOSTIC_PROFILE:
+        return OBSERVER_DIAGNOSTIC_COMPLETION_FILE
+    return None
 
 
 def available_memory_mib() -> float:
@@ -139,8 +175,8 @@ def validate_native_vst3_environment(
 ) -> pathlib.Path:
     resolved_profile = profile.resolve(strict=False)
     if (
-        profile.is_symlink()
-        or resolved_profile != DISPOSABLE_PROFILE
+        path_has_symlink_component(profile)
+        or resolved_profile not in disposable_vst3_profiles()
         or not resolved_profile.is_file()
     ):
         raise ValueError(
@@ -691,8 +727,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.profile is None:
         parser.error("--profile is required unless --check-only is used")
+    if path_has_symlink_component(args.profile):
+        print(
+            f"guardrail refusal: disposable profile path is symlinked: "
+            f"{args.profile}",
+            file=sys.stderr,
+        )
+        return 2
     profile = args.profile.resolve()
-    if profile != DISPOSABLE_PROFILE:
+    if profile not in disposable_vst3_profiles():
         print(f"guardrail refusal: non-disposable profile: {profile}", file=sys.stderr)
         return 2
     if not profile.is_file():
@@ -739,8 +782,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     completion_file = None
     if args.completion_file is not None:
+        if path_has_symlink_component(args.completion_file):
+            print(
+                f"guardrail refusal: completion file path is symlinked: "
+                f"{args.completion_file}",
+                file=sys.stderr,
+            )
+            return 2
         completion_file = args.completion_file.resolve()
-        if completion_file != COMPLETION_FILE:
+        if completion_file != completion_file_for_profile(profile):
             print(
                 f"guardrail refusal: unexpected completion file: {completion_file}",
                 file=sys.stderr,
@@ -772,6 +822,31 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    if profile == OBSERVER_DIAGNOSTIC_PROFILE:
+        if not args.gui or completion_file is None or vst3_path is None:
+            print(
+                "guardrail refusal: observer diagnostic requires GUI, exact "
+                "completion monitoring, and VST3 injection",
+                file=sys.stderr,
+            )
+            return 2
+        if args.workspace != 5 or args.timeout_seconds != 45:
+            print(
+                "guardrail refusal: observer diagnostic requires workspace 5 "
+                "and a 45-second limit",
+                file=sys.stderr,
+            )
+            return 2
+        if reaper_arguments != [
+            str(OBSERVER_DIAGNOSTIC_PROJECT),
+            str(OBSERVER_DIAGNOSTIC_SCRIPT),
+        ]:
+            print(
+                "guardrail refusal: observer diagnostic REAPER arguments are "
+                "not the fixed one-row script",
+                file=sys.stderr,
+            )
+            return 2
 
     command = guarded_command(
         profile,

@@ -116,6 +116,113 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("unexpected completion file", result.stdout + result.stderr)
 
+    def test_observer_profile_requires_its_exact_completion_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            v2_profile = root / "v2.ini"
+            observer_profile = root / "observer.ini"
+            v2_completion = root / "v2-phase.log"
+            observer_completion = root / "observer-phase.log"
+            observer_project = root / "observer.RPP"
+            observer_script = root / "observer.lua"
+            vst3_path = root / "VST3"
+            v2_profile.write_text("[reaper]\n", encoding="utf-8")
+            observer_profile.write_text("[reaper]\n", encoding="utf-8")
+            patches = (
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", v2_profile),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "OBSERVER_DIAGNOSTIC_PROFILE",
+                    observer_profile,
+                ),
+                mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", v2_completion),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "OBSERVER_DIAGNOSTIC_COMPLETION_FILE",
+                    observer_completion,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "OBSERVER_DIAGNOSTIC_PROJECT",
+                    observer_project,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "OBSERVER_DIAGNOSTIC_SCRIPT",
+                    observer_script,
+                ),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "validate_native_vst3_environment",
+                    return_value=vst3_path,
+                ),
+            )
+            arguments = [
+                "--dry-run",
+                "--gui",
+                "--workspace",
+                "5",
+                "--profile",
+                str(observer_profile),
+                "--vst3-path",
+                str(vst3_path),
+                "--completion-file",
+                str(observer_completion),
+                "--timeout-seconds",
+                "45",
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+                "--",
+                str(observer_project),
+                str(observer_script),
+            ]
+            with (
+                patches[0],
+                patches[1],
+                patches[2],
+                patches[3],
+                patches[4],
+                patches[5],
+                patches[6],
+                patches[7],
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 0)
+                cross_pair = arguments.copy()
+                cross_pair[cross_pair.index(str(observer_completion))] = str(
+                    v2_completion
+                )
+                self.assertEqual(GUARDED_REAPER.main(cross_pair), 2)
+                reverse_cross_pair = arguments.copy()
+                reverse_cross_pair[
+                    reverse_cross_pair.index(str(observer_profile))
+                ] = str(v2_profile)
+                self.assertEqual(GUARDED_REAPER.main(reverse_cross_pair), 2)
+                no_vst3 = arguments.copy()
+                vst3_index = no_vst3.index("--vst3-path")
+                del no_vst3[vst3_index : vst3_index + 2]
+                self.assertEqual(GUARDED_REAPER.main(no_vst3), 2)
+                no_completion = arguments.copy()
+                completion_index = no_completion.index("--completion-file")
+                del no_completion[completion_index : completion_index + 2]
+                self.assertEqual(GUARDED_REAPER.main(no_completion), 2)
+                no_gui = [argument for argument in arguments if argument != "--gui"]
+                self.assertEqual(GUARDED_REAPER.main(no_gui), 2)
+                arbitrary_arguments = arguments.copy()
+                arbitrary_arguments[-1] = str(root / "other.lua")
+                self.assertEqual(GUARDED_REAPER.main(arbitrary_arguments), 2)
+                profile_alias = root / "observer-alias.ini"
+                profile_alias.symlink_to(observer_profile)
+                alias_arguments = arguments.copy()
+                alias_arguments[alias_arguments.index(str(observer_profile))] = str(
+                    profile_alias
+                )
+                self.assertEqual(GUARDED_REAPER.main(alias_arguments), 2)
+
     def test_live_profile_is_refused(self):
         result = self.run_runner(
             "--dry-run",
