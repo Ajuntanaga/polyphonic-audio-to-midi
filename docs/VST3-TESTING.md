@@ -595,6 +595,27 @@ force track scheduling, relax the boot verdict, or start the 19-row tail. Task
 16 remains blocked. At most one fresh guarded diagnostic row requires separate
 authority; only its new telemetry can justify any later behavioral amendment.
 
+### Authorized v3 one-shot diagnostic gate (pre-launch)
+
+- The user then authorized exactly one new diagnostic row. Commit `0a216d4`
+  adds `--observer-diagnostic-once`, fixed to 44.1 kHz/block 32 and the distinct
+  `native-vst3-probe-v3-observer-diagnostic` evidence namespace. It cannot run
+  the v2 matrix, v2 check mode, or the nineteen-row tail.
+- Its staging, project, and evidence roots are new fixed paths. All three must
+  be absent and nonsymlinked before execution. If any artifact exists, the
+  runner refuses before `stage()` can remove a directory; there is no recovery,
+  adoption, overwrite, or retry path for v3.
+- The guard permits the v3 profile only for the exact build-local VST3, v3
+  completion sentinel, GUI workspace 5, 45-second limit, and fixed one-row
+  project/script. It rejects plain REAPER, CLAP, path aliases, pair mixing, and
+  altered limits/arguments. Existing v2/CLAP behavior remains separately
+  constrained to the old disposable profile.
+- Focused RED-to-GREEN regressions cover root restoration, one-row/no-tail
+  dispatch, stale-root and broken-symlink refusal, CLI mode exclusion, and the
+  full v3 guard contract. The full repository run passes 178 tests and both
+  source validators. No v3 REAPER process has launched; the v1/v2 seals remain
+  untouched.
+
 The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
 the primary real-world capability/latency rows, without removing any mandatory

@@ -1,8 +1,8 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T04:04:11-07:00
+Updated: 2026-08-31T04:28:54-07:00
 
-## Task 15 v2 diagnostic instrumentation complete offline; host diagnosis still gated — Task 16 blocked
+## Task 15 v3 one-shot observer diagnostic ready; one guarded host row authorized — Task 16 blocked
 
 - The user's `continue` freshly authorized exactly the presented twenty-row v2
   Gate C5 matrix once: 44.1, 48, 88.2, and 96 kHz at blocks 32, 64, 128, 256,
@@ -88,11 +88,26 @@ Updated: 2026-08-31T04:04:11-07:00
   case. Any later capability, latency, and correctness report must call out
   96 kHz/256 and 96 kHz/512 as the primary real-world rows while retaining the
   mandatory full 20-row matrix and the independent 96 kHz false-note gate.
-- Task 16 and Tasks 17-24 remain blocked. The next possible action is a
-  separately authorized, single guarded diagnostic row using the amended
-  harness. Do not launch the sealed matrix or its nineteen-row tail, retry a
-  sealed row, alter scheduling, or edit the production adapter from this
-  result.
+- Task 16 and Tasks 17-24 remain blocked. The user has now authorized exactly
+  one fresh diagnostic execution. Commit `0a216d4` (`feat: isolate one-shot
+  VST3 observer diagnostic`) introduces a fixed `--observer-diagnostic-once`
+  path for only 44.1 kHz/block 32 under the new
+  `native-vst3-probe-v3-observer-diagnostic` namespace. It cannot invoke the
+  v2 matrix, check mode, or tail and restores all v2 paths after use.
+- The v3 staging root, project root, and evidence root must each be absent and
+  nonsymlinked before any write. Any pre-existing, malformed, pending, or
+  interrupted v3 artifact is a permanent refusal; it is never recovered,
+  overwritten, adopted, or retried. This preserves the old v2 staging residual
+  and both immutable v1/v2 rows exactly.
+- The guarded launcher allows the v3 profile only with the exact build-local
+  VST3, paired v3 completion sentinel, GUI workspace 5, 45-second limit, and
+  fixed project/script arguments. It rejects CLAP/plain REAPER use, aliases,
+  cross-paired paths, altered workspace/timeout, and any other arguments.
+- Offline verification after the boundary amendment passes all 178 repository
+  tests plus both source validators; `git diff --check` is clean. No REAPER
+  launch has occurred from v3 and all three v3 roots are absent at this
+  checkpoint. The next action is the single guarded row, after a fresh host and
+  workspace preflight; stop immediately on any guard refusal or non-pass.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -996,8 +1011,9 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify harness-recovery commits `7ca54a5` and `a551021` plus observer-
-   diagnostic commit `176923e`, then verify the immutable v1 and v2 seven-file
+1. Verify harness-recovery commits `7ca54a5` and `a551021`, observer-
+   diagnostic commit `176923e`, and isolated v3 gate `0a216d4`, then verify the
+   immutable v1 and v2 seven-file
    manifest digests
    `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`
    and
@@ -1007,11 +1023,11 @@ REAPER process behind.
    `092345Z`. Do not adopt, delete, rename, overwrite, or retry either one.
 3. Confirm zero REAPER processes/windows, the user's active workspace unchanged,
    and acceptable passive pressure before any further work.
-4. Do not rerun the sealed matrix or launch its nineteen-row tail. Task 16
-   remains blocked. The evidence-only instrumentation is complete offline, but
-   the exact live cause remains unknown. Any next execution requires separate
-   authority for at most one fresh guarded diagnostic row; it is not a retry of
-   either sealed row and does not open the tail.
+4. Do not rerun the sealed matrix or launch its nineteen-row tail. The user's
+   current authorization covers only `--observer-diagnostic-once`: one fresh
+   44.1 kHz/block-32 row in its isolated v3 namespace. It is not a retry of
+   either sealed row and does not open the tail. Stop after the row, whether it
+   passes, fails, or the guard refuses.
 5. Keep every adapter/probe change, REAPER launch, clean-DI/live input,
    performance run, persistent installation, live project, custom GUI, and
    REAPER MCP behind its named gate.
