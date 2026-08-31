@@ -112,6 +112,20 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
             projects.add(project)
         self.assertEqual(len(projects), 20)
 
+    def test_recovery_batches_cannot_overlap_sealed_task15_evidence(self):
+        sealed = (
+            PROBE_RUNNER.ROOT
+            / "build/test-results/native-vst3-probe/batches"
+        ).resolve()
+        self.assertNotEqual(PROBE_RUNNER.BATCH_ROOT, sealed)
+        self.assertEqual(
+            PROBE_RUNNER.BATCH_ROOT,
+            (
+                PROBE_RUNNER.ROOT
+                / "build/test-results/native-vst3-probe-v2/batches"
+            ).resolve(),
+        )
+
     def test_preflight_refuses_existing_reaper_and_every_pressure_boundary(self):
         healthy = self.healthy_snapshot()
         self.assertEqual(PROBE_RUNNER.stability_errors(healthy, set()), [])

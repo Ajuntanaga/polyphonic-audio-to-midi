@@ -120,6 +120,16 @@ class SourceContractTests(unittest.TestCase):
             "slider4:0<0,16384,1>-Host block size",
             "M3_VST3_COMMAND = 2210",
             "M3_VST3_PHASE_SAMPLE = 2212",
+            "M3_VST3_MAGIC = 2205",
+            "M3_VST3_GENERATION = 2206",
+            "M3_VST3_READY = 2207",
+            "M3_VST3_HEARTBEAT = 2208",
+            "M3_VST3_ACK = 2209",
+            "M3_VST3_MAGIC_VALUE = 0x4D335633",
+            "gmem[M3_VST3_MAGIC] = M3_VST3_MAGIC_VALUE",
+            "gmem[M3_VST3_HEARTBEAT] += 1",
+            "gmem[M3_VST3_READY] = m3_vst3_generation",
+            "gmem[M3_VST3_ACK] = m3_vst3_reset",
             "m3_vst3_left = 0.25",
             "m3_vst3_right = -0.25",
             "m3_vst3_left = -0.75",
@@ -155,6 +165,10 @@ class SourceContractTests(unittest.TestCase):
             'TrackFX_GetNamedConfigParm(track, probe_fx, "is_instrument")',
             "reaper.TrackFX_GetParamIdent",
             "reaper.TrackFX_GetParamFromIdent",
+            "local OBSERVER_MAGIC_VALUE = 0x4D335633",
+            "reaper.TrackFX_GetParamNormalized",
+            "reaper.TrackFX_SetParamNormalized",
+            "reaper.TrackFX_FormatParamValueNormalized",
             "reaper.TrackFX_GetParameterStepSizes",
             "reaper.TrackFX_GetFormattedParamValue",
             "local PERSISTENT_PARAMETER_COUNT = 14",
@@ -168,7 +182,7 @@ class SourceContractTests(unittest.TestCase):
             'atomic_write(result_directory .. "/events.tsv"',
             'atomic_write(result_directory .. "/state.tsv"',
             'atomic_write(result_directory .. "/probe-vst3.tsv"',
-            'write_phase("suite-finish")',
+            'write_phase(#failures == 0 and "suite-finish" or "suite-fail")',
             "reaper.Main_OnCommand(40004, 0)",
         ):
             self.assertIn(contract, runner)
@@ -184,11 +198,11 @@ class SourceContractTests(unittest.TestCase):
             '"index\\tstable_id\\tname\\tdefault\\tmutated\\trestored"',
             runner,
         )
-        success_gate = runner.index("if #failures == 0 then")
-        suite_finish = runner.index('write_phase("suite-finish")')
+        terminal_phase = runner.index(
+            'write_phase(#failures == 0 and "suite-finish" or "suite-fail")'
+        )
         close_process = runner.index("reaper.Main_OnCommand(40004, 0)")
-        self.assertLess(success_gate, suite_finish)
-        self.assertLess(suite_finish, close_process)
+        self.assertLess(terminal_phase, close_process)
 
         with tempfile.TemporaryDirectory() as temporary:
             staged = pathlib.Path(temporary) / "reaper-test"

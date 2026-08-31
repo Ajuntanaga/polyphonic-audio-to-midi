@@ -1,4 +1,5 @@
 local PERSISTENT_PARAMETER_COUNT = 14
+local OBSERVER_MAGIC_VALUE = 0x4D335633
 local COMMAND = 2210
 local SOURCE_RESET = 2211
 local PHASE_SAMPLE = 2212
@@ -6,6 +7,11 @@ local ACTIVE = 2201
 local SOURCE_FAULT = 2202
 local ACTUAL_RATE = 2203
 local ACTUAL_BLOCK = 2204
+local OBSERVER_MAGIC = 2205
+local OBSERVER_GENERATION = 2206
+local OBSERVER_READY = 2207
+local OBSERVER_HEARTBEAT = 2208
+local OBSERVER_ACK = 2209
 local CAPTURE_COUNTER = 128
 local CAPTURE_COUNT = 256
 local CAPTURE_OVERFLOW = 257
@@ -18,6 +24,7 @@ local OUTPUT_NONFINITE = 2051
 local SYNTH_OUTPUT_PEAK = 2100
 local SYNTH_OUTPUT_COUNT = 2101
 local TEST_TIMEOUT_SECONDS = 5
+local OBSERVER_TIMEOUT_SECONDS = 3
 
 local resource = reaper.GetResourcePath()
 local result_directory = resource .. "/test-results"
@@ -48,6 +55,7 @@ local synth_fx = -1
 local synth_probe_fx = -1
 local reporter_fx = -1
 local finished = false
+local finish_suite
 local reset_nonce = 0
 local verified_dry_error = math.huge
 local verified_synth_peak = 0
@@ -91,6 +99,86 @@ local function finite(value)
   return value == value and value > -math.huge and value < math.huge
 end
 
+local function integer_in_range(value, minimum, maximum)
+  return finite(value) and value == math.floor(value) and
+         value >= minimum and value <= maximum
+end
+
+local function observer_status(read, expected_ack)
+  local magic = read(OBSERVER_MAGIC)
+  local generation = read(OBSERVER_GENERATION)
+  local ready = read(OBSERVER_READY)
+  local heartbeat = read(OBSERVER_HEARTBEAT)
+  local ack = read(OBSERVER_ACK)
+  if magic == 0 and generation == 0 and ready == 0 and heartbeat == 0 then
+    return "waiting", "init"
+  end
+  if magic ~= OBSERVER_MAGIC_VALUE then
+    return "invalid", "magic"
+  end
+  if not integer_in_range(generation, 1, 1048576) or
+     not integer_in_range(ready, 0, 1048576) or
+     not integer_in_range(heartbeat, 0, 1048576) or
+     not integer_in_range(ack, 0, 1048576) then
+    return "invalid", "protocol-range"
+  end
+  if ready == 0 or heartbeat < 4 then
+    return "waiting", "ready"
+  end
+  if ready ~= generation then
+    return "invalid", "generation"
+  end
+  if ack ~= expected_ack then
+    return "waiting", "ack"
+  end
+  if read(ACTIVE) ~= 1 or read(SOURCE_FAULT) ~= 0 or
+     not integer_in_range(read(ACTUAL_RATE), 1, 384000) or
+     not integer_in_range(read(ACTUAL_BLOCK), 1, 512) then
+    return "invalid", "source-range"
+  end
+  return "ready", "-"
+end
+
+local observer_metric_contract = {
+  {CAPTURE_COUNTER, 0, 1048576, true, "capture-counter"},
+  {CAPTURE_COUNT, 0, 256, true, "capture-count"},
+  {CAPTURE_OVERFLOW, 0, 1, true, "capture-overflow"},
+  {DRY_ERROR, 0, 2, false, "dry-error"},
+  {DRY_COUNT, 0, 1048576, true, "dry-count"},
+  {OUTPUT_PEAK, 0, 1, false, "output-peak"},
+  {OUTPUT_NONFINITE, 0, 1, true, "output-nonfinite"},
+  {SYNTH_OUTPUT_PEAK, 0, 1000, false, "synth-peak"},
+  {SYNTH_OUTPUT_COUNT, 0, 1048576, true, "synth-count"},
+  {PHASE_SAMPLE, 0, 1048576, true, "phase-sample"},
+}
+
+local function observer_metrics_valid(read)
+  for _, contract in ipairs(observer_metric_contract) do
+    local value = read(contract[1])
+    local valid = finite(value) and value >= contract[2] and
+                  value <= contract[3]
+    if contract[4] then
+      valid = valid and value == math.floor(value)
+    end
+    if not valid then
+      return false, contract[5]
+    end
+  end
+  return true, "-"
+end
+
+local observer_transport_cells = {
+  ACTIVE, SOURCE_FAULT, ACTUAL_RATE, ACTUAL_BLOCK, OBSERVER_MAGIC,
+  OBSERVER_GENERATION, OBSERVER_READY, OBSERVER_HEARTBEAT, OBSERVER_ACK,
+  COMMAND, SOURCE_RESET, PHASE_SAMPLE,
+}
+
+local function clear_observer_transport()
+  for _, cell in ipairs(observer_transport_cells) do
+    reaper.gmem_write(cell, 0)
+  end
+end
+
 local parameter_contract = {
   {"Detector input", 0, 2, 1, 0, false},
   {"Mode", 0, 1, 1, 0, true},
@@ -109,6 +197,41 @@ local parameter_contract = {
   {"Dry audio", 0, 1, 1, 1, true},
   {"Status", 0, 5, 1, 0, false},
 }
+
+local parameter_contract_by_name = {}
+for _, contract in ipairs(parameter_contract) do
+  parameter_contract_by_name[contract[1]] = contract
+end
+
+local function canonical_plain(contract, value)
+  if contract == nil or not finite(value) then
+    return nil
+  end
+  local bounded = math.max(contract[2], math.min(contract[3], value))
+  local steps = math.floor((bounded - contract[2]) / contract[4] + 0.5)
+  return math.max(contract[2], math.min(
+    contract[3], contract[2] + steps * contract[4]
+  ))
+end
+
+local function plain_to_normalized(name, value)
+  local contract = parameter_contract_by_name[name]
+  local plain = canonical_plain(contract, value)
+  if plain == nil then
+    return nil
+  end
+  return (plain - contract[2]) / (contract[3] - contract[2])
+end
+
+local function normalized_to_plain(name, value)
+  local contract = parameter_contract_by_name[name]
+  if contract == nil or not finite(value) or value < 0 or value > 1 then
+    return nil
+  end
+  return canonical_plain(
+    contract, contract[2] + value * (contract[3] - contract[2])
+  )
+end
 
 local persistent_names = {
   "Detector input", "Mode", "A4 reference", "Input trim",
@@ -167,7 +290,14 @@ local function parameter_value(name)
   if index == nil then
     return math.huge
   end
-  return reaper.TrackFX_GetParam(track, probe_fx, index)
+  local value = normalized_to_plain(
+    name, reaper.TrackFX_GetParamNormalized(track, probe_fx, index)
+  )
+  if value == nil then
+    fail("parameter-normalized-range-" .. name)
+    return math.huge
+  end
+  return value
 end
 
 local function set_parameter(name, value)
@@ -176,8 +306,13 @@ local function set_parameter(name, value)
     fail("set-missing-parameter-" .. name)
     return math.huge
   end
+  local normalized = plain_to_normalized(name, value)
+  if normalized == nil then
+    fail("parameter-plain-range-" .. name)
+    return math.huge
+  end
   expect(
-    reaper.TrackFX_SetParam(track, probe_fx, index, value),
+    reaper.TrackFX_SetParamNormalized(track, probe_fx, index, normalized),
     "parameter-write-rejected-" .. name
   )
   return parameter_value(name)
@@ -189,12 +324,17 @@ local function inspect_parameter_surface()
     local name = contract[1]
     local index = parameter_indices[name]
     if index ~= nil then
-      local value, minimum, maximum = reaper.TrackFX_GetParamEx(
+      local raw_value, minimum, maximum = reaper.TrackFX_GetParamEx(
         track, probe_fx, index
       )
-      expect(near(minimum, contract[2], 1e-9), "parameter-min-" .. name)
-      expect(near(maximum, contract[3], 1e-9), "parameter-max-" .. name)
-      expect(near(value, contract[5], 1e-9), "parameter-default-" .. name)
+      local normalized = reaper.TrackFX_GetParamNormalized(
+        track, probe_fx, index
+      )
+      expect(near(minimum, 0, 1e-12), "parameter-min-" .. name)
+      expect(near(maximum, 1, 1e-12), "parameter-max-" .. name)
+      expect(near(raw_value, normalized, 1e-12), "parameter-raw-" .. name)
+      expect(near(parameter_value(name), contract[5], 1e-9),
+             "parameter-default-" .. name)
 
       local step_ok, step, small_step, large_step, is_toggle =
         reaper.TrackFX_GetParameterStepSizes(track, probe_fx, index)
@@ -214,14 +354,19 @@ local function inspect_parameter_surface()
       local formatted_ok, formatted = reaper.TrackFX_GetFormattedParamValue(
         track, probe_fx, index, ""
       )
-      expect(formatted_ok and formatted ~= "", "parameter-format-" .. name)
+      local normalized_format_ok, normalized_format =
+        reaper.TrackFX_FormatParamValueNormalized(
+          track, probe_fx, index, normalized, ""
+        )
+      expect(formatted_ok and formatted ~= "" and normalized_format_ok and
+             formatted == normalized_format, "parameter-format-" .. name)
     end
   end
 
   local status_before = parameter_value("Status")
   local status_index = parameter_indices["Status"]
   if status_index ~= nil then
-    reaper.TrackFX_SetParam(track, probe_fx, status_index, 5)
+    reaper.TrackFX_SetParamNormalized(track, probe_fx, status_index, 1)
     expect(near(parameter_value("Status"), status_before, 1e-9),
            "status-read-only")
   end
@@ -290,16 +435,21 @@ local function state_round_trip()
   return true
 end
 
+local observer_reset_cells = {
+  CAPTURE_COUNTER, CAPTURE_COUNT, CAPTURE_OVERFLOW, DRY_ERROR, DRY_COUNT,
+  OUTPUT_PEAK, OUTPUT_NONFINITE, SYNTH_OUTPUT_PEAK, SYNTH_OUTPUT_COUNT,
+}
+
 local function reset_observers()
-  reaper.gmem_write(CAPTURE_COUNTER, 0)
-  reaper.gmem_write(CAPTURE_COUNT, 0)
-  reaper.gmem_write(CAPTURE_OVERFLOW, 0)
-  reaper.gmem_write(DRY_ERROR, 0)
-  reaper.gmem_write(DRY_COUNT, 0)
-  reaper.gmem_write(OUTPUT_PEAK, 0)
-  reaper.gmem_write(OUTPUT_NONFINITE, 0)
-  reaper.gmem_write(SYNTH_OUTPUT_PEAK, 0)
-  reaper.gmem_write(SYNTH_OUTPUT_COUNT, 0)
+  for _, cell in ipairs(observer_reset_cells) do
+    reaper.gmem_write(cell, 0)
+  end
+  for _, cell in ipairs(observer_reset_cells) do
+    if reaper.gmem_read(cell) ~= 0 then
+      return false, cell
+    end
+  end
+  return true, nil
 end
 
 local function select_source_phase(command)
@@ -309,38 +459,66 @@ local function select_source_phase(command)
   reaper.gmem_write(PHASE_SAMPLE, 0)
 end
 
-local function begin_playback(command)
+local function prepare_playback(command)
   reaper.OnStopButton()
-  reset_observers()
+  local reset_ok = reset_observers()
+  if not reset_ok then
+    fail("observer-reset-readback")
+    finish_suite()
+    return false
+  end
   select_source_phase(command)
   reaper.SetEditCurPos(0, false, false)
+  return true
+end
+
+local function begin_playback(command)
+  if not prepare_playback(command) then
+    return false
+  end
   reaper.OnPlayButton()
+  return true
 end
 
 local function captured_note_events()
-  local raw_count = math.floor(reaper.gmem_read(CAPTURE_COUNT))
-  if raw_count < 0 or raw_count > 256 then
+  local raw_count = reaper.gmem_read(CAPTURE_COUNT)
+  if not integer_in_range(raw_count, 0, 256) then
     fail("capture-count-out-of-range")
-    raw_count = math.max(0, math.min(256, raw_count))
+    finish_suite()
+    return nil
   end
   local events = {}
   for index = 0, raw_count - 1 do
     local cell = CAPTURE_EVENT_BASE + index * CAPTURE_EVENT_WORDS
-    local status = math.floor(reaper.gmem_read(cell + 2))
-    local pitch = math.floor(reaper.gmem_read(cell + 3))
-    local velocity = math.floor(reaper.gmem_read(cell + 4))
-    local kind = status & 0xF0
-    if kind == 0x80 or kind == 0x90 then
-      events[#events + 1] = {
-        absolute_sample = math.floor(reaper.gmem_read(cell)),
-        offset = math.floor(reaper.gmem_read(cell + 1)),
-        type = kind == 0x90 and velocity > 0 and "on" or "off",
-        channel = (status & 0x0F) + 1,
-        pitch = pitch,
-        velocity = velocity,
-        note_id = -1000 - pitch,
-      }
+    local absolute_sample = reaper.gmem_read(cell)
+    local offset = reaper.gmem_read(cell + 1)
+    local status = reaper.gmem_read(cell + 2)
+    local pitch = reaper.gmem_read(cell + 3)
+    local velocity = reaper.gmem_read(cell + 4)
+    if not integer_in_range(absolute_sample, 0, 1048576) or
+       not integer_in_range(offset, 0, 511) or
+       not integer_in_range(status, 0, 255) or
+       not integer_in_range(pitch, 0, 127) or
+       not integer_in_range(velocity, 0, 127) then
+      fail("capture-event-out-of-range")
+      finish_suite()
+      return nil
     end
+    local kind = status & 0xF0
+    if kind ~= 0x80 and kind ~= 0x90 then
+      fail("capture-event-type-out-of-range")
+      finish_suite()
+      return nil
+    end
+    events[#events + 1] = {
+      absolute_sample = absolute_sample,
+      offset = offset,
+      type = kind == 0x90 and velocity > 0 and "on" or "off",
+      channel = (status & 0x0F) + 1,
+      pitch = pitch,
+      velocity = velocity,
+      note_id = -1000 - pitch,
+    }
   end
   return events
 end
@@ -384,7 +562,9 @@ local function first_event_index(events, event_type, pitch)
 end
 
 local function setup_track()
-  expect(reaper.CountTracks(0) == 0, "project-not-blank")
+  if not expect(reaper.CountTracks(0) == 0, "project-not-blank") then
+    return false
+  end
   reaper.InsertTrackAtIndex(0, true)
   track = reaper.GetTrack(0, 0)
   if not expect(track ~= nil, "track-creation") then
@@ -407,14 +587,20 @@ local function setup_track()
   if reporter_fx >= 0 then
     reaper.TrackFX_SetEnabled(track, reporter_fx, false)
   end
+  return expect(source_fx == 0, "source-discovery")
+end
+
+local function inspect_track_surface()
   expect(source_fx == 0, "source-discovery")
   expect(probe_fx == 1, "probe-discovery")
   expect(capture_fx == 2, "capture-discovery")
   expect(synth_fx == 3, "reasynth-discovery")
   expect(synth_probe_fx == 4, "synth-probe-discovery")
   expect(reporter_fx == 5, "diagnostic-reporter-reserve")
-  expect(not reaper.TrackFX_GetEnabled(track, reporter_fx),
-         "diagnostic-reporter-reserve-enabled")
+  if reporter_fx >= 0 then
+    expect(not reaper.TrackFX_GetEnabled(track, reporter_fx),
+           "diagnostic-reporter-reserve-enabled")
+  end
   if probe_fx ~= 1 or reporter_fx ~= 5 then
     return false
   end
@@ -442,14 +628,6 @@ local function diagnostic_parameter(name)
   return nil
 end
 
-local function read_diagnostic(name)
-  local index = diagnostic_parameter(name)
-  if index == nil then
-    return nil
-  end
-  return reaper.TrackFX_GetParam(track, probe_fx, index)
-end
-
 local diagnostic_contract = {
   {"create", "Probe create"},
   {"initialize", "Probe initialize"},
@@ -466,13 +644,37 @@ local diagnostic_contract = {
   {"float64_seen", "Probe float64"},
   {"alias_seen", "Probe alias"},
   {"separate_seen", "Probe separate"},
-  {"sample_rate_diagnostic", "Probe sample rate"},
-  {"block_size_diagnostic", "Probe maximum block"},
+  {"sample_rate_diagnostic", "Probe sample rate", 384000},
+  {"block_size_diagnostic", "Probe maximum block", 16384},
   {"trigger_one", "Probe trigger one"},
   {"trigger_two", "Probe trigger two"},
   {"trigger_overflow", "Probe trigger overflow"},
   {"trigger_fault", "Probe trigger fault"},
 }
+
+local diagnostic_maximum = {}
+for _, contract in ipairs(diagnostic_contract) do
+  diagnostic_maximum[contract[2]] = contract[3] or 1048576
+end
+
+local function diagnostic_to_plain(name, normalized)
+  local maximum = diagnostic_maximum[name]
+  if maximum == nil or not finite(normalized) or
+     normalized < 0 or normalized > 1 then
+    return nil
+  end
+  return normalized * maximum
+end
+
+local function read_diagnostic(name)
+  local index = diagnostic_parameter(name)
+  if index == nil then
+    return nil
+  end
+  return diagnostic_to_plain(
+    name, reaper.TrackFX_GetParamNormalized(track, probe_fx, index)
+  )
+end
 
 local function capture_diagnostics()
   diagnostic_values = {}
@@ -507,19 +709,27 @@ local function capture_diagnostics()
 end
 
 local function write_results()
-  local actual_rate = math.floor(reaper.gmem_read(ACTUAL_RATE) + 0.5)
-  local actual_block = math.floor(reaper.gmem_read(ACTUAL_BLOCK) + 0.5)
+  local observer_ok = observer_status(reaper.gmem_read, reset_nonce) == "ready"
+  local actual_rate = observer_ok and
+    math.floor(reaper.gmem_read(ACTUAL_RATE) + 0.5) or -1
+  local actual_block = observer_ok and
+    math.floor(reaper.gmem_read(ACTUAL_BLOCK) + 0.5) or -1
   local status = #failures == 0 and "pass" or "fail"
   atomic_write(result_directory .. "/capability.tsv", {
     "metric\tvalue",
     "status\t" .. status,
     "sample_rate\t" .. actual_rate,
     "block_size\t" .. actual_block,
-    "dry_error\t" .. string.format("%.17g", verified_dry_error),
+    "dry_error\t" .. string.format(
+      "%.17g", finite(verified_dry_error) and verified_dry_error or -1
+    ),
     "synth_peak\t" .. string.format("%.17g", verified_synth_peak),
-    "source_fault\t" .. math.floor(reaper.gmem_read(SOURCE_FAULT)),
-    "capture_overflow\t" .. math.floor(reaper.gmem_read(CAPTURE_OVERFLOW)),
-    "output_nonfinite\t" .. math.floor(reaper.gmem_read(OUTPUT_NONFINITE)),
+    "source_fault\t" .. (observer_ok and
+      math.floor(reaper.gmem_read(SOURCE_FAULT)) or -1),
+    "capture_overflow\t" .. (observer_ok and
+      math.floor(reaper.gmem_read(CAPTURE_OVERFLOW)) or -1),
+    "output_nonfinite\t" .. (observer_ok and
+      math.floor(reaper.gmem_read(OUTPUT_NONFINITE)) or -1),
     "failure_count\t" .. #failures,
     "failures\t" .. (#failures == 0 and "-" or table.concat(failures, ",")),
   })
@@ -540,27 +750,50 @@ local function write_results()
   atomic_write(result_directory .. "/probe-vst3.tsv", report)
 end
 
-local function finish_suite()
+finish_suite = function()
   if finished then
     return
   end
   finished = true
   reaper.OnStopButton()
   write_results()
-  if #failures == 0 then
-    write_phase("suite-finish")
-    reaper.GetSetProjectInfo(0, "DIRTY", 0, true)
-    reaper.defer(function()
-      reaper.Main_OnCommand(40004, 0)
-    end)
-  else
-    write_phase("suite-fail")
-  end
+  write_phase(#failures == 0 and "suite-finish" or "suite-fail")
+  reaper.GetSetProjectInfo(0, "DIRTY", 0, true)
+  reaper.defer(function()
+    reaper.Main_OnCommand(40004, 0)
+  end)
 end
 
 local function fail_timeout(label)
   fail(label .. "-timeout")
   finish_suite()
+end
+
+local function observer_gate(deadline, label, poll)
+  if finished then
+    return false
+  end
+  local status, reason = observer_status(reaper.gmem_read, reset_nonce)
+  if status == "invalid" then
+    fail("observer-" .. reason)
+    finish_suite()
+    return false
+  end
+  if status == "waiting" then
+    if reaper.time_precise() >= deadline then
+      fail_timeout(label .. "-observer-" .. reason)
+    else
+      reaper.defer(poll)
+    end
+    return false
+  end
+  local valid, metric = observer_metrics_valid(reaper.gmem_read)
+  if not valid then
+    fail("observer-" .. metric .. "-range")
+    finish_suite()
+    return false
+  end
+  return true
 end
 
 local begin_trigger_one
@@ -571,11 +804,18 @@ local begin_reporter
 
 local mute_deadline
 local function poll_mute()
+  if not observer_gate(mute_deadline, "dry-mute", poll_mute) then
+    return
+  end
   if reaper.gmem_read(DRY_COUNT) >= 320 then
     expect(reaper.gmem_read(OUTPUT_PEAK) == 0, "dry-mute-output")
     expect(reaper.gmem_read(DRY_ERROR) > 0, "dry-mute-no-input-reference")
     expect(reaper.gmem_read(OUTPUT_NONFINITE) == 0, "dry-mute-nonfinite")
-    expect(#captured_note_events() == 0, "dry-mute-note-output")
+    local events = captured_note_events()
+    if events == nil then
+      return
+    end
+    expect(#events == 0, "dry-mute-note-output")
     reaper.OnStopButton()
     set_parameter("Dry audio", 1)
     begin_trigger_one()
@@ -590,7 +830,15 @@ end
 
 local trigger_one_deadline
 local function poll_trigger_one()
+  if not observer_gate(
+    trigger_one_deadline, "trigger-one", poll_trigger_one
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   if #events >= 2 and reaper.gmem_read(DRY_COUNT) >= 320 then
     expect(#events == 2, "trigger-one-event-count")
     expect_event(events[1], "on", 60, 101, 256)
@@ -618,7 +866,15 @@ end
 
 local recovery_deadline
 local function poll_stop_recovery()
+  if not observer_gate(
+    recovery_deadline, "stop-restart", poll_stop_recovery
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   if #events >= 1 then
     local off_index = first_event_index(events, "off", 64)
     local on_index = first_event_index(events, "on", 64)
@@ -640,7 +896,15 @@ end
 
 local trigger_two_deadline
 local function poll_trigger_two()
+  if not observer_gate(
+    trigger_two_deadline, "trigger-two", poll_trigger_two
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   if #events >= 1 and reaper.gmem_read(SYNTH_OUTPUT_PEAK) > 0 then
     expect(#events == 1, "trigger-two-event-count")
     expect_event(events[1], "on", 64, 111, 256)
@@ -648,13 +912,10 @@ local function poll_trigger_two()
     verified_synth_peak = math.max(
       verified_synth_peak, reaper.gmem_read(SYNTH_OUTPUT_PEAK)
     )
-    reaper.OnStopButton()
-    reset_observers()
-    select_source_phase(3)
-    reaper.SetEditCurPos(0, false, false)
-    reaper.OnPlayButton()
-    recovery_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-    reaper.defer(poll_stop_recovery)
+    if begin_playback(3) then
+      recovery_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+      reaper.defer(poll_stop_recovery)
+    end
     return
   end
   if reaper.time_precise() >= trigger_two_deadline then
@@ -666,7 +927,15 @@ end
 
 local bypass_cleanup_deadline
 local function poll_bypass_cleanup()
+  if not observer_gate(
+    bypass_cleanup_deadline, "bypass-cleanup", poll_bypass_cleanup
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   local off_index = first_event_index(events, "off", 64)
   if off_index ~= nil then
     local on_index = first_event_index(events, "on", 64)
@@ -693,15 +962,25 @@ end
 
 local bypass_hold_deadline
 local function poll_bypass_hold()
+  if not observer_gate(
+    bypass_hold_deadline, "bypass-held", poll_bypass_hold
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   if first_event_index(events, "on", 64) ~= nil then
     expect_event(events[first_event_index(events, "on", 64)],
                  "on", 64, 111, 256)
     record_events("bypass-held", events)
-    reset_observers()
-    select_source_phase(3)
+    if not prepare_playback(3) then
+      return
+    end
     reaper.TrackFX_SetEnabled(track, probe_fx, false)
     expect(not reaper.TrackFX_GetEnabled(track, probe_fx), "bypass-disable")
+    reaper.OnPlayButton()
     reaper.defer(enable_after_bypass)
     return
   end
@@ -716,6 +995,11 @@ local delete_quiet_reset_time
 local delete_quiet_deadline
 local delete_quiet_reset = false
 local function poll_delete_quiet()
+  if not observer_gate(
+    delete_quiet_deadline, "probe-delete-silence", poll_delete_quiet
+  ) then
+    return
+  end
   if not delete_quiet_reset and
      reaper.time_precise() >= delete_quiet_reset_time then
     delete_quiet_reset = true
@@ -725,7 +1009,11 @@ local function poll_delete_quiet()
   if delete_quiet_reset and reaper.gmem_read(SYNTH_OUTPUT_COUNT) >= 320 then
     expect(reaper.gmem_read(SYNTH_OUTPUT_PEAK) <= 1e-12,
            "probe-delete-downstream-audio")
-    record_events("probe-delete", captured_note_events())
+    local events = captured_note_events()
+    if events == nil then
+      return
+    end
+    record_events("probe-delete", events)
     begin_reporter()
     return
   end
@@ -738,14 +1026,23 @@ end
 
 local delete_hold_deadline
 local function poll_delete_hold()
+  if not observer_gate(
+    delete_hold_deadline, "delete-held", poll_delete_hold
+  ) then
+    return
+  end
   local events = captured_note_events()
+  if events == nil then
+    return
+  end
   if first_event_index(events, "on", 64) ~= nil and
      reaper.gmem_read(SYNTH_OUTPUT_PEAK) > 0 then
     expect_event(events[first_event_index(events, "on", 64)],
                  "on", 64, 111, 256)
     record_events("delete-held", events)
-    reset_observers()
-    select_source_phase(3)
+    if not prepare_playback(3) then
+      return
+    end
     reaper.TrackFX_Delete(track, probe_fx)
     probe_fx = -1
     reporter_fx = 4
@@ -753,6 +1050,7 @@ local function poll_delete_hold()
     delete_quiet_reset = false
     delete_quiet_reset_time = reaper.time_precise() + 0.35
     delete_quiet_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.OnPlayButton()
     reaper.defer(poll_delete_quiet)
     return
   end
@@ -765,6 +1063,11 @@ end
 
 local reporter_deadline
 local function poll_reporter()
+  if not observer_gate(
+    reporter_deadline, "diagnostic-reporter", poll_reporter
+  ) then
+    return
+  end
   local process_count = read_diagnostic("Probe process") or 0
   local destroy_count = read_diagnostic("Probe destroy") or 0
   if process_count >= 1 and destroy_count >= 1 then
@@ -804,58 +1107,110 @@ begin_reporter = function()
   reaper.TrackFX_SetEnabled(track, probe_fx, true)
   expect(reaper.TrackFX_GetEnabled(track, probe_fx),
          "diagnostic-reporter-enable")
-  reset_observers()
-  select_source_phase(3)
-  reaper.SetEditCurPos(0, false, false)
-  reaper.OnPlayButton()
-  reporter_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-  reaper.defer(poll_reporter)
+  if begin_playback(3) then
+    reporter_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.defer(poll_reporter)
+  end
 end
 
 begin_delete_hold = function()
   write_phase("delete-held")
-  begin_playback(2)
-  delete_hold_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-  reaper.defer(poll_delete_hold)
+  if begin_playback(2) then
+    delete_hold_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.defer(poll_delete_hold)
+  end
 end
 
 begin_bypass_hold = function()
   write_phase("bypass-held")
-  begin_playback(2)
-  bypass_hold_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-  reaper.defer(poll_bypass_hold)
+  if begin_playback(2) then
+    bypass_hold_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.defer(poll_bypass_hold)
+  end
 end
 
 begin_trigger_two = function()
   write_phase("trigger-two-held")
-  begin_playback(2)
-  trigger_two_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-  reaper.defer(poll_trigger_two)
+  if begin_playback(2) then
+    trigger_two_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.defer(poll_trigger_two)
+  end
 end
 
 begin_trigger_one = function()
   write_phase("trigger-one")
-  begin_playback(1)
-  trigger_one_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
-  reaper.defer(poll_trigger_one)
+  if begin_playback(1) then
+    trigger_one_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
+    reaper.defer(poll_trigger_one)
+  end
 end
 
-write_phase("suite-start")
-reaper.gmem_write(ACTIVE, 0)
-reaper.gmem_write(SOURCE_FAULT, 0)
-reset_observers()
-
-if not setup_track() then
-  finish_suite()
-else
-  inspect_parameter_surface()
-  if not state_round_trip() then
+local function begin_capability_assertions()
+  reaper.OnStopButton()
+  if not reset_observers() then
+    fail("observer-reset-readback")
     finish_suite()
-  else
-    write_phase("dry-mute")
-    set_parameter("Dry audio", 0)
-    begin_playback(0)
+    return
+  end
+  write_phase("observer-ready")
+  if not inspect_track_surface() then
+    finish_suite()
+    return
+  end
+  inspect_parameter_surface()
+  if #failures > 0 or not state_round_trip() then
+    finish_suite()
+    return
+  end
+  write_phase("dry-mute")
+  set_parameter("Dry audio", 0)
+  if begin_playback(0) then
     mute_deadline = reaper.time_precise() + TEST_TIMEOUT_SECONDS
     reaper.defer(poll_mute)
   end
+end
+
+local observer_boot_deadline
+local function poll_observer_boot()
+  if observer_gate(
+    observer_boot_deadline, "observer-ready", poll_observer_boot
+  ) then
+    begin_capability_assertions()
+  end
+end
+
+local function begin_observer_boot()
+  select_source_phase(0)
+  reaper.SetEditCurPos(0, false, false)
+  reaper.OnPlayButton()
+  observer_boot_deadline = reaper.time_precise() + OBSERVER_TIMEOUT_SECONDS
+  reaper.defer(poll_observer_boot)
+end
+
+if type(M3_VST3_CAPABILITY_UNIT_TEST) == "table" then
+  M3_VST3_CAPABILITY_UNIT_TEST.plain_to_normalized = plain_to_normalized
+  M3_VST3_CAPABILITY_UNIT_TEST.normalized_to_plain = normalized_to_plain
+  M3_VST3_CAPABILITY_UNIT_TEST.diagnostic_to_plain = diagnostic_to_plain
+  M3_VST3_CAPABILITY_UNIT_TEST.observer_status = observer_status
+  M3_VST3_CAPABILITY_UNIT_TEST.magic = OBSERVER_MAGIC_VALUE
+  M3_VST3_CAPABILITY_UNIT_TEST.cells = {
+    magic = OBSERVER_MAGIC,
+    generation = OBSERVER_GENERATION,
+    ready = OBSERVER_READY,
+    heartbeat = OBSERVER_HEARTBEAT,
+    ack = OBSERVER_ACK,
+    active = ACTIVE,
+    fault = SOURCE_FAULT,
+    rate = ACTUAL_RATE,
+    block = ACTUAL_BLOCK,
+  }
+  return
+end
+
+write_phase("suite-start")
+clear_observer_transport()
+if not setup_track() then
+  finish_suite()
+else
+  begin_observer_boot()
 end
