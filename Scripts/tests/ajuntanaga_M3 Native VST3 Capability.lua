@@ -1,5 +1,6 @@
 local PERSISTENT_PARAMETER_COUNT = 14
 local OBSERVER_MAGIC_VALUE = 0x4D335633
+local GMEM_NAME = "m3_poly_midi_tests_v1"
 local COMMAND = 2210
 local SOURCE_RESET = 2211
 local PHASE_SAMPLE = 2212
@@ -36,7 +37,7 @@ assert(
   "native VST3 capability results escaped the disposable test directory"
 )
 reaper.RecursiveCreateDirectory(result_directory, 0)
-reaper.gmem_attach("m3_poly_midi_tests_v1")
+local gmem_initial_previous = reaper.gmem_attach(GMEM_NAME)
 
 local phase_lines = {}
 local failures = {}
@@ -59,6 +60,9 @@ local finish_suite
 local reset_nonce = 0
 local verified_dry_error = math.huge
 local verified_synth_peak = 0
+local gmem_round_trip_previous
+local observer_snapshots = {}
+local source_snapshots = {}
 
 local function atomic_write(path, lines)
   assert(path:sub(1, #result_directory) == result_directory)
@@ -102,6 +106,32 @@ end
 local function integer_in_range(value, minimum, maximum)
   return finite(value) and value == math.floor(value) and
          value >= minimum and value <= maximum
+end
+
+local observer_snapshot_contract = {
+  {"active", ACTIVE},
+  {"fault", SOURCE_FAULT},
+  {"rate", ACTUAL_RATE},
+  {"block", ACTUAL_BLOCK},
+  {"magic", OBSERVER_MAGIC},
+  {"generation", OBSERVER_GENERATION},
+  {"ready", OBSERVER_READY},
+  {"heartbeat", OBSERVER_HEARTBEAT},
+  {"ack", OBSERVER_ACK},
+}
+
+local function observer_snapshot(read)
+  local snapshot = {}
+  for _, contract in ipairs(observer_snapshot_contract) do
+    snapshot[contract[1]] = read(contract[2])
+  end
+  return snapshot
+end
+
+local function capture_observer_snapshot(label)
+  if observer_snapshots[label] == nil then
+    observer_snapshots[label] = observer_snapshot(reaper.gmem_read)
+  end
 end
 
 local function observer_status(read, expected_ack)
@@ -590,6 +620,23 @@ local function setup_track()
   return expect(source_fx == 0, "source-discovery")
 end
 
+local function capture_source_snapshot(label)
+  local snapshot = {
+    name = "-", enabled = -1, offline = -1, parameter_count = -1,
+    rate = -1, block = -1,
+  }
+  if track ~= nil and source_fx >= 0 then
+    local name_ok, name = reaper.TrackFX_GetFXName(track, source_fx, "")
+    snapshot.name = name_ok and name or "-"
+    snapshot.enabled = reaper.TrackFX_GetEnabled(track, source_fx) and 1 or 0
+    snapshot.offline = reaper.TrackFX_GetOffline(track, source_fx) and 1 or 0
+    snapshot.parameter_count = reaper.TrackFX_GetNumParams(track, source_fx)
+    snapshot.rate = reaper.TrackFX_GetParam(track, source_fx, 2)
+    snapshot.block = reaper.TrackFX_GetParam(track, source_fx, 3)
+  end
+  source_snapshots[label] = snapshot
+end
+
 local function inspect_track_surface()
   expect(source_fx == 0, "source-discovery")
   expect(probe_fx == 1, "probe-discovery")
@@ -709,13 +756,15 @@ local function capture_diagnostics()
 end
 
 local function write_results()
+  capture_observer_snapshot("terminal")
+  capture_source_snapshot("terminal")
   local observer_ok = observer_status(reaper.gmem_read, reset_nonce) == "ready"
   local actual_rate = observer_ok and
     math.floor(reaper.gmem_read(ACTUAL_RATE) + 0.5) or -1
   local actual_block = observer_ok and
     math.floor(reaper.gmem_read(ACTUAL_BLOCK) + 0.5) or -1
   local status = #failures == 0 and "pass" or "fail"
-  atomic_write(result_directory .. "/capability.tsv", {
+  local capability = {
     "metric\tvalue",
     "status\t" .. status,
     "sample_rate\t" .. actual_rate,
@@ -732,7 +781,37 @@ local function write_results()
       math.floor(reaper.gmem_read(OUTPUT_NONFINITE)) or -1),
     "failure_count\t" .. #failures,
     "failures\t" .. (#failures == 0 and "-" or table.concat(failures, ",")),
-  })
+  }
+  local function metric_value(value)
+    if type(value) == "number" then
+      return string.format("%.17g", value)
+    end
+    if value == nil or value == "" then
+      return "-"
+    end
+    return tostring(value):gsub("[\t\r\n]", " ")
+  end
+  for _, stage in ipairs({"after_clear", "after_setup", "first_poll", "terminal"}) do
+    local snapshot = observer_snapshots[stage] or {}
+    for _, contract in ipairs(observer_snapshot_contract) do
+      capability[#capability + 1] = "observer_" .. stage .. "_" ..
+        contract[1] .. "\t" .. metric_value(snapshot[contract[1]])
+    end
+  end
+  capability[#capability + 1] = "gmem_initial_previous\t" ..
+    metric_value(gmem_initial_previous)
+  capability[#capability + 1] = "gmem_round_trip_previous\t" ..
+    metric_value(gmem_round_trip_previous)
+  for _, stage in ipairs({"after_setup", "terminal"}) do
+    local snapshot = source_snapshots[stage] or {}
+    for _, field in ipairs({
+      "name", "enabled", "offline", "parameter_count", "rate", "block",
+    }) do
+      capability[#capability + 1] = "source_" .. stage .. "_" .. field ..
+        "\t" .. metric_value(snapshot[field])
+    end
+  end
+  atomic_write(result_directory .. "/capability.tsv", capability)
   atomic_write(result_directory .. "/events.tsv", event_lines)
   atomic_write(result_directory .. "/state.tsv", state_lines)
 
@@ -773,6 +852,7 @@ local function observer_gate(deadline, label, poll)
   if finished then
     return false
   end
+  capture_observer_snapshot("first_poll")
   local status, reason = observer_status(reaper.gmem_read, reset_nonce)
   if status == "invalid" then
     fail("observer-" .. reason)
@@ -1192,6 +1272,7 @@ if type(M3_VST3_CAPABILITY_UNIT_TEST) == "table" then
   M3_VST3_CAPABILITY_UNIT_TEST.normalized_to_plain = normalized_to_plain
   M3_VST3_CAPABILITY_UNIT_TEST.diagnostic_to_plain = diagnostic_to_plain
   M3_VST3_CAPABILITY_UNIT_TEST.observer_status = observer_status
+  M3_VST3_CAPABILITY_UNIT_TEST.observer_snapshot = observer_snapshot
   M3_VST3_CAPABILITY_UNIT_TEST.magic = OBSERVER_MAGIC_VALUE
   M3_VST3_CAPABILITY_UNIT_TEST.cells = {
     magic = OBSERVER_MAGIC,
@@ -1209,7 +1290,12 @@ end
 
 write_phase("suite-start")
 clear_observer_transport()
-if not setup_track() then
+capture_observer_snapshot("after_clear")
+local setup_ok = setup_track()
+gmem_round_trip_previous = reaper.gmem_attach(GMEM_NAME)
+capture_observer_snapshot("after_setup")
+capture_source_snapshot("after_setup")
+if not setup_ok then
   finish_suite()
 else
   begin_observer_boot()

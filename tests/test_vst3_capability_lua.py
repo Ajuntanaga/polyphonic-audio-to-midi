@@ -132,6 +132,11 @@ reaper = {{
     return function() index = index + 1 return index end
   end)(),
   TrackFX_SetEnabled = function() return true end,
+  TrackFX_GetFXName = function() return true, "source" end,
+  TrackFX_GetEnabled = function() return true end,
+  TrackFX_GetOffline = function() return false end,
+  TrackFX_GetNumParams = function() return 5 end,
+  TrackFX_GetParam = function() return 0, 0, 1 end,
   SetEditCurPos = function() end,
   OnPlayButton = function() end,
   OnStopButton = function() end,
@@ -154,6 +159,110 @@ assert(closed, "failed capability run did not close")
             self.assertIn("block_size\t-1", capability)
             self.assertIn("observer-magic", capability)
             self.assertNotIn("dry-mute", capability)
+
+    def test_failed_boot_records_transport_attach_and_source_diagnostics(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            resource = pathlib.Path(temporary) / "build/reaper-test"
+            results = resource / "test-results"
+            results.mkdir(parents=True)
+            run_lua(
+                f"""
+local memory = {{}}
+local attached = "legacy_segment"
+local function install_wrong_magic()
+  memory[2201] = 1
+  memory[2202] = 2
+  memory[2203] = 96000
+  memory[2204] = 512
+  memory[2205] = 1234
+  memory[2206] = 7
+  memory[2207] = 6
+  memory[2208] = 5
+  memory[2209] = 4
+end
+closed = false
+reaper = {{
+  GetResourcePath = function() return {lua_quote(resource)} end,
+  RecursiveCreateDirectory = function() end,
+  gmem_attach = function(name)
+    local previous = attached
+    attached = name
+    return previous
+  end,
+  gmem_write = function(index, value) memory[index] = value end,
+  gmem_read = function(index) return memory[index] or 0 end,
+  CountTracks = function() return 0 end,
+  InsertTrackAtIndex = function() end,
+  GetTrack = function() return {{}} end,
+  TrackFX_AddByName = (function()
+    local index = -1
+    return function()
+      index = index + 1
+      if index == 0 then install_wrong_magic() end
+      return index
+    end
+  end)(),
+  TrackFX_SetEnabled = function() return true end,
+  TrackFX_GetFXName = function()
+    return true, "JS: ajuntanaga/M3 Native VST3 Capability Source"
+  end,
+  TrackFX_GetEnabled = function() return true end,
+  TrackFX_GetOffline = function() return false end,
+  TrackFX_GetNumParams = function() return 5 end,
+  TrackFX_GetParam = function(_, _, index)
+    if index == 2 then return 96000, 0, 384000 end
+    if index == 3 then return 512, 0, 16384 end
+    return 0, 0, 1
+  end,
+  SetEditCurPos = function() end,
+  OnPlayButton = function() end,
+  OnStopButton = function() end,
+  time_precise = function() return 0 end,
+  GetSetProjectInfo = function() end,
+  defer = function(callback) callback() end,
+  Main_OnCommand = function(command) closed = command == 40004 end,
+}}
+assert(loadfile({lua_quote(CAPABILITY_SCRIPT)}))()
+assert(closed, "failed capability run did not close")
+"""
+            )
+            metrics = dict(
+                line.split("\t", 1)
+                for line in (results / "capability.tsv")
+                .read_text(encoding="utf-8")
+                .splitlines()[1:]
+            )
+            observer_fields = {
+                "active": "1",
+                "fault": "2",
+                "rate": "96000",
+                "block": "512",
+                "magic": "1234",
+                "generation": "7",
+                "ready": "6",
+                "heartbeat": "5",
+                "ack": "4",
+            }
+            for field in observer_fields:
+                self.assertEqual(metrics[f"observer_after_clear_{field}"], "0")
+            for stage in ("after_setup", "first_poll", "terminal"):
+                for field, value in observer_fields.items():
+                    self.assertEqual(metrics[f"observer_{stage}_{field}"], value)
+            self.assertEqual(metrics["gmem_initial_previous"], "legacy_segment")
+            self.assertEqual(
+                metrics["gmem_round_trip_previous"], "m3_poly_midi_tests_v1"
+            )
+            for stage in ("after_setup", "terminal"):
+                prefix = f"source_{stage}_"
+                self.assertEqual(
+                    metrics[prefix + "name"],
+                    "JS: ajuntanaga/M3 Native VST3 Capability Source",
+                )
+                self.assertEqual(metrics[prefix + "enabled"], "1")
+                self.assertEqual(metrics[prefix + "offline"], "0")
+                self.assertEqual(metrics[prefix + "parameter_count"], "5")
+                self.assertEqual(metrics[prefix + "rate"], "96000")
+                self.assertEqual(metrics[prefix + "block"], "512")
 
     def test_observer_protocol_rejects_address_values_and_waits_for_ack(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -197,6 +306,74 @@ local function read(index) return value[index] or 0 end
 assert(api.observer_status(read, 1) == "waiting", "missing ack did not wait")
 value[api.cells.ack] = 1
 assert(api.observer_status(read, 1) == "ready", "valid observer was rejected")
+"""
+            )
+
+    def test_observer_snapshot_preserves_zero_address_wrong_and_ready_inputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            resource = pathlib.Path(temporary) / "build/reaper-test"
+            (resource / "test-results").mkdir(parents=True)
+            run_lua(
+                f"""
+M3_VST3_CAPABILITY_UNIT_TEST = {{}}
+reaper = {{
+  GetResourcePath = function() return {lua_quote(resource)} end,
+  RecursiveCreateDirectory = function() end,
+  gmem_attach = function() return "" end,
+  gmem_write = function() end,
+  gmem_read = function() return 0 end,
+  CountTracks = function() return 1 end,
+  InsertTrackAtIndex = function() end,
+  GetTrack = function() return nil end,
+  OnStopButton = function() end,
+  GetSetProjectInfo = function() end,
+  defer = function(callback) callback() end,
+  Main_OnCommand = function() end,
+}}
+assert(loadfile({lua_quote(CAPABILITY_SCRIPT)}))()
+local api = M3_VST3_CAPABILITY_UNIT_TEST
+assert(type(api.observer_snapshot) == "function", "missing raw snapshot")
+local fields = {{
+  "active", "fault", "rate", "block", "magic", "generation",
+  "ready", "heartbeat", "ack",
+}}
+local function check(read, expected, label)
+  local snapshot = api.observer_snapshot(read)
+  for position, field in ipairs(fields) do
+    assert(snapshot[field] == expected[position], label .. " " .. field)
+  end
+end
+check(function() return 0 end, {{0, 0, 0, 0, 0, 0, 0, 0, 0}}, "zero")
+check(
+  function(index) return index end,
+  {{2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2209}},
+  "address"
+)
+local wrong = {{
+  [api.cells.active] = 1,
+  [api.cells.fault] = 2,
+  [api.cells.rate] = 96000,
+  [api.cells.block] = 512,
+  [api.cells.magic] = 1234,
+  [api.cells.generation] = 7,
+  [api.cells.ready] = 6,
+  [api.cells.heartbeat] = 5,
+  [api.cells.ack] = 4,
+}}
+check(
+  function(index) return wrong[index] or 0 end,
+  {{1, 2, 96000, 512, 1234, 7, 6, 5, 4}},
+  "wrong-magic"
+)
+wrong[api.cells.magic] = api.magic
+wrong[api.cells.ready] = 7
+wrong[api.cells.ack] = 1
+wrong[api.cells.fault] = 0
+check(
+  function(index) return wrong[index] or 0 end,
+  {{1, 0, 96000, 512, api.magic, 7, 7, 5, 1}},
+  "ready"
+)
 """
             )
 
