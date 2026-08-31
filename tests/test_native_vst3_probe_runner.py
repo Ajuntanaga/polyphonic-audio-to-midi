@@ -313,7 +313,9 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                 "suite-start\n", encoding="utf-8"
             )
             (staging / ".native-vst3-attempt.json").write_text(
-                '{"schema": 1, "sample_rate": 88200, "block_size": 512}\n',
+                '{"schema": 1, "evidence_namespace": '
+                '"native-vst3-probe-v2", "sample_rate": 88200, '
+                '"block_size": 512}\n',
                 encoding="utf-8",
             )
             profile = root / "reaper-test/reaper.ini"
@@ -331,6 +333,7 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                 ),
             ):
                 recovered = PROBE_RUNNER.recover_staging_partial()
+                blocking = PROBE_RUNNER.prior_invalid_attempts(88200, 512)
             self.assertIsNotNone(recovered)
             assert recovered is not None
             self.assertEqual(
@@ -338,6 +341,7 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                 "88200-512.invalid-20260830T120000Z-recovered",
             )
             self.assertTrue((recovered / "phase.log").is_file())
+            self.assertEqual(blocking, [recovered])
 
     def test_unmarked_staging_from_another_workflow_is_ignored(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -360,6 +364,49 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                 recovered = PROBE_RUNNER.recover_staging_partial()
             self.assertIsNone(recovered)
             self.assertTrue((staging / "phase.log").is_file())
+
+    def test_legacy_recovered_staging_does_not_consume_a_v2_attempt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            batches = pathlib.Path(temporary) / "batches"
+            legacy = batches / "44100-32.invalid-old-recovered"
+            legacy.mkdir(parents=True)
+            marker = legacy / PROBE_RUNNER.STAGING_ATTEMPT_NAME
+            marker.write_text(
+                '{"schema": 1, "sample_rate": 44100, "block_size": 32}\n',
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(PROBE_RUNNER, "BATCH_ROOT", batches),
+                mock.patch.object(
+                    PROBE_RUNNER, "recover_pending_batches", return_value=[]
+                ),
+                mock.patch.object(
+                    PROBE_RUNNER,
+                    "recover_staging_partial",
+                    return_value=legacy,
+                ),
+                mock.patch.object(
+                    PROBE_RUNNER, "run_row", return_value="completed"
+                ) as run,
+            ):
+                outcomes = PROBE_RUNNER.run_matrix()
+
+            self.assertEqual(len(outcomes), 20)
+            self.assertEqual(run.call_count, 20)
+            self.assertTrue(marker.is_file())
+
+    def test_unverifiable_recovered_staging_remains_blocking(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            batches = pathlib.Path(temporary) / "batches"
+            invalid = batches / "44100-32.invalid-broken-recovered"
+            invalid.mkdir(parents=True)
+            (invalid / PROBE_RUNNER.STAGING_ATTEMPT_NAME).write_text(
+                "[]\n", encoding="utf-8"
+            )
+            with mock.patch.object(PROBE_RUNNER, "BATCH_ROOT", batches):
+                self.assertEqual(
+                    PROBE_RUNNER.prior_invalid_attempts(44100, 32), [invalid]
+                )
 
     def test_each_row_freshly_stages_project_and_runs_one_guard_process(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -483,6 +530,12 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
             self.assertEqual(
                 json.loads(marker.read_text(encoding="utf-8"))["inputs"],
                 hashes,
+            )
+            self.assertEqual(
+                json.loads(marker.read_text(encoding="utf-8"))[
+                    "evidence_namespace"
+                ],
+                "native-vst3-probe-v2",
             )
 
     def test_matrix_stops_on_first_failure_and_never_runs_the_tail(self):

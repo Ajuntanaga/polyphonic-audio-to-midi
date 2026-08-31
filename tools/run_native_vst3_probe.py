@@ -58,6 +58,7 @@ STAGING_ROOT = (ROOT / "build/reaper-test").resolve()
 PROFILE = (STAGING_ROOT / "reaper.ini").resolve()
 STAGING_RESULTS = (STAGING_ROOT / "test-results").resolve()
 STAGING_ATTEMPT_NAME = ".native-vst3-attempt.json"
+EVIDENCE_NAMESPACE = "native-vst3-probe-v2"
 COMPLETION_FILE = (STAGING_RESULTS / "phase.log").resolve()
 PROBE_SCRIPT = (
     STAGING_ROOT / "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua"
@@ -532,7 +533,23 @@ def prior_invalid_attempts(
     if not BATCH_ROOT.is_dir():
         return []
     label = row_label(sample_rate, block_size)
-    return sorted(BATCH_ROOT.glob(f"{label}.invalid-*"))
+    attempts = sorted(BATCH_ROOT.glob(f"{label}.invalid-*"))
+    return [attempt for attempt in attempts if _blocks_v2(attempt)]
+
+
+def _blocks_v2(attempt: pathlib.Path) -> bool:
+    if "-recovered" not in attempt.name:
+        return True
+    marker = attempt / STAGING_ATTEMPT_NAME
+    if not marker.is_file() or marker.is_symlink():
+        return True
+    try:
+        document = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return True
+    if not isinstance(document, dict):
+        return True
+    return document.get("evidence_namespace") == EVIDENCE_NAMESPACE
 
 
 def guard_command(
@@ -709,6 +726,7 @@ def run_row(sample_rate: int, block_size: int) -> str:
         STAGING_RESULTS / STAGING_ATTEMPT_NAME,
         {
             "schema": 1,
+            "evidence_namespace": EVIDENCE_NAMESPACE,
             "sample_rate": sample_rate,
             "block_size": block_size,
             "inputs": hashes,
@@ -742,6 +760,7 @@ def run_row(sample_rate: int, block_size: int) -> str:
     write_pressure_record(pending / "pressure.json", before, after)
     metadata: dict[str, object] = {
         "schema": 1,
+        "evidence_namespace": EVIDENCE_NAMESPACE,
         "sample_rate": sample_rate,
         "block_size": block_size,
         "inputs": hashes,
@@ -778,10 +797,10 @@ def run_row(sample_rate: int, block_size: int) -> str:
 def run_matrix() -> dict[tuple[int, int], str]:
     recovered_pending = recover_pending_batches()
     recovered_staging = recover_staging_partial()
-    if recovered_pending or recovered_staging is not None:
-        recovered = [str(path) for path in recovered_pending]
-        if recovered_staging is not None:
-            recovered.append(str(recovered_staging))
+    recovered = [str(path) for path in recovered_pending]
+    if recovered_staging is not None and _blocks_v2(recovered_staging):
+        recovered.append(str(recovered_staging))
+    if recovered:
         raise RuntimeError(
             "interrupted native VST3 attempt preserved; no retry: "
             + ", ".join(recovered)
