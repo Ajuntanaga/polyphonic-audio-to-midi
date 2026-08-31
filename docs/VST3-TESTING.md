@@ -423,3 +423,90 @@ authorized. The required separately approved, non-launching TDD amendment was:
   offline-verified, but it is not a host result. The only safe next action is
   independent review followed by fresh, explicit authorization for a new v2
   disposable REAPER validation; the sealed v1 row is never retried.
+
+## Task 15 Gate C5 v2 observer-handshake failure
+
+### Fresh authority and legacy-staging recovery
+
+- The user's later `continue` freshly authorized the exact v2 matrix once:
+  sample rates 44100, 48000, 88200, and 96000 at blocks 32, 64, 128, 256, and
+  512. Execution remained serial, disposable, background/nonactivating on
+  workspace 5, stop-on-first-non-pass, and no-retry.
+- Guarded native debug/sanitizer tests, the exact release probe build, official
+  probe validation, the focused host/recovery suite, all 170 repository tests,
+  the native source validator, and the exact twenty-row dry plan passed before
+  any launch. The user remained on workspace 1 and no REAPER process/window
+  existed.
+- The first default runner invocation launched no REAPER process. It found
+  stale staging from v1 and conservatively preserved it at
+  `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T091010Z-recovered`.
+  The attempt marker and all seven evidence files are byte-identical to the v1
+  staging/row inputs. This is preserved legacy evidence, not a v2 launch, so no
+  launch authority was consumed.
+- TDD commit `a551021` adds `evidence_namespace = native-vst3-probe-v2` to new
+  attempt markers and metadata. One shared predicate ignores only a valid
+  recovered marker proven to omit that namespace; missing, symlinked,
+  malformed, non-object, current-v2, and ordinary invalid records remain
+  permanent blockers. The initial legacy-recovery and namespace tests, then a
+  non-object-marker test, each failed for the intended reason before the
+  minimal fix. No production detector, adapter, probe, timeout, or launch guard
+  changed.
+
+### Executed row and immutable evidence
+
+- The corrected runner was invoked once. It launched only 44.1 kHz/block 32.
+  The disposable REAPER process exited normally in 3.12 seconds; the guard
+  returned zero; and the runner classified the terminal result `fail`.
+- `phase.log` is exactly `suite-start`, `suite-fail`. `capability.tsv` has
+  status `fail`, failure count 1, and sole label `observer-magic`. Its fail-closed
+  sample rate, block size, and unavailable diagnostics remain `-1`; synth peak
+  remains zero. `events.tsv` and `state.tsv` contain only their headers.
+- The immutable row is
+  `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T092345Z`.
+  Its exact runtime inputs are:
+
+```text
+capability script  7b842e910ba3632ca793ae9e2c022416ab1521357cd99e2b6daba140405be31d
+capability source  2f8cfe147893c37eac291da02ee91796600f7e7480c4ee2547a8ba157d474023
+guard              a2376ab2220d8f0415be78a8f0ffb73dafcd5d478331c5eea3034be8fd1a78e5
+module-info        85b8bb18526e8f4ec4744e27069551741b01a8268efb3d97d8ab985e59fec24f
+probe binary       49c5b442e262394458be5d63e200ca26a62b8cc44b7e76c9160c52c654bd5521
+probe bundle       e21f55b673e529feb35620bb80dcc1426671fb066e7a761739f9ed86bcaa4018
+runner             3fd4de6f375707a5c3c148bcdfd488a9c08cc65da7f9622b53058e60a389c4a7
+stager             249988cb85f4d1affb29daa8297deb6c4106a2a58981b2a5bf2a1b52cdd832e9
+```
+
+- The seven-file lexical evidence manifest is:
+
+```text
+cd48bbcf5b36ad3e9fef7be136f32acf4afa4195dceb44b12210ba20429e5175  capability.tsv
+070821a67f30a5bc59f83f19a094893d38101c36d11aa7a189f9086cb14cf070  events.tsv
+6b570e3861118936f6fcd9b8db4c8e910248f129340b6adbe61d0ae10e025473  metadata.json
+8e112e1109832cd4e06aa8ebe8b9bf43d93da991f80ba3034e792901eb6c51f6  phase.log
+beda9773ced2ef007d8bb6178e9d7f19e1ffbdb793874a19017df83f9feba52e  pressure.json
+5b6a3ad995745b261680c7d52f0c3148fb14ae726392bbec73d9ff0f7bd7d4b5  probe-vst3.tsv
+3684785f56a3cf5646dc9d66443ba4691f1c5a48eca00ba1e856253cebc78b2f  state.tsv
+manifest digest: 6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62
+```
+
+### Interpretation, cleanup, and decision
+
+- This is a valid capability `fail`, not an infrastructure timeout or crash:
+  the guard returned zero, REAPER closed itself, and the script published a
+  terminal failure. The observer-magic gate occurs before every parameter,
+  state, audio, MIDI, lifecycle, and reporter assertion. The row therefore
+  establishes no production detector or native-adapter defect and authorizes
+  no edit to either.
+- Before/after readings were 26269.34/26201.62 MiB available,
+  0.48/0.84 one-minute load, 48/50 C, and 0.00/0.00 memory-full and I/O-full
+  PSI. Cleanup left zero REAPER processes/windows and workspace 1 active. No
+  material resource spike or system-stability event occurred.
+- Execution stopped permanently after that first non-pass. The other nineteen
+  rows were not launched and no retry occurred. Check-only adjudication rejects
+  the sealed v2 invalid row plus the absent tail. The v1 manifest digest remains
+  unchanged at
+  `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
+- Gate C5 v2 did not pass. Task 16 and Tasks 17-24 remain blocked. The next safe
+  work is read-only diagnosis of the live JSFX observer attachment/readiness
+  boundary; implementation or another host run requires a separately approved
+  amendment. The current matrix must not be rerun.

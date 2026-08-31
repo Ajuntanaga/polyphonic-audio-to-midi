@@ -1,43 +1,55 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T01:48:58-07:00
+Updated: 2026-08-31T02:28:22-07:00
 
-## Task 15 harness recovery implemented and offline-verified — v2 host validation authorization pending; Task 16 blocked
+## Task 15 v2 capability failure sealed at observer handshake — Task 16 blocked
 
-- The user approved the bounded non-launching Task 15 recovery amendment and
-  implementation. It is sealed at `7ca54a5` (`test: repair VST3 capability
-  harness`). No production detector, native adapter, timeout, or REAPER guard
-  policy was changed.
-- The ReaScript now uses REAPER's explicit normalized VST3 read, write, and
-  formatting APIs and converts through the existing plain-unit parameter
-  contract. Probe diagnostics use their exact bounded normalized domains.
-- The JSFX/ReaScript observer transport now requires magic, generation,
-  readiness, heartbeat, reset acknowledgement, exact reset readback, and
-  bounded telemetry/event values. The preserved
-  `gmem_read(index) == index` pattern fails closed as `observer-magic` before
-  any dry-audio, MIDI, plug-in, or state assertion can run.
-- Both `suite-finish` and `suite-fail` are terminal script states that close
-  the disposable REAPER instance. The existing guard sentinel and limits are
-  unchanged; a completed assertion failure can therefore be classified as
-  `fail` rather than becoming a 45-second infrastructure timeout.
-- Any future recovery evidence is isolated under
-  `build/test-results/native-vst3-probe-v2/batches`; the sealed v1 row can
-  neither be adopted nor overwritten. No v2 directory or row has been created.
-- The implementation followed TDD: the initial normalized-API, observer,
-  terminal-close, source-handshake, and evidence-namespace tests failed for
-  the intended missing behavior before the smallest fixes. Fresh verification
-  passes all 168 repository tests and `tools/validate_native_source.py .`.
-  The non-launching preflight also passes with about 25.8 GiB available and
-  zero memory-full/I/O-full pressure.
-- No REAPER process was launched or left running. The seven-file sealed-row
-  manifest remains exactly
+- The user's `continue` freshly authorized exactly the presented twenty-row v2
+  Gate C5 matrix once: 44.1, 48, 88.2, and 96 kHz at blocks 32, 64, 128, 256,
+  and 512, serially in disposable background REAPER instances on workspace 5,
+  with permanent stop on the first non-pass and no retry.
+- All non-launching gates passed before the host run: guarded native debug and
+  sanitizer tests, the exact release probe build, official probe validation,
+  the focused host/recovery suite, all 170 repository tests, the native source
+  validator, and an exact twenty-row dry plan. Immediately before launch,
+  about 25.7 GiB was available, temperature was 48 C, and memory-full and
+  I/O-full PSI were zero; workspace 1 remained active and no REAPER process or
+  window existed.
+- The first runner invocation launched no REAPER process. It conservatively
+  recovered stale v1 staging into
+  `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T091010Z-recovered`.
+  Read-only comparison proved that directory is byte-identical legacy v1
+  staging, not a v2 attempt. It remains preserved.
+- TDD commit `a551021` (`fix: namespace VST3 recovery evidence`) adds the v2
+  namespace to new attempt markers and ignores only a well-formed recovered
+  marker proven to be foreign legacy evidence. Missing, malformed, non-object,
+  symlinked, current-v2, or ordinary invalid evidence still blocks forever.
+  This offline runner fix consumed none of the twenty launch authority and
+  changed no production detector, adapter, probe, timeout, or pressure guard.
+- The actual v2 execution launched only 44.1 kHz/block 32. REAPER exited
+  normally with guard return code zero; `phase.log` ends in `suite-fail`; and
+  the runner classified the row `fail` because the sole assertion label is
+  `observer-magic`. The immutable row is
+  `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T092345Z`,
+  with seven-file manifest digest
+  `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
+- The observer failed closed before parameter, state, audio, MIDI, lifecycle,
+  or reporter assertions. The empty event/state bodies and `-1` diagnostics
+  are therefore deliberate non-evidence. This result proves no production
+  detector or native-adapter defect and authorizes no such edit.
+- The row began/ended at 26269.34/26201.62 MiB available, load 0.48/0.84,
+  48/50 C, and zero memory-full/I/O-full PSI. Cleanup left zero REAPER
+  processes/windows and left workspace 1 active. There was no crash, timeout, or
+  meaningful system-pressure spike.
+- Per the gate, nineteen rows were not launched and no retry occurred. The v1
+  sealed manifest remains unchanged at
   `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`.
-  Gate C5 itself remains sealed `infrastructure-invalid`; its first row and
-  nineteen-row tail remain immutable and are never retried.
-- The next safe action is independent review of this offline recovery
-  checkpoint, followed only by a fresh, explicit authorization for a new v2
-  disposable REAPER validation. Task 16 remains blocked until a valid v2 Gate
-  C5 result exists.
+  Check-only adjudication now rejects the sealed v2 invalid row and the missing
+  tail, as required.
+- Task 16 and Tasks 17-24 remain blocked. The next safe action is read-only
+  diagnosis of why the live JSFX observer did not expose its magic, followed
+  only by a separately approved offline amendment if the evidence supports
+  one. Do not launch, retry, or edit the production adapter from this result.
 
 - On 2026-08-29, immediately after the sealed Task 2 checkpoint stopped at
   Gate D2, the user explicitly said `Authorize all`. This authorizes every
@@ -371,6 +383,21 @@ Updated: 2026-08-31T01:48:58-07:00
 - **Decision:** Gate C5 did not pass. Task 16 and all remaining detector-port
   and release work are blocked. The infrastructure-invalid result authorizes
   no retry and no adapter, runner, profile, timeout, or assertion-script edit.
+- The subsequently authorized, non-launching harness recovery is sealed at
+  `7ca54a5`, and its evidence-namespace recovery correction is sealed at
+  `a551021`. The first v2 runner invocation recovered and preserved the stale
+  v1 staging duplicate without launching REAPER or consuming launch authority.
+- Fresh v2 Gate C5 authorization then launched exactly one row. The 44.1
+  kHz/block 32 process exited cleanly with guard return code zero and a terminal
+  `suite-fail`; the only assertion label is `observer-magic`. The v2 row is
+  immutable at
+  `build/test-results/native-vst3-probe-v2/batches/44100-32.invalid-20260831T092345Z`
+  with manifest digest
+  `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
+- The v2 result is a valid capability `fail`, not another infrastructure
+  timeout. It stops before any product assertion, so it neither establishes a
+  production-adapter defect nor authorizes a corrective edit. Nineteen rows
+  remain unlaunched; retry and Task 16 remain blocked.
 
 - The user approved exact-plan inline execution with `Proceed --continuous` on
   2026-08-29. Task 1 is sealed at commit `436b396` (`test: seal VST3
@@ -926,38 +953,35 @@ REAPER process behind.
 
 ## Exact resume action
 
-1. Verify Task 14 feature commit `848bf80`, Task 13 feature commit `f3c3fe2`,
-   Task 12 feature commit `7c02188`,
-   SDK manifest SHA-256
-   `4d5b8c240b842a85b39b97ccc8b69e3bb7ed6b000709e62c07a3e41c855063f0`,
-   exact production bundle digest
-   `fed1e4062ba5f29511df2c4b9f430ed3fe0d70172d897ec91dacdc5d2a9e1eaa`,
-   and the immutable one-run Gate O4 record. The failed CLAP Task 10 evidence
-   remains historical input and must not be retried.
-2. Verify the immutable Gate C5 invalid row, its manifest digest
-   `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`,
-   zero remaining REAPER process/window, and unchanged active workspace.
-3. Do not retry 44.1 kHz/block 32 and do not launch the nineteen-row tail.
-   Task 16 remains blocked. Use the post-seal diagnosis only to scope a
-   separately approved non-launching harness-recovery amendment; it does not
-   authorize a runner, adapter, profile, timeout, probe, or assertion edit.
-4. Keep the production VST3 target free of every CLAP entry, bridge, raw-MIDI,
-   probe, and historical adapter source as later tasks extend the verified
-   minimal VST3 target.
-5. Keep every REAPER launch, clean-DI/live input, performance run, persistent
-   installation, live project, custom GUI, and REAPER MCP behind its named
-   gate.
+1. Verify harness-recovery commits `7ca54a5` and `a551021`, then verify the
+   immutable v1 and v2 seven-file manifest digests
+   `98c48c74eeea2ef8bc962689d210bfc6154cf9069fa7c4dee34ed072a4fa0958`
+   and
+   `6d47f22e360e202a3c4cd905302ed0e8c8bfe587909e29dc58cd593872776e62`.
+2. Preserve both v2 directories exactly: the proven legacy staging duplicate
+   ending `091010Z-recovered` and the current-v2 failed row ending
+   `092345Z`. Do not adopt, delete, rename, overwrite, or retry either one.
+3. Confirm zero REAPER processes/windows, the user's active workspace unchanged,
+   and acceptable passive pressure before any further work.
+4. Do not rerun the matrix or launch its nineteen-row tail. Task 16 remains
+   blocked. The only presently safe next task is read-only diagnosis of the
+   JSFX observer attachment/readiness failure; any implementation requires a
+   separately approved amendment and fresh tests before any new host gate.
+5. Keep every adapter/probe change, REAPER launch, clean-DI/live input,
+   performance run, persistent installation, live project, custom GUI, and
+   REAPER MCP behind its named gate.
 
 The prior 07:55 PDT pause boundary was honored. The user explicitly resumed the
 task afterward.
 
 ## Remaining plan actions and prerequisite gates
 
-- VST3 Task 15 is sealed `infrastructure-invalid` after one launched row and a
-  nineteen-row unlaunched tail. The read-only diagnosis confirms normalized
-  parameter-unit misuse, an unguarded observer address pattern, and failure
-  completion misclassification in the harness. Tasks 16-24 are blocked; no
-  retry or corrective implementation is authorized by this evidence.
+- VST3 Task 15 v1 remains sealed `infrastructure-invalid`. Its repaired v2 gate
+  is now sealed `fail` after one cleanly exited row stopped at
+  `observer-magic`; nineteen rows remain unlaunched. Because the observer gate
+  failed before any product assertion, Tasks 16-24 are blocked and no retry,
+  production-adapter diagnosis, or corrective implementation is authorized by
+  the v2 result.
 - Persistent VST3 installation at I9 remains conditional on every required
   release gate being green.
 - Clean-DI/live guitar execution at D8 remains conditional on suitable input
