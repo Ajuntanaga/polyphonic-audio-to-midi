@@ -638,6 +638,30 @@ authority; only its new telemetry can justify any later behavioral amendment.
   and restored workspace 1. The v1/v2 seven-file manifests recomputed to their
   prior immutable digests exactly. Task 16 remains blocked.
 
+### Post-seal v3 root cause and containment findings
+
+- Read-only correlation of the sealed script hash with its source established
+  a direct pre-telemetry failure: the capability script allowed only the old
+  `/build/reaper-test/test-results` suffix, while the v3 profile's resource
+  directory ended in `/build/reaper-test-observer-diagnostic/test-results`.
+  Its assertion occurs before directory creation, `suite-start`, telemetry, or
+  the deferred close action. The empty v3 telemetry and 45-second timeout are
+  therefore explained without inferring a malformed RPP, a detector/adapter
+  defect, or a MIDI failure; `faultyproject` is non-diagnostic aftermath.
+- A focused offline TDD correction admits only those two disposable profile
+  suffixes. Its Lua regressions prove both reach `gmem_attach` and reject an
+  unrelated root, a near-miss suffix, and a live-profile-shaped path. The
+  guarded launcher remains the canonical exact-profile authorization boundary.
+  This correction affects only future staging source, not the sealed v3 staged
+  script, marker, batch, digest, or consumed one-row authority.
+- Separately, post-run inspection found the preserved v3 profile was rewritten
+  to append `~/.vst3`, and its VST cache records `ATONE.vst3` from that external
+  location. This breached the intended build-only scan boundary. It is not
+  evidence of the timeout's cause, and the profile must not be rewritten or
+  masked. Any future host proposal first needs a proven pre-launch containment
+  mechanism and post-exit validation of both `vstpath` and the cache, followed
+  by fresh explicit host authority.
+
 The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
 the primary real-world capability/latency rows, without removing any mandatory

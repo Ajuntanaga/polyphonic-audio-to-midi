@@ -1,6 +1,31 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T04:36:00-07:00
+Updated: 2026-08-31T04:52:25-07:00
+
+## Current post-v3 offline correction and containment boundary
+
+- Read-only forensic work established the direct cause of the sealed v3
+  timeout: its staged capability ReaScript allowed only the old
+  `/build/reaper-test/test-results` suffix, while v3 used
+  `/build/reaper-test-observer-diagnostic/test-results`. Its assertion ran
+  before any phase/telemetry write or disposable-instance close, which explains
+  the empty evidence and fixed-cap `124` without diagnosing the project,
+  observer, production adapter, or MIDI path.
+- The smallest TDD correction now accepts only the two fixed disposable
+  profile suffixes and still rejects a live-profile-shaped path and a near
+  miss. The Lua regression proves both allowed profiles reach setup. It changes
+  only future staging source; the sealed v3 copy, evidence, marker, and no-retry
+  boundary remain untouched.
+- A separate read-only review found that REAPER appended `~/.vst3` to the
+  sealed profile's `vstpath` and cached an external `ATONE.vst3` bundle. This
+  is a scan-containment breach, not a demonstrated timeout cause. Preserve the
+  profile as evidence; do not mask or rewrite it. A future host design must add
+  pre-launch containment plus post-exit profile/cache validation before any new
+  host authority is sought.
+- The current safe work is offline fixture-driven scan-containment validation
+  and documentation only. Do not retry v1/v2/v3, launch a tail, start Task 16,
+  alter the product adapter, or open REAPER without a fresh, separately
+  authorized host gate.
 
 ## Task 15 v3 one-shot observer diagnostic sealed infrastructure-invalid — Task 16 blocked
 

@@ -30,10 +30,21 @@ local OBSERVER_TIMEOUT_SECONDS = 3
 local resource = reaper.GetResourcePath()
 local result_directory = resource .. "/test-results"
 local phase_path = result_directory .. "/phase.log"
-local expected_result_root = "/build/reaper-test/test-results"
+local expected_result_roots = {
+  "/build/reaper-test/test-results",
+  "/build/reaper-test-observer-diagnostic/test-results",
+}
+local expected_result_root = false
+
+for _, root in ipairs(expected_result_roots) do
+  if result_directory:sub(-#root) == root then
+    expected_result_root = true
+    break
+  end
+end
 
 assert(
-  result_directory:sub(-#expected_result_root) == expected_result_root,
+  expected_result_root,
   "native VST3 capability results escaped the disposable test directory"
 )
 reaper.RecursiveCreateDirectory(result_directory, 0)

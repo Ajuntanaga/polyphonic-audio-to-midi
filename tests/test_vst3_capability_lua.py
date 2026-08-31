@@ -64,6 +64,47 @@ def run_lua(source: str) -> None:
 
 
 class Vst3CapabilityLuaTests(unittest.TestCase):
+    def test_result_directory_allows_only_fixed_disposable_profile_suffixes(self):
+        for profile in (
+            "reaper-test",
+            "reaper-test-observer-diagnostic",
+        ):
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
+                resource = pathlib.Path(temporary) / "build" / profile
+                run_lua(
+                    f"""
+M3_VST3_CAPABILITY_UNIT_TEST = {{}}
+gmem_attach_calls = 0
+reaper = {{
+  GetResourcePath = function() return {lua_quote(resource)} end,
+  RecursiveCreateDirectory = function() end,
+  gmem_attach = function() gmem_attach_calls = gmem_attach_calls + 1 end,
+}}
+assert(loadfile({lua_quote(CAPABILITY_SCRIPT)}))()
+assert(gmem_attach_calls == 1, "allowed result root did not reach setup")
+"""
+                )
+
+        for relative in (
+            "outside",
+            "build/reaper-test-observer-diagnostic-near-miss",
+            ".config/REAPER",
+        ):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as temporary:
+                resource = pathlib.Path(temporary) / relative
+                with self.assertRaisesRegex(AssertionError, "escaped the disposable"):
+                    run_lua(
+                        f"""
+M3_VST3_CAPABILITY_UNIT_TEST = {{}}
+reaper = {{
+  GetResourcePath = function() return {lua_quote(resource)} end,
+  RecursiveCreateDirectory = function() end,
+  gmem_attach = function() end,
+}}
+assert(loadfile({lua_quote(CAPABILITY_SCRIPT)}))()
+"""
+                    )
+
     def test_normalized_parameter_and_diagnostic_conversions_execute_in_lua(self):
         with tempfile.TemporaryDirectory() as temporary:
             resource = pathlib.Path(temporary) / "build/reaper-test"
