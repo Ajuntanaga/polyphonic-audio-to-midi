@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V4 synthetic receipt exchange",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "v4-receipt-exchange-vector-1"},
+    "pre": {"$ref": "#/$defs/pre"},
+    "ack_hex": {"const": "06"},
+    "post": {"$ref": "#/$defs/post"}
+  },
+  "required": ["schema", "pre", "ack_hex", "post"],
+  "additionalProperties": false,
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "properties": {
+        "schema": {"const": 1},
+        "namespace": {"const": "native-vst3-probe-v4-scan-isolated"},
+        "nonce": {"type": "string", "pattern": "^[0-9a-f]{32}$", "minLength": 32, "maxLength": 32},
+        "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64},
+        "inputs": {
+          "type": "object", "minProperties": 1, "maxProperties": 16,
+          "propertyNames": {
+            "allOf": [
+              {"pattern": "^[a-z][a-z0-9_-]{0,127}$"},
+              {"not": {"pattern": "[^a-z0-9_-]"}}
+            ],
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64}
+        }
+      },
+      "required": ["schema", "namespace", "nonce", "config_sha256", "inputs"]
+    },
+    "row": {
+      "type": "object",
+      "properties": {
+        "sample_rate_hz": {"const": 44100},
+        "block_size": {"const": 32}
+      },
+      "required": ["sample_rate_hz", "block_size"],
+      "additionalProperties": false
+    },
+    "common_attestation": {
+      "type": "object",
+      "properties": {
+        "home": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+        "pwd": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+        "cwd": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+        "environment_keys": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 128}},
+        "forbidden_env_absent": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 128}},
+        "runtime_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64},
+        "run_input_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64},
+        "bwrap_path": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+        "bwrap_version": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 128},
+        "bwrap_argv_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64},
+        "production_bundle_absent": {"const": true}, "private_vst_empty": {"const": true}, "private_vst3_empty": {"const": true},
+        "private_home_private": {"const": true}, "scan_root_readonly": {"const": true}, "scan_descendants_readonly": {"const": true},
+        "no_later_scan_mount": {"const": true},
+        "x11_identity": {
+          "type": "object",
+          "properties": {
+            "display": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+            "authority": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+            "socket": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256},
+            "screen": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+            "protocol": {"type": "string", "pattern": "^[\\x20-\\x7e]+$", "not": {"pattern": "[^\\x20-\\x7e]"}, "minLength": 1, "maxLength": 256}
+          },
+          "required": ["display", "authority", "socket", "screen", "protocol"],
+          "additionalProperties": false
+        },
+        "source_fds_absent": {"const": true}, "control_root_absent": {"const": true}, "dumpable_disabled": {"const": true},
+        "capabilities_empty": {"const": true}, "proc_receipt_blocked": {"const": true}, "proc_mem_blocked": {"const": true}
+      },
+      "required": ["home", "pwd", "cwd", "environment_keys", "forbidden_env_absent", "runtime_manifest_sha256", "run_input_manifest_sha256", "bwrap_path", "bwrap_version", "bwrap_argv_sha256", "production_bundle_absent", "private_vst_empty", "private_vst3_empty", "private_home_private", "scan_root_readonly", "scan_descendants_readonly", "no_later_scan_mount", "x11_identity", "source_fds_absent", "control_root_absent", "dumpable_disabled", "capabilities_empty", "proc_receipt_blocked", "proc_mem_blocked"]
+    },
+    "pre_attestation": {
+      "allOf": [{"$ref": "#/$defs/common_attestation"}],
+      "unevaluatedProperties": false
+    },
+    "post_attestation": {
+      "allOf": [
+        {"$ref": "#/$defs/common_attestation"},
+        {
+          "type": "object",
+          "properties": {"scan_root_unchanged": {"const": true}},
+          "required": ["scan_root_unchanged"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "pre": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "properties": {"row": {"$ref": "#/$defs/row"}, "phase": {"const": "pre"}, "no_child_started": {"const": true}, "attestation": {"$ref": "#/$defs/pre_attestation"}},
+          "required": ["row", "phase", "no_child_started", "attestation"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "post": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "properties": {
+            "phase": {"const": "post"}, "terminal": {"const": true},
+            "row": {"$ref": "#/$defs/row"},
+            "child_pid": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+            "child_returncode": {"type": "integer", "minimum": -255, "maximum": 255},
+            "pre_monotonic_ns": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807},
+            "post_monotonic_ns": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807},
+            "attestation": {"$ref": "#/$defs/post_attestation"}
+          },
+          "required": ["row", "phase", "terminal", "child_pid", "child_returncode", "pre_monotonic_ns", "post_monotonic_ns", "attestation"]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

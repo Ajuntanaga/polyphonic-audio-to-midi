@@ -1,7 +1,7 @@
 # V4 Disposable REAPER VST3 Scan-Isolation Design
 
 Date: 2026-08-31
-Status: proposed offline architecture; Task 0A sealed, Task 0B limited to documentation/read-only inventory, and Task 0B source authoring, namespace, and host execution blocked; no REAPER launch authority
+Status: proposed offline architecture; Task 0A sealed and Task 0B1 source-only authoring is in review; namespace and host execution remain blocked; no REAPER launch authority
 Scope: a future one-row VST3 capability diagnostic only
 
 ## 1. Authority and non-goals
@@ -98,15 +98,17 @@ configuration has no admission path and enforce exact public-API and
 safe-top-level source allowlists. Its source files and hashes are immutable
 inputs. Their transitive Python/import/extension closure remains unresolved
 until a separately authorized Task 0B2 invocation applies the reviewed
-closure-construction method and seals the complete combined closure; Task 0B
-may not alter the source component
-or introduce a second skeleton with new runtime imports.
+closure-construction method. That invocation must remain blocked until exactly
+one separately reviewed same-namespace session-entrypoint runtime root reaches
+Task 0A and the three Task 0B1 runtime libraries; Task 0B may not alter the
+source component or introduce a second skeleton with new runtime imports.
 
 Phase B is two distinct immutable artifacts, never one overloaded "host"
 manifest:
 
-1. A **fixture-runtime-manifest** is safety-only. It covers the sealed Task 0A
-   skeleton plus the exact receipt-schema, measured-collector, and child-adapter
+1. A **fixture-runtime-manifest** is safety-only. It covers a reviewed
+   same-namespace session-entrypoint runtime root, the sealed Task 0A skeleton,
+   and the exact receipt-schema, measured-collector, and child-adapter
    source/runtime closure needed for one bounded non-REAPER fixture. It may be
    intentionally incompatible with REAPER, and must never be named or consumed
    as host-compatibility evidence.
@@ -121,22 +123,26 @@ non-executing method at
 `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
 It deterministically defines how the source import graph, extension modules,
 ELF dependencies, loader inputs, resource budgets, and unresolved branches are
-recorded and rejected. Until a new explicit offline Task 0B1 authorization,
-Task 0B permits documentation and read-only inventory only; it
-does not permit authoring the static closure constructor, measured namespace
-collectors, exact PRE/POST receipt-schema/exchange module, or sole process
-adapter. When authorized, those four modules must be authored without
+recorded and rejected. Its Task 0B1 source-component amendment is independently
+re-reviewed. The user granted bounded offline Task 0B1 source authoring; the
+static closure constructor, measured namespace collectors, exact PRE/POST
+receipt-schema/exchange module, and sole process adapter may be authored without
 invocation. The static closure constructor is build-time provenance only and
-never a fixture mount; the reviewed Task 0B0 method must seal the complete Task
-0A plus Task 0B1 runtime Python, extension, and ELF closure in a successor
-referencing the immutable skeleton source component. The receipt module extends
-the sealed envelope/base-identity API; it is not a second skeleton. A separate
-explicit offline Task 0B2 authorization is required before the constructor may
-be tested or invoked against sealed static inputs. That task remains data-only:
-it excludes target import/execution/loading, namespace or fixture creation,
-Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access, and
-all host action. Its reviewed output is only a prerequisite to consider a later
-fixture-manifest review, never fixture or host authority.
+never a fixture mount. The three runtime libraries are analysis roots only, not
+session/fixture/manifest runtime roots. The receipt module extends the sealed
+envelope/base-identity API; it is not a second skeleton or session owner. A
+separate explicit offline Task 0B2 authorization is required before the
+constructor may be tested or invoked against sealed static inputs. That task
+remains data-only: it excludes target import/execution/loading, namespace or
+fixture creation, Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/
+network access, and all host action. Without a separately reviewed session
+runtime root, its only honest output is
+`BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)`. A later pure-
+component/session design and source gate is required before receipt,
+measurement, or child-runner behavior is executed. No Task 0B1 component is
+allowed to own PRE/ACK/child/POST sequencing. Its reviewed output is only a
+prerequisite to consider a later fixture-manifest review, never fixture or host
+authority.
 
 Every regular manifest entry must record source, destination, file kind, mode,
 device/inode, byte size, SHA-256, descriptor mount primitive, and reason.
@@ -384,13 +390,15 @@ stale, or out-of-sequence receipt is failure.
 The receipt contains schema/version, v4 namespace name, sample rate/block
 size, exact input hashes, sealed host-runtime and run-input manifest digests,
 the original/in-sandbox `HOME`/`PWD` strings and working directory, Bubblewrap
-identity and complete-argv digest, exact private scan-root entries/hashes,
-production-bundle absence, empty private defaults, mount/environment and
-proc/ptrace-barrier assertions, and pre/post timestamps with child PID/return
-code. `PRE` also contains a fresh nonce, namespace/config digest, and a
-no-child-started assertion. `POST` repeats the nonce/config digest and adds
-post-walk assertions. The parent independently records its Bubblewrap argv
-digest and timestamps; it does not accept a receipt merely because it
+identity and complete-argv digest, production-bundle absence, empty private
+defaults, mount/environment and proc/ptrace-barrier assertions, and pre/post
+timestamps with child PID/return code. The exact private scan-root entry list
+and hashes belong to the later parent-validated run-input manifest referenced
+by that digest; they are not accepted merely because a receipt repeats or
+summarizes them. `PRE` also contains a fresh nonce, namespace/config digest,
+and a no-child-started assertion. `POST` repeats the nonce/config digest and
+adds post-walk assertions. The parent independently records its Bubblewrap
+argv digest and timestamps; it does not accept a receipt merely because it
 self-asserts parent-owned values.
 
 It must fail before REAPER starts if any preflight condition differs. It must

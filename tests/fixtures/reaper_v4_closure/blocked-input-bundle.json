@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "case": "runtime-session-entrypoint-unresolved",
+  "input_bundle": {
+    "schema": 1,
+    "method_version": "v4-task0b0",
+    "method_spec_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "constructor_identity": {"kind": "synthetic-constructor", "raw_path": "/synthetic/task0b1/closure-constructor.py", "mode": 33188, "device": 1, "inode": 101, "byte_size": 4096, "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "version": "v4-task0b1-synthetic"},
+    "parser_identity": {"kind": "synthetic-parser", "raw_path": "/synthetic/task0b1/input-parser.py", "mode": 33188, "device": 1, "inode": 102, "byte_size": 2048, "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "version": "v4-task0b1-synthetic"},
+    "target_platform": {"architecture": "synthetic-x86_64", "system": "synthetic-linux"},
+    "task0a_source_component_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "analysis_roots": [
+      {"id": "task0a-protocol", "module": "tools.reaper_v4_protocol", "kind": "analysis_source", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "role": "sealed_component"},
+      {"id": "task0b1-receipts", "module": "tools.reaper_v4_receipt_schema", "kind": "analysis_source", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "role": "runtime_library"},
+      {"id": "task0b1-measurements", "module": "tools.reaper_v4_measurements", "kind": "analysis_source", "sha256": "6666666666666666666666666666666666666666666666666666666666666666", "role": "runtime_library"},
+      {"id": "task0b1-runner", "module": "tools.reaper_v4_child_runner", "kind": "analysis_source", "sha256": "7777777777777777777777777777777777777777777777777777777777777777", "role": "runtime_library"}
+    ],
+    "runtime_roots": [],
+    "catalogs": {
+      "resolver_policy": {"schema": 1, "kind": "resolver_policy", "records": []},
+      "startup_model": {"schema": 1, "kind": "startup_model", "records": []},
+      "module_catalog": {"schema": 1, "kind": "module_catalog", "records": []},
+      "interpreter_module_registry": {"schema": 1, "kind": "interpreter_module_registry", "records": []},
+      "frozen_effect_catalog": {"schema": 1, "kind": "frozen_effect_catalog", "records": []},
+      "elf_catalog": {"schema": 1, "kind": "elf_catalog", "records": []},
+      "branch_policy": {"schema": 1, "kind": "branch_policy", "records": []},
+      "native_effect_catalog": {"schema": 1, "kind": "native_effect_catalog", "records": []},
+      "virtual_resource_catalog": {"schema": 1, "kind": "virtual_resource_catalog", "records": []},
+      "source_effect_catalog": {"schema": 1, "kind": "source_effect_catalog", "records": []},
+      "resource_policy": {"schema": 1, "kind": "resource_policy", "records": []}
+    },
+    "budgets": {"maximum_edges": 0, "maximum_nodes": 0}
+  },
+  "expected_outcome_projection": {
+    "closure_state": "BLOCKED_UNRESOLVED",
+    "unresolved": [
+      {"code": "runtime_session_entrypoint_unresolved", "role": "same_namespace_pre_ack_child_post_owner"}
+    ]
+  }
+}

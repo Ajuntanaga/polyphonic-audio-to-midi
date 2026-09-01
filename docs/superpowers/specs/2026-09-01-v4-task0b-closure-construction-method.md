@@ -1,8 +1,8 @@
 # V4 Task 0B0 Static Closure-Construction Method
 
 Date: 2026-09-01
-Status: independently reviewed documentation-only method; Task 0B1 source
-authority remains separately required
+Status: independently re-reviewed documentation-only method; Task 0B1 source
+authoring is authorized but module invocation remains separately prohibited
 Scope: construct or refuse a conservative static closure record for the future
 combined Task 0A/Task 0B1 Python, extension, and ELF inputs
 Plan: docs/superpowers/plans/2026-08-31-v4-reaper-scan-isolation.md
@@ -29,9 +29,9 @@ Task 0A component:
 | `tools/reaper_v4_attester.py` | `1b6cae926421615fb6f42fe1ee40d4a09d1dd862296a90c38b8371ee42377891` |
 | `tests/test_reaper_v4_protocol.py` | `809a0b71c65e1e24e5c3f03a247408cec9dfec619d559acbddd1ad5ef0233192` |
 
-Task 0B0 CLEAN review means only that this method is fit to govern a future
-source-only Task 0B1. Task 0B1 still needs new explicit offline user authority
-and may only author, never invoke, four sources: the build-time static closure
+Task 0B0 CLEAN review means only that this method is fit to govern the active
+source-only Task 0B1. The user granted explicit offline Task 0B1 authority,
+which may only author, never invoke, four sources: the build-time static closure
 constructor plus the three runtime receipt-schema, measured-collector, and
 child-adapter modules. Task 0B1 also covers authoring their schemas, synthetic
 method-test fixtures, and catalog formats, but not constructing a record from
@@ -56,9 +56,20 @@ The following artifacts are deliberately distinct:
 The future `tools/reaper_v4_closure_constructor.py` is a build-time analysis
 tool, not a V4 fixture runtime node. Its source and parser identities bind the
 closure record's producer, but it is not mounted by a
-`fixture-runtime-manifest`. The runtime graph instead contains Task 0A plus the
-Task 0B1 receipt-schema, measured-collector, and child-adapter modules. This
-separation prevents a build tool from silently becoming a sandbox dependency.
+`fixture-runtime-manifest`. Task 0A plus the Task 0B1 receipt-schema,
+measured-collector, and child-adapter modules are initially **analysis roots**,
+not runtime roots. This separation prevents a build tool from silently becoming
+a sandbox dependency and prevents library source from silently becoming a
+session entrypoint.
+
+Exactly one separately reviewed same-namespace session entrypoint must later be
+declared as a **runtime root**. It alone owns the PRE, ACK, child, and POST
+sequence, and must reach Task 0A plus all three Task 0B1 runtime libraries. It
+is not authorized in Task 0B1. Until that source and its manifest-root identity
+exist, construction must emit the exact unresolved code
+`runtime_session_entrypoint_unresolved` with expected role
+`same_namespace_pre_ack_child_post_owner`; it may not produce
+`COMPLETE_FIXTURE_CANDIDATE`.
 
 "Complete combined closure" in this method means a closed conservative union,
 not a claim that a particular execution loads the minimal listed files. It is
@@ -80,11 +91,18 @@ or any ambient analyzer package state. A parser pinned to the target grammar
 and configured for AST-only output is allowed; generating or executing target
 bytecode is not.
 
-The future static constructor is a named Task 0B1 deliverable. Its source,
+The Task 0B1 static-constructor skeleton is a named deliverable. Its source,
 alongside the receipt-schema, measured-collector, and child-adapter sources,
 is covered only by the explicit offline Task 0B1 authorization described in the
 plan. This specification defines required behavior only. A documentation review
-cannot be substituted for its implementation or test evidence.
+cannot be substituted for its implementation or test evidence. The current
+author-only skeleton intentionally refuses all pathname loading and rejects
+schema-invalid data. For the sole supplied schema-valid empty synthetic catalog vector,
+it emits only a full
+`BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` record. It does not
+yet parse a graph or implement a candidate-complete path; retained-dirfd input,
+catalog records, and reachability construction require the later scoped Task
+0B2/0B3 work.
 
 ## 4. Sealed input set
 
@@ -118,6 +136,26 @@ The constructor never reads ambient `sys.path`, `sys.modules`, cwd, shell
 environment, HOME, loader cache, or analyzer-host configuration. If a required
 startup or loader influence is not explicitly sealed in the policy, the result
 is `BLOCKED_UNRESOLVED`.
+
+### 4.1a Root declaration
+
+The canonical input bundle—not `resolver-policy.json`—has two exact ordered
+members: `analysis_roots` and `runtime_roots`. Every root is a closed object
+with `id`, `module`, `kind`, `sha256`, and `role`. `id` is a unique stable
+lowercase identifier; `module` is a cataloged dotted source module; `kind` is
+either `analysis_source` or `session_entrypoint`; `sha256` is the exact source
+identity; and `role` is a fixed semantic label. Both arrays are included in the
+canonical `input_bundle_digest` and emitted as `analysis_root_identities` and
+`runtime_root_identities` in the output record.
+
+The constructor traverses every analysis root as evidence for the conservative
+static graph. A Task 0B1 library listed in `analysis_roots` is never a runtime
+root by implication. A complete candidate requires exactly one runtime root of
+kind `session_entrypoint`, role `same_namespace_pre_ack_child_post_owner`, and
+proven static reachability from that root to Task 0A plus every Task 0B1 runtime
+library. Zero, multiple, malformed, or incomplete runtime roots emit the typed
+unresolved output record `runtime_session_entrypoint_unresolved`; the analysis
+graph remains recorded, but `closure_state` is `BLOCKED_UNRESOLVED`.
 
 ### 4.2 Startup model
 
@@ -269,11 +307,18 @@ Bubblewrap allocation.
 
 ### 5.1 Python edges
 
-The graph begins with every `startup-model` root and then parses target source
-bytes with the target grammar, recording each AST digest. It traverses every
+The graph begins with every `startup-model` root and the deterministic union of
+declared analysis and runtime roots, then parses target source bytes with the
+target grammar, recording each AST digest. The seed order is startup roots,
+ordered analysis roots, then ordered runtime roots. Identical source roots
+deduplicate only when their `module` and `sha256` both match; a duplicated module
+with a different SHA-256 is unresolved. The output retains both root-role
+identities even when their source traversal seed is shared. It traverses every
 lexical literal `import` and `from … import` edge, including function-local
 imports. Relative imports and required package initializers resolve only through
-the module catalog.
+the module catalog. Runtime-root reachability is evaluated from the parsed
+runtime-root node against this conservative graph; an analysis-only path does
+not satisfy it.
 
 For `from package import name`, the record always includes the package source.
 It classifies `name` as a package attribute only when the package AST provides
@@ -380,7 +425,8 @@ interpreter_module_registry_digest, native_effect_catalog_digest,
 frozen_effect_catalog_digest, virtual_resource_catalog_digest,
 source_effect_catalog_digest,
 startup_model_digest, input_bundle_digest, target_platform,
-task0a_source_component_digest, input_root_identities,
+task0a_source_component_digest, analysis_root_identities,
+runtime_root_identities,
 module_catalog_digest, elf_catalog_digest, branch_policy_digest,
 nodes, edges, branch_records, unresolved, budgets, closure_digest,
 closure_state
@@ -398,18 +444,26 @@ Every edge is typed: `import`, `conditional`, `package_init`, `builtin`,
 `literal_dlopen`, `native_effect`, `resource`, or `config`. Each branch record
 includes the source location, expression, sealed inputs, verdict (`included`,
 `excluded`, or `unresolved`), and evidence. An exclusion without sealed
-evidence refuses.
+evidence refuses. Every `unresolved` member is a closed object with `code`,
+`role`, `analysis_root_ids`, and `evidence`. The missing-session case uses only
+`code: "runtime_session_entrypoint_unresolved"` and
+`role: "same_namespace_pre_ack_child_post_owner"`; its
+`analysis_root_ids` are the ordered declared analysis-root identifiers and its
+evidence identifies the empty/malformed/incomplete runtime-root declaration.
 
 Only two terminal states exist:
 
 | `closure_state` | Meaning | May become a fixture manifest? |
 | --- | --- | --- |
-| `COMPLETE_FIXTURE_CANDIDATE` | The Task 0A plus Task 0B1 runtime conservative graph is closed, provenance-backed, and budgeted | Only after separate fixture-manifest review and authority |
+| `COMPLETE_FIXTURE_CANDIDATE` | One reviewed session-entrypoint runtime root reaches Task 0A plus every Task 0B1 runtime library, and the conservative graph is closed, provenance-backed, and budgeted | Only after separate fixture-manifest review and authority |
 | `BLOCKED_UNRESOLVED` | A reachable edge, input identity, policy condition, budget, or topology is incomplete or ambiguous | No |
 
 No current Task 0A-only record can be `COMPLETE_FIXTURE_CANDIDATE`: the future
-Task 0B1 runtime-source identities and their graph do not yet exist. The
-current honest result is therefore `BLOCKED_UNRESOLVED`.
+Task 0B1 runtime-source identities, their graph, and the separately reviewed
+session-entrypoint runtime root do not yet exist. Even after Task 0B1 source
+authoring, the absence of that root produces
+`BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)`. The current honest
+result is therefore `BLOCKED_UNRESOLVED`.
 
 Neither state claims an actual loaded set, a successful fixture, REAPER
 compatibility, or authority to form a Bubblewrap/REAPER command.
@@ -489,11 +543,12 @@ entry has root provenance, every exclusion has sealed evidence, registry/native
 effect evidence binds the exact target identity, resource equations recompute,
 and the result contains no host-compatibility wording.
 
-Independent review is CLEAN for this documentation-only method. This marks
-Task 0B0 complete; it does not grant Task 0B1 source authority, Task 0B2 constructor-invocation
-authority, fixture authority, or host authority. A future Task 0B1
-implementation and separately authorized Task 0B2 invocation must show the
-same method applies to the combined Task 0A/Task 0B1 graph before a reviewed
+The original Task 0B0 method review and its Task 0B1 source-component amendment
+are independently CLEAN. This does not grant Task 0B2
+constructor-invocation authority, fixture authority, or host authority. A
+future separately authorized Task 0B2 invocation must show the same method
+applies to the combined Task 0A/Task 0B1 analysis graph and reports the missing
+runtime root before a reviewed
 `fixture-runtime-manifest` can exist. The
 `reaper-host-runtime-manifest` still needs separately authorized resolution of
 REAPER, libSwell, GUI, X11, and all dynamic runtime behavior.

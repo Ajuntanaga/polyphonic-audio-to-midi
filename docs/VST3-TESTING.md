@@ -701,17 +701,20 @@ the primary real-world capability/latency rows, without removing any mandatory
   ACK/control, runner, admission, launch, or import-time behavior from being
   introduced unnoticed. It creates no fixture or host authority.
 - Its runtime inventory remains static and intentionally incomplete. The
-  documentation-only non-executing closure method at
+  original documentation-only non-executing closure method at
   `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`
-  has an independent CLEAN review, but Task 0B remains documentation/read-only
-  inventory only until explicit offline Task 0B1 authority is granted. Task 0B1
-  may author, but not invoke, the static constructor plus the
+  has an independent CLEAN review, including its Task 0B1 source-component/
+  runtime-root amendment. The user has granted bounded Task 0B1 author-only
+  scope. Task 0B1 may author, but not invoke, the static constructor plus the
   receipt-schema, measured-collector, and child-adapter sources. A separately
   authorized offline Task 0B2 is required before that constructor may be tested
   or invoked against sealed static inputs; it excludes target
   import/execution/loading, namespace or fixture creation,
   Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access,
-  and all host actions. A future `fixture-runtime-manifest` can support only a
+  and all host actions. The Task 0B1 files are analysis roots only; without one
+  separately reviewed session runtime root, Task 0B2 must report
+  `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` and cannot emit a
+  fixture manifest. A future `fixture-runtime-manifest` can support only a
   bounded non-REAPER fixture; a `reaper-host-runtime-manifest` must add the
   complete REAPER/libSwell/GUI/X11/dynamic closure before compatibility. Both
   require declared copy-byte, FD, `RLIMIT_NOFILE`, and memory/tmpfs refusal

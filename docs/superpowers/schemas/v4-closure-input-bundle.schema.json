@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V4 Task 0B1 closed blocked-closure input bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "method_version", "method_spec_sha256", "constructor_identity", "parser_identity", "target_platform", "task0a_source_component_digest", "analysis_roots", "runtime_roots", "catalogs", "budgets"],
+  "properties": {
+    "schema": {"const": 1},
+    "method_version": {"const": "v4-task0b0"},
+    "method_spec_sha256": {"$ref": "#/$defs/sha256"},
+    "constructor_identity": {"$ref": "#/$defs/constructor_identity"},
+    "parser_identity": {"$ref": "#/$defs/parser_identity"},
+    "target_platform": {"$ref": "#/$defs/target_platform"},
+    "task0a_source_component_digest": {"$ref": "#/$defs/sha256"},
+    "analysis_roots": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        {"$ref": "#/$defs/task0a_protocol_root"},
+        {"$ref": "#/$defs/task0b1_receipt_root"},
+        {"$ref": "#/$defs/task0b1_measurement_root"},
+        {"$ref": "#/$defs/task0b1_runner_root"}
+      ],
+      "items": false
+    },
+    "runtime_roots": {"type": "array", "maxItems": 0, "items": false},
+    "catalogs": {"$ref": "#/$defs/catalogs"},
+    "budgets": {"$ref": "#/$defs/budgets"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "maxLength": 64},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "raw_path", "mode", "device", "inode", "byte_size", "sha256", "version"],
+      "properties": {
+        "kind": {"enum": ["synthetic-constructor", "synthetic-parser"]},
+        "raw_path": {"type": "string", "pattern": "^/synthetic(?:/[\\x20-\\x7e]+)*$", "maxLength": 1024, "not": {"pattern": "(?:^|/)(?:\\.|\\.\\.)(?:/|$)"}},
+        "mode": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "device": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807},
+        "inode": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807},
+        "byte_size": {"type": "integer", "minimum": 0, "maximum": 9223372036854775807},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "version": {"type": "string", "minLength": 1, "maxLength": 128, "not": {"pattern": "[^\\x20-\\x7e]"}}
+      }
+    },
+    "constructor_identity": {"allOf": [{"$ref": "#/$defs/identity"}, {"properties": {"kind": {"const": "synthetic-constructor"}}}]},
+    "parser_identity": {"allOf": [{"$ref": "#/$defs/identity"}, {"properties": {"kind": {"const": "synthetic-parser"}}}]},
+    "target_platform": {
+      "type": "object", "additionalProperties": false,
+      "required": ["architecture", "system"],
+      "properties": {"architecture": {"type": "string", "minLength": 1, "maxLength": 128, "not": {"pattern": "[^\\x20-\\x7e]"}}, "system": {"type": "string", "minLength": 1, "maxLength": 128, "not": {"pattern": "[^\\x20-\\x7e]"}}}
+    },
+    "root_base": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "module", "kind", "sha256", "role"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "not": {"pattern": "[^a-z0-9-]"}, "maxLength": 128},
+        "module": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$", "not": {"pattern": "[^A-Za-z0-9_.]"}, "maxLength": 256},
+        "kind": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}, "role": {"type": "string", "maxLength": 128}
+      }
+    },
+    "analysis_root": {
+      "allOf": [{"$ref": "#/$defs/root_base"}, {"properties": {"kind": {"const": "analysis_source"}, "role": {"enum": ["sealed_component", "runtime_library"]}}}]
+    },
+    "task0a_protocol_root": {
+      "allOf": [{"$ref": "#/$defs/analysis_root"}, {"properties": {"module": {"const": "tools.reaper_v4_protocol"}, "role": {"const": "sealed_component"}}}]
+    },
+    "task0b1_receipt_root": {
+      "allOf": [{"$ref": "#/$defs/analysis_root"}, {"properties": {"module": {"const": "tools.reaper_v4_receipt_schema"}, "role": {"const": "runtime_library"}}}]
+    },
+    "task0b1_measurement_root": {
+      "allOf": [{"$ref": "#/$defs/analysis_root"}, {"properties": {"module": {"const": "tools.reaper_v4_measurements"}, "role": {"const": "runtime_library"}}}]
+    },
+    "task0b1_runner_root": {
+      "allOf": [{"$ref": "#/$defs/analysis_root"}, {"properties": {"module": {"const": "tools.reaper_v4_child_runner"}, "role": {"const": "runtime_library"}}}]
+    },
+    "runtime_root": {
+      "allOf": [{"$ref": "#/$defs/root_base"}, {"properties": {"kind": {"const": "session_entrypoint"}, "role": {"const": "same_namespace_pre_ack_child_post_owner"}}}]
+    },
+    "empty_catalog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "kind", "records"],
+      "properties": {"schema": {"const": 1}, "kind": {"type": "string", "maxLength": 64}, "records": {"type": "array", "maxItems": 0}}
+    },
+    "catalogs": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resolver_policy", "startup_model", "module_catalog", "interpreter_module_registry", "frozen_effect_catalog", "elf_catalog", "branch_policy", "native_effect_catalog", "virtual_resource_catalog", "source_effect_catalog", "resource_policy"],
+      "properties": {
+        "resolver_policy": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "resolver_policy"}}}]},
+        "startup_model": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "startup_model"}}}]},
+        "module_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "module_catalog"}}}]},
+        "interpreter_module_registry": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "interpreter_module_registry"}}}]},
+        "frozen_effect_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "frozen_effect_catalog"}}}]},
+        "elf_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "elf_catalog"}}}]},
+        "branch_policy": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "branch_policy"}}}]},
+        "native_effect_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "native_effect_catalog"}}}]},
+        "virtual_resource_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "virtual_resource_catalog"}}}]},
+        "source_effect_catalog": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "source_effect_catalog"}}}]},
+        "resource_policy": {"allOf": [{"$ref": "#/$defs/empty_catalog"}, {"properties": {"kind": {"const": "resource_policy"}}}]}
+      }
+    },
+    "budgets": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximum_edges", "maximum_nodes"],
+      "properties": {"maximum_edges": {"type": "integer", "minimum": 0}, "maximum_nodes": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

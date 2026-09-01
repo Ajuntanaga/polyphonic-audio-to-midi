@@ -1,0 +1,42 @@
+{
+  "schema": "v4-receipt-exchange-vector-1",
+  "pre": {
+    "schema": 1,
+    "namespace": "native-vst3-probe-v4-scan-isolated",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "config_sha256": "723da06ef0d40d7842a190e11d585e789f1b2c0c370bb49c798b7d7850365e9b",
+    "inputs": {"synthetic": "1111111111111111111111111111111111111111111111111111111111111111"},
+    "row": {"sample_rate_hz": 44100, "block_size": 32},
+    "phase": "pre",
+    "no_child_started": true,
+    "attestation": {
+      "home": "synthetic-home", "pwd": "synthetic-pwd", "cwd": "synthetic-cwd", "environment_keys": ["LANG"], "forbidden_env_absent": ["DISPLAY"],
+      "runtime_manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "run_input_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333", "bwrap_path": "synthetic-bwrap", "bwrap_version": "synthetic", "bwrap_argv_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "production_bundle_absent": true, "private_vst_empty": true, "private_vst3_empty": true, "private_home_private": true, "scan_root_readonly": true, "scan_descendants_readonly": true, "no_later_scan_mount": true,
+      "x11_identity": {"display": "synthetic-display", "authority": "synthetic-authority", "socket": "synthetic-socket", "screen": 0, "protocol": "synthetic"},
+      "source_fds_absent": true, "control_root_absent": true, "dumpable_disabled": true, "capabilities_empty": true, "proc_receipt_blocked": true, "proc_mem_blocked": true
+    }
+  },
+  "ack_hex": "06",
+  "post": {
+    "schema": 1,
+    "namespace": "native-vst3-probe-v4-scan-isolated",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "config_sha256": "723da06ef0d40d7842a190e11d585e789f1b2c0c370bb49c798b7d7850365e9b",
+    "inputs": {"synthetic": "1111111111111111111111111111111111111111111111111111111111111111"},
+    "row": {"sample_rate_hz": 44100, "block_size": 32},
+    "phase": "post",
+    "terminal": true,
+    "child_pid": 1,
+    "child_returncode": 0,
+    "pre_monotonic_ns": 1,
+    "post_monotonic_ns": 2,
+    "attestation": {
+      "home": "synthetic-home", "pwd": "synthetic-pwd", "cwd": "synthetic-cwd", "environment_keys": ["LANG"], "forbidden_env_absent": ["DISPLAY"],
+      "runtime_manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "run_input_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333", "bwrap_path": "synthetic-bwrap", "bwrap_version": "synthetic", "bwrap_argv_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "production_bundle_absent": true, "private_vst_empty": true, "private_vst3_empty": true, "private_home_private": true, "scan_root_readonly": true, "scan_descendants_readonly": true, "no_later_scan_mount": true,
+      "x11_identity": {"display": "synthetic-display", "authority": "synthetic-authority", "socket": "synthetic-socket", "screen": 0, "protocol": "synthetic"},
+      "source_fds_absent": true, "control_root_absent": true, "dumpable_disabled": true, "capabilities_empty": true, "proc_receipt_blocked": true, "proc_mem_blocked": true, "scan_root_unchanged": true
+    }
+  }
+}

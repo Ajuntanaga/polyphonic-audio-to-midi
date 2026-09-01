@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-01T02:30:00-07:00
+Updated: 2026-09-01T04:10:41-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -21,17 +21,19 @@ Updated: 2026-09-01T02:30:00-07:00
   process-launch path, or import-time side effect. Four focused tests pass.
 - Commit `940f64d` (`docs: harden V4 runtime manifest gate`) records the
   independently reviewed Task 0B block: a closure-construction method and
-  explicit offline Task 0B1 authority must precede source authoring; fixture
+  explicit offline Task 0B1 authority precede source authoring; fixture
   and host manifests are separate; and any future descriptor-pinned manifest
   must refuse over-copy, FD, `RLIMIT_NOFILE`, or memory/tmpfs budgets.
-- The independently reviewed Task 0B0 method is
+- The original Task 0B0 method is
   `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
-  It completes the documentation-only method gate but grants no implementation
-  authority. With a new explicit offline authorization, Task 0B1 may author,
-  but not invoke, four sources: the static closure
+  Its original review and Task 0B1 source-component/runtime-root amendment are
+  independently CLEAN. The user has granted the bounded Task 0B1 author-only
+  scope. The amendment records that Task 0B1 may author, but not invoke, four
+  sources: the static closure
   constructor plus the receipt-schema, measured-collector, and child-adapter
   runtime modules, along with their catalog schemas and synthetic static-data
-  fixtures. A separate explicit offline Task 0B2 authorization is required to
+  fixtures. They are analysis roots only; no Task 0B1 file is a session or
+  manifest runtime root. A separate explicit offline Task 0B2 authorization is required to
   test or invoke the constructor against sealed data; it remains data-only and
   excludes target import/execution/loading, namespace or fixture creation,
   Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access,
@@ -39,11 +41,14 @@ Updated: 2026-09-01T02:30:00-07:00
 - The static source closure is recorded only as an unresolved Task 0B input:
   it includes Python `ctypes`, `hashlib`, `json`, `struct`, and their extension
   / ELF candidates. It is neither fixture-complete nor compatibility-complete.
-  No Task 0B source authoring is currently authorized: the reviewed,
-  non-executing closure-construction method is complete, but explicit offline
-  Task 0B1 authority remains a prerequisite. Task 0B1 does not authorize
-  testing or invoking the constructor; that later step needs its own Task 0B2
-  authority.
+  Task 0B1 author-only source/catalog work is sealed: the four bounded source
+  modules, two schema files, two synthetic fixtures, and their exact hash
+  seals passed the seven-check AST/JSON-byte gate. Two independent static
+  reviews are CLEAN. No Task 0B1 module was imported, compiled, or invoked,
+  and no host process was launched. Any later Task 0B2 invocation must return
+  `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` until a separately
+  reviewed session runtime root exists. Task 0B1 never authorizes testing or
+  invoking the constructor; that later step needs its own Task 0B2 authority.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -51,9 +56,9 @@ Updated: 2026-09-01T02:30:00-07:00
   host request is possible. Both require copy-byte, FD, `RLIMIT_NOFILE`, and
   memory/tmpfs preflight refusal budgets.
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
-  Task 0B remains a documentation/read-only-inventory gate; no source-only V4
-  work remains authorized beyond documentation or review without a new scoped
-  task.
+  Task 0B1 is now preservation-only. Its static test may be rerun without
+  importing target modules; any source change, module invocation, fixture,
+  namespace, or external action requires a new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots
