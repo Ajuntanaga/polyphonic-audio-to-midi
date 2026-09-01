@@ -1,6 +1,28 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-08-31T04:52:25-07:00
+Updated: 2026-09-01T00:19:52-07:00
+
+## V4 scan-isolation design reviewed — source-only Phase A next
+
+- Commit `8f0d1db` (`docs: define V4 scan isolation gate`) records the
+  independently reviewed V4 one-row scan-isolation design, static runtime
+  inventory, and TDD implementation plan. It preserves every sealed v1/v2/v3
+  artifact and creates no new execution authority.
+- The design places a fresh private VST3 root inside a Bubblewrap namespace,
+  keeps control receipts and uncertainty markers solely in an outer
+  retained-dirfd controller, and requires scope confirmation, zero REAPER PID
+  census, bounded attester PRE/POST evidence, descriptor-pinned regular inputs,
+  and anchored nonregular inputs before any future scanner can run.
+- The runtime inventory is deliberately **not compatibility-complete**: REAPER,
+  libSwell, GUI/audio and Python runtime closure still require an immutable
+  manifest. Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or
+  executed. The only permitted next implementation work is the complete
+  source-only Phase A attester and its offline protocol tests; Phase B remains
+  an inventory/review gate.
+- Any later V4 host execution needs the compatibility-complete manifest,
+  implementation and independent review of the isolation controls, fresh roots
+  and preflight, and new explicit user authority. It cannot consume prior v2 or
+  v3 authority or unblock Task 16.
 
 ## Current post-v3 offline correction and containment boundary
 

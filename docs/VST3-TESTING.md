@@ -684,3 +684,20 @@ The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
 the primary real-world capability/latency rows, without removing any mandatory
 44.1/48/88.2/96 kHz row or the independent 96 kHz false-MIDI-44 release gate.
+
+### V4 scan-isolation design gate
+
+- Commit `8f0d1db` records a reviewed offline design for a fresh, single-row
+  V4 namespace. It is a future containment design only: all v1/v2/v3 evidence
+  remains sealed, no REAPER/Bubblewrap/systemd process was launched, and Task
+  16 remains blocked.
+- The design requires an outer-controller-only control root, one framed
+  attester PRE/ACK/POST exchange, descriptor-pinned regular inputs, anchored
+  nonregular inputs, private VST scan roots, verified scope teardown, and a
+  zero-process census before any post-exit scan could be considered.
+- Its runtime inventory is static and intentionally incomplete. A
+  compatibility-complete immutable runtime manifest, separately implemented
+  and reviewed controls, a fresh preflight, and new explicit user authority
+  are still required before any V4 host command may be formed or run. The only
+  current implementation scope is source-only Phase A attester code and
+  offline tests.
