@@ -1,16 +1,18 @@
 # V4 Task 0B3 — Single Session-Owner Design
 
-**Status:** design-only; independently reviewed
+**Status:** design-only; Task 0B3a evidence-input amendment independently
+reviewed
 
-**Authority:** Task 0B3 defines a future in-namespace session-owner contract.
-It authorizes no source file, module import, component invocation, fixture,
-namespace, Bubblewrap/systemd/REAPER command, GUI/X11/audio/network action, or
-host mutation. It does not alter immutable Task 0A or make a Task 0B1 library
-admissible.
+**Authority:** This Task 0B3 record defines a future in-namespace session-owner
+contract. By itself, it authorizes no module import, component invocation,
+fixture, namespace, Bubblewrap/systemd/REAPER command, GUI/X11/audio/network
+action, or host mutation. The separately scoped Task 0B3a source contract may
+authorize source bytes and a pre-import static verifier only; it does not alter
+immutable Task 0A or make a Task 0B1 library admissible.
 
 ## 1. Decision
 
-One later, separately authorized source component—provisionally named
+One later, separately authorized source component—
 `tools/reaper_v4_session.py`—is the sole in-namespace **runtime root**. Its
 exact closure role is:
 
@@ -25,13 +27,13 @@ It alone owns the state transition:
 validated configuration -> PRE -> parent ACK+EOF -> one child -> POST+EOF
 ```
 
-It is not a fifth Task 0B1 artifact. It cannot be authored, imported, or
-executed until a later scoped source authority. A later reviewed closure may
-include helper modules, but they are reachable implementation details only:
-none may become a second runtime root, coordinator, receipt writer, or child
-admission path. Until an independently reviewed successor closure proves this
-one root reaches immutable Task 0A and all three Task 0B1 runtime libraries,
-the only permitted closure state remains:
+It is not a fifth Task 0B1 artifact. It cannot be imported or executed until a
+later scoped authority; Task 0B3a may author its source and static verifier
+only. A later reviewed closure may include helper modules, but they are
+reachable implementation details only: none may become a second runtime root,
+coordinator, receipt writer, or child admission path. Until an independently
+reviewed successor closure proves this one root reaches immutable Task 0A and
+all three Task 0B1 runtime libraries, the only permitted closure state remains:
 
 ```text
 BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)
@@ -54,6 +56,12 @@ flowchart LR
 The outer controller remains the only owner of retained control-root dirfds,
 markers, and durable receipts. The session owner receives none of them.
 
+A later source-free execution-surface bootstrap may invoke the two public
+session functions only. Its sole allowed exception boundary catches
+`SessionError`, exits nonzero, and emits no text or traceback; it is not a
+second state-machine root and cannot add a diagnostic, policy decision, receipt,
+or child path. Its exact identity remains a separate policy-bound review item.
+
 ## 2. Existing component boundaries
 
 The future session root composes these fixed boundaries; it must not duplicate
@@ -73,17 +81,41 @@ binding, and conservative in-scope failure reporting.
 
 ## 3. Future SessionConfig admission contract
 
-The future source accepts one descriptor-pinned, read-only canonical JSON file
-mounted at a single manifest-declared sandbox path. The parent pins and retains
-the exact source bytes, identity, and digest before Bubblewrap creates the
-mount. The session command has exactly that fixed path as its configuration
-argument; it accepts no ambient configuration path, environment override,
-control descriptor, or optional argument.
+The future source accepts a descriptor-pinned read-only canonical JSON file and
+its independent digest sidecar at exactly these two sandbox paths:
+
+```text
+/run/m3-v4/session-config.json
+/run/m3-v4/session-config.sha256
+```
+
+The parent pins and retains the exact source bytes, source identities, and both
+mount inputs before Bubblewrap creates the mounts. The sidecar contains exactly
+64 lower-case hexadecimal bytes and no newline. The session command receives
+only the two fixed paths as its configuration arguments; it accepts no ambient
+configuration path, environment override, control descriptor, optional
+argument, or digest-valued argv argument.
 
 The configuration digest is SHA-256 over canonical UTF-8 JSON with
-`session_config_sha256` omitted. Any malformed, duplicate, missing, extra,
-symlinked, substituted, stale, or digest-mismatched configuration fails before
-PRE and starts no child.
+`session_config_sha256` omitted. The session opens the sidecar first, then the
+configuration, each once with bounded no-follow, close-on-exec, regular,
+one-link, read-only-mount checks and complete EOF reads. It requires:
+
+```text
+computed configuration digest == embedded session_config_sha256 == sidecar bytes
+```
+
+The sidecar is an outer-parent bootstrap trust anchor. It is deliberately not
+included in `direct_input_digests`, `session_policy_sha256`, or any manifest
+digest stored inside the SessionConfig: putting it in a config-derived digest
+would make the configuration hash recursive. The parent records the pair in
+its retained outer launch state and descriptor-pins both mount sources. A
+same-byte host-path replacement or a paired substituted JSON/sidecar pair is
+prevented by that retained parent identity, not by local hash equality. Inside
+the namespace the sidecar detects disagreement and the session rejects a
+changed content digest, symlink, nonregular file, link-count change, or
+noncanonical replacement before PRE. Any malformed, duplicate, missing, extra,
+stale, or digest-mismatched configuration fails before PRE and starts no child.
 
 For this contract, canonical JSON means exact built-in `null`, Boolean,
 integer, string, list, and object values only; no float, duplicate key,
@@ -95,10 +127,12 @@ configuration/frame results against immutable Task 0A. It must not modify Task
 8 KiB SessionConfig/certificate records.
 
 `schema` and `namespace` must exactly equal their `base_config` counterparts.
-`session_policy_sha256` is SHA-256 of the canonical policy projection containing
-exactly `row`, `direct_input_digests`, the three manifest digests,
-`fixture_certificates`, `bwrap`, `namespace_expectations`, `child`, and
-`limits`. `base_config.inputs` must be exactly the canonical union of
+`namespace_policy_sha256` is SHA-256 of canonical JSON exactly over
+`namespace_expectations`. `session_policy_sha256` is SHA-256 of the canonical
+policy projection containing exactly `row`, `direct_input_digests`, the three
+manifest digests, `namespace_policy_sha256`, `fixture_certificates`, `bwrap`,
+`namespace_expectations`, `child`, and `limits`. `base_config.inputs` must be
+exactly the canonical union of
 `direct_input_digests` and `{"session_policy": session_policy_sha256}`; the
 normal Task 0A `config_sha256` is then recomputed and validated over that
 complete base configuration. This binds the full immutable policy and the
@@ -126,6 +160,7 @@ Its future closed top-level shape is:
   runtime_manifest_sha256,
   run_input_manifest_sha256,
   fixture_manifest_sha256,
+  namespace_policy_sha256,
   fixture_certificates,
   bwrap,
   namespace_expectations,
@@ -138,13 +173,34 @@ All keys are exact; values are printable ASCII where a path or identifier is
 needed, canonical lower-case hex where a digest is needed, and bounded exact
 built-in containers only. Booleans never satisfy integer fields.
 
+Every configuration-defined absolute path is either `/` or at most 512 ASCII
+bytes, begins with one `/`, has one through 16 nonempty components of one
+through 64 bytes drawn only from `[A-Za-z0-9._-]`, has no `.`/`..` component,
+repeated slash, or trailing slash, and is compared byte-for-byte in that
+normalized form. The future source opens such a path component-by-component
+from a retained `/` anchor using `O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC` for
+`/` and every intermediate directory. It opens a final regular file readable as
+`O_RDONLY|O_NOFOLLOW|O_CLOEXEC` relative to the retained parent dirfd, and a
+final directory as `O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC`. A final X11
+socket is opened as `O_PATH|O_NOFOLLOW|O_CLOEXEC` relative to the retained
+parent dirfd and must satisfy `stat.S_ISSOCK` before its owner/mode/device/inode
+are used. It rejects any symlink or unexpected type before use. The two fixed
+bootstrap paths are literals under this same grammar.
+
+Parsed SessionConfig structural accounting is exact: charge one node for the
+root and each scalar/list/object value; object keys are not nodes. The root has
+depth zero, every contained value increments depth by one, and an object/list
+at depth 15 may contain only scalars at depth 16; no value may exceed depth 16.
+The total charged nodes must not exceed 256. This traversal occurs over the one
+bounded exact-built-in snapshot before semantic validation.
+
 The nested members are also closed. A later source/schema task must use these
 exact member sets, not an extensible configuration map:
 
 ```text
 fixture_certificates = {
-  proc_ptrace_certificate_sha256,
-  control_visibility_certificate_sha256
+  proc_ptrace_barrier,
+  control_visibility
 }
 
 bwrap = {path, version, argv_sha256}
@@ -152,12 +208,14 @@ bwrap = {path, version, argv_sha256}
 namespace_expectations = {
   home, pwd, cwd,
   environment,                 # exactly HOME, PWD, DISPLAY, XAUTHORITY, LANG, TZ
-  x11_identity,                # exactly display, authority, socket, screen, protocol
+  user_namespace,
+  x11_identity,
   measurement_root,            # exactly path, device, inode
   measurement_plan,            # exactly resources, expected
-  private_tree,                # exactly home_private, vst_empty, vst3_empty
-  scan_root                    # exactly path, device, inode, readonly,
-                               # descendants_readonly, no_later_mount
+  private_tree,
+  scan_root,
+  descriptor_policy,
+  control_visibility
 }
 
 child = {argv, cwd, environment, timeout_ms}
@@ -168,19 +226,151 @@ limits = {
 }
 ```
 
+Their exact nested shapes are:
+
+```text
+user_namespace = {
+  policy_sha256, effective_uid, effective_gid, uid_map, gid_map, setgroups
+}
+uid_map/gid_map = [{inside_id, outside_id, length}]
+
+x11_identity = {display, display_number, screen, protocol, authority, socket}
+authority = {
+  path, source_device, source_inode, destination_mode, destination_size, sha256
+}
+socket = {path, kind, uid, gid, mode, device, inode}
+
+private_tree = {home_mount, empty_directories}
+home_mount = {path, filesystem_type, mode, writable}
+
+scan_root = {path, entries, mount_points}
+entries = [{relative_path, input_name, mode, size, sha256}]
+mount_points = [{relative_path, readonly}]
+
+descriptor_policy = {fd_policy_sha256, inherited_fds}
+inherited_fds = [{fd, kind, role}]
+
+control_visibility = {mount_policy_sha256, namespace_root_kind, mounts}
+mounts = [{path, filesystem_type, readonly}]
+```
+
+`uid_map` and `gid_map` are lists of one through eight exact non-Boolean
+integer triples, sorted by `inside_id` and non-overlapping in both inside and
+outside ranges; `setgroups` is exactly `"deny"`. `effective_uid` and
+`effective_gid` are non-Boolean integers represented by a permitted mapping.
+`socket.kind` is exactly `"unix_socket"`. `private_tree.empty_directories` is
+exactly `[".vst", ".vst3"]`; `home_mount.filesystem_type` is exactly `"tmpfs"`,
+`home_mount.mode` is `0o700`, and `home_mount.writable` is true. That mount
+describes the private writable home used to prove those two directories are
+bounded-empty.
+
+`authority.source_device` and `authority.source_inode` are parent-only
+descriptor-pinning provenance. Because a future `--ro-bind-data` mount may
+copy a regular Xauthority file, the session must not compare those source
+identities to the in-namespace destination. It instead requires the destination
+to be a no-follow regular one-link file with `destination_mode`,
+`destination_size`, and `sha256`, captures its destination device/inode before
+PRE, and compares that retained destination baseline before POST.
+
+The selected fixture vector has exactly two nested scan-root entries. Each
+entry's `sha256` must equal
+`direct_input_digests[entry.input_name]`; only directories implied by those two
+relative paths may exist. `mount_points` is exactly `"."` plus the two file
+mount paths, all read-only. The session derives the receipt's
+`production_bundle_absent` claim only from that exact no-extra tree comparison.
+Within `scan_root.mount_points`, `"."` denotes `scan_root.path` itself rather
+than a string concatenation ending in `/.`; every other member is joined by one
+slash only after its relative-path grammar has been validated.
+
+Every `entries.relative_path` has one through eight printable-ASCII components
+of one through 64 bytes drawn only from `[A-Za-z0-9._-]`; no component is `.`
+or `..`, no path begins or ends with `/`, and the two paths are byte-sorted,
+unique, and neither is a prefix of the other. Each entry is a no-follow regular
+file, has a non-Boolean `mode`, a non-Boolean size no greater than 16 MiB, and
+is hashed by a 64 KiB streaming buffer. The combined expected entry size is at
+most 32 MiB. Every implied directory is opened no-follow and may contain only
+its named descendants; any symlink, special file, unexpected directory, or
+extra entry fails before PRE.
+
+The session reads at most 64 KiB/128 records of mountinfo, at most 16 inherited
+FD entries, at most eight 256-byte ID-map records per map, and at most 64 KiB
+of the Xauthority file (whose declared size must fit that limit). These are
+hard byte/record caps independent of the five-second deadline. The future
+source reads regular entries and authority data in 64 KiB bounded chunks rather
+than allocating their contents as one object.
+
+`descriptor_policy.inherited_fds` is exactly the ordered three-entry list:
+
+```text
+{fd: 0, kind: "pipe", role: "ack_input"}
+{fd: 1, kind: "pipe", role: "receipt_output"}
+{fd: 2, kind: "pipe", role: "diagnostic_output"}
+```
+
+`user_namespace.policy_sha256` is the SHA-256 of canonical JSON exactly over
+`{effective_uid, effective_gid, uid_map, gid_map, setgroups}`.
+`descriptor_policy.fd_policy_sha256` is the SHA-256 of canonical JSON exactly
+over `{inherited_fds}`. `control_visibility.mount_policy_sha256` is the
+SHA-256 of canonical JSON exactly over `{namespace_root_kind, mounts}`. The
+session recomputes all three before PRE and requires them to match the relevant
+certificate applicability values.
+
+`namespace_root_kind` is exactly `"private_tmpfs_root"`. `mounts` is an ordered
+list of 1 through 64 unique absolute printable-ASCII mount paths, byte-sorted
+under the absolute-path grammar, each with an exact printable-ASCII filesystem
+type and Boolean read-only state. It is the complete expected in-namespace
+mount projection: a later session parses at most 128 mountinfo records,
+accepting only the kernel octal escapes `\040`, `\011`, `\012`, and `\134` in
+a mount path, rejects any other escape or decoded noncanonical path, then
+compares the decoded projection exactly. It rejects an unknown, duplicate,
+missing, or mismatched mount. The host control-root path is never placed in
+SessionConfig. For every `scan_root.mount_points` member, the absolute path
+formed from `scan_root.path` plus that member's relative path must occur once
+in `control_visibility.mounts` with the same read-only state; no other listed
+mount may be strictly below `scan_root.path`.
+
 `direct_input_digests` is a closed map of 1 through 15 lower-case direct input
 names to 64-hex SHA-256 values. It exactly matches the parent-retained selected
 row's manifest-declared receipt-input map and cannot use the reserved name
 `session_policy`. The resulting Task 0A `inputs` map has 2 through 16 entries:
 that map is the only receipt representation of the direct input hashes, and it
-must be byte-identical in PRE and POST.
+must be byte-identical in PRE and POST. The SessionConfig JSON and its digest
+sidecar are bootstrap artifacts, not direct inputs: neither may appear in this
+map or in a manifest digest that SessionConfig itself carries.
 
 `environment` and `child.environment` are exact six-member maps with the
 lexicographically ordered names shown above; they must compare byte-for-byte.
-`measurement_root` and `scan_root` identities are positive non-Boolean
-device/inode pairs with absolute manifest-declared sandbox paths. `private_tree`
-and `scan_root` facts are true only after the provenance requirements in
-Section 4 are met.
+The following cross-field relations are mandatory before PRE:
+
+```text
+home == pwd == cwd == environment.HOME == environment.PWD
+     == child.cwd == child.environment.HOME == child.environment.PWD
+     == private_tree.home_mount.path
+
+x11_identity.display == environment.DISPLAY == child.environment.DISPLAY
+x11_identity.authority.path == environment.XAUTHORITY
+                             == child.environment.XAUTHORITY
+x11_identity.socket.path == "/tmp/.X11-unix/X" + decimal(x11_identity.display_number)
+x11_identity.display == ":" + decimal(x11_identity.display_number)
+                      or ":" + decimal(x11_identity.display_number)
+                         + "." + decimal(x11_identity.screen)
+x11_identity.protocol == "MIT-MAGIC-COOKIE-1"
+```
+
+`display_number` and `screen` are non-Boolean integers in `0..2147483647`; an
+omitted display screen is therefore represented by the first permitted display
+form with `screen == 0`. The receipt's fixed X11 projection is exactly
+`{display, authority: authority.path, socket: socket.path, screen, protocol}`;
+the source may not substitute a second path or inferred socket. The session
+rejects any mismatch before it opens a child.
+
+`measurement_root` is a positive non-Boolean device/inode pair with an absolute
+manifest-declared sandbox path. The scan root deliberately has no predeclared
+device/inode pair: its private tmpfs identity is created inside the namespace.
+The session opens it before PRE, captures its device/inode, mount-table, exact
+tree, and file hashes in a retained baseline, then compares that same baseline
+after the child to derive `scan_root_unchanged`. `private_tree` and `scan_root`
+facts are true only after the provenance requirements in Section 4 are met.
 
 `measurement_plan.resources` is an ordered list of 1 through 16 unique,
 single-component printable-ASCII relative names (at most 256 bytes each).
@@ -213,14 +403,15 @@ these constants by explicit amendment.
 | --- | --- |
 | `schema`, `namespace`, `base_config`, `session_policy_sha256`, `direct_input_digests` | Task 0A identity. `base_config` is exactly `{schema, namespace, nonce, config_sha256, inputs}`; its inputs are the direct manifest input hashes plus `session_policy`, and Task 0A revalidates them. |
 | `row` | Exactly `{sample_rate_hz: 44100, block_size: 32}`. No other V4 row is admitted by this design. |
-| `runtime_manifest_sha256`, `run_input_manifest_sha256`, `fixture_manifest_sha256` | Sealed identities supplied and independently retained by the parent. The session carries only the admitted values; the parent compares later receipt values to its retained state. The run-input manifest, not the receipt, binds the private scan-root entry list and hashes. |
-| `fixture_certificates` | Canonical identities for the fixture-proven proc/ptrace and control-visibility properties described below. A missing, unknown, or mismatched certificate suppresses PRE. |
+| `runtime_manifest_sha256`, `run_input_manifest_sha256`, `fixture_manifest_sha256`, `namespace_policy_sha256` | Sealed identities supplied and independently retained by the parent. The session carries only the admitted values; the parent compares later receipt values to its retained state. The run-input manifest, not the receipt, binds the private scan-root entry list and hashes. `namespace_policy_sha256` binds the complete `namespace_expectations` object and must equal the certificate applicability field. The manifests exclude the self-referential SessionConfig bootstrap pair. |
+| `fixture_certificates` | The two complete canonical parent-validated certificate records described below. The session rehashes and cross-binds their declared policy/manifests/results; a missing, unknown, or mismatched record suppresses PRE. |
 | `bwrap` | Exact absolute path, version text, and complete-argv digest held and independently validated by the parent. The session does not claim it can observe the parent’s complete Bubblewrap argv. |
-| `namespace_expectations` | Exact `HOME`, `PWD`, `cwd`, environment map, X11 identity, one `measurement_root` identity, private-tree facts, and scan-root mount facts. |
+| `namespace_expectations` | Exact `HOME`, `PWD`, `cwd`, environment map, user-namespace mapping, descriptor-pinned X11 record, one `measurement_root` identity, bounded private-tree and scan-tree evidence, and mount/descriptor visibility policy. |
 | `child` | One immutable `argv`, exact `cwd`, exact environment, and bounded timeout later used to construct one `ChildSpec`. |
 | `limits` | Explicit bounded protocol, diagnostic, frame, measurement, and child-lifetime limits; no field may select a fallback or extend a deadline dynamically. |
 
-`fixture_certificates` must include distinct digest-bound evidence for:
+`fixture_certificates` must include the two full distinct, digest-bound records
+for:
 
 1. the non-dumpable, capability-free proc/ptrace barrier and its negative
    `/proc/<session-pid>/fd/1` and `/proc/<session-pid>/mem` fixture proof; and
@@ -228,9 +419,11 @@ these constants by explicit amendment.
    control descriptor crosses into the namespace.
 
 These are certificates the parent validates against the reviewed fixture and
-namespace policy. The session may attest their result only after it also checks
-the configuration binding and its own allowed descriptor/mount state. It must
-not turn a local Boolean or a receipt self-assertion into proof.
+namespace policy. They are carried as admitted full records so the session can
+rehash their canonical bytes and compare their applicable policy/manifests to
+SessionConfig. The session may attest their result only after it also checks the
+configuration binding and its own allowed descriptor/mount state. It must not
+turn a local Boolean or a receipt self-assertion into proof.
 
 Each future certificate is itself closed canonical JSON with these exact
 members:
@@ -245,24 +438,60 @@ members:
 }
 ```
 
+Every certificate has `schema` as exact non-Boolean integer `1`; every
+`*_sha256` and `certificate_sha256` is 64 lower-case hexadecimal bytes;
+`kernel_release` is printable ASCII of 1 through 128 bytes; `boot_id` is the
+lower-case 36-byte UUID form `8-4-4-4-12`; and `uid` is a non-Boolean integer
+in `0..2147483647`. `bwrap_path` follows the absolute-path grammar,
+`bwrap_version` is printable ASCII of 1 through 128 bytes, and `kind` is one of
+the two exact literals below. All device and inode identities throughout
+SessionConfig are non-Boolean integers in `1..9223372036854775807`; all size
+fields are non-Boolean integers in `0..16777216`; every `mode` field means
+`stat.S_IMODE(st_mode)` and is a non-Boolean integer in `0..0o7777`.
+
+For both admitted certificate records, these equality relations are mandatory:
+
+```text
+certificate.runtime_manifest_sha256 == runtime_manifest_sha256
+certificate.fixture_manifest_sha256 == fixture_manifest_sha256
+certificate.bwrap_{path,version,argv_sha256} == bwrap.{path,version,argv_sha256}
+certificate.namespace_policy_sha256 == namespace_policy_sha256
+certificate.mount_policy_sha256 == control_visibility.mount_policy_sha256
+certificate.fd_policy_sha256 == descriptor_policy.fd_policy_sha256
+certificate.user_namespace_policy_sha256 == user_namespace.policy_sha256
+```
+
+`certificate.uid` is the outer parent's effective host UID, not the
+in-namespace effective UID. It must equal the mapping-derived host UID for
+`user_namespace.effective_uid`: locate the unique `uid_map` record whose
+inside range contains that effective UID and calculate
+`outside_id + effective_uid - inside_id`. Any absent, ambiguous, or unequal
+mapping suppresses PRE. The parent validates `kernel_release`, `boot_id`, and
+the session-source identity before scope creation; the session only rehashes
+their canonical certificate record and compares the listed in-namespace
+applicability fields.
+
 Its digest omits `certificate_sha256`. `kind` is exactly either
 `proc_ptrace_barrier` or `control_visibility`. For `proc_ptrace_barrier`,
 `result` is exactly `{proc_receipt_blocked: true, proc_mem_blocked: true}`;
-for `control_visibility`, it is exactly `{control_root_absent: true}`. Before
-the scope starts, the parent must match every applicability field with its
-current sealed session source,
-manifests, Bubblewrap policy, mount/FD policy, kernel/boot/user-namespace
-policy, and fixture evidence. Any mismatch, missing record, stale boot,
-unknown result member, or unverified fixture evidence suppresses PRE. The
-session copies only the admitted parent-owned values into receipt payloads; it
-does not claim to measure the parent's executable path, Bubblewrap argv, or a
-certificate's external applicability.
+for `control_visibility`, it is exactly
+`{control_root_absent: true, mount_mutation_blocked: true}`. Before the scope
+starts, the parent must match every applicability field with its current sealed
+session source, manifests, Bubblewrap policy, mount/FD policy, kernel/boot/user
+namespace policy, and fixture evidence. Any mismatch, missing record, stale
+boot, unknown result member, or unverified fixture evidence suppresses PRE.
+The session rehashes each admitted record and verifies its `kind`, fixed
+result, matching runtime/fixture manifests, Bubblewrap record, user namespace,
+mount policy, and FD policy before it copies the permitted parent-owned values
+into receipt payloads. It does not claim to measure the parent's executable
+path, Bubblewrap argv, or a certificate's external applicability.
 
 `user_namespace_policy_sha256` is the sealed static `--unshare-user` topology
 and mapping policy, which the parent can match before scope creation. The
 future session must separately confirm the resulting in-namespace user
-namespace/mapping against that policy before PRE. A future namespace inode is
-never treated as a pre-scope certificate input.
+namespace/mapping against the explicit `user_namespace` map, effective IDs,
+and policy digest in admitted SessionConfig before PRE. A future namespace inode
+is never treated as a pre-scope certificate input.
 
 ## 4. Attestation provenance
 
@@ -273,12 +502,12 @@ must refuse instead of inventing a value when its evidence is unavailable.
 | --- | --- | --- |
 | `home`, `pwd`, `cwd`, `environment_keys`, `forbidden_env_absent` | In-namespace direct measurement, exact comparison with `namespace_expectations`, and no unlisted environment key | Session owner |
 | `runtime_manifest_sha256`, `run_input_manifest_sha256`, Bubblewrap path/version/argv digest, base identity, row | Session carries values from its admitted configuration; parent independently compares all PRE/POST values with its retained configuration, manifest, and Bubblewrap identities | Parent |
-| private HOME and empty `.vst`/`.vst3`, production-bundle absence, scan root read-only/no later mount | Bounded in-namespace mount/tree checks tied to the manifest and retained root identities | Session owner + fixture/runtime manifest |
-| X11 identity | In-namespace identity comparison with the descriptor-pinned parent record | Session owner + parent |
-| `source_fds_absent` | Exact in-namespace descriptor allowlist: only standard streams and explicitly reviewed runtime descriptors; no data/source/control descriptor | Session owner + fixture policy |
+| private HOME and empty `.vst`/`.vst3`, production-bundle absence, scan root read-only/no later mount | Exact `private_tree`, two-entry `scan_root`, and mount-point projections; a bounded no-extra tree/mount comparison plus retained in-namespace baseline | Session owner + fixture/runtime manifest |
+| X11 identity | `x11_identity.authority` no-follow destination regular mode/size/hash comparison plus a retained destination device/inode baseline; source device/inode remain parent-only provenance. Compare the socket type/owner/mode/device/inode and then project the fixed five receipt fields | Session owner + parent |
+| `source_fds_absent` | Exact initial inherited-FD census equal to `descriptor_policy.inherited_fds`; all later internally opened descriptors are separately tracked | Session owner + fixture policy |
 | `dumpable_disabled`, `capabilities_empty` | Task 0A barrier must succeed in the owner process before PRE | Session owner |
 | `proc_receipt_blocked`, `proc_mem_blocked` | Session barrier plus matching sealed fixture certificate; a future fixture must prove the negative opens | Parent-validated fixture certificate + session owner |
-| `control_root_absent` | Matching control-visibility certificate plus exact in-namespace mount and descriptor allowlist; neither `V4ControlPaths` nor a control-root path/FD may cross the boundary | Parent-validated fixture certificate + session owner |
+| `control_root_absent` | Matching control-visibility certificate, matching mount/FD policy digests, the closed private-root discriminator, and exact inherited-FD census; neither `V4ControlPaths` nor a control-root path/FD may cross the boundary | Parent-validated fixture certificate + session owner |
 | POST-only `scan_root_unchanged` | Same anchored root/mount identity and post-child bounded recheck | Session owner |
 
 The Task 0B1 receipt schema fixes the fact names. This design neither adds a
@@ -292,6 +521,22 @@ the canonical high-risk subset
 The finite forbidden list is an additional guard, not a claim that an open-ended
 wildcard list itself proves absence of every undeclared key.
 
+Because Task 0B1 requires shared PRE/POST attestation values to be identical,
+the session rechecks every fact a child could mutate before it proposes POST:
+the private home mount and both empty directories, the full scan-root
+mount/tree/hash baseline, Xauthority and X11 socket identities, the complete
+mount projection, and the inherited-FD policy. Environment/cwd/base identity,
+the barrier result, and parent certificate/manifest values may be carried only
+because the configuration and descriptor policy prove them immutable to the
+child. Any changed or unreadable mutable fact suppresses POST; the session does
+not reuse a stale PRE Boolean.
+
+`no_later_scan_mount` is a present-tense sampled property, not a prediction:
+at each PRE and POST sampling point, the exact complete mount projection has no
+unknown mount strictly below the scan root. The parent-validated
+`mount_mutation_blocked` certificate is additional fixture evidence, not a
+substitute for the post-child comparison.
+
 ## 5. Exact raw transport
 
 Only standard streams form the in-namespace control channel:
@@ -302,22 +547,33 @@ session fd 1          -> trusted parent stdout: framed PRE/POST only
 session/bwrap fd 2    -> trusted parent stderr: bounded diagnostics only
 ```
 
-No other descriptor is an admission, receipt, configuration, or control
-channel. The future session checks that fd 0 and fd 1 are pipes, obtains the
-applicable `PIPE_BUF`, and refuses before PRE if the sealed maximum frame does
-not fit. It uses a deadline-enforced nonblocking/poll loop before each write or
-read. Once writable, it emits each frame in one write of the complete byte
-sequence; a short write, `EINTR`, `EPIPE`, `EAGAIN` after the sealed deadline,
-or other error is failure. It never retries an incomplete frame, writes a
-diagnostic to stdout, or emits a second PRE/POST.
+No inherited descriptor beyond the exact three-entry descriptor policy is an
+admission, receipt, configuration, or control channel. The two fixed
+descriptor-pinned configuration paths in Section 3 are opened by path only,
+then closed before the inherited-FD census and raw exchange; they never arrive
+as passed descriptors. The future session checks that fd 0 and fd 1 are pipes,
+obtains the applicable `PIPE_BUF`, and refuses before PRE if the sealed maximum
+frame does not fit. It uses a deadline-enforced nonblocking/poll loop before
+each write or read. Once writable, it emits each frame in one write of the
+complete byte sequence; a short write, `EINTR`, `EPIPE`, `EAGAIN` after the
+sealed deadline, or other error is failure. It never retries an incomplete
+frame, writes a diagnostic to stdout, or emits a second PRE/POST.
 
-Fd 2 permits at most one printable-ASCII closed-code diagnostic, at most
-`diagnostic_max_bytes`, in one bounded best-effort write. It never carries a
-receipt or admission value. The parent begins concurrent bounded draining of
-stdout and stderr when it creates the scope and continues until both EOFs;
-stdout backpressure, stderr overflow, read error, or either deadline expiry is
-raw-exchange uncertainty. Before ACK it starts no child; after ACK it suppresses
-POST and requires outer teardown/census.
+Before either bootstrap path is opened, `load_session_config` performs one
+`fstat` of fd 2, requires a pipe/FIFO, and sets it nonblocking. If that setup
+fails, it aborts silently before either bootstrap path is opened. Only after that setup, fd 2
+permits at most one printable-ASCII closed-code diagnostic, at most
+`diagnostic_max_bytes`, in one nonblocking `write` attempt. A short write,
+`EAGAIN`, interruption, or other write error is ignored and never retried; it
+never carries a receipt or admission value. `run_session` repeats that one
+bounded fd-2 setup at its own entry rather than retaining mutable readiness
+state from `load_session_config`; its setup failure is silent and disables
+diagnostics only for that call, while its later mandatory descriptor-policy
+preflight still decides admission. The parent begins concurrent bounded
+draining of stdout and stderr when it creates the scope and continues until both
+EOFs; stdout backpressure, stderr overflow, read error, or either deadline
+expiry is raw-exchange uncertainty. Before ACK it starts no child; after ACK it
+suppresses POST and requires outer teardown/census.
 
 The one legal wire exchange is:
 
@@ -382,6 +638,11 @@ launch, and bounded kill/reap after successful `Popen` return. The outer
 session/scope—not the adapter—owns recovery and evidence sealing for an
 interruption that occurs before `Popen` returns.
 
+After a returned `ChildOutcome`, the session treats `timed_out == true` or a
+negative `returncode` as uncertainty. Either condition suppresses POST and
+requires outer teardown/census; only a non-timeout, nonnegative return code may
+enter the post-child evidence branch.
+
 ## 7. State and failure table
 
 No uncertain path can emit terminal success evidence.
@@ -411,9 +672,13 @@ tree attester. The future session owner must therefore:
    is permitted;
 2. retain the root descriptor for the entire PRE-to-POST interval and recheck
    it before PRE and after the child;
-3. use only bounded, no-follow, non-recursive measurement calls under that
-   root; and
-4. assign every fact outside that API to a separately reviewed, bounded
+3. separately open the in-namespace `scan_root` once before PRE, retain its
+   descriptor and observed device/inode/mount/tree/hash baseline through the
+   child, then make the same bounded no-follow, no-extra comparison after the
+   child; and
+4. use only bounded, no-follow, non-recursive measurement calls under either
+   admitted root; and
+5. assign every fact outside that API to a separately reviewed, bounded
    evidence function or to a sealed fixture certificate.
 
 The later source closure must include every new measurement/evidence function.
@@ -426,7 +691,9 @@ This record intentionally creates no implementation authority. The smallest
 safe sequence is:
 
 1. **Task 0B3a — session source authority:** author the one named session-root
-   source only, following this design. No component invocation or fixture.
+   source and its pre-import source-byte/AST verifier only, following this
+   design and the separate Task 0B3a source contract. No component invocation
+   or fixture.
 2. **Task 0B3b — pure receipt gate:** execute adversarial in-memory receipt
    PRE/POST/ACK vectors only; prove value and exchange relations.
 3. **Task 0B3c — measurement gate:** test only a temporary, synthetic
