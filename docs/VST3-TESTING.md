@@ -662,6 +662,24 @@ authority; only its new telemetry can justify any later behavioral amendment.
   mechanism and post-exit validation of both `vstpath` and the cache, followed
   by fresh explicit host authority.
 
+### Offline scan-containment hardening (future guard only)
+
+- Fixture- and mock-driven hardening now makes the future guarded path fail
+  closed around the known containment boundary: exact observer arguments and
+  paths, raw symlink rejection, an exclusive no-follow attempt lock across
+  recovery/staging/the serial matrix, unavailable-process-census refusal, and
+  a durable external uncertainty marker are all required. GUI teardown uses an
+  exact transient user scope; only a clean zero exit plus an exact no-follow
+  scope-exit receipt may reach the post-exit profile/cache inspection.
+- The complete low-priority repository suite (`221` tests), both source
+  validators, Python compilation, and whitespace validation pass. Every GUI,
+  systemd, and process boundary in that verification was mocked or dry-run; no
+  REAPER process was launched and no sealed v1/v2/v3 evidence changed.
+- This is an offline future-guard result, not proof that a later host launch
+  has achieved pre-launch scan isolation. It does not consume or create host
+  authority. A new namespace, a separately reviewed isolation design, and new
+  explicit authorization remain necessary before any REAPER launch.
+
 The user identifies 96 kHz at blocks 256-512 as the normal operating case.
 When a later gate is authorized, 96 kHz/256 and 96 kHz/512 must be reported as
 the primary real-world capability/latency rows, without removing any mandatory

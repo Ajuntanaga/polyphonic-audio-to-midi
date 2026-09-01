@@ -18,6 +18,13 @@ SPEC.loader.exec_module(GUARDED_REAPER)
 
 
 class GuardedReaperTests(unittest.TestCase):
+    def trusted_vst3_command(
+        self, scope_unit: str = "m3-poly-guarded-4321.scope"
+    ) -> list[str]:
+        return GUARDED_REAPER.GuardedCommand(
+            [f"--unit={scope_unit}", "--"], scope_unit
+        )
+
     def run_runner(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(RUNNER), *arguments],
@@ -58,6 +65,13 @@ class GuardedReaperTests(unittest.TestCase):
         profile.parent.mkdir(parents=True)
         profile.write_text(
             f"[reaper]\nvstpath={vst3_root}\n", encoding="utf-8"
+        )
+        (profile.parent / "reaper-vstplugins64.ini").write_text(
+            "[vstcache]\n"
+            "M3_Polyphonic_Audio_to_MIDI.vst3=fixture\n"
+            "M3_Polyphonic_Audio_to_MIDI_Probe.vst3=fixture\n"
+            "reacomp.vst.so=fixture\n",
+            encoding="utf-8",
         )
         return vst3_root, bundle, binary, moduleinfo, profile
 
@@ -295,6 +309,419 @@ class GuardedReaperTests(unittest.TestCase):
                         vst3_root, root / "other.ini"
                     )
 
+    def test_native_vst3_scan_containment_accepts_exact_profile_and_cache(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            ):
+                self.assertEqual(
+                    GUARDED_REAPER.native_vst3_scan_containment_errors(
+                        profile, vst3_root
+                    ),
+                    [],
+                )
+
+    def test_native_vst3_scan_containment_record_hashes_profile_and_cache(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            ):
+                record = GUARDED_REAPER.native_vst3_scan_containment_record(
+                    profile, vst3_root
+                )
+
+            self.assertEqual(record["errors"], [])
+            self.assertRegex(record["profile_sha256"], r"^[0-9a-f]{64}$")
+            self.assertIsNone(record["cache_sha256"]["reaper-vstplugins.ini"])
+            self.assertRegex(
+                record["cache_sha256"]["reaper-vstplugins64.ini"],
+                r"^[0-9a-f]{64}$",
+            )
+
+    def test_native_vst3_scan_containment_refuses_rewrite_and_external_cache(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            cache = profile.parent / "reaper-vstplugins64.ini"
+            patches = (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            )
+            with patches[0], patches[1], patches[2], patches[3], patches[4]:
+                profile.write_text(
+                    f"[reaper]\nvstpath={vst3_root};~/.vst3\n",
+                    encoding="utf-8",
+                )
+                self.assertIn(
+                    "disposable profile VST scan path is not the exact build-local root",
+                    GUARDED_REAPER.native_vst3_scan_containment_errors(
+                        profile, vst3_root
+                    ),
+                )
+                profile.write_text(
+                    f"[reaper]\nvstpath={vst3_root}\n", encoding="utf-8"
+                )
+                cache.write_text(
+                    "[vstcache]\n"
+                    "M3_Polyphonic_Audio_to_MIDI.vst3=fixture\n"
+                    "M3_Polyphonic_Audio_to_MIDI_Probe.vst3=fixture\n"
+                    "ATONE.vst3 =fixture\n",
+                    encoding="utf-8",
+                )
+                self.assertIn(
+                    "unexpected cached VST3 bundle: ATONE.vst3",
+                    GUARDED_REAPER.native_vst3_scan_containment_errors(
+                        profile, vst3_root
+                    ),
+                )
+
+    def test_native_vst3_scan_containment_refuses_missing_or_malformed_cache(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            cache = profile.parent / "reaper-vstplugins64.ini"
+            patches = (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+            )
+            with patches[0], patches[1], patches[2], patches[3], patches[4]:
+                cache.unlink()
+                self.assertIn(
+                    "disposable VST cache is missing",
+                    GUARDED_REAPER.native_vst3_scan_containment_errors(
+                        profile, vst3_root
+                    ),
+                )
+                cache.write_text("[other]\n", encoding="utf-8")
+                self.assertTrue(
+                    any(
+                        "does not contain a vstcache section" in error
+                        for error in GUARDED_REAPER.native_vst3_scan_containment_errors(
+                            profile, vst3_root
+                        )
+                    )
+                )
+                cache.unlink()
+                cache.symlink_to(root / "missing-cache.ini")
+                self.assertIn(
+                    "disposable VST cache is not a regular file: reaper-vstplugins64.ini",
+                    GUARDED_REAPER.native_vst3_scan_containment_errors(
+                        profile, vst3_root
+                    ),
+                )
+
+    def test_vst3_prelaunch_refuses_external_cache_without_launching(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            cache = profile.parent / "reaper-vstplugins64.ini"
+            cache.write_text(
+                "[vstcache]\nATONE.vst3=fixture\n", encoding="utf-8"
+            )
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_prelaunch_scan_containment_errors",
+                    return_value=[],
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded", return_value=0) as launch,
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+
+            launch.assert_not_called()
+
+    def test_vst3_containment_inspects_after_guarded_error_or_interrupt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            (profile.parent / "reaper-vstplugins64.ini").unlink()
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "run_gui_guarded",
+                    side_effect=[RuntimeError("after launch"), KeyboardInterrupt],
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_scan_containment_errors",
+                    return_value=["unexpected cached VST3 bundle: ATONE.vst3"],
+                ) as containment,
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "clear_confirmed_user_scope_exit_receipt",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "confirmed_user_scope_exit_receipt_present",
+                    return_value=True,
+                ),
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+                self.assertEqual(GUARDED_REAPER.main(arguments), 130)
+
+            self.assertEqual(containment.call_count, 0)
+
+    def test_vst3_post_exit_containment_failure_preserves_nonzero_status(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            (profile.parent / "reaper-vstplugins64.ini").unlink()
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(
+                    GUARDED_REAPER, "run_gui_guarded", side_effect=[0, 124]
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_scan_containment_errors",
+                    return_value=["unexpected cached VST3 bundle: ATONE.vst3"],
+                ) as containment,
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "clear_confirmed_user_scope_exit_receipt",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "confirmed_user_scope_exit_receipt_present",
+                    return_value=True,
+                ),
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+                self.assertEqual(GUARDED_REAPER.main(arguments), 124)
+
+            self.assertEqual(containment.call_count, 1)
+
+    def test_vst3_nonzero_exit_with_valid_receipt_skips_containment_scan(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_prelaunch_scan_containment_errors",
+                    return_value=[],
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded", return_value=37),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "clear_confirmed_user_scope_exit_receipt",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "confirmed_user_scope_exit_receipt_present",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER, "native_vst3_scan_containment_errors"
+                ) as scan,
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 37)
+
+            scan.assert_not_called()
+
+    def test_vst3_gui_rejects_suffixless_or_mismatched_scope_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            completion = profile.parent / "test-results/phase.log"
+            completion.parent.mkdir()
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--completion-file",
+                str(completion),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            invalid_commands = (
+                GUARDED_REAPER.GuardedCommand(
+                    ["--unit=m3-poly-guarded-4321"], "m3-poly-guarded-4321"
+                ),
+                GUARDED_REAPER.GuardedCommand(
+                    ["--unit=m3-poly-guarded-9999.scope"],
+                    "m3-poly-guarded-4321.scope",
+                ),
+            )
+            for command in invalid_commands:
+                with (
+                    mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                    mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                    mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                    mock.patch.object(
+                        GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                    ),
+                    mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                    mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", completion),
+                    mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                    mock.patch.object(
+                        GUARDED_REAPER, "guarded_command", return_value=command
+                    ),
+                    mock.patch.object(GUARDED_REAPER, "run_gui_guarded") as launch,
+                ):
+                    self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+                launch.assert_not_called()
+
     def test_native_vst3_environment_refuses_wrong_identity_extra_or_symlink(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
@@ -355,6 +782,8 @@ class GuardedReaperTests(unittest.TestCase):
         self.assertNotIn("M3_CLAP_PROBE_REPORT", rendered)
         self.assertNotIn("HOME=", rendered)
         self.assertNotIn(str(pathlib.Path.home() / ".config/REAPER"), rendered)
+        self.assertTrue(command.scope_unit.endswith(".scope"))
+        self.assertIn(f"--unit={command.scope_unit}", command)
 
         result = self.run_runner(
             "--dry-run",
@@ -615,6 +1044,7 @@ class GuardedReaperTests(unittest.TestCase):
             text=True,
             capture_output=True,
             check=False,
+            timeout=GUARDED_REAPER.WMCTRL_TIMEOUT_SECONDS,
         )
 
     def test_launch_focus_restore_does_not_override_a_third_workspace(self):
@@ -699,6 +1129,7 @@ class GuardedReaperTests(unittest.TestCase):
                     text=True,
                     capture_output=True,
                     check=False,
+                    timeout=GUARDED_REAPER.WMCTRL_TIMEOUT_SECONDS,
                 ),
                 mock.call(
                     ["/usr/bin/wmctrl", "-ir", "0x0480000a", "-t", "4"],
@@ -706,6 +1137,7 @@ class GuardedReaperTests(unittest.TestCase):
                     text=True,
                     capture_output=True,
                     check=False,
+                    timeout=GUARDED_REAPER.WMCTRL_TIMEOUT_SECONDS,
                 ),
             ]
         )
@@ -878,6 +1310,7 @@ class GuardedReaperTests(unittest.TestCase):
                     text=True,
                     capture_output=True,
                     check=False,
+                    timeout=GUARDED_REAPER.WMCTRL_TIMEOUT_SECONDS,
                 ),
                 mock.call(
                     ["/usr/bin/wmctrl", "-ir", "0x0480000a", "-t", "4"],
@@ -885,6 +1318,7 @@ class GuardedReaperTests(unittest.TestCase):
                     text=True,
                     capture_output=True,
                     check=False,
+                    timeout=GUARDED_REAPER.WMCTRL_TIMEOUT_SECONDS,
                 ),
             ]
         )
@@ -939,6 +1373,9 @@ class GuardedReaperTests(unittest.TestCase):
             cmd="reaper",
             timeout=GUARDED_REAPER.COMPLETION_GRACE_SECONDS,
         )
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        completion = pathlib.Path(temporary.name) / "phase.log"
         with (
             mock.patch.object(
                 GUARDED_REAPER,
@@ -972,8 +1409,19 @@ class GuardedReaperTests(unittest.TestCase):
             ),
             mock.patch.object(
                 GUARDED_REAPER,
-                "stop_process_group",
+                "stop_guarded_scope",
+                return_value=True,
             ) as stop,
+            mock.patch.object(
+                GUARDED_REAPER,
+                "user_scope_exited",
+                return_value=True,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "write_confirmed_user_scope_exit_receipt",
+                return_value=True,
+            ),
             mock.patch.object(
                 GUARDED_REAPER.subprocess,
                 "Popen",
@@ -984,11 +1432,729 @@ class GuardedReaperTests(unittest.TestCase):
                 ["reaper"],
                 {},
                 5,
-                GUARDED_REAPER.COMPLETION_FILE,
+                completion,
+                "m3-poly-guarded-fixture.scope",
             )
 
         self.assertEqual(result, 0)
-        stop.assert_called_once_with(process, GUARDED_REAPER.signal.SIGTERM)
+        stop.assert_called_once_with(
+            process,
+            GUARDED_REAPER.signal.SIGTERM,
+            "m3-poly-guarded-fixture.scope",
+        )
+
+    def test_scope_teardown_refuses_live_scope_after_dead_wrapper_and_group(self):
+        process = mock.Mock(pid=4321)
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "user_scope_exit_state",
+                side_effect=[None] * 7,
+            ),
+            mock.patch.object(
+                GUARDED_REAPER.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0, "", ""),
+            ) as systemctl,
+            mock.patch.object(GUARDED_REAPER.os, "killpg"),
+            mock.patch.object(GUARDED_REAPER.time, "sleep"),
+        ):
+            self.assertFalse(
+                GUARDED_REAPER.stop_guarded_scope(
+                    process,
+                    GUARDED_REAPER.signal.SIGTERM,
+                    "m3-poly-guarded-fixture.scope",
+                )
+            )
+
+        self.assertEqual(
+            systemctl.call_args_list,
+            [
+                mock.call(
+                    [
+                        "/usr/bin/systemctl",
+                        "--user",
+                        "kill",
+                        "--kill-whom=all",
+                        "--signal=TERM",
+                        "m3-poly-guarded-fixture.scope",
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=GUARDED_REAPER.SYSTEMCTL_TIMEOUT_SECONDS,
+                ),
+                mock.call(
+                    [
+                        "/usr/bin/systemctl",
+                        "--user",
+                        "kill",
+                        "--kill-whom=all",
+                        "--signal=KILL",
+                        "m3-poly-guarded-fixture.scope",
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=GUARDED_REAPER.SYSTEMCTL_TIMEOUT_SECONDS,
+                ),
+            ],
+        )
+
+    def test_scope_teardown_permission_error_fails_closed(self):
+        process = mock.Mock(pid=4321)
+        with (
+            mock.patch.object(
+                GUARDED_REAPER, "user_scope_exit_state", return_value=None
+            ),
+            mock.patch.object(
+                GUARDED_REAPER.os, "killpg", side_effect=PermissionError
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "_signal_user_scope",
+                return_value=False,
+            ),
+        ):
+            self.assertFalse(
+                GUARDED_REAPER.stop_guarded_scope(
+                    process,
+                    GUARDED_REAPER.signal.SIGTERM,
+                    "m3-poly-guarded-fixture.scope",
+                )
+            )
+
+    def test_scope_teardown_accepts_confirmed_inactive_or_absent_scope(self):
+        process = mock.Mock(pid=4321)
+        process.poll.return_value = 0
+        for state in ("inactive", "absent"):
+            with self.subTest(state=state), mock.patch.object(
+                GUARDED_REAPER,
+                "user_scope_exit_state",
+                return_value="inactive" if state == "inactive" else "collected",
+            ) as exited, mock.patch.object(GUARDED_REAPER.os, "killpg") as killpg:
+                self.assertTrue(
+                    GUARDED_REAPER.stop_guarded_scope(
+                        process,
+                        GUARDED_REAPER.signal.SIGTERM,
+                        "m3-poly-guarded-fixture.scope",
+                    )
+                )
+            exited.assert_called_once_with("m3-poly-guarded-fixture.scope")
+            killpg.assert_not_called()
+
+    def test_scope_teardown_refuses_collected_scope_while_launcher_is_live(self):
+        process = mock.Mock(pid=4321)
+        process.poll.return_value = None
+        with (
+            mock.patch.object(
+                GUARDED_REAPER,
+                "user_scope_exit_state",
+                return_value="collected",
+            ),
+            mock.patch.object(
+                GUARDED_REAPER,
+                "_signal_user_scope",
+                return_value=True,
+            ) as signal_scope,
+            mock.patch.object(GUARDED_REAPER.os, "killpg") as killpg,
+            mock.patch.object(GUARDED_REAPER.time, "sleep"),
+        ):
+            self.assertFalse(
+                GUARDED_REAPER.stop_guarded_scope(
+                    process,
+                    GUARDED_REAPER.signal.SIGTERM,
+                    "m3-poly-guarded-fixture.scope",
+                )
+            )
+
+        self.assertEqual(
+            signal_scope.call_args_list,
+            [
+                mock.call("m3-poly-guarded-fixture.scope", "TERM"),
+                mock.call("m3-poly-guarded-fixture.scope", "KILL"),
+            ],
+        )
+        self.assertIn(mock.call(4321, GUARDED_REAPER.signal.SIGTERM), killpg.call_args_list)
+        self.assertIn(mock.call(4321, GUARDED_REAPER.signal.SIGKILL), killpg.call_args_list)
+
+    def test_scope_query_failure_or_ambiguous_output_fails_closed(self):
+        unit = "m3-poly-guarded-fixture.scope"
+        cases = (
+            subprocess.CompletedProcess([], 1, "", "bus unavailable"),
+            subprocess.CompletedProcess([], 0, "LoadState=loaded\nActiveState=\n", ""),
+            subprocess.CompletedProcess([], 0, "LoadState=not-found\n", ""),
+        )
+        for result in cases:
+            with self.subTest(result=result), mock.patch.object(
+                GUARDED_REAPER.subprocess, "run", return_value=result
+            ):
+                self.assertFalse(GUARDED_REAPER.user_scope_exited(unit))
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired("systemctl", 2),
+        ):
+            self.assertFalse(GUARDED_REAPER.user_scope_exited(unit))
+
+    def test_scope_query_accepts_only_exact_inactive_or_collected_state(self):
+        unit = "m3-poly-guarded-fixture.scope"
+        for stdout in (
+            "LoadState=loaded\nActiveState=inactive\nSubState=dead\n",
+            "LoadState=not-found\nActiveState=inactive\nSubState=dead\n",
+        ):
+            with self.subTest(stdout=stdout), mock.patch.object(
+                GUARDED_REAPER.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0, stdout, ""),
+            ):
+                self.assertTrue(GUARDED_REAPER.user_scope_exited(unit))
+
+    def test_scope_exit_receipt_requires_exact_regular_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            completion = pathlib.Path(temporary) / "phase.log"
+            receipt = GUARDED_REAPER.confirmed_user_scope_exit_receipt(completion)
+            self.assertTrue(
+                GUARDED_REAPER.write_confirmed_user_scope_exit_receipt(completion)
+            )
+            self.assertTrue(
+                GUARDED_REAPER.confirmed_user_scope_exit_receipt_present(completion)
+            )
+            receipt.write_text("partial", encoding="utf-8")
+            self.assertFalse(
+                GUARDED_REAPER.confirmed_user_scope_exit_receipt_present(completion)
+            )
+            receipt.unlink()
+            target = completion.parent / "outside-receipt"
+            target.write_text(
+                GUARDED_REAPER.CONFIRMED_USER_SCOPE_EXIT_RECEIPT_CONTENT,
+                encoding="utf-8",
+            )
+            receipt.symlink_to(target)
+            with mock.patch.object(
+                GUARDED_REAPER.os,
+                "open",
+                wraps=GUARDED_REAPER.os.open,
+            ) as open_receipt:
+                self.assertFalse(
+                    GUARDED_REAPER.confirmed_user_scope_exit_receipt_present(
+                        completion
+                    )
+                )
+            open_receipt.assert_called_once_with(
+                receipt,
+                GUARDED_REAPER.os.O_RDONLY | GUARDED_REAPER.os.O_NOFOLLOW,
+            )
+
+    def test_gui_launcher_exit_refuses_a_still_active_scope(self):
+        process = mock.Mock()
+        process.poll.return_value = 0
+        process.returncode = 0
+        with tempfile.TemporaryDirectory() as temporary:
+            completion = pathlib.Path(temporary) / "phase.log"
+            with (
+                mock.patch.object(
+                    GUARDED_REAPER, "require_workspace", return_value=1
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER, "settle_launch_workspace", return_value=0
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER, "restore_launch_workspace", return_value=False
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER, "reaper_window_ids", return_value=set()
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER, "user_scope_exited", return_value=False
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER.subprocess, "Popen", return_value=process
+                ),
+            ):
+                result = GUARDED_REAPER.run_gui_guarded(
+                    ["reaper"],
+                    {},
+                    5,
+                    completion,
+                    "m3-poly-guarded-fixture.scope",
+                )
+
+            self.assertEqual(result, 2)
+            self.assertTrue(
+                GUARDED_REAPER.unconfirmed_process_group_exit_marker_present(
+                    completion
+                )
+            )
+
+    def test_gui_launcher_exit_allows_confirmed_inactive_scope(self):
+        process = mock.Mock()
+        process.poll.return_value = 0
+        process.returncode = 0
+        with (
+            mock.patch.object(GUARDED_REAPER, "require_workspace", return_value=1),
+            mock.patch.object(GUARDED_REAPER, "settle_launch_workspace", return_value=0),
+            mock.patch.object(GUARDED_REAPER, "restore_launch_workspace", return_value=False),
+            mock.patch.object(GUARDED_REAPER, "reaper_window_ids", return_value=set()),
+            mock.patch.object(GUARDED_REAPER, "user_scope_exited", return_value=True),
+            mock.patch.object(GUARDED_REAPER.subprocess, "Popen", return_value=process),
+        ):
+            self.assertEqual(
+                GUARDED_REAPER.run_gui_guarded(
+                    ["reaper"],
+                    {},
+                    5,
+                    None,
+                    "m3-poly-guarded-fixture.scope",
+                ),
+                0,
+            )
+
+    def test_gui_completion_refuses_unconfirmed_process_group_exit(self):
+        process = mock.Mock(pid=4321)
+        process.poll.return_value = None
+        process.wait.side_effect = subprocess.TimeoutExpired(
+            cmd="reaper",
+            timeout=GUARDED_REAPER.COMPLETION_GRACE_SECONDS,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            completion = pathlib.Path(temporary) / "phase.log"
+            with (
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "require_workspace",
+                    return_value=1,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "settle_launch_workspace",
+                    return_value=0,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "restore_launch_workspace",
+                    return_value=False,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "reaper_window_ids",
+                    return_value=set(),
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "move_reaper_windows_once",
+                    return_value=0,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "completion_published",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "stop_guarded_scope",
+                    return_value=False,
+                ) as stop,
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "user_scope_exited",
+                    return_value=True,
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER.subprocess,
+                    "Popen",
+                    return_value=process,
+                ),
+            ):
+                result = GUARDED_REAPER.run_gui_guarded(
+                    ["reaper"],
+                    {},
+                    5,
+                    completion,
+                    "m3-poly-guarded-fixture.scope",
+                )
+
+        self.assertEqual(result, 2)
+        stop.assert_called_once_with(
+            process,
+            GUARDED_REAPER.signal.SIGTERM,
+            "m3-poly-guarded-fixture.scope",
+        )
+
+    def test_gui_unconfirmed_cleanup_seals_marker_before_reraising(self):
+        cases = (
+            ("interrupt", KeyboardInterrupt(), GUARDED_REAPER.signal.SIGINT),
+            ("runtime error", RuntimeError("window failure"), GUARDED_REAPER.signal.SIGTERM),
+        )
+        for name, failure, expected_signal in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                completion = pathlib.Path(temporary) / "staging/test-results/phase.log"
+                completion.parent.mkdir(parents=True)
+                marker = GUARDED_REAPER.unconfirmed_process_group_exit_marker(
+                    completion
+                )
+                process = mock.Mock(pid=4321)
+                process.poll.return_value = None
+                with (
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "require_workspace",
+                        return_value=1,
+                    ),
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "settle_launch_workspace",
+                        return_value=0,
+                    ),
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "restore_launch_workspace",
+                        return_value=False,
+                    ),
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "reaper_window_ids",
+                        return_value=set(),
+                    ),
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "move_reaper_windows_once",
+                        side_effect=failure,
+                    ),
+                    mock.patch.object(
+                        GUARDED_REAPER,
+                        "stop_guarded_scope",
+                        return_value=False,
+                    ) as stop,
+                    mock.patch.object(
+                        GUARDED_REAPER.subprocess,
+                        "Popen",
+                        return_value=process,
+                    ),
+                ):
+                    with self.assertRaises(type(failure)):
+                        GUARDED_REAPER.run_gui_guarded(
+                            [
+                                "reaper",
+                            ],
+                            {},
+                            5,
+                            completion,
+                            "m3-poly-guarded-fixture.scope",
+                        )
+
+                self.assertTrue(marker.is_file())
+                self.assertEqual(
+                    marker.read_text(encoding="utf-8"),
+                    '{"schema":1,"status":"process-group-exit-unconfirmed"}\n',
+                )
+                stop.assert_called_once_with(
+                    process,
+                    expected_signal,
+                    "m3-poly-guarded-fixture.scope",
+                )
+
+    def test_vst3_stale_unconfirmed_termination_marker_refuses_launch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            completion = profile.parent / "test-results/phase.log"
+            completion.parent.mkdir()
+            marker = completion.parent / ".native-vst3-termination-unconfirmed.json"
+            marker.write_text(
+                '{"schema":1,"status":"process-group-exit-unconfirmed"}\n',
+                encoding="utf-8",
+            )
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--completion-file",
+                str(completion),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", completion),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_prelaunch_scan_containment_errors",
+                    return_value=[],
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded") as launch,
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_scan_containment_errors",
+                    return_value=[],
+                ),
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+
+            launch.assert_not_called()
+            self.assertEqual(
+                marker.read_text(encoding="utf-8"),
+                '{"schema":1,"status":"process-group-exit-unconfirmed"}\n',
+            )
+
+    def test_vst3_marker_skips_normal_post_exit_scan(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            completion = profile.parent / "test-results/phase.log"
+            completion.parent.mkdir()
+            marker = completion.parent / ".native-vst3-termination-unconfirmed.json"
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--completion-file",
+                str(completion),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+
+            def launch(*_args):
+                marker.write_text(
+                    '{"schema":1,"status":"process-group-exit-unconfirmed"}\n',
+                    encoding="utf-8",
+                )
+                return 130
+
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", completion),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_prelaunch_scan_containment_errors",
+                    return_value=[],
+                ),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "guarded_command",
+                    return_value=self.trusted_vst3_command(),
+                ),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded", side_effect=launch),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_scan_containment_errors",
+                ) as scan,
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 130)
+
+            scan.assert_not_called()
+
+    def test_vst3_post_exit_requires_exact_scope_receipt_before_scan(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            for cache in profile.parent.glob("reaper-vstplugins*.ini"):
+                cache.unlink()
+            completion = profile.parent / "test-results/phase.log"
+            completion.parent.mkdir()
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--completion-file",
+                str(completion),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            command = self.trusted_vst3_command()
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", completion),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(
+                    GUARDED_REAPER,
+                    "native_vst3_prelaunch_scan_containment_errors",
+                    return_value=[],
+                ),
+                mock.patch.object(GUARDED_REAPER, "guarded_command", return_value=command),
+                mock.patch.object(GUARDED_REAPER, "runtime_environment", return_value={}),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded", return_value=0),
+                mock.patch.object(
+                    GUARDED_REAPER, "native_vst3_scan_containment_errors"
+                ) as scan,
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+
+            scan.assert_not_called()
+
+    def test_vst3_gui_refuses_a_launcher_without_scope_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            vst3_root, bundle, binary, moduleinfo, profile = (
+                self.create_vst3_layout(root)
+            )
+            completion = profile.parent / "test-results/phase.log"
+            completion.parent.mkdir()
+            arguments = [
+                "--gui",
+                "--profile",
+                str(profile),
+                "--vst3-path",
+                str(vst3_root),
+                "--completion-file",
+                str(completion),
+                "--available-mib",
+                "32000",
+                "--load-one",
+                "2.5",
+                "--temperature-c",
+                "72",
+            ]
+            with (
+                mock.patch.object(GUARDED_REAPER, "BUILD_VST3_DIR", vst3_root),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BUNDLE", bundle),
+                mock.patch.object(GUARDED_REAPER, "PROBE_VST3_BINARY", binary),
+                mock.patch.object(
+                    GUARDED_REAPER, "PROBE_VST3_MODULEINFO", moduleinfo
+                ),
+                mock.patch.object(GUARDED_REAPER, "DISPOSABLE_PROFILE", profile),
+                mock.patch.object(GUARDED_REAPER, "COMPLETION_FILE", completion),
+                mock.patch.object(GUARDED_REAPER, "REAPER", pathlib.Path("/bin/true")),
+                mock.patch.object(GUARDED_REAPER, "guarded_command", return_value=["guard"]),
+                mock.patch.object(GUARDED_REAPER, "run_gui_guarded") as launch,
+            ):
+                self.assertEqual(GUARDED_REAPER.main(arguments), 2)
+
+            launch.assert_not_called()
+
+    def test_stop_process_group_refuses_leader_exit_with_live_descendants(self):
+        process = mock.Mock(pid=4321)
+        process.poll.return_value = 0
+        with (
+            mock.patch.object(GUARDED_REAPER.os, "killpg", return_value=None) as killpg,
+            mock.patch.object(GUARDED_REAPER.time, "sleep"),
+        ):
+            self.assertFalse(
+                GUARDED_REAPER.stop_process_group(process, GUARDED_REAPER.signal.SIGTERM)
+            )
+
+        self.assertEqual(
+            killpg.call_args_list[0],
+            mock.call(4321, GUARDED_REAPER.signal.SIGTERM),
+        )
+        self.assertIn(
+            mock.call(4321, GUARDED_REAPER.signal.SIGKILL),
+            killpg.call_args_list,
+        )
+        self.assertGreaterEqual(killpg.call_args_list.count(mock.call(4321, 0)), 2)
+
+    def test_unconfirmed_marker_is_fail_closed_and_never_overwrites_symlink(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            completion = pathlib.Path(temporary) / "phase.log"
+            marker = completion.parent / ".native-vst3-termination-unconfirmed.json"
+            marker.write_text("partial", encoding="utf-8")
+            self.assertTrue(
+                GUARDED_REAPER.unconfirmed_process_group_exit_marker_present(
+                    completion
+                )
+            )
+            marker.unlink()
+            target = completion.parent / "outside-marker"
+            target.write_text("outside", encoding="utf-8")
+            marker.symlink_to(target)
+            self.assertTrue(
+                GUARDED_REAPER.unconfirmed_process_group_exit_marker_present(
+                    completion
+                )
+            )
+            self.assertFalse(
+                GUARDED_REAPER.write_unconfirmed_process_group_exit_marker(
+                    completion
+                )
+            )
+            self.assertEqual(target.read_text(encoding="utf-8"), "outside")
+
+    def test_unconfirmed_marker_uses_external_staging_sidecar_and_reads_legacy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staging = pathlib.Path(temporary) / "staging"
+            completion = staging / "test-results/phase.log"
+            completion.parent.mkdir(parents=True)
+            canonical = GUARDED_REAPER.unconfirmed_process_group_exit_marker(
+                completion
+            )
+            legacy = completion.parent / GUARDED_REAPER.UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER
+
+            self.assertEqual(canonical.parent, staging)
+            self.assertTrue(
+                GUARDED_REAPER.write_unconfirmed_process_group_exit_marker(
+                    completion
+                )
+            )
+            self.assertTrue(canonical.is_file())
+            self.assertFalse(legacy.exists())
+            canonical.unlink()
+            legacy.write_text("legacy", encoding="utf-8")
+            self.assertTrue(
+                GUARDED_REAPER.unconfirmed_process_group_exit_marker_present(
+                    completion
+                )
+            )
+
+    def test_wmctrl_timeout_becomes_runtime_error(self):
+        with mock.patch.object(
+            GUARDED_REAPER.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired("wmctrl", 1),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "wmctrl command timed out"):
+                GUARDED_REAPER.move_reaper_windows_once({}, 5)
 
     def test_workspace_mover_refuses_nontransient_listing_errors(self):
         denied = subprocess.CompletedProcess(

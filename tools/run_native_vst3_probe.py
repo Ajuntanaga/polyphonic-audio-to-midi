@@ -13,10 +13,11 @@ import pathlib
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 
 
@@ -25,9 +26,16 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.run_guarded_reaper import (  # noqa: E402
+    VST3_CACHE_FILENAMES,
+    UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL,
     available_memory_mib,
     maximum_temperature_c,
+    native_vst3_prelaunch_scan_containment_errors,
+    native_vst3_scan_containment_record,
+    native_vst3_scan_containment_unavailable_record,
     preflight_errors,
+    confirmed_user_scope_exit_receipt_present,
+    unconfirmed_process_group_exit_marker_present,
     validate_native_vst3_environment,
 )
 from tools.stage_reaper_test_env import stage  # noqa: E402
@@ -59,6 +67,8 @@ STAGING_ROOT = (ROOT / "build/reaper-test").resolve()
 PROFILE = (STAGING_ROOT / "reaper.ini").resolve()
 STAGING_RESULTS = (STAGING_ROOT / "test-results").resolve()
 STAGING_ATTEMPT_NAME = ".native-vst3-attempt.json"
+ATTEMPT_LOCK_NAME = ".native-vst3-probe-attempt-{}.lock"
+OUTER_GUARD_TIMEOUT_SECONDS = 60
 EVIDENCE_NAMESPACE = "native-vst3-probe-v2"
 COMPLETION_FILE = (STAGING_RESULTS / "phase.log").resolve()
 PROBE_SCRIPT = (
@@ -213,19 +223,21 @@ def current_stability_snapshot() -> StabilitySnapshot:
     )
 
 
-def reaper_pids(proc_root: pathlib.Path = pathlib.Path("/proc")) -> set[int]:
+def reaper_pids(proc_root: pathlib.Path = pathlib.Path("/proc")) -> set[int] | None:
     pids: set[int] = set()
     try:
-        processes = proc_root.iterdir()
+        processes = tuple(proc_root.iterdir())
     except OSError:
-        return pids
+        return None
     for process in processes:
         if not process.name.isdigit():
             continue
         try:
             executable = (process / "exe").resolve(strict=True)
-        except (FileNotFoundError, PermissionError, ProcessLookupError, OSError):
+        except (FileNotFoundError, ProcessLookupError):
             continue
+        except OSError:
+            return None
         if executable.name == "reaper":
             pids.add(int(process.name))
     return pids
@@ -233,14 +245,16 @@ def reaper_pids(proc_root: pathlib.Path = pathlib.Path("/proc")) -> set[int]:
 
 def stability_errors(
     snapshot: StabilitySnapshot,
-    existing_reaper_pids: set[int],
+    existing_reaper_pids: set[int] | None,
 ) -> list[str]:
     errors = preflight_errors(
         snapshot.available_mib,
         snapshot.load_one,
         snapshot.temperature_c,
     )
-    if existing_reaper_pids:
+    if existing_reaper_pids is None:
+        errors.insert(0, "REAPER process census is unavailable")
+    elif existing_reaper_pids:
         errors.insert(
             0,
             "existing REAPER process detected: "
@@ -456,6 +470,41 @@ def _metric_result_errors(
     return errors
 
 
+def _trusted_vst3_scan_containment_errors(containment: object) -> list[str]:
+    if containment is None:
+        return ["metadata VST3 scan containment is missing"]
+    if not isinstance(containment, dict) or set(containment) != {
+        "errors",
+        "profile_sha256",
+        "cache_sha256",
+    }:
+        return ["metadata VST3 scan containment fields are invalid"]
+
+    errors: list[str] = []
+    if containment["errors"] != []:
+        errors.append("metadata VST3 scan containment errors are not empty")
+    profile_digest = containment["profile_sha256"]
+    if not (
+        isinstance(profile_digest, str)
+        and re.fullmatch(r"[0-9a-f]{64}", profile_digest)
+    ):
+        errors.append("metadata VST3 scan containment profile digest is invalid")
+    cache_digests = containment["cache_sha256"]
+    expected_cache_names = set(VST3_CACHE_FILENAMES)
+    if not isinstance(cache_digests, dict) or set(cache_digests) != expected_cache_names:
+        errors.append("metadata VST3 scan containment cache keys are invalid")
+        return errors
+    if all(digest is None for digest in cache_digests.values()):
+        errors.append("metadata VST3 scan containment has no cache digest")
+    for digest in cache_digests.values():
+        if digest is not None and not (
+            isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)
+        ):
+            errors.append("metadata VST3 scan containment cache digest is invalid")
+            break
+    return errors
+
+
 def batch_validation_errors(
     batch: pathlib.Path,
     sample_rate: int,
@@ -552,6 +601,11 @@ def batch_validation_errors(
                 errors.append("metadata classification is not pass")
             if metadata.get("inputs") != dict(current_hashes):
                 errors.append("metadata input hashes are stale or incomplete")
+            errors.extend(
+                _trusted_vst3_scan_containment_errors(
+                    metadata.get("vst3_scan_containment")
+                )
+            )
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             errors.append(f"invalid metadata.json: {exc}")
     return errors
@@ -766,11 +820,109 @@ def _copy_staging_results(destination: pathlib.Path) -> None:
             shutil.copy2(source, destination / name)
 
 
+def attempt_lock_path() -> pathlib.Path:
+    scope = f"{STAGING_ROOT.resolve()}\0{PROFILE.resolve()}".encode("utf-8")
+    return STAGING_ROOT.parent / ATTEMPT_LOCK_NAME.format(
+        hashlib.sha256(scope).hexdigest()[:16]
+    )
+
+
+def _attempt_lock_content() -> str:
+    return json.dumps(
+        {
+            "schema": 1,
+            "staging_root": str(STAGING_ROOT.resolve()),
+            "profile": str(PROFILE.resolve()),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ) + "\n"
+
+
+def acquire_attempt_lock() -> tuple[pathlib.Path, int]:
+    lock = attempt_lock_path()
+    try:
+        descriptor = os.open(
+            lock,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+        )
+    except FileExistsError as exc:
+        raise RuntimeError(
+            "native VST3 attempt lock already exists; explicit recovery is "
+            f"required before staging or launch: {lock}"
+        ) from exc
+    except OSError as exc:
+        raise RuntimeError(
+            "native VST3 attempt lock could not be acquired; explicit "
+            f"recovery is required before staging or launch: {lock}: {exc}"
+        ) from exc
+    try:
+        os.write(descriptor, _attempt_lock_content().encode("utf-8"))
+    except OSError as exc:
+        os.close(descriptor)
+        raise RuntimeError(
+            "native VST3 attempt lock could not be sealed; explicit recovery "
+            f"is required before staging or launch: {lock}: {exc}"
+        ) from exc
+    return lock, descriptor
+
+
+def release_attempt_lock(lock: pathlib.Path, descriptor: int) -> None:
+    try:
+        original = os.fstat(descriptor)
+        os.close(descriptor)
+        reader = os.open(lock, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            status = os.fstat(reader)
+            if (
+                not stat.S_ISREG(status.st_mode)
+                or status.st_nlink != 1
+                or (status.st_dev, status.st_ino)
+                != (original.st_dev, original.st_ino)
+            ):
+                raise OSError("attempt lock is not a unique regular file")
+            expected = _attempt_lock_content().encode("utf-8")
+            content = os.read(reader, len(expected) + 1)
+        finally:
+            os.close(reader)
+        if content != expected:
+            raise OSError("attempt lock content changed")
+        lock.unlink()
+    except (OSError, UnicodeError) as exc:
+        raise RuntimeError(
+            "native VST3 attempt completed but its lock was retained; "
+            f"explicit recovery is required: {lock}: {exc}"
+        ) from exc
+
+
+def _with_attempt_lock(operation: Callable[[], object]) -> object:
+    lock, descriptor = acquire_attempt_lock()
+    try:
+        result = operation()
+    except BaseException:
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+        raise
+    release_attempt_lock(lock, descriptor)
+    return result
+
+
 def run_row(sample_rate: int, block_size: int) -> str:
     if (sample_rate, block_size) not in MATRIX:
         raise ValueError(
             f"unsupported native VST3 probe row: {sample_rate}/{block_size}"
         )
+    result = _with_attempt_lock(
+        lambda: _run_row_locked(sample_rate, block_size)
+    )
+    assert isinstance(result, str)
+    return result
+
+
+def _run_row_locked(sample_rate: int, block_size: int) -> str:
     hashes = input_hashes()
     BATCH_ROOT.mkdir(parents=True, exist_ok=True)
     batch = BATCH_ROOT / row_label(sample_rate, block_size)
@@ -778,12 +930,57 @@ def run_row(sample_rate: int, block_size: int) -> str:
         errors = batch_validation_errors(
             batch, sample_rate, block_size, hashes
         )
-        if not errors:
-            return "adopted"
-        archived = archive_invalid_batch(batch)
+        if errors:
+            archived = archive_invalid_batch(batch)
+            raise RuntimeError(
+                "completed native VST3 row changed; no retry; preserved "
+                f"{archived}: " + "; ".join(errors)
+            )
+        return "adopted"
+
+    # Staging removes this directory recursively, so refusal must precede it.
+    if unconfirmed_process_group_exit_marker_present(COMPLETION_FILE):
+        before = current_stability_snapshot()
+        containment = native_vst3_scan_containment_unavailable_record(
+            PROFILE,
+            [
+                "post-exit VST3 scan containment unavailable: "
+                "guarded process-group exit was not confirmed"
+            ],
+        )
+        pending = BATCH_ROOT / (
+            f".{row_label(sample_rate, block_size)}.pending-"
+            f"{os.getpid()}-{_timestamp()}"
+        )
+        _copy_staging_results(pending)
+        write_pressure_record(pending / "pressure.json", before, before)
+        _atomic_write_json(
+            pending / "metadata.json",
+            {
+                "schema": 1,
+                "evidence_namespace": EVIDENCE_NAMESPACE,
+                "sample_rate": sample_rate,
+                "block_size": block_size,
+                "inputs": hashes,
+                "guard_returncode": 2,
+                "classification": "infrastructure-invalid",
+                "vst3_scan_containment": containment,
+            },
+        )
+        validation = batch_validation_errors(pending, sample_rate, block_size, hashes)
+        validation.insert(0, "guard returned 2")
+        validation.extend(
+            f"VST3 scan containment: {error}"
+            for error in containment["errors"]
+        )
+        metadata = json.loads((pending / "metadata.json").read_text(encoding="utf-8"))
+        metadata["errors"] = validation
+        _atomic_write_json(pending / "metadata.json", metadata)
+        destination = _invalid_destination(sample_rate, block_size)
+        pending.rename(destination)
         raise RuntimeError(
-            f"completed native VST3 row changed; no retry; preserved {archived}: "
-            + "; ".join(errors)
+            f"native VST3 row {sample_rate}/{block_size} failed; no retry; "
+            f"preserved {destination}: " + "; ".join(validation)
         )
 
     project = project_path(sample_rate, block_size)
@@ -819,16 +1016,113 @@ def run_row(sample_rate: int, block_size: int) -> str:
             f"native VST3 row {sample_rate}/{block_size} preflight aborted; "
             f"no retry; preserved {destination}: {exc}"
         ) from exc
-    command = guard_command(sample_rate, block_size)
+    prelaunch_containment_errors = native_vst3_prelaunch_scan_containment_errors(
+        PROFILE
+    )
     launch_error = ""
-    try:
-        completed = subprocess.run(command, cwd=ROOT, check=False)
-        returncode = completed.returncode
-    except OSError as exc:
-        returncode = -1
-        launch_error = str(exc)
+    guarded_unconfirmed_teardown = False
+    guarded_timeout = False
+    guard_invoked = False
+    scope_exit_confirmed = False
+    if prelaunch_containment_errors:
+        returncode = 2
+    else:
+        command = guard_command(sample_rate, block_size)
+        try:
+            guard_invoked = True
+            completed = subprocess.run(
+                command,
+                cwd=ROOT,
+                check=False,
+                text=True,
+                capture_output=True,
+                timeout=OUTER_GUARD_TIMEOUT_SECONDS,
+            )
+            returncode = completed.returncode
+            guarded_stdout = completed.stdout or ""
+            guarded_stderr = completed.stderr or ""
+            if guarded_stdout:
+                sys.stdout.write(guarded_stdout)
+            if guarded_stderr:
+                sys.stderr.write(guarded_stderr)
+            guarded_unconfirmed_teardown = (
+                UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL in guarded_stdout
+                or UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL in guarded_stderr
+            )
+            scope_exit_confirmed = (
+                returncode == 0
+                and confirmed_user_scope_exit_receipt_present(COMPLETION_FILE)
+            )
+        except subprocess.TimeoutExpired:
+            returncode = 124
+            guarded_timeout = True
+            guarded_unconfirmed_teardown = True
+            launch_error = (
+                "guarded subprocess exceeded outer "
+                f"{OUTER_GUARD_TIMEOUT_SECONDS}-second limit"
+            )
+        except OSError as exc:
+            returncode = -1
+            launch_error = str(exc)
     after = current_stability_snapshot()
-    post_errors = stability_errors(after, reaper_pids())
+    post_reaper_pids = reaper_pids()
+    post_errors = stability_errors(after, post_reaper_pids)
+    unconfirmed_teardown = (
+        guarded_unconfirmed_teardown
+        or unconfirmed_process_group_exit_marker_present(COMPLETION_FILE)
+    )
+    unavailable_errors: list[str] = []
+    if prelaunch_containment_errors:
+        unavailable_errors.extend(prelaunch_containment_errors)
+    if guard_invoked and returncode != 0:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "guarded process did not exit cleanly"
+        )
+    if guarded_timeout:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "guarded subprocess exceeded its outer time limit"
+        )
+    if not guard_invoked:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "guarded process was not started"
+        )
+    if guard_invoked and not scope_exit_confirmed:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "guarded user scope exit receipt is missing or invalid"
+        )
+    if unconfirmed_teardown:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "guarded process-group exit was not confirmed"
+        )
+    if post_reaper_pids is None:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "REAPER process census is unavailable"
+        )
+    elif post_reaper_pids:
+        unavailable_errors.append(
+            "post-exit VST3 scan containment unavailable: "
+            "REAPER process still detected: "
+            + ",".join(str(pid) for pid in sorted(post_reaper_pids))
+        )
+    if unavailable_errors:
+        scan_containment = native_vst3_scan_containment_unavailable_record(
+            PROFILE,
+            unavailable_errors,
+        )
+    else:
+        scan_containment = native_vst3_scan_containment_record(
+            PROFILE, BUILD_VST3_DIR
+        )
+    post_errors.extend(
+        f"VST3 scan containment: {error}"
+        for error in scan_containment["errors"]
+    )
 
     pending = BATCH_ROOT / (
         f".{row_label(sample_rate, block_size)}.pending-"
@@ -844,6 +1138,7 @@ def run_row(sample_rate: int, block_size: int) -> str:
         "inputs": hashes,
         "guard_returncode": returncode,
         "classification": "pass" if returncode == 0 else "infrastructure-invalid",
+        "vst3_scan_containment": scan_containment,
     }
     if launch_error:
         metadata["launch_error"] = launch_error
@@ -873,6 +1168,12 @@ def run_row(sample_rate: int, block_size: int) -> str:
 
 
 def run_matrix() -> dict[tuple[int, int], str]:
+    result = _with_attempt_lock(_run_matrix_locked)
+    assert isinstance(result, dict)
+    return result
+
+
+def _run_matrix_locked() -> dict[tuple[int, int], str]:
     recovered_pending = recover_pending_batches()
     recovered_staging = recover_staging_partial()
     recovered = [str(path) for path in recovered_pending]
@@ -896,7 +1197,9 @@ def run_matrix() -> dict[tuple[int, int], str]:
                 f"{sample_rate}/{block_size}: "
                 + ", ".join(str(path) for path in invalid)
             )
-        outcomes[(sample_rate, block_size)] = run_row(sample_rate, block_size)
+        outcomes[(sample_rate, block_size)] = _run_row_locked(
+            sample_rate, block_size
+        )
     return outcomes
 
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import hashlib
 import json
 import os
 import pathlib
 import re
 import signal
 import shlex
+import stat
 import subprocess
 import sys
 import time
@@ -35,6 +37,24 @@ PROBE_VST3_MODULEINFO = (
 ).resolve()
 PROBE_VST3_FUID = "6F62F8B1B8A14872A0D92C3C274421D8"
 PROBE_VST3_NAME = "M3 Polyphonic Audio to MIDI Probe"
+ALLOWED_VST3_CACHE_BUNDLES = frozenset(
+    {
+        "M3_Polyphonic_Audio_to_MIDI.vst3",
+        "M3_Polyphonic_Audio_to_MIDI_Probe.vst3",
+    }
+)
+VST3_CACHE_FILENAMES = ("reaper-vstplugins.ini", "reaper-vstplugins64.ini")
+UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER = (
+    ".native-vst3-termination-unconfirmed.json"
+)
+UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER_CONTENT = (
+    '{"schema":1,"status":"process-group-exit-unconfirmed"}\n'
+)
+UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL = "M3_VST3_PROCESS_GROUP_EXIT_UNCONFIRMED"
+CONFIRMED_USER_SCOPE_EXIT_RECEIPT = ".native-vst3-user-scope-exit-confirmed.json"
+CONFIRMED_USER_SCOPE_EXIT_RECEIPT_CONTENT = (
+    '{"schema":1,"status":"user-scope-exit-confirmed"}\n'
+)
 LIVE_REAPER_PROFILE = (pathlib.Path.home() / ".config/REAPER").resolve()
 COMPLETION_FILE = (
     ROOT / "build/reaper-test/test-results/phase.log"
@@ -58,6 +78,8 @@ MIN_AVAILABLE_MIB = 4096.0
 MAX_LOAD_ONE = 12.0
 MAX_TEMPERATURE_C = 90.0
 MAX_CPU_SECONDS = 45
+SYSTEMCTL_TIMEOUT_SECONDS = 2.0
+WMCTRL_TIMEOUT_SECONDS = 1.0
 WMCTRL = pathlib.Path("/usr/bin/wmctrl")
 PLUGIN_INJECTION_ENVIRONMENT = (
     "CLAP_PATH",
@@ -87,6 +109,131 @@ def completion_file_for_profile(profile: pathlib.Path) -> pathlib.Path | None:
     if profile == OBSERVER_DIAGNOSTIC_PROFILE:
         return OBSERVER_DIAGNOSTIC_COMPLETION_FILE
     return None
+
+
+def unconfirmed_process_group_exit_marker(
+    completion_file: pathlib.Path | None,
+) -> pathlib.Path | None:
+    if completion_file is None:
+        return None
+    if completion_file.parent.name == "test-results":
+        return completion_file.parent.parent / UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER
+    return completion_file.parent / UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER
+
+
+def _legacy_unconfirmed_process_group_exit_marker(
+    completion_file: pathlib.Path | None,
+) -> pathlib.Path | None:
+    if completion_file is None:
+        return None
+    return completion_file.parent / UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER
+
+
+def write_unconfirmed_process_group_exit_marker(
+    completion_file: pathlib.Path | None,
+) -> bool:
+    marker = unconfirmed_process_group_exit_marker(completion_file)
+    if marker is None:
+        return False
+    try:
+        descriptor = os.open(
+            marker,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+        )
+    except OSError:
+        return False
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(UNCONFIRMED_PROCESS_GROUP_EXIT_MARKER_CONTENT)
+    return True
+
+
+def unconfirmed_process_group_exit_marker_present(
+    completion_file: pathlib.Path | None,
+) -> bool:
+    canonical = unconfirmed_process_group_exit_marker(completion_file)
+    legacy = _legacy_unconfirmed_process_group_exit_marker(completion_file)
+    if canonical is None:
+        return False
+    for marker in {canonical, legacy}:
+        if marker is None:
+            continue
+        try:
+            marker.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError:
+            return True
+        return True
+    return False
+
+
+def confirmed_user_scope_exit_receipt(
+    completion_file: pathlib.Path | None,
+) -> pathlib.Path | None:
+    if completion_file is None:
+        return None
+    return completion_file.parent / CONFIRMED_USER_SCOPE_EXIT_RECEIPT
+
+
+def clear_confirmed_user_scope_exit_receipt(
+    completion_file: pathlib.Path | None,
+) -> bool:
+    receipt = confirmed_user_scope_exit_receipt(completion_file)
+    if receipt is None:
+        return False
+    try:
+        receipt.unlink(missing_ok=True)
+    except OSError:
+        return False
+    return True
+
+
+def write_confirmed_user_scope_exit_receipt(
+    completion_file: pathlib.Path | None,
+) -> bool:
+    receipt = confirmed_user_scope_exit_receipt(completion_file)
+    if receipt is None:
+        return False
+    try:
+        descriptor = os.open(
+            receipt,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+        )
+    except OSError:
+        return False
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(CONFIRMED_USER_SCOPE_EXIT_RECEIPT_CONTENT)
+    return True
+
+
+def confirmed_user_scope_exit_receipt_present(
+    completion_file: pathlib.Path | None,
+) -> bool:
+    receipt = confirmed_user_scope_exit_receipt(completion_file)
+    if receipt is None:
+        return False
+    try:
+        descriptor = os.open(receipt, os.O_RDONLY | os.O_NOFOLLOW)
+    except OSError:
+        return False
+    try:
+        status = os.fstat(descriptor)
+        if not stat.S_ISREG(status.st_mode) or status.st_nlink != 1:
+            return False
+        expected_length = len(CONFIRMED_USER_SCOPE_EXIT_RECEIPT_CONTENT.encode("utf-8"))
+        content = bytearray()
+        while len(content) <= expected_length:
+            chunk = os.read(descriptor, expected_length + 1 - len(content))
+            if not chunk:
+                break
+            content.extend(chunk)
+        return content == CONFIRMED_USER_SCOPE_EXIT_RECEIPT_CONTENT.encode("utf-8")
+    except OSError:
+        return False
+    finally:
+        os.close(descriptor)
 
 
 def available_memory_mib() -> float:
@@ -278,6 +425,116 @@ def validate_native_vst3_environment(
     return resolved_vst3
 
 
+def native_vst3_prelaunch_scan_containment_errors(
+    profile: pathlib.Path,
+) -> list[str]:
+    errors: list[str] = []
+    for name in VST3_CACHE_FILENAMES:
+        cache = profile.parent / name
+        if cache.is_symlink():
+            errors.append(f"disposable VST cache path is symlinked: {name}")
+        elif cache.exists():
+            errors.append(f"disposable VST cache exists before launch: {name}")
+    return errors
+
+
+def native_vst3_scan_containment_errors(
+    profile: pathlib.Path,
+    expected_vst3_root: pathlib.Path,
+) -> list[str]:
+    errors: list[str] = []
+    try:
+        validate_native_vst3_environment(expected_vst3_root, profile)
+    except ValueError as exc:
+        errors.append(str(exc))
+
+    found_cache = False
+    for name in VST3_CACHE_FILENAMES:
+        cache = profile.parent / name
+        if cache.is_symlink():
+            found_cache = True
+            errors.append(f"disposable VST cache is not a regular file: {name}")
+            continue
+        if not cache.exists():
+            continue
+        found_cache = True
+        if not cache.is_file():
+            errors.append(f"disposable VST cache is not a regular file: {name}")
+            continue
+        try:
+            lines = cache.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"disposable VST cache is unreadable: {name}: {exc}")
+            continue
+
+        in_vstcache = False
+        found_vstcache = False
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                in_vstcache = stripped.lower() == "[vstcache]"
+                found_vstcache = found_vstcache or in_vstcache
+                continue
+            if not in_vstcache or not stripped or stripped.startswith(";"):
+                continue
+            key, separator, _value = stripped.partition("=")
+            key = key.strip()
+            if not separator or not key:
+                errors.append(f"disposable VST cache entry is malformed: {name}")
+                continue
+            if (
+                key.lower().endswith(".vst3")
+                and key not in ALLOWED_VST3_CACHE_BUNDLES
+            ):
+                errors.append(f"unexpected cached VST3 bundle: {key}")
+        if not found_vstcache:
+            errors.append(f"disposable VST cache does not contain a vstcache section: {name}")
+    if not found_cache:
+        errors.append("disposable VST cache is missing")
+    return errors
+
+
+def _sha256_regular_file(path: pathlib.Path) -> str | None:
+    if path.is_symlink() or not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError:
+        return None
+    return digest.hexdigest()
+
+
+def native_vst3_scan_containment_record(
+    profile: pathlib.Path,
+    expected_vst3_root: pathlib.Path,
+) -> dict[str, object]:
+    return {
+        "errors": native_vst3_scan_containment_errors(profile, expected_vst3_root),
+        "profile_sha256": _sha256_regular_file(profile),
+        "cache_sha256": {
+            name: _sha256_regular_file(profile.parent / name)
+            for name in VST3_CACHE_FILENAMES
+        },
+    }
+
+
+def native_vst3_scan_containment_unavailable_record(
+    profile: pathlib.Path,
+    errors: list[str],
+) -> dict[str, object]:
+    return {
+        "errors": errors,
+        "profile_sha256": None,
+        "cache_sha256": {
+            name: None
+            for name in VST3_CACHE_FILENAMES
+        },
+    }
+
+
 def overrides_instance_isolation(argument: str) -> bool:
     normalized = argument.lower()
     return any(
@@ -331,6 +588,20 @@ def transient_window_listing_error(stderr: str) -> bool:
     return "BadWindow" in stderr or "BadDrawable" in stderr
 
 
+def run_wmctrl(arguments: list[str], environment: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            [str(WMCTRL), *arguments],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=WMCTRL_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("wmctrl command timed out") from exc
+
+
 def move_reaper_windows_once(
     environment: dict[str, str],
     workspace_number: int,
@@ -341,13 +612,7 @@ def move_reaper_windows_once(
     excluded = excluded_window_ids or set()
     listing = None
     for attempt in range(3):
-        listing = subprocess.run(
-            [str(WMCTRL), "-l", "-x"],
-            env=environment,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        listing = run_wmctrl(["-l", "-x"], environment)
         if listing.returncode == 0:
             break
         if not transient_window_listing_error(listing.stderr) or attempt == 2:
@@ -370,12 +635,8 @@ def move_reaper_windows_once(
             continue
         touched = False
         if background:
-            result = subprocess.run(
-                [str(WMCTRL), "-ir", window_id, "-b", "add,hidden"],
-                env=environment,
-                text=True,
-                capture_output=True,
-                check=False,
+            result = run_wmctrl(
+                ["-ir", window_id, "-b", "add,hidden"], environment
             )
             if result.returncode != 0:
                 detail = result.stderr.strip() or f"exit status {result.returncode}"
@@ -387,13 +648,7 @@ def move_reaper_windows_once(
             if touched:
                 placed += 1
             continue
-        result = subprocess.run(
-            [str(WMCTRL), "-ir", window_id, "-t", target],
-            env=environment,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        result = run_wmctrl(["-ir", window_id, "-t", target], environment)
         if result.returncode != 0:
             detail = result.stderr.strip() or f"exit status {result.returncode}"
             raise RuntimeError(
@@ -409,13 +664,7 @@ def move_reaper_windows_once(
 def reaper_window_ids(environment: dict[str, str]) -> set[str]:
     listing = None
     for attempt in range(3):
-        listing = subprocess.run(
-            [str(WMCTRL), "-l", "-x"],
-            env=environment,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        listing = run_wmctrl(["-l", "-x"], environment)
         if listing.returncode == 0:
             break
         if not transient_window_listing_error(listing.stderr) or attempt == 2:
@@ -453,13 +702,7 @@ def _workspace_state(listing_text: str) -> tuple[set[int], int]:
 
 
 def _workspace_listing(environment: dict[str, str]) -> str:
-    listing = subprocess.run(
-        [str(WMCTRL), "-d"],
-        env=environment,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    listing = run_wmctrl(["-d"], environment)
     if listing.returncode != 0:
         detail = listing.stderr.strip() or f"exit status {listing.returncode}"
         raise RuntimeError(f"could not list workspaces: {detail}")
@@ -480,13 +723,7 @@ def restore_launch_workspace(
         return False
     if active_workspace_index(environment) != target_workspace:
         return False
-    restored = subprocess.run(
-        [str(WMCTRL), "-s", str(original_workspace)],
-        env=environment,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    restored = run_wmctrl(["-s", str(original_workspace)], environment)
     if restored.returncode != 0:
         detail = restored.stderr.strip() or f"exit status {restored.returncode}"
         raise RuntimeError(
@@ -530,22 +767,198 @@ def require_workspace(environment: dict[str, str], workspace_number: int) -> int
     return active
 
 
-def stop_process_group(process: subprocess.Popen[bytes], first_signal: int) -> None:
-    if process.poll() is not None:
-        return
+def _process_group_exited(process_group: int) -> bool:
+    try:
+        os.killpg(process_group, 0)
+    except ProcessLookupError:
+        return True
+    except PermissionError:
+        return False
+    return False
+
+
+def _wait_for_process_group_exit(
+    process_group: int,
+    polls: int = 3,
+    interval_seconds: float = 0.05,
+) -> bool:
+    for index in range(polls):
+        if _process_group_exited(process_group):
+            return True
+        if index + 1 < polls:
+            time.sleep(interval_seconds)
+    return False
+
+
+def stop_process_group(process: subprocess.Popen[bytes], first_signal: int) -> bool:
     try:
         os.killpg(process.pid, first_signal)
         process.wait(timeout=5)
-        return
     except (ProcessLookupError, subprocess.TimeoutExpired):
         pass
-    if process.poll() is not None:
-        return
+    if _wait_for_process_group_exit(process.pid):
+        return True
     try:
         os.killpg(process.pid, signal.SIGKILL)
         process.wait(timeout=5)
     except (ProcessLookupError, subprocess.TimeoutExpired):
         pass
+    return _wait_for_process_group_exit(process.pid)
+
+
+class GuardedCommand(list[str]):
+    """A trusted launcher command paired with its generated user scope."""
+
+    def __init__(self, arguments: list[str], scope_unit: str):
+        super().__init__(arguments)
+        self.scope_unit = scope_unit
+
+
+def trusted_vst3_scope_unit(command: object) -> str | None:
+    if not isinstance(command, GuardedCommand):
+        return None
+    scope_unit = command.scope_unit
+    if not isinstance(scope_unit, str) or not re.fullmatch(
+        r"m3-poly-guarded-[1-9][0-9]*\.scope", scope_unit
+    ):
+        return None
+    if any(not isinstance(argument, str) for argument in command):
+        return None
+    unit_arguments = [argument for argument in command if argument.startswith("--unit=")]
+    if unit_arguments != [f"--unit={scope_unit}"]:
+        return None
+    return scope_unit
+
+
+def user_scope_exit_state(scope_unit: str) -> str | None:
+    """Return an exact inactive/collected state, or None for uncertainty."""
+    try:
+        result = subprocess.run(
+            [
+                "/usr/bin/systemctl",
+                "--user",
+                "show",
+                scope_unit,
+                "--property=LoadState",
+                "--property=ActiveState",
+                "--property=SubState",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=SYSTEMCTL_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    properties: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        if "=" not in line:
+            return None
+        key, value = line.split("=", 1)
+        if key not in {"LoadState", "ActiveState", "SubState"} or key in properties:
+            return None
+        properties[key] = value
+    if properties == {
+        "LoadState": "loaded",
+        "ActiveState": "inactive",
+        "SubState": "dead",
+    }:
+        return "inactive"
+    if properties == {
+        "LoadState": "not-found",
+        "ActiveState": "inactive",
+        "SubState": "dead",
+    }:
+        return "collected"
+    return None
+
+
+def user_scope_exited(scope_unit: str) -> bool:
+    """Return true only for an explicit inactive or collected user scope."""
+    return user_scope_exit_state(scope_unit) is not None
+
+
+def _launcher_exited(process: subprocess.Popen[bytes]) -> bool:
+    try:
+        return process.poll() is not None
+    except OSError:
+        return False
+
+
+def _scope_exit_confirmed_for_launcher(
+    process: subprocess.Popen[bytes], scope_unit: str
+) -> bool:
+    state = user_scope_exit_state(scope_unit)
+    return state == "inactive" or (state == "collected" and _launcher_exited(process))
+
+
+def _wait_for_user_scope_exit(
+    process: subprocess.Popen[bytes],
+    scope_unit: str,
+    polls: int = 3,
+    interval_seconds: float = 0.05,
+) -> bool:
+    for index in range(polls):
+        if _scope_exit_confirmed_for_launcher(process, scope_unit):
+            return True
+        if index + 1 < polls:
+            time.sleep(interval_seconds)
+    return False
+
+
+def _signal_user_scope(scope_unit: str, signal_name: str) -> bool:
+    try:
+        result = subprocess.run(
+            [
+                "/usr/bin/systemctl",
+                "--user",
+                "kill",
+                "--kill-whom=all",
+                f"--signal={signal_name}",
+                scope_unit,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=SYSTEMCTL_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
+def stop_guarded_scope(
+    process: subprocess.Popen[bytes], first_signal: int, scope_unit: str | None
+) -> bool:
+    """Stop the exact launcher scope; process-group signals are best effort only."""
+    if scope_unit is None:
+        return False
+    if _scope_exit_confirmed_for_launcher(process, scope_unit):
+        return True
+    try:
+        os.killpg(process.pid, first_signal)
+    except OSError:
+        pass
+    if not _signal_user_scope(scope_unit, signal.Signals(first_signal).name.removeprefix("SIG")):
+        return False
+    if _wait_for_user_scope_exit(process, scope_unit):
+        return True
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except OSError:
+        pass
+    if not _signal_user_scope(scope_unit, "KILL"):
+        return False
+    return _wait_for_user_scope_exit(process, scope_unit)
+
+
+class _GuardedGuiResult(int):
+    def __new__(cls, value: int, unconfirmed_teardown: bool = False):
+        result = int.__new__(cls, value)
+        result.unconfirmed_teardown = unconfirmed_teardown
+        return result
 
 
 def run_gui_guarded(
@@ -553,6 +966,7 @@ def run_gui_guarded(
     environment: dict[str, str],
     workspace_number: int,
     completion_file: pathlib.Path | None = None,
+    scope_unit: str | None = None,
 ) -> int:
     original_workspace = require_workspace(environment, workspace_number)
     target_workspace = workspace_index(workspace_number)
@@ -573,6 +987,24 @@ def run_gui_guarded(
             original_workspace,
             target_workspace,
         )
+        if scope_unit is not None and not user_scope_exited(scope_unit):
+            if not write_unconfirmed_process_group_exit_marker(completion_file):
+                print(UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL, file=sys.stderr)
+            print(
+                "guarded REAPER launcher exited but disposable user scope "
+                "exit could not be confirmed",
+                file=sys.stderr,
+            )
+            return _GuardedGuiResult(2 if result == 0 else result, True)
+        if scope_unit is not None and completion_file is not None:
+            if not write_confirmed_user_scope_exit_receipt(completion_file):
+                if not write_unconfirmed_process_group_exit_marker(completion_file):
+                    print(UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL, file=sys.stderr)
+                print(
+                    "guarded REAPER user scope exit receipt could not be sealed",
+                    file=sys.stderr,
+                )
+                return _GuardedGuiResult(2 if result == 0 else result, True)
         return result
 
     process = subprocess.Popen(
@@ -597,12 +1029,20 @@ def run_gui_guarded(
                     result = process.wait(timeout=COMPLETION_GRACE_SECONDS)
                     return finish(result)
                 except subprocess.TimeoutExpired:
-                    stop_process_group(process, signal.SIGTERM)
+                    if stop_guarded_scope(process, signal.SIGTERM, scope_unit):
+                        print(
+                            "guarded REAPER completion observed; "
+                            "closed disposable instance after grace period"
+                        )
+                        return finish(0)
+                    if not write_unconfirmed_process_group_exit_marker(completion_file):
+                        print(UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL, file=sys.stderr)
                     print(
-                        "guarded REAPER completion observed; "
-                        "closed disposable instance after grace period"
+                        "guarded REAPER completion observed but disposable "
+                        "process group exit could not be confirmed",
+                        file=sys.stderr,
                     )
-                    return finish(0)
+                    return finish(_GuardedGuiResult(2, True))
             try:
                 poll_seconds = 0.02 if time.monotonic() <= preserve_until else 0.10
                 result = process.wait(timeout=poll_seconds)
@@ -612,11 +1052,17 @@ def run_gui_guarded(
                 pass
         preserve_launch_focus()
         return finish(process.returncode)
-    except KeyboardInterrupt:
-        stop_process_group(process, signal.SIGINT)
+    except KeyboardInterrupt as exc:
+        if not stop_guarded_scope(process, signal.SIGINT, scope_unit):
+            if not write_unconfirmed_process_group_exit_marker(completion_file):
+                print(UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL, file=sys.stderr)
+            exc.unconfirmed_teardown = True
         raise
-    except (OSError, RuntimeError):
-        stop_process_group(process, signal.SIGTERM)
+    except (OSError, RuntimeError) as exc:
+        if not stop_guarded_scope(process, signal.SIGTERM, scope_unit):
+            if not write_unconfirmed_process_group_exit_marker(completion_file):
+                print(UNCONFIRMED_PROCESS_GROUP_EXIT_SENTINEL, file=sys.stderr)
+            exc.unconfirmed_teardown = True
         raise
 
 
@@ -632,7 +1078,7 @@ def guarded_command(
         raise ValueError("CLAP and VST3 injection are mutually exclusive")
     cpu = max(os.sched_getaffinity(0))
     cpu_seconds = max(5, min(timeout_seconds, MAX_CPU_SECONDS))
-    unit = f"m3-poly-guarded-{os.getpid()}"
+    unit = f"m3-poly-guarded-{os.getpid()}.scope"
     systemd_options = [
         "/usr/bin/systemd-run",
         "--user",
@@ -652,7 +1098,7 @@ def guarded_command(
         systemd_options.append(f"--setenv=CLAP_PATH={clap_path}")
     if probe_report is not None:
         systemd_options.append(f"--setenv=M3_CLAP_PROBE_REPORT={probe_report}")
-    return [
+    return GuardedCommand([
         *systemd_options,
         "--",
         "/usr/bin/timeout",
@@ -682,7 +1128,7 @@ def guarded_command(
         str(profile),
         "-nosplash",
         *reaper_arguments,
-    ]
+    ], unit)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -856,6 +1302,8 @@ def main(argv: list[str] | None = None) -> int:
         probe_report,
         vst3_path,
     )
+    scope_unit = command.scope_unit if isinstance(command, GuardedCommand) else None
+    trusted_vst3_scope = trusted_vst3_scope_unit(command)
     if args.dry_run:
         if args.gui:
             print(f"guarded GUI workspace: {args.workspace}")
@@ -869,6 +1317,38 @@ def main(argv: list[str] | None = None) -> int:
         print(shlex.join(command))
         return 0
 
+    if vst3_path is not None:
+        if args.gui and trusted_vst3_scope is None:
+            print(
+                "guardrail refusal: VST3 GUI launch lacks a trusted user scope identity",
+                file=sys.stderr,
+            )
+            return 2
+        if args.gui:
+            scope_unit = trusted_vst3_scope
+        if unconfirmed_process_group_exit_marker_present(completion_file):
+            print(
+                "guardrail refusal: prior guarded process-group exit remains "
+                "unconfirmed",
+                file=sys.stderr,
+            )
+            return 2
+        if scope_unit is not None and not clear_confirmed_user_scope_exit_receipt(
+            completion_file
+        ):
+            print(
+                "guardrail refusal: could not clear prior user scope exit receipt",
+                file=sys.stderr,
+            )
+            return 2
+        prelaunch_errors = native_vst3_prelaunch_scan_containment_errors(profile)
+        if prelaunch_errors:
+            print(
+                "guardrail refusal: " + "; ".join(prelaunch_errors),
+                file=sys.stderr,
+            )
+            return 2
+
     if completion_file is not None:
         try:
             completion_file.unlink(missing_ok=True)
@@ -879,23 +1359,69 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 2
 
+    launch_attempted = False
+    unconfirmed_teardown = False
     try:
         environment = runtime_environment(args.gui)
+        launch_attempted = True
         if args.gui:
-            return run_gui_guarded(
+            result = run_gui_guarded(
                 command,
                 environment,
                 args.workspace,
                 completion_file,
+                scope_unit,
             )
-        completed = subprocess.run(command, env=environment, check=False)
-    except KeyboardInterrupt:
+            unconfirmed_teardown = bool(
+                getattr(result, "unconfirmed_teardown", False)
+            )
+        else:
+            completed = subprocess.run(command, env=environment, check=False)
+            result = completed.returncode
+    except KeyboardInterrupt as exc:
+        unconfirmed_teardown = bool(
+            getattr(exc, "unconfirmed_teardown", False)
+        )
         print("guarded REAPER interrupted", file=sys.stderr)
-        return 130
+        result = 130
     except (OSError, RuntimeError) as exc:
+        unconfirmed_teardown = bool(
+            getattr(exc, "unconfirmed_teardown", False)
+        )
         print(f"guardrail refusal: {exc}", file=sys.stderr)
-        return 2
-    return completed.returncode
+        result = 2
+    if launch_attempted and vst3_path is not None:
+        if unconfirmed_teardown or unconfirmed_process_group_exit_marker_present(
+            completion_file
+        ):
+            print(
+                "guardrail post-exit scan containment unavailable: "
+                "guarded process-group exit was not confirmed",
+                file=sys.stderr,
+            )
+            return 2 if result == 0 else result
+        if scope_unit is not None and not confirmed_user_scope_exit_receipt_present(
+            completion_file
+        ):
+            print(
+                "guardrail post-exit scan containment unavailable: "
+                "guarded user scope exit receipt is missing or invalid",
+                file=sys.stderr,
+            )
+            return 2 if result == 0 else result
+        if result != 0:
+            return result
+        containment_errors = native_vst3_scan_containment_errors(
+            profile, vst3_path
+        )
+        if containment_errors:
+            print(
+                "guardrail post-exit scan containment failure: "
+                + "; ".join(containment_errors),
+                file=sys.stderr,
+            )
+            return 2 if result == 0 else result
+    return result
 
 
 if __name__ == "__main__":

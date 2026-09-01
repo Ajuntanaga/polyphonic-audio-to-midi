@@ -1055,6 +1055,21 @@ limited to 50% of one logical core and memory remains capped at 512 MiB. A live
 10 ms observation kept workspace 1 active for the full launch and left no
 REAPER process behind.
 
+## Offline scan-containment hardening — future guard only
+
+- The future VST3 guarded path now fails closed on exact scope/receipt,
+  symlink, lock, recovery, process-census, marker, and cache-validation
+  boundaries. The systemd transient scope is considered exited only after an
+  exact inactive state, or after collection with a positively exited launcher.
+- Independent read-only review is clean. The low-priority `221`-test repository
+  suite, both source validators, Python compilation, and whitespace validation
+  pass. Verification used mocks or dry-run paths only: it launched no REAPER
+  process and did not alter sealed v1/v2/v3 evidence.
+- This is future-guard hardening, not a fresh host design, a proof of
+  pre-launch scan isolation, or authorization to launch REAPER. Before any new
+  host work, preserve the seals, design and independently review the isolation
+  boundary, use a new namespace, and obtain new explicit host authority.
+
 ## Exact resume action
 
 1. Verify harness-recovery commits `7ca54a5` and `a551021`, observer-
