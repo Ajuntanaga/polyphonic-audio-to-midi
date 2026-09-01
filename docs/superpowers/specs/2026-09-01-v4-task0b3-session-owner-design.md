@@ -1,0 +1,484 @@
+# V4 Task 0B3 — Single Session-Owner Design
+
+**Status:** design-only; independently reviewed
+
+**Authority:** Task 0B3 defines a future in-namespace session-owner contract.
+It authorizes no source file, module import, component invocation, fixture,
+namespace, Bubblewrap/systemd/REAPER command, GUI/X11/audio/network action, or
+host mutation. It does not alter immutable Task 0A or make a Task 0B1 library
+admissible.
+
+## 1. Decision
+
+One later, separately authorized source component—provisionally named
+`tools/reaper_v4_session.py`—is the sole in-namespace **runtime root**. Its
+exact closure role is:
+
+```text
+kind = "session_entrypoint"
+role = "same_namespace_pre_ack_child_post_owner"
+```
+
+It alone owns the state transition:
+
+```text
+validated configuration -> PRE -> parent ACK+EOF -> one child -> POST+EOF
+```
+
+It is not a fifth Task 0B1 artifact. It cannot be authored, imported, or
+executed until a later scoped source authority. A later reviewed closure may
+include helper modules, but they are reachable implementation details only:
+none may become a second runtime root, coordinator, receipt writer, or child
+admission path. Until an independently reviewed successor closure proves this
+one root reaches immutable Task 0A and all three Task 0B1 runtime libraries,
+the only permitted closure state remains:
+
+```text
+BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)
+```
+
+No second coordinator, fallback runner, alternate receipt writer, or
+out-of-namespace control channel is permitted.
+
+```mermaid
+flowchart LR
+  A["sealed SessionConfig"] --> B["barrier + provenance-backed preflight"]
+  B --> C["validate and atomically emit PRE seq 0"]
+  C --> D["parent validates then sends ACK + EOF"]
+  D --> E["admit one exact ChildSpec"]
+  E --> F["reap child and post-measure"]
+  F --> G["validate and atomically emit POST seq 1 + EOF"]
+  G --> H["outer controller confirms scope exit and writes artifacts"]
+```
+
+The outer controller remains the only owner of retained control-root dirfds,
+markers, and durable receipts. The session owner receives none of them.
+
+## 2. Existing component boundaries
+
+The future session root composes these fixed boundaries; it must not duplicate
+or weaken them.
+
+| Component | Permitted future role | Must not do |
+| --- | --- | --- |
+| Task 0A protocol | Canonical bounded frame envelope and base-identity validation; process barrier primitive | Read/write a control stream, admit a child, or form a command |
+| Task 0B1 receipt schema | In-memory PRE/POST/ACK value and relation validation | Read descriptors, consume ACK EOF, measure state, or emit a frame |
+| Task 0B1 measurements | Explicit-plan, bounded metadata collection after its own authority | Walk ambient paths, frame I/O, or launch a child |
+| Task 0B1 child runner | One exact child adapter after admission | Decide admission, consume ACK, emit PRE/POST, retry, or use a fallback |
+| Outer controller | Scope lifetime, PID census, retained-dirfd artifacts, and final classification | Delegate control-root ownership into the namespace |
+
+The session root owns only the missing composition: immutable configuration
+admission, raw standard-stream exchange, evidence assembly, exact ChildSpec
+binding, and conservative in-scope failure reporting.
+
+## 3. Future SessionConfig admission contract
+
+The future source accepts one descriptor-pinned, read-only canonical JSON file
+mounted at a single manifest-declared sandbox path. The parent pins and retains
+the exact source bytes, identity, and digest before Bubblewrap creates the
+mount. The session command has exactly that fixed path as its configuration
+argument; it accepts no ambient configuration path, environment override,
+control descriptor, or optional argument.
+
+The configuration digest is SHA-256 over canonical UTF-8 JSON with
+`session_config_sha256` omitted. Any malformed, duplicate, missing, extra,
+symlinked, substituted, stale, or digest-mismatched configuration fails before
+PRE and starts no child.
+
+For this contract, canonical JSON means exact built-in `null`, Boolean,
+integer, string, list, and object values only; no float, duplicate key,
+whitespace variation, or non-ASCII path/identifier value; object keys sorted by
+their printable-ASCII byte order; UTF-8; and `,`/`:` separators. The later
+source/schema task must use identical canonical rules and cross-test its base
+configuration/frame results against immutable Task 0A. It must not modify Task
+0A or assume Task 0A's 2 KiB frame encoder can serialize the separately bounded
+8 KiB SessionConfig/certificate records.
+
+`schema` and `namespace` must exactly equal their `base_config` counterparts.
+`session_policy_sha256` is SHA-256 of the canonical policy projection containing
+exactly `row`, `direct_input_digests`, the three manifest digests,
+`fixture_certificates`, `bwrap`, `namespace_expectations`, `child`, and
+`limits`. `base_config.inputs` must be exactly the canonical union of
+`direct_input_digests` and `{"session_policy": session_policy_sha256}`; the
+normal Task 0A `config_sha256` is then recomputed and validated over that
+complete base configuration. This binds the full immutable policy and the
+selected direct input hashes to the existing sealed PRE/POST identity without
+changing the receipt grammar.
+
+The parent retains the complete canonical SessionConfig bytes and digest and
+compares all later PRE/POST values with them. `base_config.config_sha256` stays
+the sealed Task 0A configuration identity; it is never the SessionConfig
+digest and the two digests must not be conflated. A changed `child.argv`,
+certificate, expectation, manifest, or limit necessarily changes
+`session_policy_sha256` and therefore changes the Task 0A receipt identity.
+
+Its future closed top-level shape is:
+
+```text
+{
+  schema,
+  namespace,
+  session_config_sha256,
+  base_config,
+  session_policy_sha256,
+  direct_input_digests,
+  row,
+  runtime_manifest_sha256,
+  run_input_manifest_sha256,
+  fixture_manifest_sha256,
+  fixture_certificates,
+  bwrap,
+  namespace_expectations,
+  child,
+  limits
+}
+```
+
+All keys are exact; values are printable ASCII where a path or identifier is
+needed, canonical lower-case hex where a digest is needed, and bounded exact
+built-in containers only. Booleans never satisfy integer fields.
+
+The nested members are also closed. A later source/schema task must use these
+exact member sets, not an extensible configuration map:
+
+```text
+fixture_certificates = {
+  proc_ptrace_certificate_sha256,
+  control_visibility_certificate_sha256
+}
+
+bwrap = {path, version, argv_sha256}
+
+namespace_expectations = {
+  home, pwd, cwd,
+  environment,                 # exactly HOME, PWD, DISPLAY, XAUTHORITY, LANG, TZ
+  x11_identity,                # exactly display, authority, socket, screen, protocol
+  measurement_root,            # exactly path, device, inode
+  measurement_plan,            # exactly resources, expected
+  private_tree,                # exactly home_private, vst_empty, vst3_empty
+  scan_root                    # exactly path, device, inode, readonly,
+                               # descendants_readonly, no_later_mount
+}
+
+child = {argv, cwd, environment, timeout_ms}
+
+limits = {
+  pre_deadline_ms, ack_deadline_ms, post_deadline_ms,
+  diagnostic_max_bytes, max_frame_bytes, child_timeout_ms
+}
+```
+
+`direct_input_digests` is a closed map of 1 through 15 lower-case direct input
+names to 64-hex SHA-256 values. It exactly matches the parent-retained selected
+row's manifest-declared receipt-input map and cannot use the reserved name
+`session_policy`. The resulting Task 0A `inputs` map has 2 through 16 entries:
+that map is the only receipt representation of the direct input hashes, and it
+must be byte-identical in PRE and POST.
+
+`environment` and `child.environment` are exact six-member maps with the
+lexicographically ordered names shown above; they must compare byte-for-byte.
+`measurement_root` and `scan_root` identities are positive non-Boolean
+device/inode pairs with absolute manifest-declared sandbox paths. `private_tree`
+and `scan_root` facts are true only after the provenance requirements in
+Section 4 are met.
+
+`measurement_plan.resources` is an ordered list of 1 through 16 unique,
+single-component printable-ASCII relative names (at most 256 bytes each).
+`measurement_plan.expected` has exactly the same names and each value is
+exactly `{mode, size}`, where `mode` is a non-Boolean integer in `0..0o7777`
+and `size` is a non-Boolean nonnegative integer. Before launching the scope,
+the parent compares this one plan and its root identity with the manifest;
+inside the namespace, the session converts the exact resource list to the
+collector's tuple and accepts only descriptor-rooted facts matching it. There
+is no second measurement-plan or ambient resource source.
+
+The limits record is deliberately fixed for the future non-REAPER session
+fixture, not caller-selectable:
+
+```text
+pre_deadline_ms=5000, ack_deadline_ms=5000, post_deadline_ms=5000,
+diagnostic_max_bytes=1024, max_frame_bytes=2064, child_timeout_ms=30000
+```
+
+`child.timeout_ms` must equal `limits.child_timeout_ms`.
+`max_frame_bytes` equals the current Task 0A maximum and must also fit the
+queried `PIPE_BUF`. The canonical SessionConfig itself is at most 8,192 bytes,
+has at most 256 structural nodes and depth 16, permits at most 16 argv members
+of at most 512 printable-ASCII bytes each, and has no duplicate JSON key.
+Any altered limit, Boolean integer, oversized byte/string/container count, or
+additional nested key fails before PRE; a later reviewed schema may only change
+these constants by explicit amendment.
+
+| Member | Required binding |
+| --- | --- |
+| `schema`, `namespace`, `base_config`, `session_policy_sha256`, `direct_input_digests` | Task 0A identity. `base_config` is exactly `{schema, namespace, nonce, config_sha256, inputs}`; its inputs are the direct manifest input hashes plus `session_policy`, and Task 0A revalidates them. |
+| `row` | Exactly `{sample_rate_hz: 44100, block_size: 32}`. No other V4 row is admitted by this design. |
+| `runtime_manifest_sha256`, `run_input_manifest_sha256`, `fixture_manifest_sha256` | Sealed identities supplied and independently retained by the parent. The session carries only the admitted values; the parent compares later receipt values to its retained state. The run-input manifest, not the receipt, binds the private scan-root entry list and hashes. |
+| `fixture_certificates` | Canonical identities for the fixture-proven proc/ptrace and control-visibility properties described below. A missing, unknown, or mismatched certificate suppresses PRE. |
+| `bwrap` | Exact absolute path, version text, and complete-argv digest held and independently validated by the parent. The session does not claim it can observe the parent’s complete Bubblewrap argv. |
+| `namespace_expectations` | Exact `HOME`, `PWD`, `cwd`, environment map, X11 identity, one `measurement_root` identity, private-tree facts, and scan-root mount facts. |
+| `child` | One immutable `argv`, exact `cwd`, exact environment, and bounded timeout later used to construct one `ChildSpec`. |
+| `limits` | Explicit bounded protocol, diagnostic, frame, measurement, and child-lifetime limits; no field may select a fallback or extend a deadline dynamically. |
+
+`fixture_certificates` must include distinct digest-bound evidence for:
+
+1. the non-dumpable, capability-free proc/ptrace barrier and its negative
+   `/proc/<session-pid>/fd/1` and `/proc/<session-pid>/mem` fixture proof; and
+2. the exact mount/FD policy proving that no V4 control-root path or retained
+   control descriptor crosses into the namespace.
+
+These are certificates the parent validates against the reviewed fixture and
+namespace policy. The session may attest their result only after it also checks
+the configuration binding and its own allowed descriptor/mount state. It must
+not turn a local Boolean or a receipt self-assertion into proof.
+
+Each future certificate is itself closed canonical JSON with these exact
+members:
+
+```text
+{
+  schema, kind, certificate_sha256, fixture_evidence_sha256,
+  session_source_sha256, runtime_manifest_sha256, fixture_manifest_sha256,
+  bwrap_path, bwrap_version, bwrap_argv_sha256,
+  namespace_policy_sha256, mount_policy_sha256, fd_policy_sha256,
+  kernel_release, boot_id, uid, user_namespace_policy_sha256, result
+}
+```
+
+Its digest omits `certificate_sha256`. `kind` is exactly either
+`proc_ptrace_barrier` or `control_visibility`. For `proc_ptrace_barrier`,
+`result` is exactly `{proc_receipt_blocked: true, proc_mem_blocked: true}`;
+for `control_visibility`, it is exactly `{control_root_absent: true}`. Before
+the scope starts, the parent must match every applicability field with its
+current sealed session source,
+manifests, Bubblewrap policy, mount/FD policy, kernel/boot/user-namespace
+policy, and fixture evidence. Any mismatch, missing record, stale boot,
+unknown result member, or unverified fixture evidence suppresses PRE. The
+session copies only the admitted parent-owned values into receipt payloads; it
+does not claim to measure the parent's executable path, Bubblewrap argv, or a
+certificate's external applicability.
+
+`user_namespace_policy_sha256` is the sealed static `--unshare-user` topology
+and mapping policy, which the parent can match before scope creation. The
+future session must separately confirm the resulting in-namespace user
+namespace/mapping against that policy before PRE. A future namespace inode is
+never treated as a pre-scope certificate input.
+
+## 4. Attestation provenance
+
+Every required receipt assertion has a named evidence owner. The later source
+must refuse instead of inventing a value when its evidence is unavailable.
+
+| Receipt assertion class | Evidence required before PRE | Owner of evidence |
+| --- | --- | --- |
+| `home`, `pwd`, `cwd`, `environment_keys`, `forbidden_env_absent` | In-namespace direct measurement, exact comparison with `namespace_expectations`, and no unlisted environment key | Session owner |
+| `runtime_manifest_sha256`, `run_input_manifest_sha256`, Bubblewrap path/version/argv digest, base identity, row | Session carries values from its admitted configuration; parent independently compares all PRE/POST values with its retained configuration, manifest, and Bubblewrap identities | Parent |
+| private HOME and empty `.vst`/`.vst3`, production-bundle absence, scan root read-only/no later mount | Bounded in-namespace mount/tree checks tied to the manifest and retained root identities | Session owner + fixture/runtime manifest |
+| X11 identity | In-namespace identity comparison with the descriptor-pinned parent record | Session owner + parent |
+| `source_fds_absent` | Exact in-namespace descriptor allowlist: only standard streams and explicitly reviewed runtime descriptors; no data/source/control descriptor | Session owner + fixture policy |
+| `dumpable_disabled`, `capabilities_empty` | Task 0A barrier must succeed in the owner process before PRE | Session owner |
+| `proc_receipt_blocked`, `proc_mem_blocked` | Session barrier plus matching sealed fixture certificate; a future fixture must prove the negative opens | Parent-validated fixture certificate + session owner |
+| `control_root_absent` | Matching control-visibility certificate plus exact in-namespace mount and descriptor allowlist; neither `V4ControlPaths` nor a control-root path/FD may cross the boundary | Parent-validated fixture certificate + session owner |
+| POST-only `scan_root_unchanged` | Same anchored root/mount identity and post-child bounded recheck | Session owner |
+
+The Task 0B1 receipt schema fixes the fact names. This design neither adds a
+fact nor permits an open all-true map. The future session source may only
+construct a PRE/POST after its evidence satisfies the existing pure validators.
+`environment_keys` is exactly the canonical list
+`["DISPLAY", "HOME", "LANG", "PWD", "TZ", "XAUTHORITY"]` and proves the
+in-namespace environment has no other key. `forbidden_env_absent` is exactly
+the canonical high-risk subset
+`["BASH_ENV", "CLAP_PATH", "DBUS_SESSION_BUS_ADDRESS", "ENV", "LD_AUDIT", "LD_LIBRARY_PATH", "LD_PRELOAD", "PYTHONHOME", "PYTHONPATH", "SSH_AUTH_SOCK", "VST3_PATH", "VST_PATH", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR"]`.
+The finite forbidden list is an additional guard, not a claim that an open-ended
+wildcard list itself proves absence of every undeclared key.
+
+## 5. Exact raw transport
+
+Only standard streams form the in-namespace control channel:
+
+```text
+trusted parent stdin  -> session fd 0: exact ACK byte then EOF
+session fd 1          -> trusted parent stdout: framed PRE/POST only
+session/bwrap fd 2    -> trusted parent stderr: bounded diagnostics only
+```
+
+No other descriptor is an admission, receipt, configuration, or control
+channel. The future session checks that fd 0 and fd 1 are pipes, obtains the
+applicable `PIPE_BUF`, and refuses before PRE if the sealed maximum frame does
+not fit. It uses a deadline-enforced nonblocking/poll loop before each write or
+read. Once writable, it emits each frame in one write of the complete byte
+sequence; a short write, `EINTR`, `EPIPE`, `EAGAIN` after the sealed deadline,
+or other error is failure. It never retries an incomplete frame, writes a
+diagnostic to stdout, or emits a second PRE/POST.
+
+Fd 2 permits at most one printable-ASCII closed-code diagnostic, at most
+`diagnostic_max_bytes`, in one bounded best-effort write. It never carries a
+receipt or admission value. The parent begins concurrent bounded draining of
+stdout and stderr when it creates the scope and continues until both EOFs;
+stdout backpressure, stderr overflow, read error, or either deadline expiry is
+raw-exchange uncertainty. Before ACK it starts no child; after ACK it suppresses
+POST and requires outer teardown/census.
+
+The one legal wire exchange is:
+
+```text
+stdout: PRE frame, type=PRE, sequence=0
+stdin:  byte 0x06, then EOF
+stdout: POST frame, type=POST, sequence=1, terminal=true, then EOF
+```
+
+The session must:
+
+1. canonical-encode and validate PRE through Task 0A and the Task 0B1 receipt
+   schema before the single stdout write;
+2. read at most two ACK bytes under the sealed deadline, require exactly one
+   byte `0x06` followed by observable EOF, and reject missing, delayed,
+   duplicate, extra, malformed, or non-EOF input;
+3. construct and launch the child only after that ACK condition succeeds;
+4. sample `pre_monotonic_ns` immediately before the successful PRE emission;
+   after direct-child reaping and every post measurement, sample
+   `post_monotonic_ns`;
+5. retain the exact emitted PRE value and consumed ACK byte, call
+   `validate_exchange(exact_pre, exact_ack, proposed_post)`, and only then
+   canonical-encode the exact accepted terminal POST for its only stdout write;
+   and
+6. close stdout after POST, with no trailing byte or second frame.
+
+The parent independently reads PRE under its own bounded frame/diagnostic
+limit, validates it against retained configuration and manifest state, writes
+the one ACK byte, and closes its write end. It rejects any unexpected raw
+output. A valid in-memory `validate_ack_bytes(b"\x06")` result is not evidence
+of stream EOF; the session and parent must prove the raw condition separately.
+
+## 6. Child admission and environment
+
+After valid ACK+EOF, the session may create exactly one `ChildSpec`. It must
+derive every field from the single admitted configuration snapshot and must not
+look up `PATH`, inherit an environment, add a descriptor, or choose a fallback.
+
+The child environment is the closed six-key map:
+
+```text
+HOME, PWD, DISPLAY, XAUTHORITY, LANG, TZ
+```
+
+It must contain exactly those six keys and the byte-identical values in
+`namespace_expectations`. In particular `PWD == HOME`, the working directory
+equals that same `HOME`, and `XAUTHORITY` is the private in-namespace path.
+The session constructs `ChildSpec.environment` only as the lexicographic tuple
+`(("DISPLAY", value), ("HOME", value), ("LANG", value), ("PWD", value),
+("TZ", value), ("XAUTHORITY", value))`; it must not pass the JSON map or an
+ambient mapping through unchanged.
+The exact six-key environment proves every undeclared key is absent. The
+finite high-risk guard list in Section 4 is additionally attested but does not
+stand in for a wildcard assertion. If a later compatibility manifest proves a
+truly necessary extra key, it requires a reviewed configuration/schema
+amendment; there is no runtime exception.
+
+The child adapter remains the sole `subprocess` user. Its future invocation
+must retain its sealed boundaries: absolute executable and cwd, `shell=False`,
+`DEVNULL` on descriptors 0/1/2, `close_fds=True`, `pass_fds=()`, one bounded
+launch, and bounded kill/reap after successful `Popen` return. The outer
+session/scope—not the adapter—owns recovery and evidence sealing for an
+interruption that occurs before `Popen` returns.
+
+## 7. State and failure table
+
+No uncertain path can emit terminal success evidence.
+
+| Stage or condition | Child started? | Session stdout | Required outer action |
+| --- | ---: | --- | --- |
+| Configuration, barrier, provenance, PRE payload, or frame-size failure | No | No PRE | Mark namespace uncertainty; no ACK/child |
+| PRE write error or short write | No | Possibly incomplete bytes, never a retry | Treat raw exchange as invalid; no child |
+| Missing/bad/extra/non-EOF ACK | No | PRE only | No POST; close/terminate scope and seal uncertainty |
+| Child adapter failure before `Popen` returns | Unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
+| Child timeout, kill/reap uncertainty, signal, or interruption after launch | Yes or unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
+| Child exits but post measurement, root identity, or POST validation fails | Yes | PRE only | No POST; outer controller rejects the row |
+| Child exits, reaps, post checks and POST write all succeed | Yes | PRE then terminal POST then EOF | Still require scope-exit confirmation, zero-REAPER census, and outer receipt validation |
+
+Terminal POST establishes only that this session observed and reaped its direct
+child within the declared contract. It is not row acceptance, a scope-exit
+proof, a zero-PID census, a cache/profile validation, or permission to scan.
+
+## 8. Measurement-root rules
+
+The existing Task 0B1 measurement API proves bounded mode/size facts for
+explicit one-component regular-file resources. It is not a general mount or
+tree attester. The future session owner must therefore:
+
+1. use the one `namespace_expectations.measurement_root` identity with expected
+   device/inode and its finite resource plan; no second or ambient root source
+   is permitted;
+2. retain the root descriptor for the entire PRE-to-POST interval and recheck
+   it before PRE and after the child;
+3. use only bounded, no-follow, non-recursive measurement calls under that
+   root; and
+4. assign every fact outside that API to a separately reviewed, bounded
+   evidence function or to a sealed fixture certificate.
+
+The later source closure must include every new measurement/evidence function.
+No session code may treat an ambient pathname, an arbitrary `/proc` walk, or a
+single mode/size result as proof of an unrelated receipt assertion.
+
+## 9. Required later gates
+
+This record intentionally creates no implementation authority. The smallest
+safe sequence is:
+
+1. **Task 0B3a — session source authority:** author the one named session-root
+   source only, following this design. No component invocation or fixture.
+2. **Task 0B3b — pure receipt gate:** execute adversarial in-memory receipt
+   PRE/POST/ACK vectors only; prove value and exchange relations.
+3. **Task 0B3c — measurement gate:** test only a temporary, synthetic
+   directory/descriptor boundary and bounded identity failures; no namespace.
+4. **Task 0B3d — child-adapter gate:** use a non-REAPER sentinel child to test
+   one-launch, environment, timeout, and reaping behavior.
+5. **Task 0B4 — session state-machine gate:** test the raw PRE/ACK/POST state
+   machine against a non-REAPER controlled fixture, including every failure row
+   above. It still does not authorize Bubblewrap, systemd, REAPER, X11, audio,
+   or host scanning.
+6. **Task 0B5 — graph-construction implementation gate:** under a separate
+   data-only authority, implement and review the currently unavailable closed
+   schema/catalog/graph-construction method. It may parse only supplied static
+   data through retained directory descriptors; it must not import, execute, or
+   load a target or create a fixture.
+7. **Successor Task 0B0 closure review:** only after the graph constructor is
+   independently reviewed, rebuild the graph from this one session-entrypoint
+   root through Task 0A and every runtime library. It must remain blocked on
+   any unresolved edge, budget excess, or missing root.
+8. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
+   fixture manifest may prove only a safety property. REAPER compatibility and
+   a host request remain separate, later decisions.
+
+Each gate needs its own explicit scope, tests, independent review, and user
+authorization. Passing one does not authorize the next.
+
+## 10. Rejected alternatives
+
+| Alternative | Rejection reason |
+| --- | --- |
+| Add sequencing to immutable Task 0A | Violates its sealed non-admissible, process-incapable boundary. |
+| Let receipt, measurement, or child-runner library choose admission | Splits responsibility and creates an implicit runtime root. |
+| Use an arbitrary inherited descriptor or control-root path | Weakens the standard-stream/outer-controller ownership boundary. |
+| Let stdin carry configuration as well as ACK | Makes ACK EOF and configuration provenance ambiguous. |
+| Accept self-asserted all-true receipt facts | Provides no evidence for parent-owned, proc/ptrace, or control-visibility claims. |
+| Emit POST after a timeout or teardown uncertainty | Can falsely turn partial launch information into terminal evidence. |
+| Permit a child environment exception at runtime | Reopens loader, plugin, and session-variable injection paths without review. |
+
+## 11. Non-claims and references
+
+This design does not create a session file, validate a runtime closure, prove a
+fixture works, establish REAPER compatibility, scan a VST3 bundle, open REAPER,
+or change the real-time Audio-to-MIDI implementation. It does not authorize a
+retry of the sealed v1/v2/v3 work.
+
+It refines the design boundary recorded in:
+
+- `docs/superpowers/plans/2026-08-31-v4-reaper-scan-isolation.md` (Task 0B3);
+- `docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md`
+  (§4.3–§4.4);
+- `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`;
+- `docs/superpowers/specs/2026-09-01-v4-task0b1-author-only-source-contract.md`.
+
+Any conflict with those sealed documents is a block requiring a reviewed
+amendment, not a runtime interpretation.

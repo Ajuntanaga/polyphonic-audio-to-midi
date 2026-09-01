@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-01T09:57:03-07:00
+Updated: 2026-09-01T12:37:18-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -72,6 +72,18 @@ Updated: 2026-09-01T09:57:03-07:00
   It uses only sealed synthetic placeholder identities; it does not bind a
   real Task 0A/Task 0B1 graph, produce a fixture manifest, or authorize a host
   action.
+- Task 0B3 is now independently reviewed as a design-only session-owner
+  checkpoint at
+  `docs/superpowers/specs/2026-09-01-v4-task0b3-session-owner-design.md`.
+  It assigns exactly one later runtime root for the PRE/ACK/child/POST state
+  machine, binds the complete session policy and selected direct input hashes
+  through immutable Task 0A receipt identity, keeps durable control artifacts
+  with the outer controller, and requires provenance-backed/certificate-bound
+  PRE assertions, bounded raw transport, and PRE-only failure for uncertainty.
+  It also names separate source, receipt, measurement, runner, state-machine,
+  graph-construction, closure, fixture, and host gates. This is not source,
+  component, fixture, namespace, Bubblewrap/systemd/REAPER, or host authority;
+  the next action remains a separately scoped user-approved source task.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,

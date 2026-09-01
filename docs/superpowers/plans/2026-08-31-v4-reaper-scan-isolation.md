@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A is sealed, and the user-authorized Task 0B1 source-only checkpoint is in review. Module invocation, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, and Task 0B3 is independently reviewed design-only. Module invocation, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -202,6 +202,14 @@ owner and its PRE/ACK/child/POST interfaces. Its source needs a further scoped
 authorization and cannot be added as an implicit fifth Task 0B1 file. Only
 after that design, pure-component validation, and a successor closure review
 may a session root be considered for `COMPLETE_FIXTURE_CANDIDATE`.
+
+**Task 0B3 design record.**
+`docs/superpowers/specs/2026-09-01-v4-task0b3-session-owner-design.md` now
+defines that one future runtime root, its closed SessionConfig/policy binding,
+standard-stream PRE/ACK/POST state machine, evidence provenance, and later
+component/graph gates. It is independently reviewed documentation only: it
+authorizes no session source, component execution, fixture, namespace,
+Bubblewrap/systemd/REAPER action, or host mutation.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus
