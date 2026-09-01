@@ -1,7 +1,7 @@
 # V4 REAPER Runtime-Manifest Inventory
 
 Date: 2026-08-31
-Status: static candidate only; **not safety-complete, launch-complete, or namespace-execution authority**
+Status: static candidate only; **not fixture-complete, compatibility-complete, launch-complete, or namespace-execution authority**
 Scope: read-only inventory supporting the V4 scan-isolation design
 
 ## Decision
@@ -11,7 +11,7 @@ does not establish the exact GUI, dynamic-loader, Python-attester, X11, font,
 configuration, or audio closure needed for a compatible REAPER launch. No
 REAPER process was started to produce this document.
 
-The required future host-runtime manifest is an immutable, individually
+The required future reaper-host-runtime-manifest is an immutable, individually
 descriptor-pinned regular-file table plus explicit non-regular entry rules. It
 may not replace that table with a broad `/usr`, `/lib`, `/lib64`, REAPER-install,
 or home-directory bind. It covers both the Python attester closure and the
@@ -29,7 +29,7 @@ An entry has one of these kinds:
 
 The V4 RPP, ReaScript, and private Xauthority are regular inputs when they
 exist. They are recorded in a separately sealed run-input manifest that links
-to, but never modifies, the sealed host-runtime manifest.
+to, but never modifies, the sealed reaper-host-runtime-manifest.
 
 ## Static baseline candidates
 
@@ -123,29 +123,61 @@ remains **unresolved-static-overapprox**. No target code was imported for this
 inventory, and this component cannot emit a receipt, consume an ACK, start a
 child, create a namespace, or support a host command.
 
+## Task 0B closure review — 2026-09-01
+
+Status: **BLOCKED — documentation and read-only inventory only.** The next
+source work requires a separately scoped, explicit offline Task 0B1
+authorization after independent review of a non-executing closure-construction
+method.
+
+The static inventory cannot become either manifest state yet:
+
+1. The Task 0A closure is an unresolved static overapproximation, and no
+   reviewed method yet constructs the required complete combined Task 0A/Task
+   0B1 Python/extension/ELF closure for the future receipt-schema, collector,
+   and child-adapter modules.
+2. REAPER and libSwell have unresolved dynamic GUI/audio/install paths, while
+   the current process has no `DISPLAY`, `XAUTHORITY`, runtime-display socket,
+   or authority-file identity to inventory.
+3. The earlier phrase "safety-complete host manifest" is retired. A
+   **fixture-runtime-manifest** can support only a non-REAPER safety fixture;
+   a **reaper-host-runtime-manifest** must reference it and add the complete
+   REAPER/libSwell/GUI/dynamic closure before it can be compatibility-complete.
+4. A descriptor-pinned manifest must budget the `--ro-bind-data` copy cost and
+   open descriptors before it can run: per-file byte size, aggregate copied
+   bytes, largest file, FD count, `RLIMIT_NOFILE` headroom, and conservative
+   memory/tmpfs overhead are mandatory refusal inputs, not advisory telemetry.
+
+No broad `/usr`, `/lib*`, install-tree, home, or runtime-directory bind may
+substitute for an unresolved item. A later read-only inventory may record exact
+file and X11 identities from an active GUI owner context, but it must preserve
+unresolved branches and creates no fixture or host authority.
+
 ## Completion gate
 
-The gate has two deliberate meanings:
+The gate has two deliberately separate manifest artifacts:
 
-1. A **safety-complete** reviewed allowlist can support a bounded non-REAPER
-   fixture. It may cleanly refuse because its regular-file set is incompatible
-   with REAPER; it must never imply compatibility.
-2. A **compatibility-complete** reviewed allowlist resolves every REAPER,
-   libSwell, probe, GUI, Python, X11, configuration, and dynamic-load input
-   needed for the single V4 row. Only that stronger state can satisfy a future
-   host-launch precondition.
+1. A **fixture-runtime-manifest** can support a bounded non-REAPER fixture. It
+   may cleanly refuse because its regular-file set is incompatible with REAPER;
+   it is safety-only and never host-compatibility evidence.
+2. A **reaper-host-runtime-manifest** references the fixture manifest and
+   resolves every REAPER, libSwell, probe, GUI, Python, X11, configuration, and
+   dynamic-load input needed for the single V4 row. Only that stronger artifact
+   is compatibility-complete and can satisfy a future host-launch precondition.
 
 Phase A contains only a sealed, non-admissible frame-envelope/base-identity and
 barrier skeleton. It has no PRE/POST schema, measured collector, standard-stream
 control, or child-launch module, and its tests never create a namespace or
-process. Task 0B must separately author, without invoking, the exact receipt
+process. Only after Task 0B0 closure-method review and explicit Task 0B1
+authority may Task 0B author, without invoking, the exact receipt
 schema/exchange module, measured collectors, and child-runner adapter. Before
-any fixture, the reviewed manifest successor must seal all three source hashes
-and every newly imported Python source, extension, and ELF dependency, while
-referencing the immutable Phase A skeleton manifest. The later Bubblewrap
-fixture validates only the safety-complete table. Neither activity proves the
-compatibility-complete REAPER closure. Until the applicable manifest state is
-complete:
+any fixture, the reviewed fixture-runtime-manifest successor must use the
+Task 0B0 method to seal the complete combined Task 0A/Task 0B1 Python,
+extension, and ELF closure, including all three new source hashes, while
+referencing the immutable Phase A skeleton source component. The later
+Bubblewrap fixture validates only the fixture-runtime-manifest table.
+Neither activity proves the reaper-host-runtime-manifest closure. Until the
+applicable manifest state is complete:
 
 1. do not form or execute a V4 REAPER command, launch REAPER, or broaden a
    runtime bind;

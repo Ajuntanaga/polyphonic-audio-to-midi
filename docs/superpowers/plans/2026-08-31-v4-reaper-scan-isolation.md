@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A non-admissible skeleton work is permitted, Task 0B runtime manifest is blocked
+Status: V4 host execution blocked; Task 0A is sealed, and Task 0B permits documentation/read-only inventory only. Task 0B source authoring requires a new explicit offline Task 0B1 authorization.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -53,9 +53,9 @@ all offline work and independent review are complete.
 | tools/reaper_v4_protocol.py | source-only canonical frame envelope and base-identity grammar only |
 | tools/reaper_v4_attester.py | non-admissible config/barrier primitives; no receipt or child API |
 | tests/test_reaper_v4_protocol.py | source-only frame, barrier, and no-admission/no-child regression coverage |
-| tools/reaper_v4_measurements.py | Task 0B-only measured namespace collectors, authored only with their manifest closure |
-| tools/reaper_v4_receipt_schema.py | Task 0B-only exact PRE/POST/exchange grammar, authored with its manifest closure |
-| tools/reaper_v4_child_runner.py | Task 0B-only process adapter; the sole module allowed to import `subprocess` |
+| tools/reaper_v4_measurements.py | Task 0B1-only measured namespace collectors, authored only after the closure method and explicit offline authority |
+| tools/reaper_v4_receipt_schema.py | Task 0B1-only exact PRE/POST/exchange grammar, authored only after the closure method and explicit offline authority |
+| tools/reaper_v4_child_runner.py | Task 0B1-only process adapter; the sole module allowed to import `subprocess` |
 | tools/reaper_v4_namespace.py | immutable data types and Bubblewrap argv grammar |
 | tools/reaper_v4_launcher.py | trusted parent identity checks, descriptor pinning, standard-stream admission/receipt protocol |
 | tests/test_reaper_v4_namespace.py | unit and non-REAPER Bubblewrap fixture coverage |
@@ -72,7 +72,7 @@ all offline work and independent review are complete.
 ### Task 0A: Non-admissible protocol/barrier contract
 
 Status: complete as a non-admissible source component; it provides no
-safety-complete manifest, fixture, namespace, or host-execution authority.
+fixture-runtime-manifest, fixture, namespace, or host-execution authority.
 
 Create tools/reaper_v4_protocol.py, tools/reaper_v4_attester.py, and their unit
 tests as a complete but **non-admissible** canonical frame-envelope,
@@ -84,69 +84,99 @@ control object, measured namespace collector, or admission entrypoint. No
 configuration, including an all-true fact map, can produce PRE/POST or invoke a
 child. Source-contract tests use exact public-API and safe-top-level AST
 allowlists alongside forbidden import/call checks; they prove the barrier's
-success/refusal behavior and no-admission invariant. Seal both source hashes
-and their transitive Python import/extension closure as the immutable
-skeleton-manifest component for Task 0B.
+success/refusal behavior and no-admission invariant. The two source hashes are
+sealed as the immutable skeleton source component. Their transitive Python,
+extension, and ELF closure remains an unresolved Task 0B0 input; it is not a
+sealed runtime manifest until the reviewed closure-construction method produces
+and verifies the complete combined closure.
 
 ~~~bash
 ionice -c 3 nice -n 10 python3 -m unittest tests.test_reaper_v4_protocol -v
 ~~~
 
-### Task 0B: Host runtime manifest
+### Task 0B: Runtime-manifest gates
 
-Status: BLOCKED. Do not start namespace execution until it is independently
-reviewed.
+Status: **BLOCKED — documentation and read-only inventory only.** Source
+authoring requires a new explicit offline Task 0B1 authorization after
+independent review of the closure-construction method, manifest split, and
+resource-budget gates. Do not start namespace execution.
 
-The current inventory identifies the direct ELF starting set but proves neither
-a compatible GUI/runtime closure nor the now-known skeleton closure. Task 0B
-may separately author, but not invoke, `tools/reaper_v4_measurements.py`,
+The current inventory identifies direct ELF starting points only. It proves
+neither the Task 0A Python closure nor REAPER GUI/runtime compatibility. The
+current environment also has no `DISPLAY` or `XAUTHORITY`; unresolved dynamic
+paths must remain unresolved rather than being replaced with broad binds.
+
+#### Task 0B0: closure-construction method (unmet prerequisite)
+
+Before any Task 0B source is authored, write and independently review a
+non-executing method that produces an immutable closure record from supplied
+static inputs. It must define the import graph, extension/ELF traversal,
+interpreter/loader identity, conditional-import handling, unresolved-branch
+refusal, source/extension/ELF hash records, and reproducible output identity.
+It must not form a Bubblewrap command, create a namespace, invoke the adapter,
+or run REAPER. Until this method is reviewed, do not author the three Task 0B1
+modules below.
+
+#### Task 0B1: source closure (separate future offline authorization)
+
+Only after Task 0B0 review and explicit offline authorization may this task
+author, but not invoke, `tools/reaper_v4_measurements.py`,
 `tools/reaper_v4_receipt_schema.py`, and `tools/reaper_v4_child_runner.py`.
-The receipt-schema module is the first code allowed to define exact PRE/POST
-payload keys, structured measured facts, and exchange validation; it is not a
-second skeleton and must reference the sealed Task 0A frame/base-identity API.
-The collector is the first code permitted to measure exact namespace state for
-those schemas. The adapter is the only module permitted to import `subprocess`,
-has no import-time side effects, uses DEVNULL standard streams, `close_fds=True`,
-and `pass_fds=()`, and returns a bounded `ChildOutcome`. A future separately
-authorized, read-only inventory activity must produce an immutable host-runtime
-manifest with type-specific entries:
+The receipt module is the first code allowed to define exact PRE/POST payload
+keys, structured measured facts, and exchange validation; it references the
+sealed Task 0A frame/base-identity API. The collector is the first code allowed
+to measure exact namespace state. The adapter is the only module allowed to
+import `subprocess`, has no import-time side effects, uses DEVNULL standard
+streams, `close_fds=True`, and `pass_fds=()`, and returns a bounded
+`ChildOutcome`.
 
-1. Every regular read-only REAPER, libSwell, interpreter, recursive/dynamic
-   REAPER/libSwell/probe GUI dependency and Python/attester input has safe raw
-   path/ancestor checks, mode, device/inode, SHA-256,
-   executable/read-only destination, source-FD snapshot, and `--ro-bind-data`
-   rule.
-2. Every X11 socket has exact DISPLAY/raw path/safe ancestors, socket type,
-   owner/mode, device/inode, `O_PATH|O_NOFOLLOW` anchor, a pre-ACK in-namespace
-   identity comparison, and post-run revalidation. Every writable directory has
-   fresh dirfd creation, owner/mode/no-symlink/tree rules, an anchored directory
-   FD, and a replacement-resistant bind proof. Neither kind claims a SHA-256.
-3. Exact environment and cwd values are HOME, PWD, DISPLAY, private
-   XAUTHORITY, approved locale/TZ, and no other key. The argv contains both
-   `--setenv PWD HOME` and `--chdir HOME`.
-4. Exact Bubblewrap argv order, full FD set, symlink topology, and a
-   no-broad-bind proof are recorded.
-5. Dynamic dependencies are either individually included or remain unresolved.
-   A non-REAPER fixture may prove a safety property only; it cannot prove a
-   REAPER `dlopen` dependency unnecessary.
+Before a fixture, use the reviewed Task 0B0 method to seal the complete
+combined Task 0A/Task 0B1 Python, extension, and ELF closure, including the
+three new source hashes and `subprocess`/`_posixsubprocess`, in a reviewed
+successor that references, but never mutates, the immutable Task 0A source
+component. This work yields two deliberately separate manifest states:
 
-Before any fixture execution, seal receipt-schema, collector, and adapter
-source hashes plus every added Python module/extension/ELF dependency
-(including `subprocess` and `_posixsubprocess`) in a reviewed manifest
-successor that references, but never mutates, the immutable skeleton manifest.
-Task 0B has two possible reviewed outcomes: safety-complete (skeleton plus the
-exact receipt-schema/collector/adapter closure; permits only the non-REAPER
-fixture and may be incompatible with REAPER) or compatibility-complete (the
-same sealed components plus complete REAPER runtime closure; required before a
-future V4 host request). Task 2 creates a separate, sealed run-input manifest
-for its RPP, ReaScript, private Xauthority copy, and staged writable tree; it
-references but never mutates the host-runtime manifest. If the manifest cannot
-be established without a host launch, record that as blocked and request new
+1. **fixture-runtime-manifest**: the skeleton plus the exact
+   receipt-schema/collector/adapter closure and only the entries needed by one
+   bounded non-REAPER fixture. It can support a safety property but is never a
+   reaper-host-runtime-manifest and must never imply REAPER compatibility.
+2. **reaper-host-runtime-manifest**: references the fixture manifest and adds
+   every resolved REAPER, libSwell, probe GUI, Python, X11, configuration, and
+   dynamic-load entry needed for the exact V4 row. Only this is
+   compatibility-complete and eligible for a future host request.
+
+Every regular entry in either manifest has safe raw-path/ancestor checks, mode,
+device/inode, byte size, SHA-256, executable/read-only destination, source-FD
+snapshot, `--ro-bind-data` rule, and reason. Both manifests declare a maximum
+regular-entry count, source-FD count, total data-copy bytes, largest entry,
+required `RLIMIT_NOFILE` headroom, and conservative writable-tree/launcher
+overhead. Preflight refuses if observed values exceed declared limits, if the
+required FDs plus headroom exceed the soft limit, or if the conservative memory
+and tmpfs total does not fit the unchanged `MemoryHigh`/`MemoryMax` ceilings.
+Every X11 socket has exact DISPLAY/raw path/safe ancestors, socket type,
+owner/mode, device/inode, `O_PATH|O_NOFOLLOW` anchor, a pre-ACK in-namespace
+identity comparison, and post-run revalidation. Every writable directory has
+fresh dirfd creation, owner/mode/no-symlink/tree rules, an anchored directory
+FD, and a replacement-resistant bind proof. Neither kind claims a SHA-256.
+
+Exact environment and cwd values are HOME, PWD, DISPLAY, private XAUTHORITY,
+approved locale/TZ, and no other key. The argv contains both `--setenv PWD
+HOME` and `--chdir HOME`. Exact Bubblewrap argv order, full FD set, symlink
+topology, and a no-broad-bind proof are recorded. Dynamic dependencies are
+either individually included or remain unresolved. A non-REAPER fixture can
+prove a safety property only; it cannot prove a REAPER `dlopen` dependency
+unnecessary.
+
+Task 2 creates a separate, sealed run-input manifest for its RPP, ReaScript,
+private Xauthority copy, and staged writable tree; it references but never
+mutates the reaper-host-runtime-manifest. If any applicable manifest cannot be
+established without a host launch, record the gap as blocked and request new
 authority rather than guessing a broader bind.
 
 ## Task 1: Implement isolated namespace primitives
 
-Prerequisite: Task 0A complete plus a reviewed safety-complete Task 0B manifest.
+Prerequisite: Task 0A complete plus a reviewed fixture-runtime-manifest and
+explicit authority for the bounded non-REAPER fixture.
 
 Create tools/reaper_v4_namespace.py, tools/reaper_v4_launcher.py, and
 tests/test_reaper_v4_namespace.py using test-first development.
@@ -320,7 +350,7 @@ identities.
 The V4 profile contains exactly the private scan path and no host VST3 path.
 Task 2 seals a separate run-input manifest containing the generated RPP,
 ReaScript, private Xauthority copy, regular-file snapshot identities, and
-writable-tree identities. It references the immutable host-runtime manifest and
+writable-tree identities. It references the immutable reaper-host-runtime-manifest and
 cannot modify it. V4 must not call V2/V3 recovery, adoption, dry-run matrix,
 or tail routing. The runner receives the retained-dirfd V4ControlPaths, refuses
 all control artifacts that are not exact no-follow regular files, and copies the
@@ -340,7 +370,7 @@ only Task 2 files.
 
 Prerequisite: Task 2 green and independently reviewed. Production V4 command
 formation remains a deterministic refusal unless a separately valid,
-compatibility-complete host-runtime manifest digest is supplied.
+compatibility-complete reaper-host-runtime-manifest digest is supplied.
 
 ~~~python
 @dataclasses.dataclass(frozen=True)
@@ -410,8 +440,9 @@ Verify no REAPER process, V4 batch, or V4 lock remains from fixtures, while
 preserved V1-V3 markers/manifests retain their hashes. Commit precise code,
 tests, docs, and vault updates only after the full offline result and review.
 
-Stop there. Even a clean safety-complete non-REAPER fixture does not provide a
-REAPER compatibility claim. A compatibility-complete host-runtime manifest and
+Stop there. Even a clean fixture-runtime-manifest non-REAPER fixture does not
+provide a REAPER compatibility claim. A compatibility-complete
+reaper-host-runtime-manifest and
 new user request must explicitly authorize exactly one V4 row, all V4 roots,
 workspace 5, resource ceilings, telemetry, terminal receipt, one-shot sealing,
 and no-retry outcome before any host process is considered.

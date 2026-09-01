@@ -1,7 +1,7 @@
 # V4 Disposable REAPER VST3 Scan-Isolation Design
 
 Date: 2026-08-31
-Status: proposed offline architecture; source-only Phase A permitted, namespace/host execution blocked on the runtime-manifest gate; no REAPER launch authority
+Status: proposed offline architecture; Task 0A sealed, Task 0B limited to documentation/read-only inventory, and Task 0B source authoring, namespace, and host execution blocked; no REAPER launch authority
 Scope: a future one-row VST3 capability diagnostic only
 
 ## 1. Authority and non-goals
@@ -95,40 +95,61 @@ dynamically import a launcher; or directly call `os.system`, `os.popen`,
 emit PRE/POST or consume an ACK, so it cannot treat configuration claims as
 measured namespace evidence. Phase A tests prove that even an all-true
 configuration has no admission path and enforce exact public-API and
-safe-top-level source allowlists. Its complete skeleton source and transitive
-Python import/extension closure then become known immutable inputs; Task 0B
-may not alter them or introduce a second skeleton with new runtime imports.
+safe-top-level source allowlists. Its source files and hashes are immutable
+inputs. Their transitive Python/import/extension closure remains an unresolved
+Task 0B0 input until the reviewed closure-construction method constructs and
+seals the complete combined closure; Task 0B may not alter the source component
+or introduce a second skeleton with new runtime imports.
 
-Phase B is a reviewed immutable **host runtime manifest**. It must cover every
-regular read-only source that a future V4 run could mount: REAPER, libSwell,
-the ELF interpreter, every recursive/dynamic REAPER/libSwell/probe GUI runtime
-dependency and the now-known Python skeleton closure. Before any fixture
-execution, Task 0B must separately author, but not invoke, the measured
-namespace collectors, exact PRE/POST receipt-schema/exchange module, and sole
-process adapter; their source and every added Python module/extension become a
-reviewed manifest successor that references the skeleton manifest. The receipt
-module is an extension of the sealed envelope/base-identity API, not a second
-skeleton. It must name source,
-destination, file kind, mode, device/inode, SHA-256 for regular files,
-descriptor mount primitive, and
-reason. Socket and writable-directory entries use the separate identity rules
-in Section 4.1, not an impossible content hash.
+Phase B is two distinct immutable artifacts, never one overloaded "host"
+manifest:
 
-A safety-complete Phase B allowlist may intentionally be incompatible with
-REAPER and can permit only a bounded non-REAPER namespace fixture. It cannot
-prove that any REAPER `dlopen` dependency is unnecessary. A
-compatibility-complete Phase B manifest, independently reviewed after all
-REAPER/libSwell/probe GUI dynamic dependencies are resolved, is required before
-any future host-launch authority could be considered. The V4 RPP, ReaScript,
-private Xauthority copy, and writable staging tree are a separate immutable
-**run-input manifest** made in Task 2; it references, but never mutates, the
-sealed host runtime manifest.
+1. A **fixture-runtime-manifest** is safety-only. It covers the sealed Task 0A
+   skeleton plus the exact receipt-schema, measured-collector, and child-adapter
+   source/runtime closure needed for one bounded non-REAPER fixture. It may be
+   intentionally incompatible with REAPER, and must never be named or consumed
+   as host-compatibility evidence.
+2. A **reaper-host-runtime-manifest** references that fixture manifest and adds
+   every regular read-only source needed for the one V4 host row: REAPER,
+   libSwell, the ELF interpreter, every recursive/dynamic REAPER/libSwell/probe
+   GUI dependency, and the complete Python closure. Only this second artifact
+   can become compatibility-complete.
 
-The current static inventory is deliberately neither safety-complete nor
-compatibility-complete: REAPER/libSwell dynamically loads GUI/audio/install
-components, and the current non-GUI process has no `DISPLAY` or `XAUTHORITY`.
-Until a future, separately authorized activity resolves that gap, this design
-is a documented safety boundary rather than host implementation authority.
+The prerequisite before Task 0B source authoring is a separately reviewed,
+non-executing closure-construction method. It must deterministically define how
+the source import graph, extension modules, ELF dependencies, loader inputs,
+and unresolved branches are recorded and rejected. Until that review and a new
+explicit offline Task 0B1 authorization, Task 0B permits documentation and
+read-only inventory only; it does not permit authoring the measured namespace
+collectors, exact PRE/POST receipt-schema/exchange module, or sole process
+adapter. When authorized, those three modules must be authored without
+invocation and the reviewed Task 0B0 method must seal the complete combined
+Task 0A/Task 0B1 Python, extension, and ELF closure in a successor referencing
+the immutable skeleton source component. The receipt module extends the sealed
+envelope/base-identity API; it is not a second skeleton.
+
+Every regular manifest entry must record source, destination, file kind, mode,
+device/inode, byte size, SHA-256, descriptor mount primitive, and reason.
+Before a fixture or host row, its manifest must also declare and preflight the
+regular-entry count, source-FD count, total `--ro-bind-data` copy bytes, largest
+regular entry, and explicit `RLIMIT_NOFILE` headroom. It must refuse if any
+observed value exceeds its declared maximum or the required FDs plus headroom
+do not fit the soft limit. The conservative copy-byte total and declared
+writable-tree/launcher overhead must fit the unchanged `MemoryHigh`/`MemoryMax`
+and tmpfs limits before execution. Socket and writable-directory entries use
+the separate identity rules in Section 4.1, not an impossible content hash.
+
+The V4 RPP, ReaScript, private Xauthority copy, and writable staging tree are a
+separate immutable **run-input manifest** made in Task 2; it references, but
+never mutates, the reaper-host-runtime-manifest.
+
+The current static inventory is deliberately neither fixture-complete nor
+compatibility-complete: the Task 0A Python closure remains an unresolved static
+overapproximation; REAPER/libSwell dynamically loads GUI/audio/install
+components; and the current non-GUI process has no `DISPLAY` or `XAUTHORITY`.
+Until a future, separately authorized activity resolves those gaps, this design
+is a documented safety boundary rather than fixture or host implementation
+authority.
 
 ## 4. Selected containment architecture
 

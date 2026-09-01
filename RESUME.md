@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-01T01:00:04-07:00
+Updated: 2026-09-01T02:15:00-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -21,13 +21,22 @@ Updated: 2026-09-01T01:00:04-07:00
   process-launch path, or import-time side effect. Four focused tests pass.
 - The static source closure is recorded only as an unresolved Task 0B input:
   it includes Python `ctypes`, `hashlib`, `json`, `struct`, and their extension
-  / ELF candidates. It is neither safety-complete nor compatibility-complete.
-  The later Task 0B manifest must seal the exact receipt-schema, measured
-  collector, and child-adapter closures before even a non-REAPER fixture.
+  / ELF candidates. It is neither fixture-complete nor compatibility-complete.
+  No Task 0B source authoring is currently authorized: an independently
+  reviewed, non-executing closure-construction method and explicit offline
+  Task 0B1 authority are prerequisites.
+- The future manifests are deliberately distinct. A `fixture-runtime-manifest`
+  can permit only a bounded non-REAPER fixture; a
+  `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
+  libSwell, GUI, X11, Python, and dynamic-load input before compatibility or a
+  host request is possible. Both require copy-byte, FD, `RLIMIT_NOFILE`, and
+  memory/tmpfs preflight refusal budgets.
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
-  Task 0B remains an inventory/review gate; no source-only V4 work remains
-  authorized beyond documentation or review without a new scoped task.
-- Any later V4 host execution needs the compatibility-complete manifest,
+  Task 0B remains a documentation/read-only-inventory gate; no source-only V4
+  work remains authorized beyond documentation or review without a new scoped
+  task.
+- Any later V4 host execution needs the compatibility-complete
+  `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots
   and preflight, and new explicit user authority. It cannot consume prior v2 or
   v3 authority or unblock Task 16.

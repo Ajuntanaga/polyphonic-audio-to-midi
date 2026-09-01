@@ -700,9 +700,12 @@ the primary real-world capability/latency rows, without removing any mandatory
   mocked barrier only; an AST gate runs before import and prevents receipt,
   ACK/control, runner, admission, launch, or import-time behavior from being
   introduced unnoticed. It creates no fixture or host authority.
-- Its runtime inventory remains static and intentionally incomplete. Task 0B
-  must first seal the exact receipt-schema, measured-collector, and child-runner
-  source/extension/ELF closures in a reviewed manifest successor. Only after
-  that can a safety-complete non-REAPER fixture be considered; a
-  compatibility-complete manifest, later controls review, fresh preflight, and
-  new explicit user authority remain required before any V4 host command.
+- Its runtime inventory remains static and intentionally incomplete. Task 0B is
+  documentation/read-only inventory only until an independently reviewed,
+  non-executing closure-construction method and explicit offline Task 0B1
+  authority exist. A future `fixture-runtime-manifest` can support only a
+  bounded non-REAPER fixture; a `reaper-host-runtime-manifest` must add the
+  complete REAPER/libSwell/GUI/X11/dynamic closure before compatibility. Both
+  require declared copy-byte, FD, `RLIMIT_NOFILE`, and memory/tmpfs refusal
+  budgets. Later controls review, fresh preflight, and new explicit user
+  authority remain required before any V4 host command.
