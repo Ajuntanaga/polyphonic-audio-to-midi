@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-01T02:15:00-07:00
+Updated: 2026-09-01T02:30:00-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -19,6 +19,11 @@ Updated: 2026-09-01T02:15:00-07:00
   process barrier. A pre-import AST gate proves it has no receipt writer, ACK
   reader, descriptor control, measured collector, runner, admission entrypoint,
   process-launch path, or import-time side effect. Four focused tests pass.
+- Commit `940f64d` (`docs: harden V4 runtime manifest gate`) records the
+  independently reviewed Task 0B block: a closure-construction method and
+  explicit offline Task 0B1 authority must precede source authoring; fixture
+  and host manifests are separate; and any future descriptor-pinned manifest
+  must refuse over-copy, FD, `RLIMIT_NOFILE`, or memory/tmpfs budgets.
 - The static source closure is recorded only as an unresolved Task 0B input:
   it includes Python `ctypes`, `hashlib`, `json`, `struct`, and their extension
   / ELF candidates. It is neither fixture-complete nor compatibility-complete.
