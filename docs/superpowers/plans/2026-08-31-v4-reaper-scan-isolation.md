@@ -4,6 +4,7 @@ Status: V4 host execution blocked; Task 0A is sealed, and Task 0B permits docume
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
+Closure method: docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md
 
 ## Goal
 
@@ -53,6 +54,7 @@ all offline work and independent review are complete.
 | tools/reaper_v4_protocol.py | source-only canonical frame envelope and base-identity grammar only |
 | tools/reaper_v4_attester.py | non-admissible config/barrier primitives; no receipt or child API |
 | tests/test_reaper_v4_protocol.py | source-only frame, barrier, and no-admission/no-child regression coverage |
+| tools/reaper_v4_closure_constructor.py | Task 0B1-only build-time static data parser/resolver; never imports or executes a target module and is never a fixture mount |
 | tools/reaper_v4_measurements.py | Task 0B1-only measured namespace collectors, authored only after the closure method and explicit offline authority |
 | tools/reaper_v4_receipt_schema.py | Task 0B1-only exact PRE/POST/exchange grammar, authored only after the closure method and explicit offline authority |
 | tools/reaper_v4_child_runner.py | Task 0B1-only process adapter; the sole module allowed to import `subprocess` |
@@ -96,32 +98,42 @@ ionice -c 3 nice -n 10 python3 -m unittest tests.test_reaper_v4_protocol -v
 
 ### Task 0B: Runtime-manifest gates
 
-Status: **BLOCKED — documentation and read-only inventory only.** Source
-authoring requires a new explicit offline Task 0B1 authorization after
-independent review of the closure-construction method, manifest split, and
-resource-budget gates. Do not start namespace execution.
+Status: **BLOCKED — documentation and read-only inventory only.** The
+closure-construction method, manifest split, and resource-budget gates have
+independent review; source authoring still requires a new explicit offline Task
+0B1 authorization. Do not start namespace execution.
 
 The current inventory identifies direct ELF starting points only. It proves
 neither the Task 0A Python closure nor REAPER GUI/runtime compatibility. The
 current environment also has no `DISPLAY` or `XAUTHORITY`; unresolved dynamic
 paths must remain unresolved rather than being replaced with broad binds.
 
-#### Task 0B0: closure-construction method (unmet prerequisite)
+#### Task 0B0: closure-construction method (complete; documentation-only)
 
-Before any Task 0B source is authored, write and independently review a
-non-executing method that produces an immutable closure record from supplied
-static inputs. It must define the import graph, extension/ELF traversal,
-interpreter/loader identity, conditional-import handling, unresolved-branch
-refusal, source/extension/ELF hash records, and reproducible output identity.
-It must not form a Bubblewrap command, create a namespace, invoke the adapter,
-or run REAPER. Until this method is reviewed, do not author the three Task 0B1
-modules below.
+The governing method is
+`docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
+It defines a non-executing immutable closure record from supplied static inputs:
+the import graph, extension/ELF traversal, interpreter/loader identity,
+conditional-import handling, unresolved-branch refusal, source/extension/ELF
+hash records, resource budgets, and reproducible output identity. It must not
+form a Bubblewrap command, create a namespace, invoke the adapter, or run
+REAPER. Independent review is CLEAN. This does not authorize any of the four
+Task 0B1 sources below.
 
 #### Task 0B1: source closure (separate future offline authorization)
 
-Only after Task 0B0 review and explicit offline authorization may this task
-author, but not invoke, `tools/reaper_v4_measurements.py`,
+After the completed Task 0B0 method and explicit offline authorization, this task
+may
+author, but not invoke, `tools/reaper_v4_closure_constructor.py`,
+`tools/reaper_v4_measurements.py`,
 `tools/reaper_v4_receipt_schema.py`, and `tools/reaper_v4_child_runner.py`.
+It may also author their exact catalog schemas and synthetic static-data test
+fixtures. It does not authorize an invocation of the constructor against Task
+0A or Task 0B1 inputs.
+The closure constructor parses data only and is the sole source allowed to
+produce the static closure record; it must not import, execute, load, or call a
+target module or artifact, and its source/parser identities are provenance only
+rather than fixture-runtime nodes.
 The receipt module is the first code allowed to define exact PRE/POST payload
 keys, structured measured facts, and exchange validation; it references the
 sealed Task 0A frame/base-identity API. The collector is the first code allowed
@@ -130,11 +142,24 @@ import `subprocess`, has no import-time side effects, uses DEVNULL standard
 streams, `close_fds=True`, and `pass_fds=()`, and returns a bounded
 `ChildOutcome`.
 
-Before a fixture, use the reviewed Task 0B0 method to seal the complete
-combined Task 0A/Task 0B1 Python, extension, and ELF closure, including the
-three new source hashes and `subprocess`/`_posixsubprocess`, in a reviewed
+#### Task 0B2: static closure construction (separate future offline authorization)
+
+Only after Task 0B1 source/catalog implementation review and another explicit
+offline authorization may this task test or invoke the closure constructor
+against sealed static inputs. Its invocation may parse only pinned supplied
+data; it must not import, execute, load, or call a target module, extension, or
+ELF artifact. It also must not create a namespace or fixture, form a
+Bubblewrap/systemd/REAPER command, access GUI/X11/audio/network facilities, or
+perform any host action. A clean static record and independent review remain
+only a precondition to consider a later fixture-manifest review; they do not
+authorize that fixture.
+
+Before a fixture, use the reviewed Task 0B0 method to seal the complete Task
+0A plus Task 0B1 runtime Python, extension, and ELF closure, including the
+three runtime source hashes and `subprocess`/`_posixsubprocess`, in a reviewed
 successor that references, but never mutates, the immutable Task 0A source
-component. This work yields two deliberately separate manifest states:
+component. The closure constructor/parser identities bind that record but are
+not fixture mounts. This work yields two deliberately separate manifest states:
 
 1. **fixture-runtime-manifest**: the skeleton plus the exact
    receipt-schema/collector/adapter closure and only the entries needed by one

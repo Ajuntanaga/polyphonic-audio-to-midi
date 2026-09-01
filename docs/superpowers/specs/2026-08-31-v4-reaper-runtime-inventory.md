@@ -128,14 +128,16 @@ child, create a namespace, or support a host command.
 Status: **BLOCKED — documentation and read-only inventory only.** The next
 source work requires a separately scoped, explicit offline Task 0B1
 authorization after independent review of a non-executing closure-construction
-method.
+method at `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
 
 The static inventory cannot become either manifest state yet:
 
-1. The Task 0A closure is an unresolved static overapproximation, and no
-   reviewed method yet constructs the required complete combined Task 0A/Task
-   0B1 Python/extension/ELF closure for the future receipt-schema, collector,
-   and child-adapter modules.
+1. The Task 0A closure is an unresolved static overapproximation. The reviewed
+   Task 0B0 method defines how a separately authorized future Task 0B2 may
+   construct the required Task 0A plus Task 0B1 runtime Python/extension/ELF
+   closure for the future receipt-schema, collector, and child-adapter modules.
+   The static constructor/parser identities are provenance only, not runtime
+   closure nodes.
 2. REAPER and libSwell have unresolved dynamic GUI/audio/install paths, while
    the current process has no `DISPLAY`, `XAUTHORITY`, runtime-display socket,
    or authority-file identity to inventory.
@@ -168,14 +170,21 @@ The gate has two deliberately separate manifest artifacts:
 Phase A contains only a sealed, non-admissible frame-envelope/base-identity and
 barrier skeleton. It has no PRE/POST schema, measured collector, standard-stream
 control, or child-launch module, and its tests never create a namespace or
-process. Only after Task 0B0 closure-method review and explicit Task 0B1
-authority may Task 0B author, without invoking, the exact receipt
-schema/exchange module, measured collectors, and child-runner adapter. Before
-any fixture, the reviewed fixture-runtime-manifest successor must use the
-Task 0B0 method to seal the complete combined Task 0A/Task 0B1 Python,
-extension, and ELF closure, including all three new source hashes, while
-referencing the immutable Phase A skeleton source component. The later
-Bubblewrap fixture validates only the fixture-runtime-manifest table.
+process. Only after the completed Task 0B0 method and explicit Task 0B1
+authority may Task 0B author, without invoking, the static closure constructor,
+exact receipt schema/exchange module, measured collectors, and child-runner
+adapter, plus their catalog schemas and synthetic static-data fixtures. A
+separate explicit offline Task 0B2 authorization is required before the
+constructor may be tested or invoked against sealed static inputs; it remains
+data-only and excludes target import/execution/loading, namespace or fixture
+creation, Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network
+access, and all host action. Before any fixture, the reviewed
+fixture-runtime-manifest successor
+must use the Task 0B0 method to seal the complete combined Task 0A/Task 0B1
+runtime Python, extension, and ELF closure, including the three runtime source
+hashes, while referencing the immutable Phase A skeleton source component. The
+static constructor/parser identities bind the record but are not fixture mounts.
+The later Bubblewrap fixture validates only the fixture-runtime-manifest table.
 Neither activity proves the reaper-host-runtime-manifest closure. Until the
 applicable manifest state is complete:
 

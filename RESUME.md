@@ -24,12 +24,26 @@ Updated: 2026-09-01T02:30:00-07:00
   explicit offline Task 0B1 authority must precede source authoring; fixture
   and host manifests are separate; and any future descriptor-pinned manifest
   must refuse over-copy, FD, `RLIMIT_NOFILE`, or memory/tmpfs budgets.
+- The independently reviewed Task 0B0 method is
+  `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
+  It completes the documentation-only method gate but grants no implementation
+  authority. With a new explicit offline authorization, Task 0B1 may author,
+  but not invoke, four sources: the static closure
+  constructor plus the receipt-schema, measured-collector, and child-adapter
+  runtime modules, along with their catalog schemas and synthetic static-data
+  fixtures. A separate explicit offline Task 0B2 authorization is required to
+  test or invoke the constructor against sealed data; it remains data-only and
+  excludes target import/execution/loading, namespace or fixture creation,
+  Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access,
+  and all host actions.
 - The static source closure is recorded only as an unresolved Task 0B input:
   it includes Python `ctypes`, `hashlib`, `json`, `struct`, and their extension
   / ELF candidates. It is neither fixture-complete nor compatibility-complete.
-  No Task 0B source authoring is currently authorized: an independently
-  reviewed, non-executing closure-construction method and explicit offline
-  Task 0B1 authority are prerequisites.
+  No Task 0B source authoring is currently authorized: the reviewed,
+  non-executing closure-construction method is complete, but explicit offline
+  Task 0B1 authority remains a prerequisite. Task 0B1 does not authorize
+  testing or invoking the constructor; that later step needs its own Task 0B2
+  authority.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,

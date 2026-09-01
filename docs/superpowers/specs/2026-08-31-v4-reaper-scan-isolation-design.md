@@ -96,9 +96,10 @@ emit PRE/POST or consume an ACK, so it cannot treat configuration claims as
 measured namespace evidence. Phase A tests prove that even an all-true
 configuration has no admission path and enforce exact public-API and
 safe-top-level source allowlists. Its source files and hashes are immutable
-inputs. Their transitive Python/import/extension closure remains an unresolved
-Task 0B0 input until the reviewed closure-construction method constructs and
-seals the complete combined closure; Task 0B may not alter the source component
+inputs. Their transitive Python/import/extension closure remains unresolved
+until a separately authorized Task 0B2 invocation applies the reviewed
+closure-construction method and seals the complete combined closure; Task 0B
+may not alter the source component
 or introduce a second skeleton with new runtime imports.
 
 Phase B is two distinct immutable artifacts, never one overloaded "host"
@@ -115,18 +116,27 @@ manifest:
    GUI dependency, and the complete Python closure. Only this second artifact
    can become compatibility-complete.
 
-The prerequisite before Task 0B source authoring is a separately reviewed,
-non-executing closure-construction method. It must deterministically define how
-the source import graph, extension modules, ELF dependencies, loader inputs,
-and unresolved branches are recorded and rejected. Until that review and a new
-explicit offline Task 0B1 authorization, Task 0B permits documentation and
-read-only inventory only; it does not permit authoring the measured namespace
+The prerequisite before Task 0B source authoring is the separately reviewed,
+non-executing method at
+`docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`.
+It deterministically defines how the source import graph, extension modules,
+ELF dependencies, loader inputs, resource budgets, and unresolved branches are
+recorded and rejected. Until a new explicit offline Task 0B1 authorization,
+Task 0B permits documentation and read-only inventory only; it
+does not permit authoring the static closure constructor, measured namespace
 collectors, exact PRE/POST receipt-schema/exchange module, or sole process
-adapter. When authorized, those three modules must be authored without
-invocation and the reviewed Task 0B0 method must seal the complete combined
-Task 0A/Task 0B1 Python, extension, and ELF closure in a successor referencing
-the immutable skeleton source component. The receipt module extends the sealed
-envelope/base-identity API; it is not a second skeleton.
+adapter. When authorized, those four modules must be authored without
+invocation. The static closure constructor is build-time provenance only and
+never a fixture mount; the reviewed Task 0B0 method must seal the complete Task
+0A plus Task 0B1 runtime Python, extension, and ELF closure in a successor
+referencing the immutable skeleton source component. The receipt module extends
+the sealed envelope/base-identity API; it is not a second skeleton. A separate
+explicit offline Task 0B2 authorization is required before the constructor may
+be tested or invoked against sealed static inputs. That task remains data-only:
+it excludes target import/execution/loading, namespace or fixture creation,
+Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access, and
+all host action. Its reviewed output is only a prerequisite to consider a later
+fixture-manifest review, never fixture or host authority.
 
 Every regular manifest entry must record source, destination, file kind, mode,
 device/inode, byte size, SHA-256, descriptor mount primitive, and reason.

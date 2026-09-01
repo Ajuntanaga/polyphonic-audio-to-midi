@@ -700,10 +700,18 @@ the primary real-world capability/latency rows, without removing any mandatory
   mocked barrier only; an AST gate runs before import and prevents receipt,
   ACK/control, runner, admission, launch, or import-time behavior from being
   introduced unnoticed. It creates no fixture or host authority.
-- Its runtime inventory remains static and intentionally incomplete. Task 0B is
-  documentation/read-only inventory only until an independently reviewed,
-  non-executing closure-construction method and explicit offline Task 0B1
-  authority exist. A future `fixture-runtime-manifest` can support only a
+- Its runtime inventory remains static and intentionally incomplete. The
+  documentation-only non-executing closure method at
+  `docs/superpowers/specs/2026-09-01-v4-task0b-closure-construction-method.md`
+  has an independent CLEAN review, but Task 0B remains documentation/read-only
+  inventory only until explicit offline Task 0B1 authority is granted. Task 0B1
+  may author, but not invoke, the static constructor plus the
+  receipt-schema, measured-collector, and child-adapter sources. A separately
+  authorized offline Task 0B2 is required before that constructor may be tested
+  or invoked against sealed static inputs; it excludes target
+  import/execution/loading, namespace or fixture creation,
+  Bubblewrap/systemd/REAPER command formation, GUI/X11/audio/network access,
+  and all host actions. A future `fixture-runtime-manifest` can support only a
   bounded non-REAPER fixture; a `reaper-host-runtime-manifest` must add the
   complete REAPER/libSwell/GUI/X11/dynamic closure before compatibility. Both
   require declared copy-byte, FD, `RLIMIT_NOFILE`, and memory/tmpfs refusal
