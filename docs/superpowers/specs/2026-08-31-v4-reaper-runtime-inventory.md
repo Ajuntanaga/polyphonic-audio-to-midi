@@ -103,6 +103,26 @@ The only discovered live canary is
 `$HOME/.vst3/yabridge/ATONE.vst3`, with a member symlinked into the Wine plug-in
 tree. It must be absent from the namespace and is never altered.
 
+## Task 0A source-component seal
+
+Commit `fac3b5e` seals the non-admissible source component, not an executable
+attester or a runtime manifest:
+
+| Source | SHA-256 | Role |
+| --- | --- | --- |
+| `tools/reaper_v4_protocol.py` | `82afbe01cf11f083481db26cc10927965cd1341b4b75367ceda25de0d82b8331` | In-memory canonical frame envelope and base configuration grammar |
+| `tools/reaper_v4_attester.py` | `1b6cae926421615fb6f42fe1ee40d4a09d1dd862296a90c38b8371ee42377891` | Non-admissible configuration and mocked-testable barrier primitive |
+| `tests/test_reaper_v4_protocol.py` | `809a0b71c65e1e24e5c3f03a247408cec9dfec619d559acbddd1ad5ef0233192` | Pre-import source-shape and focused behavior gate |
+
+Declared runtime imports are `dataclasses`, `enum`, `hashlib`, `json`, `struct`,
+`collections.abc`, `ctypes`, and `pathlib`. The static candidate closure includes
+`_ctypes`/libffi, `_hashlib`/libcrypto, interpreter built-ins such as `_json` and
+`_struct`, plus transitive pure-Python standard-library modules. The actual
+recursive import, extension, loader, `sys.path`, and conditional-import closure
+remains **unresolved-static-overapprox**. No target code was imported for this
+inventory, and this component cannot emit a receipt, consume an ACK, start a
+child, create a namespace, or support a host command.
+
 ## Completion gate
 
 The gate has two deliberate meanings:

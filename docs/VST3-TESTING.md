@@ -695,9 +695,14 @@ the primary real-world capability/latency rows, without removing any mandatory
   attester PRE/ACK/POST exchange, descriptor-pinned regular inputs, anchored
   nonregular inputs, private VST scan roots, verified scope teardown, and a
   zero-process census before any post-exit scan could be considered.
-- Its runtime inventory is static and intentionally incomplete. A
-  compatibility-complete immutable runtime manifest, separately implemented
-  and reviewed controls, a fresh preflight, and new explicit user authority
-  are still required before any V4 host command may be formed or run. The only
-  current implementation scope is source-only Phase A attester code and
-  offline tests.
+- Task 0A is sealed at `fac3b5e` as a deliberately non-admissible source
+  component. Its four focused tests prove an in-memory frame/config grammar and
+  mocked barrier only; an AST gate runs before import and prevents receipt,
+  ACK/control, runner, admission, launch, or import-time behavior from being
+  introduced unnoticed. It creates no fixture or host authority.
+- Its runtime inventory remains static and intentionally incomplete. Task 0B
+  must first seal the exact receipt-schema, measured-collector, and child-runner
+  source/extension/ELF closures in a reviewed manifest successor. Only after
+  that can a safety-complete non-REAPER fixture be considered; a
+  compatibility-complete manifest, later controls review, fresh preflight, and
+  new explicit user authority remain required before any V4 host command.
