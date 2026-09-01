@@ -172,6 +172,28 @@ Task 0B2 must return only
 `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` and cannot emit a
 fixture manifest.
 
+**Task 0B2 narrow correction amendment.** Under the current user `Proceed`
+authorization, and only following the demonstrated sealed-synthetic-data RED,
+Task 0B2 may apply the one private normalization correction in
+`tools/reaper_v4_closure_constructor.py` required for its own constructed
+synthetic record to validate. It must reseal that Task 0B1 static source hash,
+rerun the static contract and Task 0B2 tests, and receive independent review.
+This does not authorize any other Task 0B1 source expansion or correction,
+target import/execution/loading, fixture or namespace action, or host action.
+
+**Task 0B2 static result.** The sealed synthetic vector first produced the
+expected RED because the private record retained nested immutable snapshots
+that `ClosureRecord` correctly rejects as caller containers. The correction
+normalizes only that private record before the existing deep-freeze/validation
+boundary. With constructor source SHA-256
+`2f8b1f02f5a730c70e38b6ebe06a99ec8abbd3c70a05851f66d6be6c5e2a97f7`, the
+one constructor-only test and the seven-check Task 0B1 static contract pass,
+and independent review is CLEAN. The resulting sealed-vector record is only
+`BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` with canonical
+digest `0fdb65aa2467554f85fb21e2e570850921cb1615bfe56ebb4b1a0b5d5fb185bf`.
+Its identities remain synthetic placeholders, so this is neither a live source
+closure nor a fixture/host-compatibility result.
+
 #### Task 0B3: session-owner design and pure component gates (separate future authority)
 
 Before any receipt, measurement, or child-runner behavior is executed, a

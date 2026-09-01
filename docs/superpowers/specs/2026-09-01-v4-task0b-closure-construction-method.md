@@ -546,12 +546,34 @@ and the result contains no host-compatibility wording.
 The original Task 0B0 method review and its Task 0B1 source-component amendment
 are independently CLEAN. This does not grant Task 0B2
 constructor-invocation authority, fixture authority, or host authority. A
-future separately authorized Task 0B2 invocation must show the same method
-applies to the combined Task 0A/Task 0B1 analysis graph and reports the missing
-runtime root before a reviewed
+future separately authorized graph-construction successor must show the same
+method applies to the combined Task 0A/Task 0B1 analysis graph and reports the
+missing runtime root before a reviewed
 `fixture-runtime-manifest` can exist. The
 `reaper-host-runtime-manifest` still needs separately authorized resolution of
 REAPER, libSwell, GUI, X11, and all dynamic runtime behavior.
+
+**Task 0B2 narrow correction amendment.** Under the current user `Proceed`
+authorization, and only after the demonstrated sealed-synthetic-data RED,
+Task 0B2 may correct only the private normalization in
+`tools/reaper_v4_closure_constructor.py` required for its own constructed
+synthetic record to validate. It must reseal the static constructor source
+hash, rerun the static contract and Task 0B2 tests, and receive independent
+review; all other Task 0B1 source expansion or correction, target
+import/execution/loading, fixture or namespace action, and host action remain
+forbidden.
+
+**Task 0B2 static result.** The sole sealed synthetic input was exercised only
+through the closure constructor. Its initial RED exposed an internal
+immutable-snapshot normalization mismatch; the narrow correction was confined
+to that private constructed record and the source resealed at
+`2f8b1f02f5a730c70e38b6ebe06a99ec8abbd3c70a05851f66d6be6c5e2a97f7`.
+The constructor-only test and the seven-check source contract pass, and an
+independent review is CLEAN. The output is exactly
+`BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)`, canonical digest
+`0fdb65aa2467554f85fb21e2e570850921cb1615bfe56ebb4b1a0b5d5fb185bf`.
+The vector's identities are synthetic placeholders: this is no fixture-runtime
+manifest, host-runtime manifest, compatibility claim, or host authority.
 
 ## 10. Rejected alternatives
 

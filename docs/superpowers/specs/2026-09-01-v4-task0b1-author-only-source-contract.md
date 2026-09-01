@@ -55,6 +55,16 @@ static closure construction. A later separately authorized pure-component gate
 is required before receipt, measurement, or child-runner behavior can be
 tested. Neither gate authorizes a session or fixture.
 
+**Task 0B2 narrow correction amendment.** Under the current user `Proceed`
+authorization, and only after the demonstrated sealed-synthetic-data RED,
+Task 0B2 may correct only the private normalization in
+`tools/reaper_v4_closure_constructor.py` required for that component's own
+constructed synthetic record to validate. The constructor source hash must be
+resealed, the static contract and Task 0B2 tests rerun, and the result
+independently reviewed. No other Task 0B1 source expansion or correction,
+target import/execution/loading, fixture or namespace action, or host action is
+authorized.
+
 ## Contract artifacts
 
 The source phase must add the following inert, canonical JSON documents:
@@ -218,7 +228,7 @@ read. An AST-only test reads their source bytes before any import.
 
 | Module | Exact imports | Exact public API | Role and boundary |
 | --- | --- | --- | --- |
-| closure constructor | `ast`, `dataclasses`, `enum`, `hashlib`, `json`, `os`, `stat`, `struct`, `types`, `Mapping` | `ClosureConstructionError`, `ClosureState`, `ClosureInputBundle`, `ClosureRecord`, `canonical_json_bytes`, `sha256_canonical`, `load_input_bundle`, `construct_closure` | Source/data-only parser skeleton. It takes a bounded, cycle-safe immutable snapshot before semantic or digest validation, including at the public canonicalization boundary. No `tools.*`, `subprocess`, `ctypes`, import loader, target evaluation, broad scan, or ambient-state API. It rejects schema-invalid data and pathname loading; for the sole supplied schema-valid empty-catalog vector it returns only the exact blocked output until Task 0B2 supplies retained-directory-FD input and Task 0B3 supplies the reviewed session graph. |
+| closure constructor | `ast`, `dataclasses`, `enum`, `hashlib`, `json`, `os`, `stat`, `struct`, `types`, `Mapping` | `ClosureConstructionError`, `ClosureState`, `ClosureInputBundle`, `ClosureRecord`, `canonical_json_bytes`, `sha256_canonical`, `load_input_bundle`, `construct_closure` | Source/data-only parser skeleton. It takes a bounded, cycle-safe immutable snapshot before semantic or digest validation, including at the public canonicalization boundary. No `tools.*`, `subprocess`, `ctypes`, import loader, target evaluation, broad scan, or ambient-state API. It rejects schema-invalid data and pathname loading; for the sole supplied schema-valid empty-catalog vector it returns only the exact blocked output until a separately authorized graph-construction successor supplies retained-directory-FD input and Task 0B3 supplies the reviewed session graph. |
 | receipt schema | `dataclasses`, `enum`, `types`, `Mapping`, `tools.reaper_v4_protocol` | `ReceiptSchemaError`, `ReceiptPhase`, `ReceiptPayload`, `ACK_BYTE`, `PRE_KEYS`, `POST_KEYS`, `ATTESTATION_KEYS`, `validate_pre_payload`, `validate_ack_bytes`, `validate_post_payload`, `validate_exchange` | Pure in-memory grammar and payload/value-relation validation only. No descriptor, file, process, clock, measurement, launch, or stream I/O. |
 | measurements | `dataclasses`, `os`, `pathlib`, `stat`, `types`, `Mapping` | `MeasurementError`, `MeasurementPlan`, `MeasurementSnapshot`, `MEASUREMENT_KEYS`, `collect_namespace_measurements` | Explicit-plan later collector. `MeasurementPlan` snapshots an exact built-in resource tuple and bounded expected facts before any later use. No frame/ACK/child API, write, subprocess, `ctypes`, environment/cwd/HOME read, recursive walk, or implicit resource access. Runtime reads may occur only inside the callable after later authority and use `O_PATH|O_NOFOLLOW|O_CLOEXEC` plus `fstat`, before accepting a regular-file fact. |
 | child runner | `dataclasses`, `subprocess`, `time` | `ChildRunnerError`, `ChildSpec`, `ChildOutcome`, `run_child` | The only subprocess importer and a later callable adapter. It contains no admission, ACK consumption, PRE/POST emission, fallback, retry, CLI, or import-time launch. It accepts only an exact `ChildSpec`, captures and validates its immutable bounded fields once, then uses only those locals. It has exactly one syntactic `subprocess.Popen` call, only in `run_child`, with absolute executable/cwd, explicit environment, `shell=False`, DEVNULL standard streams, `close_fds=True`, `pass_fds=()`, one bounded launch, and two bounded kill/reap attempts after timeout or any `BaseException` **after successful `Popen` return**; each attempt still waits when kill reports an error. A later outer session/scope must recover a launch interrupted before `Popen` returns, and must perform exact row/policy environment admission and binding before it creates `ChildSpec`. |

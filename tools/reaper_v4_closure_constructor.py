@@ -731,4 +731,4 @@ def construct_closure(input_bundle: ClosureInputBundle) -> ClosureRecord:
         "closure_state": ClosureState.BLOCKED_UNRESOLVED.value,
     }
     record["closure_digest"] = _sha256_frozen(record)
-    return ClosureRecord(record=record)
+    return ClosureRecord(record=_normalise_frozen(record))

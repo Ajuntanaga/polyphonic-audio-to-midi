@@ -37,7 +37,7 @@ TASK0A_HASHES = {
     "tests/test_reaper_v4_protocol.py": "809a0b71c65e1e24e5c3f03a247408cec9dfec619d559acbddd1ad5ef0233192",
 }
 TASK0B1_SOURCE_HASHES = {
-    "constructor": "eaca2f2a26db7310fb9ad1a37e5c5b89d39857da7795cb0c57a08e796d0e0b60",
+    "constructor": "2f8b1f02f5a730c70e38b6ebe06a99ec8abbd3c70a05851f66d6be6c5e2a97f7",
     "receipt": "ac8fb910a6bb0b06a0278cfe92e4f3e60ebe19a988048b3e11f9c320b32a6eff",
     "measurements": "834ffbf9dbfe3c061904588132ae2683ae788589128c4bc51d02b1d21f625054",
     "runner": "13f6e4f5a9139e45bbc593a79f363ccad5fc1e6ca283cfc7379b04f50d657b5c",
