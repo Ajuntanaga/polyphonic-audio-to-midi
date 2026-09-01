@@ -84,18 +84,31 @@ preservation-only and are never mounted read-write inside v4.
 
 ### 3.1 Two-phase runtime-manifest prerequisite
 
-Phase A may implement the complete in-namespace attester source, its frame and
-proc-barrier code, and unit tests without executing it. It may import every
-module the future attester needs, including a child-launch module, but no Phase
-A test or code path may invoke Bubblewrap, a subprocess, REAPER, systemd, or a
-V4 namespace. Its complete source and transitive Python import/extension closure
-then become known inputs; Task 1 may not create a second attester with new
-runtime imports.
+Phase A may implement only a **non-admissible** protocol/barrier skeleton: a
+canonical frame envelope, base-identity/config grammar, proc-barrier primitive,
+and unit tests. It deliberately does not define a PRE/POST receipt payload
+schema or exchange validator. It must not import `subprocess` or a
+runner/collector adapter; define a `ChildRunner`, control-descriptor API,
+default/fallback runner, or admission entrypoint; execute at import time;
+dynamically import a launcher; or directly call `os.system`, `os.popen`,
+`fork*`, `posix_spawn*`, `spawn*`, or `exec*`. It is structurally unable to
+emit PRE/POST or consume an ACK, so it cannot treat configuration claims as
+measured namespace evidence. Phase A tests prove that even an all-true
+configuration has no admission path and enforce exact public-API and
+safe-top-level source allowlists. Its complete skeleton source and transitive
+Python import/extension closure then become known immutable inputs; Task 0B
+may not alter them or introduce a second skeleton with new runtime imports.
 
 Phase B is a reviewed immutable **host runtime manifest**. It must cover every
 regular read-only source that a future V4 run could mount: REAPER, libSwell,
 the ELF interpreter, every recursive/dynamic REAPER/libSwell/probe GUI runtime
-dependency and the now-known Python attester closure. It must name source,
+dependency and the now-known Python skeleton closure. Before any fixture
+execution, Task 0B must separately author, but not invoke, the measured
+namespace collectors, exact PRE/POST receipt-schema/exchange module, and sole
+process adapter; their source and every added Python module/extension become a
+reviewed manifest successor that references the skeleton manifest. The receipt
+module is an extension of the sealed envelope/base-identity API, not a second
+skeleton. It must name source,
 destination, file kind, mode, device/inode, SHA-256 for regular files,
 descriptor mount primitive, and
 reason. Socket and writable-directory entries use the separate identity rules

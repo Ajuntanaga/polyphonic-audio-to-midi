@@ -115,12 +115,17 @@ The gate has two deliberate meanings:
    needed for the single V4 row. Only that stronger state can satisfy a future
    host-launch precondition.
 
-Phase A must contain the complete future attester source, including every module
-used by its child-launch path, but its tests may not execute that path or create
-a namespace/process. Its exact Python closure can then be derived. The later
-Bubblewrap fixture validates the safety-complete table. Neither activity proves
-the compatibility-complete REAPER closure. Until the applicable manifest state
-is complete:
+Phase A contains only a sealed, non-admissible frame-envelope/base-identity and
+barrier skeleton. It has no PRE/POST schema, measured collector, standard-stream
+control, or child-launch module, and its tests never create a namespace or
+process. Task 0B must separately author, without invoking, the exact receipt
+schema/exchange module, measured collectors, and child-runner adapter. Before
+any fixture, the reviewed manifest successor must seal all three source hashes
+and every newly imported Python source, extension, and ELF dependency, while
+referencing the immutable Phase A skeleton manifest. The later Bubblewrap
+fixture validates only the safety-complete table. Neither activity proves the
+compatibility-complete REAPER closure. Until the applicable manifest state is
+complete:
 
 1. do not form or execute a V4 REAPER command, launch REAPER, or broaden a
    runtime bind;

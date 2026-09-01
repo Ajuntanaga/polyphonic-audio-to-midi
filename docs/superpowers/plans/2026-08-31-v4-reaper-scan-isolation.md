@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A source-only work is permitted, Task 0B runtime manifest is blocked
+Status: V4 host execution blocked; Task 0A non-admissible skeleton work is permitted, Task 0B runtime manifest is blocked
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -19,10 +19,14 @@ all offline work and independent review are complete.
 
 ## Non-negotiable constraints
 
-- Only Task 0A source-only attester code may begin before a reviewed manifest.
-  It must not import process-launch code or call Bubblewrap, `subprocess`,
-  REAPER, systemd, or create a namespace. No namespace/process-launch task may
-  begin before Task 0B is complete and independently reviewed.
+- Only Task 0A non-admissible protocol/barrier code may begin before a reviewed
+  manifest. It must not import process-launch code or call Bubblewrap,
+  `subprocess`, REAPER, systemd, or create a namespace. It has no `__main__`,
+  no dynamic/lazy launcher import, no descriptor-control API, no `ChildRunner`,
+  and no direct `os.system`, `os.popen`, `fork*`, `posix_spawn*`, `spawn*`, or
+  `exec*` call. It is structurally unable to emit PRE/POST, consume an ACK, or
+  start a child: measured collectors and admission do not exist until Task 0B
+  is complete and independently reviewed.
 - No REAPER, audio, or GUI launch occurs during plan execution or tests.
 - The only candidate bundle is the probe. The production VST3 bundle, host
   build VST3 directory, live home VST3 directory, and all VST2/CLAP/LV2 roots
@@ -46,9 +50,12 @@ all offline work and independent review are complete.
 
 | File | Responsibility |
 | --- | --- |
-| tools/reaper_v4_protocol.py | source-only frame codec, receipt schema, and proc/ptrace barrier primitives |
-| tools/reaper_v4_attester.py | complete in-namespace attester source; Phase A tests never invoke its child-launch path |
-| tests/test_reaper_v4_protocol.py | source-only frame, barrier, and no-child-invocation coverage |
+| tools/reaper_v4_protocol.py | source-only canonical frame envelope and base-identity grammar only |
+| tools/reaper_v4_attester.py | non-admissible config/barrier primitives; no receipt or child API |
+| tests/test_reaper_v4_protocol.py | source-only frame, barrier, and no-admission/no-child regression coverage |
+| tools/reaper_v4_measurements.py | Task 0B-only measured namespace collectors, authored only with their manifest closure |
+| tools/reaper_v4_receipt_schema.py | Task 0B-only exact PRE/POST/exchange grammar, authored with its manifest closure |
+| tools/reaper_v4_child_runner.py | Task 0B-only process adapter; the sole module allowed to import `subprocess` |
 | tools/reaper_v4_namespace.py | immutable data types and Bubblewrap argv grammar |
 | tools/reaper_v4_launcher.py | trusted parent identity checks, descriptor pinning, standard-stream admission/receipt protocol |
 | tests/test_reaper_v4_namespace.py | unit and non-REAPER Bubblewrap fixture coverage |
@@ -62,17 +69,24 @@ all offline work and independent review are complete.
 
 ## Task 0: Establish non-circular manifest gates
 
-### Task 0A: Source-only attester contract
+### Task 0A: Non-admissible protocol/barrier contract
 
-Status: pending and offline-safe.
+Status: complete as a non-admissible source component; it provides no
+safety-complete manifest, fixture, namespace, or host-execution authority.
 
 Create tools/reaper_v4_protocol.py, tools/reaper_v4_attester.py, and their unit
-tests. Together they are the complete future attester source and may import all
-modules used by its eventual child-launch path. Phase A tests must not invoke
-that path or call Bubblewrap, systemd, REAPER, or create a namespace. They prove
-the frame codec, required `PR_SET_DUMPABLE` invocation/error path, and a static
-no-child-invocation contract. Seal both source hashes and their transitive
-Python import/extension closure as the exact attester input to Task 0B.
+tests as a complete but **non-admissible** canonical frame-envelope,
+base-identity, and barrier skeleton. It parses/rejects malformed frame envelopes
+and base configuration, and exposes the mocked-testable `PR_SET_DUMPABLE` /
+capability primitive, but it deliberately owns no PRE/POST receipt payload
+schema, exchange validator, writer, ACK reader, `ChildRunner`, standard-stream
+control object, measured namespace collector, or admission entrypoint. No
+configuration, including an all-true fact map, can produce PRE/POST or invoke a
+child. Source-contract tests use exact public-API and safe-top-level AST
+allowlists alongside forbidden import/call checks; they prove the barrier's
+success/refusal behavior and no-admission invariant. Seal both source hashes
+and their transitive Python import/extension closure as the immutable
+skeleton-manifest component for Task 0B.
 
 ~~~bash
 ionice -c 3 nice -n 10 python3 -m unittest tests.test_reaper_v4_protocol -v
@@ -84,9 +98,18 @@ Status: BLOCKED. Do not start namespace execution until it is independently
 reviewed.
 
 The current inventory identifies the direct ELF starting set but proves neither
-a compatible GUI/runtime closure nor the now-known attester closure. A future
-separately authorized, read-only inventory activity must produce an immutable
-host-runtime manifest with type-specific entries:
+a compatible GUI/runtime closure nor the now-known skeleton closure. Task 0B
+may separately author, but not invoke, `tools/reaper_v4_measurements.py`,
+`tools/reaper_v4_receipt_schema.py`, and `tools/reaper_v4_child_runner.py`.
+The receipt-schema module is the first code allowed to define exact PRE/POST
+payload keys, structured measured facts, and exchange validation; it is not a
+second skeleton and must reference the sealed Task 0A frame/base-identity API.
+The collector is the first code permitted to measure exact namespace state for
+those schemas. The adapter is the only module permitted to import `subprocess`,
+has no import-time side effects, uses DEVNULL standard streams, `close_fds=True`,
+and `pass_fds=()`, and returns a bounded `ChildOutcome`. A future separately
+authorized, read-only inventory activity must produce an immutable host-runtime
+manifest with type-specific entries:
 
 1. Every regular read-only REAPER, libSwell, interpreter, recursive/dynamic
    REAPER/libSwell/probe GUI dependency and Python/attester input has safe raw
@@ -107,11 +130,16 @@ host-runtime manifest with type-specific entries:
    A non-REAPER fixture may prove a safety property only; it cannot prove a
    REAPER `dlopen` dependency unnecessary.
 
-Task 0B has two possible reviewed outcomes: safety-complete (permits only the
-non-REAPER fixture and may be incompatible with REAPER) or compatibility-
-complete (required before a future V4 host request). Task 2 creates a separate,
-sealed run-input manifest for its RPP, ReaScript, private Xauthority copy, and
-staged writable tree; it
+Before any fixture execution, seal receipt-schema, collector, and adapter
+source hashes plus every added Python module/extension/ELF dependency
+(including `subprocess` and `_posixsubprocess`) in a reviewed manifest
+successor that references, but never mutates, the immutable skeleton manifest.
+Task 0B has two possible reviewed outcomes: safety-complete (skeleton plus the
+exact receipt-schema/collector/adapter closure; permits only the non-REAPER
+fixture and may be incompatible with REAPER) or compatibility-complete (the
+same sealed components plus complete REAPER runtime closure; required before a
+future V4 host request). Task 2 creates a separate, sealed run-input manifest
+for its RPP, ReaScript, private Xauthority copy, and staged writable tree; it
 references but never mutates the host-runtime manifest. If the manifest cannot
 be established without a host launch, record that as blocked and request new
 authority rather than guessing a broader bind.
@@ -178,7 +206,8 @@ def open_regular_snapshots(config: V4NamespaceConfig) -> tuple[tuple[RuntimeRegu
 def open_nonregular_anchors(config: V4NamespaceConfig) -> tuple[tuple[RuntimeNonregularEntry, int], ...]: ...
 def acquire_v4_control(lock: V4AttemptLock, roots: V4Roots) -> V4ControlPaths: ...
 def build_bwrap_command(config: V4NamespaceConfig, snapshots: tuple[tuple[RuntimeRegularFile, int], ...], anchors: tuple[tuple[RuntimeNonregularEntry, int], ...], child_argv: list[str], environment: Mapping[str, str]) -> list[str]: ...
-def run_attested_child(config_path: pathlib.Path, child_argv: list[str], admission_fd: int = 0, receipt_fd: int = 1) -> int: ...
+def validate_config(config: Mapping[str, object]) -> Mapping[str, object]: ...
+def establish_protocol_barrier(config: Mapping[str, object]) -> None: ...
 def launch_v4_namespace(config: V4NamespaceConfig, child_argv: list[str], environment: Mapping[str, str]) -> V4LaunchResult: ...
 ~~~
 
