@@ -1,7 +1,7 @@
 # V4 Task 0B3 — Single Session-Owner Design
 
-**Status:** design-only; Task 0B3a non-admissible skeleton independently
-reviewed
+**Status:** design-only; Task 0B3a non-admissible skeleton and Task 0B3b pure
+receipt gate independently reviewed
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -740,8 +740,9 @@ safe sequence is:
    session-root API shell and its pre-import source-byte/AST verifier. Both
    public functions fail closed before any runtime work; no component invocation
    or fixture.
-2. **Task 0B3b — pure receipt gate:** execute adversarial in-memory receipt
-   PRE/POST/ACK vectors only; prove value and exchange relations.
+2. **Task 0B3b — pure receipt gate (sealed):** executed adversarial in-memory
+   receipt PRE/POST/ACK vectors only and proved value/exchange relations. It
+   did not test raw ACK EOF/order or any session behavior.
 3. **Task 0B3c — measurement gate:** test only a temporary, synthetic
    directory/descriptor boundary and bounded identity failures; no namespace.
 4. **Task 0B3d — child-adapter gate:** use a non-REAPER sentinel child to test

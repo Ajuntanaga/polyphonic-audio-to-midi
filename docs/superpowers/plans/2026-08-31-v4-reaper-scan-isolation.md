@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, and Task 0B3a is a sealed non-admissible skeleton. Module invocation, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, and Task 0B3b is sealed pure receipt evidence. Fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -225,6 +225,21 @@ This checkpoint preserves only the future root identity and does not advance
 closure status or authorize a fixture. The next separate authority is Task
 0B3b for pure in-memory receipt vectors; actual session implementation remains
 reserved to Task 0B4.
+
+**Task 0B3b pure receipt checkpoint.**
+The separately scoped pure receipt gate invokes only the real
+`reaper_v4_receipt_schema` and immutable protocol validators against the sealed
+synthetic PRE/ACK/POST vector. Its 12 tests accept the valid immutable exchange
+and reject bad ACK values/types, individually valid identity and
+shared-attestation mismatches, missing or false required containment facts,
+row/clock/PID/return-code errors and closed boundaries, non-printable text,
+cycles, and container subclasses. The seven-check Task 0B1 static source
+contract remains green, and independent review is CLEAN. No production source,
+session, raw stream, namespace, Bubblewrap, systemd, REAPER, X11, audio, or
+host action occurs. In particular, this gate proves no ACK EOF, raw-frame
+ordering, or session behavior. The next separate authority is Task 0B3c for
+synthetic measurement/descriptor validation; session implementation remains
+Task 0B4.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus
