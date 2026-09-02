@@ -127,6 +127,21 @@ must prove:
 The source SHA-256 is the seal for every private syntactic detail. The static
 test must say explicitly that it proves neither runtime order nor behavior.
 
+## Task 1: Non-admissible skeleton authoring and static contract
+
+1. Replace any preliminary session implementation with the exact non-admissible
+   skeleton in this contract. No source behavior may survive the replacement.
+2. Replace the static test with the pre-import AST/hash verifier described
+   above. It must first fail against the preliminary source shape, then pin the
+   final skeleton hash.
+3. Run only
+   `ionice -c 3 nice -n 10 python3 -B -m unittest tests.test_reaper_v4_task0b3a_static_contract -v`.
+   The test may parse/read source bytes but must not import any target module.
+   Do not run `py_compile`, a component test, or the repository suite.
+4. Check whitespace, self-review the two owned files, and commit only those
+   files. An independent source-only task review remains mandatory before the
+   checkpoint.
+
 ## Deferred implementation authority
 
 The complete Task 0B3 execution rules remain binding but are intentionally
