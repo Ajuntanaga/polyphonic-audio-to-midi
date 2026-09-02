@@ -65,6 +65,23 @@ independently reviewed. No other Task 0B1 source expansion or correction,
 target import/execution/loading, fixture or namespace action, or host action is
 authorized.
 
+**Task 0B3c narrow correction amendment.** Under the separately scoped
+temporary-directory/descriptor gate, the initial synthetic-only RED exposed
+collector validation holes. The sole authorized production correction was within
+`tools/reaper_v4_measurements.py`: take an exact-plan local snapshot before
+validation; reject non-canonical strings, duplicates, and unhashable values
+before `os.open`; normalize root-descriptor `OverflowError` and close failures
+to `MeasurementError`; and require `MEASUREMENT_KEYS` to be exactly
+`("mode", "size")`. This is a fail-closed collector correction, not a new
+capability. The sealed collector source SHA-256 is
+`27fa32e618a1a1461f3ec50820e7ad8717aa0747f1a6c7e475badefa0b4f7a22`.
+The seven-check static contract plus the Task 0B3c synthetic descriptor suite
+passed 20 tests, and independent review is CLEAN. This authority did not
+create a session or namespace, form or invoke Bubblewrap/systemd/REAPER,
+perform X11, audio, network, or host action, or prove ACK, raw-stream, or
+session behavior. Task 0B3d remains a separately authorized child-adapter-only
+gate.
+
 ## Contract artifacts
 
 The source phase must add the following inert, canonical JSON documents:
@@ -230,7 +247,7 @@ read. An AST-only test reads their source bytes before any import.
 | --- | --- | --- | --- |
 | closure constructor | `ast`, `dataclasses`, `enum`, `hashlib`, `json`, `os`, `stat`, `struct`, `types`, `Mapping` | `ClosureConstructionError`, `ClosureState`, `ClosureInputBundle`, `ClosureRecord`, `canonical_json_bytes`, `sha256_canonical`, `load_input_bundle`, `construct_closure` | Source/data-only parser skeleton. It takes a bounded, cycle-safe immutable snapshot before semantic or digest validation, including at the public canonicalization boundary. No `tools.*`, `subprocess`, `ctypes`, import loader, target evaluation, broad scan, or ambient-state API. It rejects schema-invalid data and pathname loading; for the sole supplied schema-valid empty-catalog vector it returns only the exact blocked output until a separately authorized graph-construction successor supplies retained-directory-FD input and Task 0B3 supplies the reviewed session graph. |
 | receipt schema | `dataclasses`, `enum`, `types`, `Mapping`, `tools.reaper_v4_protocol` | `ReceiptSchemaError`, `ReceiptPhase`, `ReceiptPayload`, `ACK_BYTE`, `PRE_KEYS`, `POST_KEYS`, `ATTESTATION_KEYS`, `validate_pre_payload`, `validate_ack_bytes`, `validate_post_payload`, `validate_exchange` | Pure in-memory grammar and payload/value-relation validation only. No descriptor, file, process, clock, measurement, launch, or stream I/O. |
-| measurements | `dataclasses`, `os`, `pathlib`, `stat`, `types`, `Mapping` | `MeasurementError`, `MeasurementPlan`, `MeasurementSnapshot`, `MEASUREMENT_KEYS`, `collect_namespace_measurements` | Explicit-plan later collector. `MeasurementPlan` snapshots an exact built-in resource tuple and bounded expected facts before any later use. No frame/ACK/child API, write, subprocess, `ctypes`, environment/cwd/HOME read, recursive walk, or implicit resource access. Runtime reads may occur only inside the callable after later authority and use `O_PATH|O_NOFOLLOW|O_CLOEXEC` plus `fstat`, before accepting a regular-file fact. |
+| measurements | `dataclasses`, `os`, `pathlib`, `stat`, `types`, `Mapping` | `MeasurementError`, `MeasurementPlan`, `MeasurementSnapshot`, `MEASUREMENT_KEYS`, `collect_namespace_measurements` | Explicit-plan later collector. It takes an exact-plan local snapshot before validation; permits only canonical one-component printable strings, rejects duplicates and unhashable values before `os.open`, and normalizes root-descriptor `OverflowError` and close failures to `MeasurementError`. `MEASUREMENT_KEYS` is exactly `("mode", "size")`; `MeasurementPlan` snapshots an exact built-in resource tuple and bounded expected facts before any later use. No frame/ACK/child API, write, subprocess, `ctypes`, environment/cwd/HOME read, recursive walk, or implicit resource access. Runtime reads may occur only inside the callable after later authority and use `O_PATH|O_NOFOLLOW|O_CLOEXEC` plus `fstat`, before accepting a regular-file fact. |
 | child runner | `dataclasses`, `subprocess`, `time` | `ChildRunnerError`, `ChildSpec`, `ChildOutcome`, `run_child` | The only subprocess importer and a later callable adapter. It contains no admission, ACK consumption, PRE/POST emission, fallback, retry, CLI, or import-time launch. It accepts only an exact `ChildSpec`, captures and validates its immutable bounded fields once, then uses only those locals. It has exactly one syntactic `subprocess.Popen` call, only in `run_child`, with absolute executable/cwd, explicit environment, `shell=False`, DEVNULL standard streams, `close_fds=True`, `pass_fds=()`, one bounded launch, and two bounded kill/reap attempts after timeout or any `BaseException` **after successful `Popen` return**; each attempt still waits when kill reports an error. A later outer session/scope must recover a launch interrupted before `Popen` returns, and must perform exact row/policy environment admission and binding before it creates `ChildSpec`. |
 
 Every public class is a frozen dataclass, enum, or exception. `ClosureInputBundle`

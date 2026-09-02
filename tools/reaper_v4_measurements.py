@@ -17,7 +17,7 @@ __all__ = (
     "collect_namespace_measurements",
 )
 
-MEASUREMENT_KEYS = ("mode", "size", "resource")
+MEASUREMENT_KEYS = ("mode", "size")
 
 
 class MeasurementError(ValueError):
@@ -121,22 +121,43 @@ class MeasurementSnapshot:
 
 def collect_namespace_measurements(plan: MeasurementPlan) -> MeasurementSnapshot:
     """Read a finite, no-follow set of regular files relative to an explicit directory fd."""
-    if not isinstance(plan, MeasurementPlan):
+    if type(plan) is not MeasurementPlan:
         raise MeasurementError("plan must be a MeasurementPlan")
-    if isinstance(plan.root_fd, bool) or not isinstance(plan.root_fd, int):
+    root_fd = plan.root_fd
+    resources = plan.resources
+    expected_facts = plan.expected
+    if isinstance(root_fd, bool) or not isinstance(root_fd, int):
         raise MeasurementError("root_fd must be an integer descriptor")
     try:
-        root_stat = os.fstat(plan.root_fd)
-    except OSError as error:
+        root_stat = os.fstat(root_fd)
+    except (OSError, OverflowError) as error:
         raise MeasurementError("root_fd cannot be inspected") from error
     if not stat.S_ISDIR(root_stat.st_mode):
         raise MeasurementError("root_fd must describe a directory")
-    if type(plan.resources) is not tuple or not 0 < len(plan.resources) <= 16:
+    if type(resources) is not tuple or not 0 < len(resources) <= 16:
         raise MeasurementError("resources must be a bounded nonempty tuple")
-    if not isinstance(plan.expected, Mapping) or set(plan.expected) != set(plan.resources):
+    for resource in resources:
+        if (
+            type(resource) is not str
+            or not resource
+            or not all(32 <= ord(character) <= 126 for character in resource)
+            or len(resource) > 256
+        ):
+            raise MeasurementError("resource names must be bounded strings")
+        candidate = pathlib.PurePosixPath(resource)
+        if (
+            candidate.is_absolute()
+            or ".." in candidate.parts
+            or len(candidate.parts) != 1
+            or candidate.as_posix() != resource
+        ):
+            raise MeasurementError("resource must be a single canonical relative name")
+    if len(set(resources)) != len(resources):
+        raise MeasurementError("resources must be unique")
+    if not isinstance(expected_facts, Mapping) or set(expected_facts) != set(resources):
         raise MeasurementError("expected facts must match the declared resources")
-    for resource in plan.resources:
-        expected = plan.expected[resource]
+    for resource in resources:
+        expected = expected_facts[resource]
         if not isinstance(expected, Mapping) or set(expected) != {"mode", "size"}:
             raise MeasurementError("expected resource facts must be closed")
         expected_mode = expected["mode"]
@@ -151,24 +172,12 @@ def collect_namespace_measurements(plan: MeasurementPlan) -> MeasurementSnapshot
             raise MeasurementError("expected size must be a nonnegative integer")
     facts: dict[str, Mapping[str, int]] = {}
     evidence: dict[str, str] = {}
-    for resource in plan.resources:
-        if (
-            type(resource) is not str
-            or not resource
-            or not all(32 <= ord(character) <= 126 for character in resource)
-            or len(resource) > 256
-        ):
-            raise MeasurementError("resource names must be bounded strings")
-        candidate = pathlib.PurePosixPath(resource)
-        if candidate.is_absolute() or ".." in candidate.parts or len(candidate.parts) != 1:
-            raise MeasurementError("resource must be a single relative name")
-        if resource in facts:
-            raise MeasurementError("resources must be unique")
+    for resource in resources:
         try:
             descriptor = os.open(
                 resource,
                 os.O_PATH | os.O_CLOEXEC | os.O_NOFOLLOW,
-                dir_fd=plan.root_fd,
+                dir_fd=root_fd,
             )
         except OSError as error:
             raise MeasurementError("resource cannot be opened") from error
@@ -178,11 +187,14 @@ def collect_namespace_measurements(plan: MeasurementPlan) -> MeasurementSnapshot
             except OSError as error:
                 raise MeasurementError("resource cannot be inspected") from error
         finally:
-            os.close(descriptor)
+            try:
+                os.close(descriptor)
+            except OSError as error:
+                raise MeasurementError("resource cannot be closed") from error
         if not stat.S_ISREG(resource_stat.st_mode):
             raise MeasurementError("resource must be a regular file")
         observed = {"mode": stat.S_IMODE(resource_stat.st_mode), "size": resource_stat.st_size}
-        expected = plan.expected[resource]
+        expected = expected_facts[resource]
         if observed != dict(expected):
             raise MeasurementError("resource facts differ from the explicit plan")
         facts[resource] = observed

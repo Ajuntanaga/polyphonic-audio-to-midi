@@ -39,7 +39,7 @@ TASK0A_HASHES = {
 TASK0B1_SOURCE_HASHES = {
     "constructor": "2f8b1f02f5a730c70e38b6ebe06a99ec8abbd3c70a05851f66d6be6c5e2a97f7",
     "receipt": "ac8fb910a6bb0b06a0278cfe92e4f3e60ebe19a988048b3e11f9c320b32a6eff",
-    "measurements": "834ffbf9dbfe3c061904588132ae2683ae788589128c4bc51d02b1d21f625054",
+    "measurements": "27fa32e618a1a1461f3ec50820e7ad8717aa0747f1a6c7e475badefa0b4f7a22",
     "runner": "13f6e4f5a9139e45bbc593a79f363ccad5fc1e6ca283cfc7379b04f50d657b5c",
 }
 TASK0B1_ARTIFACT_HASHES = {
@@ -524,13 +524,14 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
     if name != "runner" and popen_calls:
         raise AssertionError(f"{name} contains a process call")
     if name == "measurements":
+        measurement_source = path.read_text(encoding="utf-8")
         measurement_freezer = next(
             node
             for node in tree.body
             if isinstance(node, ast.FunctionDef) and node.name == "_freeze_measurement_data"
         )
         measurement_freezer_source = ast.get_source_segment(
-            path.read_text(encoding="utf-8"), measurement_freezer
+            measurement_source, measurement_freezer
         )
         if (
             measurement_freezer_source is None
@@ -541,12 +542,12 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
             or "remaining = [512]" not in measurement_freezer_source
             or "if len(snapshot) + 1 > remaining[0]" not in measurement_freezer_source
             or "measurement data must not contain cycles" not in measurement_freezer_source
-            or "type(self.resources) is not tuple" not in path.read_text(encoding="utf-8")
-            or "_freeze_measurement_data(self.resources)" not in path.read_text(encoding="utf-8")
-            or 'object.__setattr__(self, "resources", resources)' not in path.read_text(encoding="utf-8")
-            or "_freeze_measurement_data(self.expected)" not in path.read_text(encoding="utf-8")
-            or "_freeze_measurement_data(self.facts)" not in path.read_text(encoding="utf-8")
-            or "_freeze_measurement_data(self.evidence)" not in path.read_text(encoding="utf-8")
+            or "type(self.resources) is not tuple" not in measurement_source
+            or "_freeze_measurement_data(self.resources)" not in measurement_source
+            or 'object.__setattr__(self, "resources", resources)' not in measurement_source
+            or "_freeze_measurement_data(self.expected)" not in measurement_source
+            or "_freeze_measurement_data(self.facts)" not in measurement_source
+            or "_freeze_measurement_data(self.evidence)" not in measurement_source
         ):
             raise AssertionError("measurement snapshots must be bounded and immutable before use")
         open_calls = [
@@ -566,12 +567,128 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
         if not (
             len(open_calls[0].keywords) == 1
             and open_calls[0].keywords[0].arg == "dir_fd"
-            and isinstance(open_calls[0].keywords[0].value, ast.Attribute)
-            and isinstance(open_calls[0].keywords[0].value.value, ast.Name)
-            and open_calls[0].keywords[0].value.value.id == "plan"
-            and open_calls[0].keywords[0].value.attr == "root_fd"
+            and isinstance(open_calls[0].keywords[0].value, ast.Name)
+            and open_calls[0].keywords[0].value.id == "root_fd"
         ):
             raise AssertionError("measurement open must remain descriptor-rooted")
+        measurement_literals = {
+            target.id: ast.literal_eval(node.value)
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance((target := node.targets[0]), ast.Name)
+            and target.id == "MEASUREMENT_KEYS"
+        }
+        if measurement_literals.get("MEASUREMENT_KEYS") != ("mode", "size"):
+            raise AssertionError("measurement keys must remain exactly mode and size")
+        collector = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "collect_namespace_measurements"
+        )
+        collector_source = ast.get_source_segment(measurement_source, collector)
+        if (
+            collector_source is None
+            or "if type(plan) is not MeasurementPlan:" not in collector_source
+            or "root_fd = plan.root_fd" not in collector_source
+            or "resources = plan.resources" not in collector_source
+            or "expected_facts = plan.expected" not in collector_source
+            or "root_stat = os.fstat(root_fd)" not in collector_source
+            or "set(expected_facts) != set(resources)" not in collector_source
+            or "expected = expected_facts[resource]" not in collector_source
+            or "except (OSError, OverflowError) as error:" not in collector_source
+            or 'raise MeasurementError("root_fd cannot be inspected") from error'
+            not in collector_source
+            or "candidate.as_posix() != resource" not in collector_source
+            or 'raise MeasurementError("resource must be a single canonical relative name")'
+            not in collector_source
+            or "try:\n                os.close(descriptor)\n            except OSError as error:\n                raise MeasurementError(\"resource cannot be closed\") from error"
+            not in collector_source
+        ):
+            raise AssertionError("measurement descriptor failures must remain normalized and closed")
+        leading_statements = collector.body
+        leading_sources = tuple(
+            ast.get_source_segment(measurement_source, statement)
+            for statement in leading_statements[1:5]
+        )
+        if (
+            len(leading_statements) < 5
+            or not isinstance(leading_statements[0], ast.Expr)
+            or not isinstance(leading_statements[0].value, ast.Constant)
+            or not isinstance(leading_statements[0].value.value, str)
+            or leading_sources
+            != (
+                "if type(plan) is not MeasurementPlan:\n        raise MeasurementError(\"plan must be a MeasurementPlan\")",
+                "root_fd = plan.root_fd",
+                "resources = plan.resources",
+                "expected_facts = plan.expected",
+            )
+        ):
+            raise AssertionError("measurement plan must be exact-typed and captured before inspection")
+        plan_attributes = [
+            node.attr
+            for node in ast.walk(collector)
+            if isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "plan"
+        ]
+        if sorted(plan_attributes) != ["expected", "resources", "root_fd"]:
+            raise AssertionError("measurement collector must use only captured plan values")
+        resource_validation_loops = [
+            node
+            for node in collector.body
+            if isinstance(node, ast.For)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "resource"
+            and isinstance(node.iter, ast.Name)
+            and node.iter.id == "resources"
+            and (
+                (loop_source := ast.get_source_segment(measurement_source, node))
+                is not None
+                and "type(resource) is not str" in loop_source
+                and "all(32 <= ord(character) <= 126 for character in resource)" in loop_source
+                and "candidate = pathlib.PurePosixPath(resource)" in loop_source
+                and "candidate.as_posix() != resource" in loop_source
+            )
+        ]
+        resource_set_calls = [
+            node
+            for node in ast.walk(collector)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "set"
+            and len(node.args) == 1
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0].id == "resources"
+        ]
+        expected_key_checks = [
+            node
+            for node in ast.walk(collector)
+            if isinstance(node, ast.If)
+            and ast.get_source_segment(measurement_source, node.test)
+            == "not isinstance(expected_facts, Mapping) or set(expected_facts) != set(resources)"
+        ]
+        if (
+            len(resource_validation_loops) != 1
+            or len(resource_set_calls) != 2
+            or len(expected_key_checks) != 1
+            or any(
+                resource_validation_loops[0].lineno >= node.lineno
+                for node in (*resource_set_calls, *expected_key_checks, open_calls[0])
+            )
+        ):
+            raise AssertionError(
+                "resource strings must be canonicalized before set-based or descriptor use"
+            )
+        uniqueness_checks = [
+            node
+            for node in ast.walk(collector)
+            if isinstance(node, ast.If)
+            and ast.get_source_segment(measurement_source, node.test)
+            == "len(set(resources)) != len(resources)"
+        ]
+        if len(uniqueness_checks) != 1 or uniqueness_checks[0].lineno >= open_calls[0].lineno:
+            raise AssertionError("measurement resources must be made unique before opening any descriptor")
     if name == "constructor":
         constructor = next(
             node

@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, and Task 0B3b is sealed pure receipt evidence. Fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, Task 0B3b is sealed pure receipt evidence, and Task 0B3c is sealed synthetic descriptor evidence. Fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -240,6 +240,23 @@ host action occurs. In particular, this gate proves no ACK EOF, raw-frame
 ordering, or session behavior. The next separate authority is Task 0B3c for
 synthetic measurement/descriptor validation; session implementation remains
 Task 0B4.
+
+**Task 0B3c synthetic measurement/descriptor checkpoint.**
+The temporary-directory-only gate first demonstrated a bounded collector RED,
+then applied only the reviewed production corrective amendment in
+`tools/reaper_v4_measurements.py`: exact-plan local snapshotting before
+validation; pre-`os.open` rejection of non-canonical strings, duplicates, and
+unhashable values; normalization of root-descriptor `OverflowError` and close
+failures to `MeasurementError`; and an exact `MEASUREMENT_KEYS` value of
+`("mode", "size")`. The sealed collector SHA-256 is
+`27fa32e618a1a1461f3ec50820e7ad8717aa0747f1a6c7e475badefa0b4f7a22`.
+The combined seven-check static contract and Task 0B3c suite passed 20 tests;
+independent review is CLEAN. This is a fail-closed corrective measurement
+boundary, not new runtime capability: no session, namespace, Bubblewrap,
+systemd, REAPER, X11, audio, network, or host action occurred. It establishes
+neither ACK EOF, raw-frame ordering, nor session behavior. The next separate
+authority is Task 0B3d for the child adapter only; session implementation
+remains Task 0B4.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus

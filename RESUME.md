@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-02T00:21:46-07:00
+Updated: 2026-09-02T00:45:20-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -110,6 +110,20 @@ Updated: 2026-09-02T00:21:46-07:00
   audio, or host action occurred. This is not evidence of ACK EOF, raw frame
   order, or session behavior. The next safe gate is separately authorized Task
   0B3c measurement validation; full session behavior remains Task 0B4.
+- Task 0B3c is sealed as a temporary-directory/descriptor-only measurement
+  gate. Its synthetic-only RED exposed collector validation holes; the narrow
+  production corrective amendment changed only `tools/reaper_v4_measurements.py` to take
+  an exact-plan local snapshot before validation, reject non-canonical strings,
+  duplicates, and unhashable values before `os.open`, normalize root
+  `OverflowError` and close failures to `MeasurementError`, and require
+  `MEASUREMENT_KEYS == ("mode", "size")`. The sealed collector source SHA-256
+  is `27fa32e618a1a1461f3ec50820e7ad8717aa0747f1a6c7e475badefa0b4f7a22`.
+  The combined static contract and B3c suite passed 20 tests, and independent
+  review is CLEAN. This proves neither ACK EOF, raw-frame order, nor session
+  behavior; it created no session or namespace and performed no Bubblewrap,
+  systemd, REAPER, X11, audio, network, or host action. The next safe gate is
+  separately authorized Task 0B3d for the child adapter only; full session
+  behavior remains Task 0B4.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -117,11 +131,11 @@ Updated: 2026-09-02T00:21:46-07:00
   host request is possible. Both require copy-byte, FD, `RLIMIT_NOFILE`, and
   memory/tmpfs preflight refusal budgets.
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
-  Task 0B3a adds only the sealed non-admissible skeleton, and Task 0B3b adds
-  only sealed pure receipt evidence. Task 0B1 remains preservation-only. Its
-  static test may be rerun without importing target modules; any measurement,
-  runner, session, fixture, namespace, or external action requires a new
-  scoped task.
+  Tasks 0B3a, 0B3b, and 0B3c add only sealed non-admissible, receipt, and
+  synthetic descriptor evidence respectively. Task 0B1 remains
+  preservation-only. Its static test may be rerun without importing target
+  modules; any child adapter, session, fixture, namespace, or external action
+  requires a new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots
