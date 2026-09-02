@@ -1,6 +1,6 @@
 # V4 Task 0B3 — Single Session-Owner Design
 
-**Status:** design-only; Task 0B3a evidence-input amendment independently
+**Status:** design-only; Task 0B3a non-admissible skeleton independently
 reviewed
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
@@ -38,6 +38,15 @@ all three Task 0B1 runtime libraries, the only permitted closure state remains:
 ```text
 BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)
 ```
+
+Task 0B3a reserves this root identity and public API as a deliberately
+**non-admissible skeleton**. Its two public functions raise `SessionError`
+before configuration I/O, validation, clocks, diagnostics, descriptor access,
+frame/ACK work, measurement, or child work. Its syntactic imports are
+declaration-only static edges; they do not prove executable reachability or
+permit a successor Task 0B0 closure to become a fixture candidate. The detailed
+execution rules in this record are reserved intact for the later Task 0B4
+implementation-and-controlled-fixture gate.
 
 No second coordinator, fallback runner, alternate receipt writer, or
 out-of-namespace control channel is permitted.
@@ -292,12 +301,29 @@ most 32 MiB. Every implied directory is opened no-follow and may contain only
 its named descendants; any symlink, special file, unexpected directory, or
 extra entry fails before PRE.
 
-The session reads at most 64 KiB/128 records of mountinfo, at most 16 inherited
-FD entries, at most eight 256-byte ID-map records per map, and at most 64 KiB
-of the Xauthority file (whose declared size must fit that limit). These are
-hard byte/record caps independent of the five-second deadline. The future
-source reads regular entries and authority data in 64 KiB bounded chunks rather
-than allocating their contents as one object.
+The session reads at most 64 KiB/128 records of `/proc/self/mountinfo`, at
+most 16 inherited FD entries, at most eight 256-byte records from each of
+`/proc/self/uid_map`, `/proc/self/gid_map`, and `/proc/self/setgroups`, and at
+most 64 KiB of the Xauthority file (whose declared size must fit that limit).
+These are hard byte/record caps independent of the five-second deadline. The
+future source reads regular entries and authority data in 64 KiB bounded chunks
+rather than allocating their contents as one object.
+
+The initial FD census has one exact, bounded mechanism. Before opening any
+component-path, scan-root, measurement, X11, or mountinfo descriptor, the
+session performs exactly one non-recursive `os.listdir("/proc/self/fd")` scan.
+It accepts at most 16 numeric ASCII names, and requires four entries: the
+three declared inherited FDs plus exactly one transient iterator FD created
+and closed by that single scan. It `fstat`s the declared three against
+`descriptor_policy`. The sole other listed number must immediately fail
+`fstat` with `EBADF`; it is the only permitted iterator artifact. A second
+extra entry, a successful `fstat` of the extra number, no transient artifact,
+or any other error suppresses PRE. The next descriptor open may occur only
+after this census has completed. The two bootstrap descriptors are already
+closed before it; fd-2 `fstat`/nonblocking setup itself opens no descriptor.
+This deliberately fails closed if a future target Python has different
+`os.listdir` iterator behavior; the later non-REAPER fixture gate must prove
+the pinned interpreter behavior before this root can become admissible.
 
 `descriptor_policy.inherited_fds` is exactly the ordered three-entry list:
 
@@ -328,6 +354,14 @@ SessionConfig. For every `scan_root.mount_points` member, the absolute path
 formed from `scan_root.path` plus that member's relative path must occur once
 in `control_visibility.mounts` with the same read-only state; no other listed
 mount may be strictly below `scan_root.path`.
+
+Each complete mount projection is taken by exactly one no-follow,
+close-on-exec open of `/proc/self/mountinfo`. It reads in bounded chunks through
+byte 65,537 solely to detect overflow, rejects a 65,537th byte, rejects a 129th
+record, demands EOF after an otherwise bounded 64 KiB/128-record stream, and
+closes the descriptor before comparing the exact decoded projection. This is
+performed once before PRE and once after the child; it never stops early at a
+valid prefix that could omit a later mount.
 
 `direct_input_digests` is a closed map of 1 through 15 lower-case direct input
 names to 64-hex SHA-256 values. It exactly matches the parent-retained selected
@@ -551,7 +585,13 @@ No inherited descriptor beyond the exact three-entry descriptor policy is an
 admission, receipt, configuration, or control channel. The two fixed
 descriptor-pinned configuration paths in Section 3 are opened by path only,
 then closed before the inherited-FD census and raw exchange; they never arrive
-as passed descriptors. The future session checks that fd 0 and fd 1 are pipes,
+as passed descriptors. Opening either once is the unavoidable prerequisite to
+its immediate `fstat` check: the session first requires a regular one-link file
+and the configured hard bound, reads at most `limit + 1` bytes, demands EOF,
+and closes it. `load_session_config` may then return only a structurally
+validated, sidecar-bound snapshot; `run_session` may use it for PRE only after
+the matching bounded mount projection has confirmed the expected read-only
+mounts. The future session checks that fd 0 and fd 1 are pipes,
 obtains the applicable `PIPE_BUF`, and refuses before PRE if the sealed maximum
 frame does not fit. It uses a deadline-enforced nonblocking/poll loop before
 each write or read. Once writable, it emits each frame in one write of the
@@ -585,8 +625,11 @@ stdout: POST frame, type=POST, sequence=1, terminal=true, then EOF
 
 The session must:
 
-1. canonical-encode and validate PRE through Task 0A and the Task 0B1 receipt
-   schema before the single stdout write;
+1. call exactly `attester.validate_config(attester.AttesterConfig(base_config))`
+   and `attester.establish_protocol_barrier(base_config)`, then call exactly
+   `receipt_schema.validate_pre_payload(pre_payload, 0)` and
+   `protocol.encode_frame(protocol.FrameType.PRE, 0, pre_receipt.payload)`
+   before the single stdout write;
 2. read at most two ACK bytes under the sealed deadline, require exactly one
    byte `0x06` followed by observable EOF, and reject missing, delayed,
    duplicate, extra, malformed, or non-EOF input;
@@ -594,9 +637,12 @@ The session must:
 4. sample `pre_monotonic_ns` immediately before the successful PRE emission;
    after direct-child reaping and every post measurement, sample
    `post_monotonic_ns`;
-5. retain the exact emitted PRE value and consumed ACK byte, call
-   `validate_exchange(exact_pre, exact_ack, proposed_post)`, and only then
-   canonical-encode the exact accepted terminal POST for its only stdout write;
+5. retain the exact emitted PRE value and consumed ACK byte, call exactly
+   `receipt_schema.validate_post_payload(post_payload, 1)`, then
+   `receipt_schema.validate_exchange(pre_payload, exact_ack, post_payload)`,
+   and only then call
+   `protocol.encode_frame(protocol.FrameType.POST, 1, post_receipt.payload)`
+   for its only stdout write;
    and
 6. close stdout after POST, with no trailing byte or second frame.
 
@@ -690,9 +736,9 @@ single mode/size result as proof of an unrelated receipt assertion.
 This record intentionally creates no implementation authority. The smallest
 safe sequence is:
 
-1. **Task 0B3a — session source authority:** author the one named session-root
-   source and its pre-import source-byte/AST verifier only, following this
-   design and the separate Task 0B3a source contract. No component invocation
+1. **Task 0B3a — non-admissible session skeleton:** author only the named
+   session-root API shell and its pre-import source-byte/AST verifier. Both
+   public functions fail closed before any runtime work; no component invocation
    or fixture.
 2. **Task 0B3b — pure receipt gate:** execute adversarial in-memory receipt
    PRE/POST/ACK vectors only; prove value and exchange relations.
@@ -700,10 +746,12 @@ safe sequence is:
    directory/descriptor boundary and bounded identity failures; no namespace.
 4. **Task 0B3d — child-adapter gate:** use a non-REAPER sentinel child to test
    one-launch, environment, timeout, and reaping behavior.
-5. **Task 0B4 — session state-machine gate:** test the raw PRE/ACK/POST state
-   machine against a non-REAPER controlled fixture, including every failure row
-   above. It still does not authorize Bubblewrap, systemd, REAPER, X11, audio,
-   or host scanning.
+5. **Task 0B4 — session implementation and state-machine gate:** under a new
+   explicit source-and-test authority, replace the Task 0B3a skeleton with the
+   full evidence, raw PRE/ACK/POST, and child state machine defined in this
+   record, then test it against a non-REAPER controlled fixture including every
+   failure row above. It still does not authorize Bubblewrap, systemd, REAPER,
+   X11, audio, or host scanning.
 6. **Task 0B5 — graph-construction implementation gate:** under a separate
    data-only authority, implement and review the currently unavailable closed
    schema/catalog/graph-construction method. It may parse only supplied static
