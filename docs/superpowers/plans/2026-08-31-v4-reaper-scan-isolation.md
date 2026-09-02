@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, and Task 0B3 is independently reviewed design-only. Module invocation, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, and Task 0B3a is a sealed non-admissible skeleton. Module invocation, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -98,11 +98,11 @@ ionice -c 3 nice -n 10 python3 -m unittest tests.test_reaper_v4_protocol -v
 
 ### Task 0B: Runtime-manifest gates
 
-Status: **Task 0B1 author-only source/catalog work in progress.** The initial
-closure-construction method, its runtime-root amendment, manifest split, and
-resource-budget gates have independent review; the user granted bounded offline
-Task 0B1 source authoring. Module invocation, namespace execution, fixture, and
-host work remain prohibited.
+Status: **Task 0B1 author-only source/catalog work and the Task 0B2 synthetic
+constructor result are sealed.** The initial closure-construction method, its
+runtime-root amendment, manifest split, and resource-budget gates have
+independent review. Module invocation, namespace execution, fixture, and host
+work remain prohibited.
 
 The current inventory identifies direct ELF starting points only. It proves
 neither the Task 0A Python closure nor REAPER GUI/runtime compatibility. The
@@ -122,15 +122,15 @@ REAPER. Its original review and the source-component amendment that distinguishe
 analysis roots from a required later runtime session root are CLEAN. This does
 not authorize Task 0B2 invocation, fixture, or host execution.
 
-#### Task 0B1: source closure (active bounded author-only authorization)
+#### Task 0B1: source closure (sealed author-only checkpoint)
 
 Under the completed Task 0B0 method and the user's explicit offline authority,
-this task may
-author, but not invoke, `tools/reaper_v4_closure_constructor.py`,
+this task authored, but did not invoke,
+`tools/reaper_v4_closure_constructor.py`,
 `tools/reaper_v4_measurements.py`,
 `tools/reaper_v4_receipt_schema.py`, and `tools/reaper_v4_child_runner.py`.
-It may also author their exact catalog schemas and synthetic static-data test
-fixtures. It does not authorize an invocation of the constructor against Task
+It also authored their exact catalog schemas and synthetic static-data test
+fixtures. This authority did not authorize an invocation of the constructor against Task
 0A or Task 0B1 inputs.
 The Task 0B1 closure-constructor skeleton is data-only and is the sole source
 reserved to produce the static closure record. In this author-only checkpoint it
@@ -157,13 +157,13 @@ the runner consumes no ACK, emits no receipt, retries nothing, and cannot
 self-authorize. The full source contract is
 `docs/superpowers/specs/2026-09-01-v4-task0b1-author-only-source-contract.md`.
 
-#### Task 0B2: static closure construction (separate future offline authorization)
+#### Task 0B2: static closure construction (sealed synthetic offline result)
 
-Only after Task 0B1 source/catalog implementation review and another explicit
-offline authorization may this task test or invoke the closure constructor
-against sealed static inputs. Its invocation may parse only pinned supplied
-data; it must not import, execute, load, or call a target module, extension, or
-ELF artifact. It also must not create a namespace or fixture, form a
+After Task 0B1 source/catalog implementation review and separate explicit
+offline authorization, this task tested the closure constructor against one
+sealed synthetic input vector. The invocation parsed only pinned supplied data;
+it did not import, execute, load, or call a target module, extension, or ELF
+artifact. It did not create a namespace or fixture, form a
 Bubblewrap/systemd/REAPER command, access GUI/X11/audio/network facilities, or
 perform any host action. A clean static record and independent review remain
 only a precondition to consider a later fixture-manifest review; they do not
@@ -172,13 +172,13 @@ Task 0B2 must return only
 `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` and cannot emit a
 fixture manifest.
 
-**Task 0B2 narrow correction amendment.** Under the current user `Proceed`
+**Task 0B2 narrow correction amendment.** Under the recorded user `Proceed`
 authorization, and only following the demonstrated sealed-synthetic-data RED,
-Task 0B2 may apply the one private normalization correction in
+Task 0B2 applied the one private normalization correction in
 `tools/reaper_v4_closure_constructor.py` required for its own constructed
-synthetic record to validate. It must reseal that Task 0B1 static source hash,
-rerun the static contract and Task 0B2 tests, and receive independent review.
-This does not authorize any other Task 0B1 source expansion or correction,
+synthetic record to validate. It resealed that Task 0B1 static source hash,
+reran the static contract and Task 0B2 tests, and received independent review.
+This did not authorize any other Task 0B1 source expansion or correction,
 target import/execution/loading, fixture or namespace action, or host action.
 
 **Task 0B2 static result.** The sealed synthetic vector first produced the
@@ -210,6 +210,21 @@ standard-stream PRE/ACK/POST state machine, evidence provenance, and later
 component/graph gates. It is independently reviewed documentation only: it
 authorizes no session source, component execution, fixture, namespace,
 Bubblewrap/systemd/REAPER action, or host mutation.
+
+**Task 0B3a static source checkpoint.**
+Commits `81df235` and `91c86c5` record the reviewed fail-closed source
+contract. Commit `a1808cb` replaces the preliminary pseudo-runtime with the
+deliberately non-admissible `tools/reaper_v4_session.py` skeleton; commit
+`d257b5d` seals the pre-import AST/hash guard. The source SHA-256 is
+`f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`.
+The one permitted static test passed, and the final independent source re-review
+is CLEAN. Both public functions reject before inspecting their arguments or
+performing I/O. No target/dependency import, compilation, invocation, fixture,
+namespace, Bubblewrap, systemd, REAPER, X11, audio, or host action occurred.
+This checkpoint preserves only the future root identity and does not advance
+closure status or authorize a fixture. The next separate authority is Task
+0B3b for pure in-memory receipt vectors; actual session implementation remains
+reserved to Task 0B4.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus

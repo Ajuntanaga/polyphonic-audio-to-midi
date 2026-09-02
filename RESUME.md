@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-01T12:37:18-07:00
+Updated: 2026-09-01T23:29:22-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -49,14 +49,14 @@ Updated: 2026-09-01T12:37:18-07:00
   `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` until a separately
   reviewed session runtime root exists. Task 0B1 never authorizes testing or
   invoking the constructor; that later step needs its own Task 0B2 authority.
-- Under the current user `Proceed` authorization, and only after the
-  demonstrated sealed-synthetic-data RED, Task 0B2 may apply the one private
+- Under the recorded user `Proceed` authorization, and only after the
+  demonstrated sealed-synthetic-data RED, Task 0B2 applied the one private
   normalization correction in `tools/reaper_v4_closure_constructor.py` needed
-  for its own constructed synthetic record to validate. It must reseal the
-  Task 0B1 static constructor source hash, rerun the static contract and
-  Task 0B2 tests, and receive independent review. All other Task 0B1 source
+  for its own constructed synthetic record to validate. It resealed the
+  Task 0B1 static constructor source hash, reran the static contract and
+  Task 0B2 tests, and received independent review. All other Task 0B1 source
   expansion or correction, target import/execution/loading, fixture or
-  namespace action, and host action remain forbidden.
+  namespace action, and host action remained forbidden.
 - Task 0B2 is now sealed as an offline constructor-only result. Its first
   synthetic-vector invocation produced the expected RED: private nested
   immutable snapshots reached `ClosureRecord` as non-caller built-in
@@ -82,8 +82,23 @@ Updated: 2026-09-01T12:37:18-07:00
   PRE assertions, bounded raw transport, and PRE-only failure for uncertainty.
   It also names separate source, receipt, measurement, runner, state-machine,
   graph-construction, closure, fixture, and host gates. This is not source,
-  component, fixture, namespace, Bubblewrap/systemd/REAPER, or host authority;
-  the next action remains a separately scoped user-approved source task.
+  component, fixture, namespace, Bubblewrap/systemd/REAPER, or host authority.
+- Task 0B3a is sealed as a non-admissible session-root source checkpoint.
+  Commits `81df235` and `91c86c5` establish the reviewed fail-closed contract;
+  `a1808cb` reduces the preliminary pseudo-runtime to an immediate-fail
+  skeleton; and `d257b5d` hardens its pre-import AST/hash guard. The sealed
+  source SHA-256 is
+  `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`.
+  `ionice -c 3 nice -n 10 python3 -B -m unittest
+  tests.test_reaper_v4_task0b3a_static_contract -v` passed one static-only
+  test, and the final independent source re-review is CLEAN. Neither public
+  function can progress past its immediate error; no target or dependency was
+  imported, compiled, or invoked, and no fixture, namespace, Bubblewrap,
+  systemd, REAPER, X11, audio, or host action occurred. It preserves the
+  future single-root identity but remains
+  `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` for closure and
+  fixture purposes. The next safe gate is separately authorized Task 0B3b
+  in-memory receipt validation; full session behavior remains Task 0B4.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -91,10 +106,10 @@ Updated: 2026-09-01T12:37:18-07:00
   host request is possible. Both require copy-byte, FD, `RLIMIT_NOFILE`, and
   memory/tmpfs preflight refusal budgets.
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
-  Apart from the narrowly recorded Task 0B2 correction above, Task 0B1 is
+  Task 0B3a adds only the sealed non-admissible skeleton; Task 0B1 remains
   preservation-only. Its static test may be rerun without importing target
-  modules; any further source change, module invocation, fixture, namespace,
-  or external action requires a new scoped task.
+  modules; any behavioral source change, module invocation, fixture,
+  namespace, or external action requires a new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots
