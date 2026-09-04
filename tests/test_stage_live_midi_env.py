@@ -80,10 +80,18 @@ class StageLiveMidiProfileTests(unittest.TestCase):
                 encoding="utf-8"
             )
             self.assertIn("VST3: M3 Polyphonic Audio to MIDI", setup)
+            self.assertIn("M3 Native 8-String Guitar to MIDI", setup)
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 0, 0.0)", setup)
             self.assertIn(
-                "TrackFX_SetParamNormalized(track, detector, 7, 0.285714285714)",
+                "TrackFX_SetParamNormalized(track, detector, 6, 0.095238095238)",
                 setup,
+            )
+            self.assertIn(
+                "TrackFX_SetParamNormalized(track, detector, 7, 0.428571428571)",
+                setup,
+            )
+            self.assertIn(
+                "TrackFX_SetParamNormalized(track, detector, 4, 0.75)", setup
             )
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 8, 0.0)", setup)
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 14, 0.0)", setup)

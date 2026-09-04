@@ -75,7 +75,7 @@ local track = assert(reaper.GetTrack(0, index))
 reaper.GetSetMediaTrackInfo_String(
   track,
   "P_NAME",
-  "M3 Native 8-String Guitar to MIDI (low range)",
+  "M3 Native 8-String Guitar to MIDI",
   true
 )
 reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2)
@@ -87,7 +87,9 @@ reaper.SetMediaTrackInfo_Value(track, "D_VOL", 0.25)
 local detector = add_fx(track, "VST3: M3 Polyphonic Audio to MIDI")
 reaper.TrackFX_SetParamNormalized(track, detector, 0, 0.0)
 reaper.TrackFX_SetParamNormalized(track, detector, 1, 0.0)
-reaper.TrackFX_SetParamNormalized(track, detector, 7, 0.285714285714)
+reaper.TrackFX_SetParamNormalized(track, detector, 4, 0.75)
+reaper.TrackFX_SetParamNormalized(track, detector, 6, 0.095238095238)
+reaper.TrackFX_SetParamNormalized(track, detector, 7, 0.428571428571)
 reaper.TrackFX_SetParamNormalized(track, detector, 8, 0.0)
 reaper.TrackFX_SetParamNormalized(track, detector, 9, 0.333333333333)
 reaper.TrackFX_SetParamNormalized(track, detector, 14, 0.0)
@@ -100,7 +102,7 @@ end
 reaper.SetOnlyTrackSelected(track)
 reaper.TrackList_AdjustWindows(false)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock2(0, "Create M3 native low-range guitar-to-MIDI live chain", -1)
+reaper.Undo_EndBlock2(0, "Create M3 native 8-string guitar-to-MIDI live chain", -1)
 '''
 
 

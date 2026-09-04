@@ -20,14 +20,14 @@ The staged native profile creates one armed, monitored track:
 Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 ```
 
-It is configured for 48 kHz, 256 samples, MIDI notes `24..48`, muted dry
-audio, and one detected note at a time. That makes it appropriate for clean,
-low-register eight-string lines and single-note playing; it is **not yet a
-polyphonic chord transcriber**. The native detector and its MIDI note-on/off
-path have been verified with an audio-driven REAPER/VST3 probe. Final guitar
-calibration remains physical-input work: plug the guitar into Revelator input
-1, arm/monitor the staged track, then adjust input gain or detector
-sensitivity only if needed.
+It is configured for 48 kHz, 256 samples, MIDI notes `32..60`—the eight open
+strings—muted dry audio, and one detected note at a time. That makes it
+appropriate for clean low-register eight-string lines and single-note playing;
+it is **not yet a polyphonic chord transcriber or a full-fretboard tracker**.
+The native detector and its MIDI note-on/off path have been verified with an
+audio-driven REAPER/VST3 probe. Final guitar calibration remains physical-input
+work: plug the guitar into Revelator input 1, arm/monitor the staged track,
+then adjust input gain or detector sensitivity only if needed.
 
 To prepare another disposable profile without touching the live REAPER setup:
 
