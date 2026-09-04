@@ -154,11 +154,12 @@ Updated: 2026-09-04T00:38:10-07:00
   its source-only test reports one normal pass and two intentionally retained
   expected failures after their RED was recorded. Two independent reviews are
   CLEAN.
-- Task 0B4b-pure is now sealed as the narrow compatibility-helper increment.
+- Task 0B4b-pure is sealed as the narrow compatibility-helper increment.
   It retired the B4a expected-failure guard, added an exact pre-import AST
   contract and five in-memory behavior tests, and changed only
   `tools/reaper_v4_session.py` as production source. Its source SHA-256 is
-  `9aa503dc77f37ace46202a35797925e784e9e302b866d3c81d880897e7a86c99`.
+  `9aa503dc77f37ace46202a35797925e784e9e302b866d3c81d880897e7a86c99`
+  (the historical B4b-pure source identity before the later admission gate).
   The immutable Task 0B1 static gate, B4b-pure pre-import contract, and
   helper suite passed 13 checks; two independent reviews are CLEAN. The
   session still has immediate-failure public entrypoints and no raw transport,
@@ -168,6 +169,21 @@ Updated: 2026-09-04T00:38:10-07:00
   compatibility. Any state-machine source or execution now needs a fresh named
   authority and reviewed contract; Task 0B4c remains a separate outer-harness
   gate.
+- Task 0B4b-admission-pure is sealed as the bounded in-memory SessionConfig
+  relation gate. It replaces the B4b-pure source contract while preserving its
+  helper regressions, removes the inert child-runner/measurement imports, and
+  adds a validator-owned snapshot boundary plus closed Task 0B3 §3 relation
+  checks. The sealed source SHA-256 is
+  `5bb71ab032b13b59170dd8034528b7b0e990751fd0d0b5b59da6e711a9ce1c11`.
+  Eighteen checks passed: the immutable Task 0B1 static gate, the new
+  pre-import admission source contract, five B4b-pure regressions, and five
+  synthetic admission tests. Three independent reviews are CLEAN after
+  test-first repairs for forged-object normalization, lexical environment/X11
+  bindings, screen syntax, scan-root mount closure, static capability edges,
+  and bounded snapshot walkers. This gate did not open a path, establish a
+  barrier, read/write a frame, launch a child, create a fixture/namespace, or
+  run REAPER, audio, X11, network, or host work. Public session entrypoints
+  remain immediate-failure stubs. Task 0B4b-evidence is next.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps
@@ -199,11 +215,13 @@ Updated: 2026-09-04T00:38:10-07:00
   synthetic descriptor, and direct-child-adapter evidence respectively. Task
   0B4a adds the sealed source-contract checkpoint, and Task 0B4b-pure adds
   only bounded in-memory compatibility helpers with fail-closed public
-  entrypoints. Task 0B4b-state-contract adds documentation-only prerequisite
-  ordering, not an executable state machine. Task 0B1 remains preservation-
-  only. Its static test may be rerun without importing target modules; any
-  admission-pure, evidence, bootstrap-transport, state-machine, fixture,
-  namespace, or external action requires its own new scoped task.
+  entrypoints. Task 0B4b-admission-pure adds only locally snapshotted,
+  self-consistent configuration admission and still exposes no runnable session
+  path. Task 0B4b-state-contract adds documentation-only prerequisite ordering,
+  not an executable state machine. Task 0B1 remains preservation-only. Its
+  static test may be rerun without importing target modules; evidence,
+  bootstrap-transport, state-machine, fixture, namespace, or external action
+  follows in its own scoped implementation gate.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots

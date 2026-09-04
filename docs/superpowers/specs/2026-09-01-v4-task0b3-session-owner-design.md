@@ -3,10 +3,10 @@
 **Status:** design-only; Task 0B3a root shell, Task 0B3b pure receipt gate,
 Task 0B3c descriptor gate, Task 0B3d child-adapter gate, Task 0B4a contract,
 and Task 0B4b-pure compatibility-helper checkpoint are sealed. Task
-0B4b-state-contract documentation checkpoint is sealed. The
-remaining order is admission-pure, evidence, bootstrap-transport, and mock-
-only state gates; then B4c-design, Task 0B5/closure/fixture-manifest review,
-and B4c-execution.
+0B4b-state-contract documentation checkpoint and Task 0B4b-admission-pure
+relation admission are sealed. The remaining order is evidence,
+bootstrap-transport, and mock-only state gates; then B4c-design, Task
+0B5/closure/fixture-manifest review, and B4c-execution.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -833,13 +833,12 @@ safe sequence is:
    record resolves the B4c name collision and documents why the current
    B4b-pure parser, collector, and POST helper cannot directly admit or run
    the coordinator. It creates no source/test/runtime authority.
-8. **Task 0B4b-admission-pure:** a fresh source/test authority must first
-   validate every closed SessionConfig nested relation and cross-digest in
-   memory, revalidate any supplied frozen object at the trust boundary, and
-   make a fresh private base/child projection. It must replace the B4b-pure
-   static contract before source change while preserving all seven pure-helper
-   regressions. It may not open a path, claim provenance, establish a barrier,
-   or emit a frame.
+8. **Task 0B4b-admission-pure (sealed):** the bounded in-memory source/test
+   gate validates every closed SessionConfig nested relation and cross-digest,
+   revalidates any supplied frozen object at the trust boundary, and creates a
+   fresh private base/child projection. It replaced the B4b-pure static
+   contract while preserving all seven pure-helper regressions. It opened no
+   path, claimed no provenance, established no barrier, and emitted no frame.
 9. **Task 0B4b-evidence:** a separate source/test gate must author and seal
    each bounded private evidence and retained-baseline helper required by the
    provenance table, with synthetic/mock/temporary-resource negative tests.

@@ -19,18 +19,19 @@ first successor gate below; it is not implied by this record.
 fixture gate**. It must not be used for the in-process session state machine.
 The latter is named `Task 0B4b-state` below.
 
-The sealed B4b-pure source remains the current admitted source boundary:
+The sealed B4b-pure source was the compatibility baseline and is superseded by
+the sealed admission-pure source boundary:
 
 ```text
 tools/reaper_v4_session.py
-SHA-256 = 9aa503dc77f37ace46202a35797925e784e9e302b866d3c81d880897e7a86c99
+SHA-256 = 5bb71ab032b13b59170dd8034528b7b0e990751fd0d0b5b59da6e711a9ce1c11
 ```
 
 Its public `load_session_config()` and `run_session()` functions still fail
-closed immediately. This checkpoint does not modify them, add a runtime root,
-or make a `SessionConfig` object admissible. In particular, no current result
-authorizes Bubblewrap, systemd, REAPER, X11, audio, network, host scanning,
-manifest construction, or a fixture.
+closed immediately. Admission now produces a fresh bounded local SessionConfig
+snapshot, but no runnable session or runtime root. In particular, no current
+result authorizes Bubblewrap, systemd, REAPER, X11, audio, network, host
+scanning, manifest construction, or a fixture.
 
 ## 2. Findings that block direct state-machine implementation
 
@@ -69,9 +70,9 @@ contract/checkpoint, and independent review. Source/test gates additionally
 need a source contract and tests; source-free B4c-design needs documentation
 and static-consistency review only. Passing one does not authorize the next.
 
-1. **Task 0B4b-admission-pure — full configuration relation gate.** This is
-   the first possible source/test successor. It may add only bounded in-memory
-   validation and private construction helpers. It must validate every closed
+1. **Task 0B4b-admission-pure — full configuration relation gate (sealed).**
+   This bounded in-memory source/test successor adds validation and private
+   construction helpers. It validates every closed
    nested `SessionConfig` member and cross-relation in Task 0B3 Section 3:
    direct-input grammar and identity, row, policy and manifest digest shape,
    certificate-minus-digest canonical projections, certificate kind/result,
@@ -84,8 +85,9 @@ and static-consistency review only. Passing one does not authorize the next.
    again; a forged or mutable proxy must refuse or be unable to alter a child
    or receipt projection. It may neither open the fixed paths nor claim
    descriptor-pinned provenance. Before changing the session source, this first
-   successor must retire and replace the B4b-pure static contract while
-   preserving regression coverage for all seven B4b-pure helpers.
+   successor retired and replaced the B4b-pure static contract while preserving
+   regression coverage for all seven B4b-pure helpers. It remains non-runnable
+   and does not authorize any later successor.
 2. **Task 0B4b-evidence — bounded evidence implementation gate.** A separate
    source/test authority must author and seal the private session-owned
    observation and retention helpers needed for each Task 0B3 Section 4

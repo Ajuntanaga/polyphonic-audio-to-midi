@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, and Task 0B4b-state-contract is sealed documentation-only sequencing evidence. A session state machine, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, and Task 0B4b-admission-pure is sealed bounded in-memory relation admission. Task 0B4b-evidence is next; a session state machine, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -311,10 +311,18 @@ non-admitted supplied-byte snapshot, a fresh Task 0A base-config projection,
 and PRE/POST value-to-encoder compatibility. They do not open configuration
 paths, consume ACKs, emit frames, establish a barrier, collect measurements,
 launch a child, form a namespace or fixture, or imply any host compatibility.
-The next work is Task 0B4b-admission-pure, which needs fresh named authority
-and a reviewed source contract. Any later evidence, bootstrap-transport, or
-state-machine source needs its own authority and reviewed contract; Task 0B4c
-remains a distinct later outer-harness gate.
+**Task 0B4b-admission-pure checkpoint (sealed).** Under the user's project-wide
+authorization, the first source-changing successor replaced that B4b-pure
+static contract, preserved its seven helper regressions, and added bounded
+in-memory admission of a fully closed SessionConfig. Its source SHA-256 is
+`5bb71ab032b13b59170dd8034528b7b0e990751fd0d0b5b59da6e711a9ce1c11`.
+The immutable Task 0B1 static suite, admission source contract, preserved
+helper suite, and synthetic admission suite passed 18 checks; three independent
+reviews are CLEAN. The gate adds no loader, raw transport, barrier, evidence,
+receipt emission, child, fixture, namespace, REAPER, or host behavior.
+`load_session_config()` and `run_session()` still fail closed. The next work is
+Task 0B4b-evidence; bootstrap transport, state-machine, and Task 0B4c
+outer-harness work remain later gates.
 
 **Task 0B4b-state-contract checkpoint (sealed).** The user's fresh `Proceed` has
 authorized only the documentation/review checkpoint at
