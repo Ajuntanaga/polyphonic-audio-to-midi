@@ -1,4 +1,4 @@
-"""Pre-import source contract for Task 0B4b-evidence."""
+"""Pre-import source contract for Task 0B4b-bootstrap-transport."""
 from __future__ import annotations
 
 import ast
@@ -9,14 +9,17 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "6049ec3096cf9a2fc50678884180fe4e0ef6072032418931f0d48afa14f83a1f"
+EXPECTED_SOURCE_SHA256 = "c8df50170c4eb5a314851020873edede62714817db86c40da425478d6d95640f"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",
+    "import fcntl",
     "import hashlib",
     "import json",
     "import os",
+    "import select",
     "import stat",
+    "import time",
     "import types",
     "from collections.abc import Mapping",
     "from tools import reaper_v4_attester as attester",
@@ -60,7 +63,12 @@ EVIDENCE_HELPERS = {
     "_validate_mount_projection", "_certificate_applicability_projection",
     "_require_owned_evidence_baseline", "_capture_evidence_baseline", "_recheck_evidence_baseline", "_release_evidence_baseline",
 }
-EXPECTED_FUNCTIONS = PURE_HELPERS | EVIDENCE_HELPERS | PUBLIC_FUNCTIONS
+BOOTSTRAP_HELPERS = {
+    "_setup_diagnostic_fd", "_emit_diagnostic_once", "_read_fixed_regular",
+    "_load_fixed_session_config", "_wait_fixed_pipe", "_write_frame_once",
+    "_read_ack_eof",
+}
+EXPECTED_FUNCTIONS = PURE_HELPERS | EVIDENCE_HELPERS | BOOTSTRAP_HELPERS | PUBLIC_FUNCTIONS
 EXPECTED_SIGNATURES = {
     "_freeze_session_data": (("value",), ("object",), "object"),
     "_canonical_session_json_bytes": (("value",), ("object",), "bytes"),
@@ -95,26 +103,36 @@ EXPECTED_SIGNATURES = {
     "_capture_evidence_baseline": (("config", "measurement_root_fd", "scan_root_fd", "home_fd", "authority_fd", "socket_fd", "cwd", "environment", "inherited_fds", "mounts"), ("SessionConfig", "int", "int", "int", "int", "int", "str", "Mapping[str, object]", "tuple[Mapping[str, object], ...]", "tuple[Mapping[str, object], ...]"), "_EvidenceBaseline"),
     "_recheck_evidence_baseline": (("baseline", "cwd", "environment", "inherited_fds", "mounts"), ("_EvidenceBaseline", "str", "Mapping[str, object]", "tuple[Mapping[str, object], ...]", "tuple[Mapping[str, object], ...]"), "None"),
     "_release_evidence_baseline": (("baseline",), ("_EvidenceBaseline",), "None"),
+    "_setup_diagnostic_fd": ((), (), "None"),
+    "_emit_diagnostic_once": (("code",), ("str",), "None"),
+    "_read_fixed_regular": (("path", "maximum"), ("str", "int"), "bytes"),
+    "_load_fixed_session_config": ((), (), "SessionConfig"),
+    "_wait_fixed_pipe": (("fd", "event", "deadline_ns"), ("int", "int", "int"), "None"),
+    "_write_frame_once": (("frame", "deadline_ns"), ("bytes", "int"), "None"),
+    "_read_ack_eof": (("deadline_ns",), ("int",), "bytes"),
     "load_session_config": (("config_path", "digest_path"), ("str", "str"), "SessionConfig"),
     "run_session": (("config",), ("SessionConfig",), "SessionResult"),
 }
 FORBIDDEN_ROOTS = {
-    "child_runner", "pathlib", "fcntl", "select", "time", "socket", "subprocess", "io", "sys",
+    "child_runner", "pathlib", "socket", "subprocess", "io", "sys",
     "importlib", "ctypes", "tempfile", "pickle", "marshal", "inspect", "platform", "threading", "signal",
 }
 FORBIDDEN_CALLS = {
     "__import__", "breakpoint", "compile", "eval", "exec", "getattr", "globals", "help", "input",
-    "locals", "open", "setattr", "delattr", "vars", "os.write", "os.pipe", "os.dup",
+    "locals", "open", "setattr", "delattr", "vars", "os.pipe", "os.dup",
 }
 OS_CALL_OWNERS = {
-    "os.fstat": {"_capture_measurement_baseline", "_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_x11_baseline"},
-    "os.open": {"_capture_scan_baseline", "_capture_private_tree_baseline"},
-    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline"},
-    "os.read": {"_hash_regular_descriptor"},
+    "os.fstat": {"_capture_measurement_baseline", "_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_x11_baseline", "_setup_diagnostic_fd", "_wait_fixed_pipe", "_write_frame_once", "_read_ack_eof", "_read_fixed_regular"},
+    "os.fstatvfs": {"_read_fixed_regular"},
+    "os.open": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_read_fixed_regular"},
+    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline", "_read_fixed_regular"},
+    "os.read": {"_hash_regular_descriptor", "_read_fixed_regular", "_read_ack_eof"},
     "os.lseek": {"_hash_regular_descriptor"},
     "os.listdir": {"_capture_scan_baseline", "_capture_private_tree_baseline"},
+    "os.write": {"_emit_diagnostic_once", "_write_frame_once"},
+    "os.fpathconf": {"_write_frame_once"},
 }
-IMPORTED_ROOTS = {"attester", "dataclasses", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "stat", "types"}
+IMPORTED_ROOTS = {"attester", "dataclasses", "fcntl", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "select", "stat", "time", "types"}
 ALLOWED_IMPORTED_ATTRIBUTES = {
     "_freeze_session_data": {"types.MappingProxyType"},
     "_canonical_session_json_bytes": {"json.dumps"},
@@ -153,6 +171,13 @@ ALLOWED_IMPORTED_ATTRIBUTES = {
     "_capture_evidence_baseline": {"os.close"},
     "_recheck_evidence_baseline": set(),
     "_release_evidence_baseline": {"os.close"},
+    "_setup_diagnostic_fd": {"fcntl.F_GETFL", "fcntl.F_SETFL", "fcntl.fcntl", "os.O_NONBLOCK", "os.fstat", "stat.S_ISFIFO"},
+    "_emit_diagnostic_once": {"os.write"},
+    "_read_fixed_regular": {"fcntl.FD_CLOEXEC", "fcntl.F_GETFD", "fcntl.F_GETFL", "fcntl.fcntl", "os.O_ACCMODE", "os.O_CLOEXEC", "os.O_NOFOLLOW", "os.O_RDONLY", "os.ST_RDONLY", "os.close", "os.fstat", "os.fstatvfs", "os.open", "os.read", "stat.S_ISREG"},
+    "_load_fixed_session_config": set(),
+    "_wait_fixed_pipe": {"os.fstat", "select.POLLERR", "select.POLLHUP", "select.POLLIN", "select.POLLNVAL", "select.POLLOUT", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns"},
+    "_write_frame_once": {"os.fpathconf", "os.fstat", "os.write", "protocol.MAX_FRAME_BYTES", "select.POLLOUT", "stat.S_ISFIFO"},
+    "_read_ack_eof": {"os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "select.POLLIN", "stat.S_ISFIFO"},
     "load_session_config": set(),
     "run_session": set(),
 }
@@ -194,6 +219,13 @@ ALLOWED_CALLS = {
     "_capture_evidence_baseline": {"SessionError", "_admit_session_config", "_capture_environment_baseline", "_capture_measurement_baseline", "_capture_private_tree_baseline", "_capture_scan_baseline", "_capture_x11_baseline", "_certificate_applicability_projection", "_freeze_session_data", "_validate_inherited_fd_census", "_validate_mount_projection", "any", "id", "len", "object.__new__", "object.__setattr__", "os.close", "set", "type"},
     "_recheck_evidence_baseline": {"SessionError", "_admit_session_config", "_capture_environment_baseline", "_capture_measurement_baseline", "_capture_private_tree_baseline", "_capture_scan_baseline", "_capture_x11_baseline", "_certificate_applicability_projection", "_freeze_session_data", "_require_owned_evidence_baseline", "_validate_inherited_fd_census", "_validate_mount_projection"},
     "_release_evidence_baseline": {"SessionError", "_EVIDENCE_OWNERS.pop", "_require_owned_evidence_baseline", "id", "object.__setattr__", "os.close"},
+    "_setup_diagnostic_fd": {"SessionError", "fcntl.fcntl", "os.fstat", "stat.S_ISFIFO"},
+    "_emit_diagnostic_once": {"SessionError", "all", "len", "os.write", "type", "code.encode"},
+    "_read_fixed_regular": {"SessionError", "bytearray", "bytes", "data.extend", "fcntl.fcntl", "len", "min", "os.close", "os.fstat", "os.fstatvfs", "os.open", "os.read", "path.__eq__", "stat.S_ISREG", "type"},
+    "_load_fixed_session_config": {"SessionError", "_admit_session_config", "_parse_session_config_bytes", "_read_fixed_regular", "_setup_diagnostic_fd", "object.__new__", "object.__setattr__"},
+    "_wait_fixed_pipe": {"SessionError", "int", "os.fstat", "poll.poll", "poll.register", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns", "type"},
+    "_write_frame_once": {"SessionError", "_wait_fixed_pipe", "len", "os.fpathconf", "os.fstat", "os.write", "stat.S_ISFIFO", "type"},
+    "_read_ack_eof": {"SessionError", "_wait_fixed_pipe", "os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "stat.S_ISFIFO", "type"},
     "load_session_config": {"SessionError"},
     "run_session": {"SessionError"},
 }
@@ -206,6 +238,13 @@ EXACT_CALL_COUNTS = {
     "_canonical_session_sha256": {"_canonical_session_json_bytes": 1, "hashlib.sha256": 1, "digest.hexdigest": 1},
     "_validate_session_config_relations": {"attester.AttesterConfig": 1, "attester.validate_config": 1, "_child_spec_projection": 1, "_validate_certificate": 2, "_session_config_digest": 1},
     "_admit_session_config": {"_materialize_exact_builtins": 1, "_freeze_session_data": 1, "_validate_session_config_relations": 1, "object.__new__": 1, "object.__setattr__": 1},
+    "_setup_diagnostic_fd": {"os.fstat": 1, "fcntl.fcntl": 2},
+    "_emit_diagnostic_once": {"os.write": 1},
+    "_read_fixed_regular": {"os.open": 1, "os.fstat": 1, "fcntl.fcntl": 2, "os.fstatvfs": 1, "os.read": 1},
+    "_load_fixed_session_config": {"_setup_diagnostic_fd": 1, "_read_fixed_regular": 2, "_parse_session_config_bytes": 1, "_admit_session_config": 1, "object.__new__": 1, "object.__setattr__": 1},
+    "_wait_fixed_pipe": {"os.fstat": 1, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
+    "_write_frame_once": {"os.fstat": 1, "os.fpathconf": 1, "_wait_fixed_pipe": 1, "os.write": 1},
+    "_read_ack_eof": {"os.fstat": 1, "_wait_fixed_pipe": 2, "os.read": 2, "receipt_schema.validate_ack_bytes": 1},
 }
 FORBIDDEN_NODES = (
     ast.Assert, ast.AsyncFunctionDef, ast.Await, ast.Delete, ast.Global, ast.Lambda, ast.NamedExpr,
@@ -332,8 +371,13 @@ def _assert_no_hidden_capability(name: str, node: ast.FunctionDef) -> None:
                 assert name in OS_CALL_OWNERS.get(target, set()), f"{target} is not allowed in {name}"
                 if target == "os.open":
                     keywords = {item.arg: ast.unparse(item.value) for item in candidate.keywords if item.arg is not None}
-                    assert "dir_fd" in keywords
-                    assert candidate.args and isinstance(candidate.args[0], ast.Name) and candidate.args[0].id == "name"
+                    if name == "_read_fixed_regular":
+                        assert "dir_fd" not in keywords
+                        expected_first = "path"
+                    else:
+                        assert "dir_fd" in keywords
+                        expected_first = "name"
+                    assert candidate.args and isinstance(candidate.args[0], ast.Name) and candidate.args[0].id == expected_first
                     source = ast.unparse(candidate)
                     assert "os.O_NOFOLLOW" in source and "os.O_CLOEXEC" in source
     for target, count in EXACT_CALL_COUNTS.get(name, {}).items():

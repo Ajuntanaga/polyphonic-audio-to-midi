@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-04T00:38:10-07:00
+Updated: 2026-09-04T03:02:34-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -199,6 +199,16 @@ Updated: 2026-09-04T00:38:10-07:00
   raw stream, barrier, child, namespace, launcher, REAPER, audio, network, or
   host scan ran; public entrypoints remain fail closed. The next gate is
   Task 0B4b-bootstrap-transport.
+- Task 0B4b-bootstrap-transport is locally implemented and verified, but is
+  not yet independently reviewed or sealed. It adds only private fixed-literal
+  sidecar/config reading and fd-0/fd-1/fd-2 helpers; the current source
+  SHA-256 is
+  `c8df50170c4eb5a314851020873edede62714817db86c40da425478d6d95640f`.
+  Its static RED recorded the absent imports/helpers, its five behavior REDs
+  recorded the fail-closed stubs, and the final preserved suite passed 36
+  checks. The tests use syscall/poll doubles and canonical synthetic config
+  bytes only. No real `/run`, child, state machine, namespace, REAPER, audio,
+  or host action has occurred under this checkpoint.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps

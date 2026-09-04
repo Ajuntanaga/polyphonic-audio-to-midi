@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import dataclasses
+import fcntl
 import hashlib
 import json
 import os
+import select
 import stat
+import time
 import types
 from collections.abc import Mapping
 from tools import reaper_v4_attester as attester
@@ -1421,6 +1424,179 @@ def _release_evidence_baseline(baseline: _EvidenceBaseline) -> None:
         raise
     except Exception as error:
         raise SessionError("evidence baseline is invalid") from error
+
+
+def _setup_diagnostic_fd() -> None:
+    try:
+        descriptor = os.fstat(2)
+        if not stat.S_ISFIFO(descriptor.st_mode):
+            raise SessionError("diagnostic descriptor is not a pipe")
+        flags = fcntl.fcntl(2, fcntl.F_GETFL)
+        fcntl.fcntl(2, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("diagnostic descriptor is invalid") from error
+
+
+def _emit_diagnostic_once(code: str) -> None:
+    if type(code) is not str or not 1 <= len(code) <= 64:
+        raise SessionError("diagnostic code is invalid")
+    try:
+        encoded = code.encode("ascii")
+    except UnicodeEncodeError as error:
+        raise SessionError("diagnostic code is invalid") from error
+    if not all(32 <= byte <= 126 for byte in encoded):
+        raise SessionError("diagnostic code is invalid")
+    try:
+        os.write(2, b"M3V4:" + encoded + b"\n")
+    except Exception:
+        return
+
+
+def _read_fixed_regular(path: str, maximum: int) -> bytes:
+    if (
+        type(path) is not str
+        or type(maximum) is not int
+        or not (
+            path == SESSION_DIGEST_PATH and maximum == 64
+            or path == SESSION_CONFIG_PATH and maximum == MAX_SESSION_CONFIG_BYTES
+        )
+    ):
+        raise SessionError("bootstrap path is invalid")
+    descriptor = -1
+    result = b""
+    completed = False
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        facts = os.fstat(descriptor)
+        if not stat.S_ISREG(facts.st_mode) or facts.st_nlink != 1:
+            raise SessionError("bootstrap source is not a regular one-link file")
+        descriptor_flags = fcntl.fcntl(descriptor, fcntl.F_GETFD)
+        status_flags = fcntl.fcntl(descriptor, fcntl.F_GETFL)
+        filesystem = os.fstatvfs(descriptor)
+        if (
+            not descriptor_flags & fcntl.FD_CLOEXEC
+            or status_flags & os.O_ACCMODE != os.O_RDONLY
+            or not filesystem.f_flag & os.ST_RDONLY
+        ):
+            raise SessionError("bootstrap source is not read-only")
+        data = bytearray()
+        while True:
+            chunk = os.read(descriptor, min(4096, maximum + 1 - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > maximum:
+                raise SessionError("bootstrap source exceeds its bounded size")
+        result = bytes(data)
+        completed = True
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("bootstrap source cannot be read") from error
+    finally:
+        if descriptor >= 0:
+            if completed:
+                try:
+                    os.close(descriptor)
+                except OSError as error:
+                    raise SessionError("bootstrap source cannot be closed") from error
+            else:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+    return result
+
+
+def _load_fixed_session_config() -> SessionConfig:
+    try:
+        _setup_diagnostic_fd()
+        sidecar = _read_fixed_regular(SESSION_DIGEST_PATH, 64)
+        config_bytes = _read_fixed_regular(SESSION_CONFIG_PATH, MAX_SESSION_CONFIG_BYTES)
+        parsed = _parse_session_config_bytes(config_bytes, sidecar)
+        temporary = object.__new__(SessionConfig)
+        object.__setattr__(temporary, "data", parsed)
+        return _admit_session_config(temporary)
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("bootstrap configuration is invalid") from error
+
+
+def _wait_fixed_pipe(fd: int, event: int, deadline_ns: int) -> None:
+    if (
+        type(fd) is not int
+        or fd not in {0, 1, 2}
+        or type(event) is not int
+        or event not in {select.POLLIN, select.POLLOUT}
+        or type(deadline_ns) is not int
+    ):
+        raise SessionError("pipe wait arguments are invalid")
+    try:
+        facts = os.fstat(fd)
+        if not stat.S_ISFIFO(facts.st_mode):
+            raise SessionError("descriptor is not a pipe")
+        remaining_ns = deadline_ns - time.monotonic_ns()
+        if remaining_ns <= 0:
+            raise SessionError("pipe wait exceeded its deadline")
+        timeout_ms = (remaining_ns + 999999) // 1000000
+        if timeout_ms < 1:
+            timeout_ms = 1
+        poll = select.poll()
+        poll.register(fd, event)
+        for observed_fd, observed_event in poll.poll(timeout_ms):
+            if observed_fd != fd:
+                continue
+            if observed_event & (select.POLLERR | select.POLLHUP | select.POLLNVAL):
+                raise SessionError("pipe entered an uncertain state")
+            if observed_event & event:
+                return
+        raise SessionError("pipe wait did not observe the requested event")
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("pipe wait is invalid") from error
+
+
+def _write_frame_once(frame: bytes, deadline_ns: int) -> None:
+    if type(frame) is not bytes or not frame or len(frame) > protocol.MAX_FRAME_BYTES or type(deadline_ns) is not int:
+        raise SessionError("frame output is invalid")
+    try:
+        facts = os.fstat(1)
+        if not stat.S_ISFIFO(facts.st_mode):
+            raise SessionError("receipt output descriptor is not a pipe")
+        pipe_bytes = os.fpathconf(1, "PC_PIPE_BUF")
+        if type(pipe_bytes) is not int or pipe_bytes < len(frame):
+            raise SessionError("receipt frame does not fit PIPE_BUF")
+        _wait_fixed_pipe(1, select.POLLOUT, deadline_ns)
+        if os.write(1, frame) != len(frame):
+            raise SessionError("receipt frame write is incomplete")
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("receipt frame cannot be written") from error
+
+
+def _read_ack_eof(deadline_ns: int) -> bytes:
+    if type(deadline_ns) is not int:
+        raise SessionError("ACK deadline is invalid")
+    try:
+        facts = os.fstat(0)
+        if not stat.S_ISFIFO(facts.st_mode):
+            raise SessionError("ACK descriptor is not a pipe")
+        _wait_fixed_pipe(0, select.POLLIN, deadline_ns)
+        acknowledged = os.read(0, 1)
+        receipt_schema.validate_ack_bytes(acknowledged)
+        _wait_fixed_pipe(0, select.POLLIN, deadline_ns)
+        if os.read(0, 1) != b"":
+            raise SessionError("ACK input has trailing data")
+        return acknowledged
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("ACK input is invalid") from error
 
 
 def load_session_config(config_path: str, digest_path: str) -> SessionConfig:
