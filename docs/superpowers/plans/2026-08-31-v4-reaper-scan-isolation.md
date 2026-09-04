@@ -278,6 +278,26 @@ audio, network, host scanning, or descendant containment. Any pre-bind or
 unconfirmed cleanup remains future outer-session/scope uncertainty. Task 0B4
 session implementation is still separate authority.
 
+**Task 0B4 boundary correction.** A fresh explicit source-and-test authority
+opened the session implementation work, but pre-implementation review found
+two blockers in the old combined gate: the immutable Task 0B1 receipt snapshot
+cannot be passed directly into the sealed Task 0A JSON encoder, and a real
+fixed-path namespace fixture would require an outer scope/harness that the
+session root deliberately does not own. The design now splits this work into
+Task 0B4a (source-contract and compatibility correction), Task 0B4b
+(in-process mocked state-machine evidence), and later separately authorized
+Task 0B4c (outer-harness controlled fixture). No session source, fixture,
+namespace, Bubblewrap, systemd, REAPER, X11, audio, network, or host action
+has occurred under this correction. Task 0B4a is sealed with the unchanged
+session-skeleton SHA-256
+`f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`.
+Its pre-import checkpoint reports one normal byte-pin PASS and two deliberately
+retained expected failures after the corresponding REDs were observed; two
+independent reviews are CLEAN. Task 0B4b needs another fresh explicit
+authority and a stronger function-local source contract before any session
+source import or change. It uses a mocked `ChildOutcome` and mocked
+barrier/evidence boundaries, not a real child or `PR_SET_DUMPABLE` call.
+
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus
 the Task 0B1 runtime Python, extension, and ELF libraries, including the three

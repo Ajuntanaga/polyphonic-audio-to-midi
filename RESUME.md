@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-03T22:37:43-07:00
+Updated: 2026-09-03T23:05:36-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -139,6 +139,22 @@ Updated: 2026-09-03T22:37:43-07:00
   descendant-containment claim occurred. Pre-bind and unconfirmed cleanup
   paths remain outer-session/scope uncertainty. Task 0B4 session
   implementation requires separate scoped authority.
+- Task 0B4a is sealed as a documentation plus intentional-RED checkpoint.
+  Pre-implementation review corrected an unsafe combined gate before any
+  session code changed: frozen Task 0B1 receipt snapshots cannot be passed
+  directly to the sealed Task 0A encoder, and a real namespace controlled
+  fixture needs a parent scope/harness the session root does not own. The
+  design now splits the work into Task 0B4a, Task 0B4b (a later separately
+  authorized in-process mocked state-machine gate), and Task 0B4c (a later
+  separately authorized outer-harness controlled fixture). The raw-byte
+  skeleton pin is
+  `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`;
+  its source-only test reports one normal pass and two intentionally retained
+  expected failures after their RED was recorded. Two independent reviews are
+  CLEAN. Task 0B4b needs a fresh explicit user authorization plus a stronger
+  function-local source contract before `reaper_v4_session.py` may change or
+  be imported. No session source, fixture, namespace, Bubblewrap, systemd,
+  REAPER, X11, audio, network, or host action occurred.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,

@@ -1,7 +1,9 @@
 # V4 Task 0B3 — Single Session-Owner Design
 
 **Status:** design-only; Task 0B3a non-admissible skeleton and Task 0B3b pure
-receipt gate independently reviewed
+receipt gate independently reviewed. Task 0B4 is split below into an
+implementable in-process state-machine gate and a separately authorized outer
+harness gate.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -46,7 +48,9 @@ frame/ACK work, measurement, or child work. Its syntactic imports are
 declaration-only static edges; they do not prove executable reachability or
 permit a successor Task 0B0 closure to become a fixture candidate. The detailed
 execution rules in this record are reserved intact for the later Task 0B4
-implementation-and-controlled-fixture gate.
+implementation gates. The state-machine source and its mocked/in-process
+tests do not themselves create the outer namespace harness required to prove
+raw-scope recovery or host compatibility.
 
 No second coordinator, fallback runner, alternate receipt writer, or
 out-of-namespace control channel is permitted.
@@ -66,10 +70,10 @@ The outer controller remains the only owner of retained control-root dirfds,
 markers, and durable receipts. The session owner receives none of them.
 
 A later source-free execution-surface bootstrap may invoke the two public
-session functions only. Its sole allowed exception boundary catches
-`SessionError`, exits nonzero, and emits no text or traceback; it is not a
-second state-machine root and cannot add a diagnostic, policy decision, receipt,
-or child path. Its exact identity remains a separate policy-bound review item.
+session functions only. It exits nonzero and emits no text or traceback for a
+`SessionError` or an escaping `BaseException`; it is not a second state-machine
+root and cannot add a diagnostic, policy decision, receipt, or child path. Its
+exact identity remains a separate policy-bound review item.
 
 ## 2. Existing component boundaries
 
@@ -87,6 +91,56 @@ or weaken them.
 The session root owns only the missing composition: immutable configuration
 admission, raw standard-stream exchange, evidence assembly, exact ChildSpec
 binding, and conservative in-scope failure reporting.
+
+### 2.1 Task 0B4 implementation boundary
+
+The Task 0B4 source must compose the sealed components without changing their
+APIs. It has four non-negotiable compatibility rules:
+
+1. `validate_pre_payload` and `validate_post_payload` return immutable receipt
+   snapshots. Task 0A's encoder accepts a top-level mapping but its JSON step
+   cannot serialize the validator's nested mapping proxies. The session owns
+   the exact-built-in requirement locally: it validates a bounded exact-built-
+   in PRE or POST payload, retains that exact unaliased payload for the
+   exchange relation, and passes that same payload to
+   `protocol.encode_frame`. It must never loosen the Task 0A encoder or
+   serialize a mutable replacement after validation.
+2. A deeply frozen admitted `SessionConfig` cannot be passed directly to Task
+   0A, whose base-config validator rejects the frozen top-level mapping. The
+   session materializes one private, bounded exact-built-in base-config
+   projection from the admitted snapshot, validates it immediately, and never
+   exposes or reuses a mutable projection as authority.
+3. Every ordinary `Exception` escaping a mandatory configuration, barrier,
+   evidence, receipt, protocol, raw-transport, or child dependency is
+   translated to `SessionError`. Before entering the PRE write it emits no
+   bytes; a PRE-write failure may leave incomplete or complete-but-unconfirmed
+   PRE bytes and starts no child; after a complete PRE but before the POST
+   write it emits PRE-only uncertainty; and a POST-write failure may leave
+   incomplete or complete-but-unconfirmed POST bytes but never an accepted
+   terminal result. The one best-effort fd-2 diagnostic write is
+   the explicit exception: its short write, interruption, or other failure is
+   ignored exactly as the raw-transport contract requires. A `BaseException`
+   before a PRE-write attempt escapes without a frame; one during either
+   mandatory write attempt has that write's possibly incomplete or complete-
+   but-unconfirmed byte state, and one after a recorded complete PRE but before
+   a POST-write attempt is PRE-only. The silent bootstrap is the sole place
+   that converts an escaping `BaseException` to a nonzero no-traceback process
+   result. Outer acceptance always requires a clean process and scope result,
+   never merely an observed absence of bytes. This does not prove direct-child
+   reaping, scope exit, or a PID census; those remain outer-controller duties.
+4. New private evidence helpers in the session must have named bounded inputs,
+   outputs, and negative tests before use. They may not use `subprocess`, form
+   a Bubblewrap/systemd/REAPER command, invent an all-true attestation, or
+   turn a mocked observation into fixture evidence. The source contract must
+   list each helper and its closure edge before it can claim an admissible
+   PRE fact.
+
+The original wording that treated one controlled fixture as sufficient for all
+of the following has been corrected. A session module can be tested with
+in-process transport and evidence doubles, but an actual fixed-path,
+namespace/mount/X11/FD/proc fixture additionally needs the parent scope,
+concurrent drains, outer teardown, and PID census. Those facilities are not
+available to the session root or to the current Task 0B4 source/test scope.
 
 ## 3. Future SessionConfig admission contract
 
@@ -628,8 +682,10 @@ The session must:
 1. call exactly `attester.validate_config(attester.AttesterConfig(base_config))`
    and `attester.establish_protocol_barrier(base_config)`, then call exactly
    `receipt_schema.validate_pre_payload(pre_payload, 0)` and
-   `protocol.encode_frame(protocol.FrameType.PRE, 0, pre_receipt.payload)`
-   before the single stdout write;
+   `protocol.encode_frame(protocol.FrameType.PRE, 0, pre_payload)` before the
+   single stdout write. `pre_payload` is the bounded exact-built-in value just
+   validated by the receipt schema; the immutable `pre_receipt.payload` is a
+   validation snapshot, not an encoder input;
 2. read at most two ACK bytes under the sealed deadline, require exactly one
    byte `0x06` followed by observable EOF, and reject missing, delayed,
    duplicate, extra, malformed, or non-EOF input;
@@ -641,8 +697,10 @@ The session must:
    `receipt_schema.validate_post_payload(post_payload, 1)`, then
    `receipt_schema.validate_exchange(pre_payload, exact_ack, post_payload)`,
    and only then call
-   `protocol.encode_frame(protocol.FrameType.POST, 1, post_receipt.payload)`
-   for its only stdout write;
+   `protocol.encode_frame(protocol.FrameType.POST, 1, post_payload)` for its
+   only stdout write. `post_payload` is likewise the exact-built-in value
+   validated before encoding, never a mutable replacement or frozen receipt
+   mapping;
    and
 6. close stdout after POST, with no trailing byte or second frame.
 
@@ -701,11 +759,12 @@ No uncertain path can emit terminal success evidence.
 | Stage or condition | Child started? | Session stdout | Required outer action |
 | --- | ---: | --- | --- |
 | Configuration, barrier, provenance, PRE payload, or frame-size failure | No | No PRE | Mark namespace uncertainty; no ACK/child |
-| PRE write error or short write | No | Possibly incomplete bytes, never a retry | Treat raw exchange as invalid; no child |
+| PRE write error, short write, or interruption during its attempt | No | Possibly incomplete or complete-but-unconfirmed PRE bytes, never a retry | Treat raw exchange as invalid; no child |
 | Missing/bad/extra/non-EOF ACK | No | PRE only | No POST; close/terminate scope and seal uncertainty |
 | Child adapter interruption before its returned process object is bound (including before `Popen` returns) | Unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
 | Child timeout, kill/reap uncertainty, signal, or interruption after launch | Yes or unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
 | Child exits but post measurement, root identity, or POST validation fails | Yes | PRE only | No POST; outer controller rejects the row |
+| POST write error, short write, or interruption during its attempt | Yes | PRE plus possibly incomplete or complete-but-unconfirmed POST, never a retry | Treat raw exchange as invalid; outer teardown/census uncertainty |
 | Child exits, reaps, post checks and POST write all succeed | Yes | PRE then terminal POST then EOF | Still require scope-exit confirmation, zero-REAPER census, and outer receipt validation |
 
 Terminal POST establishes only that this session observed and reaped its direct
@@ -752,22 +811,42 @@ safe sequence is:
    directory/descriptor boundary and bounded identity failures; no namespace.
 4. **Task 0B3d — child-adapter gate:** use a non-REAPER sentinel child to test
    one-launch, environment, timeout, and reaping behavior.
-5. **Task 0B4 — session implementation and state-machine gate:** under a new
-   explicit source-and-test authority, replace the Task 0B3a skeleton with the
-   full evidence, raw PRE/ACK/POST, and child state machine defined in this
-   record, then test it against a non-REAPER controlled fixture including every
-   failure row above. It still does not authorize Bubblewrap, systemd, REAPER,
-   X11, audio, or host scanning.
-6. **Task 0B5 — graph-construction implementation gate:** under a separate
+5. **Task 0B4a — session-source contract correction:** under the current
+   source-and-test authority, replace the incompatible skeleton-only contract
+   with an exact source contract for configuration parsing, private
+   exact-built-in projections, receipt/encoder compatibility, bounded evidence
+   helpers, and silent PRE-only uncertainty. This stage is documentation and
+   test-first source-shape work; it creates no namespace, raw scope, fixture,
+   or host proof.
+6. **Task 0B4b — in-process state-machine gate:** a further fresh explicit
+   user authority is required after Task 0B4a review before importing or
+   executing the session source. It may implement and test the one session root
+   against bounded in-process transport and evidence doubles. It must cover
+   every row in the failure table as a state-machine outcome: no child before
+   ACK+EOF and no terminal POST for any uncertain path. It uses a mocked
+   `ChildOutcome`, mocked barrier, and mocked measurement/evidence boundaries;
+   it does not launch a sentinel or invoke the real `PR_SET_DUMPABLE` barrier.
+   The sealed Task 0B3d sentinel evidence remains the only direct-child launch
+   evidence. These tests may prove the session's local composition only. They
+   must not claim fixed-path provenance, namespace measurements, X11, scope
+   exit, descendant containment, PID census, or host compatibility.
+7. **Task 0B4c — outer-harness controlled-fixture gate:** a separately scoped
+   authority is required before an actual fixed-path/standard-stream,
+   namespace/mount/FD/proc fixture, concurrent parent drains, or any
+   uncertain-child teardown/census scenario. It must provide the outer scope
+   owner that this session intentionally lacks. It still does not authorize
+   Bubblewrap, systemd, REAPER, X11, audio, host scanning, or a host launch
+   unless an even later authority explicitly does so.
+8. **Task 0B5 — graph-construction implementation gate:** under a separate
    data-only authority, implement and review the currently unavailable closed
    schema/catalog/graph-construction method. It may parse only supplied static
    data through retained directory descriptors; it must not import, execute, or
    load a target or create a fixture.
-7. **Successor Task 0B0 closure review:** only after the graph constructor is
+9. **Successor Task 0B0 closure review:** only after the graph constructor is
    independently reviewed, rebuild the graph from this one session-entrypoint
    root through Task 0A and every runtime library. It must remain blocked on
    any unresolved edge, budget excess, or missing root.
-8. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
+10. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
    fixture manifest may prove only a safety property. REAPER compatibility and
    a host request remain separate, later decisions.
 
