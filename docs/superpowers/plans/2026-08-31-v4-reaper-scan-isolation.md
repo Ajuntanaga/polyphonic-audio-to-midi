@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, Task 0B3b is sealed pure receipt evidence, and Task 0B3c is sealed synthetic descriptor evidence. Fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, and Task 0B3d is sealed direct-child adapter evidence. Fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -257,6 +257,26 @@ systemd, REAPER, X11, audio, network, or host action occurred. It establishes
 neither ACK EOF, raw-frame ordering, nor session behavior. The next separate
 authority is Task 0B3d for the child adapter only; session implementation
 remains Task 0B4.
+
+**Task 0B3d child-adapter checkpoint.** The separately scoped adapter gate
+tested only `tools/reaper_v4_child_runner.py`: deterministic mock races first
+demonstrated the intended REDs, followed by a temporary-directory,
+non-forking Python sentinel launched three times with exact `-I -S -B -c`
+isolation flags.
+The narrow reviewed correction keeps the sole launch inside the bound-process
+recovery boundary, reserves at most two cleanup slots before `kill()`, reaches
+the bounded wait after each entered-slot kill error, and preserves the first
+non-`Exception` interruption, including escalation of a cleanup
+non-`Exception` over an ordinary original adapter error. The sealed runner
+SHA-256 is `a9cecba05537a349355fc204d2a8343a51caf6fabb7ab5d184ef341270f5a946`.
+Seven static source/data checks plus twelve B3d tests passed (19 total), and
+two independent reviews are CLEAN. The evidence is direct-child-only:
+explicit environment/cwd, launch-failure normalization, isolated startup, and
+timeout/reaping behavior. It neither implements nor proves a session,
+PRE/ACK/POST exchange, namespace, Bubblewrap/systemd/REAPER behavior, X11,
+audio, network, host scanning, or descendant containment. Any pre-bind or
+unconfirmed cleanup remains future outer-session/scope uncertainty. Task 0B4
+session implementation is still separate authority.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus

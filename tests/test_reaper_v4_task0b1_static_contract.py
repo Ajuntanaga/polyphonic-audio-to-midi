@@ -40,7 +40,7 @@ TASK0B1_SOURCE_HASHES = {
     "constructor": "2f8b1f02f5a730c70e38b6ebe06a99ec8abbd3c70a05851f66d6be6c5e2a97f7",
     "receipt": "ac8fb910a6bb0b06a0278cfe92e4f3e60ebe19a988048b3e11f9c320b32a6eff",
     "measurements": "27fa32e618a1a1461f3ec50820e7ad8717aa0747f1a6c7e475badefa0b4f7a22",
-    "runner": "13f6e4f5a9139e45bbc593a79f363ccad5fc1e6ca283cfc7379b04f50d657b5c",
+    "runner": "a9cecba05537a349355fc204d2a8343a51caf6fabb7ab5d184ef341270f5a946",
 }
 TASK0B1_ARTIFACT_HASHES = {
     "bundle_schema": "1fa7ee4032921b959d855a0c3e91804515fb253b99df96396eca67a4603ac1f8",
@@ -796,7 +796,7 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
             or "timeout_ms = spec.timeout_ms" not in runner_source
             or "type(argv) is not tuple" not in runner_source
             or "type(environment_entries) is not tuple" not in runner_source
-            or "process = subprocess.Popen(\n            argv," not in runner_source
+            or "process = subprocess.Popen(" not in runner_source
             or "cwd=cwd," not in runner_source
             or "returncode = process.wait(timeout=timeout_ms / 1000)" not in runner_source
         ):
@@ -874,15 +874,110 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
             for call in waits
         ):
             raise AssertionError("runner cleanup waits must remain bounded")
-        base_exception_handlers = [
-            handler
+        outer_tries = [
+            node
             for node in owner.body
             if isinstance(node, ast.Try)
-            for handler in node.handlers
+            and any(
+                isinstance(handler.type, ast.Name) and handler.type.id == "BaseException"
+                for handler in node.handlers
+            )
+        ]
+        if len(outer_tries) != 1 or popen not in ast.walk(outer_tries[0]):
+            raise AssertionError("runner Popen must remain inside one outer BaseException boundary")
+        outer_try = outer_tries[0]
+        base_exception_handlers = [
+            handler
+            for handler in outer_try.handlers
             if isinstance(handler.type, ast.Name) and handler.type.id == "BaseException"
         ]
         if len(base_exception_handlers) != 1:
-            raise AssertionError("runner must catch every BaseException after launch")
+            raise AssertionError("runner must catch every post-launch BaseException once")
+        outer_handler = base_exception_handlers[0]
+        if not (
+            outer_handler.name == "original_error"
+            and len(outer_handler.body) == 2
+            and isinstance(outer_handler.body[0], ast.If)
+            and isinstance(outer_handler.body[1], ast.Raise)
+            and outer_handler.body[1].exc is None
+            and outer_handler.body[1].cause is None
+        ):
+            raise AssertionError("runner outer recovery must preserve the original BaseException")
+        outer_recovery = outer_handler.body[0]
+        cleanup_tries = [node for node in outer_recovery.body if isinstance(node, ast.Try)]
+        if len(cleanup_tries) != 1 or len(cleanup_tries[0].body) != 1:
+            raise AssertionError("runner outer recovery must make one bounded cleanup attempt")
+        cleanup_try = cleanup_tries[0]
+        if not (
+            isinstance(cleanup_try.body[0], ast.Expr)
+            and isinstance(cleanup_try.body[0].value, ast.Call)
+            and isinstance(cleanup_try.body[0].value.func, ast.Name)
+            and cleanup_try.body[0].value.func.id == "stop_and_reap"
+        ):
+            raise AssertionError("runner outer recovery must invoke the bounded cleanup helper")
+        cleanup_handlers = [
+            handler
+            for handler in cleanup_try.handlers
+            if isinstance(handler.type, ast.Name) and handler.type.id == "BaseException"
+        ]
+        if len(cleanup_handlers) != 1:
+            raise AssertionError("runner outer recovery must capture one cleanup BaseException")
+        cleanup_handler = cleanup_handlers[0]
+        if not (
+            cleanup_handler.name == "cleanup_error"
+            and len(cleanup_handler.body) == 1
+            and isinstance(cleanup_handler.body[0], ast.If)
+        ):
+            raise AssertionError("runner outer recovery must prioritize a qualifying cleanup interruption")
+        cleanup_priority = cleanup_handler.body[0]
+        if not (
+            isinstance(cleanup_priority.test, ast.BoolOp)
+            and isinstance(cleanup_priority.test.op, ast.And)
+            and len(cleanup_priority.test.values) == 2
+            and isinstance(cleanup_priority.test.values[0], ast.UnaryOp)
+            and isinstance(cleanup_priority.test.values[0].op, ast.Not)
+            and isinstance(cleanup_priority.test.values[0].operand, ast.Call)
+            and isinstance(cleanup_priority.test.values[0].operand.func, ast.Name)
+            and cleanup_priority.test.values[0].operand.func.id == "isinstance"
+            and len(cleanup_priority.test.values[0].operand.args) == 2
+            and isinstance(cleanup_priority.test.values[0].operand.args[0], ast.Name)
+            and cleanup_priority.test.values[0].operand.args[0].id == "cleanup_error"
+            and isinstance(cleanup_priority.test.values[0].operand.args[1], ast.Name)
+            and cleanup_priority.test.values[0].operand.args[1].id == "Exception"
+            and isinstance(cleanup_priority.test.values[1], ast.Call)
+            and isinstance(cleanup_priority.test.values[1].func, ast.Name)
+            and cleanup_priority.test.values[1].func.id == "isinstance"
+            and len(cleanup_priority.test.values[1].args) == 2
+            and isinstance(cleanup_priority.test.values[1].args[0], ast.Name)
+            and cleanup_priority.test.values[1].args[0].id == "original_error"
+            and isinstance(cleanup_priority.test.values[1].args[1], ast.Name)
+            and cleanup_priority.test.values[1].args[1].id == "Exception"
+            and len(cleanup_priority.body) == 1
+            and isinstance(cleanup_priority.body[0], ast.Raise)
+            and isinstance(cleanup_priority.body[0].exc, ast.Name)
+            and cleanup_priority.body[0].exc.id == "cleanup_error"
+            and cleanup_priority.body[0].cause is None
+            and not cleanup_priority.orelse
+        ):
+            raise AssertionError(
+                "runner must propagate a cleanup non-Exception over an ordinary original error"
+            )
+        process_bindings = [
+            node
+            for node in owner.body
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            and any(
+                isinstance(target, ast.Name) and target.id == "process"
+                for target in assignment_targets(node)
+            )
+        ]
+        if (
+            len(process_bindings) != 1
+            or process_bindings[0].lineno >= outer_try.lineno
+            or not isinstance(process_bindings[0].value, ast.Constant)
+            or process_bindings[0].value.value is not None
+        ):
+            raise AssertionError("runner must prebind process before its outer cleanup boundary")
         stop_and_reap = next(
             (
                 function
@@ -891,18 +986,8 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
             ),
             None,
         )
-        if stop_and_reap is None or not any(
-            isinstance(node, ast.For)
-            and isinstance(node.target, ast.Name)
-            and node.target.id == "_"
-            and isinstance(node.iter, ast.Call)
-            and call_name(node.iter) == "range"
-            and len(node.iter.args) == 1
-            and isinstance(node.iter.args[0], ast.Constant)
-            and node.iter.args[0].value == 2
-            for node in ast.walk(stop_and_reap)
-        ):
-            raise AssertionError("runner cleanup must retry bounded kill/reap attempts")
+        if stop_and_reap is None:
+            raise AssertionError("runner must retain its bounded cleanup helper")
         helper_base_exception_handlers = [
             handler
             for handler in ast.walk(stop_and_reap)
@@ -912,10 +997,22 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
         ]
         if len(helper_base_exception_handlers) != 2:
             raise AssertionError("runner cleanup must retain interruption-safe kill and wait handlers")
-        cleanup_loops = [node for node in stop_and_reap.body if isinstance(node, ast.For)]
-        if len(cleanup_loops) != 1 or len(cleanup_loops[0].body) != 2:
-            raise AssertionError("runner cleanup attempt must have a fixed kill-then-wait shape")
-        kill_try, wait_try = cleanup_loops[0].body
+        cleanup_loops = [node for node in stop_and_reap.body if isinstance(node, ast.While)]
+        if len(cleanup_loops) != 1 or len(cleanup_loops[0].body) != 3:
+            raise AssertionError("runner cleanup attempt must reserve then kill and bounded-wait")
+        cleanup_loop = cleanup_loops[0]
+        if not (
+            isinstance(cleanup_loop.test, ast.Compare)
+            and isinstance(cleanup_loop.test.left, ast.Name)
+            and cleanup_loop.test.left.id == "cleanup_attempts"
+            and len(cleanup_loop.test.ops) == 1
+            and isinstance(cleanup_loop.test.ops[0], ast.Lt)
+            and len(cleanup_loop.test.comparators) == 1
+            and isinstance(cleanup_loop.test.comparators[0], ast.Constant)
+            and cleanup_loop.test.comparators[0].value == 2
+        ):
+            raise AssertionError("runner cleanup attempts must globally cap at two")
+        reservation, kill_try, wait_try = cleanup_loop.body
         if not isinstance(kill_try, ast.Try) or not isinstance(wait_try, ast.Try):
             raise AssertionError("runner cleanup attempt must guard both kill and wait")
         if not any(
@@ -940,17 +1037,219 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
             for call in ast.walk(wait_try)
         ):
             raise AssertionError("runner cleanup must kill then bounded-wait in every attempt")
+        cleanup_counter_bindings = [
+            node
+            for node in ast.walk(owner)
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "cleanup_attempts"
+                for target in node.targets
+            )
+        ]
+        cleanup_counter_increments = [
+            node
+            for node in ast.walk(owner)
+            if isinstance(node, ast.AugAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "cleanup_attempts"
+        ]
+        if (
+            len(cleanup_counter_bindings) != 1
+            or not isinstance(cleanup_counter_bindings[0].value, ast.Constant)
+            or cleanup_counter_bindings[0].value.value != 0
+            or len(cleanup_counter_increments) != 1
+            or cleanup_counter_increments[0] is not reservation
+            or not isinstance(reservation, ast.AugAssign)
+            or not isinstance(reservation.target, ast.Name)
+            or reservation.target.id != "cleanup_attempts"
+            or not isinstance(cleanup_counter_increments[0].op, ast.Add)
+            or not isinstance(cleanup_counter_increments[0].value, ast.Constant)
+            or cleanup_counter_increments[0].value.value != 1
+            or wait_try.finalbody
+        ):
+            raise AssertionError("runner must reserve each cleanup slot immediately before kill")
+        for operation, guarded_try in (("kill", kill_try), ("wait", wait_try)):
+            base_handlers = [
+                handler
+                for handler in guarded_try.handlers
+                if isinstance(handler.type, ast.Name) and handler.type.id == "BaseException"
+            ]
+            if len(base_handlers) != 1:
+                raise AssertionError(f"runner {operation} must retain one BaseException boundary")
+            handler = base_handlers[0]
+            if not (
+                handler.name == "error"
+                and len(handler.body) == 1
+                and isinstance(handler.body[0], ast.If)
+                and isinstance(handler.body[0].test, ast.Call)
+                and isinstance(handler.body[0].test.func, ast.Name)
+                and handler.body[0].test.func.id == "isinstance"
+                and len(handler.body[0].test.args) == 2
+                and isinstance(handler.body[0].test.args[0], ast.Name)
+                and handler.body[0].test.args[0].id == "error"
+                and isinstance(handler.body[0].test.args[1], ast.Name)
+                and handler.body[0].test.args[1].id == "Exception"
+                and len(handler.body[0].body) == 1
+                and isinstance(handler.body[0].body[0], ast.Assign)
+                and len(handler.body[0].body[0].targets) == 1
+                and isinstance(handler.body[0].body[0].targets[0], ast.Name)
+                and handler.body[0].body[0].targets[0].id == "last_error"
+                and isinstance(handler.body[0].body[0].value, ast.Name)
+                and handler.body[0].body[0].value.id == "error"
+                and len(handler.body[0].orelse) == 1
+                and isinstance(handler.body[0].orelse[0], ast.If)
+                and isinstance(handler.body[0].orelse[0].test, ast.Compare)
+                and isinstance(handler.body[0].orelse[0].test.left, ast.Name)
+                and handler.body[0].orelse[0].test.left.id == "interruption"
+                and len(handler.body[0].orelse[0].test.ops) == 1
+                and isinstance(handler.body[0].orelse[0].test.ops[0], ast.Is)
+                and len(handler.body[0].orelse[0].test.comparators) == 1
+                and isinstance(handler.body[0].orelse[0].test.comparators[0], ast.Constant)
+                and handler.body[0].orelse[0].test.comparators[0].value is None
+                and len(handler.body[0].orelse[0].body) == 1
+                and isinstance(handler.body[0].orelse[0].body[0], ast.Assign)
+                and len(handler.body[0].orelse[0].body[0].targets) == 1
+                and isinstance(handler.body[0].orelse[0].body[0].targets[0], ast.Name)
+                and handler.body[0].orelse[0].body[0].targets[0].id == "interruption"
+                and isinstance(handler.body[0].orelse[0].body[0].value, ast.Name)
+                and handler.body[0].orelse[0].body[0].value.id == "error"
+                and not handler.body[0].orelse[0].orelse
+            ):
+                raise AssertionError(
+                    f"runner {operation} must retain only the first non-Exception interruption"
+                )
+        interruption_bindings = [
+            node
+            for node in stop_and_reap.body
+            if isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "interruption"
+            and isinstance(node.value, ast.Constant)
+            and node.value.value is None
+        ]
+        if len(interruption_bindings) != 1:
+            raise AssertionError("runner cleanup must prebind its saved interruption")
+        if not (
+            len(wait_try.orelse) == 3
+            and isinstance(wait_try.orelse[0], ast.Assign)
+            and len(wait_try.orelse[0].targets) == 1
+            and isinstance(wait_try.orelse[0].targets[0], ast.Name)
+            and wait_try.orelse[0].targets[0].id == "confirmed_reaped"
+            and isinstance(wait_try.orelse[0].value, ast.Constant)
+            and wait_try.orelse[0].value.value is True
+            and isinstance(wait_try.orelse[1], ast.If)
+            and isinstance(wait_try.orelse[1].test, ast.Compare)
+            and isinstance(wait_try.orelse[1].test.left, ast.Name)
+            and wait_try.orelse[1].test.left.id == "interruption"
+            and len(wait_try.orelse[1].test.ops) == 1
+            and isinstance(wait_try.orelse[1].test.ops[0], ast.IsNot)
+            and len(wait_try.orelse[1].test.comparators) == 1
+            and isinstance(wait_try.orelse[1].test.comparators[0], ast.Constant)
+            and wait_try.orelse[1].test.comparators[0].value is None
+            and len(wait_try.orelse[1].body) == 1
+            and isinstance(wait_try.orelse[1].body[0], ast.Raise)
+            and isinstance(wait_try.orelse[1].body[0].exc, ast.Name)
+            and wait_try.orelse[1].body[0].exc.id == "interruption"
+            and wait_try.orelse[1].body[0].cause is None
+            and isinstance(wait_try.orelse[2], ast.Return)
+        ):
+            raise AssertionError(
+                "runner must confirm reaping before reraising a saved cleanup interruption"
+            )
+        confirmed_reaped_writes = [
+            node
+            for node in ast.walk(owner)
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "confirmed_reaped"
+                for target in node.targets
+            )
+        ]
         if any(
-            isinstance(node, (ast.Continue, ast.Raise, ast.Return))
-            for handler in kill_try.handlers
-            for node in ast.walk(handler)
+            isinstance(node, ast.AugAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "confirmed_reaped"
+            for node in ast.walk(owner)
         ):
-            raise AssertionError("runner cleanup must reach wait after every kill failure")
-        if not any(
-            isinstance(node, ast.Nonlocal) and node.names == ["cleanup_started"]
-            for node in ast.walk(stop_and_reap)
+            raise AssertionError("runner must not mutate the reaping confirmation")
+        if (
+            len(confirmed_reaped_writes) != 3
+            or any(
+                not isinstance(node.value, ast.Constant)
+                or type(node.value.value) is not bool
+                for node in confirmed_reaped_writes
+            )
         ):
-            raise AssertionError("runner cleanup must retain the one-time cleanup guard")
+            raise AssertionError("runner reaping confirmation must have one explicit false state and two true marks")
+        initial_reaped_writes = [
+            node
+            for node in confirmed_reaped_writes
+            if isinstance(node.value, ast.Constant) and node.value.value is False
+        ]
+        if len(initial_reaped_writes) != 1 or initial_reaped_writes[0].lineno >= outer_try.lineno:
+            raise AssertionError("runner must initialize its reaping confirmation before launch")
+        confirmed_reaped_assignments = [
+            node
+            for node in confirmed_reaped_writes
+            if isinstance(node.value, ast.Constant) and node.value.value is True
+        ]
+        if len(confirmed_reaped_assignments) != 2:
+            raise AssertionError("runner must confirm reaping after both primary and cleanup waits")
+        primary_reaped_assignments = [
+            node for node in confirmed_reaped_assignments if node in ast.walk(outer_try)
+        ]
+        cleanup_reaped_assignments = [
+            node for node in confirmed_reaped_assignments if node in ast.walk(stop_and_reap)
+        ]
+        if len(primary_reaped_assignments) != 1 or len(cleanup_reaped_assignments) != 1:
+            raise AssertionError("runner must keep primary and cleanup reaping confirmations separate")
+        primary_wait_seen = False
+        cleanup_wait_seen = False
+        for confirmed_reaped_assignment in confirmed_reaped_assignments:
+            if not (
+                isinstance(confirmed_reaped_assignment.value, ast.Constant)
+                and confirmed_reaped_assignment.value.value is True
+            ):
+                raise AssertionError("runner reaping confirmation must be an explicit true value")
+            successful_waits = [
+                call
+                for node in ast.walk(owner)
+                if isinstance(node, ast.Try)
+                and confirmed_reaped_assignment in node.orelse
+                for statement in node.body
+                for call in ast.walk(statement)
+                if isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Attribute)
+                and isinstance(call.func.value, ast.Name)
+                and call.func.value.id == "process"
+                and call.func.attr == "wait"
+            ]
+            if len(successful_waits) != 1:
+                raise AssertionError("runner may confirm reaping only after one successful wait")
+            wait = successful_waits[0]
+            timeout = next(
+                (keyword.value for keyword in wait.keywords if keyword.arg == "timeout"), None
+            )
+            if (
+                isinstance(timeout, ast.Constant)
+                and timeout.value == 1
+                and confirmed_reaped_assignment in cleanup_reaped_assignments
+            ):
+                cleanup_wait_seen = True
+            elif (
+                isinstance(timeout, ast.BinOp)
+                and isinstance(timeout.left, ast.Name)
+                and timeout.left.id == "timeout_ms"
+                and isinstance(timeout.op, ast.Div)
+                and isinstance(timeout.right, ast.Constant)
+                and timeout.right.value == 1000
+                and confirmed_reaped_assignment in primary_reaped_assignments
+            ):
+                primary_wait_seen = True
+            else:
+                raise AssertionError("runner reaping confirmation must follow its designated bounded wait")
+        if not primary_wait_seen or not cleanup_wait_seen:
+            raise AssertionError("runner must confirm both primary and cleanup reaping paths")
         if not any(
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
@@ -961,8 +1260,11 @@ def assert_source_shape(name: str, path: pathlib.Path) -> None:
         outer_handler_source = ast.get_source_segment(
             path.read_text(encoding="utf-8"), base_exception_handlers[0]
         )
-        if outer_handler_source is None or "if not cleanup_started:" not in outer_handler_source:
-            raise AssertionError("runner BaseException path must prevent repeated cleanup attempts")
+        if (
+            outer_handler_source is None
+            or "if process is not None and not confirmed_reaped:" not in outer_handler_source
+        ):
+            raise AssertionError("runner BaseException path must clean up only a bound unreaped child")
         if "except UnicodeEncodeError" not in path.read_text(encoding="utf-8"):
             raise AssertionError("runner must refuse malformed Unicode before launch")
     if name == "measurements" and ".encode(" in path.read_text(encoding="utf-8"):

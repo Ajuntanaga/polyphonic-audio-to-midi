@@ -82,6 +82,29 @@ perform X11, audio, network, or host action, or prove ACK, raw-stream, or
 session behavior. Task 0B3d remains a separately authorized child-adapter-only
 gate.
 
+**Task 0B3d child-adapter checkpoint and narrow correction amendment.** The
+separately scoped direct-child gate invoked only
+`tools/reaper_v4_child_runner.py`, first through deterministic mock race
+vectors and then through a temporary-directory, non-forking Python sentinel
+with exact isolated startup flags `-I -S -B -c`. The controlled REDs exposed
+the post-bind cleanup boundary, an unsafe cleanup-slot counter placement, and
+last-interruption overwriting. The reviewed correction prebinds the process,
+keeps the sole launch inside its outer recovery boundary, reserves at most two
+direct-child cleanup slots before `kill()`, always reaches the bounded
+`wait()` after a `kill()` error within an entered slot, and preserves the first
+non-`Exception` interruption, including escalation of a cleanup
+non-`Exception` over an ordinary original adapter error. Reaping is confirmed
+only after `wait()` returns; every pre-bind or unconfirmed path remains
+outer-session/scope uncertainty. The sealed runner SHA-256 is
+`a9cecba05537a349355fc204d2a8343a51caf6fabb7ab5d184ef341270f5a946`.
+The seven-check static contract plus the twelve Task 0B3d tests passed 19
+checks, and two independent reviews are CLEAN. This proves only direct-child
+adapter semantics: explicit environment/cwd, no retry on launch failure,
+bounded timeout/reap behavior, and isolated sentinel startup. It proves no
+session, raw PRE/ACK/POST stream, namespace, Bubblewrap, systemd, REAPER,
+X11, audio, network, host scan, or descendant containment. Task 0B4 session
+implementation remains a separately scoped future authority.
+
 ## Contract artifacts
 
 The source phase must add the following inert, canonical JSON documents:
@@ -248,7 +271,7 @@ read. An AST-only test reads their source bytes before any import.
 | closure constructor | `ast`, `dataclasses`, `enum`, `hashlib`, `json`, `os`, `stat`, `struct`, `types`, `Mapping` | `ClosureConstructionError`, `ClosureState`, `ClosureInputBundle`, `ClosureRecord`, `canonical_json_bytes`, `sha256_canonical`, `load_input_bundle`, `construct_closure` | Source/data-only parser skeleton. It takes a bounded, cycle-safe immutable snapshot before semantic or digest validation, including at the public canonicalization boundary. No `tools.*`, `subprocess`, `ctypes`, import loader, target evaluation, broad scan, or ambient-state API. It rejects schema-invalid data and pathname loading; for the sole supplied schema-valid empty-catalog vector it returns only the exact blocked output until a separately authorized graph-construction successor supplies retained-directory-FD input and Task 0B3 supplies the reviewed session graph. |
 | receipt schema | `dataclasses`, `enum`, `types`, `Mapping`, `tools.reaper_v4_protocol` | `ReceiptSchemaError`, `ReceiptPhase`, `ReceiptPayload`, `ACK_BYTE`, `PRE_KEYS`, `POST_KEYS`, `ATTESTATION_KEYS`, `validate_pre_payload`, `validate_ack_bytes`, `validate_post_payload`, `validate_exchange` | Pure in-memory grammar and payload/value-relation validation only. No descriptor, file, process, clock, measurement, launch, or stream I/O. |
 | measurements | `dataclasses`, `os`, `pathlib`, `stat`, `types`, `Mapping` | `MeasurementError`, `MeasurementPlan`, `MeasurementSnapshot`, `MEASUREMENT_KEYS`, `collect_namespace_measurements` | Explicit-plan later collector. It takes an exact-plan local snapshot before validation; permits only canonical one-component printable strings, rejects duplicates and unhashable values before `os.open`, and normalizes root-descriptor `OverflowError` and close failures to `MeasurementError`. `MEASUREMENT_KEYS` is exactly `("mode", "size")`; `MeasurementPlan` snapshots an exact built-in resource tuple and bounded expected facts before any later use. No frame/ACK/child API, write, subprocess, `ctypes`, environment/cwd/HOME read, recursive walk, or implicit resource access. Runtime reads may occur only inside the callable after later authority and use `O_PATH|O_NOFOLLOW|O_CLOEXEC` plus `fstat`, before accepting a regular-file fact. |
-| child runner | `dataclasses`, `subprocess`, `time` | `ChildRunnerError`, `ChildSpec`, `ChildOutcome`, `run_child` | The only subprocess importer and a later callable adapter. It contains no admission, ACK consumption, PRE/POST emission, fallback, retry, CLI, or import-time launch. It accepts only an exact `ChildSpec`, captures and validates its immutable bounded fields once, then uses only those locals. It has exactly one syntactic `subprocess.Popen` call, only in `run_child`, with absolute executable/cwd, explicit environment, `shell=False`, DEVNULL standard streams, `close_fds=True`, `pass_fds=()`, one bounded launch, and two bounded kill/reap attempts after timeout or any `BaseException` **after successful `Popen` return**; each attempt still waits when kill reports an error. A later outer session/scope must recover a launch interrupted before `Popen` returns, and must perform exact row/policy environment admission and binding before it creates `ChildSpec`. |
+| child runner | `dataclasses`, `subprocess`, `time` | `ChildRunnerError`, `ChildSpec`, `ChildOutcome`, `run_child` | The only subprocess importer and a later callable adapter. It contains no admission, ACK consumption, PRE/POST emission, fallback, retry, CLI, or import-time launch. It accepts only an exact `ChildSpec`, captures and validates its immutable bounded fields once, then uses only those locals. It has exactly one syntactic `subprocess.Popen` call, only in `run_child`, with absolute executable/cwd, explicit environment, `shell=False`, DEVNULL standard streams, `close_fds=True`, `pass_fds=()`, one bounded launch, and at most two reserved direct-child cleanup slots after timeout or any `BaseException` **once Python has bound the returned process object**. Within an entered slot, an error from `kill()` still reaches its bounded `wait()`; reaping is confirmed only when that wait returns. An interruption between Python operations or repeated cleanup failure leaves process state uncertain. A later outer session/scope must recover that uncertainty and a partial launch interrupted before binding—including before `Popen` returns or after OS child creation but before Python retains the returned object—and must perform exact row/policy environment admission and binding before it creates `ChildSpec`. |
 
 Every public class is a frozen dataclass, enum, or exception. `ClosureInputBundle`
 has one `bundle` mapping that is valid only when it satisfies the closed input-
@@ -314,8 +337,11 @@ module import and prove:
   digest-mismatched records after bounded cycle-safe snapshotting; public
   canonicalization uses the same snapshot boundary; the measurement collector uses only metadata-only
   `O_PATH|O_NOFOLLOW|O_CLOEXEC` descriptors; and the runner contains bounded
-  kill/reap cleanup for every `BaseException` after successful `Popen` return;
-  a future outer session/scope owns partial-launch recovery and exact
+  at most two reserved direct-child cleanup slots once the returned process
+  object is bound, confirming reaping only after a bounded wait returns; a
+  future outer session/scope owns every unconfirmed cleanup and partial-launch
+  recovery before that binding (including after OS child creation but before
+  Python retains the returned object) and exact
   environment admission before `ChildSpec` creation;
   the AST gate checks that exact `os.open` flags, the one direct `Popen`
   reference, and the two-attempt kill-then-wait cleanup shape rather than token

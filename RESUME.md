@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-02T00:45:20-07:00
+Updated: 2026-09-03T22:37:43-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -124,6 +124,21 @@ Updated: 2026-09-02T00:45:20-07:00
   systemd, REAPER, X11, audio, network, or host action. The next safe gate is
   separately authorized Task 0B3d for the child adapter only; full session
   behavior remains Task 0B4.
+- Task 0B3d is sealed as a direct-child adapter gate. Its mock REDs exposed
+  post-bind cleanup, cleanup-slot accounting, and interruption-order defects;
+  the narrow reviewed correction keeps the single launch inside its
+  bound-process recovery boundary, reserves at most two cleanup slots before
+  `kill()`, keeps a bounded wait after each entered-slot kill error, and
+  preserves the first non-`Exception` interruption, and escalates a cleanup
+  non-`Exception` over an ordinary original adapter error. The sealed runner
+  SHA-256 is `a9cecba05537a349355fc204d2a8343a51caf6fabb7ab5d184ef341270f5a946`.
+  Seven static checks plus twelve B3d tests passed (19 total), including three
+  isolated temporary-directory sentinel invocations. Each child was direct and
+  non-forking with `-I -S -B -c`; no session, raw stream,
+  namespace, Bubblewrap, systemd, REAPER, X11, audio, network, host scan, or
+  descendant-containment claim occurred. Pre-bind and unconfirmed cleanup
+  paths remain outer-session/scope uncertainty. Task 0B4 session
+  implementation requires separate scoped authority.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -131,10 +146,10 @@ Updated: 2026-09-02T00:45:20-07:00
   host request is possible. Both require copy-byte, FD, `RLIMIT_NOFILE`, and
   memory/tmpfs preflight refusal budgets.
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
-  Tasks 0B3a, 0B3b, and 0B3c add only sealed non-admissible, receipt, and
-  synthetic descriptor evidence respectively. Task 0B1 remains
-  preservation-only. Its static test may be rerun without importing target
-  modules; any child adapter, session, fixture, namespace, or external action
+  Tasks 0B3a, 0B3b, 0B3c, and 0B3d add only sealed non-admissible, receipt,
+  synthetic descriptor, and direct-child-adapter evidence respectively. Task
+  0B1 remains preservation-only. Its static test may be rerun without importing
+  target modules; any further session, fixture, namespace, or external action
   requires a new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,

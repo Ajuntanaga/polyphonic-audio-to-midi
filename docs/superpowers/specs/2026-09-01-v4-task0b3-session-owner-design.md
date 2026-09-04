@@ -680,9 +680,14 @@ amendment; there is no runtime exception.
 The child adapter remains the sole `subprocess` user. Its future invocation
 must retain its sealed boundaries: absolute executable and cwd, `shell=False`,
 `DEVNULL` on descriptors 0/1/2, `close_fds=True`, `pass_fds=()`, one bounded
-launch, and bounded kill/reap after successful `Popen` return. The outer
-session/scope—not the adapter—owns recovery and evidence sealing for an
-interruption that occurs before `Popen` returns.
+launch, and bounded kill/reap once Python has bound the returned process
+object. It reserves at most two direct-child cleanup slots; within an entered
+slot, a `kill()` error still reaches the bounded `wait()`, and reaping is
+confirmed only when that wait returns. The outer session/scope—not the
+adapter—owns recovery and evidence sealing for every unconfirmed cleanup and
+for a partial launch interrupted before binding, including before `Popen`
+returns or after OS child creation but before Python retains the returned
+object.
 
 After a returned `ChildOutcome`, the session treats `timed_out == true` or a
 negative `returncode` as uncertainty. Either condition suppresses POST and
@@ -698,7 +703,7 @@ No uncertain path can emit terminal success evidence.
 | Configuration, barrier, provenance, PRE payload, or frame-size failure | No | No PRE | Mark namespace uncertainty; no ACK/child |
 | PRE write error or short write | No | Possibly incomplete bytes, never a retry | Treat raw exchange as invalid; no child |
 | Missing/bad/extra/non-EOF ACK | No | PRE only | No POST; close/terminate scope and seal uncertainty |
-| Child adapter failure before `Popen` returns | Unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
+| Child adapter interruption before its returned process object is bound (including before `Popen` returns) | Unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
 | Child timeout, kill/reap uncertainty, signal, or interruption after launch | Yes or unknown | PRE only | Outer scope-wide teardown and PID census; no POST |
 | Child exits but post measurement, root identity, or POST validation fails | Yes | PRE only | No POST; outer controller rejects the row |
 | Child exits, reaps, post checks and POST write all succeed | Yes | PRE then terminal POST then EOF | Still require scope-exit confirmation, zero-REAPER census, and outer receipt validation |

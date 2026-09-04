@@ -95,30 +95,16 @@ def run_child(spec: ChildSpec) -> ChildOutcome:
         if name == "PATH" or name in environment:
             raise ChildRunnerError("environment may not override PATH or duplicate keys")
         environment[name] = value
-    started_ns = time.monotonic_ns()
-    try:
-        process = subprocess.Popen(
-            argv,
-            cwd=cwd,
-            env=environment,
-            shell=False,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            close_fds=True,
-            pass_fds=(),
-        )
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
-        raise ChildRunnerError("child launch failed") from error
-
-    cleanup_started = False
+    process: object | None = None
+    confirmed_reaped = False
+    cleanup_attempts = 0
 
     def stop_and_reap() -> int:
-        nonlocal cleanup_started
-        cleanup_started = True
+        nonlocal cleanup_attempts, confirmed_reaped
         interruption: BaseException | None = None
         last_error: Exception | None = None
-        for _ in range(2):
+        while cleanup_attempts < 2:
+            cleanup_attempts += 1
             try:
                 process.kill()
             except BaseException as error:
@@ -134,6 +120,7 @@ def run_child(spec: ChildSpec) -> ChildOutcome:
                 elif interruption is None:
                     interruption = error
             else:
+                confirmed_reaped = True
                 if interruption is not None:
                     raise interruption
                 return returncode
@@ -143,7 +130,22 @@ def run_child(spec: ChildSpec) -> ChildOutcome:
             raise ChildRunnerError("post-launch child cleanup failed") from last_error
         raise ChildRunnerError("post-launch child cleanup failed")
 
+    started_ns = time.monotonic_ns()
     try:
+        try:
+            process = subprocess.Popen(
+                argv,
+                cwd=cwd,
+                env=environment,
+                shell=False,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                pass_fds=(),
+            )
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            raise ChildRunnerError("child launch failed") from error
         child_pid = process.pid
         if (
             isinstance(child_pid, bool)
@@ -157,6 +159,8 @@ def run_child(spec: ChildSpec) -> ChildOutcome:
         except subprocess.TimeoutExpired:
             timed_out = True
             returncode = stop_and_reap()
+        else:
+            confirmed_reaped = True
         elapsed_ms = (time.monotonic_ns() - started_ns) // 1_000_000
         if (
             isinstance(returncode, bool)
@@ -170,10 +174,14 @@ def run_child(spec: ChildSpec) -> ChildOutcome:
             timed_out=timed_out,
             elapsed_ms=elapsed_ms,
         )
-    except BaseException:
-        if not cleanup_started:
+    except BaseException as original_error:
+        if process is not None and not confirmed_reaped:
             try:
                 stop_and_reap()
-            except BaseException:
-                pass
+            except BaseException as cleanup_error:
+                if (
+                    not isinstance(cleanup_error, Exception)
+                    and isinstance(original_error, Exception)
+                ):
+                    raise cleanup_error
         raise
