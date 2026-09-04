@@ -15,6 +15,9 @@ DEFAULT_BLOCK_SIZE = 256
 DEFAULT_INPUT_CHANNELS = 6
 DEFAULT_OUTPUT_CHANNELS = 2
 SETUP_SCRIPT_NAME = "ajuntanaga_M3 Live Guitar to MIDI.lua"
+DEFAULT_NATIVE_BUNDLE = (
+    ROOT / "build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3"
+)
 
 
 SETUP_SCRIPT = r'''local function add_fx(track, name)
@@ -59,6 +62,48 @@ reaper.Undo_EndBlock2(0, "Create M3 8-String Guitar to MIDI live chain", -1)
 '''
 
 
+NATIVE_SETUP_SCRIPT = r'''local function add_fx(track, name)
+  local fx = reaper.TrackFX_AddByName(track, name, false, 1)
+  assert(fx >= 0, "required effect is unavailable: " .. name)
+  return fx
+end
+
+reaper.Undo_BeginBlock2(0)
+local index = reaper.CountTracks(0)
+reaper.InsertTrackAtIndex(index, true)
+local track = assert(reaper.GetTrack(0, index))
+reaper.GetSetMediaTrackInfo_String(
+  track,
+  "P_NAME",
+  "M3 Native 8-String Guitar to MIDI (low range)",
+  true
+)
+reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2)
+reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
+reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT", 0)
+reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)
+reaper.SetMediaTrackInfo_Value(track, "D_VOL", 0.25)
+
+local detector = add_fx(track, "VST3: M3 Polyphonic Audio to MIDI")
+reaper.TrackFX_SetParamNormalized(track, detector, 0, 0.0)
+reaper.TrackFX_SetParamNormalized(track, detector, 1, 0.0)
+reaper.TrackFX_SetParamNormalized(track, detector, 7, 0.285714285714)
+reaper.TrackFX_SetParamNormalized(track, detector, 8, 0.0)
+reaper.TrackFX_SetParamNormalized(track, detector, 9, 0.333333333333)
+reaper.TrackFX_SetParamNormalized(track, detector, 14, 0.0)
+
+local synth = reaper.TrackFX_AddByName(track, "VSTi: ReaSynth (Cockos)", false, 1)
+if synth < 0 then
+  synth = add_fx(track, "ReaSynth (Cockos)")
+end
+
+reaper.SetOnlyTrackSelected(track)
+reaper.TrackList_AdjustWindows(false)
+reaper.UpdateArrange()
+reaper.Undo_EndBlock2(0, "Create M3 native low-range guitar-to-MIDI live chain", -1)
+'''
+
+
 def _overlaps_live_profile(output: pathlib.Path) -> bool:
     return (
         output == LIVE_REAPER_PROFILE
@@ -73,6 +118,8 @@ def stage_live_profile(
     *,
     input_device: str = DEFAULT_INPUT_DEVICE,
     output_device: str = DEFAULT_OUTPUT_DEVICE,
+    detector: str = "jsfx",
+    native_bundle: pathlib.Path | None = None,
 ) -> pathlib.Path:
     root = root.resolve()
     output = output.resolve()
@@ -81,10 +128,30 @@ def stage_live_profile(
     effects = root / "Effects"
     if not effects.is_dir():
         raise ValueError(f"missing Effects tree: {effects}")
+    if detector not in {"jsfx", "native"}:
+        raise ValueError("detector must be 'jsfx' or 'native'")
+
+    resolved_native_bundle: pathlib.Path | None = None
+    if detector == "native":
+        resolved_native_bundle = (native_bundle or DEFAULT_NATIVE_BUNDLE).resolve()
+        if not resolved_native_bundle.is_dir():
+            raise ValueError(f"missing native VST3 bundle: {resolved_native_bundle}")
+        if resolved_native_bundle.name != "M3_Polyphonic_Audio_to_MIDI.vst3":
+            raise ValueError("native bundle must be M3_Polyphonic_Audio_to_MIDI.vst3")
+        native_module = (
+            resolved_native_bundle
+            / "Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so"
+        )
+        if not native_module.is_file():
+            raise ValueError(f"missing native VST3 module: {native_module}")
 
     output.mkdir(parents=True, exist_ok=True)
     shutil.copytree(effects, output / "Effects", dirs_exist_ok=True)
     (output / "Scripts").mkdir(parents=True, exist_ok=True)
+
+    if resolved_native_bundle is not None:
+        native_output = output / "VST3" / resolved_native_bundle.name
+        shutil.copytree(resolved_native_bundle, native_output, dirs_exist_ok=True)
 
     profile = (
         "[reaper]\n"
@@ -100,9 +167,11 @@ def stage_live_profile(
         "saveFlags=0\n"
         "warnmaxram64=0\n"
     )
+    if resolved_native_bundle is not None:
+        profile += f"vstpath={output / 'VST3'}\n"
     (output / "reaper.ini").write_text(profile, encoding="utf-8")
     (output / "Scripts" / SETUP_SCRIPT_NAME).write_text(
-        SETUP_SCRIPT,
+        NATIVE_SETUP_SCRIPT if resolved_native_bundle is not None else SETUP_SCRIPT,
         encoding="utf-8",
     )
     return output
@@ -115,12 +184,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--input-device", default=DEFAULT_INPUT_DEVICE)
     parser.add_argument("--output-device", default=DEFAULT_OUTPUT_DEVICE)
+    parser.add_argument("--detector", choices=("jsfx", "native"), default="jsfx")
+    parser.add_argument("--native-bundle", type=pathlib.Path)
     args = parser.parse_args(argv)
     output = stage_live_profile(
         ROOT,
         args.output,
         input_device=args.input_device,
         output_device=args.output_device,
+        detector=args.detector,
+        native_bundle=args.native_bundle,
     )
     print(f"staged M3 live MIDI profile: {output}")
     return 0

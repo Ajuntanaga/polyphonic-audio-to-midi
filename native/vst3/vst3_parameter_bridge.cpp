@@ -13,6 +13,10 @@ namespace m3::vst3 {
 namespace {
 
 constexpr double kCanonicalTolerance = 1.0e-12;
+// Hosts commonly persist or route VST3 normalized values through float.
+// Accept that representation of a declared discrete step, then canonicalize
+// it to the exact plain value before it reaches the processor.
+constexpr double kHostNormalizedTolerance = 1.0e-6;
 
 bool result_ok(Steinberg::tresult result) noexcept {
   return result == Steinberg::kResultOk || result == Steinberg::kResultTrue;
@@ -129,7 +133,7 @@ bool canonical_normalized_value(const ParameterSpec& spec, double normalized,
   const double candidate = normalized_to_plain(spec, normalized);
   const double canonical = plain_to_normalized(spec, candidate);
   if (!std::isfinite(candidate) || !std::isfinite(canonical) ||
-      !same_value(normalized, canonical)) {
+      std::abs(normalized - canonical) > kHostNormalizedTolerance) {
     return false;
   }
   plain = candidate;

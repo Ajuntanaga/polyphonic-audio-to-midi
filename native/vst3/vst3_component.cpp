@@ -257,6 +257,12 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     active_config_ = prepared.requested;
     copy_runtime_config(active_config_, snapshot.config);
     audio_requested_config_ = active_config_;
+    if (!detector_.configure(processSetup.sampleRate, active_config_)) {
+      prepared_exchange_.reset();
+      prepared_exchange_initialized_ = false;
+      generated_notes_.release_storage_preserving_pending();
+      return Steinberg::kInvalidArgument;
+    }
     structural_boundary_pending_ = false;
     prepared_claim_pending_ = false;
     if (!generated_notes_.release_pending()) {
@@ -641,6 +647,7 @@ void M3Component::commit_prepared_config_if_released() noexcept {
   active_generation_ = generation;
   structural_boundary_pending_ = false;
   release_channel_pending_ = false;
+  static_cast<void>(detector_.configure(processSetup.sampleRate, active_config_));
   if (status_ == Status::reconfiguring) {
     set_status(Status::ready);
   }
@@ -649,6 +656,7 @@ void M3Component::commit_prepared_config_if_released() noexcept {
 void M3Component::reset_detector_transients() noexcept {
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
+  detector_.reset();
   ++detector_reset_count_;
 }
 
@@ -797,6 +805,43 @@ Steinberg::tresult M3Component::process_samples(
       !generated_notes_.output_blocked() && !generated_notes_.panic_hold();
   if (detector_allowed) {
     advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
+  }
+  const bool monophonic_detector_allowed =
+      detector_allowed && active_config_.max_polyphony == 1U;
+  if (monophonic_detector_allowed) {
+    detector_.set_runtime_config(active_config_);
+    const double input_gain =
+        std::pow(10.0, active_config_.input_trim_db / 20.0);
+    const bool left_silent =
+        (input.silenceFlags & Steinberg::uint64{1}) != 0U;
+    const bool right_silent =
+        (input.silenceFlags & Steinberg::uint64{2}) != 0U;
+    const std::uint32_t frames = static_cast<std::uint32_t>(data.numSamples);
+    for (std::uint32_t frame = 0; frame < frames; ++frame) {
+      const double left =
+          left_silent ? 0.0 : static_cast<double>(input_channels[0][frame]);
+      const double right =
+          right_silent ? 0.0 : static_cast<double>(input_channels[1][frame]);
+      const double selected =
+          active_config_.detector_input == DetectorInput::left
+              ? left
+              : active_config_.detector_input == DetectorInput::right
+                    ? right
+                    : (left + right) * 0.7071067811865476;
+      const DetectorDecision decision =
+          detector_.process_sample(selected * input_gain);
+      for (std::size_t index = 0; index < decision.transitions.size(); ++index) {
+        VoiceTransition transition = decision.transitions[index];
+        transition.sample_offset = frame;
+        if (!queue_generated_transition(transition, frames)) {
+          generated_notes_.report_output_failure();
+          break;
+        }
+      }
+      if (generated_notes_.output_blocked()) {
+        break;
+      }
+    }
   }
   if (structural_boundary_pending_) {
     generated_notes_.begin_block();

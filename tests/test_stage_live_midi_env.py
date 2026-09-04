@@ -49,6 +49,45 @@ class StageLiveMidiProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "live REAPER profile"):
             stage_live_profile(ROOT, LIVE_REAPER_PROFILE)
 
+    def test_stages_native_detector_bundle_in_a_separate_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = pathlib.Path(temporary)
+            output = temporary_root / "m3-native-live-midi"
+            bundle = (
+                temporary_root
+                / "M3_Polyphonic_Audio_to_MIDI.vst3"
+                / "Contents/x86_64-linux"
+            )
+            bundle.mkdir(parents=True)
+            (bundle / "M3_Polyphonic_Audio_to_MIDI.so").write_bytes(b"native")
+
+            stage_live_profile(
+                ROOT,
+                output,
+                detector="native",
+                native_bundle=bundle.parents[1],
+            )
+
+            profile = (output / "reaper.ini").read_text(encoding="utf-8")
+            self.assertIn(f"vstpath={output / 'VST3'}\n", profile)
+            copied_bundle = (
+                output
+                / "VST3/M3_Polyphonic_Audio_to_MIDI.vst3"
+                / "Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so"
+            )
+            self.assertEqual(copied_bundle.read_bytes(), b"native")
+            setup = (output / "Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("VST3: M3 Polyphonic Audio to MIDI", setup)
+            self.assertIn("TrackFX_SetParamNormalized(track, detector, 0, 0.0)", setup)
+            self.assertIn(
+                "TrackFX_SetParamNormalized(track, detector, 7, 0.285714285714)",
+                setup,
+            )
+            self.assertIn("TrackFX_SetParamNormalized(track, detector, 8, 0.0)", setup)
+            self.assertIn("TrackFX_SetParamNormalized(track, detector, 14, 0.0)", setup)
+
 
 if __name__ == "__main__":
     unittest.main()

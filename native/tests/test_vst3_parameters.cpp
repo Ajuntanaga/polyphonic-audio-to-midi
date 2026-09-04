@@ -276,6 +276,30 @@ M3_TEST(vst3_parameter_edits_reject_unknown_nonfinite_and_noncanonical_values) {
   close_controller(instance);
 }
 
+M3_TEST(vst3_parameter_edits_accept_float_encoded_host_steps) {
+  ControllerInstance instance;
+  M3_EXPECT_TRUE(open_controller(instance));
+  if (instance.controller == nullptr) {
+    close_controller(instance);
+    return;
+  }
+
+  const double highest_48 = static_cast<double>(
+      static_cast<float>((48.0 - 24.0) / (108.0 - 24.0)));
+  const double max_fret_12 = static_cast<double>(static_cast<float>(12.0 / 36.0));
+  const double sensitivity_80 = static_cast<double>(static_cast<float>(0.80));
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330008U,
+                                                        highest_48),
+               Steinberg::kResultTrue);
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D33000AU,
+                                                        max_fret_12),
+               Steinberg::kResultTrue);
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330005U,
+                                                        sensitivity_80),
+               Steinberg::kResultTrue);
+  close_controller(instance);
+}
+
 M3_TEST(vst3_parameter_queue_coalesces_last_boundary_values_atomically) {
   m3::PersistentConfig initial;
   m3::test::FakeVst3ParameterChanges changes;

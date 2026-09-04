@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "m3/generated_note_ledger.hpp"
+#include "m3/monophonic_pitch_detector.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/types.hpp"
 #include "prepared_config_exchange.hpp"
@@ -161,6 +162,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   PreparedConfigExchange prepared_exchange_{};
   PreparedConfigExchange::Claim prepared_claim_{};
   GeneratedNoteLedger generated_notes_{};
+  MonophonicPitchDetector detector_{};
   std::uint64_t main_generation_{};
   std::uint64_t setup_generation_{};
   std::uint64_t active_generation_{};

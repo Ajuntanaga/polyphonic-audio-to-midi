@@ -37,6 +37,7 @@ set(public_sdk_SOURCE_DIR "${M3_VST3_SDK_ROOT}/public.sdk")
 
 set(M3_NATIVE_CORE_SOURCES
     native/src/generated_note_ledger.cpp
+    native/src/monophonic_pitch_detector.cpp
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
 )
@@ -77,6 +78,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
+    native/tests/test_monophonic_pitch_detector.cpp
     native/tests/test_parameter_contract.cpp
     native/tests/test_parameter_normalization.cpp
     native/tests/test_pitch_math.cpp
@@ -89,6 +91,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_vst3_audio.cpp
     native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp
+    native/tests/test_vst3_detector.cpp
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp
