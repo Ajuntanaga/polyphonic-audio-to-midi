@@ -2,9 +2,11 @@
 
 **Status:** design-only; Task 0B3a root shell, Task 0B3b pure receipt gate,
 Task 0B3c descriptor gate, Task 0B3d child-adapter gate, Task 0B4a contract,
-and Task 0B4b-pure compatibility-helper checkpoint are sealed. The remaining
-Task 0B4 work is a separately authorized state-machine gate followed by a
-separately authorized outer-harness gate.
+and Task 0B4b-pure compatibility-helper checkpoint are sealed. Task
+0B4b-state-contract documentation checkpoint is sealed. The
+remaining order is admission-pure, evidence, bootstrap-transport, and mock-
+only state gates; then B4c-design, Task 0B5/closure/fixture-manifest review,
+and B4c-execution.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -827,35 +829,65 @@ safe sequence is:
    value-to-encoder compatibility. Public session entrypoints remain
    immediate-failure stubs; it does not implement the session state machine,
    transport, barrier, evidence, or child path.
-7. **Later state-machine gate:** a further fresh explicit user authority and
-   reviewed source contract are required before importing/executing any session
-   state-machine path. It may implement and test the one session root against
-   bounded in-process transport and evidence doubles. It must cover every row
-   in the failure table as a state-machine outcome: no child before ACK+EOF and
-   no terminal POST for any uncertain path. It uses a mocked `ChildOutcome`,
-   mocked barrier, and mocked measurement/evidence boundaries; it does not
-   launch a sentinel or invoke the real `PR_SET_DUMPABLE` barrier. The sealed
-   Task 0B3d sentinel evidence remains the only direct-child launch evidence.
-   These tests may prove the session's local composition only. They must not
-   claim fixed-path provenance, namespace measurements, X11, scope exit,
-   descendant containment, PID census, or host compatibility.
-8. **Task 0B4c — outer-harness controlled-fixture gate:** a separately scoped
-   authority is required before an actual fixed-path/standard-stream,
-   namespace/mount/FD/proc fixture, concurrent parent drains, or any
-   uncertain-child teardown/census scenario. It must provide the outer scope
-   owner that this session intentionally lacks. It still does not authorize
-   Bubblewrap, systemd, REAPER, X11, audio, host scanning, or a host launch
-   unless an even later authority explicitly does so.
-9. **Task 0B5 — graph-construction implementation gate:** under a separate
+7. **Task 0B4b-state-contract (sealed documentation-only checkpoint):** this
+   record resolves the B4c name collision and documents why the current
+   B4b-pure parser, collector, and POST helper cannot directly admit or run
+   the coordinator. It creates no source/test/runtime authority.
+8. **Task 0B4b-admission-pure:** a fresh source/test authority must first
+   validate every closed SessionConfig nested relation and cross-digest in
+   memory, revalidate any supplied frozen object at the trust boundary, and
+   make a fresh private base/child projection. It must replace the B4b-pure
+   static contract before source change while preserving all seven pure-helper
+   regressions. It may not open a path, claim provenance, establish a barrier,
+   or emit a frame.
+9. **Task 0B4b-evidence:** a separate source/test gate must author and seal
+   each bounded private evidence and retained-baseline helper required by the
+   provenance table, with synthetic/mock/temporary-resource negative tests.
+   It must not add a runtime root, callback, raw channel, or all-true
+   attestation. Actual namespace/path/FD proof remains later.
+10. **Task 0B4b-bootstrap-transport:** a separate source/test gate must
+   author and seal the fixed-literal bootstrap loader and fixed standard-stream
+   helper logic against syscall/poll doubles or temporary controlled pipes. It
+   must cover sidecar-first loading, descriptor/EOF bounds, ACK+EOF, write
+   failure, deadline, and the one fd-2 diagnostic attempt without executing a
+   real fixture or child.
+11. **Task 0B4b-state:** only after the preceding gates are sealed may a
+   further fresh explicit user authority and reviewed source contract implement
+   and test the one session root against bounded in-process transport and
+   evidence doubles. It must cover every failure-table row as a local
+   state-machine outcome: no child before ACK+EOF and no terminal POST for an
+   uncertain path. It uses a mocked `ChildOutcome`, mocked barrier, and mocked
+   measurement/evidence boundaries; it does not launch a sentinel or invoke
+   the real `PR_SET_DUMPABLE` barrier. The sealed Task 0B3d sentinel evidence
+   remains the only direct-child launch evidence. These tests prove local
+   composition only; they cannot claim fixed-path provenance, namespace
+   measurements, X11, scope exit, descendant containment, PID census, or host
+   compatibility.
+12. **Task 0B4c-design — controlled-fixture definition gate:** a separate,
+   source-free design authority must define the bounded non-REAPER fixture,
+   outer ownership, standard-stream topology, expected mounts, and resource
+   budgets. It creates no namespace, process, mount, or executed fixture.
+13. **Task 0B5 — graph-construction implementation gate:** under a separate
    data-only authority, implement and review the currently unavailable closed
    schema/catalog/graph-construction method. It may parse only supplied static
    data through retained directory descriptors; it must not import, execute, or
    load a target or create a fixture.
-10. **Successor Task 0B0 closure review:** only after the graph constructor is
-   independently reviewed, rebuild the graph from this one session-entrypoint
-   root through Task 0A and every runtime library. It must remain blocked on
-   any unresolved edge, budget excess, or missing root.
-11. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
+14. **Successor Task 0B0 closure review and fixture-runtime-manifest review:**
+   only after a reviewed executable session root, fixture definition, and graph
+   constructor exist, rebuild the graph from this one session-entrypoint root
+   through Task 0A and every runtime library. It must remain blocked on any
+   unresolved edge or budget excess. A bounded fixture-runtime manifest must be
+   independently reviewed before any fixture-execution authority.
+15. **Task 0B4c-execution — outer-harness controlled-fixture gate:** only
+   after the preceding closure and fixture-manifest review may a separately
+   scoped authority execute an actual fixed-path/standard-stream,
+   namespace/mount/FD/proc fixture, concurrent parent drains, or an
+   uncertain-child teardown/census scenario. Its own future authority must
+   name exactly one independently reviewed non-REAPER scope mechanism and its
+   fixed policy; it must not substitute an unreviewed launcher. It provides the
+   outer scope owner that this session intentionally lacks. It never authorizes
+   REAPER, X11, audio, host scanning, or a host launch.
+16. **Separate host-manifest and host-request gates:** a bounded non-REAPER
    fixture manifest may prove only a safety property. REAPER compatibility and
    a host request remain separate, later decisions.
 

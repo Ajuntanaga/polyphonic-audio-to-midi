@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, and Task 0B4b-pure is sealed bounded compatibility-helper evidence. A session state machine, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, and Task 0B4b-state-contract is sealed documentation-only sequencing evidence. A session state machine, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -285,9 +285,10 @@ cannot be passed directly into the sealed Task 0A JSON encoder, and a real
 fixed-path namespace fixture would require an outer scope/harness that the
 session root deliberately does not own. The design now splits this work into
 Task 0B4a (source-contract and compatibility correction), Task 0B4b-pure
-(bounded in-memory compatibility helpers), a separately named later
-state-machine gate, and Task 0B4c (outer-harness controlled fixture). No
-session state machine or fixture,
+(bounded in-memory compatibility helpers), Task 0B4b-state-contract, separate
+admission/evidence/bootstrap-transport/state gates, Task 0B4c-design, and
+Task 0B4c-execution (outer-harness controlled fixture). No session state
+machine or fixture,
 namespace, Bubblewrap, systemd, REAPER, X11, audio, network, or host action
 has occurred under this correction. Task 0B4a is sealed with the unchanged
 session-skeleton SHA-256
@@ -310,16 +311,46 @@ non-admitted supplied-byte snapshot, a fresh Task 0A base-config projection,
 and PRE/POST value-to-encoder compatibility. They do not open configuration
 paths, consume ACKs, emit frames, establish a barrier, collect measurements,
 launch a child, form a namespace or fixture, or imply any host compatibility.
-The next state-machine work needs a fresh named authority and reviewed source
-contract; Task 0B4c remains a distinct later outer-harness gate.
+The next work is Task 0B4b-admission-pure, which needs fresh named authority
+and a reviewed source contract. Any later evidence, bootstrap-transport, or
+state-machine source needs its own authority and reviewed contract; Task 0B4c
+remains a distinct later outer-harness gate.
 
-Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
-closure from exactly one reviewed session-entrypoint root through Task 0A plus
+**Task 0B4b-state-contract checkpoint (sealed).** The user's fresh `Proceed` has
+authorized only the documentation/review checkpoint at
+`docs/superpowers/specs/2026-09-04-v4-task0b4b-state-machine-source-contract.md`.
+It preserves `Task 0B4c` for the later outer harness and records four separate
+successor authorities: `Task 0B4b-admission-pure` for complete in-memory
+SessionConfig relation validation, `Task 0B4b-evidence` for bounded private
+provenance/baseline helper implementation, `Task 0B4b-bootstrap-transport` for
+fixed-loader/raw-helper implementation against doubles, and `Task 0B4b-state`
+for mock-only coordinator composition. The current B4b-pure parser is intentionally
+non-admitting, the sealed collector cannot establish all provenance facts, and
+the B4b POST helper encodes before the required exchange check; none may be
+silently treated as a runtime admission seam. This documentation gate changes
+no source or test, imports or executes no target, and performs no
+configuration/path/descriptor I/O, raw transport, barrier, measurement, child,
+fixture, namespace, Bubblewrap, systemd, REAPER, X11, audio, network, or host
+action. A source-free `Task 0B4c-design` must then define the bounded fixture
+before its manifest can be selected. A future `Task 0B4c-execution` authority
+must name one independently reviewed non-REAPER scope mechanism rather than
+silently choosing a launcher. Each successor needs its own explicit user
+authority, appropriate reviewed contract/checkpoint, and independent review;
+source/test gates require source contracts and tests, while source-free
+`Task 0B4c-design` requires documentation/static-consistency review only.
+Three independent documentation reviews are CLEAN and `git diff --check`
+passes; no source/test/runtime authority was consumed by this checkpoint.
+
+Before a fixture, first seal the reviewed executable session-entrypoint source
+through the Task 0B4b-admission-pure, Task 0B4b-evidence,
+Task 0B4b-bootstrap-transport, and Task 0B4b-state gates, then define the
+bounded fixture under Task 0B4c-design. Then use the reviewed Task 0B0 method
+to seal the complete runtime closure from exactly that root through Task 0A plus
 the Task 0B1 runtime Python, extension, and ELF libraries, including the three
 runtime source hashes and `subprocess`/`_posixsubprocess`. The reviewed
-successor references, but never mutates, the immutable Task 0A source component.
-The closure constructor/parser identities bind that record but are not fixture
-mounts. This work yields two deliberately separate manifest states:
+successor references, but never mutates, the immutable Task 0A source
+component. The closure constructor/parser identities bind that record but are
+not fixture mounts. This work yields two deliberately separate manifest states:
 
 1. **fixture-runtime-manifest**: only after a separately reviewed executable
    session-entrypoint state-machine source exists, that root plus the exact

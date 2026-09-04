@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-03T23:58:17-07:00
+Updated: 2026-09-04T00:38:10-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -145,9 +145,10 @@ Updated: 2026-09-03T23:58:17-07:00
   directly to the sealed Task 0A encoder, and a real namespace controlled
   fixture needs a parent scope/harness the session root does not own. The
   design now splits the work into Task 0B4a, Task 0B4b-pure (bounded
-  in-memory compatibility helpers), a later separately authorized
-  state-machine gate, and Task 0B4c (a later separately authorized
-  outer-harness controlled fixture). The raw-byte
+  in-memory compatibility helpers), Task 0B4b-state-contract, separate later
+  admission/evidence/bootstrap-transport/state gates, Task 0B4c-design, and
+  Task 0B4c-execution (a later separately authorized outer-harness controlled
+  fixture). The raw-byte
   skeleton pin is
   `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`;
   its source-only test reports one normal pass and two intentionally retained
@@ -167,6 +168,26 @@ Updated: 2026-09-03T23:58:17-07:00
   compatibility. Any state-machine source or execution now needs a fresh named
   authority and reviewed contract; Task 0B4c remains a separate outer-harness
   gate.
+- Task 0B4b-state-contract is sealed as a documentation-only prerequisite
+  checkpoint
+  under the user's fresh `Proceed`. It resolves the name boundary that keeps
+  Task 0B4c for the later outer-harness fixture, and records why B4b-pure's
+  non-admitting parser, descriptor-only collector, and direct POST encoder
+  cannot be used as a state-machine admission path. It reserves four future
+  separately authorized gates: `0B4b-admission-pure` for complete in-memory
+  SessionConfig relation validation, `0B4b-evidence` for bounded private
+  provenance/baseline helper implementation, `0B4b-bootstrap-transport` for
+  fixed-loader/raw-helper implementation against doubles, and `0B4b-state` for
+  mock-only local composition. This current checkpoint changes no source or
+  test and performs no target import/execution, configuration/path/descriptor
+  I/O, raw transport, barrier, measurement, child, fixture, namespace,
+  Bubblewrap, systemd, REAPER, X11, audio, network, or host action. A
+  source-free `0B4c-design` must define the bounded fixture before Task 0B5,
+  successor closure review, and bounded fixture-runtime-manifest review;
+  `0B4c-execution` stays later and must name one independently reviewed
+  non-REAPER scope mechanism rather than silently choosing a launcher. Three
+  independent documentation reviews are CLEAN and `git diff --check` passes;
+  no source/test/runtime authority was consumed by this checkpoint.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -178,9 +199,11 @@ Updated: 2026-09-03T23:58:17-07:00
   synthetic descriptor, and direct-child-adapter evidence respectively. Task
   0B4a adds the sealed source-contract checkpoint, and Task 0B4b-pure adds
   only bounded in-memory compatibility helpers with fail-closed public
-  entrypoints. Task 0B1 remains preservation-only. Its static test may be
-  rerun without importing target modules; any state-machine, fixture,
-  namespace, or external action requires a new scoped task.
+  entrypoints. Task 0B4b-state-contract adds documentation-only prerequisite
+  ordering, not an executable state machine. Task 0B1 remains preservation-
+  only. Its static test may be rerun without importing target modules; any
+  admission-pure, evidence, bootstrap-transport, state-machine, fixture,
+  namespace, or external action requires its own new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots
