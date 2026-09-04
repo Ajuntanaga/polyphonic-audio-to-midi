@@ -9,7 +9,7 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "c8df50170c4eb5a314851020873edede62714817db86c40da425478d6d95640f"
+EXPECTED_SOURCE_SHA256 = "6004beb204a464e33d75f12aba058757d0875e8ba5dc12ff2ec56e67dbb262a2"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",

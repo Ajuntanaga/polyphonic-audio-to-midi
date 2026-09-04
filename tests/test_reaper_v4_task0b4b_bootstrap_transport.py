@@ -204,6 +204,21 @@ class Task0B4bBootstrapTransportTests(unittest.TestCase):
             with self.assertRaises(session.SessionError):
                 session._read_ack_eof(2_000)
 
+    def test_ack_accepts_kernel_hangup_when_the_second_read_observes_eof(self) -> None:
+        """A FIFO HUP is the normal readiness signal for a distinct EOF read."""
+        session = _session_module()
+        polls = [
+            _Poll([(0, session.select.POLLIN)]),
+            _Poll([(0, session.select.POLLHUP)]),
+        ]
+        with (
+            mock.patch.object(session.os, "fstat", return_value=_Stat(stat.S_IFIFO | 0o600)),
+            mock.patch.object(session.select, "poll", side_effect=polls),
+            mock.patch.object(session.time, "monotonic_ns", return_value=1_000),
+            mock.patch.object(session.os, "read", side_effect=[b"\x06", b""]),
+        ):
+            self.assertEqual(session._read_ack_eof(2_000), b"\x06")
+
 
 if __name__ == "__main__":
     unittest.main()

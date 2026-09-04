@@ -203,11 +203,13 @@ Updated: 2026-09-04T03:02:34-07:00
   not yet independently reviewed or sealed. It adds only private fixed-literal
   sidecar/config reading and fd-0/fd-1/fd-2 helpers; the current source
   SHA-256 is
-  `c8df50170c4eb5a314851020873edede62714817db86c40da425478d6d95640f`.
+  `6004beb204a464e33d75f12aba058757d0875e8ba5dc12ff2ec56e67dbb262a2`.
   Its static RED recorded the absent imports/helpers, its five behavior REDs
-  recorded the fail-closed stubs, and the final preserved suite passed 36
-  checks. The tests use syscall/poll doubles and canonical synthetic config
-  bytes only. No real `/run`, child, state machine, namespace, REAPER, audio,
+  recorded the fail-closed stubs, and the preserved suite now passes 37
+  checks. The added `POLLHUP` regression accepts it only as second-read EOF
+  readiness; the read itself must still prove EOF. The tests use syscall/poll
+  doubles and canonical synthetic config bytes only. No real `/run`, child,
+  state machine, namespace, REAPER, audio,
   or host action has occurred under this checkpoint.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint

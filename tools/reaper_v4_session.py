@@ -1549,10 +1549,14 @@ def _wait_fixed_pipe(fd: int, event: int, deadline_ns: int) -> None:
         for observed_fd, observed_event in poll.poll(timeout_ms):
             if observed_fd != fd:
                 continue
-            if observed_event & (select.POLLERR | select.POLLHUP | select.POLLNVAL):
+            if observed_event & (select.POLLERR | select.POLLNVAL):
                 raise SessionError("pipe entered an uncertain state")
             if observed_event & event:
                 return
+            if event == select.POLLIN and observed_event & select.POLLHUP:
+                return
+            if observed_event & select.POLLHUP:
+                raise SessionError("pipe entered an uncertain state")
         raise SessionError("pipe wait did not observe the requested event")
     except SessionError:
         raise

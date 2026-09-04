@@ -30,6 +30,6 @@ or temporary controlled pipes only.
 ## Task 4: Seal
 
 - [x] Run all immutable/static/pure/admission/evidence/bootstrap suites plus
-  whitespace check.
+  whitespace check (37 checks after the `POLLHUP`-to-EOF regression).
 - [ ] Independently review the no-host/no-child boundary, record the source
   SHA/result, update recovery records/canonical note, and commit.
