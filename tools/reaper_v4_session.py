@@ -1,4 +1,4 @@
-"""Non-admissible pure compatibility helpers for the future V4 session root."""
+"""Mock-only composition for the one V4 session root; runtime evidence stays fail-closed."""
 from __future__ import annotations
 
 import dataclasses
@@ -12,6 +12,7 @@ import time
 import types
 from collections.abc import Mapping
 from tools import reaper_v4_attester as attester
+from tools import reaper_v4_child_runner as child_runner
 from tools import reaper_v4_measurements as measurements
 from tools import reaper_v4_protocol as protocol
 from tools import reaper_v4_receipt_schema as receipt_schema
@@ -1603,9 +1604,159 @@ def _read_ack_eof(deadline_ns: int) -> bytes:
         raise SessionError("ACK input is invalid") from error
 
 
+def _capture_runtime_evidence(config: SessionConfig) -> _EvidenceBaseline:
+    raise SessionError("runtime evidence is not admitted")
+
+
+def _recheck_runtime_evidence(baseline: _EvidenceBaseline) -> None:
+    raise SessionError("runtime evidence is not admitted")
+
+
+def _release_runtime_evidence(baseline: _EvidenceBaseline) -> None:
+    raise SessionError("runtime evidence is not admitted")
+
+
+def _assemble_pre_payload(config: SessionConfig, baseline: _EvidenceBaseline) -> dict[str, object]:
+    raise SessionError("runtime evidence is not admitted")
+
+
+def _assemble_post_payload(
+    config: SessionConfig,
+    baseline: _EvidenceBaseline,
+    outcome: child_runner.ChildOutcome,
+    pre_monotonic_ns: int,
+    post_monotonic_ns: int,
+) -> dict[str, object]:
+    raise SessionError("runtime evidence is not admitted")
+
+
+def _child_spec_from_config(config: SessionConfig) -> child_runner.ChildSpec:
+    try:
+        admitted = _admit_session_config(config)
+        projection = _child_spec_projection(admitted.data)
+        return child_runner.ChildSpec(
+            argv=projection["argv"],
+            cwd=projection["cwd"],
+            environment=projection["environment"],
+            timeout_ms=projection["timeout_ms"],
+        )
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("child specification is invalid") from error
+
+
+def _validate_child_outcome(outcome: child_runner.ChildOutcome) -> child_runner.ChildOutcome:
+    try:
+        if type(outcome) is not child_runner.ChildOutcome:
+            raise SessionError("child outcome is invalid")
+        if (
+            type(outcome.child_pid) is not int
+            or not 1 <= outcome.child_pid <= 2147483647
+            or type(outcome.returncode) is not int
+            or not -255 <= outcome.returncode <= 255
+            or type(outcome.timed_out) is not bool
+            or type(outcome.elapsed_ms) is not int
+            or not 0 <= outcome.elapsed_ms <= 30000
+        ):
+            raise SessionError("child outcome is invalid")
+        if outcome.timed_out or outcome.returncode < 0:
+            raise SessionError("child outcome is uncertain")
+        return outcome
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("child outcome is invalid") from error
+
+
+def _finalize_post_payload(pre_payload: dict[str, object], ack: bytes, post_payload: dict[str, object]) -> bytes:
+    if type(pre_payload) is not dict or type(ack) is not bytes or type(post_payload) is not dict:
+        raise SessionError("post payload is invalid")
+    try:
+        receipt_schema.validate_post_payload(post_payload, 1)
+        receipt_schema.validate_exchange(pre_payload, ack, post_payload)
+        return protocol.encode_frame(protocol.FrameType.POST, 1, post_payload)
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("post payload is invalid") from error
+
+
 def load_session_config(config_path: str, digest_path: str) -> SessionConfig:
-    raise SessionError("session execution is not admitted")
+    if (
+        type(config_path) is not str
+        or type(digest_path) is not str
+        or config_path != SESSION_CONFIG_PATH
+        or digest_path != SESSION_DIGEST_PATH
+    ):
+        raise SessionError("session configuration path is invalid")
+    return _load_fixed_session_config()
 
 
 def run_session(config: SessionConfig) -> SessionResult:
-    raise SessionError("session execution is not admitted")
+    baseline: _EvidenceBaseline | None = None
+    diagnostic_ready = False
+    try:
+        _setup_diagnostic_fd()
+        diagnostic_ready = True
+        admitted = _admit_session_config(config)
+        baseline = _capture_runtime_evidence(admitted)
+        base_config = _base_config_projection(admitted)
+        attester.establish_protocol_barrier(base_config)
+        limits = admitted.data["limits"]
+        if type(limits) is not types.MappingProxyType:
+            raise SessionError("session limits are invalid")
+        pre_payload = _assemble_pre_payload(admitted, baseline)
+        receipt_schema.validate_pre_payload(pre_payload, 0)
+        pre_frame = protocol.encode_frame(protocol.FrameType.PRE, 0, pre_payload)
+        pre_monotonic_ns = time.monotonic_ns()
+        if type(pre_monotonic_ns) is not int or not 1 <= pre_monotonic_ns <= MAX_SESSION_INTEGER:
+            raise SessionError("PRE clock is invalid")
+        _write_frame_once(pre_frame, pre_monotonic_ns + limits["pre_deadline_ms"] * 1_000_000)
+        ack_deadline = time.monotonic_ns()
+        if type(ack_deadline) is not int or not 1 <= ack_deadline <= MAX_SESSION_INTEGER:
+            raise SessionError("ACK clock is invalid")
+        ack = _read_ack_eof(ack_deadline + limits["ack_deadline_ms"] * 1_000_000)
+        child_spec = _child_spec_from_config(admitted)
+        outcome = _validate_child_outcome(child_runner.run_child(child_spec))
+        _recheck_runtime_evidence(baseline)
+        post_monotonic_ns = time.monotonic_ns()
+        if type(post_monotonic_ns) is not int or not pre_monotonic_ns <= post_monotonic_ns <= MAX_SESSION_INTEGER:
+            raise SessionError("POST clock is invalid")
+        post_payload = _assemble_post_payload(admitted, baseline, outcome, pre_monotonic_ns, post_monotonic_ns)
+        post_frame = _finalize_post_payload(pre_payload, ack, post_payload)
+        _write_frame_once(post_frame, post_monotonic_ns + limits["post_deadline_ms"] * 1_000_000)
+        os.close(1)
+        _release_runtime_evidence(baseline)
+        baseline = None
+        result = object.__new__(SessionResult)
+        object.__setattr__(result, "child_pid", outcome.child_pid)
+        object.__setattr__(result, "child_returncode", outcome.returncode)
+        object.__setattr__(result, "pre_monotonic_ns", pre_monotonic_ns)
+        object.__setattr__(result, "post_monotonic_ns", post_monotonic_ns)
+        return result
+    except SessionError:
+        if baseline is not None:
+            try:
+                _release_runtime_evidence(baseline)
+            except Exception:
+                pass
+        if diagnostic_ready:
+            _emit_diagnostic_once("SESSION_FAILURE")
+        raise
+    except Exception as error:
+        if baseline is not None:
+            try:
+                _release_runtime_evidence(baseline)
+            except Exception:
+                pass
+        if diagnostic_ready:
+            _emit_diagnostic_once("SESSION_FAILURE")
+        raise SessionError("session execution is invalid") from error
+    except BaseException:
+        if baseline is not None:
+            try:
+                _release_runtime_evidence(baseline)
+            except Exception:
+                pass
+        raise

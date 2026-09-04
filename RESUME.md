@@ -211,6 +211,18 @@ Updated: 2026-09-04T03:02:34-07:00
   doubles and canonical synthetic config bytes only. No real `/run`, child,
   state machine, namespace, REAPER, audio,
   or host action has occurred under this checkpoint.
+- Task 0B4b-state is now locally implemented and verified as a mock-only
+  composition checkpoint, but remains unsealed pending independent review.
+  It replaces the predecessor static contract, imports only the sealed child
+  adapter, and gives the public root its literal-path loader plus one local
+  PRE -> ACK+EOF -> child -> POST transition. The evidence and payload
+  assembly edges intentionally remain exact fail-closed stubs, so no runtime
+  invocation can self-assert receipt facts. Its source SHA-256 is
+  `de81082af61edc3e1d1d0b65749b493f45717d72708f6135eadc608099df9385`.
+  The preserved suite has 45 checks: mock-only success, failure, outcome,
+  post-finalization, and interruption vectors prove local ordering only. No
+  real `/run` read, barrier, measurement, child, fixture, namespace, REAPER,
+  audio, X11, network, or host action occurred.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps
@@ -221,8 +233,9 @@ Updated: 2026-09-04T03:02:34-07:00
   SessionConfig relation validation, `0B4b-evidence` for bounded private
   provenance/baseline helper implementation, `0B4b-bootstrap-transport` for
   fixed-loader/raw-helper implementation against doubles, and `0B4b-state` for
-  mock-only local composition. Admission and evidence are now sealed; bootstrap
-  transport is next. This documentation checkpoint itself changed no source or
+  mock-only local composition. Admission and evidence are sealed; bootstrap
+  transport and the mock-only state source are now locally verified but pending
+  independent review. This documentation checkpoint itself changed no source or
   test and performs no target import/execution, configuration/path/descriptor
   I/O, raw transport, barrier, measurement, child, fixture, namespace,
   Bubblewrap, systemd, REAPER, X11, audio, network, or host action. A

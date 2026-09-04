@@ -67,7 +67,7 @@ def _session_module() -> object:
 
 
 class Task0B4bPureHelperTests(unittest.TestCase):
-    def test_public_session_surface_remains_fail_closed(self) -> None:
+    def test_public_constructors_remain_direct_init_fail_closed(self) -> None:
         session = _session_module()
         with self.assertRaises(session.SessionError):
             session.SessionConfig()
@@ -75,8 +75,6 @@ class Task0B4bPureHelperTests(unittest.TestCase):
             session.SessionResult()
         with self.assertRaises(session.SessionError):
             session.load_session_config("/ignored", "/ignored")
-        with self.assertRaises(session.SessionError):
-            session.run_session(object())
 
     def test_freeze_and_materialize_are_bounded_unaliased_exact_containers(self) -> None:
         session = _session_module()

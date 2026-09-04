@@ -5,9 +5,10 @@ Task 0B3c descriptor gate, Task 0B3d child-adapter gate, Task 0B4a contract,
 and Task 0B4b-pure compatibility-helper checkpoint are sealed. Task
 0B4b-state-contract documentation checkpoint and Task 0B4b-admission-pure
 relation admission and Task 0B4b-evidence bounded observation/retention gate
-are sealed. The remaining order is bootstrap-transport and mock-only state
-gates; then B4c-design, Task
-0B5/closure/fixture-manifest review, and B4c-execution.
+are sealed. Bootstrap-transport and mock-only state source are locally green
+and pending independent review; the latter retains fail-closed evidence/payload
+stubs and proves only mocked local composition. The remaining order is
+B4c-design, Task 0B5/closure/fixture-manifest review, and B4c-execution.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -847,24 +848,27 @@ safe sequence is:
    ownership prevents a forged or descriptor-mutated baseline from closing an
    unrelated descriptor. It adds no runtime root, callback, raw channel, or
    all-true attestation. It proves no actual namespace/path/FD evidence.
-10. **Task 0B4b-bootstrap-transport:** a separate source/test gate must
-   author and seal the fixed-literal bootstrap loader and fixed standard-stream
-   helper logic against syscall/poll doubles or temporary controlled pipes. It
+10. **Task 0B4b-bootstrap-transport (locally verified, pending independent
+   review):** this separate source/test gate authored the fixed-literal bootstrap
+   loader and fixed standard-stream helper logic against syscall/poll doubles or
+   temporary controlled pipes. It
    must cover sidecar-first loading, descriptor/EOF bounds, ACK+EOF, write
    failure, deadline, and the one fd-2 diagnostic attempt without executing a
    real fixture or child.
-11. **Task 0B4b-state:** only after the preceding gates are sealed may a
-   further fresh explicit user authority and reviewed source contract implement
-   and test the one session root against bounded in-process transport and
-   evidence doubles. It must cover every failure-table row as a local
-   state-machine outcome: no child before ACK+EOF and no terminal POST for an
-   uncertain path. It uses a mocked `ChildOutcome`, mocked barrier, and mocked
-   measurement/evidence boundaries; it does not launch a sentinel or invoke
-   the real `PR_SET_DUMPABLE` barrier. The sealed Task 0B3d sentinel evidence
-   remains the only direct-child launch evidence. These tests prove local
-   composition only; they cannot claim fixed-path provenance, namespace
-   measurements, X11, scope exit, descendant containment, PID census, or host
-   compatibility.
+11. **Task 0B4b-state (locally verified, pending independent review):** under
+   the user's full project authority, the reviewed source contract now
+   implements and tests the one session root against bounded in-process
+   transport and evidence doubles. It covers local failure-table outcomes: no
+   child before ACK+EOF and no terminal POST for an uncertain path. It uses a
+   mocked `ChildOutcome`, mocked barrier, and mocked measurement/evidence
+   boundaries; it does not launch a sentinel or invoke the real
+   `PR_SET_DUMPABLE` barrier. The sealed Task 0B3d sentinel evidence remains
+   the only direct-child launch evidence. These tests prove local composition
+   only; they cannot claim fixed-path provenance, namespace measurements, X11,
+   scope exit, descendant containment, PID census, or host compatibility.
+   Neither the state source nor the bootstrap source may advance to B4c-design,
+   closure, a fixture manifest, or execution until its independent review seals
+   the ordered prerequisite chain.
 12. **Task 0B4c-design — controlled-fixture definition gate:** a separate,
    source-free design authority must define the bounded non-REAPER fixture,
    outer ownership, standard-stream topology, expected mounts, and resource

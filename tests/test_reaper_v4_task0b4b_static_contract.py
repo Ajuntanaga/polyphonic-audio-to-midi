@@ -9,7 +9,7 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "6004beb204a464e33d75f12aba058757d0875e8ba5dc12ff2ec56e67dbb262a2"
+EXPECTED_SOURCE_SHA256 = "de81082af61edc3e1d1d0b65749b493f45717d72708f6135eadc608099df9385"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",
@@ -23,6 +23,7 @@ EXPECTED_IMPORTS = {
     "import types",
     "from collections.abc import Mapping",
     "from tools import reaper_v4_attester as attester",
+    "from tools import reaper_v4_child_runner as child_runner",
     "from tools import reaper_v4_measurements as measurements",
     "from tools import reaper_v4_protocol as protocol",
     "from tools import reaper_v4_receipt_schema as receipt_schema",
@@ -68,7 +69,12 @@ BOOTSTRAP_HELPERS = {
     "_load_fixed_session_config", "_wait_fixed_pipe", "_write_frame_once",
     "_read_ack_eof",
 }
-EXPECTED_FUNCTIONS = PURE_HELPERS | EVIDENCE_HELPERS | BOOTSTRAP_HELPERS | PUBLIC_FUNCTIONS
+STATE_HELPERS = {
+    "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
+    "_assemble_pre_payload", "_assemble_post_payload", "_child_spec_from_config",
+    "_validate_child_outcome", "_finalize_post_payload",
+}
+EXPECTED_FUNCTIONS = PURE_HELPERS | EVIDENCE_HELPERS | BOOTSTRAP_HELPERS | STATE_HELPERS | PUBLIC_FUNCTIONS
 EXPECTED_SIGNATURES = {
     "_freeze_session_data": (("value",), ("object",), "object"),
     "_canonical_session_json_bytes": (("value",), ("object",), "bytes"),
@@ -110,11 +116,19 @@ EXPECTED_SIGNATURES = {
     "_wait_fixed_pipe": (("fd", "event", "deadline_ns"), ("int", "int", "int"), "None"),
     "_write_frame_once": (("frame", "deadline_ns"), ("bytes", "int"), "None"),
     "_read_ack_eof": (("deadline_ns",), ("int",), "bytes"),
+    "_capture_runtime_evidence": (("config",), ("SessionConfig",), "_EvidenceBaseline"),
+    "_recheck_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
+    "_release_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
+    "_assemble_pre_payload": (("config", "baseline"), ("SessionConfig", "_EvidenceBaseline"), "dict[str, object]"),
+    "_assemble_post_payload": (("config", "baseline", "outcome", "pre_monotonic_ns", "post_monotonic_ns"), ("SessionConfig", "_EvidenceBaseline", "child_runner.ChildOutcome", "int", "int"), "dict[str, object]"),
+    "_child_spec_from_config": (("config",), ("SessionConfig",), "child_runner.ChildSpec"),
+    "_validate_child_outcome": (("outcome",), ("child_runner.ChildOutcome",), "child_runner.ChildOutcome"),
+    "_finalize_post_payload": (("pre_payload", "ack", "post_payload"), ("dict[str, object]", "bytes", "dict[str, object]"), "bytes"),
     "load_session_config": (("config_path", "digest_path"), ("str", "str"), "SessionConfig"),
     "run_session": (("config",), ("SessionConfig",), "SessionResult"),
 }
 FORBIDDEN_ROOTS = {
-    "child_runner", "pathlib", "socket", "subprocess", "io", "sys",
+    "pathlib", "socket", "subprocess", "io", "sys",
     "importlib", "ctypes", "tempfile", "pickle", "marshal", "inspect", "platform", "threading", "signal",
 }
 FORBIDDEN_CALLS = {
@@ -125,14 +139,14 @@ OS_CALL_OWNERS = {
     "os.fstat": {"_capture_measurement_baseline", "_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_x11_baseline", "_setup_diagnostic_fd", "_wait_fixed_pipe", "_write_frame_once", "_read_ack_eof", "_read_fixed_regular"},
     "os.fstatvfs": {"_read_fixed_regular"},
     "os.open": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_read_fixed_regular"},
-    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline", "_read_fixed_regular"},
+    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline", "_read_fixed_regular", "run_session"},
     "os.read": {"_hash_regular_descriptor", "_read_fixed_regular", "_read_ack_eof"},
     "os.lseek": {"_hash_regular_descriptor"},
     "os.listdir": {"_capture_scan_baseline", "_capture_private_tree_baseline"},
     "os.write": {"_emit_diagnostic_once", "_write_frame_once"},
     "os.fpathconf": {"_write_frame_once"},
 }
-IMPORTED_ROOTS = {"attester", "dataclasses", "fcntl", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "select", "stat", "time", "types"}
+IMPORTED_ROOTS = {"attester", "child_runner", "dataclasses", "fcntl", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "select", "stat", "time", "types"}
 ALLOWED_IMPORTED_ATTRIBUTES = {
     "_freeze_session_data": {"types.MappingProxyType"},
     "_canonical_session_json_bytes": {"json.dumps"},
@@ -178,8 +192,23 @@ ALLOWED_IMPORTED_ATTRIBUTES = {
     "_wait_fixed_pipe": {"os.fstat", "select.POLLERR", "select.POLLHUP", "select.POLLIN", "select.POLLNVAL", "select.POLLOUT", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns"},
     "_write_frame_once": {"os.fpathconf", "os.fstat", "os.write", "protocol.MAX_FRAME_BYTES", "select.POLLOUT", "stat.S_ISFIFO"},
     "_read_ack_eof": {"os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "select.POLLIN", "stat.S_ISFIFO"},
+    "_capture_runtime_evidence": set(),
+    "_recheck_runtime_evidence": set(),
+    "_release_runtime_evidence": set(),
+    "_assemble_pre_payload": set(),
+    "_assemble_post_payload": {"child_runner.ChildOutcome"},
+    "_child_spec_from_config": {"child_runner.ChildSpec"},
+    "_validate_child_outcome": {"child_runner.ChildOutcome"},
+    "_finalize_post_payload": {
+        "protocol.FrameType", "protocol.FrameType.POST", "protocol.encode_frame",
+        "receipt_schema.validate_exchange", "receipt_schema.validate_post_payload",
+    },
     "load_session_config": set(),
-    "run_session": set(),
+    "run_session": {
+        "attester.establish_protocol_barrier", "child_runner.run_child", "os.close",
+        "protocol.FrameType", "protocol.FrameType.PRE", "protocol.encode_frame",
+        "receipt_schema.validate_pre_payload", "time.monotonic_ns", "types.MappingProxyType",
+    },
 }
 ALLOWED_CALLS = {
     "_freeze_session_data": {
@@ -226,8 +255,23 @@ ALLOWED_CALLS = {
     "_wait_fixed_pipe": {"SessionError", "int", "os.fstat", "poll.poll", "poll.register", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns", "type"},
     "_write_frame_once": {"SessionError", "_wait_fixed_pipe", "len", "os.fpathconf", "os.fstat", "os.write", "stat.S_ISFIFO", "type"},
     "_read_ack_eof": {"SessionError", "_wait_fixed_pipe", "os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "stat.S_ISFIFO", "type"},
-    "load_session_config": {"SessionError"},
-    "run_session": {"SessionError"},
+    "_capture_runtime_evidence": {"SessionError"},
+    "_recheck_runtime_evidence": {"SessionError"},
+    "_release_runtime_evidence": {"SessionError"},
+    "_assemble_pre_payload": {"SessionError"},
+    "_assemble_post_payload": {"SessionError"},
+    "_child_spec_from_config": {"SessionError", "_admit_session_config", "_child_spec_projection", "child_runner.ChildSpec"},
+    "_validate_child_outcome": {"SessionError", "type"},
+    "_finalize_post_payload": {"SessionError", "protocol.encode_frame", "receipt_schema.validate_exchange", "receipt_schema.validate_post_payload", "type"},
+    "load_session_config": {"SessionError", "_load_fixed_session_config", "type"},
+    "run_session": {
+        "SessionError", "_admit_session_config", "_assemble_post_payload", "_assemble_pre_payload",
+        "_base_config_projection", "_capture_runtime_evidence", "_child_spec_from_config",
+        "_emit_diagnostic_once", "_finalize_post_payload", "_read_ack_eof", "_recheck_runtime_evidence",
+        "_release_runtime_evidence", "_setup_diagnostic_fd", "_validate_child_outcome", "_write_frame_once",
+        "attester.establish_protocol_barrier", "child_runner.run_child", "object.__new__", "object.__setattr__",
+        "os.close", "protocol.encode_frame", "receipt_schema.validate_pre_payload", "time.monotonic_ns", "type",
+    },
 }
 EXACT_CALL_COUNTS = {
     "_canonical_session_json_bytes": {"_materialize_exact_builtins": 1, "json.dumps": 1},
@@ -245,6 +289,10 @@ EXACT_CALL_COUNTS = {
     "_wait_fixed_pipe": {"os.fstat": 1, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
     "_write_frame_once": {"os.fstat": 1, "os.fpathconf": 1, "_wait_fixed_pipe": 1, "os.write": 1},
     "_read_ack_eof": {"os.fstat": 1, "_wait_fixed_pipe": 2, "os.read": 2, "receipt_schema.validate_ack_bytes": 1},
+    "_child_spec_from_config": {"_admit_session_config": 1, "_child_spec_projection": 1, "child_runner.ChildSpec": 1},
+    "_finalize_post_payload": {"receipt_schema.validate_post_payload": 1, "receipt_schema.validate_exchange": 1, "protocol.encode_frame": 1},
+    "load_session_config": {"_load_fixed_session_config": 1},
+    "run_session": {"_read_ack_eof": 1, "child_runner.run_child": 1, "_finalize_post_payload": 1, "os.close": 1},
 }
 FORBIDDEN_NODES = (
     ast.Assert, ast.AsyncFunctionDef, ast.Await, ast.Delete, ast.Global, ast.Lambda, ast.NamedExpr,
@@ -360,7 +408,8 @@ def _assert_no_hidden_capability(name: str, node: ast.FunctionDef) -> None:
                     f"imported attribute is forbidden in {name}: {target}"
                 )
         if isinstance(candidate, ast.ExceptHandler):
-            assert not (isinstance(candidate.type, ast.Name) and candidate.type.id == "BaseException")
+            if isinstance(candidate.type, ast.Name) and candidate.type.id == "BaseException":
+                assert name == "run_session"
         if isinstance(candidate, ast.Call):
             target = _attribute_name(candidate.func)
             assert target is not None, "computed call target is forbidden"
@@ -486,6 +535,54 @@ def _assert_bounded_walkers(functions: dict[str, ast.FunctionDef]) -> None:
                 assert key_index < append_index
 
 
+def _assert_state_entrypoints(functions: dict[str, ast.FunctionDef]) -> None:
+    for name in (
+        "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
+        "_assemble_pre_payload", "_assemble_post_payload",
+    ):
+        _assert_error_stub(functions[name], "runtime evidence is not admitted")
+    loader_calls = [
+        _attribute_name(candidate.func)
+        for candidate in ast.walk(functions["load_session_config"])
+        if isinstance(candidate, ast.Call)
+    ]
+    assert loader_calls.count("_load_fixed_session_config") == 1
+    run = functions["run_session"]
+    calls = sorted(
+        (
+            candidate.lineno,
+            candidate.col_offset,
+            _attribute_name(candidate.func),
+        )
+        for candidate in ast.walk(run)
+        if isinstance(candidate, ast.Call)
+    )
+    direct = [target for _line, _column, target in calls]
+    required_order = (
+        "_setup_diagnostic_fd", "_admit_session_config", "_capture_runtime_evidence",
+        "_base_config_projection", "attester.establish_protocol_barrier",
+        "_assemble_pre_payload", "receipt_schema.validate_pre_payload", "protocol.encode_frame",
+        "time.monotonic_ns", "_write_frame_once", "_read_ack_eof", "_child_spec_from_config",
+        "_validate_child_outcome", "_recheck_runtime_evidence",
+        "_assemble_post_payload", "_finalize_post_payload", "os.close", "object.__new__",
+        "object.__setattr__",
+    )
+    cursor = 0
+    for target in required_order:
+        cursor = direct.index(target, cursor) + 1
+    outcome_calls = [
+        candidate for candidate in ast.walk(run)
+        if isinstance(candidate, ast.Call) and _attribute_name(candidate.func) == "_validate_child_outcome"
+    ]
+    assert len(outcome_calls) == 1
+    assert len(outcome_calls[0].args) == 1 and isinstance(outcome_calls[0].args[0], ast.Call)
+    assert _attribute_name(outcome_calls[0].args[0].func) == "child_runner.run_child"
+    assert "receipt_schema.validate_post_payload" not in direct
+    assert "receipt_schema.validate_exchange" not in direct
+    assert any(isinstance(node, ast.Return) for node in ast.walk(run))
+    assert not any(isinstance(node, ast.Try) and node.finalbody for node in ast.walk(run))
+
+
 def assert_b4b_source_contract() -> None:
     if sys.flags.optimize:
         raise AssertionError("the pre-import source contract may not run under optimization")
@@ -502,12 +599,11 @@ def assert_b4b_source_contract() -> None:
         _assert_signature(name, node)
         _assert_no_hidden_capability(name, node)
     _assert_bounded_walkers(functions)
-    for name in PUBLIC_FUNCTIONS:
-        _assert_error_stub(functions[name], "session execution is not admitted")
+    _assert_state_entrypoints(functions)
 
 
-class Task0B4bEvidenceStaticContractTests(unittest.TestCase):
-    def test_preimport_evidence_source_contract(self) -> None:
+class Task0B4bStateStaticContractTests(unittest.TestCase):
+    def test_preimport_state_source_contract(self) -> None:
         self.assertTrue(__debug__, "the contract may not run under optimization")
         assert_b4b_source_contract()
 
