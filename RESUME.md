@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-03T23:05:36-07:00
+Updated: 2026-09-03T23:58:17-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -144,17 +144,29 @@ Updated: 2026-09-03T23:05:36-07:00
   session code changed: frozen Task 0B1 receipt snapshots cannot be passed
   directly to the sealed Task 0A encoder, and a real namespace controlled
   fixture needs a parent scope/harness the session root does not own. The
-  design now splits the work into Task 0B4a, Task 0B4b (a later separately
-  authorized in-process mocked state-machine gate), and Task 0B4c (a later
-  separately authorized outer-harness controlled fixture). The raw-byte
+  design now splits the work into Task 0B4a, Task 0B4b-pure (bounded
+  in-memory compatibility helpers), a later separately authorized
+  state-machine gate, and Task 0B4c (a later separately authorized
+  outer-harness controlled fixture). The raw-byte
   skeleton pin is
   `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`;
   its source-only test reports one normal pass and two intentionally retained
   expected failures after their RED was recorded. Two independent reviews are
-  CLEAN. Task 0B4b needs a fresh explicit user authorization plus a stronger
-  function-local source contract before `reaper_v4_session.py` may change or
-  be imported. No session source, fixture, namespace, Bubblewrap, systemd,
-  REAPER, X11, audio, network, or host action occurred.
+  CLEAN.
+- Task 0B4b-pure is now sealed as the narrow compatibility-helper increment.
+  It retired the B4a expected-failure guard, added an exact pre-import AST
+  contract and five in-memory behavior tests, and changed only
+  `tools/reaper_v4_session.py` as production source. Its source SHA-256 is
+  `9aa503dc77f37ace46202a35797925e784e9e302b866d3c81d880897e7a86c99`.
+  The immutable Task 0B1 static gate, B4b-pure pre-import contract, and
+  helper suite passed 13 checks; two independent reviews are CLEAN. The
+  session still has immediate-failure public entrypoints and no raw transport,
+  configuration-path/descriptor I/O, barrier, measurement, child, fixture,
+  namespace, Bubblewrap, systemd, REAPER, X11, audio, network, or host action.
+  It proves no session admission, ACK order, receipt emission, or host
+  compatibility. Any state-machine source or execution now needs a fresh named
+  authority and reviewed contract; Task 0B4c remains a separate outer-harness
+  gate.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,
@@ -164,9 +176,11 @@ Updated: 2026-09-03T23:05:36-07:00
 - Therefore no V4 REAPER/Bubblewrap/systemd command may be formed or executed.
   Tasks 0B3a, 0B3b, 0B3c, and 0B3d add only sealed non-admissible, receipt,
   synthetic descriptor, and direct-child-adapter evidence respectively. Task
-  0B1 remains preservation-only. Its static test may be rerun without importing
-  target modules; any further session, fixture, namespace, or external action
-  requires a new scoped task.
+  0B4a adds the sealed source-contract checkpoint, and Task 0B4b-pure adds
+  only bounded in-memory compatibility helpers with fail-closed public
+  entrypoints. Task 0B1 remains preservation-only. Its static test may be
+  rerun without importing target modules; any state-machine, fixture,
+  namespace, or external action requires a new scoped task.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots

@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is a sealed non-admissible skeleton, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, and Task 0B3d is sealed direct-child adapter evidence. Fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, and Task 0B4b-pure is sealed bounded compatibility-helper evidence. A session state machine, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -284,19 +284,34 @@ two blockers in the old combined gate: the immutable Task 0B1 receipt snapshot
 cannot be passed directly into the sealed Task 0A JSON encoder, and a real
 fixed-path namespace fixture would require an outer scope/harness that the
 session root deliberately does not own. The design now splits this work into
-Task 0B4a (source-contract and compatibility correction), Task 0B4b
-(in-process mocked state-machine evidence), and later separately authorized
-Task 0B4c (outer-harness controlled fixture). No session source, fixture,
+Task 0B4a (source-contract and compatibility correction), Task 0B4b-pure
+(bounded in-memory compatibility helpers), a separately named later
+state-machine gate, and Task 0B4c (outer-harness controlled fixture). No
+session state machine or fixture,
 namespace, Bubblewrap, systemd, REAPER, X11, audio, network, or host action
 has occurred under this correction. Task 0B4a is sealed with the unchanged
 session-skeleton SHA-256
 `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`.
 Its pre-import checkpoint reports one normal byte-pin PASS and two deliberately
 retained expected failures after the corresponding REDs were observed; two
-independent reviews are CLEAN. Task 0B4b needs another fresh explicit
-authority and a stronger function-local source contract before any session
-source import or change. It uses a mocked `ChildOutcome` and mocked
-barrier/evidence boundaries, not a real child or `PR_SET_DUMPABLE` call.
+independent reviews are CLEAN.
+
+**Task 0B4b-pure checkpoint.** A fresh explicit pure-source authority then
+retired the B4a expected-failure test and added the reviewed B4b-pure
+pre-import contract plus five in-memory helper tests. It changed only
+`tools/reaper_v4_session.py` as production source and defines no state-machine entrypoint:
+`load_session_config()` and `run_session()` remain immediate `SessionError`
+stubs. The sealed source SHA-256 is
+`9aa503dc77f37ace46202a35797925e784e9e302b866d3c81d880897e7a86c99`.
+The combined immutable Task 0B1 static gate, B4b-pure pre-import gate, and
+pure-helper suite passed 13 checks; two independent reviews are CLEAN. The
+helpers prove only bounded freeze/materialize/canonical/digest behavior, a
+non-admitted supplied-byte snapshot, a fresh Task 0A base-config projection,
+and PRE/POST value-to-encoder compatibility. They do not open configuration
+paths, consume ACKs, emit frames, establish a barrier, collect measurements,
+launch a child, form a namespace or fixture, or imply any host compatibility.
+The next state-machine work needs a fresh named authority and reviewed source
+contract; Task 0B4c remains a distinct later outer-harness gate.
 
 Before a fixture, use the reviewed Task 0B0 method to seal the complete runtime
 closure from exactly one reviewed session-entrypoint root through Task 0A plus
@@ -306,7 +321,8 @@ successor references, but never mutates, the immutable Task 0A source component.
 The closure constructor/parser identities bind that record but are not fixture
 mounts. This work yields two deliberately separate manifest states:
 
-1. **fixture-runtime-manifest**: the skeleton plus the exact
+1. **fixture-runtime-manifest**: only after a separately reviewed executable
+   session-entrypoint state-machine source exists, that root plus the exact
    receipt-schema/collector/adapter closure and only the entries needed by one
    bounded non-REAPER fixture. It can support a safety property but is never a
    reaper-host-runtime-manifest and must never imply REAPER compatibility.

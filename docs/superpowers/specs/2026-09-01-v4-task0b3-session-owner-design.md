@@ -1,9 +1,10 @@
 # V4 Task 0B3 — Single Session-Owner Design
 
-**Status:** design-only; Task 0B3a non-admissible skeleton and Task 0B3b pure
-receipt gate independently reviewed. Task 0B4 is split below into an
-implementable in-process state-machine gate and a separately authorized outer
-harness gate.
+**Status:** design-only; Task 0B3a root shell, Task 0B3b pure receipt gate,
+Task 0B3c descriptor gate, Task 0B3d child-adapter gate, Task 0B4a contract,
+and Task 0B4b-pure compatibility-helper checkpoint are sealed. The remaining
+Task 0B4 work is a separately authorized state-machine gate followed by a
+separately authorized outer-harness gate.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
 contract. By itself, it authorizes no module import, component invocation,
@@ -41,16 +42,18 @@ all three Task 0B1 runtime libraries, the only permitted closure state remains:
 BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)
 ```
 
-Task 0B3a reserves this root identity and public API as a deliberately
-**non-admissible skeleton**. Its two public functions raise `SessionError`
-before configuration I/O, validation, clocks, diagnostics, descriptor access,
-frame/ACK work, measurement, or child work. Its syntactic imports are
-declaration-only static edges; they do not prove executable reachability or
+Task 0B3a reserved this root identity and public API as a deliberately
+**non-admissible skeleton**. Task 0B4b-pure retains the same two
+immediate-failure public functions and adds only bounded in-memory
+compatibility helpers; it performs no configuration I/O, clocks, diagnostics,
+descriptor access, frame/ACK work, measurement, or child work. Its private
+Task 0A base-config projection is not a public validation/admission entrypoint.
+Those imports/helpers do not prove executable runtime reachability or
 permit a successor Task 0B0 closure to become a fixture candidate. The detailed
 execution rules in this record are reserved intact for the later Task 0B4
-implementation gates. The state-machine source and its mocked/in-process
-tests do not themselves create the outer namespace harness required to prove
-raw-scope recovery or host compatibility.
+state-machine gate. That source and its mocked/in-process tests do not
+themselves create the outer namespace harness required to prove raw-scope
+recovery or host compatibility.
 
 No second coordinator, fallback runner, alternate receipt writer, or
 out-of-namespace control channel is permitted.
@@ -818,35 +821,41 @@ safe sequence is:
    helpers, and silent PRE-only uncertainty. This stage is documentation and
    test-first source-shape work; it creates no namespace, raw scope, fixture,
    or host proof.
-6. **Task 0B4b — in-process state-machine gate:** a further fresh explicit
-   user authority is required after Task 0B4a review before importing or
-   executing the session source. It may implement and test the one session root
-   against bounded in-process transport and evidence doubles. It must cover
-   every row in the failure table as a state-machine outcome: no child before
-   ACK+EOF and no terminal POST for any uncertain path. It uses a mocked
-   `ChildOutcome`, mocked barrier, and mocked measurement/evidence boundaries;
-   it does not launch a sentinel or invoke the real `PR_SET_DUMPABLE` barrier.
-   The sealed Task 0B3d sentinel evidence remains the only direct-child launch
-   evidence. These tests may prove the session's local composition only. They
-   must not claim fixed-path provenance, namespace measurements, X11, scope
-   exit, descendant containment, PID census, or host compatibility.
-7. **Task 0B4c — outer-harness controlled-fixture gate:** a separately scoped
+6. **Task 0B4b-pure — compatibility-helper checkpoint (sealed):** the later
+   pure in-memory source/test gate implements only bounded data conversion,
+   canonical/digest handling, Task 0A base-config projection, and PRE/POST
+   value-to-encoder compatibility. Public session entrypoints remain
+   immediate-failure stubs; it does not implement the session state machine,
+   transport, barrier, evidence, or child path.
+7. **Later state-machine gate:** a further fresh explicit user authority and
+   reviewed source contract are required before importing/executing any session
+   state-machine path. It may implement and test the one session root against
+   bounded in-process transport and evidence doubles. It must cover every row
+   in the failure table as a state-machine outcome: no child before ACK+EOF and
+   no terminal POST for any uncertain path. It uses a mocked `ChildOutcome`,
+   mocked barrier, and mocked measurement/evidence boundaries; it does not
+   launch a sentinel or invoke the real `PR_SET_DUMPABLE` barrier. The sealed
+   Task 0B3d sentinel evidence remains the only direct-child launch evidence.
+   These tests may prove the session's local composition only. They must not
+   claim fixed-path provenance, namespace measurements, X11, scope exit,
+   descendant containment, PID census, or host compatibility.
+8. **Task 0B4c — outer-harness controlled-fixture gate:** a separately scoped
    authority is required before an actual fixed-path/standard-stream,
    namespace/mount/FD/proc fixture, concurrent parent drains, or any
    uncertain-child teardown/census scenario. It must provide the outer scope
    owner that this session intentionally lacks. It still does not authorize
    Bubblewrap, systemd, REAPER, X11, audio, host scanning, or a host launch
    unless an even later authority explicitly does so.
-8. **Task 0B5 — graph-construction implementation gate:** under a separate
+9. **Task 0B5 — graph-construction implementation gate:** under a separate
    data-only authority, implement and review the currently unavailable closed
    schema/catalog/graph-construction method. It may parse only supplied static
    data through retained directory descriptors; it must not import, execute, or
    load a target or create a fixture.
-9. **Successor Task 0B0 closure review:** only after the graph constructor is
+10. **Successor Task 0B0 closure review:** only after the graph constructor is
    independently reviewed, rebuild the graph from this one session-entrypoint
    root through Task 0A and every runtime library. It must remain blocked on
    any unresolved edge, budget excess, or missing root.
-10. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
+11. **Separate fixture-manifest and host-manifest gates:** a bounded non-REAPER
    fixture manifest may prove only a safety property. REAPER compatibility and
    a host request remain separate, later decisions.
 

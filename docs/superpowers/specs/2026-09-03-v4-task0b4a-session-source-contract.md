@@ -3,13 +3,23 @@
 **Status:** sealed documentation plus intentional-RED checkpoint; no source
 implementation.
 
+**Supersession note:** the later, separately authorized Task 0B4b-pure
+checkpoint is sealed at
+`docs/superpowers/specs/2026-09-03-v4-task0b4b-pure-session-helpers-contract.md`.
+It implements only seven bounded in-memory compatibility helpers and preserves
+the fail-closed public entrypoints.  Its deliberately non-admitted parser
+supersedes this checkpoint's broader proposed parser/admission language; a
+state machine still needs its own later authority.
+
 **Authority:** The current Task 0B4a authority permits this contract and a
 pre-import AST/source-byte test for
 `tools/reaper_v4_session.py`. It permits no import or execution of that module,
 no change to its source before independent review of this contract, and no
 session, child, barrier, descriptor, pipe, namespace, Bubblewrap, systemd,
-REAPER, X11, audio, network, or host action. Task 0B4b needs a fresh explicit
-authority before any session source import or execution.
+REAPER, X11, audio, network, or host action. At the B4a handoff, Task 0B4b
+needed a fresh explicit authority before any session source import or execution.
+That historical handoff was consumed only by the later sealed B4b-pure scope
+described above.
 
 ## 1. Immutable boundaries
 
@@ -114,6 +124,11 @@ The receipt phase and payload annotations are names under the sealed
 `receipt_schema` module alias only. They do not make that module a transport,
 I/O, or child owner.
 
+The broader parser/admission proposal in this historical section was narrowed
+before source work. The B4b-pure contract is the authoritative specification
+for the actual seven-helper source; no current source implements full nested
+policy/certificate admission.
+
 ### 3.1 Exact external dependency edges
 
 The following table is the complete external/dependency-edge graph. It lists
@@ -155,17 +170,11 @@ outer-harness work.
 
 ## 5. Test-first checkpoint
 
-`tests/test_reaper_v4_task0b4a_static_contract.py` must read and parse the
-session source before any target import. Its current-skeleton assertion pins
-the B3a source bytes and non-execution boundary throughout B4a. Its separate
-future-shape assertions were first observed RED, then retained as
-`unittest.expectedFailure` specifications: they prove the skeleton has not
-yet supplied the B4b private compatibility surface, import allowlist,
-signatures, or top-level safety shape, and an accidental early implementation
-becomes an unexpected-success failure. These are preliminary specifications,
-not a future green source guard: they intentionally do not validate helper-
-local calls, nested definitions/imports, exact annotations, or keyword-only
-forms. Before any B4b source implementation, a separate reviewed B4b static
-contract must remove and replace those expected-failure checks with exact
-function-local rules. The B4a test may only inspect source bytes/AST and does
-not itself make the contract executable evidence.
+`tests/test_reaper_v4_task0b4a_static_contract.py` read and parsed the session
+source before any target import during B4a. Its current-skeleton assertion
+pinned the B3a source bytes and its two future-shape assertions were first
+observed RED, then retained as `unittest.expectedFailure` specifications. At
+the sealed B4b-pure checkpoint, that preliminary test was retired and replaced
+by `tests/test_reaper_v4_task0b4b_static_contract.py`, which enforces exact
+function-local rules before the target import. The historical B4a test did not
+itself make the contract executable evidence.
