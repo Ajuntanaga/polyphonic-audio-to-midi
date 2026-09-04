@@ -1,17 +1,44 @@
 # M3 Polyphonic Audio to MIDI
 
-Status: terminal JSFX experiment; native CLAP design approved; native
-implementation plan prepared; not implemented or installed.
+Status: the JSFX detector is retained as a behavioral oracle; a native Linux
+x86-64 VST3 effect now provides the practical low-register live-MIDI path.
+It is built and staged in a disposable REAPER profile, not installed into the
+user's persistent VST3 directory.
 
-Source-editable, causal, real-time polyphonic audio-to-MIDI for REAPER and a
-downstream VSTi. The current experimental detector is JSFX/EEL2. The approved
-next runtime is a CLAP effect with a format-neutral C++17 core; its detailed
-[native implementation plan](docs/superpowers/plans/2026-08-28-native-clap-polyphonic-audio-to-midi.md)
-is written, but no native code or dependency has been added yet. Lua remains
-limited to disposable host testing and the guarded Safe Bypass action. The M3
-profile maps the eight open
-strings to MIDI `32,36,40,44,48,52,56,60` (`G# C E G# C E G# C`, low to high)
-and emits ordinary discrete MIDI rather than MPE.
+M3 is a source-editable, causal audio-to-MIDI effect for REAPER and a
+downstream VSTi. The practical native path is a C++17 VST3 effect with a
+single audio-thread detector. Lua only creates the disposable REAPER track;
+it does not perform detection or MIDI generation. The M3 profile maps the
+eight open strings to MIDI `32,36,40,44,48,52,56,60` (`G# C E G# C E G# C`,
+low to high) and emits ordinary discrete MIDI rather than MPE.
+
+## Use now: low-string live MIDI
+
+The staged native profile creates one armed, monitored track:
+
+```text
+Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
+```
+
+It is configured for 48 kHz, 256 samples, MIDI notes `24..48`, muted dry
+audio, and one detected note at a time. That makes it appropriate for clean,
+low-register eight-string lines and single-note playing; it is **not yet a
+polyphonic chord transcriber**. The native detector and its MIDI note-on/off
+path have been verified with an audio-driven REAPER/VST3 probe. Final guitar
+calibration remains physical-input work: plug the guitar into Revelator input
+1, arm/monitor the staged track, then adjust input gain or detector
+sensitivity only if needed.
+
+To prepare another disposable profile without touching the live REAPER setup:
+
+```bash
+python3 tools/stage_live_midi_env.py \
+  --output build/m3-native-live-midi \
+  --detector native
+```
+
+The native bundle stays under `build/`; staging copies it only into that
+disposable profile. No persistent plug-in installation is required.
 
 Task 11 passed a disposable REAPER chain containing the synthetic signal
 source, the production detector, MIDI capture, ReaSynth, and an audio-output
@@ -43,19 +70,15 @@ performance-ready and must not be installed. See
 [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for hashes and the recorded
 `native amendment required` decision.
 
-The approved native amendment selects a Linux x86-64 CLAP track effect, raw
-MIDI 1.0, a single audio-thread detector, a fixed 64-sample decision cadence,
-and REAPER's generic parameter view for the first revision. The committed
-[native CLAP design](docs/superpowers/specs/2026-08-28-native-clap-polyphonic-audio-to-midi-design.md)
-was introduced at design checkpoint `3ac7dcb`; the written specification was
-approved on 2026-08-28. The native implementation plan was prepared on
-2026-08-28. Dependency retrieval, native source work, and every REAPER launch
-remain gated exactly as stated in that plan.
+The earlier CLAP experiment remains preserved as historical evidence. The
+current implementation uses VST3 because its disposable host probe succeeded
+and it integrates directly with the staged REAPER chain. The future work that
+matters for music quality is physical 8-string calibration and, separately,
+expanding the detector beyond one simultaneous note.
 
-This remains synthetic dummy-audio evidence, not a live-guitar or audible
-hardware claim. Persistent installation, live projects, audio-interface input,
-clean-DI metrics, and native implementation remain separately gated. The fresh
-local source gate is 90 tests plus a clean
-standalone contract. See
-[docs/TESTING.md](docs/TESTING.md) for the isolated verification boundary and
-[docs/MIDI-LIFECYCLE.md](docs/MIDI-LIFECYCLE.md) for cleanup behavior.
+The probe evidence is not a substitute for a guitar performance test. It proves
+the native effect can turn audio into downstream MIDI in REAPER; it does not
+prove tracking quality for a particular instrument, pickup, tuning, or playing
+style. See [docs/TESTING.md](docs/TESTING.md) for the isolated verification
+boundary and [docs/MIDI-LIFECYCLE.md](docs/MIDI-LIFECYCLE.md) for cleanup
+behavior.
