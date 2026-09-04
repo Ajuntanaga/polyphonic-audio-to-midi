@@ -183,18 +183,34 @@ Updated: 2026-09-04T00:38:10-07:00
   and bounded snapshot walkers. This gate did not open a path, establish a
   barrier, read/write a frame, launch a child, create a fixture/namespace, or
   run REAPER, audio, X11, network, or host work. Public session entrypoints
-  remain immediate-failure stubs. Task 0B4b-evidence is next.
+  remain immediate-failure stubs. Task 0B4b-bootstrap-transport is next.
+- Task 0B4b-evidence is sealed as the bounded supplied-observation and
+  descriptor-retention gate. It replaced the admission static contract while
+  preserving B4b-pure/admission regressions, and added cwd/environment,
+  measurement, scan/private-home, X11, FD/mount, certificate, retained-recheck,
+  and one-shot-release helpers. Its registry binds every successful baseline to
+  its original descriptor tuple, refusing forged or mutated values before they
+  can close a descriptor. The sealed source SHA-256 is
+  `6049ec3096cf9a2fc50678884180fe4e0ef6072032418931f0d48afa14f83a1f`.
+  Thirty checks passed across the immutable Task 0B1 static, evidence static,
+  B4b-pure, admission, and temporary-resource evidence suites; three
+  independent reviews are CLEAN and `git diff --check` passes. Only temporary
+  controlled resources/supplied descriptors were used. No fixed `/run` path,
+  raw stream, barrier, child, namespace, launcher, REAPER, audio, network, or
+  host scan ran; public entrypoints remain fail closed. The next gate is
+  Task 0B4b-bootstrap-transport.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps
   Task 0B4c for the later outer-harness fixture, and records why B4b-pure's
   non-admitting parser, descriptor-only collector, and direct POST encoder
   cannot be used as a state-machine admission path. It reserves four future
-  separately authorized gates: `0B4b-admission-pure` for complete in-memory
+  ordered the four source gates: `0B4b-admission-pure` for complete in-memory
   SessionConfig relation validation, `0B4b-evidence` for bounded private
   provenance/baseline helper implementation, `0B4b-bootstrap-transport` for
   fixed-loader/raw-helper implementation against doubles, and `0B4b-state` for
-  mock-only local composition. This current checkpoint changes no source or
+  mock-only local composition. Admission and evidence are now sealed; bootstrap
+  transport is next. This documentation checkpoint itself changed no source or
   test and performs no target import/execution, configuration/path/descriptor
   I/O, raw transport, barrier, measurement, child, fixture, namespace,
   Bubblewrap, systemd, REAPER, X11, audio, network, or host action. A
@@ -217,11 +233,13 @@ Updated: 2026-09-04T00:38:10-07:00
   only bounded in-memory compatibility helpers with fail-closed public
   entrypoints. Task 0B4b-admission-pure adds only locally snapshotted,
   self-consistent configuration admission and still exposes no runnable session
-  path. Task 0B4b-state-contract adds documentation-only prerequisite ordering,
-  not an executable state machine. Task 0B1 remains preservation-only. Its
-  static test may be rerun without importing target modules; evidence,
-  bootstrap-transport, state-machine, fixture, namespace, or external action
-  follows in its own scoped implementation gate.
+  path. Task 0B4b-evidence adds only temporary/supplied-observation and
+  descriptor-retention helper behavior, not executable session admission.
+  Task 0B4b-state-contract adds documentation-only prerequisite ordering, not
+  an executable state machine. Task 0B1 remains preservation-only. Its static
+  test may be rerun without importing target modules; bootstrap-transport,
+  state-machine, fixture, namespace, or external action follows in its own
+  scoped implementation gate.
 - Any later V4 host execution needs the compatibility-complete
   `reaper-host-runtime-manifest`,
   implementation and independent review of the isolation controls, fresh roots

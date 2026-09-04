@@ -4,8 +4,9 @@
 Task 0B3c descriptor gate, Task 0B3d child-adapter gate, Task 0B4a contract,
 and Task 0B4b-pure compatibility-helper checkpoint are sealed. Task
 0B4b-state-contract documentation checkpoint and Task 0B4b-admission-pure
-relation admission are sealed. The remaining order is evidence,
-bootstrap-transport, and mock-only state gates; then B4c-design, Task
+relation admission and Task 0B4b-evidence bounded observation/retention gate
+are sealed. The remaining order is bootstrap-transport and mock-only state
+gates; then B4c-design, Task
 0B5/closure/fixture-manifest review, and B4c-execution.
 
 **Authority:** This Task 0B3 record defines a future in-namespace session-owner
@@ -839,11 +840,13 @@ safe sequence is:
    fresh private base/child projection. It replaced the B4b-pure static
    contract while preserving all seven pure-helper regressions. It opened no
    path, claimed no provenance, established no barrier, and emitted no frame.
-9. **Task 0B4b-evidence:** a separate source/test gate must author and seal
-   each bounded private evidence and retained-baseline helper required by the
-   provenance table, with synthetic/mock/temporary-resource negative tests.
-   It must not add a runtime root, callback, raw channel, or all-true
-   attestation. Actual namespace/path/FD proof remains later.
+9. **Task 0B4b-evidence (sealed):** the bounded source/test gate now supplies
+   private cwd/environment, measurement-root, scan-root, private-home, X11,
+   FD-census, mount, certificate-projection, and retained-baseline helpers
+   through temporary controlled descriptors/observations. Its registry-bound
+   ownership prevents a forged or descriptor-mutated baseline from closing an
+   unrelated descriptor. It adds no runtime root, callback, raw channel, or
+   all-true attestation. It proves no actual namespace/path/FD evidence.
 10. **Task 0B4b-bootstrap-transport:** a separate source/test gate must
    author and seal the fixed-literal bootstrap loader and fixed standard-stream
    helper logic against syscall/poll doubles or temporary controlled pipes. It

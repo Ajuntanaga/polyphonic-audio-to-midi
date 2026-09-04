@@ -88,20 +88,18 @@ and static-consistency review only. Passing one does not authorize the next.
    successor retired and replaced the B4b-pure static contract while preserving
    regression coverage for all seven B4b-pure helpers. It remains non-runnable
    and does not authorize any later successor.
-2. **Task 0B4b-evidence — bounded evidence implementation gate.** A separate
-   source/test authority must author and seal the private session-owned
-   observation and retention helpers needed for each Task 0B3 Section 4
-   assertion. Every helper needs named bounded inputs, output schema,
-   retained-resource owner, close/error behavior, PRE/post use, a fixed source
-   edge, and negative tests. It must cover the measurement-root descriptor,
-   scan-root baseline, private-home tree, mount projection, X11 identities,
-   inherited-FD census, certificate applicability projection, and post-child
-   recheck. Tests may use only supplied mock or temporary controlled resources;
-   they establish helper behavior, not namespace evidence. The implementation
-   must exist before the state-machine closure is sealed. It must not add a
-   second runtime root, arbitrary callback, raw control channel, or all-true
-   fixture vector. Actual namespace/path/FD proof remains for Task
-   0B4c-execution.
+2. **Task 0B4b-evidence — bounded evidence implementation gate (sealed).**
+   The source/test successor now provides private supplied cwd/environment,
+   measurement-root, scan-root, private-home, mount, X11, inherited-FD,
+   certificate-projection, retained-recheck, and one-shot-release helpers.
+   Registry-bound original descriptor tuples reject forged/mutated baselines
+   before recheck/release. Its source SHA-256 is
+   `6049ec3096cf9a2fc50678884180fe4e0ef6072032418931f0d48afa14f83a1f`;
+   30 focused checks and three independent reviews are clean. Tests used only
+   supplied observations and temporary controlled resources, so this proves
+   helper behavior—not namespace evidence—and creates no runtime root,
+   callback, raw control channel, or all-true fixture vector. Actual
+   namespace/path/FD proof remains for Task 0B4c-execution.
 3. **Task 0B4b-bootstrap-transport — fixed-loader and raw-helper gate.** A
    separate source/test authority must author and seal the fixed-literal
    configuration loader and fixed fd-0/fd-1/fd-2 transport helpers before the

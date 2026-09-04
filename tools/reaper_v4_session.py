@@ -4,9 +4,12 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import os
+import stat
 import types
 from collections.abc import Mapping
 from tools import reaper_v4_attester as attester
+from tools import reaper_v4_measurements as measurements
 from tools import reaper_v4_protocol as protocol
 from tools import reaper_v4_receipt_schema as receipt_schema
 
@@ -54,6 +57,27 @@ class SessionResult:
 
     def __init__(self) -> None:
         raise SessionError("session execution is not admitted")
+
+
+@dataclasses.dataclass(frozen=True, init=False)
+class _EvidenceBaseline:
+    config: SessionConfig
+    descriptors: tuple[int, int, int, int, int]
+    environment: Mapping[str, object]
+    measurement: Mapping[str, object]
+    scan: Mapping[str, object]
+    private_tree: Mapping[str, object]
+    x11: Mapping[str, object]
+    inherited_fds: tuple[Mapping[str, object], ...]
+    mounts: tuple[Mapping[str, object], ...]
+    certificate: Mapping[str, object]
+    released: bool
+
+    def __init__(self) -> None:
+        raise SessionError("evidence baseline is internal")
+
+
+_EVIDENCE_OWNERS = {}
 
 
 def _freeze_session_data(value: object) -> object:
@@ -882,6 +906,521 @@ def _admit_session_config(config: SessionConfig) -> SessionConfig:
         raise
     except Exception as error:
         raise SessionError("session configuration is invalid") from error
+
+
+def _hash_regular_descriptor(descriptor: int, size: int) -> str:
+    if type(descriptor) is not int or descriptor < 0 or type(size) is not int or not 0 <= size <= 16 * 1024 * 1024:
+        raise SessionError("regular descriptor is invalid")
+    digest = hashlib.sha256()
+    remaining = size
+    try:
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        while remaining:
+            chunk = os.read(descriptor, min(65536, remaining))
+            if not chunk:
+                raise SessionError("regular descriptor size changed")
+            digest.update(chunk)
+            remaining -= len(chunk)
+        if os.read(descriptor, 1):
+            raise SessionError("regular descriptor size changed")
+    except SessionError:
+        raise
+    except (OSError, OverflowError) as error:
+        raise SessionError("regular descriptor cannot be read") from error
+    return digest.hexdigest()
+
+
+def _capture_environment_baseline(
+    config: SessionConfig, cwd: str, environment: Mapping[str, object]
+) -> Mapping[str, object]:
+    try:
+        admitted = _admit_session_config(config)
+        if type(cwd) is not str or type(environment) is not dict:
+            raise SessionError("environment observation is invalid")
+        observed = _freeze_session_data({"cwd": cwd, "environment": environment})
+        expectations = admitted.data["namespace_expectations"]
+        expected_environment = expectations["environment"]
+        observed_environment = observed["environment"]
+        environment_keys = ("DISPLAY", "HOME", "LANG", "PWD", "TZ", "XAUTHORITY")
+        forbidden_environment = (
+            "BASH_ENV", "CLAP_PATH", "DBUS_SESSION_BUS_ADDRESS", "ENV", "LD_AUDIT",
+            "LD_LIBRARY_PATH", "LD_PRELOAD", "PYTHONHOME", "PYTHONPATH", "SSH_AUTH_SOCK",
+            "VST3_PATH", "VST_PATH", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR",
+        )
+        if (
+            observed["cwd"] != expectations["cwd"]
+            or observed_environment["HOME"] != expectations["home"]
+            or observed_environment["PWD"] != expectations["pwd"]
+            or tuple(observed_environment) != environment_keys
+            or dict(observed_environment) != dict(expected_environment)
+            or any(key in observed_environment for key in forbidden_environment)
+        ):
+            raise SessionError("environment observation is invalid")
+        return observed
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("environment observation is invalid") from error
+
+
+def _capture_measurement_baseline(config: SessionConfig, root_fd: int) -> Mapping[str, object]:
+    admitted = _admit_session_config(config)
+    if type(root_fd) is not int or root_fd < 0:
+        raise SessionError("measurement root descriptor is invalid")
+    expectations = admitted.data["namespace_expectations"]
+    root = expectations["measurement_root"]
+    plan = expectations["measurement_plan"]
+    try:
+        root_stat = os.fstat(root_fd)
+    except (OSError, OverflowError) as error:
+        raise SessionError("measurement root cannot be inspected") from error
+    if (
+        not stat.S_ISDIR(root_stat.st_mode)
+        or root_stat.st_dev != root["device"]
+        or root_stat.st_ino != root["inode"]
+    ):
+        raise SessionError("measurement root identity is invalid")
+    try:
+        measurement_plan = measurements.MeasurementPlan(
+            root_fd=root_fd,
+            resources=tuple(plan["resources"]),
+            expected=_materialize_exact_builtins(plan["expected"]),
+        )
+        snapshot = measurements.collect_namespace_measurements(measurement_plan)
+    except measurements.MeasurementError as error:
+        raise SessionError("measurement root facts are invalid") from error
+    return _freeze_session_data({
+        "device": root_stat.st_dev,
+        "inode": root_stat.st_ino,
+        "facts": _materialize_exact_builtins(snapshot.facts),
+        "evidence": _materialize_exact_builtins(snapshot.evidence),
+    })
+
+
+def _capture_scan_baseline(config: SessionConfig, root_fd: int) -> Mapping[str, object]:
+    admitted = _admit_session_config(config)
+    if type(root_fd) is not int or root_fd < 0:
+        raise SessionError("scan root descriptor is invalid")
+    scan = admitted.data["namespace_expectations"]["scan_root"]
+    try:
+        root_stat = os.fstat(root_fd)
+    except (OSError, OverflowError) as error:
+        raise SessionError("scan root cannot be inspected") from error
+    if not stat.S_ISDIR(root_stat.st_mode):
+        raise SessionError("scan root must be a directory")
+    tree: dict[str, object] = {}
+    for entry in scan["entries"]:
+        relative_path = entry["relative_path"]
+        current = tree
+        components = relative_path.split("/")
+        for component in components[:-1]:
+            child = current.get(component)
+            if child is None:
+                child = {}
+                current[component] = child
+            if type(child) is not dict:
+                raise SessionError("scan tree is invalid")
+            current = child
+        if components[-1] in current:
+            raise SessionError("scan tree is invalid")
+        current[components[-1]] = entry
+    pending: list[tuple[int, dict[str, object], str]] = [(root_fd, tree, "")]
+    opened: set[int] = set()
+    observed: list[dict[str, object]] = []
+    try:
+        while pending:
+            directory_fd, expected_children, prefix = pending.pop()
+            try:
+                names = os.listdir(directory_fd)
+            except OSError as error:
+                raise SessionError("scan directory cannot be listed") from error
+            if sorted(names) != sorted(expected_children):
+                raise SessionError("scan tree contains an unexpected name")
+            for name in sorted(names):
+                child = expected_children[name]
+                relative_path = name if not prefix else f"{prefix}/{name}"
+                if type(child) is dict:
+                    try:
+                        child_fd = os.open(
+                            name,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                            dir_fd=directory_fd,
+                        )
+                        child_stat = os.fstat(child_fd)
+                    except (OSError, OverflowError) as error:
+                        raise SessionError("scan directory cannot be opened") from error
+                    opened.add(child_fd)
+                    if not stat.S_ISDIR(child_stat.st_mode):
+                        raise SessionError("scan tree contains a non-directory")
+                    pending.append((child_fd, child, relative_path))
+                    continue
+                if type(child) is not types.MappingProxyType:
+                    raise SessionError("scan entry is invalid")
+                file_fd: int | None = None
+                try:
+                    file_fd = os.open(
+                        name,
+                        os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                        dir_fd=directory_fd,
+                    )
+                    file_stat = os.fstat(file_fd)
+                    if not stat.S_ISREG(file_stat.st_mode):
+                        raise SessionError("scan entry is not a regular file")
+                    mode = stat.S_IMODE(file_stat.st_mode)
+                    size = file_stat.st_size
+                    if mode != child["mode"] or size != child["size"]:
+                        raise SessionError("scan entry facts are invalid")
+                    digest = _hash_regular_descriptor(file_fd, size)
+                    if digest != child["sha256"]:
+                        raise SessionError("scan entry digest is invalid")
+                    observed.append({
+                        "relative_path": relative_path,
+                        "device": file_stat.st_dev,
+                        "inode": file_stat.st_ino,
+                        "mode": mode,
+                        "size": size,
+                        "sha256": digest,
+                    })
+                except SessionError:
+                    raise
+                except (OSError, OverflowError) as error:
+                    raise SessionError("scan entry cannot be inspected") from error
+                finally:
+                    if file_fd is not None:
+                        try:
+                            os.close(file_fd)
+                        except OSError as error:
+                            raise SessionError("scan entry cannot be closed") from error
+            if directory_fd != root_fd:
+                try:
+                    os.close(directory_fd)
+                except OSError as error:
+                    raise SessionError("scan directory cannot be closed") from error
+                opened.remove(directory_fd)
+    except SessionError:
+        for descriptor in tuple(opened):
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        raise
+    except Exception as error:
+        for descriptor in tuple(opened):
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        raise SessionError("scan baseline is invalid") from error
+    return _freeze_session_data({
+        "device": root_stat.st_dev,
+        "inode": root_stat.st_ino,
+        "entries": observed,
+    })
+
+
+def _capture_private_tree_baseline(config: SessionConfig, home_fd: int) -> Mapping[str, object]:
+    admitted = _admit_session_config(config)
+    if type(home_fd) is not int or home_fd < 0:
+        raise SessionError("private home descriptor is invalid")
+    private_tree = admitted.data["namespace_expectations"]["private_tree"]
+    home_mount = private_tree["home_mount"]
+    try:
+        home_stat = os.fstat(home_fd)
+    except (OSError, OverflowError) as error:
+        raise SessionError("private home cannot be inspected") from error
+    if not stat.S_ISDIR(home_stat.st_mode) or stat.S_IMODE(home_stat.st_mode) != home_mount["mode"]:
+        raise SessionError("private home facts are invalid")
+    observed_directories: list[dict[str, object]] = []
+    for name in private_tree["empty_directories"]:
+        descriptor: int | None = None
+        try:
+            descriptor = os.open(
+                name,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                dir_fd=home_fd,
+            )
+            directory_stat = os.fstat(descriptor)
+            names = os.listdir(descriptor)
+        except (OSError, OverflowError) as error:
+            raise SessionError("private home directory cannot be inspected") from error
+        finally:
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError as error:
+                    raise SessionError("private home directory cannot be closed") from error
+        if not stat.S_ISDIR(directory_stat.st_mode) or names:
+            raise SessionError("private home directory is not empty")
+        observed_directories.append({
+            "name": name,
+            "device": directory_stat.st_dev,
+            "inode": directory_stat.st_ino,
+        })
+    return _freeze_session_data({
+        "device": home_stat.st_dev,
+        "inode": home_stat.st_ino,
+        "mode": stat.S_IMODE(home_stat.st_mode),
+        "empty_directories": observed_directories,
+    })
+
+
+def _capture_x11_baseline(config: SessionConfig, authority_fd: int, socket_fd: int) -> Mapping[str, object]:
+    admitted = _admit_session_config(config)
+    if (
+        type(authority_fd) is not int or authority_fd < 0
+        or type(socket_fd) is not int or socket_fd < 0
+        or authority_fd == socket_fd
+    ):
+        raise SessionError("X11 descriptors are invalid")
+    x11 = admitted.data["namespace_expectations"]["x11_identity"]
+    authority = x11["authority"]
+    socket_identity = x11["socket"]
+    try:
+        authority_stat = os.fstat(authority_fd)
+        socket_stat = os.fstat(socket_fd)
+    except (OSError, OverflowError) as error:
+        raise SessionError("X11 descriptors cannot be inspected") from error
+    if (
+        not stat.S_ISREG(authority_stat.st_mode)
+        or authority_stat.st_nlink != 1
+        or stat.S_IMODE(authority_stat.st_mode) != authority["destination_mode"]
+        or authority_stat.st_size != authority["destination_size"]
+        or authority_stat.st_size > 65536
+        or _hash_regular_descriptor(authority_fd, authority_stat.st_size) != authority["sha256"]
+    ):
+        raise SessionError("Xauthority facts are invalid")
+    if (
+        not stat.S_ISSOCK(socket_stat.st_mode)
+        or socket_stat.st_uid != socket_identity["uid"]
+        or socket_stat.st_gid != socket_identity["gid"]
+        or stat.S_IMODE(socket_stat.st_mode) != socket_identity["mode"]
+        or socket_stat.st_dev != socket_identity["device"]
+        or socket_stat.st_ino != socket_identity["inode"]
+    ):
+        raise SessionError("X11 socket facts are invalid")
+    return _freeze_session_data({
+        "authority": {
+            "device": authority_stat.st_dev,
+            "inode": authority_stat.st_ino,
+            "mode": stat.S_IMODE(authority_stat.st_mode),
+            "size": authority_stat.st_size,
+            "sha256": authority["sha256"],
+        },
+        "socket": {
+            "uid": socket_stat.st_uid,
+            "gid": socket_stat.st_gid,
+            "mode": stat.S_IMODE(socket_stat.st_mode),
+            "device": socket_stat.st_dev,
+            "inode": socket_stat.st_ino,
+        },
+    })
+
+
+def _validate_inherited_fd_census(
+    config: SessionConfig, observed: tuple[Mapping[str, object], ...]
+) -> tuple[Mapping[str, object], ...]:
+    admitted = _admit_session_config(config)
+    if type(observed) is not tuple:
+        raise SessionError("inherited descriptor census is invalid")
+    frozen = _freeze_session_data(list(observed))
+    expected = admitted.data["namespace_expectations"]["descriptor_policy"]["inherited_fds"]
+    if frozen != expected:
+        raise SessionError("inherited descriptor census is invalid")
+    return frozen
+
+
+def _validate_mount_projection(
+    config: SessionConfig, observed: tuple[Mapping[str, object], ...]
+) -> tuple[Mapping[str, object], ...]:
+    admitted = _admit_session_config(config)
+    if type(observed) is not tuple:
+        raise SessionError("mount projection is invalid")
+    frozen = _freeze_session_data(list(observed))
+    expectations = admitted.data["namespace_expectations"]
+    control = expectations["control_visibility"]
+    if frozen != control["mounts"]:
+        raise SessionError("mount projection is invalid")
+    home_mount = expectations["private_tree"]["home_mount"]
+    home_path = home_mount["path"]
+    selected: Mapping[str, object] | None = None
+    for mount in frozen:
+        path = mount["path"]
+        if path == "/" or home_path == path or home_path.startswith(f"{path}/"):
+            if selected is None or len(path) > len(selected["path"]):
+                selected = mount
+    if (
+        selected is None
+        or selected["filesystem_type"] != home_mount["filesystem_type"]
+        or selected["readonly"] == home_mount["writable"]
+    ):
+        raise SessionError("private home mount is invalid")
+    return frozen
+
+
+def _certificate_applicability_projection(config: SessionConfig) -> dict[str, object]:
+    admitted = _admit_session_config(config)
+    value = _materialize_exact_builtins(admitted.data)
+    expectations = value["namespace_expectations"]
+    return {
+        "runtime_manifest_sha256": value["runtime_manifest_sha256"],
+        "fixture_manifest_sha256": value["fixture_manifest_sha256"],
+        "bwrap": dict(value["bwrap"]),
+        "namespace_policy_sha256": value["namespace_policy_sha256"],
+        "mount_policy_sha256": expectations["control_visibility"]["mount_policy_sha256"],
+        "fd_policy_sha256": expectations["descriptor_policy"]["fd_policy_sha256"],
+        "user_namespace_policy_sha256": expectations["user_namespace"]["policy_sha256"],
+        "certificates": dict(value["fixture_certificates"]),
+    }
+
+
+def _require_owned_evidence_baseline(baseline: _EvidenceBaseline) -> tuple[int, int, int, int, int]:
+    try:
+        if type(baseline) is not _EvidenceBaseline or baseline.released:
+            raise SessionError("evidence baseline is invalid")
+        descriptors = baseline.descriptors
+        registered = _EVIDENCE_OWNERS.get(id(baseline))
+        if (
+            type(descriptors) is not tuple
+            or len(descriptors) != 5
+            or len(set(descriptors)) != 5
+            or type(registered) is not tuple
+            or len(registered) != 2
+            or registered[0] is not baseline
+            or descriptors != registered[1]
+        ):
+            raise SessionError("evidence baseline is invalid")
+        return registered[1]
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("evidence baseline is invalid") from error
+
+
+def _capture_evidence_baseline(
+    config: SessionConfig,
+    measurement_root_fd: int,
+    scan_root_fd: int,
+    home_fd: int,
+    authority_fd: int,
+    socket_fd: int,
+    cwd: str,
+    environment: Mapping[str, object],
+    inherited_fds: tuple[Mapping[str, object], ...],
+    mounts: tuple[Mapping[str, object], ...],
+) -> _EvidenceBaseline:
+    descriptors = (measurement_root_fd, scan_root_fd, home_fd, authority_fd, socket_fd)
+    if any(type(descriptor) is not int or descriptor < 0 for descriptor in descriptors) or len(set(descriptors)) != 5:
+        raise SessionError("evidence descriptors are invalid")
+    admitted = _admit_session_config(config)
+    retained = False
+    cleanup_done = False
+    try:
+        environment_baseline = _capture_environment_baseline(admitted, cwd, environment)
+        measurement = _capture_measurement_baseline(admitted, measurement_root_fd)
+        scan = _capture_scan_baseline(admitted, scan_root_fd)
+        private_tree = _capture_private_tree_baseline(admitted, home_fd)
+        x11 = _capture_x11_baseline(admitted, authority_fd, socket_fd)
+        inherited = _validate_inherited_fd_census(admitted, inherited_fds)
+        mount_projection = _validate_mount_projection(admitted, mounts)
+        certificate = _certificate_applicability_projection(admitted)
+        baseline = object.__new__(_EvidenceBaseline)
+        object.__setattr__(baseline, "config", admitted)
+        object.__setattr__(baseline, "descriptors", descriptors)
+        object.__setattr__(baseline, "environment", environment_baseline)
+        object.__setattr__(baseline, "measurement", measurement)
+        object.__setattr__(baseline, "scan", scan)
+        object.__setattr__(baseline, "private_tree", private_tree)
+        object.__setattr__(baseline, "x11", x11)
+        object.__setattr__(baseline, "inherited_fds", inherited)
+        object.__setattr__(baseline, "mounts", mount_projection)
+        object.__setattr__(baseline, "certificate", _freeze_session_data(certificate))
+        object.__setattr__(baseline, "released", False)
+        _EVIDENCE_OWNERS[id(baseline)] = (baseline, descriptors)
+        retained = True
+        return baseline
+    except SessionError:
+        failure: OSError | None = None
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError as error:
+                if failure is None:
+                    failure = error
+        cleanup_done = True
+        if failure is not None:
+            raise SessionError("evidence capture cleanup is uncertain") from failure
+        raise
+    except Exception as error:
+        failure = None
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError as close_error:
+                if failure is None:
+                    failure = close_error
+        cleanup_done = True
+        if failure is not None:
+            raise SessionError("evidence capture cleanup is uncertain") from failure
+        raise SessionError("evidence capture is invalid") from error
+    finally:
+        if not retained and not cleanup_done:
+            for descriptor in descriptors:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+
+
+def _recheck_evidence_baseline(
+    baseline: _EvidenceBaseline,
+    cwd: str,
+    environment: Mapping[str, object],
+    inherited_fds: tuple[Mapping[str, object], ...],
+    mounts: tuple[Mapping[str, object], ...],
+) -> None:
+    try:
+        measurement_root_fd, scan_root_fd, home_fd, authority_fd, socket_fd = _require_owned_evidence_baseline(baseline)
+        admitted = _admit_session_config(baseline.config)
+        if _capture_environment_baseline(admitted, cwd, environment) != baseline.environment:
+            raise SessionError("environment baseline changed")
+        if _capture_measurement_baseline(admitted, measurement_root_fd) != baseline.measurement:
+            raise SessionError("measurement baseline changed")
+        if _capture_scan_baseline(admitted, scan_root_fd) != baseline.scan:
+            raise SessionError("scan baseline changed")
+        if _capture_private_tree_baseline(admitted, home_fd) != baseline.private_tree:
+            raise SessionError("private tree baseline changed")
+        if _capture_x11_baseline(admitted, authority_fd, socket_fd) != baseline.x11:
+            raise SessionError("X11 baseline changed")
+        if _validate_inherited_fd_census(admitted, inherited_fds) != baseline.inherited_fds:
+            raise SessionError("inherited descriptor census changed")
+        if _validate_mount_projection(admitted, mounts) != baseline.mounts:
+            raise SessionError("mount projection changed")
+        if _freeze_session_data(_certificate_applicability_projection(admitted)) != baseline.certificate:
+            raise SessionError("certificate applicability changed")
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("evidence recheck is invalid") from error
+
+
+def _release_evidence_baseline(baseline: _EvidenceBaseline) -> None:
+    try:
+        descriptors = _require_owned_evidence_baseline(baseline)
+        object.__setattr__(baseline, "released", True)
+        _EVIDENCE_OWNERS.pop(id(baseline), None)
+        failure: OSError | None = None
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError as error:
+                if failure is None:
+                    failure = error
+        if failure is not None:
+            raise SessionError("evidence descriptor cannot be closed") from failure
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("evidence baseline is invalid") from error
 
 
 def load_session_config(config_path: str, digest_path: str) -> SessionConfig:

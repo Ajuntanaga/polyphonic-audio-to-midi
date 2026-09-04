@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, and Task 0B4b-admission-pure is sealed bounded in-memory relation admission. Task 0B4b-evidence is next; a session state machine, fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, Task 0B4b-admission-pure is sealed bounded in-memory relation admission, and Task 0B4b-evidence is sealed bounded observation/retention behavior. Task 0B4b-bootstrap-transport is next; a session state machine, fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -321,8 +321,22 @@ helper suite, and synthetic admission suite passed 18 checks; three independent
 reviews are CLEAN. The gate adds no loader, raw transport, barrier, evidence,
 receipt emission, child, fixture, namespace, REAPER, or host behavior.
 `load_session_config()` and `run_session()` still fail closed. The next work is
-Task 0B4b-evidence; bootstrap transport, state-machine, and Task 0B4c
-outer-harness work remain later gates.
+Task 0B4b-bootstrap-transport; state-machine and Task 0B4c outer-harness work
+remain later gates.
+
+**Task 0B4b-evidence checkpoint (sealed).** The bounded source/test successor
+replaced the admission static contract while preserving all B4b-pure and
+admission regressions. It added only supplied-observation and
+descriptor-rooted helpers for cwd/environment, measurement, scan/private home,
+X11, mount/FD comparison, certificate projection, and retained recheck/release.
+Its registry binds each baseline to its original descriptor tuple so forged or
+mutated values cannot redirect a close. The source SHA-256 is
+`6049ec3096cf9a2fc50678884180fe4e0ef6072032418931f0d48afa14f83a1f`.
+Thirty focused checks passed; three independent reviews and `git diff --check`
+are CLEAN. Tests used only temporary controlled files/directories/socket and
+supplied descriptors. No fixed `/run` path, raw stream, barrier, child,
+namespace, launcher, REAPER, audio, network, or host scan ran. Public session
+entrypoints remain fail closed.
 
 **Task 0B4b-state-contract checkpoint (sealed).** The user's fresh `Proceed` has
 authorized only the documentation/review checkpoint at
