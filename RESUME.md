@@ -248,6 +248,13 @@ Updated: 2026-09-05T16:01:28-07:00
   non-REAPER scope mechanism rather than silently choosing a launcher. Three
   independent documentation reviews are CLEAN and `git diff --check` passes;
   no source/test/runtime authority was consumed by this checkpoint.
+- A source-free **draft** of the Task 0B4c controlled-fixture definition now
+  lives at
+  `docs/superpowers/specs/2026-09-05-v4-task0b4c-controlled-fixture-design.md`.
+  It fixes the intended non-REAPER data plane, stream topology, parent
+  ownership, and resource bounds without advancing B4c-design: bootstrap/state
+  review, runtime evidence/payload implementation, Task 0B5 closure, and
+  fixture-manifest review remain required before any fixture execution.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a
   `reaper-host-runtime-manifest` must reference it and resolve every REAPER,

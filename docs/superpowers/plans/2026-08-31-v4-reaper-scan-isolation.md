@@ -363,6 +363,14 @@ source/test gates require source contracts and tests, while source-free
 Three independent documentation reviews are CLEAN and `git diff --check`
 passes; no source/test/runtime authority was consumed by this checkpoint.
 
+**Task 0B4c controlled-fixture draft (not a gate completion).** The source-free
+definition at
+`docs/superpowers/specs/2026-09-05-v4-task0b4c-controlled-fixture-design.md`
+fixes the intended non-REAPER fixture topology, data-plane bounds, and outer
+ownership. It does not advance B4c-design while bootstrap/state review,
+runtime evidence/payload implementation, Task 0B5 closure, and
+fixture-manifest review remain incomplete; it authorizes no fixture action.
+
 Before a fixture, first seal the reviewed executable session-entrypoint source
 through the Task 0B4b-admission-pure, Task 0B4b-evidence,
 Task 0B4b-bootstrap-transport, and Task 0B4b-state gates, then define the
