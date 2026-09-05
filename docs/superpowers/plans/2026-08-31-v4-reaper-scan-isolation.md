@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, Task 0B4b-admission-pure is sealed bounded in-memory relation admission, and Task 0B4b-evidence is sealed bounded observation/retention behavior. Task 0B4b-bootstrap-transport and Task 0B4b-state are locally green with 46 focused checks against current source SHA-256 `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`, checkpointed in `2ce8abc`, and both remain pending independent review. The state source is mock-only and contains fail-closed evidence/payload stubs; fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, Task 0B4b-admission-pure is sealed bounded in-memory relation admission, and Task 0B4b-evidence is sealed bounded observation/retention behavior. Task 0B4b-bootstrap-transport, Task 0B4b-state, and Task 0B4b-payload-assembly are locally verified with 51 focused checks against current source SHA-256 `41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937`; all remain pending independent review. The three runtime-observation helpers remain fail closed; fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -363,12 +363,27 @@ source/test gates require source contracts and tests, while source-free
 Three independent documentation reviews are CLEAN and `git diff --check`
 passes; no source/test/runtime authority was consumed by this checkpoint.
 
+**Task 0B4b-payload-assembly checkpoint (locally verified, pending independent
+review).** This narrowly replaces the PRE/POST payload stubs with a common
+owned-baseline attestation helper. It re-admits the configuration and validates
+the retained supplied environment, descriptor-rooted measurement/scan/private
+tree/X11 records, FD/mount projections, and certificate applicability before
+returning fresh ordinary payload values. PRE and POST now pass the sealed
+receipt/exchange grammar in the controlled descriptor fixture; POST adds only
+`scan_root_unchanged`, while the existing finalizer still orders
+`validate_post -> validate_exchange -> encode`. The source SHA-256 is
+`41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937` and
+the preserved V4 suite plus five payload tests passed 51 checks. No namespace,
+fixed `/run` read, barrier, child process, REAPER, audio, X11 client traffic,
+network, fixture execution, or host scan ran. The runtime-observation helpers
+remain fail closed, so this does not make the root fixture-ready.
+
 **Task 0B4c controlled-fixture draft (not a gate completion).** The source-free
 definition at
 `docs/superpowers/specs/2026-09-05-v4-task0b4c-controlled-fixture-design.md`
 fixes the intended non-REAPER fixture topology, data-plane bounds, and outer
-ownership. It does not advance B4c-design while bootstrap/state review,
-runtime evidence/payload implementation, Task 0B5 closure, and
+ownership. It does not advance B4c-design while bootstrap/state/payload review,
+runtime-observation acquisition, Task 0B5 closure, and
 fixture-manifest review remain incomplete; it authorizes no fixture action.
 
 Before a fixture, first seal the reviewed executable session-entrypoint source

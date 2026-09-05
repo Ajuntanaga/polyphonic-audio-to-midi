@@ -9,7 +9,7 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38"
+EXPECTED_SOURCE_SHA256 = "41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",
@@ -71,7 +71,7 @@ BOOTSTRAP_HELPERS = {
 }
 STATE_HELPERS = {
     "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
-    "_assemble_pre_payload", "_assemble_post_payload", "_child_spec_from_config",
+    "_shared_receipt_attestation", "_assemble_pre_payload", "_assemble_post_payload", "_child_spec_from_config",
     "_validate_child_outcome", "_finalize_post_payload",
 }
 EXPECTED_FUNCTIONS = PURE_HELPERS | EVIDENCE_HELPERS | BOOTSTRAP_HELPERS | STATE_HELPERS | PUBLIC_FUNCTIONS
@@ -119,6 +119,7 @@ EXPECTED_SIGNATURES = {
     "_capture_runtime_evidence": (("config",), ("SessionConfig",), "_EvidenceBaseline"),
     "_recheck_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
     "_release_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
+    "_shared_receipt_attestation": (("config", "baseline"), ("SessionConfig", "_EvidenceBaseline"), "dict[str, object]"),
     "_assemble_pre_payload": (("config", "baseline"), ("SessionConfig", "_EvidenceBaseline"), "dict[str, object]"),
     "_assemble_post_payload": (("config", "baseline", "outcome", "pre_monotonic_ns", "post_monotonic_ns"), ("SessionConfig", "_EvidenceBaseline", "child_runner.ChildOutcome", "int", "int"), "dict[str, object]"),
     "_child_spec_from_config": (("config",), ("SessionConfig",), "child_runner.ChildSpec"),
@@ -195,6 +196,7 @@ ALLOWED_IMPORTED_ATTRIBUTES = {
     "_capture_runtime_evidence": set(),
     "_recheck_runtime_evidence": set(),
     "_release_runtime_evidence": set(),
+    "_shared_receipt_attestation": set(),
     "_assemble_pre_payload": set(),
     "_assemble_post_payload": {"child_runner.ChildOutcome"},
     "_child_spec_from_config": {"child_runner.ChildSpec"},
@@ -258,8 +260,20 @@ ALLOWED_CALLS = {
     "_capture_runtime_evidence": {"SessionError"},
     "_recheck_runtime_evidence": {"SessionError"},
     "_release_runtime_evidence": {"SessionError"},
-    "_assemble_pre_payload": {"SessionError"},
-    "_assemble_post_payload": {"SessionError"},
+    "_shared_receipt_attestation": {
+        "SessionError", "_admit_session_config", "_certificate_applicability_projection",
+        "_materialize_exact_builtins", "_require_owned_evidence_baseline", "any", "item.get",
+        "len", "list", "measurement.get", "measurement_evidence.values", "observed_by_path.get",
+        "private_tree.get", "scan.get", "set", "tuple", "type", "x11.get",
+    },
+    "_assemble_pre_payload": {
+        "SessionError", "_admit_session_config", "_materialize_exact_builtins",
+        "_shared_receipt_attestation", "dict", "type",
+    },
+    "_assemble_post_payload": {
+        "SessionError", "_admit_session_config", "_materialize_exact_builtins",
+        "_shared_receipt_attestation", "_validate_child_outcome", "dict", "type",
+    },
     "_child_spec_from_config": {"SessionError", "_admit_session_config", "_child_spec_projection", "child_runner.ChildSpec"},
     "_validate_child_outcome": {"SessionError", "type"},
     "_finalize_post_payload": {"SessionError", "protocol.encode_frame", "receipt_schema.validate_exchange", "receipt_schema.validate_post_payload", "type"},
@@ -289,6 +303,23 @@ EXACT_CALL_COUNTS = {
     "_wait_fixed_pipe": {"os.fstat": 1, "fcntl.fcntl": 2, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
     "_write_frame_once": {"os.fstat": 1, "os.fpathconf": 1, "_wait_fixed_pipe": 1, "os.write": 1},
     "_read_ack_eof": {"os.fstat": 1, "_wait_fixed_pipe": 2, "os.read": 2, "receipt_schema.validate_ack_bytes": 1},
+    "_shared_receipt_attestation": {
+        "_admit_session_config": 1,
+        "_require_owned_evidence_baseline": 1,
+        "_materialize_exact_builtins": 9,
+        "_certificate_applicability_projection": 1,
+    },
+    "_assemble_pre_payload": {
+        "_admit_session_config": 1,
+        "_materialize_exact_builtins": 1,
+        "_shared_receipt_attestation": 1,
+    },
+    "_assemble_post_payload": {
+        "_admit_session_config": 1,
+        "_validate_child_outcome": 1,
+        "_materialize_exact_builtins": 1,
+        "_shared_receipt_attestation": 1,
+    },
     "_child_spec_from_config": {"_admit_session_config": 1, "_child_spec_projection": 1, "child_runner.ChildSpec": 1},
     "_finalize_post_payload": {"receipt_schema.validate_post_payload": 1, "receipt_schema.validate_exchange": 1, "protocol.encode_frame": 1},
     "load_session_config": {"_load_fixed_session_config": 1},
@@ -560,9 +591,46 @@ def _assert_fixed_pipe_nonblocking(functions: dict[str, ast.FunctionDef]) -> Non
 def _assert_state_entrypoints(functions: dict[str, ast.FunctionDef]) -> None:
     for name in (
         "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
-        "_assemble_pre_payload", "_assemble_post_payload",
     ):
         _assert_error_stub(functions[name], "runtime evidence is not admitted")
+    shared = functions["_shared_receipt_attestation"]
+    pre = functions["_assemble_pre_payload"]
+    post = functions["_assemble_post_payload"]
+    assert not any(
+        isinstance(candidate, ast.Raise)
+        and isinstance(candidate.exc, ast.Call)
+        and _attribute_name(candidate.exc.func) == "SessionError"
+        and len(candidate.exc.args) == 1
+        and isinstance(candidate.exc.args[0], ast.Constant)
+        and candidate.exc.args[0].value == "runtime evidence is not admitted"
+        for candidate in ast.walk(shared)
+    )
+    for name, node in {"_assemble_pre_payload": pre, "_assemble_post_payload": post}.items():
+        assert not (
+            len(node.body) == 1
+            and isinstance(node.body[0], ast.Raise)
+            and isinstance(node.body[0].exc, ast.Call)
+            and _attribute_name(node.body[0].exc.func) == "SessionError"
+        ), f"{name} must assemble an owned receipt payload"
+    shared_strings = {
+        candidate.value
+        for candidate in ast.walk(shared)
+        if isinstance(candidate, ast.Constant) and type(candidate.value) is str
+    }
+    pre_strings = {
+        candidate.value
+        for candidate in ast.walk(pre)
+        if isinstance(candidate, ast.Constant) and type(candidate.value) is str
+    }
+    post_strings = {
+        candidate.value
+        for candidate in ast.walk(post)
+        if isinstance(candidate, ast.Constant) and type(candidate.value) is str
+    }
+    assert "scan_root_unchanged" not in shared_strings | pre_strings
+    assert post_strings & {"scan_root_unchanged"} == {"scan_root_unchanged"}
+    assert {"pre", "no_child_started", "attestation"} <= pre_strings
+    assert {"post", "terminal", "child_pid", "child_returncode", "pre_monotonic_ns", "post_monotonic_ns", "attestation"} <= post_strings
     loader_calls = [
         _attribute_name(candidate.func)
         for candidate in ast.walk(functions["load_session_config"])

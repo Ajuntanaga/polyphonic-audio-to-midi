@@ -218,14 +218,32 @@ Updated: 2026-09-05T16:01:28-07:00
   composition checkpoint in `2ce8abc`, but remains unsealed pending independent review.
   It replaces the predecessor static contract, imports only the sealed child
   adapter, and gives the public root its literal-path loader plus one local
-  PRE -> ACK+EOF -> child -> POST transition. The evidence and payload
-  assembly edges intentionally remain exact fail-closed stubs, so no runtime
-  invocation can self-assert receipt facts. Its source SHA-256 is
+  PRE -> ACK+EOF -> child -> POST transition. At that checkpoint, the runtime
+  observation and payload-assembly edges were exact fail-closed stubs, so no
+  runtime invocation could self-assert receipt facts. Its checkpoint source
+  SHA-256 is
   `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
-  The preserved suite has 46 checks: mock-only success, failure, outcome,
+  The preserved suite had 46 checks: mock-only success, failure, outcome,
   post-finalization, interruption, and one-shot terminal-release vectors prove local ordering only. No
   real `/run` read, barrier, measurement, child, fixture, namespace, REAPER,
   audio, X11, network, or host action occurred.
+- Task 0B4b-payload-assembly is locally verified, pending independent source
+  review. It replaces only the PRE/POST payload stubs with
+  `_shared_receipt_attestation`, which re-admits the supplied configuration,
+  verifies a registry-owned controlled evidence baseline against its retained
+  environment, measurement, scan, private-home, X11, FD/mount, and certificate
+  records, and returns fresh ordinary receipt values. PRE and POST now validate
+  with the sealed Task 0B1 receipt grammar; POST adds only
+  `scan_root_unchanged` and the existing finalizer retains
+  `validate_post -> validate_exchange -> encode` ordering. The current source
+  SHA-256 is
+  `41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937`.
+  The test-first PRE vector captured the original stub refusal, then the full
+  V4 source-only/controlled-descriptor suite passed 51 checks, including five
+  payload vectors. No namespace, real `/run` access, barrier, child process,
+  REAPER, audio, X11 client traffic, network, fixture, or host scan ran. The
+  three runtime-observation helpers remain fail closed; making the root
+  fixture-ready still requires their later reviewed implementation.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps

@@ -56,11 +56,14 @@ _finalize_post_payload(pre_payload: dict[str, object], ack: bytes,
                        post_payload: dict[str, object]) -> bytes
 ```
 
-The first five evidence/payload helpers are deliberately one-statement
-`SessionError` stubs in this mock-only gate. Tests replace them by their exact
-module names. They cannot read an ambient path, synthesize an all-true
-attestation, or be invoked as a public interface. A later reviewed source gate
-must replace those stubs before a fixture can call the root.
+At this historical mock-only checkpoint, the first five evidence/payload
+helpers were deliberately one-statement `SessionError` stubs. The later
+`2026-09-05-v4-task0b4b-payload-assembly-source-contract.md` replaces only
+the PRE/POST payload stubs with an owned-baseline cross-check and leaves the
+three runtime-observation helpers fail closed. It adds no ambient path,
+transport, barrier, child, or fixture edge, and it does not make direct helper
+calls a public interface or fixture authority. Runtime observation acquisition
+must still be reviewed before a fixture can call the root.
 
 `_child_spec_from_config()` materializes the admitted private child projection
 and constructs exactly one sealed `child_runner.ChildSpec`. `_validate_child_outcome()`
@@ -120,7 +123,8 @@ Mock-only behavior must cover a full successful path and every failure row:
 The test doubles use an existing canonical synthetic receipt vector only as
 data for real receipt/protocol validation; they are not namespace evidence.
 
-The preserved Task 0B1 static, replacement state static, B4b pure, admission,
-evidence, bootstrap-transport, and mock-only state suite is green with 46
-checks, and `git diff --check` is clean. No real fixed path, barrier,
-measurement, child, namespace, fixture, audio device, or host operation ran.
+At the original state checkpoint the preserved suite had 46 checks. The later
+payload-assembly increment reruns the same preserved checks plus five payload
+tests (51 total) against its recorded source hash. No real fixed path,
+barrier, measurement, child, namespace, fixture, audio device, or host
+operation ran.

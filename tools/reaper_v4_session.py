@@ -1608,6 +1608,192 @@ def _read_ack_eof(deadline_ns: int) -> bytes:
         raise SessionError("ACK input is invalid") from error
 
 
+def _shared_receipt_attestation(
+    config: SessionConfig, baseline: _EvidenceBaseline
+) -> dict[str, object]:
+    try:
+        admitted = _admit_session_config(config)
+        _require_owned_evidence_baseline(baseline)
+        if (
+            type(baseline.config) is not SessionConfig
+            or baseline.config.data != admitted.data
+        ):
+            raise SessionError("evidence baseline configuration is invalid")
+        value = _materialize_exact_builtins(admitted.data)
+        environment = _materialize_exact_builtins(baseline.environment)
+        measurement = _materialize_exact_builtins(baseline.measurement)
+        scan = _materialize_exact_builtins(baseline.scan)
+        private_tree = _materialize_exact_builtins(baseline.private_tree)
+        x11 = _materialize_exact_builtins(baseline.x11)
+        inherited_fds = _materialize_exact_builtins(baseline.inherited_fds)
+        mounts = _materialize_exact_builtins(baseline.mounts)
+        certificate = _materialize_exact_builtins(baseline.certificate)
+        if (
+            type(value) is not dict
+            or type(environment) is not dict
+            or type(measurement) is not dict
+            or type(scan) is not dict
+            or type(private_tree) is not dict
+            or type(x11) is not dict
+            or type(inherited_fds) is not list
+            or type(mounts) is not list
+            or type(certificate) is not dict
+        ):
+            raise SessionError("evidence baseline is invalid")
+        expectations = value["namespace_expectations"]
+        if type(expectations) is not dict:
+            raise SessionError("evidence baseline is invalid")
+        expected_environment = expectations["environment"]
+        environment_keys = (
+            "DISPLAY", "HOME", "LANG", "PWD", "TZ", "XAUTHORITY",
+        )
+        forbidden_environment = (
+            "BASH_ENV", "CLAP_PATH", "DBUS_SESSION_BUS_ADDRESS", "ENV",
+            "LD_AUDIT", "LD_LIBRARY_PATH", "LD_PRELOAD", "PYTHONHOME",
+            "PYTHONPATH", "SSH_AUTH_SOCK", "VST3_PATH", "VST_PATH",
+            "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR",
+        )
+        if (
+            set(environment) != {"cwd", "environment"}
+            or environment["cwd"] != expectations["cwd"]
+            or type(environment["environment"]) is not dict
+            or tuple(environment["environment"]) != environment_keys
+            or environment["environment"] != expected_environment
+        ):
+            raise SessionError("environment baseline is invalid")
+        measurement_root = expectations["measurement_root"]
+        measurement_plan = expectations["measurement_plan"]
+        measurement_evidence = measurement.get("evidence")
+        if (
+            set(measurement) != {"device", "inode", "facts", "evidence"}
+            or measurement["device"] != measurement_root["device"]
+            or measurement["inode"] != measurement_root["inode"]
+            or type(measurement["facts"]) is not dict
+            or measurement["facts"] != measurement_plan["expected"]
+            or type(measurement_evidence) is not dict
+            or set(measurement_evidence) != set(measurement_plan["resources"])
+            or any(item != "descriptor-rooted-no-follow-regular-file" for item in measurement_evidence.values())
+        ):
+            raise SessionError("measurement baseline is invalid")
+        expected_entries = expectations["scan_root"]["entries"]
+        observed_entries = scan.get("entries")
+        if (
+            set(scan) != {"device", "inode", "entries"}
+            or type(observed_entries) is not list
+            or len(observed_entries) != len(expected_entries)
+        ):
+            raise SessionError("scan baseline is invalid")
+        observed_by_path: dict[str, object] = {}
+        for observed in observed_entries:
+            if (
+                type(observed) is not dict
+                or set(observed) != {"relative_path", "device", "inode", "mode", "size", "sha256"}
+                or type(observed["device"]) is not int
+                or type(observed["inode"]) is not int
+                or observed["device"] < 0
+                or observed["inode"] < 1
+                or type(observed["relative_path"]) is not str
+                or observed["relative_path"] in observed_by_path
+            ):
+                raise SessionError("scan baseline is invalid")
+            observed_by_path[observed["relative_path"]] = observed
+        for expected in expected_entries:
+            if type(expected) is not dict:
+                raise SessionError("scan baseline is invalid")
+            observed = observed_by_path.get(expected["relative_path"])
+            if (
+                type(observed) is not dict
+                or any(observed[key] != expected[key] for key in ("relative_path", "mode", "size", "sha256"))
+            ):
+                raise SessionError("scan baseline is invalid")
+        expected_private = expectations["private_tree"]
+        observed_directories = private_tree.get("empty_directories")
+        if (
+            set(private_tree) != {"device", "inode", "mode", "empty_directories"}
+            or private_tree["mode"] != expected_private["home_mount"]["mode"]
+            or type(observed_directories) is not list
+            or [item.get("name") if type(item) is dict else None for item in observed_directories]
+            != expected_private["empty_directories"]
+            or any(
+                type(item) is not dict
+                or set(item) != {"name", "device", "inode"}
+                or type(item["device"]) is not int
+                or type(item["inode"]) is not int
+                or item["device"] < 0
+                or item["inode"] < 1
+                for item in observed_directories
+            )
+        ):
+            raise SessionError("private tree baseline is invalid")
+        expected_x11 = expectations["x11_identity"]
+        authority = x11.get("authority")
+        socket_identity = x11.get("socket")
+        if (
+            set(x11) != {"authority", "socket"}
+            or type(authority) is not dict
+            or type(socket_identity) is not dict
+            or set(authority) != {"device", "inode", "mode", "size", "sha256"}
+            or any(authority[key] != expected_x11["authority"]["destination_" + key] for key in ("mode", "size"))
+            or authority["sha256"] != expected_x11["authority"]["sha256"]
+            or type(authority["device"]) is not int
+            or type(authority["inode"]) is not int
+            or authority["device"] < 0
+            or authority["inode"] < 1
+        ):
+            raise SessionError("X11 baseline is invalid")
+        expected_socket = expected_x11["socket"]
+        if (
+            set(socket_identity) != {"uid", "gid", "mode", "device", "inode"}
+            or any(socket_identity[key] != expected_socket[key] for key in ("uid", "gid", "mode", "device", "inode"))
+        ):
+            raise SessionError("X11 baseline is invalid")
+        if (
+            inherited_fds != expectations["descriptor_policy"]["inherited_fds"]
+            or mounts != expectations["control_visibility"]["mounts"]
+            or certificate != _certificate_applicability_projection(admitted)
+        ):
+            raise SessionError("retained evidence baseline is invalid")
+        proc_result = certificate["certificates"]["proc_ptrace_barrier"]["result"]
+        control_result = certificate["certificates"]["control_visibility"]["result"]
+        bwrap = value["bwrap"]
+        return {
+            "home": expectations["home"],
+            "pwd": expectations["pwd"],
+            "cwd": expectations["cwd"],
+            "environment_keys": list(environment_keys),
+            "forbidden_env_absent": list(forbidden_environment),
+            "runtime_manifest_sha256": value["runtime_manifest_sha256"],
+            "run_input_manifest_sha256": value["run_input_manifest_sha256"],
+            "bwrap_path": bwrap["path"],
+            "bwrap_version": bwrap["version"],
+            "bwrap_argv_sha256": bwrap["argv_sha256"],
+            "production_bundle_absent": True,
+            "private_vst_empty": True,
+            "private_vst3_empty": True,
+            "private_home_private": True,
+            "scan_root_readonly": True,
+            "scan_descendants_readonly": True,
+            "no_later_scan_mount": True,
+            "x11_identity": {
+                "display": expected_x11["display"],
+                "authority": expected_x11["authority"]["path"],
+                "socket": expected_x11["socket"]["path"],
+                "screen": expected_x11["screen"],
+                "protocol": expected_x11["protocol"],
+            },
+            "source_fds_absent": True,
+            "control_root_absent": control_result["control_root_absent"],
+            "dumpable_disabled": True,
+            "capabilities_empty": True,
+            "proc_receipt_blocked": proc_result["proc_receipt_blocked"],
+            "proc_mem_blocked": proc_result["proc_mem_blocked"],
+        }
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("receipt evidence is invalid") from error
+
+
 def _capture_runtime_evidence(config: SessionConfig) -> _EvidenceBaseline:
     raise SessionError("runtime evidence is not admitted")
 
@@ -1621,7 +1807,27 @@ def _release_runtime_evidence(baseline: _EvidenceBaseline) -> None:
 
 
 def _assemble_pre_payload(config: SessionConfig, baseline: _EvidenceBaseline) -> dict[str, object]:
-    raise SessionError("runtime evidence is not admitted")
+    try:
+        admitted = _admit_session_config(config)
+        value = _materialize_exact_builtins(admitted.data)
+        if type(value) is not dict or type(value["base_config"]) is not dict or type(value["row"]) is not dict:
+            raise SessionError("receipt identity is invalid")
+        base = value["base_config"]
+        return {
+            "schema": base["schema"],
+            "namespace": base["namespace"],
+            "nonce": base["nonce"],
+            "config_sha256": base["config_sha256"],
+            "inputs": dict(base["inputs"]),
+            "row": dict(value["row"]),
+            "phase": "pre",
+            "no_child_started": True,
+            "attestation": _shared_receipt_attestation(admitted, baseline),
+        }
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("PRE payload is invalid") from error
 
 
 def _assemble_post_payload(
@@ -1631,7 +1837,40 @@ def _assemble_post_payload(
     pre_monotonic_ns: int,
     post_monotonic_ns: int,
 ) -> dict[str, object]:
-    raise SessionError("runtime evidence is not admitted")
+    try:
+        admitted = _admit_session_config(config)
+        validated = _validate_child_outcome(outcome)
+        if (
+            type(pre_monotonic_ns) is not int
+            or type(post_monotonic_ns) is not int
+            or not 1 <= pre_monotonic_ns <= post_monotonic_ns <= MAX_SESSION_INTEGER
+        ):
+            raise SessionError("POST clocks are invalid")
+        value = _materialize_exact_builtins(admitted.data)
+        if type(value) is not dict or type(value["base_config"]) is not dict or type(value["row"]) is not dict:
+            raise SessionError("receipt identity is invalid")
+        base = value["base_config"]
+        attestation = _shared_receipt_attestation(admitted, baseline)
+        attestation["scan_root_unchanged"] = True
+        return {
+            "schema": base["schema"],
+            "namespace": base["namespace"],
+            "nonce": base["nonce"],
+            "config_sha256": base["config_sha256"],
+            "inputs": dict(base["inputs"]),
+            "row": dict(value["row"]),
+            "phase": "post",
+            "terminal": True,
+            "child_pid": validated.child_pid,
+            "child_returncode": validated.returncode,
+            "pre_monotonic_ns": pre_monotonic_ns,
+            "post_monotonic_ns": post_monotonic_ns,
+            "attestation": attestation,
+        }
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("POST payload is invalid") from error
 
 
 def _child_spec_from_config(config: SessionConfig) -> child_runner.ChildSpec:
