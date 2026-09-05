@@ -48,12 +48,12 @@ touching the normal REAPER profile:
 
 ```bash
 /home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \
-  -cfgfile "$PWD/build/m3-native-live-midi-8open/reaper.ini" -nosplash
+  -cfgfile "$PWD/build/m3-native-live-midi-8open/reaper.ini" -nosplash \
+  "$PWD/build/m3-native-live-midi-8open/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
 ```
 
-In REAPER, use **Actions → Show action list → ReaScript: Load…** to load and
-run [ajuntanaga_M3 Live Guitar to MIDI.lua](build/m3-native-live-midi-8open/Scripts/ajuntanaga_M3%20Live%20Guitar%20to%20MIDI.lua).
-It creates one armed, monitored `M3 Native 8-String Guitar to MIDI` track:
+REAPER accepts a Lua script as a command-line argument, so that command creates
+one armed, monitored `M3 Native 8-String Guitar to MIDI` track automatically:
 
 ```text
 Revelator input 1 → M3 Polyphonic Audio to MIDI → ReaSynth
