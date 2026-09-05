@@ -1,6 +1,6 @@
 # V4 Disposable REAPER Scan-Isolation Implementation Plan
 
-Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, Task 0B4b-admission-pure is sealed bounded in-memory relation admission, and Task 0B4b-evidence is sealed bounded observation/retention behavior. Task 0B4b-bootstrap-transport, Task 0B4b-state, and Task 0B4b-payload-assembly are locally verified with 51 focused checks against current source SHA-256 `41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937`; all remain pending independent review. The three runtime-observation helpers remain fail closed; fixture, namespace, and host work remain prohibited.
+Status: V4 host execution blocked; Task 0A and the Task 0B1/0B2 source/data checkpoints are sealed, Task 0B3 is independently reviewed design-only, Task 0B3a is the sealed non-admissible root shell, Task 0B3b is sealed pure receipt evidence, Task 0B3c is sealed synthetic descriptor evidence, Task 0B3d is sealed direct-child adapter evidence, Task 0B4a is sealed contract work, Task 0B4b-pure is sealed bounded compatibility-helper evidence, Task 0B4b-state-contract is sealed documentation-only sequencing evidence, Task 0B4b-admission-pure is sealed bounded in-memory relation admission, and Task 0B4b-evidence is sealed bounded observation/retention behavior. Task 0B4b-bootstrap-transport, Task 0B4b-state, Task 0B4b-payload-assembly, and Task 0B4b-runtime-observation are locally verified with 57 focused checks against current source SHA-256 `6a2bbdfee29c26253ffb4a8f05c62feeab207ea21942aa40368a9ac9e8fcdc1c`; all remain pending source review. Runtime acquisition now works only against controlled temporary resources/syscall doubles; fixture, namespace, and host work remain prohibited.
 Date: 2026-08-31
 Spec: docs/superpowers/specs/2026-08-31-v4-reaper-scan-isolation-design.md
 Inventory: docs/superpowers/specs/2026-08-31-v4-reaper-runtime-inventory.md
@@ -377,6 +377,21 @@ the preserved V4 suite plus five payload tests passed 51 checks. No namespace,
 fixed `/run` read, barrier, child process, REAPER, audio, X11 client traffic,
 network, fixture execution, or host scan ran. The runtime-observation helpers
 remain fail closed, so this does not make the root fixture-ready.
+
+**Task 0B4b-runtime-observation checkpoint (locally verified, pending source
+review).** This replaces the final three runtime-evidence stubs with bounded
+five-path descriptor acquisition, an RLIMIT_NOFILE-capped FD census, a bounded
+/proc/self/mountinfo projection, retained-baseline recheck, and one-shot
+release delegation. Source SHA-256 is
+6a2bbdfee29c26253ffb4a8f05c62feeab207ea21942aa40368a9ac9e8fcdc1c.
+The full source-only/controlled-resource V4 suite passed 57 checks, including
+six new vectors for fixture-descriptor handoff, FD-census closure, exact mount
+projection, partial-open cleanup, invalid-admission non-observation, and
+mountinfo EOF closure. All filesystem, descriptor, resource, and mountinfo
+edges were controlled temporary resources or syscall doubles. No real /run
+input, namespace, launcher, child, REAPER, audio, X11-client, network, or host
+scan ran. This makes the root implementation-ready for later fixture work, not
+fixture-executed or REAPER-compatible.
 
 **Task 0B4c controlled-fixture draft (not a gate completion).** The source-free
 definition at

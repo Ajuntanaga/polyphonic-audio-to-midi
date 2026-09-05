@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-05T16:01:28-07:00
+Updated: 2026-09-05T16:43:22-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -241,9 +241,20 @@ Updated: 2026-09-05T16:01:28-07:00
   The test-first PRE vector captured the original stub refusal, then the full
   V4 source-only/controlled-descriptor suite passed 51 checks, including five
   payload vectors. No namespace, real `/run` access, barrier, child process,
-  REAPER, audio, X11 client traffic, network, fixture, or host scan ran. The
-  three runtime-observation helpers remain fail closed; making the root
-  fixture-ready still requires their later reviewed implementation.
+  REAPER, audio, X11 client traffic, network, fixture, or host scan ran.
+- Task 0B4b-runtime-observation is locally verified, pending source review.
+  It replaces the three runtime-evidence stubs with a bounded five-descriptor
+  acquisition path, a 64-FD census, a bounded mountinfo projection, retained
+  evidence recheck, and one-shot release delegation. The current session
+  source SHA-256 is
+  6a2bbdfee29c26253ffb4a8f05c62feeab207ea21942aa40368a9ac9e8fcdc1c.
+  The complete controlled V4 suite passed 57 checks, including six
+  temporary-resource/syscall-double vectors for descriptor handoff, census
+  closure, mount projection, partial-open cleanup, invalid-admission
+  non-observation, and mountinfo EOF closure. No real /run read, namespace,
+  Bubblewrap, child process, REAPER, audio, X11 client traffic, network, or
+  host scan ran. A reviewed closure/fixture-manifest and a later controlled
+  fixture remain required before any actual session execution.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps
@@ -271,7 +282,7 @@ Updated: 2026-09-05T16:01:28-07:00
   `docs/superpowers/specs/2026-09-05-v4-task0b4c-controlled-fixture-design.md`.
   It fixes the intended non-REAPER data plane, stream topology, parent
   ownership, and resource bounds without advancing B4c-design: bootstrap/state
-  review, runtime evidence/payload implementation, Task 0B5 closure, and
+  review, runtime evidence/payload source review, Task 0B5 closure, and
   fixture-manifest review remain required before any fixture execution.
 - The future manifests are deliberately distinct. A `fixture-runtime-manifest`
   can permit only a bounded non-REAPER fixture; a

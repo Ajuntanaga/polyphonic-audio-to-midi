@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import dataclasses
+import errno
 import fcntl
 import hashlib
 import json
 import os
+import resource as runtime_resource
 import select
 import stat
 import time
@@ -38,6 +40,9 @@ MAX_SESSION_DEPTH = 16
 MAX_SESSION_STRING_BYTES = 512
 MIN_SESSION_INTEGER = -9223372036854775808
 MAX_SESSION_INTEGER = 9223372036854775807
+MAX_RUNTIME_DESCRIPTOR_LIMIT = 64
+MAX_RUNTIME_MOUNTINFO_BYTES = 65536
+RUNTIME_MOUNTINFO_PATH = "/proc/self/mountinfo"
 
 
 class SessionError(RuntimeError):
@@ -1794,16 +1799,299 @@ def _shared_receipt_attestation(
         raise SessionError("receipt evidence is invalid") from error
 
 
+def _open_runtime_evidence_descriptors(
+    config: SessionConfig,
+) -> tuple[int, int, int, int, int]:
+    descriptors: list[int] = []
+    try:
+        admitted = _admit_session_config(config)
+        expectations = admitted.data["namespace_expectations"]
+        paths = (
+            (
+                expectations["measurement_root"]["path"],
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            ),
+            (
+                expectations["scan_root"]["path"],
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            ),
+            (
+                expectations["home"],
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            ),
+            (
+                expectations["x11_identity"]["authority"]["path"],
+                os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            ),
+            (
+                expectations["x11_identity"]["socket"]["path"],
+                os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC,
+            ),
+        )
+        for path, flags in paths:
+            descriptors.append(os.open(path, flags))
+        if (
+            len(descriptors) != 5
+            or len(set(descriptors)) != 5
+            or any(type(descriptor) is not int or descriptor < 0 for descriptor in descriptors)
+        ):
+            raise SessionError("runtime evidence descriptors are invalid")
+        return (
+            descriptors[0], descriptors[1], descriptors[2], descriptors[3], descriptors[4],
+        )
+    except SessionError:
+        failure: OSError | None = None
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError as error:
+                if failure is None:
+                    failure = error
+        if failure is not None:
+            raise SessionError("runtime evidence descriptor cleanup is uncertain") from failure
+        raise
+    except Exception as error:
+        failure = None
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError as close_error:
+                if failure is None:
+                    failure = close_error
+        if failure is not None:
+            raise SessionError("runtime evidence descriptor cleanup is uncertain") from failure
+        raise SessionError("runtime evidence descriptors cannot be opened") from error
+    except BaseException:
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        raise
+
+
+def _observe_runtime_descriptor_census(
+    config: SessionConfig, retained: tuple[int, ...],
+) -> tuple[Mapping[str, object], ...]:
+    try:
+        admitted = _admit_session_config(config)
+        if (
+            type(retained) is not tuple
+            or len(retained) not in {0, 5}
+            or any(type(descriptor) is not int or descriptor < 0 for descriptor in retained)
+            or len(set(retained)) != len(retained)
+        ):
+            raise SessionError("runtime retained descriptors are invalid")
+        soft_limit, _hard_limit = runtime_resource.getrlimit(runtime_resource.RLIMIT_NOFILE)
+        if (
+            type(soft_limit) is not int
+            or not 8 <= soft_limit <= MAX_RUNTIME_DESCRIPTOR_LIMIT
+        ):
+            raise SessionError("runtime descriptor limit is invalid")
+        expected = admitted.data["namespace_expectations"]["descriptor_policy"]["inherited_fds"]
+        if type(expected) is not tuple or len(expected) != 3:
+            raise SessionError("runtime descriptor policy is invalid")
+        expected_ids: set[int] = set()
+        for record in expected:
+            if type(record) is not types.MappingProxyType or type(record["fd"]) is not int:
+                raise SessionError("runtime descriptor policy is invalid")
+            expected_ids.add(record["fd"])
+        live: set[int] = set()
+        for descriptor in range(soft_limit):
+            try:
+                fcntl.fcntl(descriptor, fcntl.F_GETFD)
+            except OSError as error:
+                if error.errno == errno.EBADF:
+                    continue
+                raise
+            live.add(descriptor)
+        if live != expected_ids | set(retained):
+            raise SessionError("runtime descriptor census is invalid")
+        observed: list[Mapping[str, object]] = []
+        for record in expected:
+            facts = os.fstat(record["fd"])
+            if not stat.S_ISFIFO(facts.st_mode):
+                raise SessionError("runtime descriptor census is invalid")
+            observed.append({
+                "fd": record["fd"],
+                "kind": "pipe",
+                "role": record["role"],
+            })
+        return tuple(observed)
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("runtime descriptor census is invalid") from error
+
+
+def _read_runtime_mountinfo() -> bytes:
+    descriptor = -1
+    result = b""
+    completed = False
+    try:
+        descriptor = os.open(RUNTIME_MOUNTINFO_PATH, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        facts = os.fstat(descriptor)
+        if not stat.S_ISREG(facts.st_mode):
+            raise SessionError("runtime mountinfo is not regular")
+        data = bytearray()
+        while True:
+            chunk = os.read(descriptor, min(4096, MAX_RUNTIME_MOUNTINFO_BYTES + 1 - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > MAX_RUNTIME_MOUNTINFO_BYTES:
+                raise SessionError("runtime mountinfo exceeds its bounded size")
+        if not data:
+            raise SessionError("runtime mountinfo is empty")
+        result = bytes(data)
+        completed = True
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("runtime mountinfo cannot be read") from error
+    finally:
+        if descriptor >= 0:
+            if completed:
+                try:
+                    os.close(descriptor)
+                except OSError as error:
+                    raise SessionError("runtime mountinfo cannot be closed") from error
+            else:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+    return result
+
+
+def _observe_runtime_mount_projection(config: SessionConfig) -> tuple[Mapping[str, object], ...]:
+    try:
+        admitted = _admit_session_config(config)
+        raw = _read_runtime_mountinfo()
+        if type(raw) is not bytes:
+            raise SessionError("runtime mountinfo is invalid")
+        text = raw.decode("ascii")
+        if not text.endswith("\n") or any(
+            character != "\n" and not 32 <= ord(character) <= 126
+            for character in text
+        ):
+            raise SessionError("runtime mountinfo is invalid")
+        expectations = admitted.data["namespace_expectations"]
+        expected = expectations["control_visibility"]["mounts"]
+        scan_path = expectations["scan_root"]["path"]
+        if type(expected) is not tuple or type(scan_path) is not str:
+            raise SessionError("runtime mount projection is invalid")
+        expected_by_path: dict[str, Mapping[str, object]] = {}
+        for record in expected:
+            if type(record) is not types.MappingProxyType:
+                raise SessionError("runtime mount projection is invalid")
+            path = record["path"]
+            if type(path) is not str or path in expected_by_path:
+                raise SessionError("runtime mount projection is invalid")
+            expected_by_path[path] = record
+        observed: dict[str, Mapping[str, object]] = {}
+        for line in text.splitlines():
+            if not line:
+                raise SessionError("runtime mountinfo is invalid")
+            fields = line.split(" ")
+            if any(not field for field in fields):
+                raise SessionError("runtime mountinfo is invalid")
+            separator = fields.index("-")
+            if separator < 6 or len(fields) <= separator + 3:
+                raise SessionError("runtime mountinfo is invalid")
+            root = fields[3]
+            path = fields[4]
+            option_text = fields[5]
+            options = option_text.split(",")
+            filesystem_type = fields[separator + 1]
+            if "\\" in root or "\\" in path:
+                raise SessionError("runtime mountinfo path is escaped")
+            if path in expected_by_path:
+                if path in observed or ("ro" in options) == ("rw" in options):
+                    raise SessionError("runtime mount projection is invalid")
+                expected_record = expected_by_path[path]
+                expected_type = expected_record["filesystem_type"]
+                observed_type = "bind" if expected_type == "bind" and root != "/" else filesystem_type
+                if observed_type != expected_type:
+                    raise SessionError("runtime mount projection is invalid")
+                observed[path] = {
+                    "path": path,
+                    "filesystem_type": observed_type,
+                    "readonly": "ro" in options,
+                }
+            elif path.startswith(scan_path + "/"):
+                raise SessionError("runtime scan mount projection is invalid")
+        if set(observed) != set(expected_by_path):
+            raise SessionError("runtime mount projection is incomplete")
+        projection: list[Mapping[str, object]] = []
+        for record in expected:
+            projection.append(observed[record["path"]])
+        return tuple(projection)
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("runtime mount projection is invalid") from error
+
+
 def _capture_runtime_evidence(config: SessionConfig) -> _EvidenceBaseline:
-    raise SessionError("runtime evidence is not admitted")
+    descriptors: tuple[int, int, int, int, int] | None = None
+    handed_off = False
+    try:
+        admitted = _admit_session_config(config)
+        cwd = os.getcwd()
+        environment = dict(os.environ)
+        inherited_fds = _observe_runtime_descriptor_census(admitted, ())
+        mounts = _observe_runtime_mount_projection(admitted)
+        descriptors = _open_runtime_evidence_descriptors(admitted)
+        handed_off = True
+        return _capture_evidence_baseline(
+            admitted, *descriptors, cwd, environment, inherited_fds, mounts,
+        )
+    except SessionError:
+        if descriptors is not None and not handed_off:
+            for descriptor in descriptors:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+        raise
+    except Exception as error:
+        if descriptors is not None and not handed_off:
+            for descriptor in descriptors:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+        raise SessionError("runtime evidence capture is invalid") from error
+    except BaseException:
+        if descriptors is not None and not handed_off:
+            for descriptor in descriptors:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+        raise
 
 
 def _recheck_runtime_evidence(baseline: _EvidenceBaseline) -> None:
-    raise SessionError("runtime evidence is not admitted")
+    try:
+        descriptors = _require_owned_evidence_baseline(baseline)
+        admitted = _admit_session_config(baseline.config)
+        _recheck_evidence_baseline(
+            baseline,
+            os.getcwd(),
+            dict(os.environ),
+            _observe_runtime_descriptor_census(admitted, descriptors),
+            _observe_runtime_mount_projection(admitted),
+        )
+    except SessionError:
+        raise
+    except Exception as error:
+        raise SessionError("runtime evidence recheck is invalid") from error
 
 
 def _release_runtime_evidence(baseline: _EvidenceBaseline) -> None:
-    raise SessionError("runtime evidence is not admitted")
+    _release_evidence_baseline(baseline)
 
 
 def _assemble_pre_payload(config: SessionConfig, baseline: _EvidenceBaseline) -> dict[str, object]:

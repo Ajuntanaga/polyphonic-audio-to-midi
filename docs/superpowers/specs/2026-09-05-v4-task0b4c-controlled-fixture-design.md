@@ -18,12 +18,13 @@ REAPER binary.
 
 This design is explicitly not executable today:
 
-1. `tools/reaper_v4_session.py` still has fail-closed runtime evidence and
-   payload-assembly stubs.
-2. The bootstrap-transport and state source checkpoints have local 46-check
-   evidence at SHA-256
-   `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`, but
-   remain pending their independent review.
+1. `tools/reaper_v4_session.py` now has locally verified payload assembly and
+   bounded runtime-observation helpers, but the combined source remains pending
+   source review and has not been exercised in an actual fixture.
+2. The bootstrap-transport, state, payload, and runtime-observation source
+   checkpoints have local 57-check evidence at SHA-256
+   `6a2bbdfee29c26253ffb4a8f05c62feeab207ea21942aa40368a9ac9e8fcdc1c`,
+   but remain pending source review.
 3. Task 0B5 has not constructed a complete runtime graph, and no reviewed
    `fixture-runtime-manifest` exists.
 
@@ -133,9 +134,9 @@ formed or run:
 1. Bootstrap-transport and state source checkpoints are independently reviewed
    and sealed, including the current nonblocking-pipe and one-shot-release
    regressions.
-2. A reviewed source gate replaces the current fail-closed runtime
-   evidence/payload stubs with named, bounded implementations and negative
-   tests. It must not add a second coordinator or an alternate control channel.
+2. The locally verified runtime-observation/payload source becomes reviewed and
+   sealed with its named bounded implementations and negative tests. It must
+   not add a second coordinator or an alternate control channel.
 3. Task 0B5 produces `COMPLETE_FIXTURE_CANDIDATE` from the exact session root;
    any unresolved graph edge stays blocked.
 4. A fixture-runtime manifest individually pins every runtime and fixture input

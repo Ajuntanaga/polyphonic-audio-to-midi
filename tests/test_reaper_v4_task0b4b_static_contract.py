@@ -9,14 +9,16 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "41f8d1fbaebb69c4aad2de50c16ff2fd48ad68b1d55e4fadf1e428889893d937"
+EXPECTED_SOURCE_SHA256 = "6a2bbdfee29c26253ffb4a8f05c62feeab207ea21942aa40368a9ac9e8fcdc1c"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",
+    "import errno",
     "import fcntl",
     "import hashlib",
     "import json",
     "import os",
+    "import resource as runtime_resource",
     "import select",
     "import stat",
     "import time",
@@ -47,6 +49,9 @@ EXPECTED_ASSIGNMENTS = {
     "MAX_SESSION_STRING_BYTES": 512,
     "MIN_SESSION_INTEGER": -9223372036854775808,
     "MAX_SESSION_INTEGER": 9223372036854775807,
+    "MAX_RUNTIME_DESCRIPTOR_LIMIT": 64,
+    "MAX_RUNTIME_MOUNTINFO_BYTES": 65536,
+    "RUNTIME_MOUNTINFO_PATH": "/proc/self/mountinfo",
     "_EVIDENCE_OWNERS": {},
 }
 PUBLIC_FUNCTIONS = {"load_session_config", "run_session"}
@@ -71,6 +76,8 @@ BOOTSTRAP_HELPERS = {
 }
 STATE_HELPERS = {
     "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
+    "_open_runtime_evidence_descriptors", "_observe_runtime_descriptor_census",
+    "_read_runtime_mountinfo", "_observe_runtime_mount_projection",
     "_shared_receipt_attestation", "_assemble_pre_payload", "_assemble_post_payload", "_child_spec_from_config",
     "_validate_child_outcome", "_finalize_post_payload",
 }
@@ -119,6 +126,10 @@ EXPECTED_SIGNATURES = {
     "_capture_runtime_evidence": (("config",), ("SessionConfig",), "_EvidenceBaseline"),
     "_recheck_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
     "_release_runtime_evidence": (("baseline",), ("_EvidenceBaseline",), "None"),
+    "_open_runtime_evidence_descriptors": (("config",), ("SessionConfig",), "tuple[int, int, int, int, int]"),
+    "_observe_runtime_descriptor_census": (("config", "retained"), ("SessionConfig", "tuple[int, ...]"), "tuple[Mapping[str, object], ...]"),
+    "_read_runtime_mountinfo": ((), (), "bytes"),
+    "_observe_runtime_mount_projection": (("config",), ("SessionConfig",), "tuple[Mapping[str, object], ...]"),
     "_shared_receipt_attestation": (("config", "baseline"), ("SessionConfig", "_EvidenceBaseline"), "dict[str, object]"),
     "_assemble_pre_payload": (("config", "baseline"), ("SessionConfig", "_EvidenceBaseline"), "dict[str, object]"),
     "_assemble_post_payload": (("config", "baseline", "outcome", "pre_monotonic_ns", "post_monotonic_ns"), ("SessionConfig", "_EvidenceBaseline", "child_runner.ChildOutcome", "int", "int"), "dict[str, object]"),
@@ -137,17 +148,18 @@ FORBIDDEN_CALLS = {
     "locals", "open", "setattr", "delattr", "vars", "os.pipe", "os.dup",
 }
 OS_CALL_OWNERS = {
-    "os.fstat": {"_capture_measurement_baseline", "_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_x11_baseline", "_setup_diagnostic_fd", "_wait_fixed_pipe", "_write_frame_once", "_read_ack_eof", "_read_fixed_regular"},
+    "os.fstat": {"_capture_measurement_baseline", "_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_x11_baseline", "_observe_runtime_descriptor_census", "_read_runtime_mountinfo", "_setup_diagnostic_fd", "_wait_fixed_pipe", "_write_frame_once", "_read_ack_eof", "_read_fixed_regular"},
     "os.fstatvfs": {"_read_fixed_regular"},
-    "os.open": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_read_fixed_regular"},
-    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline", "_read_fixed_regular", "run_session"},
-    "os.read": {"_hash_regular_descriptor", "_read_fixed_regular", "_read_ack_eof"},
+    "os.open": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_open_runtime_evidence_descriptors", "_read_runtime_mountinfo", "_read_fixed_regular"},
+    "os.close": {"_capture_scan_baseline", "_capture_private_tree_baseline", "_capture_evidence_baseline", "_release_evidence_baseline", "_open_runtime_evidence_descriptors", "_read_runtime_mountinfo", "_capture_runtime_evidence", "_read_fixed_regular", "run_session"},
+    "os.read": {"_hash_regular_descriptor", "_read_runtime_mountinfo", "_read_fixed_regular", "_read_ack_eof"},
     "os.lseek": {"_hash_regular_descriptor"},
     "os.listdir": {"_capture_scan_baseline", "_capture_private_tree_baseline"},
     "os.write": {"_emit_diagnostic_once", "_write_frame_once"},
     "os.fpathconf": {"_write_frame_once"},
+    "os.getcwd": {"_capture_runtime_evidence", "_recheck_runtime_evidence"},
 }
-IMPORTED_ROOTS = {"attester", "child_runner", "dataclasses", "fcntl", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "select", "stat", "time", "types"}
+IMPORTED_ROOTS = {"attester", "child_runner", "dataclasses", "errno", "fcntl", "hashlib", "json", "measurements", "os", "protocol", "receipt_schema", "runtime_resource", "select", "stat", "time", "types"}
 ALLOWED_IMPORTED_ATTRIBUTES = {
     "_freeze_session_data": {"types.MappingProxyType"},
     "_canonical_session_json_bytes": {"json.dumps"},
@@ -193,8 +205,21 @@ ALLOWED_IMPORTED_ATTRIBUTES = {
     "_wait_fixed_pipe": {"fcntl.F_GETFL", "fcntl.F_SETFL", "fcntl.fcntl", "os.O_NONBLOCK", "os.fstat", "select.POLLERR", "select.POLLHUP", "select.POLLIN", "select.POLLNVAL", "select.POLLOUT", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns"},
     "_write_frame_once": {"os.fpathconf", "os.fstat", "os.write", "protocol.MAX_FRAME_BYTES", "select.POLLOUT", "stat.S_ISFIFO"},
     "_read_ack_eof": {"os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "select.POLLIN", "stat.S_ISFIFO"},
-    "_capture_runtime_evidence": set(),
-    "_recheck_runtime_evidence": set(),
+    "_open_runtime_evidence_descriptors": {
+        "os.O_CLOEXEC", "os.O_DIRECTORY", "os.O_NOFOLLOW", "os.O_PATH", "os.O_RDONLY",
+        "os.close", "os.open",
+    },
+    "_observe_runtime_descriptor_census": {
+        "errno.EBADF", "fcntl.F_GETFD", "fcntl.fcntl", "os.fstat",
+        "runtime_resource.RLIMIT_NOFILE", "runtime_resource.getrlimit", "stat.S_ISFIFO", "types.MappingProxyType",
+    },
+    "_read_runtime_mountinfo": {
+        "os.O_CLOEXEC", "os.O_NOFOLLOW", "os.O_RDONLY", "os.close", "os.fstat", "os.open",
+        "os.read", "stat.S_ISREG",
+    },
+    "_observe_runtime_mount_projection": {"types.MappingProxyType"},
+    "_capture_runtime_evidence": {"os.close", "os.environ", "os.getcwd"},
+    "_recheck_runtime_evidence": {"os.environ", "os.getcwd"},
     "_release_runtime_evidence": set(),
     "_shared_receipt_attestation": set(),
     "_assemble_pre_payload": set(),
@@ -257,9 +282,35 @@ ALLOWED_CALLS = {
     "_wait_fixed_pipe": {"SessionError", "fcntl.fcntl", "int", "os.fstat", "poll.poll", "poll.register", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns", "type"},
     "_write_frame_once": {"SessionError", "_wait_fixed_pipe", "len", "os.fpathconf", "os.fstat", "os.write", "stat.S_ISFIFO", "type"},
     "_read_ack_eof": {"SessionError", "_wait_fixed_pipe", "os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "stat.S_ISFIFO", "type"},
-    "_capture_runtime_evidence": {"SessionError"},
-    "_recheck_runtime_evidence": {"SessionError"},
-    "_release_runtime_evidence": {"SessionError"},
+    "_open_runtime_evidence_descriptors": {
+        "SessionError", "_admit_session_config", "any", "descriptors.append", "len", "os.close",
+        "os.open", "set", "type",
+    },
+    "_observe_runtime_descriptor_census": {
+        "SessionError", "_admit_session_config", "any", "expected_ids.add", "fcntl.fcntl", "len",
+        "live.add", "observed.append", "os.fstat", "range", "runtime_resource.getrlimit", "set",
+        "stat.S_ISFIFO", "tuple", "type",
+    },
+    "_read_runtime_mountinfo": {
+        "SessionError", "bytearray", "bytes", "data.extend", "len", "min", "os.close", "os.fstat",
+        "os.open", "os.read", "stat.S_ISREG",
+    },
+    "_observe_runtime_mount_projection": {
+        "SessionError", "_admit_session_config", "_read_runtime_mountinfo", "any", "fields.index", "len",
+        "option_text.split", "ord", "path.startswith", "projection.append", "raw.decode", "set",
+        "text.endswith", "text.splitlines", "line.split", "tuple", "type",
+    },
+    "_capture_runtime_evidence": {
+        "SessionError", "_admit_session_config", "_capture_evidence_baseline", "_observe_runtime_descriptor_census",
+        "_observe_runtime_mount_projection", "_open_runtime_evidence_descriptors", "dict", "os.close",
+        "os.getcwd",
+    },
+    "_recheck_runtime_evidence": {
+        "SessionError", "_admit_session_config", "_observe_runtime_descriptor_census",
+        "_observe_runtime_mount_projection", "_recheck_evidence_baseline", "_require_owned_evidence_baseline",
+        "dict", "os.getcwd",
+    },
+    "_release_runtime_evidence": {"_release_evidence_baseline"},
     "_shared_receipt_attestation": {
         "SessionError", "_admit_session_config", "_certificate_applicability_projection",
         "_materialize_exact_builtins", "_require_owned_evidence_baseline", "any", "item.get",
@@ -303,6 +354,21 @@ EXACT_CALL_COUNTS = {
     "_wait_fixed_pipe": {"os.fstat": 1, "fcntl.fcntl": 2, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
     "_write_frame_once": {"os.fstat": 1, "os.fpathconf": 1, "_wait_fixed_pipe": 1, "os.write": 1},
     "_read_ack_eof": {"os.fstat": 1, "_wait_fixed_pipe": 2, "os.read": 2, "receipt_schema.validate_ack_bytes": 1},
+    "_open_runtime_evidence_descriptors": {"_admit_session_config": 1, "os.open": 1},
+    "_observe_runtime_descriptor_census": {"_admit_session_config": 1, "runtime_resource.getrlimit": 1, "fcntl.fcntl": 1, "os.fstat": 1},
+    "_read_runtime_mountinfo": {"os.open": 1, "os.fstat": 1, "os.read": 1},
+    "_observe_runtime_mount_projection": {"_admit_session_config": 1, "_read_runtime_mountinfo": 1},
+    "_capture_runtime_evidence": {
+        "_admit_session_config": 1, "_observe_runtime_descriptor_census": 1,
+        "_observe_runtime_mount_projection": 1, "_open_runtime_evidence_descriptors": 1,
+        "_capture_evidence_baseline": 1,
+    },
+    "_recheck_runtime_evidence": {
+        "_require_owned_evidence_baseline": 1, "_admit_session_config": 1,
+        "_observe_runtime_descriptor_census": 1, "_observe_runtime_mount_projection": 1,
+        "_recheck_evidence_baseline": 1,
+    },
+    "_release_runtime_evidence": {"_release_evidence_baseline": 1},
     "_shared_receipt_attestation": {
         "_admit_session_config": 1,
         "_require_owned_evidence_baseline": 1,
@@ -440,7 +506,7 @@ def _assert_no_hidden_capability(name: str, node: ast.FunctionDef) -> None:
                 )
         if isinstance(candidate, ast.ExceptHandler):
             if isinstance(candidate.type, ast.Name) and candidate.type.id == "BaseException":
-                assert name == "run_session"
+                assert name in {"_open_runtime_evidence_descriptors", "_capture_runtime_evidence", "run_session"}
         if isinstance(candidate, ast.Call):
             target = _attribute_name(candidate.func)
             assert target is not None, "computed call target is forbidden"
@@ -454,12 +520,25 @@ def _assert_no_hidden_capability(name: str, node: ast.FunctionDef) -> None:
                     if name == "_read_fixed_regular":
                         assert "dir_fd" not in keywords
                         expected_first = "path"
+                    elif name == "_read_runtime_mountinfo":
+                        assert "dir_fd" not in keywords
+                        assert candidate.args and isinstance(candidate.args[0], ast.Name)
+                        assert candidate.args[0].id == "RUNTIME_MOUNTINFO_PATH"
+                        expected_first = None
+                    elif name == "_open_runtime_evidence_descriptors":
+                        assert "dir_fd" not in keywords
+                        expected_first = "path"
                     else:
                         assert "dir_fd" in keywords
                         expected_first = "name"
-                    assert candidate.args and isinstance(candidate.args[0], ast.Name) and candidate.args[0].id == expected_first
+                    if expected_first is not None:
+                        assert candidate.args and isinstance(candidate.args[0], ast.Name) and candidate.args[0].id == expected_first
                     source = ast.unparse(candidate)
-                    assert "os.O_NOFOLLOW" in source and "os.O_CLOEXEC" in source
+                    if name == "_open_runtime_evidence_descriptors":
+                        assert len(candidate.args) == 2 and isinstance(candidate.args[1], ast.Name)
+                        assert candidate.args[1].id == "flags"
+                    else:
+                        assert "os.O_NOFOLLOW" in source and "os.O_CLOEXEC" in source
     for target, count in EXACT_CALL_COUNTS.get(name, {}).items():
         assert calls.get(target) == count, f"{name} must call {target} exactly {count} time(s)"
 
@@ -589,10 +668,71 @@ def _assert_fixed_pipe_nonblocking(functions: dict[str, ast.FunctionDef]) -> Non
 
 
 def _assert_state_entrypoints(functions: dict[str, ast.FunctionDef]) -> None:
-    for name in (
-        "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
-    ):
-        _assert_error_stub(functions[name], "runtime evidence is not admitted")
+    runtime = {
+        name: functions[name]
+        for name in (
+            "_open_runtime_evidence_descriptors", "_observe_runtime_descriptor_census",
+            "_read_runtime_mountinfo", "_observe_runtime_mount_projection",
+            "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
+        )
+    }
+    for name, node in runtime.items():
+        assert not (
+            len(node.body) == 1
+            and isinstance(node.body[0], ast.Raise)
+            and isinstance(node.body[0].exc, ast.Call)
+            and _attribute_name(node.body[0].exc.func) == "SessionError"
+        ), f"{name} must be a bounded runtime-observation helper"
+    open_helper = runtime["_open_runtime_evidence_descriptors"]
+    open_literals = {
+        _attribute_name(candidate)
+        for candidate in ast.walk(open_helper)
+        if isinstance(candidate, ast.Attribute)
+    }
+    assert {"os.O_CLOEXEC", "os.O_DIRECTORY", "os.O_NOFOLLOW", "os.O_PATH", "os.O_RDONLY"} <= open_literals
+    census = runtime["_observe_runtime_descriptor_census"]
+    assert any(
+        isinstance(candidate, ast.Call) and _attribute_name(candidate.func) == "runtime_resource.getrlimit"
+        for candidate in ast.walk(census)
+    )
+    assert any(
+        isinstance(candidate, ast.Name) and candidate.id == "MAX_RUNTIME_DESCRIPTOR_LIMIT"
+        for candidate in ast.walk(census)
+    )
+    mount_reader = runtime["_read_runtime_mountinfo"]
+    assert any(
+        isinstance(candidate, ast.Name) and candidate.id == "RUNTIME_MOUNTINFO_PATH"
+        for candidate in ast.walk(mount_reader)
+    )
+    assert any(
+        isinstance(candidate, ast.Name) and candidate.id == "MAX_RUNTIME_MOUNTINFO_BYTES"
+        for candidate in ast.walk(mount_reader)
+    )
+    capture = runtime["_capture_runtime_evidence"]
+    capture_calls = [
+        _attribute_name(candidate.func)
+        for candidate in ast.walk(capture)
+        if isinstance(candidate, ast.Call)
+    ]
+    assert capture_calls.count("_observe_runtime_descriptor_census") == 1
+    assert capture_calls.count("_observe_runtime_mount_projection") == 1
+    assert capture_calls.count("_open_runtime_evidence_descriptors") == 1
+    assert capture_calls.count("_capture_evidence_baseline") == 1
+    recheck = runtime["_recheck_runtime_evidence"]
+    recheck_calls = [
+        _attribute_name(candidate.func)
+        for candidate in ast.walk(recheck)
+        if isinstance(candidate, ast.Call)
+    ]
+    assert recheck_calls.count("_require_owned_evidence_baseline") == 1
+    assert recheck_calls.count("_recheck_evidence_baseline") == 1
+    release = runtime["_release_runtime_evidence"]
+    release_calls = [
+        _attribute_name(candidate.func)
+        for candidate in ast.walk(release)
+        if isinstance(candidate, ast.Call)
+    ]
+    assert release_calls == ["_release_evidence_baseline"]
     shared = functions["_shared_receipt_attestation"]
     pre = functions["_assemble_pre_payload"]
     post = functions["_assemble_post_payload"]
