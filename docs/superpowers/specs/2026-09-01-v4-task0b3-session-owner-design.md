@@ -873,6 +873,10 @@ safe sequence is:
    source-free design authority must define the bounded non-REAPER fixture,
    outer ownership, standard-stream topology, expected mounts, and resource
    budgets. It creates no namespace, process, mount, or executed fixture.
+   The draft at
+   `docs/superpowers/specs/2026-09-05-v4-task0b4c-controlled-fixture-design.md`
+   records that shape under the user's full project authority, but does not
+   complete this gate or relax the preceding source-review requirement.
 13. **Task 0B5 — graph-construction implementation gate:** under a separate
    data-only authority, implement and review the currently unavailable closed
    schema/catalog/graph-construction method. It may parse only supplied static

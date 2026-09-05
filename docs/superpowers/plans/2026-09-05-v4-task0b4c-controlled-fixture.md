@@ -82,11 +82,11 @@ git commit -m "docs: define bounded V4 fixture"
 - Consumes: the draft fixture definition from Task 1.
 - Produces: a consistent statement that no manifest or execution follows from a documentation draft.
 
-- [ ] **Step 1: Add the draft-only cross-reference**
+- [x] **Step 1: Add the draft-only cross-reference**
 
 State that the B4c document defines topology and budgets but cannot seal B4c-design while bootstrap/state independent review or runtime stub replacement is incomplete.
 
-- [ ] **Step 2: Validate no execution authorization appears**
+- [x] **Step 2: Validate no execution authorization appears**
 
 Run:
 
@@ -99,7 +99,7 @@ rg -n "authorize.*(Bubblewrap|systemd|REAPER|fixture)|execute.*fixture" \
 
 Expected: every match is a prohibition or future condition, never a current command authority.
 
-- [ ] **Step 3: Commit the cross-reference correction**
+- [x] **Step 3: Commit the cross-reference correction**
 
 ```bash
 git add RESUME.md docs/superpowers/specs/2026-09-01-v4-task0b3-session-owner-design.md
