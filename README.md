@@ -40,6 +40,32 @@ python3 tools/stage_live_midi_env.py \
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 
+### Start the live chain
+
+On the desktop that has the Revelator attached, the prepared eight-open-string
+profile is already at `build/m3-native-live-midi-8open`. Launch it without
+touching the normal REAPER profile:
+
+```bash
+/home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \
+  -cfgfile "$PWD/build/m3-native-live-midi-8open/reaper.ini" -nosplash
+```
+
+In REAPER, use **Actions → Show action list → ReaScript: Load…** to load and
+run [ajuntanaga_M3 Live Guitar to MIDI.lua](build/m3-native-live-midi-8open/Scripts/ajuntanaga_M3%20Live%20Guitar%20to%20MIDI.lua).
+It creates one armed, monitored `M3 Native 8-String Guitar to MIDI` track:
+
+```text
+Revelator input 1 → M3 Polyphonic Audio to MIDI → ReaSynth
+```
+
+Play clean single-note lines first. The profile is deliberately limited to the
+eight open-string range (MIDI 32–60), uses muted dry audio, and sends the
+detected note to ReaSynth. If there is no input meter activity, choose the
+Revelator's first mono input in REAPER's track input menu; if there is input
+but no synth note, lower the guitar/interface gain before increasing detector
+sensitivity.
+
 Task 11 passed a disposable REAPER chain containing the synthetic signal
 source, the production detector, MIDI capture, ReaSynth, and an audio-output
 probe. All 13 cases passed: mono, dyad, one full eight-note chord, and ten
