@@ -200,7 +200,8 @@ Updated: 2026-09-05T16:01:28-07:00
   host scan ran; public entrypoints remain fail closed. The next gate is
   Task 0B4b-bootstrap-transport.
 - Task 0B4b-bootstrap-transport is locally implemented and verified, but is
-  not yet independently reviewed or sealed. It adds only private fixed-literal
+  not yet independently reviewed or sealed. Its implementation checkpoint is
+  commit `2ce8abc`; it adds only private fixed-literal
   sidecar/config reading and fd-0/fd-1/fd-2 helpers; the current source
   SHA-256 is
   `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
@@ -214,7 +215,7 @@ Updated: 2026-09-05T16:01:28-07:00
   state machine, namespace, REAPER, audio,
   or host action has occurred under this checkpoint.
 - Task 0B4b-state is now locally implemented and verified as a mock-only
-  composition checkpoint, but remains unsealed pending independent review.
+  composition checkpoint in `2ce8abc`, but remains unsealed pending independent review.
   It replaces the predecessor static contract, imports only the sealed child
   adapter, and gives the public root its literal-path loader plus one local
   PRE -> ACK+EOF -> child -> POST transition. The evidence and payload

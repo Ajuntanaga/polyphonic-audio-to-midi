@@ -6,6 +6,7 @@ session-root composition slice. It succeeds the locally verified
 bootstrap-transport source and deliberately proves local ordering only. Its
 current source SHA-256 is
 `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
+The current implementation checkpoint is commit `2ce8abc`.
 It does not make a fixture, namespace, REAPER, audio, X11, network, or host
 claim.
 

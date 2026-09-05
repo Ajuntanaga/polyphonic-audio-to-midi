@@ -5,7 +5,8 @@ it can be called sealed. It succeeds sealed Task 0B4b-evidence (`a276949`) and
 permits only private fixed-literal loader and standard-stream helper
 implementation. It does not authorize a session state machine, child, fixture,
 namespace, REAPER, audio, or host operation. The current source SHA-256 is
-`5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
+`5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`; the
+current implementation checkpoint is commit `2ce8abc`.
 
 ## Scope
 
