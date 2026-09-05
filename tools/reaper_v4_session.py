@@ -1539,6 +1539,10 @@ def _wait_fixed_pipe(fd: int, event: int, deadline_ns: int) -> None:
         facts = os.fstat(fd)
         if not stat.S_ISFIFO(facts.st_mode):
             raise SessionError("descriptor is not a pipe")
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        if type(flags) is not int:
+            raise SessionError("pipe descriptor flags are invalid")
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
         remaining_ns = deadline_ns - time.monotonic_ns()
         if remaining_ns <= 0:
             raise SessionError("pipe wait exceeded its deadline")
@@ -1727,8 +1731,11 @@ def run_session(config: SessionConfig) -> SessionResult:
         post_frame = _finalize_post_payload(pre_payload, ack, post_payload)
         _write_frame_once(post_frame, post_monotonic_ns + limits["post_deadline_ms"] * 1_000_000)
         os.close(1)
-        _release_runtime_evidence(baseline)
+        if baseline is None:
+            raise SessionError("runtime evidence is missing")
+        released_baseline = baseline
         baseline = None
+        _release_runtime_evidence(released_baseline)
         result = object.__new__(SessionResult)
         object.__setattr__(result, "child_pid", outcome.child_pid)
         object.__setattr__(result, "child_returncode", outcome.returncode)

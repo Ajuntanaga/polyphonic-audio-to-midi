@@ -5,7 +5,7 @@ it can be called sealed. This is the source-and-test contract for the single
 session-root composition slice. It succeeds the locally verified
 bootstrap-transport source and deliberately proves local ordering only. Its
 current source SHA-256 is
-`de81082af61edc3e1d1d0b65749b493f45717d72708f6135eadc608099df9385`.
+`5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
 It does not make a fixture, namespace, REAPER, audio, X11, network, or host
 claim.
 
@@ -120,6 +120,6 @@ The test doubles use an existing canonical synthetic receipt vector only as
 data for real receipt/protocol validation; they are not namespace evidence.
 
 The preserved Task 0B1 static, replacement state static, B4b pure, admission,
-evidence, bootstrap-transport, and mock-only state suite is green with 45
+evidence, bootstrap-transport, and mock-only state suite is green with 46
 checks, and `git diff --check` is clean. No real fixed path, barrier,
 measurement, child, namespace, fixture, audio device, or host operation ran.

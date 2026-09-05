@@ -249,6 +249,30 @@ class Task0B4bStateTests(unittest.TestCase):
                             session.run_session(config)
                 self.assertEqual(len(frames), 2 if failure == "close" else 1)
 
+    def test_failed_terminal_release_is_not_retried(self) -> None:
+        """A failed one-shot release remains uncertainty, not a second release attempt."""
+        session = _session_module()
+        config, _order, frames, _specs, patches = self._success_patches(session)
+        release_calls: list[object] = []
+
+        def fail_release(baseline: object) -> None:
+            release_calls.append(baseline)
+            raise session.SessionError("release failed")
+
+        with (
+            patches[0], patches[1], patches[2], patches[3], patches[4],
+            patches[5], patches[6], patches[7], patches[8], patches[9],
+            patches[10],
+            mock.patch.object(
+                session, "_release_runtime_evidence", side_effect=fail_release
+            ),
+            patches[12], patches[13],
+        ):
+            with self.assertRaises(session.SessionError):
+                session.run_session(config)
+        self.assertEqual(len(frames), 2)
+        self.assertEqual(len(release_calls), 1)
+
     def test_post_finalizer_validates_post_then_exchange_then_encodes(self) -> None:
         session = _session_module()
         order: list[str] = []

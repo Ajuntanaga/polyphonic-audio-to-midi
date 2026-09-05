@@ -29,12 +29,24 @@ def _close_quietly(descriptor: int) -> None:
         pass
 
 
+class _StatOverride:
+    """A minimal immutable-like stat view for one controlled negative vector."""
+
+    def __init__(self, source: os.stat_result, mode: int) -> None:
+        self.st_mode = mode
+        self.st_uid = source.st_uid
+        self.st_gid = source.st_gid
+        self.st_dev = source.st_dev
+        self.st_ino = source.st_ino
+
+
 class _EvidenceFixture:
     def __init__(self, session: object) -> None:
         self._session = session
         self._temporary = tempfile.TemporaryDirectory()
         self._descriptors: list[int] = []
         self._socket: socket.socket | None = None
+        self._socket_peer: socket.socket | None = None
         self.config: object | None = None
         self.cwd = ""
         self.environment: dict[str, object] = {}
@@ -44,7 +56,6 @@ class _EvidenceFixture:
         self.scan_plugin_a = ""
         self.scan_plugin_b = ""
         self.authority_path = ""
-        self.socket_path = ""
 
     def __enter__(self) -> _EvidenceFixture:
         root = self._temporary.name
@@ -52,9 +63,7 @@ class _EvidenceFixture:
         scan = os.path.join(root, "scan")
         home = os.path.join(root, "home")
         authority = os.path.join(root, "Xauthority")
-        socket_path = os.path.join(root, "X0")
         self.authority_path = authority
-        self.socket_path = socket_path
         os.mkdir(measurement)
         self.measurement_display = os.path.join(measurement, "display")
         with open(self.measurement_display, "wb"):
@@ -78,15 +87,13 @@ class _EvidenceFixture:
         with open(authority, "wb") as stream:
             stream.write(authority_bytes)
         os.chmod(authority, 0o600)
-        self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._socket.bind(socket_path)
-        os.chmod(socket_path, 0o777)
+        self._socket, self._socket_peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
 
         measurement_fd = os.open(measurement, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
         scan_fd = os.open(scan, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
         home_fd = os.open(home, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
         authority_fd = os.open(authority, os.O_RDONLY | os.O_CLOEXEC)
-        socket_fd = os.open(socket_path, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC)
+        socket_fd = os.dup(self._socket.fileno())
         self._descriptors = [measurement_fd, scan_fd, home_fd, authority_fd, socket_fd]
 
         value = _valid_config()
@@ -146,6 +153,8 @@ class _EvidenceFixture:
             _close_quietly(descriptor)
         if self._socket is not None:
             self._socket.close()
+        if self._socket_peer is not None:
+            self._socket_peer.close()
         self._temporary.cleanup()
 
 
@@ -363,9 +372,18 @@ class Task0B4bEvidenceTests(unittest.TestCase):
             with self.assertRaises(session.SessionError):
                 fixture.capture()
         with _EvidenceFixture(session) as fixture:
-            os.chmod(fixture.socket_path, 0o700)
-            with self.assertRaises(session.SessionError):
-                fixture.capture()
+            original_fstat = session.os.fstat
+            socket_fd = fixture.descriptors[4]
+
+            def socket_mode_changed(descriptor: int) -> os.stat_result | _StatOverride:
+                facts = original_fstat(descriptor)
+                if descriptor == socket_fd:
+                    return _StatOverride(facts, stat.S_IFSOCK | 0o700)
+                return facts
+
+            with mock.patch.object(session.os, "fstat", side_effect=socket_mode_changed):
+                with self.assertRaises(session.SessionError):
+                    fixture.capture()
 
     def test_certificate_projection_is_fresh_and_non_attesting(self) -> None:
         session = _session_module()

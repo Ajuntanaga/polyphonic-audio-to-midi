@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-04T03:02:34-07:00
+Updated: 2026-09-05T16:01:28-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -203,12 +203,14 @@ Updated: 2026-09-04T03:02:34-07:00
   not yet independently reviewed or sealed. It adds only private fixed-literal
   sidecar/config reading and fd-0/fd-1/fd-2 helpers; the current source
   SHA-256 is
-  `6004beb204a464e33d75f12aba058757d0875e8ba5dc12ff2ec56e67dbb262a2`.
+  `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
   Its static RED recorded the absent imports/helpers, its five behavior REDs
-  recorded the fail-closed stubs, and the preserved suite now passes 37
+  recorded the fail-closed stubs, and the preserved suite now passes 46
   checks. The added `POLLHUP` regression accepts it only as second-read EOF
-  readiness; the read itself must still prove EOF. The tests use syscall/poll
-  doubles and canonical synthetic config bytes only. No real `/run`, child,
+  readiness; the read itself must still prove EOF. The raw fd-0/fd-1 waiter
+  now sets `O_NONBLOCK` before every bounded poll and refuses a flags failure
+  before any raw operation. The tests use syscall/poll doubles and canonical
+  synthetic config bytes only. No real `/run`, child,
   state machine, namespace, REAPER, audio,
   or host action has occurred under this checkpoint.
 - Task 0B4b-state is now locally implemented and verified as a mock-only
@@ -218,9 +220,9 @@ Updated: 2026-09-04T03:02:34-07:00
   PRE -> ACK+EOF -> child -> POST transition. The evidence and payload
   assembly edges intentionally remain exact fail-closed stubs, so no runtime
   invocation can self-assert receipt facts. Its source SHA-256 is
-  `de81082af61edc3e1d1d0b65749b493f45717d72708f6135eadc608099df9385`.
-  The preserved suite has 45 checks: mock-only success, failure, outcome,
-  post-finalization, and interruption vectors prove local ordering only. No
+  `5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
+  The preserved suite has 46 checks: mock-only success, failure, outcome,
+  post-finalization, interruption, and one-shot terminal-release vectors prove local ordering only. No
   real `/run` read, barrier, measurement, child, fixture, namespace, REAPER,
   audio, X11, network, or host action occurred.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite

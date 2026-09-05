@@ -5,7 +5,7 @@ it can be called sealed. It succeeds sealed Task 0B4b-evidence (`a276949`) and
 permits only private fixed-literal loader and standard-stream helper
 implementation. It does not authorize a session state machine, child, fixture,
 namespace, REAPER, audio, or host operation. The current source SHA-256 is
-`6004beb204a464e33d75f12aba058757d0875e8ba5dc12ff2ec56e67dbb262a2`.
+`5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38`.
 
 ## Scope
 
@@ -69,8 +69,11 @@ helper before return. It never calls the public loader stub or accepts a path
 argument. This proves only local fixed-literal operation under doubles, not
 paired-substitution resistance or an actual `/run` mount.
 
-`_wait_fixed_pipe()` validates a fixed pipe descriptor, uses a bounded poll
-with `time.monotonic_ns()`, and refuses timeout, `POLLERR`, or `POLLNVAL`.
+`_wait_fixed_pipe()` validates a fixed pipe descriptor, sets its existing
+status flags plus `O_NONBLOCK` before the deadline calculation or poll, uses a
+bounded poll with `time.monotonic_ns()`, and refuses timeout, `POLLERR`, or
+`POLLNVAL`. A flags-read or flags-write failure is `SessionError` before any
+raw read or write.
 For a requested `POLLIN`, a `POLLHUP` is admitted only as readiness for the
 caller’s immediate bounded read: that read must still prove the ACK byte or
 EOF. A hangup never makes a write successful. `_write_frame_once()` uses fd 1 only, requires a nonempty
@@ -120,8 +123,10 @@ interruption while still reporting a normal-path close error.
 After a targeted RED showed that a closed Linux FIFO can report the second ACK
 readiness event as `POLLHUP`, the helper was narrowed to accept that condition
 only for a requested `POLLIN`; the immediate bounded read must still establish
-EOF. The focused static/bootstrap command is green with nine checks. The
+EOF. A later targeted RED showed the raw standard streams remained blocking;
+the common fixed-pipe waiter now sets `O_NONBLOCK` before polling, with an
+explicit flags-failure refusal regression. The focused static/bootstrap command is green with nine checks. The
 preserved Task 0B1 static, B4b pure, admission, evidence, bootstrap, and
-whitespace suite is green with 37 checks. These tests use only syscall/poll doubles and
+mock-only state suite is green with 46 checks. These tests use only syscall/poll doubles and
 canonical synthetic configuration bytes; no real `/run` path, child,
 namespace, REAPER, audio device, or host scan was used.

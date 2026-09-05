@@ -156,18 +156,40 @@ class Task0B4bBootstrapTransportTests(unittest.TestCase):
         ])
 
     def test_pipe_wait_and_single_frame_write_refuse_uncertain_output(self) -> None:
-        """Skipping pipe validation, PIPE_BUF, deadline, or short-write refusal fails this."""
+        """Skipping pipe validation, nonblocking mode, PIPE_BUF, deadline, or short-write refusal fails this."""
         session = _session_module()
         poll = _Poll([(1, session.select.POLLOUT)])
         frame = b"frame"
         writes: list[tuple[int, bytes]] = []
+        flags = {"value": 0}
+
+        def fake_fcntl(descriptor: int, command: int, value: int | None = None) -> int:
+            self.assertEqual(descriptor, 1)
+            if command == session.fcntl.F_GETFL:
+                return flags["value"]
+            self.assertEqual(command, session.fcntl.F_SETFL)
+            self.assertIsNotNone(value)
+            flags["value"] = value  # type: ignore[assignment]
+            return 0
+
         with (
             mock.patch.object(session.os, "fstat", return_value=_Stat(stat.S_IFIFO | 0o600)),
             mock.patch.object(session.select, "poll", return_value=poll),
             mock.patch.object(session.time, "monotonic_ns", return_value=1_000),
+            mock.patch.object(session.fcntl, "fcntl", side_effect=fake_fcntl),
         ):
             session._wait_fixed_pipe(1, session.select.POLLOUT, 2_000)
         self.assertEqual(poll.registered, [(1, session.select.POLLOUT)])
+        self.assertNotEqual(flags["value"] & session.os.O_NONBLOCK, 0)
+
+        with (
+            mock.patch.object(session.os, "fstat", return_value=_Stat(stat.S_IFIFO | 0o600)),
+            mock.patch.object(session.fcntl, "fcntl", side_effect=OSError("flags unavailable")),
+            mock.patch.object(session.select, "poll") as make_poll,
+        ):
+            with self.assertRaises(session.SessionError):
+                session._wait_fixed_pipe(1, session.select.POLLOUT, 2_000)
+            make_poll.assert_not_called()
 
         with (
             mock.patch.object(session.os, "fstat", return_value=_Stat(stat.S_IFIFO | 0o600)),
@@ -216,6 +238,7 @@ class Task0B4bBootstrapTransportTests(unittest.TestCase):
             mock.patch.object(session.select, "poll", side_effect=polls),
             mock.patch.object(session.time, "monotonic_ns", return_value=1_000),
             mock.patch.object(session.os, "read", side_effect=[b"\x06", b""]),
+            mock.patch.object(session.fcntl, "fcntl", return_value=0),
         ):
             self.assertEqual(session._read_ack_eof(2_000), b"\x06")
 

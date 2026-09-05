@@ -9,7 +9,7 @@ import unittest
 
 
 SESSION_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "reaper_v4_session.py"
-EXPECTED_SOURCE_SHA256 = "de81082af61edc3e1d1d0b65749b493f45717d72708f6135eadc608099df9385"
+EXPECTED_SOURCE_SHA256 = "5aaeef6dcf84ac988fa537e63cf7016fde03c46fcbc755d71886133186687e38"
 EXPECTED_IMPORTS = {
     "from __future__ import annotations",
     "import dataclasses",
@@ -189,7 +189,7 @@ ALLOWED_IMPORTED_ATTRIBUTES = {
     "_emit_diagnostic_once": {"os.write"},
     "_read_fixed_regular": {"fcntl.FD_CLOEXEC", "fcntl.F_GETFD", "fcntl.F_GETFL", "fcntl.fcntl", "os.O_ACCMODE", "os.O_CLOEXEC", "os.O_NOFOLLOW", "os.O_RDONLY", "os.ST_RDONLY", "os.close", "os.fstat", "os.fstatvfs", "os.open", "os.read", "stat.S_ISREG"},
     "_load_fixed_session_config": set(),
-    "_wait_fixed_pipe": {"os.fstat", "select.POLLERR", "select.POLLHUP", "select.POLLIN", "select.POLLNVAL", "select.POLLOUT", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns"},
+    "_wait_fixed_pipe": {"fcntl.F_GETFL", "fcntl.F_SETFL", "fcntl.fcntl", "os.O_NONBLOCK", "os.fstat", "select.POLLERR", "select.POLLHUP", "select.POLLIN", "select.POLLNVAL", "select.POLLOUT", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns"},
     "_write_frame_once": {"os.fpathconf", "os.fstat", "os.write", "protocol.MAX_FRAME_BYTES", "select.POLLOUT", "stat.S_ISFIFO"},
     "_read_ack_eof": {"os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "select.POLLIN", "stat.S_ISFIFO"},
     "_capture_runtime_evidence": set(),
@@ -252,7 +252,7 @@ ALLOWED_CALLS = {
     "_emit_diagnostic_once": {"SessionError", "all", "len", "os.write", "type", "code.encode"},
     "_read_fixed_regular": {"SessionError", "bytearray", "bytes", "data.extend", "fcntl.fcntl", "len", "min", "os.close", "os.fstat", "os.fstatvfs", "os.open", "os.read", "path.__eq__", "stat.S_ISREG", "type"},
     "_load_fixed_session_config": {"SessionError", "_admit_session_config", "_parse_session_config_bytes", "_read_fixed_regular", "_setup_diagnostic_fd", "object.__new__", "object.__setattr__"},
-    "_wait_fixed_pipe": {"SessionError", "int", "os.fstat", "poll.poll", "poll.register", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns", "type"},
+    "_wait_fixed_pipe": {"SessionError", "fcntl.fcntl", "int", "os.fstat", "poll.poll", "poll.register", "select.poll", "stat.S_ISFIFO", "time.monotonic_ns", "type"},
     "_write_frame_once": {"SessionError", "_wait_fixed_pipe", "len", "os.fpathconf", "os.fstat", "os.write", "stat.S_ISFIFO", "type"},
     "_read_ack_eof": {"SessionError", "_wait_fixed_pipe", "os.fstat", "os.read", "receipt_schema.validate_ack_bytes", "stat.S_ISFIFO", "type"},
     "_capture_runtime_evidence": {"SessionError"},
@@ -286,7 +286,7 @@ EXACT_CALL_COUNTS = {
     "_emit_diagnostic_once": {"os.write": 1},
     "_read_fixed_regular": {"os.open": 1, "os.fstat": 1, "fcntl.fcntl": 2, "os.fstatvfs": 1, "os.read": 1},
     "_load_fixed_session_config": {"_setup_diagnostic_fd": 1, "_read_fixed_regular": 2, "_parse_session_config_bytes": 1, "_admit_session_config": 1, "object.__new__": 1, "object.__setattr__": 1},
-    "_wait_fixed_pipe": {"os.fstat": 1, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
+    "_wait_fixed_pipe": {"os.fstat": 1, "fcntl.fcntl": 2, "time.monotonic_ns": 1, "select.poll": 1, "poll.register": 1, "poll.poll": 1},
     "_write_frame_once": {"os.fstat": 1, "os.fpathconf": 1, "_wait_fixed_pipe": 1, "os.write": 1},
     "_read_ack_eof": {"os.fstat": 1, "_wait_fixed_pipe": 2, "os.read": 2, "receipt_schema.validate_ack_bytes": 1},
     "_child_spec_from_config": {"_admit_session_config": 1, "_child_spec_projection": 1, "child_runner.ChildSpec": 1},
@@ -535,6 +535,28 @@ def _assert_bounded_walkers(functions: dict[str, ast.FunctionDef]) -> None:
                 assert key_index < append_index
 
 
+def _assert_fixed_pipe_nonblocking(functions: dict[str, ast.FunctionDef]) -> None:
+    """Every raw-frame poll must leave its fixed pipe descriptor nonblocking."""
+    calls = [
+        candidate for candidate in ast.walk(functions["_wait_fixed_pipe"])
+        if isinstance(candidate, ast.Call) and _attribute_name(candidate.func) == "fcntl.fcntl"
+    ]
+    assert len(calls) == 2
+    get_flags, set_flags = calls
+    assert tuple(ast.unparse(argument) for argument in get_flags.args) == ("fd", "fcntl.F_GETFL")
+    assert not get_flags.keywords
+    assert tuple(ast.unparse(argument) for argument in set_flags.args) == (
+        "fd", "fcntl.F_SETFL", "flags | os.O_NONBLOCK",
+    )
+    assert not set_flags.keywords
+    assert get_flags.lineno < set_flags.lineno
+    poll_call = next(
+        candidate for candidate in ast.walk(functions["_wait_fixed_pipe"])
+        if isinstance(candidate, ast.Call) and _attribute_name(candidate.func) == "select.poll"
+    )
+    assert set_flags.lineno < poll_call.lineno
+
+
 def _assert_state_entrypoints(functions: dict[str, ast.FunctionDef]) -> None:
     for name in (
         "_capture_runtime_evidence", "_recheck_runtime_evidence", "_release_runtime_evidence",
@@ -579,6 +601,25 @@ def _assert_state_entrypoints(functions: dict[str, ast.FunctionDef]) -> None:
     assert _attribute_name(outcome_calls[0].args[0].func) == "child_runner.run_child"
     assert "receipt_schema.validate_post_payload" not in direct
     assert "receipt_schema.validate_exchange" not in direct
+    terminal_releases = [
+        candidate for candidate in ast.walk(run)
+        if isinstance(candidate, ast.Call)
+        and _attribute_name(candidate.func) == "_release_runtime_evidence"
+        and len(candidate.args) == 1
+        and isinstance(candidate.args[0], ast.Name)
+        and candidate.args[0].id == "released_baseline"
+    ]
+    assert len(terminal_releases) == 1
+    assert any(
+        isinstance(candidate, ast.Assign)
+        and len(candidate.targets) == 1
+        and isinstance(candidate.targets[0], ast.Name)
+        and candidate.targets[0].id == "baseline"
+        and isinstance(candidate.value, ast.Constant)
+        and candidate.value.value is None
+        and candidate.lineno < terminal_releases[0].lineno
+        for candidate in ast.walk(run)
+    )
     assert any(isinstance(node, ast.Return) for node in ast.walk(run))
     assert not any(isinstance(node, ast.Try) and node.finalbody for node in ast.walk(run))
 
@@ -599,6 +640,7 @@ def assert_b4b_source_contract() -> None:
         _assert_signature(name, node)
         _assert_no_hidden_capability(name, node)
     _assert_bounded_walkers(functions)
+    _assert_fixed_pipe_nonblocking(functions)
     _assert_state_entrypoints(functions)
 
 
