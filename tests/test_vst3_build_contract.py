@@ -199,6 +199,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 },
                 {
                     "native/src/generated_note_ledger.cpp",
+                    "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
@@ -234,6 +235,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 },
                 {
                     "native/src/generated_note_ledger.cpp",
+                    "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
