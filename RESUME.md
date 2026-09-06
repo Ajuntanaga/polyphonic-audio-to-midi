@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-05T16:43:22-07:00
+Updated: 2026-09-05T17:24:58-07:00
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
@@ -258,20 +258,28 @@ Updated: 2026-09-05T16:43:22-07:00
   host scan ran. A reviewed closure/fixture-manifest and a later controlled
   fixture remain required before any actual session execution.
 - Task 0B5 source closure and parent-harness implementation is locally
-  verified. `tools/reaper_v4_session_entry.py` establishes the one source root;
+  verified and committed as `feat: pin V4 observed runtime catalog`.
+  `tools/reaper_v4_session_entry.py` establishes the one source root;
   `tools/reaper_v4_fixture_manifest.py` produces a deterministic seven-source,
   eight-edge graph and rejects bootstrap-config self-reference; and
   `tools/reaper_v4_fixture_harness.py` performs the parent-side
   PRE -> ACK+EOF -> POST exchange against an isolated non-REAPER Python
-  sentinel. The full V4 discovery suite passed 110 checks. A controlled import
-  plus recursive ELF-dependency observation found a draft 89-entry, ~21.7 MiB
-  runtime inventory, but it is not yet a reviewed complete manifest. The local
-  Bubblewrap probe failed before executing a child because this sandbox's
-  kernel denies creation of an unprivileged user namespace; `strace` is also
-  denied ptrace. No fallback, actual fixture, session invocation, REAPER,
-  audio, X11-client, network, or host scan was attempted. Resume with the
-  individually pinned runtime catalog and fixture-runtime-manifest, then use a
-  host that permits the reviewed Bubblewrap scope for actual fixture execution.
+  sentinel. The full V4 discovery suite passed 113 checks. The persisted
+  `tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json` pins 77
+  observed interpreter/extension/ELF regular inputs (9,499,630 bytes) under
+  canonical catalog SHA-256
+  `446a7f87e156f4cfa4cf58582261fde22a6557cf06604da6a02c6d393450c76e`.
+  Rechecking that catalog plus the seven source files builds only an 84-entry,
+  9,647,488-byte `DECLARED_RUNTIME_MANIFEST` in memory; it remains explicitly
+  `UNRESOLVED` for builtin/frozen modules, conditional imports, interpreter
+  startup, native effects, and virtual resources. The local Bubblewrap probe
+  failed before executing a child because this Codex execution environment
+  refuses new namespaces even though the host user-namespace sysctls are
+  enabled; `strace` is also denied ptrace. No
+  fallback, actual fixture, session invocation, REAPER, audio, X11-client,
+  network, or host scan was attempted. Resume with the individually pinned
+  runtime catalog and complete fixture-runtime-manifest, then use a host that
+  permits the reviewed Bubblewrap scope for actual fixture execution.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps

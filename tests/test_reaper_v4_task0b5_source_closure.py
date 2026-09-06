@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import pathlib
 import tempfile
 import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+OBSERVED_RUNTIME_CATALOG = ROOT / "tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json"
 
 
 class Task0B5SourceClosureTests(unittest.TestCase):
@@ -126,6 +128,93 @@ class Task0B5SourceClosureTests(unittest.TestCase):
             max(entry["byte_size"] for entry in manifest["entries"]),
         )
         self.assertEqual(len(manifest["fixture_manifest_sha256"]), 64)
+
+    def test_catalog_pins_runtime_bytes_and_refuses_drift_on_manifest_build(self) -> None:
+        """Changing a cataloged runtime file must refuse later manifest assembly."""
+        from tools.reaper_v4_fixture_manifest import (
+            FixtureManifestError,
+            build_fixture_runtime_manifest_from_catalog,
+            build_runtime_catalog,
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            entry = self._write(root, "session_entry.py", "from tools import session\n")
+            self._write(root, "tools/session.py", "VALUE = 1\n")
+            runtime = self._write(root, "runtime/python", "runtime-v1\n")
+            fixture_input = self._write(root, "fixture/a", "A")
+            catalog = build_runtime_catalog(
+                {"/usr/bin/python3": runtime},
+                unresolved=("interpreter startup model is not sealed",),
+            )
+            manifest = build_fixture_runtime_manifest_from_catalog(
+                root,
+                entry,
+                catalog,
+                {"/fixture/a": fixture_input},
+            )
+            runtime.write_text("runtime-v2\n", encoding="utf-8")
+            with self.assertRaisesRegex(FixtureManifestError, "no longer matches"):
+                build_fixture_runtime_manifest_from_catalog(
+                    root,
+                    entry,
+                    catalog,
+                    {"/fixture/a": fixture_input},
+                )
+
+        self.assertEqual(catalog["state"], "OBSERVED_RUNTIME_CATALOG")
+        self.assertEqual(catalog["completeness"], "UNRESOLVED")
+        self.assertEqual(catalog["unresolved"], ("interpreter startup model is not sealed",))
+        self.assertEqual(manifest["state"], "DECLARED_RUNTIME_MANIFEST")
+        self.assertEqual(manifest["runtime_catalog_sha256"], catalog["runtime_catalog_sha256"])
+
+    def test_runtime_catalog_json_round_trips_only_in_canonical_form(self) -> None:
+        """A persisted catalog must preserve exact entries and reject byte drift."""
+        from tools.reaper_v4_fixture_manifest import (
+            FixtureManifestError,
+            build_runtime_catalog,
+            load_runtime_catalog_bytes,
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            runtime = self._write(root, "runtime/python", "runtime\n")
+            catalog = build_runtime_catalog(
+                {"/usr/bin/python3": runtime},
+                unresolved=("startup registry is not sealed",),
+            )
+            encoded = json.dumps(
+                catalog,
+                allow_nan=False,
+                ensure_ascii=True,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("ascii")
+            loaded = load_runtime_catalog_bytes(encoded)
+
+        self.assertEqual(loaded, catalog)
+        self.assertIs(type(loaded["entries"]), tuple)
+        self.assertIs(type(loaded["unresolved"]), tuple)
+        self.assertEqual(load_runtime_catalog_bytes(encoded + b"\n"), catalog)
+        with self.assertRaisesRegex(FixtureManifestError, "not canonical"):
+            load_runtime_catalog_bytes(b'{"schema": 1}')
+        with self.assertRaisesRegex(FixtureManifestError, "not canonical"):
+            load_runtime_catalog_bytes(encoded + b"\n\n")
+
+    def test_checked_in_runtime_catalog_is_canonical_and_honestly_unresolved(self) -> None:
+        """The catalog must remain a concrete review input, never a completion claim."""
+        from tools.reaper_v4_fixture_manifest import load_runtime_catalog_bytes
+
+        catalog = load_runtime_catalog_bytes(OBSERVED_RUNTIME_CATALOG.read_bytes())
+
+        self.assertEqual(catalog["state"], "OBSERVED_RUNTIME_CATALOG")
+        self.assertEqual(catalog["completeness"], "UNRESOLVED")
+        self.assertGreater(catalog["resource_policy"]["regular_entry_count"], 16)
+        self.assertEqual(
+            tuple(entry["destination"] for entry in catalog["entries"]),
+            tuple(sorted(entry["destination"] for entry in catalog["entries"])),
+        )
+        self.assertTrue(any("startup" in reason for reason in catalog["unresolved"]))
 
     def test_refuses_bootstrap_paths_inside_the_manifest(self) -> None:
         from tools.reaper_v4_fixture_manifest import (

@@ -36,7 +36,7 @@ The current source root closure is exact and source-only:
 It contains seven regular Python sources and eight typed import edges.  It does
 not yet prove the interpreter, extension, ELF loader, or fixture-data closure.
 
-## Manifest boundary
+## Manifest boundary and observed runtime catalog
 
 `build_fixture_runtime_manifest()` deliberately treats the configuration JSON
 and its SHA-256 sidecar as a fixed bootstrap pair outside the manifest.  The
@@ -45,11 +45,20 @@ be self-referential.  The builder rejects either bootstrap destination and
 records each supplied source, runtime, or fixture regular file by destination,
 host source identity, mode, byte size, and SHA-256.
 
-An isolated `python3 -E -S -B` import observation was used only to estimate the
-next inventory step.  It found 82 runtime regular files plus the seven session
-sources (89 entries, approximately 21.7 MiB after recursive ELF dependencies).
-That is a declared draft inventory, not a proof of complete interpreter
-closure and not a manifest seal.
+An isolated `env -i` / `python3 -I -S -B` import observation is persisted in
+`tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json`.  It pins 77
+regular interpreter/extension/ELF inputs (9,499,630 bytes), with canonical
+catalog SHA-256
+`446a7f87e156f4cfa4cf58582261fde22a6557cf06604da6a02c6d393450c76e`.
+`build_fixture_runtime_manifest_from_catalog()` rehashes every cataloged source
+before it will assemble a manifest; the current catalog plus the seven source
+files produces an 84-entry, 9,647,488-byte declared manifest in memory.
+
+The catalog is explicitly marked `OBSERVED_RUNTIME_CATALOG` / `UNRESOLVED`.
+It retains the unresolved builtin/frozen-module registry, conditional-import,
+interpreter-startup, native-effect, and virtual-resource closure gaps. It is a
+reviewable input—not a complete interpreter closure, fixture-runtime manifest,
+or fixture-execution authorization.
 
 ## Parent-harness evidence
 
@@ -61,24 +70,25 @@ The new harness test suite uses only an isolated Python sentinel started with
 3. a child exit before PRE is refused; and
 4. a POST supplied before the ACK is refused.
 
-Together with the existing V4 suites, discovery runs 110 tests green.
+Together with the existing V4 suites, discovery runs 113 tests green.
 The sentinel is not REAPER, does not access audio, X11, network, or a plug-in,
 and supplies no compatibility claim.
 
 ## Current execution limit
 
 The reviewed Bubblewrap binary is installed, but a harmless namespace probe is
-currently refused by this machine's kernel policy:
+currently refused by this Codex execution environment before its child starts,
+even though the host user-namespace sysctls report enabled:
 
 ```text
 bwrap: No permissions to create a new namespace
 ```
 
-`strace` is also denied `PTRACE_TRACEME` in this Codex sandbox.  Therefore no
+`strace` is also denied `PTRACE_TRACEME` in this Codex sandbox. Therefore no
 actual Bubblewrap fixture, mount namespace, session invocation, or REAPER host
-action occurred here.  The code and manifest/harness inputs are ready for the
-next reviewed runtime-catalog and fixture-execution environment; there is no
-unsandboxed fallback.
+action occurred here. The code and manifest/harness inputs are ready for an
+execution environment that permits the reviewed scope; there is no unsandboxed
+fallback.
 
 ## Next work
 
