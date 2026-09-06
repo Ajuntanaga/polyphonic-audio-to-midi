@@ -11,6 +11,7 @@ LIVE_REAPER_PROFILE = (pathlib.Path.home() / ".config" / "REAPER").resolve()
 DEFAULT_INPUT_DEVICE = "hw:R24,0"
 DEFAULT_OUTPUT_DEVICE = "hw:R24,0"
 DEFAULT_SAMPLE_RATE = 48000
+SUPPORTED_SAMPLE_RATES = (44100, 48000, 88200, 96000)
 DEFAULT_BLOCK_SIZE = 256
 DEFAULT_INPUT_CHANNELS = 6
 DEFAULT_OUTPUT_CHANNELS = 2
@@ -120,6 +121,7 @@ def stage_live_profile(
     *,
     input_device: str = DEFAULT_INPUT_DEVICE,
     output_device: str = DEFAULT_OUTPUT_DEVICE,
+    sample_rate: int = DEFAULT_SAMPLE_RATE,
     detector: str = "jsfx",
     native_bundle: pathlib.Path | None = None,
 ) -> pathlib.Path:
@@ -132,6 +134,8 @@ def stage_live_profile(
         raise ValueError(f"missing Effects tree: {effects}")
     if detector not in {"jsfx", "native"}:
         raise ValueError("detector must be 'jsfx' or 'native'")
+    if type(sample_rate) is not int or sample_rate not in SUPPORTED_SAMPLE_RATES:
+        raise ValueError("sample rate must be one of the supported live rates")
 
     resolved_native_bundle: pathlib.Path | None = None
     if detector == "native":
@@ -164,7 +168,7 @@ def stage_live_profile(
         "linux_audio_bufs=2\n"
         f"linux_audio_nch_in={DEFAULT_INPUT_CHANNELS}\n"
         f"linux_audio_nch_out={DEFAULT_OUTPUT_CHANNELS}\n"
-        f"linux_audio_srate={DEFAULT_SAMPLE_RATE}\n"
+        f"linux_audio_srate={sample_rate}\n"
         "newprojdo=0\n"
         "saveFlags=0\n"
         "warnmaxram64=0\n"
@@ -186,6 +190,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--input-device", default=DEFAULT_INPUT_DEVICE)
     parser.add_argument("--output-device", default=DEFAULT_OUTPUT_DEVICE)
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        choices=SUPPORTED_SAMPLE_RATES,
+        default=DEFAULT_SAMPLE_RATE,
+    )
     parser.add_argument("--detector", choices=("jsfx", "native"), default="jsfx")
     parser.add_argument("--native-bundle", type=pathlib.Path)
     args = parser.parse_args(argv)
@@ -194,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
         args.output,
         input_device=args.input_device,
         output_device=args.output_device,
+        sample_rate=args.sample_rate,
         detector=args.detector,
         native_bundle=args.native_bundle,
     )

@@ -20,8 +20,10 @@ The staged native profile creates one armed, monitored track:
 Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 ```
 
-It is configured for 48 kHz, 256 samples, MIDI notes `32..60`—the eight open
-strings—muted dry audio, and one detected note at a time. That makes it
+The default disposable profile is configured for 48 kHz and 256 samples. For
+the Revelator's 96 kHz mode, stage the dedicated profile below. Both profiles
+use MIDI notes `32..60`—the eight open strings—muted dry audio, and one
+detected note at a time. That makes it
 appropriate for clean low-register eight-string lines and single-note playing;
 it is **not yet a polyphonic chord transcriber or a full-fretboard tracker**.
 The native detector and its MIDI note-on/off path have been verified with an
@@ -37,19 +39,27 @@ python3 tools/stage_live_midi_env.py \
   --detector native
 ```
 
+For the 96 kHz Revelator profile used for live guitar, stage it separately:
+
+```bash
+python3 tools/stage_live_midi_env.py \
+  --output build/m3-native-live-midi-8open-96k \
+  --detector native \
+  --sample-rate 96000
+```
+
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 
 ### Start the live chain
 
-On the desktop that has the Revelator attached, the prepared eight-open-string
-profile is already at `build/m3-native-live-midi-8open`. Launch it without
-touching the normal REAPER profile:
+On the desktop that has the Revelator attached, launch the prepared 96 kHz
+eight-open-string profile without touching the normal REAPER profile:
 
 ```bash
 /home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \
-  -cfgfile "$PWD/build/m3-native-live-midi-8open/reaper.ini" -nosplash \
-  "$PWD/build/m3-native-live-midi-8open/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
+  -cfgfile "$PWD/build/m3-native-live-midi-8open-96k/reaper.ini" -nosplash \
+  "$PWD/build/m3-native-live-midi-8open-96k/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
 ```
 
 REAPER accepts a Lua script as a command-line argument, so that command creates

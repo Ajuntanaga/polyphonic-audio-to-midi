@@ -49,6 +49,17 @@ class StageLiveMidiProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "live REAPER profile"):
             stage_live_profile(ROOT, LIVE_REAPER_PROFILE)
 
+    def test_stages_requested_96khz_profile(self) -> None:
+        """A live profile can use the requested 96 kHz interface clock."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output = pathlib.Path(temporary) / "m3-live-midi-96k"
+
+            stage_live_profile(ROOT, output, sample_rate=96000)
+
+            profile = (output / "reaper.ini").read_text(encoding="utf-8")
+            self.assertIn("linux_audio_srate=96000\n", profile)
+            self.assertIn("linux_audio_bsize=256\n", profile)
+
     def test_stages_native_detector_bundle_in_a_separate_profile(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             temporary_root = pathlib.Path(temporary)
