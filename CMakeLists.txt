@@ -74,9 +74,11 @@ set(M3_VST3_PROBE_PROCESSOR_SOURCES
 )
 
 # VSTGUI's VST3Editor discovers an optional editor delegate with dynamic_cast.
-# Keep RTTI limited to the combined controller's two defining translation units.
+# Keep RTTI limited to concrete controller/editor types that cross that boundary.
 set_source_files_properties(
+    native/vst3/m3_editor.cpp
     native/vst3/vst3_component.cpp
+    native/vst3/vst3_probe_processor.cpp
     third_party/vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
     PROPERTIES COMPILE_OPTIONS -frtti
 )

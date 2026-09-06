@@ -1,6 +1,7 @@
 #include "m3_editor.hpp"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -103,6 +104,35 @@ class M3Editor final : public VSTGUI::VST3Editor {
       return new (std::nothrow) M3RootSurface();
     }
     return VSTGUI::VST3Editor::createView(attributes, ui_description);
+  }
+
+  Steinberg::tresult PLUGIN_API setContentScaleFactor(
+      ScaleFactor factor) override {
+    const double previous_factor = getContentScaleFactor();
+    const Steinberg::ViewRect previous_rect = getRect();
+    const Steinberg::tresult result =
+        VSTGUI::VST3Editor::setContentScaleFactor(factor);
+    if (result == Steinberg::kResultOk) {
+      const double ratio = static_cast<double>(factor) / previous_factor;
+      Steinberg::ViewRect scaled = previous_rect;
+      scaled.right = scaled.left + static_cast<Steinberg::int32>(
+                                       std::floor(previous_rect.getWidth() *
+                                                  ratio));
+      scaled.bottom = scaled.top + static_cast<Steinberg::int32>(
+                                         std::floor(previous_rect.getHeight() *
+                                                    ratio));
+      if (plugFrame) {
+        if (requestResize(
+                VSTGUI::CPoint(scaled.getWidth(), scaled.getHeight()))) {
+          return Steinberg::kResultOk;
+        }
+        static_cast<void>(VSTGUI::VST3Editor::setContentScaleFactor(
+            static_cast<ScaleFactor>(previous_factor)));
+        return Steinberg::kResultFalse;
+      }
+      setRect(scaled);
+    }
+    return result;
   }
 };
 

@@ -101,6 +101,35 @@ class FakeVst3ComponentHandler final
   std::uint32_t restart_count_{};
 };
 
+class FakeVst3PlugFrame final : public Steinberg::IPlugFrame {
+ public:
+  FakeVst3PlugFrame() noexcept = default;
+  FakeVst3PlugFrame(const FakeVst3PlugFrame&) = delete;
+  FakeVst3PlugFrame& operator=(const FakeVst3PlugFrame&) = delete;
+
+  [[nodiscard]] std::size_t resize_count() const noexcept {
+    return resize_count_;
+  }
+  [[nodiscard]] const Steinberg::ViewRect& last_size() const noexcept {
+    return last_size_;
+  }
+  void reject_resize(bool reject) noexcept { reject_resize_ = reject; }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::tresult PLUGIN_API resizeView(
+      Steinberg::IPlugView* view,
+      Steinberg::ViewRect* new_size) override;
+
+ private:
+  Steinberg::ViewRect last_size_{};
+  std::size_t resize_count_{};
+  Steinberg::uint32 reference_count_{1};
+  bool reject_resize_{};
+};
+
 struct FakeVst3ParameterPoint final {
   Steinberg::int32 offset{};
   Steinberg::Vst::ParamValue value{};

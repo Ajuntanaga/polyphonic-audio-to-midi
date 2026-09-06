@@ -126,6 +126,47 @@ Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::restartComponent(
   return Steinberg::kResultOk;
 }
 
+Steinberg::tresult PLUGIN_API FakeVst3PlugFrame::queryInterface(
+    const Steinberg::TUID requested_iid, void** object) {
+  if (object == nullptr) {
+    return Steinberg::kInvalidArgument;
+  }
+  *object = nullptr;
+  if (Steinberg::FUnknownPrivate::iidEqual(requested_iid,
+                                            Steinberg::FUnknown::iid) ||
+      Steinberg::FUnknownPrivate::iidEqual(requested_iid,
+                                            Steinberg::IPlugFrame::iid)) {
+    *object = static_cast<Steinberg::IPlugFrame*>(this);
+    addRef();
+    return Steinberg::kResultOk;
+  }
+  return Steinberg::kNoInterface;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3PlugFrame::addRef() {
+  return ++reference_count_;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3PlugFrame::release() {
+  if (reference_count_ > 0U) {
+    --reference_count_;
+  }
+  return reference_count_;
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3PlugFrame::resizeView(
+    Steinberg::IPlugView* view, Steinberg::ViewRect* new_size) {
+  if (view == nullptr || new_size == nullptr) {
+    return Steinberg::kInvalidArgument;
+  }
+  last_size_ = *new_size;
+  ++resize_count_;
+  if (reject_resize_) {
+    return Steinberg::kResultFalse;
+  }
+  return view->onSize(new_size);
+}
+
 void FakeVst3ParamValueQueue::reset(Steinberg::Vst::ParamID id) noexcept {
   id_ = id;
   point_count_ = 0;

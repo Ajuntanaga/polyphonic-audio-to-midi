@@ -337,6 +337,7 @@ def vstgui_allowed_path(relative: str) -> bool:
     return (
         relative.startswith("third_party/vst3sdk/vstgui4/")
         or relative in {"CMakeLists.txt", "cmake/M3Vst3Sdk.cmake"}
+        or relative == "native/tests/test_vst3_editor.cpp"
         or (
             relative.startswith("native/vst3/")
             and pathlib.PurePosixPath(relative).name.startswith("m3_editor")

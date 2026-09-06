@@ -219,7 +219,9 @@ class Vst3BuildContractTests(unittest.TestCase):
             self.assertEqual(
                 rtti_sources,
                 {
+                    "native/vst3/m3_editor.cpp",
                     "native/vst3/vst3_component.cpp",
+                    "native/vst3/vst3_probe_processor.cpp",
                     (
                         "third_party/vst3sdk/public.sdk/source/vst/"
                         "vstsinglecomponenteffect.cpp"
