@@ -2,6 +2,7 @@
 #include <new>
 
 #include "fake_vst3_host.hpp"
+#include "m3_editor.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
@@ -319,5 +320,185 @@ M3_TEST(vst3_probe_editor_public_attach_remove_is_safe_and_silent) {
   delete probe;
   if (platform_factory != nullptr) {
     platform_factory->setRunLoop({});
+  }
+}
+
+M3_TEST(vst3_editor_writable_controls_emit_one_exact_host_gesture) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  if (component != nullptr && controller != nullptr) {
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    struct Case final {
+      m3::ParameterId parameter_id;
+      double normalized_value;
+    };
+    constexpr Case kCases[] = {
+        {0x4D330001U, 0.5}, {0x4D330002U, 1.0},
+        {0x4D330003U, 0.5}, {0x4D330004U, 0.75},
+        {0x4D330005U, 0.75}, {0x4D330006U, 0.6},
+        {0x4D330007U, 0.25}, {0x4D330008U, 0.75},
+        {0x4D330009U, 4.0 / 7.0}, {0x4D33000AU, 0.5},
+        {0x4D33000BU, 0.0}, {0x4D33000CU, 99.0 / 126.0},
+        {0x4D33000DU, 4.0 / 15.0}, {0x4D33000FU, 0.0},
+    };
+    for (const Case& test_case : kCases) {
+      handler.reset();
+      const m3::vst3::EditorGesture gesture =
+          m3::vst3::editor_gesture_for_test(
+              *static_cast<Steinberg::Vst::EditController*>(controller),
+              test_case.parameter_id,
+              test_case.normalized_value, m3::VelocityMode::fixed);
+      M3_EXPECT_TRUE(gesture.accepted);
+      M3_EXPECT_EQ(gesture.parameter_id, test_case.parameter_id);
+      M3_EXPECT_NEAR(gesture.normalized_value,
+                     test_case.normalized_value, 1.0e-12);
+      M3_EXPECT_EQ(handler.edit_call_count(), 3U);
+      if (handler.edit_call_count() == 3U) {
+        M3_EXPECT_EQ(handler.edit_call(0).kind,
+                     m3::test::FakeVst3EditKind::begin);
+        M3_EXPECT_EQ(handler.edit_call(0).id, test_case.parameter_id);
+        M3_EXPECT_EQ(handler.edit_call(1).kind,
+                     m3::test::FakeVst3EditKind::perform);
+        M3_EXPECT_EQ(handler.edit_call(1).id, test_case.parameter_id);
+        M3_EXPECT_NEAR(handler.edit_call(1).value,
+                       test_case.normalized_value, 1.0e-12);
+        M3_EXPECT_EQ(handler.edit_call(2).kind,
+                     m3::test::FakeVst3EditKind::end);
+        M3_EXPECT_EQ(handler.edit_call(2).id, test_case.parameter_id);
+      }
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_status_and_dynamic_fixed_velocity_are_read_only) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  if (component != nullptr && controller != nullptr) {
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    const m3::vst3::EditorGesture status =
+        m3::vst3::editor_gesture_for_test(
+            *static_cast<Steinberg::Vst::EditController*>(controller),
+            m3::kStatusParameterId, 1.0,
+            m3::VelocityMode::fixed);
+    M3_EXPECT_FALSE(status.accepted);
+    M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+
+    const m3::vst3::EditorGesture fixed_velocity =
+        m3::vst3::editor_gesture_for_test(
+            *static_cast<Steinberg::Vst::EditController*>(controller),
+            m3::ParameterId{0x4D33000CU}, 0.75,
+            m3::VelocityMode::dynamic);
+    M3_EXPECT_FALSE(fixed_velocity.accepted);
+    M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_panic_press_resets_and_linked_range_writes_both_ends) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  if (component != nullptr && controller != nullptr) {
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_TRUE(m3::vst3::editor_panic_for_test(
+        *static_cast<Steinberg::Vst::EditController*>(controller)));
+    M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+    if (handler.edit_call_count() == 6U) {
+      M3_EXPECT_EQ(handler.edit_call(0).kind,
+                   m3::test::FakeVst3EditKind::begin);
+      M3_EXPECT_EQ(handler.edit_call(1).kind,
+                   m3::test::FakeVst3EditKind::perform);
+      M3_EXPECT_NEAR(handler.edit_call(1).value, 1.0, 1.0e-12);
+      M3_EXPECT_EQ(handler.edit_call(2).kind,
+                   m3::test::FakeVst3EditKind::end);
+      M3_EXPECT_EQ(handler.edit_call(3).kind,
+                   m3::test::FakeVst3EditKind::begin);
+      M3_EXPECT_EQ(handler.edit_call(4).kind,
+                   m3::test::FakeVst3EditKind::perform);
+      M3_EXPECT_NEAR(handler.edit_call(4).value, 0.0, 1.0e-12);
+      M3_EXPECT_EQ(handler.edit_call(5).kind,
+                   m3::test::FakeVst3EditKind::end);
+    }
+    M3_EXPECT_NEAR(controller->getParamNormalized(m3::kPanicParameterId),
+                   0.0, 1.0e-12);
+
+    handler.reset();
+    const m3::vst3::EditorRangeGesture range =
+        m3::vst3::editor_range_gesture_for_test(
+            *static_cast<Steinberg::Vst::EditController*>(controller), 0.25,
+            0.75);
+    M3_EXPECT_TRUE(range.accepted);
+    M3_EXPECT_NEAR(range.low_normalized, 0.25, 1.0e-12);
+    M3_EXPECT_NEAR(range.high_normalized, 0.75, 1.0e-12);
+    M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+    if (handler.edit_call_count() == 6U) {
+      M3_EXPECT_EQ(handler.edit_call(0).id, 0x4D330007U);
+      M3_EXPECT_EQ(handler.edit_call(1).id, 0x4D330007U);
+      M3_EXPECT_EQ(handler.edit_call(2).id, 0x4D330007U);
+      M3_EXPECT_EQ(handler.edit_call(3).id, 0x4D330008U);
+      M3_EXPECT_EQ(handler.edit_call(4).id, 0x4D330008U);
+      M3_EXPECT_EQ(handler.edit_call(5).id, 0x4D330008U);
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
   }
 }
