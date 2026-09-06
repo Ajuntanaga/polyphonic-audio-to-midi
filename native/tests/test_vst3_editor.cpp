@@ -1,3 +1,4 @@
+#include <limits>
 #include <new>
 
 #include "fake_vst3_host.hpp"
@@ -48,6 +49,50 @@ Steinberg::Vst::IEditController* create_controller(
   component->queryInterface(Steinberg::Vst::IEditController::iid,
                             reinterpret_cast<void**>(&controller));
   return controller;
+}
+
+void expect_scale_rejected(float factor) noexcept {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  m3::test::FakeVst3Host host;
+  if (component != nullptr && controller != nullptr) {
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      Steinberg::IPlugViewContentScaleSupport* scale_support = nullptr;
+      M3_EXPECT_EQ(view->queryInterface(
+                       Steinberg::IPlugViewContentScaleSupport::iid,
+                       reinterpret_cast<void**>(&scale_support)),
+                   Steinberg::kResultTrue);
+      M3_EXPECT_TRUE(scale_support != nullptr);
+      if (scale_support != nullptr) {
+        M3_EXPECT_EQ(scale_support->setContentScaleFactor(factor),
+                     Steinberg::kInvalidArgument);
+        Steinberg::ViewRect unchanged{};
+        M3_EXPECT_EQ(view->getSize(&unchanged), Steinberg::kResultTrue);
+        M3_EXPECT_EQ(unchanged.right - unchanged.left, 1024);
+        M3_EXPECT_EQ(unchanged.bottom - unchanged.top, 620);
+        scale_support->release();
+      }
+      view->release();
+    }
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
 }
 
 }  // namespace
@@ -114,7 +159,7 @@ M3_TEST(vst3_editor_remove_before_attach_is_safe_and_silent) {
   }
 }
 
-M3_TEST(vst3_editor_scale_before_frame_updates_stored_geometry) {
+M3_TEST(vst3_editor_scale_round_trip_restores_logical_geometry) {
   Steinberg::IPluginFactory* factory = GetPluginFactory();
   Steinberg::Vst::IComponent* component = nullptr;
   Steinberg::Vst::IEditController* controller =
@@ -136,12 +181,14 @@ M3_TEST(vst3_editor_scale_before_frame_updates_stored_geometry) {
                    Steinberg::kResultTrue);
       M3_EXPECT_TRUE(scale_support != nullptr);
       if (scale_support != nullptr) {
-        M3_EXPECT_EQ(scale_support->setContentScaleFactor(1.5F),
+        M3_EXPECT_EQ(scale_support->setContentScaleFactor(1.3F),
+                     Steinberg::kResultOk);
+        M3_EXPECT_EQ(scale_support->setContentScaleFactor(1.0F),
                      Steinberg::kResultOk);
         Steinberg::ViewRect scaled{};
         M3_EXPECT_EQ(view->getSize(&scaled), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(scaled.right - scaled.left, 1536);
-        M3_EXPECT_EQ(scaled.bottom - scaled.top, 930);
+        M3_EXPECT_EQ(scaled.right - scaled.left, 1024);
+        M3_EXPECT_EQ(scaled.bottom - scaled.top, 620);
         scale_support->release();
       }
       view->release();
@@ -158,6 +205,14 @@ M3_TEST(vst3_editor_scale_before_frame_updates_stored_geometry) {
   if (factory != nullptr) {
     factory->release();
   }
+}
+
+M3_TEST(vst3_editor_rejects_invalid_scale_without_geometry_mutation) {
+  expect_scale_rejected(0.0F);
+  expect_scale_rejected(-1.0F);
+  expect_scale_rejected(std::numeric_limits<float>::infinity());
+  expect_scale_rejected(-std::numeric_limits<float>::infinity());
+  expect_scale_rejected(std::numeric_limits<float>::quiet_NaN());
 }
 
 M3_TEST(vst3_editor_scale_requests_host_resize_and_accepts_on_size) {

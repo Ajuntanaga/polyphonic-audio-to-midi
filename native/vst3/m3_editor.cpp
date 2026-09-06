@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <new>
 
@@ -108,19 +109,25 @@ class M3Editor final : public VSTGUI::VST3Editor {
 
   Steinberg::tresult PLUGIN_API setContentScaleFactor(
       ScaleFactor factor) override {
+    const double requested_factor = static_cast<double>(factor);
+    Steinberg::int32 scaled_width = 0;
+    Steinberg::int32 scaled_height = 0;
+    if (!std::isfinite(requested_factor) || requested_factor <= 0.0 ||
+        !physical_extent(logical_width_, requested_factor, scaled_width) ||
+        !physical_extent(logical_height_, requested_factor, scaled_height)) {
+      return Steinberg::kInvalidArgument;
+    }
     const double previous_factor = getContentScaleFactor();
+    if (requested_factor == previous_factor) {
+      return Steinberg::kResultOk;
+    }
     const Steinberg::ViewRect previous_rect = getRect();
     const Steinberg::tresult result =
         VSTGUI::VST3Editor::setContentScaleFactor(factor);
     if (result == Steinberg::kResultOk) {
-      const double ratio = static_cast<double>(factor) / previous_factor;
       Steinberg::ViewRect scaled = previous_rect;
-      scaled.right = scaled.left + static_cast<Steinberg::int32>(
-                                       std::floor(previous_rect.getWidth() *
-                                                  ratio));
-      scaled.bottom = scaled.top + static_cast<Steinberg::int32>(
-                                         std::floor(previous_rect.getHeight() *
-                                                    ratio));
+      scaled.right = scaled.left + scaled_width;
+      scaled.bottom = scaled.top + scaled_height;
       if (plugFrame) {
         if (requestResize(
                 VSTGUI::CPoint(scaled.getWidth(), scaled.getHeight()))) {
@@ -134,6 +141,45 @@ class M3Editor final : public VSTGUI::VST3Editor {
     }
     return result;
   }
+
+  Steinberg::tresult PLUGIN_API onSize(
+      Steinberg::ViewRect* new_size) override {
+    if (new_size == nullptr) {
+      return Steinberg::kInvalidArgument;
+    }
+    const Steinberg::tresult result = VSTGUI::VST3Editor::onSize(new_size);
+    if (result == Steinberg::kResultOk) {
+      const double factor = getContentScaleFactor();
+      Steinberg::int32 expected_width = 0;
+      Steinberg::int32 expected_height = 0;
+      const bool matches_logical_size =
+          physical_extent(logical_width_, factor, expected_width) &&
+          physical_extent(logical_height_, factor, expected_height) &&
+          new_size->getWidth() == expected_width &&
+          new_size->getHeight() == expected_height;
+      if (!matches_logical_size) {
+        logical_width_ = static_cast<double>(new_size->getWidth()) / factor;
+        logical_height_ = static_cast<double>(new_size->getHeight()) / factor;
+      }
+    }
+    return result;
+  }
+
+ private:
+  static bool physical_extent(double logical_extent, double factor,
+                              Steinberg::int32& physical) noexcept {
+    const double scaled = std::floor(logical_extent * factor);
+    if (!std::isfinite(scaled) || scaled < 0.0 ||
+        scaled > static_cast<double>(
+                     std::numeric_limits<Steinberg::int32>::max())) {
+      return false;
+    }
+    physical = static_cast<Steinberg::int32>(scaled);
+    return true;
+  }
+
+  double logical_width_{static_cast<double>(kEditorWidth)};
+  double logical_height_{static_cast<double>(kEditorHeight)};
 };
 
 }  // internal
