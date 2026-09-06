@@ -112,6 +112,34 @@ EditorGesture perform_editor_gesture(
   return output;
 }
 
+double linked_range_request(Steinberg::Vst::EditController& controller,
+                            ParameterId id, double requested) noexcept {
+  if (id != kLowestMidiNoteId && id != kHighestMidiNoteId) {
+    return requested;
+  }
+  const ParameterId other_id = id == kLowestMidiNoteId
+                                   ? kHighestMidiNoteId
+                                   : kLowestMidiNoteId;
+  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* other_spec = find_parameter(other_id);
+  double requested_plain = 0.0;
+  double other_plain = 0.0;
+  const double other_normalized = controller.getParamNormalized(other_id);
+  if (spec == nullptr || other_spec == nullptr ||
+      !canonical_normalized_value(*spec, requested, requested_plain) ||
+      !canonical_normalized_value(*other_spec, other_normalized,
+                                  other_plain)) {
+    return requested;
+  }
+  if (id == kLowestMidiNoteId && requested_plain > other_plain) {
+    return plain_to_normalized(*spec, other_plain);
+  }
+  if (id == kHighestMidiNoteId && requested_plain < other_plain) {
+    return plain_to_normalized(*spec, other_plain);
+  }
+  return requested;
+}
+
 VSTGUI::CColor status_deck_color(Status status) noexcept {
   switch (status) {
     case Status::ready:
@@ -224,6 +252,32 @@ class M3DeckControl final : public VSTGUI::CControl {
     }
   }
 
+  ~M3DeckControl() noexcept override { reset_panic(); }
+
+  void dispatchEvent(VSTGUI::Event& event) override {
+    if (event.type == VSTGUI::EventType::MouseDown) {
+      auto& mouse_event = static_cast<VSTGUI::MouseDownEvent&>(event);
+      if (!layout_.enabled || !interaction_allowed()) {
+        event.consumed = true;
+        mouse_event.ignoreFollowUpMoveAndUpEvents(true);
+        return;
+      }
+      if (mouse_event.buttonState.isLeft() &&
+          mouse_event.modifiers.is(VSTGUI::ModifierKey::Control) &&
+          layout_.presentation != EditorPresentation::momentary) {
+        const ParameterSpec* spec = find_parameter(layout_.parameter_id);
+        if (spec != nullptr) {
+          static_cast<void>(emit(
+              plain_to_normalized(*spec, spec->default_value)));
+        }
+        event.consumed = true;
+        mouse_event.ignoreFollowUpMoveAndUpEvents(true);
+        return;
+      }
+    }
+    VSTGUI::CControl::dispatchEvent(event);
+  }
+
   void draw(VSTGUI::CDrawContext* context) override {
     if (context == nullptr) {
       return;
@@ -266,6 +320,13 @@ class M3DeckControl final : public VSTGUI::CControl {
       return panic_pressed_ ? VSTGUI::kMouseEventHandled
                             : VSTGUI::kMouseEventNotHandled;
     }
+    if (layout_.presentation == EditorPresentation::knob ||
+        layout_.presentation == EditorPresentation::note_range) {
+      dragging_ = true;
+      drag_origin_y_ = where.y;
+      drag_start_normalized_ = getValueNormalized();
+      return VSTGUI::kMouseEventHandled;
+    }
     double requested = getValueNormalized();
     if (layout_.presentation == EditorPresentation::toggle) {
       requested = requested >= 0.5 ? 0.0 : 1.0;
@@ -292,12 +353,58 @@ class M3DeckControl final : public VSTGUI::CControl {
   VSTGUI::CMouseEventResult onMouseUp(
       VSTGUI::CPoint&,
       const VSTGUI::CButtonState&) override {
-    if (!panic_pressed_) {
+    if (panic_pressed_) {
+      reset_panic();
+      return VSTGUI::kMouseEventHandled;
+    }
+    if (dragging_) {
+      dragging_ = false;
+      return VSTGUI::kMouseEventHandled;
+    }
+    return VSTGUI::kMouseEventNotHandled;
+  }
+
+  VSTGUI::CMouseEventResult onMouseMoved(
+      VSTGUI::CPoint& where,
+      const VSTGUI::CButtonState& buttons) override {
+    if (!dragging_ || !buttons.isLeftButton() || !interaction_allowed()) {
       return VSTGUI::kMouseEventNotHandled;
     }
-    panic_pressed_ = false;
-    static_cast<void>(emit(0.0));
+    const double requested = std::clamp(
+        drag_start_normalized_ + (drag_origin_y_ - where.y) / 200.0,
+        0.0, 1.0);
+    static_cast<void>(emit(requested));
     return VSTGUI::kMouseEventHandled;
+  }
+
+  VSTGUI::CMouseEventResult onMouseCancel() override {
+    dragging_ = false;
+    reset_panic();
+    return VSTGUI::kMouseEventHandled;
+  }
+
+  void onMouseWheelEvent(VSTGUI::MouseWheelEvent& event) override {
+    if (!layout_.enabled || !interaction_allowed() ||
+        (layout_.presentation != EditorPresentation::knob &&
+         layout_.presentation != EditorPresentation::note_range)) {
+      return;
+    }
+    const double requested = std::clamp(
+        static_cast<double>(getValueNormalized()) +
+            static_cast<double>(event.deltaY) * getWheelInc(),
+        0.0, 1.0);
+    static_cast<void>(emit(requested));
+    event.consumed = true;
+  }
+
+  bool removed(VSTGUI::CView* parent) override {
+    cancel_interaction();
+    return VSTGUI::CControl::removed(parent);
+  }
+
+  void cancel_interaction() noexcept {
+    dragging_ = false;
+    reset_panic();
   }
 
   void onKeyboardEvent(VSTGUI::KeyboardEvent& event) override {
@@ -346,8 +453,10 @@ class M3DeckControl final : public VSTGUI::CControl {
         controller_.getParamNormalized(kVelocityModeId) >= 0.5
             ? VelocityMode::dynamic
             : VelocityMode::fixed;
+    const double linked = linked_range_request(
+        controller_, layout_.parameter_id, requested);
     const EditorGesture gesture = perform_editor_gesture(
-        controller_, layout_.parameter_id, requested, velocity_mode);
+        controller_, layout_.parameter_id, linked, velocity_mode);
     if (!gesture.accepted) {
       return false;
     }
@@ -357,6 +466,15 @@ class M3DeckControl final : public VSTGUI::CControl {
       parent->invalid();
     }
     return true;
+  }
+
+  void reset_panic() noexcept {
+    if (!panic_pressed_) {
+      return;
+    }
+    panic_pressed_ = false;
+    static_cast<void>(perform_editor_gesture(
+        controller_, kPanicParameterId, 0.0, VelocityMode::fixed));
   }
 
   void draw_label(VSTGUI::CDrawContext* context, const char* label,
@@ -525,6 +643,9 @@ class M3DeckControl final : public VSTGUI::CControl {
   EditorControlLayout layout_;
   Steinberg::Vst::EditController& controller_;
   bool panic_pressed_{};
+  bool dragging_{};
+  double drag_origin_y_{};
+  double drag_start_normalized_{};
 
   CLASS_METHODS_NOCOPY(M3DeckControl, VSTGUI::CControl)
 };
@@ -551,6 +672,33 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     return index < controls_.size() ? controls_[index] : nullptr;
   }
 
+  M3DeckControl* control_for(ParameterId parameter_id) const noexcept {
+    for (std::size_t index = 0; index < layouts_.size(); ++index) {
+      if (layouts_[index].parameter_id == parameter_id) {
+        return controls_[index];
+      }
+    }
+    return nullptr;
+  }
+
+  bool remove_control(ParameterId parameter_id) noexcept {
+    for (std::size_t index = 0; index < layouts_.size(); ++index) {
+      if (layouts_[index].parameter_id == parameter_id &&
+          controls_[index] != nullptr) {
+        M3DeckControl* control = controls_[index];
+        control->cancel_interaction();
+        controls_[index] = nullptr;
+        return removeView(control, true);
+      }
+    }
+    return false;
+  }
+
+  void setViewSize(const VSTGUI::CRect& rect, bool invalid = true) override {
+    VSTGUI::CViewContainer::setViewSize(rect, invalid);
+    relayout_controls();
+  }
+
   void drawBackgroundRect(VSTGUI::CDrawContext* context,
                           const VSTGUI::CRect&) override {
     if (context == nullptr) {
@@ -559,33 +707,60 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     const VSTGUI::CRect bounds = getViewSize();
     context->setFillColor(kGraphite);
     context->drawRect(bounds, VSTGUI::kDrawFilled);
-    draw_rounded_gradient(context, VSTGUI::CRect(14.0, 84.0, 1010.0, 262.0),
+    draw_rounded_gradient(context, scaled_rect(14.0, 84.0, 1010.0, 262.0),
                           VSTGUI::CColor(27U, 32U, 39U, 255U), kGraphite,
                           kPanelEdge, 12.0);
-    draw_rounded_gradient(context, VSTGUI::CRect(14.0, 270.0, 1010.0, 412.0),
+    draw_rounded_gradient(context, scaled_rect(14.0, 270.0, 1010.0, 412.0),
                           VSTGUI::CColor(25U, 33U, 40U, 255U), kGraphite,
                           VSTGUI::CColor(26U, 120U, 130U, 255U), 12.0);
     context->setFillColor(kCyan);
-    context->drawRect(VSTGUI::CRect(216.0, 334.0, 244.0, 346.0),
+    context->drawRect(scaled_rect(216.0, 334.0, 244.0, 346.0),
                       VSTGUI::kDrawFilled);
-    draw_rounded_gradient(context, VSTGUI::CRect(14.0, 424.0, 1010.0, 596.0),
+    draw_rounded_gradient(context, scaled_rect(14.0, 424.0, 1010.0, 596.0),
                           VSTGUI::CColor(30U, 31U, 38U, 255U), kGraphite,
                           kPanelEdge, 12.0);
     context->setFont(VSTGUI::kNormalFontSmall);
     context->setFontColor(kAmber);
-    context->drawString("SOURCE + TUNING", VSTGUI::CRect(24.0, 92.0, 500.0, 116.0),
+    context->drawString("SOURCE + TUNING",
+                        scaled_rect(24.0, 92.0, 500.0, 116.0),
                         VSTGUI::kLeftText, true);
     context->setFontColor(kCyan);
-    context->drawString("TRACKING", VSTGUI::CRect(522.0, 92.0, 1000.0, 116.0),
+    context->drawString("TRACKING", scaled_rect(522.0, 92.0, 1000.0, 116.0),
                         VSTGUI::kLeftText, true);
-    context->drawString("PERFORMANCE RANGE", VSTGUI::CRect(24.0, 278.0, 440.0, 298.0),
+    context->drawString("PERFORMANCE RANGE",
+                        scaled_rect(24.0, 278.0, 440.0, 298.0),
                         VSTGUI::kLeftText, true);
     context->setFontColor(kMuted);
-    context->drawString("ADVANCED  ·  LIVE ROUTING", VSTGUI::CRect(24.0, 430.0, 700.0, 452.0),
+    context->drawString("ADVANCED  ·  LIVE ROUTING",
+                        scaled_rect(24.0, 430.0, 700.0, 452.0),
                         VSTGUI::kLeftText, true);
   }
 
  private:
+  VSTGUI::CRect scaled_rect(double left, double top, double right,
+                            double bottom) const noexcept {
+    const VSTGUI::CRect bounds = getViewSize();
+    const double x_scale = bounds.getWidth() / kEditorWidth;
+    const double y_scale = bounds.getHeight() / kEditorHeight;
+    return VSTGUI::CRect(bounds.left + left * x_scale,
+                          bounds.top + top * y_scale,
+                          bounds.left + right * x_scale,
+                          bounds.top + bottom * y_scale);
+  }
+
+  void relayout_controls() {
+    for (std::size_t index = 0; index < controls_.size(); ++index) {
+      if (controls_[index] == nullptr) {
+        continue;
+      }
+      const EditorRect& original = layouts_[index].bounds;
+      const VSTGUI::CRect resized = scaled_rect(
+          original.left, original.top, original.right, original.bottom);
+      controls_[index]->setViewSize(resized);
+      controls_[index]->setMouseableArea(resized);
+    }
+  }
+
   std::array<EditorControlLayout, kEditorControlCount> layouts_{};
   std::array<M3DeckControl*, kEditorControlCount> controls_{};
 };
@@ -604,8 +779,15 @@ class M3Editor final : public VSTGUI::VST3Editor {
     enableTooltips(true);
   }
 
+  M3RootSurface* surface() const noexcept { return surface_; }
+
  protected:
   ~M3Editor() override = default;
+
+  void PLUGIN_API close() override {
+    VSTGUI::VST3Editor::close();
+    surface_ = nullptr;
+  }
 
   VSTGUI::CView* createView(
       const VSTGUI::UIAttributes& attributes,
@@ -618,6 +800,7 @@ class M3Editor final : public VSTGUI::VST3Editor {
       if (surface == nullptr) {
         return nullptr;
       }
+      surface_ = surface;
       VSTGUI::UIAttributes control_attributes;
       for (std::size_t index = 0; index < kEditorControlCount; ++index) {
         if (VSTGUI::CControl* control = surface->control_at(index)) {
@@ -702,11 +885,126 @@ class M3Editor final : public VSTGUI::VST3Editor {
   }
 
   Steinberg::Vst::EditController& edit_controller_;
+  M3RootSurface* surface_{};
   double logical_width_{static_cast<double>(kEditorWidth)};
   double logical_height_{static_cast<double>(kEditorHeight)};
 };
 
 }  // namespace
+
+#if defined(M3_TESTING)
+namespace {
+
+M3DeckControl* test_control(Steinberg::IPlugView& view,
+                            ParameterId parameter_id) noexcept {
+  auto* editor = static_cast<M3Editor*>(&view);
+  return editor->surface() == nullptr
+             ? nullptr
+             : editor->surface()->control_for(parameter_id);
+}
+
+VSTGUI::CPoint test_control_point(const M3DeckControl& control,
+                                  double x_fraction,
+                                  double y_fraction) noexcept {
+  const VSTGUI::CRect bounds = control.getViewSize();
+  return VSTGUI::CPoint(
+      bounds.left + bounds.getWidth() * std::clamp(x_fraction, 0.0, 1.0),
+      bounds.top + bounds.getHeight() * std::clamp(y_fraction, 0.0, 1.0));
+}
+
+}  // namespace
+
+bool editor_pointer_down_for_test(Steinberg::IPlugView& view,
+                                  ParameterId parameter_id,
+                                  double x_fraction, double y_fraction,
+                                  bool default_reset) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  VSTGUI::MouseDownEvent event(
+      test_control_point(*control, x_fraction, y_fraction),
+      VSTGUI::MouseEventButtonState(VSTGUI::MouseButton::Left));
+  if (default_reset) {
+    static_cast<void>(event.modifiers = VSTGUI::ModifierKey::Control);
+  }
+  control->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+bool editor_pointer_drag_for_test(Steinberg::IPlugView& view,
+                                  ParameterId parameter_id,
+                                  double vertical_delta) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  VSTGUI::CPoint point = test_control_point(*control, 0.5, 0.5);
+  point.y += vertical_delta;
+  VSTGUI::MouseMoveEvent event(
+      point, VSTGUI::MouseEventButtonState(VSTGUI::MouseButton::Left));
+  control->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+bool editor_pointer_up_for_test(Steinberg::IPlugView& view,
+                                ParameterId parameter_id) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  VSTGUI::MouseUpEvent event(
+      test_control_point(*control, 0.5, 0.5),
+      VSTGUI::MouseEventButtonState(VSTGUI::MouseButton::Left));
+  control->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+bool editor_pointer_cancel_for_test(Steinberg::IPlugView& view,
+                                    ParameterId parameter_id) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  VSTGUI::MouseCancelEvent event;
+  control->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+bool editor_wheel_for_test(Steinberg::IPlugView& view,
+                           ParameterId parameter_id,
+                           double vertical_delta) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  VSTGUI::MouseWheelEvent event;
+  event.mousePosition = test_control_point(*control, 0.5, 0.5);
+  event.deltaY = vertical_delta;
+  control->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+bool editor_remove_control_for_test(Steinberg::IPlugView& view,
+                                    ParameterId parameter_id) noexcept {
+  auto* editor = static_cast<M3Editor*>(&view);
+  return editor->surface() != nullptr &&
+         editor->surface()->remove_control(parameter_id);
+}
+
+bool editor_control_bounds_for_test(Steinberg::IPlugView& view,
+                                    ParameterId parameter_id,
+                                    EditorRect& bounds) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  if (control == nullptr) {
+    return false;
+  }
+  const VSTGUI::CRect view_bounds = control->getViewSize();
+  bounds = EditorRect{view_bounds.left, view_bounds.top, view_bounds.right,
+                      view_bounds.bottom};
+  return true;
+}
+#endif
 
 EditorGesture editor_gesture_for_test(
     Steinberg::Vst::EditController& controller, ParameterId parameter_id,
