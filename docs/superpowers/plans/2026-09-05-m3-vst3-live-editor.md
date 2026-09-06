@@ -459,14 +459,14 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   profile; it never changes the persistent VST3 install or normal REAPER
   configuration.
 
-- [ ] **Step 1: Write the production-resource and editor-bundle RED**
+- [x] **Step 1: Write the production-resource and editor-bundle RED**
 
   Extend `tests/test_vst3_build_contract.py` with a production assertion that
   the editor source is in the explicit production graph, that
   `vstgui_support` is linked, and that no VSTGUI test/example/tool target is
   made a production dependency.
 
-- [ ] **Step 2: Run the production-build RED**
+- [x] **Step 2: Run the production-build RED**
 
   Run:
 
@@ -477,7 +477,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Expected: it fails until the build graph names the editor sources and
   `vstgui_support` exactly.
 
-- [ ] **Step 3: Build and validate the release bundle**
+- [x] **Step 3: Build and validate the release bundle**
 
   Run:
 
@@ -509,7 +509,14 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   presented. Stop and preserve the failed staged profile if attachment or
   gesture behavior differs from the offline contract.
 
-- [ ] **Step 5: Record the verification and commit**
+  **Recorded status (2026-09-06):** the build-local 96 kHz profile, custom
+  `1024 x 620` attachment, `1200 x 720` resize, textual status, and disposable
+  parameter-observer canary are verified. Physical mouse validation remains
+  manual: rootless Xwayland could not prove synthetic pointer delivery to the
+  nested VSTGUI event surface, so the guarded run injected no Button1 event and
+  made no successful GUI-gesture claim. The normal REAPER profile was unchanged.
+
+- [x] **Step 5: Record the verification and commit**
 
   Update the README and VST3 testing guide with the editor's control groups,
   generic-host fallback, exact build commands, and the 96 kHz disposable visual
