@@ -93,6 +93,36 @@ bool canonical_editor_value(ParameterId id, double requested,
   return std::isfinite(normalized);
 }
 
+bool editor_parameter_writable(ParameterId id,
+                               VelocityMode velocity_mode) noexcept {
+  const ParameterSpec* spec = find_parameter(id);
+  return spec != nullptr && !spec->read_only &&
+         (id != kFixedVelocityId || velocity_mode == VelocityMode::fixed);
+}
+
+EditorGesture apply_editor_value(
+    Steinberg::Vst::EditController& controller, ParameterId id,
+    double normalized) noexcept {
+  EditorGesture output{id, normalized, false, false};
+  const bool set = result_ok(controller.setParamNormalized(id, normalized));
+  output.value_applied = set;
+  const bool performed =
+      set && result_ok(controller.performEdit(id, normalized));
+  output.accepted = set && performed;
+  return output;
+}
+
+EditorGesture perform_open_editor_value(
+    Steinberg::Vst::EditController& controller, ParameterId id,
+    double requested, VelocityMode velocity_mode) noexcept {
+  EditorGesture output{id, requested, false, false};
+  double normalized = 0.0;
+  if (!canonical_editor_value(id, requested, velocity_mode, normalized)) {
+    return output;
+  }
+  return apply_editor_value(controller, id, normalized);
+}
+
 EditorGesture perform_editor_gesture(
     Steinberg::Vst::EditController& controller, ParameterId id,
     double requested, VelocityMode velocity_mode) noexcept {
@@ -105,11 +135,9 @@ EditorGesture perform_editor_gesture(
   if (!result_ok(controller.beginEdit(id))) {
     return output;
   }
-  const bool set = result_ok(controller.setParamNormalized(id, normalized));
-  output.value_applied = set;
-  const bool performed = set && result_ok(controller.performEdit(id, normalized));
+  output = apply_editor_value(controller, id, normalized);
   const bool ended = result_ok(controller.endEdit(id));
-  output.accepted = set && performed && ended;
+  output.accepted = output.accepted && ended;
   return output;
 }
 
@@ -262,7 +290,30 @@ class M3DeckControl final : public VSTGUI::CControl {
     }
   }
 
-  ~M3DeckControl() noexcept override { reset_panic(); }
+  ~M3DeckControl() noexcept override { cancel_interaction(); }
+
+  void set_dependent_control(M3DeckControl* dependent) noexcept {
+    dependent_control_ = dependent;
+  }
+
+  void setValue(float new_value) override {
+    const float previous = getValue();
+    VSTGUI::CControl::setValue(new_value);
+    if (dependent_control_ != nullptr && getValue() != previous) {
+      dependent_control_->invalid();
+    }
+  }
+
+#if defined(M3_TESTING)
+  void invalid() override {
+    ++invalidation_count_;
+    VSTGUI::CControl::invalid();
+  }
+
+  std::size_t invalidation_count_for_test() const noexcept {
+    return invalidation_count_;
+  }
+#endif
 
   void dispatchEvent(VSTGUI::Event& event) override {
     if (event.type == VSTGUI::EventType::MouseDown) {
@@ -333,7 +384,14 @@ class M3DeckControl final : public VSTGUI::CControl {
     }
     if (layout_.presentation == EditorPresentation::knob ||
         layout_.presentation == EditorPresentation::note_range) {
+      finish_drag();
+      const VelocityMode velocity_mode = current_velocity_mode();
+      if (!editor_parameter_writable(layout_.parameter_id, velocity_mode) ||
+          !result_ok(controller_.beginEdit(layout_.parameter_id))) {
+        return VSTGUI::kMouseEventNotHandled;
+      }
       dragging_ = true;
+      drag_edit_open_ = true;
       drag_origin_y_ = where.y;
       drag_start_normalized_ = getValueNormalized();
       return VSTGUI::kMouseEventHandled;
@@ -368,8 +426,7 @@ class M3DeckControl final : public VSTGUI::CControl {
       reset_panic();
       return VSTGUI::kMouseEventHandled;
     }
-    if (dragging_) {
-      dragging_ = false;
+    if (finish_drag()) {
       return VSTGUI::kMouseEventHandled;
     }
     return VSTGUI::kMouseEventNotHandled;
@@ -385,12 +442,12 @@ class M3DeckControl final : public VSTGUI::CControl {
         drag_start_normalized_ + meaningful_delta(
                                      (drag_origin_y_ - where.y) / 200.0),
         0.0, 1.0);
-    static_cast<void>(emit(requested));
+    static_cast<void>(emit_open(requested));
     return VSTGUI::kMouseEventHandled;
   }
 
   VSTGUI::CMouseEventResult onMouseCancel() override {
-    dragging_ = false;
+    static_cast<void>(finish_drag());
     reset_panic();
     return VSTGUI::kMouseEventHandled;
   }
@@ -414,7 +471,7 @@ class M3DeckControl final : public VSTGUI::CControl {
   }
 
   void cancel_interaction() noexcept {
-    dragging_ = false;
+    static_cast<void>(finish_drag());
     reset_panic();
   }
 
@@ -469,26 +526,52 @@ class M3DeckControl final : public VSTGUI::CControl {
            controller_.getParamNormalized(kVelocityModeId) < 0.5;
   }
 
-  EditorGesture emit(double requested) {
-    const VelocityMode velocity_mode =
-        controller_.getParamNormalized(kVelocityModeId) >= 0.5
-            ? VelocityMode::dynamic
-            : VelocityMode::fixed;
-    const double canonical =
-        canonical_ui_request(layout_.parameter_id, requested);
-    const double linked = linked_range_request(
-        controller_, layout_.parameter_id, canonical);
-    const EditorGesture gesture = perform_editor_gesture(
-        controller_, layout_.parameter_id, linked, velocity_mode);
-    if (!gesture.value_applied) {
-      return gesture;
-    }
-    setValueNormalized(static_cast<float>(gesture.normalized_value));
-    invalid();
-    if (VSTGUI::CView* parent = getParentView()) {
-      parent->invalid();
+  VelocityMode current_velocity_mode() const noexcept {
+    return controller_.getParamNormalized(kVelocityModeId) >= 0.5
+               ? VelocityMode::dynamic
+               : VelocityMode::fixed;
+  }
+
+  EditorGesture update_after_gesture(const EditorGesture& gesture) {
+    if (gesture.value_applied) {
+      setValueNormalized(static_cast<float>(gesture.normalized_value));
+      invalid();
+      if (VSTGUI::CView* parent = getParentView()) {
+        parent->invalid();
+      }
     }
     return gesture;
+  }
+
+  double prepared_ui_request(double requested) const noexcept {
+    const double canonical =
+        canonical_ui_request(layout_.parameter_id, requested);
+    return linked_range_request(controller_, layout_.parameter_id, canonical);
+  }
+
+  EditorGesture emit(double requested) {
+    const double linked = prepared_ui_request(requested);
+    const EditorGesture gesture = perform_editor_gesture(
+        controller_, layout_.parameter_id, linked, current_velocity_mode());
+    return update_after_gesture(gesture);
+  }
+
+  EditorGesture emit_open(double requested) {
+    const double linked = prepared_ui_request(requested);
+    const EditorGesture gesture = perform_open_editor_value(
+        controller_, layout_.parameter_id, linked, current_velocity_mode());
+    return update_after_gesture(gesture);
+  }
+
+  bool finish_drag() noexcept {
+    const bool was_dragging = dragging_;
+    dragging_ = false;
+    if (!drag_edit_open_) {
+      return was_dragging;
+    }
+    drag_edit_open_ = false;
+    static_cast<void>(controller_.endEdit(layout_.parameter_id));
+    return true;
   }
 
   void reset_panic() noexcept {
@@ -665,10 +748,15 @@ class M3DeckControl final : public VSTGUI::CControl {
 
   EditorControlLayout layout_;
   Steinberg::Vst::EditController& controller_;
+  M3DeckControl* dependent_control_{};
   bool panic_pressed_{};
   bool dragging_{};
+  bool drag_edit_open_{};
   double drag_origin_y_{};
   double drag_start_normalized_{};
+#if defined(M3_TESTING)
+  std::size_t invalidation_count_{};
+#endif
 
   CLASS_METHODS_NOCOPY(M3DeckControl, VSTGUI::CControl)
 };
@@ -688,6 +776,10 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       if (controls_[index] != nullptr) {
         static_cast<void>(addView(controls_[index]));
       }
+    }
+    M3DeckControl* velocity_mode = control_for(kVelocityModeId);
+    if (velocity_mode != nullptr) {
+      velocity_mode->set_dependent_control(control_for(kFixedVelocityId));
     }
   }
 
@@ -709,6 +801,12 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       if (layouts_[index].parameter_id == parameter_id &&
           controls_[index] != nullptr) {
         M3DeckControl* control = controls_[index];
+        if (parameter_id == kFixedVelocityId) {
+          M3DeckControl* velocity_mode = control_for(kVelocityModeId);
+          if (velocity_mode != nullptr) {
+            velocity_mode->set_dependent_control(nullptr);
+          }
+        }
         control->cancel_interaction();
         controls_[index] = nullptr;
         return removeView(control, true);
@@ -804,6 +902,12 @@ class M3Editor final : public VSTGUI::VST3Editor {
 
   M3RootSurface* surface() const noexcept { return surface_; }
 
+#if defined(M3_TESTING)
+  double content_scale_factor_for_test() const noexcept {
+    return getContentScaleFactor();
+  }
+#endif
+
  protected:
   ~M3Editor() override = default;
 
@@ -898,7 +1002,7 @@ class M3Editor final : public VSTGUI::VST3Editor {
   static bool physical_extent(double logical_extent, double factor,
                               Steinberg::int32& physical) noexcept {
     const double scaled = std::floor(logical_extent * factor);
-    if (!std::isfinite(scaled) || scaled < 0.0 ||
+    if (!std::isfinite(scaled) || scaled < 1.0 ||
         scaled > static_cast<double>(
                      std::numeric_limits<Steinberg::int32>::max())) {
       return false;
@@ -1026,6 +1130,17 @@ bool editor_control_bounds_for_test(Steinberg::IPlugView& view,
   bounds = EditorRect{view_bounds.left, view_bounds.top, view_bounds.right,
                       view_bounds.bottom};
   return true;
+}
+
+std::size_t editor_control_invalidation_count_for_test(
+    Steinberg::IPlugView& view, ParameterId parameter_id) noexcept {
+  M3DeckControl* control = test_control(view, parameter_id);
+  return control == nullptr ? 0U : control->invalidation_count_for_test();
+}
+
+double editor_content_scale_factor_for_test(
+    Steinberg::IPlugView& view) noexcept {
+  return static_cast<M3Editor*>(&view)->content_scale_factor_for_test();
 }
 #endif
 

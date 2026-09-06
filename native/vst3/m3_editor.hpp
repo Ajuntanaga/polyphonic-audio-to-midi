@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "m3/parameter_contract.hpp"
 #include "m3_editor_layout.hpp"
 #include "public.sdk/source/vst/vstsinglecomponenteffect.h"
@@ -48,6 +50,10 @@ bool editor_remove_control_for_test(Steinberg::IPlugView& view,
 bool editor_control_bounds_for_test(Steinberg::IPlugView& view,
                                     ParameterId parameter_id,
                                     EditorRect& bounds) noexcept;
+std::size_t editor_control_invalidation_count_for_test(
+    Steinberg::IPlugView& view, ParameterId parameter_id) noexcept;
+double editor_content_scale_factor_for_test(
+    Steinberg::IPlugView& view) noexcept;
 #endif
 
 Steinberg::IPlugView* create_m3_editor(
