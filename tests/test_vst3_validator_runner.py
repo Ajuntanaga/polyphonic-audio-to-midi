@@ -10,6 +10,39 @@ from tools import run_vst3_validator as RUNNER
 
 
 class Vst3ValidatorRunnerTests(unittest.TestCase):
+    def git(self, root: pathlib.Path, *arguments: str) -> str:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        return completed.stdout.strip()
+
+    def pinned_vstgui_git_output(
+        self, root: pathlib.Path, *arguments: str
+    ) -> str:
+        if arguments == (
+            "ls-files",
+            "--stage",
+            "--",
+            "third_party/vst3sdk/vstgui4",
+        ):
+            return (
+                f"160000 {RUNNER.VSTGUI_REVISION} 0\t"
+                "third_party/vst3sdk/vstgui4"
+            )
+        if root == RUNNER.VSTGUI_PATH and arguments == ("rev-parse", "HEAD"):
+            return RUNNER.VSTGUI_REVISION
+        if root == RUNNER.VSTGUI_PATH and arguments == (
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+        ):
+            return ""
+        self.fail(f"unexpected Git query: {root} {arguments}")
+
     def create_layout(self, root: pathlib.Path, kind: str = "production"):
         contract = RUNNER.KIND_CONTRACTS[kind]
         release = root / "build/vst3/release"
@@ -50,10 +83,46 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
             "third_party/vst3sdk/LICENSE.txt\n",
             encoding="utf-8",
         )
+        vstgui = sdk_manifest.parent / "vstgui4"
+        vstgui.mkdir()
+        (vstgui / "CMakeLists.txt").write_text(
+            "add_library(vstgui_support STATIC fixture.cpp)\n",
+            encoding="utf-8",
+        )
+        self.git(vstgui, "init", "-q")
+        self.git(vstgui, "add", "CMakeLists.txt")
+        self.git(
+            vstgui,
+            "-c",
+            "user.name=M3 Fixture",
+            "-c",
+            "user.email=m3-fixture@example.invalid",
+            "commit",
+            "-qm",
+            "pin fixture VSTGUI",
+        )
+        vstgui_revision = self.git(vstgui, "rev-parse", "HEAD")
+        self.git(root, "init", "-q")
+        self.git(
+            root,
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            f"160000,{vstgui_revision},third_party/vst3sdk/vstgui4",
+        )
         guard = root / "tools/run_guarded_native_build.py"
         guard.parent.mkdir(parents=True)
         guard.write_text("# fixture\n", encoding="utf-8")
-        return release, validator, bundle, binary, moduleinfo, sdk_manifest, guard
+        return (
+            release,
+            validator,
+            bundle,
+            binary,
+            moduleinfo,
+            sdk_manifest,
+            guard,
+            vstgui_revision,
+        )
 
     def patch_layout(
         self,
@@ -63,25 +132,44 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
         sdk_manifest,
         guard,
         results,
+        vstgui_revision,
     ):
         return mock.patch.multiple(
             RUNNER,
+            create=True,
             ROOT=root,
             RELEASE_ROOT=release,
             VALIDATOR=validator,
             SDK_MANIFEST=sdk_manifest,
             GUARD=guard,
             RESULT_ROOT=results,
+            VSTGUI_PATH=root / "third_party/vst3sdk/vstgui4",
+            VSTGUI_REVISION=vstgui_revision,
         )
 
     def test_exact_kind_bundle_fuid_and_official_validator_are_required(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
             values = self.create_layout(root)
-            release, validator, bundle, _binary, moduleinfo, manifest, guard = values
+            (
+                release,
+                validator,
+                bundle,
+                _binary,
+                moduleinfo,
+                manifest,
+                guard,
+                vstgui_revision,
+            ) = values
             results = root / "results"
             with self.patch_layout(
-                root, release, validator, manifest, guard, results
+                root,
+                release,
+                validator,
+                manifest,
+                guard,
+                results,
+                vstgui_revision,
             ):
                 self.assertEqual(RUNNER.input_errors("production", bundle), [])
                 self.assertTrue(
@@ -116,6 +204,96 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
                 )
                 moduleinfo.write_text(trailing, encoding="utf-8")
                 self.assertEqual(RUNNER.input_errors("production", bundle), [])
+
+                unexpected = root / "third_party/vst3sdk/unexpected.cpp"
+                unexpected.write_text("unexpected copied SDK file\n", encoding="utf-8")
+                self.assertTrue(
+                    any(
+                        "manifest file set" in error
+                        for error in RUNNER.input_errors("production", bundle)
+                    )
+                )
+
+    def test_wrong_or_dirty_vstgui_pin_never_invokes_validator(self):
+        cases = ("missing-gitlink", "wrong-gitlink", "wrong-head", "dirty")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                root = pathlib.Path(temporary)
+                values = self.create_layout(root)
+                (
+                    release,
+                    validator,
+                    bundle,
+                    _binary,
+                    _moduleinfo,
+                    manifest,
+                    guard,
+                    vstgui_revision,
+                ) = values
+                vstgui = root / "third_party/vst3sdk/vstgui4"
+                gitlink_path = "third_party/vst3sdk/vstgui4"
+                if case == "missing-gitlink":
+                    self.git(root, "update-index", "--force-remove", gitlink_path)
+                elif case in {"wrong-gitlink", "wrong-head"}:
+                    cmake = vstgui / "CMakeLists.txt"
+                    cmake.write_text(cmake.read_text(encoding="utf-8") + "# second\n")
+                    self.git(vstgui, "add", "CMakeLists.txt")
+                    self.git(
+                        vstgui,
+                        "-c",
+                        "user.name=M3 Fixture",
+                        "-c",
+                        "user.email=m3-fixture@example.invalid",
+                        "commit",
+                        "-qm",
+                        "second fixture revision",
+                    )
+                    second_revision = self.git(vstgui, "rev-parse", "HEAD")
+                    if case == "wrong-gitlink":
+                        self.git(vstgui, "checkout", "-q", vstgui_revision)
+                        self.git(
+                            root,
+                            "update-index",
+                            "--cacheinfo",
+                            f"160000,{second_revision},{gitlink_path}",
+                        )
+                else:
+                    cmake = vstgui / "CMakeLists.txt"
+                    cmake.write_text(cmake.read_text(encoding="utf-8") + "# dirty\n")
+
+                results = root / "results"
+                expected_error = {
+                    "missing-gitlink": "VSTGUI gitlink",
+                    "wrong-gitlink": "VSTGUI gitlink",
+                    "wrong-head": "VSTGUI checked-out HEAD",
+                    "dirty": "VSTGUI worktree is dirty",
+                }[case]
+                with (
+                    self.patch_layout(
+                        root,
+                        release,
+                        validator,
+                        manifest,
+                        guard,
+                        results,
+                        vstgui_revision,
+                    ),
+                    mock.patch.object(RUNNER, "run_once") as run,
+                ):
+                    self.assertTrue(
+                        any(
+                            expected_error in error
+                            for error in RUNNER.input_errors("production", bundle)
+                        )
+                    )
+                    self.assertEqual(
+                        RUNNER.main(
+                            ["--kind", "production", "--bundle", str(bundle)]
+                        ),
+                        2,
+                    )
+                run.assert_not_called()
+                self.assertFalse((results / "production/result.json").exists())
 
     def test_classification_separates_plugin_failures_from_infrastructure(self):
         passed = (
@@ -154,11 +332,24 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
     def test_validator_command_is_guarded_bounded_and_exact(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
-            release, validator, bundle, _binary, _moduleinfo, manifest, guard = (
-                self.create_layout(root)
-            )
+            (
+                release,
+                validator,
+                bundle,
+                _binary,
+                _moduleinfo,
+                manifest,
+                guard,
+                vstgui_revision,
+            ) = self.create_layout(root)
             with self.patch_layout(
-                root, release, validator, manifest, guard, root / "results"
+                root,
+                release,
+                validator,
+                manifest,
+                guard,
+                root / "results",
+                vstgui_revision,
             ):
                 command = RUNNER.validator_command(bundle)
             self.assertEqual(command[0], RUNNER.sys.executable)
@@ -176,16 +367,34 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
-            release, validator, bundle, _binary, _moduleinfo, manifest, guard = (
-                self.create_layout(root)
-            )
+            (
+                release,
+                validator,
+                bundle,
+                _binary,
+                _moduleinfo,
+                manifest,
+                guard,
+                vstgui_revision,
+            ) = self.create_layout(root)
             results = root / "results"
             completed = subprocess.CompletedProcess(
                 args=[], returncode=0, stdout=passed, stderr=""
             )
             with (
                 self.patch_layout(
-                    root, release, validator, manifest, guard, results
+                    root,
+                    release,
+                    validator,
+                    manifest,
+                    guard,
+                    results,
+                    vstgui_revision,
+                ),
+                mock.patch.object(
+                    RUNNER,
+                    "_git_output",
+                    side_effect=self.pinned_vstgui_git_output,
                 ),
                 mock.patch.object(
                     RUNNER.subprocess, "run", return_value=completed
@@ -212,23 +421,38 @@ class Vst3ValidatorRunnerTests(unittest.TestCase):
                     "runner",
                     "sdk_manifest",
                     "validator",
+                    "vstgui_revision",
                 },
             )
+            self.assertEqual(record["hashes"]["vstgui_revision"], vstgui_revision)
             self.assertEqual(list(record_path.parent.glob("*.pending")), [])
 
     def test_input_error_never_invokes_validator_or_creates_success_record(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
-            release, validator, bundle, _binary, moduleinfo, manifest, guard = (
-                self.create_layout(root)
-            )
+            (
+                release,
+                validator,
+                bundle,
+                _binary,
+                moduleinfo,
+                manifest,
+                guard,
+                vstgui_revision,
+            ) = self.create_layout(root)
             moduleinfo.unlink()
             results = root / "results"
             with (
                 self.patch_layout(
-                    root, release, validator, manifest, guard, results
+                    root,
+                    release,
+                    validator,
+                    manifest,
+                    guard,
+                    results,
+                    vstgui_revision,
                 ),
-                mock.patch.object(RUNNER.subprocess, "run") as run,
+                mock.patch.object(RUNNER, "run_once") as run,
             ):
                 self.assertEqual(
                     RUNNER.main(

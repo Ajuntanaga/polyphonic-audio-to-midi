@@ -21,6 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 RELEASE_ROOT = (ROOT / "build/vst3/release").resolve()
 VALIDATOR = (RELEASE_ROOT / "bin/Release/validator").resolve()
 SDK_MANIFEST = (ROOT / "third_party/vst3sdk/SHA256SUMS").resolve()
+VSTGUI_PATH = (ROOT / "third_party/vst3sdk/vstgui4").resolve()
+VSTGUI_REVISION = "5db272256172557818b6158cf0bb2c4410bddb25"
 GUARD = (ROOT / "tools/run_guarded_native_build.py").resolve()
 RESULT_ROOT = (ROOT / "build/test-results/vst3-validator").resolve()
 
@@ -99,6 +101,53 @@ def _inside(path: pathlib.Path, root: pathlib.Path) -> bool:
         return False
 
 
+def _git_output(root: pathlib.Path, *arguments: str) -> str:
+    return subprocess.check_output(
+        ["git", "-C", str(root), *arguments],
+        stderr=subprocess.STDOUT,
+        text=True,
+    ).strip()
+
+
+def vstgui_source_errors() -> list[str]:
+    relative = "third_party/vst3sdk/vstgui4"
+    if (
+        not VSTGUI_PATH.is_dir()
+        or VSTGUI_PATH.is_symlink()
+        or not _inside(VSTGUI_PATH, ROOT / "third_party/vst3sdk")
+    ):
+        return [f"VSTGUI source worktree is absent or invalid: {VSTGUI_PATH}"]
+
+    errors: list[str] = []
+    expected_gitlink = f"160000 {VSTGUI_REVISION} 0\t{relative}"
+    try:
+        gitlink = _git_output(ROOT, "ls-files", "--stage", "--", relative)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        gitlink = ""
+        errors.append(f"VSTGUI gitlink could not be read: {exc}")
+    if gitlink != expected_gitlink:
+        errors.append("VSTGUI gitlink does not match the exact pinned revision")
+
+    try:
+        checked_out = _git_output(VSTGUI_PATH, "rev-parse", "HEAD")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        checked_out = ""
+        errors.append(f"VSTGUI checked-out HEAD could not be read: {exc}")
+    if checked_out != VSTGUI_REVISION:
+        errors.append("VSTGUI checked-out HEAD does not match the exact pinned revision")
+
+    try:
+        status = _git_output(
+            VSTGUI_PATH, "status", "--porcelain=v1", "--untracked-files=all"
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        status = ""
+        errors.append(f"VSTGUI worktree status could not be read: {exc}")
+    if status:
+        errors.append("VSTGUI worktree is dirty")
+    return errors
+
+
 def sdk_manifest_errors() -> list[str]:
     if not SDK_MANIFEST.is_file():
         return [f"SDK manifest is absent: {SDK_MANIFEST}"]
@@ -130,7 +179,9 @@ def sdk_manifest_errors() -> list[str]:
     actual = sorted(
         path.relative_to(ROOT).as_posix()
         for path in (ROOT / "third_party/vst3sdk").rglob("*")
-        if path.is_file() and path.resolve() != SDK_MANIFEST.resolve()
+        if path.is_file()
+        and path.resolve() != SDK_MANIFEST.resolve()
+        and not path.is_relative_to(VSTGUI_PATH)
     )
     if names != actual:
         errors.append("SDK manifest file set does not match the retained SDK tree")
@@ -214,6 +265,7 @@ def input_errors(kind: str, bundle: pathlib.Path) -> list[str]:
     if not GUARD.is_file() or not _inside(GUARD, ROOT / "tools"):
         errors.append(f"native build guard is absent or escaped: {GUARD}")
     errors.extend(sdk_manifest_errors())
+    errors.extend(vstgui_source_errors())
     return errors
 
 
@@ -236,6 +288,7 @@ def collect_hashes(kind: str, bundle: pathlib.Path) -> dict[str, str]:
         "runner": sha256_file(pathlib.Path(__file__).resolve()),
         "sdk_manifest": sha256_file(SDK_MANIFEST),
         "validator": sha256_file(VALIDATOR),
+        "vstgui_revision": _git_output(VSTGUI_PATH, "rev-parse", "HEAD"),
     }
 
 
