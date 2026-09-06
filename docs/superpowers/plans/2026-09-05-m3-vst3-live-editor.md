@@ -80,7 +80,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   a build contract that rejects any other UI framework, network build step, or
   UI reference in the audio path.
 
-- [ ] **Step 1: Write the VSTGUI source/build-contract RED**
+- [x] **Step 1: Write the VSTGUI source/build-contract RED**
 
   Add a focused `test_vstgui_editor_dependency_is_exact_and_local` assertion to
   `tests/test_vst3_build_contract.py`:
@@ -100,7 +100,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   `validate_native_source.py` so `vstgui` is legal only in the VSTGUI tree,
   `CMakeLists.txt`, `cmake/M3Vst3Sdk.cmake`, and `native/vst3/m3_editor*`.
 
-- [ ] **Step 2: Run the source/build-contract RED**
+- [x] **Step 2: Run the source/build-contract RED**
 
   Run:
 
@@ -111,7 +111,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Expected: FAIL with `VSTGUI source is absent` or a missing VSTGUI build
   setting; no build or REAPER process starts.
 
-- [ ] **Step 3: Add only the matched local VSTGUI source and CMake wiring**
+- [x] **Step 3: Add only the matched local VSTGUI source and CMake wiring**
 
   Add the official source as the SDK's expected child, never through CMake:
 
@@ -133,7 +133,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   adds the editor source; do not add FetchContent, a download command, JUCE,
   iPlug2, or an additional plug-in target.
 
-- [ ] **Step 4: Verify configuration and provenance are green**
+- [x] **Step 4: Verify configuration and provenance are green**
 
   Run:
 
@@ -146,7 +146,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   its cache contains `SMTG_ENABLE_VSTGUI_SUPPORT:BOOL=ON` and no network build
   construct appears in authored CMake.
 
-- [ ] **Step 5: Commit the audited dependency boundary**
+- [x] **Step 5: Commit the audited dependency boundary**
 
   ```bash
   git add .gitmodules third_party/vst3sdk/vstgui4 third_party/vst3sdk/UPSTREAM.md \
@@ -189,7 +189,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   }
   ```
 
-- [ ] **Step 1: Write pure-layout RED tests**
+- [x] **Step 1: Write pure-layout RED tests**
 
   Add tests that assert all sixteen parameter IDs appear exactly once, with
   these mandatory presentations:
@@ -210,7 +210,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   visible rectangles overlap; and all six `Status` values have nonempty labels
   and distinct nonzero colors where an error needs distinction.
 
-- [ ] **Step 2: Run the layout RED**
+- [x] **Step 2: Run the layout RED**
 
   Run:
 
@@ -221,7 +221,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
 
   Expected: compilation fails because `m3_editor_layout.hpp` is absent.
 
-- [ ] **Step 3: Implement the fixed, vector-ready layout model**
+- [x] **Step 3: Implement the fixed, vector-ready layout model**
 
   Use a fixed `std::array<EditorControlLayout, 16>` and the original parameter
   IDs. Partition `1024 x 620` into Header, Tracking, Performance Range, and
@@ -239,7 +239,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Keep this file free of VSTGUI headers, allocations, I/O, host calls, and
   detector references.
 
-- [ ] **Step 4: Run the pure layout suite**
+- [x] **Step 4: Run the pure layout suite**
 
   Run:
 
@@ -250,7 +250,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
 
   Expected: all existing native tests and the new layout tests pass.
 
-- [ ] **Step 5: Commit the no-redundancy model**
+- [x] **Step 5: Commit the no-redundancy model**
 
   ```bash
   git add native/vst3/m3_editor_layout.hpp native/vst3/m3_editor_layout.cpp \
@@ -283,7 +283,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   `M3Component::createView(ViewType::kEditor)` returns that view; a null or
   unsupported view name returns `nullptr`.
 
-- [ ] **Step 1: Write editor-lifecycle RED tests**
+- [x] **Step 1: Write editor-lifecycle RED tests**
 
   Replace the old assertion that the editor is null with:
 
@@ -303,7 +303,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   `endEdit`; it initially proves only construction, view size, and safe remove
   before the later gesture task.
 
-- [ ] **Step 2: Run the lifecycle RED**
+- [x] **Step 2: Run the lifecycle RED**
 
   Run:
 
@@ -315,7 +315,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Expected: the prior `createView(...) == nullptr` implementation fails the
   new lifecycle test.
 
-- [ ] **Step 3: Implement the VSTGUI shell**
+- [x] **Step 3: Implement the VSTGUI shell**
 
   Add the editor sources to the explicit VST3 adapter list and link
   `vstgui_support` to `m3_native_tests`, `m3_vst3_probe`, and
@@ -335,7 +335,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   }
   ```
 
-- [ ] **Step 4: Run lifecycle and regression tests**
+- [x] **Step 4: Run lifecycle and regression tests**
 
   Run:
 
@@ -348,7 +348,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Expected: custom editor creation and lifecycle tests pass; all existing
   parameter, state, realtime, and build-contract tests remain green.
 
-- [ ] **Step 5: Commit the editor shell**
+- [x] **Step 5: Commit the editor shell**
 
   ```bash
   git add native/vst3/m3_editor.hpp native/vst3/m3_editor.cpp \
@@ -373,7 +373,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   exactly `beginEdit(id) -> setParamNormalized(id, value) ->
   performEdit(id, value) -> endEdit(id)` for writable parameters.
 
-- [ ] **Step 1: Write interaction and read-only RED tests**
+- [x] **Step 1: Write interaction and read-only RED tests**
 
   Add a table-driven test over the writable controls:
 
@@ -391,7 +391,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   selection for Detector Input/Mode/Velocity, toggles for Dry Audio, a linked
   low/high note-range edit, and fixed-velocity suppression in Dynamic mode.
 
-- [ ] **Step 2: Run the interaction RED**
+- [x] **Step 2: Run the interaction RED**
 
   Run:
 
@@ -403,7 +403,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   Expected: the editor shell has no control implementation or gesture log, so
   the new interaction test fails.
 
-- [ ] **Step 3: Implement the code-drawn performance surface**
+- [x] **Step 3: Implement the code-drawn performance surface**
 
   Draw the four regions with VSTGUI paths, gradients, text, and focus rings:
 
@@ -421,7 +421,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   VST3 host edit gesture. The `Status` control only reads the status parameter
   and never emits an edit.
 
-- [ ] **Step 4: Run editor interaction, native, and source-boundary tests**
+- [x] **Step 4: Run editor interaction, native, and source-boundary tests**
 
   Run:
 
@@ -436,7 +436,7 @@ runner, Python `unittest`, and REAPER only through the staged 96 kHz profile.
   gesture; Status stays read-only; source validation confirms no VSTGUI use in
   audio-thread code.
 
-- [ ] **Step 5: Commit the finished editor surface**
+- [x] **Step 5: Commit the finished editor surface**
 
   ```bash
   git add native/vst3/m3_editor.hpp native/vst3/m3_editor.cpp \
