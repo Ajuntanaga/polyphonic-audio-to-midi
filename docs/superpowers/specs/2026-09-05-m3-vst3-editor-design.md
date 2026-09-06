@@ -122,8 +122,9 @@ that a host automation lane uses.
 
 - Add the exact VSTGUI source paired with VST3 SDK `v3.8.1_build_84` at its
   recorded Git link `5db272256172557818b6158cf0bb2c4410bddb25`.
-- Store the reviewed source and license metadata under `third_party/vstgui4`;
-  do not rely on the ignored, partial `build/vendor` checkout.
+- Store the reviewed source at the SDK's native path
+  `third_party/vst3sdk/vstgui4` and record its exact Git link in the retained
+  SDK provenance; do not rely on the ignored, partial `build/vendor` checkout.
 - Enable `SMTG_ENABLE_VSTGUI_SUPPORT` only after its source path is explicit.
   Link `vstgui_support` only to the native test and production VST3 targets
   that compile the editor.
