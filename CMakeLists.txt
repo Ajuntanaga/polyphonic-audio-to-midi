@@ -71,6 +71,10 @@ set(M3_VST3_PROBE_PROCESSOR_SOURCES
     native/vst3/vst3_probe_processor.cpp
 )
 
+set(M3_EDITOR_LAYOUT_SOURCES
+    native/vst3/m3_editor_layout.cpp
+)
+
 set(M3_NATIVE_TEST_SOURCES
     native/tests/fake_clap_host.cpp
     native/tests/fake_vst3_host.cpp
@@ -79,6 +83,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
+    native/tests/test_m3_editor_layout.cpp
     native/tests/test_monophonic_pitch_detector.cpp
     native/tests/test_parameter_contract.cpp
     native/tests/test_parameter_normalization.cpp
@@ -110,6 +115,7 @@ add_executable(m3_native_tests
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_VST3_ADAPTER_SOURCES}
     ${M3_VST3_PROBE_PROCESSOR_SOURCES}
+    ${M3_EDITOR_LAYOUT_SOURCES}
     ${M3_NATIVE_TEST_SOURCES}
 )
 target_compile_definitions(m3_native_tests PRIVATE M3_TESTING)

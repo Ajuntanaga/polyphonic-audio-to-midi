@@ -573,6 +573,7 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertEqual(
             cpp_sources,
             {
+                "m3_editor_layout.cpp",
                 "vst3_component.cpp",
                 "vst3_event_sink.cpp",
                 "vst3_factory.cpp",
@@ -592,6 +593,21 @@ class Vst3BuildContractTests(unittest.TestCase):
             ]
         )
         self.assertEqual(errors, [])
+
+    def test_editor_layout_model_stays_pure_and_part_of_native_tests(self):
+        header = ROOT / "native/vst3/m3_editor_layout.hpp"
+        source = ROOT / "native/vst3/m3_editor_layout.cpp"
+        root_cmake = ROOT / "CMakeLists.txt"
+        self.assertTrue(header.is_file(), "m3_editor_layout.hpp is absent")
+        self.assertTrue(source.is_file(), "m3_editor_layout.cpp is absent")
+        model_text = header.read_text(encoding="utf-8") + source.read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("vstgui", model_text.lower())
+        self.assertNotIn("Steinberg", model_text)
+        self.assertIn("native/vst3/m3_editor_layout.cpp", root_cmake.read_text(
+            encoding="utf-8"
+        ))
 
     def test_source_validator_rejects_unapproved_dependencies_and_abi_copies(self):
         cases = (
