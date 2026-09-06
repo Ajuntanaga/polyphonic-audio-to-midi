@@ -14,6 +14,8 @@ from tools import validate_native_source
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 IDENTITY_HEADER = ROOT / "native/vst3/vst3_ids.hpp"
 VST3_SDK_ROOT = ROOT / "third_party/vst3sdk"
+VSTGUI_PATH = VST3_SDK_ROOT / "vstgui4"
+VSTGUI_REVISION = "5db272256172557818b6158cf0bb2c4410bddb25"
 VST3_SDK_REVISIONS = {
     ".": (
         "https://github.com/steinbergmedia/vst3sdk.git",
@@ -34,6 +36,10 @@ VST3_SDK_REVISIONS = {
     "public.sdk": (
         "https://github.com/steinbergmedia/vst3_public_sdk",
         "586dc5e6c8012c3e4b01c79389375cbe96bdb1da",
+    ),
+    "vstgui4": (
+        "https://github.com/steinbergmedia/vstgui.git",
+        "5db272256172557818b6158cf0bb2c4410bddb25",
     ),
 }
 
@@ -82,7 +88,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             self.assertIsNone(re.search(forbidden, build_text, re.IGNORECASE), forbidden)
         for required in (
             "CMAKE_CXX_STANDARD 17",
-            "SMTG_ENABLE_VSTGUI_SUPPORT OFF",
+            "SMTG_ENABLE_VSTGUI_SUPPORT ON",
             "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF",
             "SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF",
             "SMTG_CREATE_PLUGIN_LINK OFF",
@@ -131,7 +137,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             )
             cache = (build_dir / "CMakeCache.txt").read_text(encoding="utf-8")
             for setting in (
-                "SMTG_ENABLE_VSTGUI_SUPPORT:BOOL=OFF",
+                "SMTG_ENABLE_VSTGUI_SUPPORT:BOOL=ON",
                 "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES:BOOL=OFF",
                 "SMTG_ENABLE_VST3_HOSTING_EXAMPLES:BOOL=OFF",
                 "SMTG_CREATE_PLUGIN_LINK:BOOL=OFF",
@@ -157,6 +163,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 "m3_vst3_production",
                 "m3_vst3_benchmark",
                 "m3_validate_production",
+                "vstgui_support",
             ):
                 self.assertIn(target, target_help.stdout)
 
@@ -399,6 +406,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             "cmake",
             "pluginterfaces",
             "public.sdk",
+            "vstgui4",
         }
         self.assertEqual(
             {path.name for path in VST3_SDK_ROOT.iterdir()},
@@ -406,10 +414,14 @@ class Vst3BuildContractTests(unittest.TestCase):
         )
         for retained_root in ("base", "cmake", "pluginterfaces", "public.sdk"):
             self.assertTrue((VST3_SDK_ROOT / retained_root).is_dir())
-        for excluded_root in ("doc", "tutorials", "vstgui4"):
+        for excluded_root in ("doc", "tutorials"):
             self.assertFalse((VST3_SDK_ROOT / excluded_root).exists())
         self.assertEqual(
-            [path for path in VST3_SDK_ROOT.rglob(".git")],
+            [
+                path
+                for path in VST3_SDK_ROOT.rglob(".git")
+                if path.parent != VSTGUI_PATH
+            ],
             [],
             "vendored SDK contains Git metadata",
         )
@@ -468,12 +480,46 @@ class Vst3BuildContractTests(unittest.TestCase):
         actual_names = sorted(
             path.relative_to(ROOT).as_posix()
             for path in VST3_SDK_ROOT.rglob("*")
-            if path.is_file() and path != manifest_path
+            if path.is_file()
+            and path != manifest_path
+            and not path.is_relative_to(VSTGUI_PATH)
         )
         self.assertEqual(manifest_names, actual_names)
         for expected_digest, relative in manifest_rows:
             actual_digest = hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
             self.assertEqual(actual_digest, expected_digest, relative)
+
+    def test_vstgui_editor_dependency_is_exact_and_local(self):
+        root_cmake = ROOT / "CMakeLists.txt"
+        sdk_setup = ROOT / "cmake/M3Vst3Sdk.cmake"
+        upstream_path = VST3_SDK_ROOT / "UPSTREAM.md"
+        self.assertTrue(VSTGUI_PATH.is_dir(), "VSTGUI source is absent")
+        self.assertTrue((VSTGUI_PATH / "CMakeLists.txt").is_file())
+
+        build_text = "\n".join(
+            path.read_text(encoding="utf-8") for path in (root_cmake, sdk_setup)
+        )
+        self.assertIn("SMTG_ENABLE_VSTGUI_SUPPORT ON", build_text)
+        self.assertIn("vstgui_support", build_text)
+        self.assertIn("vstgui4/CMakeLists.txt", build_text)
+
+        gitlink = subprocess.run(
+            ["git", "ls-files", "--stage", "--", str(VSTGUI_PATH.relative_to(ROOT))],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(gitlink.returncode, 0, gitlink.stderr)
+        self.assertRegex(
+            gitlink.stdout,
+            rf"(?m)^160000 {VSTGUI_REVISION} 0\tthird_party/vst3sdk/vstgui4$",
+        )
+
+        upstream = upstream_path.read_text(encoding="utf-8")
+        self.assertIn("https://github.com/steinbergmedia/vstgui.git", upstream)
+        self.assertIn(VSTGUI_REVISION, upstream)
+        self.assertRegex(upstream, r"(?im)^.*vstgui.*license.*$")
 
         persistent_bundles = [
             path
@@ -523,6 +569,28 @@ class Vst3BuildContractTests(unittest.TestCase):
                     [("native/vst3/bad_boundary.cpp", source)]
                 )
                 self.assertTrue(any(label in error for error in errors), errors)
+
+    def test_source_validator_allows_vstgui_only_at_the_editor_boundary(self):
+        allowed_entries = (
+            ("CMakeLists.txt", "set(M3_EDITOR_LIBRARY vstgui_support)\n"),
+            ("cmake/M3Vst3Sdk.cmake", "set(M3_EDITOR_LIBRARY vstgui_support)\n"),
+            (
+                "native/vst3/m3_editor_view.cpp",
+                "#include <vstgui/lib/vstguiinit.h>\n",
+            ),
+            (
+                "third_party/vst3sdk/vstgui4/CMakeLists.txt",
+                "project(vstgui)\n",
+            ),
+        )
+        for entry in allowed_entries:
+            with self.subTest(path=entry[0]):
+                self.assertEqual(self.validation_errors([entry]), [])
+
+        errors = self.validation_errors(
+            [("cmake/Other.cmake", "set(M3_EDITOR_LIBRARY vstgui_support)\n")]
+        )
+        self.assertTrue(any("vstgui" in error for error in errors), errors)
 
     def test_source_validator_allows_the_official_vst3_view_interface(self):
         errors = self.validation_errors(

@@ -36,7 +36,6 @@ UNAPPROVED_DEPENDENCIES = (
     "torch/",
     ".tflite",
     ".pt",
-    "vstgui",
     "juce",
     "iplug2",
     "iplug_include_in_plug_src.h",
@@ -334,12 +333,25 @@ def is_build_path(relative: str) -> bool:
     )
 
 
+def vstgui_allowed_path(relative: str) -> bool:
+    return (
+        relative.startswith("third_party/vst3sdk/vstgui4/")
+        or relative in {"CMakeLists.txt", "cmake/M3Vst3Sdk.cmake"}
+        or (
+            relative.startswith("native/vst3/")
+            and pathlib.PurePosixPath(relative).name.startswith("m3_editor")
+        )
+    )
+
+
 def validate_entries(
     entries: list[tuple[str, str]], *, sdk_present: bool
 ) -> list[str]:
     errors: list[str] = []
     for relative, text in entries:
         lowered = text.lower()
+        if "vstgui" in lowered and not vstgui_allowed_path(relative):
+            errors.append(f"unapproved dependency token vstgui: {relative}")
         if relative.startswith(NATIVE_PREFIXES):
             for token in UNAPPROVED_DEPENDENCIES:
                 if token in lowered:

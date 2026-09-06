@@ -10,6 +10,7 @@ function(m3_add_pinned_vst3_sdk)
         public.sdk/source/vst/vstaudioeffect.h
         public.sdk/samples/vst-hosting/validator/CMakeLists.txt
         public.sdk/samples/vst-utilities/moduleinfotool/CMakeLists.txt
+        vstgui4/CMakeLists.txt
     )
     foreach(relative_path IN LISTS required_sdk_paths)
         if(NOT EXISTS "${M3_VST3_SDK_ROOT}/${relative_path}")
@@ -22,6 +23,9 @@ function(m3_add_pinned_vst3_sdk)
         "${CMAKE_BINARY_DIR}/sdk"
         EXCLUDE_FROM_ALL
     )
+    if(NOT TARGET vstgui_support)
+        message(FATAL_ERROR "Pinned VSTGUI support target is absent")
+    endif()
 
     # The SDK hosting tree supplies validator even with unrelated host samples
     # disabled. Utilities stay disabled globally; add only moduleinfotool as a
