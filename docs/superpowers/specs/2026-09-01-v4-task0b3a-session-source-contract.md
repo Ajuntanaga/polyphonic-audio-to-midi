@@ -1,7 +1,8 @@
 # V4 Task 0B3a — Non-Admissible Session-Root Skeleton
 
-**Status:** user-authorized source-only task; non-admissible skeleton
-independently reviewed
+**Status:** historical non-admissible skeleton checkpoint, superseded by the
+reviewed Task 0B4b session source contracts and their replacement static
+verification.
 
 **Authority:** the user's 2026-09-01 `Resume` authorizes only the two source
 files and the pre-import AST/hash verification described here. It does not
@@ -16,10 +17,11 @@ authorized and reviewed.
 
 ## Scope and non-goals
 
-The exact artifacts are:
+The historical artifacts were:
 
 1. `tools/reaper_v4_session.py`; and
-2. `tests/test_reaper_v4_task0b3a_static_contract.py`.
+2. `tests/test_reaper_v4_task0b3a_static_contract.py` (retired once the
+   successor session implementation acquired its own pre-import contract).
 
 No Task 0A or Task 0B1 source, schema, or fixture may change. No runtime
 closure, fixture manifest, host manifest, control-root artifact, or executable
@@ -124,8 +126,9 @@ must prove:
 - no forbidden import, call, attribute, dynamic access, or host capability
   appears anywhere in the AST.
 
-The source SHA-256 is the seal for every private syntactic detail. The static
-test must say explicitly that it proves neither runtime order nor behavior.
+The source SHA-256 is the historical seal for every private syntactic detail.
+The static test was retired when the B4b successor contract took over the
+executable session source; it did not prove runtime order or behavior.
 
 ## Task 1: Non-admissible skeleton authoring and static contract
 
@@ -134,7 +137,7 @@ test must say explicitly that it proves neither runtime order nor behavior.
 2. Replace the static test with the pre-import AST/hash verifier described
    above. It must first fail against the preliminary source shape, then pin the
    final skeleton hash.
-3. Run only
+3. Historically, run only
    `ionice -c 3 nice -n 10 python3 -B -m unittest tests.test_reaper_v4_task0b3a_static_contract -v`.
    The test may parse/read source bytes but must not import any target module.
    Do not run `py_compile`, a component test, or the repository suite.

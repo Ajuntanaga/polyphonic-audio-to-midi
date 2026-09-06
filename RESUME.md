@@ -91,14 +91,16 @@ Updated: 2026-09-05T16:43:22-07:00
   `f3867a75817670916f2a450f7d7024f5c1bf1932d97fb65d34c4ca251a9f5c60`.
   `ionice -c 3 nice -n 10 python3 -B -m unittest
   tests.test_reaper_v4_task0b3a_static_contract -v` passed one static-only
-  test, and the final independent source re-review is CLEAN. Neither public
+  test, and the final independent source re-review is CLEAN. That historical
+  guard is retired now that the successor B4b static contract pins the
+  executable implementation. Neither public
   function can progress past its immediate error; no target or dependency was
   imported, compiled, or invoked, and no fixture, namespace, Bubblewrap,
   systemd, REAPER, X11, audio, or host action occurred. It preserves the
   future single-root identity but remains
-  `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` for closure and
-  fixture purposes. The next safe gate is separately authorized Task 0B3b
-  in-memory receipt validation; full session behavior remains Task 0B4.
+  `BLOCKED_UNRESOLVED(runtime_session_entrypoint_unresolved)` for its original
+  historical scope. The subsequent B4b implementation replaces that skeleton
+  under its own verified static contract.
 - Task 0B3b is sealed as a pure in-memory receipt gate. Its 12 adversarial
   tests exercise the real receipt/protocol validators against the synthetic
   PRE/ACK/POST vector: valid immutable snapshots; exact ACK; independently
@@ -255,6 +257,21 @@ Updated: 2026-09-05T16:43:22-07:00
   Bubblewrap, child process, REAPER, audio, X11 client traffic, network, or
   host scan ran. A reviewed closure/fixture-manifest and a later controlled
   fixture remain required before any actual session execution.
+- Task 0B5 source closure and parent-harness implementation is locally
+  verified. `tools/reaper_v4_session_entry.py` establishes the one source root;
+  `tools/reaper_v4_fixture_manifest.py` produces a deterministic seven-source,
+  eight-edge graph and rejects bootstrap-config self-reference; and
+  `tools/reaper_v4_fixture_harness.py` performs the parent-side
+  PRE -> ACK+EOF -> POST exchange against an isolated non-REAPER Python
+  sentinel. The full V4 discovery suite passed 110 checks. A controlled import
+  plus recursive ELF-dependency observation found a draft 89-entry, ~21.7 MiB
+  runtime inventory, but it is not yet a reviewed complete manifest. The local
+  Bubblewrap probe failed before executing a child because this sandbox's
+  kernel denies creation of an unprivileged user namespace; `strace` is also
+  denied ptrace. No fallback, actual fixture, session invocation, REAPER,
+  audio, X11-client, network, or host scan was attempted. Resume with the
+  individually pinned runtime catalog and fixture-runtime-manifest, then use a
+  host that permits the reviewed Bubblewrap scope for actual fixture execution.
 - Task 0B4b-state-contract is sealed as a documentation-only prerequisite
   checkpoint
   under the user's fresh `Proceed`. It resolves the name boundary that keeps
