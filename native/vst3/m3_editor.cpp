@@ -96,7 +96,7 @@ bool canonical_editor_value(ParameterId id, double requested,
 EditorGesture perform_editor_gesture(
     Steinberg::Vst::EditController& controller, ParameterId id,
     double requested, VelocityMode velocity_mode) noexcept {
-  EditorGesture output{id, requested, false};
+  EditorGesture output{id, requested, false, false};
   double normalized = 0.0;
   if (!canonical_editor_value(id, requested, velocity_mode, normalized)) {
     return output;
@@ -106,6 +106,7 @@ EditorGesture perform_editor_gesture(
     return output;
   }
   const bool set = result_ok(controller.setParamNormalized(id, normalized));
+  output.value_applied = set;
   const bool performed = set && result_ok(controller.performEdit(id, normalized));
   const bool ended = result_ok(controller.endEdit(id));
   output.accepted = set && performed && ended;
@@ -138,6 +139,15 @@ double linked_range_request(Steinberg::Vst::EditController& controller,
     return plain_to_normalized(*spec, other_plain);
   }
   return requested;
+}
+
+double canonical_ui_request(ParameterId id, double requested) noexcept {
+  const ParameterSpec* spec = find_parameter(id);
+  if (spec == nullptr) {
+    return requested;
+  }
+  const double plain = normalized_to_plain(*spec, requested);
+  return std::isfinite(plain) ? plain_to_normalized(*spec, plain) : requested;
 }
 
 VSTGUI::CColor status_deck_color(Status status) noexcept {
@@ -316,7 +326,8 @@ class M3DeckControl final : public VSTGUI::CControl {
       return VSTGUI::kMouseEventNotHandled;
     }
     if (layout_.presentation == EditorPresentation::momentary) {
-      panic_pressed_ = emit(1.0);
+      const EditorGesture press = emit(1.0);
+      panic_pressed_ = press.value_applied;
       return panic_pressed_ ? VSTGUI::kMouseEventHandled
                             : VSTGUI::kMouseEventNotHandled;
     }
@@ -346,8 +357,8 @@ class M3DeckControl final : public VSTGUI::CControl {
       requested = std::clamp(
           (getViewSize().bottom - where.y) / height, 0.0, 1.0);
     }
-    return emit(requested) ? VSTGUI::kMouseEventHandled
-                           : VSTGUI::kMouseEventNotHandled;
+    return emit(requested).accepted ? VSTGUI::kMouseEventHandled
+                                    : VSTGUI::kMouseEventNotHandled;
   }
 
   VSTGUI::CMouseEventResult onMouseUp(
@@ -371,7 +382,8 @@ class M3DeckControl final : public VSTGUI::CControl {
       return VSTGUI::kMouseEventNotHandled;
     }
     const double requested = std::clamp(
-        drag_start_normalized_ + (drag_origin_y_ - where.y) / 200.0,
+        drag_start_normalized_ + meaningful_delta(
+                                     (drag_origin_y_ - where.y) / 200.0),
         0.0, 1.0);
     static_cast<void>(emit(requested));
     return VSTGUI::kMouseEventHandled;
@@ -390,9 +402,8 @@ class M3DeckControl final : public VSTGUI::CControl {
       return;
     }
     const double requested = std::clamp(
-        static_cast<double>(getValueNormalized()) +
-            static_cast<double>(event.deltaY) * getWheelInc(),
-        0.0, 1.0);
+        static_cast<double>(getValueNormalized()) + meaningful_delta(
+            static_cast<double>(event.deltaY) * getWheelInc()), 0.0, 1.0);
     static_cast<void>(emit(requested));
     event.consumed = true;
   }
@@ -443,29 +454,41 @@ class M3DeckControl final : public VSTGUI::CControl {
   }
 
  private:
+  double meaningful_delta(double delta) const noexcept {
+    const ParameterSpec* spec = find_parameter(layout_.parameter_id);
+    if (spec == nullptr || spec->step_count <= 0 || !std::isfinite(delta) ||
+        delta == 0.0) {
+      return delta;
+    }
+    const double step = 1.0 / static_cast<double>(spec->step_count);
+    return std::abs(delta) < step ? std::copysign(step, delta) : delta;
+  }
+
   bool interaction_allowed() const noexcept {
     return layout_.parameter_id != kFixedVelocityId ||
            controller_.getParamNormalized(kVelocityModeId) < 0.5;
   }
 
-  bool emit(double requested) {
+  EditorGesture emit(double requested) {
     const VelocityMode velocity_mode =
         controller_.getParamNormalized(kVelocityModeId) >= 0.5
             ? VelocityMode::dynamic
             : VelocityMode::fixed;
+    const double canonical =
+        canonical_ui_request(layout_.parameter_id, requested);
     const double linked = linked_range_request(
-        controller_, layout_.parameter_id, requested);
+        controller_, layout_.parameter_id, canonical);
     const EditorGesture gesture = perform_editor_gesture(
         controller_, layout_.parameter_id, linked, velocity_mode);
-    if (!gesture.accepted) {
-      return false;
+    if (!gesture.value_applied) {
+      return gesture;
     }
     setValueNormalized(static_cast<float>(gesture.normalized_value));
     invalid();
     if (VSTGUI::CView* parent = getParentView()) {
       parent->invalid();
     }
-    return true;
+    return gesture;
   }
 
   void reset_panic() noexcept {

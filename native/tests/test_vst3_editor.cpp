@@ -614,6 +614,92 @@ M3_TEST(vst3_editor_real_range_drag_clamps_low_to_the_shared_high_value) {
   }
 }
 
+M3_TEST(vst3_editor_tiny_drag_and_fine_wheel_emit_exact_legal_steps) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      struct Case final {
+        m3::ParameterId parameter_id;
+        double drag_delta;
+        double after_drag;
+        double wheel_delta;
+        double after_wheel;
+      };
+      constexpr Case kCases[] = {
+          {0x4D330007U, -1.0, 9.0 / 84.0, 0.25, 10.0 / 84.0},
+          {0x4D330008U, 1.0, 59.0 / 84.0, -0.25, 58.0 / 84.0},
+          {0x4D330004U, -1.0, 242.0 / 480.0, 0.25, 243.0 / 480.0},
+          {0x4D330009U, 1.0, 6.0 / 7.0, -0.25, 5.0 / 7.0},
+          {0x4D33000DU, -1.0, 1.0 / 15.0, 0.25, 2.0 / 15.0},
+      };
+      for (const Case& test_case : kCases) {
+        handler.reset();
+        M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+            *view, test_case.parameter_id, 0.5, 0.5, false));
+        M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+        M3_EXPECT_TRUE(m3::vst3::editor_pointer_drag_for_test(
+            *view, test_case.parameter_id, test_case.drag_delta));
+        M3_EXPECT_TRUE(m3::vst3::editor_pointer_up_for_test(
+            *view, test_case.parameter_id));
+        expect_single_edit(handler, test_case.parameter_id,
+                           test_case.after_drag);
+        M3_EXPECT_NEAR(controller->getParamNormalized(test_case.parameter_id),
+                       test_case.after_drag, 1.0e-6);
+
+        handler.reset();
+        M3_EXPECT_TRUE(m3::vst3::editor_wheel_for_test(
+            *view, test_case.parameter_id, test_case.wheel_delta));
+        expect_single_edit(handler, test_case.parameter_id,
+                           test_case.after_wheel);
+        M3_EXPECT_NEAR(controller->getParamNormalized(test_case.parameter_id),
+                       test_case.after_wheel, 1.0e-6);
+      }
+      M3_EXPECT_TRUE(controller->getParamNormalized(0x4D330007U) <=
+                     controller->getParamNormalized(0x4D330008U));
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
 M3_TEST(vst3_editor_real_control_events_cover_rotary_discrete_and_read_only_paths) {
   Steinberg::IPluginFactory* factory = GetPluginFactory();
   Steinberg::Vst::IComponent* component = nullptr;
@@ -789,6 +875,113 @@ M3_TEST(vst3_editor_real_panic_cancel_and_removal_each_reset_exactly_once) {
         destruction_view->release();
       }
     }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_partial_panic_press_still_resets_once_on_every_exit) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    auto attach_view = [&]() noexcept {
+      Steinberg::IPlugView* view =
+          controller->createView(Steinberg::Vst::ViewType::kEditor);
+      M3_EXPECT_TRUE(view != nullptr);
+      if (view != nullptr) {
+        M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+        M3_EXPECT_EQ(view->attached(
+                         nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                     Steinberg::kResultOk);
+      }
+      return view;
+    };
+
+    Steinberg::IPlugView* cancel_view = attach_view();
+    if (cancel_view != nullptr) {
+      handler.reset();
+      handler.fail_next_perform_edit();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *cancel_view, m3::kPanicParameterId, 0.5, 0.5, false));
+      M3_EXPECT_EQ(handler.edit_call_count(), 3U);
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_cancel_for_test(
+          *cancel_view, m3::kPanicParameterId));
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_cancel_for_test(
+          *cancel_view, m3::kPanicParameterId));
+      M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+      if (handler.edit_call_count() == 6U) {
+        expect_edit_at(handler, 0U, m3::kPanicParameterId, 1.0);
+        expect_edit_at(handler, 3U, m3::kPanicParameterId, 0.0);
+      }
+      M3_EXPECT_EQ(cancel_view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+      M3_EXPECT_EQ(cancel_view->setFrame(nullptr), Steinberg::kResultTrue);
+      cancel_view->release();
+    }
+
+    Steinberg::IPlugView* removal_view = attach_view();
+    if (removal_view != nullptr) {
+      handler.reset();
+      handler.fail_next_end_edit();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *removal_view, m3::kPanicParameterId, 0.5, 0.5, false));
+      M3_EXPECT_TRUE(m3::vst3::editor_remove_control_for_test(
+          *removal_view, m3::kPanicParameterId));
+      M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+      if (handler.edit_call_count() == 6U) {
+        expect_edit_at(handler, 0U, m3::kPanicParameterId, 1.0);
+        expect_edit_at(handler, 3U, m3::kPanicParameterId, 0.0);
+      }
+      M3_EXPECT_EQ(removal_view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+      M3_EXPECT_EQ(removal_view->setFrame(nullptr), Steinberg::kResultTrue);
+      removal_view->release();
+    }
+
+    Steinberg::IPlugView* destruction_view = attach_view();
+    if (destruction_view != nullptr) {
+      handler.reset();
+      handler.fail_next_end_edit();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *destruction_view, m3::kPanicParameterId, 0.5, 0.5, false));
+      M3_EXPECT_EQ(destruction_view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(handler.edit_call_count(), 6U);
+      if (handler.edit_call_count() == 6U) {
+        expect_edit_at(handler, 0U, m3::kPanicParameterId, 1.0);
+        expect_edit_at(handler, 3U, m3::kPanicParameterId, 0.0);
+      }
+      M3_EXPECT_EQ(destruction_view->setFrame(nullptr),
+                   Steinberg::kResultTrue);
+      destruction_view->release();
+    }
+
     M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
                  Steinberg::kResultTrue);
     M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);

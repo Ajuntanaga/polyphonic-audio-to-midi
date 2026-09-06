@@ -64,6 +64,8 @@ void FakeVst3ComponentHandler::reset() noexcept {
   edit_calls_.fill(FakeVst3EditCall{});
   edit_call_count_ = 0U;
   restart_count_ = 0U;
+  fail_next_perform_edit_ = false;
+  fail_next_end_edit_ = false;
 }
 
 Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::queryInterface(
@@ -112,12 +114,30 @@ Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::beginEdit(
 Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::performEdit(
     Steinberg::Vst::ParamID id,
     Steinberg::Vst::ParamValue value_normalized) {
-  return append_edit(FakeVst3EditKind::perform, id, value_normalized);
+  const Steinberg::tresult appended =
+      append_edit(FakeVst3EditKind::perform, id, value_normalized);
+  if (appended != Steinberg::kResultOk) {
+    return appended;
+  }
+  if (fail_next_perform_edit_) {
+    fail_next_perform_edit_ = false;
+    return Steinberg::kResultFalse;
+  }
+  return Steinberg::kResultOk;
 }
 
 Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::endEdit(
     Steinberg::Vst::ParamID id) {
-  return append_edit(FakeVst3EditKind::end, id, 0.0);
+  const Steinberg::tresult appended =
+      append_edit(FakeVst3EditKind::end, id, 0.0);
+  if (appended != Steinberg::kResultOk) {
+    return appended;
+  }
+  if (fail_next_end_edit_) {
+    fail_next_end_edit_ = false;
+    return Steinberg::kResultFalse;
+  }
+  return Steinberg::kResultOk;
 }
 
 Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::restartComponent(

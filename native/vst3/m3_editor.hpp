@@ -9,6 +9,7 @@ namespace m3::vst3 {
 struct EditorGesture final {
   ParameterId parameter_id{};
   double normalized_value{};
+  bool value_applied{};
   bool accepted{};
 };
 

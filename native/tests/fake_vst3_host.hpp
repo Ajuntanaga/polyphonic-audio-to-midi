@@ -65,6 +65,8 @@ class FakeVst3ComponentHandler final
   FakeVst3ComponentHandler& operator=(const FakeVst3ComponentHandler&) = delete;
 
   void reset() noexcept;
+  void fail_next_perform_edit() noexcept { fail_next_perform_edit_ = true; }
+  void fail_next_end_edit() noexcept { fail_next_end_edit_ = true; }
   [[nodiscard]] std::size_t edit_call_count() const noexcept {
     return edit_call_count_;
   }
@@ -99,6 +101,8 @@ class FakeVst3ComponentHandler final
   std::size_t edit_call_count_{};
   Steinberg::uint32 reference_count_{1};
   std::uint32_t restart_count_{};
+  bool fail_next_perform_edit_{};
+  bool fail_next_end_edit_{};
 };
 
 class FakeVst3PlugFrame final : public Steinberg::IPlugFrame {
