@@ -1,3 +1,4 @@
+import configparser
 import hashlib
 import json
 import pathlib
@@ -89,6 +90,7 @@ class Vst3BuildContractTests(unittest.TestCase):
         for required in (
             "CMAKE_CXX_STANDARD 17",
             "SMTG_ENABLE_VSTGUI_SUPPORT ON",
+            "SMTG_ENABLE_WAYLAND_SUPPORT OFF",
             "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF",
             "SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF",
             "SMTG_CREATE_PLUGIN_LINK OFF",
@@ -138,6 +140,7 @@ class Vst3BuildContractTests(unittest.TestCase):
             cache = (build_dir / "CMakeCache.txt").read_text(encoding="utf-8")
             for setting in (
                 "SMTG_ENABLE_VSTGUI_SUPPORT:BOOL=ON",
+                "SMTG_ENABLE_WAYLAND_SUPPORT:BOOL=OFF",
                 "SMTG_ENABLE_VST3_PLUGIN_EXAMPLES:BOOL=OFF",
                 "SMTG_ENABLE_VST3_HOSTING_EXAMPLES:BOOL=OFF",
                 "SMTG_CREATE_PLUGIN_LINK:BOOL=OFF",
@@ -166,6 +169,17 @@ class Vst3BuildContractTests(unittest.TestCase):
                 "vstgui_support",
             ):
                 self.assertIn(target, target_help.stdout)
+
+            for target in (
+                "m3_native_tests",
+                "m3_clap_history",
+                "m3_vst3_probe",
+                "m3_vst3_production",
+            ):
+                link_command = (
+                    build_dir / f"CMakeFiles/{target}.dir/link.txt"
+                ).read_text(encoding="utf-8")
+                self.assertNotIn("vstgui", link_command.lower())
 
             commands = json.loads(
                 (build_dir / "compile_commands.json").read_text(encoding="utf-8")
@@ -503,6 +517,15 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIn("vstgui_support", build_text)
         self.assertIn("vstgui4/CMakeLists.txt", build_text)
 
+        gitmodules = configparser.ConfigParser()
+        gitmodules.read(ROOT / ".gitmodules", encoding="utf-8")
+        section = "submodule \"third_party/vst3sdk/vstgui4\""
+        self.assertEqual(gitmodules.sections(), [section])
+        self.assertEqual(gitmodules[section]["path"], "third_party/vst3sdk/vstgui4")
+        self.assertEqual(
+            gitmodules[section]["url"], "https://github.com/steinbergmedia/vstgui.git"
+        )
+
         gitlink = subprocess.run(
             ["git", "ls-files", "--stage", "--", str(VSTGUI_PATH.relative_to(ROOT))],
             cwd=ROOT,
@@ -520,6 +543,21 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIn("https://github.com/steinbergmedia/vstgui.git", upstream)
         self.assertIn(VSTGUI_REVISION, upstream)
         self.assertRegex(upstream, r"(?im)^.*vstgui.*license.*$")
+
+        root_text = root_cmake.read_text(encoding="utf-8")
+        for target in (
+            "m3_native_tests",
+            "m3_clap_history",
+            "m3_vst3_probe",
+            "m3_vst3_production",
+        ):
+            link_match = re.search(
+                rf"target_link_libraries\(\s*{target}\b(?P<body>.*?)\)",
+                root_text,
+                re.DOTALL,
+            )
+            self.assertIsNotNone(link_match, target)
+            self.assertNotIn("vstgui", link_match.group("body").lower())
 
         persistent_bundles = [
             path
