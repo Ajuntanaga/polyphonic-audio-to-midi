@@ -1,6 +1,6 @@
 # Native VST3 Testing
 
-Updated: 2026-08-30T16:14:41-07:00
+Updated: 2026-09-06
 
 ## Authority and current gate
 
@@ -720,3 +720,146 @@ the primary real-world capability/latency rows, without removing any mandatory
   require declared copy-byte, FD, `RLIMIT_NOFILE`, and memory/tmpfs refusal
   budgets. Later controls review, fresh preflight, and new explicit user
   authority remain required before any V4 host command.
+
+## Task 5 M3 live-editor release validation
+
+### Release graph and corrective validator amendment
+
+- The existing Task 3 contract already proved that `m3_editor.cpp`,
+  `m3_editor_layout.cpp`, and `vstgui_support` are direct production inputs,
+  with VSTGUI examples and hosting utilities disabled. Task 5 therefore did
+  not manufacture a failing test. It added one focused inherited-green check
+  against the generated makefile graph: every VSTGUI dependency of
+  `m3_vst3_production` must stay outside test, example, and tool paths.
+- The first real Task 5 validator-runner invocation refused its input before
+  invoking Steinberg's validator. The retained `SHA256SUMS` covered exactly
+  all 1,003 copied non-VSTGUI SDK files, while the separately pinned VSTGUI
+  Git link contributed 1,166 descendants that were intentionally absent from
+  that manifest. There were no non-VSTGUI path or hash mismatches.
+- Commit `8a01dd5` (`fix: validate separately pinned VSTGUI source`) keeps the
+  non-VSTGUI manifest exact and validates VSTGUI separately. It fails closed
+  for a missing or wrong Git link, wrong checked-out HEAD, or dirty worktree,
+  and records the exact VSTGUI revision
+  `5db272256172557818b6158cf0bb2c4410bddb25` in validator evidence. Focused
+  fixtures cover an accepted unmanifested VSTGUI descendant, rejection of an
+  extra non-VSTGUI file, and every wrong/missing/dirty VSTGUI state without
+  invoking the validator.
+
+The exact release commands were:
+
+```bash
+ionice -c 3 nice -n 10 cmake -S . -B build/vst3/release \
+  -DCMAKE_BUILD_TYPE=Release
+ionice -c 3 nice -n 10 cmake --build build/vst3/release \
+  --target m3_vst3_production -j1
+ionice -c 3 nice -n 10 cmake --build build/vst3/release \
+  --target m3_validate_production -j1
+ionice -c 3 nice -n 10 python3 -B -m unittest \
+  tests.test_vst3_build_contract tests.test_vst3_validator_runner -q
+python3 -B tools/validate_native_source.py .
+ionice -c 3 nice -n 10 python3 -B tools/run_vst3_validator.py \
+  --kind production \
+  --bundle build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3
+```
+
+The configure, serial production build, aggregate
+`m3_validate_production` target, 26 focused Python tests, and native source
+validator passed. `m3_validate_production` builds the production bundle and
+official validator dependency; the final command above is the invocation that
+actually ran the official validator. That invocation ran exactly once after
+the corrective commit, classified `pass`, returned zero, disabled automatic
+retry, and reported exactly `47 tests passed, 0 tests failed` at
+`2026-09-06T08:00:53.975+00:00`.
+
+Its current recorded hashes are:
+
+```text
+bundle             77a95d0e57bfbed85648aa3ff5f903f4b47a898ffc109c6fe6d5378c79331631
+bundle binary      34baa6525544f26d259a6370faf809b7fb160b03833e9d683c120760401f597c
+module-info        7a6247b9d1ccd815c0bf6ff0821a906168e2bb48d755f0e22cd60450734e8738
+SDK manifest       3e46582d9ea90406656deca666725164d3a01009dfc60ffccbf183d3c926d67d
+VSTGUI revision    5db272256172557818b6158cf0bb2c4410bddb25
+validator          15432889f00a6ee4ba3c91edad5f37dc7d4dec7e13de6ef27dde95d65f4df3d7
+runner             3a96ccff58dee1a7ed21a0ecc80529404eea7807265d6996666746fa34260cb7
+stdout             af9195807c9b2c13f6f119478993cbb865d25cd924e0d901cd785a1642c360e0
+stderr             e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+```
+
+### Disposable 96 kHz stage and editor presentation
+
+The production bundle was staged with:
+
+```bash
+ionice -c 3 nice -n 10 python3 tools/stage_live_midi_env.py \
+  --output build/m3-native-live-midi-8open-96k \
+  --detector native \
+  --sample-rate 96000
+```
+
+- The profile and bundle remain under
+  `build/m3-native-live-midi-8open-96k`. The profile records 96 kHz, block 256,
+  the native detector, and a VST path beginning at the staged `VST3`
+  directory. The staged module-info and binary hashes exactly match the
+  release bundle values above. There is no persistent M3 installation.
+- Every REAPER check used a fresh `-newinst -noactivate -cfgfile` process with
+  the build-local `reaper.ini`. Exact PID/window ownership was checked before
+  interaction and only that disposable PID was terminated. No REAPER process
+  or window remained afterward.
+- The normal profile
+  `/home/ajuntanaga/.config/REAPER/reaper.ini` remained byte-identical at
+  SHA-256
+  `0c9a808df5361758c7f6656ed052332cfe16004b4a9f2d476d9c319829ae0a41`.
+  No persistent plug-in path, saved project, device routing, or hardware
+  setting was changed.
+- The custom editor attached at its exact initial `1024 x 620` size and
+  resized to a `1200 x 720` client without overlap. The screen presents Header
+  / live state, Source + Tuning, Tracking, Performance Range, and Advanced ·
+  Live Routing. The Status control showed textual `Ready`. Inspection found
+  no fabricated input meter, detected-note display, tuner, or confidence
+  telemetry.
+- The initial and resized build-local captures have SHA-256
+  `a206d25d164cff29972635ec867c0dcd956e99a136d945b21c789b222f5b7716`
+  and
+  `168ab1809b15f7039f0bb47d4b7d11c9e2d5b85afba398ae4d1e282243500bb8`.
+
+### Physical gesture boundary: manual
+
+The disposable Lua observer independently resolved `Dry audio` at index 14,
+round-tripped the stable identifier `14:1295187983`, and passed a reversible
+host-API canary with exact normalized and raw readback `1 -> 0 -> 1`.
+Heartbeat, last-touched, and focused-FX observations remained live. This proves
+the disposable host observation/restoration path; it is not evidence that a
+pointer event reached the custom control.
+
+The physical GUI gesture required by Task 5 Step 4 is **not verified** in this
+environment. REAPER embeds the editor through a rootless Xwayland hierarchy
+with a host child and a nested VSTGUI event surface. XTest could not prove a
+recursive pointer-delivery chain to that deepest surface. The final reviewed
+run therefore stopped before Button1 injection, recorded zero GUI transitions,
+and required no restore. No safe installed `xdotool`, `ydotool`, or `wtype`
+input path was available, and no existing REAPER window was guessed or
+clicked. This is an environment input-boundary limitation, not a successful
+gesture result and not evidence of a product gesture defect.
+
+Task 5 Step 4 remains manual. From a desktop with the Revelator already in its
+96 kHz operating mode:
+
+1. Stage the profile with the command above and launch only the build-local
+   `reaper.ini` using the README's `-newinst -noactivate -cfgfile` command.
+2. Open the staged M3 FX, confirm the custom `1024 x 620` editor and textual
+   status, then resize it and inspect the control layout.
+3. With a physical mouse, note the Dry Audio state, change it once, and use
+   REAPER's `Param` menu to confirm that `Dry audio` is the last-touched host
+   parameter. Restore the original Dry Audio value once.
+4. Play clean single-note low-string material through the already staged
+   input and confirm downstream MIDI/ReaSynth behavior. Do not treat this as
+   a chord-tracking or instrument-calibration claim.
+5. Close only the disposable instance without saving. If editor attachment,
+   host parameter observation, restoration, or isolation differs, stop and
+   preserve that disposable profile; do not attach automation to another
+   REAPER window.
+
+Hosts that cannot attach the custom editor retain the unchanged generic VST3
+parameter surface. The custom editor adds no fallback process and changes no
+parameter ID, range, default, state, automation, detector, MIDI, or 96 kHz
+behavior.

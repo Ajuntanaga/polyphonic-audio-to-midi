@@ -3,7 +3,10 @@
 Status: the JSFX detector is retained as a behavioral oracle; a native Linux
 x86-64 VST3 effect now provides the practical low-register live-MIDI path.
 It is built and staged in a disposable REAPER profile, not installed into the
-user's persistent VST3 directory.
+user's persistent VST3 directory. The production VST3 now includes a custom,
+resizable performance editor. Its attachment and presentation are verified;
+the final physical-mouse gesture check remains manual on this rootless
+Xwayland workstation.
 
 M3 is a source-editable, causal audio-to-MIDI effect for REAPER and a
 downstream VSTi. The practical native path is a C++17 VST3 effect with a
@@ -51,6 +54,33 @@ python3 tools/stage_live_midi_env.py \
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 
+### Build and validate the editor bundle
+
+The M3 editor release was produced with serial, low-priority commands:
+
+```bash
+ionice -c 3 nice -n 10 cmake -S . -B build/vst3/release \
+  -DCMAKE_BUILD_TYPE=Release
+ionice -c 3 nice -n 10 cmake --build build/vst3/release \
+  --target m3_vst3_production -j1
+ionice -c 3 nice -n 10 cmake --build build/vst3/release \
+  --target m3_validate_production -j1
+ionice -c 3 nice -n 10 python3 -B -m unittest \
+  tests.test_vst3_build_contract tests.test_vst3_validator_runner -q
+python3 -B tools/validate_native_source.py .
+ionice -c 3 nice -n 10 python3 -B tools/run_vst3_validator.py \
+  --kind production \
+  --bundle build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3
+```
+
+The official validator result is `47 tests passed, 0 tests failed`. The custom
+editor opens at `1024 x 620` and can be resized. Its visible groups are Header
+and live state, Source + Tuning, Tracking, Performance Range, and Advanced ·
+Live Routing. `Ready` is truthful text from the existing Status parameter; the
+editor does not fabricate an input meter, detected-note display, tuner, or
+confidence indicator. A host that cannot attach the custom editor can still
+use the unchanged generic VST3 parameter surface.
+
 ### Start the live chain
 
 On the desktop that has the Revelator attached, launch the prepared 96 kHz
@@ -71,10 +101,32 @@ Revelator input 1 → M3 Polyphonic Audio to MIDI → ReaSynth
 
 Play clean single-note lines first. The profile is deliberately limited to the
 eight open-string range (MIDI 32–60), uses muted dry audio, and sends the
-detected note to ReaSynth. If there is no input meter activity, choose the
-Revelator's first mono input in REAPER's track input menu; if there is input
+detected note to ReaSynth. If there is no REAPER track-meter activity, choose
+the Revelator's first mono input in REAPER's track input menu; if there is input
 but no synth note, lower the guitar/interface gain before increasing detector
 sensitivity.
+
+For the remaining manual 96 kHz editor check, use a physical mouse in only
+this disposable instance:
+
+1. Confirm REAPER reports `96000 Hz` without changing the interface or normal
+   REAPER configuration.
+2. Open the staged M3 FX. Confirm the custom editor is `1024 x 620`, resize it,
+   and check that the controls reflow without overlap.
+3. Note that Dry Audio is `OFF` in the live-chain preset. Click it once, then
+   use REAPER's `Param` menu to confirm `Dry audio` is the last-touched host
+   parameter. Click it once more to restore `OFF`.
+4. Play clean single notes from the low strings and confirm that the staged
+   track produces downstream MIDI/ReaSynth output. This is the physical-input
+   calibration check; it does not broaden the detector's one-note claim.
+5. Close only the disposable REAPER instance without saving the project.
+
+Automated pointer injection is intentionally not part of this procedure. On
+the validation workstation, rootless Xwayland exposed a nested VSTGUI event
+surface but could not prove that XTest would deliver to it, and no safe
+installed `xdotool`, `ydotool`, or `wtype` input path was available. The
+final automated attempt therefore injected no Button1 event and made no GUI
+parameter claim.
 
 Task 11 passed a disposable REAPER chain containing the synthetic signal
 source, the production detector, MIDI capture, ReaSynth, and an audio-output

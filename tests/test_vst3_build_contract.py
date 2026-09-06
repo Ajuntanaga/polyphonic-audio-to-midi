@@ -184,6 +184,28 @@ class Vst3BuildContractTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
             self.assertNotIn("vstgui", clap_link_command.lower())
 
+            makefile_graph = (
+                build_dir / "CMakeFiles/Makefile2"
+            ).read_text(encoding="utf-8")
+            production_dependencies = re.findall(
+                r"(?m)^CMakeFiles/m3_vst3_production\.dir/all: (.+)$",
+                makefile_graph,
+            )
+            vstgui_dependencies = [
+                dependency
+                for dependency in production_dependencies
+                if "vstgui" in dependency.lower()
+            ]
+            self.assertTrue(vstgui_dependencies)
+            for dependency in vstgui_dependencies:
+                self.assertIsNone(
+                    re.search(
+                        r"(?i)(?:^|/)(?:tests?|examples?|tools?)(?:/|$)",
+                        dependency,
+                    ),
+                    dependency,
+                )
+
             commands = json.loads(
                 (build_dir / "compile_commands.json").read_text(encoding="utf-8")
             )
