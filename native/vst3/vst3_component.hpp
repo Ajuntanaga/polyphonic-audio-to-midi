@@ -64,9 +64,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
     return Steinberg::Vst::kNoTail;
   }
   Steinberg::IPlugView* PLUGIN_API createView(
-      Steinberg::FIDString) override {
-    return nullptr;
-  }
+      Steinberg::FIDString name) override;
 
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {

@@ -172,14 +172,17 @@ class Vst3BuildContractTests(unittest.TestCase):
 
             for target in (
                 "m3_native_tests",
-                "m3_clap_history",
                 "m3_vst3_probe",
                 "m3_vst3_production",
             ):
                 link_command = (
                     build_dir / f"CMakeFiles/{target}.dir/link.txt"
                 ).read_text(encoding="utf-8")
-                self.assertNotIn("vstgui", link_command.lower())
+                self.assertIn("vstgui_support", link_command.lower())
+            clap_link_command = (
+                build_dir / "CMakeFiles/m3_clap_history.dir/link.txt"
+            ).read_text(encoding="utf-8")
+            self.assertNotIn("vstgui", clap_link_command.lower())
 
             commands = json.loads(
                 (build_dir / "compile_commands.json").read_text(encoding="utf-8")
@@ -208,6 +211,22 @@ class Vst3BuildContractTests(unittest.TestCase):
                     self.assertIn(flag, command)
                 self.assertNotIn("-march=native", command)
 
+            rtti_sources = {
+                pathlib.Path(row["file"]).relative_to(ROOT).as_posix()
+                for row in commands
+                if "-frtti" in row["command"]
+            }
+            self.assertEqual(
+                rtti_sources,
+                {
+                    "native/vst3/vst3_component.cpp",
+                    (
+                        "third_party/vst3sdk/public.sdk/source/vst/"
+                        "vstsinglecomponenteffect.cpp"
+                    ),
+                },
+            )
+
             probe_commands = [
                 row
                 for row in commands
@@ -224,6 +243,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
+                    "native/vst3/m3_editor.cpp",
+                    "native/vst3/m3_editor_layout.cpp",
                     "native/vst3/vst3_component.cpp",
                     "native/vst3/vst3_event_sink.cpp",
                     "native/vst3/vst3_factory.cpp",
@@ -260,6 +281,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
+                    "native/vst3/m3_editor.cpp",
+                    "native/vst3/m3_editor_layout.cpp",
                     "native/vst3/vst3_component.cpp",
                     "native/vst3/vst3_event_sink.cpp",
                     "native/vst3/vst3_factory.cpp",
@@ -547,7 +570,6 @@ class Vst3BuildContractTests(unittest.TestCase):
         root_text = root_cmake.read_text(encoding="utf-8")
         for target in (
             "m3_native_tests",
-            "m3_clap_history",
             "m3_vst3_probe",
             "m3_vst3_production",
         ):
@@ -557,7 +579,14 @@ class Vst3BuildContractTests(unittest.TestCase):
                 re.DOTALL,
             )
             self.assertIsNotNone(link_match, target)
-            self.assertNotIn("vstgui", link_match.group("body").lower())
+            self.assertIn("vstgui_support", link_match.group("body").lower())
+        clap_link_match = re.search(
+            r"target_link_libraries\(\s*m3_clap_history\b(?P<body>.*?)\)",
+            root_text,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(clap_link_match)
+        self.assertNotIn("vstgui", clap_link_match.group("body").lower())
 
         persistent_bundles = [
             path
@@ -573,6 +602,7 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertEqual(
             cpp_sources,
             {
+                "m3_editor.cpp",
                 "m3_editor_layout.cpp",
                 "vst3_component.cpp",
                 "vst3_event_sink.cpp",

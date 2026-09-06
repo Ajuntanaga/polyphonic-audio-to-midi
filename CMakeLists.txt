@@ -59,6 +59,8 @@ set(M3_NATIVE_PLUGIN_SOURCES
 )
 
 set(M3_VST3_ADAPTER_SOURCES
+    native/vst3/m3_editor.cpp
+    native/vst3/m3_editor_layout.cpp
     native/vst3/vst3_component.cpp
     native/vst3/vst3_event_sink.cpp
     native/vst3/vst3_factory.cpp
@@ -71,8 +73,12 @@ set(M3_VST3_PROBE_PROCESSOR_SOURCES
     native/vst3/vst3_probe_processor.cpp
 )
 
-set(M3_EDITOR_LAYOUT_SOURCES
-    native/vst3/m3_editor_layout.cpp
+# VSTGUI's VST3Editor discovers an optional editor delegate with dynamic_cast.
+# Keep RTTI limited to the combined controller's two defining translation units.
+set_source_files_properties(
+    native/vst3/vst3_component.cpp
+    third_party/vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
+    PROPERTIES COMPILE_OPTIONS -frtti
 )
 
 set(M3_NATIVE_TEST_SOURCES
@@ -98,6 +104,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp
     native/tests/test_vst3_detector.cpp
+    native/tests/test_vst3_editor.cpp
     native/tests/test_vst3_factory.cpp
     native/tests/test_vst3_lifecycle.cpp
     native/tests/test_vst3_parameters.cpp
@@ -115,8 +122,8 @@ add_executable(m3_native_tests
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_VST3_ADAPTER_SOURCES}
     ${M3_VST3_PROBE_PROCESSOR_SOURCES}
-    ${M3_EDITOR_LAYOUT_SOURCES}
     ${M3_NATIVE_TEST_SOURCES}
+    third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
 )
 target_compile_definitions(m3_native_tests PRIVATE M3_TESTING)
 target_include_directories(m3_native_tests PRIVATE
@@ -127,8 +134,11 @@ target_include_directories(m3_native_tests PRIVATE
 )
 target_include_directories(m3_native_tests SYSTEM BEFORE PRIVATE
     third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
 )
-target_link_libraries(m3_native_tests PRIVATE Threads::Threads sdk m)
+target_link_libraries(
+    m3_native_tests PRIVATE Threads::Threads vstgui_support sdk m
+)
 m3_apply_project_options(m3_native_tests)
 add_test(NAME m3_native_tests COMMAND m3_native_tests)
 
@@ -177,8 +187,11 @@ target_include_directories(m3_vst3_probe PRIVATE
 )
 target_include_directories(m3_vst3_probe SYSTEM BEFORE PRIVATE
     third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
 )
-target_link_libraries(m3_vst3_probe PRIVATE Threads::Threads sdk m)
+target_link_libraries(
+    m3_vst3_probe PRIVATE Threads::Threads vstgui_support sdk m
+)
 m3_apply_project_options(m3_vst3_probe)
 set_target_properties(m3_vst3_probe PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
@@ -232,8 +245,11 @@ target_include_directories(m3_vst3_production PRIVATE
 )
 target_include_directories(m3_vst3_production SYSTEM BEFORE PRIVATE
     third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
 )
-target_link_libraries(m3_vst3_production PRIVATE Threads::Threads sdk m)
+target_link_libraries(
+    m3_vst3_production PRIVATE Threads::Threads vstgui_support sdk m
+)
 m3_apply_project_options(m3_vst3_production)
 set_target_properties(m3_vst3_production PROPERTIES EXCLUDE_FROM_ALL TRUE)
 add_dependencies(m3_vst3_production validator)

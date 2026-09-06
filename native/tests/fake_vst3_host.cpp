@@ -60,6 +60,72 @@ Steinberg::tresult PLUGIN_API FakeVst3Host::createInstance(
   return Steinberg::kNoInterface;
 }
 
+void FakeVst3ComponentHandler::reset() noexcept {
+  edit_calls_.fill(FakeVst3EditCall{});
+  edit_call_count_ = 0U;
+  restart_count_ = 0U;
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::queryInterface(
+    const Steinberg::TUID requested_iid, void** object) {
+  if (object == nullptr) {
+    return Steinberg::kInvalidArgument;
+  }
+  *object = nullptr;
+  if (Steinberg::FUnknownPrivate::iidEqual(requested_iid,
+                                            Steinberg::FUnknown::iid) ||
+      Steinberg::FUnknownPrivate::iidEqual(
+          requested_iid, Steinberg::Vst::IComponentHandler::iid)) {
+    *object = static_cast<Steinberg::Vst::IComponentHandler*>(this);
+    addRef();
+    return Steinberg::kResultOk;
+  }
+  return Steinberg::kNoInterface;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3ComponentHandler::addRef() {
+  return ++reference_count_;
+}
+
+Steinberg::uint32 PLUGIN_API FakeVst3ComponentHandler::release() {
+  if (reference_count_ > 0U) {
+    --reference_count_;
+  }
+  return reference_count_;
+}
+
+Steinberg::tresult FakeVst3ComponentHandler::append_edit(
+    FakeVst3EditKind kind, Steinberg::Vst::ParamID id,
+    Steinberg::Vst::ParamValue value) noexcept {
+  if (edit_call_count_ >= edit_calls_.size()) {
+    return Steinberg::kOutOfMemory;
+  }
+  edit_calls_[edit_call_count_++] = FakeVst3EditCall{kind, id, value};
+  return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::beginEdit(
+    Steinberg::Vst::ParamID id) {
+  return append_edit(FakeVst3EditKind::begin, id, 0.0);
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::performEdit(
+    Steinberg::Vst::ParamID id,
+    Steinberg::Vst::ParamValue value_normalized) {
+  return append_edit(FakeVst3EditKind::perform, id, value_normalized);
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::endEdit(
+    Steinberg::Vst::ParamID id) {
+  return append_edit(FakeVst3EditKind::end, id, 0.0);
+}
+
+Steinberg::tresult PLUGIN_API FakeVst3ComponentHandler::restartComponent(
+    Steinberg::int32) {
+  ++restart_count_;
+  return Steinberg::kResultOk;
+}
+
 void FakeVst3ParamValueQueue::reset(Steinberg::Vst::ParamID id) noexcept {
   id_ = id;
   point_count_ = 0;

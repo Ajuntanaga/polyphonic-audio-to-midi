@@ -8,7 +8,7 @@
 
 #include "m3/constants.hpp"
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "public.sdk/source/vst/vstsinglecomponenteffect.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
@@ -41,6 +41,64 @@ class FakeVst3Host final : public Steinberg::Vst::IHostApplication {
  private:
   Steinberg::uint32 reference_count_{1};
   std::uint32_t query_count_{};
+};
+
+enum class FakeVst3EditKind : std::uint8_t {
+  begin,
+  perform,
+  end,
+};
+
+struct FakeVst3EditCall final {
+  FakeVst3EditKind kind{};
+  Steinberg::Vst::ParamID id{};
+  Steinberg::Vst::ParamValue value{};
+};
+
+class FakeVst3ComponentHandler final
+    : public Steinberg::Vst::IComponentHandler {
+ public:
+  static constexpr std::size_t kCapacity = 64;
+
+  FakeVst3ComponentHandler() noexcept = default;
+  FakeVst3ComponentHandler(const FakeVst3ComponentHandler&) = delete;
+  FakeVst3ComponentHandler& operator=(const FakeVst3ComponentHandler&) = delete;
+
+  void reset() noexcept;
+  [[nodiscard]] std::size_t edit_call_count() const noexcept {
+    return edit_call_count_;
+  }
+  [[nodiscard]] const FakeVst3EditCall& edit_call(
+      std::size_t index) const noexcept {
+    return edit_calls_[index];
+  }
+  [[nodiscard]] std::uint32_t restart_count() const noexcept {
+    return restart_count_;
+  }
+
+  Steinberg::tresult PLUGIN_API queryInterface(
+      const Steinberg::TUID requested_iid, void** object) override;
+  Steinberg::uint32 PLUGIN_API addRef() override;
+  Steinberg::uint32 PLUGIN_API release() override;
+  Steinberg::tresult PLUGIN_API beginEdit(
+      Steinberg::Vst::ParamID id) override;
+  Steinberg::tresult PLUGIN_API performEdit(
+      Steinberg::Vst::ParamID id,
+      Steinberg::Vst::ParamValue value_normalized) override;
+  Steinberg::tresult PLUGIN_API endEdit(
+      Steinberg::Vst::ParamID id) override;
+  Steinberg::tresult PLUGIN_API restartComponent(
+      Steinberg::int32 flags) override;
+
+ private:
+  Steinberg::tresult append_edit(FakeVst3EditKind kind,
+                                 Steinberg::Vst::ParamID id,
+                                 Steinberg::Vst::ParamValue value) noexcept;
+
+  std::array<FakeVst3EditCall, kCapacity> edit_calls_{};
+  std::size_t edit_call_count_{};
+  Steinberg::uint32 reference_count_{1};
+  std::uint32_t restart_count_{};
 };
 
 struct FakeVst3ParameterPoint final {

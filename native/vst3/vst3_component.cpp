@@ -4,12 +4,14 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <new>
 #include <type_traits>
 
 #include "dry_path.hpp"
 #include "m3/constants.hpp"
+#include "m3_editor.hpp"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/base/fstrdefs.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
@@ -67,6 +69,14 @@ M3Component::~M3Component() {
 Steinberg::FUnknown* M3Component::createInstance(void*) noexcept {
   M3Component* component = new (std::nothrow) M3Component;
   return static_cast<Steinberg::Vst::IAudioProcessor*>(component);
+}
+
+Steinberg::IPlugView* PLUGIN_API M3Component::createView(
+    Steinberg::FIDString name) {
+  return name != nullptr &&
+                 std::strcmp(name, Steinberg::Vst::ViewType::kEditor) == 0
+             ? create_m3_editor(*this)
+             : nullptr;
 }
 
 Steinberg::tresult PLUGIN_API M3Component::initialize(

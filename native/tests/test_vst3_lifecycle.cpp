@@ -134,8 +134,18 @@ M3_TEST(vst3_busses_layout_sample_sizes_latency_tail_and_view_are_exact) {
     M3_EXPECT_EQ(processor->getTailSamples(), Steinberg::Vst::kNoTail);
   }
   if (controller != nullptr) {
-    M3_EXPECT_TRUE(controller->createView(Steinberg::Vst::ViewType::kEditor) ==
-                   nullptr);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      Steinberg::ViewRect rect{};
+      M3_EXPECT_EQ(view->getSize(&rect), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(rect.right - rect.left, 1024);
+      M3_EXPECT_EQ(rect.bottom - rect.top, 620);
+      view->release();
+    }
+    M3_EXPECT_TRUE(controller->createView("unsupported") == nullptr);
+    M3_EXPECT_TRUE(controller->createView(nullptr) == nullptr);
   }
   Steinberg::TUID controller_id{};
   M3_EXPECT_TRUE(component->getControllerClassId(controller_id) !=
