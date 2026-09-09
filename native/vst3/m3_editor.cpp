@@ -223,6 +223,57 @@ void draw_rounded_gradient(VSTGUI::CDrawContext* context,
   context->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
 }
 
+void draw_glow_layer(VSTGUI::CDrawContext* context,
+                     const VSTGUI::CRect& rect,
+                     const VSTGUI::CColor& color,
+                     VSTGUI::CCoord radius,
+                     VSTGUI::CCoord spread,
+                     VSTGUI::CCoord line_width,
+                     std::uint8_t alpha) {
+  if (context == nullptr) {
+    return;
+  }
+  VSTGUI::CRect halo = rect;
+  halo.extend(spread, spread);
+  auto path = VSTGUI::owned(context->createGraphicsPath());
+  if (!path) {
+    return;
+  }
+  path->addRoundRect(halo, radius + spread);
+  context->setFrameColor(
+      VSTGUI::CColor(color.red, color.green, color.blue, alpha));
+  context->setLineWidth(line_width);
+  context->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
+}
+
+// Static, low-alpha layers add depth without suggesting live signal telemetry
+// or introducing timer-driven motion into the editor.
+void draw_static_glow_outline(VSTGUI::CDrawContext* context,
+                              const VSTGUI::CRect& rect,
+                              const VSTGUI::CColor& color,
+                              VSTGUI::CCoord radius) {
+  draw_glow_layer(context, rect, color, radius, 6.0, 2.0, 18U);
+  draw_glow_layer(context, rect, color, radius, 2.0, 1.0, 54U);
+}
+
+// CControl drawing is clipped to its view bounds. Keep this variant fully
+// inside that clipping region so a state glow remains visible on child views.
+void draw_inset_glow_outline(VSTGUI::CDrawContext* context,
+                             const VSTGUI::CRect& rect,
+                             const VSTGUI::CColor& color,
+                             VSTGUI::CCoord radius) {
+  VSTGUI::CRect outer = rect;
+  outer.inset(3.0, 3.0);
+  draw_glow_layer(context, outer, color,
+                  std::max<VSTGUI::CCoord>(0.0, radius - 3.0), 0.0, 4.0,
+                  18U);
+  VSTGUI::CRect inner = outer;
+  inner.inset(2.0, 2.0);
+  draw_glow_layer(context, inner, color,
+                  std::max<VSTGUI::CCoord>(0.0, radius - 5.0), 0.0, 2.0,
+                  54U);
+}
+
 VSTGUI::CRect to_rect(const EditorRect& rect) noexcept {
   return VSTGUI::CRect(rect.left, rect.top, rect.right, rect.bottom);
 }
@@ -676,6 +727,7 @@ class M3DeckControl final : public VSTGUI::CControl {
         segment.inset(3.0, 3.0);
         context->setFillColor(VSTGUI::CColor(18U, 95U, 105U, 255U));
         context->drawRect(segment, VSTGUI::kDrawFilled);
+        draw_inset_glow_outline(context, segment, kCyan, 6.0);
       }
       draw_label(context, labels[index], segment,
                  index == selected ? kCyan : kMuted);
@@ -736,6 +788,9 @@ class M3DeckControl final : public VSTGUI::CControl {
     const Status status = static_cast<Status>(status_index);
     draw_rounded_gradient(context, bounds, kPanelTop, kPanelBottom,
                           status_deck_color(status), 8.0);
+    if (status == Status::ready) {
+      draw_inset_glow_outline(context, bounds, kCyan, 8.0);
+    }
     draw_label(context, "M3  /  POLYPHONIC AUDIO → MIDI  /  CAUSAL LIVE",
                VSTGUI::CRect(bounds.left + 14.0, bounds.top,
                               bounds.right - 190.0, bounds.bottom),
@@ -831,9 +886,13 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     draw_rounded_gradient(context, scaled_rect(14.0, 84.0, 1010.0, 262.0),
                           VSTGUI::CColor(27U, 32U, 39U, 255U), kGraphite,
                           kPanelEdge, 12.0);
-    draw_rounded_gradient(context, scaled_rect(14.0, 270.0, 1010.0, 412.0),
+    const VSTGUI::CRect tracking_panel =
+        scaled_rect(14.0, 270.0, 1010.0, 412.0);
+    draw_rounded_gradient(context, tracking_panel,
                           VSTGUI::CColor(25U, 33U, 40U, 255U), kGraphite,
                           VSTGUI::CColor(26U, 120U, 130U, 255U), 12.0);
+    draw_static_glow_outline(context, tracking_panel,
+                             VSTGUI::CColor(26U, 120U, 130U, 255U), 12.0);
     context->setFillColor(kCyan);
     context->drawRect(scaled_rect(216.0, 334.0, 244.0, 346.0),
                       VSTGUI::kDrawFilled);
