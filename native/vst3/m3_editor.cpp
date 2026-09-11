@@ -10,12 +10,13 @@
 #include <new>
 
 #include "m3_editor_layout.hpp"
+#include "vst3_component.hpp"
 #include "vst3_parameter_bridge.hpp"
 #include "vstgui/lib/ccolor.h"
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
-#include "vstgui/lib/cgradient.h"
 #include "vstgui/lib/cgraphicspath.h"
+#include "vstgui/lib/cvstguitimer.h"
 #include "vstgui/lib/controls/ccontrol.h"
 #include "vstgui/lib/cviewcontainer.h"
 #include "vstgui/lib/events.h"
@@ -28,10 +29,6 @@
 namespace m3::vst3 {
 namespace {
 
-constexpr Steinberg::int32 kEditorWidth = 1024;
-constexpr Steinberg::int32 kEditorHeight = 620;
-constexpr Steinberg::int32 kEditorMaximumWidth = 2048;
-constexpr Steinberg::int32 kEditorMaximumHeight = 1240;
 constexpr char kEditorTemplateName[] = "M3Editor";
 constexpr char kRootViewName[] = "M3RootSurface";
 constexpr ParameterId kDetectorInputId = 0x4D330001U;
@@ -51,12 +48,12 @@ constexpr char kEditorDescription[] = R"(
           "autosize": "left right top bottom",
           "class": "CViewContainer",
           "custom-view-name": "M3RootSurface",
-          "maxSize": "2048, 1240",
-          "minSize": "1024, 620",
+          "maxSize": "2048, 1616",
+          "minSize": "1024, 808",
           "mouse-enabled": "true",
           "opacity": "1",
           "origin": "0, 0",
-          "size": "1024, 620",
+          "size": "1024, 808",
           "transparent": "false"
         }
       }
@@ -65,15 +62,18 @@ constexpr char kEditorDescription[] = R"(
 }
 )";
 
-const VSTGUI::CColor kGraphite{17U, 20U, 25U, 255U};
-const VSTGUI::CColor kPanelTop{34U, 39U, 47U, 255U};
-const VSTGUI::CColor kPanelBottom{23U, 27U, 33U, 255U};
-const VSTGUI::CColor kPanelEdge{61U, 69U, 80U, 255U};
-const VSTGUI::CColor kText{231U, 238U, 244U, 255U};
-const VSTGUI::CColor kMuted{137U, 150U, 163U, 255U};
-const VSTGUI::CColor kCyan{23U, 218U, 232U, 255U};
-const VSTGUI::CColor kAmber{238U, 174U, 61U, 255U};
-const VSTGUI::CColor kRed{233U, 71U, 78U, 255U};
+const VSTGUI::CColor kGraphite{9U, 13U, 18U, 255U};
+const VSTGUI::CColor kPanelTop{20U, 27U, 35U, 255U};
+const VSTGUI::CColor kPanelBottom{15U, 21U, 28U, 255U};
+const VSTGUI::CColor kPanelRaised{25U, 34U, 44U, 255U};
+const VSTGUI::CColor kPanelEdge{47U, 61U, 74U, 255U};
+const VSTGUI::CColor kPanelEdgeSoft{31U, 42U, 53U, 255U};
+const VSTGUI::CColor kText{236U, 242U, 247U, 255U};
+const VSTGUI::CColor kMuted{146U, 160U, 174U, 255U};
+const VSTGUI::CColor kMutedLow{91U, 106U, 120U, 255U};
+const VSTGUI::CColor kCyan{35U, 219U, 230U, 255U};
+const VSTGUI::CColor kAmber{244U, 181U, 63U, 255U};
+const VSTGUI::CColor kRed{240U, 76U, 86U, 255U};
 
 bool result_ok(Steinberg::tresult result) noexcept {
   return result == Steinberg::kResultOk || result == Steinberg::kResultTrue;
@@ -196,12 +196,12 @@ VSTGUI::CColor status_deck_color(Status status) noexcept {
   return kRed;
 }
 
-void draw_rounded_gradient(VSTGUI::CDrawContext* context,
-                           const VSTGUI::CRect& rect,
-                           const VSTGUI::CColor& top,
-                           const VSTGUI::CColor& bottom,
-                           const VSTGUI::CColor& edge,
-                           VSTGUI::CCoord radius = 10.0) {
+void draw_rounded_surface(VSTGUI::CDrawContext* context,
+                          const VSTGUI::CRect& rect,
+                          const VSTGUI::CColor& fill,
+                          const VSTGUI::CColor& edge,
+                          VSTGUI::CCoord radius = 10.0,
+                          VSTGUI::CCoord line_width = 1.0) {
   if (context == nullptr) {
     return;
   }
@@ -210,17 +210,22 @@ void draw_rounded_gradient(VSTGUI::CDrawContext* context,
     return;
   }
   path->addRoundRect(rect, radius);
-  auto gradient = VSTGUI::owned(path->createGradient(0.0, 1.0, top, bottom));
-  if (gradient) {
-    context->fillLinearGradient(path, *gradient, rect.getTopLeft(),
-                                rect.getBottomLeft(), false);
-  } else {
-    context->setFillColor(bottom);
-    context->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
-  }
+  context->setFillColor(fill);
+  context->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
   context->setFrameColor(edge);
-  context->setLineWidth(1.0);
+  context->setLineWidth(line_width);
   context->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
+}
+
+void draw_rule(VSTGUI::CDrawContext* context, const VSTGUI::CPoint& start,
+               const VSTGUI::CPoint& end, const VSTGUI::CColor& color,
+               VSTGUI::CCoord width = 1.0) {
+  if (context == nullptr) {
+    return;
+  }
+  context->setFrameColor(color);
+  context->setLineWidth(width);
+  context->drawLine(start, end);
 }
 
 void draw_glow_layer(VSTGUI::CDrawContext* context,
@@ -280,8 +285,8 @@ VSTGUI::CRect to_rect(const EditorRect& rect) noexcept {
 
 const char* const* segment_labels(ParameterId id,
                                   std::size_t& count) noexcept {
-  static const char* const kInputLabels[] = {"LEFT", "RIGHT", "DOWNMIX"};
-  static const char* const kModeLabels[] = {"M3 8-STRING", "GENERAL"};
+  static const char* const kInputLabels[] = {"LEFT", "RIGHT", "L + R"};
+  static const char* const kModeLabels[] = {"M3", "GENERAL"};
   static const char* const kVelocityLabels[] = {"FIXED", "DYNAMIC"};
   count = 0U;
   if (id == kDetectorInputId) {
@@ -297,6 +302,19 @@ const char* const* segment_labels(ParameterId id,
     return kVelocityLabels;
   }
   return nullptr;
+}
+
+const char* segment_title(ParameterId id) noexcept {
+  if (id == kDetectorInputId) {
+    return "DETECTOR INPUT";
+  }
+  if (id == kProfileModeId) {
+    return "INSTRUMENT PROFILE";
+  }
+  if (id == kVelocityModeId) {
+    return "VELOCITY MODE";
+  }
+  return "MODE";
 }
 
 class StaticEditorDescription final : public VSTGUI::UIDescription {
@@ -657,16 +675,20 @@ class M3DeckControl final : public VSTGUI::CControl {
     const VSTGUI::CRect bounds = getViewSize();
     const bool suppressed = !interaction_allowed();
     if (suppressed) {
-      draw_rounded_gradient(context, bounds,
-                            VSTGUI::CColor(27U, 31U, 37U, 255U), kGraphite,
-                            kPanelEdge, 8.0);
+      draw_rounded_surface(context, bounds, kPanelBottom, kPanelEdgeSoft, 7.0);
       draw_label(context, "FIXED VELOCITY",
-                 VSTGUI::CRect(bounds.left, bounds.top + 28.0, bounds.right,
-                                bounds.top + 52.0),
+                 VSTGUI::CRect(bounds.left, bounds.top + 18.0, bounds.right,
+                                bounds.top + 38.0),
                  kMuted);
-      draw_label(context, "AVAILABLE IN FIXED MODE",
-                 VSTGUI::CRect(bounds.left, bounds.top + 54.0, bounds.right,
-                                bounds.top + 80.0),
+      context->setFont(VSTGUI::kNormalFontBig);
+      context->setFontColor(kMutedLow);
+      context->drawString("LOCKED",
+                          VSTGUI::CRect(bounds.left, bounds.top + 40.0,
+                                       bounds.right, bounds.top + 72.0),
+                          VSTGUI::kCenterText, true);
+      draw_label(context, "SELECT FIXED MODE",
+                 VSTGUI::CRect(bounds.left, bounds.top + 78.0, bounds.right,
+                                bounds.top + 100.0),
                  kAmber);
       return;
     }
@@ -675,19 +697,44 @@ class M3DeckControl final : public VSTGUI::CControl {
     const VSTGUI::CPoint center(bounds.getCenter().x, bounds.top + diameter / 2.0);
     VSTGUI::CRect dial(center.x - diameter / 2.0, center.y - diameter / 2.0,
                        center.x + diameter / 2.0, center.y + diameter / 2.0);
-    dial.inset(9.0, 9.0);
-    context->setFillColor(VSTGUI::CColor(42U, 48U, 56U, 255U));
-    context->setFrameColor(kPanelEdge);
-    context->setLineWidth(2.0);
+    dial.inset(8.0, 8.0);
+    context->setFillColor(kPanelBottom);
+    context->setFrameColor(kPanelEdgeSoft);
+    context->setLineWidth(1.0);
     context->drawEllipse(dial, VSTGUI::kDrawFilledAndStroked);
+    context->setFrameColor(kPanelEdge);
+    context->setLineWidth(3.0);
+    context->drawArc(dial, 135.0, 405.0, VSTGUI::kDrawStroked);
     context->setFrameColor(kCyan);
-    context->setLineWidth(4.0);
+    context->setLineWidth(3.0);
     context->drawArc(dial, 135.0,
                      static_cast<float>(135.0 + normalized * 270.0),
                      VSTGUI::kDrawStroked);
+    const double tick_outer = dial.getWidth() * 0.55;
+    const double tick_inner = dial.getWidth() * 0.48;
+    for (unsigned tick = 0U; tick <= 10U; ++tick) {
+      const double tick_angle =
+          (135.0 + static_cast<double>(tick) * 27.0) *
+          VSTGUI::Constants::pi / 180.0;
+      draw_rule(context,
+                VSTGUI::CPoint(center.x + std::cos(tick_angle) * tick_inner,
+                               center.y + std::sin(tick_angle) * tick_inner),
+                VSTGUI::CPoint(center.x + std::cos(tick_angle) * tick_outer,
+                               center.y + std::sin(tick_angle) * tick_outer),
+                tick <= static_cast<unsigned>(std::lround(normalized * 10.0))
+                    ? kCyan
+                    : kMutedLow,
+                1.0);
+    }
+    VSTGUI::CRect hub = dial;
+    hub.inset(dial.getWidth() * 0.18, dial.getHeight() * 0.18);
+    context->setFillColor(kPanelRaised);
+    context->setFrameColor(kPanelEdgeSoft);
+    context->setLineWidth(1.0);
+    context->drawEllipse(hub, VSTGUI::kDrawFilledAndStroked);
     const double angle = (135.0 + normalized * 270.0) *
                          VSTGUI::Constants::pi / 180.0;
-    const double radius = dial.getWidth() * 0.32;
+    const double radius = dial.getWidth() * 0.25;
     context->setFrameColor(kText);
     context->setLineWidth(2.0);
     context->drawLine(center,
@@ -703,13 +750,16 @@ class M3DeckControl final : public VSTGUI::CControl {
     draw_label(context, spec == nullptr ? "" : spec->name,
                VSTGUI::CRect(bounds.left, bounds.bottom - 18.0,
                               bounds.right, bounds.bottom),
-               kAmber);
+               kMuted);
   }
 
   void draw_segment(VSTGUI::CDrawContext* context, double normalized) const {
     const VSTGUI::CRect bounds = getViewSize();
-    draw_rounded_gradient(context, bounds, kPanelTop, kPanelBottom, kPanelEdge,
-                          8.0);
+    draw_rounded_surface(context, bounds, kPanelBottom, kPanelEdgeSoft, 7.0);
+    draw_label(context, segment_title(layout_.parameter_id),
+               VSTGUI::CRect(bounds.left + 8.0, bounds.top + 3.0,
+                              bounds.right - 8.0, bounds.top + 19.0),
+               kMutedLow, VSTGUI::kLeftText);
     std::size_t count = 0U;
     const char* const* labels = segment_labels(layout_.parameter_id, count);
     if (labels == nullptr || count < 2U) {
@@ -717,68 +767,111 @@ class M3DeckControl final : public VSTGUI::CControl {
     }
     const std::size_t selected = static_cast<std::size_t>(
         std::llround(normalized * static_cast<double>(count - 1U)));
-    const double width = bounds.getWidth() / static_cast<double>(count);
+    VSTGUI::CRect selector = bounds;
+    selector.inset(5.0, 5.0);
+    selector.top = bounds.top + 22.0;
+    const double width = selector.getWidth() / static_cast<double>(count);
     for (std::size_t index = 0; index < count; ++index) {
       VSTGUI::CRect segment(
-          bounds.left + width * static_cast<double>(index), bounds.top,
-          bounds.left + width * static_cast<double>(index + 1U),
-          bounds.bottom);
+          selector.left + width * static_cast<double>(index), selector.top,
+          selector.left + width * static_cast<double>(index + 1U),
+          selector.bottom);
       if (index == selected) {
-        segment.inset(3.0, 3.0);
-        context->setFillColor(VSTGUI::CColor(18U, 95U, 105U, 255U));
-        context->drawRect(segment, VSTGUI::kDrawFilled);
-        draw_inset_glow_outline(context, segment, kCyan, 6.0);
+        VSTGUI::CRect active = segment;
+        active.inset(2.0, 1.0);
+        draw_rounded_surface(context, active,
+                             VSTGUI::CColor(18U, 69U, 78U, 255U), kCyan,
+                             4.0, 1.0);
+        draw_rule(context,
+                  VSTGUI::CPoint(active.left + 7.0, active.bottom - 3.0),
+                  VSTGUI::CPoint(active.right - 7.0, active.bottom - 3.0),
+                  kCyan, 2.0);
+      } else if (index > 0U) {
+        draw_rule(context, VSTGUI::CPoint(segment.left, segment.top + 6.0),
+                  VSTGUI::CPoint(segment.left, segment.bottom - 6.0),
+                  kPanelEdgeSoft);
       }
       draw_label(context, labels[index], segment,
-                 index == selected ? kCyan : kMuted);
+                 index == selected ? kText : kMuted);
     }
   }
 
   void draw_toggle(VSTGUI::CDrawContext* context, double normalized) const {
     const VSTGUI::CRect bounds = getViewSize();
-    draw_rounded_gradient(context, bounds, kPanelTop, kPanelBottom, kPanelEdge,
-                          bounds.getHeight() / 2.0);
-    VSTGUI::CRect lamp = bounds;
-    lamp.inset(10.0, 10.0);
+    const bool enabled = normalized >= 0.5;
+    draw_rounded_surface(context, bounds, kPanelBottom, kPanelEdgeSoft,
+                         bounds.getHeight() / 2.0);
+    draw_label(context, "DRY AUDIO",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.top + 8.0,
+                              bounds.right - 76.0, bounds.top + 28.0),
+               kText, VSTGUI::kLeftText);
+    draw_label(context, enabled ? "MONITOR ON" : "MONITOR OFF",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.top + 28.0,
+                              bounds.right - 76.0, bounds.bottom - 6.0),
+               enabled ? kCyan : kMuted, VSTGUI::kLeftText);
+    VSTGUI::CRect track(bounds.right - 64.0, bounds.top + 16.0,
+                        bounds.right - 12.0, bounds.bottom - 16.0);
+    draw_rounded_surface(context, track,
+                         enabled ? VSTGUI::CColor(14U, 67U, 75U, 255U)
+                                 : VSTGUI::CColor(28U, 37U, 46U, 255U),
+                         enabled ? kCyan : kPanelEdge, track.getHeight() / 2.0);
+    VSTGUI::CRect lamp = track;
+    lamp.inset(3.0, 3.0);
     lamp.setWidth(lamp.getHeight());
-    if (normalized >= 0.5) {
-      lamp.offset(bounds.getWidth() - lamp.getWidth() - 20.0, 0.0);
+    if (enabled) {
+      lamp.offset(track.getWidth() - lamp.getWidth() - 6.0, 0.0);
     }
-    context->setFillColor(normalized >= 0.5 ? kCyan : kMuted);
+    context->setFillColor(enabled ? kCyan : kMuted);
     context->drawEllipse(lamp, VSTGUI::kDrawFilled);
-    draw_label(context, normalized >= 0.5 ? "DRY AUDIO  ON" : "DRY AUDIO  OFF",
-               bounds, normalized >= 0.5 ? kText : kMuted);
   }
 
   void draw_note_range(VSTGUI::CDrawContext* context,
                        double normalized) const {
     const VSTGUI::CRect bounds = getViewSize();
-    draw_rounded_gradient(context, bounds, kPanelTop, kPanelBottom, kCyan,
-                          8.0);
+    draw_rounded_surface(context, bounds, kPanelBottom, kPanelEdgeSoft, 7.0);
+    context->setFillColor(kCyan);
+    context->drawRect(VSTGUI::CRect(bounds.left, bounds.top + 12.0,
+                                    bounds.left + 3.0, bounds.bottom - 12.0),
+                      VSTGUI::kDrawFilled);
     char value_text[128]{};
     parameter_text(normalized, value_text);
-    context->setFont(VSTGUI::kNormalFontBig);
+    draw_label(context,
+               layout_.parameter_id == kLowestMidiNoteId ? "LOW LIMIT"
+                                                         : "HIGH LIMIT",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.top + 7.0,
+                              bounds.right - 12.0, bounds.top + 25.0),
+               kMuted, VSTGUI::kLeftText);
+    context->setFont(VSTGUI::kNormalFontVeryBig);
     context->setFontColor(kText);
     context->drawString(value_text,
-                        VSTGUI::CRect(bounds.left, bounds.top + 8.0,
-                                     bounds.right, bounds.bottom - 18.0),
-                        VSTGUI::kCenterText, true);
-    draw_label(context,
-               layout_.parameter_id == kLowestMidiNoteId ? "LOW · LINKED RANGE"
-                                                         : "HIGH · LINKED RANGE",
-               VSTGUI::CRect(bounds.left, bounds.bottom - 22.0,
-                              bounds.right, bounds.bottom),
-               kCyan);
+                        VSTGUI::CRect(bounds.left + 16.0, bounds.top + 23.0,
+                                     bounds.right - 12.0, bounds.bottom - 19.0),
+                        VSTGUI::kLeftText, true);
+    draw_label(context, "MIDI NOTE  ·  LINKED",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.bottom - 21.0,
+                              bounds.right - 12.0, bounds.bottom - 5.0),
+               kCyan, VSTGUI::kLeftText);
   }
 
   void draw_momentary(VSTGUI::CDrawContext* context) const {
     const VSTGUI::CRect bounds = getViewSize();
-    draw_rounded_gradient(context, bounds,
-                          panic_pressed_ ? kRed
-                                         : VSTGUI::CColor(83U, 29U, 34U, 255U),
-                          VSTGUI::CColor(41U, 19U, 23U, 255U), kRed, 8.0);
-    draw_label(context, panic_pressed_ ? "PANIC HELD" : "PANIC", bounds,
-               kText);
+    draw_rounded_surface(context, bounds,
+                         panic_pressed_
+                             ? VSTGUI::CColor(108U, 25U, 34U, 255U)
+                             : VSTGUI::CColor(44U, 20U, 26U, 255U),
+                         kRed, 7.0, panic_pressed_ ? 2.0 : 1.0);
+    context->setFillColor(kRed);
+    context->drawRect(VSTGUI::CRect(bounds.left, bounds.top + 9.0,
+                                    bounds.left + 3.0, bounds.bottom - 9.0),
+                      VSTGUI::kDrawFilled);
+    draw_label(context, panic_pressed_ ? "PANIC HELD" : "PANIC",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.top + 5.0,
+                              bounds.right - 10.0, bounds.top + 26.0),
+               kText, VSTGUI::kLeftText);
+    draw_label(context, "ALL NOTES OFF",
+               VSTGUI::CRect(bounds.left + 16.0, bounds.top + 25.0,
+                              bounds.right - 10.0, bounds.bottom - 4.0),
+               panic_pressed_ ? kText : kRed, VSTGUI::kLeftText);
   }
 
   void draw_status(VSTGUI::CDrawContext* context, double normalized) const {
@@ -786,19 +879,42 @@ class M3DeckControl final : public VSTGUI::CControl {
     const int status_index = std::clamp(
         static_cast<int>(std::llround(normalized * 5.0)), 0, 5);
     const Status status = static_cast<Status>(status_index);
-    draw_rounded_gradient(context, bounds, kPanelTop, kPanelBottom,
-                          status_deck_color(status), 8.0);
+    draw_rounded_surface(context, bounds, kPanelBottom, kPanelEdgeSoft, 7.0);
     if (status == Status::ready) {
       draw_inset_glow_outline(context, bounds, kCyan, 8.0);
     }
-    draw_label(context, "M3  /  POLYPHONIC AUDIO → MIDI  /  CAUSAL LIVE",
-               VSTGUI::CRect(bounds.left + 14.0, bounds.top,
-                              bounds.right - 190.0, bounds.bottom),
+    context->setFont(VSTGUI::kNormalFontVeryBig);
+    context->setFontColor(kCyan);
+    context->drawString("M3",
+                        VSTGUI::CRect(bounds.left + 14.0, bounds.top + 4.0,
+                                     bounds.left + 66.0, bounds.bottom - 4.0),
+                        VSTGUI::kLeftText, true);
+    draw_rule(context, VSTGUI::CPoint(bounds.left + 72.0, bounds.top + 10.0),
+              VSTGUI::CPoint(bounds.left + 72.0, bounds.bottom - 10.0),
+              kPanelEdge);
+    draw_label(context, "POLYPHONIC AUDIO → MIDI",
+               VSTGUI::CRect(bounds.left + 86.0, bounds.top + 6.0,
+                              bounds.right - 210.0, bounds.top + 27.0),
                kText, VSTGUI::kLeftText);
+    draw_label(context, "CAUSAL NATIVE ENGINE  ·  ZERO LOOKAHEAD",
+               VSTGUI::CRect(bounds.left + 86.0, bounds.top + 26.0,
+                              bounds.right - 210.0, bounds.bottom - 5.0),
+               kMuted, VSTGUI::kLeftText);
+    const VSTGUI::CRect status_pill(bounds.right - 181.0, bounds.top + 10.0,
+                                    bounds.right - 12.0, bounds.bottom - 10.0);
+    draw_rounded_surface(context, status_pill,
+                         VSTGUI::CColor(13U, 25U, 30U, 255U),
+                         status_deck_color(status), status_pill.getHeight() / 2.0);
+    context->setFillColor(status_deck_color(status));
+    context->drawEllipse(VSTGUI::CRect(status_pill.left + 10.0,
+                                       status_pill.top + 9.0,
+                                       status_pill.left + 18.0,
+                                       status_pill.top + 17.0),
+                         VSTGUI::kDrawFilled);
     draw_label(context, status_label(status),
-               VSTGUI::CRect(bounds.right - 185.0, bounds.top,
-                              bounds.right - 14.0, bounds.bottom),
-               status_deck_color(status), VSTGUI::kRightText);
+               VSTGUI::CRect(status_pill.left + 24.0, status_pill.top,
+                              status_pill.right - 10.0, status_pill.bottom),
+               status_deck_color(status), VSTGUI::kLeftText);
   }
 
   EditorControlLayout layout_;
@@ -819,9 +935,11 @@ class M3DeckControl final : public VSTGUI::CControl {
 class M3RootSurface final : public VSTGUI::CViewContainer {
  public:
   M3RootSurface(VSTGUI::IControlListener* listener,
-                Steinberg::Vst::EditController& controller)
+                Steinberg::Vst::EditController& controller,
+                const TunerTelemetry& tuner_telemetry)
       : VSTGUI::CViewContainer(
-            VSTGUI::CRect(0.0, 0.0, kEditorWidth, kEditorHeight)) {
+            VSTGUI::CRect(0.0, 0.0, kEditorWidth, kEditorHeight)),
+        tuner_telemetry_(tuner_telemetry) {
     setBackgroundColor(kGraphite);
     const PersistentConfig config{};
     for (std::size_t index = 0; index < layouts_.size(); ++index) {
@@ -837,6 +955,38 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       velocity_mode->set_dependent_control(control_for(kFixedVelocityId));
     }
   }
+
+  bool refresh_tuner() noexcept {
+    TunerSnapshot snapshot;
+    if (!tuner_telemetry_.read_latest(snapshot)) {
+      return false;
+    }
+    if (has_tuner_snapshot_ &&
+        snapshot.generation == tuner_snapshot_.generation) {
+      return false;
+    }
+    tuner_snapshot_ = snapshot;
+    has_tuner_snapshot_ = true;
+#if defined(M3_TESTING)
+    ++tuner_invalidation_count_;
+#endif
+    invalid();
+    return true;
+  }
+
+  bool tuner_snapshot_for_test(TunerSnapshot& snapshot) const noexcept {
+    if (!has_tuner_snapshot_) {
+      return false;
+    }
+    snapshot = tuner_snapshot_;
+    return true;
+  }
+
+#if defined(M3_TESTING)
+  std::size_t tuner_invalidation_count_for_test() const noexcept {
+    return tuner_invalidation_count_;
+  }
+#endif
 
   VSTGUI::CControl* control_at(std::size_t index) const noexcept {
     return index < controls_.size() ? controls_[index] : nullptr;
@@ -883,40 +1033,300 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     const VSTGUI::CRect bounds = getViewSize();
     context->setFillColor(kGraphite);
     context->drawRect(bounds, VSTGUI::kDrawFilled);
-    draw_rounded_gradient(context, scaled_rect(14.0, 84.0, 1010.0, 262.0),
-                          VSTGUI::CColor(27U, 32U, 39U, 255U), kGraphite,
-                          kPanelEdge, 12.0);
-    const VSTGUI::CRect tracking_panel =
-        scaled_rect(14.0, 270.0, 1010.0, 412.0);
-    draw_rounded_gradient(context, tracking_panel,
-                          VSTGUI::CColor(25U, 33U, 40U, 255U), kGraphite,
-                          VSTGUI::CColor(26U, 120U, 130U, 255U), 12.0);
-    draw_static_glow_outline(context, tracking_panel,
+    draw_rule(context, scaled_rect(24.0, 78.0, 1000.0, 78.0).getTopLeft(),
+              scaled_rect(24.0, 78.0, 1000.0, 78.0).getTopRight(),
+              kPanelEdgeSoft);
+    draw_rounded_surface(context, scaled_rect(14.0, 84.0, 1010.0, 262.0),
+                         kPanelBottom, kPanelEdgeSoft, 10.0);
+    const VSTGUI::CRect tuner_panel =
+        scaled_rect(14.0, 270.0, 1010.0, 446.0);
+    draw_rounded_surface(context, tuner_panel,
+                         VSTGUI::CColor(10U, 19U, 24U, 255U),
+                         VSTGUI::CColor(22U, 111U, 120U, 255U), 10.0);
+    // This static frame establishes deck hierarchy only. Actual voice state is
+    // rendered from the snapshot inside it, with a textual state in every row.
+    draw_static_glow_outline(context, tuner_panel,
                              VSTGUI::CColor(26U, 120U, 130U, 255U), 12.0);
-    context->setFillColor(kCyan);
-    context->drawRect(scaled_rect(216.0, 334.0, 244.0, 346.0),
-                      VSTGUI::kDrawFilled);
-    draw_rounded_gradient(context, scaled_rect(14.0, 424.0, 1010.0, 596.0),
-                          VSTGUI::CColor(30U, 31U, 38U, 255U), kGraphite,
-                          kPanelEdge, 12.0);
+    draw_rounded_surface(context, scaled_rect(14.0, 458.0, 1010.0, 608.0),
+                         kPanelBottom, kPanelEdgeSoft, 10.0);
+    draw_rounded_surface(context, scaled_rect(14.0, 620.0, 1010.0, 792.0),
+                         kPanelBottom, kPanelEdgeSoft, 10.0);
+    draw_tuner(context);
     context->setFont(VSTGUI::kNormalFontSmall);
-    context->setFontColor(kAmber);
-    context->drawString("SOURCE + TUNING",
-                        scaled_rect(24.0, 92.0, 500.0, 116.0),
+    context->setFontColor(kMuted);
+    context->drawString("01  /  INPUT & DETECTOR",
+                        scaled_rect(24.0, 92.0, 500.0, 114.0),
                         VSTGUI::kLeftText, true);
+    context->setFontColor(kMutedLow);
+    context->drawString("SIGNAL PATH",
+                        scaled_rect(760.0, 92.0, 1000.0, 114.0),
+                        VSTGUI::kRightText, true);
     context->setFontColor(kCyan);
-    context->drawString("TRACKING", scaled_rect(522.0, 92.0, 1000.0, 116.0),
-                        VSTGUI::kLeftText, true);
-    context->drawString("PERFORMANCE RANGE",
-                        scaled_rect(24.0, 278.0, 440.0, 298.0),
+    context->drawString("03  /  RANGE & VOICING",
+                        scaled_rect(24.0, 466.0, 440.0, 486.0),
                         VSTGUI::kLeftText, true);
     context->setFontColor(kMuted);
-    context->drawString("ADVANCED  ·  LIVE ROUTING",
-                        scaled_rect(24.0, 430.0, 700.0, 452.0),
+    context->drawString("04  /  OUTPUT & ROUTING",
+                        scaled_rect(24.0, 626.0, 700.0, 648.0),
                         VSTGUI::kLeftText, true);
+    context->setFontColor(kMutedLow);
+    context->drawString("M3 NATIVE  ·  8 VOICE CORE",
+                        scaled_rect(700.0, 626.0, 1000.0, 648.0),
+                        VSTGUI::kRightText, true);
   }
 
  private:
+  static void draw_label(
+      VSTGUI::CDrawContext* context, const char* label,
+      const VSTGUI::CRect& rect, const VSTGUI::CColor& color = kMuted,
+      VSTGUI::CHoriTxtAlign align = VSTGUI::kCenterText) {
+    if (context == nullptr) {
+      return;
+    }
+    context->setFont(VSTGUI::kNormalFontSmall);
+    context->setFontColor(color);
+    context->drawString(label, rect, align, true);
+  }
+
+  static char* append_literal(char* cursor, char* end,
+                              const char* source) noexcept {
+    while (source != nullptr && *source != '\0' && cursor + 1 < end) {
+      *cursor++ = *source++;
+    }
+    return cursor;
+  }
+
+  static char* append_unsigned(char* cursor, char* end, unsigned value,
+                               unsigned minimum_digits = 0U) noexcept {
+    std::array<char, 10> reversed{};
+    std::size_t count = 0U;
+    do {
+      reversed[count++] = static_cast<char>('0' + value % 10U);
+      value /= 10U;
+    } while (value != 0U && count < reversed.size());
+    while (count < minimum_digits && count < reversed.size()) {
+      reversed[count++] = '0';
+    }
+    while (count > 0U && cursor + 1 < end) {
+      *cursor++ = reversed[--count];
+    }
+    return cursor;
+  }
+
+  static char* append_signed(char* cursor, char* end, int value,
+                             unsigned minimum_digits) noexcept {
+    if (cursor + 1 < end) {
+      *cursor++ = value < 0 ? '-' : '+';
+    }
+    const unsigned magnitude = static_cast<unsigned>(value < 0 ? -value : value);
+    return append_unsigned(cursor, end, magnitude, minimum_digits);
+  }
+
+  static void terminate_text(char* cursor, char* end) noexcept {
+    if (cursor < end) {
+      *cursor = '\0';
+    }
+  }
+
+  static void format_note(const TunerVoice& voice,
+                          char (&text)[8]) noexcept {
+    static constexpr std::array<const char*, 12> kNames{
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    const std::uint8_t note = std::min<std::uint8_t>(voice.midi_note, 127U);
+    const int octave = static_cast<int>(note / 12U) - 1;
+    char* const end = text + sizeof(text);
+    char* cursor = append_literal(text, end, kNames[note % 12U]);
+    if (octave < 0 && cursor + 1 < end) {
+      *cursor++ = '-';
+    }
+    cursor = append_unsigned(cursor, end,
+                             static_cast<unsigned>(octave < 0 ? -octave : octave));
+    terminate_text(cursor, end);
+  }
+
+  static void format_cents(const TunerVoice& voice,
+                           char (&text)[12]) noexcept {
+    if (!voice.cents_valid || voice.state != TunerVoiceState::tracking) {
+      char* const end = text + sizeof(text);
+      terminate_text(append_literal(text, end, "--"), end);
+      return;
+    }
+    const int cents = std::clamp(
+        static_cast<int>(std::lround(static_cast<double>(voice.cents_q8) / 256.0)),
+        -50, 50);
+    char* const end = text + sizeof(text);
+    char* cursor = append_signed(text, end, cents, 2U);
+    cursor = append_literal(cursor, end, "¢");
+    terminate_text(cursor, end);
+  }
+
+  static void format_confidence(const TunerVoice& voice,
+                                char (&text)[16]) noexcept {
+    const unsigned percent = std::min(
+        100U, static_cast<unsigned>(std::lround(
+                  static_cast<double>(voice.confidence_q15) * 100.0 / 32767.0)));
+    char* const end = text + sizeof(text);
+    char* cursor = append_unsigned(text, end, percent);
+    cursor = append_literal(cursor, end, "%");
+    terminate_text(cursor, end);
+  }
+
+  static void format_voice_header(std::uint8_t voice_count,
+                                  std::uint8_t max_polyphony,
+                                  char (&text)[32]) noexcept {
+    char* const end = text + sizeof(text);
+    char* cursor = append_unsigned(text, end, voice_count);
+    cursor = append_literal(cursor, end, " ACTIVE  ·  LIMIT ");
+    cursor = append_unsigned(cursor, end, max_polyphony);
+    terminate_text(cursor, end);
+  }
+
+  void draw_tuner_card(VSTGUI::CDrawContext* context,
+                       const VSTGUI::CRect& card,
+                       std::size_t slot,
+                       const TunerVoice* voice) const {
+    if (context == nullptr) {
+      return;
+    }
+    char slot_text[8]{};
+    char* const slot_end = slot_text + sizeof(slot_text);
+    char* slot_cursor = append_literal(slot_text, slot_end, "V");
+    slot_cursor = append_unsigned(slot_cursor, slot_end,
+                                  static_cast<unsigned>(slot + 1U), 2U);
+    terminate_text(slot_cursor, slot_end);
+    if (voice == nullptr) {
+      draw_rounded_surface(context, card,
+                           VSTGUI::CColor(12U, 17U, 23U, 255U),
+                           kPanelEdgeSoft, 5.0);
+      draw_label(context, slot_text,
+                 VSTGUI::CRect(card.left + 8.0, card.top + 5.0,
+                                card.right - 8.0, card.top + 20.0),
+                 kMutedLow, VSTGUI::kLeftText);
+      const double center = card.getCenter().x;
+      draw_rule(context, VSTGUI::CPoint(card.left + 14.0, card.bottom - 30.0),
+                VSTGUI::CPoint(card.right - 14.0, card.bottom - 30.0),
+                kPanelEdgeSoft);
+      draw_rule(context, VSTGUI::CPoint(center, card.bottom - 34.0),
+                VSTGUI::CPoint(center, card.bottom - 26.0), kMutedLow);
+      return;
+    }
+    const bool tracking = voice->state == TunerVoiceState::tracking;
+    const VSTGUI::CColor state_color = tracking ? kCyan : kAmber;
+    draw_rounded_surface(context, card,
+                         tracking ? VSTGUI::CColor(15U, 28U, 34U, 255U)
+                                  : VSTGUI::CColor(28U, 25U, 18U, 255U),
+                         state_color, 5.0, 1.0);
+    char note[8]{};
+    char cents[12]{};
+    char confidence[16]{};
+    format_note(*voice, note);
+    format_cents(*voice, cents);
+    format_confidence(*voice, confidence);
+    draw_label(context, slot_text,
+               VSTGUI::CRect(card.left + 8.0, card.top + 5.0,
+                              card.right - 8.0, card.top + 20.0),
+               state_color, VSTGUI::kLeftText);
+    draw_label(context, confidence,
+               VSTGUI::CRect(card.left + 8.0, card.top + 5.0,
+                              card.right - 8.0, card.top + 20.0),
+               kMuted, VSTGUI::kRightText);
+    context->setFont(VSTGUI::kNormalFontVeryBig);
+    context->setFontColor(kText);
+    context->drawString(note,
+                        VSTGUI::CRect(card.left + 8.0, card.top + 21.0,
+                                     card.right - 8.0, card.top + 50.0),
+                        VSTGUI::kCenterText, true);
+    context->setFont(VSTGUI::kNormalFontSmall);
+    context->setFontColor(state_color);
+    context->drawString(tracking ? "TRACKING" : "ACQUIRING",
+                        VSTGUI::CRect(card.left + 8.0, card.top + 48.0,
+                                     card.right - 8.0, card.top + 65.0),
+                        VSTGUI::kCenterText, true);
+    draw_label(context, "CENTS",
+               VSTGUI::CRect(card.left + 8.0, card.top + 65.0,
+                              card.getCenter().x - 2.0, card.top + 80.0),
+               kMutedLow, VSTGUI::kLeftText);
+    context->setFontColor(kText);
+    context->drawString(cents,
+                        VSTGUI::CRect(card.getCenter().x - 1.0,
+                                     card.top + 64.0, card.right - 8.0,
+                                     card.top + 81.0),
+                        VSTGUI::kRightText, true);
+    const double rail_y = card.bottom - 26.0;
+    draw_rule(context, VSTGUI::CPoint(card.left + 12.0, rail_y),
+              VSTGUI::CPoint(card.right - 12.0, rail_y), kPanelEdge, 2.0);
+    draw_rule(context, VSTGUI::CPoint(card.getCenter().x, rail_y - 4.0),
+              VSTGUI::CPoint(card.getCenter().x, rail_y + 4.0), kMuted);
+    if (tracking && voice->cents_valid) {
+      const double cents_value = std::clamp(
+          static_cast<double>(voice->cents_q8) / 256.0, -50.0, 50.0);
+      const double indicator_x =
+          card.left + 12.0 + (cents_value + 50.0) / 100.0 *
+                                   (card.getWidth() - 24.0);
+      context->setFillColor(state_color);
+      context->drawEllipse(VSTGUI::CRect(indicator_x - 3.0, rail_y - 3.0,
+                                         indicator_x + 3.0, rail_y + 3.0),
+                           VSTGUI::kDrawFilled);
+    }
+    const unsigned lit = std::min(
+        5U, static_cast<unsigned>(std::lround(
+                static_cast<double>(voice->confidence_q15) * 5.0 / 32767.0)));
+    const double segment_width = (card.getWidth() - 28.0) / 5.0;
+    for (unsigned index = 0U; index < 5U; ++index) {
+      VSTGUI::CRect segment(card.left + 12.0 + index * segment_width,
+                            card.bottom - 12.0,
+                            card.left + 12.0 + (index + 1U) * segment_width - 2.0,
+                            card.bottom - 8.0);
+      context->setFillColor(index < lit ? state_color : kPanelEdgeSoft);
+      context->drawRect(segment, VSTGUI::kDrawFilled);
+    }
+  }
+
+  void draw_tuner(VSTGUI::CDrawContext* context) const {
+    if (context == nullptr) {
+      return;
+    }
+    context->setFont(VSTGUI::kNormalFontSmall);
+    context->setFontColor(kCyan);
+    context->drawString("02  /  POLYPHONIC PITCH ARRAY",
+                        scaled_rect(24.0, 278.0, 620.0, 300.0),
+                        VSTGUI::kLeftText, true);
+    const bool tracking = has_tuner_snapshot_ &&
+                          tuner_snapshot_.state == TunerFrameState::tracking &&
+                          tuner_snapshot_.voice_count > 0U;
+    if (tracking) {
+      char header[32]{};
+      format_voice_header(tuner_snapshot_.voice_count,
+                          tuner_snapshot_.max_polyphony, header);
+      context->setFontColor(kText);
+      context->drawString(header, scaled_rect(680.0, 278.0, 1000.0, 300.0),
+                          VSTGUI::kRightText, true);
+    } else {
+      context->setFontColor(tuner_snapshot_.state == TunerFrameState::unavailable
+                                ? kAmber
+                                : kMuted);
+      context->drawString(tuner_snapshot_.state == TunerFrameState::unavailable
+                              ? "TUNER UNAVAILABLE"
+                              : "NO VOICED ESTIMATES",
+                          scaled_rect(620.0, 278.0, 1000.0, 300.0),
+                          VSTGUI::kRightText, true);
+    }
+    for (std::size_t index = 0U; index < kMaxVoices; ++index) {
+      const double left = 24.0 + static_cast<double>(index) * 122.0;
+      const TunerVoice* voice =
+          tracking && index < tuner_snapshot_.voice_count
+              ? &tuner_snapshot_.voices[index]
+              : nullptr;
+      draw_tuner_card(context, scaled_rect(left, 306.0, left + 116.0, 424.0),
+                      index, voice);
+    }
+    context->setFont(VSTGUI::kNormalFontSmall);
+    context->setFontColor(kMuted);
+    context->drawString("REAL-TIME DETECTOR ESTIMATES  ·  ±50 CENT WINDOW  ·  NOT MIDI OUTPUT",
+                        scaled_rect(24.0, 427.0, 1000.0, 442.0),
+                        VSTGUI::kCenterText, true);
+  }
+
   VSTGUI::CRect scaled_rect(double left, double top, double right,
                             double bottom) const noexcept {
     const VSTGUI::CRect bounds = getViewSize();
@@ -943,23 +1353,46 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
 
   std::array<EditorControlLayout, kEditorControlCount> layouts_{};
   std::array<M3DeckControl*, kEditorControlCount> controls_{};
+  const TunerTelemetry& tuner_telemetry_;
+  TunerSnapshot tuner_snapshot_{};
+  bool has_tuner_snapshot_{};
+#if defined(M3_TESTING)
+  std::size_t tuner_invalidation_count_{};
+#endif
 };
 
 class M3Editor final : public VSTGUI::VST3Editor {
  public:
-  explicit M3Editor(Steinberg::Vst::EditController& edit_controller)
-      : VSTGUI::VST3Editor(new StaticEditorDescription(), &edit_controller,
+  explicit M3Editor(M3Component& component)
+      : VSTGUI::VST3Editor(new StaticEditorDescription(), &component,
                            kEditorTemplateName),
-        edit_controller_(edit_controller) {
+        component_(component),
+        edit_controller_(component) {
     getUIDescription()->forget();
     setRect(Steinberg::ViewRect(0, 0, kEditorWidth, kEditorHeight));
     static_cast<void>(setEditorSizeConstrains(
         VSTGUI::CPoint(kEditorWidth, kEditorHeight),
         VSTGUI::CPoint(kEditorMaximumWidth, kEditorMaximumHeight)));
     enableTooltips(true);
+    enableShowEditButton(false);
   }
 
   M3RootSurface* surface() const noexcept { return surface_; }
+
+  bool refresh_tuner_for_test() noexcept {
+    return surface_ != nullptr && surface_->refresh_tuner();
+  }
+
+  bool tuner_snapshot_for_test(TunerSnapshot& snapshot) const noexcept {
+    return surface_ != nullptr && surface_->tuner_snapshot_for_test(snapshot);
+  }
+
+#if defined(M3_TESTING)
+  std::size_t tuner_invalidation_count_for_test() const noexcept {
+    return surface_ == nullptr ? 0U
+                               : surface_->tuner_invalidation_count_for_test();
+  }
+#endif
 
 #if defined(M3_TESTING)
   double content_scale_factor_for_test() const noexcept {
@@ -970,7 +1403,33 @@ class M3Editor final : public VSTGUI::VST3Editor {
  protected:
   ~M3Editor() override = default;
 
+  bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& type) override {
+    if (!VSTGUI::VST3Editor::open(parent, type)) {
+      return false;
+    }
+    if (VSTGUI::CFrame* editor_frame = getFrame()) {
+      editor_frame->setFocusColor(kCyan);
+      editor_frame->setFocusWidth(2.0);
+      editor_frame->setFocusDrawingEnabled(true);
+    }
+    if (surface_ != nullptr) {
+      static_cast<void>(surface_->refresh_tuner());
+      tuner_timer_ = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>(
+          [this](VSTGUI::CVSTGUITimer*) {
+            if (surface_ != nullptr) {
+              static_cast<void>(surface_->refresh_tuner());
+            }
+          },
+          50U, true);
+    }
+    return true;
+  }
+
   void PLUGIN_API close() override {
+    if (tuner_timer_) {
+      static_cast<void>(tuner_timer_->stop());
+      tuner_timer_ = nullptr;
+    }
     VSTGUI::VST3Editor::close();
     surface_ = nullptr;
   }
@@ -982,7 +1441,8 @@ class M3Editor final : public VSTGUI::VST3Editor {
         VSTGUI::IUIDescription::kCustomViewName);
     if (custom_view != nullptr && *custom_view == kRootViewName) {
       auto* surface =
-          new (std::nothrow) M3RootSurface(this, edit_controller_);
+          new (std::nothrow) M3RootSurface(this, edit_controller_,
+                                           component_.tuner_telemetry());
       if (surface == nullptr) {
         return nullptr;
       }
@@ -1070,8 +1530,10 @@ class M3Editor final : public VSTGUI::VST3Editor {
     return true;
   }
 
+  M3Component& component_;
   Steinberg::Vst::EditController& edit_controller_;
   M3RootSurface* surface_{};
+  VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> tuner_timer_{};
   double logical_width_{static_cast<double>(kEditorWidth)};
   double logical_height_{static_cast<double>(kEditorHeight)};
 };
@@ -1201,6 +1663,20 @@ double editor_content_scale_factor_for_test(
     Steinberg::IPlugView& view) noexcept {
   return static_cast<M3Editor*>(&view)->content_scale_factor_for_test();
 }
+
+bool editor_refresh_tuner_for_test(Steinberg::IPlugView& view) noexcept {
+  return static_cast<M3Editor*>(&view)->refresh_tuner_for_test();
+}
+
+bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
+                                    TunerSnapshot& snapshot) noexcept {
+  return static_cast<M3Editor*>(&view)->tuner_snapshot_for_test(snapshot);
+}
+
+std::size_t editor_tuner_invalidation_count_for_test(
+    Steinberg::IPlugView& view) noexcept {
+  return static_cast<M3Editor*>(&view)->tuner_invalidation_count_for_test();
+}
 #endif
 
 EditorGesture editor_gesture_for_test(
@@ -1250,8 +1726,8 @@ EditorRangeGesture editor_range_gesture_for_test(
 }
 
 Steinberg::IPlugView* create_m3_editor(
-    Steinberg::Vst::EditController& controller) noexcept {
-  return new (std::nothrow) M3Editor(controller);
+    M3Component& component) noexcept {
+  return new (std::nothrow) M3Editor(component);
 }
 
 }  // namespace m3::vst3

@@ -66,6 +66,13 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   Steinberg::IPlugView* PLUGIN_API createView(
       Steinberg::FIDString name) override;
 
+  // Read-only detector evidence for the editor. This is deliberately not a
+  // VST parameter: it neither changes persistent state nor implies MIDI
+  // delivery succeeded.
+  [[nodiscard]] const TunerTelemetry& tuner_telemetry() const noexcept {
+    return tuner_telemetry_;
+  }
+
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {
     audio_requested_config_.dry_passthrough = enabled;
@@ -110,6 +117,17 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   }
   [[nodiscard]] std::uint8_t active_midi_channel_for_test() const noexcept {
     return active_config_.midi_channel;
+  }
+  [[nodiscard]] MonophonicPitchDetector::SelectionWork
+  detector_selection_work_for_test() const noexcept {
+    return detector_.selection_work_for_test();
+  }
+  [[nodiscard]] bool read_tuner_snapshot_for_test(
+      TunerSnapshot& snapshot) const noexcept {
+    return tuner_telemetry_.read_latest(snapshot);
+  }
+  void publish_tuner_snapshot_for_test(const TunerSnapshot& snapshot) noexcept {
+    tuner_telemetry_.publish(snapshot);
   }
 #endif
 
@@ -161,6 +179,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   PreparedConfigExchange::Claim prepared_claim_{};
   GeneratedNoteLedger generated_notes_{};
   MonophonicPitchDetector detector_{};
+  TunerTelemetry tuner_telemetry_{};
   std::uint64_t main_generation_{};
   std::uint64_t setup_generation_{};
   std::uint64_t active_generation_{};
@@ -217,6 +236,15 @@ bool queue_generated_note_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
 [[nodiscard]] std::uint8_t active_midi_channel_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
+[[nodiscard]] MonophonicPitchDetector::SelectionWork
+detector_selection_work_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept;
+[[nodiscard]] bool read_tuner_snapshot_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    TunerSnapshot& snapshot) noexcept;
+void publish_tuner_snapshot_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    const TunerSnapshot& snapshot) noexcept;
 #endif
 
 }  // namespace m3::vst3

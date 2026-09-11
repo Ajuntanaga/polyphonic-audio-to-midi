@@ -76,7 +76,9 @@ M3_TEST(editor_layout_updates_fixed_velocity_visibility_without_overlaps) {
     }
     const auto& bounds = dynamic_layout.bounds;
     M3_EXPECT_TRUE(bounds.left >= 0.0 && bounds.top >= 0.0);
-    M3_EXPECT_TRUE(bounds.right <= 1024.0 && bounds.bottom <= 620.0);
+    M3_EXPECT_TRUE(
+        bounds.right <= static_cast<double>(m3::vst3::kEditorWidth) &&
+        bounds.bottom <= static_cast<double>(m3::vst3::kEditorHeight));
     M3_EXPECT_TRUE(bounds.left < bounds.right && bounds.top < bounds.bottom);
   }
   for (std::size_t first = 0; first < fixed_layouts.size(); ++first) {

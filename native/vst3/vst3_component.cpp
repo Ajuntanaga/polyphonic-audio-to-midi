@@ -121,6 +121,7 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   release_channel_pending_ = false;
   release_midi_channel_ = 1U;
   generated_notes_.deactivate();
+  tuner_telemetry_.clear(TunerFrameState::unavailable);
   processing_started_once_ = false;
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
@@ -298,6 +299,7 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
   structural_boundary_pending_ = false;
   active_ = false;
   generated_notes_.release_storage_preserving_pending();
+  tuner_telemetry_.clear(TunerFrameState::unavailable);
   return Steinberg::kResultOk;
 }
 
@@ -344,12 +346,14 @@ Steinberg::tresult PLUGIN_API M3Component::process(
       static_cast<std::uint32_t>(data.numSamples) > kMaxHostFrames) {
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
   if (data.symbolicSampleSize != processSetup.symbolicSampleSize) {
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
@@ -358,6 +362,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
                                  audio_requested_config_, parameter_batch)) {
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
@@ -395,6 +400,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
   }
   raise_status(Status::invalid_input_or_state);
   generated_notes_.report_output_failure();
+  tuner_telemetry_.clear(TunerFrameState::unavailable);
   publish_parameter_outputs(data.outputParameterChanges);
   return Steinberg::kInvalidArgument;
 }
@@ -667,6 +673,7 @@ void M3Component::reset_detector_transients() noexcept {
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
   detector_.reset();
+  tuner_telemetry_.clear(TunerFrameState::no_signal);
   ++detector_reset_count_;
 }
 
@@ -783,6 +790,7 @@ Steinberg::tresult M3Component::process_samples(
     }
     release_channel_pending_ = true;
     generated_notes_.report_output_failure();
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
     zero_available_output<Sample>(data);
     retry_pending_releases(data);
     deliver_generated_notes(data, true, false, 0.0);
@@ -816,9 +824,7 @@ Steinberg::tresult M3Component::process_samples(
   if (detector_allowed) {
     advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
   }
-  const bool monophonic_detector_allowed =
-      detector_allowed && active_config_.max_polyphony == 1U;
-  if (monophonic_detector_allowed) {
+  if (detector_allowed) {
     detector_.set_runtime_config(active_config_);
     const double input_gain =
         std::pow(10.0, active_config_.input_trim_db / 20.0);
@@ -840,6 +846,9 @@ Steinberg::tresult M3Component::process_samples(
                     : (left + right) * 0.7071067811865476;
       const DetectorDecision decision =
           detector_.process_sample(selected * input_gain);
+      if (decision.tuner_snapshot_ready) {
+        tuner_telemetry_.publish(decision.tuner_snapshot);
+      }
       for (std::size_t index = 0; index < decision.transitions.size(); ++index) {
         VoiceTransition transition = decision.transitions[index];
         transition.sample_offset = frame;
@@ -852,6 +861,8 @@ Steinberg::tresult M3Component::process_samples(
         break;
       }
     }
+  } else {
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
   }
   if (structural_boundary_pending_) {
     generated_notes_.begin_block();
@@ -1009,6 +1020,30 @@ std::uint8_t active_midi_channel_for_test(
              ? static_cast<M3Component*>(processor)
                    ->active_midi_channel_for_test()
              : 0U;
+}
+
+MonophonicPitchDetector::SelectionWork detector_selection_work_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->detector_selection_work_for_test()
+             : MonophonicPitchDetector::SelectionWork{};
+}
+
+bool read_tuner_snapshot_for_test(Steinberg::Vst::IAudioProcessor* processor,
+                                  TunerSnapshot& snapshot) noexcept {
+  return processor != nullptr &&
+         static_cast<M3Component*>(processor)->read_tuner_snapshot_for_test(
+             snapshot);
+}
+
+void publish_tuner_snapshot_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    const TunerSnapshot& snapshot) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)->publish_tuner_snapshot_for_test(
+        snapshot);
+  }
 }
 #endif
 

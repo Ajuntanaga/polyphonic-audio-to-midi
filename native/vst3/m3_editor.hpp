@@ -3,10 +3,13 @@
 #include <cstddef>
 
 #include "m3/parameter_contract.hpp"
+#include "m3/tuner_telemetry.hpp"
 #include "m3_editor_layout.hpp"
 #include "public.sdk/source/vst/vstsinglecomponenteffect.h"
 
 namespace m3::vst3 {
+
+class M3Component;
 
 struct EditorGesture final {
   ParameterId parameter_id{};
@@ -54,9 +57,14 @@ std::size_t editor_control_invalidation_count_for_test(
     Steinberg::IPlugView& view, ParameterId parameter_id) noexcept;
 double editor_content_scale_factor_for_test(
     Steinberg::IPlugView& view) noexcept;
+bool editor_refresh_tuner_for_test(Steinberg::IPlugView& view) noexcept;
+bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
+                                    TunerSnapshot& snapshot) noexcept;
+std::size_t editor_tuner_invalidation_count_for_test(
+    Steinberg::IPlugView& view) noexcept;
 #endif
 
 Steinberg::IPlugView* create_m3_editor(
-    Steinberg::Vst::EditController& controller) noexcept;
+    M3Component& component) noexcept;
 
 }  // namespace m3::vst3

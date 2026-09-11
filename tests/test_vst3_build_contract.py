@@ -51,6 +51,17 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIsNotNone(validator, "validate_entries() is absent")
         return validator(entries, sdk_present=sdk_present)
 
+    def test_sanitizer_keeps_memory_checks_without_vst3_abi_vptr_checks(self):
+        compiler_options = (
+            ROOT / "cmake/M3CompilerOptions.cmake"
+        ).read_text(encoding="utf-8")
+        sanitizer_branch = compiler_options.split(
+            "if(M3_ENABLE_ASAN_UBSAN)", 1
+        )[1].split("elseif(M3_ENABLE_TSAN)", 1)[0]
+
+        self.assertIn("-fsanitize=address,undefined", sanitizer_branch)
+        self.assertIn("-fno-sanitize=vptr", sanitizer_branch)
+
     def test_installed_cmake_meets_the_offline_build_prerequisite(self):
         cmake = shutil.which("cmake")
         self.assertIsNotNone(cmake, "CMake executable is required after Gate T1")
@@ -266,6 +277,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
+                    "native/src/tuner_telemetry.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
                     "native/vst3/m3_editor_layout.cpp",
@@ -304,6 +316,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
+                    "native/src/tuner_telemetry.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
                     "native/vst3/m3_editor_layout.cpp",

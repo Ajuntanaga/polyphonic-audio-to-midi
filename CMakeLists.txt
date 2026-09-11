@@ -41,6 +41,7 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/monophonic_pitch_detector.cpp
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
+    native/src/tuner_telemetry.cpp
 )
 
 set(M3_NATIVE_SHARED_ADAPTER_SOURCES
@@ -102,6 +103,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_state_image.cpp
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
+    native/tests/test_tuner_telemetry.cpp
     native/tests/test_vst3_audio.cpp
     native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp

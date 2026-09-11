@@ -1,6 +1,52 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-05T17:24:58-07:00
+Updated: 2026-09-11
+
+## Current native M3 polyphonic VST3 + tuner checkpoint
+
+- Worktree: `.worktrees/m3-live-editor`, branch `feat/m3-live-editor`, base
+  commit `7815ad38c6510878488b5f7a1e49a7ec56bef053`. The current implementation is
+  intentionally uncommitted.
+- The native VST3 now performs bounded polyphonic selection for up to eight
+  voices instead of disabling detection when Max Polyphony is greater than
+  one. It includes per-new-voice causal evidence, deterministic release/onset
+  ordering, subharmonic rejection, and M3 string/fret feasibility with
+  backfilling of feasible candidates.
+- The audio thread publishes a fixed-capacity, lock-free tuner snapshot to the
+  editor. The editor renders a read-only eight-card Voice Stack with note,
+  signed cents when valid, confidence, per-row state, configured maximum, and
+  explicit no-signal/unavailable states. It never sends parameter edits or
+  presents a global in-tune verdict. The editor is now 1024x808 (maximum
+  2048x1616), and VSTGUI's developer-only Open UI Editor button is disabled.
+- Fresh native verification is green: Debug 150/150, Release 150/150 (including
+  the 96 kHz max-eight deadline gate), ThreadSanitizer 150/150, and
+  AddressSanitizer plus UndefinedBehaviorSanitizer 150/150. Leak scanning alone
+  was disabled because LeakSanitizer cannot operate under this sandbox's ptrace
+  boundary; GCC vptr checks are disabled only for the Steinberg COM-style ABI
+  representation casts, with all other ASan/UBSan checks retained.
+- The broader offline build/source contract is green: 87 Python tests,
+  `tools/validate_source.py`, `tools/validate_native_source.py`, and
+  `git diff --check`.
+- The production bundle and project validation target are green at
+  `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3`. Current binary
+  SHA-256: `764deeb3381526083e3e6b51f6c486bcc940cea84a40fc7abb92625efecd9798`.
+- A real headless VSTGUI render was inspected at 1024x808. The editor was then
+  visually redesigned as a flat precision-instrument surface: stronger brand
+  and status hierarchy, compact labeled mode switches, detailed dial scales,
+  restrained section rails, and eight simultaneous vertical pitch lanes with
+  meaningful cent rails and segmented confidence. Settling voices do not claim
+  a cent estimate. The SDK's developer editor button was also removed. The
+  final render was rechecked and temporary screenshot instrumentation removed.
+- The official validator was attempted once against the current bundle and
+  correctly classified `infrastructure-invalid`: this sandbox cannot connect
+  to the user-scope session bus (`Operation not permitted`). Previous validator
+  evidence was preserved at `/tmp/m3-validator-evidence.Ddc0Lp/production`.
+  Do not call this a plug-in failure or validator pass.
+- Next action: run the guarded official validator from a normal user session
+  with a working user bus. Only after that passes should a separately approved
+  host/live-input stage assess real guitar chord quality and end-to-end tuner
+  behavior. The present results prove synthetic native behavior, concurrency,
+  timing, and UI truthfulness—not physical-guitar tracking quality.
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 

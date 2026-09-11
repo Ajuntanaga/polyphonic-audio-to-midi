@@ -3,6 +3,7 @@
 
 #include "fake_vst3_host.hpp"
 #include "m3_editor.hpp"
+#include "vst3_component.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
@@ -104,8 +105,10 @@ void expect_scale_rejected(float factor) noexcept {
                      Steinberg::kInvalidArgument);
         Steinberg::ViewRect unchanged{};
         M3_EXPECT_EQ(view->getSize(&unchanged), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(unchanged.right - unchanged.left, 1024);
-        M3_EXPECT_EQ(unchanged.bottom - unchanged.top, 620);
+        M3_EXPECT_EQ(unchanged.right - unchanged.left,
+                     m3::vst3::kEditorWidth);
+        M3_EXPECT_EQ(unchanged.bottom - unchanged.top,
+                     m3::vst3::kEditorHeight);
         M3_EXPECT_NEAR(
             m3::vst3::editor_content_scale_factor_for_test(*view), 1.0,
             1.0e-12);
@@ -150,14 +153,16 @@ M3_TEST(vst3_editor_remove_before_attach_is_safe_and_silent) {
       Steinberg::ViewRect constrained{10, 20, 510, 420};
       M3_EXPECT_EQ(view->checkSizeConstraint(&constrained),
                    Steinberg::kResultTrue);
-      M3_EXPECT_EQ(constrained.right - constrained.left, 1024);
-      M3_EXPECT_EQ(constrained.bottom - constrained.top, 620);
-      Steinberg::ViewRect resized{0, 0, 1200, 720};
+      M3_EXPECT_EQ(constrained.right - constrained.left,
+                   m3::vst3::kEditorWidth);
+      M3_EXPECT_EQ(constrained.bottom - constrained.top,
+                   m3::vst3::kEditorHeight);
+      Steinberg::ViewRect resized{0, 0, 1200, 900};
       M3_EXPECT_EQ(view->onSize(&resized), Steinberg::kResultTrue);
       Steinberg::ViewRect actual{};
       M3_EXPECT_EQ(view->getSize(&actual), Steinberg::kResultTrue);
       M3_EXPECT_EQ(actual.right - actual.left, 1200);
-      M3_EXPECT_EQ(actual.bottom - actual.top, 720);
+      M3_EXPECT_EQ(actual.bottom - actual.top, 900);
 
       Steinberg::IPlugViewContentScaleSupport* scale_support = nullptr;
       M3_EXPECT_EQ(view->queryInterface(
@@ -218,8 +223,8 @@ M3_TEST(vst3_editor_scale_round_trip_restores_logical_geometry) {
                      Steinberg::kResultOk);
         Steinberg::ViewRect scaled{};
         M3_EXPECT_EQ(view->getSize(&scaled), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(scaled.right - scaled.left, 1024);
-        M3_EXPECT_EQ(scaled.bottom - scaled.top, 620);
+        M3_EXPECT_EQ(scaled.right - scaled.left, m3::vst3::kEditorWidth);
+        M3_EXPECT_EQ(scaled.bottom - scaled.top, m3::vst3::kEditorHeight);
         scale_support->release();
       }
       view->release();
@@ -279,18 +284,20 @@ M3_TEST(vst3_editor_attached_tiny_scale_is_rejected_without_host_or_state_change
             1.0e-12);
         Steinberg::ViewRect unchanged{};
         M3_EXPECT_EQ(view->getSize(&unchanged), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(unchanged.right - unchanged.left, 1024);
-        M3_EXPECT_EQ(unchanged.bottom - unchanged.top, 620);
+        M3_EXPECT_EQ(unchanged.right - unchanged.left,
+                     m3::vst3::kEditorWidth);
+        M3_EXPECT_EQ(unchanged.bottom - unchanged.top,
+                     m3::vst3::kEditorHeight);
 
         M3_EXPECT_EQ(scale_support->setContentScaleFactor(1.5F),
                      Steinberg::kResultOk);
         M3_EXPECT_EQ(plug_frame.resize_count(), 1U);
         M3_EXPECT_EQ(plug_frame.last_size().right -
                          plug_frame.last_size().left,
-                     1536);
+                     m3::vst3::kEditorWidth * 3 / 2);
         M3_EXPECT_EQ(plug_frame.last_size().bottom -
                          plug_frame.last_size().top,
-                     930);
+                     m3::vst3::kEditorHeight * 3 / 2);
         scale_support->release();
       }
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
@@ -340,8 +347,10 @@ M3_TEST(vst3_editor_scale_requests_host_resize_and_accepts_on_size) {
         M3_EXPECT_EQ(plug_frame.resize_count(), 1U);
         Steinberg::ViewRect unchanged{};
         M3_EXPECT_EQ(view->getSize(&unchanged), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(unchanged.right - unchanged.left, 1024);
-        M3_EXPECT_EQ(unchanged.bottom - unchanged.top, 620);
+        M3_EXPECT_EQ(unchanged.right - unchanged.left,
+                     m3::vst3::kEditorWidth);
+        M3_EXPECT_EQ(unchanged.bottom - unchanged.top,
+                     m3::vst3::kEditorHeight);
 
         plug_frame.reject_resize(false);
         M3_EXPECT_EQ(scale_support->setContentScaleFactor(1.5F),
@@ -349,14 +358,16 @@ M3_TEST(vst3_editor_scale_requests_host_resize_and_accepts_on_size) {
         M3_EXPECT_EQ(plug_frame.resize_count(), 2U);
         M3_EXPECT_EQ(plug_frame.last_size().right -
                          plug_frame.last_size().left,
-                     1536);
+                     m3::vst3::kEditorWidth * 3 / 2);
         M3_EXPECT_EQ(plug_frame.last_size().bottom -
                          plug_frame.last_size().top,
-                     930);
+                     m3::vst3::kEditorHeight * 3 / 2);
         Steinberg::ViewRect scaled{};
         M3_EXPECT_EQ(view->getSize(&scaled), Steinberg::kResultTrue);
-        M3_EXPECT_EQ(scaled.right - scaled.left, 1536);
-        M3_EXPECT_EQ(scaled.bottom - scaled.top, 930);
+        M3_EXPECT_EQ(scaled.right - scaled.left,
+                     m3::vst3::kEditorWidth * 3 / 2);
+        M3_EXPECT_EQ(scaled.bottom - scaled.top,
+                     m3::vst3::kEditorHeight * 3 / 2);
         scale_support->release();
       }
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
@@ -517,6 +528,108 @@ M3_TEST(vst3_editor_status_and_dynamic_fixed_velocity_are_read_only) {
     M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
                  Steinberg::kResultTrue);
     M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  Steinberg::Vst::IAudioProcessor* processor = nullptr;
+  if (component != nullptr) {
+    static_cast<void>(component->queryInterface(
+        Steinberg::Vst::IAudioProcessor::iid,
+        reinterpret_cast<void**>(&processor)));
+  }
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(processor != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr && processor != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      const std::size_t before =
+          m3::vst3::editor_tuner_invalidation_count_for_test(*view);
+      m3::TunerSnapshot published;
+      published.generation = 41U;
+      published.state = m3::TunerFrameState::tracking;
+      published.voice_count = 2U;
+      published.max_polyphony = 2U;
+      published.voices[0] = m3::TunerVoice{
+          40U, static_cast<std::int16_t>(-7 * 256), 28000U, 8U,
+          m3::TunerVoiceState::tracking, true};
+      published.voices[1] = m3::TunerVoice{
+          47U, static_cast<std::int16_t>(11 * 256), 19000U, 3U,
+          m3::TunerVoiceState::settling, true};
+      m3::vst3::publish_tuner_snapshot_for_test(processor, published);
+      handler.reset();
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_FALSE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      m3::TunerSnapshot observed;
+      M3_EXPECT_TRUE(
+          m3::vst3::editor_tuner_snapshot_for_test(*view, observed));
+      const std::uint32_t first_generation = observed.generation;
+      M3_EXPECT_TRUE(first_generation > 0U);
+      M3_EXPECT_EQ(observed.state, m3::TunerFrameState::tracking);
+      M3_EXPECT_EQ(observed.voice_count, 2U);
+      M3_EXPECT_EQ(observed.max_polyphony, 2U);
+      M3_EXPECT_EQ(observed.voices[0].midi_note, 40U);
+      M3_EXPECT_EQ(observed.voices[1].midi_note, 47U);
+      M3_EXPECT_TRUE(
+          m3::vst3::editor_tuner_invalidation_count_for_test(*view) > before);
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+
+      m3::TunerSnapshot empty;
+      // A reset detector can restart its local generation at the same value.
+      // The transport must still deliver the later no-signal frame to the UI.
+      empty.generation = published.generation;
+      empty.state = m3::TunerFrameState::no_signal;
+      m3::vst3::publish_tuner_snapshot_for_test(processor, empty);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_TRUE(
+          m3::vst3::editor_tuner_snapshot_for_test(*view, observed));
+      M3_EXPECT_TRUE(observed.generation > first_generation);
+      M3_EXPECT_EQ(observed.state, m3::TunerFrameState::no_signal);
+      M3_EXPECT_EQ(observed.voice_count, 0U);
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (processor != nullptr) {
+    processor->release();
   }
   if (controller != nullptr) {
     controller->release();
@@ -1374,7 +1487,7 @@ M3_TEST(vst3_editor_accepted_resize_reflows_real_child_controls) {
       m3::vst3::EditorRect after{};
       M3_EXPECT_TRUE(m3::vst3::editor_control_bounds_for_test(
           *view, 0x4D330005U, before));
-      Steinberg::ViewRect resized{0, 0, 1200, 720};
+      Steinberg::ViewRect resized{0, 0, 1200, 900};
       M3_EXPECT_EQ(view->onSize(&resized), Steinberg::kResultTrue);
       M3_EXPECT_TRUE(m3::vst3::editor_control_bounds_for_test(
           *view, 0x4D330005U, after));
@@ -1382,8 +1495,12 @@ M3_TEST(vst3_editor_accepted_resize_reflows_real_child_controls) {
       M3_EXPECT_TRUE(after.top > before.top);
       M3_EXPECT_TRUE(after.right > before.right);
       M3_EXPECT_TRUE(after.bottom > before.bottom);
-      M3_EXPECT_NEAR(after.left, before.left * 1200.0 / 1024.0, 1.0e-6);
-      M3_EXPECT_NEAR(after.top, before.top * 720.0 / 620.0, 1.0e-6);
+      M3_EXPECT_NEAR(after.left, before.left * 1200.0 /
+                                      static_cast<double>(m3::vst3::kEditorWidth),
+                     1.0e-6);
+      M3_EXPECT_NEAR(after.top, before.top * 900.0 /
+                                     static_cast<double>(m3::vst3::kEditorHeight),
+                     1.0e-6);
       M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
       view->release();

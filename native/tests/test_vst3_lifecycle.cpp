@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "vst3_component.hpp"
+#include "m3_editor_layout.hpp"
 
 #include "fake_vst3_host.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
@@ -140,8 +141,8 @@ M3_TEST(vst3_busses_layout_sample_sizes_latency_tail_and_view_are_exact) {
     if (view != nullptr) {
       Steinberg::ViewRect rect{};
       M3_EXPECT_EQ(view->getSize(&rect), Steinberg::kResultTrue);
-      M3_EXPECT_EQ(rect.right - rect.left, 1024);
-      M3_EXPECT_EQ(rect.bottom - rect.top, 620);
+      M3_EXPECT_EQ(rect.right - rect.left, m3::vst3::kEditorWidth);
+      M3_EXPECT_EQ(rect.bottom - rect.top, m3::vst3::kEditorHeight);
       view->release();
     }
     M3_EXPECT_TRUE(controller->createView("unsupported") == nullptr);

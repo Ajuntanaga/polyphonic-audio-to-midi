@@ -25,14 +25,14 @@ Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 
 The default disposable profile is configured for 48 kHz and 256 samples. For
 the Revelator's 96 kHz mode, stage the dedicated profile below. Both profiles
-use MIDI notes `32..60`—the eight open strings—muted dry audio, and one
-detected note at a time. That makes it
-appropriate for clean low-register eight-string lines and single-note playing;
-it is **not yet a polyphonic chord transcriber or a full-fretboard tracker**.
-The native detector and its MIDI note-on/off path have been verified with an
-audio-driven REAPER/VST3 probe. Final guitar calibration remains physical-input
-work: plug the guitar into Revelator input 1, arm/monitor the staged track,
-then adjust input gain or detector sensitivity only if needed.
+use MIDI notes `32..60`—the eight open strings—and muted dry audio. The native
+detector now selects a bounded set of up to the configured Maximum Polyphony
+(1–8) rather than disabling detection above one voice. Synthetic native and
+VST3 tests cover a single tone at the default limit and an independent two-tone
+dyad at a limit of two; they do not constitute a physical guitar chord-quality
+claim. Final guitar calibration remains physical-input work: plug the guitar
+into Revelator input 1, arm/monitor the staged track, then adjust input gain or
+detector sensitivity only if needed.
 
 To prepare another disposable profile without touching the live REAPER setup:
 
@@ -73,13 +73,17 @@ ionice -c 3 nice -n 10 python3 -B tools/run_vst3_validator.py \
   --bundle build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3
 ```
 
-The official validator result is `47 tests passed, 0 tests failed`. The custom
-editor opens at `1024 x 620` and can be resized. Its visible groups are Header
-and live state, Source + Tuning, Tracking, Performance Range, and Advanced ·
-Live Routing. `Ready` is truthful text from the existing Status parameter; the
-editor does not fabricate an input meter, detected-note display, tuner, or
-confidence indicator. A host that cannot attach the custom editor can still
-use the unchanged generic VST3 parameter surface.
+The recorded production validator result is `47 tests passed, 0 tests failed`.
+The current custom editor opens at `1024 x 808` and can be resized. Its visible
+groups are Header and live state, Source + Tuning, Voice Stack, Performance
+Range, and Advanced · Live Routing. The read-only Voice Stack shows the
+detector's bounded voice estimates: note, signed cents when an estimate is
+available, confidence, and Tracking or Settling state. It explicitly says
+`DETECTOR ESTIMATES · NOT MIDI OUTPUT`; it is neither an input meter nor a
+claim that a displayed voice was delivered as a host MIDI event. `Ready`
+remains truthful text from the existing Status parameter. A host that cannot
+attach the custom editor can still use the unchanged generic VST3 parameter
+surface.
 
 ### Start the live chain
 
@@ -111,14 +115,15 @@ this disposable instance:
 
 1. Confirm REAPER reports `96000 Hz` without changing the interface or normal
    REAPER configuration.
-2. Open the staged M3 FX. Confirm the custom editor is `1024 x 620`, resize it,
+2. Open the staged M3 FX. Confirm the custom editor is `1024 x 808`, resize it,
    and check that the controls reflow without overlap.
 3. Note that Dry Audio is `OFF` in the live-chain preset. Click it once, then
    use REAPER's `Param` menu to confirm `Dry audio` is the last-touched host
    parameter. Click it once more to restore `OFF`.
-4. Play clean single notes from the low strings and confirm that the staged
-   track produces downstream MIDI/ReaSynth output. This is the physical-input
-   calibration check; it does not broaden the detector's one-note claim.
+4. Play clean notes from the low strings and confirm that the staged track
+   produces downstream MIDI/ReaSynth output. Treat chord and cents display
+   quality as a separate physical-input calibration exercise; the Voice Stack
+   reports detector estimates, not a global in-tune verdict.
 5. Close only the disposable REAPER instance without saving the project.
 
 Automated pointer injection is intentionally not part of this procedure. On
@@ -161,8 +166,9 @@ performance-ready and must not be installed. See
 The earlier CLAP experiment remains preserved as historical evidence. The
 current implementation uses VST3 because its disposable host probe succeeded
 and it integrates directly with the staged REAPER chain. The future work that
-matters for music quality is physical 8-string calibration and, separately,
-expanding the detector beyond one simultaneous note.
+matters for music quality is physical 8-string calibration and broader
+polyphonic chord-quality and latency qualification across pickups, tunings, and
+playing techniques.
 
 The probe evidence is not a substitute for a guitar performance test. It proves
 the native effect can turn audio into downstream MIDI in REAPER; it does not

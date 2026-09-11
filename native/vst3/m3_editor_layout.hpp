@@ -32,6 +32,10 @@ struct EditorControlLayout final {
 };
 
 inline constexpr std::size_t kEditorControlCount = 16;
+inline constexpr std::int32_t kEditorWidth = 1024;
+inline constexpr std::int32_t kEditorHeight = 808;
+inline constexpr std::int32_t kEditorMaximumWidth = 2048;
+inline constexpr std::int32_t kEditorMaximumHeight = 1616;
 
 EditorControlLayout editor_control_layout(std::size_t index,
                                           const PersistentConfig& config,
