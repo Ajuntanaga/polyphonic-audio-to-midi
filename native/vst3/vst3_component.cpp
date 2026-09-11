@@ -41,6 +41,20 @@ bool is_process_mode(Steinberg::int32 mode) noexcept {
          mode == Steinberg::Vst::kPrefetch || mode == Steinberg::Vst::kOffline;
 }
 
+bool process_mode_compatible_with_setup(Steinberg::int32 setup_mode,
+                                        Steinberg::int32 process_mode) noexcept {
+  if (!is_process_mode(setup_mode) || !is_process_mode(process_mode)) {
+    return false;
+  }
+  // VST3 permits realtime and prefetch to alternate without setupProcessing;
+  // entering or leaving offline mode requires a new setup.
+  if (setup_mode == Steinberg::Vst::kOffline ||
+      process_mode == Steinberg::Vst::kOffline) {
+    return setup_mode == process_mode;
+  }
+  return true;
+}
+
 bool same_persistent_config(const PersistentConfig& left,
                             const PersistentConfig& right) noexcept {
   return structural_config_equal(left, right) &&
@@ -340,8 +354,10 @@ Steinberg::tresult PLUGIN_API M3Component::setProcessing(
 
 Steinberg::tresult PLUGIN_API M3Component::process(
     Steinberg::Vst::ProcessData& data) {
-  if (!processing_ || !is_process_mode(data.processMode) ||
-      data.processMode != processSetup.processMode || data.numSamples < 0 ||
+  if (!processing_ ||
+      !process_mode_compatible_with_setup(processSetup.processMode,
+                                          data.processMode) ||
+      data.numSamples < 0 ||
       data.numSamples > processSetup.maxSamplesPerBlock ||
       static_cast<std::uint32_t>(data.numSamples) > kMaxHostFrames) {
     raise_status(Status::invalid_input_or_state);

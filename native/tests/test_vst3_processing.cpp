@@ -128,6 +128,48 @@ M3_TEST(vst3_process_modes_formats_blocks_and_phase_are_host_independent) {
   }
 }
 
+M3_TEST(vst3_realtime_and_prefetch_switch_without_reconfiguration) {
+  constexpr Steinberg::int32 kModePairs[][2]{
+      {Steinberg::Vst::kRealtime, Steinberg::Vst::kPrefetch},
+      {Steinberg::Vst::kPrefetch, Steinberg::Vst::kRealtime},
+  };
+  for (const auto& pair : kModePairs) {
+    ProcessInstance instance;
+    M3_EXPECT_TRUE(open_instance(instance, pair[0],
+                                 Steinberg::Vst::kSample32, 128));
+    if (instance.processor == nullptr) {
+      close_instance(instance);
+      continue;
+    }
+    m3::test::FakeVst3ProcessBlock<float> block;
+    block.configure(128, false);
+    block.fill_finite();
+    block.data().processMode = pair[1];
+    const Steinberg::tresult result = instance.processor->process(block.data());
+    M3_EXPECT_EQ(result, Steinberg::kResultOk);
+    if (result == Steinberg::kResultOk) {
+      for (std::uint32_t frame = 0; frame < 128U; ++frame) {
+        M3_EXPECT_EQ(block.output_left()[frame], block.input_left()[frame]);
+        M3_EXPECT_EQ(block.output_right()[frame], block.input_right()[frame]);
+      }
+    }
+    close_instance(instance);
+  }
+
+  ProcessInstance offline_instance;
+  M3_EXPECT_TRUE(open_instance(offline_instance, Steinberg::Vst::kOffline,
+                               Steinberg::Vst::kSample32, 128));
+  if (offline_instance.processor != nullptr) {
+    m3::test::FakeVst3ProcessBlock<float> block;
+    block.configure(128, false);
+    block.fill_finite();
+    block.data().processMode = Steinberg::Vst::kRealtime;
+    M3_EXPECT_TRUE(offline_instance.processor->process(block.data()) !=
+                   Steinberg::kResultOk);
+  }
+  close_instance(offline_instance);
+}
+
 M3_TEST(vst3_process_parameter_flush_silence_alias_and_dirty_outputs_are_safe) {
   ProcessInstance instance;
   M3_EXPECT_TRUE(open_instance(instance, Steinberg::Vst::kRealtime,

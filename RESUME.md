@@ -4,9 +4,11 @@ Updated: 2026-09-11
 
 ## Current native M3 polyphonic VST3 + tuner checkpoint
 
-- Worktree: `.worktrees/m3-live-editor`, branch `feat/m3-live-editor`, base
-  commit `7815ad38c6510878488b5f7a1e49a7ec56bef053`. The current implementation is
-  intentionally uncommitted.
+- Worktree: `.worktrees/m3-live-editor`, branch `feat/m3-live-editor`. Commit
+  `4fa2c09` contains the native polyphonic detector, truthful tuner telemetry,
+  and redesigned precision editor. A focused two-file follow-up remains
+  uncommitted in `native/vst3/vst3_component.cpp` and
+  `native/tests/test_vst3_processing.cpp`.
 - The native VST3 now performs bounded polyphonic selection for up to eight
   voices instead of disabling detection when Max Polyphony is greater than
   one. It includes per-new-voice causal evidence, deterministic release/onset
@@ -18,18 +20,18 @@ Updated: 2026-09-11
   explicit no-signal/unavailable states. It never sends parameter edits or
   presents a global in-tune verdict. The editor is now 1024x808 (maximum
   2048x1616), and VSTGUI's developer-only Open UI Editor button is disabled.
-- Fresh native verification is green: Debug 150/150, Release 150/150 (including
+- Fresh native verification is green: Debug 151/151, Release 151/151 (including
   the 96 kHz max-eight deadline gate), ThreadSanitizer 150/150, and
   AddressSanitizer plus UndefinedBehaviorSanitizer 150/150. Leak scanning alone
   was disabled because LeakSanitizer cannot operate under this sandbox's ptrace
   boundary; GCC vptr checks are disabled only for the Steinberg COM-style ABI
   representation casts, with all other ASan/UBSan checks retained.
-- The broader offline build/source contract is green: 87 Python tests,
+- The broader offline build/source contract is green: 343 Python tests,
   `tools/validate_source.py`, `tools/validate_native_source.py`, and
   `git diff --check`.
 - The production bundle and project validation target are green at
   `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3`. Current binary
-  SHA-256: `764deeb3381526083e3e6b51f6c486bcc940cea84a40fc7abb92625efecd9798`.
+  SHA-256: `5988a72d5b7783e4e178874af93261dbff1e6dbd6810e05510777dfd4ba4d094`.
 - A real headless VSTGUI render was inspected at 1024x808. The editor was then
   visually redesigned as a flat precision-instrument surface: stronger brand
   and status hierarchy, compact labeled mode switches, detailed dial scales,
@@ -37,16 +39,28 @@ Updated: 2026-09-11
   meaningful cent rails and segmented confidence. Settling voices do not claim
   a cent estimate. The SDK's developer editor button was also removed. The
   final render was rechecked and temporary screenshot instrumentation removed.
-- The official validator was attempted once against the current bundle and
-  correctly classified `infrastructure-invalid`: this sandbox cannot connect
-  to the user-scope session bus (`Operation not permitted`). Previous validator
-  evidence was preserved at `/tmp/m3-validator-evidence.Ddc0Lp/production`.
-  Do not call this a plug-in failure or validator pass.
-- Next action: run the guarded official validator from a normal user session
-  with a working user bus. Only after that passes should a separately approved
-  host/live-input stage assess real guitar chord quality and end-to-end tuner
-  behavior. The present results prove synthetic native behavior, concurrency,
-  timing, and UI truthfulness—not physical-guitar tracking quality.
+- The official Steinberg validator now passes the production bundle. Evidence
+  is retained in
+  `build/test-results/vst3-validator/production/result.json` with timestamp
+  `2026-09-11T13:45:40.049+00:00` and validator return code 0.
+- A guarded disposable REAPER run exposed and fixed a real host-integration
+  defect: REAPER may alternate VST3 `kRealtime` and `kPrefetch` process calls
+  without another `setupProcessing`, as the VST3 contract permits. The old
+  exact-mode comparison rejected those blocks before dry audio and detection.
+  The focused repair now accepts realtime/prefetch interchangeably while still
+  refusing every offline transition without a matching setup.
+- The repaired release completed an exact live E2+B2 lifecycle in disposable
+  REAPER: four MIDI events (note-on 40, note-on 47, note-off 40, note-off 47),
+  one on/off pair per note, and no capture overflow. Evidence is retained at
+  `build/reaper-test/test-results/m3-polyphonic-host-smoke.tsv`. The normal
+  REAPER profile remained byte-identical at SHA-256
+  `0c9a808df5361758c7f6656ed052332cfe16004b4a9f2d476d9c319829ae0a41`.
+- Actual hosted editor evidence is retained at
+  `build/evidence/native-m3-host-smoke-20260911.png`. A dynamic dyad screenshot
+  is optional presentation evidence only; exact host telemetry and MIDI
+  lifecycle are already proven. The next substantive product gate is physical
+  guitar/96 kHz audio-interface validation, which must not be inferred from the
+  synthetic dyad result.
 
 ## V4 scan-isolation design reviewed — Task 0A sealed non-admissible
 
