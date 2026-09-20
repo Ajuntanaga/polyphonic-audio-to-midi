@@ -13,6 +13,7 @@ DEFAULT_OUTPUT_DEVICE = "hw:R24,0"
 DEFAULT_SAMPLE_RATE = 48000
 SUPPORTED_SAMPLE_RATES = (44100, 48000, 88200, 96000)
 DEFAULT_BLOCK_SIZE = 256
+SUPPORTED_BLOCK_SIZES = (32, 64, 128, 256, 512, 1024)
 DEFAULT_INPUT_CHANNELS = 6
 DEFAULT_OUTPUT_CHANNELS = 2
 SETUP_SCRIPT_NAME = "ajuntanaga_M3 Live Guitar to MIDI.lua"
@@ -122,6 +123,9 @@ def stage_live_profile(
     input_device: str = DEFAULT_INPUT_DEVICE,
     output_device: str = DEFAULT_OUTPUT_DEVICE,
     sample_rate: int = DEFAULT_SAMPLE_RATE,
+    block_size: int = DEFAULT_BLOCK_SIZE,
+    input_channels: int = DEFAULT_INPUT_CHANNELS,
+    output_channels: int = DEFAULT_OUTPUT_CHANNELS,
     detector: str = "jsfx",
     native_bundle: pathlib.Path | None = None,
 ) -> pathlib.Path:
@@ -136,6 +140,12 @@ def stage_live_profile(
         raise ValueError("detector must be 'jsfx' or 'native'")
     if type(sample_rate) is not int or sample_rate not in SUPPORTED_SAMPLE_RATES:
         raise ValueError("sample rate must be one of the supported live rates")
+    if type(block_size) is not int or block_size not in SUPPORTED_BLOCK_SIZES:
+        raise ValueError("block size must be one of the supported live sizes")
+    if type(input_channels) is not int or not 1 <= input_channels <= 64:
+        raise ValueError("input channels must be an integer between 1 and 64")
+    if type(output_channels) is not int or not 1 <= output_channels <= 64:
+        raise ValueError("output channels must be an integer between 1 and 64")
 
     resolved_native_bundle: pathlib.Path | None = None
     if detector == "native":
@@ -164,10 +174,10 @@ def stage_live_profile(
         "linux_audio_mode=1\n"
         f"alsa_indev={input_device}\n"
         f"alsa_outdev={output_device}\n"
-        f"linux_audio_bsize={DEFAULT_BLOCK_SIZE}\n"
+        f"linux_audio_bsize={block_size}\n"
         "linux_audio_bufs=2\n"
-        f"linux_audio_nch_in={DEFAULT_INPUT_CHANNELS}\n"
-        f"linux_audio_nch_out={DEFAULT_OUTPUT_CHANNELS}\n"
+        f"linux_audio_nch_in={input_channels}\n"
+        f"linux_audio_nch_out={output_channels}\n"
         f"linux_audio_srate={sample_rate}\n"
         "newprojdo=0\n"
         "saveFlags=0\n"
@@ -196,6 +206,14 @@ def main(argv: list[str] | None = None) -> int:
         choices=SUPPORTED_SAMPLE_RATES,
         default=DEFAULT_SAMPLE_RATE,
     )
+    parser.add_argument(
+        "--block-size",
+        type=int,
+        choices=SUPPORTED_BLOCK_SIZES,
+        default=DEFAULT_BLOCK_SIZE,
+    )
+    parser.add_argument("--input-channels", type=int, default=DEFAULT_INPUT_CHANNELS)
+    parser.add_argument("--output-channels", type=int, default=DEFAULT_OUTPUT_CHANNELS)
     parser.add_argument("--detector", choices=("jsfx", "native"), default="jsfx")
     parser.add_argument("--native-bundle", type=pathlib.Path)
     args = parser.parse_args(argv)
@@ -205,6 +223,9 @@ def main(argv: list[str] | None = None) -> int:
         input_device=args.input_device,
         output_device=args.output_device,
         sample_rate=args.sample_rate,
+        block_size=args.block_size,
+        input_channels=args.input_channels,
+        output_channels=args.output_channels,
         detector=args.detector,
         native_bundle=args.native_bundle,
     )

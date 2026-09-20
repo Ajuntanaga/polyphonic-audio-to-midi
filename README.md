@@ -45,6 +45,20 @@ python3 tools/stage_live_midi_env.py \
   --sample-rate 96000
 ```
 
+If the Revelator/io24 is busy, use the normal system ALSA device explicitly.
+This creates a separate stereo profile at 96 kHz with a 512-sample block and
+does not alter the Revelator or your normal REAPER configuration:
+
+```bash
+python3 tools/stage_live_midi_env.py \
+  --output build/m3-native-live-midi-system \
+  --input-device default --output-device default \
+  --input-channels 2 --output-channels 2 \
+  --sample-rate 96000 --block-size 512 \
+  --detector native \
+  --native-bundle /path/to/M3_Polyphonic_Audio_to_MIDI.vst3
+```
+
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 
