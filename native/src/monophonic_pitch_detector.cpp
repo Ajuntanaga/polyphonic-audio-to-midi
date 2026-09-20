@@ -16,6 +16,7 @@ constexpr double kTwoPi = 6.28318530717958647692;
 constexpr double kCorrelationSeconds = 0.080;
 constexpr double kFastEnergySeconds = 0.008;
 constexpr double kSlowEnergySeconds = 0.100;
+constexpr double kTunerSmoothingSeconds = 0.075;
 constexpr double kDcCutoffHz = 15.0;
 constexpr double kMinimumA4Hz = 400.0;
 constexpr double kMaximumA4Hz = 480.0;
@@ -53,6 +54,7 @@ bool MonophonicPitchDetector::configure(double sample_rate,
   }
 
   sample_rate_ = sample_rate;
+  a4_hz_ = config.a4_hz;
   dc_pole = std::exp(-kTwoPi * kDcCutoffHz / sample_rate_);
   correlation_decay = std::exp(-1.0 / (kCorrelationSeconds * sample_rate_));
   fast_energy_decay =
@@ -107,6 +109,10 @@ void MonophonicPitchDetector::reset() noexcept {
   active_ = {};
   pending_ticks_ = {};
   quiet_ticks_ = {};
+  previous_fundamental_real_ = {};
+  previous_fundamental_imaginary_ = {};
+  smoothed_phase_delta_ = {};
+  previous_fundamental_valid_ = {};
   for (Cell& cell : cells_) {
     cell.cosine = 1.0;
     cell.sine = 0.0;
@@ -184,6 +190,7 @@ double MonophonicPitchDetector::candidate_score(
 
 DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
   DetectorDecision decision;
+  decision.tuner.updated = true;
   const bool quiet = fast_energy_ < signal_floor() ||
                      fast_energy_ < slow_energy_ * 0.05;
   std::array<double, kMaxCandidates> scores{};
@@ -222,6 +229,69 @@ DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
     }
     selected[best_candidate] = true;
     ++selected_count;
+  }
+
+  const double tuner_smoothing =
+      1.0 - std::exp(-static_cast<double>(kDecisionQuantum) /
+                     (kTunerSmoothingSeconds * sample_rate_));
+  for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
+    const Cell& fundamental = cells_[cell_index(candidate, 0U)];
+    const double current_magnitude =
+        fundamental.fast_real * fundamental.fast_real +
+        fundamental.fast_imaginary * fundamental.fast_imaginary;
+    const double previous_real = previous_fundamental_real_[candidate];
+    const double previous_imaginary =
+        previous_fundamental_imaginary_[candidate];
+    const double previous_magnitude =
+        previous_real * previous_real + previous_imaginary * previous_imaginary;
+    if (!quiet && previous_fundamental_valid_[candidate] &&
+        current_magnitude > std::numeric_limits<double>::epsilon() &&
+        previous_magnitude > std::numeric_limits<double>::epsilon()) {
+      const double cross = previous_real * fundamental.fast_imaginary -
+                           previous_imaginary * fundamental.fast_real;
+      const double dot = previous_real * fundamental.fast_real +
+                         previous_imaginary * fundamental.fast_imaginary;
+      const double phase_delta = std::atan2(cross, dot);
+      smoothed_phase_delta_[candidate] +=
+          tuner_smoothing *
+          (phase_delta - smoothed_phase_delta_[candidate]);
+    } else if (quiet) {
+      smoothed_phase_delta_[candidate] = 0.0;
+    }
+    previous_fundamental_real_[candidate] = fundamental.fast_real;
+    previous_fundamental_imaginary_[candidate] = fundamental.fast_imaginary;
+    previous_fundamental_valid_[candidate] = !quiet && fundamental.enabled;
+  }
+
+  std::size_t tuner_candidate = kMaxCandidates;
+  double tuner_score = admission_floor;
+  for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
+    if (selected[candidate] && scores[candidate] > tuner_score) {
+      tuner_candidate = candidate;
+      tuner_score = scores[candidate];
+    }
+  }
+  if (tuner_candidate != kMaxCandidates &&
+      previous_fundamental_valid_[tuner_candidate]) {
+    const double center_note =
+        static_cast<double>(lowest_note_ + tuner_candidate);
+    const double center_frequency = midi_to_frequency(center_note, a4_hz_);
+    const double frequency = center_frequency +
+        smoothed_phase_delta_[tuner_candidate] * sample_rate_ /
+            (kTwoPi * static_cast<double>(kDecisionQuantum));
+    if (std::isfinite(frequency) && frequency > 0.0) {
+      const double fractional_note =
+          69.0 + 12.0 * std::log2(frequency / a4_hz_);
+      const double nearest_note = std::round(fractional_note);
+      const double cents = 100.0 * (fractional_note - nearest_note);
+      if (std::isfinite(fractional_note) && std::isfinite(cents) &&
+          nearest_note >= 0.0 && nearest_note <= 127.0 && cents >= -50.0 &&
+          cents <= 50.0) {
+        decision.tuner.signal = true;
+        decision.tuner.note = static_cast<std::uint8_t>(nearest_note);
+        decision.tuner.cents = cents;
+      }
+    }
   }
 
   std::size_t active_count = 0U;

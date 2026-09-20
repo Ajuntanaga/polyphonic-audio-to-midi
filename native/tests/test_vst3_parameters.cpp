@@ -139,9 +139,9 @@ M3_TEST(vst3_parameter_info_is_exact_and_generic) {
     return;
   }
   M3_EXPECT_EQ(instance.controller->getParameterCount(),
-               static_cast<Steinberg::int32>(m3::kParameterCount));
-  for (std::size_t index = 0; index < m3::kParameterCount; ++index) {
-    const m3::ParameterSpec* spec = m3::parameter_spec(index);
+               static_cast<Steinberg::int32>(m3::vst3::kVst3ParameterCount));
+  for (std::size_t index = 0; index < m3::vst3::kVst3ParameterCount; ++index) {
+    const m3::ParameterSpec* spec = m3::vst3::vst3_parameter_spec(index);
     M3_EXPECT_TRUE(spec != nullptr);
     if (spec == nullptr) {
       continue;
@@ -166,7 +166,7 @@ M3_TEST(vst3_parameter_info_is_exact_and_generic) {
     M3_EXPECT_EQ(info.flags & Steinberg::Vst::ParameterInfo::kIsHidden, 0);
   }
   Steinberg::Vst::ParameterInfo extra{};
-  M3_EXPECT_TRUE(instance.controller->getParameterInfo(16, extra) !=
+  M3_EXPECT_TRUE(instance.controller->getParameterInfo(18, extra) !=
                  Steinberg::kResultTrue);
   close_controller(instance);
 }
@@ -178,9 +178,11 @@ M3_TEST(vst3_parameter_conversions_cover_every_exact_step) {
     close_controller(instance);
     return;
   }
-  for (std::size_t spec_index = 0; spec_index < m3::kParameterCount;
+  for (std::size_t spec_index = 0;
+       spec_index < m3::vst3::kVst3ParameterCount;
        ++spec_index) {
-    const m3::ParameterSpec* spec = m3::parameter_spec(spec_index);
+    const m3::ParameterSpec* spec =
+        m3::vst3::vst3_parameter_spec(spec_index);
     M3_EXPECT_TRUE(spec != nullptr);
     if (spec == nullptr) {
       continue;
@@ -217,6 +219,47 @@ M3_TEST(vst3_parameter_conversions_cover_every_exact_step) {
                      Steinberg::kResultTrue);
       }
     }
+  }
+  close_controller(instance);
+}
+
+M3_TEST(vst3_tuner_parameter_text_is_musical_and_read_only) {
+  ControllerInstance instance;
+  M3_EXPECT_TRUE(open_controller(instance));
+  if (instance.controller == nullptr) {
+    close_controller(instance);
+    return;
+  }
+
+  struct Case final {
+    m3::ParameterId id;
+    double plain;
+    const char* text;
+  };
+  constexpr Case cases[] = {
+      {m3::vst3::kTunerNoteParameterId, 69.0, "A4"},
+      {m3::vst3::kTunerNoteParameterId,
+       static_cast<double>(m3::kTunerNoSignalNote), "No signal"},
+      {m3::vst3::kTunerCentsParameterId, 12.3, "+12.3"},
+      {m3::vst3::kTunerCentsParameterId, -7.4, "-7.4"},
+  };
+  for (const Case& test_case : cases) {
+    const m3::ParameterSpec* spec =
+        m3::vst3::find_vst3_parameter(test_case.id);
+    M3_EXPECT_TRUE(spec != nullptr);
+    if (spec == nullptr) {
+      continue;
+    }
+    Steinberg::Vst::String128 text{};
+    M3_EXPECT_EQ(instance.controller->getParamStringByValue(
+                     test_case.id,
+                     m3::plain_to_normalized(*spec, test_case.plain), text),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_TRUE(string_matches(text, test_case.text));
+    M3_EXPECT_TRUE(instance.controller->setParamNormalized(
+                       test_case.id,
+                       m3::plain_to_normalized(*spec, test_case.plain)) !=
+                   Steinberg::kResultTrue);
   }
   close_controller(instance);
 }

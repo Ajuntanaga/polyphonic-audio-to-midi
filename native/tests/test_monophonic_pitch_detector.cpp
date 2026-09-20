@@ -59,6 +59,24 @@ void feed_dyad(m3::MonophonicPitchDetector& detector, std::uint8_t first,
   }
 }
 
+m3::TunerEstimate feed_tuned_tone(m3::MonophonicPitchDetector& detector,
+                                  double midi_note, double sample_rate,
+                                  std::uint32_t samples) noexcept {
+  constexpr double kAmplitude = 0.20;
+  const double frequency = m3::midi_to_frequency(midi_note, 440.0);
+  m3::TunerEstimate latest;
+  for (std::uint32_t index = 0; index < samples; ++index) {
+    const double phase = 6.28318530717958647692 * frequency *
+                         static_cast<double>(index) / sample_rate;
+    const m3::DetectorDecision decision =
+        detector.process_sample(kAmplitude * std::sin(phase));
+    if (decision.tuner.updated) {
+      latest = decision.tuner;
+    }
+  }
+  return latest;
+}
+
 bool contains_transition(const m3::TickTransitions& transitions,
                          m3::TransitionKind kind, std::uint8_t note) noexcept {
   for (std::size_t index = 0; index < transitions.size(); ++index) {
@@ -147,4 +165,35 @@ M3_TEST(native_detector_tracks_and_releases_a_two_note_chord) {
       contains_transition(transitions, m3::TransitionKind::note_off, 32U));
   M3_EXPECT_TRUE(
       contains_transition(transitions, m3::TransitionKind::note_off, 40U));
+}
+
+M3_TEST(native_detector_reports_tuner_note_cents_and_no_signal) {
+  m3::PersistentConfig config;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 1U;
+  config.sensitivity = 75U;
+  config.response = 25U;
+
+  m3::MonophonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+
+  const m3::TunerEstimate tuned =
+      feed_tuned_tone(detector, 45.23, 48000.0, 96000U);
+  M3_EXPECT_TRUE(tuned.updated);
+  M3_EXPECT_TRUE(tuned.signal);
+  M3_EXPECT_EQ(tuned.note, 45U);
+  M3_EXPECT_NEAR(tuned.cents, 23.0, 2.0);
+
+  m3::TunerEstimate quiet;
+  for (std::uint32_t index = 0; index < 24000U; ++index) {
+    const m3::DetectorDecision decision = detector.process_sample(0.0);
+    if (decision.tuner.updated) {
+      quiet = decision.tuner;
+    }
+  }
+  M3_EXPECT_TRUE(quiet.updated);
+  M3_EXPECT_FALSE(quiet.signal);
+  M3_EXPECT_EQ(quiet.note, m3::kTunerNoSignalNote);
+  M3_EXPECT_NEAR(quiet.cents, 0.0, 0.0);
 }

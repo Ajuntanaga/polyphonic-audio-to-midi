@@ -11,6 +11,7 @@ namespace m3 {
 
 struct DetectorDecision final {
   TickTransitions transitions{};
+  TunerEstimate tuner{};
 };
 
 // The historical type name is retained for ABI/source compatibility. The
@@ -57,6 +58,7 @@ class MonophonicPitchDetector final {
 
   std::array<Cell, kCellCount> cells_{};
   double sample_rate_{};
+  double a4_hz_{440.0};
   double dc_pole{};
   double correlation_decay{};
   double fast_energy_decay{};
@@ -77,6 +79,10 @@ class MonophonicPitchDetector final {
   std::array<bool, kMaxCandidates> active_{};
   std::array<std::uint8_t, kMaxCandidates> pending_ticks_{};
   std::array<std::uint8_t, kMaxCandidates> quiet_ticks_{};
+  std::array<double, kMaxCandidates> previous_fundamental_real_{};
+  std::array<double, kMaxCandidates> previous_fundamental_imaginary_{};
+  std::array<double, kMaxCandidates> smoothed_phase_delta_{};
+  std::array<bool, kMaxCandidates> previous_fundamental_valid_{};
   bool configured_{};
 };
 

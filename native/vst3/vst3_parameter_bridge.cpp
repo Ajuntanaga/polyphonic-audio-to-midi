@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
 #include <cstdint>
 #include <limits>
 #include <new>
@@ -17,6 +18,13 @@ constexpr double kCanonicalTolerance = 1.0e-12;
 // Accept that representation of a declared discrete step, then canonicalize
 // it to the exact plain value before it reaches the processor.
 constexpr double kHostNormalizedTolerance = 1.0e-6;
+constexpr std::array<ParameterSpec, 2> kTunerParameters{{
+    {kTunerNoteParameterId, "Tuner note", 0.0, 128.0, 1.0,
+     static_cast<double>(kTunerNoSignalNote), 128,
+     ParameterUpdateClass::telemetry, false, true, true},
+    {kTunerCentsParameterId, "Tuner cents", -50.0, 50.0, 0.1, 0.0, 1000,
+     ParameterUpdateClass::telemetry, false, false, true},
+}};
 
 bool result_ok(Steinberg::tresult result) noexcept {
   return result == Steinberg::kResultOk || result == Steinberg::kResultTrue;
@@ -78,8 +86,9 @@ class ContractParameter final : public Steinberg::Vst::Parameter {
     double plain = 0.0;
     char text[128]{};
     if (!canonical_normalized_value(spec_, normalized, plain) ||
-        !parameter_value_to_text(spec_.id, plain, text,
-                                 static_cast<std::uint32_t>(sizeof(text)))) {
+        !vst3_parameter_value_to_text(
+            spec_.id, plain, text,
+            static_cast<std::uint32_t>(sizeof(text)))) {
       return;
     }
     Steinberg::UString(output, 128).fromAscii(text);
@@ -88,6 +97,9 @@ class ContractParameter final : public Steinberg::Vst::Parameter {
   bool fromString(const Steinberg::Vst::TChar* input,
                   Steinberg::Vst::ParamValue& normalized) const override {
     if (input == nullptr) {
+      return false;
+    }
+    if (spec_.read_only) {
       return false;
     }
     char text[128]{};
@@ -125,6 +137,56 @@ class ContractParameter final : public Steinberg::Vst::Parameter {
 
 }  // namespace
 
+const ParameterSpec* vst3_parameter_spec(std::size_t index) noexcept {
+  if (index < kParameterCount) {
+    return parameter_spec(index);
+  }
+  const std::size_t tuner_index = index - kParameterCount;
+  return tuner_index < kTunerParameters.size()
+             ? &kTunerParameters[tuner_index]
+             : nullptr;
+}
+
+const ParameterSpec* find_vst3_parameter(ParameterId id) noexcept {
+  if (const ParameterSpec* shared = find_parameter(id); shared != nullptr) {
+    return shared;
+  }
+  for (const ParameterSpec& spec : kTunerParameters) {
+    if (spec.id == id) {
+      return &spec;
+    }
+  }
+  return nullptr;
+}
+
+bool vst3_parameter_value_to_text(ParameterId id, double value, char* output,
+                                  std::uint32_t capacity) noexcept {
+  if (output == nullptr || capacity == 0U || !std::isfinite(value)) {
+    return false;
+  }
+  output[0] = '\0';
+  int written = -1;
+  if (id == kTunerNoteParameterId) {
+    const long note = std::lround(value);
+    if (note == static_cast<long>(kTunerNoSignalNote)) {
+      written = std::snprintf(output, capacity, "%s", "No signal");
+    } else if (note >= 0L && note <= 127L) {
+      constexpr std::array<const char*, 12> kNames{
+          "C", "C#", "D", "D#", "E", "F",
+          "F#", "G", "G#", "A", "A#", "B"};
+      written = std::snprintf(output, capacity, "%s%ld",
+                              kNames[static_cast<std::size_t>(note % 12L)],
+                              note / 12L - 1L);
+    }
+  } else if (id == kTunerCentsParameterId) {
+    const double canonical = std::abs(value) < 0.05 ? 0.0 : value;
+    written = std::snprintf(output, capacity, "%+.1f", canonical);
+  } else {
+    return parameter_value_to_text(id, value, output, capacity);
+  }
+  return written >= 0 && static_cast<std::uint32_t>(written) < capacity;
+}
+
 bool canonical_normalized_value(const ParameterSpec& spec, double normalized,
                                 double& plain) noexcept {
   if (!std::isfinite(normalized) || normalized < 0.0 || normalized > 1.0) {
@@ -159,9 +221,9 @@ bool canonical_plain_value(const ParameterSpec& spec, double plain,
 
 bool register_vst3_parameters(
     Steinberg::Vst::ParameterContainer& container) noexcept {
-  container.init(static_cast<Steinberg::int32>(kParameterCount));
-  for (std::size_t index = 0; index < kParameterCount; ++index) {
-    const ParameterSpec* spec = parameter_spec(index);
+  container.init(static_cast<Steinberg::int32>(kVst3ParameterCount));
+  for (std::size_t index = 0; index < kVst3ParameterCount; ++index) {
+    const ParameterSpec* spec = vst3_parameter_spec(index);
     Steinberg::Vst::ParameterInfo info{};
     if (spec == nullptr || !build_parameter_info(*spec, info)) {
       return false;
@@ -178,16 +240,18 @@ bool register_vst3_parameters(
 bool synchronize_vst3_parameters(
     Steinberg::Vst::ParameterContainer& container,
     const PersistentConfig& config, Status status) noexcept {
-  for (std::size_t index = 0; index < kParameterCount; ++index) {
-    const ParameterSpec* spec = parameter_spec(index);
+  for (std::size_t index = 0; index < kVst3ParameterCount; ++index) {
+    const ParameterSpec* spec = vst3_parameter_spec(index);
     if (spec == nullptr) {
       return false;
     }
     double plain = 0.0;
     double normalized = 0.0;
     Steinberg::Vst::Parameter* parameter = container.getParameter(spec->id);
-    if (parameter == nullptr ||
-        !parameter_value(config, status, spec->id, plain) ||
+    const bool has_value = index < kParameterCount
+                               ? parameter_value(config, status, spec->id, plain)
+                               : (plain = spec->default_value, true);
+    if (parameter == nullptr || !has_value ||
         !canonical_plain_value(*spec, plain, normalized)) {
       return false;
     }
@@ -222,6 +286,9 @@ bool read_last_boundary_values(
     }
     std::size_t spec_index = 0;
     if (!parameter_index(queue->getParameterId(), spec_index)) {
+      if (find_vst3_parameter(queue->getParameterId()) != nullptr) {
+        return false;
+      }
       continue;
     }
     const ParameterSpec* spec = parameter_spec(spec_index);
@@ -288,7 +355,7 @@ bool read_last_boundary_values(
 bool push_output_value(Steinberg::Vst::IParameterChanges* changes,
                        ParameterId id, double normalized,
                        Steinberg::int32 offset) noexcept {
-  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* spec = find_vst3_parameter(id);
   double plain = 0.0;
   if (changes == nullptr || spec == nullptr || offset < 0 ||
       !canonical_normalized_value(*spec, normalized, plain)) {

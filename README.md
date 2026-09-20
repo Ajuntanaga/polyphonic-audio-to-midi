@@ -62,6 +62,16 @@ python3 tools/stage_live_midi_env.py \
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 
+### Tuner readout
+
+The VST3 exposes two read-only parameters in REAPER's generic plug-in controls:
+`Tuner note` and `Tuner cents`. The note is displayed musically (`A4`, `C#3`,
+and so on), cents are signed to one decimal place, and silence returns
+`No signal` / `+0.0`. The readout follows the strongest detected fundamental
+and uses the plug-in's configured A4 reference. It is intentionally a single
+tuner display; polyphonic MIDI generation remains independent and continues to
+track up to eight simultaneous notes.
+
 ### Start the live chain
 
 On the desktop that has the Revelator attached, launch the prepared 96 kHz
