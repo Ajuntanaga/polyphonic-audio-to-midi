@@ -806,9 +806,7 @@ Steinberg::tresult M3Component::process_samples(
   if (detector_allowed) {
     advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
   }
-  const bool monophonic_detector_allowed =
-      detector_allowed && active_config_.max_polyphony == 1U;
-  if (monophonic_detector_allowed) {
+  if (detector_allowed) {
     detector_.set_runtime_config(active_config_);
     const double input_gain =
         std::pow(10.0, active_config_.input_trim_db / 20.0);

@@ -236,3 +236,68 @@ M3_TEST(vst3_audio_path_tracks_the_highest_open_string_with_profile_range) {
   }
   close_active(instance);
 }
+
+M3_TEST(vst3_audio_path_emits_and_releases_a_two_note_chord) {
+  ActiveInstance instance;
+  M3_EXPECT_TRUE(open_active(instance));
+  if (instance.processor == nullptr) {
+    close_active(instance);
+    return;
+  }
+
+  constexpr std::uint32_t kFrames = 256U;
+  constexpr double kSampleRate = 48000.0;
+  constexpr double kAmplitude = 0.15;
+  constexpr std::uint8_t kFirstNote = 32U;
+  constexpr std::uint8_t kSecondNote = 40U;
+  const double first_frequency =
+      m3::midi_to_frequency(static_cast<double>(kFirstNote), 440.0);
+  const double second_frequency =
+      m3::midi_to_frequency(static_cast<double>(kSecondNote), 440.0);
+  m3::test::FakeVst3ProcessBlock<float> block;
+  m3::test::FakeVst3EventList events;
+  std::array<Steinberg::Vst::Event, 4> captured{};
+  std::size_t captured_count = 0U;
+  std::uint64_t absolute_sample = 0U;
+
+  for (std::uint32_t block_index = 0; block_index < 96U; ++block_index) {
+    block.configure(kFrames, false);
+    for (std::uint32_t frame = 0; frame < kFrames; ++frame) {
+      const double phase = 6.28318530717958647692 *
+                           static_cast<double>(absolute_sample + frame) /
+                           kSampleRate;
+      block.input_left()[frame] = static_cast<float>(
+          kAmplitude * (std::sin(phase * first_frequency) +
+                        std::sin(phase * second_frequency)));
+      block.input_right()[frame] = 0.0F;
+    }
+    block.data().outputEvents = &events;
+    M3_EXPECT_EQ(instance.processor->process(block.data()),
+                 Steinberg::kResultOk);
+    capture_events(events, captured, captured_count);
+    events.reset();
+    absolute_sample += kFrames;
+  }
+  for (std::uint32_t block_index = 0; block_index < 48U; ++block_index) {
+    block.configure(kFrames, false);
+    block.fill_silence();
+    block.data().outputEvents = &events;
+    M3_EXPECT_EQ(instance.processor->process(block.data()),
+                 Steinberg::kResultOk);
+    capture_events(events, captured, captured_count);
+    events.reset();
+  }
+
+  M3_EXPECT_EQ(captured_count, 4U);
+  if (captured_count == 4U) {
+    M3_EXPECT_EQ(captured[0].type, Steinberg::Vst::Event::kNoteOnEvent);
+    M3_EXPECT_EQ(captured[0].noteOn.pitch, 32);
+    M3_EXPECT_EQ(captured[1].type, Steinberg::Vst::Event::kNoteOnEvent);
+    M3_EXPECT_EQ(captured[1].noteOn.pitch, 40);
+    M3_EXPECT_EQ(captured[2].type, Steinberg::Vst::Event::kNoteOffEvent);
+    M3_EXPECT_EQ(captured[2].noteOff.pitch, 32);
+    M3_EXPECT_EQ(captured[3].type, Steinberg::Vst::Event::kNoteOffEvent);
+    M3_EXPECT_EQ(captured[3].noteOff.pitch, 40);
+  }
+  close_active(instance);
+}

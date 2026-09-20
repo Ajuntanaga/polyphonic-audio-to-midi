@@ -22,14 +22,11 @@ Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 
 The default disposable profile is configured for 48 kHz and 256 samples. For
 the Revelator's 96 kHz mode, stage the dedicated profile below. Both profiles
-use MIDI notes `32..60`—the eight open strings—muted dry audio, and one
-detected note at a time. That makes it
-appropriate for clean low-register eight-string lines and single-note playing;
-it is **not yet a polyphonic chord transcriber or a full-fretboard tracker**.
-The native detector and its MIDI note-on/off path have been verified with an
-audio-driven REAPER/VST3 probe. Final guitar calibration remains physical-input
-work: plug the guitar into Revelator input 1, arm/monitor the staged track,
-then adjust input gain or detector sensitivity only if needed.
+use MIDI notes `32..60`—the eight open strings—with muted dry audio and up to
+eight simultaneous generated notes. The native detector and VST3 bridge are
+covered by synthetic mono and two-note chord tests. It is still **not yet a
+validated guitar chord transcriber or a full-fretboard tracker**: physical
+multi-string calibration remains required before relying on it in a session.
 
 To prepare another disposable profile without touching the live REAPER setup:
 
@@ -69,9 +66,9 @@ one armed, monitored `M3 Native 8-String Guitar to MIDI` track automatically:
 Revelator input 1 → M3 Polyphonic Audio to MIDI → ReaSynth
 ```
 
-Play clean single-note lines first. The profile is deliberately limited to the
-eight open-string range (MIDI 32–60), uses muted dry audio, and sends the
-detected note to ReaSynth. If there is no input meter activity, choose the
+Start with clean single-note and two-note playing. The profile is deliberately
+limited to the eight open-string range (MIDI 32–60), uses muted dry audio, and
+sends detected notes to ReaSynth. If there is no input meter activity, choose the
 Revelator's first mono input in REAPER's track input menu; if there is input
 but no synth note, lower the guitar/interface gain before increasing detector
 sensitivity.
@@ -109,8 +106,8 @@ performance-ready and must not be installed. See
 The earlier CLAP experiment remains preserved as historical evidence. The
 current implementation uses VST3 because its disposable host probe succeeded
 and it integrates directly with the staged REAPER chain. The future work that
-matters for music quality is physical 8-string calibration and, separately,
-expanding the detector beyond one simultaneous note.
+matters for music quality is physical 8-string calibration and broader
+multi-note guitar validation beyond the synthetic two-note coverage.
 
 The probe evidence is not a substitute for a guitar performance test. It proves
 the native effect can turn audio into downstream MIDI in REAPER; it does not

@@ -13,6 +13,9 @@ struct DetectorDecision final {
   TickTransitions transitions{};
 };
 
+// The historical type name is retained for ABI/source compatibility. The
+// implementation now ranks and tracks up to PersistentConfig::max_polyphony
+// independent candidates.
 class MonophonicPitchDetector final {
  public:
   MonophonicPitchDetector() noexcept = default;
@@ -27,7 +30,6 @@ class MonophonicPitchDetector final {
  private:
   static constexpr std::size_t kHarmonicCount = 6U;
   static constexpr std::size_t kCellCount = kMaxCandidates * kHarmonicCount;
-  static constexpr std::uint8_t kNoNote = 128U;
 
   struct Cell final {
     double cosine{1.0};
@@ -41,6 +43,7 @@ class MonophonicPitchDetector final {
 
   [[nodiscard]] DetectorDecision make_decision() noexcept;
   void update_cell(Cell& cell, double sample) noexcept;
+  [[nodiscard]] double candidate_score(std::size_t candidate) const noexcept;
   [[nodiscard]] std::uint8_t dynamic_velocity() const noexcept;
   [[nodiscard]] std::uint8_t attack_decisions() const noexcept;
   [[nodiscard]] std::uint8_t release_decisions() const noexcept;
@@ -56,6 +59,7 @@ class MonophonicPitchDetector final {
   double sample_rate_{};
   double dc_pole{};
   double correlation_decay{};
+  double fast_energy_decay{};
   double slow_energy_decay{};
   double previous_input_{};
   double previous_dc_output_{};
@@ -69,10 +73,10 @@ class MonophonicPitchDetector final {
   std::uint8_t response_{25U};
   std::uint8_t fixed_velocity_{100U};
   VelocityMode velocity_mode_{VelocityMode::dynamic};
-  std::uint8_t active_note_{kNoNote};
-  std::uint8_t pending_note_{kNoNote};
-  std::uint8_t pending_ticks_{};
-  std::uint8_t quiet_ticks_{};
+  std::uint8_t max_polyphony_{1U};
+  std::array<bool, kMaxCandidates> active_{};
+  std::array<std::uint8_t, kMaxCandidates> pending_ticks_{};
+  std::array<std::uint8_t, kMaxCandidates> quiet_ticks_{};
   bool configured_{};
 };
 

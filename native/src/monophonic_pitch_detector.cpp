@@ -10,6 +10,10 @@ namespace m3 {
 namespace {
 
 constexpr double kTwoPi = 6.28318530717958647692;
+// At the lowest supported pitches, a very short correlator cannot distinguish
+// neighboring semitones. This remains causal, but retains enough history to
+// rank independent low-string fundamentals instead of adjacent-bin leakage.
+constexpr double kCorrelationSeconds = 0.080;
 constexpr double kFastEnergySeconds = 0.008;
 constexpr double kSlowEnergySeconds = 0.100;
 constexpr double kDcCutoffHz = 15.0;
@@ -27,6 +31,7 @@ bool valid_config(double sample_rate, const PersistentConfig& config) noexcept {
          config.lowest_note >= kMinimumMidiNote &&
          config.highest_note >= config.lowest_note &&
          config.highest_note <= kMaximumMidiNote &&
+         config.max_polyphony >= 1U && config.max_polyphony <= kMaxVoices &&
          static_cast<std::size_t>(config.highest_note - config.lowest_note) +
                  1U <=
              kMaxCandidates;
@@ -49,12 +54,15 @@ bool MonophonicPitchDetector::configure(double sample_rate,
 
   sample_rate_ = sample_rate;
   dc_pole = std::exp(-kTwoPi * kDcCutoffHz / sample_rate_);
-  correlation_decay = std::exp(-1.0 / (kFastEnergySeconds * sample_rate_));
+  correlation_decay = std::exp(-1.0 / (kCorrelationSeconds * sample_rate_));
+  fast_energy_decay =
+      std::exp(-1.0 / (kFastEnergySeconds * sample_rate_));
   slow_energy_decay =
       std::exp(-1.0 / (kSlowEnergySeconds * sample_rate_));
   lowest_note_ = config.lowest_note;
   candidate_count_ = static_cast<std::uint8_t>(
       static_cast<std::uint32_t>(config.highest_note) - lowest_note_ + 1U);
+  max_polyphony_ = config.max_polyphony;
   set_runtime_config(config);
 
   for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
@@ -96,10 +104,9 @@ void MonophonicPitchDetector::reset() noexcept {
   slow_energy_ = 0.0;
   decision_phase_ = 0U;
   transition_sequence_ = 0U;
-  active_note_ = kNoNote;
-  pending_note_ = kNoNote;
-  pending_ticks_ = 0U;
-  quiet_ticks_ = 0U;
+  active_ = {};
+  pending_ticks_ = {};
+  quiet_ticks_ = {};
   for (Cell& cell : cells_) {
     cell.cosine = 1.0;
     cell.sine = 0.0;
@@ -123,7 +130,12 @@ void MonophonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
 }
 
 std::uint8_t MonophonicPitchDetector::attack_decisions() const noexcept {
-  return static_cast<std::uint8_t>(2U + response_ / 20U);
+  const std::uint32_t response_ticks = 2U + response_ / 20U;
+  const std::uint32_t settling_ticks = static_cast<std::uint32_t>(std::ceil(
+      kCorrelationSeconds * sample_rate_ /
+      static_cast<double>(kDecisionQuantum)));
+  return static_cast<std::uint8_t>(
+      std::min<std::uint32_t>(255U, std::max(response_ticks, settling_ticks)));
 }
 
 std::uint8_t MonophonicPitchDetector::release_decisions() const noexcept {
@@ -155,73 +167,105 @@ void MonophonicPitchDetector::append_transition(
   static_cast<void>(decision.transitions.push_back(transition));
 }
 
+double MonophonicPitchDetector::candidate_score(
+    std::size_t candidate) const noexcept {
+  double score = 0.0;
+  for (std::size_t harmonic = 0; harmonic < kHarmonicCount; ++harmonic) {
+    const Cell& cell = cells_[cell_index(candidate, harmonic)];
+    if (!cell.enabled) {
+      continue;
+    }
+    const double energy = cell.fast_real * cell.fast_real +
+                          cell.fast_imaginary * cell.fast_imaginary;
+    score += kHarmonicWeights[harmonic] * energy;
+  }
+  return score;
+}
+
 DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
   DetectorDecision decision;
   const bool quiet = fast_energy_ < signal_floor() ||
                      fast_energy_ < slow_energy_ * 0.05;
-  if (quiet) {
-    pending_note_ = kNoNote;
-    pending_ticks_ = 0U;
-    if (active_note_ != kNoNote && quiet_ticks_ < 255U) {
-      ++quiet_ticks_;
-      if (quiet_ticks_ >= release_decisions()) {
-        append_transition(decision, TransitionKind::note_off, active_note_, 0U);
-        active_note_ = kNoNote;
-        quiet_ticks_ = 0U;
+  std::array<double, kMaxCandidates> scores{};
+  std::array<bool, kMaxCandidates> selected{};
+  const double admission_floor = quiet ? std::numeric_limits<double>::infinity()
+                                       : fast_energy_ * 0.015;
+  std::size_t selected_count = 0U;
+
+  for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
+    scores[candidate] = candidate_score(candidate);
+  }
+  for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
+    if (active_[candidate] && scores[candidate] > admission_floor * 0.35 &&
+        selected_count < max_polyphony_) {
+      selected[candidate] = true;
+      ++selected_count;
+    }
+  }
+  while (selected_count < max_polyphony_) {
+    std::size_t best_candidate = kMaxCandidates;
+    double best_score = admission_floor;
+    for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
+      const bool exceeds_lower_neighbor =
+          candidate == 0U || scores[candidate] > scores[candidate - 1U];
+      const bool meets_upper_neighbor =
+          candidate + 1U == candidate_count_ ||
+          scores[candidate] >= scores[candidate + 1U];
+      if (!selected[candidate] && exceeds_lower_neighbor &&
+          meets_upper_neighbor && scores[candidate] > best_score) {
+        best_score = scores[candidate];
+        best_candidate = candidate;
       }
     }
-    return decision;
+    if (best_candidate == kMaxCandidates) {
+      break;
+    }
+    selected[best_candidate] = true;
+    ++selected_count;
   }
 
-  quiet_ticks_ = 0U;
-  double best_score = 0.0;
-  std::uint8_t best_note = kNoNote;
+  std::size_t active_count = 0U;
+  for (bool is_active : active_) {
+    if (is_active) {
+      ++active_count;
+    }
+  }
   for (std::size_t candidate = 0; candidate < candidate_count_; ++candidate) {
-    double score = 0.0;
-    for (std::size_t harmonic = 0; harmonic < kHarmonicCount; ++harmonic) {
-      const Cell& cell = cells_[cell_index(candidate, harmonic)];
-      if (!cell.enabled) {
+    const std::uint8_t note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    if (selected[candidate]) {
+      quiet_ticks_[candidate] = 0U;
+      if (active_[candidate]) {
+        pending_ticks_[candidate] = 0U;
         continue;
       }
-      const double energy = cell.fast_real * cell.fast_real +
-                            cell.fast_imaginary * cell.fast_imaginary;
-      score += kHarmonicWeights[harmonic] * energy;
+      if (pending_ticks_[candidate] < 255U) {
+        ++pending_ticks_[candidate];
+      }
+      if (pending_ticks_[candidate] >= attack_decisions() &&
+          active_count < max_polyphony_) {
+        append_transition(decision, TransitionKind::note_on, note,
+                          dynamic_velocity());
+        active_[candidate] = true;
+        ++active_count;
+        pending_ticks_[candidate] = 0U;
+      }
+      continue;
     }
-    if (score > best_score) {
-      best_score = score;
-      best_note = static_cast<std::uint8_t>(lowest_note_ + candidate);
-    }
-  }
 
-  const bool candidate_is_coherent =
-      best_note != kNoNote && best_score > fast_energy_ * 0.05;
-  if (!candidate_is_coherent) {
-    pending_note_ = kNoNote;
-    pending_ticks_ = 0U;
-    return decision;
+    pending_ticks_[candidate] = 0U;
+    if (!active_[candidate]) {
+      continue;
+    }
+    if (quiet_ticks_[candidate] < 255U) {
+      ++quiet_ticks_[candidate];
+    }
+    if (quiet_ticks_[candidate] >= release_decisions()) {
+      append_transition(decision, TransitionKind::note_off, note, 0U);
+      active_[candidate] = false;
+      --active_count;
+      quiet_ticks_[candidate] = 0U;
+    }
   }
-  if (best_note == active_note_) {
-    pending_note_ = kNoNote;
-    pending_ticks_ = 0U;
-    return decision;
-  }
-  if (best_note != pending_note_) {
-    pending_note_ = best_note;
-    pending_ticks_ = 1U;
-  } else if (pending_ticks_ < 255U) {
-    ++pending_ticks_;
-  }
-  if (pending_ticks_ < attack_decisions()) {
-    return decision;
-  }
-  if (active_note_ != kNoNote) {
-    append_transition(decision, TransitionKind::note_off, active_note_, 0U);
-  }
-  active_note_ = best_note;
-  append_transition(decision, TransitionKind::note_on, active_note_,
-                    dynamic_velocity());
-  pending_note_ = kNoNote;
-  pending_ticks_ = 0U;
   return decision;
 }
 
@@ -233,8 +277,8 @@ DetectorDecision MonophonicPitchDetector::process_sample(double sample) noexcept
   previous_input_ = sample;
   previous_dc_output_ = dc_blocked;
   const double power = dc_blocked * dc_blocked;
-  const double energy_mix = 1.0 - correlation_decay;
-  fast_energy_ = correlation_decay * fast_energy_ + energy_mix * power;
+  const double energy_mix = 1.0 - fast_energy_decay;
+  fast_energy_ = fast_energy_decay * fast_energy_ + energy_mix * power;
   const double slow_energy_mix = 1.0 - slow_energy_decay;
   slow_energy_ = slow_energy_decay * slow_energy_ + slow_energy_mix * power;
   for (Cell& cell : cells_) {
