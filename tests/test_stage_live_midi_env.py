@@ -128,7 +128,7 @@ class StageLiveMidiProfileTests(unittest.TestCase):
             self.assertIn(
                 "TrackFX_SetParamNormalized(track, detector, 4, 0.75)", setup
             )
-            self.assertIn("TrackFX_SetParamNormalized(track, detector, 8, 0.0)", setup)
+            self.assertIn("TrackFX_SetParamNormalized(track, detector, 8, 1.0)", setup)
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 14, 0.0)", setup)
 
 
