@@ -1,20 +1,22 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-21
+Updated: 2026-09-22
 
 ## Current integrated product checkpoint
 
-- Active worktree: `.worktrees/m3-native-polyphony`, branch
-  `feat/m3-native-polyphony`. The branch now integrates `main`'s current
+- Active worktree: repository root, branch `main`. It integrates the current
   stereo/96 kHz staging and generic host tuner parameters with the native
   eight-voice detector, tuner telemetry, and custom VSTGUI editor. The staged
   live preset selects full polyphony by default and opens the editor
   automatically.
-- The native suite passes 152/152, the full Python discovery suite passes
-  344/344, `tools/validate_native_source.py` passes, and Steinberg's production
-  VST3 validator reports `pass`. The canonical release module is
+- The native suite passes 153/153, including the REAPER custom-to-generic-to-
+  custom editor reattach regression. Python discovery passes 343/344; its sole
+  failure is the workspace-hygiene assertion finding 29 pre-existing ignored
+  `.vst3` build bundles beneath `.worktrees/`, which were preserved. The
+  plugin-facing checks, `tools/validate_native_source.py`, and Steinberg's
+  production VST3 validator pass. The canonical release module is
   `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3/Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so`,
-  SHA-256 `444c64486e98fff6933887bce30ffe0625b67ed96de064e01f100104c10a8505`.
+  SHA-256 `bc181869c7b50b07d2282ea7f3607c607aac7b24daff9ef6508255e1f6f45fb9`.
 - The disposable system-audio profile is
   `build/m3-native-live-midi-system/reaper.ini`. It is bound only to the
   built-in `Generic_1` ALC257 codec through `plughw:Generic_1,0`, with REAPER

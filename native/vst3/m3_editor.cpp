@@ -1398,7 +1398,31 @@ class M3Editor final : public VSTGUI::VST3Editor {
   double content_scale_factor_for_test() const noexcept {
     return getContentScaleFactor();
   }
+
+  std::size_t attach_refresh_count_for_test() const noexcept {
+    return attach_refresh_count_;
+  }
 #endif
+
+  Steinberg::tresult PLUGIN_API attached(
+      void* parent, Steinberg::FIDString type) override {
+    const Steinberg::tresult result =
+        VSTGUI::VST3Editor::attached(parent, type);
+    if (result_ok(result)) {
+      // VSTGUI builds and invalidates the view before the native platform
+      // frame is attached. Hosts such as REAPER can reuse the same plug-view
+      // after showing their generic parameter UI, so that early invalidation
+      // is not guaranteed to produce a fresh expose. Invalidate once more
+      // after attachment to repaint the complete opaque editor surface.
+      if (VSTGUI::CFrame* editor_frame = getFrame()) {
+        editor_frame->invalid();
+      }
+#if defined(M3_TESTING)
+      ++attach_refresh_count_;
+#endif
+    }
+    return result;
+  }
 
  protected:
   ~M3Editor() override = default;
@@ -1536,6 +1560,9 @@ class M3Editor final : public VSTGUI::VST3Editor {
   VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> tuner_timer_{};
   double logical_width_{static_cast<double>(kEditorWidth)};
   double logical_height_{static_cast<double>(kEditorHeight)};
+#if defined(M3_TESTING)
+  std::size_t attach_refresh_count_{};
+#endif
 };
 
 }  // namespace
@@ -1676,6 +1703,11 @@ bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
 std::size_t editor_tuner_invalidation_count_for_test(
     Steinberg::IPlugView& view) noexcept {
   return static_cast<M3Editor*>(&view)->tuner_invalidation_count_for_test();
+}
+
+std::size_t editor_attach_refresh_count_for_test(
+    Steinberg::IPlugView& view) noexcept {
+  return static_cast<M3Editor*>(&view)->attach_refresh_count_for_test();
 }
 #endif
 

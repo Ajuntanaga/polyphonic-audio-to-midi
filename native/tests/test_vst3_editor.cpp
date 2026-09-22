@@ -428,6 +428,72 @@ M3_TEST(vst3_probe_editor_public_attach_remove_is_safe_and_silent) {
   }
 }
 
+M3_TEST(vst3_editor_custom_generic_custom_round_trip_restores_full_surface) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      M3_EXPECT_EQ(
+          m3::vst3::editor_attach_refresh_count_for_test(*view), 1U);
+
+      // REAPER temporarily substitutes a shorter generic parameter view.
+      Steinberg::ViewRect generic_size{0, 0, m3::vst3::kEditorWidth, 560};
+      M3_EXPECT_EQ(view->onSize(&generic_size), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      M3_EXPECT_EQ(
+          m3::vst3::editor_attach_refresh_count_for_test(*view), 2U);
+      Steinberg::ViewRect restored{};
+      M3_EXPECT_EQ(view->getSize(&restored), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(restored.getWidth(), m3::vst3::kEditorWidth);
+      M3_EXPECT_EQ(restored.getHeight(), m3::vst3::kEditorHeight);
+      m3::vst3::EditorRect dry_audio{};
+      M3_EXPECT_TRUE(m3::vst3::editor_control_bounds_for_test(
+          *view, 0x4D33000FU, dry_audio));
+      M3_EXPECT_TRUE(dry_audio.bottom <=
+                     static_cast<double>(m3::vst3::kEditorHeight));
+
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
 M3_TEST(vst3_editor_writable_controls_emit_one_exact_host_gesture) {
   Steinberg::IPluginFactory* factory = GetPluginFactory();
   Steinberg::Vst::IComponent* component = nullptr;

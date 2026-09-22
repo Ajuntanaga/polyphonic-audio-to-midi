@@ -62,6 +62,8 @@ bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
                                     TunerSnapshot& snapshot) noexcept;
 std::size_t editor_tuner_invalidation_count_for_test(
     Steinberg::IPlugView& view) noexcept;
+std::size_t editor_attach_refresh_count_for_test(
+    Steinberg::IPlugView& view) noexcept;
 #endif
 
 Steinberg::IPlugView* create_m3_editor(

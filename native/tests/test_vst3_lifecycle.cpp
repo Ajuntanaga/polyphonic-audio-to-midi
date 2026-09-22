@@ -158,6 +158,10 @@ M3_TEST(vst3_busses_layout_sample_sizes_latency_tail_and_view_are_exact) {
     processor->release();
   }
   M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+  M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+  M3_EXPECT_EQ(component->setActive(Steinberg::TBool{0}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
   component->release();
   if (factory != nullptr) {
     factory->release();
@@ -205,6 +209,10 @@ M3_TEST(vst3_setup_activation_and_processing_state_machine_rejects_bad_inputs) {
                    Steinberg::kResultOk);
     M3_EXPECT_EQ(processor->setProcessing(Steinberg::TBool{0}),
                  Steinberg::kResultOk);
+    M3_EXPECT_EQ(component->setActive(Steinberg::TBool{0}),
+                 Steinberg::kResultOk);
+    // Steinberg's valid-state-transition validator leaves the component
+    // inactive before its generic teardown deactivates it again.
     M3_EXPECT_EQ(component->setActive(Steinberg::TBool{0}),
                  Steinberg::kResultOk);
     processor->release();

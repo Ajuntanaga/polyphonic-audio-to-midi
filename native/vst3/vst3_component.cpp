@@ -252,7 +252,13 @@ Steinberg::tresult PLUGIN_API M3Component::setupProcessing(
 }
 
 Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
-  if (!is_boolean(state) || !initialized_ || !setup_complete_) {
+  if (!is_boolean(state) || !initialized_) {
+    return Steinberg::kInvalidArgument;
+  }
+  if (state == Steinberg::TBool{0} && !active_ && !processing_) {
+    return Steinberg::kResultOk;
+  }
+  if (!setup_complete_) {
     return Steinberg::kInvalidArgument;
   }
   if (state == Steinberg::TBool{1}) {
@@ -309,8 +315,11 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     status_dirty_ = false;
     return Steinberg::kResultOk;
   }
-  if (!active_ || processing_) {
+  if (processing_) {
     return Steinberg::kResultFalse;
+  }
+  if (!active_) {
+    return Steinberg::kResultOk;
   }
   if (prepared_claim_pending_) {
     static_cast<void>(prepared_exchange_.cancel(prepared_claim_));
