@@ -1,6 +1,38 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-11
+Updated: 2026-09-21
+
+## Current integrated product checkpoint
+
+- Active worktree: `.worktrees/m3-native-polyphony`, branch
+  `feat/m3-native-polyphony`. The branch now integrates `main`'s current
+  stereo/96 kHz staging and generic host tuner parameters with the native
+  eight-voice detector, tuner telemetry, and custom VSTGUI editor. The staged
+  live preset selects full polyphony by default and opens the editor
+  automatically.
+- The native suite passes 152/152, the full Python discovery suite passes
+  344/344, `tools/validate_native_source.py` passes, and Steinberg's production
+  VST3 validator reports `pass`. The canonical release module is
+  `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3/Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so`,
+  SHA-256 `1c1888849348d1db88cd473b82c2480561f15a5fbcdbec05176c9b313cd52093`.
+- The disposable system-audio profile is
+  `build/m3-native-live-midi-system/reaper.ini`. It is bound only to the
+  built-in `Generic_1` ALC257 codec through `plughw:Generic_1,0`, with REAPER
+  configured for 96 kHz and 512 samples. Direct device checks confirmed
+  96 kHz/512 stereo capture; built-in playback is physically 48 kHz/256 and is
+  converted by ALSA `plughw` while the plug-in graph remains 96 kHz/512.
+  The io24 (`R24`) was not opened.
+- A real disposable REAPER 7.79 launch discovered the production VST3, created
+  the armed `M3 Native 8-String Guitar to MIDI` track, opened the custom editor,
+  and held only `/dev/snd/pcmC2D0{c,p}`. This verifies discovery, editor
+  integration, and the selected normal-audio route. It does not by itself
+  prove musical tracking from a physically played guitar; that still needs a
+  player-generated input pass.
+- The separate V4 evidence worktree is sealed through Q46 at commit
+  `ba895a28c6676116dbca81d16a4d57f104e011dd`. Q46 unifies eight captured ELF
+  nodes, ten ordered dependency declarations, and ten exact SONAME matches;
+  no unmatched declarations remain. That lane is evidence for future isolated
+  fixture/host closure, not a substitute for the working product checks above.
 
 ## Current native M3 polyphonic VST3 + tuner checkpoint
 

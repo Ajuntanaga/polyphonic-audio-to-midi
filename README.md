@@ -51,8 +51,26 @@ python3 tools/stage_live_midi_env.py \
   --sample-rate 96000
 ```
 
+If the io24/Revelator is in use elsewhere, stage a separate profile against
+the computer's normal stereo audio system. This leaves both the interface and
+the normal REAPER profile untouched:
+
+```bash
+python3 tools/stage_live_midi_env.py \
+  --output build/m3-native-live-midi-system \
+  --input-device plughw:Generic_1,0 --output-device plughw:Generic_1,0 \
+  --input-channels 2 --output-channels 2 \
+  --sample-rate 96000 --block-size 512 \
+  --detector native \
+  --native-bundle build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3
+```
+
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
+On the validation workstation, `Generic_1` is the built-in ALC257 codec and is
+distinct from the `R24` io24. Its capture stream runs natively at 96 kHz/512;
+the ALSA `plughw` layer keeps REAPER's processing graph at 96 kHz/512 while
+converting the built-in playback stream to the codec's 48 kHz hardware rate.
 
 ### Build and validate the editor bundle
 
@@ -84,6 +102,11 @@ claim that a displayed voice was delivered as a host MIDI event. `Ready`
 remains truthful text from the existing Status parameter. A host that cannot
 attach the custom editor can still use the unchanged generic VST3 parameter
 surface.
+
+The host's generic parameter list also exposes a read-only strongest-voice
+projection as `Tuner note` and `Tuner cents`. This is a compatibility view for
+hosts that do not open the editor. It does not reduce the eight-voice editor
+stack or the polyphonic MIDI output to monophonic operation.
 
 ### Start the live chain
 

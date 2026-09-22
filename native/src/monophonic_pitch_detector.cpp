@@ -741,6 +741,22 @@ void MonophonicPitchDetector::write_snapshot(
   if (quiet && voice_count == 0U) {
     snapshot.state = TunerFrameState::no_signal;
   }
+  decision.tuner.updated = true;
+  if (voice_count != 0U) {
+    std::size_t strongest = 0U;
+    for (std::size_t index = 1U; index < voice_count; ++index) {
+      if (snapshot.voices[index].confidence_q15 >
+          snapshot.voices[strongest].confidence_q15) {
+        strongest = index;
+      }
+    }
+    const TunerVoice& voice = snapshot.voices[strongest];
+    decision.tuner.signal = true;
+    decision.tuner.note = voice.midi_note;
+    decision.tuner.cents = voice.cents_valid
+                               ? static_cast<double>(voice.cents_q8) / 256.0
+                               : 0.0;
+  }
   decision.tuner_snapshot_ready = true;
 }
 

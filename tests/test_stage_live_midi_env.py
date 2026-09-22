@@ -60,6 +60,30 @@ class StageLiveMidiProfileTests(unittest.TestCase):
             self.assertIn("linux_audio_srate=96000\n", profile)
             self.assertIn("linux_audio_bsize=256\n", profile)
 
+    def test_stages_two_channel_normal_system_audio_profile(self) -> None:
+        """A non-interface profile can use ordinary stereo ALSA devices."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output = pathlib.Path(temporary) / "m3-normal-system-audio"
+
+            stage_live_profile(
+                ROOT,
+                output,
+                input_device="default",
+                output_device="default",
+                sample_rate=96000,
+                block_size=512,
+                input_channels=2,
+                output_channels=2,
+            )
+
+            profile = (output / "reaper.ini").read_text(encoding="utf-8")
+            self.assertIn("alsa_indev=default\n", profile)
+            self.assertIn("alsa_outdev=default\n", profile)
+            self.assertIn("linux_audio_srate=96000\n", profile)
+            self.assertIn("linux_audio_bsize=512\n", profile)
+            self.assertIn("linux_audio_nch_in=2\n", profile)
+            self.assertIn("linux_audio_nch_out=2\n", profile)
+
     def test_stages_native_detector_bundle_in_a_separate_profile(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             temporary_root = pathlib.Path(temporary)
@@ -106,6 +130,7 @@ class StageLiveMidiProfileTests(unittest.TestCase):
             )
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 8, 1.0)", setup)
             self.assertIn("TrackFX_SetParamNormalized(track, detector, 14, 0.0)", setup)
+            self.assertIn("TrackFX_Show(track, detector, 3)", setup)
 
 
 if __name__ == "__main__":

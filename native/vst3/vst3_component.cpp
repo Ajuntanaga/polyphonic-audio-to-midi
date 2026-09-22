@@ -140,9 +140,13 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
   detector_reset_count_ = 0U;
+  tuner_note_ = kTunerNoSignalNote;
+  tuner_cents_ = 0.0;
   panic_ready_dirty_.store(false, std::memory_order_relaxed);
   panic_requested_.store(false, std::memory_order_relaxed);
   status_dirty_ = false;
+  tuner_note_dirty_ = false;
+  tuner_cents_dirty_ = false;
   initialized_ = true;
   status_ = Status::ready;
 #if defined(M3_TESTING)
@@ -181,12 +185,16 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
   detector_reset_count_ = 0U;
+  tuner_note_ = kTunerNoSignalNote;
+  tuner_cents_ = 0.0;
   structural_boundary_pending_ = false;
   release_channel_pending_ = false;
   processing_started_once_ = false;
   panic_ready_dirty_.store(false, std::memory_order_relaxed);
   panic_requested_.store(false, std::memory_order_relaxed);
   status_dirty_ = false;
+  tuner_note_dirty_ = false;
+  tuner_cents_dirty_ = false;
   status_ = Status::ready;
 #if defined(M3_TESTING)
   terminated_count.fetch_add(1U, std::memory_order_relaxed);
@@ -314,6 +322,7 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
   active_ = false;
   generated_notes_.release_storage_preserving_pending();
   tuner_telemetry_.clear(TunerFrameState::unavailable);
+  update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   return Steinberg::kResultOk;
 }
 
@@ -363,6 +372,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
@@ -370,6 +380,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
@@ -379,6 +390,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     raise_status(Status::invalid_input_or_state);
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
     publish_parameter_outputs(data.outputParameterChanges);
     return Steinberg::kInvalidArgument;
   }
@@ -417,6 +429,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
   raise_status(Status::invalid_input_or_state);
   generated_notes_.report_output_failure();
   tuner_telemetry_.clear(TunerFrameState::unavailable);
+  update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   publish_parameter_outputs(data.outputParameterChanges);
   return Steinberg::kInvalidArgument;
 }
@@ -476,13 +489,14 @@ Steinberg::tresult PLUGIN_API M3Component::getParamStringByValue(
     return Steinberg::kInvalidArgument;
   }
   text[0] = 0;
-  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* spec = find_vst3_parameter(id);
   double plain = 0.0;
   char ascii[128]{};
   if (spec == nullptr ||
       !canonical_normalized_value(*spec, normalized, plain) ||
-      !parameter_value_to_text(id, plain, ascii,
-                               static_cast<std::uint32_t>(sizeof(ascii)))) {
+      !vst3_parameter_value_to_text(
+          id, plain, ascii,
+          static_cast<std::uint32_t>(sizeof(ascii)))) {
     return Steinberg::kResultFalse;
   }
   Steinberg::UString(text, 128).fromAscii(ascii);
@@ -492,8 +506,8 @@ Steinberg::tresult PLUGIN_API M3Component::getParamStringByValue(
 Steinberg::tresult PLUGIN_API M3Component::getParamValueByString(
     Steinberg::Vst::ParamID id, Steinberg::Vst::TChar* text,
     Steinberg::Vst::ParamValue& normalized) {
-  const ParameterSpec* spec = find_parameter(id);
-  if (spec == nullptr || text == nullptr) {
+  const ParameterSpec* spec = find_vst3_parameter(id);
+  if (spec == nullptr || spec->read_only || text == nullptr) {
     return Steinberg::kResultFalse;
   }
   char ascii[128]{};
@@ -513,7 +527,7 @@ Steinberg::Vst::ParamValue PLUGIN_API
 M3Component::normalizedParamToPlain(
     Steinberg::Vst::ParamID id,
     Steinberg::Vst::ParamValue normalized) {
-  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* spec = find_vst3_parameter(id);
   double plain = std::numeric_limits<double>::quiet_NaN();
   if (spec != nullptr) {
     static_cast<void>(canonical_normalized_value(*spec, normalized, plain));
@@ -524,7 +538,7 @@ M3Component::normalizedParamToPlain(
 Steinberg::Vst::ParamValue PLUGIN_API
 M3Component::plainParamToNormalized(Steinberg::Vst::ParamID id,
                                     Steinberg::Vst::ParamValue plain) {
-  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* spec = find_vst3_parameter(id);
   double normalized = std::numeric_limits<double>::quiet_NaN();
   if (spec != nullptr) {
     static_cast<void>(canonical_plain_value(*spec, plain, normalized));
@@ -534,7 +548,7 @@ M3Component::plainParamToNormalized(Steinberg::Vst::ParamID id,
 
 Steinberg::tresult PLUGIN_API M3Component::setParamNormalized(
     Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue normalized) {
-  const ParameterSpec* spec = find_parameter(id);
+  const ParameterSpec* spec = find_vst3_parameter(id);
   double plain = 0.0;
   if (!initialized_ || spec == nullptr || spec->read_only ||
       !canonical_normalized_value(*spec, normalized, plain)) {
@@ -690,7 +704,31 @@ void M3Component::reset_detector_transients() noexcept {
   decision_tick_count_ = 0U;
   detector_.reset();
   tuner_telemetry_.clear(TunerFrameState::no_signal);
+  update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   ++detector_reset_count_;
+}
+
+void M3Component::update_tuner(const TunerEstimate& estimate) noexcept {
+  if (!estimate.updated) {
+    return;
+  }
+  const std::uint8_t note = estimate.signal && estimate.note <= 127U
+                                ? estimate.note
+                                : kTunerNoSignalNote;
+  const double cents = note == kTunerNoSignalNote ||
+                               !std::isfinite(estimate.cents)
+                           ? 0.0
+                           : std::clamp(std::round(estimate.cents * 10.0) /
+                                            10.0,
+                                        -50.0, 50.0);
+  if (tuner_note_ != note) {
+    tuner_note_ = note;
+    tuner_note_dirty_ = true;
+  }
+  if (tuner_cents_ != cents) {
+    tuner_cents_ = cents;
+    tuner_cents_dirty_ = true;
+  }
 }
 
 void M3Component::advance_decision_phase(std::uint32_t frames) noexcept {
@@ -729,13 +767,31 @@ void M3Component::update_delivery_status(
 void M3Component::publish_parameter_outputs(
     Steinberg::Vst::IParameterChanges* output) noexcept {
   if (status_dirty_) {
-    const ParameterSpec* spec = find_parameter(kStatusParameterId);
+    const ParameterSpec* spec = find_vst3_parameter(kStatusParameterId);
     const double normalized =
         spec != nullptr
             ? plain_to_normalized(*spec, static_cast<double>(status_))
             : std::numeric_limits<double>::quiet_NaN();
     if (push_output_value(output, kStatusParameterId, normalized, 0)) {
       status_dirty_ = false;
+    }
+  }
+  if (tuner_note_dirty_) {
+    const ParameterSpec* spec = find_vst3_parameter(kTunerNoteParameterId);
+    const double normalized =
+        spec != nullptr ? plain_to_normalized(*spec, tuner_note_)
+                        : std::numeric_limits<double>::quiet_NaN();
+    if (push_output_value(output, kTunerNoteParameterId, normalized, 0)) {
+      tuner_note_dirty_ = false;
+    }
+  }
+  if (tuner_cents_dirty_) {
+    const ParameterSpec* spec = find_vst3_parameter(kTunerCentsParameterId);
+    const double normalized =
+        spec != nullptr ? plain_to_normalized(*spec, tuner_cents_)
+                        : std::numeric_limits<double>::quiet_NaN();
+    if (push_output_value(output, kTunerCentsParameterId, normalized, 0)) {
+      tuner_cents_dirty_ = false;
     }
   }
   if (panic_ready_dirty_.load(std::memory_order_acquire) &&
@@ -807,6 +863,7 @@ Steinberg::tresult M3Component::process_samples(
     release_channel_pending_ = true;
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
     zero_available_output<Sample>(data);
     retry_pending_releases(data);
     deliver_generated_notes(data, true, false, 0.0);
@@ -832,6 +889,8 @@ Steinberg::tresult M3Component::process_samples(
     }
     release_channel_pending_ = true;
     generated_notes_.report_output_failure();
+    tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
   const bool detector_allowed =
       !result.nonfinite_input && !structural_boundary_pending_ &&
@@ -865,6 +924,7 @@ Steinberg::tresult M3Component::process_samples(
       if (decision.tuner_snapshot_ready) {
         tuner_telemetry_.publish(decision.tuner_snapshot);
       }
+      update_tuner(decision.tuner);
       for (std::size_t index = 0; index < decision.transitions.size(); ++index) {
         VoiceTransition transition = decision.transitions[index];
         transition.sample_offset = frame;
@@ -879,6 +939,7 @@ Steinberg::tresult M3Component::process_samples(
     }
   } else {
     tuner_telemetry_.clear(TunerFrameState::unavailable);
+    update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
   if (structural_boundary_pending_) {
     generated_notes_.begin_block();

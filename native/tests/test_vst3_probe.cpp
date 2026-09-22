@@ -407,7 +407,7 @@ M3_TEST(vst3_probe_diagnostics_publish_once_per_processing_start) {
   M3_EXPECT_TRUE(open_probe(instance, 96000.0, Steinberg::Vst::kSample32,
                             512U));
   if (instance.object != nullptr && instance.processing) {
-    constexpr Steinberg::int32 kProductionParameterCount = 16;
+    constexpr Steinberg::int32 kProductionParameterCount = 18;
     constexpr Steinberg::int32 kDiagnosticParameterCount = 21;
     M3_EXPECT_EQ(instance.object->getParameterCount(),
                  kProductionParameterCount + kDiagnosticParameterCount);

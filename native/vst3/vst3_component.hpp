@@ -150,6 +150,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void retry_pending_releases(Steinberg::Vst::ProcessData& data) noexcept;
   void commit_prepared_config_if_released() noexcept;
   void reset_detector_transients() noexcept;
+  void update_tuner(const TunerEstimate& estimate) noexcept;
   void advance_decision_phase(std::uint32_t frames) noexcept;
   void set_status(Status status) noexcept;
   void raise_status(Status status) noexcept;
@@ -187,12 +188,16 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   std::uint32_t decision_phase_{};
   std::uint32_t detector_reset_count_{};
   std::uint8_t release_midi_channel_{1};
+  std::uint8_t tuner_note_{kTunerNoSignalNote};
+  double tuner_cents_{};
   bool setup_prepared_valid_{};
   bool prepared_exchange_initialized_{};
   bool prepared_claim_pending_{};
   bool structural_boundary_pending_{};
   bool release_channel_pending_{};
   bool status_dirty_{};
+  bool tuner_note_dirty_{};
+  bool tuner_cents_dirty_{};
   std::atomic<bool> panic_ready_dirty_{false};
   std::atomic<bool> panic_requested_{false};
 };

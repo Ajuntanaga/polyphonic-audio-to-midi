@@ -13,6 +13,9 @@ namespace m3 {
 struct DetectorDecision final {
   TickTransitions transitions{};
   TunerSnapshot tuner_snapshot{};
+  // A host-readable strongest-voice projection accompanies the full
+  // polyphonic editor snapshot. It does not replace or limit MIDI polyphony.
+  TunerEstimate tuner{};
   bool tuner_snapshot_ready{};
 };
 

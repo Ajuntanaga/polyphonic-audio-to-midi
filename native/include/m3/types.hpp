@@ -20,6 +20,15 @@ enum class Status : std::uint8_t {
 };
 enum class TransitionKind : std::uint8_t { note_off, note_on };
 
+inline constexpr std::uint8_t kTunerNoSignalNote = 128U;
+
+struct TunerEstimate final {
+  bool updated{};
+  bool signal{};
+  std::uint8_t note{kTunerNoSignalNote};
+  double cents{};
+};
+
 struct PersistentConfig final {
   DetectorInput detector_input{DetectorInput::left};
   ProfileMode profile_mode{ProfileMode::m3};
