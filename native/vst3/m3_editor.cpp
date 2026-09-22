@@ -97,6 +97,9 @@ const VSTGUI::CColor kIvory{244U, 237U, 218U, 255U};
 const VSTGUI::CColor kIvoryShade{222U, 213U, 192U, 255U};
 const VSTGUI::CColor kIvoryHighlight{255U, 251U, 239U, 255U};
 const VSTGUI::CColor kInk{14U, 17U, 18U, 255U};
+const VSTGUI::CColor kInTuneBlue{23U, 103U, 183U, 255U};
+const VSTGUI::CColor kInTuneBlueBloom{23U, 103U, 232U, 255U};
+const VSTGUI::CColor kInTuneBlueHighlight{112U, 196U, 255U, 255U};
 
 bool result_ok(Steinberg::tresult result) noexcept {
   return result == Steinberg::kResultOk || result == Steinberg::kResultTrue;
@@ -2117,7 +2120,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
                           voice->state == TunerVoiceState::tracking;
     const bool cents_valid = tracking && voice->cents_valid && needle_active;
     const bool in_tune = cents_valid && std::abs(displayed_cents) <= 2.0;
-    const VSTGUI::CColor needle_color = in_tune ? kInk : kCyan;
+    const VSTGUI::CColor needle_color = in_tune ? kInTuneBlue : kCyan;
 
     draw_label(context, "-50",
                VSTGUI::CRect(lane.left + 4.0, lane.top + 6.0,
@@ -2137,6 +2140,45 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
         to_rect(editor_tuner_meter_arc_bounds(lane_bounds));
     VSTGUI::CRect arc_shadow = arc;
     arc_shadow.offset(1.5, 2.5);
+    if (in_tune) {
+      VSTGUI::CRect outer_glow = arc_shadow;
+      outer_glow.offset(0.0, 2.0);
+      constexpr float kOuterGlowStart = static_cast<float>(
+          VSTGUI::Constants::pi * (220.0 / 180.0));
+      constexpr float kOuterGlowEnd = static_cast<float>(
+          VSTGUI::Constants::pi * (320.0 / 180.0));
+      context->setFrameColor(VSTGUI::CColor(
+          kInTuneBlueBloom.red, kInTuneBlueBloom.green,
+          kInTuneBlueBloom.blue, 34U));
+      context->setLineWidth(14.0);
+      context->drawArc(outer_glow, kOuterGlowStart, kOuterGlowEnd,
+                       VSTGUI::kDrawStroked);
+
+      VSTGUI::CRect middle_glow = arc_shadow;
+      middle_glow.offset(0.0, 1.35);
+      constexpr float kMiddleGlowStart = static_cast<float>(
+          VSTGUI::Constants::pi * (232.0 / 180.0));
+      constexpr float kMiddleGlowEnd = static_cast<float>(
+          VSTGUI::Constants::pi * (308.0 / 180.0));
+      context->setFrameColor(VSTGUI::CColor(
+          kInTuneBlue.red, kInTuneBlue.green, kInTuneBlue.blue, 58U));
+      context->setLineWidth(8.0);
+      context->drawArc(middle_glow, kMiddleGlowStart, kMiddleGlowEnd,
+                       VSTGUI::kDrawStroked);
+
+      VSTGUI::CRect inner_glow = arc_shadow;
+      inner_glow.offset(0.0, 0.8);
+      constexpr float kInnerGlowStart = static_cast<float>(
+          VSTGUI::Constants::pi * (250.0 / 180.0));
+      constexpr float kInnerGlowEnd = static_cast<float>(
+          VSTGUI::Constants::pi * (290.0 / 180.0));
+      context->setFrameColor(VSTGUI::CColor(
+          kInTuneBlueHighlight.red, kInTuneBlueHighlight.green,
+          kInTuneBlueHighlight.blue, 86U));
+      context->setLineWidth(3.2);
+      context->drawArc(inner_glow, kInnerGlowStart, kInnerGlowEnd,
+                       VSTGUI::kDrawStroked);
+    }
     context->setFrameColor(VSTGUI::CColor(58U, 51U, 41U, 118U));
     context->setLineWidth(5.5);
     constexpr float kArcStart =
@@ -2170,20 +2212,37 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       const double angle_degrees = 270.0 + displayed_cents * 1.4;
       const double angle = angle_degrees * VSTGUI::Constants::pi / 180.0;
       const VSTGUI::CPoint endpoint(
-          pivot.x + std::cos(angle) * (outer_x - 5.0),
-          pivot.y + std::sin(angle) * (outer_y - 5.0));
+          pivot.x + std::cos(angle) * outer_x,
+          pivot.y + std::sin(angle) * outer_y);
       draw_rule(context, VSTGUI::CPoint(pivot.x + 2.0, pivot.y + 2.5),
                 VSTGUI::CPoint(endpoint.x + 2.0, endpoint.y + 2.5),
                 VSTGUI::CColor(53U, 42U, 30U, 150U), 5.0);
-      if (!in_tune) {
-        draw_rule(context, pivot, endpoint,
-                  VSTGUI::CColor(kCyan.red, kCyan.green, kCyan.blue, 38U),
-                  9.0);
-        draw_rule(context, pivot, endpoint,
-                  VSTGUI::CColor(kCyan.red, kCyan.green, kCyan.blue, 94U),
-                  5.0);
-      }
+      draw_rule(context, pivot, endpoint,
+                VSTGUI::CColor(needle_color.red, needle_color.green,
+                                 needle_color.blue, 38U),
+                9.0);
+      draw_rule(context, pivot, endpoint,
+                VSTGUI::CColor(needle_color.red, needle_color.green,
+                                 needle_color.blue, 94U),
+                5.0);
       draw_rule(context, pivot, endpoint, needle_color, 3.2);
+      if (in_tune) {
+        const double length = std::hypot(endpoint.x - pivot.x,
+                                         endpoint.y - pivot.y);
+        const VSTGUI::CPoint highlight_offset(
+            length > 0.0 ? (endpoint.y - pivot.y) * 0.55 / length : 0.0,
+            length > 0.0 ? (pivot.x - endpoint.x) * 0.55 / length : 0.0);
+        draw_rule(
+            context,
+            VSTGUI::CPoint(pivot.x + highlight_offset.x,
+                           pivot.y + highlight_offset.y),
+            VSTGUI::CPoint(endpoint.x + highlight_offset.x,
+                           endpoint.y + highlight_offset.y),
+            VSTGUI::CColor(kInTuneBlueHighlight.red,
+                             kInTuneBlueHighlight.green,
+                             kInTuneBlueHighlight.blue, 210U),
+            1.0);
+      }
       context->setFillColor(needle_color);
       context->drawEllipse(VSTGUI::CRect(pivot.x - 3.0, pivot.y - 3.0,
                                          pivot.x + 3.0, pivot.y + 3.0),

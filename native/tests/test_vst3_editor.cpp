@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
@@ -719,6 +720,156 @@ M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
       M3_EXPECT_EQ(observed.state, m3::TunerFrameState::no_signal);
       M3_EXPECT_EQ(observed.voice_count, 0U);
       M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (processor != nullptr) {
+    processor->release();
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_in_tune_needle_is_blue_and_layers_over_scale) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  Steinberg::Vst::IAudioProcessor* processor = nullptr;
+  if (component != nullptr) {
+    static_cast<void>(component->queryInterface(
+        Steinberg::Vst::IAudioProcessor::iid,
+        reinterpret_cast<void**>(&processor)));
+  }
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(processor != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr && processor != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+
+      m3::TunerSnapshot snapshot;
+      snapshot.generation = 73U;
+      snapshot.state = m3::TunerFrameState::tracking;
+      snapshot.voice_count = 1U;
+      snapshot.max_polyphony = 8U;
+      snapshot.voices[0] = m3::TunerVoice{
+          45U, 0, 30000U, 8U, m3::TunerVoiceState::tracking, true};
+      m3::vst3::publish_tuner_snapshot_for_test(processor, snapshot);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+
+      constexpr std::size_t width =
+          static_cast<std::size_t>(m3::vst3::kEditorWidth);
+      constexpr std::size_t height =
+          static_cast<std::size_t>(m3::vst3::kEditorHeight);
+      std::vector<std::uint8_t> rgba(width * height * 4U);
+      M3_EXPECT_TRUE(m3::vst3::editor_render_rgba_for_test(
+          *view, rgba.data(), rgba.size()));
+      M3_EXPECT_TRUE(write_editor_ppm(
+          *view, std::getenv("M3_EDITOR_IN_TUNE_SCREENSHOT")));
+
+      const m3::vst3::EditorRect panel =
+          m3::vst3::editor_tuner_display_bounds();
+      const double lane_left = panel.left + 18.0;
+      const double lane_right = panel.right - 18.0;
+      const double lane_width = (lane_right - lane_left) / 8.0;
+      const double lane_top = panel.top + 42.0;
+      const m3::vst3::EditorRect arc =
+          m3::vst3::editor_tuner_meter_arc_bounds(
+              {lane_left, lane_top, lane_left + lane_width,
+               panel.bottom - 15.0});
+      const int center_x =
+          static_cast<int>(std::lround((arc.left + arc.right) * 0.5));
+      const int arc_top = static_cast<int>(std::lround(arc.top));
+      const auto is_blue = [&rgba](int x, int y, int margin) noexcept {
+        constexpr std::size_t row_width =
+            static_cast<std::size_t>(m3::vst3::kEditorWidth);
+        const std::size_t offset =
+            (static_cast<std::size_t>(y) * row_width +
+             static_cast<std::size_t>(x)) *
+            4U;
+        return rgba[offset + 2U] > rgba[offset] + margin &&
+               rgba[offset + 2U] > rgba[offset + 1U] + margin / 3;
+      };
+
+      bool blue_core = false;
+      bool blue_over_scale = false;
+      bool blue_scale_underglow = false;
+      bool pale_needle_highlight = false;
+      bool wide_soft_bloom = false;
+      for (int y = arc_top + 7; y <= arc_top + 22; ++y) {
+        for (int x = center_x - 2; x <= center_x + 2; ++x) {
+          blue_core = blue_core || is_blue(x, y, 48);
+          constexpr std::size_t row_width =
+              static_cast<std::size_t>(m3::vst3::kEditorWidth);
+          const std::size_t offset =
+              (static_cast<std::size_t>(y) * row_width +
+               static_cast<std::size_t>(x)) *
+              4U;
+          pale_needle_highlight =
+              pale_needle_highlight ||
+              (rgba[offset + 2U] >= 220U && rgba[offset + 1U] >= 145U &&
+               rgba[offset + 2U] > rgba[offset] + 80U);
+        }
+      }
+      for (int y = arc_top - 2; y <= arc_top + 3; ++y) {
+        for (int x = center_x - 2; x <= center_x + 2; ++x) {
+          blue_over_scale = blue_over_scale || is_blue(x, y, 36);
+        }
+      }
+      for (int y = arc_top + 1; y <= arc_top + 10; ++y) {
+        for (int x = center_x - 34; x <= center_x + 34; ++x) {
+          if (x < center_x - 7 || x > center_x + 7) {
+            blue_scale_underglow =
+                blue_scale_underglow || is_blue(x, y, 8);
+          }
+        }
+      }
+      for (int y = arc_top + 12; y <= arc_top + 25; ++y) {
+        for (int x = center_x - 44; x <= center_x + 44; ++x) {
+          const int distance = x < center_x ? center_x - x : x - center_x;
+          if (distance >= 38 && distance <= 44) {
+            wide_soft_bloom = wide_soft_bloom || is_blue(x, y, 5);
+          }
+        }
+      }
+      M3_EXPECT_TRUE(blue_core);
+      M3_EXPECT_TRUE(blue_over_scale);
+      M3_EXPECT_TRUE(blue_scale_underglow);
+      M3_EXPECT_TRUE(pale_needle_highlight);
+      M3_EXPECT_TRUE(wide_soft_bloom);
+
       M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
       view->release();
