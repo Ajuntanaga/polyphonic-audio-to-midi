@@ -11,7 +11,7 @@ namespace m3 {
 
 struct NoteEventSink final {
   void* context{};
-  bool (*push)(void*, const VoiceTransition&) noexcept = nullptr;
+  bool (*push)(void*, const VoiceTransition&, std::uint8_t) noexcept = nullptr;
 };
 
 struct NoteDeliveryResult final {
@@ -39,10 +39,14 @@ class GeneratedNoteLedger final {
   bool retry_pending_releases(NoteEventSink sink) noexcept;
   NoteDeliveryResult deliver_queued(std::uint32_t frames, NoteEventSink sink,
                                     double selected_peak, bool finite_input,
-                                    bool supported_layout) noexcept;
+                                    bool supported_layout,
+                                    MidiRouting routing = MidiRouting::single,
+                                    std::uint8_t start_channel = 1U) noexcept;
   NoteDeliveryResult deliver(std::uint32_t frames, NoteEventSink sink,
                              double selected_peak, bool finite_input,
-                             bool supported_layout) noexcept;
+                             bool supported_layout,
+                             MidiRouting routing = MidiRouting::single,
+                             std::uint8_t start_channel = 1U) noexcept;
   [[nodiscard]] bool is_active(std::uint8_t note) const noexcept;
   [[nodiscard]] bool is_pending_release(std::uint8_t note) const noexcept;
   [[nodiscard]] bool release_pending() const noexcept {
@@ -62,7 +66,10 @@ class GeneratedNoteLedger final {
   static void clear_bit(std::array<std::uint64_t, 2>& bits,
                         std::uint8_t note) noexcept;
   static bool push(NoteEventSink sink,
-                   const VoiceTransition& transition) noexcept;
+                   const VoiceTransition& transition,
+                   std::uint8_t one_based_channel) noexcept;
+  [[nodiscard]] std::uint8_t allocate_channel(
+      MidiRouting routing, std::uint8_t start_channel) const noexcept;
   void enter_blocked() noexcept;
   void finish_hold(double selected_peak, bool finite_input,
                    bool supported_layout) noexcept;
@@ -74,6 +81,7 @@ class GeneratedNoteLedger final {
   std::uint32_t max_frames_{};
   std::array<std::uint64_t, 2> active_{};
   std::array<std::uint64_t, 2> pending_release_{};
+  std::array<std::uint8_t, 128> note_channels_{};
   std::uint8_t active_count_{};
   bool invalid_transition_{};
   bool output_blocked_{};

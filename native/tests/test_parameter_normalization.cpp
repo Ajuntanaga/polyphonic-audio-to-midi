@@ -71,11 +71,11 @@ M3_TEST(parameter_normalization_clamps_and_rounds_at_the_common_boundary) {
   }
 
   const m3::ParameterSpec* a4 = m3::find_parameter(0x4D330003U);
-  const m3::ParameterSpec* detector = m3::find_parameter(0x4D330001U);
+  const m3::ParameterSpec* routing = m3::find_parameter(0x4D330001U);
   M3_EXPECT_TRUE(a4 != nullptr);
-  M3_EXPECT_TRUE(detector != nullptr);
+  M3_EXPECT_TRUE(routing != nullptr);
   M3_EXPECT_NEAR(m3::canonical_plain(*a4, 432.56), 432.6, 1.0e-12);
-  M3_EXPECT_NEAR(m3::canonical_plain(*detector, 1.6), 2.0, 0.0);
+  M3_EXPECT_NEAR(m3::canonical_plain(*routing, 1.6), 1.0, 0.0);
 }
 
 M3_TEST(parameter_normalization_rejects_nonfinite_values_without_mutation) {

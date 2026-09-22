@@ -140,10 +140,11 @@ M3_TEST(vst3_event_sink_encodes_exact_notes_and_rejects_invalid_values) {
       for (const std::uint8_t velocity : kVelocities) {
         for (const std::uint32_t offset : kOffsets) {
           events.reset();
-          m3::vst3::Vst3EventSinkContext context{&events, channel};
+          m3::vst3::Vst3EventSinkContext context{&events};
           const m3::VoiceTransition note_on = transition(
               offset, m3::TransitionKind::note_on, pitch, velocity, 9);
-          M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, note_on));
+          M3_EXPECT_TRUE(
+              m3::vst3::push_vst3_note(&context, note_on, channel));
           M3_EXPECT_EQ(events.stored_event_count(), 1U);
           const Steinberg::Vst::Event& encoded_on = events.stored_event(0);
           expect_common_event(encoded_on,
@@ -164,7 +165,8 @@ M3_TEST(vst3_event_sink_encodes_exact_notes_and_rejects_invalid_values) {
           events.reset();
           const m3::VoiceTransition note_off = transition(
               offset, m3::TransitionKind::note_off, pitch, 0, 10);
-          M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, note_off));
+          M3_EXPECT_TRUE(
+              m3::vst3::push_vst3_note(&context, note_off, channel));
           M3_EXPECT_EQ(events.stored_event_count(), 1U);
           const Steinberg::Vst::Event& encoded_off = events.stored_event(0);
           expect_common_event(encoded_off,
@@ -184,37 +186,35 @@ M3_TEST(vst3_event_sink_encodes_exact_notes_and_rejects_invalid_values) {
     }
   }
 
-  m3::vst3::Vst3EventSinkContext context{&events, 1};
+  m3::vst3::Vst3EventSinkContext context{&events};
   const m3::VoiceTransition valid =
       transition(0, m3::TransitionKind::note_on, 60, 100, 1);
-  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(nullptr, valid));
+  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(nullptr, valid, 1U));
   context.events = nullptr;
-  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid));
+  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid, 1U));
   context.events = &events;
-  context.one_based_channel = 0;
-  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid));
-  context.one_based_channel = 17;
-  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid));
-  context.one_based_channel = 1;
+  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid, 0U));
+  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid, 17U));
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
-      &context, transition(0, static_cast<m3::TransitionKind>(2), 60, 100, 1)));
+      &context, transition(0, static_cast<m3::TransitionKind>(2), 60, 100, 1),
+      1U));
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
-      &context, transition(0, m3::TransitionKind::note_on, 255, 100, 1)));
+      &context, transition(0, m3::TransitionKind::note_on, 255, 100, 1), 1U));
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
-      &context, transition(0, m3::TransitionKind::note_on, 60, 0, 1)));
+      &context, transition(0, m3::TransitionKind::note_on, 60, 0, 1), 1U));
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
-      &context, transition(0, m3::TransitionKind::note_on, 60, 128, 1)));
+      &context, transition(0, m3::TransitionKind::note_on, 60, 128, 1), 1U));
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
-      &context, transition(0, m3::TransitionKind::note_off, 60, 1, 1)));
+      &context, transition(0, m3::TransitionKind::note_off, 60, 1, 1), 1U));
   const std::uint32_t excessive_offset =
       static_cast<std::uint32_t>(std::numeric_limits<Steinberg::int32>::max()) +
       1U;
   M3_EXPECT_FALSE(m3::vst3::push_vst3_note(
       &context, transition(excessive_offset, m3::TransitionKind::note_on, 60,
-                           100, 1)));
+                           100, 1), 1U));
   events.reset();
   events.reject_attempt(0);
-  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid));
+  M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, valid, 1U));
   M3_EXPECT_EQ(events.stored_event_count(), 0U);
 
   m3::GeneratedNoteLedger ledger;
@@ -313,6 +313,46 @@ M3_TEST(vst3_component_orders_generated_events_and_never_reads_input_events) {
   }
   M3_EXPECT_EQ(input_events.get_count_call_count(), 0U);
   M3_EXPECT_EQ(input_events.get_event_call_count(), 0U);
+  close_active(instance);
+}
+
+M3_TEST(vst3_per_voice_routing_emits_simultaneous_notes_on_distinct_channels) {
+  ActiveInstance instance;
+  M3_EXPECT_TRUE(open_active(instance));
+  if (instance.processor == nullptr || instance.controller == nullptr) {
+    close_active(instance);
+    return;
+  }
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330001U, 1.0),
+               Steinberg::kResultTrue);
+
+  constexpr std::uint32_t kFrames = 64U;
+  m3::test::FakeVst3ProcessBlock<float> block;
+  m3::test::FakeVst3EventList events;
+  m3::test::FakeVst3ParameterChanges routing;
+  M3_EXPECT_TRUE(routing.append_input(0x4D330001U, 0, 1.0));
+  block.configure(kFrames, false);
+  block.fill_finite();
+  block.data().inputParameterChanges = &routing;
+  block.data().outputEvents = &events;
+  begin_notes(instance);
+  M3_EXPECT_TRUE(queue_note(
+      instance, transition(0, m3::TransitionKind::note_on, 60, 100, 1),
+      kFrames));
+  M3_EXPECT_TRUE(queue_note(
+      instance, transition(1, m3::TransitionKind::note_on, 64, 100, 2),
+      kFrames));
+  M3_EXPECT_TRUE(queue_note(
+      instance, transition(2, m3::TransitionKind::note_on, 67, 100, 3),
+      kFrames));
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 3U);
+  for (std::size_t index = 0U; index < 3U; ++index) {
+    M3_EXPECT_EQ(events.stored_event(index).type,
+                 Steinberg::Vst::Event::kNoteOnEvent);
+    M3_EXPECT_EQ(events.stored_event(index).noteOn.channel,
+                 static_cast<Steinberg::int16>(index));
+  }
   close_active(instance);
 }
 
@@ -508,7 +548,7 @@ M3_TEST(vst3_each_cleanup_rejection_retains_unconfirmed_pitches) {
 
 M3_TEST(vst3_event_sink_normal_null_and_rejection_paths_are_allocation_free) {
   m3::test::FakeVst3EventList events;
-  m3::vst3::Vst3EventSinkContext context{&events, 16};
+  m3::vst3::Vst3EventSinkContext context{&events};
   const m3::VoiceTransition note_on =
       transition(31, m3::TransitionKind::note_on, 84, 127, 1);
   const std::size_t allocations_before = m3::test::allocation_count();
@@ -516,13 +556,13 @@ M3_TEST(vst3_event_sink_normal_null_and_rejection_paths_are_allocation_free) {
   for (std::size_t iteration = 0; iteration < 100000U; ++iteration) {
     events.reset();
     context.events = &events;
-    M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, note_on));
+    M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, note_on, 16U));
     context.events = nullptr;
-    M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, note_on));
+    M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, note_on, 16U));
     events.reset();
     events.reject_attempt(0);
     context.events = &events;
-    M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, note_on));
+    M3_EXPECT_FALSE(m3::vst3::push_vst3_note(&context, note_on, 16U));
   }
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations_before);
   M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations_before);

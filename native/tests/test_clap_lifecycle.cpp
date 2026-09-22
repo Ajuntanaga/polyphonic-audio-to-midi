@@ -196,7 +196,8 @@ M3_TEST(clap_nonfinite_audio_fails_closed_and_partial_layout_stays_safe) {
   for (std::uint32_t frame = 0; frame < 32; ++frame) {
     M3_EXPECT_EQ(block.output_left()[frame], block.input_left()[frame]);
   }
-  M3_EXPECT_EQ(m3::adapter_status_for_test(plugin), m3::Status::unsupported_layout);
+  M3_EXPECT_TRUE(m3::adapter_status_for_test(plugin) !=
+                 m3::Status::unsupported_layout);
 
   plugin->stop_processing(plugin);
   plugin->deactivate(plugin);

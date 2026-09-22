@@ -7,7 +7,8 @@
 namespace m3::vst3 {
 
 bool push_vst3_note(void* raw_context,
-                    const VoiceTransition& transition) noexcept {
+                    const VoiceTransition& transition,
+                    std::uint8_t one_based_channel) noexcept {
   auto* context = static_cast<Vst3EventSinkContext*>(raw_context);
   const bool note_on = transition.kind == TransitionKind::note_on;
   const bool note_off = transition.kind == TransitionKind::note_off;
@@ -15,7 +16,7 @@ bool push_vst3_note(void* raw_context,
       (note_on && transition.velocity > 0U && transition.velocity <= 127U) ||
       (note_off && transition.velocity == 0U);
   if (context == nullptr || context->events == nullptr ||
-      context->one_based_channel < 1U || context->one_based_channel > 16U ||
+      one_based_channel < 1U || one_based_channel > 16U ||
       transition.note > 127U || !valid_velocity || (!note_on && !note_off) ||
       transition.sample_offset >
           static_cast<std::uint32_t>(
@@ -28,7 +29,7 @@ bool push_vst3_note(void* raw_context,
   event.sampleOffset =
       static_cast<Steinberg::int32>(transition.sample_offset);
   const Steinberg::int16 channel = static_cast<Steinberg::int16>(
-      context->one_based_channel - 1U);
+      one_based_channel - 1U);
   const Steinberg::int16 pitch =
       static_cast<Steinberg::int16>(transition.note);
   const Steinberg::int32 note_id =

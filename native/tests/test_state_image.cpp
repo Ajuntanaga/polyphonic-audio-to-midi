@@ -184,7 +184,7 @@ void refresh_crc(m3::StateImage& image) noexcept {
 
 bool same_config(const m3::PersistentConfig& left,
                  const m3::PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.input_trim_db == right.input_trim_db &&
          left.sensitivity == right.sensitivity && left.response == right.response &&
@@ -216,7 +216,7 @@ M3_TEST(state_image_default_bytes_and_sha256_are_exact) {
 
 M3_TEST(state_image_round_trips_all_fourteen_nondefault_values) {
   m3::PersistentConfig source;
-  source.detector_input = m3::DetectorInput::downmix;
+  source.midi_routing = m3::MidiRouting::per_voice;
   source.profile_mode = m3::ProfileMode::general;
   source.a4_hz = 432.5;
   source.input_trim_db = -12.5;
@@ -333,7 +333,7 @@ M3_TEST(state_image_uses_common_canonicalization_and_rejects_invalid_encode) {
   refresh_crc(image);
   m3::PersistentConfig config;
   M3_EXPECT_TRUE(m3::decode_state(image.data(), image.size(), config));
-  M3_EXPECT_EQ(config.detector_input, m3::DetectorInput::downmix);
+  M3_EXPECT_EQ(config.midi_routing, m3::MidiRouting::per_voice);
   M3_EXPECT_NEAR(config.a4_hz, 432.6, 1.0e-12);
   M3_EXPECT_EQ(config.midi_channel, 1U);
 

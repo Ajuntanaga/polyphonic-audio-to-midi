@@ -24,13 +24,16 @@ class NoteCapture final {
   [[nodiscard]] std::uint8_t external_channel() const noexcept {
     return external_channel_;
   }
+  [[nodiscard]] std::uint8_t channel(std::size_t index) const noexcept {
+    return channels_[index];
+  }
   const m3::VoiceTransition& operator[](std::size_t index) const noexcept {
     return events_[index];
   }
 
  private:
-  static bool push(void* context,
-                   const m3::VoiceTransition& transition) noexcept {
+  static bool push(void* context, const m3::VoiceTransition& transition,
+                   std::uint8_t channel) noexcept {
     auto* self = static_cast<NoteCapture*>(context);
     const std::size_t attempt = self->attempts_++;
     if (!self->rejection_used_ && attempt == self->reject_attempt_) {
@@ -41,10 +44,12 @@ class NoteCapture final {
       return false;
     }
     self->events_[self->size_++] = transition;
+    self->channels_[self->size_ - 1U] = channel;
     return true;
   }
 
   std::array<m3::VoiceTransition, 4112> events_{};
+  std::array<std::uint8_t, 4112> channels_{};
   std::size_t size_{};
   std::size_t attempts_{};
   std::size_t reject_attempt_{};
@@ -63,8 +68,11 @@ m3::VoiceTransition transition(std::uint32_t offset,
 m3::NoteDeliveryResult deliver(m3::GeneratedNoteLedger& ledger,
                                std::uint32_t frames, NoteCapture& capture,
                                double peak = 0.0, bool finite = true,
-                               bool supported = true) noexcept {
-  return ledger.deliver(frames, capture.sink(), peak, finite, supported);
+                               bool supported = true,
+                               m3::MidiRouting routing = m3::MidiRouting::single,
+                               std::uint8_t start_channel = 1U) noexcept {
+  return ledger.deliver(frames, capture.sink(), peak, finite, supported,
+                        routing, start_channel);
 }
 
 void establish_note(m3::GeneratedNoteLedger& ledger, std::uint8_t note,
@@ -144,6 +152,52 @@ M3_TEST(generated_note_ledger_orders_ticks_and_equal_time_off_before_on) {
   M3_EXPECT_EQ(capture[1].sample_offset, 64U);
   M3_EXPECT_EQ(capture[2].sample_offset, 128U);
   M3_EXPECT_EQ(capture[3].sample_offset, 191U);
+}
+
+M3_TEST(generated_note_ledger_per_voice_channels_are_unique_stable_and_wrap) {
+  m3::GeneratedNoteLedger ledger;
+  M3_EXPECT_TRUE(ledger.activate(64));
+  ledger.begin_block();
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(0, m3::TransitionKind::note_on, 60, 100, 1), 64));
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(1, m3::TransitionKind::note_on, 64, 100, 2), 64));
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(2, m3::TransitionKind::note_on, 67, 100, 3), 64));
+  NoteCapture ons;
+  M3_EXPECT_TRUE(deliver(ledger, 64, ons, 0.5, true, true,
+                         m3::MidiRouting::per_voice, 15U)
+                     .detection_allowed);
+  M3_EXPECT_EQ(ons.size(), 3U);
+  M3_EXPECT_EQ(ons.channel(0), 15U);
+  M3_EXPECT_EQ(ons.channel(1), 16U);
+  M3_EXPECT_EQ(ons.channel(2), 1U);
+
+  ledger.begin_block();
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(0, m3::TransitionKind::note_off, 64, 0, 4), 64));
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(1, m3::TransitionKind::note_on, 71, 100, 5), 64));
+  NoteCapture changes;
+  M3_EXPECT_TRUE(deliver(ledger, 64, changes, 0.5, true, true,
+                         m3::MidiRouting::per_voice, 15U)
+                     .detection_allowed);
+  M3_EXPECT_EQ(changes.size(), 2U);
+  M3_EXPECT_EQ(changes[0].note, 64U);
+  M3_EXPECT_EQ(changes.channel(0), 16U);
+  M3_EXPECT_EQ(changes[1].note, 71U);
+  M3_EXPECT_EQ(changes.channel(1), 16U);
+
+  ledger.begin_block();
+  ledger.request_release_all();
+  NoteCapture releases;
+  M3_EXPECT_TRUE(deliver(ledger, 64, releases, 0.0, true, true,
+                         m3::MidiRouting::single, 9U)
+                     .detection_allowed);
+  M3_EXPECT_EQ(releases.size(), 3U);
+  M3_EXPECT_EQ(releases.channel(0), 15U);
+  M3_EXPECT_EQ(releases.channel(1), 1U);
+  M3_EXPECT_EQ(releases.channel(2), 16U);
 }
 
 M3_TEST(generated_note_ledger_accepts_exact_capacity_then_flags_overflow) {

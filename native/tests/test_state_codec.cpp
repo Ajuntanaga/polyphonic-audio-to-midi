@@ -20,7 +20,7 @@ namespace {
 
 bool same_config(const m3::PersistentConfig& left,
                  const m3::PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.input_trim_db == right.input_trim_db &&
          left.sensitivity == right.sensitivity && left.response == right.response &&
@@ -179,7 +179,7 @@ M3_TEST(clap_state_stream_rejects_premature_trailing_and_invalid_without_mutatio
   m3::StateImage image{};
   M3_EXPECT_TRUE(m3::encode_state(m3::PersistentConfig{}, image));
   m3::PersistentConfig destination;
-  destination.detector_input = m3::DetectorInput::right;
+  destination.midi_routing = m3::MidiRouting::per_voice;
   destination.a4_hz = 432.5;
   destination.midi_channel = 16;
   destination.dry_passthrough = false;
@@ -204,7 +204,7 @@ M3_TEST(clap_state_stream_rejects_premature_trailing_and_invalid_without_mutatio
 
 M3_TEST(clap_state_extension_loads_atomically_and_saves_the_same_image) {
   m3::PersistentConfig config;
-  config.detector_input = m3::DetectorInput::right;
+  config.midi_routing = m3::MidiRouting::per_voice;
   config.a4_hz = 432.5;
   config.midi_channel = 16;
   config.dry_passthrough = false;

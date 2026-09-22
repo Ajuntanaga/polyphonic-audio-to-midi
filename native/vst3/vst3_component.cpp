@@ -133,7 +133,6 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   prepared_claim_pending_ = false;
   structural_boundary_pending_ = false;
   release_channel_pending_ = false;
-  release_midi_channel_ = 1U;
   generated_notes_.deactivate();
   tuner_telemetry_.clear(TunerFrameState::unavailable);
   processing_started_once_ = false;
@@ -208,8 +207,9 @@ Steinberg::tresult PLUGIN_API M3Component::setBusArrangements(
     Steinberg::int32 num_outputs) {
   if (!initialized_ || active_ || inputs == nullptr || outputs == nullptr ||
       num_inputs != 1 || num_outputs != 1 ||
-      inputs[0] != Steinberg::Vst::SpeakerArr::kStereo ||
-      outputs[0] != Steinberg::Vst::SpeakerArr::kStereo) {
+      (inputs[0] != Steinberg::Vst::SpeakerArr::kMono &&
+       inputs[0] != Steinberg::Vst::SpeakerArr::kStereo) ||
+      outputs[0] != inputs[0]) {
     return Steinberg::kResultFalse;
   }
   return SingleComponentEffect::setBusArrangements(inputs, num_inputs, outputs,
@@ -305,7 +305,6 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     structural_boundary_pending_ = false;
     prepared_claim_pending_ = false;
     if (!generated_notes_.release_pending()) {
-      release_midi_channel_ = active_config_.midi_channel;
       release_channel_pending_ = false;
     }
     active_ = true;
@@ -358,9 +357,6 @@ Steinberg::tresult PLUGIN_API M3Component::setProcessing(
   }
   generated_notes_.request_release_all();
   if (generated_notes_.release_pending()) {
-    if (!release_channel_pending_) {
-      release_midi_channel_ = active_config_.midi_channel;
-    }
     release_channel_pending_ = true;
   }
   generated_notes_.request_recovery();
@@ -629,9 +625,6 @@ void M3Component::begin_structural_boundary(
   }
   pending_structural_config_ = config;
   structural_boundary_pending_ = true;
-  if (!release_channel_pending_) {
-    release_midi_channel_ = active_config_.midi_channel;
-  }
   release_channel_pending_ = true;
   generated_notes_.request_release_all();
   reset_detector_transients();
@@ -664,10 +657,7 @@ void M3Component::claim_matching_prepared_config() noexcept {
 
 void M3Component::retry_pending_releases(
     Steinberg::Vst::ProcessData& data) noexcept {
-  const std::uint8_t channel =
-      release_channel_pending_ ? release_midi_channel_
-                               : active_config_.midi_channel;
-  Vst3EventSinkContext context{data.outputEvents, channel};
+  Vst3EventSinkContext context{data.outputEvents};
   if (!generated_notes_.retry_pending_releases(
           NoteEventSink{&context, &push_vst3_note})) {
     raise_status(Status::midi_output_blocked);
@@ -812,12 +802,12 @@ void M3Component::publish_parameter_outputs(
 void M3Component::deliver_generated_notes(
     Steinberg::Vst::ProcessData& data, bool finite_input,
     bool supported_layout, double selected_peak) noexcept {
-  Vst3EventSinkContext context{data.outputEvents,
-                               active_config_.midi_channel};
+  Vst3EventSinkContext context{data.outputEvents};
   const NoteDeliveryResult result = generated_notes_.deliver_queued(
       static_cast<std::uint32_t>(data.numSamples),
       NoteEventSink{&context, &push_vst3_note}, selected_peak, finite_input,
-      supported_layout);
+      supported_layout, active_config_.midi_routing,
+      active_config_.midi_channel);
   if (status_ == Status::unsupported_layout ||
       status_ == Status::invalid_input_or_state) {
     return;
@@ -845,8 +835,12 @@ Steinberg::tresult M3Component::process_samples(
   if (valid_layout) {
     Steinberg::Vst::AudioBusBuffers& input = data.inputs[0];
     Steinberg::Vst::AudioBusBuffers& output = data.outputs[0];
-    valid_layout = input.numChannels == 2 && output.numChannels == 2 &&
-                   (input.silenceFlags & ~Steinberg::uint64{3}) == 0U;
+    valid_layout = (input.numChannels == 1 || input.numChannels == 2) &&
+                   output.numChannels == input.numChannels;
+    const Steinberg::uint64 valid_silence_mask =
+        input.numChannels == 1 ? Steinberg::uint64{1} : Steinberg::uint64{3};
+    valid_layout = valid_layout &&
+                   (input.silenceFlags & ~valid_silence_mask) == 0U;
     if constexpr (std::is_same_v<Sample, Steinberg::Vst::Sample32>) {
       input_channels = input.channelBuffers32;
       output_channels = output.channelBuffers32;
@@ -858,17 +852,17 @@ Steinberg::tresult M3Component::process_samples(
                    output_channels != nullptr;
   }
   if (valid_layout) {
-    valid_layout = input_channels[0] != nullptr && input_channels[1] != nullptr &&
-                   output_channels[0] != nullptr &&
-                   output_channels[1] != nullptr &&
-                   input_channels[0] != input_channels[1] &&
-                   output_channels[0] != output_channels[1];
+    const Steinberg::int32 channel_count = data.inputs[0].numChannels;
+    valid_layout = input_channels[0] != nullptr && output_channels[0] != nullptr;
+    if (valid_layout && channel_count == 2) {
+      valid_layout = input_channels[1] != nullptr &&
+                     output_channels[1] != nullptr &&
+                     input_channels[0] != input_channels[1] &&
+                     output_channels[0] != output_channels[1];
+    }
   }
   if (!valid_layout) {
     raise_status(Status::unsupported_layout);
-    if (!release_channel_pending_) {
-      release_midi_channel_ = active_config_.midi_channel;
-    }
     release_channel_pending_ = true;
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
@@ -885,24 +879,19 @@ Steinberg::tresult M3Component::process_samples(
 
   Steinberg::Vst::AudioBusBuffers& input = data.inputs[0];
   Steinberg::Vst::AudioBusBuffers& output = data.outputs[0];
-  const DryPathResult result = process_dry_path(
-      input_channels, 2U, output_channels, 2U,
-      static_cast<std::uint32_t>(data.numSamples),
-      audio_requested_config_.dry_passthrough,
-      active_config_.detector_input, input.silenceFlags);
-  output.silenceFlags = result.output_silence_flags;
-  if (result.nonfinite_input) {
+  const auto channel_count = static_cast<std::uint32_t>(input.numChannels);
+  const std::uint32_t frames = static_cast<std::uint32_t>(data.numSamples);
+  const DryPathResult input_analysis = analyze_detector_input(
+      input_channels, channel_count, frames, input.silenceFlags);
+  if (input_analysis.nonfinite_input) {
     raise_status(Status::invalid_input_or_state);
-    if (!release_channel_pending_) {
-      release_midi_channel_ = active_config_.midi_channel;
-    }
     release_channel_pending_ = true;
     generated_notes_.report_output_failure();
     tuner_telemetry_.clear(TunerFrameState::unavailable);
     update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
   const bool detector_allowed =
-      !result.nonfinite_input && !structural_boundary_pending_ &&
+      !input_analysis.nonfinite_input && !structural_boundary_pending_ &&
       !generated_notes_.release_pending() &&
       !generated_notes_.output_blocked() && !generated_notes_.panic_hold();
   if (detector_allowed) {
@@ -912,22 +901,20 @@ Steinberg::tresult M3Component::process_samples(
     detector_.set_runtime_config(active_config_);
     const double input_gain =
         std::pow(10.0, active_config_.input_trim_db / 20.0);
-    const bool left_silent =
-        (input.silenceFlags & Steinberg::uint64{1}) != 0U;
-    const bool right_silent =
-        (input.silenceFlags & Steinberg::uint64{2}) != 0U;
-    const std::uint32_t frames = static_cast<std::uint32_t>(data.numSamples);
     for (std::uint32_t frame = 0; frame < frames; ++frame) {
-      const double left =
-          left_silent ? 0.0 : static_cast<double>(input_channels[0][frame]);
-      const double right =
-          right_silent ? 0.0 : static_cast<double>(input_channels[1][frame]);
+      const bool left_silent =
+          (input.silenceFlags & Steinberg::uint64{1}) != 0U;
+      const bool right_silent = channel_count < 2U ||
+          (input.silenceFlags & Steinberg::uint64{2}) != 0U;
+      const double left = left_silent
+                              ? 0.0
+                              : static_cast<double>(input_channels[0][frame]);
+      const double right = right_silent
+                               ? 0.0
+                               : static_cast<double>(input_channels[1][frame]);
       const double selected =
-          active_config_.detector_input == DetectorInput::left
-              ? left
-              : active_config_.detector_input == DetectorInput::right
-                    ? right
-                    : (left + right) * 0.7071067811865476;
+          left * input_analysis.detector_left_gain +
+          right * input_analysis.detector_right_gain;
       const DetectorDecision decision =
           detector_.process_sample(selected * input_gain);
       if (decision.tuner_snapshot_ready) {
@@ -950,11 +937,15 @@ Steinberg::tresult M3Component::process_samples(
     tuner_telemetry_.clear(TunerFrameState::unavailable);
     update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
+  const DryPathResult result = process_dry_path(
+      input_channels, channel_count, output_channels, channel_count, frames,
+      audio_requested_config_.dry_passthrough, input.silenceFlags);
+  output.silenceFlags = result.output_silence_flags;
   if (structural_boundary_pending_) {
     generated_notes_.begin_block();
   }
-  deliver_generated_notes(data, !result.nonfinite_input, true,
-                          result.selected_peak);
+  deliver_generated_notes(data, !input_analysis.nonfinite_input, true,
+                          input_analysis.selected_peak);
   generated_notes_.begin_block();
   return Steinberg::kResultOk;
 }

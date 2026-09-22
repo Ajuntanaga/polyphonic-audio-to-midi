@@ -7,7 +7,7 @@
 
 namespace m3 {
 
-enum class DetectorInput : std::uint8_t { left, right, downmix };
+enum class MidiRouting : std::uint8_t { single, per_voice };
 enum class ProfileMode : std::uint8_t { m3, general };
 enum class VelocityMode : std::uint8_t { fixed, dynamic };
 enum class Status : std::uint8_t {
@@ -30,7 +30,7 @@ struct TunerEstimate final {
 };
 
 struct PersistentConfig final {
-  DetectorInput detector_input{DetectorInput::left};
+  MidiRouting midi_routing{MidiRouting::single};
   ProfileMode profile_mode{ProfileMode::m3};
   double a4_hz{440.0};
   double input_trim_db{0.0};

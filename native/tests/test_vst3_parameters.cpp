@@ -115,7 +115,7 @@ void ascii_to_vst3(const char* source,
 
 bool same_config(const m3::PersistentConfig& left,
                  const m3::PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.input_trim_db == right.input_trim_db &&
          left.sensitivity == right.sensitivity && left.response == right.response &&

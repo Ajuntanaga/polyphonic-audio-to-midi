@@ -25,8 +25,7 @@ constexpr std::uint64_t coherence_word(std::uint64_t generation,
 
 m3::PersistentConfig config_for(std::uint64_t generation) noexcept {
   m3::PersistentConfig config;
-  config.detector_input =
-      static_cast<m3::DetectorInput>(generation % 3U);
+  config.midi_routing = static_cast<m3::MidiRouting>(generation % 2U);
   config.profile_mode = static_cast<m3::ProfileMode>(generation % 2U);
   config.a4_hz = 400.0 + static_cast<double>(generation % 801U) * 0.1;
   config.input_trim_db =
@@ -46,7 +45,7 @@ m3::PersistentConfig config_for(std::uint64_t generation) noexcept {
 
 bool same_config(const m3::PersistentConfig& left,
                  const m3::PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.input_trim_db == right.input_trim_db &&
          left.sensitivity == right.sensitivity && left.response == right.response &&

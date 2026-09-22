@@ -121,6 +121,10 @@ M3_TEST(vst3_busses_layout_sample_sizes_latency_tail_and_view_are_exact) {
     M3_EXPECT_EQ(processor->setBusArrangements(&input, 1, &output, 1),
                  Steinberg::kResultTrue);
     input = Steinberg::Vst::SpeakerArr::kMono;
+    output = Steinberg::Vst::SpeakerArr::kMono;
+    M3_EXPECT_EQ(processor->setBusArrangements(&input, 1, &output, 1),
+                 Steinberg::kResultTrue);
+    output = Steinberg::Vst::SpeakerArr::kStereo;
     M3_EXPECT_TRUE(processor->setBusArrangements(&input, 1, &output, 1) !=
                    Steinberg::kResultTrue);
     M3_EXPECT_TRUE(processor->setBusArrangements(nullptr, 0, &output, 1) !=

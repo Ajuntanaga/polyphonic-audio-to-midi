@@ -13,7 +13,7 @@ namespace {
 std::atomic<std::size_t> prepared_stage_count{};
 #endif
 
-constexpr std::size_t kDetectorInput = 0;
+constexpr std::size_t kMidiRouting = 0;
 constexpr std::size_t kProfileMode = 1;
 constexpr std::size_t kA4Hz = 2;
 constexpr std::size_t kInputTrimDb = 3;
@@ -78,7 +78,7 @@ AtomicConfigRequest::AtomicConfigRequest(const PersistentConfig& initial,
 
 void AtomicConfigRequest::store_fields(
     const PersistentConfig& config) noexcept {
-  fields_[kDetectorInput].store(static_cast<std::uint64_t>(config.detector_input),
+  fields_[kMidiRouting].store(static_cast<std::uint64_t>(config.midi_routing),
                                 std::memory_order_relaxed);
   fields_[kProfileMode].store(static_cast<std::uint64_t>(config.profile_mode),
                               std::memory_order_relaxed);
@@ -102,8 +102,8 @@ void AtomicConfigRequest::store_fields(
 
 PersistentConfig AtomicConfigRequest::load_fields() const noexcept {
   PersistentConfig config;
-  config.detector_input = static_cast<DetectorInput>(
-      fields_[kDetectorInput].load(std::memory_order_relaxed));
+  config.midi_routing = static_cast<MidiRouting>(
+      fields_[kMidiRouting].load(std::memory_order_relaxed));
   config.profile_mode = static_cast<ProfileMode>(
       fields_[kProfileMode].load(std::memory_order_relaxed));
   config.a4_hz = bits_double(fields_[kA4Hz].load(std::memory_order_relaxed));
@@ -234,7 +234,7 @@ std::size_t prepared_config_stage_count_for_test() noexcept {
 
 bool structural_config_equal(const PersistentConfig& left,
                              const PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.lowest_note == right.lowest_note &&
          left.highest_note == right.highest_note &&
@@ -245,7 +245,7 @@ bool structural_config_equal(const PersistentConfig& left,
 
 void copy_structural_config(PersistentConfig& destination,
                             const PersistentConfig& source) noexcept {
-  destination.detector_input = source.detector_input;
+  destination.midi_routing = source.midi_routing;
   destination.profile_mode = source.profile_mode;
   destination.a4_hz = source.a4_hz;
   destination.lowest_note = source.lowest_note;

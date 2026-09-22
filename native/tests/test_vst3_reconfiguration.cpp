@@ -304,7 +304,7 @@ M3_TEST(vst3_state_load_prepares_structural_data_outside_processing) {
                Steinberg::kResultOk);
 
   m3::PersistentConfig config;
-  config.detector_input = m3::DetectorInput::downmix;
+  config.midi_routing = m3::MidiRouting::per_voice;
   config.profile_mode = m3::ProfileMode::general;
   config.a4_hz = 432.5;
   config.midi_channel = 4;

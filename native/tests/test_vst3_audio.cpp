@@ -1,9 +1,11 @@
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
 
 #include "fake_vst3_host.hpp"
+#include "../plugin/dry_path.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "test_support.hpp"
@@ -22,7 +24,8 @@ struct ActiveInstance final {
 };
 
 bool open_active(ActiveInstance& instance, Steinberg::int32 sample_size,
-                 Steinberg::int32 max_frames = 16384) noexcept {
+                 Steinberg::int32 max_frames = 16384,
+                 bool mono = false) noexcept {
   instance.factory = GetPluginFactory();
   if (instance.factory == nullptr) {
     return false;
@@ -43,6 +46,16 @@ bool open_active(ActiveInstance& instance, Steinberg::int32 sample_size,
           Steinberg::kResultOk ||
       instance.processor == nullptr) {
     return false;
+  }
+  if (mono) {
+    Steinberg::Vst::SpeakerArrangement input =
+        Steinberg::Vst::SpeakerArr::kMono;
+    Steinberg::Vst::SpeakerArrangement output =
+        Steinberg::Vst::SpeakerArr::kMono;
+    if (instance.processor->setBusArrangements(&input, 1, &output, 1) !=
+        Steinberg::kResultTrue) {
+      return false;
+    }
   }
   Steinberg::Vst::ProcessSetup setup{};
   setup.processMode = Steinberg::Vst::kRealtime;
@@ -134,6 +147,58 @@ void exercise_dry_modes() noexcept {
 }
 
 }  // namespace
+
+M3_TEST(vst3_host_layout_auto_input_is_unity_for_mono_dual_mono_and_one_side) {
+  std::array<float, 4> left{{0.25F, -0.5F, 0.75F, -1.0F}};
+  std::array<float, 4> right = left;
+  std::array<float*, 2> stereo{{left.data(), right.data()}};
+  const m3::DryPathResult dual =
+      m3::analyze_detector_input(stereo.data(), 2U, 4U);
+  M3_EXPECT_NEAR(dual.detector_left_gain, 0.5, 0.0);
+  M3_EXPECT_NEAR(dual.detector_right_gain, 0.5, 0.0);
+  M3_EXPECT_NEAR(dual.selected_peak, 1.0, 0.0);
+
+  left.fill(0.0F);
+  const m3::DryPathResult right_only =
+      m3::analyze_detector_input(stereo.data(), 2U, 4U);
+  M3_EXPECT_NEAR(right_only.detector_left_gain, 0.0, 0.0);
+  M3_EXPECT_NEAR(right_only.detector_right_gain, 1.0, 0.0);
+  M3_EXPECT_NEAR(right_only.selected_peak, 1.0, 0.0);
+
+  left = right;
+  const m3::DryPathResult flagged_left =
+      m3::analyze_detector_input(stereo.data(), 2U, 4U, 1U);
+  M3_EXPECT_NEAR(flagged_left.detector_left_gain, 0.0, 0.0);
+  M3_EXPECT_NEAR(flagged_left.detector_right_gain, 1.0, 0.0);
+
+  std::array<float*, 1> mono{{left.data()}};
+  const m3::DryPathResult mono_analysis =
+      m3::analyze_detector_input(mono.data(), 1U, 4U);
+  M3_EXPECT_NEAR(mono_analysis.detector_left_gain, 1.0, 0.0);
+  M3_EXPECT_NEAR(mono_analysis.detector_right_gain, 0.0, 0.0);
+  M3_EXPECT_NEAR(mono_analysis.selected_peak, 1.0, 0.0);
+}
+
+M3_TEST(vst3_negotiated_mono_processes_and_passes_dry_audio_at_unity) {
+  ActiveInstance instance;
+  M3_EXPECT_TRUE(open_active(instance, Steinberg::Vst::kSample32, 128, true));
+  if (instance.processor == nullptr) {
+    close_active(instance);
+    return;
+  }
+  m3::test::FakeVst3ProcessBlock<float> block;
+  block.configure(64, false);
+  block.fill_finite();
+  block.input_bus().numChannels = 1;
+  block.output_bus().numChannels = 1;
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_TRUE(m3::vst3::status_for_test(instance.processor) !=
+                 m3::Status::unsupported_layout);
+  for (std::uint32_t frame = 0U; frame < 64U; ++frame) {
+    M3_EXPECT_EQ(block.output_left()[frame], block.input_left()[frame]);
+  }
+  close_active(instance);
+}
 
 M3_TEST(vst3_dry_path_is_exact_for_float32_float64_and_all_block_sizes) {
   exercise_dry_modes<Steinberg::Vst::Sample32>();

@@ -19,7 +19,7 @@ namespace {
 
 m3::PersistentConfig nondefault_config() noexcept {
   m3::PersistentConfig config;
-  config.detector_input = m3::DetectorInput::downmix;
+  config.midi_routing = m3::MidiRouting::per_voice;
   config.profile_mode = m3::ProfileMode::general;
   config.a4_hz = 432.5;
   config.input_trim_db = -12.5;
@@ -38,7 +38,7 @@ m3::PersistentConfig nondefault_config() noexcept {
 
 bool same_config(const m3::PersistentConfig& left,
                  const m3::PersistentConfig& right) noexcept {
-  return left.detector_input == right.detector_input &&
+  return left.midi_routing == right.midi_routing &&
          left.profile_mode == right.profile_mode && left.a4_hz == right.a4_hz &&
          left.input_trim_db == right.input_trim_db &&
          left.sensitivity == right.sensitivity && left.response == right.response &&

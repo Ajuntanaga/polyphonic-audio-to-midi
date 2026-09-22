@@ -132,7 +132,6 @@ struct Adapter final {
   bool audio_publication_pending{};
   bool pending_audio_structural{};
   m3::MidiPipeline midi_pipeline{};
-  std::uint8_t release_midi_channel{1};
   bool release_channel_pending{};
   double sample_rate{};
   std::uint32_t min_frames{};
@@ -494,16 +493,13 @@ template <typename Sample>
 m3::DryPathResult process_typed(const clap_audio_buffer_t& input,
                                 clap_audio_buffer_t& output,
                                 std::uint32_t frames,
-                                bool passthrough,
-                                m3::DetectorInput detector_input) noexcept {
+                                bool passthrough) noexcept {
   if constexpr (sizeof(Sample) == sizeof(float)) {
     return m3::process_dry_path(input.data32, input.channel_count, output.data32,
-                                output.channel_count, frames, passthrough,
-                                detector_input);
+                                output.channel_count, frames, passthrough);
   } else {
     return m3::process_dry_path(input.data64, input.channel_count, output.data64,
-                                output.channel_count, frames, passthrough,
-                                detector_input);
+                                output.channel_count, frames, passthrough);
   }
 }
 
@@ -590,7 +586,6 @@ bool Adapter::plugin_activate(const clap_plugin_t* plugin_pointer,
   self->prepared_publication_pending = false;
   self->audio_publication_pending = false;
   self->pending_audio_structural = false;
-  self->release_midi_channel = snapshot.config.midi_channel;
   self->release_channel_pending = false;
   self->status.store(m3::Status::ready, std::memory_order_release);
   self->lifecycle = Lifecycle::active;
@@ -682,7 +677,6 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
     if (self->prepared_exchange.claim_latest(claim)) {
       const m3::PersistentConfig adopted = claim.config->requested;
       const std::uint64_t adopted_generation = claim.generation;
-      self->release_midi_channel = self->active_config.midi_channel;
       self->midi_pipeline.request_reset();
       self->release_channel_pending = true;
       if (self->prepared_exchange.commit(claim)) {
@@ -730,17 +724,17 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
     float64 = exact_float64_layout(input, output);
     if (float32) {
       result = process_typed<float>(input, output, process->frames_count,
-                                    self->audio_requested_config.dry_passthrough,
-                                    self->active_config.detector_input);
+                                    self->audio_requested_config.dry_passthrough);
     } else if (float64) {
       result = process_typed<double>(input, output, process->frames_count,
-                                     self->audio_requested_config.dry_passthrough,
-                                     self->active_config.detector_input);
+                                     self->audio_requested_config.dry_passthrough);
     }
     exact_layout = process->audio_inputs_count == 1 &&
                    process->audio_outputs_count == 1 &&
-                   input.channel_count == 2 && output.channel_count == 2 &&
-                   result.channels_processed == 2 && (float32 || float64);
+                   (input.channel_count == 1 || input.channel_count == 2) &&
+                   output.channel_count == input.channel_count &&
+                   result.channels_processed == input.channel_count &&
+                   (float32 || float64);
   }
 
   if (!exact_layout) {
@@ -748,13 +742,11 @@ clap_process_status Adapter::plugin_process(const clap_plugin_t* plugin_pointer,
   } else if (result.nonfinite_input) {
     latch_status(*self, m3::Status::invalid_input_or_state);
   }
-  const std::uint8_t midi_channel = self->release_channel_pending
-                                        ? self->release_midi_channel
-                                        : self->active_config.midi_channel;
   const m3::MidiProcessResult midi = self->midi_pipeline.process(
-      process->frames_count, midi_channel, process->in_events,
+      process->frames_count, self->active_config.midi_channel,
+      process->in_events,
       process->out_events, result.selected_peak, !result.nonfinite_input,
-      exact_layout);
+      exact_layout, self->active_config.midi_routing);
   if (self->release_channel_pending &&
       !self->midi_pipeline.cleanup_pending()) {
     self->release_channel_pending = false;

@@ -70,6 +70,7 @@ void GeneratedNoteLedger::deactivate() noexcept {
   max_frames_ = 0;
   active_ = {};
   pending_release_ = {};
+  note_channels_ = {};
   active_count_ = 0U;
   invalid_transition_ = false;
   output_blocked_ = false;
@@ -150,8 +151,41 @@ bool GeneratedNoteLedger::is_pending_release(
 }
 
 bool GeneratedNoteLedger::push(
-    NoteEventSink sink, const VoiceTransition& transition) noexcept {
-  return sink.push != nullptr && sink.push(sink.context, transition);
+    NoteEventSink sink, const VoiceTransition& transition,
+    std::uint8_t one_based_channel) noexcept {
+  return sink.push != nullptr && one_based_channel >= 1U &&
+         one_based_channel <= 16U &&
+         sink.push(sink.context, transition, one_based_channel);
+}
+
+std::uint8_t GeneratedNoteLedger::allocate_channel(
+    MidiRouting routing, std::uint8_t start_channel) const noexcept {
+  if (start_channel < 1U || start_channel > 16U) {
+    return 0U;
+  }
+  if (routing == MidiRouting::single) {
+    return start_channel;
+  }
+  if (routing != MidiRouting::per_voice) {
+    return 0U;
+  }
+  for (std::uint8_t slot = 0U; slot < kMaxVoices; ++slot) {
+    const std::uint8_t channel = static_cast<std::uint8_t>(
+        ((static_cast<std::uint16_t>(start_channel) - 1U + slot) % 16U) + 1U);
+    bool used = false;
+    for (std::uint16_t note = 0U; note < 128U; ++note) {
+      const auto midi_note = static_cast<std::uint8_t>(note);
+      if ((is_active(midi_note) || is_pending_release(midi_note)) &&
+          note_channels_[note] == channel) {
+        used = true;
+        break;
+      }
+    }
+    if (!used) {
+      return channel;
+    }
+  }
+  return 0U;
 }
 
 void GeneratedNoteLedger::request_release_all() noexcept {
@@ -190,7 +224,7 @@ bool GeneratedNoteLedger::retry_pending_releases(NoteEventSink sink) noexcept {
     }
     const VoiceTransition release{0, TransitionKind::note_off, midi_note, 0,
                                   static_cast<std::uint32_t>(note)};
-    if (!push(sink, release)) {
+    if (!push(sink, release, note_channels_[midi_note])) {
       enter_blocked();
       return false;
     }
@@ -199,6 +233,7 @@ bool GeneratedNoteLedger::retry_pending_releases(NoteEventSink sink) noexcept {
     }
     clear_bit(pending_release_, midi_note);
     clear_bit(active_, midi_note);
+    note_channels_[midi_note] = 0U;
   }
   cleanup_complete_ = true;
   return true;
@@ -225,18 +260,24 @@ void GeneratedNoteLedger::finish_hold(double selected_peak, bool finite_input,
 
 NoteDeliveryResult GeneratedNoteLedger::deliver(
     std::uint32_t frames, NoteEventSink sink, double selected_peak,
-    bool finite_input, bool supported_layout) noexcept {
+    bool finite_input, bool supported_layout, MidiRouting routing,
+    std::uint8_t start_channel) noexcept {
   static_cast<void>(retry_pending_releases(sink));
   return deliver_queued(frames, sink, selected_peak, finite_input,
-                        supported_layout);
+                        supported_layout, routing, start_channel);
 }
 
 NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
     std::uint32_t frames, NoteEventSink sink, double selected_peak,
-    bool finite_input, bool supported_layout) noexcept {
+    bool finite_input, bool supported_layout, MidiRouting routing,
+    std::uint8_t start_channel) noexcept {
   if (!storage_ || frames == 0 || frames > max_frames_) {
     invalid_transition_ = true;
     return NoteDeliveryResult{output_blocked_, panic_hold_, false};
+  }
+  if (start_channel < 1U || start_channel > 16U ||
+      (routing != MidiRouting::single && routing != MidiRouting::per_voice)) {
+    invalid_transition_ = true;
   }
   for (std::size_t index = 0; index < size_; ++index) {
     if (storage_[index].sample_offset >= frames) {
@@ -256,7 +297,7 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
           enter_blocked();
           break;
         }
-        if (!push(sink, event)) {
+        if (!push(sink, event, note_channels_[event.note])) {
           set_bit(pending_release_, event.note);
           enter_blocked();
           break;
@@ -266,6 +307,7 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         }
         clear_bit(active_, event.note);
         clear_bit(pending_release_, event.note);
+        note_channels_[event.note] = 0U;
         continue;
       }
       if (panic_hold_) {
@@ -279,10 +321,12 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         enter_blocked();
         break;
       }
-      if (!push(sink, event)) {
+      const std::uint8_t channel = allocate_channel(routing, start_channel);
+      if (channel == 0U || !push(sink, event, channel)) {
         enter_blocked();
         break;
       }
+      note_channels_[event.note] = channel;
       set_bit(active_, event.note);
       ++active_count_;
     }

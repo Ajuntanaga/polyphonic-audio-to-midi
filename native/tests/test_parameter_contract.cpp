@@ -29,7 +29,7 @@ struct ExpectedParameter final {
 };
 
 constexpr ExpectedParameter kExpected[] = {
-    {0x4D330001U, "Detector input", 0.0, 2.0, 1.0, 0.0, 2,
+    {0x4D330001U, "MIDI routing", 0.0, 1.0, 1.0, 0.0, 1,
      m3::ParameterUpdateClass::structural, true, true, false},
     {0x4D330002U, "Mode", 0.0, 1.0, 1.0, 0.0, 1,
      m3::ParameterUpdateClass::structural, true, true, false},
@@ -156,7 +156,7 @@ M3_TEST(parameter_validation_clamps_and_rejects_without_partial_changes) {
   M3_EXPECT_NEAR(config.input_trim_db, -24.0, 0.0);
   M3_EXPECT_EQ(m3::apply_parameter(config, 0x4D330001U, 2.9),
                m3::ParameterApplyResult::changed);
-  M3_EXPECT_EQ(config.detector_input, m3::DetectorInput::downmix);
+  M3_EXPECT_EQ(config.midi_routing, m3::MidiRouting::per_voice);
   M3_EXPECT_EQ(m3::apply_parameter(config, 0x4D33000DU, 99.0),
                m3::ParameterApplyResult::changed);
   M3_EXPECT_EQ(config.midi_channel, 16U);
@@ -180,9 +180,10 @@ M3_TEST(parameter_text_conversions_cover_enum_and_numeric_views) {
   char text[64]{};
   M3_EXPECT_TRUE(m3::parameter_value_to_text(0x4D330001U, 2.0, text,
                                               sizeof(text)));
-  M3_EXPECT_TRUE(std::strcmp(text, "Downmix") == 0);
+  M3_EXPECT_TRUE(std::strcmp(text, "Per Voice") == 0);
   double value = -1.0;
-  M3_EXPECT_TRUE(m3::parameter_text_to_value(0x4D330001U, "Right", value));
+  M3_EXPECT_TRUE(
+      m3::parameter_text_to_value(0x4D330001U, "Per Voice", value));
   M3_EXPECT_NEAR(value, 1.0, 0.0);
   M3_EXPECT_TRUE(m3::parameter_value_to_text(0x4D330003U, 440.0, text,
                                               sizeof(text)));

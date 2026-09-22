@@ -38,7 +38,7 @@ M3_TEST(midi_frequency_uses_the_supplied_a4_reference) {
 
 M3_TEST(persistent_config_defaults_match_the_public_surface) {
   const m3::PersistentConfig config;
-  M3_EXPECT_EQ(config.detector_input, m3::DetectorInput::left);
+  M3_EXPECT_EQ(config.midi_routing, m3::MidiRouting::single);
   M3_EXPECT_EQ(config.profile_mode, m3::ProfileMode::m3);
   M3_EXPECT_NEAR(config.a4_hz, 440.0, 0.0);
   M3_EXPECT_EQ(config.lowest_note, 32U);

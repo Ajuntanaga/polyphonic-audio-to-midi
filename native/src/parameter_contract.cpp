@@ -10,7 +10,7 @@
 namespace {
 
 constexpr std::array<m3::ParameterSpec, m3::kParameterCount> kParameters{{
-    {0x4D330001U, "Detector input", 0.0, 2.0, 1.0, 0.0, 2,
+    {0x4D330001U, "MIDI routing", 0.0, 1.0, 1.0, 0.0, 1,
      m3::ParameterUpdateClass::structural, true, true, false},
     {0x4D330002U, "Mode", 0.0, 1.0, 1.0, 0.0, 1,
      m3::ParameterUpdateClass::structural, true, true, false},
@@ -52,7 +52,7 @@ constexpr std::array<m3::ParameterId, m3::kPersistentParameterCount>
         0x4D33000DU, 0x4D33000FU,
     }};
 
-constexpr const char* kDetectorInputLabels[] = {"Left", "Right", "Downmix"};
+constexpr const char* kMidiRoutingLabels[] = {"Single", "Per Voice"};
 constexpr const char* kModeLabels[] = {"M3 Eight-String", "General Tonal"};
 constexpr const char* kVelocityLabels[] = {"Fixed", "Dynamic"};
 constexpr const char* kPanicLabels[] = {"Ready", "Panic"};
@@ -133,8 +133,8 @@ bool format_parameter_number(double value, bool one_decimal, char* output,
 const char* enum_label(m3::ParameterId id, std::size_t index) noexcept {
   switch (id) {
     case 0x4D330001U:
-      return index < std::size(kDetectorInputLabels)
-                 ? kDetectorInputLabels[index]
+      return index < std::size(kMidiRoutingLabels)
+                 ? kMidiRoutingLabels[index]
                  : nullptr;
     case 0x4D330002U:
       return index < std::size(kModeLabels) ? kModeLabels[index] : nullptr;
@@ -204,7 +204,7 @@ bool parameter_value(const PersistentConfig& config, Status status,
                      ParameterId id, double& value) noexcept {
   switch (id) {
     case 0x4D330001U:
-      value = static_cast<double>(config.detector_input);
+      value = static_cast<double>(config.midi_routing);
       return true;
     case 0x4D330002U:
       value = static_cast<double>(config.profile_mode);
@@ -275,7 +275,7 @@ ParameterApplyResult apply_parameter(PersistentConfig& config, ParameterId id,
   static_cast<void>(parameter_value(config, Status::ready, id, previous));
   switch (id) {
     case 0x4D330001U:
-      config.detector_input = static_cast<DetectorInput>(value);
+      config.midi_routing = static_cast<MidiRouting>(value);
       break;
     case 0x4D330002U:
       config.profile_mode = static_cast<ProfileMode>(value);

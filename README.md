@@ -92,16 +92,24 @@ ionice -c 3 nice -n 10 python3 -B tools/run_vst3_validator.py \
 ```
 
 The recorded production validator result is `47 tests passed, 0 tests failed`.
-The current custom editor opens at `1024 x 808` and can be resized. Its visible
-groups are Header and live state, Source + Tuning, Voice Stack, Performance
-Range, and Advanced · Live Routing. The read-only Voice Stack shows the
-detector's bounded voice estimates: note, signed cents when an estimate is
-available, confidence, and Tracking or Settling state. It explicitly says
-`DETECTOR ESTIMATES · NOT MIDI OUTPUT`; it is neither an input meter nor a
-claim that a displayed voice was delivered as a host MIDI event. `Ready`
-remains truthful text from the existing Status parameter. A host that cannot
-attach the custom editor can still use the unchanged generic VST3 parameter
-surface.
+The current custom editor opens at `1024 x 468` and can be resized. Its live
+surface follows the selected Mechanical Night Arc reference: a wide header,
+one eight-voice ivory meter bank, and a compact row of performance controls.
+Each read-only circular meter shows a detector estimate's note and signed
+cents; the header reports the bounded live voice count. The separate Settings
+page exposes the complete parameter surface. The VST3 host owns the input bus
+layout: mono is analyzed directly, while stereo is averaged when both sides
+carry signal and uses the active side at unity when the other side is silent.
+There is no plug-in mono/stereo or L/R selector.
+
+`MIDI Routing` selects either `Single`, which sends every note on `MIDI Ch`,
+or `Per Voice`, which assigns active notes to as many as eight consecutive
+channels beginning at `MIDI Ch` and wrapping after channel 16. A note retains
+its assigned channel through note-off, retry, and panic cleanup. This is
+standard channelized MIDI routing rather than MPE. `Ready` remains truthful
+text from the existing Status parameter, and no displayed voice is claimed to
+have been delivered as a host MIDI event. A host that cannot attach the custom
+editor can still use the unchanged generic VST3 parameter surface.
 
 The host's generic parameter list also exposes a read-only strongest-voice
 projection as `Tuner note` and `Tuner cents`. This is a compatibility view for
@@ -110,27 +118,28 @@ stack or the polyphonic MIDI output to monophonic operation.
 
 ### Start the live chain
 
-On the desktop that has the Revelator attached, launch the prepared 96 kHz
-eight-open-string profile without touching the normal REAPER profile:
+To test while the io24 is reserved by another session, launch the prepared
+96 kHz / 512-sample profile for the computer's normal ALSA device without
+touching the normal REAPER profile:
 
 ```bash
 /home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \
-  -cfgfile "$PWD/build/m3-native-live-midi-8open-96k/reaper.ini" -nosplash \
-  "$PWD/build/m3-native-live-midi-8open-96k/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
+  -cfgfile "$PWD/build/m3-native-live-midi-system-routing-96k-512/reaper.ini" -nosplash \
+  "$PWD/build/m3-native-live-midi-system-routing-96k-512/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
 ```
 
 REAPER accepts a Lua script as a command-line argument, so that command creates
 one armed, monitored `M3 Native 8-String Guitar to MIDI` track automatically:
 
 ```text
-Revelator input 1 → M3 Polyphonic Audio to MIDI → ReaSynth
+System audio input → M3 Polyphonic Audio to MIDI → ReaSynth
 ```
 
 Play clean single-note lines first. The profile is deliberately limited to the
 eight open-string range (MIDI 32–60), uses muted dry audio, and sends the
 detected note to ReaSynth. If there is no REAPER track-meter activity, choose
-the Revelator's first mono input in REAPER's track input menu; if there is input
-but no synth note, lower the guitar/interface gain before increasing detector
+the intended system input in REAPER's track input menu; if there is input but
+no synth note, lower the guitar/interface gain before increasing detector
 sensitivity.
 
 For the remaining manual 96 kHz editor check, use a physical mouse in only
@@ -138,7 +147,7 @@ this disposable instance:
 
 1. Confirm REAPER reports `96000 Hz` without changing the interface or normal
    REAPER configuration.
-2. Open the staged M3 FX. Confirm the custom editor is `1024 x 808`, resize it,
+2. Open the staged M3 FX. Confirm the custom editor is `1024 x 468`, resize it,
    and check that the controls reflow without overlap.
 3. Note that Dry Audio is `OFF` in the live-chain preset. Click it once, then
    use REAPER's `Param` menu to confirm `Dry audio` is the last-touched host

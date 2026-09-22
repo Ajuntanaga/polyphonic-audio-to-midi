@@ -206,7 +206,7 @@ bool ProbeProcessor::dry_path_self_test(bool alias) noexcept {
   std::array<float*, 2> output{{alias ? left.data() : output_left.data(),
                                alias ? right.data() : output_right.data()}};
   const DryPathResult result = process_dry_path(
-      input.data(), 2, output.data(), 2, 4, true, DetectorInput::left);
+      input.data(), 2, output.data(), 2, 4, true);
   if (result.nonfinite_input || result.channels_processed != 2) {
     return false;
   }

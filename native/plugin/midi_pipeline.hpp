@@ -36,7 +36,8 @@ class MidiPipeline final {
                             const clap_output_events_t* output,
                             double selected_input_peak,
                             bool finite_input,
-                            bool supported_layout) noexcept;
+                            bool supported_layout,
+                            MidiRouting routing = MidiRouting::single) noexcept;
 
   [[nodiscard]] std::size_t capacity() const noexcept {
     return ledger_.capacity();
@@ -44,13 +45,14 @@ class MidiPipeline final {
   [[nodiscard]] bool is_active(std::uint8_t note) const noexcept;
   [[nodiscard]] bool is_pending_release(std::uint8_t note) const noexcept;
   [[nodiscard]] bool cleanup_pending() const noexcept {
-    return channel_panic_required_ || ledger_.release_pending();
+    return channel_panic_mask_ != 0U || ledger_.release_pending();
   }
 
  private:
   struct DeliveryContext;
   static bool push_generated(void* context,
-                             const VoiceTransition& transition) noexcept;
+                             const VoiceTransition& transition,
+                             std::uint8_t one_based_channel) noexcept;
   bool push_midi(const clap_output_events_t* output, std::uint32_t offset,
                  std::uint8_t status, std::uint8_t data1,
                  std::uint8_t data2) noexcept;
@@ -59,12 +61,14 @@ class MidiPipeline final {
   bool flush_inputs(DeliveryContext& context, std::uint32_t boundary,
                     bool inclusive, bool final_flush) noexcept;
   void enter_output_blocked() noexcept;
-  bool retry_channel_panics(const clap_output_events_t* output,
-                            std::uint8_t channel) noexcept;
+  bool retry_channel_panics(const clap_output_events_t* output) noexcept;
+  void mark_route_for_panic() noexcept;
 
   GeneratedNoteLedger ledger_{};
   bool invalid_event_{};
-  bool channel_panic_required_{};
+  std::uint16_t channel_panic_mask_{};
+  MidiRouting routing_{MidiRouting::single};
+  std::uint8_t start_channel_{1U};
 };
 
 }  // namespace m3

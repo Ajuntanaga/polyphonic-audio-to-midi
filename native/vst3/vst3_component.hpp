@@ -187,7 +187,6 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   std::uint64_t decision_tick_count_{};
   std::uint32_t decision_phase_{};
   std::uint32_t detector_reset_count_{};
-  std::uint8_t release_midi_channel_{1};
   std::uint8_t tuner_note_{kTunerNoSignalNote};
   double tuner_cents_{};
   bool setup_prepared_valid_{};

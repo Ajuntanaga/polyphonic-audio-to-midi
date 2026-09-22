@@ -1,5 +1,8 @@
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <new>
+#include <vector>
 
 #include "fake_vst3_host.hpp"
 #include "m3_editor.hpp"
@@ -31,6 +34,36 @@ class FakeVstguiRunLoop final : public VSTGUI::IRunLoop,
   }
   bool unregisterTimer(VSTGUI::ITimerHandler*) override { return true; }
 };
+
+bool write_editor_ppm(Steinberg::IPlugView& view, const char* path) {
+  if (path == nullptr || path[0] == '\0') {
+    return true;
+  }
+  constexpr std::size_t width =
+      static_cast<std::size_t>(m3::vst3::kEditorWidth);
+  constexpr std::size_t height =
+      static_cast<std::size_t>(m3::vst3::kEditorHeight);
+  std::vector<std::uint8_t> rgba(width * height * 4U);
+  if (!m3::vst3::editor_render_rgba_for_test(view, rgba.data(),
+                                              rgba.size())) {
+    return false;
+  }
+  std::vector<std::uint8_t> rgb(width * height * 3U);
+  for (std::size_t pixel = 0U; pixel < width * height; ++pixel) {
+    rgb[pixel * 3U] = rgba[pixel * 4U];
+    rgb[pixel * 3U + 1U] = rgba[pixel * 4U + 1U];
+    rgb[pixel * 3U + 2U] = rgba[pixel * 4U + 2U];
+  }
+  std::FILE* file = std::fopen(path, "wb");
+  if (file == nullptr) {
+    return false;
+  }
+  const bool header_ok =
+      std::fprintf(file, "P6\n%zu %zu\n255\n", width, height) > 0;
+  const bool body_ok =
+      header_ok && std::fwrite(rgb.data(), 1U, rgb.size(), file) == rgb.size();
+  return std::fclose(file) == 0 && body_ok;
+}
 
 Steinberg::Vst::IEditController* create_controller(
     Steinberg::IPluginFactory* factory,
@@ -457,7 +490,8 @@ M3_TEST(vst3_editor_custom_generic_custom_round_trip_restores_full_surface) {
           m3::vst3::editor_attach_refresh_count_for_test(*view), 1U);
 
       // REAPER temporarily substitutes a shorter generic parameter view.
-      Steinberg::ViewRect generic_size{0, 0, m3::vst3::kEditorWidth, 560};
+      Steinberg::ViewRect generic_size{0, 0, m3::vst3::kEditorWidth,
+                                       m3::vst3::kEditorHeight - 100};
       M3_EXPECT_EQ(view->onSize(&generic_size), Steinberg::kResultTrue);
       M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
 
@@ -513,7 +547,7 @@ M3_TEST(vst3_editor_writable_controls_emit_one_exact_host_gesture) {
       double normalized_value;
     };
     constexpr Case kCases[] = {
-        {0x4D330001U, 0.5}, {0x4D330002U, 1.0},
+        {0x4D330001U, 1.0}, {0x4D330002U, 1.0},
         {0x4D330003U, 0.5}, {0x4D330004U, 0.75},
         {0x4D330005U, 0.75}, {0x4D330006U, 0.6},
         {0x4D330007U, 0.25}, {0x4D330008U, 0.75},
@@ -696,6 +730,74 @@ M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
   }
   if (processor != nullptr) {
     processor->release();
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_opens_on_tuner_and_settings_toggle_is_parameter_silent) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3ComponentHandler handler;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    M3_EXPECT_EQ(controller->setComponentHandler(&handler),
+                 Steinberg::kResultTrue);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      M3_EXPECT_FALSE(m3::vst3::editor_settings_open_for_test(*view));
+      M3_EXPECT_TRUE(write_editor_ppm(
+          *view, std::getenv("M3_EDITOR_TUNER_SCREENSHOT")));
+      M3_EXPECT_TRUE(m3::vst3::editor_control_visible_for_test(
+          *view, m3::ParameterId{0x4D330001U}));
+      M3_EXPECT_FALSE(m3::vst3::editor_control_visible_for_test(
+          *view, m3::ParameterId{0x4D330004U}));
+      handler.reset();
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
+      M3_EXPECT_TRUE(m3::vst3::editor_settings_open_for_test(*view));
+      M3_EXPECT_TRUE(write_editor_ppm(
+          *view, std::getenv("M3_EDITOR_SETTINGS_SCREENSHOT")));
+      M3_EXPECT_TRUE(m3::vst3::editor_control_visible_for_test(
+          *view, m3::ParameterId{0x4D330004U}));
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
+      M3_EXPECT_FALSE(m3::vst3::editor_settings_open_for_test(*view));
+      M3_EXPECT_FALSE(m3::vst3::editor_control_visible_for_test(
+          *view, m3::ParameterId{0x4D330004U}));
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(controller->setComponentHandler(nullptr),
+                 Steinberg::kResultTrue);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
   }
   if (controller != nullptr) {
     controller->release();

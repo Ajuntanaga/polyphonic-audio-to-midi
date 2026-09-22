@@ -1,11 +1,13 @@
 #include "m3_editor_layout.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 
 namespace m3::vst3 {
 namespace {
 
-constexpr ParameterId kDetectorInputId = 0x4D330001U;
+constexpr ParameterId kMidiRoutingId = 0x4D330001U;
 constexpr ParameterId kProfileModeId = 0x4D330002U;
 constexpr ParameterId kA4ReferenceId = 0x4D330003U;
 constexpr ParameterId kInputTrimId = 0x4D330004U;
@@ -20,55 +22,149 @@ constexpr ParameterId kFixedVelocityId = 0x4D33000CU;
 constexpr ParameterId kMidiChannelId = 0x4D33000DU;
 constexpr ParameterId kDryAudioId = 0x4D33000FU;
 
-constexpr std::array<EditorControlLayout, kEditorControlCount> kControls = {{
-    {kStatusParameterId, EditorPresentation::status, {24.0, 20.0, 790.0, 70.0},
+constexpr EditorRect kTunerDisplayBounds{16.0, 108.0, 1008.0, 332.0};
+constexpr EditorRect kSettingsButtonBounds{878.0, 352.0, 1004.0, 426.0};
+constexpr EditorRect kSettingsPanelBounds{16.0, 108.0, 1008.0, 438.0};
+constexpr EditorRect kSettingsDoneButtonBounds{874.0, 114.0, 994.0, 150.0};
+
+constexpr std::array<EditorControlLayout, kEditorControlCount> kTunerControls = {{
+    {kStatusParameterId, EditorPresentation::status, {16.0, 16.0, 552.0, 100.0},
      true, false},
     {kPanicParameterId, EditorPresentation::momentary,
-     {820.0, 20.0, 1000.0, 70.0}, true, true},
-    {kDetectorInputId, EditorPresentation::segment,
-     {24.0, 130.0, 170.0, 190.0}, true, true},
+     {868.0, 28.0, 1008.0, 98.0}, true, true},
+    {kMidiRoutingId, EditorPresentation::segment,
+     {20.0, 356.0, 152.0, 426.0}, true, true},
     {kProfileModeId, EditorPresentation::segment,
-     {190.0, 130.0, 336.0, 190.0}, true, true},
-    {kA4ReferenceId, EditorPresentation::knob, {356.0, 130.0, 502.0, 250.0},
-     true, true},
-    {kInputTrimId, EditorPresentation::knob, {522.0, 130.0, 668.0, 250.0}, true,
+     {160.0, 356.0, 280.0, 426.0}, true, true},
+    {kA4ReferenceId, EditorPresentation::compact_value,
+     {288.0, 356.0, 396.0, 426.0}, true, true},
+    {kInputTrimId, EditorPresentation::knob, {440.0, 122.0, 574.0, 242.0}, false,
      true},
-    {kSensitivityId, EditorPresentation::knob, {688.0, 130.0, 834.0, 250.0},
-     true, true},
-    {kResponseId, EditorPresentation::knob, {854.0, 130.0, 1000.0, 250.0}, true,
+    {kSensitivityId, EditorPresentation::knob,
+     {404.0, 356.0, 526.0, 426.0}, true, true},
+    {kResponseId, EditorPresentation::knob, {534.0, 356.0, 650.0, 426.0}, true,
      true},
     {kLowestMidiNoteId, EditorPresentation::note_range,
-     {24.0, 488.0, 220.0, 568.0}, true, true},
+     {860.0, 122.0, 1004.0, 242.0}, false, true},
     {kHighestMidiNoteId, EditorPresentation::note_range,
-     {240.0, 488.0, 436.0, 568.0}, true, true},
+     {20.0, 254.0, 154.0, 374.0}, false, true},
     {kMaximumPolyphonyId, EditorPresentation::knob,
-     {456.0, 468.0, 652.0, 588.0}, true, true},
-    {kMaximumFretId, EditorPresentation::knob, {672.0, 468.0, 868.0, 588.0}, true,
-     true},
+     {160.0, 254.0, 294.0, 374.0}, false, true},
+    {kMaximumFretId, EditorPresentation::knob, {300.0, 254.0, 434.0, 374.0},
+     false, true},
     {kVelocityModeId, EditorPresentation::segment,
-     {24.0, 656.0, 240.0, 716.0}, true, true},
-    {kFixedVelocityId, EditorPresentation::knob, {270.0, 636.0, 466.0, 756.0},
-     true, true},
-    {kMidiChannelId, EditorPresentation::knob, {496.0, 636.0, 692.0, 756.0}, true,
+     {440.0, 254.0, 574.0, 374.0}, false, true},
+    {kFixedVelocityId, EditorPresentation::knob, {580.0, 254.0, 714.0, 374.0},
+     false, true},
+    {kMidiChannelId, EditorPresentation::compact_value,
+     {658.0, 356.0, 750.0, 426.0}, true, true},
+    {kDryAudioId, EditorPresentation::toggle, {758.0, 356.0, 868.0, 426.0}, true,
      true},
-    {kDryAudioId, EditorPresentation::toggle, {722.0, 656.0, 920.0, 716.0}, true,
-     true},
+}};
+
+constexpr std::array<EditorControlLayout, kEditorControlCount>
+    kSettingsControls = {{
+        {kStatusParameterId, EditorPresentation::status,
+         {16.0, 16.0, 552.0, 100.0}, true, false},
+        {kPanicParameterId, EditorPresentation::momentary,
+         {868.0, 28.0, 1008.0, 98.0}, true, true},
+        {kMidiRoutingId, EditorPresentation::segment,
+         {20.0, 158.0, 154.0, 278.0}, true, true},
+        {kProfileModeId, EditorPresentation::segment,
+         {160.0, 158.0, 294.0, 278.0}, true, true},
+        {kA4ReferenceId, EditorPresentation::knob,
+         {300.0, 158.0, 434.0, 278.0}, true, true},
+        {kInputTrimId, EditorPresentation::knob,
+         {440.0, 158.0, 574.0, 278.0}, true, true},
+        {kSensitivityId, EditorPresentation::knob,
+         {580.0, 158.0, 714.0, 278.0}, true, true},
+        {kResponseId, EditorPresentation::knob,
+         {720.0, 158.0, 854.0, 278.0}, true, true},
+        {kLowestMidiNoteId, EditorPresentation::note_range,
+         {860.0, 158.0, 1004.0, 278.0}, true, true},
+        {kHighestMidiNoteId, EditorPresentation::note_range,
+         {20.0, 294.0, 154.0, 414.0}, true, true},
+        {kMaximumPolyphonyId, EditorPresentation::knob,
+         {160.0, 294.0, 294.0, 414.0}, true, true},
+        {kMaximumFretId, EditorPresentation::knob,
+         {300.0, 294.0, 434.0, 414.0}, true, true},
+        {kVelocityModeId, EditorPresentation::segment,
+         {440.0, 294.0, 574.0, 414.0}, true, true},
+        {kFixedVelocityId, EditorPresentation::knob,
+         {580.0, 294.0, 714.0, 414.0}, true, true},
+        {kMidiChannelId, EditorPresentation::knob,
+         {720.0, 294.0, 854.0, 414.0}, true, true},
+        {kDryAudioId, EditorPresentation::toggle,
+         {860.0, 294.0, 1004.0, 414.0}, true, true},
 }};
 
 }  // namespace
 
 EditorControlLayout editor_control_layout(std::size_t index,
                                           const PersistentConfig& config,
-                                          Status status) noexcept {
+                                          Status status,
+                                          EditorSurfacePage page) noexcept {
   static_cast<void>(status);
+  const auto& controls = page == EditorSurfacePage::tuner ? kTunerControls
+                                                          : kSettingsControls;
   EditorControlLayout control =
-      index < kControls.size() ? kControls[index] : kControls[0];
+      index < controls.size() ? controls[index] : controls[0];
   if (control.parameter_id == kFixedVelocityId &&
       config.velocity_mode != VelocityMode::fixed) {
     control.visible = false;
     control.enabled = false;
   }
   return control;
+}
+
+EditorRect editor_tuner_display_bounds() noexcept {
+  return kTunerDisplayBounds;
+}
+
+EditorRect editor_settings_button_bounds() noexcept {
+  return kSettingsButtonBounds;
+}
+
+EditorRect editor_settings_panel_bounds() noexcept {
+  return kSettingsPanelBounds;
+}
+
+EditorRect editor_settings_done_button_bounds() noexcept {
+  return kSettingsDoneButtonBounds;
+}
+
+EditorRect editor_tuner_meter_arc_bounds(const EditorRect& lane) noexcept {
+  const double lane_width = std::max(0.0, lane.right - lane.left);
+  const double inset = lane_width * 0.055;
+  const double arc_width = std::max(0.0, lane_width - inset * 2.0);
+  const double arc_height = arc_width;
+  const double arc_top = lane.top + 16.0;
+  return EditorRect{lane.left + inset, arc_top, lane.right - inset,
+                    arc_top + arc_height};
+}
+
+double advance_tuner_needle(double displayed_cents, double target_cents,
+                            double elapsed_seconds) noexcept {
+  const double target =
+      std::clamp(std::isfinite(target_cents) ? target_cents : 0.0, -50.0, 50.0);
+  if (!std::isfinite(displayed_cents)) {
+    return target;
+  }
+  const double displayed = std::clamp(displayed_cents, -50.0, 50.0);
+  if (!std::isfinite(elapsed_seconds) || elapsed_seconds <= 0.0) {
+    return displayed;
+  }
+  if (elapsed_seconds >= 0.25) {
+    return target;
+  }
+  const double delta = target - displayed;
+  if (std::abs(delta) <= 0.08) {
+    return target;
+  }
+  constexpr double kResponseSeconds = 0.055;
+  const double alpha = 1.0 - std::exp(-elapsed_seconds / kResponseSeconds);
+  const double next = displayed + delta * alpha;
+  return std::abs(target - next) <= 0.08 ? target : next;
 }
 
 const char* status_label(Status status) noexcept {
