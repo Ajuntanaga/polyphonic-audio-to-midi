@@ -14,7 +14,7 @@ Updated: 2026-09-21
   344/344, `tools/validate_native_source.py` passes, and Steinberg's production
   VST3 validator reports `pass`. The canonical release module is
   `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3/Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so`,
-  SHA-256 `1c1888849348d1db88cd473b82c2480561f15a5fbcdbec05176c9b313cd52093`.
+  SHA-256 `444c64486e98fff6933887bce30ffe0625b67ed96de064e01f100104c10a8505`.
 - The disposable system-audio profile is
   `build/m3-native-live-midi-system/reaper.ini`. It is bound only to the
   built-in `Generic_1` ALC257 codec through `plughw:Generic_1,0`, with REAPER
