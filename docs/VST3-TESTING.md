@@ -841,8 +841,8 @@ input path was available, and no existing REAPER window was guessed or
 clicked. This is an environment input-boundary limitation, not a successful
 gesture result and not evidence of a product gesture defect.
 
-Task 5 Step 4 remains manual. From a desktop with the Revelator already in its
-96 kHz operating mode:
+Task 5 Step 4 remains manual. From a desktop with the audio interface already
+set to 96 kHz:
 
 1. Stage the profile with the command above and launch only the build-local
    `reaper.ini` using the README's `-newinst -noactivate -cfgfile` command.

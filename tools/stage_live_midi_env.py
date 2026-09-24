@@ -196,7 +196,7 @@ def stage_live_profile(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="stage an isolated Revelator-backed M3 live-MIDI REAPER profile"
+        description="stage an isolated audio-interface-backed M3 live-MIDI REAPER profile"
     )
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--input-device", default=DEFAULT_INPUT_DEVICE)

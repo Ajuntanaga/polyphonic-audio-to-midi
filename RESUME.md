@@ -56,7 +56,7 @@ Updated: 2026-09-24
   configured for 96 kHz and 512 samples. Direct device checks confirmed
   96 kHz/512 stereo capture; built-in playback is physically 48 kHz/256 and is
   converted by ALSA `plughw` while the plug-in graph remains 96 kHz/512.
-  The io24 (`R24`) was not opened.
+  The external audio interface (`R24`) was not opened.
 - A real disposable REAPER 7.79 launch discovered the production VST3, created
   the armed `M3 Native 8-String Guitar to MIDI` track, opened the custom editor,
   and held only `/dev/snd/pcmC2D0{c,p}`. This verifies discovery, editor
@@ -631,8 +631,8 @@ Updated: 2026-09-24
   every prerequisite release gate being green.
 - Fresh post-authorization baseline verification passed 44 native tests and
   125 Python tests at the unchanged Task 2 checkpoint. No REAPER process was
-  present; the tests ran serially at low priority after an unrelated io24 test
-  process completed and the ACPI temperature fell.
+  present; the tests ran serially at low priority after an unrelated
+  audio-interface test process completed and the ACPI temperature fell.
 - Task 3 is sealed at commit `9851237` (`build: vendor pinned VST3 SDK
   3.8.1`). The official root tag and all four root gitlinks/submodule HEADs
   match the approved revisions exactly. The retained 24 MiB source-only tree

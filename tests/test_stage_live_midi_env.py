@@ -15,7 +15,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class StageLiveMidiProfileTests(unittest.TestCase):
-    def test_stages_isolated_revelator_profile_with_live_guitar_chain(self) -> None:
+    def test_stages_isolated_audio_interface_profile_with_live_guitar_chain(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             output = pathlib.Path(temporary) / "m3-live-midi"
 

@@ -24,15 +24,15 @@ Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 ```
 
 The default disposable profile is configured for 48 kHz and 256 samples. For
-the Revelator's 96 kHz mode, stage the dedicated profile below. Both profiles
+96 kHz operation, stage the dedicated profile below. Both profiles
 use MIDI notes `32..60`—the eight open strings—and muted dry audio. The native
 detector now selects a bounded set of up to the configured Maximum Polyphony
 (1–8) rather than disabling detection above one voice. Synthetic native and
 VST3 tests cover a single tone at the default limit and an independent two-tone
 dyad at a limit of two; they do not constitute a physical guitar chord-quality
 claim. Final guitar calibration remains physical-input work: plug the guitar
-into Revelator input 1, arm/monitor the staged track, then adjust input gain or
-detector sensitivity only if needed.
+into an audio-interface input, arm/monitor the staged track, then adjust input
+gain or detector sensitivity only if needed.
 
 To prepare another disposable profile without touching the live REAPER setup:
 
@@ -42,7 +42,7 @@ python3 tools/stage_live_midi_env.py \
   --detector native
 ```
 
-For the 96 kHz Revelator profile used for live guitar, stage it separately:
+For a 96 kHz live-guitar profile, stage it separately:
 
 ```bash
 python3 tools/stage_live_midi_env.py \
@@ -51,9 +51,9 @@ python3 tools/stage_live_midi_env.py \
   --sample-rate 96000
 ```
 
-If the io24/Revelator is in use elsewhere, stage a separate profile against
-the computer's normal stereo audio system. This leaves both the interface and
-the normal REAPER profile untouched:
+If the primary audio interface is in use elsewhere, stage a separate profile
+against the computer's normal stereo audio system. This leaves both the
+interface and the normal REAPER profile untouched:
 
 ```bash
 python3 tools/stage_live_midi_env.py \
@@ -68,9 +68,10 @@ python3 tools/stage_live_midi_env.py \
 The native bundle stays under `build/`; staging copies it only into that
 disposable profile. No persistent plug-in installation is required.
 On the validation workstation, `Generic_1` is the built-in ALC257 codec and is
-distinct from the `R24` io24. Its capture stream runs natively at 96 kHz/512;
-the ALSA `plughw` layer keeps REAPER's processing graph at 96 kHz/512 while
-converting the built-in playback stream to the codec's 48 kHz hardware rate.
+distinct from the `R24` interface. Its capture stream runs natively at
+96 kHz/512; the ALSA `plughw` layer keeps REAPER's processing graph at
+96 kHz/512 while converting the built-in playback stream to the codec's 48 kHz
+hardware rate.
 
 ### Build and validate the editor bundle
 
@@ -142,9 +143,9 @@ stack or the polyphonic MIDI output to monophonic operation.
 
 ### Start the live chain
 
-To test while the io24 is reserved by another session, launch the prepared
-96 kHz / 512-sample profile for the computer's normal ALSA device without
-touching the normal REAPER profile:
+To test while the primary audio interface is reserved by another session,
+launch the prepared 96 kHz / 512-sample profile for the computer's normal ALSA
+device without touching the normal REAPER profile:
 
 ```bash
 /home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \

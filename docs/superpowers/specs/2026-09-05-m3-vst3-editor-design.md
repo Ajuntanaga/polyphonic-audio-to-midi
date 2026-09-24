@@ -1,7 +1,7 @@
 # M3 VST3 Live Editor Design
 
-Date: 2026-09-05  
-Architecture approved in chat: 2026-09-05  
+Date: 2026-09-05
+Architecture approved in chat: 2026-09-05
 Document status: approved design; implementation plan and source work follow
 only after this document is reviewed
 
@@ -14,10 +14,10 @@ readability, and no duplicated wall of sliders. It takes inspiration from the
 clarity and modular organization of professional rack plug-ins, without using
 another product's branding, artwork, assets, or trade dress.
 
-The editor is for the practical live path: a Revelator at 96 kHz, a low-register
-eight-string guitar, and a downstream VSTi. It must make the important controls
-fast to find while preserving every existing VST3 parameter and host automation
-contract.
+The editor is for the practical live path: an audio interface at 96 kHz, a
+low-register eight-string guitar, and a downstream VSTi. It must make the
+important controls fast to find while preserving every existing VST3 parameter
+and host automation contract.
 
 ## 2. Current state and scope
 
