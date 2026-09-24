@@ -27,10 +27,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run Python contract suite
+      - name: Run portable Python contracts
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
+        # The complete suite also exercises local REAPER, desktop, build-tree,
+        # and historical-evidence contracts. Those are verified on the audio
+        # workstation; hosted CI runs only contracts with no host dependency.
+        run: |
+          python3 -m unittest -v \
+            tests.test_guarded_reaper.GuardedReaperTests.test_default_reaper_path_is_portable_and_overrideable \
+            tests.test_guarded_reaper.GuardedReaperTests.test_guarded_command_uses_the_requested_reaper_executable \
+            tests.test_run_synthetic_matrix.SyntheticMatrixRunnerTests.test_guard_command_passes_the_selected_reaper_to_the_guard \
+            tests.test_source_contract.SourceContractTests.test_tracked_public_files_do_not_embed_a_contributor_home_path \
+            tests.test_vst3_build_contract.Vst3BuildContractTests.test_public_onboarding_initializes_the_pinned_vstgui_submodule
       - name: Validate authored source
         run: |
           python3 -B tools/validate_source.py .
