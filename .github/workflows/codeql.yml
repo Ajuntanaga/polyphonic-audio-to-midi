@@ -23,7 +23,7 @@ jobs:
         language: [c-cpp, python]
     steps:
       - name: Check out source and pinned submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Install C++ build dependencies
@@ -38,7 +38,7 @@ jobs:
             libx11-dev libx11-xcb-dev libxcb-cursor-dev libxcb-keysyms1-dev \
             libxcb-util-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
       - name: Build C++ analysis target
@@ -47,4 +47,4 @@ jobs:
           cmake -S . -B build/codeql -DCMAKE_BUILD_TYPE=Release
           cmake --build build/codeql --target m3_vst3_production --parallel 2
       - name: Analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
