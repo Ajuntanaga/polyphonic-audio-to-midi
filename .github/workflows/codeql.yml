@@ -22,29 +22,16 @@ jobs:
       matrix:
         language: [c-cpp, python]
     steps:
-      - name: Check out source and pinned submodules
+      - name: Check out authored source
         uses: actions/checkout@v7
-        with:
-          submodules: recursive
-      - name: Install C++ build dependencies
-        if: matrix.language == 'c-cpp'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends \
-            libexpat1-dev libglib2.0-dev libcairo2-dev libfontconfig1-dev \
-            libfreetype6-dev libpango1.0-dev libwayland-dev \
-            libgtkmm-3.0-dev libatkmm-1.6-dev libsqlite3-dev pkg-config \
-            wayland-protocols \
-            libx11-dev libx11-xcb-dev libxcb-cursor-dev libxcb-keysyms1-dev \
-            libxcb-util-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-      - name: Build C++ analysis target
-        if: matrix.language == 'c-cpp'
-        run: |
-          cmake -S . -B build/codeql -DCMAKE_BUILD_TYPE=Release
-          cmake --build build/codeql --target m3_vst3_production --parallel 2
+          build-mode: none
+          config: |
+            paths:
+              - native
+              - tools
       - name: Analyze
         uses: github/codeql-action/analyze@v4

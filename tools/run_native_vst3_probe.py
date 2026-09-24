@@ -601,11 +601,10 @@ def batch_validation_errors(
                 errors.append("metadata classification is not pass")
             if metadata.get("inputs") != dict(current_hashes):
                 errors.append("metadata input hashes are stale or incomplete")
-            errors.extend(
-                _trusted_vst3_scan_containment_errors(
-                    metadata.get("vst3_scan_containment")
-                )
-            )
+            if _trusted_vst3_scan_containment_errors(
+                metadata.get("vst3_scan_containment")
+            ):
+                errors.append("metadata VST3 scan containment is invalid")
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             errors.append(f"invalid metadata.json: {exc}")
     return errors

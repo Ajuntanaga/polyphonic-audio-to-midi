@@ -635,17 +635,16 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
             )
             metadata_path = batch / "metadata.json"
             valid = self.sealed_vst3_scan_containment()
+            expected_error = "metadata VST3 scan containment is invalid"
             cases = (
-                ("missing", None, "metadata VST3 scan containment is missing"),
+                ("missing", None),
                 (
                     "error-bearing",
-                    {**valid, "errors": ["unexpected cached VST3 bundle"]},
-                    "metadata VST3 scan containment errors are not empty",
+                    {**valid, "errors": ["sensitive-marker-must-not-escape"]},
                 ),
                 (
                     "malformed profile digest",
                     {**valid, "profile_sha256": "A" * 64},
-                    "metadata VST3 scan containment profile digest is invalid",
                 ),
                 (
                     "malformed cache key set",
@@ -653,7 +652,6 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                         **valid,
                         "cache_sha256": {"reaper-vstplugins.ini": "c" * 64},
                     },
-                    "metadata VST3 scan containment cache keys are invalid",
                 ),
                 (
                     "malformed cache digest",
@@ -664,7 +662,6 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                             "reaper-vstplugins64.ini": "C" * 64,
                         },
                     },
-                    "metadata VST3 scan containment cache digest is invalid",
                 ),
                 (
                     "no cache digest",
@@ -675,15 +672,13 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                             "reaper-vstplugins64.ini": None,
                         },
                     },
-                    "metadata VST3 scan containment has no cache digest",
                 ),
                 (
                     "tampered",
                     {**valid, "tampered": True},
-                    "metadata VST3 scan containment fields are invalid",
                 ),
             )
-            for name, containment, expected_error in cases:
+            for name, containment in cases:
                 with self.subTest(name=name):
                     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
                     if containment is None:
@@ -693,11 +688,12 @@ class NativeVst3ProbeRunnerTests(unittest.TestCase):
                     metadata_path.write_text(
                         json.dumps(metadata) + "\n", encoding="utf-8"
                     )
-                    self.assertIn(
-                        expected_error,
-                        PROBE_RUNNER.batch_validation_errors(
-                            batch, 44100, 32, hashes
-                        ),
+                    errors = PROBE_RUNNER.batch_validation_errors(
+                        batch, 44100, 32, hashes
+                    )
+                    self.assertIn(expected_error, errors)
+                    self.assertNotIn(
+                        "sensitive-marker-must-not-escape", "; ".join(errors)
                     )
 
     def test_pressure_record_is_atomic_json_with_before_and_after(self):
