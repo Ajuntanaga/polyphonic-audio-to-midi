@@ -23,7 +23,7 @@ jobs:
         language: [c-cpp, python]
     steps:
       - name: Check out source and pinned submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Install C++ build dependencies
