@@ -23,6 +23,8 @@ enum class TunerVoiceState : std::uint8_t {
   tracking,
 };
 
+inline constexpr std::uint8_t kUnassignedTunerString = 0xFFU;
+
 struct TunerVoice final {
   std::uint8_t midi_note{};
   std::int16_t cents_q8{};
@@ -30,6 +32,11 @@ struct TunerVoice final {
   std::uint16_t age_ticks{};
   TunerVoiceState state{TunerVoiceState::settling};
   bool cents_valid{};
+  // Zero-based physical M3 string/lane identity. General mode and legacy
+  // producers leave this unassigned. Keeping identity in the evidence frame
+  // prevents the editor from reordering a sustained string when spectral
+  // rank changes.
+  std::uint8_t string_index{kUnassignedTunerString};
 };
 
 struct TunerSnapshot final {

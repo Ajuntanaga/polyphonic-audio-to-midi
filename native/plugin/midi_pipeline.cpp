@@ -53,17 +53,8 @@ bool MidiPipeline::is_pending_release(std::uint8_t note) const noexcept {
 bool MidiPipeline::request_panic(std::uint32_t offset,
                                  std::uint32_t frames_count) noexcept {
   ledger_.request_recovery();
-  bool complete = true;
-  std::uint32_t sequence = 0;
-  for (std::uint16_t note = 0; note < 128; ++note) {
-    const auto midi_note = static_cast<std::uint8_t>(note);
-    if (ledger_.is_active(midi_note) &&
-        !queue_transition(VoiceTransition{offset, TransitionKind::note_off,
-                                          midi_note, 0, sequence++},
-                          frames_count)) {
-      complete = false;
-    }
-  }
+  const bool complete =
+      ledger_.queue_active_releases(offset, frames_count);
   if (!complete) {
     enter_output_blocked();
   }

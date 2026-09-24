@@ -707,6 +707,104 @@ M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
           m3::vst3::editor_tuner_invalidation_count_for_test(*view) > before);
       M3_EXPECT_EQ(handler.edit_call_count(), 0U);
 
+      m3::TunerVoice displayed{};
+      bool lane_active = false;
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 0U, displayed, lane_active));
+      M3_EXPECT_FALSE(lane_active);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 1U, displayed, lane_active));
+      // A never-confirmed settling candidate must not create an extra meter.
+      M3_EXPECT_FALSE(lane_active);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 2U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.midi_note, 40U);
+
+      m3::TunerSnapshot reordered;
+      reordered.generation = 42U;
+      reordered.state = m3::TunerFrameState::tracking;
+      reordered.voice_count = 2U;
+      reordered.max_polyphony = 2U;
+      reordered.voices[0] = m3::TunerVoice{
+          47U, static_cast<std::int16_t>(9 * 256), 25000U, 9U,
+          m3::TunerVoiceState::tracking, true};
+      reordered.voices[1] = m3::TunerVoice{
+          40U, 0, 10000U, 9U, m3::TunerVoiceState::settling, false};
+      m3::vst3::publish_tuner_snapshot_for_test(processor, reordered);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 2U, displayed, lane_active));
+      // Existing notes keep their physical meter while release evidence is
+      // settling, even if the detector's candidate array changes order.
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.midi_note, 40U);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 3U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.midi_note, 47U);
+
+      m3::TunerSnapshot open_strings;
+      open_strings.generation = 43U;
+      open_strings.state = m3::TunerFrameState::tracking;
+      open_strings.voice_count = 8U;
+      open_strings.max_polyphony = 8U;
+      for (std::size_t input = 0U; input < m3::kM3OpenNotes.size(); ++input) {
+        const std::size_t string = m3::kM3OpenNotes.size() - 1U - input;
+        open_strings.voices[input] = m3::TunerVoice{
+            m3::kM3OpenNotes[string], 0, 30000U, 12U,
+            m3::TunerVoiceState::tracking, true};
+      }
+      m3::vst3::publish_tuner_snapshot_for_test(processor, open_strings);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      for (std::size_t string = 0U; string < m3::kM3OpenNotes.size();
+           ++string) {
+        M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+            *view, string, displayed, lane_active));
+        M3_EXPECT_TRUE(lane_active);
+        M3_EXPECT_EQ(displayed.midi_note, m3::kM3OpenNotes[string]);
+      }
+
+      m3::TunerSnapshot unison;
+      unison.generation = 44U;
+      unison.state = m3::TunerFrameState::tracking;
+      unison.voice_count = 2U;
+      unison.max_polyphony = 8U;
+      unison.voices[0] = m3::TunerVoice{
+          44U, 0, 30000U, 12U, m3::TunerVoiceState::tracking, true};
+      unison.voices[1] = m3::TunerVoice{
+          44U, 0, 28000U, 12U, m3::TunerVoiceState::tracking, true};
+      m3::vst3::publish_tuner_snapshot_for_test(processor, unison);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 2U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.midi_note, 44U);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 3U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.midi_note, 44U);
+
+      m3::TunerSnapshot explicit_strings;
+      explicit_strings.generation = 45U;
+      explicit_strings.state = m3::TunerFrameState::tracking;
+      explicit_strings.voice_count = 2U;
+      explicit_strings.max_polyphony = 8U;
+      explicit_strings.voices[0] = m3::TunerVoice{
+          44U, 0, 30000U, 12U, m3::TunerVoiceState::tracking, true, 0U};
+      explicit_strings.voices[1] = m3::TunerVoice{
+          44U, 0, 28000U, 12U, m3::TunerVoiceState::tracking, true, 3U};
+      m3::vst3::publish_tuner_snapshot_for_test(processor, explicit_strings);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 0U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.string_index, 0U);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 3U, displayed, lane_active));
+      M3_EXPECT_TRUE(lane_active);
+      M3_EXPECT_EQ(displayed.string_index, 3U);
+
       m3::TunerSnapshot empty;
       // A reset detector can restart its local generation at the same value.
       // The transport must still deliver the later no-signal frame to the UI.
@@ -719,6 +817,12 @@ M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
       M3_EXPECT_TRUE(observed.generation > first_generation);
       M3_EXPECT_EQ(observed.state, m3::TunerFrameState::no_signal);
       M3_EXPECT_EQ(observed.voice_count, 0U);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 2U, displayed, lane_active));
+      M3_EXPECT_FALSE(lane_active);
+      M3_EXPECT_TRUE(m3::vst3::editor_tuner_display_lane_for_test(
+          *view, 3U, displayed, lane_active));
+      M3_EXPECT_FALSE(lane_active);
       M3_EXPECT_EQ(handler.edit_call_count(), 0U);
       M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
@@ -785,7 +889,7 @@ M3_TEST(vst3_editor_in_tune_needle_is_blue_and_layers_over_scale) {
       snapshot.voice_count = 1U;
       snapshot.max_polyphony = 8U;
       snapshot.voices[0] = m3::TunerVoice{
-          45U, 0, 30000U, 8U, m3::TunerVoiceState::tracking, true};
+          32U, 0, 30000U, 8U, m3::TunerVoiceState::tracking, true};
       m3::vst3::publish_tuner_snapshot_for_test(processor, snapshot);
       M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
 
@@ -921,6 +1025,8 @@ M3_TEST(vst3_editor_opens_on_tuner_and_settings_toggle_is_parameter_silent) {
       M3_EXPECT_EQ(view->attached(
                        nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
                    Steinberg::kResultOk);
+      M3_EXPECT_FALSE(
+          m3::vst3::editor_focus_drawing_enabled_for_test(*view));
       M3_EXPECT_FALSE(m3::vst3::editor_settings_open_for_test(*view));
       M3_EXPECT_TRUE(write_editor_ppm(
           *view, std::getenv("M3_EDITOR_TUNER_SCREENSHOT")));
@@ -1113,7 +1219,7 @@ M3_TEST(vst3_editor_real_range_drag_clamps_low_to_the_shared_high_value) {
   }
 }
 
-M3_TEST(vst3_editor_two_drag_moves_share_one_open_host_gesture) {
+M3_TEST(vst3_editor_drag_and_wheel_share_one_open_host_gesture) {
   Steinberg::IPluginFactory* factory = GetPluginFactory();
   Steinberg::Vst::IComponent* component = nullptr;
   Steinberg::Vst::IEditController* controller =
@@ -1142,6 +1248,7 @@ M3_TEST(vst3_editor_two_drag_moves_share_one_open_host_gesture) {
                        nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
                    Steinberg::kResultOk);
       constexpr m3::ParameterId kSensitivityId = 0x4D330005U;
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
           *view, kSensitivityId, 0.5, 0.5, false));
@@ -1174,17 +1281,29 @@ M3_TEST(vst3_editor_two_drag_moves_share_one_open_host_gesture) {
         M3_EXPECT_NEAR(handler.edit_call(2U).value, 0.52, 1.0e-6);
       }
 
-      M3_EXPECT_TRUE(m3::vst3::editor_pointer_up_for_test(
-          *view, kSensitivityId));
+      M3_EXPECT_TRUE(m3::vst3::editor_wheel_for_test(
+          *view, kSensitivityId, 1.0));
       M3_EXPECT_EQ(handler.edit_call_count(), 4U);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kSensitivityId), 0.53,
+                     1.0e-6);
       if (handler.edit_call_count() >= 4U) {
         M3_EXPECT_EQ(handler.edit_call(3U).kind,
-                     m3::test::FakeVst3EditKind::end);
+                     m3::test::FakeVst3EditKind::perform);
         M3_EXPECT_EQ(handler.edit_call(3U).id, kSensitivityId);
+        M3_EXPECT_NEAR(handler.edit_call(3U).value, 0.53, 1.0e-6);
+      }
+
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_up_for_test(
+          *view, kSensitivityId));
+      M3_EXPECT_EQ(handler.edit_call_count(), 5U);
+      if (handler.edit_call_count() >= 5U) {
+        M3_EXPECT_EQ(handler.edit_call(4U).kind,
+                     m3::test::FakeVst3EditKind::end);
+        M3_EXPECT_EQ(handler.edit_call(4U).id, kSensitivityId);
       }
       M3_EXPECT_TRUE(!m3::vst3::editor_pointer_up_for_test(
           *view, kSensitivityId));
-      M3_EXPECT_EQ(handler.edit_call_count(), 4U);
+      M3_EXPECT_EQ(handler.edit_call_count(), 5U);
 
       M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
       M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
@@ -1236,6 +1355,7 @@ M3_TEST(vst3_editor_drag_cancel_removal_and_destruction_end_once) {
         M3_EXPECT_EQ(view->attached(
                          nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
                      Steinberg::kResultOk);
+        M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
       }
       return view;
     };
@@ -1433,30 +1553,54 @@ M3_TEST(vst3_editor_real_control_events_cover_rotary_discrete_and_read_only_path
       M3_EXPECT_EQ(view->attached(
                        nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
                    Steinberg::kResultOk);
+      constexpr m3::ParameterId kSensitivityId = 0x4D330005U;
+      constexpr m3::ParameterId kResponseId = 0x4D330006U;
+
+      // The compact tuner-page ranges are read-only summaries. Precision
+      // editing belongs exclusively to the settings page.
+      M3_EXPECT_EQ(controller->setParamNormalized(kSensitivityId, 0.5),
+                   Steinberg::kResultTrue);
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
-          *view, 0x4D330005U, 0.5, 0.5, false));
+          *view, kSensitivityId, 0.90, 0.72, false));
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kSensitivityId), 0.5,
+                     1.0e-6);
+
+      handler.reset();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *view, kResponseId, 0.10, 0.72, false));
+      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+
+      // The settings-page versions remain continuous knobs.
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
+      M3_EXPECT_EQ(controller->setParamNormalized(kSensitivityId, 0.5),
+                   Steinberg::kResultTrue);
+      handler.reset();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *view, kSensitivityId, 0.5, 0.5, false));
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_drag_for_test(
-          *view, 0x4D330005U, -20.0));
+          *view, kSensitivityId, -20.0));
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_up_for_test(
-          *view, 0x4D330005U));
-      expect_single_edit(handler, 0x4D330005U, 0.6);
-      M3_EXPECT_NEAR(controller->getParamNormalized(0x4D330005U), 0.6,
+          *view, kSensitivityId));
+      expect_single_edit(handler, kSensitivityId, 0.6);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kSensitivityId), 0.6,
                      1.0e-6);
 
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_wheel_for_test(
-          *view, 0x4D330005U, 1.0));
-      expect_single_edit(handler, 0x4D330005U, 0.61);
-      M3_EXPECT_NEAR(controller->getParamNormalized(0x4D330005U), 0.61,
+          *view, kSensitivityId, 1.0));
+      expect_single_edit(handler, kSensitivityId, 0.61);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kSensitivityId), 0.61,
                      1.0e-6);
 
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
-          *view, 0x4D330005U, 0.5, 0.5, true));
-      expect_single_edit(handler, 0x4D330005U, 0.5);
-      M3_EXPECT_NEAR(controller->getParamNormalized(0x4D330005U), 0.5,
+          *view, kSensitivityId, 0.5, 0.5, true));
+      expect_single_edit(handler, kSensitivityId, 0.5);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kSensitivityId), 0.5,
                      1.0e-6);
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
 
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
@@ -1566,6 +1710,95 @@ M3_TEST(vst3_editor_external_velocity_mode_invalidates_fixed_velocity) {
   }
   if (controller != nullptr) {
     controller->release();
+  }
+  if (component != nullptr) {
+    component->release();
+  }
+  if (factory != nullptr) {
+    factory->release();
+  }
+}
+
+M3_TEST(vst3_editor_double_click_tuner_lane_requests_physical_string_calibration) {
+  Steinberg::IPluginFactory* factory = GetPluginFactory();
+  Steinberg::Vst::IComponent* component = nullptr;
+  Steinberg::Vst::IEditController* controller =
+      create_controller(factory, component);
+  Steinberg::Vst::IAudioProcessor* processor = nullptr;
+  if (component != nullptr) {
+    static_cast<void>(component->queryInterface(
+        Steinberg::Vst::IAudioProcessor::iid,
+        reinterpret_cast<void**>(&processor)));
+  }
+  m3::test::FakeVst3Host host;
+  m3::test::FakeVst3PlugFrame plug_frame;
+  const VSTGUI::LinuxFactory* platform_factory =
+      VSTGUI::getPlatformFactory().asLinuxFactory();
+  const auto run_loop = VSTGUI::makeOwned<FakeVstguiRunLoop>();
+  M3_EXPECT_TRUE(component != nullptr);
+  M3_EXPECT_TRUE(controller != nullptr);
+  M3_EXPECT_TRUE(processor != nullptr);
+  M3_EXPECT_TRUE(platform_factory != nullptr);
+  if (component != nullptr && controller != nullptr && processor != nullptr &&
+      platform_factory != nullptr) {
+    platform_factory->setRunLoop(run_loop);
+    M3_EXPECT_EQ(component->initialize(&host), Steinberg::kResultOk);
+    Steinberg::Vst::ProcessSetup setup{};
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    setup.maxSamplesPerBlock = 512;
+    setup.sampleRate = 48000.0;
+    M3_EXPECT_EQ(processor->setupProcessing(setup), Steinberg::kResultOk);
+    M3_EXPECT_EQ(component->setActive(Steinberg::TBool{1}),
+                 Steinberg::kResultOk);
+    M3_EXPECT_EQ(processor->setProcessing(Steinberg::TBool{1}),
+                 Steinberg::kResultOk);
+    Steinberg::IPlugView* view =
+        controller->createView(Steinberg::Vst::ViewType::kEditor);
+    M3_EXPECT_TRUE(view != nullptr);
+    if (view != nullptr) {
+      M3_EXPECT_EQ(view->setFrame(&plug_frame), Steinberg::kResultTrue);
+      M3_EXPECT_EQ(view->attached(
+                       nullptr, Steinberg::kPlatformTypeWaylandSurfaceID),
+                   Steinberg::kResultOk);
+      M3_EXPECT_EQ(
+          m3::vst3::editor_pending_calibration_command_for_test(*view), 0U);
+      M3_EXPECT_TRUE(
+          m3::vst3::editor_double_click_tuner_lane_for_test(*view, 5U));
+      M3_EXPECT_EQ(
+          m3::vst3::editor_pending_calibration_command_for_test(*view), 6U);
+      Steinberg::Vst::ProcessData flush{};
+      flush.processMode = Steinberg::Vst::kRealtime;
+      flush.symbolicSampleSize = Steinberg::Vst::kSample32;
+      flush.numSamples = 0;
+      M3_EXPECT_EQ(processor->process(flush), Steinberg::kResultOk);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      M3_EXPECT_TRUE(write_editor_ppm(
+          *view, std::getenv("M3_EDITOR_CALIBRATION_SCREENSHOT")));
+      M3_EXPECT_EQ(
+          m3::vst3::editor_pending_calibration_command_for_test(*view), 0U);
+
+      M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));
+      static_cast<void>(
+          m3::vst3::editor_double_click_tuner_lane_for_test(*view, 2U));
+      M3_EXPECT_EQ(
+          m3::vst3::editor_pending_calibration_command_for_test(*view), 0U);
+      M3_EXPECT_EQ(view->removed(), Steinberg::kResultOk);
+      M3_EXPECT_EQ(view->setFrame(nullptr), Steinberg::kResultTrue);
+      view->release();
+    }
+    M3_EXPECT_EQ(processor->setProcessing(Steinberg::TBool{0}),
+                 Steinberg::kResultOk);
+    M3_EXPECT_EQ(component->setActive(Steinberg::TBool{0}),
+                 Steinberg::kResultOk);
+    M3_EXPECT_EQ(component->terminate(), Steinberg::kResultOk);
+    platform_factory->setRunLoop({});
+  }
+  if (controller != nullptr) {
+    controller->release();
+  }
+  if (processor != nullptr) {
+    processor->release();
   }
   if (component != nullptr) {
     component->release();

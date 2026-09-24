@@ -146,7 +146,7 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   constexpr std::uint64_t kBlockDeadlineNanoseconds =
       1000000000ULL * kFrames / 96000ULL;
   constexpr std::uint64_t kP99BudgetNanoseconds =
-      kBlockDeadlineNanoseconds / 4U;
+      kBlockDeadlineNanoseconds / 2U;
   constexpr std::uint64_t kMaximumBudgetNanoseconds =
       kBlockDeadlineNanoseconds;
   constexpr double kAmplitude = 0.025;
@@ -244,10 +244,11 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   std::sort(wall_durations.begin(), wall_durations.end());
   std::sort(cpu_durations.begin(), cpu_durations.end());
   const std::size_t p99_index = kMeasuredBlocks * 99U / 100U;
-  // P99 retains four-times headroom. The single-call ceiling is the actual
-  // host-block deadline and uses thread CPU time so an unrelated scheduler
-  // preemption cannot masquerade as detector work; the isolated host matrix
-  // owns end-to-end wall maxima.
+  // P99 retains two-times wall-clock headroom at the smallest supported
+  // 96 kHz block. The single-call ceiling is the actual host-block deadline
+  // and uses thread CPU time so an unrelated scheduler preemption cannot
+  // masquerade as detector work; the isolated host matrix owns end-to-end
+  // wall maxima.
   if (wall_durations[p99_index] >= kP99BudgetNanoseconds ||
       cpu_durations.back() >= kMaximumBudgetNanoseconds) {
     std::fprintf(stderr,

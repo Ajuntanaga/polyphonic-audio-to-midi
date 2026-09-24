@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "fake_vst3_host.hpp"
+#include "m3/calibration_state_image.hpp"
 #include "m3/constants.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/state_image.hpp"
@@ -240,8 +241,12 @@ M3_TEST(vst3_adversarial_fixed_seed_100000_operations_fail_closed) {
   m3::test::FakeVst3Stream saved_state;
   saved_state.reset_output(37);
   safe = instance.component->getState(&saved_state) == Steinberg::kResultOk &&
-         saved_state.size() == m3::kStateSize && safe;
-  std::array<std::uint8_t, 256> state_bytes{};
+         saved_state.size() ==
+             m3::kStateSize + m3::kCalibrationStateSize &&
+         safe;
+  std::array<std::uint8_t,
+             m3::kStateSize + m3::kCalibrationStateSize + 1U>
+      state_bytes{};
   std::memcpy(state_bytes.data(), saved_state.bytes(), saved_state.size());
 
   FixedPrng random{0x4D335633U};
@@ -288,7 +293,7 @@ M3_TEST(vst3_adversarial_fixed_seed_100000_operations_fail_closed) {
       static_cast<void>(instance.processor->process(block.data()));
       safe = observe_events(events, host_active) && safe;
     } else if (kind == 1U) {
-      const std::size_t length = (operation / 10U) % 257U;
+      const std::size_t length = (operation / 10U) % state_bytes.size();
       for (std::size_t index = 0; index < state_bytes.size(); ++index) {
         state_bytes[index] = static_cast<std::uint8_t>(random.next());
       }

@@ -5,11 +5,13 @@
 #include <cstring>
 
 #include "fake_vst3_host.hpp"
+#include "m3/calibration_state_image.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/state_image.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "test_support.hpp"
+#include "vst3_component.hpp"
 #include "vst3_ids.hpp"
 #include "vst3_state_stream.hpp"
 
@@ -56,6 +58,42 @@ bool bytes_equal(const std::uint8_t* left, const std::uint8_t* right,
                  std::size_t size) noexcept {
   return left != nullptr && right != nullptr &&
          std::memcmp(left, right, size) == 0;
+}
+
+m3::StringCalibrationBank calibration_bank() noexcept {
+  m3::StringCalibrationBank bank;
+  bank.calibrated_string_mask = static_cast<std::uint8_t>(1U << 2U);
+  for (std::size_t fret = 0U; fret < m3::kCalibrationFretCount; ++fret) {
+    auto& point = bank.points[2U][fret];
+    point.cents_offset_q8 = static_cast<std::int16_t>(fret * 4U);
+    point.harmonic_profile_q15 = {15000U, 7000U, 4000U,
+                                  2500U, 1500U, 800U};
+    point.confidence_q15 = 28000U;
+    point.observation_count = 5U;
+    point.quality = m3::CalibrationPointQuality::measured;
+  }
+  return bank;
+}
+
+bool same_calibration(const m3::StringCalibrationBank& left,
+                      const m3::StringCalibrationBank& right) noexcept {
+  if (left.calibrated_string_mask != right.calibrated_string_mask) {
+    return false;
+  }
+  for (std::size_t string = 0U; string < m3::kMaxVoices; ++string) {
+    for (std::size_t fret = 0U; fret < m3::kCalibrationFretCount; ++fret) {
+      const auto& a = left.points[string][fret];
+      const auto& b = right.points[string][fret];
+      if (a.cents_offset_q8 != b.cents_offset_q8 ||
+          a.harmonic_profile_q15 != b.harmonic_profile_q15 ||
+          a.confidence_q15 != b.confidence_q15 ||
+          a.observation_count != b.observation_count ||
+          a.quality != b.quality) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 struct ComponentInstance final {
@@ -189,6 +227,147 @@ M3_TEST(vst3_state_stream_matches_neutral_default_and_nondefault_images) {
   }
 }
 
+M3_TEST(vst3_extended_state_persists_calibration_and_accepts_legacy_state) {
+  const m3::PersistentConfig config = nondefault_config();
+  const m3::StringCalibrationBank calibration = calibration_bank();
+  m3::test::FakeVst3Stream output;
+  output.reset_output(31);
+  M3_EXPECT_TRUE(m3::vst3::save_vst3_state_with_calibration(
+      config, calibration, &output));
+  M3_EXPECT_EQ(output.size(),
+               m3::kStateSize + m3::kCalibrationStateSize);
+
+  m3::test::FakeVst3Stream input;
+  M3_EXPECT_TRUE(input.set_input(output.bytes(), output.size(), 23));
+  m3::PersistentConfig decoded_config;
+  m3::StringCalibrationBank decoded_calibration;
+  M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
+      &input, decoded_config, decoded_calibration));
+  M3_EXPECT_TRUE(same_config(decoded_config, config));
+  M3_EXPECT_TRUE(same_calibration(decoded_calibration, calibration));
+
+  m3::StateImage legacy{};
+  M3_EXPECT_TRUE(m3::encode_state(config, legacy));
+  M3_EXPECT_TRUE(input.set_input(legacy.data(), legacy.size(), 19));
+  decoded_calibration = calibration;
+  M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
+      &input, decoded_config, decoded_calibration));
+  M3_EXPECT_TRUE(same_config(decoded_config, config));
+  M3_EXPECT_EQ(decoded_calibration.calibrated_string_mask, 0U);
+}
+
+M3_TEST(vst3_component_restores_and_resaves_string_calibration) {
+  ComponentInstance instance;
+  M3_EXPECT_TRUE(open_component(instance));
+  if (instance.component == nullptr || instance.processor == nullptr) {
+    close_component(instance);
+    return;
+  }
+
+  const m3::PersistentConfig config = nondefault_config();
+  const m3::StringCalibrationBank calibration = calibration_bank();
+  m3::test::FakeVst3Stream encoded;
+  encoded.reset_output(31);
+  M3_EXPECT_TRUE(m3::vst3::save_vst3_state_with_calibration(
+      config, calibration, &encoded));
+
+  m3::test::FakeVst3Stream input;
+  M3_EXPECT_TRUE(input.set_input(encoded.bytes(), encoded.size(), 23));
+  M3_EXPECT_EQ(instance.component->setState(&input), Steinberg::kResultOk);
+
+  m3::test::FakeVst3Stream resaved;
+  resaved.reset_output(29);
+  M3_EXPECT_EQ(instance.component->getState(&resaved), Steinberg::kResultOk);
+  m3::test::FakeVst3Stream resaved_input;
+  M3_EXPECT_TRUE(
+      resaved_input.set_input(resaved.bytes(), resaved.size(), 19));
+  m3::PersistentConfig restored_config;
+  m3::StringCalibrationBank restored_calibration;
+  M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
+      &resaved_input, restored_config, restored_calibration));
+  M3_EXPECT_TRUE(same_config(restored_config, config));
+  M3_EXPECT_TRUE(same_calibration(restored_calibration, calibration));
+
+  Steinberg::Vst::ProcessSetup setup{};
+  setup.processMode = Steinberg::Vst::kRealtime;
+  setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+  setup.maxSamplesPerBlock = 512;
+  setup.sampleRate = 48000.0;
+  M3_EXPECT_EQ(instance.processor->setupProcessing(setup),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{1}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.processor->setProcessing(Steinberg::TBool{1}),
+               Steinberg::kResultOk);
+  Steinberg::Vst::ProcessData flush{};
+  flush.processMode = Steinberg::Vst::kRealtime;
+  flush.symbolicSampleSize = Steinberg::Vst::kSample32;
+  flush.numSamples = 0;
+  M3_EXPECT_EQ(instance.processor->process(flush), Steinberg::kResultOk);
+  const auto ui_state =
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor);
+  M3_EXPECT_EQ(ui_state.calibrated_string_mask,
+               calibration.calibrated_string_mask);
+
+  close_component(instance);
+}
+
+M3_TEST(vst3_component_terminate_clears_unrestored_detector_calibration) {
+  ComponentInstance instance;
+  M3_EXPECT_TRUE(open_component(instance));
+  if (instance.component == nullptr || instance.processor == nullptr) {
+    close_component(instance);
+    return;
+  }
+
+  m3::test::FakeVst3Stream encoded;
+  encoded.reset_output(31);
+  M3_EXPECT_TRUE(m3::vst3::save_vst3_state_with_calibration(
+      m3::PersistentConfig{}, calibration_bank(), &encoded));
+  m3::test::FakeVst3Stream input;
+  M3_EXPECT_TRUE(input.set_input(encoded.bytes(), encoded.size(), 23));
+  M3_EXPECT_EQ(instance.component->setState(&input), Steinberg::kResultOk);
+
+  const auto process_once = [&instance]() noexcept {
+    Steinberg::Vst::ProcessSetup setup{};
+    setup.processMode = Steinberg::Vst::kRealtime;
+    setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+    setup.maxSamplesPerBlock = 512;
+    setup.sampleRate = 48000.0;
+    M3_EXPECT_EQ(instance.processor->setupProcessing(setup),
+                 Steinberg::kResultOk);
+    M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{1}),
+                 Steinberg::kResultOk);
+    M3_EXPECT_EQ(instance.processor->setProcessing(Steinberg::TBool{1}),
+                 Steinberg::kResultOk);
+    Steinberg::Vst::ProcessData flush{};
+    flush.processMode = Steinberg::Vst::kRealtime;
+    flush.symbolicSampleSize = Steinberg::Vst::kSample32;
+    flush.numSamples = 0;
+    M3_EXPECT_EQ(instance.processor->process(flush), Steinberg::kResultOk);
+  };
+
+  process_once();
+  M3_EXPECT_TRUE(
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor)
+          .calibrated_string_mask != 0U);
+  M3_EXPECT_EQ(instance.processor->setProcessing(Steinberg::TBool{0}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{0}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->terminate(), Steinberg::kResultOk);
+
+  M3_EXPECT_EQ(instance.component->initialize(&instance.host),
+               Steinberg::kResultOk);
+  process_once();
+  M3_EXPECT_EQ(
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor)
+          .calibrated_string_mask,
+      0U);
+
+  close_component(instance);
+}
+
 M3_TEST(vst3_state_stream_rejects_null_failure_and_invalid_progress) {
   m3::PersistentConfig destination = nondefault_config();
   const m3::PersistentConfig before = destination;
@@ -283,9 +462,15 @@ M3_TEST(vst3_component_and_controller_state_synchronize_without_callbacks) {
   processor_output.reset_output(11);
   M3_EXPECT_EQ(instance.component->getState(&processor_output),
                Steinberg::kResultOk);
-  M3_EXPECT_EQ(processor_output.size(), m3::kStateSize);
+  M3_EXPECT_EQ(processor_output.size(),
+               m3::kStateSize + m3::kCalibrationStateSize);
   M3_EXPECT_TRUE(bytes_equal(processor_output.bytes(), expected.data(),
                              expected.size()));
+  m3::StringCalibrationBank saved_calibration;
+  M3_EXPECT_TRUE(m3::decode_calibration_state(
+      processor_output.bytes() + m3::kStateSize,
+      m3::kCalibrationStateSize, saved_calibration));
+  M3_EXPECT_EQ(saved_calibration.calibrated_string_mask, 0U);
 
   m3::test::FakeVst3Stream controller_input;
   M3_EXPECT_TRUE(controller_input.set_input(expected.data(), expected.size(),

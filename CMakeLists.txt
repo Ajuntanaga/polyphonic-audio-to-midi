@@ -37,8 +37,11 @@ enable_testing()
 set(public_sdk_SOURCE_DIR "${M3_VST3_SDK_ROOT}/public.sdk")
 
 set(M3_NATIVE_CORE_SOURCES
+    native/src/calibration_bank_transport.cpp
+    native/src/calibration_state_image.cpp
     native/src/generated_note_ledger.cpp
     native/src/monophonic_pitch_detector.cpp
+    native/src/string_calibration.cpp
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
     native/src/tuner_telemetry.cpp
@@ -88,12 +91,15 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/fake_clap_host.cpp
     native/tests/fake_vst3_host.cpp
     native/tests/test_clap_lifecycle.cpp
+    native/tests/test_calibration_bank_transport.cpp
+    native/tests/test_calibration_state_image.cpp
     native/tests/test_fixed_vector.cpp
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
     native/tests/test_m3_editor_layout.cpp
     native/tests/test_monophonic_pitch_detector.cpp
+    native/tests/test_string_calibration.cpp
     native/tests/test_parameter_contract.cpp
     native/tests/test_parameter_normalization.cpp
     native/tests/test_pitch_math.cpp

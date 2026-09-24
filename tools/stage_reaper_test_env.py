@@ -22,6 +22,10 @@ def _overlaps_live_profile(output: pathlib.Path) -> bool:
     )
 
 
+def _overlaps_source_tree(root: pathlib.Path, output: pathlib.Path) -> bool:
+    return output == root or root in output.parents or output in root.parents
+
+
 def _validated_vst3_path(vst3_path: pathlib.Path | None) -> pathlib.Path | None:
     if vst3_path is None:
         return None
@@ -50,6 +54,8 @@ def stage(
     output = output.resolve()
     if _overlaps_live_profile(output):
         raise ValueError("refusing to stage into, below, or above live REAPER profile")
+    if _overlaps_source_tree(root, output):
+        raise ValueError("refusing to stage into, below, or above the source tree")
     resolved_vst3 = _validated_vst3_path(vst3_path)
 
     effects = root / "Effects"

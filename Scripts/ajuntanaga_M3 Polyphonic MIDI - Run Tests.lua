@@ -921,69 +921,81 @@ end
 reaper.RecursiveCreateDirectory(result_directory, 0)
 os.remove(phase_path)
 write_phase("script-start")
-reaper.gmem_attach("m3_poly_midi_tests_v1")
-reaper.Undo_BeginBlock2(0)
-undo_open = true
-local index = reaper.CountTracks(0)
-reaper.InsertTrackAtIndex(index, false)
-track = assert(reaper.GetTrack(0, index))
-reaper.GetSetMediaTrackInfo_String(
-  track,
-  "P_NAME",
-  "M3 disposable integration",
-  true
-)
-reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2)
-assert(reaper.CreateNewMIDIItemInProj(track, 0, 2, false))
-source_fx = reaper.TrackFX_AddByName(
-  track,
-  "JS: tests/ajuntanaga_M3 Polyphonic MIDI - Signal Source",
-  false,
-  1
-)
-detector_fx = reaper.TrackFX_AddByName(
-  track,
-  "JS: ajuntanaga_M3 Polyphonic Audio to MIDI",
-  false,
-  1
-)
-capture_fx = reaper.TrackFX_AddByName(
-  track,
-  "JS: tests/ajuntanaga_M3 Polyphonic MIDI - MIDI Capture",
-  false,
-  1
-)
-synth_fx = reaper.TrackFX_AddByName(
-  track,
-  "VSTi: ReaSynth (Cockos)",
-  false,
-  1
-)
-if synth_fx < 0 then
-  synth_fx = reaper.TrackFX_AddByName(
+local function setup_suite()
+  reaper.gmem_attach("m3_poly_midi_tests_v1")
+  reaper.Undo_BeginBlock2(0)
+  undo_open = true
+  local index = reaper.CountTracks(0)
+  reaper.InsertTrackAtIndex(index, false)
+  track = assert(reaper.GetTrack(0, index))
+  reaper.GetSetMediaTrackInfo_String(
     track,
-    "ReaSynth (Cockos)",
+    "P_NAME",
+    "M3 disposable integration",
+    true
+  )
+  reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2)
+  assert(reaper.CreateNewMIDIItemInProj(track, 0, 2, false))
+  source_fx = reaper.TrackFX_AddByName(
+    track,
+    "JS: tests/ajuntanaga_M3 Polyphonic MIDI - Signal Source",
     false,
     1
   )
+  detector_fx = reaper.TrackFX_AddByName(
+    track,
+    "JS: ajuntanaga_M3 Polyphonic Audio to MIDI",
+    false,
+    1
+  )
+  capture_fx = reaper.TrackFX_AddByName(
+    track,
+    "JS: tests/ajuntanaga_M3 Polyphonic MIDI - MIDI Capture",
+    false,
+    1
+  )
+  synth_fx = reaper.TrackFX_AddByName(
+    track,
+    "VSTi: ReaSynth (Cockos)",
+    false,
+    1
+  )
+  if synth_fx < 0 then
+    synth_fx = reaper.TrackFX_AddByName(
+      track,
+      "ReaSynth (Cockos)",
+      false,
+      1
+    )
+  end
+  probe_fx = reaper.TrackFX_AddByName(
+    track,
+    "JS: tests/ajuntanaga_M3 Polyphonic MIDI - Synth Output Probe",
+    false,
+    1
+  )
+  assert(
+    source_fx >= 0 and detector_fx >= 0 and capture_fx >= 0 and
+    synth_fx >= 0 and probe_fx >= 0
+  )
+  assert(
+    source_fx == 0 and detector_fx == 1 and capture_fx == 2 and
+    synth_fx == 3 and probe_fx == 4
+  )
+  assert(reaper.TrackFX_GetEnabled(track, synth_fx))
+  reaper.TrackFX_SetParam(track, detector_fx, 1, 0)
+  reaper.TrackFX_SetParam(track, detector_fx, 5, 0)
+  reaper.TrackFX_SetParam(track, detector_fx, 14, 1)
+  write_phase("chain-ready")
 end
-probe_fx = reaper.TrackFX_AddByName(
-  track,
-  "JS: tests/ajuntanaga_M3 Polyphonic MIDI - Synth Output Probe",
-  false,
-  1
+
+local setup_ok, setup_error = xpcall(
+  setup_suite,
+  debug.traceback
 )
-assert(
-  source_fx >= 0 and detector_fx >= 0 and capture_fx >= 0 and
-  synth_fx >= 0 and probe_fx >= 0
-)
-assert(
-  source_fx == 0 and detector_fx == 1 and capture_fx == 2 and
-  synth_fx == 3 and probe_fx == 4
-)
-assert(reaper.TrackFX_GetEnabled(track, synth_fx))
-reaper.TrackFX_SetParam(track, detector_fx, 1, 0)
-reaper.TrackFX_SetParam(track, detector_fx, 5, 0)
-reaper.TrackFX_SetParam(track, detector_fx, 14, 1)
-write_phase("chain-ready")
-reaper.defer(start_next_case)
+if setup_ok then
+  reaper.defer(start_next_case)
+else
+  failures[#failures + 1] = "setup: " .. tostring(setup_error)
+  finish_suite()
+end

@@ -15,8 +15,10 @@ M3_TEST(native_capacity_and_m3_tuning_contract) {
   M3_EXPECT_EQ(m3::kMaxInternalSelections, 16U);
   M3_EXPECT_EQ(m3::kMaxTickTransitions, 16U);
   constexpr std::uint8_t expected[] = {32, 36, 40, 44, 48, 52, 56, 60};
+  constexpr std::uint8_t expected_gauges[] = {80, 60, 44, 32, 24, 16, 12, 9};
   for (std::size_t index = 0; index < m3::kM3OpenNotes.size(); ++index) {
     M3_EXPECT_EQ(m3::kM3OpenNotes[index], expected[index]);
+    M3_EXPECT_EQ(m3::kM3StringGaugeMils[index], expected_gauges[index]);
   }
 }
 

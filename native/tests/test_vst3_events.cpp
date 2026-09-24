@@ -90,8 +90,10 @@ m3::VoiceTransition transition(std::uint32_t offset,
                                m3::TransitionKind kind,
                                std::uint8_t note,
                                std::uint8_t velocity,
-                               std::uint32_t sequence) noexcept {
-  return m3::VoiceTransition{offset, kind, note, velocity, sequence};
+                               std::uint32_t sequence,
+                               std::uint8_t voice_id =
+                                   m3::kUnassignedVoiceId) noexcept {
+  return m3::VoiceTransition{offset, kind, note, velocity, sequence, voice_id};
 }
 
 void expect_common_event(const Steinberg::Vst::Event& event,
@@ -222,6 +224,22 @@ M3_TEST(vst3_event_sink_encodes_exact_notes_and_rejects_invalid_values) {
   ledger.begin_block();
   M3_EXPECT_FALSE(ledger.queue_transition(
       transition(kFrames, m3::TransitionKind::note_on, 60, 100, 1), kFrames));
+}
+
+M3_TEST(vst3_event_sink_gives_same_pitch_physical_voices_distinct_note_ids) {
+  m3::test::FakeVst3EventList events;
+  m3::vst3::Vst3EventSinkContext context{&events};
+  const m3::VoiceTransition low_string =
+      transition(0U, m3::TransitionKind::note_on, 48U, 100U, 1U, 0U);
+  const m3::VoiceTransition open_string =
+      transition(1U, m3::TransitionKind::note_on, 48U, 100U, 2U, 4U);
+  M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, low_string, 3U));
+  M3_EXPECT_TRUE(m3::vst3::push_vst3_note(&context, open_string, 4U));
+  M3_EXPECT_EQ(events.stored_event_count(), 2U);
+  M3_EXPECT_EQ(events.stored_event(0U).noteOn.pitch, 48);
+  M3_EXPECT_EQ(events.stored_event(1U).noteOn.pitch, 48);
+  M3_EXPECT_TRUE(events.stored_event(0U).noteOn.noteId !=
+                 events.stored_event(1U).noteOn.noteId);
 }
 
 M3_TEST(vst3_component_orders_generated_events_and_never_reads_input_events) {

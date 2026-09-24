@@ -21,6 +21,7 @@ enum class Status : std::uint8_t {
 enum class TransitionKind : std::uint8_t { note_off, note_on };
 
 inline constexpr std::uint8_t kTunerNoSignalNote = 128U;
+inline constexpr std::uint8_t kUnassignedVoiceId = 0xFFU;
 
 struct TunerEstimate final {
   bool updated{};
@@ -52,6 +53,10 @@ struct VoiceTransition final {
   std::uint8_t note{};
   std::uint8_t velocity{};
   std::uint32_t sequence{};
+  // Stable physical-string identity for M3 Per Voice routing. Legacy and
+  // general-profile producers leave this unassigned and retain pitch-keyed
+  // behavior.
+  std::uint8_t voice_id{kUnassignedVoiceId};
 };
 
 using TickTransitions = FixedVector<VoiceTransition, kMaxTickTransitions>;

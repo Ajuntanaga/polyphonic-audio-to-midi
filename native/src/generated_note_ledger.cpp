@@ -68,9 +68,7 @@ void GeneratedNoteLedger::deactivate() noexcept {
   capacity_ = 0;
   size_ = 0;
   max_frames_ = 0;
-  active_ = {};
-  pending_release_ = {};
-  note_channels_ = {};
+  voices_ = {};
   active_count_ = 0U;
   invalid_transition_ = false;
   output_blocked_ = false;
@@ -103,9 +101,11 @@ bool GeneratedNoteLedger::queue_transition(
   const bool valid_velocity =
       (note_off && transition.velocity == 0U) ||
       (note_on && transition.velocity > 0U && transition.velocity <= 127U);
+  const bool valid_voice = transition.voice_id == kUnassignedVoiceId ||
+                           transition.voice_id < kMaxVoices;
   if (!storage_ || size_ >= capacity_ || frames == 0 || frames > max_frames_ ||
       transition.sample_offset >= frames || (!note_off && !note_on) ||
-      transition.note > 127U || !valid_velocity) {
+      transition.note > 127U || !valid_velocity || !valid_voice) {
     invalid_transition_ = true;
     return false;
   }
@@ -120,34 +120,83 @@ bool GeneratedNoteLedger::queue_transition(
   return true;
 }
 
-bool GeneratedNoteLedger::bit(const std::array<std::uint64_t, 2>& bits,
-                              std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  return (bits[word] & (std::uint64_t{1} << shift)) != 0U;
+bool GeneratedNoteLedger::queue_active_releases(
+    std::uint32_t sample_offset, std::uint32_t frames) noexcept {
+  bool complete = true;
+  std::uint32_t sequence = 0U;
+  for (const ActiveVoice& voice : voices_) {
+    if (!voice.active) {
+      continue;
+    }
+    complete = queue_transition(
+                   VoiceTransition{sample_offset, TransitionKind::note_off,
+                                   voice.note, 0U, sequence++, voice.voice_id},
+                   frames) &&
+               complete;
+  }
+  return complete;
 }
 
-void GeneratedNoteLedger::set_bit(std::array<std::uint64_t, 2>& bits,
-                                  std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  bits[word] |= std::uint64_t{1} << shift;
+std::size_t GeneratedNoteLedger::find_voice(
+    const VoiceTransition& transition) const noexcept {
+  for (std::size_t slot = 0U; slot < voices_.size(); ++slot) {
+    const ActiveVoice& voice = voices_[slot];
+    if ((!voice.active && !voice.pending_release) ||
+        voice.note != transition.note) {
+      continue;
+    }
+    if (transition.voice_id < kMaxVoices) {
+      if (voice.voice_id == transition.voice_id) {
+        return slot;
+      }
+    } else if (voice.voice_id == kUnassignedVoiceId) {
+      return slot;
+    }
+  }
+  return voices_.size();
 }
 
-void GeneratedNoteLedger::clear_bit(std::array<std::uint64_t, 2>& bits,
-                                    std::uint8_t note) noexcept {
-  const std::size_t word = note / 64U;
-  const std::uint32_t shift = note % 64U;
-  bits[word] &= ~(std::uint64_t{1} << shift);
+std::size_t GeneratedNoteLedger::find_free_voice() const noexcept {
+  for (std::size_t slot = 0U; slot < voices_.size(); ++slot) {
+    if (!voices_[slot].active && !voices_[slot].pending_release) {
+      return slot;
+    }
+  }
+  return voices_.size();
 }
 
 bool GeneratedNoteLedger::is_active(std::uint8_t note) const noexcept {
-  return note <= 127U && bit(active_, note);
+  if (note > 127U) {
+    return false;
+  }
+  for (const ActiveVoice& voice : voices_) {
+    if (voice.active && voice.note == note) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool GeneratedNoteLedger::is_pending_release(
     std::uint8_t note) const noexcept {
-  return note <= 127U && bit(pending_release_, note);
+  if (note > 127U) {
+    return false;
+  }
+  for (const ActiveVoice& voice : voices_) {
+    if (voice.pending_release && voice.note == note) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool GeneratedNoteLedger::release_pending() const noexcept {
+  for (const ActiveVoice& voice : voices_) {
+    if (voice.pending_release) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool GeneratedNoteLedger::push(
@@ -159,7 +208,8 @@ bool GeneratedNoteLedger::push(
 }
 
 std::uint8_t GeneratedNoteLedger::allocate_channel(
-    MidiRouting routing, std::uint8_t start_channel) const noexcept {
+    MidiRouting routing, std::uint8_t start_channel,
+    const VoiceTransition& transition) const noexcept {
   if (start_channel < 1U || start_channel > 16U) {
     return 0U;
   }
@@ -169,14 +219,27 @@ std::uint8_t GeneratedNoteLedger::allocate_channel(
   if (routing != MidiRouting::per_voice) {
     return 0U;
   }
+  if (transition.voice_id < kMaxVoices) {
+    const std::uint8_t channel = static_cast<std::uint8_t>(
+        ((static_cast<std::uint16_t>(start_channel) - 1U +
+          transition.voice_id) %
+         16U) +
+        1U);
+    for (const ActiveVoice& voice : voices_) {
+      if ((voice.active || voice.pending_release) &&
+          voice.channel == channel) {
+        return 0U;
+      }
+    }
+    return channel;
+  }
   for (std::uint8_t slot = 0U; slot < kMaxVoices; ++slot) {
     const std::uint8_t channel = static_cast<std::uint8_t>(
         ((static_cast<std::uint16_t>(start_channel) - 1U + slot) % 16U) + 1U);
     bool used = false;
-    for (std::uint16_t note = 0U; note < 128U; ++note) {
-      const auto midi_note = static_cast<std::uint8_t>(note);
-      if ((is_active(midi_note) || is_pending_release(midi_note)) &&
-          note_channels_[note] == channel) {
+    for (const ActiveVoice& voice : voices_) {
+      if ((voice.active || voice.pending_release) &&
+          voice.channel == channel) {
         used = true;
         break;
       }
@@ -189,9 +252,14 @@ std::uint8_t GeneratedNoteLedger::allocate_channel(
 }
 
 void GeneratedNoteLedger::request_release_all() noexcept {
-  pending_release_[0] |= active_[0];
-  pending_release_[1] |= active_[1];
-  if (pending_release_[0] != 0U || pending_release_[1] != 0U) {
+  bool any = false;
+  for (ActiveVoice& voice : voices_) {
+    if (voice.active) {
+      voice.pending_release = true;
+      any = true;
+    }
+  }
+  if (any) {
     cleanup_complete_ = false;
   }
 }
@@ -217,23 +285,23 @@ bool GeneratedNoteLedger::retry_pending_releases(NoteEventSink sink) noexcept {
     cleanup_complete_ = true;
     return true;
   }
-  for (std::uint16_t note = 0; note < 128; ++note) {
-    const auto midi_note = static_cast<std::uint8_t>(note);
-    if (!is_pending_release(midi_note)) {
-      continue;
+  for (std::uint16_t note = 0U; note < 128U; ++note) {
+    for (ActiveVoice& voice : voices_) {
+      if (!voice.pending_release || voice.note != note) {
+        continue;
+      }
+      const VoiceTransition release{
+          0U, TransitionKind::note_off, voice.note, 0U,
+          static_cast<std::uint32_t>(note), voice.voice_id};
+      if (!push(sink, release, voice.channel)) {
+        enter_blocked();
+        return false;
+      }
+      if (voice.active && active_count_ > 0U) {
+        --active_count_;
+      }
+      voice = {};
     }
-    const VoiceTransition release{0, TransitionKind::note_off, midi_note, 0,
-                                  static_cast<std::uint32_t>(note)};
-    if (!push(sink, release, note_channels_[midi_note])) {
-      enter_blocked();
-      return false;
-    }
-    if (is_active(midi_note) && active_count_ > 0U) {
-      --active_count_;
-    }
-    clear_bit(pending_release_, midi_note);
-    clear_bit(active_, midi_note);
-    note_channels_[midi_note] = 0U;
   }
   cleanup_complete_ = true;
   return true;
@@ -293,27 +361,36 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         continue;
       }
       if (event.kind == TransitionKind::note_off) {
-        if (!is_active(event.note) && !is_pending_release(event.note)) {
+        const std::size_t slot = find_voice(event);
+        if (slot >= voices_.size()) {
           enter_blocked();
           break;
         }
-        if (!push(sink, event, note_channels_[event.note])) {
-          set_bit(pending_release_, event.note);
+        ActiveVoice& voice = voices_[slot];
+        if (!push(sink, event, voice.channel)) {
+          voice.pending_release = true;
           enter_blocked();
           break;
         }
-        if (is_active(event.note) && active_count_ > 0U) {
+        if (voice.active && active_count_ > 0U) {
           --active_count_;
         }
-        clear_bit(active_, event.note);
-        clear_bit(pending_release_, event.note);
-        note_channels_[event.note] = 0U;
+        voice = {};
         continue;
       }
       if (panic_hold_) {
         continue;
       }
-      if (is_active(event.note) || is_pending_release(event.note)) {
+      bool identity_in_use = find_voice(event) < voices_.size();
+      if (event.voice_id < kMaxVoices) {
+        for (const ActiveVoice& voice : voices_) {
+          identity_in_use =
+              identity_in_use ||
+              ((voice.active || voice.pending_release) &&
+               voice.voice_id == event.voice_id);
+        }
+      }
+      if (identity_in_use) {
         enter_blocked();
         break;
       }
@@ -321,13 +398,16 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         enter_blocked();
         break;
       }
-      const std::uint8_t channel = allocate_channel(routing, start_channel);
-      if (channel == 0U || !push(sink, event, channel)) {
+      const std::uint8_t channel =
+          allocate_channel(routing, start_channel, event);
+      const std::size_t slot = find_free_voice();
+      if (channel == 0U || slot >= voices_.size() ||
+          !push(sink, event, channel)) {
         enter_blocked();
         break;
       }
-      note_channels_[event.note] = channel;
-      set_bit(active_, event.note);
+      voices_[slot] = ActiveVoice{true, false, event.note, channel,
+                                  event.voice_id};
       ++active_count_;
     }
   }

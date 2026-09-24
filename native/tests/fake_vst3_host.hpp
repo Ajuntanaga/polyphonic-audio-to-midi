@@ -289,7 +289,7 @@ class FakeVst3EventList final : public Steinberg::Vst::IEventList {
 
 class FakeVst3Stream final : public Steinberg::IBStream {
  public:
-  static constexpr std::size_t kCapacity = 512;
+  static constexpr std::size_t kCapacity = 8192;
 
   FakeVst3Stream() noexcept = default;
   FakeVst3Stream(const FakeVst3Stream&) = delete;

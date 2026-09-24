@@ -39,6 +39,10 @@ bool editor_pointer_down_for_test(Steinberg::IPlugView& view,
                                   ParameterId parameter_id,
                                   double x_fraction, double y_fraction,
                                   bool default_reset) noexcept;
+bool editor_double_click_tuner_lane_for_test(Steinberg::IPlugView& view,
+                                             std::size_t lane) noexcept;
+std::uint32_t editor_pending_calibration_command_for_test(
+    Steinberg::IPlugView& view) noexcept;
 bool editor_pointer_drag_for_test(Steinberg::IPlugView& view,
                                   ParameterId parameter_id,
                                   double vertical_delta) noexcept;
@@ -58,6 +62,8 @@ bool editor_control_visible_for_test(Steinberg::IPlugView& view,
                                      ParameterId parameter_id) noexcept;
 bool editor_settings_open_for_test(Steinberg::IPlugView& view) noexcept;
 bool editor_toggle_settings_for_test(Steinberg::IPlugView& view) noexcept;
+bool editor_focus_drawing_enabled_for_test(
+    Steinberg::IPlugView& view) noexcept;
 bool editor_render_rgba_for_test(Steinberg::IPlugView& view,
                                  std::uint8_t* rgba,
                                  std::size_t byte_count) noexcept;
@@ -68,6 +74,10 @@ double editor_content_scale_factor_for_test(
 bool editor_refresh_tuner_for_test(Steinberg::IPlugView& view) noexcept;
 bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
                                     TunerSnapshot& snapshot) noexcept;
+bool editor_tuner_display_lane_for_test(Steinberg::IPlugView& view,
+                                        std::size_t lane,
+                                        TunerVoice& voice,
+                                        bool& active) noexcept;
 std::size_t editor_tuner_invalidation_count_for_test(
     Steinberg::IPlugView& view) noexcept;
 std::size_t editor_attach_refresh_count_for_test(

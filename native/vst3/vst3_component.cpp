@@ -24,6 +24,35 @@ namespace m3::vst3 {
 namespace {
 
 constexpr Steinberg::int32 kMidiChannels = 16;
+constexpr std::uint32_t kCalibrationCommandNone = 0U;
+constexpr std::uint32_t kCalibrationCommandFirstString = 1U;
+constexpr std::uint32_t kCalibrationCommandCancel = 9U;
+constexpr std::uint32_t kCalibrationCommandClear = 10U;
+constexpr std::uint32_t kCalibrationPhaseMask = 0x07U;
+constexpr std::uint32_t kCalibrationStringShift = 3U;
+constexpr std::uint32_t kCalibrationHighestFretShift = 6U;
+constexpr std::uint32_t kCalibrationMeasuredFretShift = 11U;
+constexpr std::uint32_t kCalibrationInterpolatedFretShift = 16U;
+constexpr std::uint32_t kCalibrationMaskShift = 21U;
+
+static_assert(std::atomic<std::uint32_t>::is_always_lock_free,
+              "M3 calibration commands require lock-free 32-bit atomics");
+
+std::uint32_t pack_calibration_status(
+    const CalibrationSweepStatus& status,
+    std::uint8_t calibrated_string_mask) noexcept {
+  return (static_cast<std::uint32_t>(status.phase) & kCalibrationPhaseMask) |
+         ((static_cast<std::uint32_t>(status.string_index) & 0x07U)
+          << kCalibrationStringShift) |
+         ((static_cast<std::uint32_t>(status.highest_fret) & 0x1FU)
+          << kCalibrationHighestFretShift) |
+         ((static_cast<std::uint32_t>(status.measured_frets) & 0x1FU)
+          << kCalibrationMeasuredFretShift) |
+         ((static_cast<std::uint32_t>(status.interpolated_frets) & 0x1FU)
+          << kCalibrationInterpolatedFretShift) |
+         (static_cast<std::uint32_t>(calibrated_string_mask)
+          << kCalibrationMaskShift);
+}
 
 #if defined(M3_TESTING)
 std::atomic<std::uint32_t> constructed_count{};
@@ -85,6 +114,55 @@ Steinberg::FUnknown* M3Component::createInstance(void*) noexcept {
   return static_cast<Steinberg::Vst::IAudioProcessor*>(component);
 }
 
+bool M3Component::request_string_calibration(
+    std::uint8_t string_index) noexcept {
+  if (!initialized_ || string_index >= kMaxVoices) {
+    return false;
+  }
+  calibration_command_.store(
+      kCalibrationCommandFirstString + string_index,
+      std::memory_order_release);
+  return true;
+}
+
+void M3Component::request_cancel_string_calibration() noexcept {
+  if (initialized_) {
+    calibration_command_.store(kCalibrationCommandCancel,
+                               std::memory_order_release);
+  }
+}
+
+void M3Component::request_clear_string_calibration() noexcept {
+  if (initialized_) {
+    calibration_command_.store(kCalibrationCommandClear,
+                               std::memory_order_release);
+  }
+}
+
+M3Component::StringCalibrationUiState
+M3Component::string_calibration_ui_state() const noexcept {
+  const std::uint32_t packed =
+      calibration_status_.load(std::memory_order_acquire);
+  StringCalibrationUiState state;
+  const std::uint32_t phase = packed & kCalibrationPhaseMask;
+  state.phase = phase <=
+                        static_cast<std::uint32_t>(
+                            CalibrationSweepPhase::insufficient)
+                    ? static_cast<CalibrationSweepPhase>(phase)
+                    : CalibrationSweepPhase::idle;
+  state.string_index = static_cast<std::uint8_t>(
+      (packed >> kCalibrationStringShift) & 0x07U);
+  state.highest_fret = static_cast<std::uint8_t>(
+      (packed >> kCalibrationHighestFretShift) & 0x1FU);
+  state.measured_frets = static_cast<std::uint8_t>(
+      (packed >> kCalibrationMeasuredFretShift) & 0x1FU);
+  state.interpolated_frets = static_cast<std::uint8_t>(
+      (packed >> kCalibrationInterpolatedFretShift) & 0x1FU);
+  state.calibrated_string_mask = static_cast<std::uint8_t>(
+      packed >> kCalibrationMaskShift);
+  return state;
+}
+
 Steinberg::IPlugView* PLUGIN_API M3Component::createView(
     Steinberg::FIDString name) {
   return name != nullptr &&
@@ -135,14 +213,25 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   release_channel_pending_ = false;
   generated_notes_.deactivate();
   tuner_telemetry_.clear(TunerFrameState::unavailable);
+  calibration_restore_.reset();
+  calibration_published_.reset();
+  main_calibration_bank_.clear();
+  calibration_published_.publish(main_calibration_bank_, 0U);
   processing_started_once_ = false;
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
   detector_reset_count_ = 0U;
+  main_calibration_restore_generation_ = 0U;
+  audio_calibration_restore_generation_ = 0U;
+  previous_calibration_phase_ = CalibrationSweepPhase::idle;
   tuner_note_ = kTunerNoSignalNote;
   tuner_cents_ = 0.0;
   panic_ready_dirty_.store(false, std::memory_order_relaxed);
   panic_requested_.store(false, std::memory_order_relaxed);
+  calibration_command_.store(kCalibrationCommandNone,
+                             std::memory_order_relaxed);
+  calibration_status_.store(0U, std::memory_order_relaxed);
+  calibration_restore_counter_.store(0U, std::memory_order_relaxed);
   status_dirty_ = false;
   tuner_note_dirty_ = false;
   tuner_cents_dirty_ = false;
@@ -176,6 +265,11 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   active_config_ = PersistentConfig{};
   pending_structural_config_ = PersistentConfig{};
   generated_notes_.deactivate();
+  detector_.clear_string_calibration();
+  detector_.reset();
+  calibration_restore_.reset();
+  calibration_published_.reset();
+  main_calibration_bank_.clear();
   setup_prepared_ = {};
   setup_prepared_valid_ = false;
   main_generation_ = 0U;
@@ -184,6 +278,9 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
   detector_reset_count_ = 0U;
+  main_calibration_restore_generation_ = 0U;
+  audio_calibration_restore_generation_ = 0U;
+  previous_calibration_phase_ = CalibrationSweepPhase::idle;
   tuner_note_ = kTunerNoSignalNote;
   tuner_cents_ = 0.0;
   structural_boundary_pending_ = false;
@@ -191,6 +288,10 @@ Steinberg::tresult PLUGIN_API M3Component::terminate() {
   processing_started_once_ = false;
   panic_ready_dirty_.store(false, std::memory_order_relaxed);
   panic_requested_.store(false, std::memory_order_relaxed);
+  calibration_command_.store(kCalibrationCommandNone,
+                             std::memory_order_relaxed);
+  calibration_status_.store(0U, std::memory_order_relaxed);
+  calibration_restore_counter_.store(0U, std::memory_order_relaxed);
   status_dirty_ = false;
   tuner_note_dirty_ = false;
   tuner_cents_dirty_ = false;
@@ -405,6 +506,7 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     } else {
       copy_runtime_config(audio_requested_config_, parameter_batch.candidate);
       copy_runtime_config(active_config_, parameter_batch.candidate);
+      detector_.set_runtime_config(active_config_);
     }
   }
   if (parameter_batch.panic ||
@@ -412,6 +514,8 @@ Steinberg::tresult PLUGIN_API M3Component::process(
     panic_ready_dirty_.store(true, std::memory_order_release);
     request_panic_recovery();
   }
+  apply_calibration_restore();
+  apply_string_calibration_command();
   if (data.numSamples == 0) {
     if (structural_boundary_pending_) {
       raise_status(Status::reconfiguring);
@@ -445,18 +549,35 @@ Steinberg::tresult PLUGIN_API M3Component::setState(
     return Steinberg::kInvalidArgument;
   }
   PersistentConfig candidate;
-  if (!load_vst3_state(state, candidate)) {
+  StringCalibrationBank calibration;
+  if (!load_vst3_state_with_calibration(state, candidate, calibration)) {
     return Steinberg::kResultFalse;
   }
-  return publish_main_config(candidate) ? Steinberg::kResultOk
-                                        : Steinberg::kResultFalse;
+  if (!publish_main_config(candidate)) {
+    return Steinberg::kResultFalse;
+  }
+  const std::uint32_t generation =
+      calibration_restore_counter_.fetch_add(1U, std::memory_order_acq_rel) +
+      1U;
+  main_calibration_bank_ = calibration;
+  main_calibration_restore_generation_ = generation;
+  calibration_restore_.publish(calibration, generation);
+  return Steinberg::kResultOk;
 }
 
 Steinberg::tresult PLUGIN_API M3Component::getState(
     Steinberg::IBStream* state) {
   ConfigRequestSnapshot snapshot;
-  return initialized_ && config_request_.snapshot(snapshot) &&
-                 save_vst3_state(snapshot.config, state)
+  CalibrationBankSnapshot calibration;
+  if (!initialized_ || !config_request_.snapshot(snapshot)) {
+    return Steinberg::kResultFalse;
+  }
+  if (calibration_published_.read_latest(calibration) &&
+      calibration.generation == main_calibration_restore_generation_) {
+    main_calibration_bank_ = calibration.bank;
+  }
+  return save_vst3_state_with_calibration(
+             snapshot.config, main_calibration_bank_, state)
              ? Steinberg::kResultOk
              : Steinberg::kResultFalse;
 }
@@ -467,7 +588,9 @@ Steinberg::tresult PLUGIN_API M3Component::setComponentState(
     return Steinberg::kInvalidArgument;
   }
   PersistentConfig candidate;
-  if (!load_vst3_state(state, candidate) ||
+  StringCalibrationBank ignored_calibration;
+  if (!load_vst3_state_with_calibration(state, candidate,
+                                        ignored_calibration) ||
       !synchronize_vst3_parameters(parameters, candidate, status_)) {
     return Steinberg::kResultFalse;
   }
@@ -701,9 +824,11 @@ void M3Component::commit_prepared_config_if_released() noexcept {
 void M3Component::reset_detector_transients() noexcept {
   decision_phase_ = 0U;
   decision_tick_count_ = 0U;
+  detector_.cancel_string_calibration();
   detector_.reset();
   tuner_telemetry_.clear(TunerFrameState::no_signal);
   update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
+  publish_string_calibration_status();
   ++detector_reset_count_;
 }
 
@@ -816,8 +941,62 @@ void M3Component::deliver_generated_notes(
 }
 
 void M3Component::request_panic_recovery() noexcept {
+  // The generated-note ledger owns delivery of the final note-offs. Discard
+  // the detector's parallel voice lifecycle at the same boundary so it cannot
+  // later emit a second, now-unmatched note-off after the ledger has recovered.
+  detector_.reset();
   generated_notes_.request_release_all();
   generated_notes_.request_recovery();
+}
+
+void M3Component::apply_string_calibration_command() noexcept {
+  const std::uint32_t command = calibration_command_.exchange(
+      kCalibrationCommandNone, std::memory_order_acq_rel);
+  if (command >= kCalibrationCommandFirstString &&
+      command < kCalibrationCommandFirstString + kMaxVoices) {
+    detector_.cancel_string_calibration();
+    static_cast<void>(detector_.begin_string_calibration(
+        static_cast<std::uint8_t>(command - kCalibrationCommandFirstString)));
+  } else if (command == kCalibrationCommandCancel) {
+    detector_.cancel_string_calibration();
+  } else if (command == kCalibrationCommandClear) {
+    detector_.clear_string_calibration();
+    publish_calibration_bank_from_audio();
+  }
+  publish_string_calibration_status();
+}
+
+void M3Component::apply_calibration_restore() noexcept {
+  CalibrationBankSnapshot snapshot;
+  if (!calibration_restore_.read_latest(snapshot) ||
+      snapshot.generation == audio_calibration_restore_generation_) {
+    return;
+  }
+  detector_.cancel_string_calibration();
+  detector_.set_calibration_bank(snapshot.bank);
+  audio_calibration_restore_generation_ = snapshot.generation;
+  previous_calibration_phase_ = detector_.calibration_status().phase;
+  calibration_published_.publish(snapshot.bank, snapshot.generation);
+  publish_string_calibration_status();
+}
+
+void M3Component::publish_calibration_bank_from_audio() noexcept {
+  calibration_published_.publish(detector_.calibration_bank(),
+                                 audio_calibration_restore_generation_);
+}
+
+void M3Component::publish_string_calibration_status() noexcept {
+  const CalibrationSweepStatus status = detector_.calibration_status();
+  if (status.phase == CalibrationSweepPhase::complete &&
+      previous_calibration_phase_ != CalibrationSweepPhase::complete) {
+    publish_calibration_bank_from_audio();
+  }
+  previous_calibration_phase_ = status.phase;
+  calibration_status_.store(
+      pack_calibration_status(
+          status,
+          detector_.calibration_bank().calibrated_string_mask),
+      std::memory_order_release);
 }
 
 bool M3Component::queue_generated_transition(
@@ -898,7 +1077,6 @@ Steinberg::tresult M3Component::process_samples(
     advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
   }
   if (detector_allowed) {
-    detector_.set_runtime_config(active_config_);
     const double input_gain =
         std::pow(10.0, active_config_.input_trim_db / 20.0);
     for (std::uint32_t frame = 0; frame < frames; ++frame) {
@@ -946,6 +1124,7 @@ Steinberg::tresult M3Component::process_samples(
   }
   deliver_generated_notes(data, !input_analysis.nonfinite_input, true,
                           input_analysis.selected_peak);
+  publish_string_calibration_status();
   generated_notes_.begin_block();
   return Steinberg::kResultOk;
 }
@@ -1121,6 +1300,22 @@ void publish_tuner_snapshot_for_test(
     static_cast<M3Component*>(processor)->publish_tuner_snapshot_for_test(
         snapshot);
   }
+}
+
+bool request_string_calibration_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    std::uint8_t string_index) noexcept {
+  return processor != nullptr &&
+         static_cast<M3Component*>(processor)->request_string_calibration(
+             string_index);
+}
+
+M3Component::StringCalibrationUiState string_calibration_ui_state_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->string_calibration_ui_state()
+             : M3Component::StringCalibrationUiState{};
 }
 #endif
 

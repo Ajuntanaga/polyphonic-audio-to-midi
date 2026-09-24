@@ -287,6 +287,23 @@ class SourceContractTests(unittest.TestCase):
             )
             self.assertTrue((staged / "test-results").is_dir())
 
+    def test_disposable_staging_rejects_every_source_tree_overlap_before_writes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = pathlib.Path(temporary)
+            source = temporary_root / "source"
+            source.mkdir()
+            sentinel = source / "must-survive.txt"
+            sentinel.write_text("source-owned\n", encoding="utf-8")
+
+            for output in (temporary_root, source, source / "nested-output"):
+                with self.subTest(output=output):
+                    with self.assertRaisesRegex(ValueError, "source tree"):
+                        stage(source, output)
+                    self.assertEqual(
+                        sentinel.read_text(encoding="utf-8"), "source-owned\n"
+                    )
+                    self.assertFalse((source / "nested-output").exists())
+
     def test_vst3_staging_puts_only_the_exact_scan_root_in_disposable_ini(self):
         with tempfile.TemporaryDirectory() as temporary:
             staged = pathlib.Path(temporary) / "reaper-test"
@@ -478,6 +495,22 @@ class SourceContractTests(unittest.TestCase):
         self.assertIn('reaper.GetSetProjectInfo(0, "DIRTY", 0, true)', runner)
         self.assertNotIn("reaper.Main_SaveProject", runner)
         self.assertNotIn('"RENDER_STATS"', runner)
+        self.assertIn("local function setup_suite()", runner)
+        self.assertIn(
+            "local setup_ok, setup_error = xpcall(\n"
+            "  setup_suite,\n"
+            "  debug.traceback\n"
+            ")",
+            runner,
+        )
+        self.assertIn(
+            'failures[#failures + 1] = "setup: " .. tostring(setup_error)',
+            runner,
+        )
+        setup = runner.index("local function setup_suite()")
+        undo_begin = runner.index("reaper.Undo_BeginBlock2(0)", setup)
+        setup_guard = runner.index("local setup_ok, setup_error = xpcall", setup)
+        self.assertLess(undo_begin, setup_guard)
         self.assertLess(
             runner.index("atomic_write(summary_path, summary_lines)"),
             runner.index('write_phase("suite-finish")'),
@@ -498,7 +531,12 @@ class SourceContractTests(unittest.TestCase):
 
     def test_safe_bypass_panics_before_delayed_disable_without_delete(self):
         script = SAFE_BYPASS.read_text(encoding="utf-8")
-        self.assertIn("local SAFE_BYPASS_DELAY_SECONDS = 0.050", script)
+        self.assertIn("local SAFE_BYPASS_MIN_DELAY_SECONDS = 0.100", script)
+        self.assertIn("local SAFE_BYPASS_PROCESS_BLOCKS = 4", script)
+        self.assertIn('audio_number("SRATE", 48000)', script)
+        self.assertIn('audio_number("BSIZE", 512)', script)
+        self.assertIn("math.max(", script)
+        self.assertNotIn("SAFE_BYPASS_DELAY_SECONDS = 0.050", script)
         self.assertIn("reaper.TrackFX_GetFXGUID(track, detector_fx)", script)
         self.assertIn(
             "reaper.TrackFX_SetParam(track, detector_fx, 4, 0)",
@@ -519,6 +557,20 @@ class SourceContractTests(unittest.TestCase):
             "  )",
             script,
         )
+        disable = script.index(
+            "reaper.TrackFX_SetEnabled(track, current_fx, false)"
+        )
+        restore = script.index(
+            "reaper.TrackFX_SetParam(\n"
+            "    track, current_fx, 4, original_sensitivity\n"
+            "  )",
+            disable,
+        )
+        verify = script.index(
+            "reaper.TrackFX_GetEnabled(track, current_fx)", disable
+        )
+        self.assertLess(disable, restore)
+        self.assertLess(restore, verify)
         self.assertNotIn("TrackFX_Delete", script)
 
     def test_all_jsfx_imports_resolve(self):

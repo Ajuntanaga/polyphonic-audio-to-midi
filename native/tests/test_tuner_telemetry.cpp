@@ -18,7 +18,7 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   expected.max_polyphony = 2U;
   expected.voices[0] = m3::TunerVoice{
       40U, static_cast<std::int16_t>(-7 * 256), 28000U, 12U,
-      m3::TunerVoiceState::tracking, true};
+      m3::TunerVoiceState::tracking, true, 2U};
   expected.voices[1] = m3::TunerVoice{
       47U, static_cast<std::int16_t>(11 * 256), 20000U, 4U,
       m3::TunerVoiceState::settling, true};
@@ -35,9 +35,12 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   M3_EXPECT_EQ(observed.voices[0].age_ticks, 12U);
   M3_EXPECT_EQ(observed.voices[0].state, m3::TunerVoiceState::tracking);
   M3_EXPECT_TRUE(observed.voices[0].cents_valid);
+  M3_EXPECT_EQ(observed.voices[0].string_index, 2U);
   M3_EXPECT_EQ(observed.voices[1].midi_note, 47U);
   M3_EXPECT_EQ(observed.voices[1].cents_q8, 11 * 256);
   M3_EXPECT_EQ(observed.voices[1].state, m3::TunerVoiceState::settling);
+  M3_EXPECT_EQ(observed.voices[1].string_index,
+               m3::kUnassignedTunerString);
 }
 
 M3_TEST(tuner_telemetry_clears_and_sanitizes_display_only_values) {

@@ -1,10 +1,11 @@
 -- @description M3 Polyphonic MIDI - Safe Bypass
--- @version 0.1.0
+-- @version 0.2.0
 -- @author ajuntanaga
 -- @about Sends Panic, waits for MIDI cleanup, then disables the detector.
 
 local DETECTOR_NAME = "M3 Polyphonic Audio to MIDI"
-local SAFE_BYPASS_DELAY_SECONDS = 0.050
+local SAFE_BYPASS_MIN_DELAY_SECONDS = 0.100
+local SAFE_BYPASS_PROCESS_BLOCKS = 4
 
 local function report_failure(message)
   reaper.ShowMessageBox(
@@ -13,6 +14,22 @@ local function report_failure(message)
     0
   )
 end
+
+local function audio_number(name, fallback)
+  local ok, text = reaper.GetAudioDeviceInfo(name)
+  local value = ok and tonumber(text) or nil
+  if not value or value ~= value or value <= 0 then
+    return fallback
+  end
+  return value
+end
+
+local sample_rate = audio_number("SRATE", 48000)
+local block_size = audio_number("BSIZE", 512)
+local safe_bypass_delay_seconds = math.max(
+  SAFE_BYPASS_MIN_DELAY_SECONDS,
+  SAFE_BYPASS_PROCESS_BLOCKS * block_size / sample_rate
+)
 
 local track = reaper.GetSelectedTrack(0, 0)
 if not track then
@@ -51,7 +68,11 @@ if not detector_guid or detector_guid == "" then
 end
 
 local original_sensitivity = reaper.TrackFX_GetParam(track, detector_fx, 4)
-reaper.TrackFX_SetParam(track, detector_fx, 4, 0)
+local sensitivity_muted = reaper.TrackFX_SetParam(track, detector_fx, 4, 0)
+if sensitivity_muted == false then
+  report_failure("Sensitivity could not be muted; Panic was not sent.")
+  return
+end
 local panic_set = reaper.TrackFX_SetParam(track, detector_fx, 13, 1)
 if panic_set == false then
   reaper.TrackFX_SetParam(track, detector_fx, 4, original_sensitivity)
@@ -74,7 +95,7 @@ local function find_detector_by_guid()
 end
 
 local function disable_detector()
-  if reaper.time_precise() - started < SAFE_BYPASS_DELAY_SECONDS then
+  if reaper.time_precise() - started < safe_bypass_delay_seconds then
     reaper.defer(disable_detector)
     return
   end
@@ -86,14 +107,20 @@ local function disable_detector()
   end
 
   reaper.TrackFX_SetEnabled(track, current_fx, false)
+  reaper.TrackFX_SetParam(track, current_fx, 13, 0)
+  local sensitivity_restored = reaper.TrackFX_SetParam(
+    track, current_fx, 4, original_sensitivity
+  )
   if reaper.TrackFX_GetEnabled(track, current_fx) then
     report_failure("The M3 detector did not disable; Panic was still sent.")
     return
   end
-
-  reaper.TrackFX_SetParam(
-    track, current_fx, 4, original_sensitivity
-  )
+  if sensitivity_restored == false then
+    report_failure(
+      "The M3 detector disabled, but its sensitivity could not be restored."
+    )
+    return
+  end
   reaper.UpdateArrange()
 end
 

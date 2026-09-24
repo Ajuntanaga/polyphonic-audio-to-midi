@@ -10,6 +10,9 @@ constexpr std::uint32_t kFrameStateShift = 8U;
 constexpr std::uint32_t kMaxPolyphonyShift = 16U;
 constexpr std::uint32_t kVoiceStateShift = 8U;
 constexpr std::uint32_t kCentsValidBit = 1U << 10U;
+constexpr std::uint32_t kStringValidBit = 1U << 11U;
+constexpr std::uint32_t kStringShift = 12U;
+constexpr std::uint32_t kStringMask = 0x07U;
 constexpr std::uint32_t kCentsShift = 16U;
 constexpr std::uint32_t kAgeShift = 16U;
 constexpr std::int16_t kMinimumCentsQ8 = -50 * 256;
@@ -50,9 +53,14 @@ std::uint32_t pack_voice_a(const TunerVoice& voice) noexcept {
                               static_cast<std::uint32_t>(TunerVoiceState::tracking));
   const std::int16_t cents =
       std::clamp(voice.cents_q8, kMinimumCentsQ8, kMaximumCentsQ8);
+  const bool string_valid = voice.string_index < kMaxVoices;
   return static_cast<std::uint32_t>(std::min<std::uint8_t>(voice.midi_note, 127U)) |
          (safe_state << kVoiceStateShift) |
          (voice.cents_valid ? kCentsValidBit : 0U) |
+         (string_valid ? kStringValidBit : 0U) |
+         (string_valid
+              ? static_cast<std::uint32_t>(voice.string_index) << kStringShift
+              : 0U) |
          (static_cast<std::uint32_t>(static_cast<std::uint16_t>(cents))
           << kCentsShift);
 }
@@ -72,6 +80,10 @@ TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b) noexcept {
                     ? static_cast<TunerVoiceState>(raw_state)
                     : TunerVoiceState::settling;
   voice.cents_valid = (word_a & kCentsValidBit) != 0U;
+  voice.string_index =
+      (word_a & kStringValidBit) != 0U
+          ? static_cast<std::uint8_t>((word_a >> kStringShift) & kStringMask)
+          : kUnassignedTunerString;
   voice.cents_q8 = static_cast<std::int16_t>(word_a >> kCentsShift);
   voice.confidence_q15 = static_cast<std::uint16_t>(word_b & 0xFFFFU);
   voice.age_ticks = static_cast<std::uint16_t>(word_b >> kAgeShift);

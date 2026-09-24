@@ -1,6 +1,6 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-22
+Updated: 2026-09-24
 
 ## Current integrated product checkpoint
 
@@ -9,14 +9,47 @@ Updated: 2026-09-22
   eight-voice detector, tuner telemetry, and custom VSTGUI editor. The staged
   live preset selects full polyphony by default and opens the editor
   automatically.
-- The native suite passes 153/153, including the REAPER custom-to-generic-to-
-  custom editor reattach regression. Python discovery passes 343/344; its sole
+- The native suite passes 191/191, including the REAPER custom-to-generic-to-
+  custom editor reattach regression and a real detector-driven open-to-fret-24-
+  to-open calibration sweep. Its simultaneous-string regressions use
+  independent cents offsets, oscillator phases, amplitudes, and harmonic
+  profiles, and verify every M3 tuner assignment remains within its physical
+  string's configured open-to-maximum-fret range. A calibrated same-note pair
+  now remains locked to its two physical tuner lanes throughout slow beating
+  at 44.1, 48, 88.2, and 96 kHz, while a single calibrated string remains one
+  lane. The VST3 detector matrix now covers those four rates at 17 host buffer
+  sizes from 16 through 4096 samples, including non-power-of-two sizes, and
+  proves dry-audio equality plus partition-invariant absolute MIDI onset/release
+  positions. A Claude read-only audit found the remaining response attack gate
+  was measured in raw 64-sample ticks; it is now normalized to elapsed time and
+  a regression constrains cross-rate onset spread to 2 ms. This is in-process
+  host-contract evidence, not a physical-driver dropout claim. Python discovery
+  passes 343/344; its sole
   failure is the workspace-hygiene assertion finding 29 pre-existing ignored
   `.vst3` build bundles beneath `.worktrees/`, which were preserved. The
   plugin-facing checks, `tools/validate_native_source.py`, and Steinberg's
   production VST3 validator pass. The canonical release module is
   `build/vst3/release/VST3/M3_Polyphonic_Audio_to_MIDI.vst3/Contents/x86_64-linux/M3_Polyphonic_Audio_to_MIDI.so`,
-  SHA-256 `bc181869c7b50b07d2282ea7f3607c607aac7b24daff9ef6508255e1f6f45fb9`.
+  SHA-256 `5ec895e5800fe87c4ed2d1a362ff62a88ae33d2d895bb3c3c8ddcf68ff734379`.
+- M3 mode now assigns detector voices to stable physical string lanes and
+  supports per-string calibration directly from the tuner: double-click one
+  meter, tune and hold its open string, slide steadily to fret 24 and back,
+  then hold open briefly to finish. Each 25-fret map stores cents bias and a
+  six-harmonic fingerprint, persists in VST3 project state, and influences
+  both tuner correction and physical-string assignment. M3 also pins the
+  NYXL0980 lane gauges thick-to-thin as `.080, .060, .044, .032, .024, .016,
+  .012, .009`; the fixed gauge/tuning prior breaks coarse fingering ties, and
+  the measured harmonic maps perform the final same-note identity split. The
+  split now reaches generated MIDI as well as tuner telemetry: in `Per Voice`
+  mode each physical lane has a distinct stable note identity and deterministic
+  base-channel-plus-lane routing, so two strings sounding the same MIDI pitch
+  can start and release independently. `Single` mode retains one pitch event.
+  The
+  installed bundle now matches the validated release at SHA-256
+  `5ec895e5800fe87c4ed2d1a362ff62a88ae33d2d895bb3c3c8ddcf68ff734379`.
+  The immediately preceding installed bundle is retained at
+  `~/.vst3/M3_Polyphonic_Audio_to_MIDI.vst3.backup-before-rate-buffer-fix-20260924`;
+  the earlier pre-unison and pre-calibration backups remain available as well.
 - The disposable system-audio profile is
   `build/m3-native-live-midi-system/reaper.ini`. It is bound only to the
   built-in `Generic_1` ALC257 codec through `plughw:Generic_1,0`, with REAPER

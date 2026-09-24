@@ -237,6 +237,36 @@ M3_TEST(vst3_process_parameter_flush_silence_alias_and_dirty_outputs_are_safe) {
   close_instance(instance);
 }
 
+M3_TEST(vst3_string_calibration_request_crosses_ui_audio_boundary_on_process) {
+  ProcessInstance instance;
+  M3_EXPECT_TRUE(open_instance(instance, Steinberg::Vst::kRealtime,
+                               Steinberg::Vst::kSample32, 512));
+  if (instance.processor == nullptr) {
+    close_instance(instance);
+    return;
+  }
+
+  M3_EXPECT_FALSE(m3::vst3::request_string_calibration_for_test(
+      instance.processor, static_cast<std::uint8_t>(m3::kMaxVoices)));
+  M3_EXPECT_TRUE(m3::vst3::request_string_calibration_for_test(
+      instance.processor, 3U));
+  M3_EXPECT_EQ(
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor).phase,
+      m3::CalibrationSweepPhase::idle);
+
+  Steinberg::Vst::ProcessData flush{};
+  flush.processMode = Steinberg::Vst::kRealtime;
+  flush.symbolicSampleSize = Steinberg::Vst::kSample32;
+  flush.numSamples = 0;
+  M3_EXPECT_EQ(instance.processor->process(flush), Steinberg::kResultOk);
+  const m3::vst3::M3Component::StringCalibrationUiState state =
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor);
+  M3_EXPECT_EQ(state.phase, m3::CalibrationSweepPhase::waiting_open);
+  M3_EXPECT_EQ(state.string_index, 3U);
+  M3_EXPECT_EQ(state.calibrated_string_mask, 0U);
+  close_instance(instance);
+}
+
 M3_TEST(vst3_process_rejects_bad_call_contracts_and_contains_bad_layouts) {
   ProcessInstance instance;
   M3_EXPECT_TRUE(open_instance(instance, Steinberg::Vst::kRealtime,

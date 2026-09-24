@@ -32,8 +32,11 @@ bool push_vst3_note(void* raw_context,
       one_based_channel - 1U);
   const Steinberg::int16 pitch =
       static_cast<Steinberg::int16>(transition.note);
-  const Steinberg::int32 note_id =
-      -1000 - static_cast<Steinberg::int32>(transition.note);
+  const Steinberg::int32 identity =
+      transition.voice_id < kMaxVoices
+          ? static_cast<Steinberg::int32>(transition.voice_id) * 128 + pitch
+          : pitch;
+  const Steinberg::int32 note_id = -1000 - identity;
   if (note_on) {
     event.type = Steinberg::Vst::Event::kNoteOnEvent;
     event.noteOn.channel = channel;

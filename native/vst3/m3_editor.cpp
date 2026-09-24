@@ -330,6 +330,28 @@ VSTGUI::CFontRef instrument_font() noexcept {
   return font.get();
 }
 
+std::size_t utf8_glyph_size(const char* text) noexcept {
+  if (text == nullptr || *text == '\0') {
+    return 0U;
+  }
+  const auto lead = static_cast<unsigned char>(text[0]);
+  std::size_t size = 1U;
+  if ((lead & 0xE0U) == 0xC0U) {
+    size = 2U;
+  } else if ((lead & 0xF0U) == 0xE0U) {
+    size = 3U;
+  } else if ((lead & 0xF8U) == 0xF0U) {
+    size = 4U;
+  }
+  for (std::size_t index = 1U; index < size; ++index) {
+    if (text[index] == '\0' ||
+        (static_cast<unsigned char>(text[index]) & 0xC0U) != 0x80U) {
+      return 1U;
+    }
+  }
+  return size;
+}
+
 void draw_ascii_tracked(VSTGUI::CDrawContext* context, const char* text,
                         const VSTGUI::CRect& rect,
                         VSTGUI::CHoriTxtAlign align,
@@ -339,10 +361,15 @@ void draw_ascii_tracked(VSTGUI::CDrawContext* context, const char* text,
   }
   std::size_t length = 0U;
   double width = 0.0;
-  for (const char* cursor = text; *cursor != '\0'; ++cursor) {
-    char glyph[2]{*cursor, '\0'};
+  for (const char* cursor = text; *cursor != '\0';) {
+    const std::size_t glyph_size = utf8_glyph_size(cursor);
+    char glyph[5]{};
+    for (std::size_t index = 0U; index < glyph_size; ++index) {
+      glyph[index] = cursor[index];
+    }
     width += context->getStringWidth(glyph);
     ++length;
+    cursor += glyph_size;
   }
   if (length > 1U) {
     width += tracking * static_cast<double>(length - 1U);
@@ -353,14 +380,19 @@ void draw_ascii_tracked(VSTGUI::CDrawContext* context, const char* text,
   } else if (align == VSTGUI::kRightText) {
     x = rect.right - width;
   }
-  for (const char* cursor = text; *cursor != '\0'; ++cursor) {
-    char glyph[2]{*cursor, '\0'};
+  for (const char* cursor = text; *cursor != '\0';) {
+    const std::size_t glyph_size = utf8_glyph_size(cursor);
+    char glyph[5]{};
+    for (std::size_t index = 0U; index < glyph_size; ++index) {
+      glyph[index] = cursor[index];
+    }
     const double glyph_width = context->getStringWidth(glyph);
     context->drawString(
         glyph,
         VSTGUI::CRect(x, rect.top, x + glyph_width + 1.0, rect.bottom),
         VSTGUI::kLeftText, true);
     x += glyph_width + tracking;
+    cursor += glyph_size;
   }
 }
 
@@ -951,7 +983,8 @@ class M3DeckControl final : public VSTGUI::CControl {
     const double requested = std::clamp(
         static_cast<double>(getValueNormalized()) + meaningful_delta(
             static_cast<double>(event.deltaY) * getWheelInc()), 0.0, 1.0);
-    static_cast<void>(emit(requested));
+    static_cast<void>(drag_edit_open_ ? emit_open(requested)
+                                      : emit(requested));
     event.consumed = true;
   }
 
@@ -994,9 +1027,10 @@ class M3DeckControl final : public VSTGUI::CControl {
     } else {
       return;
     }
-    static_cast<void>(emit(
-        std::clamp(static_cast<double>(getValueNormalized()) + delta,
-                   0.0, 1.0)));
+    const double requested = std::clamp(
+        static_cast<double>(getValueNormalized()) + delta, 0.0, 1.0);
+    static_cast<void>(drag_edit_open_ ? emit_open(requested)
+                                      : emit(requested));
     event.consumed = true;
   }
 
@@ -1639,10 +1673,12 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
  public:
   M3RootSurface(VSTGUI::IControlListener* listener,
                 Steinberg::Vst::EditController& controller,
+                M3Component& component,
                 const TunerTelemetry& tuner_telemetry)
       : VSTGUI::CViewContainer(
             VSTGUI::CRect(0.0, 0.0, kEditorWidth, kEditorHeight)),
         controller_(controller),
+        component_(component),
         tuner_telemetry_(tuner_telemetry) {
     setBackgroundColor(kGraphite);
     const PersistentConfig config{};
@@ -1665,6 +1701,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     if (settings_button_ != nullptr) {
       static_cast<void>(addView(settings_button_));
     }
+    calibration_state_ = component_.string_calibration_ui_state();
   }
 
   bool settings_open() const noexcept { return settings_open_; }
@@ -1694,6 +1731,158 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     return true;
   }
 
+  bool m3_profile_active() const noexcept {
+    return controller_.getParamNormalized(kProfileModeId) < 0.5;
+  }
+
+  std::uint8_t maximum_fret() const noexcept {
+    const ParameterSpec* spec = find_parameter(kMaximumFretId);
+    if (spec == nullptr) {
+      return 24U;
+    }
+    return static_cast<std::uint8_t>(std::clamp(
+        std::lround(normalized_to_plain(
+            *spec, controller_.getParamNormalized(kMaximumFretId))),
+        0L, 36L));
+  }
+
+  std::size_t existing_display_lane(const TunerVoice& voice,
+                                    const std::array<bool, kMaxVoices>& seen)
+      const noexcept {
+    if (voice.string_index < kMaxVoices) {
+      const std::size_t lane = voice.string_index;
+      return display_voice_active_[lane] && !seen[lane] ? lane : kMaxVoices;
+    }
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      if (display_voice_active_[lane] && !seen[lane] &&
+          display_voices_[lane].midi_note == voice.midi_note) {
+        return lane;
+      }
+    }
+    return kMaxVoices;
+  }
+
+  std::size_t available_display_lane(const TunerVoice& voice) const noexcept {
+    if (voice.string_index < kMaxVoices) {
+      return display_voice_active_[voice.string_index]
+                 ? kMaxVoices
+                 : voice.string_index;
+    }
+    if (!m3_profile_active()) {
+      for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+        if (!display_voice_active_[lane]) {
+          return lane;
+        }
+      }
+      return kMaxVoices;
+    }
+
+    const std::uint8_t max_fret = maximum_fret();
+    std::size_t best = kMaxVoices;
+    std::uint8_t best_fret = std::numeric_limits<std::uint8_t>::max();
+    for (std::size_t lane = 0U; lane < kM3OpenNotes.size(); ++lane) {
+      if (display_voice_active_[lane] ||
+          voice.midi_note < kM3OpenNotes[lane]) {
+        continue;
+      }
+      const auto fret = static_cast<std::uint8_t>(
+          voice.midi_note - kM3OpenNotes[lane]);
+      if (fret <= max_fret && fret < best_fret) {
+        best = lane;
+        best_fret = fret;
+      }
+    }
+    return best;
+  }
+
+  void clear_display_lane(std::size_t lane) noexcept {
+    if (lane >= kMaxVoices) {
+      return;
+    }
+    display_voice_active_[lane] = false;
+    display_voices_[lane] = {};
+    needle_active_[lane] = false;
+  }
+
+  void update_display_lanes(const TunerSnapshot& snapshot) noexcept {
+    if (snapshot.state != TunerFrameState::tracking) {
+      for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+        clear_display_lane(lane);
+      }
+      return;
+    }
+
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      if (!display_voice_active_[lane]) {
+        continue;
+      }
+      bool retained = false;
+      for (std::size_t index = 0U;
+           index < snapshot.voice_count && index < kMaxVoices; ++index) {
+        retained = retained ||
+                   snapshot.voices[index].midi_note ==
+                       display_voices_[lane].midi_note;
+      }
+      if (!retained) {
+        clear_display_lane(lane);
+      }
+    }
+
+    std::array<bool, kMaxVoices> seen{};
+    // Confirmed voices claim or retain lanes first. A settling observation is
+    // allowed to hold a lane only when that note was previously confirmed.
+    for (const TunerVoiceState pass : {TunerVoiceState::tracking,
+                                       TunerVoiceState::settling}) {
+      for (std::size_t index = 0U;
+           index < snapshot.voice_count && index < kMaxVoices; ++index) {
+        const TunerVoice& voice = snapshot.voices[index];
+        if (voice.state != pass) {
+          continue;
+        }
+        std::size_t lane = existing_display_lane(voice, seen);
+        if (lane == kMaxVoices && pass == TunerVoiceState::tracking) {
+          lane = available_display_lane(voice);
+        }
+        if (lane == kMaxVoices) {
+          continue;
+        }
+        seen[lane] = true;
+        if (!display_voice_active_[lane]) {
+          display_voices_[lane] = voice;
+          display_voice_active_[lane] = true;
+        } else if (pass == TunerVoiceState::tracking) {
+          const std::int16_t previous_cents = display_voices_[lane].cents_q8;
+          const bool previous_valid = display_voices_[lane].cents_valid;
+          display_voices_[lane] = voice;
+          if (!voice.cents_valid && previous_valid) {
+            display_voices_[lane].cents_q8 = previous_cents;
+            display_voices_[lane].cents_valid = true;
+          }
+        } else {
+          display_voices_[lane].confidence_q15 = voice.confidence_q15;
+          display_voices_[lane].age_ticks = voice.age_ticks;
+          display_voices_[lane].state = TunerVoiceState::settling;
+        }
+        if (display_voices_[lane].cents_valid) {
+          needle_targets_[lane] = std::clamp(
+              static_cast<double>(display_voices_[lane].cents_q8) / 256.0,
+              -50.0, 50.0);
+          if (!needle_active_[lane] ||
+              needle_notes_[lane] != display_voices_[lane].midi_note) {
+            needle_positions_[lane] = needle_targets_[lane];
+          }
+          needle_notes_[lane] = display_voices_[lane].midi_note;
+          needle_active_[lane] = true;
+        }
+      }
+    }
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      if (display_voice_active_[lane] && !seen[lane]) {
+        clear_display_lane(lane);
+      }
+    }
+  }
+
   bool refresh_tuner() noexcept {
     TunerSnapshot snapshot;
     bool changed = false;
@@ -1703,23 +1892,14 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       tuner_snapshot_ = snapshot;
       has_tuner_snapshot_ = true;
       changed = true;
-      const bool tracking = snapshot.state == TunerFrameState::tracking;
-      for (std::size_t index = 0U; index < kMaxVoices; ++index) {
-        const bool active = tracking && index < snapshot.voice_count &&
-                            snapshot.voices[index].cents_valid;
-        if (!active) {
-          needle_active_[index] = false;
-          continue;
-        }
-        const TunerVoice& voice = snapshot.voices[index];
-        needle_targets_[index] = std::clamp(
-            static_cast<double>(voice.cents_q8) / 256.0, -50.0, 50.0);
-        if (!needle_active_[index] || needle_notes_[index] != voice.midi_note) {
-          needle_positions_[index] = needle_targets_[index];
-        }
-        needle_notes_[index] = voice.midi_note;
-        needle_active_[index] = true;
-      }
+      update_display_lanes(snapshot);
+    }
+
+    const M3Component::StringCalibrationUiState calibration =
+        component_.string_calibration_ui_state();
+    if (!same_calibration_state(calibration_state_, calibration)) {
+      calibration_state_ = calibration;
+      changed = true;
     }
 
     for (std::size_t index = 0U; index < kMaxVoices; ++index) {
@@ -1751,9 +1931,23 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     return true;
   }
 
+  bool tuner_display_lane_for_test(std::size_t lane, TunerVoice& voice,
+                                   bool& active) const noexcept {
+    if (lane >= kMaxVoices) {
+      return false;
+    }
+    voice = display_voices_[lane];
+    active = display_voice_active_[lane];
+    return true;
+  }
+
 #if defined(M3_TESTING)
   std::size_t tuner_invalidation_count_for_test() const noexcept {
     return tuner_invalidation_count_;
+  }
+
+  std::uint32_t pending_calibration_command_for_test() const noexcept {
+    return component_.pending_calibration_command_for_test();
   }
 #endif
 
@@ -1799,6 +1993,41 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     relayout_controls();
   }
 
+  void onMouseDownEvent(VSTGUI::MouseDownEvent& event) override {
+    if (!settings_open_ && event.buttonState.isLeft() &&
+        event.clickCount >= 2U) {
+      const VSTGUI::CRect bounds = getViewSize();
+      const double width = bounds.getWidth();
+      const double height = bounds.getHeight();
+      if (width > 0.0 && height > 0.0) {
+        const double logical_x =
+            (event.mousePosition.x - bounds.left) * kEditorWidth / width;
+        const double logical_y =
+            (event.mousePosition.y - bounds.top) * kEditorHeight / height;
+        constexpr double kLaneLeft = 34.0;
+        constexpr double kLaneRight = 990.0;
+        constexpr double kLaneTop = 150.0;
+        constexpr double kLaneBottom = 317.0;
+        if (logical_x >= kLaneLeft && logical_x < kLaneRight &&
+            logical_y >= kLaneTop && logical_y <= kLaneBottom) {
+          const double lane_width =
+              (kLaneRight - kLaneLeft) / static_cast<double>(kMaxVoices);
+          const std::size_t lane = static_cast<std::size_t>(
+              (logical_x - kLaneLeft) / lane_width);
+          if (lane < kMaxVoices && m3_profile_active() &&
+              component_.request_string_calibration(
+                  static_cast<std::uint8_t>(lane))) {
+            event.consumed = true;
+            event.ignoreFollowUpMoveAndUpEvents(true);
+            invalid();
+            return;
+          }
+        }
+      }
+    }
+    VSTGUI::CViewContainer::onMouseDownEvent(event);
+  }
+
   void drawBackgroundRect(VSTGUI::CDrawContext* context,
                           const VSTGUI::CRect&) override {
     if (context == nullptr) {
@@ -1826,6 +2055,17 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
   }
 
  private:
+  static bool same_calibration_state(
+      const M3Component::StringCalibrationUiState& left,
+      const M3Component::StringCalibrationUiState& right) noexcept {
+    return left.phase == right.phase &&
+           left.string_index == right.string_index &&
+           left.highest_fret == right.highest_fret &&
+           left.measured_frets == right.measured_frets &&
+           left.interpolated_frets == right.interpolated_frets &&
+           left.calibrated_string_mask == right.calibrated_string_mask;
+  }
+
   static void toggle_settings_callback(void* context) noexcept {
     if (context != nullptr) {
       static_cast<void>(
@@ -1935,6 +2175,68 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     char* const end = text + sizeof(text);
     char* cursor = append_unsigned(text, end, voice_count);
     cursor = append_literal(cursor, end, " NOTES  •  LIVE");
+    terminate_text(cursor, end);
+  }
+
+  static unsigned calibrated_string_count(std::uint8_t mask) noexcept {
+    unsigned count = 0U;
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      count += (mask & (1U << string)) != 0U ? 1U : 0U;
+    }
+    return count;
+  }
+
+  static void format_calibration_header(
+      const M3Component::StringCalibrationUiState& state,
+      char (&text)[96]) noexcept {
+    char* const end = text + sizeof(text);
+    char* cursor = text;
+    if (state.phase == CalibrationSweepPhase::idle) {
+      cursor = append_literal(cursor, end,
+                              "DOUBLE-CLICK A METER TO CALIBRATE  •  ");
+      cursor = append_unsigned(
+          cursor, end,
+          calibrated_string_count(state.calibrated_string_mask));
+      cursor = append_literal(cursor, end, "/8 READY");
+      terminate_text(cursor, end);
+      return;
+    }
+
+    cursor = append_literal(cursor, end, "STRING ");
+    cursor = append_unsigned(cursor, end,
+                             static_cast<unsigned>(state.string_index) + 1U);
+    cursor = append_literal(cursor, end, "  ");
+    TunerVoice open_note;
+    open_note.midi_note = kM3OpenNotes[state.string_index];
+    char note[8]{};
+    format_note(open_note, note);
+    cursor = append_literal(cursor, end, note);
+    switch (state.phase) {
+      case CalibrationSweepPhase::waiting_open:
+        cursor = append_literal(cursor, end, "  •  TUNE + HOLD OPEN");
+        break;
+      case CalibrationSweepPhase::ascending:
+        cursor = append_literal(cursor, end,
+                                " LOCKED  •  SLIDE TO FRET 24  •  FRET ");
+        cursor = append_unsigned(cursor, end, state.highest_fret);
+        break;
+      case CalibrationSweepPhase::descending:
+        cursor = append_literal(cursor, end,
+                                "  •  SLIDE BACK TO OPEN  •  HOLD TO FINISH");
+        break;
+      case CalibrationSweepPhase::complete:
+        cursor = append_literal(
+            cursor, end,
+            " CALIBRATED  •  DOUBLE-CLICK ANOTHER METER");
+        break;
+      case CalibrationSweepPhase::insufficient:
+        cursor = append_literal(
+            cursor, end,
+            "  •  TRY AGAIN WITH A SLOWER, CLEANER SWEEP");
+        break;
+      case CalibrationSweepPhase::idle:
+        break;
+    }
     terminate_text(cursor, end);
   }
 
@@ -2070,10 +2372,17 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
                        scaled_rect(180.0, 117.0, 360.0, 143.0),
                        11.5, kCaption, VSTGUI::kLeftText,
                        VSTGUI::kNormalFace, 0.8, 1.0, true, 0.8);
-    draw_embossed_text(context, "PERFORMANCE CONFIGURATION",
-                       scaled_rect(580.0, 117.0, 858.0, 143.0),
-                       10.5, kMuted, VSTGUI::kRightText,
-                       VSTGUI::kNormalFace, 0.7, 1.0, true, 0.55);
+    char calibration[96]{};
+    format_calibration_header(calibration_state_, calibration);
+    draw_embossed_text(context, calibration,
+                       scaled_rect(430.0, 117.0, 858.0, 143.0),
+                       9.5,
+                       calibration_state_.phase ==
+                               CalibrationSweepPhase::complete
+                           ? kInTuneBlueHighlight
+                           : kMuted,
+                       VSTGUI::kRightText, VSTGUI::kNormalFace,
+                       0.7, 1.0, true, 0.55);
     draw_rule(context, scaled_rect(28.0, 151.0, 996.0, 151.0).getTopLeft(),
               scaled_rect(28.0, 151.0, 996.0, 151.0).getTopRight(),
               VSTGUI::CColor(151U, 164U, 166U, 115U), 1.0);
@@ -2116,9 +2425,10 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     if (context == nullptr) {
       return;
     }
-    const bool tracking = voice != nullptr &&
-                          voice->state == TunerVoiceState::tracking;
-    const bool cents_valid = tracking && voice->cents_valid && needle_active;
+    const bool displayed = voice != nullptr &&
+                           (voice->state == TunerVoiceState::tracking ||
+                            voice->state == TunerVoiceState::settling);
+    const bool cents_valid = displayed && voice->cents_valid && needle_active;
     const bool in_tune = cents_valid && std::abs(displayed_cents) <= 2.0;
     const VSTGUI::CColor needle_color = in_tune ? kInTuneBlue : kCyan;
 
@@ -2286,12 +2596,32 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     }
     context->setFont(VSTGUI::kNormalFont, 16.0, VSTGUI::kBoldFace);
     context->setFontColor(kInk);
+    std::uint8_t displayed_voice_count = 0U;
+    for (const bool active : display_voice_active_) {
+      displayed_voice_count = static_cast<std::uint8_t>(
+          displayed_voice_count + (active ? 1U : 0U));
+    }
     const bool tracking = has_tuner_snapshot_ &&
                           tuner_snapshot_.state == TunerFrameState::tracking &&
-                          tuner_snapshot_.voice_count > 0U;
-    if (tracking) {
+                          displayed_voice_count > 0U;
+    char calibration[96]{};
+    format_calibration_header(calibration_state_, calibration);
+    const bool calibration_emphasis =
+        calibration_state_.phase != CalibrationSweepPhase::idle;
+    if (calibration_emphasis) {
+      context->setFont(VSTGUI::kNormalFont, 12.0, VSTGUI::kBoldFace);
+      context->setFontColor(
+          calibration_state_.phase == CalibrationSweepPhase::complete
+              ? kInTuneBlue
+              : kCyan);
+      context->drawString(
+          calibration,
+          VSTGUI::CRect(ivory.left + 18.0, ivory.top + 5.0,
+                        ivory.right - 18.0, ivory.top + 30.0),
+          VSTGUI::kCenterText, true);
+    } else if (tracking) {
       char header[32]{};
-      format_voice_header(tuner_snapshot_.voice_count,
+      format_voice_header(displayed_voice_count,
                           tuner_snapshot_.max_polyphony, header);
       context->setFontColor(kInk);
       context->setFont(VSTGUI::kNormalFont, 16.0, VSTGUI::kBoldFace);
@@ -2299,15 +2629,28 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
                           VSTGUI::CRect(ivory.left + 18.0, ivory.top + 5.0,
                                        ivory.right - 18.0, ivory.top + 30.0),
                           VSTGUI::kLeftText, true);
+      context->setFont(VSTGUI::kNormalFont, 10.0, VSTGUI::kNormalFace);
+      context->setFontColor(VSTGUI::CColor(89U, 82U, 68U, 255U));
+      context->drawString(
+          calibration,
+          VSTGUI::CRect(ivory.left + 350.0, ivory.top + 7.0,
+                        ivory.right - 18.0, ivory.top + 30.0),
+          VSTGUI::kRightText, true);
     } else {
       context->setFont(VSTGUI::kNormalFontSmall);
       context->setFontColor(VSTGUI::CColor(89U, 82U, 68U, 255U));
       context->drawString(tuner_snapshot_.state == TunerFrameState::unavailable
                               ? "TUNER UNAVAILABLE"
                               : "NO VOICED ESTIMATES",
-                          VSTGUI::CRect(ivory.left + 430.0, ivory.top + 13.0,
-                                       ivory.right - 18.0, ivory.top + 40.0),
-                          VSTGUI::kRightText, true);
+                          VSTGUI::CRect(ivory.left + 18.0, ivory.top + 7.0,
+                                       ivory.left + 300.0, ivory.top + 30.0),
+                          VSTGUI::kLeftText, true);
+      context->setFont(VSTGUI::kNormalFont, 10.0, VSTGUI::kNormalFace);
+      context->drawString(
+          calibration,
+          VSTGUI::CRect(ivory.left + 300.0, ivory.top + 7.0,
+                        ivory.right - 18.0, ivory.top + 30.0),
+          VSTGUI::kRightText, true);
     }
     const double lane_left = ivory.left + 8.0;
     const double lane_right = ivory.right - 8.0;
@@ -2317,8 +2660,8 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     for (std::size_t index = 0U; index < kMaxVoices; ++index) {
       const double left = lane_left + static_cast<double>(index) * lane_width;
       const TunerVoice* voice =
-          tracking && index < tuner_snapshot_.voice_count
-              ? &tuner_snapshot_.voices[index]
+          tracking && display_voice_active_[index]
+              ? &display_voices_[index]
               : nullptr;
       if (index > 0U) {
         draw_rule(context, VSTGUI::CPoint(left, lane_top + 1.0),
@@ -2328,6 +2671,25 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       draw_tuner_lane(
           context, VSTGUI::CRect(left, lane_top, left + lane_width, lane_bottom),
           voice, needle_positions_[index], needle_active_[index]);
+      const bool calibrating =
+          calibration_state_.string_index == index &&
+          (calibration_state_.phase == CalibrationSweepPhase::waiting_open ||
+           calibration_state_.phase == CalibrationSweepPhase::ascending ||
+           calibration_state_.phase == CalibrationSweepPhase::descending);
+      if (calibrating) {
+        const VSTGUI::CColor glow =
+            calibration_state_.phase == CalibrationSweepPhase::waiting_open
+                ? kCyan
+                : kInTuneBlue;
+        draw_rule(context,
+                  VSTGUI::CPoint(left + 8.0, lane_bottom - 3.0),
+                  VSTGUI::CPoint(left + lane_width - 8.0, lane_bottom - 3.0),
+                  VSTGUI::CColor(glow.red, glow.green, glow.blue, 50U), 8.0);
+        draw_rule(context,
+                  VSTGUI::CPoint(left + 8.0, lane_bottom - 3.0),
+                  VSTGUI::CPoint(left + lane_width - 8.0, lane_bottom - 3.0),
+                  glow, 2.0);
+      }
     }
   }
 
@@ -2367,13 +2729,17 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
   std::array<EditorControlLayout, kEditorControlCount> layouts_{};
   std::array<M3DeckControl*, kEditorControlCount> controls_{};
   Steinberg::Vst::EditController& controller_;
+  M3Component& component_;
   const TunerTelemetry& tuner_telemetry_;
   M3SettingsButton* settings_button_{};
   TunerSnapshot tuner_snapshot_{};
+  std::array<TunerVoice, kMaxVoices> display_voices_{};
+  std::array<bool, kMaxVoices> display_voice_active_{};
   std::array<double, kMaxVoices> needle_positions_{};
   std::array<double, kMaxVoices> needle_targets_{};
   std::array<std::uint8_t, kMaxVoices> needle_notes_{};
   std::array<bool, kMaxVoices> needle_active_{};
+  M3Component::StringCalibrationUiState calibration_state_{};
   bool has_tuner_snapshot_{};
   bool settings_open_{};
 #if defined(M3_TESTING)
@@ -2407,6 +2773,12 @@ class M3Editor final : public VSTGUI::VST3Editor {
     return surface_ != nullptr && surface_->tuner_snapshot_for_test(snapshot);
   }
 
+  bool tuner_display_lane_for_test(std::size_t lane, TunerVoice& voice,
+                                   bool& active) const noexcept {
+    return surface_ != nullptr &&
+           surface_->tuner_display_lane_for_test(lane, voice, active);
+  }
+
 #if defined(M3_TESTING)
   std::size_t tuner_invalidation_count_for_test() const noexcept {
     return surface_ == nullptr ? 0U
@@ -2421,6 +2793,11 @@ class M3Editor final : public VSTGUI::VST3Editor {
 
   std::size_t attach_refresh_count_for_test() const noexcept {
     return attach_refresh_count_;
+  }
+
+  bool focus_drawing_enabled_for_test() const noexcept {
+    const VSTGUI::CFrame* editor_frame = getFrame();
+    return editor_frame != nullptr && editor_frame->focusDrawingEnabled();
   }
 #endif
 
@@ -2452,9 +2829,7 @@ class M3Editor final : public VSTGUI::VST3Editor {
       return false;
     }
     if (VSTGUI::CFrame* editor_frame = getFrame()) {
-      editor_frame->setFocusColor(kCyan);
-      editor_frame->setFocusWidth(2.0);
-      editor_frame->setFocusDrawingEnabled(true);
+      editor_frame->setFocusDrawingEnabled(false);
     }
     if (surface_ != nullptr) {
       static_cast<void>(surface_->refresh_tuner());
@@ -2485,7 +2860,7 @@ class M3Editor final : public VSTGUI::VST3Editor {
         VSTGUI::IUIDescription::kCustomViewName);
     if (custom_view != nullptr && *custom_view == kRootViewName) {
       auto* surface =
-          new (std::nothrow) M3RootSurface(this, edit_controller_,
+          new (std::nothrow) M3RootSurface(this, edit_controller_, component_,
                                            component_.tuner_telemetry());
       if (surface == nullptr) {
         return nullptr;
@@ -2627,6 +3002,31 @@ bool editor_pointer_down_for_test(Steinberg::IPlugView& view,
   return static_cast<bool>(event.consumed);
 }
 
+bool editor_double_click_tuner_lane_for_test(Steinberg::IPlugView& view,
+                                             std::size_t lane) noexcept {
+  auto* editor = static_cast<M3Editor*>(&view);
+  M3RootSurface* surface = editor->surface();
+  if (surface == nullptr || lane >= kMaxVoices) {
+    return false;
+  }
+  constexpr double lane_left = 34.0;
+  constexpr double lane_width = (990.0 - lane_left) / kMaxVoices;
+  VSTGUI::MouseDownEvent event(
+      VSTGUI::CPoint(lane_left + (static_cast<double>(lane) + 0.5) * lane_width,
+                     230.0),
+      VSTGUI::MouseEventButtonState(VSTGUI::MouseButton::Left));
+  event.clickCount = 2U;
+  surface->dispatchEvent(event);
+  return static_cast<bool>(event.consumed);
+}
+
+std::uint32_t editor_pending_calibration_command_for_test(
+    Steinberg::IPlugView& view) noexcept {
+  M3RootSurface* surface = static_cast<M3Editor*>(&view)->surface();
+  return surface == nullptr ? 0U
+                            : surface->pending_calibration_command_for_test();
+}
+
 bool editor_pointer_drag_for_test(Steinberg::IPlugView& view,
                                   ParameterId parameter_id,
                                   double vertical_delta) noexcept {
@@ -2717,6 +3117,11 @@ bool editor_toggle_settings_for_test(Steinberg::IPlugView& view) noexcept {
   return editor->surface() != nullptr && editor->surface()->toggle_settings();
 }
 
+bool editor_focus_drawing_enabled_for_test(
+    Steinberg::IPlugView& view) noexcept {
+  return static_cast<M3Editor*>(&view)->focus_drawing_enabled_for_test();
+}
+
 bool editor_render_rgba_for_test(Steinberg::IPlugView& view,
                                  std::uint8_t* rgba,
                                  std::size_t byte_count) noexcept {
@@ -2775,6 +3180,14 @@ bool editor_refresh_tuner_for_test(Steinberg::IPlugView& view) noexcept {
 bool editor_tuner_snapshot_for_test(Steinberg::IPlugView& view,
                                     TunerSnapshot& snapshot) noexcept {
   return static_cast<M3Editor*>(&view)->tuner_snapshot_for_test(snapshot);
+}
+
+bool editor_tuner_display_lane_for_test(Steinberg::IPlugView& view,
+                                        std::size_t lane,
+                                        TunerVoice& voice,
+                                        bool& active) noexcept {
+  return static_cast<M3Editor*>(&view)->tuner_display_lane_for_test(
+      lane, voice, active);
 }
 
 std::size_t editor_tuner_invalidation_count_for_test(

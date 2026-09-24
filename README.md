@@ -2,11 +2,11 @@
 
 Status: the JSFX detector is retained as a behavioral oracle; a native Linux
 x86-64 VST3 effect now provides the practical low-register live-MIDI path.
-It is built and staged in a disposable REAPER profile, not installed into the
-user's persistent VST3 directory. The production VST3 now includes a custom,
-resizable performance editor. Its attachment and presentation are verified;
-the final physical-mouse gesture check remains manual on this rootless
-Xwayland workstation.
+It is built, validated, and installed in the user's VST3 directory, with the
+previous bundle retained as a recoverable backup. The production VST3 includes
+a custom, resizable performance editor. Its attachment and presentation are
+verified; musical tracking from the physical instrument remains the final
+player-generated validation step.
 
 M3 is a source-editable, causal audio-to-MIDI effect for REAPER and a
 downstream VSTi. The practical native path is a C++17 VST3 effect with a
@@ -92,6 +92,14 @@ ionice -c 3 nice -n 10 python3 -B tools/run_vst3_validator.py \
 ```
 
 The recorded production validator result is `47 tests passed, 0 tests failed`.
+The native VST3 host matrix also exercises 44.1, 48, 88.2, and 96 kHz with
+buffer sizes `16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1000,
+1024, 1536, 2048, 4096`. It verifies exact dry-audio passthrough, in-range MIDI
+event offsets, and identical absolute note-on/note-off sample positions across
+every partition at a given rate. A separate timing regression keeps detector
+attack timing within 2 ms across those four rates. These are deterministic
+in-process VST3 host tests; the physical interface and DAW still determine which
+rate/buffer combinations their audio driver can sustain without dropouts.
 The current custom editor opens at `1024 x 468` and can be resized. Its live
 surface follows the selected Mechanical Night Arc reference: a wide header,
 one eight-voice ivory meter bank, and a compact row of performance controls.
@@ -102,11 +110,27 @@ layout: mono is analyzed directly, while stereo is averaged when both sides
 carry signal and uses the active side at unity when the other side is silent.
 There is no plug-in mono/stereo or L/R selector.
 
+In M3 mode, double-click any tuner meter to calibrate its physical string.
+Tune and hold the named open string until it locks, slide steadily to fret 24
+and back to open, then hold the returned open note briefly. The learned
+25-fret cents/timbre map is saved with the VST3 project state and helps keep
+that string on its corresponding tuner lane. The fixed instrument prior is the
+D'Addario NYXL0980 set in thick-to-thin order: `.080, .060, .044, .032, .024,
+.016, .012, .009`, tuned `G# C E G# C E G# C`. Calibration supplies the final
+per-string harmonic fingerprint; the gauge, tuning, and playable fret ranges
+provide the bounded assignment prior. Synthetic calibrated detuned-unison
+tests keep two same-note sources on their distinct physical tuner lanes at
+44.1, 48, 88.2, and 96 kHz, while a single source remains one lane.
+
 `MIDI Routing` selects either `Single`, which sends every note on `MIDI Ch`,
-or `Per Voice`, which assigns active notes to as many as eight consecutive
-channels beginning at `MIDI Ch` and wrapping after channel 16. A note retains
-its assigned channel through note-off, retry, and panic cleanup. This is
-standard channelized MIDI routing rather than MPE. `Ready` remains truthful
+or `Per Voice`. In M3 mode, tuner/string lane 1 uses `MIDI Ch`, lane 2 uses the
+next channel, and so on through all eight lanes, wrapping after channel 16;
+this mapping does not depend on note attack order. General mode assigns its
+active voices to the same bounded channel range dynamically. A voice retains
+its assigned channel through note-off, retry, and panic cleanup. Calibrated
+same-pitch strings carry distinct real-time voice identities, so they remain
+independent on their per-lane channels. This is standard channelized MIDI
+routing rather than MPE. `Ready` remains truthful
 text from the existing Status parameter, and no displayed voice is claimed to
 have been delivered as a host MIDI event. A host that cannot attach the custom
 editor can still use the unchanged generic VST3 parameter surface.

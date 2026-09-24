@@ -5,10 +5,15 @@
 #include <cstdint>
 
 #include "m3/constants.hpp"
+#include "m3/string_calibration.hpp"
 #include "m3/tuner_telemetry.hpp"
 #include "m3/types.hpp"
 
 namespace m3 {
+
+#if defined(M3_TESTING)
+struct MonophonicPitchDetectorTestAccess;
+#endif
 
 struct DetectorDecision final {
   TickTransitions transitions{};
@@ -32,6 +37,12 @@ class MonophonicPitchDetector final {
   void set_runtime_config(const PersistentConfig& config) noexcept;
   void reset() noexcept;
   [[nodiscard]] DetectorDecision process_sample(double sample) noexcept;
+  bool begin_string_calibration(std::uint8_t string_index) noexcept;
+  void cancel_string_calibration() noexcept;
+  void clear_string_calibration() noexcept;
+  [[nodiscard]] CalibrationSweepStatus calibration_status() const noexcept;
+  [[nodiscard]] const StringCalibrationBank& calibration_bank() const noexcept;
+  void set_calibration_bank(const StringCalibrationBank& bank) noexcept;
 
 #if defined(M3_TESTING)
   struct SelectionWork final {
@@ -46,6 +57,9 @@ class MonophonicPitchDetector final {
 #endif
 
  private:
+#if defined(M3_TESTING)
+  friend struct MonophonicPitchDetectorTestAccess;
+#endif
   static constexpr std::size_t kHarmonicCount = 6U;
   static constexpr std::size_t kCellCount = kMaxCandidates * kHarmonicCount;
   struct Cell final {
@@ -60,11 +74,17 @@ class MonophonicPitchDetector final {
 
   struct CandidateState final {
     std::uint8_t attack_ticks{};
-    std::uint8_t release_ticks{};
+    std::uint16_t release_ticks{};
     std::uint8_t evidence_ticks{};
     std::uint8_t evidence_gap_ticks{};
     std::uint16_t age_ticks{};
     bool active{};
+    std::uint8_t assigned_string{kUnassignedTunerString};
+    std::uint8_t assigned_string_mask{};
+    std::uint8_t unison_evidence_ticks{};
+    std::uint16_t unison_gap_ticks{};
+    std::uint8_t pending_unison_string{kUnassignedTunerString};
+    std::uint8_t midi_voice_mask{};
   };
 
   struct M3PoolCandidate final {
@@ -86,15 +106,23 @@ class MonophonicPitchDetector final {
   void update_cell(Cell& cell, double sample) noexcept;
   [[nodiscard]] std::uint8_t dynamic_velocity() const noexcept;
   [[nodiscard]] std::uint8_t attack_decisions() const noexcept;
-  [[nodiscard]] std::uint8_t release_decisions() const noexcept;
+  [[nodiscard]] std::uint16_t release_decisions() const noexcept;
   [[nodiscard]] std::uint8_t candidate_evidence_decisions(
       bool multi_voice) const noexcept;
   [[nodiscard]] double signal_floor() const noexcept;
   void append_transition(DetectorDecision& decision, TransitionKind kind,
-                         std::uint8_t note, std::uint8_t velocity) noexcept;
+                         std::uint8_t note, std::uint8_t velocity,
+                         std::uint8_t voice_id =
+                             kUnassignedVoiceId) noexcept;
+  [[nodiscard]] bool append_candidate_note_on(
+      DetectorDecision& decision, std::size_t candidate,
+      std::uint8_t velocity) noexcept;
+  void append_candidate_note_off(DetectorDecision& decision,
+                                 std::size_t candidate) noexcept;
   void write_snapshot(DetectorDecision& decision,
                       const std::array<double, kMaxCandidates>& scores,
                       const std::array<bool, kMaxCandidates>& selected,
+                      double lower_guard_score, double upper_guard_score,
                       bool quiet) noexcept;
   [[nodiscard]] bool is_harmonic_shadow(
       std::size_t candidate, std::size_t selected_candidate,
@@ -117,22 +145,41 @@ class MonophonicPitchDetector final {
       double threshold,
       std::array<bool, kMaxCandidates>& selected,
       std::size_t count) noexcept;
+  void assign_m3_strings(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void update_harmonic_profile_memory(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void infer_m3_unison_strings(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void observe_calibration(
+      const std::array<double, kMaxCandidates>& scores,
+      double lower_guard_score, double upper_guard_score, bool quiet) noexcept;
+  [[nodiscard]] double calibration_similarity(
+      std::size_t candidate, std::size_t string) const noexcept;
   [[nodiscard]] std::size_t cell_index(std::size_t candidate,
                                        std::size_t harmonic) const noexcept {
     return candidate * kHarmonicCount + harmonic;
   }
 
   std::array<Cell, kCellCount> cells_{};
+  // Boundary-only analysis cells make the configured lowest/highest notes
+  // tunable without adding selectable candidates to the pitch set.
+  std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};
+  std::array<Cell, kHarmonicCount> upper_cents_guard_cells_{};
   std::array<CandidateState, kMaxCandidates> candidate_states_{};
   std::array<std::uint8_t, kMaxCandidates> playable_string_masks_{};
   std::array<double, kMaxCandidates> narrow_fundamental_real_{};
   std::array<double, kMaxCandidates> narrow_fundamental_imaginary_{};
+  std::array<std::array<double, kHarmonicCount>, kMaxCandidates>
+      harmonic_energy_memory_{};
   std::array<M3PoolCandidate, kMaxVoices * kMaxVoices> m3_pool_{};
   std::array<M3DpState, 1U << kMaxVoices> m3_dp_states_{};
+  StringSweepCalibrator calibrator_{};
   double sample_rate_{};
   double dc_pole{};
   double correlation_decay{};
   double narrow_correlation_decay{};
+  double harmonic_memory_decay{};
   double slow_energy_decay{};
   double previous_input_{};
   double previous_dc_output_{};
@@ -147,8 +194,10 @@ class MonophonicPitchDetector final {
   std::uint8_t max_fret_{24U};
   std::uint8_t sensitivity_{50U};
   std::uint8_t response_{25U};
+  std::uint16_t unison_dropout_decisions_{1U};
   std::uint8_t fixed_velocity_{100U};
   VelocityMode velocity_mode_{VelocityMode::dynamic};
+  MidiRouting midi_routing_{MidiRouting::single};
   std::uint32_t snapshot_generation_{};
   std::uint32_t signal_samples_{};
   std::uint32_t narrow_signal_samples_{};

@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "m3/calibration_bank_transport.hpp"
 #include "m3/generated_note_ledger.hpp"
 #include "m3/monophonic_pitch_detector.hpp"
 #include "m3/parameter_contract.hpp"
@@ -73,6 +74,23 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
     return tuner_telemetry_;
   }
 
+  struct StringCalibrationUiState final {
+    CalibrationSweepPhase phase{CalibrationSweepPhase::idle};
+    std::uint8_t string_index{};
+    std::uint8_t highest_fret{};
+    std::uint8_t measured_frets{};
+    std::uint8_t interpolated_frets{};
+    std::uint8_t calibrated_string_mask{};
+  };
+
+  // UI-to-audio-thread commands. The editor never mutates detector state
+  // directly; the next process call applies exactly one bounded command.
+  bool request_string_calibration(std::uint8_t string_index) noexcept;
+  void request_cancel_string_calibration() noexcept;
+  void request_clear_string_calibration() noexcept;
+  [[nodiscard]] StringCalibrationUiState string_calibration_ui_state()
+      const noexcept;
+
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {
     audio_requested_config_.dry_passthrough = enabled;
@@ -129,6 +147,10 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void publish_tuner_snapshot_for_test(const TunerSnapshot& snapshot) noexcept {
     tuner_telemetry_.publish(snapshot);
   }
+  [[nodiscard]] std::uint32_t pending_calibration_command_for_test()
+      const noexcept {
+    return calibration_command_.load(std::memory_order_acquire);
+  }
 #endif
 
  protected:
@@ -162,6 +184,10 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
                                bool supported_layout,
                                double selected_peak) noexcept;
   void request_panic_recovery() noexcept;
+  void apply_string_calibration_command() noexcept;
+  void apply_calibration_restore() noexcept;
+  void publish_calibration_bank_from_audio() noexcept;
+  void publish_string_calibration_status() noexcept;
 
   bool initialized_{};
   bool setup_complete_{};
@@ -181,12 +207,17 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   GeneratedNoteLedger generated_notes_{};
   MonophonicPitchDetector detector_{};
   TunerTelemetry tuner_telemetry_{};
+  CalibrationBankTransport calibration_restore_{};
+  CalibrationBankTransport calibration_published_{};
+  StringCalibrationBank main_calibration_bank_{};
   std::uint64_t main_generation_{};
   std::uint64_t setup_generation_{};
   std::uint64_t active_generation_{};
   std::uint64_t decision_tick_count_{};
   std::uint32_t decision_phase_{};
   std::uint32_t detector_reset_count_{};
+  std::uint32_t main_calibration_restore_generation_{};
+  std::uint32_t audio_calibration_restore_generation_{};
   std::uint8_t tuner_note_{kTunerNoSignalNote};
   double tuner_cents_{};
   bool setup_prepared_valid_{};
@@ -199,6 +230,11 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   bool tuner_cents_dirty_{};
   std::atomic<bool> panic_ready_dirty_{false};
   std::atomic<bool> panic_requested_{false};
+  std::atomic<std::uint32_t> calibration_command_{0U};
+  std::atomic<std::uint32_t> calibration_status_{0U};
+  std::atomic<std::uint32_t> calibration_restore_counter_{0U};
+  CalibrationSweepPhase previous_calibration_phase_{
+      CalibrationSweepPhase::idle};
 };
 
 #if defined(M3_TESTING)
@@ -249,6 +285,12 @@ detector_selection_work_for_test(
 void publish_tuner_snapshot_for_test(
     Steinberg::Vst::IAudioProcessor* processor,
     const TunerSnapshot& snapshot) noexcept;
+bool request_string_calibration_for_test(
+    Steinberg::Vst::IAudioProcessor* processor,
+    std::uint8_t string_index) noexcept;
+[[nodiscard]] M3Component::StringCalibrationUiState
+string_calibration_ui_state_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept;
 #endif
 
 }  // namespace m3::vst3

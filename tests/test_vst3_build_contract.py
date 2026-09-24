@@ -273,10 +273,13 @@ class Vst3BuildContractTests(unittest.TestCase):
                     for row in probe_commands
                 },
                 {
+                    "native/src/calibration_bank_transport.cpp",
+                    "native/src/calibration_state_image.cpp",
                     "native/src/generated_note_ledger.cpp",
                     "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
+                    "native/src/string_calibration.cpp",
                     "native/src/tuner_telemetry.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
@@ -312,10 +315,13 @@ class Vst3BuildContractTests(unittest.TestCase):
                     for row in production_commands
                 },
                 {
+                    "native/src/calibration_bank_transport.cpp",
+                    "native/src/calibration_state_image.cpp",
                     "native/src/generated_note_ledger.cpp",
                     "native/src/monophonic_pitch_detector.cpp",
                     "native/src/parameter_contract.cpp",
                     "native/src/state_image.cpp",
+                    "native/src/string_calibration.cpp",
                     "native/src/tuner_telemetry.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
@@ -628,7 +634,7 @@ class Vst3BuildContractTests(unittest.TestCase):
         persistent_bundles = [
             path
             for path in ROOT.rglob("*.vst3")
-            if not path.relative_to(ROOT).as_posix().startswith("build/")
+            if path.relative_to(ROOT).parts[0] not in {"build", ".worktrees"}
         ]
         self.assertEqual(persistent_bundles, [])
 
