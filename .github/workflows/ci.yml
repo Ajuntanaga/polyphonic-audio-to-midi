@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-contracts:
+    name: Source contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source and pinned submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python contract suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Validate authored source
+        run: |
+          python3 -B tools/validate_source.py .
+          python3 -B tools/validate_native_source.py .
+
+  native:
+    name: Native C++ tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source and pinned submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install VSTGUI build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+            libexpat1-dev libglib2.0-dev libcairo2-dev libfontconfig1-dev \
+            libfreetype6-dev libpango1.0-dev libwayland-dev \
+            libgtkmm-3.0-dev libatkmm-1.6-dev libsqlite3-dev pkg-config \
+            wayland-protocols \
+            libx11-dev libx11-xcb-dev libxcb-cursor-dev libxcb-keysyms1-dev \
+            libxcb-util-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - name: Configure
+        run: cmake -S . -B build/ci -DCMAKE_BUILD_TYPE=Release
+      - name: Build native tests
+        run: cmake --build build/ci --target m3_native_tests --parallel 2
+      - name: Run native tests
+        run: ctest --test-dir build/ci --output-on-failure -R '^m3_native_tests$'
+      - name: Build production VST3
+        run: cmake --build build/ci --target m3_vst3_production --parallel 2

@@ -33,6 +33,43 @@ class GuardedReaperTests(unittest.TestCase):
             check=False,
         )
 
+    def test_default_reaper_path_is_portable_and_overrideable(self):
+        self.assertEqual(
+            GUARDED_REAPER.default_reaper_executable(
+                environment={"M3_REAPER": "/opt/reaper/reaper"},
+                path_lookup=lambda _name: "/usr/local/bin/reaper",
+                home=pathlib.Path("/home/example"),
+            ),
+            pathlib.Path("/opt/reaper/reaper"),
+        )
+        self.assertEqual(
+            GUARDED_REAPER.default_reaper_executable(
+                environment={},
+                path_lookup=lambda _name: "/usr/local/bin/reaper",
+                home=pathlib.Path("/home/example"),
+            ),
+            pathlib.Path("/usr/local/bin/reaper"),
+        )
+        self.assertEqual(
+            GUARDED_REAPER.default_reaper_executable(
+                environment={},
+                path_lookup=lambda _name: None,
+                home=pathlib.Path("/home/example"),
+            ),
+            pathlib.Path("/home/example/opt/REAPER/reaper"),
+        )
+
+    def test_guarded_command_uses_the_requested_reaper_executable(self):
+        requested = pathlib.Path("/opt/reaper/reaper")
+        command = GUARDED_REAPER.guarded_command(
+            PROFILE,
+            ["-new"],
+            45,
+            reaper=requested,
+        )
+
+        self.assertIn(str(requested), command)
+
     def create_vst3_layout(self, root: pathlib.Path):
         vst3_root = root / "build/vst3/release/VST3"
         bundle = vst3_root / "M3_Polyphonic_Audio_to_MIDI_Probe.vst3"

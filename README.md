@@ -2,10 +2,8 @@
 
 Status: the JSFX detector is retained as a behavioral oracle; a native Linux
 x86-64 VST3 effect now provides the practical low-register live-MIDI path.
-It is built, validated, and installed in the user's VST3 directory, with the
-previous bundle retained as a recoverable backup. The production VST3 includes
-a custom, resizable performance editor. Its attachment and presentation are
-verified; musical tracking from the physical instrument remains the final
+The production bundle is built and validated with a custom, resizable
+performance editor. Musical tracking from a physical instrument remains a
 player-generated validation step.
 
 M3 is a source-editable, causal audio-to-MIDI effect for REAPER and a
@@ -15,12 +13,36 @@ it does not perform detection or MIDI generation. The M3 profile maps the
 eight open strings to MIDI `32,36,40,44,48,52,56,60` (`G# C E G# C E G# C`,
 low to high) and emits ordinary discrete MIDI rather than MPE.
 
+## Clone and build
+
+Prebuilt beta bundles are published on the
+[GitHub Releases page](https://github.com/Ajuntanaga/polyphonic-audio-to-midi/releases).
+The source build is reproducible from a recursive clone.
+
+VSTGUI is pinned as a Git submodule. Clone it with the repository:
+
+```bash
+git clone --recurse-submodules \
+  https://github.com/Ajuntanaga/polyphonic-audio-to-midi.git
+cd polyphonic-audio-to-midi
+```
+
+If the repository is already cloned, initialize the dependency before running
+CMake:
+
+```bash
+git submodule update --init --recursive
+```
+
+The release build and validator commands are listed under
+[Build and validate the editor bundle](#build-and-validate-the-editor-bundle).
+
 ## Use now: low-string live MIDI
 
 The staged native profile creates one armed, monitored track:
 
 ```text
-Revelator input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
+Audio-interface input 1 -> M3 Polyphonic Audio to MIDI (VST3) -> ReaSynth
 ```
 
 The default disposable profile is configured for 48 kHz and 256 samples. For
@@ -148,7 +170,8 @@ launch the prepared 96 kHz / 512-sample profile for the computer's normal ALSA
 device without touching the normal REAPER profile:
 
 ```bash
-/home/ajuntanaga/opt/REAPER/reaper -newinst -noactivate \
+REAPER_BIN="${M3_REAPER:-$HOME/opt/REAPER/reaper}"
+"$REAPER_BIN" -newinst -noactivate \
   -cfgfile "$PWD/build/m3-native-live-midi-system-routing-96k-512/reaper.ini" -nosplash \
   "$PWD/build/m3-native-live-midi-system-routing-96k-512/Scripts/ajuntanaga_M3 Live Guitar to MIDI.lua"
 ```

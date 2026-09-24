@@ -46,6 +46,16 @@ VST3_SDK_REVISIONS = {
 
 
 class Vst3BuildContractTests(unittest.TestCase):
+    def test_public_onboarding_initializes_the_pinned_vstgui_submodule(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        sdk_setup = (ROOT / "cmake/M3Vst3Sdk.cmake").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("git clone --recurse-submodules", readme)
+        self.assertIn("git submodule update --init --recursive", readme)
+        self.assertIn("git submodule update --init --recursive", sdk_setup)
+
     def validation_errors(self, entries, *, sdk_present=False):
         validator = getattr(validate_native_source, "validate_entries", None)
         self.assertIsNotNone(validator, "validate_entries() is absent")

@@ -46,8 +46,8 @@ no-follow snapshot operation.
 | Source | Proposed destination | SHA-256 | Static reason |
 | --- | --- | --- | --- |
 | `/usr/bin/bwrap` | not mounted; trusted outer launcher only | `0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0` | namespace boundary; outer validator also requires root:root, 0755, regular, no caps/setid |
-| `/home/ajuntanaga/opt/REAPER/reaper` | `/opt/reaper/reaper` | `cee99a74fdd9fc87974c96ea334a50afff4ca8d3121591aed218057bb38185e4` | REAPER main ELF |
-| `/home/ajuntanaga/opt/REAPER/libSwell.so` | `/opt/reaper/libSwell.so` | `9b991d09df2fe359d47dc3f0b3d2e9aa358d806c702bb93c11d6b2fe61db011c` | REAPER static local reference |
+| `$HOME/opt/REAPER/reaper` | `/opt/reaper/reaper` | `cee99a74fdd9fc87974c96ea334a50afff4ca8d3121591aed218057bb38185e4` | REAPER main ELF |
+| `$HOME/opt/REAPER/libSwell.so` | `/opt/reaper/libSwell.so` | `9b991d09df2fe359d47dc3f0b3d2e9aa358d806c702bb93c11d6b2fe61db011c` | REAPER static local reference |
 | `/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2` | same, plus exact `/lib64/ld-linux-x86-64.so.2` topology | `c5e80a563850d6ab5c2f2482e4202d9c1b71fbf44854b8c399e63527202c64e1` | ELF interpreter |
 | `/usr/lib/x86_64-linux-gnu/libpthread.so.0` | same | `f93acb6e78dcf0213c8a85f922d21916249148e24de426079c40b6304c42085d` | direct `DT_NEEDED` candidate |
 | `/usr/lib/x86_64-linux-gnu/libdl.so.2` | same | `7d293f8361fcead4f9691561adc0413f724f3607b959abe0d4fb243072956079` | direct `DT_NEEDED` candidate |

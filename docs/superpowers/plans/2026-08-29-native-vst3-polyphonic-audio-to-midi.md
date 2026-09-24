@@ -1609,8 +1609,8 @@ The exact VST3 step counts are `2,1,800,480,100,100,84,84,7,36,1,126,15,1,1,5` i
 - Modify: `docs/VST3-TESTING.md`
 - Modify: `docs/VST3-PERFORMANCE.md`
 - Modify: `tools/validate_native_source.py`
-- Modify outside Git: `/home/ajuntanaga/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
-- Create or modify outside Git: `/home/ajuntanaga/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Native VST3 Implementation Plan.md`
+- Modify outside Git: `$HOME/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
+- Create or modify outside Git: `$HOME/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Native VST3 Implementation Plan.md`
 
 **Interfaces:**
 
@@ -1643,7 +1643,7 @@ The exact VST3 step counts are `2,1,800,480,100,100,84,84,7,36,1,126,15,1,1,5` i
   ```bash
   git status --short
   find build/vst3/release/VST3 -maxdepth 5 -type f -printf '%P\n' | LC_ALL=C sort
-  find /home/ajuntanaga/.vst3 -maxdepth 1 -name 'M3_Polyphonic_Audio_to_MIDI.vst3' -print 2>/dev/null
+  find "$HOME/.vst3" -maxdepth 1 -name 'M3_Polyphonic_Audio_to_MIDI.vst3' -print 2>/dev/null
   ```
 
   Expected: one production bundle plus named test-only build-local bundles; persistent search prints nothing; only intended documentation/source changes are tracked.

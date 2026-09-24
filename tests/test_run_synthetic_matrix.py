@@ -2,6 +2,7 @@ import pathlib
 import tempfile
 import unittest
 
+from tools import run_synthetic_matrix
 from tools.run_synthetic_matrix import (
     MAX_BATCH_SIZE,
     batch_ranges,
@@ -13,6 +14,14 @@ from tools.run_synthetic_matrix import (
 
 
 class SyntheticMatrixRunnerTests(unittest.TestCase):
+    def test_guard_command_passes_the_selected_reaper_to_the_guard(self):
+        selected = pathlib.Path("/opt/reaper/reaper")
+
+        command = run_synthetic_matrix._guard_command(45, selected)
+
+        reaper_index = command.index("--reaper")
+        self.assertEqual(command[reaper_index + 1], str(selected))
+
     def test_groups_cases_by_rate_and_block_without_reordering(self):
         rows = [
             {"case_id": "1", "sample_rate": "44100", "block_size": "32"},

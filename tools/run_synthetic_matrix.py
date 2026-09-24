@@ -25,6 +25,7 @@ if str(ROOT) not in sys.path:
 
 from tools.run_guarded_reaper import (  # noqa: E402
     available_memory_mib,
+    default_reaper_executable,
     maximum_temperature_c,
     preflight_errors,
 )
@@ -40,7 +41,7 @@ SCHEMA_VERSION = 1
 MAX_BATCH_SIZE = 8
 DEFAULT_BATCH_SIZE = 8
 DEFAULT_TIMEOUT_SECONDS = 90
-REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
+REAPER = default_reaper_executable()
 STAGING_ROOT = ROOT / "build" / "reaper-test"
 RESULTS_ROOT = ROOT / "build" / "test-results"
 DEFAULT_OUTPUT = RESULTS_ROOT / "synthetic-matrix"
@@ -464,13 +465,18 @@ def _reaper_pids() -> set[int]:
     return pids
 
 
-def _guard_command(timeout_seconds: int) -> list[str]:
+def _guard_command(
+    timeout_seconds: int,
+    reaper: pathlib.Path,
+) -> list[str]:
     return [
         sys.executable,
         str(GUARD),
         "--gui",
         "--workspace",
         "5",
+        "--reaper",
+        str(reaper),
         "--profile",
         str(STAGING_ROOT / "reaper.ini"),
         "--completion-file",
@@ -489,6 +495,7 @@ def _run_batch(
     timeout_seconds: int,
     manifest_digest: str,
     runtime_digest: str,
+    reaper: pathlib.Path,
 ) -> BatchValidation:
     before_snapshot = _stability_snapshot()
     errors = _stability_errors(before_snapshot)
@@ -515,7 +522,7 @@ def _run_batch(
 
     preexisting_pids = _reaper_pids()
     completed = subprocess.run(
-        _guard_command(timeout_seconds),
+        _guard_command(timeout_seconds, reaper),
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -699,8 +706,8 @@ def run(args: argparse.Namespace) -> int:
         raise ValueError("max batches must be positive")
     if args.start_offset is not None and args.start_offset < 0:
         raise ValueError("start offset must be nonnegative")
-    if not REAPER.is_file() or not os.access(REAPER, os.X_OK):
-        raise ValueError(f"REAPER executable is unusable: {REAPER}")
+    if not args.reaper.is_file() or not os.access(args.reaper, os.X_OK):
+        raise ValueError(f"REAPER executable is unusable: {args.reaper}")
 
     rows = _load_manifest(MANIFEST)
     all_batches = _batches(rows, args.batch_size)
@@ -753,6 +760,7 @@ def run(args: argparse.Namespace) -> int:
             args.timeout_seconds,
             manifest_digest,
             runtime_digest,
+            args.reaper,
         )
         checkpoint["completed"][batch.key] = _completion_record(
             batch,
@@ -803,6 +811,7 @@ def build_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument("--output", type=pathlib.Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--reaper", type=pathlib.Path, default=REAPER)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument(
         "--timeout-seconds",

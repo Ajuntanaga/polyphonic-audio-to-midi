@@ -25,7 +25,7 @@ Stage only the repository-owned test environment:
 
 ```sh
 python3 tools/stage_reaper_test_env.py \
-  --reaper /home/ajuntanaga/opt/REAPER/reaper \
+  --reaper "${M3_REAPER:-$HOME/opt/REAPER/reaper}" \
   --output build/reaper-test
 ```
 

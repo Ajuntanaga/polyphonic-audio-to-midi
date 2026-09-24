@@ -10,7 +10,7 @@ from tools.stage_reaper_test_env import stage
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
+REAPER = pathlib.Path.home() / "opt/REAPER/reaper"
 CONSTANTS = ROOT / "Effects/m3_poly_midi/constants.jsfx-inc"
 PROFILE = ROOT / "Effects/m3_poly_midi/m3_profile.jsfx-inc"
 SELECTOR = ROOT / "Effects/m3_poly_midi/salience_selector.jsfx-inc"
@@ -62,6 +62,31 @@ def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
 
 
 class SourceContractTests(unittest.TestCase):
+    def test_tracked_public_files_do_not_embed_a_contributor_home_path(self):
+        frozen_observation = (
+            b"tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json"
+        )
+        tracked = subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+        ).stdout.split(b"\0")
+        contributor_home = b"/home/" + b"ajuntanaga"
+        offenders = []
+        for relative in tracked:
+            if not relative:
+                continue
+            if relative == frozen_observation:
+                continue
+            path = ROOT / relative.decode("utf-8")
+            if not path.is_file():
+                continue
+            if contributor_home in path.read_bytes():
+                offenders.append(relative.decode("utf-8"))
+
+        self.assertEqual(offenders, [])
+
     def test_native_capability_probe_sources_are_bounded_and_exact(self):
         source = NATIVE_CAPABILITY_SOURCE.read_text(encoding="utf-8")
         runner = NATIVE_CAPABILITY_RUNNER.read_text(encoding="utf-8")

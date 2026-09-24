@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a focused change to tracking, MIDI output, UI, or tooling.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the musical or technical limitation you are trying to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the observable result rather than prescribing an internal implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation idea
+      description: Describe audio cases, host settings, or automated checks that would demonstrate the change.

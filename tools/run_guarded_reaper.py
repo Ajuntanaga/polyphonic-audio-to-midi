@@ -7,14 +7,32 @@ import pathlib
 import re
 import signal
 import shlex
+import shutil
 import stat
 import subprocess
 import sys
 import time
 
 
+def default_reaper_executable(
+    environment=None,
+    path_lookup=None,
+    home: pathlib.Path | None = None,
+) -> pathlib.Path:
+    environment = os.environ if environment is None else environment
+    override = environment.get("M3_REAPER")
+    if override:
+        return pathlib.Path(override).expanduser()
+    path_lookup = shutil.which if path_lookup is None else path_lookup
+    discovered = path_lookup("reaper")
+    if discovered:
+        return pathlib.Path(discovered)
+    home = pathlib.Path.home() if home is None else home
+    return home / "opt/REAPER/reaper"
+
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-REAPER = pathlib.Path("/home/ajuntanaga/opt/REAPER/reaper")
+REAPER = default_reaper_executable()
 DISPOSABLE_PROFILE = (ROOT / "build/reaper-test/reaper.ini").resolve()
 OBSERVER_DIAGNOSTIC_PROFILE = ROOT / "build/reaper-test-observer-diagnostic/reaper.ini"
 BUILD_CLAP_DIR = (ROOT / "build/native/clap").resolve()
@@ -1073,9 +1091,11 @@ def guarded_command(
     clap_path: pathlib.Path | None = None,
     probe_report: pathlib.Path | None = None,
     vst3_path: pathlib.Path | None = None,
+    reaper: pathlib.Path | None = None,
 ) -> list[str]:
     if vst3_path is not None and (clap_path is not None or probe_report is not None):
         raise ValueError("CLAP and VST3 injection are mutually exclusive")
+    reaper = REAPER if reaper is None else reaper
     cpu = max(os.sched_getaffinity(0))
     cpu_seconds = max(5, min(timeout_seconds, MAX_CPU_SECONDS))
     unit = f"m3-poly-guarded-{os.getpid()}.scope"
@@ -1121,7 +1141,7 @@ def guarded_command(
         "/usr/bin/taskset",
         "-c",
         str(cpu),
-        str(REAPER),
+        str(reaper),
         "-newinst",
         "-noactivate",
         "-cfgfile",
@@ -1137,6 +1157,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--gui", action="store_true")
     parser.add_argument("--workspace", type=int, default=5)
+    parser.add_argument("--reaper", type=pathlib.Path, default=REAPER)
     parser.add_argument("--profile", type=pathlib.Path)
     parser.add_argument("--clap-path", type=pathlib.Path)
     parser.add_argument("--probe-report", type=pathlib.Path)
@@ -1223,8 +1244,11 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             print(f"guardrail refusal: {exc}", file=sys.stderr)
             return 2
-    if not REAPER.is_file() or not os.access(REAPER, os.X_OK):
-        print(f"guardrail refusal: REAPER executable is unusable: {REAPER}", file=sys.stderr)
+    if not args.reaper.is_file() or not os.access(args.reaper, os.X_OK):
+        print(
+            f"guardrail refusal: REAPER executable is unusable: {args.reaper}",
+            file=sys.stderr,
+        )
         return 2
     completion_file = None
     if args.completion_file is not None:
@@ -1298,9 +1322,10 @@ def main(argv: list[str] | None = None) -> int:
         profile,
         reaper_arguments,
         args.timeout_seconds,
-        clap_path,
-        probe_report,
-        vst3_path,
+        clap_path=clap_path,
+        probe_report=probe_report,
+        vst3_path=vst3_path,
+        reaper=args.reaper,
     )
     scope_unit = command.scope_unit if isinstance(command, GuardedCommand) else None
     trusted_vst3_scope = trusted_vst3_scope_unit(command)

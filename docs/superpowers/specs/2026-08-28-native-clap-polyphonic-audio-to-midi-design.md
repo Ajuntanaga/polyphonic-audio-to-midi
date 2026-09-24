@@ -8,7 +8,7 @@ Document status: approved; native implementation planning remains separately gat
 ## 1. Authority and amendment boundary
 
 This document amends the approved JSFX-first design at
-`/home/ajuntanaga/Documents/Codex/2026-08-25/c/outputs/2026-08-25-realtime-polyphonic-audio-to-midi-design.md`.
+`$REPOSITORY/outputs/2026-08-25-realtime-polyphonic-audio-to-midi-design.md`.
 It replaces only the production runtime, host adapter, processing cadence, and
 first-native UI decision. The musical contract, detector model, validation
 thresholds, safety gates, and separately authorized actions remain in force.

@@ -806,7 +806,7 @@ ionice -c 3 nice -n 10 python3 tools/stage_live_midi_env.py \
   interaction and only that disposable PID was terminated. No REAPER process
   or window remained afterward.
 - The normal profile
-  `/home/ajuntanaga/.config/REAPER/reaper.ini` remained byte-identical at
+  `$HOME/.config/REAPER/reaper.ini` remained byte-identical at
   SHA-256
   `0c9a808df5361758c7f6656ed052332cfe16004b4a9f2d476d9c319829ae0a41`.
   No persistent plug-in path, saved project, device routing, or hardware

@@ -208,7 +208,7 @@ Expected: PASS with no imported filesystem/process behavior.
 - Modify: `RESUME.md`
 - Modify: `docs/superpowers/plans/2026-08-31-v4-reaper-scan-isolation.md`
 - Modify: `docs/superpowers/specs/2026-09-04-v4-task0b4b-admission-pure-source-contract.md`
-- Modify: `/home/ajuntanaga/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
+- Modify: `$HOME/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
 
 **Interfaces:**
 - Consumes: passing static, preserved helper, admission suites, a source hash,

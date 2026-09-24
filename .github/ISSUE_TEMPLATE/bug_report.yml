@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible plug-in, build, or tracking defect.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include private projects, credentials, or licensed audio you cannot share.
+  - type: input
+    id: version
+    attributes:
+      label: M3 version or commit
+      placeholder: v0.1.0-beta.2 or a commit SHA
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host and operating system
+      placeholder: REAPER 7.x on Ubuntu 24.04
+    validations:
+      required: true
+  - type: input
+    id: audio
+    attributes:
+      label: Audio configuration
+      description: Include sample rate, block size, channel count, and generic audio-interface details.
+      placeholder: 96 kHz, 512 samples, mono input
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Give the shortest sequence that consistently reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove personal paths and unrelated project data before attaching files.

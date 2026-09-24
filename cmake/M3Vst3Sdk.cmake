@@ -14,7 +14,11 @@ function(m3_add_pinned_vst3_sdk)
     )
     foreach(relative_path IN LISTS required_sdk_paths)
         if(NOT EXISTS "${M3_VST3_SDK_ROOT}/${relative_path}")
-            message(FATAL_ERROR "Pinned VST3 SDK path is absent: ${relative_path}")
+            message(FATAL_ERROR
+                "Pinned VST3 SDK path is absent: ${relative_path}. "
+                "Initialize dependencies with: "
+                "git submodule update --init --recursive"
+            )
         endif()
     endforeach()
 

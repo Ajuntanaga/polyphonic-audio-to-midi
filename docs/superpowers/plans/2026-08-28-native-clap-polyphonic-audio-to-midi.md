@@ -700,7 +700,7 @@ On any `try_push()` failure, latch `midi_output_blocked`, suppress all later gen
   Run:
 
   ```bash
-  python3 tools/stage_reaper_test_env.py --reaper /home/ajuntanaga/opt/REAPER/reaper --output build/reaper-test --case-set host
+  python3 tools/stage_reaper_test_env.py --reaper "${M3_REAPER:-$HOME/opt/REAPER/reaper}" --output build/reaper-test --case-set host
   python3 -m unittest tests.test_guarded_reaper tests.test_native_clap_probe_runner -v
   ```
 
@@ -1466,8 +1466,8 @@ On any `try_push()` failure, latch `midi_output_blocked`, suppress all later gen
 - Modify: `docs/NATIVE-TESTING.md`
 - Modify: `docs/NATIVE-PERFORMANCE.md`
 - Modify: `tools/validate_native_source.py`
-- Modify outside Git: `/home/ajuntanaga/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
-- Create or modify outside Git: `/home/ajuntanaga/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Native CLAP Implementation Plan.md`
+- Modify outside Git: `$HOME/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Polyphonic Audio to MIDI.md`
+- Create or modify outside Git: `$HOME/Documents/Obsidian/ResearchOS/Systems/REAPER/Polyphonic Audio to MIDI/Native CLAP Implementation Plan.md`
 
 - [ ] **Step 1: Make documentation state evidence, not aspiration.**
 
