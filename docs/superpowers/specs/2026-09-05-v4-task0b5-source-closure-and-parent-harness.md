@@ -49,7 +49,10 @@ An isolated `env -i` / `python3 -I -S -B` import observation is persisted in
 `tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json`.  It pins 77
 regular interpreter/extension/ELF inputs (9,499,630 bytes), with canonical
 catalog SHA-256
-`446a7f87e156f4cfa4cf58582261fde22a6557cf06604da6a02c6d393450c76e`.
+`fc2e615cdcfc57468d8227074ba260f6c35dc56e9d2f722a53986270d00e90a0`.
+The public serialization replaces the seven contributor-local workspace
+prefixes with `/REDACTED`; relative tool paths, byte sizes, modes, and hashes
+remain unchanged.
 `build_fixture_runtime_manifest_from_catalog()` rehashes every cataloged source
 before it will assemble a manifest; the current catalog plus the seven source
 files produces an 84-entry, 9,647,488-byte declared manifest in memory.

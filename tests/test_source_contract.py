@@ -63,9 +63,6 @@ def parse_integer_assignments(path: pathlib.Path) -> dict[str, int]:
 
 class SourceContractTests(unittest.TestCase):
     def test_tracked_public_files_do_not_embed_a_contributor_home_path(self):
-        frozen_observation = (
-            b"tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json"
-        )
         tracked = subprocess.run(
             ["git", "ls-files", "-z"],
             cwd=ROOT,
@@ -76,8 +73,6 @@ class SourceContractTests(unittest.TestCase):
         offenders = []
         for relative in tracked:
             if not relative:
-                continue
-            if relative == frozen_observation:
                 continue
             path = ROOT / relative.decode("utf-8")
             if not path.is_file():

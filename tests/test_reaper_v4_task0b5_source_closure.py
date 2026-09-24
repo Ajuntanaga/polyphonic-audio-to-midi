@@ -214,6 +214,15 @@ class Task0B5SourceClosureTests(unittest.TestCase):
             tuple(entry["destination"] for entry in catalog["entries"]),
             tuple(sorted(entry["destination"] for entry in catalog["entries"])),
         )
+        redacted_entries = tuple(
+            entry
+            for entry in catalog["entries"]
+            if entry["source"].startswith("/REDACTED/")
+        )
+        self.assertEqual(len(redacted_entries), 7)
+        self.assertTrue(
+            all(entry["destination"].startswith("/REDACTED/") for entry in redacted_entries)
+        )
         self.assertTrue(any("startup" in reason for reason in catalog["unresolved"]))
 
     def test_refuses_bootstrap_paths_inside_the_manifest(self) -> None:

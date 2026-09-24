@@ -395,7 +395,9 @@ Updated: 2026-09-24
   `tests/fixtures/reaper_v4_closure/observed-runtime-catalog.json` pins 77
   observed interpreter/extension/ELF regular inputs (9,499,630 bytes) under
   canonical catalog SHA-256
-  `446a7f87e156f4cfa4cf58582261fde22a6557cf06604da6a02c6d393450c76e`.
+  `fc2e615cdcfc57468d8227074ba260f6c35dc56e9d2f722a53986270d00e90a0`.
+  The public fixture replaces its seven contributor-local workspace prefixes
+  with `/REDACTED` while retaining their relative tool paths and file hashes.
   Rechecking that catalog plus the seven source files builds only an 84-entry,
   9,647,488-byte `DECLARED_RUNTIME_MANIFEST` in memory; it remains explicitly
   `UNRESOLVED` for builtin/frozen modules, conditional imports, interpreter
