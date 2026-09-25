@@ -139,7 +139,6 @@ class MonophonicPitchDetector final {
   void write_snapshot(DetectorDecision& decision,
                       const std::array<double, kMaxCandidates>& scores,
                       const std::array<bool, kMaxCandidates>& selected,
-                      double lower_guard_score, double upper_guard_score,
                       bool quiet) noexcept;
   [[nodiscard]] bool is_harmonic_shadow(
       std::size_t candidate, std::size_t selected_candidate,

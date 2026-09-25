@@ -33,6 +33,10 @@ constexpr double kNarrowFundamentalRelativeFloor = 0.12;
 // admission gates, not look-ahead: every decision uses samples already seen.
 constexpr double kSingleVoiceEvidenceSeconds = 0.040;
 constexpr double kMultiVoiceEvidenceSeconds = 0.050;
+// The fine-pitch phasor starts after causal pitch selection. Its cascaded
+// smoothing needs this additional evidence before its first value is honest
+// enough to expose as a tuner measurement.
+constexpr double kPhaseCentsEvidenceSeconds = 0.160;
 constexpr double kSilenceEnergyRatio = 0.50;
 // A naturally ringing string can decay quickly without becoming silence.  A
 // hard mute instead leaves the 40 ms energy follower to fall at roughly
@@ -1140,7 +1144,8 @@ void MonophonicPitchDetector::update_phase_cents_estimates(
   const double cents_mix =
       1.0 - std::exp(-1.0 / (0.010 * decisions_per_second));
   const std::uint16_t required_updates = static_cast<std::uint16_t>(
-      std::clamp(std::ceil(0.060 * decisions_per_second), 1.0,
+      std::clamp(std::ceil(kPhaseCentsEvidenceSeconds * decisions_per_second),
+                 1.0,
                  static_cast<double>(
                      std::numeric_limits<std::uint16_t>::max())));
   for (std::size_t candidate = 0U;
@@ -1553,7 +1558,7 @@ void MonophonicPitchDetector::write_snapshot(
     DetectorDecision& decision,
     const std::array<double, kMaxCandidates>& scores,
     const std::array<bool, kMaxCandidates>& selected,
-    double lower_guard_score, double upper_guard_score, bool quiet) noexcept {
+    bool quiet) noexcept {
   TunerSnapshot& snapshot = decision.tuner_snapshot;
   snapshot.generation = ++snapshot_generation_;
   snapshot.max_polyphony = max_polyphony_;
@@ -1600,27 +1605,6 @@ void MonophonicPitchDetector::write_snapshot(
         base_voice.cents_q8 = static_cast<std::int16_t>(std::lround(
             phase_cents.cents * 256.0));
         base_voice.cents_valid = true;
-      } else {
-        const double left_score =
-            candidate > 0U ? scores[candidate - 1U] : lower_guard_score;
-        const double right_score =
-            candidate + 1U < static_cast<std::size_t>(candidate_count_)
-                ? scores[candidate + 1U]
-                : upper_guard_score;
-        const double left = std::log(std::max(left_score, kScoreEpsilon));
-        const double center =
-            std::log(std::max(scores[candidate], kScoreEpsilon));
-        const double right = std::log(std::max(right_score, kScoreEpsilon));
-        const double denominator = left - 2.0 * center + right;
-        if (std::isfinite(denominator) && denominator < -kScoreEpsilon) {
-          const double semitone_offset = std::clamp(
-              0.5 * (left - right) / denominator, -0.5, 0.5);
-          if (std::isfinite(semitone_offset)) {
-            base_voice.cents_q8 = static_cast<std::int16_t>(std::lround(
-                semitone_offset * 100.0 * 256.0));
-            base_voice.cents_valid = true;
-          }
-        }
       }
       if (tracking) {
         if (base_voice.cents_valid) {
@@ -1990,8 +1974,7 @@ DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
   const double lower_guard_score = guard_score(lower_cents_guard_cells_);
   const double upper_guard_score = guard_score(upper_cents_guard_cells_);
   observe_calibration(scores, lower_guard_score, upper_guard_score, quiet);
-  write_snapshot(decision, scores, selected, lower_guard_score,
-                 upper_guard_score, quiet);
+  write_snapshot(decision, scores, selected, quiet);
   return decision;
 }
 

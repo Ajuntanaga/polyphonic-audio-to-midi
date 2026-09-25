@@ -117,6 +117,8 @@ struct MonophonicPitchDetectorTestAccess final {
     detector.fast_energy_ = 1.0;
     detector.candidate_states_ = {};
     detector.candidate_states_[1U].active = true;
+    detector.phase_cents_states_[1U].cents = 7.5;
+    detector.phase_cents_states_[1U].valid = true;
 
     std::array<double, kMaxCandidates> scores{};
     std::array<bool, kMaxCandidates> selected{};
@@ -125,18 +127,19 @@ struct MonophonicPitchDetectorTestAccess final {
     scores[1U] = 1.00;
     scores[2U] = 0.40;
     DetectorDecision valid;
-    detector.write_snapshot(valid, scores, selected, 0.0, 0.0, false);
+    detector.write_snapshot(valid, scores, selected, false);
 
+    detector.phase_cents_states_[1U].valid = false;
     scores[0U] = 1.00;
     scores[1U] = 0.60;
     scores[2U] = 0.60;
     DetectorDecision invalid;
-    detector.write_snapshot(invalid, scores, selected, 0.0, 0.0, false);
+    detector.write_snapshot(invalid, scores, selected, false);
 
     selected[1U] = false;
     detector.candidate_states_[1U].release_ticks = 1U;
     DetectorDecision coast;
-    detector.write_snapshot(coast, scores, selected, 0.0, 0.0, false);
+    detector.write_snapshot(coast, scores, selected, false);
     return {valid.tuner_snapshot.voices[0U],
             invalid.tuner_snapshot.voices[0U],
             coast.tuner_snapshot.voices[0U]};
@@ -629,6 +632,83 @@ M3_TEST(native_detector_reports_settled_cents_within_one_cent_at_48_and_96khz) {
   }
   M3_EXPECT_TRUE(observed_every_case);
   M3_EXPECT_NEAR(worst_error, 0.0, 1.0);
+}
+
+M3_TEST(native_detector_never_labels_an_inaccurate_attack_cents_value_valid) {
+  constexpr std::array<double, 4U> kSampleRates{44100.0, 48000.0, 88200.0,
+                                               96000.0};
+  constexpr std::array<std::uint8_t, 3U> kNotes{32U, 48U, 60U};
+  constexpr std::array<double, 3U> kOffsets{-20.0, 0.0, 20.0};
+  double worst_valid_error = 0.0;
+  double worst_rate = 0.0;
+  double worst_offset = 0.0;
+  double worst_measured = 0.0;
+  std::uint8_t worst_note = 0U;
+  std::uint32_t worst_sample = 0U;
+  bool observed_every_case = true;
+
+  for (const double sample_rate : kSampleRates) {
+    for (const std::uint8_t note : kNotes) {
+      for (const double offset : kOffsets) {
+        m3::PersistentConfig config;
+        config.profile_mode = m3::ProfileMode::m3;
+        config.lowest_note = 32U;
+        config.highest_note = 60U;
+        config.max_polyphony = 1U;
+        config.max_fret = 24U;
+        config.sensitivity = 69U;
+        config.response = 81U;
+
+        m3::MonophonicPitchDetector detector;
+        M3_EXPECT_TRUE(detector.configure(sample_rate, config));
+        const double frequency = m3::midi_to_frequency(
+            static_cast<double>(note) + offset / 100.0, config.a4_hz);
+        const std::uint32_t samples = static_cast<std::uint32_t>(
+            std::lround(0.22 * sample_rate));
+        bool observed_valid = false;
+        for (std::uint32_t sample = 0U; sample < samples; ++sample) {
+          const double time = static_cast<double>(sample) / sample_rate;
+          const m3::DetectorDecision decision = detector.process_sample(
+              0.12 * std::sin(6.28318530717958647692 * frequency * time));
+          for (std::size_t voice = 0U;
+               decision.tuner_snapshot_ready &&
+               voice < decision.tuner_snapshot.voice_count;
+               ++voice) {
+            const m3::TunerVoice& estimate =
+                decision.tuner_snapshot.voices[voice];
+            if (estimate.midi_note != note || !estimate.cents_valid ||
+                estimate.state != m3::TunerVoiceState::tracking) {
+              continue;
+            }
+            observed_valid = true;
+            const double measured =
+                static_cast<double>(estimate.cents_q8) / 256.0;
+            const double error = std::abs(measured - offset);
+            if (error > worst_valid_error) {
+              worst_valid_error = error;
+              worst_rate = sample_rate;
+              worst_note = note;
+              worst_offset = offset;
+              worst_measured = measured;
+              worst_sample = sample;
+            }
+          }
+        }
+        observed_every_case = observed_every_case && observed_valid;
+      }
+    }
+  }
+
+  if (worst_valid_error > 2.0) {
+    std::fprintf(stderr,
+                 "worst attack cents error %.3f at %.0f Hz note %u "
+                 "offset %.1f measured %.3f sample %u\n",
+                 worst_valid_error, worst_rate,
+                 static_cast<unsigned>(worst_note), worst_offset,
+                 worst_measured, static_cast<unsigned>(worst_sample));
+  }
+  M3_EXPECT_TRUE(observed_every_case);
+  M3_EXPECT_NEAR(worst_valid_error, 0.0, 2.0);
 }
 
 M3_TEST(native_detector_calibration_does_not_redefine_tuner_zero_cents) {
