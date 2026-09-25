@@ -68,7 +68,8 @@ struct CalibrationSweepStatus final {
 // locks, file access, or look-ahead occurs here.
 class StringSweepCalibrator final {
  public:
-  bool begin(std::uint8_t string_index) noexcept;
+  bool begin(std::uint8_t string_index,
+             double observations_per_second = 750.0) noexcept;
   bool observe(const CalibrationObservation& observation) noexcept;
   void cancel() noexcept;
   void clear() noexcept;
@@ -84,7 +85,17 @@ class StringSweepCalibrator final {
     double cents_square_sum{};
     double confidence_sum{};
     std::array<double, kCalibrationHarmonicCount> harmonic_sum{};
+    std::array<double, kCalibrationHarmonicCount> harmonic_square_sum{};
     std::uint16_t count{};
+  };
+
+  struct StableWindow final {
+    Accumulator pending{};
+    double minimum_cents{};
+    double maximum_cents{};
+    std::uint8_t fret{static_cast<std::uint8_t>(kCalibrationFretCount)};
+    CalibrationSweepPhase phase{CalibrationSweepPhase::idle};
+    bool established{};
   };
 
   void finalize() noexcept;
@@ -97,7 +108,10 @@ class StringSweepCalibrator final {
   StringCalibrationBank bank_{};
   std::array<Accumulator, kCalibrationFretCount> ascending_{};
   std::array<Accumulator, kCalibrationFretCount> descending_{};
+  StableWindow stable_window_{};
   CalibrationSweepStatus status_{};
+  std::uint16_t stable_window_observations_{4U};
+  std::uint16_t open_lock_observations_{64U};
 };
 
 }  // namespace m3

@@ -20,6 +20,7 @@ enum class TunerFrameState : std::uint8_t {
 
 enum class TunerVoiceState : std::uint8_t {
   settling,
+  coasting,
   tracking,
 };
 

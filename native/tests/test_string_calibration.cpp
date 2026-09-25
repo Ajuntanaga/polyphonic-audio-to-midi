@@ -170,3 +170,179 @@ M3_TEST(string_calibration_keeps_all_eight_string_maps_independent) {
     }
   }
 }
+
+M3_TEST(string_calibration_does_not_measure_a_fret_from_transition_only_frames) {
+  m3::StringSweepCalibrator calibrator;
+  constexpr std::size_t string_index = 4U;
+  constexpr std::size_t transition_fret = 12U;
+  M3_EXPECT_TRUE(calibrator.begin(static_cast<std::uint8_t>(string_index)));
+
+  for (std::size_t repeat = 0U; repeat < 64U; ++repeat) {
+    M3_EXPECT_TRUE(
+        calibrator.observe(observation(string_index, 0U, 2.0)));
+  }
+  for (std::size_t fret = 0U; fret < m3::kCalibrationFretCount; ++fret) {
+    if (fret == transition_fret) {
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, -30.0)));
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, 0.0)));
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, 30.0)));
+    } else {
+      feed_fret(calibrator, string_index, fret, 2.0);
+    }
+  }
+  for (std::size_t fret = m3::kCalibrationFretCount; fret-- > 0U;) {
+    if (fret == transition_fret) {
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, 30.0)));
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, 0.0)));
+      M3_EXPECT_TRUE(
+          calibrator.observe(observation(string_index, fret, -30.0)));
+    } else {
+      feed_fret(calibrator, string_index, fret, 3.0);
+    }
+  }
+
+  M3_EXPECT_EQ(calibrator.status().phase,
+               m3::CalibrationSweepPhase::complete);
+  M3_EXPECT_EQ(calibrator.status().measured_frets, 24U);
+  M3_EXPECT_EQ(calibrator.status().interpolated_frets, 1U);
+  const auto* point =
+      calibrator.bank().point(string_index, transition_fret);
+  M3_EXPECT_TRUE(point != nullptr);
+  if (point != nullptr) {
+    M3_EXPECT_EQ(point->quality, m3::CalibrationPointQuality::interpolated);
+    M3_EXPECT_EQ(point->observation_count, 0U);
+  }
+}
+
+M3_TEST(string_calibration_rejects_a_slow_transition_ramp) {
+  m3::StringSweepCalibrator calibrator;
+  constexpr std::size_t string_index = 4U;
+  constexpr std::size_t transition_fret = 12U;
+  M3_EXPECT_TRUE(calibrator.begin(static_cast<std::uint8_t>(string_index)));
+
+  for (std::size_t repeat = 0U; repeat < 64U; ++repeat) {
+    M3_EXPECT_TRUE(
+        calibrator.observe(observation(string_index, 0U, 2.0)));
+  }
+  for (std::size_t fret = 0U; fret < m3::kCalibrationFretCount; ++fret) {
+    if (fret == transition_fret) {
+      for (int cents = -30; cents <= 30; cents += 3) {
+        M3_EXPECT_TRUE(calibrator.observe(
+            observation(string_index, fret, static_cast<double>(cents))));
+      }
+    } else {
+      feed_fret(calibrator, string_index, fret, 2.0);
+    }
+  }
+  for (std::size_t fret = m3::kCalibrationFretCount; fret-- > 0U;) {
+    if (fret == transition_fret) {
+      for (int cents = 30; cents >= -30; cents -= 3) {
+        M3_EXPECT_TRUE(calibrator.observe(
+            observation(string_index, fret, static_cast<double>(cents))));
+      }
+    } else {
+      feed_fret(calibrator, string_index, fret, 3.0);
+    }
+  }
+
+  M3_EXPECT_EQ(calibrator.status().phase,
+               m3::CalibrationSweepPhase::complete);
+  M3_EXPECT_EQ(calibrator.status().measured_frets, 24U);
+  M3_EXPECT_EQ(calibrator.status().interpolated_frets, 1U);
+  const auto* point =
+      calibrator.bank().point(string_index, transition_fret);
+  M3_EXPECT_TRUE(point != nullptr);
+  if (point != nullptr) {
+    M3_EXPECT_EQ(point->quality, m3::CalibrationPointQuality::interpolated);
+    M3_EXPECT_EQ(point->observation_count, 0U);
+  }
+}
+
+M3_TEST(string_calibration_windows_are_time_based_across_observation_rates) {
+  constexpr std::array<double, 2U> kObservationRates{750.0, 1500.0};
+  constexpr std::array<std::size_t, 2U> kOpenObservations{64U, 128U};
+  constexpr std::array<std::size_t, 2U> kFretObservations{6U, 10U};
+  for (std::size_t rate_index = 0U; rate_index < kObservationRates.size();
+       ++rate_index) {
+    m3::StringSweepCalibrator calibrator;
+    M3_EXPECT_TRUE(calibrator.begin(0U, kObservationRates[rate_index]));
+    for (std::size_t repeat = 1U;
+         repeat < kOpenObservations[rate_index]; ++repeat) {
+      M3_EXPECT_TRUE(calibrator.observe(observation(0U, 0U, 2.0)));
+    }
+    M3_EXPECT_EQ(calibrator.status().phase,
+                 m3::CalibrationSweepPhase::waiting_open);
+    M3_EXPECT_TRUE(calibrator.observe(observation(0U, 0U, 2.0)));
+    M3_EXPECT_EQ(calibrator.status().phase,
+                 m3::CalibrationSweepPhase::ascending);
+
+    const auto feed = [&](std::size_t fret, double cents) noexcept {
+      for (std::size_t repeat = 0U;
+           repeat < kFretObservations[rate_index]; ++repeat) {
+        if (calibrator.active()) {
+          M3_EXPECT_TRUE(calibrator.observe(observation(0U, fret, cents)));
+        }
+      }
+    };
+    for (std::size_t fret = 0U; fret < m3::kCalibrationFretCount; ++fret) {
+      feed(fret, 2.0);
+    }
+    for (std::size_t fret = m3::kCalibrationFretCount; fret-- > 0U;) {
+      feed(fret, 3.0);
+    }
+    M3_EXPECT_EQ(calibrator.status().phase,
+                 m3::CalibrationSweepPhase::complete);
+    M3_EXPECT_EQ(calibrator.status().measured_frets, 25U);
+  }
+}
+
+M3_TEST(string_calibration_confidence_records_temporal_harmonic_stability) {
+  m3::StringSweepCalibrator calibrator;
+  constexpr std::size_t string_index = 5U;
+  constexpr std::size_t unstable_fret = 12U;
+  M3_EXPECT_TRUE(calibrator.begin(static_cast<std::uint8_t>(string_index)));
+
+  for (std::size_t repeat = 0U; repeat < 64U; ++repeat) {
+    M3_EXPECT_TRUE(
+        calibrator.observe(observation(string_index, 0U, 2.0)));
+  }
+  const auto feed_direction = [&](bool descending) noexcept {
+    for (std::size_t step = 0U; step < m3::kCalibrationFretCount; ++step) {
+      const std::size_t fret = descending
+                                   ? m3::kCalibrationFretCount - 1U - step
+                                   : step;
+      if (fret != unstable_fret) {
+        feed_fret(calibrator, string_index, fret, 2.0);
+        continue;
+      }
+      for (std::size_t repeat = 0U; repeat < 6U; ++repeat) {
+        auto frame = observation(string_index, fret, 2.0);
+        frame.harmonic_energy = repeat % 2U == 0U
+                                    ? std::array<double, 6>{1.0, 0.0, 0.0,
+                                                            0.0, 0.0, 0.0}
+                                    : std::array<double, 6>{0.0, 1.0, 0.0,
+                                                            0.0, 0.0, 0.0};
+        M3_EXPECT_TRUE(calibrator.observe(frame));
+      }
+    }
+  };
+  feed_direction(false);
+  feed_direction(true);
+
+  M3_EXPECT_EQ(calibrator.status().phase,
+               m3::CalibrationSweepPhase::complete);
+  const auto* stable = calibrator.bank().point(string_index, 11U);
+  const auto* unstable = calibrator.bank().point(string_index, unstable_fret);
+  M3_EXPECT_TRUE(stable != nullptr);
+  M3_EXPECT_TRUE(unstable != nullptr);
+  if (stable != nullptr && unstable != nullptr) {
+    M3_EXPECT_EQ(stable->quality, m3::CalibrationPointQuality::measured);
+    M3_EXPECT_EQ(unstable->quality, m3::CalibrationPointQuality::measured);
+    M3_EXPECT_TRUE(unstable->confidence_q15 < stable->confidence_q15 / 2U);
+  }
+}

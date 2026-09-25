@@ -11,11 +11,15 @@ constexpr double kMaximumCenterErrorCents = 35.0;
 constexpr double kMinimumConfidence = 0.45;
 constexpr double kMaximumOpenTuneErrorCents = 8.0;
 constexpr double kMaximumOpenDeviationCents = 6.0;
-constexpr std::uint16_t kOpenLockObservations = 64U;
+constexpr double kOpenLockSeconds = 64.0 / 750.0;
 constexpr std::uint16_t kMinimumObservationsPerDirection = 3U;
+constexpr double kStableWindowSeconds = 0.005;
+constexpr std::uint16_t kMinimumStableWindowObservations = 3U;
 constexpr std::uint8_t kMinimumMeasuredFrets = 18U;
 constexpr double kMaximumDirectionOffsetDifferenceCents = 24.0;
 constexpr double kMinimumDirectionProfileSimilarity = 0.72;
+constexpr double kMaximumStableWindowSpanCents = 8.0;
+constexpr double kMaximumStableCenterErrorCents = 12.0;
 constexpr double kQ15Scale = 32767.0;
 
 bool finite_nonnegative(double value) noexcept {
@@ -56,12 +60,23 @@ void StringCalibrationBank::clear() noexcept {
   calibrated_string_mask = 0U;
 }
 
-bool StringSweepCalibrator::begin(std::uint8_t string_index) noexcept {
-  if (string_index >= kMaxVoices || active()) {
+bool StringSweepCalibrator::begin(std::uint8_t string_index,
+                                  double observations_per_second) noexcept {
+  if (string_index >= kMaxVoices || active() ||
+      !std::isfinite(observations_per_second) ||
+      observations_per_second <= 0.0) {
     return false;
   }
+  stable_window_observations_ = static_cast<std::uint16_t>(std::clamp(
+      std::ceil(kStableWindowSeconds * observations_per_second),
+      static_cast<double>(kMinimumStableWindowObservations),
+      static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
+  open_lock_observations_ = static_cast<std::uint16_t>(std::clamp(
+      std::ceil(kOpenLockSeconds * observations_per_second), 1.0,
+      static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
   ascending_ = {};
   descending_ = {};
+  stable_window_ = {};
   status_ = {};
   status_.phase = CalibrationSweepPhase::waiting_open;
   status_.string_index = string_index;
@@ -133,12 +148,14 @@ bool StringSweepCalibrator::observe(
     open.confidence_sum += observation.confidence;
     for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
       open.harmonic_sum[harmonic] += profile[harmonic];
+      open.harmonic_square_sum[harmonic] +=
+          profile[harmonic] * profile[harmonic];
     }
     if (open.count < std::numeric_limits<std::uint16_t>::max()) {
       ++open.count;
     }
     ++status_.accepted_observations;
-    if (open.count >= kOpenLockObservations) {
+    if (open.count >= open_lock_observations_) {
       const double mean = open.cents_sum / open.count;
       const double variance = std::max(
           0.0, open.cents_square_sum / open.count - mean * mean);
@@ -152,14 +169,6 @@ bool StringSweepCalibrator::observe(
     }
     return true;
   }
-  status_.highest_fret = std::max(status_.highest_fret, fret);
-
-  if (status_.phase == CalibrationSweepPhase::ascending &&
-      status_.highest_fret >= kCalibrationFretCount - 1U &&
-      fret + 1U <= status_.highest_fret) {
-    status_.phase = CalibrationSweepPhase::descending;
-  }
-
   // The downward glide enters the open-note bin from above, so its early
   // estimates are intentionally not representative of the tuned endpoint.
   // Complete only from a brief centered open-string hold after the return.
@@ -168,18 +177,90 @@ bool StringSweepCalibrator::observe(
     return reject();
   }
 
+  const auto add_sample = [&profile, &observation](Accumulator& accumulator,
+                                                    double sample_cents) {
+    if (accumulator.count == std::numeric_limits<std::uint16_t>::max()) {
+      return;
+    }
+    accumulator.cents_sum += sample_cents;
+    accumulator.cents_square_sum += sample_cents * sample_cents;
+    accumulator.confidence_sum += observation.confidence;
+    for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
+      accumulator.harmonic_sum[harmonic] += profile[harmonic];
+      accumulator.harmonic_square_sum[harmonic] +=
+          profile[harmonic] * profile[harmonic];
+    }
+    ++accumulator.count;
+  };
+  const auto reset_window = [this, &add_sample](
+                                std::uint8_t sample_fret,
+                                CalibrationSweepPhase sample_phase,
+                                double sample_cents) {
+    stable_window_ = {};
+    stable_window_.fret = sample_fret;
+    stable_window_.phase = sample_phase;
+    stable_window_.minimum_cents = sample_cents;
+    stable_window_.maximum_cents = sample_cents;
+    add_sample(stable_window_.pending, sample_cents);
+  };
+
+  const bool same_window = stable_window_.fret == fret &&
+                           stable_window_.phase == status_.phase;
+  const double prospective_minimum =
+      same_window ? std::min(stable_window_.minimum_cents, cents) : cents;
+  const double prospective_maximum =
+      same_window ? std::max(stable_window_.maximum_cents, cents) : cents;
+  const bool stable_span =
+      prospective_maximum - prospective_minimum <=
+      kMaximumStableWindowSpanCents;
+  if (!same_window || !stable_span ||
+      std::abs(cents) > kMaximumStableCenterErrorCents) {
+    reset_window(fret, status_.phase, cents);
+    return true;
+  }
+  stable_window_.minimum_cents = prospective_minimum;
+  stable_window_.maximum_cents = prospective_maximum;
+
+  if (!stable_window_.established) {
+    add_sample(stable_window_.pending, cents);
+    if (stable_window_.pending.count < stable_window_observations_) {
+      return true;
+    }
+  }
+
+  if (status_.phase == CalibrationSweepPhase::ascending &&
+      status_.highest_fret >= kCalibrationFretCount - 1U &&
+      fret + 1U <= status_.highest_fret) {
+    status_.phase = CalibrationSweepPhase::descending;
+    stable_window_.phase = status_.phase;
+  }
+
   Accumulator& accumulator =
       status_.phase == CalibrationSweepPhase::descending
           ? descending_[fret]
           : ascending_[fret];
-  if (accumulator.count < std::numeric_limits<std::uint16_t>::max()) {
-    accumulator.cents_sum += cents;
-    accumulator.cents_square_sum += cents * cents;
-    accumulator.confidence_sum += observation.confidence;
+  if (!stable_window_.established) {
+    const Accumulator& pending = stable_window_.pending;
+    accumulator.cents_sum += pending.cents_sum;
+    accumulator.cents_square_sum += pending.cents_square_sum;
+    accumulator.confidence_sum += pending.confidence_sum;
     for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
-      accumulator.harmonic_sum[harmonic] += profile[harmonic];
+      accumulator.harmonic_sum[harmonic] += pending.harmonic_sum[harmonic];
+      accumulator.harmonic_square_sum[harmonic] +=
+          pending.harmonic_square_sum[harmonic];
     }
-    ++accumulator.count;
+    accumulator.count = static_cast<std::uint16_t>(std::min<std::uint32_t>(
+        static_cast<std::uint32_t>(accumulator.count) + pending.count,
+        std::numeric_limits<std::uint16_t>::max()));
+    status_.accepted_observations += pending.count;
+    stable_window_.established = true;
+  } else {
+    add_sample(accumulator, cents);
+    ++status_.accepted_observations;
+  }
+
+  if (status_.phase == CalibrationSweepPhase::ascending) {
+    status_.highest_fret = std::max(status_.highest_fret, fret);
   }
   // The turnaround sample belongs to both traversals. Copying the top-fret
   // plateau into the descending pass avoids asking the player to lift and
@@ -188,7 +269,6 @@ bool StringSweepCalibrator::observe(
       fret == kCalibrationFretCount - 1U) {
     descending_[fret] = accumulator;
   }
-  ++status_.accepted_observations;
 
   if (status_.phase == CalibrationSweepPhase::descending && fret == 0U &&
       descending_[0U].count >= kMinimumObservationsPerDirection) {
@@ -246,9 +326,25 @@ void StringSweepCalibrator::finalize() noexcept {
           (up.harmonic_sum[harmonic] + down.harmonic_sum[harmonic]) /
           static_cast<double>(total_count));
     }
+    double profile_variance = 0.0;
+    for (std::size_t harmonic = 0U; harmonic < kCalibrationHarmonicCount;
+         ++harmonic) {
+      const double sum =
+          up.harmonic_sum[harmonic] + down.harmonic_sum[harmonic];
+      const double square_sum = up.harmonic_square_sum[harmonic] +
+                                down.harmonic_square_sum[harmonic];
+      const double mean = sum / static_cast<double>(total_count);
+      profile_variance += std::max(
+          0.0, square_sum / static_cast<double>(total_count) - mean * mean);
+    }
+    // Confidence represents both spectral evidence and repeatability. A
+    // profile that alternates between incompatible harmonic envelopes must
+    // not receive the same string-identity authority as a stable plateau,
+    // even when both have the same arithmetic mean.
+    const double temporal_stability = 1.0 / (1.0 + 8.0 * profile_variance);
     point.confidence_q15 = q15(
         (up.confidence_sum + down.confidence_sum) /
-        static_cast<double>(total_count));
+        static_cast<double>(total_count) * temporal_stability);
     point.observation_count = static_cast<std::uint16_t>(std::min<std::uint32_t>(
         total_count, std::numeric_limits<std::uint16_t>::max()));
     point.quality = CalibrationPointQuality::measured;
@@ -318,6 +414,7 @@ void StringSweepCalibrator::cancel() noexcept {
   }
   ascending_ = {};
   descending_ = {};
+  stable_window_ = {};
 }
 
 void StringSweepCalibrator::clear() noexcept {

@@ -85,6 +85,23 @@ class MonophonicPitchDetector final {
     std::uint16_t unison_gap_ticks{};
     std::uint8_t pending_unison_string{kUnassignedTunerString};
     std::uint8_t midi_voice_mask{};
+    std::int16_t retained_cents_q8{};
+    std::uint16_t retained_confidence_q15{};
+    bool retained_cents_valid{};
+  };
+
+  struct PhaseCentsState final {
+    double filtered_real{};
+    double filtered_imaginary{};
+    double filtered_twice_real{};
+    double filtered_twice_imaginary{};
+    double previous_real{};
+    double previous_imaginary{};
+    double frequency_offset{};
+    double cents{};
+    std::uint16_t accepted_updates{};
+    bool has_previous{};
+    bool valid{};
   };
 
   struct M3PoolCandidate final {
@@ -149,6 +166,8 @@ class MonophonicPitchDetector final {
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void update_harmonic_profile_memory(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void update_phase_cents_estimates(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
   void infer_m3_unison_strings(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void observe_calibration(
@@ -156,6 +175,8 @@ class MonophonicPitchDetector final {
       double lower_guard_score, double upper_guard_score, bool quiet) noexcept;
   [[nodiscard]] double calibration_similarity(
       std::size_t candidate, std::size_t string) const noexcept;
+  [[nodiscard]] double corrected_harmonic_energy(
+      std::size_t candidate, std::size_t harmonic) const noexcept;
   [[nodiscard]] std::size_t cell_index(std::size_t candidate,
                                        std::size_t harmonic) const noexcept {
     return candidate * kHarmonicCount + harmonic;
@@ -172,6 +193,7 @@ class MonophonicPitchDetector final {
   std::array<double, kMaxCandidates> narrow_fundamental_imaginary_{};
   std::array<std::array<double, kHarmonicCount>, kMaxCandidates>
       harmonic_energy_memory_{};
+  std::array<PhaseCentsState, kMaxCandidates> phase_cents_states_{};
   std::array<M3PoolCandidate, kMaxVoices * kMaxVoices> m3_pool_{};
   std::array<M3DpState, 1U << kMaxVoices> m3_dp_states_{};
   StringSweepCalibrator calibrator_{};
@@ -185,6 +207,7 @@ class MonophonicPitchDetector final {
   double previous_dc_output_{};
   double fast_energy_{};
   double slow_energy_{};
+  double previous_decision_energy_{};
   double signal_floor_{};
   std::uint32_t decision_phase_{};
   std::uint32_t transition_sequence_{};

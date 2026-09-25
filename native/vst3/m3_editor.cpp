@@ -1832,6 +1832,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     // Confirmed voices claim or retain lanes first. A settling observation is
     // allowed to hold a lane only when that note was previously confirmed.
     for (const TunerVoiceState pass : {TunerVoiceState::tracking,
+                                       TunerVoiceState::coasting,
                                        TunerVoiceState::settling}) {
       for (std::size_t index = 0U;
            index < snapshot.voice_count && index < kMaxVoices; ++index) {
@@ -1858,6 +1859,8 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
             display_voices_[lane].cents_q8 = previous_cents;
             display_voices_[lane].cents_valid = true;
           }
+        } else if (pass == TunerVoiceState::coasting) {
+          display_voices_[lane] = voice;
         } else {
           display_voices_[lane].confidence_q15 = voice.confidence_q15;
           display_voices_[lane].age_ticks = voice.age_ticks;
@@ -2143,7 +2146,9 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
 
   static void format_cents(const TunerVoice& voice,
                            char (&text)[12]) noexcept {
-    if (!voice.cents_valid || voice.state != TunerVoiceState::tracking) {
+    if (!voice.cents_valid ||
+        (voice.state != TunerVoiceState::tracking &&
+         voice.state != TunerVoiceState::coasting)) {
       char* const end = text + sizeof(text);
       terminate_text(append_literal(text, end, "--"), end);
       return;
@@ -2427,6 +2432,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
     }
     const bool displayed = voice != nullptr &&
                            (voice->state == TunerVoiceState::tracking ||
+                            voice->state == TunerVoiceState::coasting ||
                             voice->state == TunerVoiceState::settling);
     const bool cents_valid = displayed && voice->cents_valid && needle_active;
     const bool in_tune = cents_valid && std::abs(displayed_cents) <= 2.0;

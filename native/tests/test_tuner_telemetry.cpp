@@ -71,6 +71,27 @@ M3_TEST(tuner_telemetry_clears_and_sanitizes_display_only_values) {
   M3_EXPECT_TRUE(observed.generation > published_generation);
 }
 
+M3_TEST(tuner_telemetry_preserves_the_explicit_coasting_state) {
+  m3::TunerTelemetry telemetry;
+  m3::TunerSnapshot expected;
+  expected.state = m3::TunerFrameState::tracking;
+  expected.voice_count = 1U;
+  expected.max_polyphony = 8U;
+  expected.voices[0] = m3::TunerVoice{
+      48U, static_cast<std::int16_t>(3 * 256), 21000U, 31U,
+      m3::TunerVoiceState::coasting, true, 4U};
+  telemetry.publish(expected);
+
+  m3::TunerSnapshot observed;
+  M3_EXPECT_TRUE(telemetry.read_latest(observed));
+  M3_EXPECT_EQ(observed.voice_count, 1U);
+  M3_EXPECT_EQ(observed.voices[0].state, m3::TunerVoiceState::coasting);
+  M3_EXPECT_EQ(observed.voices[0].midi_note, 48U);
+  M3_EXPECT_EQ(observed.voices[0].cents_q8, 3 * 256);
+  M3_EXPECT_EQ(observed.voices[0].confidence_q15, 21000U);
+  M3_EXPECT_EQ(observed.voices[0].string_index, 4U);
+}
+
 M3_TEST(tuner_telemetry_owns_monotonic_generations_across_source_resets) {
   m3::TunerTelemetry telemetry;
   m3::TunerSnapshot source;
