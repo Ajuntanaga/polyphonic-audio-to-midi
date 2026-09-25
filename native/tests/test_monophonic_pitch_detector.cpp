@@ -783,6 +783,54 @@ M3_TEST(native_monophonic_detector_tracks_highest_open_string_tone_and_releases)
   }
 }
 
+M3_TEST(native_detector_tracks_the_twenty_fourth_fret_c6_range_boundary) {
+  constexpr std::uint8_t kNote = 84U;
+  constexpr std::array<double, 4U> kSampleRates{44100.0, 48000.0, 88200.0,
+                                               96000.0};
+  for (const double sample_rate : kSampleRates) {
+    m3::PersistentConfig config;
+    config.profile_mode = m3::ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = kNote;
+    config.max_polyphony = 1U;
+    config.max_fret = 24U;
+    config.sensitivity = 69U;
+    config.response = 81U;
+
+    m3::MonophonicPitchDetector detector;
+    M3_EXPECT_TRUE(detector.configure(sample_rate, config));
+    const double frequency = m3::midi_to_frequency(kNote, config.a4_hz);
+    bool note_on = false;
+    bool tracked = false;
+    const std::uint32_t samples = static_cast<std::uint32_t>(
+        std::lround(0.30 * sample_rate));
+    for (std::uint32_t sample = 0U; sample < samples; ++sample) {
+      const double time = static_cast<double>(sample) / sample_rate;
+      const m3::DetectorDecision decision = detector.process_sample(
+          0.12 * std::sin(6.28318530717958647692 * frequency * time));
+      for (std::size_t event = 0U; event < decision.transitions.size();
+           ++event) {
+        note_on = note_on ||
+                  (decision.transitions[event].kind ==
+                       m3::TransitionKind::note_on &&
+                   decision.transitions[event].note == kNote);
+      }
+      for (std::size_t voice = 0U;
+           decision.tuner_snapshot_ready &&
+           voice < decision.tuner_snapshot.voice_count;
+           ++voice) {
+        const m3::TunerVoice& estimate =
+            decision.tuner_snapshot.voices[voice];
+        tracked = tracked ||
+                  (estimate.state == m3::TunerVoiceState::tracking &&
+                   estimate.midi_note == kNote && estimate.string_index == 7U);
+      }
+    }
+    M3_EXPECT_TRUE(note_on);
+    M3_EXPECT_TRUE(tracked);
+  }
+}
+
 M3_TEST(native_detector_does_not_expand_one_tone_into_the_polyphony_limit) {
   m3::PersistentConfig config;
   config.lowest_note = 36U;

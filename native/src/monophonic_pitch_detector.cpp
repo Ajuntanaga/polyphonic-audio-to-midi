@@ -62,7 +62,11 @@ constexpr std::array<int, 5> kHarmonicIntervals{12, 19, 24, 28, 31};
 constexpr std::array<int, 6> kM3LowerCrossHarmonicIntervals{3, 4, 5, 7, 9, 16};
 constexpr std::size_t kM3StringMaskCount = 1U << kM3OpenNotes.size();
 constexpr std::size_t kM3OpenChordMinimum = 2U;
-constexpr double kM3FrettedNotePenalty = 0.60;
+// Candidate scores are normalized to input energy; a clean sinusoid therefore
+// contributes about 0.50 at its fundamental. Keep the position prior below
+// that physical baseline even at fret 24, otherwise the DP prefers its empty
+// state and the upper end of the declared M3 range can never enter attack.
+constexpr double kM3FrettedNotePenalty = 0.20;
 constexpr double kM3FretPenalty = 0.005;
 // A full eight-string assignment has the same summed linear fret count under
 // many cyclic permutations. A small convex position prior rejects those
