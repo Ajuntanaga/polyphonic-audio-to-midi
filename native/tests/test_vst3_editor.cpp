@@ -805,6 +805,43 @@ M3_TEST(vst3_editor_tuner_snapshot_refreshes_without_parameter_edits) {
       M3_EXPECT_TRUE(lane_active);
       M3_EXPECT_EQ(displayed.string_index, 3U);
 
+      constexpr std::size_t kEditorPixels =
+          static_cast<std::size_t>(m3::vst3::kEditorWidth) *
+          static_cast<std::size_t>(m3::vst3::kEditorHeight);
+      std::vector<std::uint8_t> independent_rgba(kEditorPixels * 4U);
+      M3_EXPECT_TRUE(m3::vst3::editor_render_rgba_for_test(
+          *view, independent_rgba.data(), independent_rgba.size()));
+
+      explicit_strings.generation = 46U;
+      constexpr std::uint8_t kSharedGroup = 12U;
+      constexpr std::uint8_t kSharedMembers =
+          static_cast<std::uint8_t>((1U << 0U) | (1U << 3U));
+      explicit_strings.voices[0].pitch_evidence_group_id = kSharedGroup;
+      explicit_strings.voices[0].pitch_evidence_member_mask = kSharedMembers;
+      explicit_strings.voices[1].pitch_evidence_group_id = kSharedGroup;
+      explicit_strings.voices[1].pitch_evidence_member_mask = kSharedMembers;
+      m3::vst3::publish_tuner_snapshot_for_test(processor, explicit_strings);
+      M3_EXPECT_TRUE(m3::vst3::editor_refresh_tuner_for_test(*view));
+      std::vector<std::uint8_t> shared_rgba(kEditorPixels * 4U);
+      M3_EXPECT_TRUE(m3::vst3::editor_render_rgba_for_test(
+          *view, shared_rgba.data(), shared_rgba.size()));
+      M3_EXPECT_TRUE(write_editor_ppm(
+          *view, std::getenv("M3_EDITOR_SHARED_EVIDENCE_SCREENSHOT")));
+      std::size_t changed_pixels = 0U;
+      for (std::size_t pixel = 0U; pixel < kEditorPixels; ++pixel) {
+        const std::size_t offset = pixel * 4U;
+        const bool changed =
+            independent_rgba[offset] != shared_rgba[offset] ||
+            independent_rgba[offset + 1U] != shared_rgba[offset + 1U] ||
+            independent_rgba[offset + 2U] != shared_rgba[offset + 2U] ||
+            independent_rgba[offset + 3U] != shared_rgba[offset + 3U];
+        changed_pixels += changed ? 1U : 0U;
+      }
+      // Shared inferred pitch evidence must be visible, but remain a small
+      // annotation rather than changing the meter geometry or reading.
+      M3_EXPECT_TRUE(changed_pixels > 0U);
+      M3_EXPECT_TRUE(changed_pixels < 2000U);
+
       m3::TunerSnapshot empty;
       // A reset detector can restart its local generation at the same value.
       // The transport must still deliver the later no-signal frame to the UI.

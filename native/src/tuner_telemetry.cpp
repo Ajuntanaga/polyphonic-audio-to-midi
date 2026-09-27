@@ -15,6 +15,7 @@ constexpr std::uint32_t kStringShift = 12U;
 constexpr std::uint32_t kStringMask = 0x07U;
 constexpr std::uint32_t kCentsShift = 16U;
 constexpr std::uint32_t kAgeShift = 16U;
+constexpr std::uint32_t kEvidenceMemberMaskShift = 8U;
 constexpr std::int16_t kMinimumCentsQ8 = -50 * 256;
 constexpr std::int16_t kMaximumCentsQ8 = 50 * 256;
 constexpr std::uint16_t kMaximumConfidenceQ15 = 32767U;
@@ -72,7 +73,20 @@ std::uint32_t pack_voice_b(const TunerVoice& voice) noexcept {
          (static_cast<std::uint32_t>(voice.age_ticks) << kAgeShift);
 }
 
-TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b) noexcept {
+std::uint32_t pack_voice_c(const TunerVoice& voice) noexcept {
+  const bool group_valid =
+      voice.pitch_evidence_group_id != kUnassignedPitchEvidenceGroup &&
+      voice.pitch_evidence_group_id <= kMaxCandidates;
+  const std::uint32_t group =
+      group_valid ? voice.pitch_evidence_group_id
+                  : kUnassignedPitchEvidenceGroup;
+  const std::uint32_t members =
+      group_valid ? voice.pitch_evidence_member_mask : 0U;
+  return group | (members << kEvidenceMemberMaskShift);
+}
+
+TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b,
+                        std::uint32_t word_c) noexcept {
   TunerVoice voice;
   voice.midi_note = static_cast<std::uint8_t>(word_a & 0xFFU);
   const std::uint32_t raw_state = (word_a >> kVoiceStateShift) & 0x03U;
@@ -87,6 +101,10 @@ TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b) noexcept {
   voice.cents_q8 = static_cast<std::int16_t>(word_a >> kCentsShift);
   voice.confidence_q15 = static_cast<std::uint16_t>(word_b & 0xFFFFU);
   voice.age_ticks = static_cast<std::uint16_t>(word_b >> kAgeShift);
+  voice.pitch_evidence_group_id =
+      static_cast<std::uint8_t>(word_c & 0xFFU);
+  voice.pitch_evidence_member_mask = static_cast<std::uint8_t>(
+      (word_c >> kEvidenceMemberMaskShift) & 0xFFU);
   return voice;
 }
 
@@ -105,6 +123,7 @@ void TunerTelemetry::publish(const TunerSnapshot& snapshot) noexcept {
     const TunerVoice voice = index < count ? snapshot.voices[index] : TunerVoice{};
     voice_words_a_[index].store(pack_voice_a(voice), std::memory_order_seq_cst);
     voice_words_b_[index].store(pack_voice_b(voice), std::memory_order_seq_cst);
+    voice_words_c_[index].store(pack_voice_c(voice), std::memory_order_seq_cst);
   }
   // The transport, rather than the detector, owns UI generations. Detector
   // resets are allowed to restart their local counters; doing so must never
@@ -137,7 +156,8 @@ bool TunerTelemetry::read_latest(TunerSnapshot& snapshot) const noexcept {
     for (std::size_t index = 0U; index < count; ++index) {
       candidate.voices[index] = unpack_voice(
           voice_words_a_[index].load(std::memory_order_seq_cst),
-          voice_words_b_[index].load(std::memory_order_seq_cst));
+          voice_words_b_[index].load(std::memory_order_seq_cst),
+          voice_words_c_[index].load(std::memory_order_seq_cst));
     }
     const std::uint32_t after = sequence_.load(std::memory_order_seq_cst);
     if (before == after && (after & 1U) == 0U) {

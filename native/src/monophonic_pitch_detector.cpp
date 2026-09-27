@@ -21,6 +21,19 @@ constexpr double kNarrowFundamentalSeconds = 0.250;
 // the slow beating of two nearly-unison strings. It is evidence memory only:
 // pitch admission and MIDI onset remain on the causal 40/50 ms path.
 constexpr double kHarmonicMemorySeconds = 0.350;
+// The slow profile spans several ordinary guitar beat cycles. It is updated
+// incrementally at the existing decision cadence, so it adds neither a worker
+// thread nor audio-callback allocation.
+constexpr double kLongHarmonicMemorySeconds = 1.500;
+constexpr double kLongHarmonicProfileReadySeconds = 0.750;
+constexpr double kBeatEnvelopeMeanSeconds = 1.250;
+constexpr double kBeatDeviationSeconds = 0.250;
+constexpr double kMinimumBeatHz = 0.25;
+constexpr double kMaximumBeatHz = 12.0;
+constexpr double kMinimumBeatModulationRatio = 0.04;
+constexpr double kMinimumBeatAwareHoldSeconds = 0.750;
+constexpr double kMaximumBeatAwareHoldSeconds = 3.000;
+constexpr double kBeatCyclesToHold = 1.5;
 // A fixed-frequency correlation cell loses progressively more energy at its
 // upper harmonics when a string is slightly detuned.  Undo that known filter
 // response only after the causal phase estimator has settled, and keep a hard
@@ -79,9 +92,19 @@ constexpr double kM3ProvisionalStringRetentionBonus = 4.0;
 // feasibility can still override it when that string is unavailable.
 constexpr double kM3ExposedStringRetentionBonus = 1024.0;
 constexpr double kM3UnisonMinimumComponent = 0.15;
+// Seven is the physical same-pitch ceiling for the declared M3 tuning inside
+// 24 frets. Equal seven-string energy is 1/7, so the final calibrated convex
+// refit needs a narrowly lower floor at that exact group size. Smaller groups
+// retain the stricter 15% floor.
+constexpr double kM3SevenStringMinimumComponent = 0.13;
 constexpr double kM3UnisonMinimumTemplateDistance = 0.0025;
 constexpr double kM3UnisonMinimumErrorImprovement = 0.010;
 constexpr double kM3UnisonMaximumErrorRatio = 0.55;
+// Several physical strings can contribute complementary fingerprints that
+// are weak in isolation but decisive together. The bounded complement search
+// additionally requires independently measured beat evidence and must remove
+// most of the remaining profile error.
+constexpr double kM3UnisonComplementMaximumRemainingErrorRatio = 0.35;
 constexpr double kM3UnisonMinimumObservationSeconds = 0.250;
 constexpr double kM3UnisonDropoutSeconds = 0.450;
 constexpr double kM3UnisonEvidenceSeconds =
@@ -232,6 +255,9 @@ bool MonophonicPitchDetector::configure(double sample_rate,
   harmonic_memory_decay = std::exp(
       -static_cast<double>(kDecisionQuantum) /
       (kHarmonicMemorySeconds * sample_rate_));
+  long_harmonic_memory_decay = std::exp(
+      -static_cast<double>(kDecisionQuantum) /
+      (kLongHarmonicMemorySeconds * sample_rate_));
   unison_dropout_decisions_ = static_cast<std::uint16_t>(std::clamp(
       std::ceil(kM3UnisonDropoutSeconds * sample_rate_ /
                 static_cast<double>(kDecisionQuantum)),
@@ -325,7 +351,10 @@ void MonophonicPitchDetector::reset() noexcept {
   narrow_fundamental_real_ = {};
   narrow_fundamental_imaginary_ = {};
   harmonic_energy_memory_ = {};
+  long_harmonic_energy_memory_ = {};
+  harmonic_memory_updates_ = {};
   phase_cents_states_ = {};
+  beat_evidence_states_ = {};
 #if defined(M3_TESTING)
   selection_work_ = {};
 #endif
@@ -491,10 +520,14 @@ bool MonophonicPitchDetector::append_candidate_note_on(
     }
     state.midi_voice_mask = desired;
     harmonic_energy_memory_[candidate] = {};
+    long_harmonic_energy_memory_[candidate] = {};
+    harmonic_memory_updates_[candidate] = 0U;
     return true;
   }
   append_transition(decision, TransitionKind::note_on, note, velocity);
   harmonic_energy_memory_[candidate] = {};
+  long_harmonic_energy_memory_[candidate] = {};
+  harmonic_memory_updates_[candidate] = 0U;
   return true;
 }
 
@@ -761,14 +794,20 @@ void MonophonicPitchDetector::select_m3_feasible_candidates(
           candidate < stronger &&
           is_local_peak(scores, candidate, count) &&
           fundamentals[candidate] >= 0.20 * scores[candidate];
-      // A higher octave is a real independent string only when its own
-      // fundamental dominates its score and is independently comparable to
-      // the lower fundamental. A bright lower string's second harmonic can
-      // dominate the octave bin without being a second physical voice.
+      // Preserve a started higher string while it still has a direct local
+      // fundamental. A new higher octave needs stricter evidence: its own
+      // fundamental must dominate its score and remain comparable to the
+      // lower fundamental. This keeps a bright lower string's upper partial
+      // from becoming a second physical voice.
+      const bool retained_higher_voice =
+          candidate_states_[candidate].active &&
+          has_direct_fundamental_peak(scores, fundamentals, candidate, count);
       const bool distinct_higher_peak =
-          candidate > stronger && is_local_peak(scores, candidate, count) &&
-          fundamentals[candidate] >= 0.85 * scores[candidate] &&
-          fundamentals[candidate] >= 0.85 * fundamentals[stronger];
+          candidate > stronger &&
+          (retained_higher_voice ||
+           (is_local_peak(scores, candidate, count) &&
+            fundamentals[candidate] >= 0.85 * scores[candidate] &&
+            fundamentals[candidate] >= 0.85 * fundamentals[stronger]));
       if ((is_harmonic_shadow(candidate, stronger, fundamentals) ||
            is_m3_lower_cross_harmonic_shadow(candidate, stronger,
                                               fundamentals)) &&
@@ -1082,12 +1121,16 @@ void MonophonicPitchDetector::assign_m3_strings(
 void MonophonicPitchDetector::update_harmonic_profile_memory(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   const double mix = 1.0 - harmonic_memory_decay;
+  const double long_mix = 1.0 - long_harmonic_memory_decay;
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
     if (!selected[candidate]) {
       if (!candidate_states_[candidate].active) {
         for (double& energy : harmonic_energy_memory_[candidate]) {
           energy *= harmonic_memory_decay;
+        }
+        for (double& energy : long_harmonic_energy_memory_[candidate]) {
+          energy *= long_harmonic_memory_decay;
         }
       }
       continue;
@@ -1099,8 +1142,128 @@ void MonophonicPitchDetector::update_harmonic_profile_memory(
           harmonic_memory_decay *
               harmonic_energy_memory_[candidate][harmonic] +
           mix * instantaneous;
+      long_harmonic_energy_memory_[candidate][harmonic] =
+          long_harmonic_memory_decay *
+              long_harmonic_energy_memory_[candidate][harmonic] +
+          long_mix * instantaneous;
+    }
+    if (harmonic_memory_updates_[candidate] <
+        std::numeric_limits<std::uint16_t>::max()) {
+      ++harmonic_memory_updates_[candidate];
     }
   }
+}
+
+void MonophonicPitchDetector::update_beat_evidence(
+    const std::array<bool, kMaxCandidates>& selected) noexcept {
+  const double decisions_per_second =
+      sample_rate_ / static_cast<double>(kDecisionQuantum);
+  const double mean_mix =
+      1.0 - std::exp(-1.0 / (kBeatEnvelopeMeanSeconds *
+                            decisions_per_second));
+  const double deviation_mix =
+      1.0 - std::exp(-1.0 / (kBeatDeviationSeconds *
+                            decisions_per_second));
+  const std::uint32_t minimum_period = static_cast<std::uint32_t>(
+      std::max(1.0, std::floor(decisions_per_second / kMaximumBeatHz)));
+  const std::uint32_t maximum_period = static_cast<std::uint32_t>(
+      std::ceil(decisions_per_second / kMinimumBeatHz));
+
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    BeatEvidenceState& state = beat_evidence_states_[candidate];
+    if (!selected[candidate] && !candidate_states_[candidate].active) {
+      state = {};
+      continue;
+    }
+    const Cell& fundamental = cells_[cell_index(candidate, 0U)];
+    if (!fundamental.enabled) {
+      state = {};
+      continue;
+    }
+    const double energy = fundamental.fast_real * fundamental.fast_real +
+                          fundamental.fast_imaginary *
+                              fundamental.fast_imaginary;
+    if (!std::isfinite(energy)) {
+      state = {};
+      continue;
+    }
+    if (!state.initialized) {
+      state.envelope_mean = energy;
+      state.initialized = true;
+      continue;
+    }
+
+    if (state.decisions_since_crossing <
+        std::numeric_limits<std::uint32_t>::max()) {
+      ++state.decisions_since_crossing;
+    }
+    state.envelope_mean += mean_mix * (energy - state.envelope_mean);
+    const double centered = energy - state.envelope_mean;
+    state.absolute_deviation +=
+        deviation_mix *
+        (std::abs(centered) - state.absolute_deviation);
+    const double gate = std::max(
+        kScoreEpsilon,
+        std::max(0.015 * std::max(state.envelope_mean, 0.0),
+                 0.20 * state.absolute_deviation));
+    if (centered < -gate) {
+      state.below_gate = true;
+    } else if (state.below_gate && centered > gate) {
+      const std::uint32_t period = state.decisions_since_crossing;
+      state.decisions_since_crossing = 0U;
+      state.below_gate = false;
+      if (period >= minimum_period && period <= maximum_period) {
+        const double measured = decisions_per_second /
+                                static_cast<double>(period);
+        if (state.accepted_cycles == 0U) {
+          state.beat_hz = measured;
+        } else {
+          state.beat_hz += 0.25 * (measured - state.beat_hz);
+        }
+        if (state.accepted_cycles <
+            std::numeric_limits<std::uint16_t>::max()) {
+          ++state.accepted_cycles;
+        }
+      } else {
+        state.accepted_cycles = 0U;
+        state.valid = false;
+      }
+    }
+    if (state.decisions_since_crossing > maximum_period) {
+      state.accepted_cycles = 0U;
+      state.valid = false;
+      state.decisions_since_crossing = maximum_period;
+    }
+    const double modulation_ratio =
+        state.absolute_deviation /
+        std::max(state.envelope_mean, kScoreEpsilon);
+    state.valid = state.accepted_cycles >= 2U &&
+                  modulation_ratio >= kMinimumBeatModulationRatio &&
+                  state.beat_hz >= kMinimumBeatHz &&
+                  state.beat_hz <= kMaximumBeatHz;
+  }
+}
+
+std::uint16_t MonophonicPitchDetector::unison_dropout_decisions(
+    std::size_t candidate) const noexcept {
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return unison_dropout_decisions_;
+  }
+  const BeatEvidenceState& beat = beat_evidence_states_[candidate];
+  if (!beat.valid || beat.beat_hz < kMinimumBeatHz ||
+      beat.beat_hz > kMaximumBeatHz) {
+    return unison_dropout_decisions_;
+  }
+  const double hold_seconds = std::clamp(
+      kBeatCyclesToHold / beat.beat_hz, kMinimumBeatAwareHoldSeconds,
+      kMaximumBeatAwareHoldSeconds);
+  const double decisions = std::ceil(
+      hold_seconds * sample_rate_ / static_cast<double>(kDecisionQuantum));
+  const std::uint16_t beat_hold = static_cast<std::uint16_t>(std::clamp(
+      decisions, 1.0,
+      static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
+  return std::max(unison_dropout_decisions_, beat_hold);
 }
 
 double MonophonicPitchDetector::corrected_harmonic_energy(
@@ -1231,20 +1394,45 @@ void MonophonicPitchDetector::infer_m3_unison_strings(
 
   std::size_t selected_count = 0U;
   std::uint8_t primary_strings = 0U;
+  // A coasting voice (active, unselected during its release hold) still owns
+  // its string lanes, tuner slots, and per-voice MIDI identities until
+  // note-off. An inferred unison lane must neither reuse one of those lanes
+  // nor displace that voice from the bounded polyphony budget.
+  std::uint8_t coasting_strings = 0U;
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    const CandidateState& candidate_state = candidate_states_[candidate];
     if (!selected[candidate]) {
+      if (candidate_state.active) {
+        std::uint8_t owned = static_cast<std::uint8_t>(
+            candidate_state.assigned_string_mask |
+            candidate_state.midi_voice_mask);
+        if (owned == 0U &&
+            candidate_state.assigned_string < kM3OpenNotes.size()) {
+          owned = static_cast<std::uint8_t>(
+              1U << candidate_state.assigned_string);
+        }
+        coasting_strings =
+            static_cast<std::uint8_t>(coasting_strings | owned);
+      }
       continue;
     }
     ++selected_count;
-    const std::uint8_t primary = candidate_states_[candidate].assigned_string;
+    const std::uint8_t primary = candidate_state.assigned_string;
     if (primary < kM3OpenNotes.size()) {
       primary_strings = static_cast<std::uint8_t>(
           primary_strings | (1U << primary));
     }
   }
+  std::size_t coasting_lanes = 0U;
+  for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    coasting_lanes += (coasting_strings & (1U << string)) != 0U ? 1U : 0U;
+  }
+  const std::uint8_t owned_strings =
+      static_cast<std::uint8_t>(primary_strings | coasting_strings);
+  const std::size_t occupied_lanes = selected_count + coasting_lanes;
   std::size_t remaining_extra =
-      max_polyphony_ > selected_count ? max_polyphony_ - selected_count : 0U;
+      max_polyphony_ > occupied_lanes ? max_polyphony_ - occupied_lanes : 0U;
   std::uint8_t allocated_extra_strings = 0U;
   const std::uint16_t profile_ready_ticks = static_cast<std::uint16_t>(
       std::clamp(std::ceil(kM3UnisonMinimumObservationSeconds * sample_rate_ /
@@ -1309,127 +1497,389 @@ void MonophonicPitchDetector::infer_m3_unison_strings(
       state.assigned_string_mask = primary_bit;
       state.unison_evidence_ticks = 0U;
       state.unison_gap_ticks = 0U;
-      state.pending_unison_string = kUnassignedTunerString;
+      state.pending_unison_mask = 0U;
     }
 
-    std::uint8_t proposed_second = kUnassignedTunerString;
-    double proposed_improvement = 0.0;
+    std::uint8_t proposed_group = primary_bit;
     if (state.age_ticks >= profile_ready_ticks && remaining_extra > 0U) {
+      const std::uint16_t long_profile_ready_ticks =
+          static_cast<std::uint16_t>(std::clamp(
+              std::ceil(kLongHarmonicProfileReadySeconds * sample_rate_ /
+                        static_cast<double>(kDecisionQuantum)),
+              1.0,
+              static_cast<double>(
+                  std::numeric_limits<std::uint16_t>::max())));
+      const bool use_long_profile =
+          harmonic_memory_updates_[candidate] >= long_profile_ready_ticks;
+      std::array<double, kHarmonicCount> profile_energy{};
       double observed_total = 0.0;
-      for (const double energy : harmonic_energy_memory_[candidate]) {
+      for (std::size_t harmonic = 0U; harmonic < profile_energy.size();
+           ++harmonic) {
+        profile_energy[harmonic] =
+            use_long_profile
+                ? 0.25 * harmonic_energy_memory_[candidate][harmonic] +
+                      0.75 *
+                          long_harmonic_energy_memory_[candidate][harmonic]
+                : harmonic_energy_memory_[candidate][harmonic];
+        const double energy = profile_energy[harmonic];
         observed_total += energy;
       }
       std::array<double, kHarmonicCount> observed{};
       if (observed_total > kScoreEpsilon) {
         for (std::size_t harmonic = 0U; harmonic < observed.size(); ++harmonic) {
-          observed[harmonic] =
-              harmonic_energy_memory_[candidate][harmonic] / observed_total;
+          observed[harmonic] = profile_energy[harmonic] / observed_total;
         }
 
-        std::array<double, kHarmonicCount> primary_template{};
-        if (load_template(candidate, primary, primary_template)) {
+        std::array<std::array<double, kHarmonicCount>, kM3OpenNotes.size()>
+            templates{};
+        std::array<bool, kM3OpenNotes.size()> template_valid{};
+        const std::uint8_t playable = playable_string_mask(candidate);
+        for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+          const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+          template_valid[string] =
+              (playable & bit) != 0U &&
+              load_template(candidate, string, templates[string]);
+        }
+        if (template_valid[primary]) {
           double best_single_error =
               std::numeric_limits<double>::infinity();
-          const std::uint8_t playable = playable_string_mask(candidate);
           for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
-            const std::uint8_t bit =
-                static_cast<std::uint8_t>(1U << string);
-            if ((playable & bit) == 0U) {
-              continue;
-            }
-            std::array<double, kHarmonicCount> single{};
-            if (!load_template(candidate, string, single)) {
+            if (!template_valid[string]) {
               continue;
             }
             double error = 0.0;
             for (std::size_t harmonic = 0U; harmonic < observed.size();
                  ++harmonic) {
-              const double difference = observed[harmonic] - single[harmonic];
+              const double difference =
+                  observed[harmonic] - templates[string][harmonic];
               error += difference * difference;
             }
             best_single_error = std::min(best_single_error, error);
           }
 
-          for (std::size_t second = 0U; second < kM3OpenNotes.size();
-               ++second) {
-            const std::uint8_t second_bit =
-                static_cast<std::uint8_t>(1U << second);
-            if (second == primary || (playable & second_bit) == 0U ||
-                (primary_strings & second_bit) != 0U ||
-                (allocated_extra_strings & second_bit) != 0U) {
-              continue;
+          std::array<double, kHarmonicCount> fitted = templates[primary];
+          std::array<double, kM3OpenNotes.size()> component_weights{};
+          component_weights[primary] = 1.0;
+          double current_error = 0.0;
+          for (std::size_t harmonic = 0U; harmonic < observed.size();
+               ++harmonic) {
+            const double difference = observed[harmonic] - fitted[harmonic];
+            current_error += difference * difference;
+          }
+
+          // Refit a proposed physical-string set as one convex mixture. This
+          // bounded KKT solve is used only for the beat-gated complement
+          // escape below; ordinary one-at-a-time inference keeps its existing
+          // cheap path. Eight strings cap the augmented system at 9 x 10 and
+          // keep the audio callback allocation-free.
+          const auto fit_group = [&templates, &observed](
+                                     std::uint8_t member_mask,
+                                     std::array<double, kHarmonicCount>&
+                                         candidate_fitted,
+                                     std::array<double, kM3OpenNotes.size()>&
+                                         candidate_weights,
+                                     double& candidate_error) noexcept {
+            std::array<std::size_t, kM3OpenNotes.size()> members{};
+            std::size_t member_count = 0U;
+            for (std::size_t string = 0U; string < kM3OpenNotes.size();
+                 ++string) {
+              if ((member_mask & (1U << string)) != 0U) {
+                members[member_count++] = string;
+              }
             }
-            std::array<double, kHarmonicCount> second_template{};
-            if (!load_template(candidate, second, second_template)) {
-              continue;
+            if (member_count == 0U) {
+              return false;
             }
-            double delta_norm = 0.0;
-            double projection = 0.0;
+
+            constexpr std::size_t kMaximumVariables =
+                kM3OpenNotes.size() + 1U;
+            std::array<std::array<double, kMaximumVariables + 1U>,
+                       kMaximumVariables>
+                system{};
+            for (std::size_t row = 0U; row < member_count; ++row) {
+              for (std::size_t column = 0U; column < member_count; ++column) {
+                for (std::size_t harmonic = 0U; harmonic < observed.size();
+                     ++harmonic) {
+                  system[row][column] +=
+                      templates[members[row]][harmonic] *
+                      templates[members[column]][harmonic];
+                }
+              }
+              // A tiny deterministic ridge makes nearly dependent measured
+              // profiles refuse by component weight instead of destabilizing
+              // the fixed-size elimination.
+              system[row][row] += 1.0e-9;
+              system[row][member_count] = 1.0;
+              for (std::size_t harmonic = 0U; harmonic < observed.size();
+                   ++harmonic) {
+                system[row][member_count + 1U] +=
+                    templates[members[row]][harmonic] * observed[harmonic];
+              }
+              system[member_count][row] = 1.0;
+            }
+            system[member_count][member_count + 1U] = 1.0;
+
+            const std::size_t dimension = member_count + 1U;
+            const std::size_t right_hand_side = dimension;
+            for (std::size_t column = 0U; column < dimension; ++column) {
+              std::size_t pivot = column;
+              for (std::size_t row = column + 1U; row < dimension; ++row) {
+                if (std::abs(system[row][column]) >
+                    std::abs(system[pivot][column])) {
+                  pivot = row;
+                }
+              }
+              if (std::abs(system[pivot][column]) <= 1.0e-14) {
+                return false;
+              }
+              if (pivot != column) {
+                std::swap(system[pivot], system[column]);
+              }
+              const double divisor = system[column][column];
+              for (std::size_t entry = column; entry <= right_hand_side;
+                   ++entry) {
+                system[column][entry] /= divisor;
+              }
+              for (std::size_t row = 0U; row < dimension; ++row) {
+                if (row == column) {
+                  continue;
+                }
+                const double factor = system[row][column];
+                for (std::size_t entry = column; entry <= right_hand_side;
+                     ++entry) {
+                  system[row][entry] -= factor * system[column][entry];
+                }
+              }
+            }
+
+            candidate_fitted = {};
+            candidate_weights = {};
+            const double minimum_component =
+                member_count == 7U ? kM3SevenStringMinimumComponent
+                                   : kM3UnisonMinimumComponent;
+            for (std::size_t member = 0U; member < member_count; ++member) {
+              const double weight = system[member][right_hand_side];
+              if (!std::isfinite(weight) ||
+                  weight < minimum_component) {
+                return false;
+              }
+              candidate_weights[members[member]] = weight;
+              for (std::size_t harmonic = 0U; harmonic < observed.size();
+                   ++harmonic) {
+                candidate_fitted[harmonic] +=
+                    weight * templates[members[member]][harmonic];
+              }
+            }
+            candidate_error = 0.0;
             for (std::size_t harmonic = 0U; harmonic < observed.size();
                  ++harmonic) {
-              const double delta =
-                  primary_template[harmonic] - second_template[harmonic];
-              delta_norm += delta * delta;
-              projection +=
-                  (observed[harmonic] - second_template[harmonic]) * delta;
+              const double difference =
+                  observed[harmonic] - candidate_fitted[harmonic];
+              candidate_error += difference * difference;
             }
-            if (delta_norm < kM3UnisonMinimumTemplateDistance) {
+            return std::isfinite(candidate_error);
+          };
+
+          // Greedily grow one bounded convex mixture. Adding a component
+          // rescales all retained weights, so every accepted member remains
+          // physically present and no pairwise-only assumption survives.
+          for (std::size_t extra_count = 0U;
+               extra_count < remaining_extra; ++extra_count) {
+            std::uint8_t best_string = kUnassignedTunerString;
+            double best_alpha = 0.0;
+            double best_error = current_error;
+            std::array<double, kHarmonicCount> best_fitted{};
+            for (std::size_t string = 0U; string < kM3OpenNotes.size();
+                 ++string) {
+              const std::uint8_t bit =
+                  static_cast<std::uint8_t>(1U << string);
+              if ((proposed_group & bit) != 0U || !template_valid[string] ||
+                  (owned_strings & bit) != 0U ||
+                  (allocated_extra_strings & bit) != 0U) {
+                continue;
+              }
+              double delta_norm = 0.0;
+              double projection = 0.0;
+              for (std::size_t harmonic = 0U; harmonic < observed.size();
+                   ++harmonic) {
+                const double delta =
+                    templates[string][harmonic] - fitted[harmonic];
+                delta_norm += delta * delta;
+                projection +=
+                    (observed[harmonic] - fitted[harmonic]) * delta;
+              }
+              if (delta_norm < kM3UnisonMinimumTemplateDistance) {
+                continue;
+              }
+              const double alpha =
+                  std::clamp(projection / delta_norm, 0.0, 1.0);
+              if (alpha < kM3UnisonMinimumComponent) {
+                continue;
+              }
+              bool retained_components_are_real = true;
+              for (std::size_t retained = 0U;
+                   retained < component_weights.size(); ++retained) {
+                if (component_weights[retained] > 0.0 &&
+                    component_weights[retained] * (1.0 - alpha) <
+                        kM3UnisonMinimumComponent) {
+                  retained_components_are_real = false;
+                }
+              }
+              if (!retained_components_are_real) {
+                continue;
+              }
+              std::array<double, kHarmonicCount> candidate_fitted{};
+              double candidate_error = 0.0;
+              for (std::size_t harmonic = 0U; harmonic < observed.size();
+                   ++harmonic) {
+                candidate_fitted[harmonic] =
+                    fitted[harmonic] +
+                    alpha * (templates[string][harmonic] - fitted[harmonic]);
+                const double difference =
+                    observed[harmonic] - candidate_fitted[harmonic];
+                candidate_error += difference * difference;
+              }
+              const double comparison_error =
+                  proposed_group == primary_bit ? best_single_error
+                                                : current_error;
+              if (comparison_error - candidate_error <
+                      kM3UnisonMinimumErrorImprovement ||
+                  candidate_error >
+                      best_single_error * kM3UnisonMaximumErrorRatio ||
+                  candidate_error >= best_error) {
+                continue;
+              }
+              best_string = static_cast<std::uint8_t>(string);
+              best_alpha = alpha;
+              best_error = candidate_error;
+              best_fitted = candidate_fitted;
+            }
+            if (best_string >= kM3OpenNotes.size()) {
+              // Forward selection can stall when multiple missing strings
+              // have complementary spectra: no one residual clears the
+              // component floor although their joint calibrated mixture is
+              // decisive. Search the at-most-eight-string complement without
+              // allocation. From a lone primary it requires at least three
+              // complementary additions; after a mixture exists it requires
+              // at least two. Every path still needs a large relative error
+              // collapse and a real minimum weight for every member.
+              bool accepted_complement = false;
+              const std::size_t available_slots =
+                  remaining_extra > extra_count
+                      ? remaining_extra - extra_count
+                      : 0U;
+              if (beat_evidence_states_[candidate].valid &&
+                  available_slots >= (extra_count == 0U ? 3U : 2U)) {
+                std::uint8_t available_mask = 0U;
+                for (std::size_t string = 0U;
+                     string < kM3OpenNotes.size(); ++string) {
+                  const std::uint8_t bit =
+                      static_cast<std::uint8_t>(1U << string);
+                  if ((proposed_group & bit) == 0U && template_valid[string] &&
+                      (owned_strings & bit) == 0U &&
+                      (allocated_extra_strings & bit) == 0U) {
+                    available_mask =
+                        static_cast<std::uint8_t>(available_mask | bit);
+                  }
+                }
+                std::uint8_t best_complement_mask = 0U;
+                std::size_t best_added_count = 0U;
+                double best_complement_error = current_error;
+                std::array<double, kHarmonicCount> best_complement_fitted{};
+                std::array<double, kM3OpenNotes.size()>
+                    best_complement_weights{};
+                constexpr std::uint16_t kSubsetLimit =
+                    static_cast<std::uint16_t>(1U << kM3OpenNotes.size());
+                for (std::uint16_t raw_subset = 1U;
+                     raw_subset < kSubsetLimit; ++raw_subset) {
+                  const std::uint8_t subset =
+                      static_cast<std::uint8_t>(raw_subset);
+                  if ((subset & static_cast<std::uint8_t>(~available_mask)) !=
+                      0U) {
+                    continue;
+                  }
+                  std::size_t added_count = 0U;
+                  for (std::size_t string = 0U;
+                       string < kM3OpenNotes.size(); ++string) {
+                    added_count += (subset & (1U << string)) != 0U ? 1U : 0U;
+                  }
+                  const std::size_t minimum_added =
+                      extra_count == 0U ? 3U : 2U;
+                  if (added_count < minimum_added ||
+                      added_count > available_slots) {
+                    continue;
+                  }
+                  const std::uint8_t candidate_mask =
+                      static_cast<std::uint8_t>(proposed_group | subset);
+                  std::array<double, kHarmonicCount> candidate_fitted{};
+                  std::array<double, kM3OpenNotes.size()> candidate_weights{};
+                  double candidate_error = 0.0;
+                  if (!fit_group(candidate_mask, candidate_fitted,
+                                 candidate_weights, candidate_error) ||
+                      candidate_error >
+                          current_error *
+                              kM3UnisonComplementMaximumRemainingErrorRatio ||
+                      candidate_error >
+                          best_single_error * kM3UnisonMaximumErrorRatio ||
+                      candidate_error >= best_complement_error) {
+                    continue;
+                  }
+                  best_complement_mask = candidate_mask;
+                  best_added_count = added_count;
+                  best_complement_error = candidate_error;
+                  best_complement_fitted = candidate_fitted;
+                  best_complement_weights = candidate_weights;
+                }
+                if (best_complement_mask != 0U) {
+                  proposed_group = best_complement_mask;
+                  current_error = best_complement_error;
+                  fitted = best_complement_fitted;
+                  component_weights = best_complement_weights;
+                  extra_count += best_added_count - 1U;
+                  accepted_complement = true;
+                }
+              }
+              if (!accepted_complement) {
+                break;
+              }
               continue;
             }
-            const double primary_weight =
-                std::clamp(projection / delta_norm, 0.0, 1.0);
-            const double second_weight = 1.0 - primary_weight;
-            if (primary_weight < kM3UnisonMinimumComponent ||
-                second_weight < kM3UnisonMinimumComponent) {
-              continue;
+            for (double& weight : component_weights) {
+              weight *= 1.0 - best_alpha;
             }
-            double pair_error = 0.0;
-            for (std::size_t harmonic = 0U; harmonic < observed.size();
-                 ++harmonic) {
-              const double fitted =
-                  primary_weight * primary_template[harmonic] +
-                  second_weight * second_template[harmonic];
-              const double difference = observed[harmonic] - fitted;
-              pair_error += difference * difference;
-            }
-            const double improvement = best_single_error - pair_error;
-            if (improvement < kM3UnisonMinimumErrorImprovement ||
-                pair_error > best_single_error *
-                                 kM3UnisonMaximumErrorRatio ||
-                improvement <= proposed_improvement) {
-              continue;
-            }
-            proposed_improvement = improvement;
-            proposed_second = static_cast<std::uint8_t>(second);
+            component_weights[best_string] = best_alpha;
+            proposed_group = static_cast<std::uint8_t>(
+                proposed_group | (1U << best_string));
+            fitted = best_fitted;
+            current_error = best_error;
           }
         }
       }
     }
 
-    if (proposed_second < kM3OpenNotes.size()) {
-      if (state.pending_unison_string == proposed_second) {
+    if (proposed_group != primary_bit) {
+      if (state.pending_unison_mask == proposed_group) {
         if (state.unison_evidence_ticks <
             std::numeric_limits<std::uint8_t>::max()) {
           ++state.unison_evidence_ticks;
         }
       } else {
-        state.pending_unison_string = proposed_second;
+        state.pending_unison_mask = proposed_group;
         state.unison_evidence_ticks = 1U;
       }
       state.unison_gap_ticks = 0U;
       if (state.unison_evidence_ticks >= unison_evidence_ticks) {
-        state.assigned_string_mask = static_cast<std::uint8_t>(
-            primary_bit | (1U << proposed_second));
+        state.assigned_string_mask = proposed_group;
       }
     } else {
-      state.pending_unison_string = kUnassignedTunerString;
+      state.pending_unison_mask = 0U;
       state.unison_evidence_ticks = 0U;
       if (state.assigned_string_mask != primary_bit &&
           state.unison_gap_ticks <
               std::numeric_limits<std::uint16_t>::max()) {
         ++state.unison_gap_ticks;
       }
-      if (state.unison_gap_ticks >= unison_dropout_decisions_) {
+      if (state.unison_gap_ticks >= unison_dropout_decisions(candidate)) {
         state.assigned_string_mask = primary_bit;
         state.unison_gap_ticks = 0U;
       }
@@ -1437,12 +1887,16 @@ void MonophonicPitchDetector::infer_m3_unison_strings(
 
     const std::uint8_t extra = static_cast<std::uint8_t>(
         state.assigned_string_mask & ~primary_bit);
-    if (extra != 0U && remaining_extra > 0U &&
-        (extra & primary_strings) == 0U &&
+    std::size_t extra_count = 0U;
+    for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+      extra_count += (extra & (1U << string)) != 0U ? 1U : 0U;
+    }
+    if (extra != 0U && extra_count <= remaining_extra &&
+        (extra & owned_strings) == 0U &&
         (extra & allocated_extra_strings) == 0U) {
       allocated_extra_strings = static_cast<std::uint8_t>(
           allocated_extra_strings | extra);
-      --remaining_extra;
+      remaining_extra -= extra_count;
     } else if (extra != 0U) {
       state.assigned_string_mask = primary_bit;
     }
@@ -1643,6 +2097,12 @@ void MonophonicPitchDetector::write_snapshot(
     if (strings == 0U && state.assigned_string < kM3OpenNotes.size()) {
       strings = static_cast<std::uint8_t>(1U << state.assigned_string);
     }
+    // Every physical lane derived from this candidate references one stable
+    // pitch-evidence group. The full member mask supports groups of two
+    // through eight strings and distinguishes simultaneous shared groups.
+    base_voice.pitch_evidence_group_id =
+        static_cast<std::uint8_t>(candidate + 1U);
+    base_voice.pitch_evidence_member_mask = strings;
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
       if ((strings & bit) != 0U) {
@@ -1789,6 +2249,7 @@ DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
   update_phase_cents_estimates(selected);
   assign_m3_strings(selected);
   update_harmonic_profile_memory(selected);
+  update_beat_evidence(selected);
   infer_m3_unison_strings(selected);
 
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
@@ -2039,7 +2500,10 @@ DetectorDecision MonophonicPitchDetector::process_sample(double sample) noexcept
         state.evidence_ticks = 0U;
       }
       harmonic_energy_memory_ = {};
+      long_harmonic_energy_memory_ = {};
+      harmonic_memory_updates_ = {};
       phase_cents_states_ = {};
+      beat_evidence_states_ = {};
     }
     signal_present_ = false;
     signal_samples_ = 0U;

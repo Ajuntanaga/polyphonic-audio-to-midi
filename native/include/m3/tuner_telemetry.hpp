@@ -25,6 +25,10 @@ enum class TunerVoiceState : std::uint8_t {
 };
 
 inline constexpr std::uint8_t kUnassignedTunerString = 0xFFU;
+// Zero is reserved so default/legacy producers cannot accidentally join an
+// evidence group. Detector-owned groups use stable nonzero IDs within one
+// configured pitch range.
+inline constexpr std::uint8_t kUnassignedPitchEvidenceGroup = 0U;
 
 struct TunerVoice final {
   std::uint8_t midi_note{};
@@ -38,6 +42,17 @@ struct TunerVoice final {
   // prevents the editor from reordering a sustained string when spectral
   // rank changes.
   std::uint8_t string_index{kUnassignedTunerString};
+  // A nonzero group identifies the one measured pitch/cents/confidence value
+  // backing this lane. The member mask makes groups of two through all eight
+  // physical strings explicit and lets multiple shared groups coexist.
+  std::uint8_t pitch_evidence_group_id{kUnassignedPitchEvidenceGroup};
+  std::uint8_t pitch_evidence_member_mask{};
+
+  [[nodiscard]] bool shares_pitch_evidence() const noexcept {
+    const std::uint8_t members = pitch_evidence_member_mask;
+    return pitch_evidence_group_id != kUnassignedPitchEvidenceGroup &&
+           members != 0U && (members & (members - 1U)) != 0U;
+  }
 };
 
 struct TunerSnapshot final {
@@ -72,6 +87,7 @@ class TunerTelemetry final {
   std::atomic<std::uint32_t> header_{};
   std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_a_{};
   std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_b_{};
+  std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_c_{};
 };
 
 }  // namespace m3

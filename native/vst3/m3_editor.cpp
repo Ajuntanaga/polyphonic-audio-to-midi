@@ -100,6 +100,7 @@ const VSTGUI::CColor kInk{14U, 17U, 18U, 255U};
 const VSTGUI::CColor kInTuneBlue{23U, 103U, 183U, 255U};
 const VSTGUI::CColor kInTuneBlueBloom{23U, 103U, 232U, 255U};
 const VSTGUI::CColor kInTuneBlueHighlight{112U, 196U, 255U, 255U};
+const VSTGUI::CColor kSharedEvidenceInk{48U, 76U, 98U, 255U};
 
 bool result_ok(Steinberg::tresult result) noexcept {
   return result == Steinberg::kResultOk || result == Steinberg::kResultTrue;
@@ -2589,10 +2590,12 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
                         VSTGUI::CRect(lane.left + 4.0, pivot.y + 44.0,
                                      lane.right - 4.0, pivot.y + 72.0),
                         VSTGUI::kCenterText, true);
-    draw_label(context, "cents",
+    const bool shared_pitch =
+        displayed && voice != nullptr && voice->shares_pitch_evidence();
+    draw_label(context, shared_pitch ? "shared cents" : "cents",
                VSTGUI::CRect(lane.left + 4.0, pivot.y + 68.0,
                               lane.right - 4.0, pivot.y + 90.0),
-               kInk);
+               shared_pitch ? kSharedEvidenceInk : kInk);
   }
 
   void draw_tuner(VSTGUI::CDrawContext* context,
