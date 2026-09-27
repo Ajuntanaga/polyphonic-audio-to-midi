@@ -8,7 +8,7 @@
 
 #include "m3/calibration_bank_transport.hpp"
 #include "m3/generated_note_ledger.hpp"
-#include "m3/monophonic_pitch_detector.hpp"
+#include "m3/polyphonic_pitch_detector.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/types.hpp"
 #include "prepared_config_exchange.hpp"
@@ -136,7 +136,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   [[nodiscard]] std::uint8_t active_midi_channel_for_test() const noexcept {
     return active_config_.midi_channel;
   }
-  [[nodiscard]] MonophonicPitchDetector::SelectionWork
+  [[nodiscard]] PolyphonicPitchDetector::SelectionWork
   detector_selection_work_for_test() const noexcept {
     return detector_.selection_work_for_test();
   }
@@ -205,7 +205,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   PreparedConfigExchange prepared_exchange_{};
   PreparedConfigExchange::Claim prepared_claim_{};
   GeneratedNoteLedger generated_notes_{};
-  MonophonicPitchDetector detector_{};
+  PolyphonicPitchDetector detector_{};
   TunerTelemetry tuner_telemetry_{};
   CalibrationBankTransport calibration_restore_{};
   CalibrationBankTransport calibration_published_{};
@@ -276,7 +276,7 @@ bool queue_generated_note_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
 [[nodiscard]] std::uint8_t active_midi_channel_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
-[[nodiscard]] MonophonicPitchDetector::SelectionWork
+[[nodiscard]] PolyphonicPitchDetector::SelectionWork
 detector_selection_work_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
 [[nodiscard]] bool read_tuner_snapshot_for_test(

@@ -204,7 +204,7 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   const std::size_t deallocations_before = m3::test::deallocation_count();
   std::array<std::uint64_t, kMeasuredBlocks> wall_durations{};
   std::array<std::uint64_t, kMeasuredBlocks> cpu_durations{};
-  m3::MonophonicPitchDetector::SelectionWork maximum_selection_work{};
+  m3::PolyphonicPitchDetector::SelectionWork maximum_selection_work{};
   for (std::size_t iteration = 0U; iteration < kMeasuredBlocks; ++iteration) {
     fill_input();
     timespec cpu_begin{};

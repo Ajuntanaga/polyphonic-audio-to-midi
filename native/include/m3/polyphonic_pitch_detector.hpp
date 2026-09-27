@@ -12,7 +12,7 @@
 namespace m3 {
 
 #if defined(M3_TESTING)
-struct MonophonicPitchDetectorTestAccess;
+struct PolyphonicPitchDetectorTestAccess;
 #endif
 
 struct DetectorDecision final {
@@ -24,14 +24,13 @@ struct DetectorDecision final {
   bool tuner_snapshot_ready{};
 };
 
-// The established source path and type name are retained for build
-// compatibility. The detector itself now selects a bounded polyphonic voice
-// set and emits one lifecycle stream per selected note.
-class MonophonicPitchDetector final {
+// Selects a bounded polyphonic voice set and emits one lifecycle stream per
+// selected note.
+class PolyphonicPitchDetector final {
  public:
-  MonophonicPitchDetector() noexcept = default;
-  MonophonicPitchDetector(const MonophonicPitchDetector&) = delete;
-  MonophonicPitchDetector& operator=(const MonophonicPitchDetector&) = delete;
+  PolyphonicPitchDetector() noexcept = default;
+  PolyphonicPitchDetector(const PolyphonicPitchDetector&) = delete;
+  PolyphonicPitchDetector& operator=(const PolyphonicPitchDetector&) = delete;
 
   bool configure(double sample_rate, const PersistentConfig& config) noexcept;
   void set_runtime_config(const PersistentConfig& config) noexcept;
@@ -58,7 +57,7 @@ class MonophonicPitchDetector final {
 
  private:
 #if defined(M3_TESTING)
-  friend struct MonophonicPitchDetectorTestAccess;
+  friend struct PolyphonicPitchDetectorTestAccess;
 #endif
   static constexpr std::size_t kHarmonicCount = 6U;
   static constexpr std::size_t kCellCount = kMaxCandidates * kHarmonicCount;

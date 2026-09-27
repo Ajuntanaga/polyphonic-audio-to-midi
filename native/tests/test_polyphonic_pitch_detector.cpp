@@ -6,14 +6,14 @@
 #include <cstdint>
 #include <limits>
 
-#include "m3/monophonic_pitch_detector.hpp"
+#include "m3/polyphonic_pitch_detector.hpp"
 #include "m3/pitch_math.hpp"
 #include "m3/types.hpp"
 #include "test_support.hpp"
 
 namespace m3 {
 
-struct MonophonicPitchDetectorTestAccess final {
+struct PolyphonicPitchDetectorTestAccess final {
   struct BeatProbe final {
     double beat_hz{};
     double hold_seconds{};
@@ -21,7 +21,7 @@ struct MonophonicPitchDetectorTestAccess final {
   };
 
   static BeatProbe beat_probe_for_interference(
-      MonophonicPitchDetector& detector, std::size_t candidate,
+      PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t source_count) noexcept {
     detector.candidate_states_[candidate].active = true;
     detector.candidate_states_[candidate].assigned_string = 0U;
@@ -65,7 +65,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static double harmonic_memory_after_note_on(
-      MonophonicPitchDetector& detector, std::size_t candidate) noexcept {
+      PolyphonicPitchDetector& detector, std::size_t candidate) noexcept {
     for (double& energy : detector.harmonic_energy_memory_[candidate]) {
       energy = 1.0;
     }
@@ -80,7 +80,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static std::uint8_t fresh_candidate_unison_mask(
-      MonophonicPitchDetector& detector, std::size_t candidate,
+      PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t primary, std::uint8_t second) noexcept {
     detector.max_polyphony_ = 2U;
     detector.signal_samples_ = static_cast<std::uint32_t>(detector.sample_rate_);
@@ -115,7 +115,7 @@ struct MonophonicPitchDetectorTestAccess final {
   // `coasting_string`. Returns the unison candidate's string mask and the
   // resulting tuner snapshot.
   static std::uint8_t unison_mask_beside_coasting_voice(
-      MonophonicPitchDetector& detector, std::size_t candidate,
+      PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t primary, std::uint8_t second, std::size_t coasting,
       std::uint8_t coasting_string, bool coasting_active,
       std::uint8_t max_polyphony, TunerSnapshot* snapshot = nullptr) noexcept {
@@ -166,7 +166,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static TunerSnapshot snapshot_for_assigned_string_group(
-      MonophonicPitchDetector& detector, std::size_t candidate,
+      PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t primary, std::uint8_t member_mask,
       std::uint8_t max_polyphony) noexcept {
     detector.max_polyphony_ = max_polyphony;
@@ -187,7 +187,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static std::uint8_t inferred_group_mask(
-      MonophonicPitchDetector& detector, std::size_t candidate,
+      PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t primary, std::uint8_t source_members,
       std::uint8_t max_polyphony, TunerSnapshot* snapshot = nullptr) noexcept {
     detector.max_polyphony_ = max_polyphony;
@@ -251,7 +251,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static std::array<std::uint8_t, 2U> legato_assignment_sequence(
-      MonophonicPitchDetector& detector) noexcept {
+      PolyphonicPitchDetector& detector) noexcept {
     constexpr std::size_t kReleasingCandidate = 12U;  // E3, string 3 open.
     constexpr std::size_t kReplacementCandidate = 13U;  // F3, fret 1.
     detector.candidate_states_ = {};
@@ -278,7 +278,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static std::uint8_t assigned_string_for_profile(
-      MonophonicPitchDetector& detector, std::uint8_t note,
+      PolyphonicPitchDetector& detector, std::uint8_t note,
       const std::array<double, kCalibrationHarmonicCount>& amplitudes) noexcept {
     if (note < detector.lowest_note_) {
       return kUnassignedTunerString;
@@ -300,7 +300,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static std::array<TunerVoice, 3U> snapshot_retention_sequence(
-      MonophonicPitchDetector& detector) noexcept {
+      PolyphonicPitchDetector& detector) noexcept {
     detector.candidate_count_ = 3U;
     detector.lowest_note_ = 39U;
     detector.max_polyphony_ = 1U;
@@ -337,7 +337,7 @@ struct MonophonicPitchDetectorTestAccess final {
   }
 
   static DetectorDecision attempt_reserved_string_activation(
-      MonophonicPitchDetector& detector) noexcept {
+      PolyphonicPitchDetector& detector) noexcept {
     detector.candidate_count_ = 2U;
     detector.lowest_note_ = 32U;
     detector.profile_mode_ = ProfileMode::m3;
@@ -376,11 +376,11 @@ M3_TEST(native_detector_estimates_two_string_beat_period_from_long_envelope) {
     config.profile_mode = m3::ProfileMode::m3;
     config.lowest_note = 32U;
     config.highest_note = 60U;
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
 
     const auto beat =
-        m3::MonophonicPitchDetectorTestAccess::beat_probe_for_interference(
+        m3::PolyphonicPitchDetectorTestAccess::beat_probe_for_interference(
             detector, 16U, 2U);
     M3_EXPECT_TRUE(beat.valid);
     M3_EXPECT_NEAR(beat.beat_hz, 2.0, 0.15);
@@ -393,11 +393,11 @@ M3_TEST(native_detector_retains_beat_evidence_for_three_string_interference) {
   config.profile_mode = m3::ProfileMode::m3;
   config.lowest_note = 32U;
   config.highest_note = 60U;
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   const auto beat =
-      m3::MonophonicPitchDetectorTestAccess::beat_probe_for_interference(
+      m3::PolyphonicPitchDetectorTestAccess::beat_probe_for_interference(
           detector, 16U, 3U);
   M3_EXPECT_TRUE(beat.valid);
   M3_EXPECT_TRUE(beat.beat_hz >= 0.25);
@@ -410,11 +410,11 @@ M3_TEST(native_detector_does_not_invent_beat_evidence_for_one_steady_string) {
   config.profile_mode = m3::ProfileMode::m3;
   config.lowest_note = 32U;
   config.highest_note = 60U;
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   const auto beat =
-      m3::MonophonicPitchDetectorTestAccess::beat_probe_for_interference(
+      m3::PolyphonicPitchDetectorTestAccess::beat_probe_for_interference(
           detector, 16U, 1U);
   M3_EXPECT_FALSE(beat.valid);
   M3_EXPECT_NEAR(beat.beat_hz, 0.0, 0.0);
@@ -423,7 +423,7 @@ M3_TEST(native_detector_does_not_invent_beat_evidence_for_one_steady_string) {
 
 namespace {
 
-void feed_tone(m3::MonophonicPitchDetector& detector, std::uint8_t note,
+void feed_tone(m3::PolyphonicPitchDetector& detector, std::uint8_t note,
                std::uint32_t samples, m3::TickTransitions& transitions,
                std::uint32_t* first_note_on_sample = nullptr) noexcept {
   constexpr double kSampleRate = 48000.0;
@@ -448,7 +448,7 @@ void feed_tone(m3::MonophonicPitchDetector& detector, std::uint8_t note,
   }
 }
 
-void feed_silence(m3::MonophonicPitchDetector& detector,
+void feed_silence(m3::PolyphonicPitchDetector& detector,
                   std::uint32_t samples,
                   m3::TickTransitions& transitions) noexcept {
   for (std::uint32_t index = 0; index < samples; ++index) {
@@ -459,7 +459,7 @@ void feed_silence(m3::MonophonicPitchDetector& detector,
   }
 }
 
-void feed_calibration_pitch(m3::MonophonicPitchDetector& detector,
+void feed_calibration_pitch(m3::PolyphonicPitchDetector& detector,
                             double midi_pitch,
                             std::uint32_t samples,
                             double* oscillator_phase = nullptr) noexcept {
@@ -479,7 +479,7 @@ void feed_calibration_pitch(m3::MonophonicPitchDetector& detector,
   }
 }
 
-void feed_calibration_glide(m3::MonophonicPitchDetector& detector,
+void feed_calibration_glide(m3::PolyphonicPitchDetector& detector,
                             double start_midi_pitch, double end_midi_pitch,
                             std::uint32_t samples,
                             double& oscillator_phase) noexcept {
@@ -545,7 +545,7 @@ void observe_dyad(const m3::DetectorDecision& decision,
   }
 }
 
-void feed_dyad(m3::MonophonicPitchDetector& detector, std::uint8_t low_note,
+void feed_dyad(m3::PolyphonicPitchDetector& detector, std::uint8_t low_note,
                std::uint8_t high_note, double low_amplitude,
                double high_amplitude, std::uint32_t samples,
                DyadLifecycle& lifecycle,
@@ -565,7 +565,7 @@ void feed_dyad(m3::MonophonicPitchDetector& detector, std::uint8_t low_note,
   }
 }
 
-void release_dyad(m3::MonophonicPitchDetector& detector,
+void release_dyad(m3::PolyphonicPitchDetector& detector,
                   std::uint32_t samples, DyadLifecycle& lifecycle) noexcept {
   for (std::uint32_t index = 0; index < samples; ++index) {
     observe_dyad(detector.process_sample(0.0), lifecycle, index);
@@ -628,7 +628,7 @@ double realistic_string_sample(std::uint8_t note, std::size_t string_index,
 }
 
 void feed_realistic_string_chord(
-    m3::MonophonicPitchDetector& detector,
+    m3::PolyphonicPitchDetector& detector,
     const std::array<std::uint8_t, m3::kMaxVoices>& notes,
     std::uint32_t samples, ChordLifecycle* lifecycle = nullptr,
     m3::TunerSnapshot* final_snapshot = nullptr) noexcept {
@@ -701,7 +701,7 @@ void observe_chord(const m3::DetectorDecision& decision,
   }
 }
 
-void feed_chord(m3::MonophonicPitchDetector& detector,
+void feed_chord(m3::PolyphonicPitchDetector& detector,
                 double amplitude, std::uint32_t samples,
                 ChordLifecycle& lifecycle) noexcept {
   constexpr double kSampleRate = 48000.0;
@@ -718,7 +718,7 @@ void feed_chord(m3::MonophonicPitchDetector& detector,
 }
 
 void feed_weighted_chord(
-    m3::MonophonicPitchDetector& detector,
+    m3::PolyphonicPitchDetector& detector,
     const std::array<double, m3::kMaxVoices>& amplitudes,
     std::uint32_t samples, ChordLifecycle& lifecycle) noexcept {
   constexpr double kSampleRate = 48000.0;
@@ -735,7 +735,7 @@ void feed_weighted_chord(
   }
 }
 
-void release_chord(m3::MonophonicPitchDetector& detector,
+void release_chord(m3::PolyphonicPitchDetector& detector,
                    std::uint32_t samples, ChordLifecycle& lifecycle) noexcept {
   for (std::uint32_t index = 0U; index < samples; ++index) {
     observe_chord(detector.process_sample(0.0), lifecycle, index);
@@ -744,7 +744,7 @@ void release_chord(m3::MonophonicPitchDetector& detector,
 
 }  // namespace
 
-M3_TEST(native_monophonic_detector_tracks_low_eight_string_tone_and_releases) {
+M3_TEST(native_polyphonic_detector_tracks_low_eight_string_tone_and_releases) {
   m3::PersistentConfig config;
   config.lowest_note = 32U;
   config.highest_note = 48U;
@@ -752,7 +752,7 @@ M3_TEST(native_monophonic_detector_tracks_low_eight_string_tone_and_releases) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   m3::TickTransitions transitions;
@@ -781,7 +781,7 @@ M3_TEST(native_detector_reports_cents_for_the_low_g_sharp_range_boundary) {
   config.sensitivity = 69U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   const double frequency = m3::midi_to_frequency(
       32.0 + kDetuneCents / 100.0, config.a4_hz);
@@ -829,7 +829,7 @@ M3_TEST(native_detector_reports_settled_cents_within_one_cent_at_48_and_96khz) {
         config.sensitivity = 69U;
         config.response = 81U;
 
-        m3::MonophonicPitchDetector detector;
+        m3::PolyphonicPitchDetector detector;
         M3_EXPECT_TRUE(detector.configure(sample_rate, config));
         const double frequency = m3::midi_to_frequency(
             static_cast<double>(note) + offset / 100.0, config.a4_hz);
@@ -903,7 +903,7 @@ M3_TEST(native_detector_never_labels_an_inaccurate_attack_cents_value_valid) {
         config.sensitivity = 69U;
         config.response = 81U;
 
-        m3::MonophonicPitchDetector detector;
+        m3::PolyphonicPitchDetector detector;
         M3_EXPECT_TRUE(detector.configure(sample_rate, config));
         const double frequency = m3::midi_to_frequency(
             static_cast<double>(note) + offset / 100.0, config.a4_hz);
@@ -968,7 +968,7 @@ M3_TEST(native_detector_calibration_does_not_redefine_tuner_zero_cents) {
   config.sensitivity = 69U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   m3::StringCalibrationBank bank;
   set_measured_string_profile(
@@ -1001,7 +1001,7 @@ M3_TEST(native_detector_calibration_does_not_redefine_tuner_zero_cents) {
   M3_EXPECT_NEAR(observed_cents, kDetuneCents, 6.0);
 }
 
-M3_TEST(native_monophonic_detector_tracks_highest_open_string_tone_and_releases) {
+M3_TEST(native_polyphonic_detector_tracks_highest_open_string_tone_and_releases) {
   m3::PersistentConfig config;
   config.lowest_note = 32U;
   config.highest_note = 60U;
@@ -1009,7 +1009,7 @@ M3_TEST(native_monophonic_detector_tracks_highest_open_string_tone_and_releases)
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   m3::TickTransitions transitions;
@@ -1041,7 +1041,7 @@ M3_TEST(native_detector_tracks_the_twenty_fourth_fret_c6_range_boundary) {
     config.sensitivity = 69U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
     const double frequency = m3::midi_to_frequency(kNote, config.a4_hz);
     bool note_on = false;
@@ -1083,7 +1083,7 @@ M3_TEST(native_detector_does_not_expand_one_tone_into_the_polyphony_limit) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   m3::TickTransitions transitions;
@@ -1107,7 +1107,7 @@ M3_TEST(native_detector_rejects_octave_and_fifth_subharmonics_at_default_range) 
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   m3::TickTransitions transitions;
@@ -1131,7 +1131,7 @@ M3_TEST(native_detector_tracks_two_independent_chord_voices_and_releases_each) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   DyadLifecycle lifecycle{40U, 47U};
@@ -1164,7 +1164,7 @@ M3_TEST(native_detector_distinguishes_a_bright_low_string_from_a_real_octave) {
   config.response = 81U;
 
   const auto exercise = [&](bool add_independent_octave) noexcept {
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
     bool low_on = false;
     bool octave_on = false;
@@ -1220,7 +1220,7 @@ M3_TEST(native_detector_keeps_an_uneven_major_seventh_as_two_voices) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   DyadLifecycle lifecycle{32U, 43U};
@@ -1244,7 +1244,7 @@ M3_TEST(native_detector_honors_m3_maximum_fret_without_limiting_general_mode) {
   m3_config.sensitivity = 75U;
   m3_config.response = 25U;
 
-  m3::MonophonicPitchDetector m3_detector;
+  m3::PolyphonicPitchDetector m3_detector;
   M3_EXPECT_TRUE(m3_detector.configure(48000.0, m3_config));
   m3::TickTransitions m3_transitions;
   feed_tone(m3_detector, 33U, 30000U, m3_transitions);
@@ -1253,7 +1253,7 @@ M3_TEST(native_detector_honors_m3_maximum_fret_without_limiting_general_mode) {
 
   m3::PersistentConfig general_config = m3_config;
   general_config.profile_mode = m3::ProfileMode::general;
-  m3::MonophonicPitchDetector general_detector;
+  m3::PolyphonicPitchDetector general_detector;
   M3_EXPECT_TRUE(general_detector.configure(48000.0, general_config));
   m3::TickTransitions general_transitions;
   feed_tone(general_detector, 33U, 30000U, general_transitions);
@@ -1277,7 +1277,7 @@ M3_TEST(native_detector_keeps_a_clear_m3_fretted_fundamental_over_the_open_prior
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::TickTransitions transitions;
   feed_tone(detector, 41U, 30000U, transitions);
@@ -1300,7 +1300,7 @@ M3_TEST(native_detector_single_voice_onset_meets_the_causal_45ms_gate) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::TickTransitions transitions;
   std::uint32_t first_note_on_sample =
@@ -1321,7 +1321,7 @@ M3_TEST(native_detector_restarts_the_single_voice_evidence_gate_after_silence) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::TickTransitions discarded;
   feed_silence(detector, 24000U, discarded);
@@ -1346,7 +1346,7 @@ M3_TEST(native_detector_restarts_the_chord_evidence_gate_after_silence) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::TickTransitions discarded;
   feed_silence(detector, 24000U, discarded);
@@ -1372,7 +1372,7 @@ M3_TEST(native_detector_requires_fresh_evidence_for_a_legato_added_voice) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   DyadLifecycle lifecycle{40U, 47U};
   feed_dyad(detector, 40U, 47U, 0.16, 0.0, 6000U, lifecycle);
@@ -1397,7 +1397,7 @@ M3_TEST(native_detector_requires_fresh_evidence_for_a_legato_replacement) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   DyadLifecycle lifecycle{40U, 47U};
   feed_dyad(detector, 40U, 47U, 0.16, 0.0, 6000U, lifecycle);
@@ -1423,10 +1423,10 @@ M3_TEST(native_detector_keeps_a_live_legato_replacement_on_its_started_string) {
   config.max_polyphony = 2U;
   config.max_fret = 24U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   const auto assignments =
-      m3::MonophonicPitchDetectorTestAccess::legato_assignment_sequence(
+      m3::PolyphonicPitchDetectorTestAccess::legato_assignment_sequence(
           detector);
   M3_EXPECT_EQ(assignments[0U], 2U);
   M3_EXPECT_EQ(assignments[1U], assignments[0U]);
@@ -1440,7 +1440,7 @@ M3_TEST(native_detector_restarts_the_four_voice_evidence_gate_after_silence) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::TickTransitions discarded;
   feed_silence(detector, 24000U, discarded);
@@ -1468,7 +1468,7 @@ M3_TEST(native_detector_completes_a_four_note_m3_chord_within_65ms) {
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   ChordLifecycle lifecycle;
   lifecycle.notes = {32U, 40U, 48U, 56U, 0U, 0U, 0U, 0U};
@@ -1502,7 +1502,7 @@ M3_TEST(native_detector_holds_a_96khz_fingerstyle_m3_triad_at_the_live_calibrati
   config.sensitivity = 69U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   ChordLifecycle lifecycle;
   lifecycle.notes = {kNotes[0], kNotes[1], kNotes[2], 0U, 0U, 0U, 0U, 0U};
@@ -1577,7 +1577,7 @@ M3_TEST(native_detector_tracks_all_eight_m3_open_strings_at_capacity) {
   config.sensitivity = 75U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   ChordLifecycle lifecycle;
   lifecycle.notes = {32U, 36U, 40U, 44U, 48U, 52U, 56U, 60U};
@@ -1610,7 +1610,7 @@ M3_TEST(native_detector_release_hold_is_time_based_at_supported_sample_rates) {
     config.sensitivity = 69U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
     const double frequency = m3::midi_to_frequency(kNote, 440.0);
     bool note_on = false;
@@ -1685,7 +1685,7 @@ M3_TEST(native_detector_does_not_release_a_naturally_decaying_note_above_the_flo
       config.sensitivity = kSensitivity;
       config.response = 81U;
 
-      m3::MonophonicPitchDetector detector;
+      m3::PolyphonicPitchDetector detector;
       M3_EXPECT_TRUE(detector.configure(sample_rate, config));
       const double frequency = m3::midi_to_frequency(kNote, 440.0);
       double phase = 0.0;
@@ -1741,7 +1741,7 @@ M3_TEST(native_detector_coasts_the_last_valid_tuner_pitch_through_a_short_dropou
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   const double frequency = m3::midi_to_frequency(kNote + 0.07, 440.0);
   m3::TunerVoice last_tracking;
@@ -1794,9 +1794,9 @@ M3_TEST(native_detector_coasts_the_last_valid_tuner_pitch_through_a_short_dropou
 }
 
 M3_TEST(native_detector_does_not_overwrite_retained_cents_with_an_invalid_frame) {
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   const auto voices =
-      m3::MonophonicPitchDetectorTestAccess::snapshot_retention_sequence(
+      m3::PolyphonicPitchDetectorTestAccess::snapshot_retention_sequence(
           detector);
   M3_EXPECT_TRUE(voices[0U].cents_valid);
   M3_EXPECT_EQ(voices[0U].state, m3::TunerVoiceState::tracking);
@@ -1826,7 +1826,7 @@ M3_TEST(native_detector_attack_hold_is_time_based_at_supported_sample_rates) {
     config.sensitivity = 69U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
     const double frequency = m3::midi_to_frequency(kNote, 440.0);
     std::uint32_t note_on_sample = std::numeric_limits<std::uint32_t>::max();
@@ -1878,7 +1878,7 @@ M3_TEST(native_detector_tracks_a_stiff_string_chord_through_sympathetic_leakage)
     config.sensitivity = 69U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
     std::array<bool, kNotes.size()> note_on{};
     bool unexpected_on = false;
@@ -1982,7 +1982,7 @@ M3_TEST(native_detector_publishes_one_stable_physical_lane_per_m3_string) {
   config.sensitivity = 75U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   m3::TunerSnapshot final_snapshot;
   feed_realistic_string_chord(detector, m3::kM3OpenNotes, 36000U, nullptr,
@@ -2017,7 +2017,7 @@ M3_TEST(native_detector_keeps_realistic_fretted_chord_inside_each_string_range) 
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   std::array<bool, m3::kMaxVoices> observed_string{};
   std::size_t checked_snapshots = 0U;
@@ -2086,7 +2086,7 @@ M3_TEST(native_detector_separates_a_calibrated_detuned_unison_into_string_lanes)
     config.sensitivity = 70U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(sample_rate, config));
     m3::StringCalibrationBank bank;
     set_measured_string_profile(bank, 0U, 16U, kLowStringCents, kLowProfile);
@@ -2215,7 +2215,7 @@ M3_TEST(native_detector_keeps_a_calibrated_harmonic_fingerprint_when_detuned) {
     config.sensitivity = 70U;
     config.response = 81U;
 
-    m3::MonophonicPitchDetector detector;
+    m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
     m3::StringCalibrationBank bank;
     set_measured_string_profile(bank, 6U, 4U, 0.0, kBrightProfile);
@@ -2270,11 +2270,11 @@ M3_TEST(native_detector_clears_prior_harmonic_memory_when_a_note_activates) {
   config.profile_mode = m3::ProfileMode::m3;
   config.lowest_note = 32U;
   config.highest_note = 60U;
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
 
   const double remaining =
-      m3::MonophonicPitchDetectorTestAccess::harmonic_memory_after_note_on(
+      m3::PolyphonicPitchDetectorTestAccess::harmonic_memory_after_note_on(
           detector, 8U);
   M3_EXPECT_NEAR(remaining, 0.0, 0.0);
 }
@@ -2293,7 +2293,7 @@ M3_TEST(native_detector_does_not_prearm_a_fresh_unison_from_global_signal_age) {
   config.highest_note = 60U;
   config.max_polyphony = 2U;
   config.max_fret = 24U;
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   m3::StringCalibrationBank bank;
   set_measured_string_profile(bank, kPrimaryString, 0U, 4.2, kOpenProfile);
@@ -2301,7 +2301,7 @@ M3_TEST(native_detector_does_not_prearm_a_fresh_unison_from_global_signal_age) {
   detector.set_calibration_bank(bank);
 
   const std::uint8_t mask =
-      m3::MonophonicPitchDetectorTestAccess::fresh_candidate_unison_mask(
+      m3::PolyphonicPitchDetectorTestAccess::fresh_candidate_unison_mask(
           detector, kNote - config.lowest_note, kPrimaryString,
           kSecondString);
   M3_EXPECT_EQ(mask, static_cast<std::uint8_t>(1U << kPrimaryString));
@@ -2313,7 +2313,7 @@ constexpr std::uint8_t kSharedUnisonNote = 48U;
 constexpr std::uint8_t kSharedUnisonPrimary = 4U;  // C3 open.
 constexpr std::uint8_t kSharedUnisonSecond = 0U;   // G#1 string, fret 16.
 
-void configure_calibrated_unison(m3::MonophonicPitchDetector& detector) {
+void configure_calibrated_unison(m3::PolyphonicPitchDetector& detector) {
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kLowProfile{
       1.00, 0.16, 0.07, 0.03, 0.01, 0.00};
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpenProfile{
@@ -2335,7 +2335,7 @@ void configure_calibrated_unison(m3::MonophonicPitchDetector& detector) {
 }
 
 void add_third_calibrated_unison_string(
-    m3::MonophonicPitchDetector& detector) {
+    m3::PolyphonicPitchDetector& detector) {
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kMiddleProfile{
       0.42, 0.31, 0.68, 0.19, 0.07, 0.03};
   m3::StringCalibrationBank bank = detector.calibration_bank();
@@ -2345,7 +2345,7 @@ void add_third_calibrated_unison_string(
 }
 
 void add_fourth_calibrated_unison_string(
-    m3::MonophonicPitchDetector& detector) {
+    m3::PolyphonicPitchDetector& detector) {
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kProfile{
       0.55, 0.18, 0.22, 0.58, 0.10, 0.04};
   m3::StringCalibrationBank bank = detector.calibration_bank();
@@ -2355,7 +2355,7 @@ void add_fourth_calibrated_unison_string(
 }
 
 void add_fifth_calibrated_unison_string(
-    m3::MonophonicPitchDetector& detector) {
+    m3::PolyphonicPitchDetector& detector) {
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kProfile{
       0.36, 0.55, 0.17, 0.24, 0.49, 0.08};
   m3::StringCalibrationBank bank = detector.calibration_bank();
@@ -2365,7 +2365,7 @@ void add_fifth_calibrated_unison_string(
 }
 
 void configure_calibrated_high_unison(
-    m3::MonophonicPitchDetector& detector) {
+    m3::PolyphonicPitchDetector& detector) {
   constexpr std::uint8_t kNote = 56U;  // G#3, playable on strings 0..6.
   constexpr std::array<std::array<double, m3::kCalibrationHarmonicCount>, 7U>
       kProfiles{{
@@ -2398,12 +2398,12 @@ void configure_calibrated_high_unison(
 }  // namespace
 
 M3_TEST(native_detector_never_infers_a_unison_lane_owned_by_a_coasting_voice) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
   constexpr std::size_t kUnison = kSharedUnisonNote - 32U;
   constexpr std::size_t kCoasting = 0U;  // G#1, open on the second string.
   constexpr std::uint8_t kBoth = static_cast<std::uint8_t>(
       (1U << kSharedUnisonPrimary) | (1U << kSharedUnisonSecond));
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
 
   // Control: without a live owner, the calibrated mixture is a unison.
@@ -2433,13 +2433,13 @@ M3_TEST(native_detector_never_infers_a_unison_lane_owned_by_a_coasting_voice) {
 }
 
 M3_TEST(native_detector_counts_coasting_lanes_against_the_unison_budget) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
   constexpr std::size_t kUnison = kSharedUnisonNote - 32U;
   constexpr std::size_t kCoasting = 8U;         // E2, open on string 2.
   constexpr std::uint8_t kCoastingString = 2U;  // Not the unison lane.
   constexpr std::uint8_t kBoth = static_cast<std::uint8_t>(
       (1U << kSharedUnisonPrimary) | (1U << kSharedUnisonSecond));
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
 
   // One selected voice plus one coasting voice already fill a two-voice
@@ -2467,11 +2467,11 @@ M3_TEST(native_detector_counts_coasting_lanes_against_the_unison_budget) {
 }
 
 M3_TEST(native_detector_groups_inferred_unison_lanes_under_one_pitch_estimate) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
   constexpr std::size_t kUnison = kSharedUnisonNote - 32U;
   constexpr std::size_t kCoasting = 8U;
   constexpr std::uint8_t kCoastingString = 2U;
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
 
   m3::TunerSnapshot snapshot;
@@ -2508,8 +2508,8 @@ M3_TEST(native_detector_groups_inferred_unison_lanes_under_one_pitch_estimate) {
 }
 
 M3_TEST(native_detector_pitch_evidence_group_represents_three_string_unison) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
   constexpr std::size_t kCandidate = kSharedUnisonNote - 32U;
   constexpr std::uint8_t kMembers =
@@ -2534,8 +2534,8 @@ M3_TEST(native_detector_pitch_evidence_group_represents_three_string_unison) {
 }
 
 M3_TEST(native_detector_infers_three_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
   add_third_calibrated_unison_string(detector);
   constexpr std::size_t kCandidate = kSharedUnisonNote - 32U;
@@ -2557,8 +2557,8 @@ M3_TEST(native_detector_infers_three_calibrated_strings_from_one_pitch_group) {
 }
 
 M3_TEST(native_detector_infers_four_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
   add_third_calibrated_unison_string(detector);
   add_fourth_calibrated_unison_string(detector);
@@ -2583,8 +2583,8 @@ M3_TEST(native_detector_infers_four_calibrated_strings_from_one_pitch_group) {
 }
 
 M3_TEST(native_detector_infers_five_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_unison(detector);
   add_third_calibrated_unison_string(detector);
   add_fourth_calibrated_unison_string(detector);
@@ -2607,8 +2607,8 @@ M3_TEST(native_detector_infers_five_calibrated_strings_from_one_pitch_group) {
 }
 
 M3_TEST(native_detector_infers_six_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_high_unison(detector);
   constexpr std::uint8_t kNote = 56U;
   constexpr std::size_t kCandidate = kNote - 32U;
@@ -2629,8 +2629,8 @@ M3_TEST(native_detector_infers_six_calibrated_strings_from_one_pitch_group) {
 }
 
 M3_TEST(native_detector_infers_seven_calibrated_strings_at_the_physical_limit) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_high_unison(detector);
   constexpr std::uint8_t kNote = 56U;
   constexpr std::size_t kCandidate = kNote - 32U;
@@ -2654,8 +2654,8 @@ M3_TEST(native_detector_infers_seven_calibrated_strings_at_the_physical_limit) {
 }
 
 M3_TEST(native_detector_does_not_expand_one_high_calibrated_string_to_seven) {
-  using Access = m3::MonophonicPitchDetectorTestAccess;
-  m3::MonophonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
   configure_calibrated_high_unison(detector);
   constexpr std::uint8_t kNote = 56U;
   constexpr std::size_t kCandidate = kNote - 32U;
@@ -2682,20 +2682,20 @@ M3_TEST(native_detector_does_not_bias_assignment_toward_a_lone_calibrated_lane) 
   config.max_polyphony = 1U;
   config.max_fret = 24U;
 
-  m3::MonophonicPitchDetector baseline;
+  m3::PolyphonicPitchDetector baseline;
   M3_EXPECT_TRUE(baseline.configure(48000.0, config));
   const std::uint8_t baseline_string =
-      m3::MonophonicPitchDetectorTestAccess::assigned_string_for_profile(
+      m3::PolyphonicPitchDetectorTestAccess::assigned_string_for_profile(
           baseline, kNote, kProfile);
   M3_EXPECT_EQ(baseline_string, 2U);
 
-  m3::MonophonicPitchDetector partially_calibrated;
+  m3::PolyphonicPitchDetector partially_calibrated;
   M3_EXPECT_TRUE(partially_calibrated.configure(48000.0, config));
   m3::StringCalibrationBank bank;
   set_measured_string_profile(bank, 1U, 4U, 0.0, kProfile);
   partially_calibrated.set_calibration_bank(bank);
   const std::uint8_t calibrated_string =
-      m3::MonophonicPitchDetectorTestAccess::assigned_string_for_profile(
+      m3::PolyphonicPitchDetectorTestAccess::assigned_string_for_profile(
           partially_calibrated, kNote, kProfile);
 
   M3_EXPECT_EQ(calibrated_string, baseline_string);
@@ -2720,7 +2720,7 @@ M3_TEST(native_detector_does_not_split_one_calibrated_string_into_a_unison) {
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   m3::StringCalibrationBank bank;
   set_measured_string_profile(bank, 0U, 16U, -3.5, kLowProfile);
@@ -2774,7 +2774,7 @@ M3_TEST(native_detector_single_routing_collapses_a_calibrated_unison_to_one_midi
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
   m3::StringCalibrationBank bank;
   set_measured_string_profile(bank, 0U, 16U, kLowCents, kLowProfile);
@@ -2827,7 +2827,7 @@ M3_TEST(native_detector_learns_a_real_audio_open_to_24_and_back_sweep) {
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   M3_EXPECT_TRUE(detector.begin_string_calibration(0U));
   double oscillator_phase = 0.0;
@@ -2866,7 +2866,7 @@ M3_TEST(native_detector_calibration_retains_a_detuned_strings_cents_offset) {
   config.sensitivity = 70U;
   config.response = 81U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   M3_EXPECT_TRUE(detector.begin_string_calibration(0U));
   double oscillator_phase = 0.0;
@@ -2901,7 +2901,7 @@ M3_TEST(native_detector_backfills_a_valid_open_string_after_an_unplayable_peak) 
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   DyadLifecycle lifecycle{32U, 34U};
   feed_dyad(detector, 32U, 34U, 0.20, 0.24, 36000U, lifecycle);
@@ -2922,10 +2922,10 @@ M3_TEST(native_detector_does_not_activate_without_an_owned_m3_string_lane) {
   config.max_polyphony = 2U;
   config.max_fret = 1U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   const m3::DetectorDecision decision =
-      m3::MonophonicPitchDetectorTestAccess::
+      m3::PolyphonicPitchDetectorTestAccess::
           attempt_reserved_string_activation(detector);
 
   M3_EXPECT_EQ(decision.transitions.size(), 0U);
@@ -2941,7 +2941,7 @@ M3_TEST(native_detector_keeps_an_independent_open_string_when_fret_masks_conflic
   config.sensitivity = 75U;
   config.response = 25U;
 
-  m3::MonophonicPitchDetector detector;
+  m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(48000.0, config));
   ChordLifecycle lifecycle;
   lifecycle.notes = {32U, 34U, 36U, 0U, 0U, 0U, 0U, 0U};

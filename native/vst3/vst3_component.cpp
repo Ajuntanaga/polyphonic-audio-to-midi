@@ -1278,12 +1278,12 @@ std::uint8_t active_midi_channel_for_test(
              : 0U;
 }
 
-MonophonicPitchDetector::SelectionWork detector_selection_work_for_test(
+PolyphonicPitchDetector::SelectionWork detector_selection_work_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept {
   return processor != nullptr
              ? static_cast<M3Component*>(processor)
                    ->detector_selection_work_for_test()
-             : MonophonicPitchDetector::SelectionWork{};
+             : PolyphonicPitchDetector::SelectionWork{};
 }
 
 bool read_tuner_snapshot_for_test(Steinberg::Vst::IAudioProcessor* processor,

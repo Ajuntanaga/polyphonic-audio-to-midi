@@ -1,4 +1,4 @@
-#include "m3/monophonic_pitch_detector.hpp"
+#include "m3/polyphonic_pitch_detector.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -236,7 +236,7 @@ void assignment_add(std::array<std::uint8_t, kM3StringMaskCount>& reachable,
 
 }  // namespace
 
-bool MonophonicPitchDetector::configure(double sample_rate,
+bool PolyphonicPitchDetector::configure(double sample_rate,
                                         const PersistentConfig& config) noexcept {
   configured_ = false;
   cells_ = {};
@@ -318,7 +318,7 @@ bool MonophonicPitchDetector::configure(double sample_rate,
   return true;
 }
 
-void MonophonicPitchDetector::set_runtime_config(
+void PolyphonicPitchDetector::set_runtime_config(
     const PersistentConfig& config) noexcept {
   midi_routing_ = config.midi_routing;
   profile_mode_ = config.profile_mode;
@@ -335,7 +335,7 @@ void MonophonicPitchDetector::set_runtime_config(
   refresh_m3_playable_string_masks();
 }
 
-void MonophonicPitchDetector::reset() noexcept {
+void PolyphonicPitchDetector::reset() noexcept {
   previous_input_ = 0.0;
   previous_dc_output_ = 0.0;
   fast_energy_ = 0.0;
@@ -376,7 +376,7 @@ void MonophonicPitchDetector::reset() noexcept {
   reset_guard(upper_cents_guard_cells_);
 }
 
-bool MonophonicPitchDetector::begin_string_calibration(
+bool PolyphonicPitchDetector::begin_string_calibration(
     std::uint8_t string_index) noexcept {
   if (!configured_ || profile_mode_ != ProfileMode::m3 ||
       string_index >= kM3OpenNotes.size()) {
@@ -397,30 +397,30 @@ bool MonophonicPitchDetector::begin_string_calibration(
       sample_rate_ / static_cast<double>(kDecisionQuantum));
 }
 
-void MonophonicPitchDetector::cancel_string_calibration() noexcept {
+void PolyphonicPitchDetector::cancel_string_calibration() noexcept {
   calibrator_.cancel();
 }
 
-void MonophonicPitchDetector::clear_string_calibration() noexcept {
+void PolyphonicPitchDetector::clear_string_calibration() noexcept {
   calibrator_.clear();
 }
 
-CalibrationSweepStatus MonophonicPitchDetector::calibration_status()
+CalibrationSweepStatus PolyphonicPitchDetector::calibration_status()
     const noexcept {
   return calibrator_.status();
 }
 
-const StringCalibrationBank& MonophonicPitchDetector::calibration_bank()
+const StringCalibrationBank& PolyphonicPitchDetector::calibration_bank()
     const noexcept {
   return calibrator_.bank();
 }
 
-void MonophonicPitchDetector::set_calibration_bank(
+void PolyphonicPitchDetector::set_calibration_bank(
     const StringCalibrationBank& bank) noexcept {
   calibrator_.set_bank(bank);
 }
 
-void MonophonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
+void PolyphonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
   const double next_cosine =
       cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
   const double next_sine =
@@ -434,7 +434,7 @@ void MonophonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
                         mix * sample * next_sine;
 }
 
-std::uint8_t MonophonicPitchDetector::attack_decisions() const noexcept {
+std::uint8_t PolyphonicPitchDetector::attack_decisions() const noexcept {
   const double reference_decisions =
       static_cast<double>(2U + response_ / 20U);
   const double seconds = reference_decisions *
@@ -447,7 +447,7 @@ std::uint8_t MonophonicPitchDetector::attack_decisions() const noexcept {
       static_cast<double>(std::numeric_limits<std::uint8_t>::max())));
 }
 
-std::uint16_t MonophonicPitchDetector::release_decisions() const noexcept {
+std::uint16_t PolyphonicPitchDetector::release_decisions() const noexcept {
   const double normalized = static_cast<double>(response_) / 100.0;
   const double seconds = kMinimumReleaseSeconds +
                          normalized *
@@ -459,7 +459,7 @@ std::uint16_t MonophonicPitchDetector::release_decisions() const noexcept {
       static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
 }
 
-std::uint8_t MonophonicPitchDetector::candidate_evidence_decisions(
+std::uint8_t PolyphonicPitchDetector::candidate_evidence_decisions(
     bool multi_voice) const noexcept {
   const double seconds = multi_voice ? kMultiVoiceEvidenceSeconds
                                      : kSingleVoiceEvidenceSeconds;
@@ -469,11 +469,11 @@ std::uint8_t MonophonicPitchDetector::candidate_evidence_decisions(
       decisions, 1.0, static_cast<double>(std::numeric_limits<std::uint8_t>::max())));
 }
 
-double MonophonicPitchDetector::signal_floor() const noexcept {
+double PolyphonicPitchDetector::signal_floor() const noexcept {
   return signal_floor_;
 }
 
-std::uint8_t MonophonicPitchDetector::dynamic_velocity() const noexcept {
+std::uint8_t PolyphonicPitchDetector::dynamic_velocity() const noexcept {
   if (velocity_mode_ == VelocityMode::fixed) {
     return fixed_velocity_;
   }
@@ -484,7 +484,7 @@ std::uint8_t MonophonicPitchDetector::dynamic_velocity() const noexcept {
   return static_cast<std::uint8_t>(std::lround(velocity));
 }
 
-void MonophonicPitchDetector::append_transition(
+void PolyphonicPitchDetector::append_transition(
     DetectorDecision& decision, TransitionKind kind, std::uint8_t note,
     std::uint8_t velocity, std::uint8_t voice_id) noexcept {
   const VoiceTransition transition{
@@ -492,7 +492,7 @@ void MonophonicPitchDetector::append_transition(
   static_cast<void>(decision.transitions.push_back(transition));
 }
 
-bool MonophonicPitchDetector::append_candidate_note_on(
+bool PolyphonicPitchDetector::append_candidate_note_on(
     DetectorDecision& decision, std::size_t candidate,
     std::uint8_t velocity) noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_)) {
@@ -531,7 +531,7 @@ bool MonophonicPitchDetector::append_candidate_note_on(
   return true;
 }
 
-void MonophonicPitchDetector::append_candidate_note_off(
+void PolyphonicPitchDetector::append_candidate_note_off(
     DetectorDecision& decision, std::size_t candidate) noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_)) {
     return;
@@ -551,7 +551,7 @@ void MonophonicPitchDetector::append_candidate_note_off(
   append_transition(decision, TransitionKind::note_off, note, 0U);
 }
 
-bool MonophonicPitchDetector::is_harmonic_shadow(
+bool PolyphonicPitchDetector::is_harmonic_shadow(
     std::size_t candidate, std::size_t selected_candidate,
     const std::array<double, kMaxCandidates>& fundamentals) const noexcept {
   if (candidate == selected_candidate ||
@@ -569,7 +569,7 @@ bool MonophonicPitchDetector::is_harmonic_shadow(
   return false;
 }
 
-void MonophonicPitchDetector::refresh_m3_playable_string_masks() noexcept {
+void PolyphonicPitchDetector::refresh_m3_playable_string_masks() noexcept {
   playable_string_masks_ = {};
   if (profile_mode_ != ProfileMode::m3) {
     return;
@@ -589,7 +589,7 @@ void MonophonicPitchDetector::refresh_m3_playable_string_masks() noexcept {
   }
 }
 
-std::uint8_t MonophonicPitchDetector::playable_string_mask(
+std::uint8_t PolyphonicPitchDetector::playable_string_mask(
     std::size_t candidate) const noexcept {
   if (profile_mode_ != ProfileMode::m3 ||
       candidate >= static_cast<std::size_t>(candidate_count_)) {
@@ -598,7 +598,7 @@ std::uint8_t MonophonicPitchDetector::playable_string_mask(
   return playable_string_masks_[candidate];
 }
 
-std::size_t MonophonicPitchDetector::m3_assignment_state_count(
+std::size_t PolyphonicPitchDetector::m3_assignment_state_count(
     const std::array<bool, kMaxCandidates>& selected) const noexcept {
   if (profile_mode_ != ProfileMode::m3) {
     return 1U;
@@ -630,12 +630,12 @@ std::size_t MonophonicPitchDetector::m3_assignment_state_count(
   return count;
 }
 
-bool MonophonicPitchDetector::selection_has_distinct_m3_strings(
+bool PolyphonicPitchDetector::selection_has_distinct_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) const noexcept {
   return m3_assignment_state_count(selected) != 0U;
 }
 
-void MonophonicPitchDetector::enforce_m3_feasibility(
+void PolyphonicPitchDetector::enforce_m3_feasibility(
     std::array<bool, kMaxCandidates>& selected,
     const std::array<double, kMaxCandidates>& scores,
     const std::array<double, kMaxCandidates>& fundamentals) const noexcept {
@@ -708,7 +708,7 @@ void MonophonicPitchDetector::enforce_m3_feasibility(
   }
 }
 
-void MonophonicPitchDetector::select_m3_feasible_candidates(
+void PolyphonicPitchDetector::select_m3_feasible_candidates(
     const std::array<double, kMaxCandidates>& scores,
     const std::array<double, kMaxCandidates>& fundamentals,
     const std::array<double, kMaxCandidates>& narrow_fundamentals,
@@ -956,7 +956,7 @@ void MonophonicPitchDetector::select_m3_feasible_candidates(
   }
 }
 
-void MonophonicPitchDetector::assign_m3_strings(
+void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   if (profile_mode_ != ProfileMode::m3) {
     for (std::size_t candidate = 0U;
@@ -1118,7 +1118,7 @@ void MonophonicPitchDetector::assign_m3_strings(
   }
 }
 
-void MonophonicPitchDetector::update_harmonic_profile_memory(
+void PolyphonicPitchDetector::update_harmonic_profile_memory(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   const double mix = 1.0 - harmonic_memory_decay;
   const double long_mix = 1.0 - long_harmonic_memory_decay;
@@ -1154,7 +1154,7 @@ void MonophonicPitchDetector::update_harmonic_profile_memory(
   }
 }
 
-void MonophonicPitchDetector::update_beat_evidence(
+void PolyphonicPitchDetector::update_beat_evidence(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   const double decisions_per_second =
       sample_rate_ / static_cast<double>(kDecisionQuantum);
@@ -1245,7 +1245,7 @@ void MonophonicPitchDetector::update_beat_evidence(
   }
 }
 
-std::uint16_t MonophonicPitchDetector::unison_dropout_decisions(
+std::uint16_t PolyphonicPitchDetector::unison_dropout_decisions(
     std::size_t candidate) const noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_)) {
     return unison_dropout_decisions_;
@@ -1266,7 +1266,7 @@ std::uint16_t MonophonicPitchDetector::unison_dropout_decisions(
   return std::max(unison_dropout_decisions_, beat_hold);
 }
 
-double MonophonicPitchDetector::corrected_harmonic_energy(
+double PolyphonicPitchDetector::corrected_harmonic_energy(
     std::size_t candidate, std::size_t harmonic) const noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_) ||
       harmonic >= kHarmonicCount) {
@@ -1302,7 +1302,7 @@ double MonophonicPitchDetector::corrected_harmonic_energy(
                           kMaximumHarmonicEnergyCorrection);
 }
 
-void MonophonicPitchDetector::update_phase_cents_estimates(
+void PolyphonicPitchDetector::update_phase_cents_estimates(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   const double decisions_per_second =
       sample_rate_ / static_cast<double>(kDecisionQuantum);
@@ -1386,7 +1386,7 @@ void MonophonicPitchDetector::update_phase_cents_estimates(
   }
 }
 
-void MonophonicPitchDetector::infer_m3_unison_strings(
+void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   if (profile_mode_ != ProfileMode::m3) {
     return;
@@ -1903,7 +1903,7 @@ void MonophonicPitchDetector::infer_m3_unison_strings(
   }
 }
 
-double MonophonicPitchDetector::calibration_similarity(
+double PolyphonicPitchDetector::calibration_similarity(
     std::size_t candidate, std::size_t string) const noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_) ||
       string >= kM3OpenNotes.size()) {
@@ -1953,7 +1953,7 @@ double MonophonicPitchDetector::calibration_similarity(
          learned_confidence;
 }
 
-void MonophonicPitchDetector::observe_calibration(
+void PolyphonicPitchDetector::observe_calibration(
     const std::array<double, kMaxCandidates>& scores,
     double lower_guard_score, double upper_guard_score, bool quiet) noexcept {
   if (!calibrator_.active() || quiet) {
@@ -2012,7 +2012,7 @@ void MonophonicPitchDetector::observe_calibration(
   static_cast<void>(calibrator_.observe(observation));
 }
 
-void MonophonicPitchDetector::write_snapshot(
+void PolyphonicPitchDetector::write_snapshot(
     DetectorDecision& decision,
     const std::array<double, kMaxCandidates>& scores,
     const std::array<bool, kMaxCandidates>& selected,
@@ -2135,7 +2135,7 @@ void MonophonicPitchDetector::write_snapshot(
   decision.tuner_snapshot_ready = true;
 }
 
-DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
+DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   DetectorDecision decision;
   std::array<double, kMaxCandidates> scores{};
   std::array<double, kMaxCandidates> fundamentals{};
@@ -2443,7 +2443,7 @@ DetectorDecision MonophonicPitchDetector::make_decision() noexcept {
   return decision;
 }
 
-DetectorDecision MonophonicPitchDetector::process_sample(double sample) noexcept {
+DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept {
   if (!configured_ || !std::isfinite(sample)) {
     return {};
   }
