@@ -43,10 +43,15 @@ struct TunerVoice final {
   // rank changes.
   std::uint8_t string_index{kUnassignedTunerString};
   // A nonzero group identifies the one measured pitch/cents/confidence value
-  // backing this lane. The member mask makes groups of two through all eight
-  // physical strings explicit and lets multiple shared groups coexist.
+  // backing this lane. The member mask makes the calibrated product ceiling
+  // of two through four same-pitch strings explicit while leaving all eight
+  // lanes available to independent pitches.
   std::uint8_t pitch_evidence_group_id{kUnassignedPitchEvidenceGroup};
   std::uint8_t pitch_evidence_member_mask{};
+  // Beat frequency is display/diagnostic evidence, not another pitch estimate.
+  // Q8 gives 1/256 Hz resolution and zero means that no causal beat period has
+  // yet been accepted.
+  std::uint16_t beat_hz_q8{};
 
   [[nodiscard]] bool shares_pitch_evidence() const noexcept {
     const std::uint8_t members = pitch_evidence_member_mask;

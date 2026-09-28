@@ -16,6 +16,7 @@ constexpr std::uint32_t kStringMask = 0x07U;
 constexpr std::uint32_t kCentsShift = 16U;
 constexpr std::uint32_t kAgeShift = 16U;
 constexpr std::uint32_t kEvidenceMemberMaskShift = 8U;
+constexpr std::uint32_t kBeatHzShift = 16U;
 constexpr std::int16_t kMinimumCentsQ8 = -50 * 256;
 constexpr std::int16_t kMaximumCentsQ8 = 50 * 256;
 constexpr std::uint16_t kMaximumConfidenceQ15 = 32767U;
@@ -82,7 +83,8 @@ std::uint32_t pack_voice_c(const TunerVoice& voice) noexcept {
                   : kUnassignedPitchEvidenceGroup;
   const std::uint32_t members =
       group_valid ? voice.pitch_evidence_member_mask : 0U;
-  return group | (members << kEvidenceMemberMaskShift);
+  return group | (members << kEvidenceMemberMaskShift) |
+         (static_cast<std::uint32_t>(voice.beat_hz_q8) << kBeatHzShift);
 }
 
 TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b,
@@ -105,6 +107,7 @@ TunerVoice unpack_voice(std::uint32_t word_a, std::uint32_t word_b,
       static_cast<std::uint8_t>(word_c & 0xFFU);
   voice.pitch_evidence_member_mask = static_cast<std::uint8_t>(
       (word_c >> kEvidenceMemberMaskShift) & 0xFFU);
+  voice.beat_hz_q8 = static_cast<std::uint16_t>(word_c >> kBeatHzShift);
   return voice;
 }
 

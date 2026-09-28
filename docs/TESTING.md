@@ -19,6 +19,100 @@ git diff --check
 
 These checks do not open REAPER and should run before any guarded host launch.
 
+## Native pre-live checks and recording replay
+
+The native suite includes the four supported rates (44.1, 48, 88.2, and
+96 kHz) and 17 host partitions from 16 through 4096 samples. Build and run it
+without opening a DAW:
+
+```sh
+cmake -S . -B build/vst3/release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/vst3/release --target m3_native_tests -j2
+build/vst3/release/m3_native_tests
+```
+
+`m3_replay` is the offline bridge for recorded strings. It accepts mono or
+stereo RIFF/WAVE PCM16, PCM24, PCM32, or float32, converts stereo to the same
+mono detector input used by the plug-in, and reports a deterministic result
+fingerprint and labeled-frame metrics:
+
+```sh
+cmake --build build/vst3/release --target m3_replay -j2
+build/vst3/release/m3_replay \
+  --wav recordings/string-1.wav \
+  --labels recordings/string-1.tsv \
+  --calibration recordings/m3-calibration.bin \
+  --block 512
+```
+
+The optional calibration input may be either the exact `M3CB` calibration
+image or the raw combined VST3 state image (persistent settings followed by
+`M3CB`). Labels use exact sample indices and this header:
+
+```text
+start_sample	end_sample	midi_note	string_mask
+```
+
+Rows may overlap for chords. `string_mask=0` scores only the MIDI note; a
+nonzero decimal bit mask scores exact physical tuner lanes and is preferred
+for isolated-string and same-note recordings. The replay engine is verified
+invariant at partitions 1, 17, 64, 128, 511, and 4096. The completed sanitized
+A4=440 physical calibration bank is retained at
+`tests/fixtures/m3_physical_a440/calibration-v1.m3cb`; its manifest records the
+eight source hashes without publishing workstation paths or raw recordings.
+Offline replay remains complementary to, not a substitute for, live DAW use.
+
+For a physical string recorded as stable individual frets rather than a
+continuous glide, the same tool can derive an `M3CB` map from two labeled
+passes over every fret. The single-bit `string_mask` must identify one physical
+lane, and `--a4` must match the reference used while recording:
+
+```sh
+build/vst3/release/m3_replay \
+  --wav recordings/string-8.wav \
+  --labels recordings/string-8-primary.tsv \
+  --a4 440 \
+  --derive-calibration-string 0 \
+  --calibration-output recordings/string-8.m3cb \
+  --block 512
+```
+
+The derivation accepts stable offsets strictly inside the nearest-semitone
+boundary, requires at least two consistent observations for all 25 frets, and
+uses the generated map immediately for the reported replay result. It does not
+modify the real-time double-click glide workflow.
+
+An optional fifth TSV column, `calibration_pass`, makes three-pass physical
+captures explicit. Pass `1` is the ascending walk, pass `2` is the descending
+walk, and pass `3` (or a later ID) contains isolated-note checks. Each pass has
+equal influence on a fretted pitch center regardless of repeated holds inside
+that pass. When one of three pass means is outside the 24-cent repeatability
+corridor, the closest consistent pair is retained; two disagreeing passes
+still fail closed. The bidirectional walk remains the harmonic fingerprint,
+while isolated notes refine pitch only. Fret zero remains anchored to the two
+walk passes so later open-string attacks cannot move the instrument reference.
+Four-column label files retain the prior observation-weighted behavior.
+
+Pass an existing `M3CB` with `--calibration` while deriving the next string to
+preserve its measured lanes and replace only the requested string. This builds
+the comparison bank needed for physical-lane assignment without replaying or
+re-estimating earlier recordings.
+
+Add `--label-details` to print one result row per labeled hold. This separates
+a weak fret, attack window, or physical-lane assignment from the aggregate
+replay score while calibrating real strings.
+
+The software-only detector benchmark is:
+
+```sh
+cmake --build build/vst3/release --target m3_vst3_benchmark -j1
+```
+
+It prints deadline ratios for dense eight-pitch and calibrated four-string
+unison workloads at every supported sample rate and block sizes 32–1024. Its
+scope is explicitly `detector_core`; it does not claim DAW, driver, or hardware
+round-trip performance.
+
 ## Disposable profile
 
 Stage only the repository-owned test environment:

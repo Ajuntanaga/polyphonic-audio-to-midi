@@ -87,6 +87,8 @@ class PolyphonicPitchDetector final {
     std::int16_t retained_cents_q8{};
     std::uint16_t retained_confidence_q15{};
     bool retained_cents_valid{};
+    bool polyphonic_context{};
+    bool calibrated_lane_committed{};
   };
 
   struct PhaseCentsState final {
@@ -111,6 +113,23 @@ class PolyphonicPitchDetector final {
     std::uint16_t accepted_cycles{};
     bool initialized{};
     bool below_gate{};
+    bool valid{};
+  };
+
+  static constexpr std::size_t kFineFrequencyHistoryCapacity = 512U;
+  struct FineFrequencyEvidenceState final {
+    std::array<double, kFineFrequencyHistoryCapacity> real{};
+    std::array<double, kFineFrequencyHistoryCapacity> imaginary{};
+    std::array<std::uint32_t, kFineFrequencyHistoryCapacity> decision_ticks{};
+    std::array<double, kMaxVoices> component_energy{};
+    double frequency_deviation_hz{};
+    std::uint32_t last_decision_tick{};
+    std::uint16_t write_index{};
+    std::uint16_t count{};
+    std::uint16_t pending_count{};
+    std::uint8_t member_mask{};
+    std::uint8_t pending_member_mask{};
+    bool multi_source_observed{};
     bool valid{};
   };
 
@@ -156,14 +175,11 @@ class PolyphonicPitchDetector final {
   void refresh_m3_playable_string_masks() noexcept;
   [[nodiscard]] std::uint8_t playable_string_mask(
       std::size_t candidate) const noexcept;
-  [[nodiscard]] std::size_t m3_assignment_state_count(
-      const std::array<bool, kMaxCandidates>& selected) const noexcept;
-  [[nodiscard]] bool selection_has_distinct_m3_strings(
-      const std::array<bool, kMaxCandidates>& selected) const noexcept;
-  void enforce_m3_feasibility(
-      std::array<bool, kMaxCandidates>& selected,
+  [[nodiscard]] bool has_calibrated_direct_support(
       const std::array<double, kMaxCandidates>& scores,
-      const std::array<double, kMaxCandidates>& fundamentals) const noexcept;
+      const std::array<double, kMaxCandidates>& fundamentals,
+      std::size_t candidate, std::size_t count,
+      double threshold) const noexcept;
   void select_m3_feasible_candidates(
       const std::array<double, kMaxCandidates>& scores,
       const std::array<double, kMaxCandidates>& fundamentals,
@@ -176,6 +192,8 @@ class PolyphonicPitchDetector final {
   void update_harmonic_profile_memory(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void update_beat_evidence(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void update_fine_frequency_evidence(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   [[nodiscard]] std::uint16_t unison_dropout_decisions(
       std::size_t candidate) const noexcept;
@@ -211,6 +229,8 @@ class PolyphonicPitchDetector final {
   std::array<std::uint16_t, kMaxCandidates> harmonic_memory_updates_{};
   std::array<PhaseCentsState, kMaxCandidates> phase_cents_states_{};
   std::array<BeatEvidenceState, kMaxCandidates> beat_evidence_states_{};
+  std::array<FineFrequencyEvidenceState, kMaxCandidates>
+      fine_frequency_evidence_states_{};
   std::array<M3PoolCandidate, kMaxVoices * kMaxVoices> m3_pool_{};
   std::array<M3DpState, 1U << kMaxVoices> m3_dp_states_{};
   StringSweepCalibrator calibrator_{};
@@ -236,10 +256,12 @@ class PolyphonicPitchDetector final {
   std::uint8_t sensitivity_{50U};
   std::uint8_t response_{25U};
   std::uint16_t unison_dropout_decisions_{1U};
+  std::uint16_t fine_frequency_decimation_decisions_{1U};
   std::uint8_t fixed_velocity_{100U};
   VelocityMode velocity_mode_{VelocityMode::dynamic};
   MidiRouting midi_routing_{MidiRouting::single};
   std::uint32_t snapshot_generation_{};
+  std::uint32_t decision_counter_{};
   std::uint32_t signal_samples_{};
   std::uint32_t narrow_signal_samples_{};
   ProfileMode profile_mode_{ProfileMode::m3};

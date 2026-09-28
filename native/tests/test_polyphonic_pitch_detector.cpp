@@ -9,6 +9,7 @@
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "m3/pitch_math.hpp"
 #include "m3/types.hpp"
+#include "m3_signal_fixture.hpp"
 #include "test_support.hpp"
 
 namespace m3 {
@@ -19,6 +20,48 @@ struct PolyphonicPitchDetectorTestAccess final {
     double hold_seconds{};
     bool valid{};
   };
+
+  struct FineProbe final {
+    std::uint8_t members{};
+    std::uint8_t pending{};
+    std::uint16_t pending_count{};
+    std::uint16_t history_count{};
+    std::array<double, kMaxVoices> component_energy{};
+    double frequency_deviation_hz{};
+    bool multi_source_observed{};
+    bool valid{};
+    bool beat_valid{};
+  };
+
+  struct PhaseProbe final {
+    double cents{};
+    std::uint16_t accepted_updates{};
+    std::uint8_t assigned_string{};
+    bool valid{};
+    bool active{};
+  };
+
+  static FineProbe fine_probe(const PolyphonicPitchDetector& detector,
+                              std::size_t candidate) noexcept {
+    const auto& fine = detector.fine_frequency_evidence_states_[candidate];
+    return {fine.member_mask,
+            fine.pending_member_mask,
+            fine.pending_count,
+            fine.count,
+            fine.component_energy,
+            fine.frequency_deviation_hz,
+            fine.multi_source_observed,
+            fine.valid,
+            detector.beat_evidence_states_[candidate].valid};
+  }
+
+  static PhaseProbe phase_probe(const PolyphonicPitchDetector& detector,
+                                std::size_t candidate) noexcept {
+    const auto& phase = detector.phase_cents_states_[candidate];
+    const auto& state = detector.candidate_states_[candidate];
+    return {phase.cents, phase.accepted_updates, state.assigned_string,
+            phase.valid, state.active};
+  }
 
   static BeatProbe beat_probe_for_interference(
       PolyphonicPitchDetector& detector, std::size_t candidate,
@@ -189,7 +232,8 @@ struct PolyphonicPitchDetectorTestAccess final {
   static std::uint8_t inferred_group_mask(
       PolyphonicPitchDetector& detector, std::size_t candidate,
       std::uint8_t primary, std::uint8_t source_members,
-      std::uint8_t max_polyphony, TunerSnapshot* snapshot = nullptr) noexcept {
+      std::uint8_t max_polyphony, TunerSnapshot* snapshot = nullptr,
+      bool use_fine_frequency_evidence = true) noexcept {
     detector.max_polyphony_ = max_polyphony;
     detector.fast_energy_ = 1.0;
     detector.candidate_states_ = {};
@@ -216,6 +260,12 @@ struct PolyphonicPitchDetectorTestAccess final {
       detector.beat_evidence_states_[candidate].beat_hz = 2.0;
       detector.beat_evidence_states_[candidate].accepted_cycles = 3U;
       detector.beat_evidence_states_[candidate].valid = true;
+    }
+    if (use_fine_frequency_evidence && source_count >= 3U &&
+        source_count <= 4U) {
+      detector.fine_frequency_evidence_states_[candidate].member_mask =
+          source_members;
+      detector.fine_frequency_evidence_states_[candidate].valid = true;
     }
     for (std::size_t harmonic = 0U;
          harmonic < detector.harmonic_energy_memory_[candidate].size();
@@ -250,6 +300,59 @@ struct PolyphonicPitchDetectorTestAccess final {
     return state.assigned_string_mask;
   }
 
+  static std::uint8_t profile_only_group_mask(
+      PolyphonicPitchDetector& detector, std::size_t candidate,
+      std::uint8_t primary,
+      const std::array<double, kCalibrationHarmonicCount>& observed,
+      std::uint8_t max_polyphony, std::uint16_t observation_updates) noexcept {
+    detector.max_polyphony_ = max_polyphony;
+    detector.fast_energy_ = 1.0;
+    detector.candidate_states_ = {};
+    auto& state = detector.candidate_states_[candidate];
+    state.active = true;
+    state.age_ticks = observation_updates;
+    state.assigned_string = primary;
+    state.assigned_string_mask = static_cast<std::uint8_t>(1U << primary);
+    state.midi_voice_mask = state.assigned_string_mask;
+    detector.beat_evidence_states_[candidate] = {};
+    detector.fine_frequency_evidence_states_[candidate] = {};
+    detector.harmonic_energy_memory_[candidate] = observed;
+    detector.long_harmonic_energy_memory_[candidate] = {};
+    detector.harmonic_memory_updates_[candidate] = observation_updates;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    for (std::uint8_t decision = 0U; decision < 16U; ++decision) {
+      detector.infer_m3_unison_strings(selected);
+    }
+    return state.assigned_string_mask;
+  }
+
+  static bool calibrated_direct_support_for_profile(
+      PolyphonicPitchDetector& detector, std::size_t candidate,
+      const std::array<double, kCalibrationHarmonicCount>& profile,
+      double score_to_threshold_ratio) noexcept {
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    constexpr double kThreshold = 1.0;
+    scores[candidate] = score_to_threshold_ratio * kThreshold;
+    fundamentals[candidate] = 0.95 * scores[candidate];
+    if (candidate > 0U) {
+      fundamentals[candidate - 1U] = 0.25 * fundamentals[candidate];
+    }
+    if (candidate + 1U < static_cast<std::size_t>(detector.candidate_count_)) {
+      fundamentals[candidate + 1U] = 0.20 * fundamentals[candidate];
+    }
+    for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
+      auto& cell = detector.cells_[detector.cell_index(candidate, harmonic)];
+      cell.enabled = true;
+      cell.fast_real = std::sqrt(profile[harmonic]);
+      cell.fast_imaginary = 0.0;
+    }
+    return detector.has_calibrated_direct_support(
+        scores, fundamentals, candidate,
+        static_cast<std::size_t>(detector.candidate_count_), kThreshold);
+  }
+
   static std::array<std::uint8_t, 2U> legato_assignment_sequence(
       PolyphonicPitchDetector& detector) noexcept {
     constexpr std::size_t kReleasingCandidate = 12U;  // E3, string 3 open.
@@ -268,6 +371,8 @@ struct PolyphonicPitchDetectorTestAccess final {
 
     detector.candidate_states_[kReleasingCandidate] = {};
     detector.candidate_states_[kReplacementCandidate].active = true;
+    detector.candidate_states_[kReplacementCandidate].age_ticks =
+        std::numeric_limits<std::uint16_t>::max();
     detector.candidate_states_[kReplacementCandidate].assigned_string_mask =
         static_cast<std::uint8_t>(1U << initial);
     detector.candidate_states_[kReplacementCandidate].midi_voice_mask =
@@ -275,6 +380,181 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.assign_m3_strings(selected);
     return {initial,
             detector.candidate_states_[kReplacementCandidate].assigned_string};
+  }
+
+  static std::uint8_t assignment_beside_committed_unison_lane(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::size_t kNewCandidate = 52U - 32U;
+    constexpr std::size_t kUnisonCandidate = 56U - 32U;
+    detector.candidate_states_ = {};
+    auto& group = detector.candidate_states_[kUnisonCandidate];
+    group.active = true;
+    group.assigned_string = 6U;
+    group.assigned_string_mask =
+        static_cast<std::uint8_t>((1U << 6U) | (1U << 5U));
+    group.midi_voice_mask = group.assigned_string_mask;
+
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kNewCandidate] = true;
+    selected[kUnisonCandidate] = true;
+    detector.assign_m3_strings(selected);
+    return detector.candidate_states_[kNewCandidate].assigned_string;
+  }
+
+  static std::uint8_t assignment_with_single_source_fine_fit(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::size_t kCandidate = 56U - 32U;
+    constexpr std::uint8_t kStartedString = 6U;
+    constexpr std::uint8_t kNearbyTemplateString = 5U;
+    detector.candidate_states_ = {};
+    auto& voice = detector.candidate_states_[kCandidate];
+    voice.active = true;
+    voice.age_ticks = std::numeric_limits<std::uint16_t>::max();
+    voice.assigned_string = kStartedString;
+    voice.assigned_string_mask =
+        static_cast<std::uint8_t>(1U << kStartedString);
+    voice.midi_voice_mask = voice.assigned_string_mask;
+    auto& fine = detector.fine_frequency_evidence_states_[kCandidate];
+    fine.valid = true;
+    // A transient may make the multi-source hypothesis plausible before the
+    // residual test collapses its retained member mask back to one template.
+    // That single retained bit is not enough to overrule the started lane.
+    fine.multi_source_observed = true;
+    fine.member_mask =
+        static_cast<std::uint8_t>(1U << kNearbyTemplateString);
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kCandidate] = true;
+    detector.assign_m3_strings(selected);
+    return voice.assigned_string;
+  }
+
+  static bool selects_direct_high_fret_candidate(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::uint8_t kNote = 75U;
+    const std::size_t candidate = kNote - detector.lowest_note_;
+    detector.fast_energy_ = 1.0;
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow_fundamentals{};
+    // Mirrors the physical string-2 fret-15 attack: a clear local
+    // fundamental well above the coherence threshold, but only about one
+    // quarter of the broadband input energy.
+    scores[candidate] = 0.26;
+    fundamentals[candidate] = 0.25;
+    std::array<bool, kMaxCandidates> selected{};
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow_fundamentals, 0.05, selected,
+        static_cast<std::size_t>(detector.candidate_count_));
+    return selected[candidate];
+  }
+
+  static bool selects_calibrated_high_fret_candidate_below_global_threshold(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::uint8_t kLowerNote = 68U;
+    constexpr std::uint8_t kNote = 80U;
+    const std::size_t lower = kLowerNote - detector.lowest_note_;
+    const std::size_t candidate = kNote - detector.lowest_note_;
+    detector.fast_energy_ = 1.0;
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow_fundamentals{};
+    scores[lower] = 0.10;
+    fundamentals[lower] = 0.10;
+    scores[candidate] = 0.020;
+    fundamentals[candidate] = 0.019;
+    auto& fundamental =
+        detector.cells_[detector.cell_index(candidate, 0U)];
+    fundamental.fast_real = std::sqrt(0.019);
+    fundamental.fast_imaginary = 0.0;
+    auto& second = detector.cells_[detector.cell_index(candidate, 1U)];
+    second.fast_real = std::sqrt(0.001 / 0.72);
+    second.fast_imaginary = 0.0;
+    std::array<bool, kMaxCandidates> selected{};
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow_fundamentals, 0.05, selected,
+        static_cast<std::size_t>(detector.candidate_count_));
+    return selected[candidate];
+  }
+
+  static std::array<std::uint8_t, 2U>
+  inference_beside_committed_unison_group(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::size_t kLowerCandidate = 52U - 32U;
+    constexpr std::size_t kHigherCandidate = 56U - 32U;
+    constexpr std::uint8_t kLowerPrimary = 4U;
+    constexpr std::uint8_t kSharedExtra = 5U;
+    constexpr std::uint8_t kHigherPrimary = 6U;
+    constexpr std::array<double, kCalibrationHarmonicCount> kLowerProfile{
+        1.00, 0.14, 0.04, 0.02, 0.01, 0.005};
+    constexpr std::array<double, kCalibrationHarmonicCount> kExtraProfile{
+        0.25, 0.90, 0.15, 0.06, 0.02, 0.010};
+    constexpr std::array<double, kCalibrationHarmonicCount> kHigherProfile{
+        0.40, 0.20, 0.82, 0.09, 0.03, 0.015};
+    auto set_profile = [](StringCalibrationBank& bank, std::size_t string,
+                          std::size_t fret,
+                          const auto& amplitudes) noexcept {
+      StringCalibrationPoint& point = bank.points[string][fret];
+      double total = 0.0;
+      for (const double amplitude : amplitudes) {
+        total += amplitude * amplitude;
+      }
+      for (std::size_t harmonic = 0U; harmonic < amplitudes.size();
+           ++harmonic) {
+        point.harmonic_profile_q15[harmonic] =
+            static_cast<std::uint16_t>(std::lround(
+                32767.0 * amplitudes[harmonic] * amplitudes[harmonic] /
+                total));
+      }
+      point.confidence_q15 = 32767U;
+      point.observation_count = 128U;
+      point.quality = CalibrationPointQuality::measured;
+      bank.calibrated_string_mask = static_cast<std::uint8_t>(
+          bank.calibrated_string_mask | (1U << string));
+    };
+    StringCalibrationBank bank;
+    set_profile(bank, kLowerPrimary, 4U, kLowerProfile);
+    set_profile(bank, kSharedExtra, 0U, kExtraProfile);
+    set_profile(bank, kSharedExtra, 4U, kExtraProfile);
+    set_profile(bank, kHigherPrimary, 0U, kHigherProfile);
+    detector.set_calibration_bank(bank);
+    detector.max_polyphony_ = 4U;
+    detector.fast_energy_ = 1.0;
+    detector.candidate_states_ = {};
+    auto& lower = detector.candidate_states_[kLowerCandidate];
+    lower.active = true;
+    lower.age_ticks = std::numeric_limits<std::uint16_t>::max();
+    lower.assigned_string = kLowerPrimary;
+    lower.assigned_string_mask =
+        static_cast<std::uint8_t>(1U << kLowerPrimary);
+    auto& higher = detector.candidate_states_[kHigherCandidate];
+    higher.active = true;
+    higher.age_ticks = std::numeric_limits<std::uint16_t>::max();
+    higher.assigned_string = kHigherPrimary;
+    higher.assigned_string_mask = static_cast<std::uint8_t>(
+        (1U << kHigherPrimary) | (1U << kSharedExtra));
+    higher.midi_voice_mask = higher.assigned_string_mask;
+
+    const auto& learned = detector.calibrator_.bank();
+    const auto* lower_point = learned.point(kLowerPrimary, 4U);
+    const auto* extra_point = learned.point(kSharedExtra, 0U);
+    for (std::size_t harmonic = 0U;
+         harmonic < PolyphonicPitchDetector::kHarmonicCount; ++harmonic) {
+      detector.harmonic_energy_memory_[kLowerCandidate][harmonic] =
+          0.5 * static_cast<double>(
+                    lower_point->harmonic_profile_q15[harmonic]) +
+          0.5 * static_cast<double>(
+                    extra_point->harmonic_profile_q15[harmonic]);
+    }
+    detector.beat_evidence_states_[kLowerCandidate].beat_hz = 2.0;
+    detector.beat_evidence_states_[kLowerCandidate].accepted_cycles = 3U;
+    detector.beat_evidence_states_[kLowerCandidate].valid = true;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kLowerCandidate] = true;
+    selected[kHigherCandidate] = true;
+    for (std::uint8_t decision = 0U; decision < 16U; ++decision) {
+      detector.infer_m3_unison_strings(selected);
+    }
+    return {lower.assigned_string_mask, higher.assigned_string_mask};
   }
 
   static std::uint8_t assigned_string_for_profile(
@@ -297,6 +577,83 @@ struct PolyphonicPitchDetectorTestAccess final {
     selected[candidate] = true;
     detector.assign_m3_strings(selected);
     return detector.candidate_states_[candidate].assigned_string;
+  }
+
+  static std::uint8_t assigned_string_for_profile_and_cents(
+      PolyphonicPitchDetector& detector, std::uint8_t note,
+      const std::array<double, kCalibrationHarmonicCount>& amplitudes,
+      double cents) noexcept {
+    if (note < detector.lowest_note_) {
+      return kUnassignedTunerString;
+    }
+    const std::size_t candidate = note - detector.lowest_note_;
+    if (candidate >= static_cast<std::size_t>(detector.candidate_count_)) {
+      return kUnassignedTunerString;
+    }
+    for (std::size_t harmonic = 0U; harmonic < amplitudes.size(); ++harmonic) {
+      auto& cell = detector.cells_[detector.cell_index(candidate, harmonic)];
+      cell.enabled = true;
+      cell.fast_real = amplitudes[harmonic];
+      cell.fast_imaginary = 0.0;
+    }
+    detector.phase_cents_states_[candidate].cents = cents;
+    detector.phase_cents_states_[candidate].valid = true;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    detector.assign_m3_strings(selected);
+    return detector.candidate_states_[candidate].assigned_string;
+  }
+
+  static std::uint8_t reassigned_settled_string_for_profile_and_cents(
+      PolyphonicPitchDetector& detector, std::uint8_t note,
+      std::uint8_t initial_string,
+      const std::array<double, kCalibrationHarmonicCount>& amplitudes,
+      double cents, bool polyphonic_context = false,
+      bool harmonic_overlap = false,
+      bool active_harmonic = false) noexcept {
+    if (note < detector.lowest_note_ ||
+        initial_string >= kM3OpenNotes.size()) {
+      return kUnassignedTunerString;
+    }
+    const std::size_t candidate = note - detector.lowest_note_;
+    if (candidate >= static_cast<std::size_t>(detector.candidate_count_)) {
+      return kUnassignedTunerString;
+    }
+    for (std::size_t harmonic = 0U; harmonic < amplitudes.size(); ++harmonic) {
+      auto& cell = detector.cells_[detector.cell_index(candidate, harmonic)];
+      cell.enabled = true;
+      cell.fast_real = amplitudes[harmonic];
+      cell.fast_imaginary = 0.0;
+    }
+    auto& state = detector.candidate_states_[candidate];
+    state.active = true;
+    state.age_ticks = std::numeric_limits<std::uint16_t>::max();
+    state.assigned_string = initial_string;
+    state.assigned_string_mask =
+        static_cast<std::uint8_t>(1U << initial_string);
+    state.midi_voice_mask = state.assigned_string_mask;
+    state.polyphonic_context = polyphonic_context;
+    detector.phase_cents_states_[candidate].cents = cents;
+    detector.phase_cents_states_[candidate].valid = true;
+    if (harmonic_overlap) {
+      std::array<bool, kMaxCandidates> overlap{};
+      overlap[candidate] = true;
+      const std::size_t harmonic = std::min(
+          candidate + 19U,
+          static_cast<std::size_t>(detector.candidate_count_ - 1U));
+      overlap[harmonic] = true;
+      detector.candidate_states_[harmonic].active = active_harmonic;
+      detector.assign_m3_strings(overlap);
+      detector.candidate_states_[harmonic] = {};
+      state.assigned_string = initial_string;
+      state.assigned_string_mask =
+          static_cast<std::uint8_t>(1U << initial_string);
+      state.midi_voice_mask = state.assigned_string_mask;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    detector.assign_m3_strings(selected);
+    return state.assigned_string;
   }
 
   static std::array<TunerVoice, 3U> snapshot_retention_sequence(
@@ -742,7 +1099,253 @@ void release_chord(m3::PolyphonicPitchDetector& detector,
   }
 }
 
+struct AudioUnisonMetrics final {
+  std::uint32_t evaluation_frames{};
+  std::uint32_t correct_frames{};
+  std::uint32_t stable_event_churn{};
+  std::uint8_t final_member_mask{};
+  std::uint32_t last_incorrect_sample{};
+  std::uint32_t last_transition_sample{};
+  std::uint16_t maximum_beat_hz_q8{};
+  bool shared_pitch_fields{true};
+  m3::PolyphonicPitchDetectorTestAccess::FineProbe fine{};
+};
+
+AudioUnisonMetrics run_plucked_unison_case(std::uint8_t note,
+                                           std::size_t member_count) noexcept {
+  constexpr double kSampleRate = 48000.0;
+  // The closest modeled pair is two cents apart. At these pitches that is a
+  // roughly three-second beat cycle, so the acceptance window deliberately
+  // begins after one causal beat-time observation rather than pretending a
+  // static spectrum can identify every lane instantly.
+  constexpr double kDurationSeconds = 5.5;
+  // The slowest two-cent pair takes roughly one 3.3-second beat cycle, then
+  // the staggered background fit needs a bounded consensus interval. Judge
+  // stability after four seconds rather than inside that causal observation.
+  constexpr double kEvaluationStartSeconds = 4.0;
+  const std::uint8_t members =
+      m3::test_signal::playable_member_mask(note, member_count);
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = static_cast<std::uint8_t>(note - 1U);
+  config.highest_note = static_cast<std::uint8_t>(note + 1U);
+  config.max_polyphony = static_cast<std::uint8_t>(member_count);
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  detector.set_calibration_bank(
+      m3::test_signal::calibration_bank_for_note(note));
+
+  AudioUnisonMetrics metrics;
+  const std::uint32_t sample_count = static_cast<std::uint32_t>(
+      std::lround(kDurationSeconds * kSampleRate));
+  const std::uint32_t evaluation_start = static_cast<std::uint32_t>(
+      std::lround(kEvaluationStartSeconds * kSampleRate));
+  for (std::uint32_t sample = 0U; sample < sample_count; ++sample) {
+    const m3::DetectorDecision decision = detector.process_sample(
+        m3::test_signal::unison_sample(note, members, sample, kSampleRate));
+    if (sample >= evaluation_start) {
+      metrics.stable_event_churn +=
+          static_cast<std::uint32_t>(decision.transitions.size());
+      if (decision.transitions.size() != 0U) {
+        metrics.last_transition_sample = sample;
+      }
+    }
+    if (!decision.tuner_snapshot_ready || sample < evaluation_start) {
+      continue;
+    }
+    ++metrics.evaluation_frames;
+    const m3::TunerSnapshot& snapshot = decision.tuner_snapshot;
+    std::uint8_t observed_members = 0U;
+    bool correct = snapshot.voice_count == member_count;
+    const m3::TunerVoice* shared =
+        snapshot.voice_count == 0U ? nullptr : &snapshot.voices[0U];
+    for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
+      const m3::TunerVoice& observed = snapshot.voices[voice];
+      correct = correct && observed.midi_note == note &&
+                observed.string_index < m3::kMaxVoices &&
+                observed.pitch_evidence_member_mask == members;
+      if (observed.string_index < m3::kMaxVoices) {
+        observed_members = static_cast<std::uint8_t>(
+            observed_members | (1U << observed.string_index));
+      }
+      metrics.maximum_beat_hz_q8 =
+          std::max(metrics.maximum_beat_hz_q8, observed.beat_hz_q8);
+      if (shared != nullptr) {
+        metrics.shared_pitch_fields =
+            metrics.shared_pitch_fields &&
+            observed.cents_q8 == shared->cents_q8 &&
+            observed.cents_valid == shared->cents_valid &&
+            observed.confidence_q15 == shared->confidence_q15 &&
+            observed.beat_hz_q8 == shared->beat_hz_q8;
+      }
+    }
+    correct = correct && observed_members == members;
+    metrics.correct_frames += correct ? 1U : 0U;
+    if (!correct) {
+      metrics.last_incorrect_sample = sample;
+    }
+    metrics.final_member_mask = observed_members;
+  }
+  metrics.fine = m3::PolyphonicPitchDetectorTestAccess::fine_probe(
+      detector, 1U);
+  return metrics;
+}
+
+struct SingleStringMetrics final {
+  std::uint8_t maximum_voices{};
+  std::uint8_t final_string{m3::kUnassignedTunerString};
+  std::uint32_t tracked_frames{};
+  m3::PolyphonicPitchDetectorTestAccess::FineProbe fine{};
+};
+
+SingleStringMetrics run_single_plucked_string_case(std::size_t string,
+                                                    std::uint8_t fret,
+                                                    double level) noexcept {
+  constexpr double kSampleRate = 48000.0;
+  const std::uint8_t note =
+      static_cast<std::uint8_t>(m3::kM3OpenNotes[string] + fret);
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = static_cast<std::uint8_t>(note - 1U);
+  config.highest_note = static_cast<std::uint8_t>(note + 1U);
+  config.max_polyphony = 7U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  detector.set_calibration_bank(
+      m3::test_signal::calibration_bank_for_note(note));
+
+  SingleStringMetrics metrics;
+  constexpr std::uint32_t kSamples = 240000U;
+  constexpr std::uint32_t kEvaluationStart = 168000U;
+  for (std::uint32_t sample = 0U; sample < kSamples; ++sample) {
+    const m3::DetectorDecision decision = detector.process_sample(
+        m3::test_signal::plucked_string_sample(
+            string, note, sample, kSampleRate, level));
+    if (!decision.tuner_snapshot_ready) {
+      continue;
+    }
+    metrics.maximum_voices = std::max(
+        metrics.maximum_voices, decision.tuner_snapshot.voice_count);
+    if (sample < kEvaluationStart) {
+      continue;
+    }
+    if (decision.tuner_snapshot.voice_count == 1U) {
+      ++metrics.tracked_frames;
+      metrics.final_string =
+          decision.tuner_snapshot.voices[0U].string_index;
+    }
+  }
+  metrics.fine = m3::PolyphonicPitchDetectorTestAccess::fine_probe(
+      detector, 1U);
+  return metrics;
+}
+
 }  // namespace
+
+M3_TEST(native_detector_tracks_audio_derived_two_through_four_string_unisons) {
+  constexpr std::array<std::uint8_t, 2U> kSharedPitchNotes{56U, 60U};
+  for (const std::uint8_t note : kSharedPitchNotes) {
+    for (std::size_t members = 2U; members <= 4U; ++members) {
+      const AudioUnisonMetrics metrics =
+          run_plucked_unison_case(note, members);
+      if (metrics.correct_frames * 10U < metrics.evaluation_frames * 9U ||
+          metrics.stable_event_churn != 0U) {
+        std::fprintf(stderr,
+                     "unison note=%u members=%zu frames=%u correct=%u churn=%u mask=%u expected=%u last_bad=%.3f last_event=%.3f fine=%u pending=%u/%u dev=%.4f multi=%d beat=%d\n",
+                     note, members, metrics.evaluation_frames,
+                     metrics.correct_frames, metrics.stable_event_churn,
+                     metrics.final_member_mask,
+                     m3::test_signal::playable_member_mask(note, members),
+                     static_cast<double>(metrics.last_incorrect_sample) /
+                         48000.0,
+                     static_cast<double>(metrics.last_transition_sample) /
+                     48000.0, metrics.fine.members,
+                     metrics.fine.pending, metrics.fine.pending_count,
+                     metrics.fine.frequency_deviation_hz,
+                     metrics.fine.multi_source_observed ? 1 : 0,
+                     metrics.fine.beat_valid ? 1 : 0);
+        std::fprintf(stderr,
+                     " unison energies=%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
+                     metrics.fine.component_energy[0U],
+                     metrics.fine.component_energy[1U],
+                     metrics.fine.component_energy[2U],
+                     metrics.fine.component_energy[3U],
+                     metrics.fine.component_energy[4U],
+                     metrics.fine.component_energy[5U],
+                     metrics.fine.component_energy[6U],
+                     metrics.fine.component_energy[7U]);
+      }
+      M3_EXPECT_TRUE(metrics.evaluation_frames > 0U);
+      M3_EXPECT_TRUE(metrics.correct_frames * 10U >=
+                     metrics.evaluation_frames * 9U);
+      M3_EXPECT_EQ(metrics.stable_event_churn, 0U);
+      M3_EXPECT_TRUE(metrics.shared_pitch_fields);
+      M3_EXPECT_EQ(metrics.final_member_mask,
+                   m3::test_signal::playable_member_mask(note, members));
+      if (note == 60U) {
+        M3_EXPECT_TRUE(metrics.maximum_beat_hz_q8 > 0U);
+      }
+    }
+  }
+}
+
+M3_TEST(native_detector_locks_each_recorded_low_string_to_its_tuner_lane) {
+  constexpr std::array<std::uint8_t, 3U> kFrets{0U, 12U, 24U};
+  constexpr std::array<double, 2U> kLevels{0.65, 1.0};
+  // Exercise the three heaviest synthetic models over complete 0--24 fret
+  // ranges; the all-string open-note test below protects all eight lane
+  // identities and the offline fixture tests cover the physical bank itself.
+  constexpr std::size_t kRecordedStringCount = 3U;
+  for (std::size_t string = 0U; string < kRecordedStringCount; ++string) {
+    for (const std::uint8_t fret : kFrets) {
+      for (const double level : kLevels) {
+        const SingleStringMetrics metrics =
+            run_single_plucked_string_case(string, fret, level);
+        if (metrics.maximum_voices > 1U || metrics.tracked_frames == 0U ||
+            metrics.final_string != static_cast<std::uint8_t>(string)) {
+          std::fprintf(stderr,
+                       "single string=%zu fret=%u level=%.2f max=%u frames=%u final=%u dev=%.4f multi=%d beat=%d fine=%u energies=%.4g,%.4g,%.4g,%.4g\n",
+                       string, fret, level, metrics.maximum_voices,
+                       metrics.tracked_frames, metrics.final_string,
+                       metrics.fine.frequency_deviation_hz,
+                       metrics.fine.multi_source_observed ? 1 : 0,
+                       metrics.fine.beat_valid ? 1 : 0,
+                       metrics.fine.members,
+                       metrics.fine.component_energy[0U],
+                       metrics.fine.component_energy[1U],
+                       metrics.fine.component_energy[2U],
+                       metrics.fine.component_energy[3U]);
+        }
+        M3_EXPECT_TRUE(metrics.maximum_voices <= 1U);
+        M3_EXPECT_TRUE(metrics.tracked_frames > 0U);
+        M3_EXPECT_EQ(metrics.final_string,
+                     static_cast<std::uint8_t>(string));
+      }
+    }
+  }
+}
+
+M3_TEST(native_detector_maps_each_open_plucked_string_to_its_tuner_lane) {
+  constexpr std::array<double, 2U> kLevels{0.65, 1.0};
+  for (std::size_t string = 0U; string < m3::kM3OpenNotes.size(); ++string) {
+    for (const double level : kLevels) {
+      const SingleStringMetrics metrics =
+          run_single_plucked_string_case(string, 0U, level);
+      M3_EXPECT_TRUE(metrics.maximum_voices <= 1U);
+      M3_EXPECT_TRUE(metrics.tracked_frames > 0U);
+      M3_EXPECT_EQ(metrics.final_string,
+                   static_cast<std::uint8_t>(string));
+    }
+  }
+}
 
 M3_TEST(native_polyphonic_detector_tracks_low_eight_string_tone_and_releases) {
   m3::PersistentConfig config;
@@ -1432,6 +2035,111 @@ M3_TEST(native_detector_keeps_a_live_legato_replacement_on_its_started_string) {
   M3_EXPECT_EQ(assignments[1U], assignments[0U]);
 }
 
+M3_TEST(native_detector_keeps_a_single_routing_tuner_lane_on_its_started_string) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::single;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 2U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const auto assignments =
+      m3::PolyphonicPitchDetectorTestAccess::legato_assignment_sequence(
+          detector);
+  M3_EXPECT_EQ(assignments[0U], 2U);
+  M3_EXPECT_EQ(assignments[1U], assignments[0U]);
+}
+
+M3_TEST(native_detector_reserves_every_committed_unison_lane_across_pitch_groups) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 3U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   assignment_beside_committed_unison_lane(detector),
+               4U);
+}
+
+M3_TEST(native_detector_does_not_move_a_settled_lane_for_a_single_source_fine_fit) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   assignment_with_single_source_fine_fit(detector),
+               6U);
+}
+
+M3_TEST(native_detector_does_not_prefer_silence_to_a_direct_high_fret_candidate) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  M3_EXPECT_TRUE(m3::PolyphonicPitchDetectorTestAccess::
+                     selects_direct_high_fret_candidate(detector));
+}
+
+M3_TEST(native_detector_uses_calibrated_identity_for_a_weak_high_fret_attack) {
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kPhysicalProfile{
+      1.00, 0.05, 0.00, 0.00, 0.00, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOtherProfile{
+      0.20, 1.00, 0.00, 0.00, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 6U, 24U, 0.0, kPhysicalProfile);
+  set_measured_string_profile(bank, 7U, 20U, 0.0, kOtherProfile);
+  detector.set_calibration_bank(bank);
+  M3_EXPECT_TRUE(m3::PolyphonicPitchDetectorTestAccess::
+                     selects_calibrated_high_fret_candidate_below_global_threshold(
+                         detector));
+}
+
+M3_TEST(native_detector_does_not_steal_an_extra_lane_from_another_pitch_group) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 4U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+
+  const auto masks = m3::PolyphonicPitchDetectorTestAccess::
+      inference_beside_committed_unison_group(detector);
+  M3_EXPECT_EQ(masks[0U], static_cast<std::uint8_t>(1U << 4U));
+  M3_EXPECT_EQ(masks[1U],
+               static_cast<std::uint8_t>((1U << 6U) | (1U << 5U)));
+}
+
 M3_TEST(native_detector_restarts_the_four_voice_evidence_gate_after_silence) {
   m3::PersistentConfig config;
   config.lowest_note = 32U;
@@ -1593,6 +2301,61 @@ M3_TEST(native_detector_tracks_all_eight_m3_open_strings_at_capacity) {
     M3_EXPECT_TRUE(lifecycle.note_off[voice]);
   }
   M3_EXPECT_FALSE(lifecycle.unexpected_on);
+}
+
+M3_TEST(native_detector_does_not_invent_highest_open_from_lower_string_harmonics) {
+  constexpr double kSampleRate = 96000.0;
+  constexpr std::uint8_t kHighestOpen = 60U;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  m3::StringCalibrationBank bank =
+      m3::test_signal::calibration_bank_for_note(kHighestOpen);
+  for (std::size_t string = 0U; string < m3::kM3OpenNotes.size(); ++string) {
+    m3::test_signal::set_calibration_point(
+        bank, string, m3::kM3OpenNotes[string]);
+  }
+  detector.set_calibration_bank(bank);
+
+  bool note_on = false;
+  std::uint32_t tracked_frames = 0U;
+  constexpr std::uint32_t kSamples = 288000U;
+  for (std::uint32_t sample = 0U; sample < kSamples; ++sample) {
+    double mixed = 0.0;
+    for (std::size_t string = 0U; string + 1U < m3::kM3OpenNotes.size();
+         ++string) {
+      mixed += m3::test_signal::plucked_string_sample(
+          string, m3::kM3OpenNotes[string], sample, kSampleRate);
+    }
+    const m3::DetectorDecision decision = detector.process_sample(mixed);
+    for (const m3::VoiceTransition& transition : decision.transitions) {
+      note_on = note_on ||
+                (transition.kind == m3::TransitionKind::note_on &&
+                 transition.note == kHighestOpen);
+    }
+    if (!decision.tuner_snapshot_ready || sample < 96000U) {
+      continue;
+    }
+    for (std::size_t voice = 0U;
+         voice < decision.tuner_snapshot.voice_count; ++voice) {
+      const m3::TunerVoice& observed = decision.tuner_snapshot.voices[voice];
+      tracked_frames +=
+          observed.state == m3::TunerVoiceState::tracking &&
+                  observed.midi_note == kHighestOpen
+              ? 1U
+              : 0U;
+    }
+  }
+  M3_EXPECT_FALSE(note_on);
+  M3_EXPECT_EQ(tracked_frames, 0U);
 }
 
 M3_TEST(native_detector_release_hold_is_time_based_at_supported_sample_rates) {
@@ -2193,6 +2956,244 @@ M3_TEST(native_detector_separates_a_calibrated_detuned_unison_into_string_lanes)
   }
 }
 
+M3_TEST(native_detector_separates_calibrated_unison_frequencies_when_timbre_matches_one_string) {
+  constexpr double kSampleRate = 48000.0;
+  constexpr double kTwoPi = 6.28318530717958647692;
+  constexpr std::uint8_t kNote = 40U;
+  constexpr double kString8Cents = -42.0;
+  constexpr double kString7Cents = -23.0;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kProfile{
+      1.00, 0.20, 0.05, 0.01, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 38U;
+  config.highest_note = 42U;
+  config.max_polyphony = 2U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 8U, kString8Cents, kProfile);
+  set_measured_string_profile(bank, 1U, 4U, kString7Cents, kProfile);
+  detector.set_calibration_bank(bank);
+
+  const double frequency8 =
+      m3::midi_to_frequency(kNote + kString8Cents / 100.0, 440.0);
+  const double frequency7 =
+      m3::midi_to_frequency(kNote + kString7Cents / 100.0, 440.0);
+  std::uint32_t evaluated = 0U;
+  std::uint32_t correct = 0U;
+  std::array<std::array<std::uint32_t, 256U>, 5U> observed_masks{};
+  constexpr std::uint32_t kSamples = 264000U;
+  constexpr std::uint32_t kEvaluationStart = 192000U;
+  for (std::uint32_t sample = 0U; sample < kSamples; ++sample) {
+    const double time = static_cast<double>(sample) / kSampleRate;
+    const double phase8 = kTwoPi * frequency8 * time + 0.17;
+    const double phase7 = kTwoPi * frequency7 * time + 1.03;
+    double mixed = 0.0;
+    for (std::size_t harmonic = 0U; harmonic < kProfile.size(); ++harmonic) {
+      const double partial = static_cast<double>(harmonic + 1U);
+      mixed += 0.050 * kProfile[harmonic] *
+               std::sin(partial * phase8 + 0.07 * partial);
+      mixed += 0.045 * kProfile[harmonic] *
+               std::sin(partial * phase7 - 0.11 * partial);
+    }
+    const m3::DetectorDecision decision = detector.process_sample(mixed);
+    if (!decision.tuner_snapshot_ready || sample < kEvaluationStart) {
+      continue;
+    }
+    ++evaluated;
+    std::uint8_t lanes = 0U;
+    bool only_note = decision.tuner_snapshot.voice_count == 2U;
+    for (std::size_t voice = 0U;
+         voice < decision.tuner_snapshot.voice_count; ++voice) {
+      const m3::TunerVoice& observed = decision.tuner_snapshot.voices[voice];
+      only_note = only_note && observed.midi_note == kNote;
+      if (observed.string_index < m3::kMaxVoices) {
+        lanes = static_cast<std::uint8_t>(
+            lanes | static_cast<std::uint8_t>(1U << observed.string_index));
+      }
+    }
+    if (only_note && lanes == 3U) {
+      ++correct;
+    }
+    for (std::uint8_t note = config.lowest_note;
+         note <= config.highest_note; ++note) {
+      std::uint8_t note_lanes = 0U;
+      for (std::size_t voice = 0U;
+           voice < decision.tuner_snapshot.voice_count; ++voice) {
+        const m3::TunerVoice& observed = decision.tuner_snapshot.voices[voice];
+        if (observed.midi_note == note &&
+            observed.string_index < m3::kMaxVoices) {
+          note_lanes = static_cast<std::uint8_t>(
+              note_lanes | static_cast<std::uint8_t>(
+                               1U << observed.string_index));
+        }
+      }
+      ++observed_masks[note - config.lowest_note][note_lanes];
+    }
+  }
+  const m3::PolyphonicPitchDetectorTestAccess::FineProbe fine =
+      m3::PolyphonicPitchDetectorTestAccess::fine_probe(detector, 2U);
+  if (correct * 10U < evaluated * 9U) {
+    std::fprintf(stderr,
+                 "identical-timbre unison evaluated=%u correct=%u fine=%u "
+                 "pending=%u/%u dev=%.4f multi=%d beat=%d\n",
+                 evaluated, correct, fine.members, fine.pending,
+                 fine.pending_count, fine.frequency_deviation_hz,
+                 fine.multi_source_observed ? 1 : 0,
+                 fine.beat_valid ? 1 : 0);
+    for (std::size_t candidate = 0U; candidate < observed_masks.size();
+         ++candidate) {
+      const m3::PolyphonicPitchDetectorTestAccess::PhaseProbe phase =
+          m3::PolyphonicPitchDetectorTestAccess::phase_probe(detector,
+                                                              candidate);
+      const m3::PolyphonicPitchDetectorTestAccess::FineProbe candidate_fine =
+          m3::PolyphonicPitchDetectorTestAccess::fine_probe(detector,
+                                                             candidate);
+      std::fprintf(stderr,
+                   " candidate=%zu cents=%.3f valid=%d updates=%u active=%d "
+                   "string=%u fine=%u pending=%u/%u history=%u multi=%d beat=%d\n",
+                   candidate + config.lowest_note, phase.cents,
+                   phase.valid ? 1 : 0, phase.accepted_updates,
+                   phase.active ? 1 : 0, phase.assigned_string,
+                   candidate_fine.members, candidate_fine.pending,
+                   candidate_fine.pending_count,
+                   candidate_fine.history_count,
+                   candidate_fine.multi_source_observed ? 1 : 0,
+                   candidate_fine.beat_valid ? 1 : 0);
+      for (std::size_t mask = 1U; mask < observed_masks[candidate].size();
+           ++mask) {
+        if (observed_masks[candidate][mask] != 0U) {
+          std::fprintf(stderr, " note=%zu mask=%zu frames=%u\n",
+                       candidate + config.lowest_note, mask,
+                       observed_masks[candidate][mask]);
+        }
+      }
+    }
+  }
+  M3_EXPECT_TRUE(evaluated > 0U);
+  M3_EXPECT_TRUE(correct * 10U >= evaluated * 9U);
+}
+
+M3_TEST(native_detector_separates_recorded_c3_calibration_members) {
+  constexpr double kSampleRate = 48000.0;
+  constexpr double kTwoPi = 6.28318530717958647692;
+  constexpr std::uint8_t kNote = 52U;
+  struct RecordedSource final {
+    std::size_t string{};
+    std::size_t fret{};
+    double cents{};
+    double phase{};
+    std::array<double, m3::kCalibrationHarmonicCount> profile{};
+  };
+  // These are the measured E3 members from the physical NYXL 9--80 bank:
+  // string 5 fret 8, string 4 fret 4, and string 3 open.  In particular,
+  // strings 5 and 3 are only 0.399 Hz apart, so this guards the closest real
+  // pair rather than a conveniently separated synthetic pair.
+  constexpr std::array<RecordedSource, 3U> kSources{{
+      {3U, 8U, 0.63671875, 0.31,
+       {1.0, 0.2409, 0.0180, 0.0057, 0.0, 0.0}},
+      {4U, 4U, 15.99609375, 1.17,
+       {1.0, 0.4874, 0.1966, 0.0153, 0.0, 0.0}},
+      {5U, 0U, 4.81640625, 2.09,
+       {1.0, 0.4142, 0.1791, 0.0446, 0.0, 0.0384}},
+  }};
+  constexpr std::array<std::uint8_t, 4U> kMemberMasks{
+      static_cast<std::uint8_t>((1U << 3U) | (1U << 5U)),
+      static_cast<std::uint8_t>((1U << 4U) | (1U << 5U)),
+      static_cast<std::uint8_t>((1U << 3U) | (1U << 4U)),
+      static_cast<std::uint8_t>((1U << 3U) | (1U << 4U) | (1U << 5U)),
+  };
+
+  for (const std::uint8_t member_mask : kMemberMasks) {
+    m3::PersistentConfig config;
+    config.profile_mode = m3::ProfileMode::m3;
+    config.midi_routing = m3::MidiRouting::per_voice;
+    config.lowest_note = 50U;
+    config.highest_note = 54U;
+    config.max_polyphony = member_mask == 56U ? 3U : 2U;
+    config.max_fret = 24U;
+    config.sensitivity = 70U;
+    config.response = 81U;
+
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+    m3::StringCalibrationBank bank;
+    for (const RecordedSource& source : kSources) {
+      set_measured_string_profile(bank, source.string, source.fret,
+                                  source.cents, source.profile);
+    }
+    detector.set_calibration_bank(bank);
+
+    std::uint32_t evaluated = 0U;
+    std::uint32_t correct = 0U;
+    constexpr std::uint32_t kSamples = 336000U;
+    constexpr std::uint32_t kEvaluationStart = 216000U;
+    for (std::uint32_t sample = 0U; sample < kSamples; ++sample) {
+      const double time = static_cast<double>(sample) / kSampleRate;
+      double mixed = 0.0;
+      for (const RecordedSource& source : kSources) {
+        if ((member_mask & (1U << source.string)) == 0U) {
+          continue;
+        }
+        const double frequency = m3::midi_to_frequency(
+            kNote + source.cents / 100.0, 440.0);
+        const double phase = kTwoPi * frequency * time + source.phase;
+        for (std::size_t harmonic = 0U;
+             harmonic < source.profile.size(); ++harmonic) {
+          const double partial = static_cast<double>(harmonic + 1U);
+          mixed += 0.035 * source.profile[harmonic] *
+                   std::sin(partial * phase +
+                            0.09 * partial * source.phase);
+        }
+      }
+      const m3::DetectorDecision decision = detector.process_sample(mixed);
+      if (!decision.tuner_snapshot_ready || sample < kEvaluationStart) {
+        continue;
+      }
+      ++evaluated;
+      std::uint8_t observed_mask = 0U;
+      bool only_note = true;
+      for (std::size_t voice_index = 0U;
+           voice_index < decision.tuner_snapshot.voice_count;
+           ++voice_index) {
+        const m3::TunerVoice& voice =
+            decision.tuner_snapshot.voices[voice_index];
+        only_note = only_note && voice.midi_note == kNote;
+        if (voice.string_index < m3::kMaxVoices) {
+          observed_mask = static_cast<std::uint8_t>(
+              observed_mask | (1U << voice.string_index));
+        }
+      }
+      if (only_note && observed_mask == member_mask) {
+        ++correct;
+      }
+    }
+    const m3::PolyphonicPitchDetectorTestAccess::FineProbe fine =
+        m3::PolyphonicPitchDetectorTestAccess::fine_probe(detector, 2U);
+    if (correct * 10U < evaluated * 9U) {
+      std::fprintf(stderr,
+                   "recorded-c3 mask=%u evaluated=%u correct=%u fine=%u "
+                   "pending=%u/%u dev=%.4f multi=%d beat=%d energies="
+                   "%.4g,%.4g,%.4g\n",
+                   member_mask, evaluated, correct, fine.members,
+                   fine.pending, fine.pending_count,
+                   fine.frequency_deviation_hz,
+                   fine.multi_source_observed ? 1 : 0,
+                   fine.beat_valid ? 1 : 0, fine.component_energy[3U],
+                   fine.component_energy[4U],
+                   fine.component_energy[5U]);
+    }
+    M3_EXPECT_TRUE(evaluated > 0U);
+    M3_EXPECT_TRUE(correct * 10U >= evaluated * 9U);
+  }
+}
+
 M3_TEST(native_detector_keeps_a_calibrated_harmonic_fingerprint_when_detuned) {
   constexpr double kSampleRate = 48000.0;
   constexpr double kTwoPi = 6.28318530717958647692;
@@ -2556,6 +3557,27 @@ M3_TEST(native_detector_infers_three_calibrated_strings_from_one_pitch_group) {
   }
 }
 
+M3_TEST(native_detector_infers_three_calibrated_strings_from_profile_and_beat_evidence) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  add_third_calibrated_unison_string(detector);
+  constexpr std::size_t kCandidate = kSharedUnisonNote - 32U;
+  constexpr std::uint8_t kThirdString = 2U;
+  constexpr std::uint8_t kMembers = static_cast<std::uint8_t>(
+      (1U << kSharedUnisonPrimary) | (1U << kSharedUnisonSecond) |
+      (1U << kThirdString));
+
+  const std::uint8_t inferred = Access::inferred_group_mask(
+      detector, kCandidate, kSharedUnisonPrimary, kMembers, 3U, nullptr,
+      false);
+  if (inferred != kMembers) {
+    std::fprintf(stderr, "profile+beat group inferred=%u expected=%u\n",
+                 inferred, kMembers);
+  }
+  M3_EXPECT_EQ(inferred, kMembers);
+}
+
 M3_TEST(native_detector_infers_four_calibrated_strings_from_one_pitch_group) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   m3::PolyphonicPitchDetector detector;
@@ -2582,78 +3604,7 @@ M3_TEST(native_detector_infers_four_calibrated_strings_from_one_pitch_group) {
   }
 }
 
-M3_TEST(native_detector_infers_five_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::PolyphonicPitchDetectorTestAccess;
-  m3::PolyphonicPitchDetector detector;
-  configure_calibrated_unison(detector);
-  add_third_calibrated_unison_string(detector);
-  add_fourth_calibrated_unison_string(detector);
-  add_fifth_calibrated_unison_string(detector);
-  constexpr std::size_t kCandidate = kSharedUnisonNote - 32U;
-  constexpr std::uint8_t kMembers = static_cast<std::uint8_t>(
-      (1U << kSharedUnisonPrimary) | (1U << kSharedUnisonSecond) |
-      (1U << 2U) | (1U << 1U) | (1U << 3U));
-
-  m3::TunerSnapshot snapshot;
-  M3_EXPECT_EQ(Access::inferred_group_mask(
-                   detector, kCandidate, kSharedUnisonPrimary, kMembers, 5U,
-                   &snapshot),
-               kMembers);
-  M3_EXPECT_EQ(snapshot.voice_count, 5U);
-  for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
-    M3_EXPECT_EQ(snapshot.voices[voice].pitch_evidence_member_mask, kMembers);
-    M3_EXPECT_TRUE(snapshot.voices[voice].shares_pitch_evidence());
-  }
-}
-
-M3_TEST(native_detector_infers_six_calibrated_strings_from_one_pitch_group) {
-  using Access = m3::PolyphonicPitchDetectorTestAccess;
-  m3::PolyphonicPitchDetector detector;
-  configure_calibrated_high_unison(detector);
-  constexpr std::uint8_t kNote = 56U;
-  constexpr std::size_t kCandidate = kNote - 32U;
-  constexpr std::uint8_t kPrimary = 6U;
-  constexpr std::uint8_t kMembers = static_cast<std::uint8_t>(
-      (1U << 1U) | (1U << 2U) | (1U << 3U) | (1U << 4U) |
-      (1U << 5U) | (1U << 6U));
-
-  m3::TunerSnapshot snapshot;
-  M3_EXPECT_EQ(Access::inferred_group_mask(
-                   detector, kCandidate, kPrimary, kMembers, 7U, &snapshot),
-               kMembers);
-  M3_EXPECT_EQ(snapshot.voice_count, 6U);
-  for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
-    M3_EXPECT_EQ(snapshot.voices[voice].pitch_evidence_member_mask, kMembers);
-    M3_EXPECT_TRUE(snapshot.voices[voice].shares_pitch_evidence());
-  }
-}
-
-M3_TEST(native_detector_infers_seven_calibrated_strings_at_the_physical_limit) {
-  using Access = m3::PolyphonicPitchDetectorTestAccess;
-  m3::PolyphonicPitchDetector detector;
-  configure_calibrated_high_unison(detector);
-  constexpr std::uint8_t kNote = 56U;
-  constexpr std::size_t kCandidate = kNote - 32U;
-  constexpr std::uint8_t kPrimary = 6U;
-  // G#3 is the only M3 note shared by seven strings inside the configured
-  // 24-fret range. The eighth string opens above it, so seven is the physical
-  // same-pitch ceiling rather than an arbitrary software limit.
-  constexpr std::uint8_t kMembers = static_cast<std::uint8_t>(
-      (1U << 0U) | (1U << 1U) | (1U << 2U) | (1U << 3U) |
-      (1U << 4U) | (1U << 5U) | (1U << 6U));
-
-  m3::TunerSnapshot snapshot;
-  const std::uint8_t inferred = Access::inferred_group_mask(
-      detector, kCandidate, kPrimary, kMembers, 7U, &snapshot);
-  M3_EXPECT_EQ(inferred, kMembers);
-  M3_EXPECT_EQ(snapshot.voice_count, 7U);
-  for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
-    M3_EXPECT_EQ(snapshot.voices[voice].pitch_evidence_member_mask, kMembers);
-    M3_EXPECT_TRUE(snapshot.voices[voice].shares_pitch_evidence());
-  }
-}
-
-M3_TEST(native_detector_does_not_expand_one_high_calibrated_string_to_seven) {
+M3_TEST(native_detector_does_not_expand_one_high_calibrated_string_beyond_the_supported_unison_limit) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   m3::PolyphonicPitchDetector detector;
   configure_calibrated_high_unison(detector);
@@ -2699,6 +3650,197 @@ M3_TEST(native_detector_does_not_bias_assignment_toward_a_lone_calibrated_lane) 
           partially_calibrated, kNote, kProfile);
 
   M3_EXPECT_EQ(calibrated_string, baseline_string);
+}
+
+M3_TEST(native_detector_uses_a_complete_calibration_to_identify_a_high_fret_lane) {
+  constexpr std::uint8_t kNote = 70U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kProfile{
+      1.00, 0.00, 0.00, 0.00, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 4U, 22U, -3.94, kProfile);
+  set_measured_string_profile(bank, 5U, 18U, 1.53, kProfile);
+  set_measured_string_profile(bank, 6U, 14U, 1.87, kProfile);
+  set_measured_string_profile(bank, 7U, 10U, 5.41, kProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   assigned_string_for_profile_and_cents(
+                       detector, kNote, kProfile, 2.89),
+               6U);
+}
+
+M3_TEST(native_detector_releases_a_stale_lane_when_physical_fret_evidence_disagrees) {
+  constexpr std::uint8_t kNote = 56U;
+  struct RecordedPoint final {
+    std::size_t string{};
+    std::size_t fret{};
+    double cents{};
+    std::array<double, m3::kCalibrationHarmonicCount> profile{};
+  };
+  // Exact note-56 rows from the physical A4=440 calibration. The thickest
+  // string's 24th fret and the seventh string's open note are both musically
+  // legal, but their measured pitch/timbre corridors are not interchangeable.
+  constexpr std::array<RecordedPoint, 7U> kPoints{{
+      {0U, 24U, 6.11328125, {0.999985, 0.005524, 0.0, 0.0, 0.0, 0.0}},
+      {1U, 20U, -17.1796875, {0.999802, 0.019918, 0.0, 0.0, 0.0, 0.0}},
+      {2U, 16U, -17.21875,
+       {0.999756, 0.021396, 0.005524, 0.0, 0.0, 0.0}},
+      {3U, 12U, -5.40234375, {0.999542, 0.029750, 0.0, 0.0, 0.0, 0.0}},
+      {4U, 8U, 11.5703125,
+       {0.992172, 0.124144, 0.007813, 0.011049, 0.0, 0.0}},
+      {5U, 4U, 3.73828125,
+       {0.975593, 0.218055, 0.025912, 0.0, 0.0, 0.0}},
+      {6U, 0U, 4.8046875,
+       {0.941461, 0.161629, 0.292739, 0.042433, 0.0, 0.005524}},
+  }};
+
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 54U;
+  config.highest_note = 58U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  for (const RecordedPoint& point : kPoints) {
+    set_measured_string_profile(bank, point.string, point.fret, point.cents,
+                                point.profile);
+  }
+  detector.set_calibration_bank(bank);
+
+  const std::uint8_t assigned =
+      m3::PolyphonicPitchDetectorTestAccess::
+          reassigned_settled_string_for_profile_and_cents(
+              detector, kNote, 6U, kPoints[0U].profile,
+              kPoints[0U].cents);
+  M3_EXPECT_EQ(assigned, 0U);
+}
+
+M3_TEST(native_detector_does_not_reassign_a_lane_after_polyphonic_context) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kFrettedProfile{
+      1.00, 0.05, 0.01, 0.00, 0.00, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpenProfile{
+      0.72, 0.66, 0.20, 0.03, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 40U;
+  config.max_polyphony = 2U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, -8.0, kFrettedProfile);
+  set_measured_string_profile(bank, 1U, 0U, 8.0, kOpenProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   reassigned_settled_string_for_profile_and_cents(
+                       detector, kNote, 1U, kFrettedProfile, -8.0, true),
+               1U);
+}
+
+M3_TEST(native_detector_inactive_harmonic_does_not_block_lane_correction) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kFrettedProfile{
+      1.00, 0.05, 0.01, 0.00, 0.00, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpenProfile{
+      0.72, 0.66, 0.20, 0.03, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 2U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, -8.0, kFrettedProfile);
+  set_measured_string_profile(bank, 1U, 0U, 8.0, kOpenProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   reassigned_settled_string_for_profile_and_cents(
+                       detector, kNote, 1U, kFrettedProfile, -8.0, false,
+                       true),
+               0U);
+}
+
+M3_TEST(native_detector_upper_harmonic_voice_does_not_block_lower_lane_correction) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kFrettedProfile{
+      1.00, 0.05, 0.01, 0.00, 0.00, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpenProfile{
+      0.72, 0.66, 0.20, 0.03, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 2U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, -8.0, kFrettedProfile);
+  set_measured_string_profile(bank, 1U, 0U, 8.0, kOpenProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   reassigned_settled_string_for_profile_and_cents(
+                       detector, kNote, 1U, kFrettedProfile, -8.0, false,
+                       true, true),
+               0U);
+}
+
+M3_TEST(native_detector_physical_cents_override_articulation_timbre_drift) {
+  constexpr std::uint8_t kNote = 61U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kObserved{
+      0.004483896, 0.004454124, 0.001050133, 0.000370557, 0.0, 0.0};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(
+      bank, 2U, 21U, -13.402,
+      {0.996694537, 0.081240384, 0.0, 0.0, 0.0, 0.0});
+  set_measured_string_profile(
+      bank, 3U, 17U, -8.840,
+      {0.999899995, 0.014142136, 0.0, 0.0, 0.0, 0.0});
+  set_measured_string_profile(
+      bank, 4U, 13U, 3.766,
+      {0.993629710, 0.112694277, 0.0, 0.0, 0.0, 0.0});
+  set_measured_string_profile(
+      bank, 5U, 9U, -0.844,
+      {0.999649939, 0.026457513, 0.0, 0.0, 0.0, 0.0});
+  set_measured_string_profile(
+      bank, 6U, 5U, 6.551,
+      {0.831985577, 0.535537114, 0.144568323, 0.010000000, 0.010000000,
+       0.0});
+  set_measured_string_profile(
+      bank, 7U, 1U, 14.336,
+      {0.995690715, 0.051961524, 0.074833148, 0.017320508, 0.0, 0.0});
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   reassigned_settled_string_for_profile_and_cents(
+                       detector, kNote, 6U, kObserved, 15.503),
+               7U);
 }
 
 M3_TEST(native_detector_does_not_split_one_calibrated_string_into_a_unison) {
@@ -2751,6 +3893,190 @@ M3_TEST(native_detector_does_not_split_one_calibrated_string_into_a_unison) {
     M3_EXPECT_EQ(final_snapshot.voices[0U].midi_note, kNote);
     M3_EXPECT_EQ(final_snapshot.voices[0U].string_index, 4U);
   }
+}
+
+M3_TEST(native_detector_does_not_split_recorded_string2_profile_across_nearby_calibrations) {
+  constexpr double kSampleRate = 96000.0;
+  constexpr double kTwoPi = 6.28318530717958647692;
+  constexpr std::uint8_t kNote = 56U;
+  struct RecordedPoint final {
+    std::size_t string{};
+    std::size_t fret{};
+    double cents{};
+    std::array<double, m3::kCalibrationHarmonicCount> profile{};
+  };
+  constexpr std::array<RecordedPoint, 7U> kPoints{{
+      {0U, 24U, 6.11328125, {1.0, 0.0055, 0.0, 0.0, 0.0, 0.0}},
+      {1U, 20U, -17.1796875, {1.0, 0.0199, 0.0, 0.0, 0.0, 0.0}},
+      {2U, 16U, -17.21875, {1.0, 0.0214, 0.0055, 0.0, 0.0, 0.0}},
+      {3U, 12U, -5.40234375, {1.0, 0.0298, 0.0, 0.0, 0.0, 0.0}},
+      {4U, 8U, 11.5703125, {1.0, 0.1251, 0.0079, 0.0111, 0.0, 0.0}},
+      {5U, 4U, 3.73828125, {1.0, 0.2235, 0.0266, 0.0, 0.0, 0.0}},
+      {6U, 0U, 4.8046875, {1.0, 0.1717, 0.3109, 0.0451, 0.0, 0.0059}},
+  }};
+
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 54U;
+  config.highest_note = 58U;
+  config.max_polyphony = 4U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  m3::StringCalibrationBank bank;
+  for (const RecordedPoint& point : kPoints) {
+    set_measured_string_profile(bank, point.string, point.fret,
+                                point.cents, point.profile);
+  }
+  detector.set_calibration_bank(bank);
+
+  // A single real string drifts slightly and its harmonic balance evolves
+  // after the pick.  Neither effect is independent same-note evidence.
+  const double base_frequency =
+      m3::midi_to_frequency(kNote + kPoints[6U].cents / 100.0, 440.0);
+  m3::TunerSnapshot final_snapshot;
+  std::uint8_t maximum_voice_count = 0U;
+  for (std::uint32_t sample = 0U; sample < 576000U; ++sample) {
+    const double time = static_cast<double>(sample) / kSampleRate;
+    const double phase =
+        kTwoPi * base_frequency * time -
+        (0.08 / 0.70) * std::cos(kTwoPi * 0.70 * time) + 0.73;
+    double mixed = 0.0;
+    for (std::size_t harmonic = 0U;
+         harmonic < kPoints[6U].profile.size(); ++harmonic) {
+      const double partial = static_cast<double>(harmonic + 1U);
+      const double evolving =
+          std::exp(-time * (0.012 + 0.008 * partial));
+      mixed += 0.050 * kPoints[6U].profile[harmonic] * evolving *
+               std::sin(partial * phase - 0.05 * partial);
+    }
+    const m3::DetectorDecision decision = detector.process_sample(mixed);
+    if (decision.tuner_snapshot_ready) {
+      final_snapshot = decision.tuner_snapshot;
+      maximum_voice_count = std::max(
+          maximum_voice_count, decision.tuner_snapshot.voice_count);
+    }
+  }
+  if (maximum_voice_count > 1U || final_snapshot.voice_count != 1U ||
+      final_snapshot.voices[0U].string_index != 6U) {
+    const m3::PolyphonicPitchDetectorTestAccess::FineProbe fine =
+        m3::PolyphonicPitchDetectorTestAccess::fine_probe(detector, 2U);
+    std::fprintf(stderr,
+                 "recorded-string2 single max=%u final=%u lane=%u fine=%u "
+                 "pending=%u/%u dev=%.4f multi=%d beat=%d\n",
+                 maximum_voice_count, final_snapshot.voice_count,
+                 final_snapshot.voice_count == 0U
+                     ? 255U
+                     : final_snapshot.voices[0U].string_index,
+                 fine.members, fine.pending, fine.pending_count,
+                 fine.frequency_deviation_hz,
+                 fine.multi_source_observed ? 1 : 0,
+                 fine.beat_valid ? 1 : 0);
+  }
+  M3_EXPECT_TRUE(maximum_voice_count <= 1U);
+  M3_EXPECT_EQ(final_snapshot.voice_count, 1U);
+  if (final_snapshot.voice_count == 1U) {
+    M3_EXPECT_EQ(final_snapshot.voices[0U].midi_note, kNote);
+    M3_EXPECT_EQ(final_snapshot.voices[0U].string_index, 6U);
+  }
+}
+
+M3_TEST(native_detector_does_not_split_physical_open_c4_pick_transient) {
+  constexpr double kSampleRate = 96000.0;
+  constexpr std::uint8_t kNote = 60U;
+  constexpr std::uint8_t kFrettedString = 6U;
+  constexpr std::uint8_t kOpenString = 7U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount>
+      kFrettedProfile{{
+          0.782030, 0.602103, 0.158490, 0.012353, 0.016571, 0.012353}};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount>
+      kOpenProfile{{0.998656, 0.050970, 0.009568, 0.0, 0.0, 0.0}};
+  // Measured 260 ms after the pick in the physical string-1 recording. The
+  // transient is spectrally between the neighbouring C4 calibrations, but it
+  // is still one string: there is no fine-frequency or beat evidence for a
+  // second physical source.
+  constexpr std::array<double, m3::kCalibrationHarmonicCount>
+      kObservedPickTransient{{
+          0.800507383, 0.175311084, 0.022085956, 0.002095577, 0.0, 0.0}};
+
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 58U;
+  config.highest_note = 62U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, kFrettedString, 4U, 7.988,
+                              kFrettedProfile);
+  set_measured_string_profile(bank, kOpenString, 0U, 8.762, kOpenProfile);
+  detector.set_calibration_bank(bank);
+
+  constexpr std::size_t kCandidate = kNote - 58U;
+  constexpr std::uint8_t kOpenOnly =
+      static_cast<std::uint8_t>(1U << kOpenString);
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::profile_only_group_mask(
+                   detector, kCandidate, kOpenString,
+                   kObservedPickTransient, 8U, 416U),
+               kOpenOnly);
+}
+
+M3_TEST(native_detector_uses_complete_physical_calibration_to_rescue_weak_open_c4) {
+  constexpr std::uint8_t kNote = 60U;
+  constexpr std::array<std::array<std::uint16_t,
+                                  m3::kCalibrationHarmonicCount>,
+                       7U>
+      kPhysicalProfiles{{
+          {{32767U, 0U, 0U, 0U, 0U, 0U}},
+          {{32633U, 134U, 0U, 0U, 0U, 0U}},
+          {{32758U, 9U, 0U, 0U, 0U, 0U}},
+          {{32385U, 382U, 0U, 0U, 0U, 0U}},
+          {{32657U, 110U, 0U, 0U, 0U, 0U}},
+          {{20046U, 11879U, 823U, 5U, 9U, 5U}},
+          {{32679U, 85U, 3U, 0U, 0U, 0U}},
+      }};
+  // Measured from the first all-open hold. It is an unambiguous direct C4
+  // peak, but its mostly-fundamental spectrum is necessarily close to several
+  // high-fret calibration profiles. The exact open-string profile remains an
+  // excellent match even though another lane wins the raw cosine by 0.5%.
+  constexpr std::array<double, m3::kCalibrationHarmonicCount>
+      kObservedPhysicalProfile{{0.994432256, 0.004831460, 0.000476871,
+                                0.000259413, 0.0, 0.0}};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 58U;
+  config.highest_note = 62U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  for (std::size_t string = 1U; string < m3::kM3OpenNotes.size(); ++string) {
+    auto& point = bank.points[string][kNote - m3::kM3OpenNotes[string]];
+    point.harmonic_profile_q15 = kPhysicalProfiles[string - 1U];
+    point.confidence_q15 = 32767U;
+    point.observation_count = 128U;
+    point.quality = m3::CalibrationPointQuality::measured;
+    bank.calibrated_string_mask = static_cast<std::uint8_t>(
+        bank.calibrated_string_mask | (1U << string));
+  }
+  detector.set_calibration_bank(bank);
+
+  // The physical all-open recording presents C4 below the normal global
+  // threshold while its direct fundamental and exact open-string fingerprint
+  // remain strong.
+  M3_EXPECT_TRUE(m3::PolyphonicPitchDetectorTestAccess::
+                     calibrated_direct_support_for_profile(
+                         detector, kNote - 58U, kObservedPhysicalProfile,
+                         0.086));
 }
 
 M3_TEST(native_detector_single_routing_collapses_a_calibrated_unison_to_one_midi_note) {

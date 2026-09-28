@@ -1,0 +1,53 @@
+{
+  "a4_hz": 440,
+  "calibration_file": "calibration-v1.m3cb",
+  "calibration_method": "pass-balanced-v1",
+  "calibration_pass_roles": [
+    "ascending_walk_timbre_and_pitch",
+    "descending_walk_timbre_and_pitch",
+    "isolated_notes_pitch_only"
+  ],
+  "calibration_sha256": "37565b5107b6ca9f71a373b34cd410779fb3d5e52a0f61dc63d30cd9510086d6",
+  "format": "M3CB-v1",
+  "fret_range": [
+    0,
+    24
+  ],
+  "open_midi_notes_thick_to_thin": [
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ],
+  "recording_sha256_thick_to_thin": [
+    "df7fb94c7500215384c6d7cba5034758dc05a5177b3b1f857593c8b85dd24b50",
+    "6e706e539ef4fc68433691780870e70ccd0dda3e3241e61de3d0ce41f75dfbe9",
+    "9d446c17f1370f973c5cb930c315cf50fca156873350519d8fa6c03ac5f129f2",
+    "64e323ff190cff9b788978e8db9045827ae390c06074b03dd073fef2e66e0bd9",
+    "8436aab1e8426d2243dd251bde39edcb8d15a00ae2104cb3c56d9bb8b098bb01",
+    "256ecd617b6db1f8b9820129b3b1f453318eec8733a6b1e356ca9815fcc46737",
+    "990b15fb21a7c2d874cbddcc2b4017961a565e31d9f2cc7c3b544f95db57e842",
+    "1a2f2b08ed366d278dd58fc39809d556f1f8988d572bd1014cbe9c2259aa4fb3"
+  ],
+  "sample_rate_hz": 96000,
+  "schema": 1,
+  "string_count": 8,
+  "string_gauge_range_inches": [
+    0.08,
+    0.009
+  ],
+  "tuning_thick_to_thin": [
+    "G#1",
+    "C2",
+    "E2",
+    "G#2",
+    "C3",
+    "E3",
+    "G#3",
+    "C4"
+  ]
+}

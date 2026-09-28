@@ -22,6 +22,7 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   expected.voices[1] = m3::TunerVoice{
       47U, static_cast<std::int16_t>(11 * 256), 20000U, 4U,
       m3::TunerVoiceState::settling, true};
+  expected.voices[0].beat_hz_q8 = 513U;
   telemetry.publish(expected);
 
   M3_EXPECT_TRUE(telemetry.read_latest(observed));
@@ -36,6 +37,7 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   M3_EXPECT_EQ(observed.voices[0].state, m3::TunerVoiceState::tracking);
   M3_EXPECT_TRUE(observed.voices[0].cents_valid);
   M3_EXPECT_EQ(observed.voices[0].string_index, 2U);
+  M3_EXPECT_EQ(observed.voices[0].beat_hz_q8, 513U);
   M3_EXPECT_EQ(observed.voices[1].midi_note, 47U);
   M3_EXPECT_EQ(observed.voices[1].cents_q8, 11 * 256);
   M3_EXPECT_EQ(observed.voices[1].state, m3::TunerVoiceState::settling);
@@ -187,6 +189,8 @@ M3_TEST(tuner_telemetry_never_mixes_concurrent_audio_and_ui_frames) {
           m3::TunerVoiceState::tracking, true, 0U,
           static_cast<std::uint8_t>(low_pair ? 11U : 12U),
           static_cast<std::uint8_t>(low_pair ? 0x11U : 0x22U)};
+      snapshot.voices[0].beat_hz_q8 =
+          static_cast<std::uint16_t>(low_pair ? 321U : 654U);
       snapshot.voices[1] = m3::TunerVoice{
           static_cast<std::uint8_t>(low_pair ? 47U : 59U),
           static_cast<std::int16_t>(low_pair ? 11 * 256 : -13 * 256),
@@ -195,6 +199,8 @@ M3_TEST(tuner_telemetry_never_mixes_concurrent_audio_and_ui_frames) {
           m3::TunerVoiceState::settling, true, 4U,
           static_cast<std::uint8_t>(low_pair ? 11U : 12U),
           static_cast<std::uint8_t>(low_pair ? 0x11U : 0x22U)};
+      snapshot.voices[1].beat_hz_q8 =
+          static_cast<std::uint16_t>(low_pair ? 321U : 654U);
       telemetry.publish(snapshot);
       if ((generation & 255U) == 0U) {
         std::this_thread::yield();
@@ -224,6 +230,8 @@ M3_TEST(tuner_telemetry_never_mixes_concurrent_audio_and_ui_frames) {
               (low_pair ? 11U : 12U) &&
           snapshot.voices[0].pitch_evidence_member_mask ==
               (low_pair ? 0x11U : 0x22U) &&
+          snapshot.voices[0].beat_hz_q8 ==
+              (low_pair ? 321U : 654U) &&
           snapshot.voices[1].midi_note == (low_pair ? 47U : 59U) &&
           snapshot.voices[1].cents_q8 == (low_pair ? 11 * 256 : -13 * 256) &&
           snapshot.voices[1].confidence_q15 == (low_pair ? 20000U : 24000U) &&
@@ -232,7 +240,9 @@ M3_TEST(tuner_telemetry_never_mixes_concurrent_audio_and_ui_frames) {
           snapshot.voices[1].pitch_evidence_group_id ==
               (low_pair ? 11U : 12U) &&
           snapshot.voices[1].pitch_evidence_member_mask ==
-              (low_pair ? 0x11U : 0x22U);
+              (low_pair ? 0x11U : 0x22U) &&
+          snapshot.voices[1].beat_hz_q8 ==
+              (low_pair ? 321U : 654U);
       if (!valid) {
         malformed.store(true, std::memory_order_release);
       }

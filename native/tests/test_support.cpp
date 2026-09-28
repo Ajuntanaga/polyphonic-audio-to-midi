@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <new>
 
 namespace {
@@ -90,9 +91,9 @@ void operator delete[](void* memory, std::align_val_t,
 namespace m3::test {
 
 Registration::Registration(const char* name, void (*function)() noexcept) noexcept {
-  static TestCase storage[256]{};
+  static TestCase storage[512]{};
   static std::size_t count = 0;
-  if (count >= 256) {
+  if (count >= 512) {
     std::abort();
   }
   TestCase& test = storage[count++];
@@ -124,8 +125,13 @@ void expect_near(double actual, double expected, double tolerance,
 }
 
 int run_all_tests() noexcept {
+  const char* filter = std::getenv("M3_TEST_FILTER");
   std::size_t count = 0;
   for (TestCase* test = tests; test != nullptr; test = test->next) {
+    if (filter != nullptr && filter[0] != '\0' &&
+        std::strstr(test->name, filter) == nullptr) {
+      continue;
+    }
     ++count;
     std::fprintf(stdout, "[ RUN      ] %s\n", test->name);
     const std::size_t before = failures;

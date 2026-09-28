@@ -3,6 +3,102 @@
 This file records only measured changes made while executing the approved test
 plan. It is not a claim that the detector is performance-ready.
 
+## Native software-only pre-live pass — 2026-09-27
+
+The calibrated fine-frequency path now keeps its roughly 100 Hz bounded phasor
+history but solves staggered candidate fits at one fifth that cadence. Its
+uniformly sampled normal matrix is evaluated as a finite geometric series, and
+fit residuals come directly from the normal equations. This removes the prior
+`samples * components^2` callback spike without moving work to a thread,
+allocating in processing, or changing the causal evidence window.
+
+The deterministic native corpus accepts same-note groups of two, three, and
+four physical strings after beat-time evidence, rejects isolated plucks across
+all eight strings at open/12th/24th fret and two levels, and requires every
+lane in one same-note group to expose exactly the same cents, confidence, and
+beat-frequency evidence. Five-through-eight same-note groups are deliberately
+not a product target; all eight lanes remain available for distinct pitches.
+
+One local 48-row detector-core benchmark covered 44.1/48/88.2/96 kHz, block
+sizes 32/64/128/256/512/1024, and both dense-eight-pitch and calibrated
+four-string-unison inputs. After the physical-corpus corrections, the latest
+measured worst P99 was `0.6100` of its block deadline (dense eight, 96 kHz, 32
+samples). One dense-eight 88.2 kHz/32-sample block measured `1.0106` deadlines;
+all other rows stayed below one deadline. This software-only run therefore
+does not certify small-buffer live operation. Correctness is independently
+partition-invariant, while actual glitch behavior remains a live
+DAW/audio-interface measurement.
+
+The new `m3_replay` target decodes bounded PCM/float WAV input, accepts
+sample-exact overlapping labels and an optional sealed calibration image, and
+emits partition-invariant fingerprints plus labeled accuracy counts. The full
+eight-string, open-through-24th-fret A4=440 calibration is now retained as the
+sanitized `tests/fixtures/m3_physical_a440` bank and manifest. The 110.13-second
+all-open physical stress take produced an identical fingerprint
+`30e9a0a4758a936c` at 32/64/128/256/512/1024-sample partitions. Its 251,763
+exact matches from 463,200 labeled note/lane observations (54.4%) are a useful
+determinism and failure-localization baseline, not a release-quality claim.
+The measured-profile correction added 22,098 exact matches over the previous
+sealed offline result while a lower-seven-open-string control continued to
+reject a nonexistent C4. Simultaneous physical-string stability still needs
+live refinement. Exact usage is in `docs/TESTING.md`.
+
+The complete per-fret bank now gets one bounded opportunity to correct a stale
+tuner lane after an isolated note has held long enough for its physical
+profile and cents corridor to settle. A note that has participated in a chord
+or same-pitch group never enters that path, and the corrected lane is locked
+for the remainder of the note. On the four flatter-string checkpoint takes,
+exact lane matches rose from 107,367 to 113,278 (+5,911, or 5.5%): string 8
+and string 7 were unchanged, string 6 rose from 22,394 to 25,326, and string 5
+rose from 12,177 to 15,156. The latter two gains corresponded exactly to 5,911
+fewer false-positive lane observations. The all-open take retained its prior
+251,763 matches, 1,140 transitions, 567,670 false-positive observations, and
+fingerprint `30e9a0a4758a936c`; the isolated-string correction therefore did
+not trade away the established chord behavior. These are offline recorded-data
+results, not a live tracking claim.
+
+The complementary checkpoint sweep across the thinner four strings measured
+23,967/53,257 exact frames on string 4 (45.0%), 28,698/63,920 on string 3
+(44.9%), 38,767/67,403 on string 2 (57.5%), and 9,177/43,756 on string 1
+(21.0%). String 1 is therefore the next software target. Its per-label trace
+shows both missing notes and same-pitch assignments to lower-string lanes;
+several descending frets are already 100% correct, so globally pitch-shifting
+the source recording would hide the useful articulation/history contrast
+rather than repair the remaining detector error.
+
+The first string-1 correction targets that contrast without changing the
+recording. A lower candidate accompanied only by exact upper harmonics no
+longer treats those harmonic voices as permanent chord history. After the
+phase estimator settles, per-fret cents evidence receives stronger identity
+weight only when the two learned string spectra are materially distinct;
+near-collinear templates retain the conservative weighting because ordinary
+tuning drift is not a safe identity signal. On the complete labeled string-1
+fret walk, exact lane matches rose from 73,463 to 76,315 and false-positive
+lane observations fell by the same 2,852 frames. The independent checkpoint
+score stayed at 9,177/43,756, the string-5 and string-6 gains stayed at 15,156
+and 25,326, and the all-open chord retained 251,763 matches, 1,140
+transitions, 567,670 false-positive observations, and fingerprint
+`30e9a0a4758a936c`. The remaining string-1 misses still require further
+software refinement and live instrument validation.
+
+The next physical-bank pass incorporates the separately played checkpoint
+notes without pitch-shifting the recordings. Ascending, descending, and
+isolated-note passes contribute equal per-fret pitch evidence, so repeated
+checkpoint holds cannot outweigh a complete walk. The two walks continue to
+define each string's harmonic identity; isolated notes refine only the fretted
+pitch center, and fret zero stays anchored to the bidirectional walk. On the
+complete string-1 walk plus checkpoint corpus, exact lane matches increased
+from 85,492 to 88,788, transitions fell from 296 to 278, and false-positive
+lane observations fell from 205,040 to 196,798. String-5 checkpoint matches
+increased from 15,156 to 22,776 and string-6 from 25,326 to 27,023. The
+recorded three-string unison increased from 11,040 to 12,999 exact matches
+with eight fewer transitions; false positives increased by 46. The all-open
+control increased from 251,763 to 252,373 exact matches and reduced false
+positives from 567,670 to 561,226, with six additional transitions. The sealed
+bank hash is
+`37565b5107b6ca9f71a373b34cd410779fb3d5e52a0f61dc63d30cd9510086d6`.
+These remain offline corpus results pending live DAW validation.
+
 ## Task 13 terminal JSFX gate — 2026-08-28
 
 Task 13 decision at measurement time: `native amendment required`. The JSFX

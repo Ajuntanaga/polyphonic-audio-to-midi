@@ -88,6 +88,7 @@ set_source_files_properties(
 )
 
 set(M3_NATIVE_TEST_SOURCES
+    native/offline/replay.cpp
     native/tests/fake_clap_host.cpp
     native/tests/fake_vst3_host.cpp
     native/tests/test_clap_lifecycle.cpp
@@ -97,6 +98,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
+    native/tests/test_offline_replay.cpp
     native/tests/test_m3_editor_layout.cpp
     native/tests/test_polyphonic_pitch_detector.cpp
     native/tests/test_string_calibration.cpp
@@ -138,6 +140,7 @@ add_executable(m3_native_tests
 target_compile_definitions(m3_native_tests PRIVATE M3_TESTING)
 target_include_directories(m3_native_tests PRIVATE
     native/include
+    native/offline
     native/plugin
     native/vst3
     third_party/clap/include
@@ -151,6 +154,15 @@ target_link_libraries(
 )
 m3_apply_project_options(m3_native_tests)
 add_test(NAME m3_native_tests COMMAND m3_native_tests)
+
+add_executable(m3_replay EXCLUDE_FROM_ALL
+    ${M3_NATIVE_CORE_SOURCES}
+    native/offline/replay.cpp
+    native/offline/replay_main.cpp
+)
+target_include_directories(m3_replay PRIVATE native/include native/offline)
+target_link_libraries(m3_replay PRIVATE Threads::Threads m)
+m3_apply_project_options(m3_replay)
 
 set(M3_CLAP_HISTORY_SOURCES
     native/plugin/clap_adapter.cpp
@@ -268,9 +280,17 @@ m3_configure_vst3_bundle(
     "M3_Polyphonic_Audio_to_MIDI"
 )
 
-# Later tasks replace this remaining benchmark reservation.
+add_executable(m3_detector_benchmark EXCLUDE_FROM_ALL
+    ${M3_NATIVE_CORE_SOURCES}
+    native/bench/detector_benchmark_main.cpp
+)
+target_include_directories(m3_detector_benchmark PRIVATE native/include)
+target_link_libraries(m3_detector_benchmark PRIVATE Threads::Threads m)
+m3_apply_project_options(m3_detector_benchmark)
 add_custom_target(m3_vst3_benchmark
-    COMMAND ${CMAKE_COMMAND} -E echo "m3_vst3_benchmark is reserved for Task 20"
+    COMMAND $<TARGET_FILE:m3_detector_benchmark>
+    DEPENDS m3_detector_benchmark
+    USES_TERMINAL
     VERBATIM
 )
 add_custom_target(m3_validate_production)
