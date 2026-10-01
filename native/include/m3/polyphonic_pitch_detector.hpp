@@ -199,6 +199,8 @@ class PolyphonicPitchDetector final {
       std::size_t candidate) const noexcept;
   void update_phase_cents_estimates(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void update_calibration_tuning_offset(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
   void infer_m3_unison_strings(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void observe_calibration(
@@ -247,6 +249,11 @@ class PolyphonicPitchDetector final {
   double slow_energy_{};
   double previous_decision_energy_{};
   double signal_floor_{};
+  double calibration_tuning_offset_cents_{};
+  std::array<double, kMaxVoices> calibration_tuning_lane_cents_{};
+  std::array<double, kMaxVoices> pending_calibration_tuning_lane_cents_{};
+  std::array<std::uint16_t, kMaxVoices>
+      pending_calibration_tuning_lane_observations_{};
   std::uint32_t decision_phase_{};
   std::uint32_t transition_sequence_{};
   std::uint8_t lowest_note_{};
@@ -257,6 +264,8 @@ class PolyphonicPitchDetector final {
   std::uint8_t response_{25U};
   std::uint16_t unison_dropout_decisions_{1U};
   std::uint16_t fine_frequency_decimation_decisions_{1U};
+  std::uint16_t calibration_tuning_evidence_{};
+  std::uint8_t calibration_tuning_lane_mask_{};
   std::uint8_t fixed_velocity_{100U};
   VelocityMode velocity_mode_{VelocityMode::dynamic};
   MidiRouting midi_routing_{MidiRouting::single};

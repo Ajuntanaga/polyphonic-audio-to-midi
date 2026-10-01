@@ -137,6 +137,13 @@ constexpr double kM3CalibratedHighestOpenThresholdRatio = 0.08;
 constexpr double kM3CalibratedCandidateMinimumSimilarity = 0.97;
 constexpr double kM3CalibratedCandidateMinimumAdvantage = 0.015;
 constexpr double kM3CalibratedHighestOpenMinimumSimilarity = 0.99;
+constexpr double kM3TuningOffsetMinimumSimilarity = 0.82;
+constexpr double kM3TuningOffsetMaximumCents = 8.0;
+constexpr double kM3TuningOffsetPendingAgreementCents = 1.5;
+constexpr double kM3TuningOffsetTrackingAgreementCents = 4.0;
+constexpr double kM3TuningOffsetAcquisitionSeconds = 0.75;
+constexpr double kM3TuningOffsetTrackingSeconds = 0.75;
+constexpr std::size_t kM3TuningOffsetMinimumStrings = 3U;
 constexpr double kM3ProvisionalStringRetentionBonus = 4.0;
 // A sounding note owns its exposed tuner lane until note-off regardless of
 // whether MIDI is routed through one channel or one channel per voice. This
@@ -387,6 +394,12 @@ void PolyphonicPitchDetector::reset() noexcept {
   fast_energy_ = 0.0;
   slow_energy_ = 0.0;
   previous_decision_energy_ = 0.0;
+  calibration_tuning_offset_cents_ = 0.0;
+  calibration_tuning_lane_cents_ = {};
+  pending_calibration_tuning_lane_cents_ = {};
+  pending_calibration_tuning_lane_observations_ = {};
+  calibration_tuning_evidence_ = 0U;
+  calibration_tuning_lane_mask_ = 0U;
   decision_phase_ = 0U;
   decision_counter_ = 0U;
   transition_sequence_ = 0U;
@@ -467,6 +480,12 @@ void PolyphonicPitchDetector::set_calibration_bank(
     const StringCalibrationBank& bank) noexcept {
   calibrator_.set_bank(bank);
   fine_frequency_evidence_states_ = {};
+  calibration_tuning_offset_cents_ = 0.0;
+  calibration_tuning_lane_cents_ = {};
+  pending_calibration_tuning_lane_cents_ = {};
+  pending_calibration_tuning_lane_observations_ = {};
+  calibration_tuning_evidence_ = 0U;
+  calibration_tuning_lane_mask_ = 0U;
 }
 
 void PolyphonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
@@ -1011,6 +1030,135 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   }
 }
 
+void PolyphonicPitchDetector::update_calibration_tuning_offset(
+    const std::array<bool, kMaxCandidates>& selected) noexcept {
+  if (profile_mode_ != ProfileMode::m3) {
+    return;
+  }
+  std::array<double, kMaxVoices> observations{};
+  std::array<bool, kMaxVoices> observed{};
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_);
+       ++candidate) {
+    const PhaseCentsState& phase = phase_cents_states_[candidate];
+    const CandidateState& state = candidate_states_[candidate];
+    const std::uint8_t members =
+        state.assigned_string_mask != 0U
+            ? state.assigned_string_mask
+            : (state.assigned_string < kM3OpenNotes.size()
+                   ? static_cast<std::uint8_t>(1U << state.assigned_string)
+                   : 0U);
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    if (!selected[candidate] || !phase.valid || !state.active ||
+        state.polyphonic_context || members == 0U ||
+        (members & static_cast<std::uint8_t>(members - 1U)) != 0U ||
+        (fine.valid && fine.multi_source_observed)) {
+      continue;
+    }
+    const std::uint8_t playable = playable_string_mask(candidate);
+    const std::uint8_t note =
+        static_cast<std::uint8_t>(lowest_note_ + candidate);
+    for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+      const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+      if ((playable & bit) == 0U || note != kM3OpenNotes[string] ||
+          members != bit) {
+        continue;
+      }
+      // A global reference shift must be inferred from an open string. A
+      // fretted point carries local intonation and setup error; treating that
+      // residual as common tuning moves every other string in the wrong
+      // direction.
+      const StringCalibrationPoint* point =
+          calibrator_.bank().point(string, 0U);
+      if (point == nullptr ||
+          point->quality != CalibrationPointQuality::measured) {
+        continue;
+      }
+      const double similarity = calibration_similarity(candidate, string);
+      if (similarity < kM3TuningOffsetMinimumSimilarity) {
+        continue;
+      }
+      const double learned_cents =
+          static_cast<double>(point->cents_offset_q8) / 256.0;
+      const double residual = phase.cents - learned_cents;
+      if (std::isfinite(residual) &&
+          std::abs(residual) <= kM3TuningOffsetMaximumCents) {
+        observations[string] = residual;
+        observed[string] = true;
+      }
+    }
+  }
+  const double ready_observations = std::ceil(
+      kM3TuningOffsetAcquisitionSeconds * sample_rate_ /
+      static_cast<double>(kDecisionQuantum));
+  for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    if (!observed[string]) {
+      continue;
+    }
+    std::uint16_t& count =
+        pending_calibration_tuning_lane_observations_[string];
+    double& pending = pending_calibration_tuning_lane_cents_[string];
+    if (count == 0U ||
+        std::abs(observations[string] - pending) <=
+            kM3TuningOffsetPendingAgreementCents) {
+      const double next_count = static_cast<double>(count) + 1.0;
+      pending += (observations[string] - pending) / next_count;
+      if (count < std::numeric_limits<std::uint16_t>::max()) {
+        ++count;
+      }
+    } else {
+      pending = observations[string];
+      count = 1U;
+    }
+    if (static_cast<double>(count) >= ready_observations) {
+      calibration_tuning_lane_cents_[string] = pending;
+      calibration_tuning_lane_mask_ = static_cast<std::uint8_t>(
+          calibration_tuning_lane_mask_ | (1U << string));
+      pending = 0.0;
+      count = 0U;
+    }
+  }
+
+  std::array<double, kMaxVoices> lane_offsets{};
+  std::size_t lane_count = 0U;
+  for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    if ((calibration_tuning_lane_mask_ & (1U << string)) != 0U) {
+      lane_offsets[lane_count++] = calibration_tuning_lane_cents_[string];
+    }
+  }
+  if (lane_count < kM3TuningOffsetMinimumStrings) {
+    return;
+  }
+  for (std::size_t index = 1U; index < lane_count; ++index) {
+    const double value = lane_offsets[index];
+    std::size_t insertion = index;
+    while (insertion > 0U && lane_offsets[insertion - 1U] > value) {
+      lane_offsets[insertion] = lane_offsets[insertion - 1U];
+      --insertion;
+    }
+    lane_offsets[insertion] = value;
+  }
+  const double shared_offset = lane_offsets[lane_count / 2U];
+  if (calibration_tuning_evidence_ == 0U) {
+    calibration_tuning_offset_cents_ = shared_offset;
+    calibration_tuning_evidence_ = 1U;
+    return;
+  }
+  const double delta = shared_offset - calibration_tuning_offset_cents_;
+  if (std::abs(delta) > kM3TuningOffsetTrackingAgreementCents) {
+    return;
+  }
+  const double mix = 1.0 - std::exp(
+      -static_cast<double>(kDecisionQuantum) /
+      (kM3TuningOffsetTrackingSeconds * sample_rate_));
+  calibration_tuning_offset_cents_ += mix * delta;
+  if (calibration_tuning_evidence_ <
+      std::numeric_limits<std::uint16_t>::max()) {
+    ++calibration_tuning_evidence_;
+  }
+}
+
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   if (profile_mode_ != ProfileMode::m3) {
@@ -1177,6 +1325,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
       candidate_states_[candidate].calibrated_lane_committed = true;
     }
     const PhaseCentsState& phase = phase_cents_states_[candidate];
+    const double assignment_cents =
+        calibration_tuning_evidence_ != 0U
+            ? phase.cents - calibration_tuning_offset_cents_
+            : phase.cents;
     double best_learned_cents_error =
         std::numeric_limits<double>::infinity();
     std::size_t best_learned_cents_string = kMaxVoices;
@@ -1186,7 +1338,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
           continue;
         }
         learned_cents_errors[string] =
-            std::abs(phase.cents - learned_cents[string]);
+            std::abs(assignment_cents - learned_cents[string]);
         if (learned_cents_errors[string] < best_learned_cents_error) {
           best_learned_cents_error = learned_cents_errors[string];
           best_learned_cents_string = string;
@@ -1290,7 +1442,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
                     : kM3CalibrationCentsPenalty;
             proposal.cost +=
                 cents_penalty *
-                std::abs(phase.cents - learned_cents[string]);
+                std::abs(assignment_cents - learned_cents[string]);
           }
         }
         const FineFrequencyEvidenceState& fine =
@@ -3200,6 +3352,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   update_harmonic_profile_memory(selected);
   update_beat_evidence(selected);
   infer_m3_unison_strings(selected);
+  update_calibration_tuning_offset(selected);
 
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     CandidateState& state = candidate_states_[candidate];

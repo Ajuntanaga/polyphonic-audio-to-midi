@@ -155,6 +155,31 @@ M3_TEST(offline_replay_parses_explicit_calibration_passes) {
   M3_EXPECT_EQ(labels[1].calibration_pass, 3U);
 }
 
+M3_TEST(offline_replay_parses_expected_cents_for_accuracy_scoring) {
+  const std::string text =
+      "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass\t"
+      "expected_cents\n"
+      "0\t12000\t40\t1\t1\t-12.375\n"
+      "12000\t24000\t41\t1\t3\t7.5\n";
+  std::vector<m3::offline::ReplayLabel> labels;
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::parse_replay_labels(
+      text.data(), text.size(), 24000U, labels, error));
+  M3_EXPECT_EQ(labels.size(), 2U);
+  M3_EXPECT_TRUE(labels[0].expected_cents_valid);
+  M3_EXPECT_EQ(labels[0].expected_cents_q8, -3168);
+  M3_EXPECT_TRUE(labels[1].expected_cents_valid);
+  M3_EXPECT_EQ(labels[1].expected_cents_q8, 1920);
+
+  const std::string out_of_range =
+      "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass\t"
+      "expected_cents\n"
+      "0\t12000\t40\t1\t1\t50.001\n";
+  M3_EXPECT_FALSE(m3::offline::parse_replay_labels(
+      out_of_range.data(), out_of_range.size(), 12000U, labels, error));
+  M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_labels);
+}
+
 M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
   constexpr std::uint32_t kSampleRate = 48000U;
   constexpr std::uint32_t kToneSamples = kSampleRate;
@@ -176,8 +201,9 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
   M3_EXPECT_TRUE(m3::offline::decode_wave_bytes(
       bytes.data(), bytes.size(), wave, error));
   const std::string label_text =
-      "start_sample\tend_sample\tmidi_note\tstring_mask\n"
-      "0\t48000\t40\t0\n";
+      "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass\t"
+      "expected_cents\n"
+      "0\t48000\t40\t0\t1\t0.0\n";
   std::vector<m3::offline::ReplayLabel> labels;
   M3_EXPECT_TRUE(m3::offline::parse_replay_labels(
       label_text.data(), label_text.size(), wave.mono_samples.size(), labels,
@@ -213,8 +239,21 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
         mask_frames += frames;
       }
       M3_EXPECT_EQ(mask_frames, result.label_results[0].labeled_frames);
+      M3_EXPECT_TRUE(result.label_results[0].cents_observations > 0U);
+      M3_EXPECT_TRUE(
+          result.label_results[0].first_valid_cents_sample < kToneSamples);
+      M3_EXPECT_TRUE(
+          result.label_results[0].first_correct_string_sample < kToneSamples);
+      M3_EXPECT_TRUE(result.label_results[0].longest_correct_run_frames > 0U);
+      M3_EXPECT_EQ(result.label_results[0].string_flip_count, 0U);
     }
     M3_EXPECT_EQ(result.transition_count, 2U);
+    M3_EXPECT_EQ(result.transition_inside_hold_count +
+                     result.transition_gap_count,
+                 result.transition_count);
+    M3_EXPECT_EQ(result.false_gap_voices + result.false_wrong_note_voices +
+                     result.false_wrong_string_voices,
+                 result.false_positive_voices);
     if (!have_baseline) {
       baseline = result;
       have_baseline = true;
@@ -227,6 +266,15 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
       M3_EXPECT_EQ(result.transition_count, baseline.transition_count);
       M3_EXPECT_EQ(result.false_positive_voices,
                    baseline.false_positive_voices);
+      M3_EXPECT_EQ(result.transition_inside_hold_count,
+                   baseline.transition_inside_hold_count);
+      M3_EXPECT_EQ(result.transition_gap_count,
+                   baseline.transition_gap_count);
+      M3_EXPECT_EQ(result.false_gap_voices, baseline.false_gap_voices);
+      M3_EXPECT_EQ(result.false_wrong_note_voices,
+                   baseline.false_wrong_note_voices);
+      M3_EXPECT_EQ(result.false_wrong_string_voices,
+                   baseline.false_wrong_string_voices);
       M3_EXPECT_EQ(result.label_results.size(),
                    baseline.label_results.size());
       if (result.label_results.size() == baseline.label_results.size()) {
@@ -236,15 +284,36 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                        baseline.label_results[label].labeled_frames);
           M3_EXPECT_EQ(result.label_results[label].matched_frames,
                        baseline.label_results[label].matched_frames);
-      M3_EXPECT_EQ(
-          result.label_results[label].matching_note_lane_frames,
-          baseline.label_results[label].matching_note_lane_frames);
-      M3_EXPECT_EQ(
-          result.label_results[label].maximum_matching_note_beat_hz_q8,
-          baseline.label_results[label].maximum_matching_note_beat_hz_q8);
-      M3_EXPECT_EQ(
+          M3_EXPECT_EQ(
+              result.label_results[label].matching_note_lane_frames,
+              baseline.label_results[label].matching_note_lane_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].maximum_matching_note_beat_hz_q8,
+              baseline.label_results[label]
+                  .maximum_matching_note_beat_hz_q8);
+          M3_EXPECT_EQ(
               result.label_results[label].matching_note_lane_mask_frames,
               baseline.label_results[label].matching_note_lane_mask_frames);
+          M3_EXPECT_EQ(result.label_results[label].cents_observations,
+                       baseline.label_results[label].cents_observations);
+          M3_EXPECT_EQ(result.label_results[label].cents_error_sum_q8,
+                       baseline.label_results[label].cents_error_sum_q8);
+          M3_EXPECT_EQ(result.label_results[label].cents_error_square_sum_q16,
+                       baseline.label_results[label]
+                           .cents_error_square_sum_q16);
+          M3_EXPECT_EQ(result.label_results[label].cents_errors_q8,
+                       baseline.label_results[label].cents_errors_q8);
+          M3_EXPECT_EQ(result.label_results[label].first_valid_cents_sample,
+                       baseline.label_results[label]
+                           .first_valid_cents_sample);
+          M3_EXPECT_EQ(result.label_results[label].first_correct_string_sample,
+                       baseline.label_results[label]
+                           .first_correct_string_sample);
+          M3_EXPECT_EQ(result.label_results[label].string_flip_count,
+                       baseline.label_results[label].string_flip_count);
+          M3_EXPECT_EQ(result.label_results[label].longest_correct_run_frames,
+                       baseline.label_results[label]
+                           .longest_correct_run_frames);
         }
       }
     }

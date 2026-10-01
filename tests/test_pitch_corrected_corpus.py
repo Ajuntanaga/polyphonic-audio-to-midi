@@ -1,5 +1,6 @@
 import math
 import binascii
+import json
 import pathlib
 import sys
 import tempfile
@@ -46,9 +47,9 @@ class PitchCorrectedCorpusTests(unittest.TestCase):
                 )
             labels.write_text(
                 "start_sample\tend_sample\tmidi_note\tstring_mask\t"
-                "calibration_pass\n"
-                "2\t5\t40\t128\t1\n"
-                "7\t9\t41\t128\t1\n",
+                "calibration_pass\texpected_cents\n"
+                "2\t5\t40\t128\t1\t-4.25\n"
+                "7\t9\t41\t128\t1\t2.5\n",
                 encoding="ascii",
             )
 
@@ -106,6 +107,68 @@ class PitchCorrectedCorpusTests(unittest.TestCase):
             self.assertEqual(midpoint[offset + 2 : offset + 19],
                              original[offset + 2 : offset + 19])
 
+    def test_adjusted_bank_adds_a_global_offset_without_changing_timbre(self):
+        source = ROOT / "tests/fixtures/m3_physical_a440/calibration-v1.m3cb"
+        original = source.read_bytes()
+        with tempfile.TemporaryDirectory() as temporary:
+            output = pathlib.Path(temporary) / "plus-three.m3cb"
+            corpus.write_adjusted_center_calibration(
+                source, output, cents_scale=1.0, cents_offset=3.0
+            )
+            adjusted = output.read_bytes()
+
+        for point in range(8 * 25):
+            offset = 25 + point * 19
+            original_cents = int.from_bytes(
+                original[offset : offset + 2], "little", signed=True
+            )
+            adjusted_cents = int.from_bytes(
+                adjusted[offset : offset + 2], "little", signed=True
+            )
+            self.assertEqual(adjusted_cents, original_cents + 3 * 256)
+            self.assertEqual(
+                adjusted[offset + 2 : offset + 19],
+                original[offset + 2 : offset + 19],
+            )
+
+    def test_note_shuffled_bank_rotates_only_centers_between_playable_strings(self):
+        source = ROOT / "tests/fixtures/m3_physical_a440/calibration-v1.m3cb"
+        original = source.read_bytes()
+        with tempfile.TemporaryDirectory() as temporary:
+            output = pathlib.Path(temporary) / "shuffled.m3cb"
+            corpus.write_note_shuffled_center_calibration(source, output)
+            shuffled = output.read_bytes()
+
+        note = 60
+        points = [
+            string * 25 + (note - open_note)
+            for string, open_note in enumerate(corpus.M3_OPEN_NOTES)
+            if 0 <= note - open_note < 25
+        ]
+        original_centers = [
+            int.from_bytes(
+                original[25 + point * 19 : 27 + point * 19],
+                "little",
+                signed=True,
+            )
+            for point in points
+        ]
+        shuffled_centers = [
+            int.from_bytes(
+                shuffled[25 + point * 19 : 27 + point * 19],
+                "little",
+                signed=True,
+            )
+            for point in points
+        ]
+        self.assertEqual(shuffled_centers, original_centers[1:] + original_centers[:1])
+        for point in range(8 * 25):
+            offset = 25 + point * 19
+            self.assertEqual(
+                shuffled[offset + 2 : offset + 19],
+                original[offset + 2 : offset + 19],
+            )
+
     def test_reaper_project_uses_elastique_pro_and_exact_segment_geometry(self):
         manifest = {
             "sample_rate_hz": 96_000,
@@ -139,6 +202,81 @@ class PitchCorrectedCorpusTests(unittest.TestCase):
         self.assertIn("SOFFS 0.300000000000 0", project)
         self.assertIn('FILE "/recordings/string.wav"', project)
         self.assertIn('RENDER_FILE "/renders/string-08-midpoint.wav"', project)
+
+    def test_expected_cents_labels_are_derived_independently_of_bank_centers(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            labels = root / "labels.tsv"
+            manifest = root / "manifest.json"
+            output = root / "expected.tsv"
+            labels.write_text(
+                "start_sample\tend_sample\tmidi_note\tstring_mask\t"
+                "calibration_pass\n"
+                "10\t20\t40\t1\t1\n"
+                "30\t40\t41\t1\t3\n",
+                encoding="ascii",
+            )
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "observations": [
+                            {"measured_cents_from_target": -20.0},
+                            {"measured_cents_from_target": 12.0},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            corpus.write_expected_cents_labels(
+                labels, manifest, output, residual_fraction=0.5
+            )
+
+            actual = corpus.read_labels(output)
+            self.assertEqual([row.expected_cents for row in actual], [-10.0, 6.0])
+            self.assertEqual(actual[0].start_sample, 10)
+            self.assertEqual(actual[1].calibration_pass, 3)
+
+    def test_experiment_truth_uses_one_frozen_bank_not_manifest_outliers(self):
+        source_bank = ROOT / "tests/fixtures/m3_physical_a440/calibration-v1.m3cb"
+        first_center = int.from_bytes(
+            source_bank.read_bytes()[25:27], "little", signed=True
+        ) / 256.0
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            labels = root / "labels.tsv"
+            manifest = root / "manifest.json"
+            output = root / "expected.tsv"
+            labels.write_text(
+                "start_sample\tend_sample\tmidi_note\tstring_mask\t"
+                "calibration_pass\n0\t100\t32\t1\t1\n",
+                encoding="ascii",
+            )
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "string_index": 0,
+                        "observations": [
+                            {"measured_cents_from_target": 100.0}
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            corpus.write_expected_cents_labels(
+                labels,
+                manifest,
+                output,
+                residual_fraction=1.0,
+                truth_calibration=source_bank,
+            )
+
+            self.assertAlmostEqual(
+                corpus.read_labels(output)[0].expected_cents,
+                first_center,
+                places=5,
+            )
 
     def test_generation_preserves_label_spans_and_measures_correction(self):
         sample_rate = 48_000
@@ -175,6 +313,12 @@ class PitchCorrectedCorpusTests(unittest.TestCase):
             label = output_labels[0]
             self.assertEqual(label.end_sample - label.start_sample, 48_000)
             self.assertEqual(label.calibration_pass, 1)
+            self.assertIsNotNone(label.expected_cents)
+            self.assertAlmostEqual(
+                label.expected_cents,
+                manifest["observations"][0]["measured_cents_from_target"],
+                places=6,
+            )
             self.assertTrue(np.array_equal(
                 raw[label.start_sample:label.end_sample], samples[12000:60000]
             ))

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include "m3/string_calibration.hpp"
@@ -37,6 +38,11 @@ struct ReplayLabel final {
   // Nonzero values identify independent recording passes so repeated holds
   // within one pass cannot outweigh the ascending or descending fret walks.
   std::uint8_t calibration_pass{};
+  // Optional expected acoustic offset from the equal-tempered MIDI center.
+  // This is measurement truth for scoring and is deliberately independent
+  // from the detector's calibration bank.
+  std::int16_t expected_cents_q8{};
+  bool expected_cents_valid{};
 };
 
 struct ReplayLabelResult final {
@@ -48,6 +54,16 @@ struct ReplayLabelResult final {
   // Index zero records labeled snapshots where that note was absent.
   std::array<std::uint32_t, 1U << kMaxVoices>
       matching_note_lane_mask_frames{};
+  std::uint32_t cents_observations{};
+  std::int64_t cents_error_sum_q8{};
+  std::uint64_t cents_error_square_sum_q16{};
+  std::vector<std::int16_t> cents_errors_q8{};
+  std::uint64_t first_valid_cents_sample{
+      std::numeric_limits<std::uint64_t>::max()};
+  std::uint64_t first_correct_string_sample{
+      std::numeric_limits<std::uint64_t>::max()};
+  std::uint32_t string_flip_count{};
+  std::uint32_t longest_correct_run_frames{};
 };
 
 struct ReplayResult final {
@@ -57,7 +73,12 @@ struct ReplayResult final {
   std::uint32_t labeled_frames{};
   std::uint32_t matched_label_frames{};
   std::uint32_t transition_count{};
+  std::uint32_t transition_inside_hold_count{};
+  std::uint32_t transition_gap_count{};
   std::uint32_t false_positive_voices{};
+  std::uint32_t false_gap_voices{};
+  std::uint32_t false_wrong_note_voices{};
+  std::uint32_t false_wrong_string_voices{};
   std::vector<ReplayLabelResult> label_results{};
 };
 
@@ -67,6 +88,7 @@ bool decode_wave_bytes(const std::uint8_t* bytes, std::size_t size,
 // TSV columns are exact sample indices:
 // start_sample<TAB>end_sample<TAB>midi_note<TAB>string_mask
 // An optional fifth calibration_pass column accepts values 1..255.
+// A six-column form appends expected_cents in the closed range -50..50.
 // Rows may overlap to describe chords. They must be ordered by start sample.
 bool parse_replay_labels(const char* text, std::size_t size,
                          std::uint64_t sample_count,

@@ -71,6 +71,34 @@ bool parse_u64(std::string_view field, std::uint64_t& value) noexcept {
   return error == std::errc{} && parsed_end == last;
 }
 
+bool parse_expected_cents(std::string_view field,
+                          std::int16_t& value_q8) noexcept {
+  if (field.empty()) {
+    return false;
+  }
+  double value = 0.0;
+  const char* first = field.data();
+  const char* last = first + field.size();
+  const auto [parsed_end, error] = std::from_chars(first, last, value);
+  if (error != std::errc{} || parsed_end != last || !std::isfinite(value) ||
+      value < -50.0 || value > 50.0) {
+    return false;
+  }
+  value_q8 = static_cast<std::int16_t>(std::lround(value * 256.0));
+  return true;
+}
+
+bool sample_is_inside_label(std::uint64_t sample_index,
+                            const std::vector<ReplayLabel>& labels) noexcept {
+  for (const ReplayLabel& label : labels) {
+    if (sample_index >= label.start_sample &&
+        sample_index < label.end_sample) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool snapshot_matches_label(const TunerSnapshot& snapshot,
                             const ReplayLabel& label) noexcept {
   std::uint8_t observed_mask = 0U;
@@ -455,6 +483,7 @@ bool parse_replay_labels(const char* text, std::size_t size,
   std::size_t position = 0U;
   bool header_seen = false;
   bool calibration_pass_column = false;
+  bool expected_cents_column = false;
   std::uint64_t prior_start = 0U;
   while (position < input.size()) {
     const std::size_t newline = input.find('\n', position);
@@ -472,14 +501,22 @@ bool parse_replay_labels(const char* text, std::size_t size,
         "start_sample\tend_sample\tmidi_note\tstring_mask";
     constexpr std::string_view kPassHeader =
         "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass";
-    if (!header_seen && (line == kHeader || line == kPassHeader)) {
-      calibration_pass_column = line == kPassHeader;
+    constexpr std::string_view kExpectedCentsHeader =
+        "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass\t"
+        "expected_cents";
+    if (!header_seen &&
+        (line == kHeader || line == kPassHeader ||
+         line == kExpectedCentsHeader)) {
+      calibration_pass_column = line != kHeader;
+      expected_cents_column = line == kExpectedCentsHeader;
       header_seen = true;
       continue;
     }
     header_seen = true;
-    std::array<std::string_view, 5U> fields{};
-    const std::size_t field_count = calibration_pass_column ? 5U : 4U;
+    std::array<std::string_view, 6U> fields{};
+    const std::size_t field_count = expected_cents_column
+                                        ? 6U
+                                        : (calibration_pass_column ? 5U : 4U);
     std::size_t field_start = 0U;
     for (std::size_t field = 0U; field < field_count; ++field) {
       const std::size_t tab = line.find('\t', field_start);
@@ -493,10 +530,17 @@ bool parse_replay_labels(const char* text, std::size_t size,
       field_start = last ? line.size() : tab + 1U;
     }
     std::array<std::uint64_t, 5U> values{};
-    for (std::size_t field = 0U; field < field_count; ++field) {
+    const std::size_t integer_field_count =
+        expected_cents_column ? 5U : field_count;
+    for (std::size_t field = 0U; field < integer_field_count; ++field) {
       if (!parse_u64(fields[field], values[field])) {
         return false;
       }
+    }
+    std::int16_t expected_cents_q8 = 0;
+    if (expected_cents_column &&
+        !parse_expected_cents(fields[5], expected_cents_q8)) {
+      return false;
     }
     if (output.size() >= kMaximumLabelRows || values[0] >= values[1] ||
         values[1] > sample_count || values[2] > 127U || values[3] > 255U ||
@@ -508,7 +552,8 @@ bool parse_replay_labels(const char* text, std::size_t size,
     output.push_back(ReplayLabel{
         values[0], values[1], static_cast<std::uint8_t>(values[2]),
         static_cast<std::uint8_t>(values[3]),
-        static_cast<std::uint8_t>(calibration_pass_column ? values[4] : 0U)});
+        static_cast<std::uint8_t>(calibration_pass_column ? values[4] : 0U),
+        expected_cents_q8, expected_cents_column});
     prior_start = values[0];
   }
   error = ReplayError::none;
@@ -846,6 +891,11 @@ bool run_detector_replay(const WaveData& wave,
   result.fingerprint = kFnvOffset;
   result.sample_count = wave.mono_samples.size();
   result.label_results.resize(labels.size());
+  struct LabelTrackingState final {
+    std::uint8_t previous_nonzero_lane_mask{};
+    std::uint32_t current_correct_run_frames{};
+  };
+  std::vector<LabelTrackingState> label_tracking(labels.size());
   for (std::size_t block_start = 0U; block_start < wave.mono_samples.size();
        block_start += input_partition) {
     const std::size_t block_end = std::min(
@@ -860,6 +910,11 @@ bool run_detector_replay(const WaveData& wave,
       const DetectorDecision decision = detector.process_sample(sample);
       for (const VoiceTransition& transition : decision.transitions) {
         ++result.transition_count;
+        if (sample_is_inside_label(sample_index, labels)) {
+          ++result.transition_inside_hold_count;
+        } else {
+          ++result.transition_gap_count;
+        }
         hash_integer(result.fingerprint, sample_index);
         hash_byte(result.fingerprint,
                   static_cast<std::uint8_t>(transition.kind));
@@ -904,9 +959,29 @@ bool run_detector_replay(const WaveData& wave,
         const bool matched = snapshot_matches_label(snapshot, label);
         result.matched_label_frames += matched ? 1U : 0U;
         label_result.matched_frames += matched ? 1U : 0U;
+        LabelTrackingState& tracking = label_tracking[label_index];
+        if (matched) {
+          if (label_result.first_correct_string_sample ==
+              std::numeric_limits<std::uint64_t>::max()) {
+            label_result.first_correct_string_sample = sample_index;
+          }
+          ++tracking.current_correct_run_frames;
+          label_result.longest_correct_run_frames = std::max(
+              label_result.longest_correct_run_frames,
+              tracking.current_correct_run_frames);
+        } else {
+          tracking.current_correct_run_frames = 0U;
+        }
         const std::uint8_t observed_lane_mask =
             matching_note_lane_mask(snapshot, label.midi_note);
         ++label_result.matching_note_lane_mask_frames[observed_lane_mask];
+        if (observed_lane_mask != 0U) {
+          if (tracking.previous_nonzero_lane_mask != 0U &&
+              tracking.previous_nonzero_lane_mask != observed_lane_mask) {
+            ++label_result.string_flip_count;
+          }
+          tracking.previous_nonzero_lane_mask = observed_lane_mask;
+        }
         for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
           const TunerVoice& observed = snapshot.voices[voice];
           if (observed.midi_note == label.midi_note &&
@@ -916,6 +991,27 @@ bool run_detector_replay(const WaveData& wave,
                 label_result.maximum_matching_note_beat_hz_q8,
                 observed.beat_hz_q8);
           }
+          if (!voice_matches_label(observed, label) ||
+              !observed.cents_valid) {
+            continue;
+          }
+          if (label_result.first_valid_cents_sample ==
+              std::numeric_limits<std::uint64_t>::max()) {
+            label_result.first_valid_cents_sample = sample_index;
+          }
+          if (!label.expected_cents_valid) {
+            continue;
+          }
+          const std::int32_t error_q8 =
+              static_cast<std::int32_t>(observed.cents_q8) -
+              static_cast<std::int32_t>(label.expected_cents_q8);
+          ++label_result.cents_observations;
+          label_result.cents_error_sum_q8 += error_q8;
+          label_result.cents_error_square_sum_q16 +=
+              static_cast<std::uint64_t>(
+                  static_cast<std::int64_t>(error_q8) * error_q8);
+          label_result.cents_errors_q8.push_back(
+              static_cast<std::int16_t>(error_q8));
         }
       }
       for (std::size_t voice_index = 0U;
@@ -929,7 +1025,29 @@ bool run_detector_replay(const WaveData& wave,
             break;
           }
         }
-        result.false_positive_voices += expected ? 0U : 1U;
+        if (expected) {
+          continue;
+        }
+        ++result.false_positive_voices;
+        bool active_label = false;
+        bool active_matching_note = false;
+        for (const ReplayLabel& label : labels) {
+          if (sample_index < label.start_sample ||
+              sample_index >= label.end_sample) {
+            continue;
+          }
+          active_label = true;
+          active_matching_note =
+              active_matching_note ||
+              snapshot.voices[voice_index].midi_note == label.midi_note;
+        }
+        if (!active_label) {
+          ++result.false_gap_voices;
+        } else if (active_matching_note) {
+          ++result.false_wrong_string_voices;
+        } else {
+          ++result.false_wrong_note_voices;
+        }
       }
     }
   }

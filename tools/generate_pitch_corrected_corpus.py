@@ -22,6 +22,9 @@ import numpy as np
 from scipy import signal
 
 
+M3_OPEN_NOTES = (32, 36, 40, 44, 48, 52, 56, 60)
+
+
 @dataclasses.dataclass(frozen=True)
 class ReplayLabel:
     start_sample: int
@@ -29,6 +32,7 @@ class ReplayLabel:
     midi_note: int
     string_mask: int
     calibration_pass: int
+    expected_cents: float | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -165,20 +169,27 @@ def write_float_wave(
 
 def read_labels(path: pathlib.Path) -> list[ReplayLabel]:
     lines = pathlib.Path(path).read_text(encoding="ascii").splitlines()
-    expected = (
+    five_columns = (
         "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass"
     )
-    if not lines or lines[0] != expected:
-        raise ValueError("labels require the five-column replay header")
+    six_columns = five_columns + "\texpected_cents"
+    if not lines or lines[0] not in (five_columns, six_columns):
+        raise ValueError("labels require the five- or six-column replay header")
+    field_count = 6 if lines[0] == six_columns else 5
     labels = []
     for line in lines[1:]:
         if not line:
             continue
         fields = line.split("\t")
-        if len(fields) != 5:
+        if len(fields) != field_count:
             raise ValueError("invalid replay label")
-        values = tuple(int(value) for value in fields)
-        label = ReplayLabel(*values)
+        values = tuple(int(value) for value in fields[:5])
+        expected_cents = None
+        if field_count == 6:
+            expected_cents = float(fields[5])
+            if not math.isfinite(expected_cents) or not -50.0 <= expected_cents <= 50.0:
+                raise ValueError("invalid expected cents")
+        label = ReplayLabel(*values, expected_cents)
         if (
             label.start_sample < 0
             or label.end_sample <= label.start_sample
@@ -194,14 +205,24 @@ def read_labels(path: pathlib.Path) -> list[ReplayLabel]:
 
 
 def _write_labels(path: pathlib.Path, labels: Iterable[ReplayLabel]) -> None:
-    rows = [
+    labels = list(labels)
+    has_expected = [label.expected_cents is not None for label in labels]
+    if any(has_expected) and not all(has_expected):
+        raise ValueError("expected cents must be present on every label or none")
+    header = (
         "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass"
-    ]
-    rows.extend(
-        f"{label.start_sample}\t{label.end_sample}\t{label.midi_note}\t"
-        f"{label.string_mask}\t{label.calibration_pass}"
-        for label in labels
     )
+    if all(has_expected) and labels:
+        header += "\texpected_cents"
+    rows = [header]
+    for label in labels:
+        row = (
+            f"{label.start_sample}\t{label.end_sample}\t{label.midi_note}\t"
+            f"{label.string_mask}\t{label.calibration_pass}"
+        )
+        if label.expected_cents is not None:
+            row += f"\t{label.expected_cents:.6f}"
+        rows.append(row)
     pathlib.Path(path).write_text("\n".join(rows) + "\n", encoding="ascii")
 
 
@@ -265,15 +286,8 @@ def _sha256(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def write_scaled_center_calibration(
-    source_path: pathlib.Path,
-    output_path: pathlib.Path,
-    cents_scale: float,
-) -> None:
-    """Scale pitch centers while retaining measured timbre/repeatability."""
-    if not math.isfinite(cents_scale) or not 0.0 <= cents_scale <= 1.0:
-        raise ValueError("cents scale must be in 0..1")
-    data = bytearray(pathlib.Path(source_path).read_bytes())
+def _calibration_image(path: pathlib.Path) -> bytearray:
+    data = bytearray(pathlib.Path(path).read_bytes())
     header_size = 24
     point_size = 19
     point_count = 8 * 25
@@ -286,17 +300,126 @@ def write_scaled_center_calibration(
         != (binascii.crc32(data[header_size:]) & 0xFFFFFFFF)
     ):
         raise ValueError("invalid M3CB calibration image")
-    first_point = header_size + 1
-    for point in range(point_count):
-        offset = first_point + point * point_size
-        cents_q8 = struct.unpack_from("<h", data, offset)[0]
-        struct.pack_into("<h", data, offset, round(cents_q8 * cents_scale))
+    return data
+
+
+def _write_calibration_image(data: bytearray, output_path: pathlib.Path) -> None:
     struct.pack_into(
-        "<I", data, 16, binascii.crc32(data[header_size:]) & 0xFFFFFFFF
+        "<I", data, 16, binascii.crc32(data[24:]) & 0xFFFFFFFF
     )
     output_path = pathlib.Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(data)
+
+
+def write_adjusted_center_calibration(
+    source_path: pathlib.Path,
+    output_path: pathlib.Path,
+    cents_scale: float = 1.0,
+    cents_offset: float = 0.0,
+) -> None:
+    """Adjust pitch centers while retaining measured timbre/repeatability."""
+    if not math.isfinite(cents_scale) or not 0.0 <= cents_scale <= 1.0:
+        raise ValueError("cents scale must be in 0..1")
+    if not math.isfinite(cents_offset) or not -50.0 <= cents_offset <= 50.0:
+        raise ValueError("cents offset must be in -50..50")
+    data = _calibration_image(source_path)
+    point_size = 19
+    point_count = 8 * 25
+    first_point = 25
+    offset_q8 = round(cents_offset * 256.0)
+    for point in range(point_count):
+        offset = first_point + point * point_size
+        if data[offset + point_size - 1] == 0:
+            continue
+        cents_q8 = struct.unpack_from("<h", data, offset)[0]
+        adjusted_q8 = round(cents_q8 * cents_scale) + offset_q8
+        if not -50 * 256 <= adjusted_q8 <= 50 * 256:
+            raise ValueError("adjusted pitch center exceeds M3CB range")
+        struct.pack_into("<h", data, offset, adjusted_q8)
+    _write_calibration_image(data, output_path)
+
+
+def write_scaled_center_calibration(
+    source_path: pathlib.Path,
+    output_path: pathlib.Path,
+    cents_scale: float,
+) -> None:
+    write_adjusted_center_calibration(
+        source_path, output_path, cents_scale=cents_scale
+    )
+
+
+def write_note_shuffled_center_calibration(
+    source_path: pathlib.Path, output_path: pathlib.Path
+) -> None:
+    """Rotate pitch centers between strings that can play the same MIDI note."""
+    data = _calibration_image(source_path)
+    point_size = 19
+    by_note: dict[int, list[int]] = {}
+    for string_index, open_note in enumerate(M3_OPEN_NOTES):
+        for fret in range(25):
+            by_note.setdefault(open_note + fret, []).append(string_index * 25 + fret)
+    for points in by_note.values():
+        points = [
+            point
+            for point in points
+            if data[25 + point * point_size + point_size - 1] != 0
+        ]
+        if len(points) < 2:
+            continue
+        centers = [
+            struct.unpack_from("<h", data, 25 + point * point_size)[0]
+            for point in points
+        ]
+        for point, cents_q8 in zip(points, centers[1:] + centers[:1]):
+            struct.pack_into("<h", data, 25 + point * point_size, cents_q8)
+    _write_calibration_image(data, output_path)
+
+
+def write_expected_cents_labels(
+    source_labels: pathlib.Path,
+    manifest_path: pathlib.Path,
+    output_path: pathlib.Path,
+    residual_fraction: float,
+    truth_calibration: pathlib.Path | None = None,
+) -> None:
+    """Attach pitch truth from a manifest or one frozen scoring bank."""
+    if not math.isfinite(residual_fraction) or not 0.0 <= residual_fraction <= 1.0:
+        raise ValueError("residual fraction must be in 0..1")
+    labels = read_labels(source_labels)
+    manifest = json.loads(pathlib.Path(manifest_path).read_text(encoding="utf-8"))
+    observations = manifest.get("observations")
+    if not isinstance(observations, list) or len(observations) != len(labels):
+        raise ValueError("manifest observations do not match labels")
+    centers = None
+    string_index = manifest.get("string_index")
+    if truth_calibration is not None:
+        if not isinstance(string_index, int) or not 0 <= string_index < 8:
+            raise ValueError("manifest has no valid string index")
+        data = _calibration_image(truth_calibration)
+        centers = [
+            struct.unpack_from("<h", data, 25 + point * 19)[0] / 256.0
+            for point in range(8 * 25)
+        ]
+    enriched = []
+    for label, observation in zip(labels, observations):
+        if not isinstance(observation, dict):
+            raise ValueError("invalid manifest observation")
+        measured = observation.get("measured_cents_from_target")
+        if not isinstance(measured, (int, float)) or not math.isfinite(measured):
+            raise ValueError("manifest observation has no finite cents value")
+        expected = float(measured)
+        if centers is not None:
+            fret = label.midi_note - M3_OPEN_NOTES[string_index]
+            if not 0 <= fret < 25:
+                raise ValueError("label note is outside the string range")
+            expected = centers[string_index * 25 + fret]
+        expected *= residual_fraction
+        if not -50.0 <= expected <= 50.0:
+            raise ValueError("expected cents exceeds replay label range")
+        enriched.append(dataclasses.replace(label, expected_cents=expected))
+    _write_labels(output_path, enriched)
 
 
 def write_zero_centered_calibration(
@@ -346,6 +469,7 @@ def generate_string_corpus(
             )
             target_hz = midi_frequency(label.midi_note, a4_hz)
             measured_hz = estimate_pitch_hz(segment, sample_rate, target_hz)
+            measured_cents = 1200.0 * math.log2(measured_hz / target_hz)
             raw_writer.write(segment)
             output_labels.append(
                 ReplayLabel(
@@ -354,6 +478,7 @@ def generate_string_corpus(
                     label.midi_note,
                     label.string_mask,
                     label.calibration_pass,
+                    measured_cents,
                 )
             )
             observations.append(
@@ -365,8 +490,7 @@ def generate_string_corpus(
                     "source_end_sample": label.end_sample,
                     "target_hz": target_hz,
                     "measured_hz": measured_hz,
-                    "measured_cents_from_target": 1200.0
-                    * math.log2(measured_hz / target_hz),
+                    "measured_cents_from_target": measured_cents,
                     "pitch_correction_semitones": 12.0
                     * math.log2(target_hz / measured_hz),
                 }

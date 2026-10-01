@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cerrno>
 #include <cmath>
 #include <cstddef>
@@ -13,6 +14,45 @@
 #include "replay.hpp"
 
 namespace {
+
+struct CentsSummary final {
+  std::size_t count{};
+  double mean{};
+  double standard_deviation{};
+  double p95_absolute{};
+};
+
+CentsSummary summarize_cents(
+    const std::vector<std::int16_t>& errors_q8) {
+  CentsSummary summary;
+  summary.count = errors_q8.size();
+  if (errors_q8.empty()) {
+    return summary;
+  }
+  double sum = 0.0;
+  double square_sum = 0.0;
+  std::vector<std::uint16_t> absolute_errors;
+  absolute_errors.reserve(errors_q8.size());
+  for (const std::int16_t error_q8 : errors_q8) {
+    const double cents = static_cast<double>(error_q8) / 256.0;
+    sum += cents;
+    square_sum += cents * cents;
+    absolute_errors.push_back(static_cast<std::uint16_t>(
+        std::abs(static_cast<std::int32_t>(error_q8))));
+  }
+  summary.mean = sum / static_cast<double>(errors_q8.size());
+  summary.standard_deviation = std::sqrt(std::max(
+      0.0, square_sum / static_cast<double>(errors_q8.size()) -
+               summary.mean * summary.mean));
+  const std::size_t percentile_index =
+      (95U * absolute_errors.size() + 99U) / 100U - 1U;
+  std::nth_element(absolute_errors.begin(),
+                   absolute_errors.begin() + percentile_index,
+                   absolute_errors.end());
+  summary.p95_absolute =
+      static_cast<double>(absolute_errors[percentile_index]) / 256.0;
+  return summary;
+}
 
 bool read_file(const char* path, std::vector<std::uint8_t>& output) {
   output.clear();
@@ -54,7 +94,8 @@ void usage(const char* program) {
       stderr,
       "usage: %s --wav FILE [--labels FILE] [--calibration FILE] "
       "[--a4 HZ] [--block FRAMES] [--label-details] "
-      "[--derive-calibration-string INDEX --calibration-output FILE]\n",
+      "[--derive-calibration-string INDEX --calibration-output FILE "
+      "[--exclude-calibration-pass PASS]]\n",
       program);
 }
 
@@ -66,6 +107,7 @@ int main(int argc, char** argv) {
   const char* calibration_path = nullptr;
   const char* calibration_output_path = nullptr;
   int calibration_string = -1;
+  std::uint8_t excluded_calibration_pass = 0U;
   std::size_t block_size = 512U;
   double a4_hz = 440.0;
   bool label_details = false;
@@ -91,6 +133,17 @@ int main(int argc, char** argv) {
         return 2;
       }
       calibration_string = static_cast<int>(parsed);
+    } else if (std::strcmp(argv[index], "--exclude-calibration-pass") == 0 &&
+               has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const unsigned long parsed = std::strtoul(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed == 0UL ||
+          parsed > 255UL) {
+        usage(argv[0]);
+        return 2;
+      }
+      excluded_calibration_pass = static_cast<std::uint8_t>(parsed);
     } else if (std::strcmp(argv[index], "--a4") == 0 && has_value) {
       errno = 0;
       char* end = nullptr;
@@ -199,8 +252,22 @@ int main(int argc, char** argv) {
       usage(argv[0]);
       return 2;
     }
+    std::vector<m3::offline::ReplayLabel> calibration_labels;
+    const std::vector<m3::offline::ReplayLabel>* derivation_labels = &labels;
+    if (excluded_calibration_pass != 0U) {
+      for (const m3::offline::ReplayLabel& label : labels) {
+        if (label.calibration_pass != excluded_calibration_pass) {
+          calibration_labels.push_back(label);
+        }
+      }
+      if (calibration_labels.empty()) {
+        std::fprintf(stderr, "m3_replay: excluded every calibration label\n");
+        return 1;
+      }
+      derivation_labels = &calibration_labels;
+    }
     if (!m3::offline::derive_labeled_string_calibration(
-            wave, labels, config,
+            wave, *derivation_labels, config,
             static_cast<std::uint8_t>(calibration_string), calibration,
             error)) {
       std::fprintf(stderr, "m3_replay: %s\n",
@@ -219,7 +286,8 @@ int main(int argc, char** argv) {
                  "m3_replay: calibrated string %d -> %s (%zu bytes)\n",
                  calibration_string, calibration_output_path,
                  encoded.size());
-  } else if (calibration_output_path != nullptr) {
+  } else if (calibration_output_path != nullptr ||
+             excluded_calibration_pass != 0U) {
     usage(argv[0]);
     return 2;
   }
@@ -232,15 +300,29 @@ int main(int argc, char** argv) {
                  m3::offline::replay_error_name(error));
     return 1;
   }
+  std::vector<std::int16_t> all_cents_errors;
+  for (const m3::offline::ReplayLabelResult& detail : result.label_results) {
+    all_cents_errors.insert(all_cents_errors.end(),
+                            detail.cents_errors_q8.begin(),
+                            detail.cents_errors_q8.end());
+  }
+  const CentsSummary cents = summarize_cents(all_cents_errors);
   std::printf(
       "sample_rate\tblock\tsamples\tsnapshots\tlabeled\tmatched\t"
-      "transitions\tfalse_positive_voices\tfingerprint\n"
-      "%u\t%zu\t%llu\t%u\t%u\t%u\t%u\t%u\t%016llx\n",
+      "transitions\ttransitions_inside_holds\ttransitions_in_gaps\t"
+      "false_positive_voices\tfalse_gap_voices\tfalse_wrong_note_voices\t"
+      "false_wrong_string_voices\tcents_observations\tcents_mean_error\t"
+      "cents_sd\tcents_p95_abs\tfingerprint\n"
+      "%u\t%zu\t%llu\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
+      "%zu\t%.6f\t%.6f\t%.6f\t%016llx\n",
       wave.sample_rate, block_size,
       static_cast<unsigned long long>(result.sample_count),
       result.snapshot_frames, result.labeled_frames,
       result.matched_label_frames, result.transition_count,
-      result.false_positive_voices,
+      result.transition_inside_hold_count, result.transition_gap_count,
+      result.false_positive_voices, result.false_gap_voices,
+      result.false_wrong_note_voices, result.false_wrong_string_voices,
+      cents.count, cents.mean, cents.standard_deviation, cents.p95_absolute,
       static_cast<unsigned long long>(result.fingerprint));
   if (label_details) {
     std::printf(
@@ -248,7 +330,10 @@ int main(int argc, char** argv) {
         "labeled\tmatched\tmatch_percent\t"
         "max_beat_hz\t"
         "lane_0\tlane_1\tlane_2\tlane_3\tlane_4\tlane_5\tlane_6\t"
-        "lane_7\tobserved_note_lane_masks\n");
+        "lane_7\tobserved_note_lane_masks\texpected_cents\t"
+        "cents_observations\tcents_mean_error\tcents_sd\tcents_p95_abs\t"
+        "first_valid_cents_ms\tfirst_correct_string_ms\tstring_flips\t"
+        "longest_correct_run_ms\n");
     for (std::size_t index = 0U; index < labels.size(); ++index) {
       const m3::offline::ReplayLabel& label = labels[index];
       const m3::offline::ReplayLabelResult& detail =
@@ -258,6 +343,7 @@ int main(int argc, char** argv) {
               ? 0.0
               : 100.0 * static_cast<double>(detail.matched_frames) /
                     static_cast<double>(detail.labeled_frames);
+      const CentsSummary label_cents = summarize_cents(detail.cents_errors_q8);
       std::printf("%zu\t%llu\t%llu\t%u\t%u\t%u\t%u\t%.3f\t%.3f", index,
                   static_cast<unsigned long long>(label.start_sample),
                   static_cast<unsigned long long>(label.end_sample),
@@ -282,7 +368,37 @@ int main(int argc, char** argv) {
         std::printf("%s%zu:%u", first_mask ? "" : ",", mask, frames);
         first_mask = false;
       }
-      std::printf("\n");
+      const double expected_cents =
+          label.expected_cents_valid
+              ? static_cast<double>(label.expected_cents_q8) / 256.0
+              : std::numeric_limits<double>::quiet_NaN();
+      const double first_valid_ms =
+          detail.first_valid_cents_sample ==
+                  std::numeric_limits<std::uint64_t>::max()
+              ? -1.0
+              : 1000.0 * static_cast<double>(
+                             detail.first_valid_cents_sample -
+                             label.start_sample) /
+                    static_cast<double>(wave.sample_rate);
+      const double first_correct_ms =
+          detail.first_correct_string_sample ==
+                  std::numeric_limits<std::uint64_t>::max()
+              ? -1.0
+              : 1000.0 * static_cast<double>(
+                             detail.first_correct_string_sample -
+                             label.start_sample) /
+                    static_cast<double>(wave.sample_rate);
+      const double longest_correct_ms =
+          1000.0 * static_cast<double>(
+                       detail.longest_correct_run_frames *
+                       static_cast<std::uint64_t>(m3::kDecisionQuantum)) /
+          static_cast<double>(wave.sample_rate);
+      std::printf("\t%.6f\t%zu\t%.6f\t%.6f\t%.6f\t%.3f\t%.3f\t%u\t%.3f\n",
+                  expected_cents, label_cents.count, label_cents.mean,
+                  label_cents.standard_deviation,
+                  label_cents.p95_absolute, first_valid_ms,
+                  first_correct_ms, detail.string_flip_count,
+                  longest_correct_ms);
     }
   }
   return 0;

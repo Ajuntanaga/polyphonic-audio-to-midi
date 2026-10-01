@@ -43,18 +43,20 @@ def _validate_variant(variant: str) -> None:
 
 def _read_label_spans(path: pathlib.Path) -> list[tuple[int, int]]:
     lines = pathlib.Path(path).read_text(encoding="ascii").splitlines()
-    expected = (
+    five_columns = (
         "start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass"
     )
-    if not lines or lines[0] != expected:
-        raise ValueError("labels require the five-column replay header")
+    six_columns = five_columns + "\texpected_cents"
+    if not lines or lines[0] not in (five_columns, six_columns):
+        raise ValueError("labels require the five- or six-column replay header")
+    field_count = 6 if lines[0] == six_columns else 5
     spans = []
     previous_end = 0
     for line in lines[1:]:
         if not line:
             continue
         fields = line.split("\t")
-        if len(fields) != 5:
+        if len(fields) != field_count:
             raise ValueError("invalid replay label")
         start, end = int(fields[0]), int(fields[1])
         if start < previous_end or end <= start:
