@@ -77,7 +77,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   struct StringCalibrationUiState final {
     CalibrationSweepPhase phase{CalibrationSweepPhase::idle};
     std::uint8_t string_index{};
-    std::uint8_t highest_fret{};
+    std::uint8_t requested_fret{};
     std::uint8_t measured_frets{};
     std::uint8_t interpolated_frets{};
     std::uint8_t calibrated_string_mask{};

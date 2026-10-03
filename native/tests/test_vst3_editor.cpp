@@ -1593,8 +1593,9 @@ M3_TEST(vst3_editor_real_control_events_cover_rotary_discrete_and_read_only_path
       constexpr m3::ParameterId kSensitivityId = 0x4D330005U;
       constexpr m3::ParameterId kResponseId = 0x4D330006U;
 
-      // The compact tuner-page ranges are read-only summaries. Precision
-      // editing belongs exclusively to the settings page.
+      // Sensitivity remains a read-only summary on the tuner page. Response
+      // is intentionally a two-state front-panel control: the left half
+      // selects SLOW and the right half selects FAST.
       M3_EXPECT_EQ(controller->setParamNormalized(kSensitivityId, 0.5),
                    Steinberg::kResultTrue);
       handler.reset();
@@ -1607,7 +1608,16 @@ M3_TEST(vst3_editor_real_control_events_cover_rotary_discrete_and_read_only_path
       handler.reset();
       M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
           *view, kResponseId, 0.10, 0.72, false));
-      M3_EXPECT_EQ(handler.edit_call_count(), 0U);
+      expect_single_edit(handler, kResponseId, 1.0);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kResponseId), 1.0,
+                     1.0e-6);
+
+      handler.reset();
+      M3_EXPECT_TRUE(m3::vst3::editor_pointer_down_for_test(
+          *view, kResponseId, 0.90, 0.72, false));
+      expect_single_edit(handler, kResponseId, 0.0);
+      M3_EXPECT_NEAR(controller->getParamNormalized(kResponseId), 0.0,
+                     1.0e-6);
 
       // The settings-page versions remain continuous knobs.
       M3_EXPECT_TRUE(m3::vst3::editor_toggle_settings_for_test(*view));

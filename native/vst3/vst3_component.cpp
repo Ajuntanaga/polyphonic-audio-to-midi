@@ -30,7 +30,7 @@ constexpr std::uint32_t kCalibrationCommandCancel = 9U;
 constexpr std::uint32_t kCalibrationCommandClear = 10U;
 constexpr std::uint32_t kCalibrationPhaseMask = 0x07U;
 constexpr std::uint32_t kCalibrationStringShift = 3U;
-constexpr std::uint32_t kCalibrationHighestFretShift = 6U;
+constexpr std::uint32_t kCalibrationRequestedFretShift = 6U;
 constexpr std::uint32_t kCalibrationMeasuredFretShift = 11U;
 constexpr std::uint32_t kCalibrationInterpolatedFretShift = 16U;
 constexpr std::uint32_t kCalibrationMaskShift = 21U;
@@ -44,8 +44,8 @@ std::uint32_t pack_calibration_status(
   return (static_cast<std::uint32_t>(status.phase) & kCalibrationPhaseMask) |
          ((static_cast<std::uint32_t>(status.string_index) & 0x07U)
           << kCalibrationStringShift) |
-         ((static_cast<std::uint32_t>(status.highest_fret) & 0x1FU)
-          << kCalibrationHighestFretShift) |
+         ((static_cast<std::uint32_t>(status.requested_fret) & 0x1FU)
+          << kCalibrationRequestedFretShift) |
          ((static_cast<std::uint32_t>(status.measured_frets) & 0x1FU)
           << kCalibrationMeasuredFretShift) |
          ((static_cast<std::uint32_t>(status.interpolated_frets) & 0x1FU)
@@ -152,8 +152,8 @@ M3Component::string_calibration_ui_state() const noexcept {
                     : CalibrationSweepPhase::idle;
   state.string_index = static_cast<std::uint8_t>(
       (packed >> kCalibrationStringShift) & 0x07U);
-  state.highest_fret = static_cast<std::uint8_t>(
-      (packed >> kCalibrationHighestFretShift) & 0x1FU);
+  state.requested_fret = static_cast<std::uint8_t>(
+      (packed >> kCalibrationRequestedFretShift) & 0x1FU);
   state.measured_frets = static_cast<std::uint8_t>(
       (packed >> kCalibrationMeasuredFretShift) & 0x1FU);
   state.interpolated_frets = static_cast<std::uint8_t>(

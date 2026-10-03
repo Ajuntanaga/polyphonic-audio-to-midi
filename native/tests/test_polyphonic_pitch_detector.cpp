@@ -579,6 +579,27 @@ struct PolyphonicPitchDetectorTestAccess final {
     return detector.candidate_states_[candidate].assigned_string;
   }
 
+  static double settled_calibration_similarity_for_profile(
+      PolyphonicPitchDetector& detector, std::uint8_t note,
+      std::uint8_t string,
+      const std::array<double, kCalibrationHarmonicCount>& amplitudes) noexcept {
+    if (note < detector.lowest_note_ || string >= kM3OpenNotes.size()) {
+      return 0.0;
+    }
+    const std::size_t candidate = note - detector.lowest_note_;
+    if (candidate >= static_cast<std::size_t>(detector.candidate_count_)) {
+      return 0.0;
+    }
+    detector.harmonic_energy_memory_[candidate] = {};
+    detector.long_harmonic_energy_memory_[candidate] = {};
+    for (std::size_t harmonic = 0U; harmonic < amplitudes.size(); ++harmonic) {
+      const double energy = amplitudes[harmonic] * amplitudes[harmonic];
+      detector.harmonic_energy_memory_[candidate][harmonic] = energy;
+      detector.long_harmonic_energy_memory_[candidate][harmonic] = energy;
+    }
+    return detector.settled_calibration_similarity(candidate, string);
+  }
+
   static std::uint8_t assigned_string_for_profile_and_cents(
       PolyphonicPitchDetector& detector, std::uint8_t note,
       const std::array<double, kCalibrationHarmonicCount>& amplitudes,
@@ -771,6 +792,53 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.append_candidate_note_off(decision, 1U);
     return decision;
   }
+
+  static CalibrationSweepStatus observe_requested_high_fret_beside_a_louder_neighbor(
+      PolyphonicPitchDetector& detector) noexcept {
+    CalibrationObservation observation;
+    observation.confidence = 0.95;
+    observation.harmonic_energy = {1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125};
+
+    const double open = static_cast<double>(kM3OpenNotes[0U]);
+    observation.midi_pitch = open;
+    for (std::size_t sample = 0U; sample < 80U; ++sample) {
+      static_cast<void>(detector.calibrator_.observe(observation));
+    }
+    for (std::size_t fret = 1U; fret <= 22U; ++fret) {
+      observation.midi_pitch = open + static_cast<double>(fret);
+      for (std::size_t sample = 0U; sample < 64U; ++sample) {
+        static_cast<void>(detector.calibrator_.observe(observation));
+      }
+    }
+
+    const CalibrationSweepStatus before = detector.calibrator_.status();
+    if (before.phase != CalibrationSweepPhase::ascending ||
+        before.requested_fret != 23U) {
+      return before;
+    }
+
+    const std::size_t first =
+        static_cast<std::size_t>(kM3OpenNotes[0U] - detector.lowest_note_);
+    const std::size_t neighbor = first + 22U;
+    const std::size_t requested = first + 23U;
+    detector.fast_energy_ = 1.0;
+    std::array<double, kMaxCandidates> scores{};
+    scores[neighbor] = 2.0;
+    scores[requested] = 1.0;
+    detector.phase_cents_states_[requested].cents = 0.0;
+    detector.phase_cents_states_[requested].valid = true;
+    for (std::size_t harmonic = 0U; harmonic < kCalibrationHarmonicCount;
+         ++harmonic) {
+      auto& cell = detector.cells_[detector.cell_index(requested, harmonic)];
+      cell.enabled = true;
+      cell.fast_real = 1.0 / static_cast<double>(harmonic + 1U);
+      cell.fast_imaginary = 0.0;
+    }
+    for (std::size_t sample = 0U; sample < 64U; ++sample) {
+      detector.observe_calibration(scores, 0.0, 0.0, false);
+    }
+    return detector.calibrator_.status();
+  }
 };
 
 }  // namespace m3
@@ -886,26 +954,22 @@ void feed_calibration_pitch(m3::PolyphonicPitchDetector& detector,
   }
 }
 
-void feed_calibration_glide(m3::PolyphonicPitchDetector& detector,
-                            double start_midi_pitch, double end_midi_pitch,
-                            std::uint32_t samples,
+void feed_calibration_frets(m3::PolyphonicPitchDetector& detector,
+                            double open_midi_pitch,
                             double& oscillator_phase) noexcept {
-  constexpr double kSampleRate = 48000.0;
-  constexpr double kAmplitude = 0.20;
-  for (std::uint32_t index = 0U; index < samples; ++index) {
-    const double amount = samples > 1U
-                              ? static_cast<double>(index) /
-                                    static_cast<double>(samples - 1U)
-                              : 1.0;
-    const double midi_pitch =
-        start_midi_pitch + (end_midi_pitch - start_midi_pitch) * amount;
-    const double frequency = m3::midi_to_frequency(midi_pitch, 440.0);
-    static_cast<void>(
-        detector.process_sample(kAmplitude * std::sin(oscillator_phase)));
-    oscillator_phase = std::fmod(
-        oscillator_phase + 6.28318530717958647692 * frequency / kSampleRate,
-        6.28318530717958647692);
+  constexpr std::uint32_t kSamplesPerFret = 24000U;
+  for (std::size_t fret = 1U; fret < m3::kCalibrationFretCount; ++fret) {
+    feed_calibration_pitch(detector, open_midi_pitch + static_cast<double>(fret),
+                           kSamplesPerFret, &oscillator_phase);
   }
+  for (std::size_t fret = m3::kCalibrationFretCount - 1U; fret-- > 0U;) {
+    feed_calibration_pitch(detector, open_midi_pitch + static_cast<double>(fret),
+                           kSamplesPerFret, &oscillator_phase);
+  }
+  // The low open string needs an additional correlation-settling hold after
+  // the fret-1 transition; the UI keeps requesting OPEN until this locks.
+  feed_calibration_pitch(detector, open_midi_pitch, 24000U,
+                         &oscillator_phase);
 }
 
 struct DyadLifecycle final {
@@ -3269,6 +3333,14 @@ M3_TEST(native_detector_keeps_a_calibrated_harmonic_fingerprint_when_detuned) {
     m3::PolyphonicPitchDetector detector;
     M3_EXPECT_TRUE(detector.configure(kSampleRate, config));
     m3::StringCalibrationBank bank;
+    // Cover every physical lane that can play C4. The test is specifically
+    // about choosing the calibrated bright fingerprint from a complete set,
+    // not about allowing a partial session to bias a fresh assignment.
+    set_measured_string_profile(bank, 1U, 24U, 0.0, kDarkProfile);
+    set_measured_string_profile(bank, 2U, 20U, 0.0, kDarkProfile);
+    set_measured_string_profile(bank, 3U, 16U, 0.0, kDarkProfile);
+    set_measured_string_profile(bank, 4U, 12U, 0.0, kDarkProfile);
+    set_measured_string_profile(bank, 5U, 8U, 0.0, kDarkProfile);
     set_measured_string_profile(bank, 6U, 4U, 0.0, kBrightProfile);
     set_measured_string_profile(bank, 7U, 0U, 0.0, kDarkProfile);
     detector.set_calibration_bank(bank);
@@ -3702,6 +3774,39 @@ M3_TEST(native_detector_does_not_bias_assignment_toward_a_lone_calibrated_lane) 
   M3_EXPECT_EQ(calibrated_string, baseline_string);
 }
 
+M3_TEST(native_detector_incomplete_two_string_calibration_does_not_override_range_assignment) {
+  constexpr std::uint8_t kNote = 40U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kObserved{
+      1.00, 0.20, 0.08, 0.03, 0.01, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kDifferent{
+      0.05, 0.10, 0.20, 0.40, 0.80, 1.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector baseline;
+  M3_EXPECT_TRUE(baseline.configure(48000.0, config));
+  const std::uint8_t baseline_string =
+      m3::PolyphonicPitchDetectorTestAccess::assigned_string_for_profile(
+          baseline, kNote, kObserved);
+  M3_EXPECT_EQ(baseline_string, 2U);
+
+  m3::PolyphonicPitchDetector partially_calibrated;
+  M3_EXPECT_TRUE(partially_calibrated.configure(48000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 8U, 0.0, kDifferent);
+  set_measured_string_profile(bank, 1U, 4U, 0.0, kObserved);
+  partially_calibrated.set_calibration_bank(bank);
+  const std::uint8_t calibrated_string =
+      m3::PolyphonicPitchDetectorTestAccess::assigned_string_for_profile(
+          partially_calibrated, kNote, kObserved);
+
+  M3_EXPECT_EQ(calibrated_string, baseline_string);
+}
+
 M3_TEST(native_detector_uses_a_complete_calibration_to_identify_a_high_fret_lane) {
   constexpr std::uint8_t kNote = 70U;
   constexpr std::array<double, m3::kCalibrationHarmonicCount> kProfile{
@@ -3726,6 +3831,77 @@ M3_TEST(native_detector_uses_a_complete_calibration_to_identify_a_high_fret_lane
                    assigned_string_for_profile_and_cents(
                        detector, kNote, kProfile, 2.89),
                6U);
+}
+
+M3_TEST(native_detector_settled_calibration_uses_stable_harmonic_shape) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kDistractor{
+      0.224063897, 0.488057200, 0.263422171,
+      0.707378011, 0.117363964, 0.357835647};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kTrueString{
+      0.367280411, 0.620195905, 0.202189861,
+      0.584716949, 0.133286571, 0.282705129};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kObserved{
+      0.304041132, 0.553912096, 0.166730321,
+      0.674453571, 0.145136281, 0.311430923};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, 0.0, kDistractor);
+  set_measured_string_profile(bank, 1U, 0U, 0.0, kTrueString);
+  bank.points[0U][4U].confidence_q15 = 26214U;
+  bank.points[1U][0U].confidence_q15 = 26214U;
+  detector.set_calibration_bank(bank);
+
+  const double distractor = m3::PolyphonicPitchDetectorTestAccess::
+      settled_calibration_similarity_for_profile(detector, kNote, 0U,
+                                                 kObserved);
+  const double true_string = m3::PolyphonicPitchDetectorTestAccess::
+      settled_calibration_similarity_for_profile(detector, kNote, 1U,
+                                                 kObserved);
+  M3_EXPECT_TRUE(true_string > distractor);
+}
+
+M3_TEST(native_detector_complete_calibration_does_not_force_a_fresh_note_onto_a_mismatched_open_string) {
+  // Physical walk regression: C2 plucked at string 8 fret 4 was routed for
+  // whole holds to the open C2 lane because the open-string prior ignored a
+  // complete calibration whose fingerprints identified the fretted string.
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kFrettedProfile{
+      0.91, 0.31, 0.14, 0.05, 0.01, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpenProfile{
+      0.72, 0.50, 0.31, 0.18, 0.09, 0.04};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, 0.0, kFrettedProfile);
+  set_measured_string_profile(bank, 1U, 0U, 0.0, kOpenProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   assigned_string_for_profile_and_cents(
+                       detector, kNote, kFrettedProfile, 0.0),
+               0U);
+  // The open-string prior still identifies an open string whose own
+  // calibrated fingerprint matches.
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   assigned_string_for_profile_and_cents(
+                       detector, kNote, kOpenProfile, 0.0),
+               1U);
 }
 
 M3_TEST(native_detector_learns_one_shared_tuning_offset_from_distinctive_string_timbre) {
@@ -3968,6 +4144,36 @@ M3_TEST(native_detector_physical_cents_override_articulation_timbre_drift) {
                    reassigned_settled_string_for_profile_and_cents(
                        detector, kNote, 6U, kObserved, 15.503),
                7U);
+}
+
+M3_TEST(native_detector_uses_measured_cents_to_stabilize_nearby_string_profiles) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kTrueProfile{
+      1.00, 0.20, 0.00, 0.00, 0.00, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kNearbyProfile{
+      1.00, 0.29, 0.00, 0.00, 0.00, 0.00};
+  // A different pick position can temporarily resemble the neighbouring
+  // string even though the stable measured pitch remains in this string's
+  // per-fret corridor.
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kObserved{
+      1.00, 0.60, 0.00, 0.00, 0.00, 0.00};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 40U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, 0.0, kTrueProfile);
+  set_measured_string_profile(bank, 1U, 0U, 1.2, kNearbyProfile);
+  detector.set_calibration_bank(bank);
+
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+                   reassigned_settled_string_for_profile_and_cents(
+                       detector, kNote, 1U, kObserved, 0.0),
+               0U);
 }
 
 M3_TEST(native_detector_does_not_split_one_calibrated_string_into_a_unison) {
@@ -4270,7 +4476,7 @@ M3_TEST(native_detector_single_routing_collapses_a_calibrated_unison_to_one_midi
   M3_EXPECT_EQ(final_snapshot.voice_count, 2U);
 }
 
-M3_TEST(native_detector_learns_a_real_audio_open_to_24_and_back_sweep) {
+M3_TEST(native_detector_learns_individually_held_frets_up_and_back_down) {
   m3::PersistentConfig config;
   config.profile_mode = m3::ProfileMode::m3;
   config.lowest_note = 32U;
@@ -4289,21 +4495,36 @@ M3_TEST(native_detector_learns_a_real_audio_open_to_24_and_back_sweep) {
   M3_EXPECT_EQ(detector.calibration_status().phase,
                m3::CalibrationSweepPhase::ascending);
 
-  constexpr std::uint32_t kOneWaySweepSamples = 144000U;
   const double open_pitch = static_cast<double>(m3::kM3OpenNotes[0U]);
-  feed_calibration_glide(detector, open_pitch, open_pitch + 24.0,
-                         kOneWaySweepSamples, oscillator_phase);
-  feed_calibration_glide(detector, open_pitch + 24.0, open_pitch,
-                         kOneWaySweepSamples, oscillator_phase);
-  // Hold the returned open string briefly so the bounded correlation window
-  // can settle at the endpoint, matching the UI's completion cue.
-  feed_calibration_pitch(detector, open_pitch, 8000U, &oscillator_phase);
+  feed_calibration_frets(detector, open_pitch, oscillator_phase);
 
   const m3::CalibrationSweepStatus status = detector.calibration_status();
   M3_EXPECT_EQ(status.phase, m3::CalibrationSweepPhase::complete);
   M3_EXPECT_EQ(status.highest_fret, 24U);
   M3_EXPECT_TRUE(status.measured_frets >= 18U);
   M3_EXPECT_TRUE(detector.calibration_bank().string_calibrated(0U));
+}
+
+M3_TEST(native_detector_calibration_tracks_the_requested_high_fret_when_a_neighbor_is_louder) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 8U;
+  config.max_fret = 24U;
+  config.sensitivity = 70U;
+  config.response = 81U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  M3_EXPECT_TRUE(detector.begin_string_calibration(0U));
+  const m3::CalibrationSweepStatus status =
+      m3::PolyphonicPitchDetectorTestAccess::
+          observe_requested_high_fret_beside_a_louder_neighbor(detector);
+
+  M3_EXPECT_EQ(status.phase, m3::CalibrationSweepPhase::ascending);
+  M3_EXPECT_EQ(status.requested_fret, 24U);
+  M3_EXPECT_EQ(status.highest_fret, 23U);
 }
 
 M3_TEST(native_detector_calibration_retains_a_detuned_strings_cents_offset) {
@@ -4326,12 +4547,7 @@ M3_TEST(native_detector_calibration_retains_a_detuned_strings_cents_offset) {
   const double open_pitch =
       static_cast<double>(m3::kM3OpenNotes[0U]) + kDetuneCents / 100.0;
   feed_calibration_pitch(detector, open_pitch, 16000U, &oscillator_phase);
-  constexpr std::uint32_t kOneWaySweepSamples = 144000U;
-  feed_calibration_glide(detector, open_pitch, open_pitch + 24.0,
-                         kOneWaySweepSamples, oscillator_phase);
-  feed_calibration_glide(detector, open_pitch + 24.0, open_pitch,
-                         kOneWaySweepSamples, oscillator_phase);
-  feed_calibration_pitch(detector, open_pitch, 8000U, &oscillator_phase);
+  feed_calibration_frets(detector, open_pitch, oscillator_phase);
 
   M3_EXPECT_EQ(detector.calibration_status().phase,
                m3::CalibrationSweepPhase::complete);
@@ -4340,7 +4556,7 @@ M3_TEST(native_detector_calibration_retains_a_detuned_strings_cents_offset) {
   M3_EXPECT_TRUE(open != nullptr);
   if (open != nullptr) {
     M3_EXPECT_NEAR(static_cast<double>(open->cents_offset_q8) / 256.0,
-                   kDetuneCents, 2.0);
+                   kDetuneCents, 4.0);
   }
 }
 

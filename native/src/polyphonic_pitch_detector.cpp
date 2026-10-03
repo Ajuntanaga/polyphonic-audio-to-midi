@@ -122,7 +122,7 @@ constexpr double kM3FretPenalty = 0.005;
 constexpr double kM3AssignmentFretShapePenalty = 0.50;
 constexpr double kM3CalibrationProfileBonus = 512.0;
 constexpr double kM3PartialCalibrationProfileBonus = 30.0;
-constexpr double kM3CalibrationCentsPenalty = 8.0;
+constexpr double kM3CalibrationCentsPenalty = 16.0;
 // When two physical lanes have materially different learned spectra, their
 // per-fret cents corridors can disambiguate an articulation whose current
 // harmonic balance drifted toward the wrong template. Near-collinear
@@ -136,6 +136,10 @@ constexpr double kM3CalibratedCandidateThresholdRatio = 0.25;
 constexpr double kM3CalibratedHighestOpenThresholdRatio = 0.08;
 constexpr double kM3CalibratedCandidateMinimumSimilarity = 0.97;
 constexpr double kM3CalibratedCandidateMinimumAdvantage = 0.015;
+// A highly repeatable calibrated point already has a trustworthy absolute
+// harmonic balance. Only less-repeatable points need the slower spectral-shape
+// tie-breaker that tolerates pick-position changes.
+constexpr double kM3SettledShapeMaximumConfidence = 0.95;
 constexpr double kM3CalibratedHighestOpenMinimumSimilarity = 0.99;
 constexpr double kM3TuningOffsetMinimumSimilarity = 0.82;
 constexpr double kM3TuningOffsetMaximumCents = 8.0;
@@ -1293,6 +1297,24 @@ void PolyphonicPitchDetector::assign_m3_strings(
     double best_learned_similarity = -1.0;
     std::size_t learned_count = 0U;
     bool all_playable_profiles_learned = true;
+    bool settled_shape_eligible = calibrated_reassignment_ready;
+    if (settled_shape_eligible) {
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+        if ((playable & bit) == 0U) {
+          continue;
+        }
+        const StringCalibrationPoint* point = calibrator_.bank().point(
+            string, note - kM3OpenNotes[string]);
+        if (point == nullptr ||
+            point->quality == CalibrationPointQuality::missing ||
+            static_cast<double>(point->confidence_q15) / 32767.0 >=
+                kM3SettledShapeMaximumConfidence) {
+          settled_shape_eligible = false;
+          break;
+        }
+      }
+    }
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
       if ((playable & bit) == 0U) {
@@ -1309,7 +1331,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       has_learned_profile[string] = true;
       learned_points[string] = point;
       learned_similarities[string] =
-          calibration_similarity(candidate, string);
+          settled_shape_eligible
+              ? settled_calibration_similarity(candidate, string)
+              : calibration_similarity(candidate, string);
       best_learned_similarity =
           std::max(best_learned_similarity, learned_similarities[string]);
       learned_cents[string] =
@@ -1409,10 +1433,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
         proposal.cost += fret_position_prior +
                          fret_shape_penalty * stiffness_prior *
                              fret_position * fret_position;
-        if (has_learned_profile[string]) {
-          // Calibration is comparative evidence, not an absolute prior. A
-          // lone learned lane remains neutral, while two or more measured
-          // alternatives can identify their physical timbre immediately.
+        if (has_learned_profile[string] &&
+            (all_playable_profiles_learned ||
+             calibrated_reassignment_ready)) {
+          // Calibration is comparative evidence, not an absolute prior. It
+          // may identify a fresh lane only when every playable alternative
+          // at this pitch has a measured point. Partial calibration remains
+          // available solely behind the stable isolated-note reassignment
+          // gate; it must not destabilize fresh notes or chords.
           proposal.cost -=
               (all_playable_profiles_learned
                    ? kM3CalibrationProfileBonus
@@ -1424,8 +1452,17 @@ void PolyphonicPitchDetector::assign_m3_strings(
             phase.valid &&
             learned_cents_errors[string] - best_learned_cents_error >=
                 kM3CalibratedCentsMinimumAdvantage;
+        // With a complete bank, an open lane must earn its prior from a
+        // competitive calibrated fingerprint before capturing a note; an
+        // unconditional bonus routed fretted plucks (string 8 fret 4 onto the
+        // open C2 lane) for entire holds. An open lane already retained by
+        // the active note keeps the prior so a flickering fast-correlator
+        // similarity cannot toggle it within the hold.
+        const bool retained_open_lane =
+            candidate_states_[candidate].active &&
+            candidate_states_[candidate].assigned_string == string;
         if (all_playable_profiles_learned && fret == 0U &&
-            (!calibrated_reassignment_ready ||
+            ((!calibrated_reassignment_ready && retained_open_lane) ||
              (best_learned_similarity - learned_similarities[string] <
                   kM3CalibratedCandidateMinimumAdvantage &&
               !contradicted_by_calibrated_cents))) {
@@ -3046,6 +3083,69 @@ double PolyphonicPitchDetector::calibration_similarity(
          confidence_weight;
 }
 
+double PolyphonicPitchDetector::settled_calibration_similarity(
+    std::size_t candidate, std::size_t string) const noexcept {
+  if (candidate >= static_cast<std::size_t>(candidate_count_) ||
+      string >= kM3OpenNotes.size()) {
+    return 0.0;
+  }
+  const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+  if (note < kM3OpenNotes[string]) {
+    return 0.0;
+  }
+  const StringCalibrationPoint* point =
+      calibrator_.bank().point(string, note - kM3OpenNotes[string]);
+  if (point == nullptr ||
+      point->quality == CalibrationPointQuality::missing) {
+    return 0.0;
+  }
+  const double learned_confidence =
+      static_cast<double>(point->confidence_q15) / 32767.0;
+
+  std::array<double, kCalibrationHarmonicCount> observed{};
+  std::array<double, kCalibrationHarmonicCount> learned{};
+  double observed_total = 0.0;
+  double learned_total = 0.0;
+  for (std::size_t harmonic = 0U; harmonic < observed.size(); ++harmonic) {
+    observed[harmonic] =
+        0.25 * harmonic_energy_memory_[candidate][harmonic] +
+        0.75 * long_harmonic_energy_memory_[candidate][harmonic];
+    learned[harmonic] =
+        static_cast<double>(point->harmonic_profile_q15[harmonic]);
+    observed_total += observed[harmonic];
+    learned_total += learned[harmonic];
+  }
+  if (observed_total <= kScoreEpsilon || learned_total <= kScoreEpsilon) {
+    return 0.0;
+  }
+  for (std::size_t harmonic = 0U; harmonic < observed.size(); ++harmonic) {
+    observed[harmonic] /= observed_total;
+    learned[harmonic] /= learned_total;
+  }
+
+  constexpr double kProfileFloor = 1.0 / 32767.0;
+  double ratio_error = 0.0;
+  for (std::size_t harmonic = 1U; harmonic < observed.size(); ++harmonic) {
+    const double observed_ratio =
+        std::log(std::max(observed[harmonic], kProfileFloor)) -
+        std::log(std::max(observed[harmonic - 1U], kProfileFloor));
+    const double learned_ratio =
+        std::log(std::max(learned[harmonic], kProfileFloor)) -
+        std::log(std::max(learned[harmonic - 1U], kProfileFloor));
+    const double difference = observed_ratio - learned_ratio;
+    ratio_error += difference * difference;
+  }
+  ratio_error /= static_cast<double>(observed.size() - 1U);
+  const double shape = std::exp(-ratio_error / 4.0);
+  const double quality = point->quality == CalibrationPointQuality::measured
+                             ? 1.0
+                             : 0.55;
+  const double stable_shape =
+      shape * quality * (0.75 + 0.25 * learned_confidence);
+  return 0.80 * calibration_similarity(candidate, string) +
+         0.20 * stable_shape;
+}
+
 void PolyphonicPitchDetector::observe_calibration(
     const std::array<double, kMaxCandidates>& scores,
     double lower_guard_score, double upper_guard_score, bool quiet) noexcept {
@@ -3056,51 +3156,62 @@ void PolyphonicPitchDetector::observe_calibration(
   const std::size_t first =
       static_cast<std::size_t>(kM3OpenNotes[sweep.string_index] - lowest_note_);
   const std::size_t last = first + kCalibrationFretCount - 1U;
-  if (last >= static_cast<std::size_t>(candidate_count_)) {
+  if (last >= static_cast<std::size_t>(candidate_count_) ||
+      sweep.requested_fret >= kCalibrationFretCount) {
     return;
   }
-  std::size_t best = first;
-  for (std::size_t candidate = first + 1U; candidate <= last; ++candidate) {
-    if (scores[candidate] > scores[best]) {
-      best = candidate;
-    }
-  }
+  // Calibration is explicitly prompted one fret at a time. Measure that
+  // requested fret rather than the loudest candidate across the full string
+  // range: a lingering lower fret, sympathetic resonance, or strong harmonic
+  // must not be learned as the requested physical fret.
+  const std::size_t target = first + sweep.requested_fret;
   const double threshold = std::max(fast_energy_ * kCandidateCoherenceRatio,
                                     kScoreEpsilon);
-  if (scores[best] <= threshold) {
+  if (scores[target] <= threshold) {
     return;
   }
 
-  const double left_score = best > 0U ? scores[best - 1U] : lower_guard_score;
+  const double left_score =
+      target > 0U ? scores[target - 1U] : lower_guard_score;
   const double right_score =
-      best + 1U < static_cast<std::size_t>(candidate_count_)
-          ? scores[best + 1U]
+      target + 1U < static_cast<std::size_t>(candidate_count_)
+          ? scores[target + 1U]
           : upper_guard_score;
   const double left = std::log(std::max(left_score, kScoreEpsilon));
-  const double center = std::log(std::max(scores[best], kScoreEpsilon));
+  const double center = std::log(std::max(scores[target], kScoreEpsilon));
   const double right = std::log(std::max(right_score, kScoreEpsilon));
   const double denominator = left - 2.0 * center + right;
   double semitone_offset = 0.0;
-  const PhaseCentsState& phase_cents = phase_cents_states_[best];
+  const PhaseCentsState& phase_cents = phase_cents_states_[target];
+  const bool local_peak =
+      scores[target] >= left_score && scores[target] >= right_score;
   if (phase_cents.valid) {
     // Calibration must learn the same settled pitch estimate that drives the
     // tuner display.  The neighbouring-bin parabola remains a startup
     // fallback while phase evidence is still accumulating.
     semitone_offset = phase_cents.cents / 100.0;
-  } else if (std::isfinite(denominator) && denominator < -kScoreEpsilon) {
+  } else if (local_peak && std::isfinite(denominator) &&
+             denominator < -kScoreEpsilon) {
+    // Low strings need the within-bin correction before phase evidence
+    // settles, but only a local peak supplies a meaningful parabola.
     semitone_offset = std::clamp(
         0.5 * (left - right) / denominator, -0.5, 0.5);
+  } else if (!local_peak) {
+    // The explicitly prompted fret may legitimately be quieter than a stale
+    // neighbour. Wait for its independent phase estimate before learning it;
+    // admitting an uncentred placeholder here corrupts the per-fret profile.
+    return;
   }
 
   CalibrationObservation observation;
-  observation.midi_pitch = static_cast<double>(lowest_note_ + best) +
+  observation.midi_pitch = static_cast<double>(lowest_note_ + target) +
                            semitone_offset;
   observation.confidence = std::clamp(
-      (scores[best] - threshold) / (scores[best] + threshold), 0.0, 1.0);
+      (scores[target] - threshold) / (scores[target] + threshold), 0.0, 1.0);
   for (std::size_t harmonic = 0U;
        harmonic < observation.harmonic_energy.size(); ++harmonic) {
     observation.harmonic_energy[harmonic] =
-        corrected_harmonic_energy(best, harmonic);
+        corrected_harmonic_energy(target, harmonic);
   }
   static_cast<void>(calibrator_.observe(observation));
 }

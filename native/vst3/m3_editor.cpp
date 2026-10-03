@@ -900,6 +900,17 @@ class M3DeckControl final : public VSTGUI::CControl {
       return panic_pressed_ ? VSTGUI::kMouseEventHandled
                             : VSTGUI::kMouseEventNotHandled;
     }
+    if (page_ == EditorSurfacePage::tuner &&
+        layout_.parameter_id == kResponseId) {
+      const double width = std::max(1.0, getViewSize().getWidth());
+      const double unit = std::clamp(
+          (where.x - getViewSize().left) / width, 0.0, 0.999999);
+      // The compact display is ordered SLOW | FAST, while the parameter is
+      // normalized FAST=0 and SLOW=1.
+      return emit(unit < 0.5 ? 1.0 : 0.0).accepted
+                 ? VSTGUI::kMouseEventHandled
+                 : VSTGUI::kMouseEventNotHandled;
+    }
     if (layout_.presentation == EditorPresentation::knob ||
         layout_.presentation == EditorPresentation::compact_value ||
         layout_.presentation == EditorPresentation::note_range) {
@@ -2064,7 +2075,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       const M3Component::StringCalibrationUiState& right) noexcept {
     return left.phase == right.phase &&
            left.string_index == right.string_index &&
-           left.highest_fret == right.highest_fret &&
+           left.requested_fret == right.requested_fret &&
            left.measured_frets == right.measured_frets &&
            left.interpolated_frets == right.interpolated_frets &&
            left.calibrated_string_mask == right.calibrated_string_mask;
@@ -2222,13 +2233,19 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
         cursor = append_literal(cursor, end, "  •  TUNE + HOLD OPEN");
         break;
       case CalibrationSweepPhase::ascending:
-        cursor = append_literal(cursor, end,
-                                " LOCKED  •  SLIDE TO FRET 24  •  FRET ");
-        cursor = append_unsigned(cursor, end, state.highest_fret);
+        cursor = append_literal(cursor, end, "  •  PLAY + HOLD FRET ");
+        cursor = append_unsigned(cursor, end, state.requested_fret);
+        cursor = append_literal(cursor, end, "  •  GOING UP");
         break;
       case CalibrationSweepPhase::descending:
-        cursor = append_literal(cursor, end,
-                                "  •  SLIDE BACK TO OPEN  •  HOLD TO FINISH");
+        cursor = append_literal(cursor, end, "  •  PLAY + HOLD ");
+        if (state.requested_fret == 0U) {
+          cursor = append_literal(cursor, end, "OPEN");
+        } else {
+          cursor = append_literal(cursor, end, "FRET ");
+          cursor = append_unsigned(cursor, end, state.requested_fret);
+        }
+        cursor = append_literal(cursor, end, "  •  GOING DOWN");
         break;
       case CalibrationSweepPhase::complete:
         cursor = append_literal(
@@ -2238,7 +2255,7 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
       case CalibrationSweepPhase::insufficient:
         cursor = append_literal(
             cursor, end,
-            "  •  TRY AGAIN WITH A SLOWER, CLEANER SWEEP");
+            "  •  TRY AGAIN WITH CLEAN, HELD FRETS");
         break;
       case CalibrationSweepPhase::idle:
         break;

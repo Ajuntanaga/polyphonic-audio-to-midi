@@ -43,7 +43,7 @@ constexpr std::array<EditorControlLayout, kEditorControlCount> kTunerControls = 
     {kSensitivityId, EditorPresentation::knob,
      {404.0, 356.0, 526.0, 426.0}, true, false},
     {kResponseId, EditorPresentation::knob, {534.0, 356.0, 650.0, 426.0}, true,
-     false},
+     true},
     {kLowestMidiNoteId, EditorPresentation::note_range,
      {860.0, 122.0, 1004.0, 242.0}, false, true},
     {kHighestMidiNoteId, EditorPresentation::note_range,

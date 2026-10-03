@@ -134,8 +134,10 @@ carry signal and uses the active side at unity when the other side is silent.
 There is no plug-in mono/stereo or L/R selector.
 
 In M3 mode, double-click any tuner meter to calibrate its physical string.
-Tune and hold the named open string until it locks, slide steadily to fret 24
-and back to open, then hold the returned open note briefly. The learned
+Tune and hold the named open string until it locks, then play and hold each
+prompted fret individually from 1 through 24 and back down through open. The
+prompt advances only after the requested fret is stable; slides and skipped
+frets do not populate later calibration points. The learned
 25-fret cents/timbre map is saved with the VST3 project state and helps keep
 that string on its corresponding tuner lane. The fixed instrument prior is the
 D'Addario NYXL0980 set in thick-to-thin order: `.080, .060, .044, .032, .024,

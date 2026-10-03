@@ -208,6 +208,8 @@ class PolyphonicPitchDetector final {
       double lower_guard_score, double upper_guard_score, bool quiet) noexcept;
   [[nodiscard]] double calibration_similarity(
       std::size_t candidate, std::size_t string) const noexcept;
+  [[nodiscard]] double settled_calibration_similarity(
+      std::size_t candidate, std::size_t string) const noexcept;
   [[nodiscard]] double corrected_harmonic_energy(
       std::size_t candidate, std::size_t harmonic) const noexcept;
   [[nodiscard]] std::size_t cell_index(std::size_t candidate,

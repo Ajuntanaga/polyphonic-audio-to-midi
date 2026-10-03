@@ -13,7 +13,7 @@ constexpr double kMaximumOpenTuneErrorCents = 8.0;
 constexpr double kMaximumOpenDeviationCents = 6.0;
 constexpr double kOpenLockSeconds = 64.0 / 750.0;
 constexpr std::uint16_t kMinimumObservationsPerDirection = 3U;
-constexpr double kStableWindowSeconds = 0.005;
+constexpr double kStableWindowSeconds = 0.080;
 constexpr std::uint16_t kMinimumStableWindowObservations = 3U;
 constexpr std::uint8_t kMinimumMeasuredFrets = 18U;
 constexpr double kMaximumDirectionOffsetDifferenceCents = 24.0;
@@ -161,6 +161,8 @@ bool StringSweepCalibrator::observe(
           0.0, open.cents_square_sum / open.count - mean * mean);
       if (std::sqrt(variance) <= kMaximumOpenDeviationCents) {
         status_.phase = CalibrationSweepPhase::ascending;
+        status_.requested_fret = 1U;
+        stable_window_ = {};
       } else {
         // Startup correlation settling must not poison the entire open-string
         // hold. Require a fresh complete stable window before locking.
@@ -169,10 +171,14 @@ bool StringSweepCalibrator::observe(
     }
     return true;
   }
-  // The downward glide enters the open-note bin from above, so its early
-  // estimates are intentionally not representative of the tuned endpoint.
-  // Complete only from a brief centered open-string hold after the return.
-  if (status_.phase == CalibrationSweepPhase::descending && fret == 0U &&
+  // Calibration is deliberately stepwise. A glissando or skipped fret is
+  // ignored and cannot populate a later bin or change direction.
+  if (fret != status_.requested_fret) {
+    stable_window_ = {};
+    return reject();
+  }
+  if (status_.phase == CalibrationSweepPhase::descending &&
+      status_.requested_fret == 0U &&
       std::abs(cents) > kMaximumOpenTuneErrorCents) {
     return reject();
   }
@@ -228,13 +234,6 @@ bool StringSweepCalibrator::observe(
     }
   }
 
-  if (status_.phase == CalibrationSweepPhase::ascending &&
-      status_.highest_fret >= kCalibrationFretCount - 1U &&
-      fret + 1U <= status_.highest_fret) {
-    status_.phase = CalibrationSweepPhase::descending;
-    stable_window_.phase = status_.phase;
-  }
-
   Accumulator& accumulator =
       status_.phase == CalibrationSweepPhase::descending
           ? descending_[fret]
@@ -254,26 +253,25 @@ bool StringSweepCalibrator::observe(
         std::numeric_limits<std::uint16_t>::max()));
     status_.accepted_observations += pending.count;
     stable_window_.established = true;
-  } else {
-    add_sample(accumulator, cents);
-    ++status_.accepted_observations;
   }
 
   if (status_.phase == CalibrationSweepPhase::ascending) {
     status_.highest_fret = std::max(status_.highest_fret, fret);
-  }
-  // The turnaround sample belongs to both traversals. Copying the top-fret
-  // plateau into the descending pass avoids asking the player to lift and
-  // re-fret 24 merely to mark a direction change.
-  if (status_.phase == CalibrationSweepPhase::ascending &&
-      fret == kCalibrationFretCount - 1U) {
-    descending_[fret] = accumulator;
-  }
-
-  if (status_.phase == CalibrationSweepPhase::descending && fret == 0U &&
-      descending_[0U].count >= kMinimumObservationsPerDirection) {
+    if (fret + 1U < kCalibrationFretCount) {
+      status_.requested_fret = static_cast<std::uint8_t>(fret + 1U);
+    } else {
+      // Fret 24 is the shared turnaround point; the next requested note is
+      // fret 23, so the player never has to articulate the top fret twice.
+      descending_[fret] = accumulator;
+      status_.phase = CalibrationSweepPhase::descending;
+      status_.requested_fret = static_cast<std::uint8_t>(fret - 1U);
+    }
+  } else if (fret == 0U) {
     finalize();
+  } else {
+    status_.requested_fret = static_cast<std::uint8_t>(fret - 1U);
   }
+  stable_window_ = {};
   return true;
 }
 

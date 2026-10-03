@@ -99,6 +99,55 @@ bank hash is
 `37565b5107b6ca9f71a373b34cd410779fb3d5e52a0f61dc63d30cd9510086d6`.
 These remain offline corpus results pending live DAW validation.
 
+The subsequent physical-lane stability sweep varied only the ordinary
+per-fret cents-corridor weight while keeping the recorded harmonic profiles,
+pitch selector, and hold logic fixed. Across 1,739,486 labeled frames from the
+eight complete string walks, the selected knee (`16`) increased exact
+note-and-string matches from 1,011,677 (58.16%) to 1,082,813 (62.25%) and
+reduced wrong-string observations from 457,603 to 389,202. A stronger value
+(`24`) added only 0.27 percentage points while increasing within-hold
+transitions, so it was rejected. The retained value increased recorded string
+flips from 800 to 853 and within-hold transitions from 2,721 to 2,829; this is
+the explicit stability cost of 71,136 additional correct-lane frames, not a
+claim of live tracking completion. Wrong-note observations were effectively
+unchanged. The full native suite and Steinberg's direct validator remained
+green; DAW and fresh-instrument behavior still require live confirmation.
+
+A follow-up wrong-string audit of the same raw/raw replay found that 61% of
+the remaining wrong-string observations came from 91 holds that never reached
+the correct lane, 24% of all wrong-string observations landed on an open
+string, and notes also playable on an open string matched only 52.4% of
+frames. The fixed open-string prior was applied to fresh notes even when the
+complete bank's fingerprint for that open lane was not competitive. With a
+complete bank the open prior now requires a competitive calibrated fingerprint
+before capture, and is kept only for an open lane the active note already
+holds. This raised exact matches from 1,082,813 (62.25%) to 1,113,873 (64.03%)
+and reduced wrong-string observations from 389,202 to 358,462. String flips
+moved from 853 to 878, within-hold transitions from 2,829 to 2,825, and no
+string walk lost matched frames. An ungated version (no retained-lane
+hysteresis) reached 63.09% but raised flips to 1,536, and a calibrated
+weak-fret prior (alone 62.45%, 64.03% → 63.64% combined), averaging the
+commit-time similarity (no change), and a 0.35-cent commit margin (62.12%)
+were all rejected. The recorded C4 and G#3 unison captures replayed
+identically before and after the change.
+
+The next string-identity pass evaluated the per-string band strategy described
+by TC Electronic's polyphonic-tuner patents and by the open PolyTuna reference.
+Applying adjacent-harmonic log-shape matching on every decision was rejected:
+it reduced exact matches to 63.37% and raised string flips from 878 to 63,999.
+Restricting the same evidence to the one settled, isolated-note reassignment
+removed that instability but traded accuracy between physical lanes. The
+retained form is therefore a bounded tie-breaker only when every playable
+calibration point for the detected pitch has repeatability confidence below
+0.95. On the complete raw corpus it raised exact matches from 1,113,873
+(64.03%) to 1,115,298 (64.12%), reduced wrong-string observations from
+358,462 to 357,037, and changed flips from 878 to 879. Physical string 2 gained
+all 1,425 corrected frames; the other seven string walks were bit-for-bit
+unchanged in matched and wrong-string counts. With pass 3 excluded from bank
+construction, the same 1,425-frame improvement remained (62.90% to 62.98%)
+with no other lane regression. This is an offline physical-corpus improvement,
+not a substitute for the pending live DAW check.
+
 ## Task 13 terminal JSFX gate — 2026-08-28
 
 Task 13 decision at measurement time: `native amendment required`. The JSFX

@@ -56,6 +56,7 @@ enum class CalibrationSweepPhase : std::uint8_t {
 struct CalibrationSweepStatus final {
   CalibrationSweepPhase phase{CalibrationSweepPhase::idle};
   std::uint8_t string_index{};
+  std::uint8_t requested_fret{};
   std::uint8_t highest_fret{};
   std::uint8_t measured_frets{};
   std::uint8_t interpolated_frets{};
@@ -63,7 +64,8 @@ struct CalibrationSweepStatus final {
   std::uint32_t rejected_observations{};
 };
 
-// Learns one physical string from a continuous open -> fret 24 -> open sweep.
+// Learns one physical string from individually held frets: open, 1..24,
+// then 23..0. Only the currently requested fret can advance the sequence.
 // The audio thread supplies bounded spectral observations; no allocation,
 // locks, file access, or look-ahead occurs here.
 class StringSweepCalibrator final {
