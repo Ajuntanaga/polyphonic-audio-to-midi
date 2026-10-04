@@ -176,12 +176,61 @@ This slice models upper-partial amplitude shape; it does not yet implement the
 offline study's explicit upper-partial frequency-detuning/inharmonicity
 descriptor or store new descriptor statistics in the calibration image.
 
+## Causal partial-frequency evidence
+
+The next bounded layer measures frequency displacement independently for the
+fundamental and the first five overtones from their complex resonator phase.
+For every partial it converts the phase advance between decision frames into a
+measured-frequency offset. It then subtracts the fundamental's cents offset
+from every partial, rejecting global tuning error while retaining stable
+partial stretch and other string-specific frequency structure. Lower and upper
+partials remain separately available to the final string/fret posterior.
+
+This estimator has fixed storage, performs no allocation or synchronization,
+and runs causally at the detector decision cadence. Two cascaded causal phasor
+filters suppress the large twice-line-frequency image present in real-valued
+audio. Against the labeled physical-string corpus, the resulting descriptor's
+mean absolute error is 0.65--5.53 cents by string (2.90 cents on string 8),
+instead of the hundreds of cents produced by the unsmoothed phase estimate.
+
+Calibration image version 2 stores a validity mask and Q8 detuning reference
+for each of the six partials at every string/fret point. Version 1 images still
+decode, while new images retain the established cents, harmonic-amplitude,
+confidence, count, and quality fields byte-for-byte and add only the new
+descriptor. The offline derivation accepts a partial reference only when its
+bounded local spectral peak is interior, sufficiently energetic, and repeated
+measurements have no more than 3 cents of standard deviation. Live calibration
+applies the same dispersion gate. In the recorded instrument this provides
+broad second-partial coverage, useful third-partial coverage, and intentionally
+sparse higher-partial coverage.
+
+The final string posterior now receives a centered likelihood from every
+shared valid detuning reference. A diagnostic comparison against every
+playable alternative shows the correct string winning 74.94 percent of frames
+where both sides have usable references. The descriptor therefore remains a
+secondary head: a high-confidence posterior receives stronger joint-assignment
+weight only when its best state agrees with the independently best detuning
+state.
+
+On the complete raw eight-string corpus this consensus rule produces
+1,119,857 exact lane frames out of 1,739,486 (64.3786 percent): 2,294 more than
+the prior classifier. Seven string replay fingerprints are unchanged; the
+gain is confined to string 2 without the string-6 regression caused by a
+global posterior-weight increase. The scored low and middle three-string
+physical-unison replays remain bit-for-bit unchanged
+(`e09ed3d3cf015468` and `456c71055b07f282`). This is a measured cumulative
+gain, not evidence that the greater-than-90-percent target has been reached.
+With calibration pass 3 excluded from every string bank, the same detector
+scores 1,100,600 exact frames (63.2716 percent), 6,470 more than the retained
+pre-detuning pass-3 holdout result. The improvement therefore is not confined
+to the full-bank derivation data.
+
 ## Production implementation order
 
-1. Add causal upper-partial detuning and attack/decay descriptors alongside
-   the existing six harmonic amplitudes. Store their calibration statistics
-   in a versioned bank with backward decoding of the present bank.
-2. Replace the single best calibration match with a bounded posterior over all
+1. Extend the causal descriptor set with explicit attack/decay features; the
+   upper-partial detuning descriptor and versioned calibration storage are now
+   implemented.
+2. Continue refining the bounded posterior over all
    playable string/fret states. Emissions combine amplitude shape,
    inharmonicity, attack/decay, cents bias, and current signal confidence.
 3. Update those posteriors through time. Reward lane continuity, but retain

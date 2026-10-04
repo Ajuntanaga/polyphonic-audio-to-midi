@@ -8,7 +8,12 @@
 
 namespace m3 {
 
-inline constexpr std::size_t kCalibrationPointStateSize = 19U;
+inline constexpr std::size_t kCalibrationPointStateV1Size = 19U;
+inline constexpr std::size_t kCalibrationStateV1PayloadSize =
+    1U + kMaxVoices * kCalibrationFretCount * kCalibrationPointStateV1Size;
+inline constexpr std::size_t kCalibrationStateV1Size =
+    24U + kCalibrationStateV1PayloadSize;
+inline constexpr std::size_t kCalibrationPointStateSize = 32U;
 inline constexpr std::size_t kCalibrationStateHeaderSize = 24U;
 inline constexpr std::size_t kCalibrationStatePayloadSize =
     1U + kMaxVoices * kCalibrationFretCount * kCalibrationPointStateSize;

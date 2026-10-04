@@ -223,18 +223,22 @@ int main(int argc, char** argv) {
   if (calibration_path != nullptr) {
     std::vector<std::uint8_t> calibration_bytes;
     bool decoded = read_file(calibration_path, calibration_bytes);
-    if (decoded && calibration_bytes.size() == m3::kCalibrationStateSize) {
+    if (decoded &&
+        (calibration_bytes.size() == m3::kCalibrationStateSize ||
+         calibration_bytes.size() == m3::kCalibrationStateV1Size)) {
       decoded = m3::decode_calibration_state(
           calibration_bytes.data(), calibration_bytes.size(), calibration);
     } else if (decoded &&
-               calibration_bytes.size() ==
-                   m3::kStateSize + m3::kCalibrationStateSize) {
+               (calibration_bytes.size() ==
+                    m3::kStateSize + m3::kCalibrationStateSize ||
+                calibration_bytes.size() ==
+                    m3::kStateSize + m3::kCalibrationStateV1Size)) {
       m3::PersistentConfig saved_config;
       decoded = m3::decode_state(calibration_bytes.data(), m3::kStateSize,
                                  saved_config) &&
                 m3::decode_calibration_state(
                     calibration_bytes.data() + m3::kStateSize,
-                    m3::kCalibrationStateSize, calibration);
+                    calibration_bytes.size() - m3::kStateSize, calibration);
       if (decoded) {
         config = saved_config;
       }
@@ -312,9 +316,14 @@ int main(int argc, char** argv) {
       "transitions\ttransitions_inside_holds\ttransitions_in_gaps\t"
       "false_positive_voices\tfalse_gap_voices\tfalse_wrong_note_voices\t"
       "false_wrong_string_voices\tcents_observations\tcents_mean_error\t"
-      "cents_sd\tcents_p95_abs\tfingerprint\n"
+      "cents_sd\tcents_p95_abs\tpartial_detuning_frames\t"
+      "partial_detuning_comparisons\tpartial_detuning_mean_abs_error\t"
+      "partial_detuning_margin_frames\tpartial_detuning_expected_best_frames\t"
+      "partial_detuning_expected_best_rate\tpartial_detuning_mean_margin\t"
+      "fingerprint\n"
       "%u\t%zu\t%llu\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
-      "%zu\t%.6f\t%.6f\t%.6f\t%016llx\n",
+      "%zu\t%.6f\t%.6f\t%.6f\t%u\t%u\t%.6f\t%u\t%u\t%.6f\t%.6f\t"
+      "%016llx\n",
       wave.sample_rate, block_size,
       static_cast<unsigned long long>(result.sample_count),
       result.snapshot_frames, result.labeled_frames,
@@ -323,6 +332,22 @@ int main(int argc, char** argv) {
       result.false_positive_voices, result.false_gap_voices,
       result.false_wrong_note_voices, result.false_wrong_string_voices,
       cents.count, cents.mean, cents.standard_deviation, cents.p95_absolute,
+      result.partial_detuning_frames,
+      result.partial_detuning_comparisons,
+      result.partial_detuning_comparisons != 0U
+          ? result.partial_detuning_absolute_error_sum /
+                static_cast<double>(result.partial_detuning_comparisons)
+          : 0.0,
+      result.partial_detuning_margin_frames,
+      result.partial_detuning_expected_best_frames,
+      result.partial_detuning_margin_frames != 0U
+          ? static_cast<double>(result.partial_detuning_expected_best_frames) /
+                static_cast<double>(result.partial_detuning_margin_frames)
+          : 0.0,
+      result.partial_detuning_margin_frames != 0U
+          ? result.partial_detuning_margin_sum /
+                static_cast<double>(result.partial_detuning_margin_frames)
+          : 0.0,
       static_cast<unsigned long long>(result.fingerprint));
   if (label_details) {
     std::printf(

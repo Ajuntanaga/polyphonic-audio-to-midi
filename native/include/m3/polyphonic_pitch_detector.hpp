@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "m3/constants.hpp"
+#include "m3/partial_detuning_evidence.hpp"
 #include "m3/string_fret_posterior.hpp"
 #include "m3/string_calibration.hpp"
 #include "m3/tuner_telemetry.hpp"
@@ -42,6 +43,9 @@ class PolyphonicPitchDetector final {
   void clear_string_calibration() noexcept;
   [[nodiscard]] CalibrationSweepStatus calibration_status() const noexcept;
   [[nodiscard]] const StringCalibrationBank& calibration_bank() const noexcept;
+  [[nodiscard]] std::uint8_t partial_detuning_candidate_count() const noexcept;
+  [[nodiscard]] PartialDetuningEvidence partial_detuning_evidence(
+      std::uint8_t midi_note) const noexcept;
   void set_calibration_bank(const StringCalibrationBank& bank) noexcept;
 
 #if defined(M3_TESTING)
@@ -200,6 +204,8 @@ class PolyphonicPitchDetector final {
       std::size_t candidate) const noexcept;
   void update_phase_cents_estimates(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void update_partial_detuning_evidence(
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
   void update_calibration_tuning_offset(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void infer_m3_unison_strings(
@@ -233,6 +239,11 @@ class PolyphonicPitchDetector final {
       long_harmonic_energy_memory_{};
   std::array<std::uint16_t, kMaxCandidates> harmonic_memory_updates_{};
   std::array<PhaseCentsState, kMaxCandidates> phase_cents_states_{};
+  std::array<PartialDetuningTracker, kMaxCandidates>
+      partial_detuning_trackers_{};
+  std::array<std::uint32_t, kMaxCandidates>
+      partial_detuning_last_update_ticks_{};
+  std::size_t partial_detuning_cursor_{};
   std::array<BeatEvidenceState, kMaxCandidates> beat_evidence_states_{};
   std::array<FineFrequencyEvidenceState, kMaxCandidates>
       fine_frequency_evidence_states_{};

@@ -12,6 +12,8 @@ m3::StringCalibrationBank state_test_bank() noexcept {
     point.cents_offset_q8 = static_cast<std::int16_t>(fret * 8U);
     point.harmonic_profile_q15 = {14000U, 7000U, 4000U,
                                   3000U, 2000U, 1000U};
+    point.partial_detuning_q8 = {0, 32, 64, 96, 128, 160};
+    point.partial_detuning_valid_mask = 0x3FU;
     point.confidence_q15 = 29000U;
     point.observation_count = 8U;
     point.quality = m3::CalibrationPointQuality::measured;
@@ -29,6 +31,9 @@ void expect_same(const m3::StringCalibrationBank& left,
       const auto& b = right.points[string][fret];
       M3_EXPECT_EQ(a.cents_offset_q8, b.cents_offset_q8);
       M3_EXPECT_EQ(a.harmonic_profile_q15, b.harmonic_profile_q15);
+      M3_EXPECT_EQ(a.partial_detuning_q8, b.partial_detuning_q8);
+      M3_EXPECT_EQ(a.partial_detuning_valid_mask,
+                   b.partial_detuning_valid_mask);
       M3_EXPECT_EQ(a.confidence_q15, b.confidence_q15);
       M3_EXPECT_EQ(a.observation_count, b.observation_count);
       M3_EXPECT_EQ(a.quality, b.quality);

@@ -21,6 +21,8 @@ constexpr double kMinimumDirectionProfileSimilarity = 0.72;
 constexpr double kMaximumStableWindowSpanCents = 8.0;
 constexpr double kMaximumStableCenterErrorCents = 12.0;
 constexpr double kQ15Scale = 32767.0;
+constexpr double kMaximumPartialDetuningCents = 50.0;
+constexpr double kMaximumPartialDetuningStandardDeviationCents = 3.0;
 
 bool finite_nonnegative(double value) noexcept {
   return std::isfinite(value) && value >= 0.0;
@@ -120,6 +122,19 @@ bool StringSweepCalibrator::observe(
   if (!normalized_profile(observation, profile)) {
     return reject();
   }
+  std::uint8_t partial_detuning_valid_mask = static_cast<std::uint8_t>(
+      observation.partial_detuning_valid_mask & 0x3FU);
+  for (std::size_t harmonic = 0U;
+       harmonic < observation.partial_detuning_cents.size(); ++harmonic) {
+    const std::uint8_t bit = static_cast<std::uint8_t>(1U << harmonic);
+    if ((partial_detuning_valid_mask & bit) != 0U &&
+        (!std::isfinite(observation.partial_detuning_cents[harmonic]) ||
+         std::abs(observation.partial_detuning_cents[harmonic]) >
+             kMaximumPartialDetuningCents)) {
+      partial_detuning_valid_mask = static_cast<std::uint8_t>(
+          partial_detuning_valid_mask & ~bit);
+    }
+  }
 
   const double relative =
       observation.midi_pitch -
@@ -150,6 +165,17 @@ bool StringSweepCalibrator::observe(
       open.harmonic_sum[harmonic] += profile[harmonic];
       open.harmonic_square_sum[harmonic] +=
           profile[harmonic] * profile[harmonic];
+      if ((partial_detuning_valid_mask & (1U << harmonic)) != 0U) {
+        open.partial_detuning_sum[harmonic] +=
+            observation.partial_detuning_cents[harmonic];
+        open.partial_detuning_square_sum[harmonic] +=
+            observation.partial_detuning_cents[harmonic] *
+            observation.partial_detuning_cents[harmonic];
+        if (open.partial_detuning_count[harmonic] <
+            std::numeric_limits<std::uint16_t>::max()) {
+          ++open.partial_detuning_count[harmonic];
+        }
+      }
     }
     if (open.count < std::numeric_limits<std::uint16_t>::max()) {
       ++open.count;
@@ -183,8 +209,10 @@ bool StringSweepCalibrator::observe(
     return reject();
   }
 
-  const auto add_sample = [&profile, &observation](Accumulator& accumulator,
-                                                    double sample_cents) {
+  const auto add_sample = [&profile, &observation,
+                           partial_detuning_valid_mask](
+                              Accumulator& accumulator,
+                              double sample_cents) {
     if (accumulator.count == std::numeric_limits<std::uint16_t>::max()) {
       return;
     }
@@ -195,6 +223,17 @@ bool StringSweepCalibrator::observe(
       accumulator.harmonic_sum[harmonic] += profile[harmonic];
       accumulator.harmonic_square_sum[harmonic] +=
           profile[harmonic] * profile[harmonic];
+      if ((partial_detuning_valid_mask & (1U << harmonic)) != 0U) {
+        accumulator.partial_detuning_sum[harmonic] +=
+            observation.partial_detuning_cents[harmonic];
+        accumulator.partial_detuning_square_sum[harmonic] +=
+            observation.partial_detuning_cents[harmonic] *
+            observation.partial_detuning_cents[harmonic];
+        if (accumulator.partial_detuning_count[harmonic] <
+            std::numeric_limits<std::uint16_t>::max()) {
+          ++accumulator.partial_detuning_count[harmonic];
+        }
+      }
     }
     ++accumulator.count;
   };
@@ -247,6 +286,16 @@ bool StringSweepCalibrator::observe(
       accumulator.harmonic_sum[harmonic] += pending.harmonic_sum[harmonic];
       accumulator.harmonic_square_sum[harmonic] +=
           pending.harmonic_square_sum[harmonic];
+      accumulator.partial_detuning_sum[harmonic] +=
+          pending.partial_detuning_sum[harmonic];
+      accumulator.partial_detuning_square_sum[harmonic] +=
+          pending.partial_detuning_square_sum[harmonic];
+      accumulator.partial_detuning_count[harmonic] =
+          static_cast<std::uint16_t>(std::min<std::uint32_t>(
+              static_cast<std::uint32_t>(
+                  accumulator.partial_detuning_count[harmonic]) +
+                  pending.partial_detuning_count[harmonic],
+              std::numeric_limits<std::uint16_t>::max()));
     }
     accumulator.count = static_cast<std::uint16_t>(std::min<std::uint32_t>(
         static_cast<std::uint32_t>(accumulator.count) + pending.count,
@@ -323,6 +372,35 @@ void StringSweepCalibrator::finalize() noexcept {
       point.harmonic_profile_q15[harmonic] = q15(
           (up.harmonic_sum[harmonic] + down.harmonic_sum[harmonic]) /
           static_cast<double>(total_count));
+      if (up.partial_detuning_count[harmonic] >=
+              kMinimumObservationsPerDirection &&
+          down.partial_detuning_count[harmonic] >=
+              kMinimumObservationsPerDirection) {
+        const std::uint32_t detuning_count =
+            static_cast<std::uint32_t>(up.partial_detuning_count[harmonic]) +
+            down.partial_detuning_count[harmonic];
+        const double detuning =
+            (up.partial_detuning_sum[harmonic] +
+             down.partial_detuning_sum[harmonic]) /
+            static_cast<double>(detuning_count);
+        const double detuning_square_mean =
+            (up.partial_detuning_square_sum[harmonic] +
+             down.partial_detuning_square_sum[harmonic]) /
+            static_cast<double>(detuning_count);
+        const double detuning_variance =
+            std::max(0.0, detuning_square_mean - detuning * detuning);
+        if (std::sqrt(detuning_variance) >
+            kMaximumPartialDetuningStandardDeviationCents) {
+          continue;
+        }
+        point.partial_detuning_q8[harmonic] =
+            static_cast<std::int16_t>(std::lround(
+                std::clamp(detuning, -kMaximumPartialDetuningCents,
+                           kMaximumPartialDetuningCents) *
+                256.0));
+        point.partial_detuning_valid_mask = static_cast<std::uint8_t>(
+            point.partial_detuning_valid_mask | (1U << harmonic));
+      }
     }
     double profile_variance = 0.0;
     for (std::size_t harmonic = 0U; harmonic < kCalibrationHarmonicCount;
@@ -392,6 +470,20 @@ void StringSweepCalibrator::finalize() noexcept {
                   (1.0 - amount) +
               static_cast<double>(result[right].harmonic_profile_q15[harmonic]) *
                   amount));
+      const std::uint8_t bit = static_cast<std::uint8_t>(1U << harmonic);
+      if ((result[left].partial_detuning_valid_mask & bit) != 0U &&
+          (result[right].partial_detuning_valid_mask & bit) != 0U) {
+        point.partial_detuning_q8[harmonic] =
+            static_cast<std::int16_t>(std::lround(
+                static_cast<double>(
+                    result[left].partial_detuning_q8[harmonic]) *
+                    (1.0 - amount) +
+                static_cast<double>(
+                    result[right].partial_detuning_q8[harmonic]) *
+                    amount));
+        point.partial_detuning_valid_mask = static_cast<std::uint8_t>(
+            point.partial_detuning_valid_mask | bit);
+      }
     }
     point.confidence_q15 = std::min(result[left].confidence_q15,
                                     result[right].confidence_q15);

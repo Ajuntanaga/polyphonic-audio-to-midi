@@ -22,6 +22,7 @@ constexpr std::size_t kMaximumInputPartition = 1U << 20U;
 constexpr double kMaximumLabeledCalibrationCents = 49.0;
 constexpr double kMaximumLabeledPassDifferenceCents = 24.0;
 constexpr double kMinimumLabeledCorrelation = 0.55;
+constexpr double kMaximumPartialDetuningStandardDeviationCents = 3.0;
 constexpr std::size_t kLabeledAnalysisMilliseconds = 750U;
 constexpr std::uint64_t kFnvOffset = 1469598103934665603ULL;
 constexpr std::uint64_t kFnvPrime = 1099511628211ULL;
@@ -148,6 +149,8 @@ struct LabeledCalibrationEstimate final {
   double cents{};
   double correlation{};
   std::array<double, kCalibrationHarmonicCount> profile{};
+  std::array<double, kCalibrationHarmonicCount> partial_detuning_cents{};
+  std::uint8_t partial_detuning_valid_mask{};
 };
 
 bool estimate_labeled_calibration(const WaveData& wave,
@@ -306,33 +309,74 @@ bool estimate_labeled_calibration(const WaveData& wave,
       std::abs(cents) > kMaximumLabeledCalibrationCents) {
     return false;
   }
+  constexpr double kPartialStepCents = 0.5;
+  constexpr int kPartialMinimumStep = -20;
+  constexpr int kPartialMaximumStep = 60;
+  std::array<double, kCalibrationHarmonicCount> peak_steps{};
+  std::array<double, kCalibrationHarmonicCount> partial_peak_energy{};
   double profile_total = 0.0;
+  double partial_peak_total = 0.0;
   for (std::size_t harmonic = 0U; harmonic < output.profile.size();
        ++harmonic) {
-    const double angular = 2.0 * kPi * frequency *
-                           static_cast<double>(harmonic + 1U) / down_rate;
-    const double cosine_step = std::cos(angular);
-    const double sine_step = std::sin(angular);
-    double cosine = 1.0;
-    double sine = 0.0;
-    double real = 0.0;
-    double imaginary = 0.0;
-    for (const double sample : samples) {
-      real += sample * cosine;
-      imaginary -= sample * sine;
-      const double next_cosine = cosine * cosine_step - sine * sine_step;
-      sine = sine * cosine_step + cosine * sine_step;
-      cosine = next_cosine;
+    const double exact_frequency =
+        frequency * static_cast<double>(harmonic + 1U);
+    output.profile[harmonic] = spectral_energy(exact_frequency);
+    if (harmonic == 0U) {
+      partial_peak_energy[harmonic] = output.profile[harmonic];
+      peak_steps[harmonic] = 0.0;
+    } else {
+      constexpr std::size_t kPartialStepCount =
+          static_cast<std::size_t>(kPartialMaximumStep -
+                                   kPartialMinimumStep + 1);
+      std::array<double, kPartialStepCount> scores{};
+      std::size_t best_index = 0U;
+      for (int step = kPartialMinimumStep; step <= kPartialMaximumStep;
+           ++step) {
+        const double partial_frequency =
+            frequency * static_cast<double>(harmonic + 1U) *
+            std::exp2(kPartialStepCents * static_cast<double>(step) / 1200.0);
+        const std::size_t index =
+            static_cast<std::size_t>(step - kPartialMinimumStep);
+        scores[index] = spectral_energy(partial_frequency);
+        if (scores[index] > scores[best_index]) {
+          best_index = index;
+        }
+      }
+      double refined = static_cast<double>(best_index + kPartialMinimumStep);
+      if (best_index > 0U && best_index + 1U < scores.size()) {
+        const double left = scores[best_index - 1U];
+        const double center = scores[best_index];
+        const double right = scores[best_index + 1U];
+        const double denominator = left - 2.0 * center + right;
+        if (std::isfinite(denominator) && std::abs(denominator) > 1.0e-12) {
+          refined += 0.5 * (left - right) / denominator;
+        }
+      }
+      partial_peak_energy[harmonic] = scores[best_index];
+      peak_steps[harmonic] = refined;
     }
-    const double energy = real * real + imaginary * imaginary;
-    output.profile[harmonic] = energy;
-    profile_total += energy;
+    profile_total += output.profile[harmonic];
+    partial_peak_total += partial_peak_energy[harmonic];
   }
   if (!std::isfinite(profile_total) || profile_total <= 0.0) {
     return false;
   }
-  for (double& energy : output.profile) {
-    energy /= profile_total;
+  for (std::size_t harmonic = 0U; harmonic < output.profile.size();
+       ++harmonic) {
+    output.profile[harmonic] /= profile_total;
+    const bool resolved = harmonic == 0U ||
+                          (peak_steps[harmonic] > kPartialMinimumStep &&
+                           peak_steps[harmonic] < kPartialMaximumStep &&
+                           partial_peak_total > 0.0 &&
+                           partial_peak_energy[harmonic] /
+                                   partial_peak_total >=
+                               0.001);
+    if (resolved) {
+      output.partial_detuning_cents[harmonic] =
+          kPartialStepCents * peak_steps[harmonic];
+      output.partial_detuning_valid_mask = static_cast<std::uint8_t>(
+          output.partial_detuning_valid_mask | (1U << harmonic));
+    }
   }
   output.cents = cents;
   output.correlation = best;
@@ -584,6 +628,11 @@ bool derive_labeled_string_calibration(
   struct Accumulator final {
     std::array<double, kCalibrationHarmonicCount> profile_sum{};
     std::array<double, kCalibrationHarmonicCount> first_profile{};
+    std::array<double, kCalibrationHarmonicCount> partial_detuning_sum{};
+    std::array<double, kCalibrationHarmonicCount>
+        partial_detuning_square_sum{};
+    std::array<std::uint16_t, kCalibrationHarmonicCount>
+        partial_detuning_count{};
     double cents_sum{};
     double confidence_sum{};
     double profile_similarity_sum{};
@@ -686,6 +735,14 @@ bool derive_labeled_string_calibration(
     for (std::size_t harmonic = 0U;
          harmonic < kCalibrationHarmonicCount; ++harmonic) {
       accumulator.profile_sum[harmonic] += estimate.profile[harmonic];
+      if ((estimate.partial_detuning_valid_mask & (1U << harmonic)) != 0U) {
+        accumulator.partial_detuning_sum[harmonic] +=
+            estimate.partial_detuning_cents[harmonic];
+        accumulator.partial_detuning_square_sum[harmonic] +=
+            estimate.partial_detuning_cents[harmonic] *
+            estimate.partial_detuning_cents[harmonic];
+        ++accumulator.partial_detuning_count[harmonic];
+      }
     }
     if (accumulator.count == std::numeric_limits<std::uint16_t>::max()) {
       return false;
@@ -807,6 +864,27 @@ bool derive_labeled_string_calibration(
                 std::clamp(identity.profile_sum[harmonic] / identity_count,
                            0.0, 1.0) *
                 32767.0));
+        if (identity.partial_detuning_count[harmonic] >= 2U) {
+          const double partial_count = static_cast<double>(
+              identity.partial_detuning_count[harmonic]);
+          const double partial_mean =
+              identity.partial_detuning_sum[harmonic] / partial_count;
+          const double partial_variance = std::max(
+              0.0, identity.partial_detuning_square_sum[harmonic] /
+                           partial_count -
+                       partial_mean * partial_mean);
+          if (std::sqrt(partial_variance) >
+              kMaximumPartialDetuningStandardDeviationCents) {
+            continue;
+          }
+          point.partial_detuning_q8[harmonic] =
+              static_cast<std::int16_t>(std::lround(std::clamp(
+                  partial_mean,
+                  -50.0, 50.0) *
+                                                      256.0));
+          point.partial_detuning_valid_mask = static_cast<std::uint8_t>(
+              point.partial_detuning_valid_mask | (1U << harmonic));
+        }
       }
       point.confidence_q15 = static_cast<std::uint16_t>(std::lround(
           std::clamp(identity.confidence_sum / identity_count * repeatability,
@@ -835,6 +913,27 @@ bool derive_labeled_string_calibration(
           static_cast<std::uint16_t>(std::lround(std::clamp(
               accumulator.profile_sum[harmonic] / count, 0.0, 1.0) *
                                                  32767.0));
+      if (accumulator.partial_detuning_count[harmonic] >= 2U) {
+        const double partial_count = static_cast<double>(
+            accumulator.partial_detuning_count[harmonic]);
+        const double partial_mean =
+            accumulator.partial_detuning_sum[harmonic] / partial_count;
+        const double partial_variance = std::max(
+            0.0, accumulator.partial_detuning_square_sum[harmonic] /
+                         partial_count -
+                     partial_mean * partial_mean);
+        if (std::sqrt(partial_variance) >
+            kMaximumPartialDetuningStandardDeviationCents) {
+          continue;
+        }
+        point.partial_detuning_q8[harmonic] =
+            static_cast<std::int16_t>(std::lround(std::clamp(
+                partial_mean,
+                -50.0, 50.0) *
+                                                    256.0));
+        point.partial_detuning_valid_mask = static_cast<std::uint8_t>(
+            point.partial_detuning_valid_mask | (1U << harmonic));
+      }
     }
     const double cents_span =
         accumulator.maximum_cents - accumulator.minimum_cents;
@@ -927,7 +1026,106 @@ bool run_detector_replay(const WaveData& wave,
         continue;
       }
       ++result.snapshot_frames;
+      if (detector.partial_detuning_candidate_count() != 0U) {
+        ++result.partial_detuning_frames;
+      }
       const TunerSnapshot& snapshot = decision.tuner_snapshot;
+      if (calibration != nullptr) {
+        for (std::size_t voice_index = 0U;
+             voice_index < snapshot.voice_count; ++voice_index) {
+          const TunerVoice& voice = snapshot.voices[voice_index];
+          bool expected_voice = false;
+          for (const ReplayLabel& label : labels) {
+            if (sample_index >= label.start_sample &&
+                sample_index < label.end_sample &&
+                voice_matches_label(voice, label)) {
+              expected_voice = true;
+              break;
+            }
+          }
+          if (!expected_voice) {
+            continue;
+          }
+          if (voice.string_index >= kMaxVoices ||
+              voice.midi_note < kM3OpenNotes[voice.string_index]) {
+            continue;
+          }
+          const std::size_t fret =
+              voice.midi_note - kM3OpenNotes[voice.string_index];
+          const StringCalibrationPoint* point =
+              calibration->point(voice.string_index, fret);
+          if (point == nullptr) {
+            continue;
+          }
+          const PartialDetuningEvidence evidence =
+              detector.partial_detuning_evidence(voice.midi_note);
+          for (std::size_t partial = 1U;
+               partial < kPartialDetuningCount; ++partial) {
+            const std::uint8_t bit =
+                static_cast<std::uint8_t>(1U << partial);
+            if ((evidence.valid_mask &
+                 point->partial_detuning_valid_mask & bit) == 0U) {
+              continue;
+            }
+            result.partial_detuning_absolute_error_sum += std::abs(
+                evidence.residual_cents[partial] -
+                static_cast<double>(point->partial_detuning_q8[partial]) /
+                    256.0);
+            ++result.partial_detuning_comparisons;
+          }
+          std::array<double, kPartialDetuningCount> expected_reference{};
+          for (std::size_t partial = 0U;
+               partial < expected_reference.size(); ++partial) {
+            expected_reference[partial] =
+                static_cast<double>(point->partial_detuning_q8[partial]) /
+                256.0;
+          }
+          const PartialDetuningComparison expected_comparison =
+              compare_partial_detuning(
+                  evidence, expected_reference,
+                  point->partial_detuning_valid_mask);
+          double best_other = -std::numeric_limits<double>::infinity();
+          if (expected_comparison.valid) {
+            for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+              if (string == voice.string_index ||
+                  voice.midi_note < kM3OpenNotes[string]) {
+                continue;
+              }
+              const std::size_t other_fret =
+                  voice.midi_note - kM3OpenNotes[string];
+              const StringCalibrationPoint* other =
+                  calibration->point(string, other_fret);
+              if (other == nullptr) {
+                continue;
+              }
+              std::array<double, kPartialDetuningCount> other_reference{};
+              for (std::size_t partial = 0U;
+                   partial < other_reference.size(); ++partial) {
+                other_reference[partial] =
+                    static_cast<double>(other->partial_detuning_q8[partial]) /
+                    256.0;
+              }
+              const PartialDetuningComparison other_comparison =
+                  compare_partial_detuning(
+                      evidence, other_reference,
+                      other->partial_detuning_valid_mask);
+              if (other_comparison.valid) {
+                best_other =
+                    std::max(best_other, other_comparison.log_likelihood);
+              }
+            }
+          }
+          if (std::isfinite(best_other)) {
+            const double margin =
+                expected_comparison.log_likelihood - best_other;
+            result.partial_detuning_margin_sum += margin;
+            ++result.partial_detuning_margin_frames;
+            if (margin >= 0.0) {
+              ++result.partial_detuning_expected_best_frames;
+            }
+          }
+        }
+      }
       hash_integer(result.fingerprint, sample_index);
       hash_byte(result.fingerprint, static_cast<std::uint8_t>(snapshot.state));
       hash_byte(result.fingerprint, snapshot.voice_count);

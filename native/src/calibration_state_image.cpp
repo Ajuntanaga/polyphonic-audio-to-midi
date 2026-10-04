@@ -7,6 +7,8 @@ namespace {
 
 constexpr std::int16_t kMinimumCentsQ8 = -50 * 256;
 constexpr std::int16_t kMaximumCentsQ8 = 50 * 256;
+constexpr std::int16_t kMinimumPartialDetuningQ8 = -50 * 256;
+constexpr std::int16_t kMaximumPartialDetuningQ8 = 50 * 256;
 constexpr std::uint16_t kMaximumQ15 = 32767U;
 
 void put_u16(std::uint8_t* output, std::uint16_t value) noexcept {
@@ -58,6 +60,19 @@ bool valid_point(const StringCalibrationPoint& point) noexcept {
       return false;
     }
   }
+  if ((point.partial_detuning_valid_mask & 0xC0U) != 0U) {
+    return false;
+  }
+  for (std::size_t harmonic = 0U;
+       harmonic < point.partial_detuning_q8.size(); ++harmonic) {
+    const bool valid =
+        (point.partial_detuning_valid_mask & (1U << harmonic)) != 0U;
+    if (point.partial_detuning_q8[harmonic] < kMinimumPartialDetuningQ8 ||
+        point.partial_detuning_q8[harmonic] > kMaximumPartialDetuningQ8 ||
+        (!valid && point.partial_detuning_q8[harmonic] != 0)) {
+      return false;
+    }
+  }
   switch (point.quality) {
     case CalibrationPointQuality::missing:
       if (point.cents_offset_q8 != 0 || point.confidence_q15 != 0U ||
@@ -66,7 +81,11 @@ bool valid_point(const StringCalibrationPoint& point) noexcept {
       }
       return std::all_of(point.harmonic_profile_q15.begin(),
                          point.harmonic_profile_q15.end(),
-                         [](std::uint16_t value) { return value == 0U; });
+                         [](std::uint16_t value) { return value == 0U; }) &&
+             point.partial_detuning_valid_mask == 0U &&
+             std::all_of(point.partial_detuning_q8.begin(),
+                         point.partial_detuning_q8.end(),
+                         [](std::int16_t value) { return value == 0; });
     case CalibrationPointQuality::measured:
       return point.observation_count != 0U;
     case CalibrationPointQuality::interpolated:
@@ -103,7 +122,7 @@ bool encode_calibration_state(const StringCalibrationBank& bank,
   output[1] = '3';
   output[2] = 'C';
   output[3] = 'B';
-  put_u16(output.data() + 4U, 1U);
+  put_u16(output.data() + 4U, 2U);
   put_u16(output.data() + 6U, static_cast<std::uint16_t>(kMaxVoices));
   put_u16(output.data() + 8U,
           static_cast<std::uint16_t>(kCalibrationFretCount));
@@ -123,6 +142,12 @@ bool encode_calibration_state(const StringCalibrationBank& bank,
         put_u16(output.data() + offset, harmonic);
         offset += 2U;
       }
+      for (const std::int16_t detuning : point.partial_detuning_q8) {
+        put_u16(output.data() + offset,
+                static_cast<std::uint16_t>(detuning));
+        offset += 2U;
+      }
+      output[offset++] = point.partial_detuning_valid_mask;
       put_u16(output.data() + offset, point.confidence_q15);
       offset += 2U;
       put_u16(output.data() + offset, point.observation_count);
@@ -138,17 +163,24 @@ bool encode_calibration_state(const StringCalibrationBank& bank,
 
 bool decode_calibration_state(const std::uint8_t* bytes, std::size_t size,
                               StringCalibrationBank& output) noexcept {
-  if (bytes == nullptr || size != kCalibrationStateSize || bytes[0] != 'M' ||
+  if (bytes == nullptr ||
+      (size != kCalibrationStateSize && size != kCalibrationStateV1Size) ||
+      bytes[0] != 'M' ||
       bytes[1] != '3' || bytes[2] != 'C' || bytes[3] != 'B' ||
-      get_u16(bytes + 4U) != 1U ||
       get_u16(bytes + 6U) != kMaxVoices ||
       get_u16(bytes + 8U) != kCalibrationFretCount ||
       get_u16(bytes + 10U) != kCalibrationHarmonicCount ||
-      get_u32(bytes + 12U) != kCalibrationStatePayloadSize ||
       get_u32(bytes + 20U) != 0U ||
-      get_u32(bytes + 16U) !=
-          crc32(bytes + kCalibrationStateHeaderSize,
-                kCalibrationStatePayloadSize)) {
+      get_u32(bytes + 16U) != crc32(bytes + kCalibrationStateHeaderSize,
+                                    size - kCalibrationStateHeaderSize)) {
+    return false;
+  }
+  const std::uint16_t version = get_u16(bytes + 4U);
+  const bool v1 = version == 1U && size == kCalibrationStateV1Size &&
+                  get_u32(bytes + 12U) == kCalibrationStateV1PayloadSize;
+  const bool v2 = version == 2U && size == kCalibrationStateSize &&
+                  get_u32(bytes + 12U) == kCalibrationStatePayloadSize;
+  if (!v1 && !v2) {
     return false;
   }
   StringCalibrationBank candidate;
@@ -162,6 +194,13 @@ bool decode_calibration_state(const std::uint8_t* bytes, std::size_t size,
       for (std::uint16_t& harmonic : point.harmonic_profile_q15) {
         harmonic = get_u16(bytes + offset);
         offset += 2U;
+      }
+      if (v2) {
+        for (std::int16_t& detuning : point.partial_detuning_q8) {
+          detuning = static_cast<std::int16_t>(get_u16(bytes + offset));
+          offset += 2U;
+        }
+        point.partial_detuning_valid_mask = bytes[offset++];
       }
       point.confidence_q15 = get_u16(bytes + offset);
       offset += 2U;

@@ -20,6 +20,8 @@ enum class CalibrationPointQuality : std::uint8_t {
 struct StringCalibrationPoint final {
   std::int16_t cents_offset_q8{};
   std::array<std::uint16_t, kCalibrationHarmonicCount> harmonic_profile_q15{};
+  std::array<std::int16_t, kCalibrationHarmonicCount> partial_detuning_q8{};
+  std::uint8_t partial_detuning_valid_mask{};
   std::uint16_t confidence_q15{};
   std::uint16_t observation_count{};
   CalibrationPointQuality quality{CalibrationPointQuality::missing};
@@ -41,6 +43,8 @@ struct StringCalibrationBank final {
 struct CalibrationObservation final {
   double midi_pitch{};
   std::array<double, kCalibrationHarmonicCount> harmonic_energy{};
+  std::array<double, kCalibrationHarmonicCount> partial_detuning_cents{};
+  std::uint8_t partial_detuning_valid_mask{};
   double confidence{};
 };
 
@@ -88,6 +92,11 @@ class StringSweepCalibrator final {
     double confidence_sum{};
     std::array<double, kCalibrationHarmonicCount> harmonic_sum{};
     std::array<double, kCalibrationHarmonicCount> harmonic_square_sum{};
+    std::array<double, kCalibrationHarmonicCount> partial_detuning_sum{};
+    std::array<double, kCalibrationHarmonicCount>
+        partial_detuning_square_sum{};
+    std::array<std::uint16_t, kCalibrationHarmonicCount>
+        partial_detuning_count{};
     std::uint16_t count{};
   };
 

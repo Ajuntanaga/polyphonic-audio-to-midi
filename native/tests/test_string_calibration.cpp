@@ -24,6 +24,15 @@ m3::CalibrationObservation observation(std::size_t string_index,
       0.08,
       0.04,
   };
+  value.partial_detuning_cents = {
+      0.0,
+      0.2 + 0.01 * string_value,
+      0.5 + 0.01 * fret_value,
+      1.0 + 0.05 * string_value,
+      1.8 + 0.03 * fret_value,
+      2.7 + 0.02 * string_value,
+  };
+  value.partial_detuning_valid_mask = 0x3FU;
   return value;
 }
 
@@ -79,6 +88,10 @@ M3_TEST(string_calibration_learns_an_open_to_24_and_back_sweep) {
     M3_EXPECT_EQ(middle->observation_count, 120U);
     M3_EXPECT_TRUE(middle->harmonic_profile_q15[0] >
                    middle->harmonic_profile_q15[1]);
+    M3_EXPECT_EQ(middle->partial_detuning_valid_mask, 0x3FU);
+    M3_EXPECT_NEAR(
+        static_cast<double>(middle->partial_detuning_q8[5U]) / 256.0,
+        2.76, 0.02);
   }
 }
 

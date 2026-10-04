@@ -289,18 +289,26 @@ def _sha256(path: pathlib.Path) -> str:
 def _calibration_image(path: pathlib.Path) -> bytearray:
     data = bytearray(pathlib.Path(path).read_bytes())
     header_size = 24
-    point_size = 19
     point_count = 8 * 25
+    version = struct.unpack_from("<H", data, 4)[0] if len(data) >= 6 else 0
+    point_size = {1: 19, 2: 32}.get(version, 0)
     expected_size = header_size + 1 + point_count * point_size
+    expected_payload = 1 + point_count * point_size
     if (
         len(data) != expected_size
         or data[:4] != b"M3CB"
-        or struct.unpack_from("<HHHHI", data, 4) != (1, 8, 25, 6, 3801)
+        or struct.unpack_from("<HHHHI", data, 4)
+        != (version, 8, 25, 6, expected_payload)
         or struct.unpack_from("<I", data, 16)[0]
         != (binascii.crc32(data[header_size:]) & 0xFFFFFFFF)
     ):
         raise ValueError("invalid M3CB calibration image")
     return data
+
+
+def _calibration_point_size(data: bytes | bytearray) -> int:
+    version = struct.unpack_from("<H", data, 4)[0]
+    return {1: 19, 2: 32}[version]
 
 
 def _write_calibration_image(data: bytearray, output_path: pathlib.Path) -> None:
@@ -324,7 +332,7 @@ def write_adjusted_center_calibration(
     if not math.isfinite(cents_offset) or not -50.0 <= cents_offset <= 50.0:
         raise ValueError("cents offset must be in -50..50")
     data = _calibration_image(source_path)
-    point_size = 19
+    point_size = _calibration_point_size(data)
     point_count = 8 * 25
     first_point = 25
     offset_q8 = round(cents_offset * 256.0)
@@ -355,7 +363,7 @@ def write_note_shuffled_center_calibration(
 ) -> None:
     """Rotate pitch centers between strings that can play the same MIDI note."""
     data = _calibration_image(source_path)
-    point_size = 19
+    point_size = _calibration_point_size(data)
     by_note: dict[int, list[int]] = {}
     for string_index, open_note in enumerate(M3_OPEN_NOTES):
         for fret in range(25):
@@ -398,8 +406,9 @@ def write_expected_cents_labels(
         if not isinstance(string_index, int) or not 0 <= string_index < 8:
             raise ValueError("manifest has no valid string index")
         data = _calibration_image(truth_calibration)
+        point_size = _calibration_point_size(data)
         centers = [
-            struct.unpack_from("<h", data, 25 + point * 19)[0] / 256.0
+            struct.unpack_from("<h", data, 25 + point * point_size)[0] / 256.0
             for point in range(8 * 25)
         ]
     enriched = []

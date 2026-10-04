@@ -41,6 +41,7 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/calibration_state_image.cpp
     native/src/generated_note_ledger.cpp
     native/src/harmonic_evidence.cpp
+    native/src/partial_detuning_evidence.cpp
     native/src/polyphonic_pitch_detector.cpp
     native/src/string_fret_posterior.cpp
     native/src/string_calibration.cpp
@@ -107,6 +108,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_string_calibration.cpp
     native/tests/test_parameter_contract.cpp
     native/tests/test_parameter_normalization.cpp
+    native/tests/test_partial_detuning_evidence.cpp
     native/tests/test_pitch_math.cpp
     native/tests/test_prepared_config_exchange.cpp
     native/tests/test_probe_processor.cpp

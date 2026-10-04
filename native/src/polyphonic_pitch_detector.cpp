@@ -159,8 +159,11 @@ constexpr double kM3ActiveStringRetentionBonus = 1024.0;
 // fine-frequency constraints. It stabilizes ambiguous alternatives without
 // overruling direct physical evidence or making a provisional lane permanent.
 constexpr double kM3StringPosteriorCost = 0.25;
+constexpr double kM3StringPosteriorDecisiveCost = 2.0;
+constexpr double kM3StringPosteriorDecisiveProbability = 0.80;
 constexpr double kM3StringPosteriorProfileWeight = 6.0;
 constexpr double kM3StringPosteriorDescriptorWeight = 1.5;
+constexpr double kM3StringPosteriorDetuningWeight = 2.0;
 constexpr double kM3StringPosteriorCentsScale = 4.0;
 constexpr double kM3UnisonMinimumComponent = 0.15;
 constexpr double kM3UnisonMinimumTemplateDistance = 0.0025;
@@ -426,6 +429,9 @@ void PolyphonicPitchDetector::reset() noexcept {
   long_harmonic_energy_memory_ = {};
   harmonic_memory_updates_ = {};
   phase_cents_states_ = {};
+  partial_detuning_trackers_ = {};
+  partial_detuning_last_update_ticks_ = {};
+  partial_detuning_cursor_ = 0U;
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
   string_fret_posteriors_.reset();
@@ -490,10 +496,37 @@ const StringCalibrationBank& PolyphonicPitchDetector::calibration_bank()
   return calibrator_.bank();
 }
 
+std::uint8_t PolyphonicPitchDetector::partial_detuning_candidate_count()
+    const noexcept {
+  std::uint8_t count = 0U;
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    if ((partial_detuning_trackers_[candidate].evidence().valid_mask & 0x3EU) !=
+        0U) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+PartialDetuningEvidence PolyphonicPitchDetector::partial_detuning_evidence(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return {};
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? partial_detuning_trackers_[candidate].evidence()
+             : PartialDetuningEvidence{};
+}
+
 void PolyphonicPitchDetector::set_calibration_bank(
     const StringCalibrationBank& bank) noexcept {
   calibrator_.set_bank(bank);
   fine_frequency_evidence_states_ = {};
+  partial_detuning_trackers_ = {};
+  partial_detuning_last_update_ticks_ = {};
+  partial_detuning_cursor_ = 0U;
   string_fret_posteriors_.reset();
   string_fret_energy_memory_ = {};
   calibration_tuning_offset_cents_ = 0.0;
@@ -1307,10 +1340,17 @@ void PolyphonicPitchDetector::assign_m3_strings(
     std::array<double, kMaxVoices> learned_cents{};
     std::array<double, kMaxVoices> learned_cents_errors{};
     std::array<double, kMaxVoices> descriptor_log_likelihoods{};
+    std::array<double, kMaxVoices> detuning_log_likelihoods{};
+    std::array<bool, kMaxVoices> has_detuning_likelihood{};
     std::array<const StringCalibrationPoint*, kMaxVoices> learned_points{};
     std::array<bool, kMaxVoices> has_learned_profile{};
     double learned_sum = 0.0;
     double descriptor_sum = 0.0;
+    double detuning_sum = 0.0;
+    std::size_t detuning_count = 0U;
+    std::size_t best_detuning_string = kMaxVoices;
+    double best_detuning_log_likelihood =
+        -std::numeric_limits<double>::infinity();
     double best_learned_similarity = -1.0;
     std::size_t learned_count = 0U;
     bool all_playable_profiles_learned = true;
@@ -1413,6 +1453,34 @@ void PolyphonicPitchDetector::assign_m3_strings(
                 settled_comparison.combined_log_likelihood();
         descriptor_sum += descriptor_log_likelihoods[string];
       }
+      const PartialDetuningEvidence observed_detuning =
+          partial_detuning_trackers_[candidate].evidence();
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        if (!has_learned_profile[string]) {
+          continue;
+        }
+        std::array<double, kPartialDetuningCount> reference{};
+        for (std::size_t partial = 0U; partial < reference.size(); ++partial) {
+          reference[partial] = static_cast<double>(
+                                   learned_points[string]
+                                       ->partial_detuning_q8[partial]) /
+                               256.0;
+        }
+        const PartialDetuningComparison comparison =
+            compare_partial_detuning(
+                observed_detuning, reference,
+                learned_points[string]->partial_detuning_valid_mask);
+        if (comparison.valid) {
+          detuning_log_likelihoods[string] = comparison.log_likelihood;
+          has_detuning_likelihood[string] = true;
+          detuning_sum += comparison.log_likelihood;
+          ++detuning_count;
+          if (comparison.log_likelihood > best_detuning_log_likelihood) {
+            best_detuning_log_likelihood = comparison.log_likelihood;
+            best_detuning_string = string;
+          }
+        }
+      }
     }
     const double learned_center =
         learned_count > 0U
@@ -1421,6 +1489,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
     const double descriptor_center =
         learned_count > 0U
             ? descriptor_sum / static_cast<double>(learned_count)
+            : 0.0;
+    const double detuning_center =
+        detuning_count > 0U
+            ? detuning_sum / static_cast<double>(detuning_count)
             : 0.0;
     if (calibrated_reassignment_ready && all_playable_profiles_learned) {
       candidate_states_[candidate].calibrated_lane_committed = true;
@@ -1506,6 +1578,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
                 (learned_similarities[string] - learned_center) +
             kM3StringPosteriorDescriptorWeight *
                 (descriptor_log_likelihoods[string] - descriptor_center);
+        if (has_detuning_likelihood[string]) {
+          posterior_frame.log_likelihood[string] +=
+              kM3StringPosteriorDetuningWeight *
+              (detuning_log_likelihoods[string] - detuning_center);
+        }
         if (phase.valid) {
           const double normalized_error =
               learned_cents_errors[string] / kM3StringPosteriorCentsScale;
@@ -1573,8 +1650,21 @@ void PolyphonicPitchDetector::assign_m3_strings(
             !beat_evidence_states_[candidate].valid;
         if (posterior_available && posterior_assignment_ready &&
             !calibrated_cents_are_decisive && !physical_unison_resolved) {
+          const std::size_t posterior_best =
+              string_fret_posteriors_.best_string(candidate);
+          const double posterior_best_probability =
+              posterior_best < kMaxVoices
+                  ? string_fret_posteriors_.probability(candidate,
+                                                        posterior_best)
+                  : 0.0;
+          const double posterior_cost =
+              posterior_best_probability >=
+                      kM3StringPosteriorDecisiveProbability &&
+                      posterior_best == best_detuning_string
+                  ? kM3StringPosteriorDecisiveCost
+                  : kM3StringPosteriorCost;
           proposal.cost +=
-              kM3StringPosteriorCost *
+              posterior_cost *
               string_fret_posteriors_.negative_log_probability(candidate,
                                                                 string);
         }
@@ -2495,6 +2585,71 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
   }
 }
 
+void PolyphonicPitchDetector::update_partial_detuning_evidence(
+    const std::array<bool, kMaxCandidates>& selected) noexcept {
+  const double decisions_per_second =
+      sample_rate_ / static_cast<double>(kDecisionQuantum);
+  const std::size_t count = static_cast<std::size_t>(candidate_count_);
+  if (count == 0U) {
+    return;
+  }
+  std::size_t calibration_candidate = count;
+  if (calibrator_.active()) {
+    const CalibrationSweepStatus status = calibrator_.status();
+    const std::uint16_t note = static_cast<std::uint16_t>(
+        kM3OpenNotes[status.string_index] + status.requested_fret);
+    if (note >= lowest_note_) {
+      const std::size_t candidate = note - lowest_note_;
+      if (candidate < count) {
+        calibration_candidate = candidate;
+      }
+    }
+  }
+  const auto eligible = [this, &selected,
+                         calibration_candidate](std::size_t candidate) {
+    return selected[candidate] || candidate_states_[candidate].active ||
+           candidate == calibration_candidate;
+  };
+  for (std::size_t candidate = 0U;
+       candidate < count; ++candidate) {
+    if (!eligible(candidate)) {
+      partial_detuning_trackers_[candidate].reset();
+      partial_detuning_last_update_ticks_[candidate] = 0U;
+    }
+  }
+  // Expensive phase/log work is round-robined across active candidates. This
+  // preserves a bounded callback spike while each candidate retains the exact
+  // elapsed decision interval needed to recover its phase-advance rate.
+  for (std::size_t probe = 0U; probe < count; ++probe) {
+    const std::size_t candidate = (partial_detuning_cursor_ + probe) % count;
+    if (!eligible(candidate)) {
+      continue;
+    }
+    PartialDetuningTracker& tracker = partial_detuning_trackers_[candidate];
+    PartialDetuningFrame frame{};
+    for (std::size_t harmonic = 0U; harmonic < kHarmonicCount; ++harmonic) {
+      const Cell& cell = cells_[cell_index(candidate, harmonic)];
+      frame.real[harmonic] = cell.fast_real;
+      frame.imaginary[harmonic] = cell.fast_imaginary;
+      frame.center_hz[harmonic] =
+          std::atan2(cell.sine_step, cell.cosine_step) * sample_rate_ / kTwoPi;
+      frame.energy[harmonic] =
+          cell.enabled ? cell.fast_real * cell.fast_real +
+                             cell.fast_imaginary * cell.fast_imaginary
+                       : 0.0;
+    }
+    const std::uint32_t previous_tick =
+        partial_detuning_last_update_ticks_[candidate];
+    const std::uint32_t elapsed_ticks =
+        previous_tick == 0U ? 1U : decision_counter_ - previous_tick;
+    tracker.update(frame,
+                   decisions_per_second / static_cast<double>(elapsed_ticks));
+    partial_detuning_last_update_ticks_[candidate] = decision_counter_;
+    partial_detuning_cursor_ = (candidate + 1U) % count;
+    break;
+  }
+}
+
 void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   if (profile_mode_ != ProfileMode::m3) {
@@ -3352,6 +3507,12 @@ void PolyphonicPitchDetector::observe_calibration(
     observation.harmonic_energy[harmonic] =
         corrected_harmonic_energy(target, harmonic);
   }
+  const PartialDetuningEvidence detuning =
+      partial_detuning_trackers_[target].evidence();
+  if (detuning.valid_mask != 0U) {
+    observation.partial_detuning_cents = detuning.residual_cents;
+    observation.partial_detuning_valid_mask = detuning.valid_mask;
+  }
   static_cast<void>(calibrator_.observe(observation));
 }
 
@@ -3597,6 +3758,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     quiet = true;
   }
   update_phase_cents_estimates(selected);
+  update_partial_detuning_evidence(selected);
   update_fine_frequency_evidence(selected);
   assign_m3_strings(selected);
   update_harmonic_profile_memory(selected);

@@ -54,6 +54,25 @@ bool read_eof(Steinberg::IBStream* stream) noexcept {
   return result_ok(result) && trailing_read == 0;
 }
 
+bool read_bounded_to_eof(Steinberg::IBStream* stream, std::uint8_t* bytes,
+                         std::size_t capacity, std::size_t& size) noexcept {
+  size = 0U;
+  while (size < capacity) {
+    const auto request = static_cast<Steinberg::int32>(capacity - size);
+    Steinberg::int32 read = 0;
+    const Steinberg::tresult result =
+        stream->read(bytes + size, request, &read);
+    if (!result_ok(result) || read < 0 || read > request) {
+      return false;
+    }
+    if (read == 0) {
+      return true;
+    }
+    size += static_cast<std::size_t>(read);
+  }
+  return read_eof(stream);
+}
+
 }  // namespace
 
 bool save_vst3_state(const PersistentConfig& config,
@@ -114,32 +133,23 @@ bool load_vst3_state_with_calibration(
     return false;
   }
 
-  std::uint8_t first = 0U;
-  Steinberg::int32 first_read = 0;
-  const Steinberg::tresult first_result =
-      stream->read(&first, 1, &first_read);
-  if (!result_ok(first_result) || first_read < 0 || first_read > 1) {
-    return false;
-  }
-
   PersistentConfig config_candidate;
   StringCalibrationBank calibration_candidate;
   if (!decode_state(state_image.data(), state_image.size(), config_candidate)) {
     return false;
   }
-  if (first_read == 0) {
+  CalibrationStateImage calibration_image{};
+  std::size_t calibration_size = 0U;
+  if (!read_bounded_to_eof(stream, calibration_image.data(),
+                           calibration_image.size(), calibration_size)) {
+    return false;
+  }
+  if (calibration_size == 0U) {
     config = config_candidate;
     calibration = calibration_candidate;
     return true;
   }
-
-  CalibrationStateImage calibration_image{};
-  calibration_image[0] = first;
-  if (!read_exact(stream, calibration_image.data() + 1U,
-                  calibration_image.size() - 1U) ||
-      !read_eof(stream) ||
-      !decode_calibration_state(calibration_image.data(),
-                                calibration_image.size(),
+  if (!decode_calibration_state(calibration_image.data(), calibration_size,
                                 calibration_candidate)) {
     return false;
   }

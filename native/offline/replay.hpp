@@ -79,6 +79,12 @@ struct ReplayResult final {
   std::uint32_t false_gap_voices{};
   std::uint32_t false_wrong_note_voices{};
   std::uint32_t false_wrong_string_voices{};
+  std::uint32_t partial_detuning_frames{};
+  std::uint32_t partial_detuning_comparisons{};
+  double partial_detuning_absolute_error_sum{};
+  std::uint32_t partial_detuning_margin_frames{};
+  std::uint32_t partial_detuning_expected_best_frames{};
+  double partial_detuning_margin_sum{};
   std::vector<ReplayLabelResult> label_results{};
 };
 
