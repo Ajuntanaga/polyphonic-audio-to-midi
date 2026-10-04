@@ -1,0 +1,36 @@
+{
+  "fetched_on": "2026-10-03",
+  "guitarset": {
+    "annotation_archive_md5": "b39b78e63d3446f2e54ddb7a54df9b10",
+    "annotation_archive_size_bytes": 39100000,
+    "derived_statistics": {
+      "maximum_annotated_polyphony": 7,
+      "note_events": 62476,
+      "pitch_contour_points": 3214786,
+      "same_pitch_cross_string_overlaps": 204,
+      "same_pitch_overlap_seconds": 41.31645,
+      "tracks": 360
+    },
+    "downloaded_scope": "annotations_only",
+    "license": "MIT",
+    "url": "https://zenodo.org/records/3371780"
+  },
+  "reference_sources": {
+    "basic_pitch": {
+      "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+      "license": "Apache-2.0",
+      "url": "https://github.com/spotify/basic-pitch"
+    },
+    "fretnet": {
+      "commit": "d481054f54184374c04b1cc27a487dc35c87f353",
+      "license": "MIT",
+      "url": "https://github.com/cwitkowitz/guitar-transcription-continuous"
+    },
+    "polytuna": {
+      "commit": "ff5a768ce0d83610dc9eefbd368926037ede15bc",
+      "license": "no_license_file_found_do_not_copy",
+      "url": "https://github.com/UC3Music/PolyTuna"
+    }
+  },
+  "schema": 1
+}

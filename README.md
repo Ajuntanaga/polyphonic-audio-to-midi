@@ -13,6 +13,10 @@ it does not perform detection or MIDI generation. The M3 profile maps the
 eight open strings to MIDI `32,36,40,44,48,52,56,60` (`G# C E G# C E G# C`,
 low to high) and emits ordinary discrete MIDI rather than MPE.
 
+The current external-method and dataset review, including the measured
+GuitarSet annotation intake and the next tracking implementation order, is in
+[Polyphonic tracking research](docs/POLYPHONIC-TRACKING-RESEARCH.md).
+
 ## Clone and build
 
 Prebuilt beta bundles are published on the
