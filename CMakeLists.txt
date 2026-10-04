@@ -40,7 +40,9 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/calibration_bank_transport.cpp
     native/src/calibration_state_image.cpp
     native/src/generated_note_ledger.cpp
+    native/src/harmonic_evidence.cpp
     native/src/polyphonic_pitch_detector.cpp
+    native/src/string_fret_posterior.cpp
     native/src/string_calibration.cpp
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
@@ -96,6 +98,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_calibration_state_image.cpp
     native/tests/test_fixed_vector.cpp
     native/tests/test_generated_note_ledger.cpp
+    native/tests/test_harmonic_evidence.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
     native/tests/test_offline_replay.cpp
@@ -109,6 +112,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_probe_processor.cpp
     native/tests/test_state_codec.cpp
     native/tests/test_state_image.cpp
+    native/tests/test_string_fret_posterior.cpp
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
     native/tests/test_tuner_telemetry.cpp

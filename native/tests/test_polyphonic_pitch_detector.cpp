@@ -579,6 +579,51 @@ struct PolyphonicPitchDetectorTestAccess final {
     return detector.candidate_states_[candidate].assigned_string;
   }
 
+  static std::array<std::uint8_t, 3U> string_posterior_sequence(
+      PolyphonicPitchDetector& detector, std::uint8_t note,
+      const std::array<double, kCalibrationHarmonicCount>& first,
+      const std::array<double, kCalibrationHarmonicCount>& second) noexcept {
+    std::array<std::uint8_t, 3U> result{kUnassignedTunerString,
+                                       kUnassignedTunerString,
+                                       kUnassignedTunerString};
+    if (note < detector.lowest_note_) {
+      return result;
+    }
+    const std::size_t candidate = note - detector.lowest_note_;
+    if (candidate >= static_cast<std::size_t>(detector.candidate_count_)) {
+      return result;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    const auto feed = [&detector, candidate, &selected](
+                          const auto& profile, bool active,
+                          bool settle_profile) noexcept {
+      double total = 0.0;
+      for (const double amplitude : profile) {
+        total += amplitude * amplitude;
+      }
+      for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
+        auto& cell = detector.cells_[detector.cell_index(candidate, harmonic)];
+        cell.enabled = true;
+        cell.fast_real = profile[harmonic] / std::sqrt(total);
+        cell.fast_imaginary = 0.0;
+        if (settle_profile) {
+          const double energy = cell.fast_real * cell.fast_real;
+          detector.harmonic_energy_memory_[candidate][harmonic] = energy;
+          detector.long_harmonic_energy_memory_[candidate][harmonic] = energy;
+        }
+      }
+      detector.candidate_states_[candidate].active = active;
+      detector.assign_m3_strings(selected);
+      return detector.string_fret_posteriors_.best_string(candidate);
+    };
+    result[0U] = feed(first, false, true);
+    detector.candidate_states_[candidate].assigned_string = result[0U];
+    result[1U] = feed(second, true, false);
+    result[2U] = feed(second, false, true);
+    return result;
+  }
+
   static double settled_calibration_similarity_for_profile(
       PolyphonicPitchDetector& detector, std::uint8_t note,
       std::uint8_t string,
@@ -3867,6 +3912,34 @@ M3_TEST(native_detector_settled_calibration_uses_stable_harmonic_shape) {
       settled_calibration_similarity_for_profile(detector, kNote, 1U,
                                                  kObserved);
   M3_EXPECT_TRUE(true_string > distractor);
+}
+
+M3_TEST(native_detector_string_posterior_retains_alternatives_until_onset) {
+  constexpr std::uint8_t kNote = 36U;
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kFretted{
+      1.00, 0.18, 0.07, 0.03, 0.01, 0.00};
+  constexpr std::array<double, m3::kCalibrationHarmonicCount> kOpen{
+      0.66, 0.62, 0.31, 0.15, 0.06, 0.02};
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 1U;
+  config.max_fret = 24U;
+
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, 0.0, kFretted);
+  set_measured_string_profile(bank, 1U, 0U, 0.0, kOpen);
+  detector.set_calibration_bank(bank);
+
+  const auto sequence =
+      m3::PolyphonicPitchDetectorTestAccess::string_posterior_sequence(
+          detector, kNote, kFretted, kOpen);
+  M3_EXPECT_EQ(sequence[0U], 0U);
+  M3_EXPECT_EQ(sequence[1U], 0U);
+  M3_EXPECT_EQ(sequence[2U], 1U);
 }
 
 M3_TEST(native_detector_complete_calibration_does_not_force_a_fresh_note_onto_a_mismatched_open_string) {

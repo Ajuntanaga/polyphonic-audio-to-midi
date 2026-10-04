@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "m3/constants.hpp"
+#include "m3/string_fret_posterior.hpp"
 #include "m3/string_calibration.hpp"
 #include "m3/tuner_telemetry.hpp"
 #include "m3/types.hpp"
@@ -235,6 +236,8 @@ class PolyphonicPitchDetector final {
   std::array<BeatEvidenceState, kMaxCandidates> beat_evidence_states_{};
   std::array<FineFrequencyEvidenceState, kMaxCandidates>
       fine_frequency_evidence_states_{};
+  StringFretPosteriorBank string_fret_posteriors_{};
+  std::array<double, kMaxCandidates> string_fret_energy_memory_{};
   std::array<M3PoolCandidate, kMaxVoices * kMaxVoices> m3_pool_{};
   std::array<M3DpState, 1U << kMaxVoices> m3_dp_states_{};
   StringSweepCalibrator calibrator_{};

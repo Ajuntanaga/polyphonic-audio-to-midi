@@ -147,6 +147,35 @@ Two bounded feature studies were run without changing production DSP:
 These measurements are promising but below the requested greater-than-90
 percent per-lane gate. They are not yet production changes.
 
+## First bounded production classifier slice
+
+The first causal implementation uses one final string/fret posterior, not
+several competing classifiers. Its observation heads remain separate:
+
+- lower-harmonic shape anchors the fundamental and lower spectrum;
+- upper-partial shape carries string and articulation character;
+- current-versus-settled spectral distance marks attacks and decays;
+- measured cents and the existing beat/fine-frequency evidence retain their
+  stronger physical meanings.
+
+Every pitch candidate keeps a fixed-size posterior over all playable physical
+strings. Sustained observations accumulate without deleting alternatives, and
+a new onset weakens the previous state before applying new evidence. The
+existing bounded joint assignment consumes the posterior only during the
+settled calibration-reassignment window. Decisive measured cents and resolved
+physical-unison evidence take precedence.
+
+On the complete raw eight-string corpus this slice produces 1,117,563 exact
+lane frames out of 1,739,486, or 64.2467 percent. That is 2,265 additional
+exact frames and +0.1302 percentage points over the accepted 64.1165-percent
+baseline. The scored low and middle three-string physical-unison replays are
+bit-for-bit unchanged from clean HEAD. This is a measured improvement, but it
+is still far below the greater-than-90-percent target.
+
+This slice models upper-partial amplitude shape; it does not yet implement the
+offline study's explicit upper-partial frequency-detuning/inharmonicity
+descriptor or store new descriptor statistics in the calibration image.
+
 ## Production implementation order
 
 1. Add causal upper-partial detuning and attack/decay descriptors alongside

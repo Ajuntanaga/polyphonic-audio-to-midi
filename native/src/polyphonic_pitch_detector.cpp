@@ -5,6 +5,7 @@
 #include <complex>
 #include <limits>
 
+#include "m3/harmonic_evidence.hpp"
 #include "m3/pitch_math.hpp"
 
 namespace m3 {
@@ -154,6 +155,13 @@ constexpr double kM3ProvisionalStringRetentionBonus = 4.0;
 // is larger than the maximum supported 36-fret position prior, while
 // feasibility can still override it when that string is unavailable.
 constexpr double kM3ActiveStringRetentionBonus = 1024.0;
+// The posterior is deliberately smaller than the settled-lane retention and
+// fine-frequency constraints. It stabilizes ambiguous alternatives without
+// overruling direct physical evidence or making a provisional lane permanent.
+constexpr double kM3StringPosteriorCost = 0.25;
+constexpr double kM3StringPosteriorProfileWeight = 6.0;
+constexpr double kM3StringPosteriorDescriptorWeight = 1.5;
+constexpr double kM3StringPosteriorCentsScale = 4.0;
 constexpr double kM3UnisonMinimumComponent = 0.15;
 constexpr double kM3UnisonMinimumTemplateDistance = 0.0025;
 constexpr double kM3UnisonMinimumErrorImprovement = 0.010;
@@ -420,6 +428,8 @@ void PolyphonicPitchDetector::reset() noexcept {
   phase_cents_states_ = {};
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
+  string_fret_posteriors_.reset();
+  string_fret_energy_memory_ = {};
 #if defined(M3_TESTING)
   selection_work_ = {};
 #endif
@@ -484,6 +494,8 @@ void PolyphonicPitchDetector::set_calibration_bank(
     const StringCalibrationBank& bank) noexcept {
   calibrator_.set_bank(bank);
   fine_frequency_evidence_states_ = {};
+  string_fret_posteriors_.reset();
+  string_fret_energy_memory_ = {};
   calibration_tuning_offset_cents_ = 0.0;
   calibration_tuning_lane_cents_ = {};
   pending_calibration_tuning_lane_cents_ = {};
@@ -1184,6 +1196,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
        ++candidate) {
     if (selected[candidate]) {
       candidates[selected_count++] = candidate;
+    } else if (!candidate_states_[candidate].active) {
+      string_fret_posteriors_.reset(candidate);
+      string_fret_energy_memory_[candidate] = 0.0;
     }
   }
   if (selected_count == 0U) {
@@ -1291,9 +1306,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
     std::array<double, kMaxVoices> learned_similarities{};
     std::array<double, kMaxVoices> learned_cents{};
     std::array<double, kMaxVoices> learned_cents_errors{};
+    std::array<double, kMaxVoices> descriptor_log_likelihoods{};
     std::array<const StringCalibrationPoint*, kMaxVoices> learned_points{};
     std::array<bool, kMaxVoices> has_learned_profile{};
     double learned_sum = 0.0;
+    double descriptor_sum = 0.0;
     double best_learned_similarity = -1.0;
     std::size_t learned_count = 0U;
     bool all_playable_profiles_learned = true;
@@ -1341,9 +1358,69 @@ void PolyphonicPitchDetector::assign_m3_strings(
       learned_sum += learned_similarities[string];
       ++learned_count;
     }
+    std::array<double, kHarmonicEvidenceCount> fast_energy{};
+    std::array<double, kHarmonicEvidenceCount> settled_energy{};
+    double fast_energy_total = 0.0;
+    double transient_strength = 0.0;
+    const bool posterior_available =
+        all_playable_profiles_learned && learned_count > 0U;
+    if (posterior_available) {
+      double settled_energy_total = 0.0;
+      for (std::size_t harmonic = 0U; harmonic < fast_energy.size();
+           ++harmonic) {
+        fast_energy[harmonic] =
+            corrected_harmonic_energy(candidate, harmonic);
+        settled_energy[harmonic] =
+            0.25 * harmonic_energy_memory_[candidate][harmonic] +
+            0.75 * long_harmonic_energy_memory_[candidate][harmonic];
+        fast_energy_total += fast_energy[harmonic];
+        settled_energy_total += settled_energy[harmonic];
+      }
+      if (settled_energy_total <= kScoreEpsilon) {
+        settled_energy = fast_energy;
+      }
+      const HarmonicEvidence fast_descriptor =
+          make_harmonic_evidence(fast_energy);
+      const HarmonicEvidence settled_descriptor =
+          make_harmonic_evidence(settled_energy);
+      transient_strength =
+          harmonic_transient_strength(fast_descriptor, settled_descriptor);
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        if (!has_learned_profile[string]) {
+          continue;
+        }
+        std::array<double, kHarmonicEvidenceCount> learned_energy{};
+        for (std::size_t harmonic = 0U; harmonic < learned_energy.size();
+             ++harmonic) {
+          learned_energy[harmonic] = static_cast<double>(
+              learned_points[string]->harmonic_profile_q15[harmonic]);
+        }
+        const HarmonicEvidence learned_descriptor =
+            make_harmonic_evidence(learned_energy);
+        const HarmonicEvidenceComparison fast_comparison =
+            compare_harmonic_evidence(fast_descriptor, learned_descriptor);
+        const HarmonicEvidenceComparison settled_comparison =
+            compare_harmonic_evidence(settled_descriptor,
+                                      learned_descriptor);
+        // During a changing attack/decay envelope, retain part of the settled
+        // observation instead of letting one upper-partial frame erase every
+        // alternative. Once the envelope settles, the current lower/upper
+        // evidence carries the full emission weight.
+        descriptor_log_likelihoods[string] =
+            (1.0 - transient_strength) *
+                fast_comparison.combined_log_likelihood() +
+            transient_strength *
+                settled_comparison.combined_log_likelihood();
+        descriptor_sum += descriptor_log_likelihoods[string];
+      }
+    }
     const double learned_center =
         learned_count > 0U
             ? learned_sum / static_cast<double>(learned_count)
+            : 0.0;
+    const double descriptor_center =
+        learned_count > 0U
+            ? descriptor_sum / static_cast<double>(learned_count)
             : 0.0;
     if (calibrated_reassignment_ready && all_playable_profiles_learned) {
       candidate_states_[candidate].calibrated_lane_committed = true;
@@ -1355,6 +1432,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
             : phase.cents;
     double best_learned_cents_error =
         std::numeric_limits<double>::infinity();
+    double second_learned_cents_error =
+        std::numeric_limits<double>::infinity();
     std::size_t best_learned_cents_string = kMaxVoices;
     if (all_playable_profiles_learned && phase.valid) {
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
@@ -1364,11 +1443,20 @@ void PolyphonicPitchDetector::assign_m3_strings(
         learned_cents_errors[string] =
             std::abs(assignment_cents - learned_cents[string]);
         if (learned_cents_errors[string] < best_learned_cents_error) {
+          second_learned_cents_error = best_learned_cents_error;
           best_learned_cents_error = learned_cents_errors[string];
           best_learned_cents_string = string;
+        } else if (learned_cents_errors[string] <
+                   second_learned_cents_error) {
+          second_learned_cents_error = learned_cents_errors[string];
         }
       }
     }
+    const bool calibrated_cents_are_decisive =
+        calibrated_reassignment_ready &&
+        std::isfinite(second_learned_cents_error) &&
+        second_learned_cents_error - best_learned_cents_error >=
+            kM3CalibratedCentsMinimumAdvantage;
     bool distinctive_cents_override = false;
     const std::size_t retained_string =
         candidate_states_[candidate].assigned_string;
@@ -1394,6 +1482,44 @@ void PolyphonicPitchDetector::assign_m3_strings(
       distinctive_cents_override =
           profile_distance >= kM3DistinctiveCalibrationProfileDistance;
     }
+    if (posterior_available) {
+      StringFretLikelihoodFrame posterior_frame;
+      posterior_frame.playable_mask = playable;
+      const double previous_energy = string_fret_energy_memory_[candidate];
+      const double energy_rise =
+          previous_energy > kScoreEpsilon
+              ? std::clamp((fast_energy_total - previous_energy) /
+                               previous_energy,
+                           0.0, 1.0)
+              : 1.0;
+      posterior_frame.onset_strength =
+          candidate_states_[candidate].active
+              ? energy_rise * (0.5 + 0.5 * transient_strength)
+              : 1.0;
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+        if ((playable & bit) == 0U || !has_learned_profile[string]) {
+          continue;
+        }
+        posterior_frame.log_likelihood[string] =
+            kM3StringPosteriorProfileWeight *
+                (learned_similarities[string] - learned_center) +
+            kM3StringPosteriorDescriptorWeight *
+                (descriptor_log_likelihoods[string] - descriptor_center);
+        if (phase.valid) {
+          const double normalized_error =
+              learned_cents_errors[string] / kM3StringPosteriorCentsScale;
+          posterior_frame.log_likelihood[string] -=
+              0.5 * std::min(32.0, normalized_error * normalized_error);
+        }
+      }
+      static_cast<void>(
+          string_fret_posteriors_.update(candidate, posterior_frame));
+      string_fret_energy_memory_[candidate] = fast_energy_total;
+    } else {
+      string_fret_posteriors_.reset(candidate);
+      string_fret_energy_memory_[candidate] = 0.0;
+    }
     for (std::size_t used = 0U; used < current.size(); ++used) {
       if (!current[used].valid) {
         continue;
@@ -1405,6 +1531,15 @@ void PolyphonicPitchDetector::assign_m3_strings(
         if ((available & bit) == 0U) {
           continue;
         }
+        const FineFrequencyEvidenceState& fine =
+            fine_frequency_evidence_states_[candidate];
+        const bool fine_has_multiple_members =
+            fine.member_mask != 0U &&
+            (fine.member_mask &
+             static_cast<std::uint8_t>(fine.member_mask - 1U)) != 0U;
+        const bool physical_unison_resolved =
+            fine.valid && fine.multi_source_observed &&
+            fine_has_multiple_members;
         const std::size_t mask = used | bit;
         Assignment proposal = current[used];
         proposal.valid = true;
@@ -1433,6 +1568,16 @@ void PolyphonicPitchDetector::assign_m3_strings(
         proposal.cost += fret_position_prior +
                          fret_shape_penalty * stiffness_prior *
                              fret_position * fret_position;
+        const bool posterior_assignment_ready =
+            calibrated_reassignment_ready &&
+            !beat_evidence_states_[candidate].valid;
+        if (posterior_available && posterior_assignment_ready &&
+            !calibrated_cents_are_decisive && !physical_unison_resolved) {
+          proposal.cost +=
+              kM3StringPosteriorCost *
+              string_fret_posteriors_.negative_log_probability(candidate,
+                                                                string);
+        }
         if (has_learned_profile[string] &&
             (all_playable_profiles_learned ||
              calibrated_reassignment_ready)) {
@@ -1482,12 +1627,6 @@ void PolyphonicPitchDetector::assign_m3_strings(
                 std::abs(assignment_cents - learned_cents[string]);
           }
         }
-        const FineFrequencyEvidenceState& fine =
-            fine_frequency_evidence_states_[candidate];
-        const bool fine_has_multiple_members =
-            fine.member_mask != 0U &&
-            (fine.member_mask &
-             static_cast<std::uint8_t>(fine.member_mask - 1U)) != 0U;
         if (fine.valid && fine.multi_source_observed &&
             fine_has_multiple_members &&
             (fine.member_mask & bit) != 0U) {
