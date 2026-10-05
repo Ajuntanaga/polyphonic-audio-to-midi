@@ -93,7 +93,9 @@ void usage(const char* program) {
   std::fprintf(
       stderr,
       "usage: %s --wav FILE [--labels FILE] [--calibration FILE] "
-      "[--a4 HZ] [--block FRAMES] [--label-details] "
+      "[--a4 HZ] [--block FRAMES] [--input-trim DB] "
+      "[--sensitivity 0..100] [--response 0..100] "
+      "[--max-polyphony 1..8] [--max-fret 0..36] [--label-details] "
       "[--derive-calibration-string INDEX --calibration-output FILE "
       "[--exclude-calibration-pass PASS]]\n",
       program);
@@ -110,6 +112,11 @@ int main(int argc, char** argv) {
   std::uint8_t excluded_calibration_pass = 0U;
   std::size_t block_size = 512U;
   double a4_hz = 440.0;
+  double input_trim_db = -11.6;
+  int sensitivity = 70;
+  int response = 81;
+  int max_polyphony = 8;
+  int max_fret = 24;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
     const bool has_value = index + 1 < argc;
@@ -165,6 +172,56 @@ int main(int argc, char** argv) {
         return 2;
       }
       block_size = static_cast<std::size_t>(parsed);
+    } else if (std::strcmp(argv[index], "--input-trim") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < -24.0 || parsed > 24.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      input_trim_db = parsed;
+    } else if (std::strcmp(argv[index], "--sensitivity") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L ||
+          parsed > 100L) {
+        usage(argv[0]);
+        return 2;
+      }
+      sensitivity = static_cast<int>(parsed);
+    } else if (std::strcmp(argv[index], "--response") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L ||
+          parsed > 100L) {
+        usage(argv[0]);
+        return 2;
+      }
+      response = static_cast<int>(parsed);
+    } else if (std::strcmp(argv[index], "--max-polyphony") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 1L ||
+          parsed > static_cast<long>(m3::kMaxVoices)) {
+        usage(argv[0]);
+        return 2;
+      }
+      max_polyphony = static_cast<int>(parsed);
+    } else if (std::strcmp(argv[index], "--max-fret") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L ||
+          parsed > 36L) {
+        usage(argv[0]);
+        return 2;
+      }
+      max_fret = static_cast<int>(parsed);
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
     } else if (std::strcmp(argv[index], "--help") == 0) {
@@ -215,11 +272,11 @@ int main(int argc, char** argv) {
   config.profile_mode = m3::ProfileMode::m3;
   config.midi_routing = m3::MidiRouting::per_voice;
   config.a4_hz = a4_hz;
-  config.input_trim_db = -11.6;
-  config.sensitivity = 70U;
-  config.response = 81U;
-  config.max_polyphony = 8U;
-  config.max_fret = 24U;
+  config.input_trim_db = input_trim_db;
+  config.sensitivity = static_cast<std::uint8_t>(sensitivity);
+  config.response = static_cast<std::uint8_t>(response);
+  config.max_polyphony = static_cast<std::uint8_t>(max_polyphony);
+  config.max_fret = static_cast<std::uint8_t>(max_fret);
   if (calibration_path != nullptr) {
     std::vector<std::uint8_t> calibration_bytes;
     bool decoded = read_file(calibration_path, calibration_bytes);
@@ -251,6 +308,14 @@ int main(int argc, char** argv) {
     }
     calibration_pointer = &calibration;
   }
+  // Command-line controls are intentional replay overrides. Apply them after
+  // a combined state+calibration image has restored its saved configuration.
+  config.a4_hz = a4_hz;
+  config.input_trim_db = input_trim_db;
+  config.sensitivity = static_cast<std::uint8_t>(sensitivity);
+  config.response = static_cast<std::uint8_t>(response);
+  config.max_polyphony = static_cast<std::uint8_t>(max_polyphony);
+  config.max_fret = static_cast<std::uint8_t>(max_fret);
   if (calibration_string >= 0) {
     if (calibration_output_path == nullptr || labels.empty()) {
       usage(argv[0]);

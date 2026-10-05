@@ -65,6 +65,9 @@ struct TunerSnapshot final {
   TunerFrameState state{TunerFrameState::unavailable};
   std::uint8_t voice_count{};
   std::uint8_t max_polyphony{1U};
+  // Peak level of the exact mono signal sent to the detector after input
+  // trim. Q15 maps full scale to 32767 and keeps the UI transport bounded.
+  std::uint16_t input_peak_q15{};
   std::array<TunerVoice, kMaxVoices> voices{};
 };
 
@@ -81,6 +84,7 @@ class TunerTelemetry final {
   TunerTelemetry& operator=(const TunerTelemetry&) = delete;
 
   void publish(const TunerSnapshot& snapshot) noexcept;
+  void publish_input_peak(double linear_peak) noexcept;
   void clear(TunerFrameState state = TunerFrameState::unavailable) noexcept;
  [[nodiscard]] bool read_latest(TunerSnapshot& snapshot) const noexcept;
 
@@ -90,6 +94,7 @@ class TunerTelemetry final {
   std::atomic<std::uint32_t> sequence_{};
   std::atomic<std::uint32_t> generation_{};
   std::atomic<std::uint32_t> header_{};
+  std::atomic<std::uint32_t> input_peak_q15_{};
   std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_a_{};
   std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_b_{};
   std::array<std::atomic<std::uint32_t>, kMaxVoices> voice_words_c_{};

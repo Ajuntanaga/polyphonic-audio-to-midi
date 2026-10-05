@@ -1,6 +1,7 @@
 #include "m3/tuner_telemetry.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace m3 {
 namespace {
@@ -20,6 +21,7 @@ constexpr std::uint32_t kBeatHzShift = 16U;
 constexpr std::int16_t kMinimumCentsQ8 = -50 * 256;
 constexpr std::int16_t kMaximumCentsQ8 = 50 * 256;
 constexpr std::uint16_t kMaximumConfidenceQ15 = 32767U;
+constexpr std::uint16_t kMaximumInputPeakQ15 = 32767U;
 
 static_assert(std::atomic<std::uint32_t>::is_always_lock_free,
               "M3 tuner telemetry requires lock-free 32-bit atomics");
@@ -122,6 +124,9 @@ void TunerTelemetry::publish(const TunerSnapshot& snapshot) noexcept {
       std::min<std::size_t>(snapshot.voice_count, kMaxVoices));
   header_.store(pack_header(snapshot.state, count, snapshot.max_polyphony),
                 std::memory_order_seq_cst);
+  // Input level is published independently once per audio block. Detector
+  // snapshots may arrive several times within that block and carry the
+  // default zero value, so they must not erase the most recent measured peak.
   for (std::size_t index = 0U; index < kMaxVoices; ++index) {
     const TunerVoice voice = index < count ? snapshot.voices[index] : TunerVoice{};
     voice_words_a_[index].store(pack_voice_a(voice), std::memory_order_seq_cst);
@@ -135,10 +140,29 @@ void TunerTelemetry::publish(const TunerSnapshot& snapshot) noexcept {
   sequence_.store(writing + 1U, std::memory_order_seq_cst);
 }
 
+void TunerTelemetry::publish_input_peak(double linear_peak) noexcept {
+  const double bounded = std::isfinite(linear_peak)
+                             ? std::clamp(linear_peak, 0.0, 1.0)
+                             : 0.0;
+  const auto encoded = static_cast<std::uint32_t>(
+      std::lround(bounded * static_cast<double>(kMaximumInputPeakQ15)));
+  if (input_peak_q15_.load(std::memory_order_seq_cst) == encoded) {
+    return;
+  }
+
+  const std::uint32_t before = sequence_.load(std::memory_order_seq_cst);
+  const std::uint32_t writing = before | 1U;
+  sequence_.store(writing, std::memory_order_seq_cst);
+  input_peak_q15_.store(encoded, std::memory_order_seq_cst);
+  static_cast<void>(generation_.fetch_add(1U, std::memory_order_seq_cst));
+  sequence_.store(writing + 1U, std::memory_order_seq_cst);
+}
+
 void TunerTelemetry::clear(TunerFrameState state) noexcept {
   TunerSnapshot snapshot;
   snapshot.state = state;
   publish(snapshot);
+  publish_input_peak(0.0);
 }
 
 bool TunerTelemetry::read_latest(TunerSnapshot& snapshot) const noexcept {
@@ -156,6 +180,10 @@ bool TunerTelemetry::read_latest(TunerSnapshot& snapshot) const noexcept {
     candidate.state = unpack_frame_state(header);
     candidate.voice_count = count;
     candidate.max_polyphony = unpack_max_polyphony(header);
+    candidate.input_peak_q15 = static_cast<std::uint16_t>(
+        std::min<std::uint32_t>(
+            input_peak_q15_.load(std::memory_order_seq_cst),
+            kMaximumInputPeakQ15));
     for (std::size_t index = 0U; index < count; ++index) {
       candidate.voices[index] = unpack_voice(
           voice_words_a_[index].load(std::memory_order_seq_cst),

@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "fake_vst3_host.hpp"
+#include "m3/parameter_contract.hpp"
 #include "../plugin/dry_path.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
@@ -177,6 +178,43 @@ M3_TEST(vst3_host_layout_auto_input_is_unity_for_mono_dual_mono_and_one_side) {
   M3_EXPECT_NEAR(mono_analysis.detector_left_gain, 1.0, 0.0);
   M3_EXPECT_NEAR(mono_analysis.detector_right_gain, 0.0, 0.0);
   M3_EXPECT_NEAR(mono_analysis.selected_peak, 1.0, 0.0);
+}
+
+M3_TEST(vst3_input_meter_reports_the_same_post_trim_peak_as_the_detector) {
+  ActiveInstance instance;
+  M3_EXPECT_TRUE(open_active(instance, Steinberg::Vst::kSample32));
+  if (instance.processor == nullptr) {
+    close_active(instance);
+    return;
+  }
+
+  m3::test::FakeVst3ProcessBlock<float> block;
+  block.configure(64U, false);
+  for (std::uint32_t frame = 0U; frame < 64U; ++frame) {
+    block.input_left()[frame] = 0.5F;
+    block.input_right()[frame] = 0.0F;
+  }
+  m3::test::FakeVst3ParameterChanges trim_change;
+  constexpr m3::ParameterId kInputTrimId = 0x4D330004U;
+  const m3::ParameterSpec* trim = m3::find_parameter(kInputTrimId);
+  M3_EXPECT_TRUE(trim != nullptr);
+  if (trim == nullptr) {
+    close_active(instance);
+    return;
+  }
+  M3_EXPECT_TRUE(trim_change.append_input(
+      kInputTrimId, 0,
+      m3::plain_to_normalized(*trim, -6.0)));
+  block.data().inputParameterChanges = &trim_change;
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+
+  m3::TunerSnapshot snapshot;
+  M3_EXPECT_TRUE(
+      m3::vst3::read_tuner_snapshot_for_test(instance.processor, snapshot));
+  const double expected_peak = 0.5 * std::pow(10.0, -6.0 / 20.0);
+  M3_EXPECT_NEAR(static_cast<double>(snapshot.input_peak_q15) / 32767.0,
+                 expected_peak, 1.0 / 32767.0);
+  close_active(instance);
 }
 
 M3_TEST(vst3_negotiated_mono_processes_and_passes_dry_audio_at_unity) {

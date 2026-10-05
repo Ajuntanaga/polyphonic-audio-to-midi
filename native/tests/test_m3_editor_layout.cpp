@@ -225,6 +225,14 @@ M3_TEST(editor_chrome_matches_the_e8_dimensional_type_and_button_system) {
   M3_EXPECT_TRUE(panic.bounds.bottom - panic.bounds.top <= 72.0);
 }
 
+M3_TEST(editor_input_meter_uses_a_post_trim_dB_scale) {
+  constexpr std::uint16_t kQuarterScaleQ15 = 8192U;
+  M3_EXPECT_EQ(m3::vst3::editor_input_meter_lit_bars(0U), 0U);
+  M3_EXPECT_EQ(m3::vst3::editor_input_meter_lit_bars(kQuarterScaleQ15), 28U);
+  M3_EXPECT_EQ(m3::vst3::editor_input_meter_lit_bars(32767U),
+               m3::vst3::editor_input_meter_bar_count());
+}
+
 M3_TEST(editor_layout_settings_page_exposes_every_parameter_without_overlap) {
   m3::PersistentConfig config;
   config.velocity_mode = m3::VelocityMode::fixed;

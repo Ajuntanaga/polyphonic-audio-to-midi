@@ -2312,18 +2312,11 @@ class M3RootSurface final : public VSTGUI::CViewContainer {
         VSTGUI::CRect(area.left + 18.0, area.top + 13.0,
                       area.right - 4.0, area.top + 33.0),
         12.0, kCaption, VSTGUI::kLeftText, VSTGUI::kBoldFace, 1.0);
-    std::uint16_t confidence = 0U;
-    if (has_tuner_snapshot_ &&
-        tuner_snapshot_.state == TunerFrameState::tracking) {
-      for (std::size_t index = 0U; index < tuner_snapshot_.voice_count;
-           ++index) {
-        confidence = std::max(confidence,
-                              tuner_snapshot_.voices[index].confidence_q15);
-      }
-    }
     constexpr std::size_t kBars = editor_input_meter_bar_count();
-    const std::size_t lit = static_cast<std::size_t>(std::lround(
-        static_cast<double>(confidence) * kBars / 32767.0));
+    const std::size_t lit = has_tuner_snapshot_
+                                ? editor_input_meter_lit_bars(
+                                      tuner_snapshot_.input_peak_q15)
+                                : 0U;
     const double left = area.left + 18.0;
     const double width = (area.getWidth() - 38.0) / kBars;
     for (std::size_t index = 0U; index < kBars; ++index) {

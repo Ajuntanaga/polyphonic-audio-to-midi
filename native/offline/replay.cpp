@@ -995,13 +995,17 @@ bool run_detector_replay(const WaveData& wave,
     std::uint32_t current_correct_run_frames{};
   };
   std::vector<LabelTrackingState> label_tracking(labels.size());
+  const double input_gain = std::pow(10.0, config.input_trim_db / 20.0);
+  if (!std::isfinite(input_gain)) {
+    return false;
+  }
   for (std::size_t block_start = 0U; block_start < wave.mono_samples.size();
        block_start += input_partition) {
     const std::size_t block_end = std::min(
         wave.mono_samples.size(), block_start + input_partition);
     for (std::size_t sample_index = block_start; sample_index < block_end;
          ++sample_index) {
-      const double sample = wave.mono_samples[sample_index];
+      const double sample = wave.mono_samples[sample_index] * input_gain;
       if (!std::isfinite(sample)) {
         error = ReplayError::nonfinite_audio;
         return false;

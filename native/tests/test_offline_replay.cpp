@@ -320,6 +320,59 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
   }
 }
 
+M3_TEST(offline_replay_applies_the_same_input_trim_as_the_live_processor) {
+  constexpr std::uint32_t kSampleRate = 48000U;
+  constexpr std::uint8_t kNote = 40U;
+  const double frequency = m3::midi_to_frequency(kNote, 440.0);
+  m3::offline::WaveData original;
+  original.sample_rate = kSampleRate;
+  original.source_channels = 1U;
+  original.mono_samples.resize(kSampleRate);
+  for (std::uint32_t index = 0U; index < kSampleRate; ++index) {
+    original.mono_samples[index] =
+        0.02 * std::sin(6.28318530717958647692 * frequency *
+                        static_cast<double>(index) /
+                        static_cast<double>(kSampleRate));
+  }
+  constexpr double kGain = 0.5;
+  m3::offline::WaveData scaled = original;
+  for (double& sample : scaled.mono_samples) {
+    sample *= kGain;
+  }
+  const std::string label_text =
+      "start_sample\tend_sample\tmidi_note\tstring_mask\n"
+      "0\t48000\t40\t0\n";
+  std::vector<m3::offline::ReplayLabel> labels;
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::parse_replay_labels(
+      label_text.data(), label_text.size(), original.mono_samples.size(),
+      labels, error));
+
+  m3::PersistentConfig trimmed_config;
+  trimmed_config.profile_mode = m3::ProfileMode::general;
+  trimmed_config.lowest_note = 39U;
+  trimmed_config.highest_note = 41U;
+  trimmed_config.max_polyphony = 1U;
+  trimmed_config.sensitivity = 70U;
+  trimmed_config.response = 81U;
+  trimmed_config.input_trim_db = 20.0 * std::log10(kGain);
+  m3::PersistentConfig unity_config = trimmed_config;
+  unity_config.input_trim_db = 0.0;
+
+  m3::offline::ReplayResult trimmed;
+  m3::offline::ReplayResult pre_scaled;
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      original, labels, trimmed_config, nullptr, 512U, trimmed, error));
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      scaled, labels, unity_config, nullptr, 512U, pre_scaled, error));
+  M3_EXPECT_EQ(trimmed.fingerprint, pre_scaled.fingerprint);
+  M3_EXPECT_EQ(trimmed.matched_label_frames,
+               pre_scaled.matched_label_frames);
+  M3_EXPECT_EQ(trimmed.transition_count, pre_scaled.transition_count);
+  M3_EXPECT_EQ(trimmed.false_positive_voices,
+               pre_scaled.false_positive_voices);
+}
+
 M3_TEST(offline_labeled_calibration_learns_each_discrete_fret_and_intonation) {
   constexpr std::uint32_t kSampleRate = 48000U;
   constexpr std::uint32_t kSamplesPerNote = 12000U;

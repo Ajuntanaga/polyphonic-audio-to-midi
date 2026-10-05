@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -74,6 +76,26 @@ inline constexpr const char* editor_instrument_font_family() noexcept {
 
 inline constexpr std::size_t editor_input_meter_bar_count() noexcept {
   return 34U;
+}
+
+inline std::size_t editor_input_meter_lit_bars(
+    std::uint16_t input_peak_q15) noexcept {
+  if (input_peak_q15 == 0U) {
+    return 0U;
+  }
+  constexpr double kMeterFloorDb = -60.0;
+  const double linear = std::clamp(
+      static_cast<double>(input_peak_q15) / 32767.0, 0.0, 1.0);
+  const double db = 20.0 * std::log10(linear);
+  if (!std::isfinite(db) || db < kMeterFloorDb) {
+    return 0U;
+  }
+  const double position = std::clamp((db - kMeterFloorDb) / -kMeterFloorDb,
+                                     0.0, 1.0);
+  return std::min<std::size_t>(
+      editor_input_meter_bar_count(),
+      static_cast<std::size_t>(
+          std::ceil(position * editor_input_meter_bar_count())));
 }
 
 EditorControlLayout editor_control_layout(std::size_t index,

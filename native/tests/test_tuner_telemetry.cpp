@@ -16,6 +16,7 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   expected.state = m3::TunerFrameState::tracking;
   expected.voice_count = 2U;
   expected.max_polyphony = 2U;
+  telemetry.publish_input_peak(0.5);
   expected.voices[0] = m3::TunerVoice{
       40U, static_cast<std::int16_t>(-7 * 256), 28000U, 12U,
       m3::TunerVoiceState::tracking, true, 2U};
@@ -26,10 +27,11 @@ M3_TEST(tuner_telemetry_transports_a_coherent_bounded_voice_snapshot) {
   telemetry.publish(expected);
 
   M3_EXPECT_TRUE(telemetry.read_latest(observed));
-  M3_EXPECT_EQ(observed.generation, 1U);
+  M3_EXPECT_EQ(observed.generation, 2U);
   M3_EXPECT_EQ(observed.state, m3::TunerFrameState::tracking);
   M3_EXPECT_EQ(observed.voice_count, 2U);
   M3_EXPECT_EQ(observed.max_polyphony, 2U);
+  M3_EXPECT_EQ(observed.input_peak_q15, 16384U);
   M3_EXPECT_EQ(observed.voices[0].midi_note, 40U);
   M3_EXPECT_EQ(observed.voices[0].cents_q8, -7 * 256);
   M3_EXPECT_EQ(observed.voices[0].confidence_q15, 28000U);
@@ -66,10 +68,16 @@ M3_TEST(tuner_telemetry_clears_and_sanitizes_display_only_values) {
   M3_EXPECT_EQ(observed.voices[0].cents_q8, 50 * 256);
   M3_EXPECT_EQ(observed.voices[0].confidence_q15, 32767U);
 
+  telemetry.publish_input_peak(0.75);
+  telemetry.publish(expected);
+  M3_EXPECT_TRUE(telemetry.read_latest(observed));
+  M3_EXPECT_EQ(observed.input_peak_q15, 24575U);
+
   telemetry.clear(m3::TunerFrameState::no_signal);
   M3_EXPECT_TRUE(telemetry.read_latest(observed));
   M3_EXPECT_EQ(observed.state, m3::TunerFrameState::no_signal);
   M3_EXPECT_EQ(observed.voice_count, 0U);
+  M3_EXPECT_EQ(observed.input_peak_q15, 0U);
   M3_EXPECT_TRUE(observed.generation > published_generation);
 }
 

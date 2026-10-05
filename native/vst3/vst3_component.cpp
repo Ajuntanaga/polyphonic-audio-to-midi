@@ -1062,6 +1062,9 @@ Steinberg::tresult M3Component::process_samples(
   const std::uint32_t frames = static_cast<std::uint32_t>(data.numSamples);
   const DryPathResult input_analysis = analyze_detector_input(
       input_channels, channel_count, frames, input.silenceFlags);
+  const double input_gain =
+      std::pow(10.0, active_config_.input_trim_db / 20.0);
+  const bool valid_input_gain = std::isfinite(input_gain);
   if (input_analysis.nonfinite_input) {
     raise_status(Status::invalid_input_or_state);
     release_channel_pending_ = true;
@@ -1070,15 +1073,14 @@ Steinberg::tresult M3Component::process_samples(
     update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
   const bool detector_allowed =
-      !input_analysis.nonfinite_input && !structural_boundary_pending_ &&
+      !input_analysis.nonfinite_input && valid_input_gain &&
+      !structural_boundary_pending_ &&
       !generated_notes_.release_pending() &&
       !generated_notes_.output_blocked() && !generated_notes_.panic_hold();
   if (detector_allowed) {
     advance_decision_phase(static_cast<std::uint32_t>(data.numSamples));
   }
   if (detector_allowed) {
-    const double input_gain =
-        std::pow(10.0, active_config_.input_trim_db / 20.0);
     for (std::uint32_t frame = 0; frame < frames; ++frame) {
       const bool left_silent =
           (input.silenceFlags & Steinberg::uint64{1}) != 0U;
@@ -1115,6 +1117,10 @@ Steinberg::tresult M3Component::process_samples(
     tuner_telemetry_.clear(TunerFrameState::unavailable);
     update_tuner(TunerEstimate{true, false, kTunerNoSignalNote, 0.0});
   }
+  tuner_telemetry_.publish_input_peak(
+      !input_analysis.nonfinite_input && valid_input_gain
+          ? input_analysis.selected_peak * input_gain
+          : 0.0);
   const DryPathResult result = process_dry_path(
       input_channels, channel_count, output_channels, channel_count, frames,
       audio_requested_config_.dry_passthrough, input.silenceFlags);
