@@ -586,6 +586,18 @@ std::uint8_t PolyphonicPitchDetector::fine_frequency_fit_member_mask(
              ? fine_frequency_evidence_states_[candidate].fit_member_mask
              : 0U;
 }
+
+double PolyphonicPitchDetector::fine_frequency_residual_improvement(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0.0;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate]
+                   .residual_improvement
+             : 0.0;
+}
 #endif
 
 void PolyphonicPitchDetector::set_calibration_bank(
@@ -2130,15 +2142,21 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     std::array<Complex, kMaxVoices> correlations{};
     std::array<Complex, kMaxVoices> basis{};
     double signal_energy = 0.0;
+    // A coherent phasor model is valid only over the causal evidence window.
+    // Keeping older attacks in the normal equations makes natural pitch
+    // decay cancel a still-present source. Retain the larger ring for gap
+    // continuity, but fit exactly the most recent admitted window.
+    const std::size_t fit_count = minimum_samples;
     const std::size_t oldest =
-        state.count < kFineFrequencyHistoryCapacity ? 0U : state.write_index;
+        (state.write_index + kFineFrequencyHistoryCapacity - fit_count) %
+        kFineFrequencyHistoryCapacity;
     const std::uint32_t oldest_tick = state.decision_ticks[oldest];
     const std::size_t second_index =
         (oldest + 1U) % kFineFrequencyHistoryCapacity;
     const std::uint32_t uniform_tick_step =
         state.decision_ticks[second_index] - oldest_tick;
     bool uniformly_sampled = uniform_tick_step != 0U;
-    for (std::size_t sample = 2U; sample < state.count && uniformly_sampled;
+    for (std::size_t sample = 2U; sample < fit_count && uniformly_sampled;
          ++sample) {
       const std::size_t previous =
           (oldest + sample - 1U) % kFineFrequencyHistoryCapacity;
@@ -2158,7 +2176,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
                      static_cast<double>(uniform_tick_step) *
                      seconds_per_decision);
       }
-      for (std::size_t sample = 0U; sample < state.count; ++sample) {
+      for (std::size_t sample = 0U; sample < fit_count; ++sample) {
         const std::size_t index =
             (oldest + sample) % kFineFrequencyHistoryCapacity;
         const Complex observation{state.real[index], state.imaginary[index]};
@@ -2174,7 +2192,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       // depends only on the calibrated frequency differences, sample count,
       // and fixed observation stride, so evaluating it directly avoids the
       // former history-length-times-components-squared callback spike.
-      const double count_as_double = static_cast<double>(state.count);
+      const double count_as_double = static_cast<double>(fit_count);
       const double step_seconds =
           static_cast<double>(uniform_tick_step) * seconds_per_decision;
       for (std::size_t row = 0U; row < component_count; ++row) {
@@ -2197,7 +2215,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       // Selector gaps retain their real decision ticks and use the exact
       // irregular normal matrix. This bounded fallback preserves the existing
       // causal fit without penalizing the steady-state callback path.
-      for (std::size_t sample = 0U; sample < state.count; ++sample) {
+      for (std::size_t sample = 0U; sample < fit_count; ++sample) {
         const std::size_t index =
             (oldest + sample) % kFineFrequencyHistoryCapacity;
         const Complex observation{state.real[index], state.imaginary[index]};
@@ -2220,7 +2238,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
         }
       }
     }
-    const double inverse_count = 1.0 / static_cast<double>(state.count);
+    const double inverse_count = 1.0 / static_cast<double>(fit_count);
     signal_energy *= inverse_count;
     for (std::size_t row = 0U; row < component_count; ++row) {
       for (std::size_t column = 0U; column < component_count; ++column) {
@@ -2230,13 +2248,13 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     double frequency_mean = 0.0;
     double frequency_square_sum = 0.0;
     std::size_t frequency_samples = 0U;
-    const std::size_t phase_start = state.count / 5U;
+    const std::size_t phase_start = fit_count / 5U;
     const std::size_t phase_candidates =
-        state.count > phase_start + 1U ? state.count - phase_start - 1U : 0U;
+        fit_count > phase_start + 1U ? fit_count - phase_start - 1U : 0U;
     const std::size_t phase_stride = std::max<std::size_t>(
         1U, (phase_candidates + kFineFrequencyMaximumPhaseSamples - 1U) /
                 kFineFrequencyMaximumPhaseSamples);
-    for (std::size_t sample = phase_start + 1U; sample < state.count;
+    for (std::size_t sample = phase_start + 1U; sample < fit_count;
          sample += phase_stride) {
       const std::size_t previous_index =
           (oldest + sample - 1U) % kFineFrequencyHistoryCapacity;
@@ -2450,6 +2468,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     state.fit_member_mask = members;
+    state.residual_improvement = 0.0;
     state.disposition = member_count > 1U
                             ? FineFrequencyDisposition::multi_source_candidate
                             : FineFrequencyDisposition::amplitude_single;
@@ -2520,6 +2539,10 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       const double improvement =
           (best_single_error - fitted_error) /
           std::max(best_single_error, kScoreEpsilon);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      state.residual_improvement =
+          std::isfinite(improvement) ? improvement : 0.0;
+#endif
       if (!std::isfinite(improvement) ||
           improvement < kFineFrequencyMinimumResidualImprovement) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)

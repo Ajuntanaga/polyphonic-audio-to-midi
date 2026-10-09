@@ -80,6 +80,10 @@ struct ReplayLabelResult final {
   // multi-source-candidate; kept numeric here to avoid coupling the public
   // replay result header to the detector implementation header.
   std::array<std::uint32_t, 5U> fine_frequency_disposition_frames{};
+  // Five-percentage-point bins from <=0% through >=100%, split by whether
+  // the pre-residual fit has the label's exact physical-string mask.
+  std::array<std::uint32_t, 21U> exact_fit_residual_improvement_frames{};
+  std::array<std::uint32_t, 21U> other_fit_residual_improvement_frames{};
 #endif
 };
 

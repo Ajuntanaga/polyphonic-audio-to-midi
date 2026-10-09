@@ -1194,6 +1194,16 @@ bool run_detector_replay(const WaveData& wave,
           ++label_result
                 .fine_frequency_fit_member_mask_frames[fit_member_mask];
         }
+        const double residual_improvement = std::clamp(
+            detector.fine_frequency_residual_improvement(label.midi_note),
+            0.0, 1.0);
+        const std::size_t residual_bin = static_cast<std::size_t>(
+            std::min(20.0, std::floor(residual_improvement * 20.0)));
+        auto& residual_bins =
+            fit_member_mask == label.string_mask
+                ? label_result.exact_fit_residual_improvement_frames
+                : label_result.other_fit_residual_improvement_frames;
+        ++residual_bins[residual_bin];
 #endif
         const bool matched = snapshot_matches_label(snapshot, label);
         result.matched_label_frames += matched ? 1U : 0U;

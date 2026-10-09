@@ -79,6 +79,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t fine_frequency_fit_member_mask(
       std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] double fine_frequency_residual_improvement(
+      std::uint8_t midi_note) const noexcept;
 #endif
 
 #if defined(M3_TESTING)
@@ -169,6 +171,7 @@ class PolyphonicPitchDetector final {
     std::uint8_t pending_member_mask{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t fit_member_mask{};
+    double residual_improvement{};
 #endif
     bool multi_source_observed{};
     bool valid{};

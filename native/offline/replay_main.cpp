@@ -432,6 +432,8 @@ int main(int argc, char** argv) {
         "fine_frequency_member_masks\t"
         "fine_frequency_pending_member_masks\t"
         "fine_frequency_fit_member_masks\t"
+        "fine_exact_fit_residual_bins\t"
+        "fine_other_fit_residual_bins\t"
         "fine_unresolved\tfine_amplitude_single\t"
         "fine_source_rejected\tfine_residual_rejected\t"
         "fine_multi_candidate");
@@ -547,6 +549,20 @@ int main(int argc, char** argv) {
         std::printf("%s%zu:%u", first_fit_mask ? "" : ",", mask, frames);
         first_fit_mask = false;
       }
+      const auto print_bins = [](const auto& bins) {
+        bool first = true;
+        for (std::size_t bin = 0U; bin < bins.size(); ++bin) {
+          if (bins[bin] == 0U) {
+            continue;
+          }
+          std::printf("%s%zu:%u", first ? "" : ",", bin, bins[bin]);
+          first = false;
+        }
+      };
+      std::printf("\t");
+      print_bins(detail.exact_fit_residual_improvement_frames);
+      std::printf("\t");
+      print_bins(detail.other_fit_residual_improvement_frames);
       for (const std::uint32_t frames :
            detail.fine_frequency_disposition_frames) {
         std::printf("\t%u", frames);

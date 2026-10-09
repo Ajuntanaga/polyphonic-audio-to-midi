@@ -373,6 +373,16 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .fine_frequency_fit_member_mask_frames,
               baseline.label_results[label]
                   .fine_frequency_fit_member_mask_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .exact_fit_residual_improvement_frames,
+              baseline.label_results[label]
+                  .exact_fit_residual_improvement_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .other_fit_residual_improvement_frames,
+              baseline.label_results[label]
+                  .other_fit_residual_improvement_frames);
 #endif
         }
       }
