@@ -246,6 +246,15 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           result.label_results[0].first_correct_string_sample < kToneSamples);
       M3_EXPECT_TRUE(result.label_results[0].longest_correct_run_frames > 0U);
       M3_EXPECT_EQ(result.label_results[0].string_flip_count, 0U);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      std::uint32_t disposition_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0].selection_disposition_frames) {
+        disposition_frames += frames;
+      }
+      M3_EXPECT_EQ(disposition_frames,
+                   result.label_results[0].labeled_frames);
+#endif
     }
     M3_EXPECT_EQ(result.transition_count, 2U);
     M3_EXPECT_EQ(result.transition_inside_hold_count +
@@ -314,6 +323,11 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           M3_EXPECT_EQ(result.label_results[label].longest_correct_run_frames,
                        baseline.label_results[label]
                            .longest_correct_run_frames);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+          M3_EXPECT_EQ(
+              result.label_results[label].selection_disposition_frames,
+              baseline.label_results[label].selection_disposition_frames);
+#endif
         }
       }
     }

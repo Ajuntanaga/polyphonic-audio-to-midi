@@ -26,6 +26,9 @@ constexpr double kMaximumPartialDetuningStandardDeviationCents = 3.0;
 constexpr std::size_t kLabeledAnalysisMilliseconds = 750U;
 constexpr std::uint64_t kFnvOffset = 1469598103934665603ULL;
 constexpr std::uint64_t kFnvPrime = 1099511628211ULL;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+static_assert(static_cast<std::size_t>(SelectionDisposition::count) == 6U);
+#endif
 
 std::uint16_t read_u16(const std::uint8_t* bytes) noexcept {
   return static_cast<std::uint16_t>(bytes[0]) |
@@ -1158,6 +1161,13 @@ bool run_detector_replay(const WaveData& wave,
         ++result.labeled_frames;
         ReplayLabelResult& label_result = result.label_results[label_index];
         ++label_result.labeled_frames;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        const std::size_t disposition = static_cast<std::size_t>(
+            detector.selection_disposition(label.midi_note));
+        if (disposition < label_result.selection_disposition_frames.size()) {
+          ++label_result.selection_disposition_frames[disposition];
+        }
+#endif
         const bool matched = snapshot_matches_label(snapshot, label);
         result.matched_label_frames += matched ? 1U : 0U;
         label_result.matched_frames += matched ? 1U : 0U;

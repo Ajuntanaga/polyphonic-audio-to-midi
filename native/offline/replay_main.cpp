@@ -423,7 +423,14 @@ int main(int argc, char** argv) {
         "lane_7\tobserved_note_lane_masks\texpected_cents\t"
         "cents_observations\tcents_mean_error\tcents_sd\tcents_p95_abs\t"
         "first_valid_cents_ms\tfirst_correct_string_ms\tstring_flips\t"
-        "longest_correct_run_ms\n");
+        "longest_correct_run_ms");
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    std::printf(
+        "\tselection_quiet\tselection_below_threshold\t"
+        "selection_spectral_rejected\tselection_dp_evicted\t"
+        "selection_selected\tselection_coasting");
+#endif
+    std::printf("\n");
     for (std::size_t index = 0U; index < labels.size(); ++index) {
       const m3::offline::ReplayLabel& label = labels[index];
       const m3::offline::ReplayLabelResult& detail =
@@ -483,12 +490,19 @@ int main(int argc, char** argv) {
                        detail.longest_correct_run_frames *
                        static_cast<std::uint64_t>(m3::kDecisionQuantum)) /
           static_cast<double>(wave.sample_rate);
-      std::printf("\t%.6f\t%zu\t%.6f\t%.6f\t%.6f\t%.3f\t%.3f\t%u\t%.3f\n",
+      std::printf("\t%.6f\t%zu\t%.6f\t%.6f\t%.6f\t%.3f\t%.3f\t%u\t%.3f",
                   expected_cents, label_cents.count, label_cents.mean,
                   label_cents.standard_deviation,
                   label_cents.p95_absolute, first_valid_ms,
                   first_correct_ms, detail.string_flip_count,
                   longest_correct_ms);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      for (const std::uint32_t frames :
+           detail.selection_disposition_frames) {
+        std::printf("\t%u", frames);
+      }
+#endif
+      std::printf("\n");
     }
   }
   return 0;

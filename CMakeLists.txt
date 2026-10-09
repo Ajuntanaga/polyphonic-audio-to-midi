@@ -48,6 +48,7 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/parameter_contract.cpp
     native/src/state_image.cpp
     native/src/tuner_telemetry.cpp
+    native/src/unison_spectral_classifier.cpp
 )
 
 set(M3_NATIVE_SHARED_ADAPTER_SOURCES
@@ -118,6 +119,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_support.cpp
     native/tests/test_test_support.cpp
     native/tests/test_tuner_telemetry.cpp
+    native/tests/test_unison_spectral_classifier.cpp
     native/tests/test_vst3_audio.cpp
     native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp
@@ -143,7 +145,10 @@ add_executable(m3_native_tests
     ${M3_NATIVE_TEST_SOURCES}
     third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
 )
-target_compile_definitions(m3_native_tests PRIVATE M3_TESTING)
+target_compile_definitions(m3_native_tests PRIVATE
+    M3_TESTING
+    M3_OFFLINE_REPLAY_DIAGNOSTICS=1
+)
 target_include_directories(m3_native_tests PRIVATE
     native/include
     native/offline
@@ -165,6 +170,9 @@ add_executable(m3_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
     native/offline/replay.cpp
     native/offline/replay_main.cpp
+)
+target_compile_definitions(m3_replay PRIVATE
+    M3_OFFLINE_REPLAY_DIAGNOSTICS=1
 )
 target_include_directories(m3_replay PRIVATE native/include native/offline)
 target_link_libraries(m3_replay PRIVATE Threads::Threads m)

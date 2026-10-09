@@ -13,6 +13,18 @@
 
 namespace m3 {
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+enum class SelectionDisposition : std::uint8_t {
+  quiet,
+  below_threshold,
+  spectral_rejected,
+  dp_evicted,
+  selected,
+  coasting,
+  count,
+};
+#endif
+
 #if defined(M3_TESTING)
 struct PolyphonicPitchDetectorTestAccess;
 #endif
@@ -47,6 +59,10 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] PartialDetuningEvidence partial_detuning_evidence(
       std::uint8_t midi_note) const noexcept;
   void set_calibration_bank(const StringCalibrationBank& bank) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] SelectionDisposition selection_disposition(
+      std::uint8_t midi_note) const noexcept;
+#endif
 
 #if defined(M3_TESTING)
   struct SelectionWork final {
@@ -158,6 +174,8 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] std::uint8_t dynamic_velocity() const noexcept;
   [[nodiscard]] std::uint8_t attack_decisions() const noexcept;
   [[nodiscard]] std::uint16_t release_decisions() const noexcept;
+  [[nodiscard]] std::uint16_t candidate_release_decisions(
+      std::size_t candidate, bool quiet) const noexcept;
   [[nodiscard]] std::uint8_t candidate_evidence_decisions(
       bool multi_voice) const noexcept;
   [[nodiscard]] double signal_floor() const noexcept;
@@ -292,6 +310,11 @@ class PolyphonicPitchDetector final {
   ProfileMode profile_mode_{ProfileMode::m3};
   bool signal_present_{};
   bool configured_{};
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::array<SelectionDisposition, kMaxCandidates>
+      selection_dispositions_{};
+#endif
 
 #if defined(M3_TESTING)
   SelectionWork selection_work_{};

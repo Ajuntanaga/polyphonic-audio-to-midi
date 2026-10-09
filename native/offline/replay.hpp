@@ -64,6 +64,11 @@ struct ReplayLabelResult final {
       std::numeric_limits<std::uint64_t>::max()};
   std::uint32_t string_flip_count{};
   std::uint32_t longest_correct_run_frames{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Mutually exclusive selector outcomes for this label's target pitch.
+  // This diagnostic exists only in the offline replay/test targets.
+  std::array<std::uint32_t, 6U> selection_disposition_frames{};
+#endif
 };
 
 struct ReplayResult final {

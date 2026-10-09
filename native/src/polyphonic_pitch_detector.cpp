@@ -42,10 +42,15 @@ constexpr double kBeatCyclesToHold = 1.5;
 // patterns without adding per-sample work or allocating on the audio thread.
 constexpr double kFineFrequencyTargetRateHz = 100.0;
 constexpr std::uint32_t kFineFrequencyAnalysisStride = 5U;
-constexpr double kFineFrequencyMinimumEvidenceSeconds = 2.5;
-constexpr double kFineFrequencyMaximumGapSeconds = 0.20;
+// Give close calibrated physical-string offsets three seconds of beat-time
+// evidence before admitting a multi-source interpretation. Ordinary pitch
+// and chord admission stay on their short causal windows; only the optional
+// same-pitch physical-string expansion waits for this evidence. Live testing
+// can justify the stricter 3.25-second boundary if this remains unstable.
+constexpr double kFineFrequencyMinimumEvidenceSeconds = 3.0;
+constexpr double kFineFrequencyMaximumGapSeconds = 0.50;
 constexpr double kFineFrequencyInitialConsensusSeconds = 0.20;
-constexpr double kFineFrequencyReplacementConsensusSeconds = 0.75;
+constexpr double kFineFrequencyReplacementConsensusSeconds = 2.25;
 constexpr double kFineFrequencyRidge = 1.0e-5;
 constexpr double kFineFrequencyMinimumRelativeAmplitude = 0.12;
 constexpr double kFineFrequencyProfileMatchedRelativeAmplitude = 0.25;
@@ -434,6 +439,9 @@ void PolyphonicPitchDetector::reset() noexcept {
   partial_detuning_cursor_ = 0U;
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  selection_dispositions_ = {};
+#endif
   string_fret_posteriors_.reset();
   string_fret_energy_memory_ = {};
 #if defined(M3_TESTING)
@@ -520,6 +528,19 @@ PartialDetuningEvidence PolyphonicPitchDetector::partial_detuning_evidence(
              : PartialDetuningEvidence{};
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+SelectionDisposition PolyphonicPitchDetector::selection_disposition(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return SelectionDisposition::below_threshold;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? selection_dispositions_[candidate]
+             : SelectionDisposition::below_threshold;
+}
+#endif
+
 void PolyphonicPitchDetector::set_calibration_bank(
     const StringCalibrationBank& bank) noexcept {
   calibrator_.set_bank(bank);
@@ -574,6 +595,23 @@ std::uint16_t PolyphonicPitchDetector::release_decisions() const noexcept {
   return static_cast<std::uint16_t>(std::clamp(
       decisions, 1.0,
       static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
+}
+
+std::uint16_t PolyphonicPitchDetector::candidate_release_decisions(
+    std::size_t candidate, bool quiet) const noexcept {
+  const std::uint16_t ordinary = release_decisions();
+  if (quiet || profile_mode_ != ProfileMode::m3 ||
+      candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return ordinary;
+  }
+  const std::uint8_t members =
+      candidate_states_[candidate].assigned_string_mask;
+  const bool resolved_unison =
+      members != 0U &&
+      (members & static_cast<std::uint8_t>(members - 1U)) != 0U;
+  return resolved_unison
+             ? std::max(ordinary, unison_dropout_decisions(candidate))
+             : ordinary;
 }
 
 std::uint8_t PolyphonicPitchDetector::candidate_evidence_decisions(
@@ -800,6 +838,9 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   selected = {};
   m3_pool_ = {};
   m3_dp_states_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  selection_dispositions_.fill(SelectionDisposition::below_threshold);
+#endif
 #if defined(M3_TESTING)
   selection_work_ = {};
 #endif
@@ -857,6 +898,12 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
           calibrated_direct ? std::max(normalized_score, calibrated_floor)
                             : normalized_score;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (raw_eligible[candidate]) {
+      selection_dispositions_[candidate] =
+          SelectionDisposition::spectral_rejected;
+    }
+#endif
   }
 
   // Classify harmonic shadows in descending spectral rank before considering
@@ -914,6 +961,11 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       }
     }
     spectral_eligible[candidate] = !shadowed;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (spectral_eligible[candidate]) {
+      selection_dispositions_[candidate] = SelectionDisposition::dp_evicted;
+    }
+#endif
   }
 
   std::array<bool, kMaxCandidates> in_pool{};
@@ -1048,7 +1100,11 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   }
   for (std::size_t option_index = 0U; option_index < pool_count; ++option_index) {
     if ((best.chosen & (std::uint64_t{1U} << option_index)) != 0U) {
-      selected[m3_pool_[option_index].detector_index] = true;
+      const std::size_t candidate = m3_pool_[option_index].detector_index;
+      selected[candidate] = true;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      selection_dispositions_[candidate] = SelectionDisposition::selected;
+#endif
     }
   }
   // A fret-position prior may rank a weak but direct high-fret candidate
@@ -1074,7 +1130,11 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       strongest = option_index;
     }
     if (strongest != pool_count) {
-      selected[m3_pool_[strongest].detector_index] = true;
+      const std::size_t candidate = m3_pool_[strongest].detector_index;
+      selected[candidate] = true;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      selection_dispositions_[candidate] = SelectionDisposition::selected;
+#endif
     }
   }
 }
@@ -1946,8 +2006,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     FineFrequencyEvidenceState& state =
         fine_frequency_evidence_states_[candidate];
     if (!selected[candidate]) {
-      if (!candidate_states_[candidate].active ||
-          decision_counter_ - state.last_decision_tick > maximum_gap) {
+      if (decision_counter_ - state.last_decision_tick > maximum_gap) {
         state = {};
       }
       continue;
@@ -2305,6 +2364,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     const bool phase_modulation_observed =
         state.frequency_deviation_hz >=
         kFineFrequencyMinimumPhaseDeviationHz;
+    constexpr std::size_t kMaximumSimultaneousUnisonMembers = 4U;
     std::array<std::size_t, kMaxVoices> order{};
     for (std::size_t component = 0U; component < component_count;
          ++component) {
@@ -2324,7 +2384,6 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     std::size_t member_count = 0U;
     double minimum_member_relative_amplitude = 1.0;
     state.component_energy = {};
-    constexpr std::size_t kMaximumSimultaneousUnisonMembers = 4U;
     for (std::size_t rank = 0U; rank < component_count &&
                                member_count <
                                    kMaximumSimultaneousUnisonMembers;
@@ -3647,6 +3706,9 @@ void PolyphonicPitchDetector::write_snapshot(
 
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   DetectorDecision decision;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  selection_dispositions_.fill(SelectionDisposition::quiet);
+#endif
   ++decision_counter_;
   std::array<double, kMaxCandidates> scores{};
   std::array<double, kMaxCandidates> fundamentals{};
@@ -3757,6 +3819,19 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     selected = {};
     quiet = true;
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (quiet) {
+    selection_dispositions_.fill(SelectionDisposition::quiet);
+  } else {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      if (selected[candidate]) {
+        selection_dispositions_[candidate] = SelectionDisposition::selected;
+      } else if (candidate_states_[candidate].active) {
+        selection_dispositions_[candidate] = SelectionDisposition::coasting;
+      }
+    }
+  }
+#endif
   update_phase_cents_estimates(selected);
   update_partial_detuning_evidence(selected);
   update_fine_frequency_evidence(selected);
@@ -3867,7 +3942,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     if (state.release_ticks < std::numeric_limits<std::uint16_t>::max()) {
       ++state.release_ticks;
     }
-    if (state.release_ticks >= release_decisions()) {
+    if (state.release_ticks >= candidate_release_decisions(candidate, quiet)) {
       append_candidate_note_off(decision, candidate);
       state = {};
     } else {
