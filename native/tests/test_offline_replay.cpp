@@ -254,6 +254,34 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
       }
       M3_EXPECT_EQ(disposition_frames,
                    result.label_results[0].labeled_frames);
+      std::uint32_t fine_mask_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0].fine_frequency_member_mask_frames) {
+        fine_mask_frames += frames;
+      }
+      M3_EXPECT_EQ(fine_mask_frames,
+                   result.label_results[0].labeled_frames);
+      std::uint32_t pending_mask_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0]
+               .fine_frequency_pending_member_mask_frames) {
+        pending_mask_frames += frames;
+      }
+      M3_EXPECT_EQ(pending_mask_frames,
+                   result.label_results[0].labeled_frames);
+      std::uint32_t fit_mask_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0].fine_frequency_fit_member_mask_frames) {
+        fit_mask_frames += frames;
+      }
+      M3_EXPECT_EQ(fit_mask_frames, result.label_results[0].labeled_frames);
+      std::uint32_t fine_disposition_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0].fine_frequency_disposition_frames) {
+        fine_disposition_frames += frames;
+      }
+      M3_EXPECT_EQ(fine_disposition_frames,
+                   result.label_results[0].labeled_frames);
 #endif
     }
     M3_EXPECT_EQ(result.transition_count, 2U);
@@ -327,6 +355,24 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           M3_EXPECT_EQ(
               result.label_results[label].selection_disposition_frames,
               baseline.label_results[label].selection_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_frequency_member_mask_frames,
+              baseline.label_results[label]
+                  .fine_frequency_member_mask_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_frequency_pending_member_mask_frames,
+              baseline.label_results[label]
+                  .fine_frequency_pending_member_mask_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_frequency_disposition_frames,
+              baseline.label_results[label]
+                  .fine_frequency_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_frequency_fit_member_mask_frames,
+              baseline.label_results[label]
+                  .fine_frequency_fit_member_mask_frames);
 #endif
         }
       }

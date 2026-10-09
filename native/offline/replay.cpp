@@ -1167,6 +1167,33 @@ bool run_detector_replay(const WaveData& wave,
         if (disposition < label_result.selection_disposition_frames.size()) {
           ++label_result.selection_disposition_frames[disposition];
         }
+        const std::size_t fine_member_mask =
+            detector.fine_frequency_member_mask(label.midi_note);
+        if (fine_member_mask <
+            label_result.fine_frequency_member_mask_frames.size()) {
+          ++label_result
+                .fine_frequency_member_mask_frames[fine_member_mask];
+        }
+        const std::size_t pending_member_mask =
+            detector.fine_frequency_pending_member_mask(label.midi_note);
+        if (pending_member_mask <
+            label_result.fine_frequency_pending_member_mask_frames.size()) {
+          ++label_result
+                .fine_frequency_pending_member_mask_frames[pending_member_mask];
+        }
+        const std::size_t fine_disposition = static_cast<std::size_t>(
+            detector.fine_frequency_disposition(label.midi_note));
+        if (fine_disposition <
+            label_result.fine_frequency_disposition_frames.size()) {
+          ++label_result.fine_frequency_disposition_frames[fine_disposition];
+        }
+        const std::size_t fit_member_mask =
+            detector.fine_frequency_fit_member_mask(label.midi_note);
+        if (fit_member_mask <
+            label_result.fine_frequency_fit_member_mask_frames.size()) {
+          ++label_result
+                .fine_frequency_fit_member_mask_frames[fit_member_mask];
+        }
 #endif
         const bool matched = snapshot_matches_label(snapshot, label);
         result.matched_label_frames += matched ? 1U : 0U;

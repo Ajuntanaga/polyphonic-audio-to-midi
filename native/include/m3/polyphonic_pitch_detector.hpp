@@ -23,6 +23,15 @@ enum class SelectionDisposition : std::uint8_t {
   coasting,
   count,
 };
+
+enum class FineFrequencyDisposition : std::uint8_t {
+  unresolved,
+  amplitude_single,
+  source_evidence_rejected,
+  residual_rejected,
+  multi_source_candidate,
+  count,
+};
 #endif
 
 #if defined(M3_TESTING)
@@ -61,6 +70,14 @@ class PolyphonicPitchDetector final {
   void set_calibration_bank(const StringCalibrationBank& bank) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   [[nodiscard]] SelectionDisposition selection_disposition(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t fine_frequency_member_mask(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t fine_frequency_pending_member_mask(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] FineFrequencyDisposition fine_frequency_disposition(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t fine_frequency_fit_member_mask(
       std::uint8_t midi_note) const noexcept;
 #endif
 
@@ -150,8 +167,14 @@ class PolyphonicPitchDetector final {
     std::uint16_t pending_count{};
     std::uint8_t member_mask{};
     std::uint8_t pending_member_mask{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    std::uint8_t fit_member_mask{};
+#endif
     bool multi_source_observed{};
     bool valid{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    FineFrequencyDisposition disposition{FineFrequencyDisposition::unresolved};
+#endif
   };
 
   struct M3PoolCandidate final {

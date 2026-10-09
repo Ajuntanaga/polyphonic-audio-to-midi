@@ -68,6 +68,18 @@ struct ReplayLabelResult final {
   // Mutually exclusive selector outcomes for this label's target pitch.
   // This diagnostic exists only in the offline replay/test targets.
   std::array<std::uint32_t, 6U> selection_disposition_frames{};
+  // Fine-frequency physical-member masks for the same target pitch. Index
+  // zero represents unresolved evidence, not a ninth physical-string state.
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      fine_frequency_member_mask_frames{};
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      fine_frequency_pending_member_mask_frames{};
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      fine_frequency_fit_member_mask_frames{};
+  // unresolved, amplitude-single, source-rejected, residual-rejected,
+  // multi-source-candidate; kept numeric here to avoid coupling the public
+  // replay result header to the detector implementation header.
+  std::array<std::uint32_t, 5U> fine_frequency_disposition_frames{};
 #endif
 };
 

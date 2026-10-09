@@ -428,7 +428,13 @@ int main(int argc, char** argv) {
     std::printf(
         "\tselection_quiet\tselection_below_threshold\t"
         "selection_spectral_rejected\tselection_dp_evicted\t"
-        "selection_selected\tselection_coasting");
+        "selection_selected\tselection_coasting\t"
+        "fine_frequency_member_masks\t"
+        "fine_frequency_pending_member_masks\t"
+        "fine_frequency_fit_member_masks\t"
+        "fine_unresolved\tfine_amplitude_single\t"
+        "fine_source_rejected\tfine_residual_rejected\t"
+        "fine_multi_candidate");
 #endif
     std::printf("\n");
     for (std::size_t index = 0U; index < labels.size(); ++index) {
@@ -499,6 +505,50 @@ int main(int argc, char** argv) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       for (const std::uint32_t frames :
            detail.selection_disposition_frames) {
+        std::printf("\t%u", frames);
+      }
+      std::printf("\t");
+      bool first_fine_mask = true;
+      for (std::size_t mask = 0U;
+           mask < detail.fine_frequency_member_mask_frames.size(); ++mask) {
+        const std::uint32_t frames =
+            detail.fine_frequency_member_mask_frames[mask];
+        if (frames == 0U) {
+          continue;
+        }
+        std::printf("%s%zu:%u", first_fine_mask ? "" : ",", mask,
+                    frames);
+        first_fine_mask = false;
+      }
+      std::printf("\t");
+      bool first_pending_mask = true;
+      for (std::size_t mask = 0U;
+           mask < detail.fine_frequency_pending_member_mask_frames.size();
+           ++mask) {
+        const std::uint32_t frames =
+            detail.fine_frequency_pending_member_mask_frames[mask];
+        if (frames == 0U) {
+          continue;
+        }
+        std::printf("%s%zu:%u", first_pending_mask ? "" : ",", mask,
+                    frames);
+        first_pending_mask = false;
+      }
+      std::printf("\t");
+      bool first_fit_mask = true;
+      for (std::size_t mask = 0U;
+           mask < detail.fine_frequency_fit_member_mask_frames.size();
+           ++mask) {
+        const std::uint32_t frames =
+            detail.fine_frequency_fit_member_mask_frames[mask];
+        if (frames == 0U) {
+          continue;
+        }
+        std::printf("%s%zu:%u", first_fit_mask ? "" : ",", mask, frames);
+        first_fit_mask = false;
+      }
+      for (const std::uint32_t frames :
+           detail.fine_frequency_disposition_frames) {
         std::printf("\t%u", frames);
       }
 #endif

@@ -539,6 +539,53 @@ SelectionDisposition PolyphonicPitchDetector::selection_disposition(
              ? selection_dispositions_[candidate]
              : SelectionDisposition::below_threshold;
 }
+
+std::uint8_t PolyphonicPitchDetector::fine_frequency_member_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return 0U;
+  }
+  const FineFrequencyEvidenceState& state =
+      fine_frequency_evidence_states_[candidate];
+  return state.valid ? state.member_mask : 0U;
+}
+
+std::uint8_t PolyphonicPitchDetector::fine_frequency_pending_member_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate].pending_member_mask
+             : 0U;
+}
+
+FineFrequencyDisposition PolyphonicPitchDetector::fine_frequency_disposition(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return FineFrequencyDisposition::unresolved;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate].disposition
+             : FineFrequencyDisposition::unresolved;
+}
+
+std::uint8_t PolyphonicPitchDetector::fine_frequency_fit_member_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate].fit_member_mask
+             : 0U;
+}
 #endif
 
 void PolyphonicPitchDetector::set_calibration_bank(
@@ -2401,6 +2448,12 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           amplitude / maximum_amplitude);
       ++member_count;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    state.fit_member_mask = members;
+    state.disposition = member_count > 1U
+                            ? FineFrequencyDisposition::multi_source_candidate
+                            : FineFrequencyDisposition::amplitude_single;
+#endif
     double minimum_member_separation_hz =
         std::numeric_limits<double>::infinity();
     for (std::size_t first = 0U; first < component_count; ++first) {
@@ -2442,6 +2495,12 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
                                     minimum_member_separation_hz >=
                                         kFineFrequencyPhaseSupportedSeparationHz));
     if (!state.multi_source_observed) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (member_count > 1U) {
+        state.disposition =
+            FineFrequencyDisposition::source_evidence_rejected;
+      }
+#endif
       std::size_t single_component = order[0U];
       const PhaseCentsState& cents = phase_cents_states_[candidate];
       if (cents.valid) {
@@ -2463,6 +2522,9 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           std::max(best_single_error, kScoreEpsilon);
       if (!std::isfinite(improvement) ||
           improvement < kFineFrequencyMinimumResidualImprovement) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        state.disposition = FineFrequencyDisposition::residual_rejected;
+#endif
         members = static_cast<std::uint8_t>(1U << strings[order[0U]]);
       }
     }
