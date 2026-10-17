@@ -6,6 +6,7 @@
 
 #include "fake_vst3_host.hpp"
 #include "m3/calibration_state_image.hpp"
+#include "m3/factory_calibration.hpp"
 #include "m3/parameter_contract.hpp"
 #include "m3/state_image.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
@@ -256,6 +257,35 @@ M3_TEST(vst3_extended_state_persists_calibration_and_accepts_legacy_state) {
   M3_EXPECT_EQ(decoded_calibration.calibrated_string_mask, 0U);
 }
 
+M3_TEST(vst3_component_fresh_state_contains_the_factory_calibration_prior) {
+  ComponentInstance instance;
+  M3_EXPECT_TRUE(open_component(instance));
+  if (instance.component == nullptr || instance.processor == nullptr) {
+    close_component(instance);
+    return;
+  }
+
+  M3_EXPECT_EQ(
+      m3::vst3::string_calibration_ui_state_for_test(instance.processor)
+          .calibrated_string_mask,
+      m3::factory_m3_calibration_bank().calibrated_string_mask);
+
+  m3::test::FakeVst3Stream saved;
+  saved.reset_output(29);
+  M3_EXPECT_EQ(instance.component->getState(&saved), Steinberg::kResultOk);
+
+  m3::test::FakeVst3Stream input;
+  M3_EXPECT_TRUE(input.set_input(saved.bytes(), saved.size(), 19));
+  m3::PersistentConfig config;
+  m3::StringCalibrationBank calibration;
+  M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
+      &input, config, calibration));
+  M3_EXPECT_TRUE(same_calibration(
+      calibration, m3::factory_m3_calibration_bank()));
+
+  close_component(instance);
+}
+
 M3_TEST(vst3_component_restores_and_resaves_string_calibration) {
   ComponentInstance instance;
   M3_EXPECT_TRUE(open_component(instance));
@@ -266,6 +296,8 @@ M3_TEST(vst3_component_restores_and_resaves_string_calibration) {
 
   const m3::PersistentConfig config = nondefault_config();
   const m3::StringCalibrationBank calibration = calibration_bank();
+  const m3::StringCalibrationBank expected_calibration =
+      m3::merge_m3_factory_calibration(calibration);
   m3::test::FakeVst3Stream encoded;
   encoded.reset_output(31);
   M3_EXPECT_TRUE(m3::vst3::save_vst3_state_with_calibration(
@@ -286,7 +318,8 @@ M3_TEST(vst3_component_restores_and_resaves_string_calibration) {
   M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
       &resaved_input, restored_config, restored_calibration));
   M3_EXPECT_TRUE(same_config(restored_config, config));
-  M3_EXPECT_TRUE(same_calibration(restored_calibration, calibration));
+  M3_EXPECT_TRUE(
+      same_calibration(restored_calibration, expected_calibration));
 
   Steinberg::Vst::ProcessSetup setup{};
   setup.processMode = Steinberg::Vst::kRealtime;
@@ -307,12 +340,86 @@ M3_TEST(vst3_component_restores_and_resaves_string_calibration) {
   const auto ui_state =
       m3::vst3::string_calibration_ui_state_for_test(instance.processor);
   M3_EXPECT_EQ(ui_state.calibrated_string_mask,
-               calibration.calibrated_string_mask);
+               expected_calibration.calibrated_string_mask);
 
   close_component(instance);
 }
 
-M3_TEST(vst3_component_terminate_clears_unrestored_detector_calibration) {
+M3_TEST(vst3_component_clear_resets_user_overrides_to_factory_calibration) {
+  ComponentInstance instance;
+  M3_EXPECT_TRUE(open_component(instance));
+  if (instance.component == nullptr || instance.processor == nullptr) {
+    close_component(instance);
+    return;
+  }
+
+  const m3::StringCalibrationBank override = calibration_bank();
+  const m3::StringCalibrationBank expected_override =
+      m3::merge_m3_factory_calibration(override);
+  m3::test::FakeVst3Stream encoded;
+  encoded.reset_output(31);
+  M3_EXPECT_TRUE(m3::vst3::save_vst3_state_with_calibration(
+      m3::PersistentConfig{}, override, &encoded));
+  m3::test::FakeVst3Stream input;
+  M3_EXPECT_TRUE(input.set_input(encoded.bytes(), encoded.size(), 23));
+  M3_EXPECT_EQ(instance.component->setState(&input), Steinberg::kResultOk);
+
+  Steinberg::Vst::ProcessSetup setup{};
+  setup.processMode = Steinberg::Vst::kRealtime;
+  setup.symbolicSampleSize = Steinberg::Vst::kSample32;
+  setup.maxSamplesPerBlock = 512;
+  setup.sampleRate = 48000.0;
+  M3_EXPECT_EQ(instance.processor->setupProcessing(setup),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{1}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.processor->setProcessing(Steinberg::TBool{1}),
+               Steinberg::kResultOk);
+  Steinberg::Vst::ProcessData flush{};
+  flush.processMode = Steinberg::Vst::kRealtime;
+  flush.symbolicSampleSize = Steinberg::Vst::kSample32;
+  flush.numSamples = 0;
+  M3_EXPECT_EQ(instance.processor->process(flush), Steinberg::kResultOk);
+
+  const auto read_saved_calibration = [&instance]() noexcept {
+    m3::StringCalibrationBank calibration;
+    m3::test::FakeVst3Stream saved;
+    saved.reset_output(29);
+    M3_EXPECT_EQ(instance.component->getState(&saved), Steinberg::kResultOk);
+    m3::test::FakeVst3Stream saved_input;
+    M3_EXPECT_TRUE(
+        saved_input.set_input(saved.bytes(), saved.size(), 19));
+    m3::PersistentConfig config;
+    M3_EXPECT_TRUE(m3::vst3::load_vst3_state_with_calibration(
+        &saved_input, config, calibration));
+    return calibration;
+  };
+  M3_EXPECT_TRUE(
+      same_calibration(read_saved_calibration(), expected_override));
+
+  static_cast<m3::vst3::M3Component*>(instance.processor)
+      ->request_clear_string_calibration();
+  M3_EXPECT_EQ(instance.processor->process(flush), Steinberg::kResultOk);
+  M3_EXPECT_TRUE(same_calibration(
+      m3::vst3::detector_calibration_bank_for_test(instance.processor),
+      m3::factory_m3_calibration_bank()));
+
+  M3_EXPECT_EQ(instance.processor->setProcessing(Steinberg::TBool{0}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{0}),
+               Steinberg::kResultOk);
+  M3_EXPECT_EQ(instance.component->setActive(Steinberg::TBool{1}),
+               Steinberg::kResultOk);
+  M3_EXPECT_TRUE(same_calibration(
+      m3::vst3::detector_calibration_bank_for_test(instance.processor),
+      m3::factory_m3_calibration_bank()));
+  M3_EXPECT_TRUE(same_calibration(
+      read_saved_calibration(), m3::factory_m3_calibration_bank()));
+
+  close_component(instance);
+}
+
+M3_TEST(vst3_component_reinitialize_restores_factory_calibration) {
   ComponentInstance instance;
   M3_EXPECT_TRUE(open_component(instance));
   if (instance.component == nullptr || instance.processor == nullptr) {
@@ -363,7 +470,7 @@ M3_TEST(vst3_component_terminate_clears_unrestored_detector_calibration) {
   M3_EXPECT_EQ(
       m3::vst3::string_calibration_ui_state_for_test(instance.processor)
           .calibrated_string_mask,
-      0U);
+      m3::factory_m3_calibration_bank().calibrated_string_mask);
 
   close_component(instance);
 }
@@ -470,7 +577,8 @@ M3_TEST(vst3_component_and_controller_state_synchronize_without_callbacks) {
   M3_EXPECT_TRUE(m3::decode_calibration_state(
       processor_output.bytes() + m3::kStateSize,
       m3::kCalibrationStateSize, saved_calibration));
-  M3_EXPECT_EQ(saved_calibration.calibrated_string_mask, 0U);
+  M3_EXPECT_TRUE(same_calibration(
+      saved_calibration, m3::factory_m3_calibration_bank()));
 
   m3::test::FakeVst3Stream controller_input;
   M3_EXPECT_TRUE(controller_input.set_input(expected.data(), expected.size(),

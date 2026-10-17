@@ -151,4 +151,19 @@ PartialDetuningEvidence PartialDetuningTracker::evidence() const noexcept {
   return result;
 }
 
+PartialAbsoluteCentsEvidence
+PartialDetuningTracker::absolute_cents_evidence() const noexcept {
+  PartialAbsoluteCentsEvidence result{};
+  for (std::size_t partial = 0U; partial < kPartialDetuningCount; ++partial) {
+    if (accepted_updates_[partial] < kRequiredUpdates ||
+        !std::isfinite(filtered_cents_[partial])) {
+      continue;
+    }
+    result.cents[partial] = filtered_cents_[partial];
+    result.valid_mask = static_cast<std::uint8_t>(
+        result.valid_mask | static_cast<std::uint8_t>(1U << partial));
+  }
+  return result;
+}
+
 }  // namespace m3

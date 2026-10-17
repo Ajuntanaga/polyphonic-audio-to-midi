@@ -3,6 +3,7 @@
 #include <type_traits>
 
 #include "fake_vst3_host.hpp"
+#include "m3/factory_calibration.hpp"
 #include "m3/parameter_contract.hpp"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
@@ -263,7 +264,9 @@ M3_TEST(vst3_string_calibration_request_crosses_ui_audio_boundary_on_process) {
       m3::vst3::string_calibration_ui_state_for_test(instance.processor);
   M3_EXPECT_EQ(state.phase, m3::CalibrationSweepPhase::waiting_open);
   M3_EXPECT_EQ(state.string_index, 3U);
-  M3_EXPECT_EQ(state.calibrated_string_mask, 0U);
+  M3_EXPECT_EQ(
+      state.calibrated_string_mask,
+      m3::factory_m3_calibration_bank().calibrated_string_mask);
   close_instance(instance);
 }
 

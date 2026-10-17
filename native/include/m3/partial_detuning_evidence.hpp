@@ -22,6 +22,15 @@ struct PartialDetuningEvidence final {
   bool valid{};
 };
 
+// Replay-only consumers use the individual absolute partial offsets to test
+// whether upper harmonics can recover a pitch center while the fundamental
+// phase estimate is unavailable.  Production detuning decisions continue to
+// use PartialDetuningEvidence, which deliberately subtracts the fundamental.
+struct PartialAbsoluteCentsEvidence final {
+  std::array<double, kPartialDetuningCount> cents{};
+  std::uint8_t valid_mask{};
+};
+
 struct PartialDetuningComparison final {
   double log_likelihood{};
   std::uint8_t common_partials{};
@@ -44,6 +53,8 @@ class PartialDetuningTracker final {
   void update(const PartialDetuningFrame& frame,
               double decisions_per_second) noexcept;
   [[nodiscard]] PartialDetuningEvidence evidence() const noexcept;
+  [[nodiscard]] PartialAbsoluteCentsEvidence
+  absolute_cents_evidence() const noexcept;
 
  private:
   std::array<double, kPartialDetuningCount> previous_real_{};

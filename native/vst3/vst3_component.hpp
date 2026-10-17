@@ -140,6 +140,11 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   detector_selection_work_for_test() const noexcept {
     return detector_.selection_work_for_test();
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  void disable_offline_replay_diagnostics_for_test() noexcept {
+    detector_.set_offline_replay_diagnostics_enabled_for_test(false);
+  }
+#endif
   [[nodiscard]] bool read_tuner_snapshot_for_test(
       TunerSnapshot& snapshot) const noexcept {
     return tuner_telemetry_.read_latest(snapshot);
@@ -150,6 +155,10 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   [[nodiscard]] std::uint32_t pending_calibration_command_for_test()
       const noexcept {
     return calibration_command_.load(std::memory_order_acquire);
+  }
+  [[nodiscard]] StringCalibrationBank detector_calibration_bank_for_test()
+      const noexcept {
+    return detector_.calibration_bank();
   }
 #endif
 
@@ -186,6 +195,7 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void request_panic_recovery() noexcept;
   void apply_string_calibration_command() noexcept;
   void apply_calibration_restore() noexcept;
+  void adopt_published_calibration_on_main_thread() noexcept;
   void publish_calibration_bank_from_audio() noexcept;
   void publish_string_calibration_status() noexcept;
 
@@ -279,6 +289,10 @@ bool queue_generated_note_for_test(
 [[nodiscard]] PolyphonicPitchDetector::SelectionWork
 detector_selection_work_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void disable_offline_replay_diagnostics_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept;
+#endif
 [[nodiscard]] bool read_tuner_snapshot_for_test(
     Steinberg::Vst::IAudioProcessor* processor,
     TunerSnapshot& snapshot) noexcept;
@@ -288,6 +302,8 @@ void publish_tuner_snapshot_for_test(
 bool request_string_calibration_for_test(
     Steinberg::Vst::IAudioProcessor* processor,
     std::uint8_t string_index) noexcept;
+[[nodiscard]] StringCalibrationBank detector_calibration_bank_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept;
 [[nodiscard]] M3Component::StringCalibrationUiState
 string_calibration_ui_state_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;

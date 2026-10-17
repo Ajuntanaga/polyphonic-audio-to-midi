@@ -74,6 +74,36 @@ HarmonicEvidenceComparison compare_harmonic_evidence(
   return result;
 }
 
+SpectralTierComparison compare_spectral_tiers(
+    const HarmonicEvidence& observed,
+    const HarmonicEvidence& reference) noexcept {
+  SpectralTierComparison result;
+  if (!observed.valid || !reference.valid) {
+    result.tier_log_likelihood.fill(-64.0);
+    result.overtone_separation_log_likelihood = -64.0;
+    return result;
+  }
+  constexpr std::array<std::size_t, kSpectralTierCount> kTierBegin{
+      0U, 1U, 3U, 4U};
+  constexpr std::array<std::size_t, kSpectralTierCount> kTierEnd{
+      1U, 2U, 4U, 5U};
+  for (std::size_t tier = 0U; tier < kSpectralTierCount; ++tier) {
+    double squared_error = 0.0;
+    for (std::size_t ratio = kTierBegin[tier]; ratio < kTierEnd[tier];
+         ++ratio) {
+      squared_error += square(observed.adjacent_log_ratio[ratio] -
+                              reference.adjacent_log_ratio[ratio]);
+    }
+    result.tier_log_likelihood[tier] =
+        -0.75 * squared_error /
+        static_cast<double>(kTierEnd[tier] - kTierBegin[tier]);
+  }
+  result.overtone_separation_log_likelihood =
+      -0.75 * square(observed.adjacent_log_ratio[2U] -
+                     reference.adjacent_log_ratio[2U]);
+  return result;
+}
+
 double harmonic_transient_strength(const HarmonicEvidence& fast,
                                    const HarmonicEvidence& settled) noexcept {
   if (!fast.valid || !settled.valid) {

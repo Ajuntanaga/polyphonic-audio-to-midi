@@ -39,6 +39,7 @@ set(public_sdk_SOURCE_DIR "${M3_VST3_SDK_ROOT}/public.sdk")
 set(M3_NATIVE_CORE_SOURCES
     native/src/calibration_bank_transport.cpp
     native/src/calibration_state_image.cpp
+    native/src/factory_calibration.cpp
     native/src/generated_note_ledger.cpp
     native/src/harmonic_evidence.cpp
     native/src/partial_detuning_evidence.cpp
@@ -49,7 +50,14 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/state_image.cpp
     native/src/tuner_telemetry.cpp
     native/src/unison_spectral_classifier.cpp
+    native/src/unison_spectral_templates.cpp
+    native/src/unison_spectral_tracker.cpp
 )
+
+# The measured 102-bin classifier is now part of the bounded production core.
+# Replay-only policy experiments remain in native/offline and are still gated
+# by M3_UNISON_SPECTRAL_SHADOW.
+set(M3_UNISON_SPECTRAL_SHADOW_SOURCES)
 
 set(M3_NATIVE_SHARED_ADAPTER_SOURCES
     native/plugin/prepared_config_exchange.cpp
@@ -93,12 +101,14 @@ set_source_files_properties(
 
 set(M3_NATIVE_TEST_SOURCES
     native/offline/replay.cpp
+    native/offline/unison_spectral_shadow.cpp
     native/tests/fake_clap_host.cpp
     native/tests/fake_vst3_host.cpp
     native/tests/test_clap_lifecycle.cpp
     native/tests/test_calibration_bank_transport.cpp
     native/tests/test_calibration_state_image.cpp
     native/tests/test_fixed_vector.cpp
+    native/tests/test_factory_calibration.cpp
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_harmonic_evidence.cpp
     native/tests/test_main.cpp
@@ -120,6 +130,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_test_support.cpp
     native/tests/test_tuner_telemetry.cpp
     native/tests/test_unison_spectral_classifier.cpp
+    native/tests/test_unison_spectral_shadow.cpp
     native/tests/test_vst3_audio.cpp
     native/tests/test_vst3_adversarial.cpp
     native/tests/test_vst3_events.cpp
@@ -138,6 +149,7 @@ set(M3_NATIVE_TEST_SOURCES
 
 add_executable(m3_native_tests
     ${M3_NATIVE_CORE_SOURCES}
+    ${M3_UNISON_SPECTRAL_SHADOW_SOURCES}
     ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
     ${M3_NATIVE_PLUGIN_SOURCES}
     ${M3_VST3_ADAPTER_SOURCES}
@@ -148,6 +160,8 @@ add_executable(m3_native_tests
 target_compile_definitions(m3_native_tests PRIVATE
     M3_TESTING
     M3_OFFLINE_REPLAY_DIAGNOSTICS=1
+    M3_SPECTRAL_TIER_DIAGNOSTICS=1
+    M3_UNISON_SPECTRAL_SHADOW=1
 )
 target_include_directories(m3_native_tests PRIVATE
     native/include
@@ -166,13 +180,50 @@ target_link_libraries(
 m3_apply_project_options(m3_native_tests)
 add_test(NAME m3_native_tests COMMAND m3_native_tests)
 
+# The aggregate native suite deliberately compiles the detector with large
+# replay-only diagnostic collectors.  Keep the hard callback deadline in a
+# production-shaped executable so diagnostic object layout and shadow work
+# cannot masquerade as shipped VST3 cost.
+add_executable(m3_vst3_realtime_tests
+    ${M3_NATIVE_CORE_SOURCES}
+    ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
+    ${M3_NATIVE_PLUGIN_SOURCES}
+    ${M3_VST3_ADAPTER_SOURCES}
+    ${M3_VST3_PROBE_PROCESSOR_SOURCES}
+    native/tests/fake_vst3_host.cpp
+    native/tests/test_main.cpp
+    native/tests/test_support.cpp
+    native/tests/test_vst3_realtime.cpp
+    third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
+)
+target_compile_definitions(m3_vst3_realtime_tests PRIVATE M3_TESTING)
+target_include_directories(m3_vst3_realtime_tests PRIVATE
+    native/include
+    native/plugin
+    native/vst3
+    third_party/clap/include
+)
+target_include_directories(m3_vst3_realtime_tests SYSTEM BEFORE PRIVATE
+    third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
+)
+target_link_libraries(
+    m3_vst3_realtime_tests PRIVATE Threads::Threads vstgui_support sdk m
+)
+m3_apply_project_options(m3_vst3_realtime_tests)
+add_test(NAME m3_vst3_realtime_tests COMMAND m3_vst3_realtime_tests)
+
 add_executable(m3_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
+    ${M3_UNISON_SPECTRAL_SHADOW_SOURCES}
     native/offline/replay.cpp
+    native/offline/unison_spectral_shadow.cpp
     native/offline/replay_main.cpp
 )
 target_compile_definitions(m3_replay PRIVATE
     M3_OFFLINE_REPLAY_DIAGNOSTICS=1
+    M3_SPECTRAL_TIER_DIAGNOSTICS=1
+    M3_UNISON_SPECTRAL_SHADOW=1
 )
 target_include_directories(m3_replay PRIVATE native/include native/offline)
 target_link_libraries(m3_replay PRIVATE Threads::Threads m)

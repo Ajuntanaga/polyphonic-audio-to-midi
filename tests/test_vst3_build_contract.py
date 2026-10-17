@@ -285,6 +285,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 {
                     "native/src/calibration_bank_transport.cpp",
                     "native/src/calibration_state_image.cpp",
+                    "native/src/factory_calibration.cpp",
                     "native/src/generated_note_ledger.cpp",
                     "native/src/harmonic_evidence.cpp",
                     "native/src/partial_detuning_evidence.cpp",
@@ -295,6 +296,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/string_fret_posterior.cpp",
                     "native/src/tuner_telemetry.cpp",
                     "native/src/unison_spectral_classifier.cpp",
+                    "native/src/unison_spectral_templates.cpp",
+                    "native/src/unison_spectral_tracker.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
                     "native/vst3/m3_editor_layout.cpp",
@@ -331,6 +334,7 @@ class Vst3BuildContractTests(unittest.TestCase):
                 {
                     "native/src/calibration_bank_transport.cpp",
                     "native/src/calibration_state_image.cpp",
+                    "native/src/factory_calibration.cpp",
                     "native/src/generated_note_ledger.cpp",
                     "native/src/harmonic_evidence.cpp",
                     "native/src/partial_detuning_evidence.cpp",
@@ -341,6 +345,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                     "native/src/string_fret_posterior.cpp",
                     "native/src/tuner_telemetry.cpp",
                     "native/src/unison_spectral_classifier.cpp",
+                    "native/src/unison_spectral_templates.cpp",
+                    "native/src/unison_spectral_tracker.cpp",
                     "native/plugin/prepared_config_exchange.cpp",
                     "native/vst3/m3_editor.cpp",
                     "native/vst3/m3_editor_layout.cpp",
@@ -363,6 +369,9 @@ class Vst3BuildContractTests(unittest.TestCase):
                 self.assertNotIn("third_party/clap/include", row["command"])
                 self.assertNotIn("-DM3_TESTING", row["command"])
                 self.assertNotIn("-DM3_VST3_PROBE_BUILD", row["command"])
+                self.assertNotIn(
+                    "-DM3_UNISON_SPECTRAL_SHADOW", row["command"]
+                )
 
             self.assertNotIn("add_custom_target(m3_vst3_probe", build_text)
             self.assertIn("smtg_add_vst3plugin(m3_vst3_probe", build_text)

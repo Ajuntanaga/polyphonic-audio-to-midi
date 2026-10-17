@@ -52,6 +52,14 @@ struct TunerVoice final {
   // Q8 gives 1/256 Hz resolution and zero means that no causal beat period has
   // yet been accepted.
   std::uint16_t beat_hz_q8{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Replay-only detector coordinates preserve the pre-output-correction
+  // candidate. They let a counterfactual be evaluated against the same raw
+  // evidence without changing the host-visible tuner or MIDI result.
+  std::uint8_t detected_midi_note{};
+  std::int16_t detected_cents_q8{};
+  bool detected_cents_valid{};
+#endif
 
   [[nodiscard]] bool shares_pitch_evidence() const noexcept {
     const std::uint8_t members = pitch_evidence_member_mask;

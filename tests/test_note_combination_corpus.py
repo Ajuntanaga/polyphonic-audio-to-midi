@@ -56,6 +56,27 @@ class NoteCombinationCorpusTests(unittest.TestCase):
             observed = {(row[left], row[right]) for row in plan}
             self.assertEqual(observed, set(itertools.product(states, repeat=2)))
 
+    def test_distinct_pitch_filter_keeps_only_ordinary_polyphonic_cases(self):
+        selected = self.module.filter_distinct_pitch_plan(
+            self.module.build_pairwise_fret_plan()
+        )
+        self.assertEqual(len(selected), 663)
+        for row in selected:
+            notes = [
+                self.module.OPEN_NOTES[index + 1] + fret
+                for index, fret in enumerate(row)
+                if fret >= 0
+            ]
+            self.assertGreaterEqual(len(notes), 2)
+            self.assertEqual(len(notes), len(set(notes)))
+        practical = self.module.filter_distinct_pitch_plan(
+            self.module.build_pairwise_fret_plan(), maximum_active_voices=5
+        )
+        self.assertEqual(len(practical), 131)
+        self.assertTrue(
+            all(2 <= sum(fret >= 0 for fret in row) <= 5 for row in practical)
+        )
+
     def test_unison_plan_contains_every_playable_two_to_four_string_subset(self):
         catalog = self.module.read_note_catalog(self.labels)
         plan = self.module.build_unison_plan(catalog)

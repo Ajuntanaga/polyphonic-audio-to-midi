@@ -133,15 +133,21 @@ M3_TEST(vst3_realtime_calls_allocate_zero_and_create_no_threads_100000) {
 }
 
 M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
-#if !defined(NDEBUG) || defined(M3_TSAN_ENABLED)
+#if !defined(NDEBUG) || defined(M3_TSAN_ENABLED) || \
+    defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   // Wall-clock budgets are meaningful only for the optimized production
-  // configuration without sanitizer instrumentation. The release native-test
-  // job runs this exact same path.
+  // configuration without sanitizer or replay-only instrumentation. The
+  // dedicated m3_vst3_realtime_tests target runs this exact path against a
+  // production-shaped detector.
   M3_EXPECT_TRUE(true);
 #else
   constexpr std::uint32_t kFrames = 32U;
   constexpr double kSampleRate = 96000.0;
-  constexpr std::size_t kWarmupBlocks = 512U;
+  // Warm for two seconds so CPU-frequency governors reach their sustained
+  // audio-load state before the deadline sample. The former 171 ms warmup was
+  // order-dependent under powersave: it passed after a build and failed when
+  // reached after low-load functional tests despite identical callback work.
+  constexpr std::size_t kWarmupBlocks = 6000U;
   constexpr std::size_t kMeasuredBlocks = 12000U;
   constexpr std::uint64_t kBlockDeadlineNanoseconds =
       1000000000ULL * kFrames / 96000ULL;
@@ -158,7 +164,6 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
     close_instance(instance);
     return;
   }
-
   const std::array<std::uint8_t, m3::kMaxVoices> notes{
       32U, 36U, 40U, 44U, 48U, 52U, 56U, 60U};
   std::array<double, m3::kMaxVoices> frequencies{};
@@ -253,12 +258,16 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
       cpu_durations.back() >= kMaximumBudgetNanoseconds) {
     std::fprintf(stderr,
                  "96 kHz callback timing: wall-p99=%llu ns wall-max=%llu ns "
-                 "cpu-max=%llu ns budgets=%llu/%llu ns\n",
+                 "cpu-max=%llu ns budgets=%llu/%llu ns "
+                 "pool=%u edges=%u transitions=%u\n",
                  static_cast<unsigned long long>(wall_durations[p99_index]),
                  static_cast<unsigned long long>(wall_durations.back()),
                  static_cast<unsigned long long>(cpu_durations.back()),
                  static_cast<unsigned long long>(kP99BudgetNanoseconds),
-                 static_cast<unsigned long long>(kMaximumBudgetNanoseconds));
+                 static_cast<unsigned long long>(kMaximumBudgetNanoseconds),
+                 maximum_selection_work.pool_candidates,
+                 maximum_selection_work.assignment_edges,
+                 maximum_selection_work.state_transitions);
   }
   M3_EXPECT_TRUE(wall_durations[p99_index] < kP99BudgetNanoseconds);
   M3_EXPECT_TRUE(cpu_durations.back() < kMaximumBudgetNanoseconds);

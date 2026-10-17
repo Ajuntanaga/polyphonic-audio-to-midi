@@ -11,6 +11,7 @@
 
 #include "dry_path.hpp"
 #include "m3/constants.hpp"
+#include "m3/factory_calibration.hpp"
 #include "m3_editor.hpp"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/base/fstrdefs.h"
@@ -215,7 +216,7 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   tuner_telemetry_.clear(TunerFrameState::unavailable);
   calibration_restore_.reset();
   calibration_published_.reset();
-  main_calibration_bank_.clear();
+  main_calibration_bank_ = factory_m3_calibration_bank();
   calibration_published_.publish(main_calibration_bank_, 0U);
   processing_started_once_ = false;
   decision_phase_ = 0U;
@@ -230,7 +231,10 @@ Steinberg::tresult PLUGIN_API M3Component::initialize(
   panic_requested_.store(false, std::memory_order_relaxed);
   calibration_command_.store(kCalibrationCommandNone,
                              std::memory_order_relaxed);
-  calibration_status_.store(0U, std::memory_order_relaxed);
+  calibration_status_.store(
+      pack_calibration_status(CalibrationSweepStatus{},
+                              main_calibration_bank_.calibrated_string_mask),
+      std::memory_order_relaxed);
   calibration_restore_counter_.store(0U, std::memory_order_relaxed);
   status_dirty_ = false;
   tuner_note_dirty_ = false;
@@ -397,12 +401,14 @@ Steinberg::tresult PLUGIN_API M3Component::setActive(Steinberg::TBool state) {
     active_config_ = prepared.requested;
     copy_runtime_config(active_config_, snapshot.config);
     audio_requested_config_ = active_config_;
+    adopt_published_calibration_on_main_thread();
     if (!detector_.configure(processSetup.sampleRate, active_config_)) {
       prepared_exchange_.reset();
       prepared_exchange_initialized_ = false;
       generated_notes_.release_storage_preserving_pending();
       return Steinberg::kInvalidArgument;
     }
+    detector_.set_calibration_bank(main_calibration_bank_);
     structural_boundary_pending_ = false;
     prepared_claim_pending_ = false;
     if (!generated_notes_.release_pending()) {
@@ -553,6 +559,7 @@ Steinberg::tresult PLUGIN_API M3Component::setState(
   if (!load_vst3_state_with_calibration(state, candidate, calibration)) {
     return Steinberg::kResultFalse;
   }
+  calibration = merge_m3_factory_calibration(calibration);
   if (!publish_main_config(candidate)) {
     return Steinberg::kResultFalse;
   }
@@ -568,14 +575,10 @@ Steinberg::tresult PLUGIN_API M3Component::setState(
 Steinberg::tresult PLUGIN_API M3Component::getState(
     Steinberg::IBStream* state) {
   ConfigRequestSnapshot snapshot;
-  CalibrationBankSnapshot calibration;
   if (!initialized_ || !config_request_.snapshot(snapshot)) {
     return Steinberg::kResultFalse;
   }
-  if (calibration_published_.read_latest(calibration) &&
-      calibration.generation == main_calibration_restore_generation_) {
-    main_calibration_bank_ = calibration.bank;
-  }
+  adopt_published_calibration_on_main_thread();
   return save_vst3_state_with_calibration(
              snapshot.config, main_calibration_bank_, state)
              ? Steinberg::kResultOk
@@ -961,6 +964,7 @@ void M3Component::apply_string_calibration_command() noexcept {
     detector_.cancel_string_calibration();
   } else if (command == kCalibrationCommandClear) {
     detector_.clear_string_calibration();
+    detector_.set_calibration_bank(factory_m3_calibration_bank());
     publish_calibration_bank_from_audio();
   }
   publish_string_calibration_status();
@@ -978,6 +982,14 @@ void M3Component::apply_calibration_restore() noexcept {
   previous_calibration_phase_ = detector_.calibration_status().phase;
   calibration_published_.publish(snapshot.bank, snapshot.generation);
   publish_string_calibration_status();
+}
+
+void M3Component::adopt_published_calibration_on_main_thread() noexcept {
+  CalibrationBankSnapshot snapshot;
+  if (calibration_published_.read_latest(snapshot) &&
+      snapshot.generation == main_calibration_restore_generation_) {
+    main_calibration_bank_ = snapshot.bank;
+  }
 }
 
 void M3Component::publish_calibration_bank_from_audio() noexcept {
@@ -1292,6 +1304,16 @@ PolyphonicPitchDetector::SelectionWork detector_selection_work_for_test(
              : PolyphonicPitchDetector::SelectionWork{};
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void disable_offline_replay_diagnostics_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)
+        ->disable_offline_replay_diagnostics_for_test();
+  }
+}
+#endif
+
 bool read_tuner_snapshot_for_test(Steinberg::Vst::IAudioProcessor* processor,
                                   TunerSnapshot& snapshot) noexcept {
   return processor != nullptr &&
@@ -1314,6 +1336,14 @@ bool request_string_calibration_for_test(
   return processor != nullptr &&
          static_cast<M3Component*>(processor)->request_string_calibration(
              string_index);
+}
+
+StringCalibrationBank detector_calibration_bank_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)
+                   ->detector_calibration_bank_for_test()
+             : StringCalibrationBank{};
 }
 
 M3Component::StringCalibrationUiState string_calibration_ui_state_for_test(

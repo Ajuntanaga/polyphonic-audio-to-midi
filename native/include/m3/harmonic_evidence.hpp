@@ -6,6 +6,14 @@
 namespace m3 {
 
 inline constexpr std::size_t kHarmonicEvidenceCount = 6U;
+inline constexpr std::size_t kSpectralTierCount = 4U;
+
+enum class SpectralTier : std::size_t {
+  low = 0U,
+  low_mid = 1U,
+  high_mid = 2U,
+  high = 3U,
+};
 
 // A normalized, fixed-size view of one already-observed harmonic frame.
 // Lower and upper partial groups remain separate because they answer
@@ -30,9 +38,18 @@ struct HarmonicEvidenceComparison final {
   }
 };
 
+struct SpectralTierComparison final {
+  std::array<double, kSpectralTierCount> tier_log_likelihood{};
+  // Transition from the body-dominated third partial into upper overtones.
+  double overtone_separation_log_likelihood{};
+};
+
 HarmonicEvidence make_harmonic_evidence(
     const std::array<double, kHarmonicEvidenceCount>& energy) noexcept;
 HarmonicEvidenceComparison compare_harmonic_evidence(
+    const HarmonicEvidence& observed,
+    const HarmonicEvidence& reference) noexcept;
+SpectralTierComparison compare_spectral_tiers(
     const HarmonicEvidence& observed,
     const HarmonicEvidence& reference) noexcept;
 double harmonic_transient_strength(const HarmonicEvidence& fast,

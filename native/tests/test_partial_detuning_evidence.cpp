@@ -54,6 +54,36 @@ M3_TEST(partial_detuning_cancels_global_tuning_and_retains_stretch) {
   M3_EXPECT_NEAR(evidence.residual_cents[5U], 4.0, 0.08);
   M3_EXPECT_NEAR(evidence.upper_mean_cents, (1.5 + 2.5 + 4.0) / 3.0,
                  0.08);
+
+  const auto absolute = tracker.absolute_cents_evidence();
+  M3_EXPECT_EQ(absolute.valid_mask, 0x3FU);
+  M3_EXPECT_NEAR(absolute.cents[0U], 8.0, 0.08);
+  M3_EXPECT_NEAR(absolute.cents[3U], 9.5, 0.08);
+  M3_EXPECT_NEAR(absolute.cents[4U], 10.5, 0.08);
+  M3_EXPECT_NEAR(absolute.cents[5U], 12.0, 0.08);
+}
+
+M3_TEST(partial_absolute_cents_survives_missing_fundamental) {
+  constexpr double kDecisionRate = 750.0;
+  std::array<double, m3::kPartialDetuningCount> offsets{};
+  for (std::size_t partial = 0U; partial < offsets.size(); ++partial) {
+    const double center = 110.0 * static_cast<double>(partial + 1U);
+    offsets[partial] = center * (std::exp2(18.0 / 1200.0) - 1.0);
+  }
+
+  m3::PartialDetuningTracker tracker;
+  for (std::size_t tick = 0U; tick < 500U; ++tick) {
+    auto frame = make_frame(offsets, tick, kDecisionRate);
+    frame.energy[0U] = 0.0;
+    tracker.update(frame, kDecisionRate);
+  }
+
+  M3_EXPECT_FALSE(tracker.evidence().valid);
+  const auto absolute = tracker.absolute_cents_evidence();
+  M3_EXPECT_EQ(absolute.valid_mask, 0x3EU);
+  for (std::size_t partial = 1U; partial < offsets.size(); ++partial) {
+    M3_EXPECT_NEAR(absolute.cents[partial], 18.0, 0.08);
+  }
 }
 
 M3_TEST(partial_detuning_rejects_missing_fundamental_and_resets) {

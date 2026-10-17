@@ -144,6 +144,27 @@ def build_pairwise_fret_plan() -> tuple[tuple[int, ...], ...]:
     return tuple(tuple(row) for row in rows)
 
 
+def filter_distinct_pitch_plan(
+    rows: Sequence[tuple[int, ...]], maximum_active_voices: int = 8,
+) -> tuple[tuple[int, ...], ...]:
+    """Keep ordinary polyphonic cases without any same-pitch string pair."""
+    if not 2 <= maximum_active_voices <= 8:
+        raise ValueError("maximum active voices must be between two and eight")
+    selected: list[tuple[int, ...]] = []
+    for row in rows:
+        notes = [
+            OPEN_NOTES[index + 1] + fret
+            for index, fret in enumerate(row)
+            if fret >= 0
+        ]
+        if (
+            2 <= len(notes) <= maximum_active_voices
+            and len(notes) == len(set(notes))
+        ):
+            selected.append(tuple(row))
+    return tuple(selected)
+
+
 def build_unison_plan(
     catalog: Mapping[tuple[int, int], Sequence[NoteExample]],
 ) -> tuple[tuple[NoteClass, ...], ...]:
@@ -420,6 +441,8 @@ def render_replay_corpus(
     unison_sizes: Sequence[int] = (),
     context_voice_count: int = 3,
     consecutive_unisons_only: bool = False,
+    distinct_pitches_only: bool = False,
+    maximum_active_voices: int = 8,
 ) -> dict[str, int]:
     """Stream the bounded pairwise and unison plans into one replay corpus."""
     if hold_seconds <= 0.0 or gap_seconds < 0.0:
@@ -446,6 +469,10 @@ def render_replay_corpus(
     if plan not in {"all", "pairwise", "unison", "contextual-unison"}:
         raise ValueError("unknown replay plan")
     pairwise = build_pairwise_fret_plan() if plan in {"all", "pairwise"} else ()
+    if distinct_pitches_only:
+        if plan != "pairwise":
+            raise ValueError("distinct-pitches-only requires the pairwise plan")
+        pairwise = filter_distinct_pitch_plan(pairwise, maximum_active_voices)
     unisons = build_unison_plan(catalog) if plan in {"all", "unison"} else ()
     if plan == "contextual-unison":
         requested_sizes = tuple(unison_sizes) or (3,)
@@ -531,6 +558,10 @@ def main() -> int:
     )
     parser.add_argument("--context-voices", type=int, default=3)
     parser.add_argument("--consecutive-unisons-only", action="store_true")
+    parser.add_argument("--distinct-pitches-only", action="store_true")
+    parser.add_argument(
+        "--maximum-active-voices", type=int, choices=range(2, 9), default=8
+    )
     args = parser.parse_args()
     manifest = build_manifest(args.labels)
     if args.render_wave is not None or args.render_labels is not None:
@@ -548,6 +579,8 @@ def main() -> int:
             unison_sizes=args.unison_size,
             context_voice_count=args.context_voices,
             consecutive_unisons_only=args.consecutive_unisons_only,
+            distinct_pitches_only=args.distinct_pitches_only,
+            maximum_active_voices=args.maximum_active_voices,
         )
     encoded = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
     if args.output is None:
