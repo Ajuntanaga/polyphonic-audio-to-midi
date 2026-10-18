@@ -619,6 +619,10 @@ int main(int argc, char** argv) {
       "physical_group_selection_lane_outcomes\t"
       "physical_group_causal_encoding\t"
       "physical_group_causal_frames\t"
+      "physical_group_pending_causal_encoding\t"
+      "physical_group_pending_causal_frames\t"
+      "physical_group_member_pending_causal_frames\t"
+      "physical_group_member_exact_exit_frames\t"
       "physical_group_causal_runs\t"
       "physical_group_causal_longest_runs\t"
       "physical_group_member_causal_frames\t"
@@ -631,6 +635,9 @@ int main(int argc, char** argv) {
       "physical_group_member_fine_unresolved_frames\t"
       "physical_group_member_fine_unresolved_runs\t"
       "physical_group_member_fine_unresolved_longest_runs\t"
+      "physical_group_fine_classifier_encoding\t"
+      "physical_group_fine_classifier_frames\t"
+      "physical_group_member_fine_classifier_frames\t"
       "fine_residual_expansion_score_floors\t"
       "fine_residual_expansion_thresholds\t"
       "fine_residual_expansion_changed\t"
@@ -823,6 +830,16 @@ int main(int argc, char** argv) {
       "\tcell=(((selection*4)+fine_relation)*4+committed_relation)*6+"
       "lane_outcome\t");
   print_sparse_u64_bins(result.physical_group_causal_frames);
+  std::printf(
+      "\tcell=(((selection*4)+fine_relation)*4+pending_relation)*6+"
+      "lane_outcome\t");
+  print_sparse_u64_bins(result.physical_group_pending_causal_frames);
+  std::printf("\t");
+  print_sparse_u64_joint_bins(
+      result.physical_group_member_pending_causal_frames);
+  std::printf("\t");
+  print_sparse_u64_joint_bins(
+      result.physical_group_member_exact_exit_frames);
   std::printf("\t");
   print_sparse_u64_bins(result.physical_group_causal_runs);
   std::printf("\t");
@@ -851,6 +868,12 @@ int main(int argc, char** argv) {
   std::printf("\t");
   print_sparse_u64_joint_bins(
       result.physical_group_member_fine_unresolved_longest_run_frames);
+  std::printf(
+      "\tcell=((fine_relation*4)+classifier_relation)*6+lane_outcome\t");
+  print_sparse_u64_bins(result.physical_group_fine_classifier_frames);
+  std::printf("\t");
+  print_sparse_u64_joint_bins(
+      result.physical_group_member_fine_classifier_frames);
   std::printf("\t");
   print_sequence(m3::offline::kFineResidualExpansionScoreFloors);
   std::printf("\t");
@@ -997,6 +1020,7 @@ int main(int argc, char** argv) {
         "selection_selected\tselection_coasting\tselection_quiet_causes\t"
         "selection_quiet_cause_runs\t"
         "selection_quiet_cause_longest_frames\t"
+        "minimum_evidence_resume_flags\t"
         "fine_history_carry_dispositions\t"
         "candidate_unison_spectral_frames\t"
         "candidate_unison_spectral_invalid\t"
@@ -1029,6 +1053,9 @@ int main(int argc, char** argv) {
         "articulated_unison_reacquisition_matched_delta\t"
         "articulated_unison_reacquisition_wrong_string_delta\t"
         "articulated_unison_reacquisition_dispositions\t"
+        "articulated_unison_reacquisition_counterfactual_matched_delta\t"
+        "articulated_unison_reacquisition_counterfactual_exact_delta\t"
+        "articulated_unison_reacquisition_counterfactual_wrong_string_delta\t"
         "observed_fingerprint_maximum_squared_distances\t"
         "observed_fingerprint_reacquisition_projected\t"
         "observed_fingerprint_reacquisition_changed\t"
@@ -1145,6 +1172,11 @@ int main(int argc, char** argv) {
         "fine_frequency_member_minimum_ratio_means\t"
         "fine_frequency_member_minimum_beat_coherence_means\t"
         "fine_frequency_member_minimum_beat_coherence_bins\t"
+        "fine_unique_member_pruning_floors\t"
+        "fine_unique_member_pruning_changed\t"
+        "fine_unique_member_pruning_exact\t"
+        "fine_unique_member_pruning_matched_delta\t"
+        "fine_unique_member_pruning_wrong_string_delta\t"
         "fine_frequency_pending_member_masks\t"
         "fine_frequency_fit_member_masks\t"
         "fine_exact_fit_residual_bins\t"
@@ -1213,6 +1245,9 @@ int main(int argc, char** argv) {
         "spectral_head_plurality_margin_thresholds\t"
         "spectral_head_plurality_best\t"
         "spectral_tier_production_proposal_masks\t"
+        "spectral_tier_production_relation_lane_outcomes\t"
+        "selector_group_relation_lane_outcomes\t"
+        "tier_completion_disposition_lane_outcomes\t"
         "spectral_tier_completion_frames\t"
         "spectral_tier_completion_candidate_masks\t"
         "spectral_tier_completion_added_member_beat_bins\t"
@@ -1270,6 +1305,10 @@ int main(int argc, char** argv) {
         "bounded_joint_completion_exact\t"
         "bounded_joint_completion_matched_delta\t"
         "bounded_joint_completion_wrong_string_delta\t"
+        "fine_exact_completion_changed\t"
+        "fine_exact_completion_exact\t"
+        "fine_exact_completion_matched_delta\t"
+        "fine_exact_completion_wrong_string_delta\t"
         "tier_ratio08_changed_by_phase\t"
         "tier_ratio08_matched_delta_by_phase\t"
         "tier_ratio08_wrong_delta_by_phase\t"
@@ -1413,6 +1452,8 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_bins(detail.longest_quiet_disposition_run_frames);
       std::printf("\t");
+      print_bins(detail.minimum_evidence_resume_flag_frames);
+      std::printf("\t");
       print_bins(detail.fine_history_carry_disposition_frames);
       std::printf("\t%u\t%u\t", detail.candidate_unison_spectral_frames,
                   detail.candidate_unison_spectral_invalid_frames);
@@ -1481,6 +1522,15 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_joint_bins(
           detail.articulated_unison_reacquisition_disposition_frames);
+      std::printf("\t");
+      print_joint_signed_bins(
+          detail.articulated_unison_reacquisition_counterfactual_matched_delta);
+      std::printf("\t");
+      print_joint_signed_bins(
+          detail.articulated_unison_reacquisition_counterfactual_exact_delta);
+      std::printf("\t");
+      print_joint_signed_bins(
+          detail.articulated_unison_reacquisition_counterfactual_wrong_string_delta);
       std::printf("\t");
       print_sequence(
           m3::offline::kObservedFingerprintMaximumSquaredDistances);
@@ -1854,6 +1904,17 @@ int main(int argc, char** argv) {
         }
       }
       std::printf("\t");
+      print_sequence(m3::offline::kFineUniqueMemberImprovementFloors);
+      std::printf("\t");
+      print_sequence(detail.fine_unique_member_pruning_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_unique_member_pruning_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_unique_member_pruning_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.fine_unique_member_pruning_wrong_string_delta);
+      std::printf("\t");
       bool first_pending_mask = true;
       for (std::size_t mask = 0U;
            mask < detail.fine_frequency_pending_member_mask_frames.size();
@@ -2097,6 +2158,14 @@ int main(int argc, char** argv) {
       print_joint_bins(detail.spectral_head_plurality_best_frames);
       std::printf("\t");
       print_bins(detail.spectral_tier_production_proposal_mask_frames);
+      std::printf("\t");
+      print_joint_bins(
+          detail.spectral_tier_production_relation_lane_outcome_frames);
+      std::printf("\t");
+      print_joint_bins(detail.selector_group_relation_lane_outcome_frames);
+      std::printf("\t");
+      print_joint_bins(
+          detail.tier_completion_disposition_lane_outcome_frames);
       std::printf("\t%u\t",
                   detail.spectral_tier_completion_projected_frames);
       print_bins(detail.spectral_tier_completion_candidate_mask_frames);
@@ -2211,6 +2280,13 @@ int main(int argc, char** argv) {
                       detail.bounded_joint_completion_matched_delta),
                   static_cast<long long>(
                       detail.bounded_joint_completion_wrong_string_delta));
+      std::printf("\t%u\t%u\t%lld\t%lld",
+                  detail.fine_exact_completion_changed_frames,
+                  detail.fine_exact_completion_exact_frames,
+                  static_cast<long long>(
+                      detail.fine_exact_completion_matched_delta),
+                  static_cast<long long>(
+                      detail.fine_exact_completion_wrong_string_delta));
       std::printf("\t");
       print_sequence(detail.tier_ratio08_changed_by_phase);
       std::printf("\t");

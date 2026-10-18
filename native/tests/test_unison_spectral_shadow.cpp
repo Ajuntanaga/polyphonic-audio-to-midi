@@ -602,6 +602,28 @@ M3_TEST(articulated_unison_reacquisition_requires_fresh_bounded_evidence) {
                ArticulatedUnisonReacquisitionDisposition::ownership_conflict);
 }
 
+M3_TEST(articulated_reacquisition_counterfactual_scores_hidden_recovery) {
+  using m3::offline::articulated_reacquisition_counterfactual;
+
+  const auto recovered = articulated_reacquisition_counterfactual(
+      0x03U, 0x07U, 0x04U, 0x07U, true);
+  M3_EXPECT_EQ(recovered.matched_delta, 1);
+  M3_EXPECT_EQ(recovered.exact_delta, 1);
+  M3_EXPECT_EQ(recovered.wrong_string_delta, 0);
+
+  const auto already_exact = articulated_reacquisition_counterfactual(
+      0x07U, 0x07U, 0x04U, 0x07U, true);
+  M3_EXPECT_EQ(already_exact.matched_delta, 0);
+  M3_EXPECT_EQ(already_exact.exact_delta, 0);
+  M3_EXPECT_EQ(already_exact.wrong_string_delta, 0);
+
+  const auto unsafe = articulated_reacquisition_counterfactual(
+      0x03U, 0x0bU, 0x08U, 0x07U, true);
+  M3_EXPECT_EQ(unsafe.matched_delta, 1);
+  M3_EXPECT_EQ(unsafe.exact_delta, 0);
+  M3_EXPECT_EQ(unsafe.wrong_string_delta, 1);
+}
+
 M3_TEST(observed_spectral_fingerprint_rejects_a_different_articulation) {
   using m3::UnisonSpectralFingerprint;
   using m3::offline::ArticulatedUnisonReacquisitionDisposition;
@@ -711,6 +733,32 @@ M3_TEST(unison_spectral_tier_completion_adds_only_one_beat_coherent_member) {
                    m3::offline::SpectralShadowPhase::settled, kTwoExtraHeads,
                    kMargins, 0.001),
                0x06U);
+}
+
+M3_TEST(fine_unique_member_pruning_drops_only_one_causally_redundant_member) {
+  using m3::offline::bounded_fine_unique_member_pruning_projection;
+  std::array<double, m3::kMaxVoices> contribution{};
+  contribution[0U] = 0.30;
+  contribution[1U] = 0.01;
+  contribution[2U] = 0.40;
+
+  M3_EXPECT_EQ(bounded_fine_unique_member_pruning_projection(
+                   0x07U, 0x07U, contribution, 0.02),
+               0x05U);
+  M3_EXPECT_EQ(bounded_fine_unique_member_pruning_projection(
+                   0x07U, 0x07U, contribution, 0.01),
+               0x07U);
+  M3_EXPECT_EQ(bounded_fine_unique_member_pruning_projection(
+                   0x03U, 0x07U, contribution, 0.02),
+               0x03U);
+  M3_EXPECT_EQ(bounded_fine_unique_member_pruning_projection(
+                   0x03U, 0x03U, contribution, 0.02),
+               0x03U);
+
+  contribution[2U] = 0.01;
+  M3_EXPECT_EQ(bounded_fine_unique_member_pruning_projection(
+                   0x07U, 0x07U, contribution, 0.02),
+               0x07U);
 }
 
 M3_TEST(selected_subset_completion_requires_unique_bounded_consensus) {

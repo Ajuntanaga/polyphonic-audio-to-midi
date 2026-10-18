@@ -399,6 +399,38 @@ bounded_articulated_unison_reacquisition_projection(
   return {cached_group_mask, Disposition::accepted};
 }
 
+ArticulatedUnisonReacquisitionCounterfactual
+articulated_reacquisition_counterfactual(
+    std::uint8_t observed_mask, std::uint8_t cached_group_mask,
+    std::uint8_t label_string_mask, std::uint8_t expected_group_mask,
+    bool group_leader) noexcept {
+  const bool observed_matches = (observed_mask & label_string_mask) != 0U;
+  const bool cached_matches =
+      (cached_group_mask & label_string_mask) != 0U;
+  const bool observed_exact =
+      group_leader && observed_mask == expected_group_mask;
+  const bool cached_exact =
+      group_leader && cached_group_mask == expected_group_mask;
+  const std::int32_t observed_wrong =
+      group_leader
+          ? static_cast<std::int32_t>(popcount(static_cast<std::uint8_t>(
+                observed_mask & static_cast<std::uint8_t>(~expected_group_mask))))
+          : 0;
+  const std::int32_t cached_wrong =
+      group_leader
+          ? static_cast<std::int32_t>(popcount(static_cast<std::uint8_t>(
+                cached_group_mask &
+                static_cast<std::uint8_t>(~expected_group_mask))))
+          : 0;
+  return {
+      static_cast<std::int32_t>(cached_matches) -
+          static_cast<std::int32_t>(observed_matches),
+      static_cast<std::int32_t>(cached_exact) -
+          static_cast<std::int32_t>(observed_exact),
+      cached_wrong - observed_wrong,
+  };
+}
+
 ArticulatedUnisonReacquisitionResult
 bounded_observed_fingerprint_reacquisition_projection(
     ArticulatedUnisonReacquisitionResult base,
@@ -497,6 +529,44 @@ std::uint8_t bounded_spectral_tier_completion_proposal(
       fine_frequency_mask, phase, best_string, margin, minimum_margin);
   return completion != fine_frequency_mask ? completion
                                            : current_assignment_mask;
+}
+
+std::uint8_t bounded_fine_unique_member_pruning_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t fine_frequency_mask,
+    const std::array<double, kMaxVoices>& unique_member_improvement,
+    double minimum_unique_improvement) noexcept {
+  const std::uint8_t members = popcount(fine_frequency_mask);
+  if (current_assignment_mask != fine_frequency_mask || members < 3U ||
+      members > 4U || !std::isfinite(minimum_unique_improvement) ||
+      minimum_unique_improvement < 0.0) {
+    return current_assignment_mask;
+  }
+  double weakest = std::numeric_limits<double>::infinity();
+  std::uint8_t weakest_bit = 0U;
+  bool tied = false;
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+    if ((fine_frequency_mask & bit) == 0U) {
+      continue;
+    }
+    const double contribution = unique_member_improvement[string];
+    if (!std::isfinite(contribution) || contribution < 0.0) {
+      return current_assignment_mask;
+    }
+    if (contribution < weakest) {
+      weakest = contribution;
+      weakest_bit = bit;
+      tied = false;
+    } else if (contribution == weakest) {
+      tied = true;
+    }
+  }
+  return !tied && weakest_bit != 0U &&
+                 weakest < minimum_unique_improvement
+             ? static_cast<std::uint8_t>(fine_frequency_mask &
+                                         static_cast<std::uint8_t>(
+                                             ~weakest_bit))
+             : current_assignment_mask;
 }
 
 std::uint8_t bounded_physical_tier_completion_projection(

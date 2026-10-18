@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <string_view>
 #include <type_traits>
@@ -930,6 +931,25 @@ ReplayGroupMaskRelation classify_group_mask_relation(
   return ReplayGroupMaskRelation::other;
 }
 
+ReplayClassifierMaskRelation classify_classifier_mask_relation(
+    const UnisonSpectralClassification& classification,
+    std::uint8_t expected_mask, bool note_only) noexcept {
+  const std::uint8_t members = mask_member_count(classification.member_mask);
+  if (!classification.valid || classification.member_count != members ||
+      members < 2U || members > 4U) {
+    return ReplayClassifierMaskRelation::invalid;
+  }
+  if (note_only || classification.member_mask == expected_mask) {
+    return ReplayClassifierMaskRelation::exact;
+  }
+  if (expected_mask != 0U &&
+      (classification.member_mask &
+       static_cast<std::uint8_t>(~expected_mask)) == 0U) {
+    return ReplayClassifierMaskRelation::subset;
+  }
+  return ReplayClassifierMaskRelation::other;
+}
+
 ReplayObservedFingerprintChangedFrameDiagnostic
 diagnose_observed_fingerprint_changed_frame(
     std::uint8_t committed_mask, std::uint8_t expected_mask,
@@ -970,6 +990,21 @@ std::size_t physical_group_fine_unresolved_cell_index(
       static_cast<std::size_t>(ReplayTargetLaneOutcome::count);
   return ((selection_disposition * kFineFrequencyUnresolvedReasonCount) +
           unresolved_reason) *
+             kLaneOutcomeCount +
+         static_cast<std::size_t>(lane_outcome);
+}
+
+std::size_t physical_group_fine_classifier_cell_index(
+    ReplayGroupMaskRelation fine_relation,
+    ReplayClassifierMaskRelation classifier_relation,
+    ReplayTargetLaneOutcome lane_outcome) noexcept {
+  constexpr std::size_t kClassifierRelationCount =
+      static_cast<std::size_t>(ReplayClassifierMaskRelation::count);
+  constexpr std::size_t kLaneOutcomeCount =
+      static_cast<std::size_t>(ReplayTargetLaneOutcome::count);
+  return ((static_cast<std::size_t>(fine_relation) *
+           kClassifierRelationCount) +
+          static_cast<std::size_t>(classifier_relation)) *
              kLaneOutcomeCount +
          static_cast<std::size_t>(lane_outcome);
 }
@@ -1685,7 +1720,11 @@ bool run_detector_replay(const WaveData& wave,
       return false;
     }
   }
-  PolyphonicPitchDetector detector;
+  // Diagnostic builds intentionally carry large fixed counter tables. Keep
+  // the detector and result off callers' bounded thread stacks; replay is an
+  // offline tool and may allocate before processing begins.
+  auto detector_storage = std::make_unique<PolyphonicPitchDetector>();
+  PolyphonicPitchDetector& detector = *detector_storage;
   if (!detector.configure(static_cast<double>(wave.sample_rate), config)) {
     return false;
   }
@@ -1709,7 +1748,8 @@ bool run_detector_replay(const WaveData& wave,
           decisive_calibrated_selector->minimum_margin)) {
     return false;
   }
-  ReplayResult result;
+  auto result_storage = std::make_unique<ReplayResult>();
+  ReplayResult& result = *result_storage;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   result.physical_group_expected_observed_mask_frames.assign(1U << 16U, 0U);
   result.physical_group_expected_fine_mask_frames.assign(1U << 16U, 0U);
@@ -1753,6 +1793,8 @@ bool run_detector_replay(const WaveData& wave,
     std::size_t cell{kPhysicalGroupCausalCellCount};
     std::uint32_t frames{};
     std::uint8_t expected_members{};
+    ReplayTargetLaneOutcome last_outcome{ReplayTargetLaneOutcome::count};
+    bool initialized{};
   };
   std::array<PhysicalGroupRunState, 128U> physical_group_runs{};
   struct PhysicalGroupFineUnresolvedRunState final {
@@ -1965,6 +2007,9 @@ bool run_detector_replay(const WaveData& wave,
             detector.fine_frequency_member_mask(static_cast<std::uint8_t>(note));
         const std::uint8_t committed =
             detector.committed_unison_mask(static_cast<std::uint8_t>(note));
+        const std::uint8_t pending =
+            detector.fine_frequency_pending_member_mask(
+                static_cast<std::uint8_t>(note));
         const bool note_only = spectral_expected_group_note_only[note];
         const auto stage_outcome =
             [note_only, expected](std::uint8_t mask) noexcept {
@@ -2004,12 +2049,29 @@ bool run_detector_replay(const WaveData& wave,
               classify_group_mask_relation(fine, expected, note_only);
           const ReplayGroupMaskRelation committed_relation =
               classify_group_mask_relation(committed, expected, note_only);
+          const ReplayGroupMaskRelation pending_relation =
+              classify_group_mask_relation(pending, expected, note_only);
           const std::size_t causal_cell = physical_group_causal_cell_index(
               selection_disposition, fine_relation, committed_relation,
               outcome);
           ++result.physical_group_causal_frames[causal_cell];
+          const std::size_t pending_causal_cell =
+              physical_group_causal_cell_index(
+                  selection_disposition, fine_relation, pending_relation,
+                  outcome);
+          ++result.physical_group_pending_causal_frames[pending_causal_cell];
+          ++result.physical_group_member_pending_causal_frames[members]
+                                                             [pending_causal_cell];
           ++result.physical_group_member_causal_frames[members][causal_cell];
           PhysicalGroupRunState& run = physical_group_runs[note];
+          if (run.initialized && run.expected_members == members &&
+              run.last_outcome == ReplayTargetLaneOutcome::exact &&
+              outcome != ReplayTargetLaneOutcome::exact) {
+            ++result.physical_group_member_exact_exit_frames[members]
+                                                            [causal_cell];
+          }
+          run.last_outcome = outcome;
+          run.initialized = true;
           if (run.cell != causal_cell || run.expected_members != members) {
             run.cell = causal_cell;
             run.frames = 0U;
@@ -3141,6 +3203,17 @@ bool run_detector_replay(const WaveData& wave,
           if (quiet_disposition <
               label_result.quiet_disposition_frames.size()) {
             ++label_result.quiet_disposition_frames[quiet_disposition];
+            if (quiet_disposition == static_cast<std::size_t>(
+                                         QuietDisposition::
+                                             minimum_evidence_after_signal_floor)) {
+              const std::size_t resume_flags =
+                  detector.fine_resume_evidence_flags(label.midi_note);
+              if (resume_flags <
+                  label_result.minimum_evidence_resume_flag_frames.size()) {
+                ++label_result.minimum_evidence_resume_flag_frames
+                      [resume_flags];
+              }
+            }
             if (tracking.current_quiet_disposition != quiet_disposition) {
               tracking.current_quiet_disposition = quiet_disposition;
               tracking.current_quiet_disposition_run_frames = 0U;
@@ -3194,6 +3267,41 @@ bool run_detector_replay(const WaveData& wave,
             label_result.fine_history_carry_disposition_frames.size()) {
           ++label_result.fine_history_carry_disposition_frames
                 [fine_carry_disposition];
+        }
+        if (spectral_group_leader_indices[label.midi_note] == label_index) {
+          const std::uint8_t expected_group =
+              spectral_expected_group_masks[label.midi_note];
+          const bool group_note_only =
+              spectral_expected_group_note_only[label.midi_note];
+          const std::uint8_t observed_group =
+              matching_note_lane_mask(snapshot, label.midi_note);
+          const std::uint8_t fine_group =
+              detector.fine_frequency_member_mask(label.midi_note);
+          const ReplayTargetLaneOutcome group_outcome =
+              group_note_only
+                  ? (observed_group == 0U
+                         ? ReplayTargetLaneOutcome::absent
+                         : ReplayTargetLaneOutcome::exact)
+                  : classify_target_lane_outcome(observed_group,
+                                                 expected_group);
+          const ReplayGroupMaskRelation fine_relation =
+              classify_group_mask_relation(fine_group, expected_group,
+                                           group_note_only);
+          const ReplayClassifierMaskRelation classifier_relation =
+              classify_classifier_mask_relation(
+                  candidate_unison_classifications[label.midi_note],
+                  expected_group, group_note_only);
+          const std::size_t joint_cell =
+              physical_group_fine_classifier_cell_index(
+                  fine_relation, classifier_relation, group_outcome);
+          const std::size_t expected_members =
+              group_note_only
+                  ? 0U
+                  : static_cast<std::size_t>(
+                        mask_member_count(expected_group));
+          ++result.physical_group_fine_classifier_frames[joint_cell];
+          ++result.physical_group_member_fine_classifier_frames
+                [expected_members][joint_cell];
         }
         if (candidate_unison_ready[label.midi_note]) {
           ++label_result.candidate_unison_spectral_frames;
@@ -3398,6 +3506,27 @@ bool run_detector_replay(const WaveData& wave,
                 ++label_result
                       .articulated_unison_reacquisition_disposition_frames
                           [policy][projection_disposition];
+                const bool group_leader =
+                    spectral_group_leader_indices[label.midi_note] ==
+                    label_index;
+                const ArticulatedUnisonReacquisitionCounterfactual
+                    counterfactual = articulated_reacquisition_counterfactual(
+                        observed_lane_mask, reacquisition.resolved_mask,
+                        label.string_mask,
+                        spectral_expected_group_masks[label.midi_note],
+                        group_leader);
+                label_result
+                    .articulated_unison_reacquisition_counterfactual_matched_delta
+                        [policy][projection_disposition] +=
+                    counterfactual.matched_delta;
+                label_result
+                    .articulated_unison_reacquisition_counterfactual_exact_delta
+                        [policy][projection_disposition] +=
+                    counterfactual.exact_delta;
+                label_result
+                    .articulated_unison_reacquisition_counterfactual_wrong_string_delta
+                        [policy][projection_disposition] +=
+                    counterfactual.wrong_string_delta;
               }
               if (projection.disposition ==
                   ArticulatedUnisonReacquisitionDisposition::accepted) {
@@ -3908,6 +4037,76 @@ bool run_detector_replay(const WaveData& wave,
           ++label_result
                 .fine_frequency_member_mask_minimum_beat_coherence_bins
                     [fine_member_mask][beat_bin];
+        }
+        if (spectral_group_leader_indices[label.midi_note] == label_index) {
+          const std::uint8_t expected_group =
+              spectral_expected_group_masks[label.midi_note];
+          const std::uint8_t fine_mask =
+              static_cast<std::uint8_t>(fine_member_mask);
+          const std::uint8_t projected =
+              bounded_spectral_onset_latch_projection(
+                  observed_lane_mask, fine_mask,
+                  other_note_lane_mask(snapshot, label.midi_note),
+                  admission.playable_string_mask, config.max_polyphony);
+          if (projected != observed_lane_mask) {
+            ++label_result.fine_exact_completion_changed_frames;
+          }
+          if (projected == expected_group) {
+            ++label_result.fine_exact_completion_exact_frames;
+          }
+          label_result.fine_exact_completion_matched_delta +=
+              static_cast<std::int64_t>(projected == expected_group) -
+              static_cast<std::int64_t>(observed_lane_mask ==
+                                        expected_group);
+          label_result.fine_exact_completion_wrong_string_delta +=
+              static_cast<std::int64_t>(mask_member_count(
+                  static_cast<std::uint8_t>(
+                      projected & static_cast<std::uint8_t>(
+                                      ~expected_group)))) -
+              static_cast<std::int64_t>(mask_member_count(
+                  static_cast<std::uint8_t>(
+                      observed_lane_mask & static_cast<std::uint8_t>(
+                                               ~expected_group))));
+        }
+        const auto unique_member_improvement =
+            detector.fine_frequency_unique_member_improvement(
+                label.midi_note);
+        for (std::size_t policy = 0U;
+             policy < kFineUniqueMemberImprovementFloors.size(); ++policy) {
+          const std::uint8_t projected =
+              bounded_fine_unique_member_pruning_projection(
+                  observed_lane_mask,
+                  static_cast<std::uint8_t>(fine_member_mask),
+                  unique_member_improvement,
+                  kFineUniqueMemberImprovementFloors[policy]);
+          const bool group_leader =
+              spectral_group_leader_indices[label.midi_note] == label_index;
+          if (group_leader && projected != observed_lane_mask) {
+            ++label_result
+                  .fine_unique_member_pruning_changed_frames[policy];
+          }
+          if (group_leader &&
+              projected == spectral_expected_group_masks[label.midi_note]) {
+            ++label_result.fine_unique_member_pruning_exact_frames[policy];
+          }
+          label_result.fine_unique_member_pruning_matched_delta[policy] +=
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(projected, label)) -
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(observed_lane_mask, label));
+          if (group_leader) {
+            const std::uint8_t expected =
+                spectral_expected_group_masks[label.midi_note];
+            label_result
+                .fine_unique_member_pruning_wrong_string_delta[policy] +=
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        projected & static_cast<std::uint8_t>(~expected)))) -
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(observed_lane_mask &
+                                              static_cast<std::uint8_t>(
+                                                  ~expected))));
+          }
         }
         if (label.string_mask != 0U &&
             committed_mask == label.string_mask) {
@@ -4522,9 +4721,28 @@ bool run_detector_replay(const WaveData& wave,
                 .spectral_head_plurality_best_frames[threshold]
                                                     [plurality_string];
         }
-        ++label_result.spectral_tier_production_proposal_mask_frames[
+        const std::uint8_t production_tier_proposal =
             detector.spectral_tier_completion_proposal_mask(
-                label.midi_note)];
+                label.midi_note);
+        ++label_result.spectral_tier_production_proposal_mask_frames[
+            production_tier_proposal];
+        ++label_result
+              .spectral_tier_production_relation_lane_outcome_frames
+                  [static_cast<std::size_t>(classify_group_mask_relation(
+                      production_tier_proposal,
+                      spectral_expected_group_masks[label.midi_note],
+                      spectral_expected_group_note_only[label.midi_note]))]
+                  [static_cast<std::size_t>(lane_outcome)];
+        ++label_result.selector_group_relation_lane_outcome_frames
+              [static_cast<std::size_t>(classify_group_mask_relation(
+                  detector.selector_group_mask(label.midi_note),
+                  spectral_expected_group_masks[label.midi_note],
+                  spectral_expected_group_note_only[label.midi_note]))]
+              [static_cast<std::size_t>(lane_outcome)];
+        ++label_result.tier_completion_disposition_lane_outcome_frames
+              [static_cast<std::size_t>(
+                  detector.tier_completion_disposition(label.midi_note))]
+              [static_cast<std::size_t>(lane_outcome)];
         if (lane_outcome == ReplayTargetLaneOutcome::subset_missing &&
             disposition ==
                 static_cast<std::size_t>(SelectionDisposition::selected)) {

@@ -33,6 +33,8 @@ struct UnisonSpectralShadowTemplateBank;
 inline constexpr std::size_t kSpectralShadowMarginThresholdCount = 7U;
 inline constexpr std::array<double, 5U>
     kSpectralTierAddedMemberRatioFloors{0.02, 0.04, 0.06, 0.08, 0.10};
+inline constexpr std::array<double, 8U> kFineUniqueMemberImprovementFloors{
+    0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04, 0.08};
 inline constexpr std::array<double, 9U> kSpectralTierBeatMaximums{
     0.21, 0.22, 0.23, 0.24, 0.25, 0.275, 0.30, 0.325, 0.35};
 inline constexpr std::size_t kCandidateAdmissionRatioBinCount = 41U;
@@ -117,6 +119,7 @@ inline constexpr std::size_t kClassifierSubsetDispositionCount =
 inline constexpr std::size_t kCandidatePopulationClassCount = 2U;
 inline constexpr std::size_t kSelectionDispositionCount = 6U;
 inline constexpr std::size_t kQuietDispositionCount = 8U;
+inline constexpr std::size_t kTierCompletionDispositionCount = 6U;
 inline constexpr std::array<double, 10U>
     kUnisonReacquisitionHoldSeconds{0.05, 0.10, 0.20, 0.30, 0.50,
                                     1.00, 2.00, 4.00, 6.00, 8.00};
@@ -444,6 +447,18 @@ enum class ReplayGroupMaskRelation : std::size_t {
   count,
 };
 
+// Relation between the independently fitted spectral classifier mask and the
+// labeled physical group. Invalid is kept separate from an ordinary wrong
+// mask so replay can distinguish missing classifier evidence from a genuine
+// disagreement.
+enum class ReplayClassifierMaskRelation : std::size_t {
+  invalid,
+  exact,
+  subset,
+  other,
+  count,
+};
+
 inline constexpr std::size_t kPhysicalGroupCausalCellCount =
     kSelectionDispositionCount *
     static_cast<std::size_t>(ReplayGroupMaskRelation::count) *
@@ -452,10 +467,18 @@ inline constexpr std::size_t kPhysicalGroupCausalCellCount =
 inline constexpr std::size_t kPhysicalGroupFineUnresolvedCellCount =
     kSelectionDispositionCount * kFineFrequencyUnresolvedReasonCount *
     static_cast<std::size_t>(ReplayTargetLaneOutcome::count);
+inline constexpr std::size_t kPhysicalGroupFineClassifierCellCount =
+    static_cast<std::size_t>(ReplayGroupMaskRelation::count) *
+    static_cast<std::size_t>(ReplayClassifierMaskRelation::count) *
+    static_cast<std::size_t>(ReplayTargetLaneOutcome::count);
 
 ReplayGroupMaskRelation classify_group_mask_relation(
     std::uint8_t observed_mask, std::uint8_t expected_mask,
     bool note_only = false) noexcept;
+
+ReplayClassifierMaskRelation classify_classifier_mask_relation(
+    const UnisonSpectralClassification& classification,
+    std::uint8_t expected_mask, bool note_only = false) noexcept;
 
 struct ReplayObservedFingerprintChangedFrameDiagnostic final {
   ReplayGroupMaskRelation committed_relation{ReplayGroupMaskRelation::absent};
@@ -477,6 +500,11 @@ std::size_t physical_group_causal_cell_index(
 
 std::size_t physical_group_fine_unresolved_cell_index(
     std::size_t selection_disposition, std::size_t unresolved_reason,
+    ReplayTargetLaneOutcome lane_outcome) noexcept;
+
+std::size_t physical_group_fine_classifier_cell_index(
+    ReplayGroupMaskRelation fine_relation,
+    ReplayClassifierMaskRelation classifier_relation,
     ReplayTargetLaneOutcome lane_outcome) noexcept;
 
 ReplayTargetLaneOutcome classify_target_lane_outcome(
@@ -562,6 +590,8 @@ struct ReplayLabelResult final {
       quiet_disposition_runs{};
   std::array<std::uint32_t, kQuietDispositionCount>
       longest_quiet_disposition_run_frames{};
+  std::array<std::uint32_t, 128U>
+      minimum_evidence_resume_flag_frames{};
   std::array<std::uint32_t,
              static_cast<std::size_t>(
                  ReplayFineHistoryCarryDisposition::count)>
@@ -636,6 +666,21 @@ struct ReplayLabelResult final {
                  kArticulatedUnisonReacquisitionDispositionCount>,
       kArticulatedUnisonReacquisitionPolicyCount>
       articulated_unison_reacquisition_disposition_frames{};
+  std::array<
+      std::array<std::int64_t,
+                 kArticulatedUnisonReacquisitionDispositionCount>,
+      kArticulatedUnisonReacquisitionPolicyCount>
+      articulated_unison_reacquisition_counterfactual_matched_delta{};
+  std::array<
+      std::array<std::int64_t,
+                 kArticulatedUnisonReacquisitionDispositionCount>,
+      kArticulatedUnisonReacquisitionPolicyCount>
+      articulated_unison_reacquisition_counterfactual_exact_delta{};
+  std::array<
+      std::array<std::int64_t,
+                 kArticulatedUnisonReacquisitionDispositionCount>,
+      kArticulatedUnisonReacquisitionPolicyCount>
+      articulated_unison_reacquisition_counterfactual_wrong_string_delta{};
   std::array<std::uint32_t,
              kObservedFingerprintReacquisitionPolicyCount>
       observed_fingerprint_reacquisition_projected_frames{};
@@ -898,6 +943,14 @@ struct ReplayLabelResult final {
       fine_frequency_member_mask_minimum_beat_coherence_sum{};
   std::array<std::array<std::uint32_t, 21U>, 1U << kMaxVoices>
       fine_frequency_member_mask_minimum_beat_coherence_bins{};
+  std::array<std::uint32_t, kFineUniqueMemberImprovementFloors.size()>
+      fine_unique_member_pruning_changed_frames{};
+  std::array<std::uint32_t, kFineUniqueMemberImprovementFloors.size()>
+      fine_unique_member_pruning_exact_frames{};
+  std::array<std::int64_t, kFineUniqueMemberImprovementFloors.size()>
+      fine_unique_member_pruning_matched_delta{};
+  std::array<std::int64_t, kFineUniqueMemberImprovementFloors.size()>
+      fine_unique_member_pruning_wrong_string_delta{};
   std::array<std::uint32_t, 1U << kMaxVoices>
       fine_frequency_pending_member_mask_frames{};
   std::array<std::uint32_t, 1U << kMaxVoices>
@@ -1111,6 +1164,21 @@ struct ReplayLabelResult final {
   // This isolates policy/cache rejection from the counterfactual projection.
   std::array<std::uint32_t, 1U << kMaxVoices>
       spectral_tier_production_proposal_mask_frames{};
+  std::array<
+      std::array<std::uint32_t,
+                 static_cast<std::size_t>(ReplayTargetLaneOutcome::count)>,
+      static_cast<std::size_t>(ReplayGroupMaskRelation::count)>
+      spectral_tier_production_relation_lane_outcome_frames{};
+  std::array<
+      std::array<std::uint32_t,
+                 static_cast<std::size_t>(ReplayTargetLaneOutcome::count)>,
+      static_cast<std::size_t>(ReplayGroupMaskRelation::count)>
+      selector_group_relation_lane_outcome_frames{};
+  std::array<
+      std::array<std::uint32_t,
+                 static_cast<std::size_t>(ReplayTargetLaneOutcome::count)>,
+      kTierCompletionDispositionCount>
+      tier_completion_disposition_lane_outcome_frames{};
   // Counterfactual completion of exactly one missing fine-frequency member
   // from the independent tier heads. It remains offline-only until an entire
   // replay gate demonstrates that the completion is selective enough.
@@ -1185,6 +1253,10 @@ struct ReplayLabelResult final {
   std::uint32_t bounded_joint_completion_exact_frames{};
   std::int64_t bounded_joint_completion_matched_delta{};
   std::int64_t bounded_joint_completion_wrong_string_delta{};
+  std::uint32_t fine_exact_completion_changed_frames{};
+  std::uint32_t fine_exact_completion_exact_frames{};
+  std::int64_t fine_exact_completion_matched_delta{};
+  std::int64_t fine_exact_completion_wrong_string_delta{};
   std::array<std::uint32_t, 3U> tier_ratio08_changed_by_phase{};
   std::array<std::int64_t, 3U> tier_ratio08_matched_delta_by_phase{};
   std::array<std::int64_t, 3U> tier_ratio08_wrong_delta_by_phase{};
@@ -1425,6 +1497,21 @@ struct ReplayResult final {
   // transition or a sustained evidence/assignment failure.
   std::array<std::uint64_t, kPhysicalGroupCausalCellCount>
       physical_group_causal_frames{};
+  // Same encoding as physical_group_causal_frames, with the third relation
+  // representing the fresh pending fine mask instead of the committed mask.
+  // This identifies a full group that is already measured but still waiting
+  // at the consensus/commit boundary.
+  std::array<std::uint64_t, kPhysicalGroupCausalCellCount>
+      physical_group_pending_causal_frames{};
+  std::array<std::array<std::uint64_t, kPhysicalGroupCausalCellCount>,
+             kMaxVoices + 1U>
+      physical_group_member_pending_causal_frames{};
+  // Counts the first non-exact causal cell after an exact physical-group
+  // output. Member-indexing isolates practical triples and quads from pair
+  // setup passages without retaining frame-level traces.
+  std::array<std::array<std::uint64_t, kPhysicalGroupCausalCellCount>,
+             kMaxVoices + 1U>
+      physical_group_member_exact_exit_frames{};
   std::array<std::uint64_t, kPhysicalGroupCausalCellCount>
       physical_group_causal_runs{};
   std::array<std::uint32_t, kPhysicalGroupCausalCellCount>
@@ -1460,6 +1547,17 @@ struct ReplayResult final {
       std::array<std::uint32_t, kPhysicalGroupFineUnresolvedCellCount>,
       kMaxVoices + 1U>
       physical_group_member_fine_unresolved_longest_run_frames{};
+  // Flattened as ((fine_relation * 4 + classifier_relation) * 6 +
+  // observed_lane_outcome). This offline-only joint table shows whether an
+  // exact spectral fit exists specifically when fine evidence or the emitted
+  // physical group is incomplete. Each physical group contributes once via
+  // its deterministic leader label.
+  std::array<std::uint64_t, kPhysicalGroupFineClassifierCellCount>
+      physical_group_fine_classifier_frames{};
+  std::array<
+      std::array<std::uint64_t, kPhysicalGroupFineClassifierCellCount>,
+      kMaxVoices + 1U>
+      physical_group_member_fine_classifier_frames{};
   std::array<std::uint64_t, kFineResidualExpansionPolicyCount>
       fine_residual_expansion_changed_frames{};
   std::array<std::uint64_t, kFineResidualExpansionPolicyCount>

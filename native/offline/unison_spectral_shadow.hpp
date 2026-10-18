@@ -199,6 +199,21 @@ struct ArticulatedUnisonReacquisitionResult final {
       ArticulatedUnisonReacquisitionDisposition::no_cache};
 };
 
+struct ArticulatedUnisonReacquisitionCounterfactual final {
+  std::int32_t matched_delta{};
+  std::int32_t exact_delta{};
+  std::int32_t wrong_string_delta{};
+};
+
+// Offline-only accounting for the recovery hidden behind a reacquisition
+// rejection. This does not decide whether the cached group is admissible; it
+// only compares that group with the currently exposed lanes for a known label.
+[[nodiscard]] ArticulatedUnisonReacquisitionCounterfactual
+articulated_reacquisition_counterfactual(
+    std::uint8_t observed_mask, std::uint8_t cached_group_mask,
+    std::uint8_t label_string_mask, std::uint8_t expected_group_mask,
+    bool group_leader) noexcept;
+
 // Counterfactual for a returning articulation of a previously resolved
 // three- or four-string unison.  Fresh pending fine/beat/tier evidence must
 // revalidate the cached physical group; this cannot create a pitch, survive
@@ -246,6 +261,15 @@ bounded_observed_fingerprint_reacquisition_projection(
     double minimum_added_member_ratio = 0.10,
     double minimum_beat_coherence = 0.20,
     double maximum_beat_coherence = 0.35) noexcept;
+
+// Offline-only nested-model counterfactual. A currently emitted three- or
+// four-member fine group may shed exactly one uniquely weakest member when
+// that member contributes less residual improvement than the tested floor.
+// It cannot create a group, alter a pair, or rewrite a different assignment.
+[[nodiscard]] std::uint8_t bounded_fine_unique_member_pruning_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t fine_frequency_mask,
+    const std::array<double, kMaxVoices>& unique_member_improvement,
+    double minimum_unique_improvement) noexcept;
 
 // Production-shaped replay projection for the measured spectral-tier repair.
 // In addition to the tier/beat gate above, the pitch must already own a live

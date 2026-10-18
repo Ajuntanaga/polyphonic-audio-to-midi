@@ -729,6 +729,12 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           baseline.combined_candidate_admission_selected_frames);
       M3_EXPECT_EQ(result.physical_group_causal_frames,
                    baseline.physical_group_causal_frames);
+      M3_EXPECT_EQ(result.physical_group_pending_causal_frames,
+                   baseline.physical_group_pending_causal_frames);
+      M3_EXPECT_EQ(result.physical_group_member_pending_causal_frames,
+                   baseline.physical_group_member_pending_causal_frames);
+      M3_EXPECT_EQ(result.physical_group_member_exact_exit_frames,
+                   baseline.physical_group_member_exact_exit_frames);
       M3_EXPECT_EQ(result.physical_group_causal_runs,
                    baseline.physical_group_causal_runs);
       M3_EXPECT_EQ(result.physical_group_causal_longest_run_frames,
@@ -739,6 +745,10 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                    baseline.physical_group_member_causal_runs);
       M3_EXPECT_EQ(result.physical_group_member_causal_longest_run_frames,
                    baseline.physical_group_member_causal_longest_run_frames);
+      M3_EXPECT_EQ(result.physical_group_fine_classifier_frames,
+                   baseline.physical_group_fine_classifier_frames);
+      M3_EXPECT_EQ(result.physical_group_member_fine_classifier_frames,
+                   baseline.physical_group_member_fine_classifier_frames);
       M3_EXPECT_EQ(result.fine_residual_expansion_changed_frames,
                    baseline.fine_residual_expansion_changed_frames);
       M3_EXPECT_EQ(result.fine_residual_expansion_exact_frames,
@@ -794,6 +804,10 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           M3_EXPECT_EQ(
               result.label_results[label].quiet_disposition_frames,
               baseline.label_results[label].quiet_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].minimum_evidence_resume_flag_frames,
+              baseline.label_results[label]
+                  .minimum_evidence_resume_flag_frames);
           M3_EXPECT_EQ(
               result.label_results[label].quiet_disposition_runs,
               baseline.label_results[label].quiet_disposition_runs);
@@ -941,6 +955,21 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .articulated_unison_reacquisition_disposition_frames,
               baseline.label_results[label]
                   .articulated_unison_reacquisition_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_matched_delta,
+              baseline.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_exact_delta,
+              baseline.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_exact_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_wrong_string_delta,
+              baseline.label_results[label]
+                  .articulated_unison_reacquisition_counterfactual_wrong_string_delta);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .observed_fingerprint_reacquisition_projected_frames,
@@ -1182,6 +1211,26 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .fine_frequency_member_mask_frames);
           M3_EXPECT_EQ(
               result.label_results[label]
+                  .fine_unique_member_pruning_changed_frames,
+              baseline.label_results[label]
+                  .fine_unique_member_pruning_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_unique_member_pruning_exact_frames,
+              baseline.label_results[label]
+                  .fine_unique_member_pruning_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_unique_member_pruning_matched_delta,
+              baseline.label_results[label]
+                  .fine_unique_member_pruning_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_unique_member_pruning_wrong_string_delta,
+              baseline.label_results[label]
+                  .fine_unique_member_pruning_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
                   .fine_frequency_pending_member_mask_frames,
               baseline.label_results[label]
                   .fine_frequency_pending_member_mask_frames);
@@ -1333,6 +1382,21 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .spectral_head_plurality_best_frames,
               baseline.label_results[label]
                   .spectral_head_plurality_best_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .spectral_tier_production_relation_lane_outcome_frames,
+              baseline.label_results[label]
+                  .spectral_tier_production_relation_lane_outcome_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .selector_group_relation_lane_outcome_frames,
+              baseline.label_results[label]
+                  .selector_group_relation_lane_outcome_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .tier_completion_disposition_lane_outcome_frames,
+              baseline.label_results[label]
+                  .tier_completion_disposition_lane_outcome_frames);
           M3_EXPECT_EQ(
               result.label_results[label].profile_unison_proposal_mask_frames,
               baseline.label_results[label]
@@ -1944,6 +2008,35 @@ M3_TEST(offline_replay_classifies_target_lane_outcomes_without_losing_masks) {
   M3_EXPECT_EQ(
       last_unresolved,
       m3::offline::kPhysicalGroupFineUnresolvedCellCount - 1U);
+
+  using m3::offline::ReplayClassifierMaskRelation;
+  m3::UnisonSpectralClassification classifier;
+  M3_EXPECT_EQ(m3::offline::classify_classifier_mask_relation(
+                   classifier, 0x07U),
+               ReplayClassifierMaskRelation::invalid);
+  classifier.valid = true;
+  classifier.member_mask = 0x07U;
+  classifier.member_count = 3U;
+  M3_EXPECT_EQ(m3::offline::classify_classifier_mask_relation(
+                   classifier, 0x07U),
+               ReplayClassifierMaskRelation::exact);
+  classifier.member_mask = 0x03U;
+  classifier.member_count = 2U;
+  M3_EXPECT_EQ(m3::offline::classify_classifier_mask_relation(
+                   classifier, 0x07U),
+               ReplayClassifierMaskRelation::subset);
+  classifier.member_mask = 0x09U;
+  M3_EXPECT_EQ(m3::offline::classify_classifier_mask_relation(
+                   classifier, 0x07U),
+               ReplayClassifierMaskRelation::other);
+  const std::size_t last_classifier =
+      m3::offline::physical_group_fine_classifier_cell_index(
+          ReplayGroupMaskRelation::other,
+          ReplayClassifierMaskRelation::other,
+          ReplayTargetLaneOutcome::disjoint_wrong);
+  M3_EXPECT_EQ(
+      last_classifier,
+      m3::offline::kPhysicalGroupFineClassifierCellCount - 1U);
 
   m3::offline::FineResidualExpansionEvidence expansion;
   expansion.active = true;
@@ -2566,8 +2659,21 @@ M3_TEST(offline_replay_scores_overlapping_same_note_labels_as_one_physical_group
   }
   M3_EXPECT_EQ(causal_frames, result.physical_group_labeled_frames);
   M3_EXPECT_TRUE(causal_runs > 0U);
+  std::uint64_t pending_causal_frames = 0U;
+  for (const std::uint64_t frames :
+       result.physical_group_pending_causal_frames) {
+    pending_causal_frames += frames;
+  }
+  M3_EXPECT_EQ(pending_causal_frames,
+               result.physical_group_labeled_frames);
   M3_EXPECT_EQ(result.physical_group_causal_frames,
                reversed.physical_group_causal_frames);
+  M3_EXPECT_EQ(result.physical_group_pending_causal_frames,
+               reversed.physical_group_pending_causal_frames);
+  M3_EXPECT_EQ(result.physical_group_member_pending_causal_frames,
+               reversed.physical_group_member_pending_causal_frames);
+  M3_EXPECT_EQ(result.physical_group_member_exact_exit_frames,
+               reversed.physical_group_member_exact_exit_frames);
   M3_EXPECT_EQ(result.physical_group_causal_runs,
                reversed.physical_group_causal_runs);
   M3_EXPECT_EQ(result.physical_group_causal_longest_run_frames,
@@ -2585,6 +2691,25 @@ M3_TEST(offline_replay_scores_overlapping_same_note_labels_as_one_physical_group
     }
     M3_EXPECT_EQ(member_causal_frames,
                  result.physical_group_expected_member_frames[members]);
+    std::uint64_t member_pending_causal_frames = 0U;
+    for (const std::uint64_t frames :
+         result.physical_group_member_pending_causal_frames[members]) {
+      member_pending_causal_frames += frames;
+    }
+    M3_EXPECT_EQ(member_pending_causal_frames,
+                 result.physical_group_expected_member_frames[members]);
+    std::uint64_t member_exact_exits = 0U;
+    for (const std::uint64_t frames :
+         result.physical_group_member_exact_exit_frames[members]) {
+      member_exact_exits += frames;
+    }
+    M3_EXPECT_TRUE(
+        member_exact_exits <=
+        result.physical_group_member_lane_outcome_frames[members]
+                                                        [static_cast<std::size_t>(
+                                                            m3::offline::
+                                                                ReplayTargetLaneOutcome::
+                                                                    exact)]);
   }
   M3_EXPECT_EQ(result.physical_group_member_causal_frames,
                reversed.physical_group_member_causal_frames);
@@ -2622,6 +2747,26 @@ M3_TEST(offline_replay_scores_overlapping_same_note_labels_as_one_physical_group
   M3_EXPECT_EQ(
       result.physical_group_member_fine_unresolved_longest_run_frames,
       reversed.physical_group_member_fine_unresolved_longest_run_frames);
+  std::uint64_t fine_classifier_frames = 0U;
+  for (const std::uint64_t frames :
+       result.physical_group_fine_classifier_frames) {
+    fine_classifier_frames += frames;
+  }
+  M3_EXPECT_EQ(fine_classifier_frames,
+               result.physical_group_labeled_frames);
+  M3_EXPECT_EQ(result.physical_group_fine_classifier_frames,
+               reversed.physical_group_fine_classifier_frames);
+  M3_EXPECT_EQ(result.physical_group_member_fine_classifier_frames,
+               reversed.physical_group_member_fine_classifier_frames);
+  for (std::size_t members = 0U; members <= m3::kMaxVoices; ++members) {
+    std::uint64_t member_fine_classifier_frames = 0U;
+    for (const std::uint64_t frames :
+         result.physical_group_member_fine_classifier_frames[members]) {
+      member_fine_classifier_frames += frames;
+    }
+    M3_EXPECT_EQ(member_fine_classifier_frames,
+                 result.physical_group_expected_member_frames[members]);
+  }
   M3_EXPECT_EQ(result.physical_group_member_causal_runs,
                reversed.physical_group_member_causal_runs);
   M3_EXPECT_EQ(result.physical_group_member_causal_longest_run_frames,
