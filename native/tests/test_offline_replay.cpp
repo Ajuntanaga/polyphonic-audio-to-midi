@@ -971,6 +971,26 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
               baseline.label_results[label]
                   .articulated_unison_reacquisition_counterfactual_wrong_string_delta);
           M3_EXPECT_EQ(
+              result.label_results[label].continuity_union_changed_frames,
+              baseline.label_results[label].continuity_union_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].continuity_union_exact_frames,
+              baseline.label_results[label].continuity_union_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].continuity_union_matched_frames,
+              baseline.label_results[label].continuity_union_matched_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].continuity_union_exact_delta,
+              baseline.label_results[label].continuity_union_exact_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label].continuity_union_matched_delta,
+              baseline.label_results[label].continuity_union_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .continuity_union_wrong_string_delta,
+              baseline.label_results[label]
+                  .continuity_union_wrong_string_delta);
+          M3_EXPECT_EQ(
               result.label_results[label]
                   .observed_fingerprint_reacquisition_projected_frames,
               baseline.label_results[label]
@@ -1576,6 +1596,46 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .cached_group_completion_wrong_string_delta,
               baseline.label_results[label]
                   .cached_group_completion_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .cached_classifier_continuity_changed_frames,
+              baseline.label_results[label]
+                  .cached_classifier_continuity_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .cached_classifier_continuity_exact_frames,
+              baseline.label_results[label]
+                  .cached_classifier_continuity_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .cached_classifier_continuity_matched_delta,
+              baseline.label_results[label]
+                  .cached_classifier_continuity_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .cached_classifier_continuity_wrong_string_delta,
+              baseline.label_results[label]
+                  .cached_classifier_continuity_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .continuity_classifier_union_changed_frames,
+              baseline.label_results[label]
+                  .continuity_classifier_union_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .continuity_classifier_union_exact_frames,
+              baseline.label_results[label]
+                  .continuity_classifier_union_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .continuity_classifier_union_matched_delta,
+              baseline.label_results[label]
+                  .continuity_classifier_union_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .continuity_classifier_union_wrong_string_delta,
+              baseline.label_results[label]
+                  .continuity_classifier_union_wrong_string_delta);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .tier_ratio_completion_changed_frames,
@@ -2307,6 +2367,18 @@ M3_TEST(offline_replay_shadow_classifies_each_ready_frame_without_midi_changes) 
     }
     M3_EXPECT_EQ(result.spectral_onset_latch_projected_frames[0U],
                  result.labeled_frames);
+    M3_EXPECT_TRUE(
+        result.spectral_onset_contraction_matched_frames[0U] <=
+        result.labeled_frames);
+    M3_EXPECT_TRUE(result.string_fret_onset_strength_max >= 0.0);
+    M3_EXPECT_TRUE(result.string_fret_onset_strength_max <= 1.0);
+    M3_EXPECT_TRUE(result.string_fret_onset_strength_first_250ms_max <=
+                   result.string_fret_onset_strength_max);
+    M3_EXPECT_TRUE(result.active_string_fret_onset_strength_max <=
+                   result.string_fret_onset_strength_max);
+    M3_EXPECT_TRUE(
+        result.active_string_fret_onset_strength_first_250ms_max <=
+        result.string_fret_onset_strength_first_250ms_max);
   }
   for (std::size_t policy = 0U;
        policy < m3::offline::kCandidateSpectralShadowPolicyCount; ++policy) {

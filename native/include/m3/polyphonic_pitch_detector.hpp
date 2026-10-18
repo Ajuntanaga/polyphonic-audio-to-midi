@@ -116,6 +116,9 @@ enum class TierCompletionDisposition : std::uint8_t {
 struct CandidateAdmissionDiagnostics final {
   double score_threshold_ratio{};
   double fundamental_score_ratio{};
+  // Existing causal string/fret-posterior onset evidence. Replay exposes it
+  // to test articulation boundaries; production builds omit this structure.
+  double string_fret_onset_strength{};
   // Scale-invariant evidence relative to the strongest playable candidate in
   // the same one-octave pitch band. This is replay-only: it measures whether
   // a quiet upper-string fundamental is locally strong even when a louder low

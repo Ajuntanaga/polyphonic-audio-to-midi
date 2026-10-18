@@ -3667,6 +3667,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
           candidate_states_[candidate].active
               ? energy_rise * (0.5 + 0.5 * transient_strength)
               : 1.0;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      candidate_admission_diagnostics_[candidate]
+          .string_fret_onset_strength = posterior_frame.onset_strength;
+#endif
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
         if ((playable & bit) == 0U || !has_learned_profile[string]) {

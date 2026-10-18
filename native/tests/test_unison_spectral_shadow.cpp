@@ -462,6 +462,29 @@ M3_TEST(unison_spectral_onset_projection_respects_physical_constraints) {
       0x01U);
 }
 
+M3_TEST(unison_spectral_onset_contraction_requires_a_matching_live_superset) {
+  using m3::offline::bounded_spectral_onset_latch_contraction_projection;
+
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x05U, 0x07U, 0x00U, 0xffU, 5U, true, false),
+               0x05U);
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x05U, 0x03U, 0x00U, 0xffU, 5U, true, false),
+               0x07U);
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x03U, 0x07U, 0x00U, 0xffU, 5U, true, false),
+               0x03U);
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x05U, 0x07U, 0x00U, 0xffU, 5U, false, false),
+               0x07U);
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x05U, 0x07U, 0x04U, 0xffU, 5U, true, false),
+               0x07U);
+  M3_EXPECT_EQ(bounded_spectral_onset_latch_contraction_projection(
+                   0x07U, 0x05U, 0x07U, 0x00U, 0xffU, 5U, true, true),
+               0x07U);
+}
+
 M3_TEST(unison_reacquisition_shadow_requires_live_subset_evidence) {
   using m3::offline::bounded_unison_reacquisition_cache_mask;
   using m3::offline::bounded_unison_reacquisition_projection;
@@ -907,4 +930,41 @@ M3_TEST(projection_union_accepts_agreement_and_refuses_conflicting_changes) {
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x07U, 0x03U), 0x07U);
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x03U, 0x07U), 0x07U);
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x07U, 0x0bU), 0x03U);
+}
+
+M3_TEST(cached_classifier_continuity_requires_an_established_live_subset) {
+  using m3::offline::SpectralShadowPhase;
+  using m3::offline::bounded_cached_classifier_continuity_projection;
+  m3::UnisonSpectralClassification classification;
+  classification.valid = true;
+  classification.member_mask = 0x07U;
+  classification.member_count = 3U;
+  classification.posterior_margin = 0.01;
+
+  M3_EXPECT_EQ(bounded_cached_classifier_continuity_projection(
+                   0x03U, 0x07U, classification,
+                   SpectralShadowPhase::settled, 0U, 0xffU, 5U, true, true,
+                   true, false, 0.20, 0.50, 0.005),
+               0x07U);
+  M3_EXPECT_EQ(bounded_cached_classifier_continuity_projection(
+                   0x03U, 0x07U, classification,
+                   SpectralShadowPhase::onset, 0U, 0xffU, 5U, true, true,
+                   true, false, 0.20, 0.50, 0.005),
+               0x07U);
+  M3_EXPECT_EQ(bounded_cached_classifier_continuity_projection(
+                   0U, 0x07U, classification,
+                   SpectralShadowPhase::settled, 0U, 0xffU, 5U, true, true,
+                   true, false, 0.20, 0.50, 0.005),
+               0U);
+  M3_EXPECT_EQ(bounded_cached_classifier_continuity_projection(
+                   0x03U, 0x07U, classification,
+                   SpectralShadowPhase::settled, 0U, 0xffU, 5U, true, true,
+                   true, true, 0.20, 0.50, 0.005),
+               0x03U);
+  classification.member_mask = 0x0bU;
+  M3_EXPECT_EQ(bounded_cached_classifier_continuity_projection(
+                   0x03U, 0x07U, classification,
+                   SpectralShadowPhase::settled, 0U, 0xffU, 5U, true, true,
+                   true, false, 0.20, 0.50, 0.005),
+               0x03U);
 }

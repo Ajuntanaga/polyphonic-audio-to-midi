@@ -30,7 +30,7 @@ enum class ReplayFineHistoryCarryDisposition : std::uint8_t {
 };
 
 struct UnisonSpectralShadowTemplateBank;
-inline constexpr std::size_t kSpectralShadowMarginThresholdCount = 7U;
+inline constexpr std::size_t kSpectralShadowMarginThresholdCount = 11U;
 inline constexpr std::array<double, 5U>
     kSpectralTierAddedMemberRatioFloors{0.02, 0.04, 0.06, 0.08, 0.10};
 inline constexpr std::array<double, 8U> kFineUniqueMemberImprovementFloors{
@@ -681,6 +681,12 @@ struct ReplayLabelResult final {
                  kArticulatedUnisonReacquisitionDispositionCount>,
       kArticulatedUnisonReacquisitionPolicyCount>
       articulated_unison_reacquisition_counterfactual_wrong_string_delta{};
+  std::uint32_t continuity_union_changed_frames{};
+  std::uint32_t continuity_union_exact_frames{};
+  std::uint32_t continuity_union_matched_frames{};
+  std::int64_t continuity_union_exact_delta{};
+  std::int64_t continuity_union_matched_delta{};
+  std::int64_t continuity_union_wrong_string_delta{};
   std::array<std::uint32_t,
              kObservedFingerprintReacquisitionPolicyCount>
       observed_fingerprint_reacquisition_projected_frames{};
@@ -765,6 +771,10 @@ struct ReplayLabelResult final {
   // M3 candidate evidence=8, calibrated direct support=16.
   std::array<std::uint32_t, kCandidateAdmissionRatioBinCount>
       candidate_score_threshold_ratio_frames{};
+  double string_fret_onset_strength_max{};
+  double string_fret_onset_strength_first_250ms_max{};
+  double active_string_fret_onset_strength_max{};
+  double active_string_fret_onset_strength_first_250ms_max{};
   // Frames where the labeled pitch cleared admission and harmonic rejection
   // but lost the bounded joint selector.  These bins distinguish genuine
   // five-voice pressure from avoidable selector occupancy without changing
@@ -1145,6 +1155,18 @@ struct ReplayLabelResult final {
       spectral_onset_latch_matched_frames{};
   std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
       spectral_onset_latch_wrong_string_voices{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_changed_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_exact_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_matched_frames{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_matched_delta{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_wrong_string_delta{};
+  std::array<double, kSpectralShadowMarginThresholdCount>
+      spectral_onset_contraction_changed_onset_strength_max{};
 #if defined(M3_SPECTRAL_TIER_DIAGNOSTICS)
   // Low, low-mid, high-mid, high, then the body/overtone crossover.
   std::array<std::array<std::uint32_t, kMaxVoices + 1U>,
@@ -1233,6 +1255,22 @@ struct ReplayLabelResult final {
       cached_group_completion_matched_delta{};
   std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
       cached_group_completion_wrong_string_delta{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      cached_classifier_continuity_changed_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      cached_classifier_continuity_exact_frames{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      cached_classifier_continuity_matched_delta{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      cached_classifier_continuity_wrong_string_delta{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      continuity_classifier_union_changed_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      continuity_classifier_union_exact_frames{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      continuity_classifier_union_matched_delta{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      continuity_classifier_union_wrong_string_delta{};
   std::array<std::uint32_t, kSpectralTierAddedMemberRatioFloors.size()>
       tier_ratio_completion_changed_frames{};
   std::array<std::uint32_t, kSpectralTierAddedMemberRatioFloors.size()>

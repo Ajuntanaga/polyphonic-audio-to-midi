@@ -1056,6 +1056,10 @@ int main(int argc, char** argv) {
         "articulated_unison_reacquisition_counterfactual_matched_delta\t"
         "articulated_unison_reacquisition_counterfactual_exact_delta\t"
         "articulated_unison_reacquisition_counterfactual_wrong_string_delta\t"
+        "continuity_union_changed\tcontinuity_union_exact\t"
+        "continuity_union_matched\tcontinuity_union_exact_delta\t"
+        "continuity_union_matched_delta\t"
+        "continuity_union_wrong_string_delta\t"
         "observed_fingerprint_maximum_squared_distances\t"
         "observed_fingerprint_reacquisition_projected\t"
         "observed_fingerprint_reacquisition_changed\t"
@@ -1087,6 +1091,10 @@ int main(int argc, char** argv) {
         "calibrated_rebin_50_changed\t"
         "calibrated_rebin_50_stable_changed\t"
         "candidate_score_threshold_ratio_bins\t"
+        "string_fret_onset_strength_max\t"
+        "string_fret_onset_strength_first_250ms_max\t"
+        "active_string_fret_onset_strength_max\t"
+        "active_string_fret_onset_strength_first_250ms_max\t"
         "candidate_dp_evicted_true_pitch_count\t"
         "candidate_dp_evicted_selected_pitch_count\t"
         "candidate_dp_evicted_score_ratio_bins\t"
@@ -1238,6 +1246,12 @@ int main(int argc, char** argv) {
         "spectral_onset_latch_exact\t"
         "spectral_onset_latch_matched\t"
         "spectral_onset_latch_wrong_strings\t"
+        "spectral_onset_contraction_changed\t"
+        "spectral_onset_contraction_exact\t"
+        "spectral_onset_contraction_matched\t"
+        "spectral_onset_contraction_matched_delta\t"
+        "spectral_onset_contraction_wrong_string_delta\t"
+        "spectral_onset_contraction_changed_onset_strength_max\t"
         "spectral_low_best\tspectral_low_mid_best\t"
         "spectral_high_mid_best\tspectral_high_best\t"
         "spectral_overtone_separation_best\t"
@@ -1288,6 +1302,14 @@ int main(int argc, char** argv) {
         "cached_group_completion_exact\t"
         "cached_group_completion_matched_delta\t"
         "cached_group_completion_wrong_string_delta\t"
+        "cached_classifier_continuity_changed\t"
+        "cached_classifier_continuity_exact\t"
+        "cached_classifier_continuity_matched_delta\t"
+        "cached_classifier_continuity_wrong_string_delta\t"
+        "continuity_classifier_union_changed\t"
+        "continuity_classifier_union_exact\t"
+        "continuity_classifier_union_matched_delta\t"
+        "continuity_classifier_union_wrong_string_delta\t"
         "tier_ratio_completion_floors\t"
         "tier_ratio_completion_changed\t"
         "tier_ratio_completion_exact\t"
@@ -1531,6 +1553,14 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_joint_signed_bins(
           detail.articulated_unison_reacquisition_counterfactual_wrong_string_delta);
+      std::printf("\t%u\t%u\t%u\t%lld\t%lld\t%lld",
+                  detail.continuity_union_changed_frames,
+                  detail.continuity_union_exact_frames,
+                  detail.continuity_union_matched_frames,
+                  static_cast<long long>(detail.continuity_union_exact_delta),
+                  static_cast<long long>(detail.continuity_union_matched_delta),
+                  static_cast<long long>(
+                      detail.continuity_union_wrong_string_delta));
       std::printf("\t");
       print_sequence(
           m3::offline::kObservedFingerprintMaximumSquaredDistances);
@@ -1601,6 +1631,11 @@ int main(int argc, char** argv) {
                   detail.calibrated_pitch_rebin_50_stable_changed_frames);
       std::printf("\t");
       print_bins(detail.candidate_score_threshold_ratio_frames);
+      std::printf("\t%.9f\t%.9f\t%.9f\t%.9f",
+                  detail.string_fret_onset_strength_max,
+                  detail.string_fret_onset_strength_first_250ms_max,
+                  detail.active_string_fret_onset_strength_max,
+                  detail.active_string_fret_onset_strength_first_250ms_max);
       std::printf("\t");
       print_bins(detail.candidate_dp_evicted_true_pitch_count_frames);
       std::printf("\t");
@@ -2137,6 +2172,19 @@ int main(int argc, char** argv) {
       print_sequence(detail.spectral_onset_latch_matched_frames);
       std::printf("\t");
       print_sequence(detail.spectral_onset_latch_wrong_string_voices);
+      std::printf("\t");
+      print_sequence(detail.spectral_onset_contraction_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.spectral_onset_contraction_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.spectral_onset_contraction_matched_frames);
+      std::printf("\t");
+      print_sequence(detail.spectral_onset_contraction_matched_delta);
+      std::printf("\t");
+      print_sequence(detail.spectral_onset_contraction_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.spectral_onset_contraction_changed_onset_strength_max);
       for (const auto& head :
            detail.string_fret_spectral_head_best_frames) {
         std::printf("\t");
@@ -2249,6 +2297,24 @@ int main(int argc, char** argv) {
       print_sequence(detail.cached_group_completion_matched_delta);
       std::printf("\t");
       print_sequence(detail.cached_group_completion_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(detail.cached_classifier_continuity_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.cached_classifier_continuity_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.cached_classifier_continuity_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.cached_classifier_continuity_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(detail.continuity_classifier_union_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.continuity_classifier_union_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.continuity_classifier_union_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.continuity_classifier_union_wrong_string_delta);
       std::printf("\t");
       print_sequence(m3::offline::kSpectralTierAddedMemberRatioFloors);
       std::printf("\t");

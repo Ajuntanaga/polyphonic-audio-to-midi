@@ -13,8 +13,9 @@ namespace m3::offline {
 using SpectralShadowPhase = UnisonSpectralPhase;
 
 inline constexpr std::size_t kSpectralShadowTemplatePhaseCount = 3U;
-inline constexpr std::array<double, 7U> kSpectralShadowMarginThresholds{
-    0.0, 0.00025, 0.0005, 0.001, 0.002, 0.005, 0.01};
+inline constexpr std::array<double, 11U> kSpectralShadowMarginThresholds{
+    0.0, 0.00005, 0.00010, 0.00015, 0.00020, 0.00025, 0.00050,
+    0.001, 0.002, 0.005, 0.01};
 inline constexpr std::size_t kCandidateSpectralIntervalRadius = 48U;
 inline constexpr std::size_t kCandidateSpectralIntervalBucketCount =
     kCandidateSpectralIntervalRadius * 2U + 1U;
@@ -157,6 +158,16 @@ class SpectralOnsetMaskLatch final {
     std::uint8_t current_assignment_mask, std::uint8_t committed_mask,
     std::uint8_t other_owned_mask, std::uint8_t playable_mask,
     std::uint8_t maximum_polyphony) noexcept;
+
+// Shadow-only contraction of a live three/four-member superset to a
+// two-member onset latch. Fine-frequency evidence must independently report
+// the same live superset; the latch cannot create a pitch or survive quiet.
+[[nodiscard]] std::uint8_t
+bounded_spectral_onset_latch_contraction_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t committed_mask,
+    std::uint8_t fine_frequency_mask, std::uint8_t other_owned_mask,
+    std::uint8_t playable_mask, std::uint8_t maximum_polyphony,
+    bool direct_fundamental, bool quiet) noexcept;
 
 // Shadow-only articulation reacquisition. A previously resolved physical
 // group may complete a live multi-member subset, but cannot start a pitch,
@@ -354,6 +365,17 @@ diagnose_classifier_subset_completion_projection(
 [[nodiscard]] std::uint8_t bounded_projection_union(
     std::uint8_t current_assignment_mask, std::uint8_t first_projection,
     std::uint8_t second_projection) noexcept;
+
+// Bridges a short exposure gap only when a recent established 3-4-string
+// group is named exactly by the independent settled corridor classifier.
+[[nodiscard]] std::uint8_t bounded_cached_classifier_continuity_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t cached_group_mask,
+    const UnisonSpectralClassification& classification,
+    SpectralShadowPhase phase, std::uint8_t other_owned_mask,
+    std::uint8_t playable_mask, std::uint8_t maximum_polyphony,
+    bool active_candidate, bool selected_or_coasting,
+    bool direct_fundamental, bool quiet, double cache_age_seconds,
+    double maximum_cache_age_seconds, double minimum_margin) noexcept;
 
 using UnisonSpectralCorridorTracker = m3::UnisonSpectralCorridorTracker;
 

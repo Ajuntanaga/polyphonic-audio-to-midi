@@ -295,6 +295,28 @@ std::uint8_t bounded_spectral_onset_latch_projection(
   return committed_mask;
 }
 
+std::uint8_t bounded_spectral_onset_latch_contraction_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t committed_mask,
+    std::uint8_t fine_frequency_mask, std::uint8_t other_owned_mask,
+    std::uint8_t playable_mask, std::uint8_t maximum_polyphony,
+    bool direct_fundamental, bool quiet) noexcept {
+  const std::uint8_t current_members = popcount(current_assignment_mask);
+  const std::uint8_t committed_members = popcount(committed_mask);
+  if (quiet || !direct_fundamental || current_members < 3U ||
+      current_members > 4U || committed_members != 2U ||
+      fine_frequency_mask != current_assignment_mask ||
+      (committed_mask & static_cast<std::uint8_t>(~current_assignment_mask)) !=
+          0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      (committed_mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+      (committed_mask & other_owned_mask) != 0U ||
+      popcount(static_cast<std::uint8_t>(committed_mask | other_owned_mask)) >
+          maximum_polyphony) {
+    return current_assignment_mask;
+  }
+  return committed_mask;
+}
+
 std::uint8_t bounded_unison_reacquisition_projection(
     std::uint8_t current_assignment_mask, std::uint8_t cached_group_mask,
     std::uint8_t fine_frequency_mask, std::uint8_t committed_mask,
@@ -756,6 +778,43 @@ std::uint8_t bounded_projection_union(
     return first_projection;
   }
   return current_assignment_mask;
+}
+
+std::uint8_t bounded_cached_classifier_continuity_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t cached_group_mask,
+    const UnisonSpectralClassification& classification,
+    SpectralShadowPhase phase, std::uint8_t other_owned_mask,
+    std::uint8_t playable_mask, std::uint8_t maximum_polyphony,
+    bool active_candidate, bool selected_or_coasting,
+    bool direct_fundamental, bool quiet, double cache_age_seconds,
+    double maximum_cache_age_seconds, double minimum_margin) noexcept {
+  const std::uint8_t cached_members = popcount(cached_group_mask);
+  const std::uint8_t current_members = popcount(current_assignment_mask);
+  if (phase == SpectralShadowPhase::unready || quiet || !active_candidate ||
+      !selected_or_coasting || !direct_fundamental || current_members == 0U ||
+      current_members >= cached_members || cached_members < 3U ||
+      cached_members > 4U ||
+      (current_assignment_mask &
+       static_cast<std::uint8_t>(~cached_group_mask)) != 0U ||
+      (cached_group_mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+      (cached_group_mask & other_owned_mask) != 0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      popcount(static_cast<std::uint8_t>(cached_group_mask |
+                                         other_owned_mask)) >
+          maximum_polyphony ||
+      !classification.valid ||
+      classification.member_mask != cached_group_mask ||
+      classification.member_count != cached_members ||
+      !std::isfinite(classification.posterior_margin) ||
+      !std::isfinite(minimum_margin) || minimum_margin < 0.0 ||
+      classification.posterior_margin < minimum_margin ||
+      !std::isfinite(cache_age_seconds) ||
+      !std::isfinite(maximum_cache_age_seconds) || cache_age_seconds < 0.0 ||
+      maximum_cache_age_seconds < 0.0 ||
+      cache_age_seconds > maximum_cache_age_seconds) {
+    return current_assignment_mask;
+  }
+  return cached_group_mask;
 }
 
 bool parse_unison_spectral_shadow_templates(
