@@ -1029,6 +1029,26 @@ int main(int argc, char** argv) {
         "articulated_unison_reacquisition_matched_delta\t"
         "articulated_unison_reacquisition_wrong_string_delta\t"
         "articulated_unison_reacquisition_dispositions\t"
+        "observed_fingerprint_maximum_squared_distances\t"
+        "observed_fingerprint_reacquisition_projected\t"
+        "observed_fingerprint_reacquisition_changed\t"
+        "observed_fingerprint_reacquisition_exact\t"
+        "observed_fingerprint_reacquisition_matched\t"
+        "observed_fingerprint_reacquisition_wrong_strings\t"
+        "observed_fingerprint_reacquisition_exact_delta\t"
+        "observed_fingerprint_reacquisition_matched_delta\t"
+        "observed_fingerprint_reacquisition_wrong_string_delta\t"
+        "observed_fingerprint_reacquisition_dispositions\t"
+        "observed_fingerprint_reacquisition_selection\t"
+        "observed_fingerprint_changed_committed_relations\t"
+        "observed_fingerprint_changed_committed_member_counts\t"
+        "observed_fingerprint_changed_snapshot_voice_counts\t"
+        "observed_fingerprint_changed_other_owned_lane_counts\t"
+        "observed_fingerprint_changed_production_dispositions\t"
+        "observed_fingerprint_changed_production_cache_age_50ms\t"
+        "observed_fingerprint_changed_production_cache_masks\t"
+        "observed_fingerprint_changed_score_threshold_ratio_05\t"
+        "observed_fingerprint_changed_direct_fundamental\t"
         "selection_quiet_lane_outcomes\t"
         "selection_below_threshold_lane_outcomes\t"
         "selection_spectral_rejected_lane_outcomes\t"
@@ -1461,6 +1481,63 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_joint_bins(
           detail.articulated_unison_reacquisition_disposition_frames);
+      std::printf("\t");
+      print_sequence(
+          m3::offline::kObservedFingerprintMaximumSquaredDistances);
+      std::printf("\t");
+      print_sequence(
+          detail.observed_fingerprint_reacquisition_projected_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.observed_fingerprint_reacquisition_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.observed_fingerprint_reacquisition_exact_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.observed_fingerprint_reacquisition_matched_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.observed_fingerprint_reacquisition_wrong_string_voices);
+      std::printf("\t");
+      print_sequence(detail.observed_fingerprint_reacquisition_exact_delta);
+      std::printf("\t");
+      print_sequence(detail.observed_fingerprint_reacquisition_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.observed_fingerprint_reacquisition_wrong_string_delta);
+      std::printf("\t");
+      print_joint_bins(
+          detail.observed_fingerprint_reacquisition_disposition_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_reacquisition_selection_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_committed_relation_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_committed_member_count_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_snapshot_voice_count_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_other_owned_lane_count_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_production_disposition_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_production_cache_age_50ms_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_production_cache_mask_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_score_threshold_ratio_05_frames);
+      std::printf("\t");
+      print_bins(
+          detail.observed_fingerprint_changed_direct_fundamental_frames);
       for (const auto& outcomes : detail.selection_lane_outcome_frames) {
         std::printf("\t");
         print_bins(outcomes);

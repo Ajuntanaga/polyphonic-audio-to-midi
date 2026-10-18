@@ -299,3 +299,54 @@ M3_TEST(cached_unison_reacquisition_is_bounded_by_live_physical_evidence) {
                    true, false),
                0x06U);
 }
+
+M3_TEST(observed_unison_reacquisition_requires_complete_live_revalidation) {
+  m3::ObservedUnisonReacquisitionEvidence evidence;
+  evidence.current_assignment_mask = 0x06U;
+  evidence.cached_group_mask = 0x07U;
+  evidence.pending_fine_mask = 0x06U;
+  evidence.spectral_tier_mask = 0x07U;
+  evidence.playable_mask = 0xffU;
+  evidence.maximum_polyphony = 5U;
+  evidence.direct_fundamental = true;
+  evidence.cache_age_seconds = 0.30;
+  evidence.maximum_cache_age_seconds = 0.50;
+  evidence.pending_evidence_seconds = 0.25;
+  evidence.minimum_revalidation_seconds = 0.20;
+  evidence.pending_beat_coherence = 0.25;
+  evidence.cached_fingerprint_valid = true;
+  evidence.current_fingerprint_valid = true;
+  evidence.fingerprint_squared_distance = 0.004;
+  evidence.maximum_fingerprint_squared_distance = 0.005;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x07U);
+
+  evidence.current_assignment_mask = 0x02U;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x02U);
+  evidence.current_assignment_mask = 0x06U;
+  evidence.pending_evidence_seconds = 0.19;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x06U);
+  evidence.pending_evidence_seconds = 0.25;
+  evidence.fingerprint_squared_distance = 0.006;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x06U);
+  evidence.fingerprint_squared_distance = 0.004;
+  evidence.other_owned_mask = 0x01U;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x06U);
+  evidence.other_owned_mask = 0U;
+  evidence.quiet = true;
+  M3_EXPECT_EQ(m3::bounded_observed_unison_reacquisition(evidence), 0x06U);
+}
+
+M3_TEST(observed_unison_cache_refresh_requires_live_exact_group_evidence) {
+  M3_EXPECT_TRUE(m3::bounded_observed_unison_cache_refresh(
+      true, true, false, false, 0x07U, 0x07U));
+  M3_EXPECT_TRUE(m3::bounded_observed_unison_cache_refresh(
+      true, false, true, false, 0x07U, 0x07U));
+  M3_EXPECT_FALSE(m3::bounded_observed_unison_cache_refresh(
+      true, false, false, false, 0x07U, 0x07U));
+  M3_EXPECT_FALSE(m3::bounded_observed_unison_cache_refresh(
+      true, false, true, true, 0x07U, 0x07U));
+  M3_EXPECT_FALSE(m3::bounded_observed_unison_cache_refresh(
+      true, false, true, false, 0x07U, 0x03U));
+  M3_EXPECT_FALSE(m3::bounded_observed_unison_cache_refresh(
+      true, false, true, false, 0x03U, 0x03U));
+}

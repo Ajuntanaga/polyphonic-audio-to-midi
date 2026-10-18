@@ -17,24 +17,6 @@
 
 namespace m3 {
 
-#if defined(M3_UNISON_SPECTRAL_SHADOW)
-enum class SpectralReacquisitionDisposition : std::uint8_t {
-  no_cache,
-  no_direct_fundamental,
-  tracker_unready,
-  cache_expired,
-  current_group_invalid,
-  fine_group_invalid,
-  group_mismatch,
-  beat_below_gate,
-  templates_unavailable,
-  classifier_invalid,
-  classifier_mismatch,
-  accepted,
-  count,
-};
-#endif
-
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
 enum class SelectionDisposition : std::uint8_t {
   quiet,
@@ -260,10 +242,17 @@ class PolyphonicPitchDetector final {
   bool set_calibrated_selector_rescue_for_diagnostics(
       double minimum_similarity, double minimum_margin) noexcept;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
+  [[nodiscard]] bool observed_spectral_lane_fingerprint(
+      std::uint8_t midi_note,
+      UnisonSpectralFingerprint& fingerprint) const noexcept;
   [[nodiscard]] std::uint8_t spectral_tier_completion_proposal_mask(
       std::uint8_t midi_note) const noexcept;
-  [[nodiscard]] SpectralReacquisitionDisposition
+  [[nodiscard]] ObservedUnisonReacquisitionDisposition
   spectral_reacquisition_disposition(std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] double unison_reacquisition_cache_age_seconds(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t unison_reacquisition_cache_mask(
+      std::uint8_t midi_note) const noexcept;
 #if defined(M3_SPECTRAL_TIER_DIAGNOSTICS)
   struct SpectralHeadDiagnostics final {
     std::array<std::uint8_t, kSpectralTierCount + 1U> best_string{};
@@ -442,11 +431,11 @@ class PolyphonicPitchDetector final {
 
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   struct UnisonReacquisitionState final {
-    UnisonSpectralCorridorTracker tracker{};
+    UnisonSpectralFingerprint confirmed_fingerprint{};
     std::uint32_t last_confirmed_tick{};
     std::uint8_t resolved_mask{};
     std::uint8_t candidate_index{0xffU};
-    bool tracking{};
+    bool confirmed_fingerprint_valid{};
   };
 #endif
 
@@ -615,16 +604,16 @@ class PolyphonicPitchDetector final {
       std::uint8_t spectral_lane_mask) noexcept;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   void update_unison_reacquisition_state(
-      const std::array<bool, kMaxCandidates>& selected, bool quiet) noexcept;
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet) noexcept;
   [[nodiscard]] UnisonReacquisitionState* find_unison_reacquisition_state(
       std::size_t candidate) noexcept;
   [[nodiscard]] const UnisonReacquisitionState*
   find_unison_reacquisition_state(std::size_t candidate) const noexcept;
   [[nodiscard]] UnisonReacquisitionState* acquire_unison_reacquisition_state(
       std::size_t candidate) noexcept;
-  [[nodiscard]] std::uint8_t spectral_reacquisition_mask(
-      std::size_t candidate, std::uint8_t current_assignment_mask,
-      std::uint8_t fine_frequency_mask) noexcept;
 #endif
   void observe_calibration(
       const std::array<double, kMaxCandidates>& scores,
@@ -683,15 +672,11 @@ class PolyphonicPitchDetector final {
   std::uint8_t spectral_lane_decimation_count_{};
   std::uint8_t spectral_lane_decimation_{1U};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
-  // At most eight physical voices can be active. Keeping one 102-bin tracker
-  // per possible MIDI pitch wastes callback memory and inflated the offline
-  // replay stack; slots are therefore bound only to active candidates.
+  // Offline candidate policy only. Slots bind to at most eight active physical
+  // groups so replay can test cache/reacquisition hypotheses without adding
+  // state or work to production VST3 builds.
   std::array<UnisonReacquisitionState, kMaxVoices>
       unison_reacquisition_states_{};
-  std::array<bool, kMaxCandidates> reacquisition_direct_evidence_{};
-  double reacquisition_decimation_sum_{};
-  std::uint8_t reacquisition_decimation_count_{};
-  std::uint8_t reacquisition_decimation_{1U};
 #endif
   StringSweepCalibrator calibrator_{};
   double sample_rate_{};
@@ -747,7 +732,7 @@ class PolyphonicPitchDetector final {
   std::array<CandidateAdmissionDiagnostics, kMaxCandidates>
       candidate_admission_diagnostics_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
-  std::array<SpectralReacquisitionDisposition, kMaxCandidates>
+  std::array<ObservedUnisonReacquisitionDisposition, kMaxCandidates>
       spectral_reacquisition_dispositions_{};
 #endif
   double diagnostic_candidate_rescue_score_ratio_{};

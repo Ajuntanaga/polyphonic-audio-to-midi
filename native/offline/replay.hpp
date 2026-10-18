@@ -129,9 +129,21 @@ inline constexpr std::array<double, 3U>
 inline constexpr std::size_t kArticulatedUnisonReacquisitionPolicyCount =
     kArticulatedUnisonReacquisitionGapSeconds.size() *
     kArticulatedUnisonReacquisitionRevalidationSeconds.size();
+inline constexpr std::array<double, 7U>
+    kObservedFingerprintMaximumSquaredDistances{0.005, 0.01, 0.02, 0.04,
+                                                 0.08, 0.16, 0.32};
 inline constexpr std::size_t
-    kArticulatedUnisonReacquisitionDispositionCount = 13U;
-inline constexpr std::size_t kSpectralReacquisitionDispositionCount = 12U;
+    kObservedFingerprintReacquisitionPolicyCount =
+        kArticulatedUnisonReacquisitionPolicyCount *
+        kObservedFingerprintMaximumSquaredDistances.size();
+inline constexpr std::size_t
+    kObservedFingerprintProductionCandidatePolicy =
+        (1U * kArticulatedUnisonReacquisitionRevalidationSeconds.size()) *
+        kObservedFingerprintMaximumSquaredDistances.size();
+inline constexpr std::size_t
+    kArticulatedUnisonReacquisitionDispositionCount = 15U;
+inline constexpr std::size_t kSpectralReacquisitionDispositionCount =
+    static_cast<std::size_t>(ObservedUnisonReacquisitionDisposition::count);
 inline constexpr std::size_t kFineFrequencyUnresolvedReasonCount = 7U;
 inline constexpr std::array<double, 4U>
     kFineResidualExpansionScoreFloors{0.20, 0.30, 0.40, 0.50};
@@ -445,6 +457,19 @@ ReplayGroupMaskRelation classify_group_mask_relation(
     std::uint8_t observed_mask, std::uint8_t expected_mask,
     bool note_only = false) noexcept;
 
+struct ReplayObservedFingerprintChangedFrameDiagnostic final {
+  ReplayGroupMaskRelation committed_relation{ReplayGroupMaskRelation::absent};
+  std::uint8_t committed_member_count{};
+  std::uint8_t snapshot_voice_count{};
+  std::uint8_t other_owned_lane_count{};
+};
+
+ReplayObservedFingerprintChangedFrameDiagnostic
+diagnose_observed_fingerprint_changed_frame(
+    std::uint8_t committed_mask, std::uint8_t expected_mask,
+    std::uint8_t snapshot_voice_count,
+    std::uint8_t other_owned_mask) noexcept;
+
 std::size_t physical_group_causal_cell_index(
     std::size_t selection_disposition, ReplayGroupMaskRelation fine_relation,
     ReplayGroupMaskRelation committed_relation,
@@ -611,6 +636,64 @@ struct ReplayLabelResult final {
                  kArticulatedUnisonReacquisitionDispositionCount>,
       kArticulatedUnisonReacquisitionPolicyCount>
       articulated_unison_reacquisition_disposition_frames{};
+  std::array<std::uint32_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_projected_frames{};
+  std::array<std::uint32_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_changed_frames{};
+  std::array<std::uint32_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_exact_frames{};
+  std::array<std::uint32_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_matched_frames{};
+  std::array<std::uint32_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_wrong_string_voices{};
+  std::array<std::int64_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_exact_delta{};
+  std::array<std::int64_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_matched_delta{};
+  std::array<std::int64_t,
+             kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_wrong_string_delta{};
+  std::array<
+      std::array<std::uint32_t,
+                 kArticulatedUnisonReacquisitionDispositionCount>,
+      kObservedFingerprintReacquisitionPolicyCount>
+      observed_fingerprint_reacquisition_disposition_frames{};
+  // Selection state for the production-candidate policy only: 0.50 s cache,
+  // 0.20 s revalidation, and 0.005 normalized squared fingerprint distance.
+  // This distinguishes a genuine selected MIDI-path recovery from a cosmetic
+  // lane projection on an already-coasting voice.
+  std::array<std::uint32_t, kSelectionDispositionCount>
+      observed_fingerprint_reacquisition_selection_frames{};
+  // Causal state for changed frames under the production-candidate shadow
+  // policy. These bins distinguish an incomplete internal physical group
+  // from output slot pressure without changing detector output.
+  std::array<std::uint32_t,
+             static_cast<std::size_t>(ReplayGroupMaskRelation::count)>
+      observed_fingerprint_changed_committed_relation_frames{};
+  std::array<std::uint32_t, kMaxVoices + 1U>
+      observed_fingerprint_changed_committed_member_count_frames{};
+  std::array<std::uint32_t, kMaxVoices + 1U>
+      observed_fingerprint_changed_snapshot_voice_count_frames{};
+  std::array<std::uint32_t, kMaxVoices + 1U>
+      observed_fingerprint_changed_other_owned_lane_count_frames{};
+  std::array<std::uint32_t, kSpectralReacquisitionDispositionCount>
+      observed_fingerprint_changed_production_disposition_frames{};
+  // Fifty-millisecond bins through 5.95 s, plus an overflow/non-finite bin.
+  std::array<std::uint32_t, 121U>
+      observed_fingerprint_changed_production_cache_age_50ms_frames{};
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      observed_fingerprint_changed_production_cache_mask_frames{};
+  std::array<std::uint32_t, 21U>
+      observed_fingerprint_changed_score_threshold_ratio_05_frames{};
+  std::array<std::uint32_t, 2U>
+      observed_fingerprint_changed_direct_fundamental_frames{};
   // Joint selector/output accounting. Rows use SelectionDisposition order;
   // columns use ReplayTargetLaneOutcome order. This keeps the offline audit
   // causal: a missing pitch can be separated from a correct pitch assigned

@@ -42,6 +42,10 @@ struct UnisonSpectralSingleScores final {
   std::uint8_t valid_mask{};
 };
 
+[[nodiscard]] double normalized_spectral_fingerprint_squared_distance(
+    const UnisonSpectralFingerprint& left,
+    const UnisonSpectralFingerprint& right) noexcept;
+
 [[nodiscard]] UnisonSpectralSingleScores score_single_spectral_sources(
     const UnisonSpectralFingerprint& observed,
     const UnisonSpectralTemplateSet& templates,
@@ -86,5 +90,70 @@ struct UnisonSpectralSingleScores final {
     std::uint8_t maximum_polyphony, bool direct_fundamental,
     double beat_coherence, bool cache_live, bool spectral_group_agreement,
     bool quiet) noexcept;
+
+struct ObservedUnisonReacquisitionEvidence final {
+  std::uint8_t current_assignment_mask{};
+  std::uint8_t cached_group_mask{};
+  std::uint8_t pending_fine_mask{};
+  std::uint8_t spectral_tier_mask{};
+  std::uint8_t other_owned_mask{};
+  std::uint8_t playable_mask{};
+  std::uint8_t maximum_polyphony{};
+  bool direct_fundamental{};
+  bool quiet{};
+  double cache_age_seconds{};
+  double maximum_cache_age_seconds{};
+  double pending_evidence_seconds{};
+  double minimum_revalidation_seconds{};
+  double pending_beat_coherence{};
+  bool cached_fingerprint_valid{};
+  bool current_fingerprint_valid{};
+  double fingerprint_squared_distance{};
+  double maximum_fingerprint_squared_distance{};
+};
+
+enum class ObservedUnisonReacquisitionDisposition : std::uint8_t {
+  accepted,
+  quiet,
+  no_cache,
+  no_direct_fundamental,
+  current_group_invalid,
+  pending_group_invalid,
+  tier_mismatch,
+  unplayable,
+  ownership_conflict,
+  over_capacity,
+  cache_expired,
+  pending_insufficient,
+  beat_below_gate,
+  fingerprint_unavailable,
+  fingerprint_mismatch,
+  count,
+};
+
+struct ObservedUnisonReacquisitionResult final {
+  std::uint8_t projected_mask{};
+  ObservedUnisonReacquisitionDisposition disposition{
+      ObservedUnisonReacquisitionDisposition::no_cache};
+};
+
+[[nodiscard]] ObservedUnisonReacquisitionResult
+diagnose_observed_unison_reacquisition(
+    const ObservedUnisonReacquisitionEvidence& evidence) noexcept;
+
+// Restores only a recently confirmed three- or four-string physical group.
+// The live subset, fresh fine/beat/tier evidence, physical ownership, and the
+// observed 102-bin spectral fingerprint must all agree. This cannot create a
+// pitch, survive silence, claim a single surviving lane, or exceed polyphony.
+[[nodiscard]] std::uint8_t bounded_observed_unison_reacquisition(
+    const ObservedUnisonReacquisitionEvidence& evidence) noexcept;
+
+// Refreshes only an exact, already-established three- or four-string group.
+// During a selector miss the candidate must remain above the accepted decay
+// floor; true silence, single/pair groups, and mask disagreement always refuse.
+[[nodiscard]] bool bounded_observed_unison_cache_refresh(
+    bool active, bool selected, bool above_decay_floor, bool quiet,
+    std::uint8_t current_assignment_mask,
+    std::uint8_t fine_frequency_mask) noexcept;
 
 }  // namespace m3

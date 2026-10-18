@@ -235,6 +235,27 @@ UnisonSpectralClassification classify(
 
 }  // namespace
 
+double normalized_spectral_fingerprint_squared_distance(
+    const UnisonSpectralFingerprint& left,
+    const UnisonSpectralFingerprint& right) noexcept {
+  if (!finite_nonnegative(left) || !finite_nonnegative(right)) {
+    return std::numeric_limits<double>::infinity();
+  }
+  const double left_norm = stable_l2_norm(left);
+  const double right_norm = stable_l2_norm(right);
+  if (left_norm <= 0.0 || right_norm <= 0.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  double distance = 0.0;
+  for (std::size_t feature = 0U; feature < left.size(); ++feature) {
+    const double difference =
+        left[feature] / left_norm - right[feature] / right_norm;
+    distance += difference * difference;
+  }
+  return std::isfinite(distance) ? distance
+                                 : std::numeric_limits<double>::infinity();
+}
+
 UnisonSpectralSingleScores score_single_spectral_sources(
     const UnisonSpectralFingerprint& observed,
     const UnisonSpectralTemplateSet& templates,
@@ -346,6 +367,110 @@ std::uint8_t bounded_cached_unison_reacquisition(
     return current_assignment_mask;
   }
   return cached_group_mask;
+}
+
+ObservedUnisonReacquisitionResult diagnose_observed_unison_reacquisition(
+    const ObservedUnisonReacquisitionEvidence& evidence) noexcept {
+  using Disposition = ObservedUnisonReacquisitionDisposition;
+  const auto reject = [&evidence](Disposition disposition) noexcept {
+    return ObservedUnisonReacquisitionResult{
+        evidence.current_assignment_mask, disposition};
+  };
+  const auto members = [](std::uint8_t mask) noexcept {
+    std::uint8_t count = 0U;
+    for (; mask != 0U; mask = static_cast<std::uint8_t>(mask & (mask - 1U))) {
+      ++count;
+    }
+    return count;
+  };
+  const std::uint8_t cached_members = members(evidence.cached_group_mask);
+  const std::uint8_t current_members =
+      members(evidence.current_assignment_mask);
+  const std::uint8_t pending_members = members(evidence.pending_fine_mask);
+  if (evidence.quiet) {
+    return reject(Disposition::quiet);
+  }
+  if (cached_members < 3U || cached_members > 4U) {
+    return reject(Disposition::no_cache);
+  }
+  if (!evidence.direct_fundamental) {
+    return reject(Disposition::no_direct_fundamental);
+  }
+  if (current_members < 2U || current_members >= cached_members ||
+      (evidence.current_assignment_mask &
+       static_cast<std::uint8_t>(~evidence.cached_group_mask)) != 0U) {
+    return reject(Disposition::current_group_invalid);
+  }
+  if (pending_members < 2U || pending_members > cached_members ||
+      (evidence.pending_fine_mask &
+       static_cast<std::uint8_t>(~evidence.cached_group_mask)) != 0U) {
+    return reject(Disposition::pending_group_invalid);
+  }
+  if (evidence.spectral_tier_mask != evidence.cached_group_mask) {
+    return reject(Disposition::tier_mismatch);
+  }
+  if (
+      (evidence.cached_group_mask &
+       static_cast<std::uint8_t>(~evidence.playable_mask)) != 0U) {
+    return reject(Disposition::unplayable);
+  }
+  if ((evidence.cached_group_mask & evidence.other_owned_mask) != 0U) {
+    return reject(Disposition::ownership_conflict);
+  }
+  if (evidence.maximum_polyphony == 0U ||
+      evidence.maximum_polyphony > kMaxVoices ||
+      members(static_cast<std::uint8_t>(evidence.cached_group_mask |
+                                        evidence.other_owned_mask)) >
+          evidence.maximum_polyphony) {
+    return reject(Disposition::over_capacity);
+  }
+  if (!std::isfinite(evidence.cache_age_seconds) ||
+      !std::isfinite(evidence.maximum_cache_age_seconds) ||
+      evidence.maximum_cache_age_seconds < 0.0 ||
+      evidence.cache_age_seconds < 0.0 ||
+      evidence.cache_age_seconds > evidence.maximum_cache_age_seconds) {
+    return reject(Disposition::cache_expired);
+  }
+  if (!std::isfinite(evidence.pending_evidence_seconds) ||
+      !std::isfinite(evidence.minimum_revalidation_seconds) ||
+      evidence.minimum_revalidation_seconds < 0.0 ||
+      evidence.pending_evidence_seconds <
+          evidence.minimum_revalidation_seconds) {
+    return reject(Disposition::pending_insufficient);
+  }
+  if (!std::isfinite(evidence.pending_beat_coherence) ||
+      evidence.pending_beat_coherence < 0.20) {
+    return reject(Disposition::beat_below_gate);
+  }
+  if (!evidence.cached_fingerprint_valid ||
+      !evidence.current_fingerprint_valid ||
+      !std::isfinite(evidence.fingerprint_squared_distance)) {
+    return reject(Disposition::fingerprint_unavailable);
+  }
+  if (
+      !std::isfinite(evidence.fingerprint_squared_distance) ||
+      !std::isfinite(evidence.maximum_fingerprint_squared_distance) ||
+      evidence.maximum_fingerprint_squared_distance < 0.0 ||
+      evidence.fingerprint_squared_distance >
+          evidence.maximum_fingerprint_squared_distance) {
+    return reject(Disposition::fingerprint_mismatch);
+  }
+  return {evidence.cached_group_mask, Disposition::accepted};
+}
+
+std::uint8_t bounded_observed_unison_reacquisition(
+    const ObservedUnisonReacquisitionEvidence& evidence) noexcept {
+  return diagnose_observed_unison_reacquisition(evidence).projected_mask;
+}
+
+bool bounded_observed_unison_cache_refresh(
+    bool active, bool selected, bool above_decay_floor, bool quiet,
+    std::uint8_t current_assignment_mask,
+    std::uint8_t fine_frequency_mask) noexcept {
+  const std::size_t members = member_count(current_assignment_mask);
+  return !quiet && active && (selected || above_decay_floor) &&
+         members >= 3U && members <= 4U &&
+         current_assignment_mask == fine_frequency_mask;
 }
 
 }  // namespace m3

@@ -458,6 +458,66 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
         M3_EXPECT_EQ(articulated_disposition_frames,
                      result.label_results[0].labeled_frames);
       }
+      const auto& observed = result.label_results[0];
+      const std::uint32_t expected_changed =
+          observed.observed_fingerprint_reacquisition_changed_frames
+              [m3::offline::kObservedFingerprintProductionCandidatePolicy];
+      std::uint32_t committed_relation_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_committed_relation_frames) {
+        committed_relation_frames += frames;
+      }
+      std::uint32_t snapshot_voice_count_frames = 0U;
+      std::uint32_t committed_member_count_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_committed_member_count_frames) {
+        committed_member_count_frames += frames;
+      }
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_snapshot_voice_count_frames) {
+        snapshot_voice_count_frames += frames;
+      }
+      std::uint32_t other_owned_lane_count_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_other_owned_lane_count_frames) {
+        other_owned_lane_count_frames += frames;
+      }
+      std::uint32_t production_disposition_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_production_disposition_frames) {
+        production_disposition_frames += frames;
+      }
+      std::uint32_t production_cache_age_frames = 0U;
+      for (const std::uint32_t frames :
+           observed
+               .observed_fingerprint_changed_production_cache_age_50ms_frames) {
+        production_cache_age_frames += frames;
+      }
+      std::uint32_t production_cache_mask_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_production_cache_mask_frames) {
+        production_cache_mask_frames += frames;
+      }
+      std::uint32_t changed_score_ratio_frames = 0U;
+      for (const std::uint32_t frames :
+           observed
+               .observed_fingerprint_changed_score_threshold_ratio_05_frames) {
+        changed_score_ratio_frames += frames;
+      }
+      std::uint32_t changed_direct_fundamental_frames = 0U;
+      for (const std::uint32_t frames :
+           observed.observed_fingerprint_changed_direct_fundamental_frames) {
+        changed_direct_fundamental_frames += frames;
+      }
+      M3_EXPECT_EQ(committed_relation_frames, expected_changed);
+      M3_EXPECT_EQ(committed_member_count_frames, expected_changed);
+      M3_EXPECT_EQ(snapshot_voice_count_frames, expected_changed);
+      M3_EXPECT_EQ(other_owned_lane_count_frames, expected_changed);
+      M3_EXPECT_EQ(production_disposition_frames, expected_changed);
+      M3_EXPECT_EQ(production_cache_age_frames, expected_changed);
+      M3_EXPECT_EQ(production_cache_mask_frames, expected_changed);
+      M3_EXPECT_EQ(changed_score_ratio_frames, expected_changed);
+      M3_EXPECT_EQ(changed_direct_fundamental_frames, expected_changed);
       std::uint32_t fit_mask_frames = 0U;
       for (const std::uint32_t frames :
            result.label_results[0].fine_frequency_fit_member_mask_frames) {
@@ -881,6 +941,96 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .articulated_unison_reacquisition_disposition_frames,
               baseline.label_results[label]
                   .articulated_unison_reacquisition_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_projected_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_projected_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_changed_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_exact_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_matched_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_matched_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_wrong_string_voices,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_wrong_string_voices);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_exact_delta,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_exact_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_matched_delta,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_wrong_string_delta,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_reacquisition_disposition_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_reacquisition_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_committed_relation_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_committed_relation_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_committed_member_count_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_committed_member_count_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_snapshot_voice_count_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_snapshot_voice_count_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_other_owned_lane_count_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_other_owned_lane_count_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_production_disposition_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_production_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_production_cache_age_50ms_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_production_cache_age_50ms_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_production_cache_mask_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_production_cache_mask_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_score_threshold_ratio_05_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_score_threshold_ratio_05_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .observed_fingerprint_changed_direct_fundamental_frames,
+              baseline.label_results[label]
+                  .observed_fingerprint_changed_direct_fundamental_frames);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .candidate_score_threshold_ratio_frames,
@@ -1833,6 +1983,28 @@ M3_TEST(offline_replay_classifies_target_lane_outcomes_without_losing_masks) {
   M3_EXPECT_EQ(m3::offline::bounded_fine_residual_expansion(
                    expansion, 0.50, 0.05, 5U),
                0U);
+}
+
+M3_TEST(offline_replay_classifies_observed_fingerprint_changed_frame_state) {
+  const auto subset =
+      m3::offline::diagnose_observed_fingerprint_changed_frame(
+          0x03U, 0x07U, 5U, 0x30U);
+  M3_EXPECT_EQ(subset.committed_relation,
+               m3::offline::ReplayGroupMaskRelation::subset);
+  M3_EXPECT_EQ(subset.committed_member_count, 2U);
+  M3_EXPECT_EQ(subset.snapshot_voice_count, 5U);
+  M3_EXPECT_EQ(subset.other_owned_lane_count, 2U);
+
+  const auto saturated =
+      m3::offline::diagnose_observed_fingerprint_changed_frame(
+          0x07U, 0x07U, 0xffU, 0xffU);
+  M3_EXPECT_EQ(saturated.committed_relation,
+               m3::offline::ReplayGroupMaskRelation::exact);
+  M3_EXPECT_EQ(saturated.committed_member_count, 3U);
+  M3_EXPECT_EQ(saturated.snapshot_voice_count,
+               static_cast<std::uint8_t>(m3::kMaxVoices));
+  M3_EXPECT_EQ(saturated.other_owned_lane_count,
+               static_cast<std::uint8_t>(m3::kMaxVoices));
 }
 
 M3_TEST(offline_candidate_spectral_partition_covers_each_safety_class) {

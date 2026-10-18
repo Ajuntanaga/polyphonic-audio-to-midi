@@ -40,7 +40,8 @@ static_assert(static_cast<std::size_t>(RetainedUnisonDisposition::count) ==
               8U);
 static_assert(static_cast<std::size_t>(FineGroupDisposition::count) == 7U);
 static_assert(
-    static_cast<std::size_t>(SpectralReacquisitionDisposition::count) ==
+    static_cast<std::size_t>(
+        ObservedUnisonReacquisitionDisposition::count) ==
     kSpectralReacquisitionDispositionCount);
 static_assert(
     static_cast<std::size_t>(
@@ -929,6 +930,23 @@ ReplayGroupMaskRelation classify_group_mask_relation(
   return ReplayGroupMaskRelation::other;
 }
 
+ReplayObservedFingerprintChangedFrameDiagnostic
+diagnose_observed_fingerprint_changed_frame(
+    std::uint8_t committed_mask, std::uint8_t expected_mask,
+    std::uint8_t snapshot_voice_count,
+    std::uint8_t other_owned_mask) noexcept {
+  ReplayObservedFingerprintChangedFrameDiagnostic diagnostic;
+  diagnostic.committed_relation =
+      classify_group_mask_relation(committed_mask, expected_mask);
+  diagnostic.committed_member_count = static_cast<std::uint8_t>(
+      std::min<std::size_t>(mask_member_count(committed_mask), kMaxVoices));
+  diagnostic.snapshot_voice_count = static_cast<std::uint8_t>(
+      std::min<std::size_t>(snapshot_voice_count, kMaxVoices));
+  diagnostic.other_owned_lane_count = static_cast<std::uint8_t>(
+      std::min<std::size_t>(mask_member_count(other_owned_mask), kMaxVoices));
+  return diagnostic;
+}
+
 std::size_t physical_group_causal_cell_index(
     std::size_t selection_disposition, ReplayGroupMaskRelation fine_relation,
     ReplayGroupMaskRelation committed_relation,
@@ -1764,6 +1782,8 @@ bool run_detector_replay(const WaveData& wave,
     std::uint8_t resolved_mask{};
     std::uint64_t last_confirmed_sample{
         std::numeric_limits<std::uint64_t>::max()};
+    UnisonSpectralFingerprint confirmed_fingerprint{};
+    bool confirmed_fingerprint_valid{};
   };
   std::array<UnisonReacquisitionState, 128U> unison_reacquisition_states{};
   std::vector<std::array<SpectralOnsetMaskLatch,
@@ -2125,12 +2145,21 @@ bool run_detector_replay(const WaveData& wave,
       std::array<UnisonSpectralClassification, 128U>
           candidate_single_classifications{};
       std::array<bool, 128U> candidate_unison_ready{};
+      std::array<UnisonSpectralFingerprint, 128U>
+          observed_spectral_lane_fingerprints{};
+      std::array<bool, 128U> observed_spectral_lane_ready{};
       std::array<SpectralShadowPhase, 128U> candidate_unison_phases{};
       std::array<UnisonSpectralSingleScores, 128U> spectral_single_scores{};
       std::array<double, 128U> spectral_single_best_errors{};
       spectral_single_best_errors.fill(
           std::numeric_limits<double>::infinity());
       std::array<std::uint8_t, 128U> spectral_playable_masks{};
+      for (std::size_t note = 0U; note < 128U; ++note) {
+        observed_spectral_lane_ready[note] =
+            detector.observed_spectral_lane_fingerprint(
+                static_cast<std::uint8_t>(note),
+                observed_spectral_lane_fingerprints[note]);
+      }
       for (std::size_t half = 0U; half < spectral_active_notes.size(); ++half) {
         std::uint64_t active = spectral_active_notes[half];
         while (active != 0U) {
@@ -2986,8 +3015,17 @@ bool run_detector_replay(const WaveData& wave,
                 quiet);
         if (!quiet && members >= 2U && members <= 4U &&
             current_assignment == committed && cached == committed) {
+          const bool group_changed = state.resolved_mask != cached;
           state.resolved_mask = cached;
           state.last_confirmed_sample = sample_index;
+          if (observed_spectral_lane_ready[note]) {
+            state.confirmed_fingerprint =
+                observed_spectral_lane_fingerprints[note];
+            state.confirmed_fingerprint_valid = true;
+          } else if (group_changed) {
+            state.confirmed_fingerprint = {};
+            state.confirmed_fingerprint_valid = false;
+          }
         }
       }
       std::array<std::array<bool, 128U>,
@@ -3326,6 +3364,12 @@ bool run_detector_replay(const WaveData& wave,
                   label.midi_note);
           const std::uint8_t other_owned =
               other_note_lane_mask(snapshot, label.midi_note);
+          const bool current_fingerprint_valid =
+              observed_spectral_lane_ready[label.midi_note];
+          const UnisonSpectralFingerprint current_fingerprint =
+              current_fingerprint_valid
+                  ? observed_spectral_lane_fingerprints[label.midi_note]
+                  : UnisonSpectralFingerprint{};
           std::size_t policy = 0U;
           for (const double maximum_gap :
                kArticulatedUnisonReacquisitionGapSeconds) {
@@ -3361,13 +3405,171 @@ bool run_detector_replay(const WaveData& wave,
                       .articulated_unison_reacquisition_projected_frames
                           [policy];
               }
+              const bool observed_matches =
+                  lane_mask_matches_label(observed_lane_mask, label);
+              std::size_t fingerprint_policy =
+                  policy * kObservedFingerprintMaximumSquaredDistances.size();
+              for (const double maximum_distance :
+                   kObservedFingerprintMaximumSquaredDistances) {
+                const ArticulatedUnisonReacquisitionResult
+                    fingerprint_projection =
+                        bounded_observed_fingerprint_reacquisition_projection(
+                            projection, observed_lane_mask,
+                            reacquisition.confirmed_fingerprint,
+                            reacquisition.confirmed_fingerprint_valid,
+                            current_fingerprint, current_fingerprint_valid,
+                            maximum_distance);
+                const std::size_t fingerprint_disposition =
+                    static_cast<std::size_t>(
+                        fingerprint_projection.disposition);
+                if (fingerprint_disposition <
+                    kArticulatedUnisonReacquisitionDispositionCount) {
+                  ++label_result
+                        .observed_fingerprint_reacquisition_disposition_frames
+                            [fingerprint_policy][fingerprint_disposition];
+                }
+                if (fingerprint_projection.disposition ==
+                    ArticulatedUnisonReacquisitionDisposition::accepted) {
+                  ++label_result
+                        .observed_fingerprint_reacquisition_projected_frames
+                            [fingerprint_policy];
+                  if (fingerprint_policy ==
+                          kObservedFingerprintProductionCandidatePolicy &&
+                      disposition <
+                          label_result
+                              .observed_fingerprint_reacquisition_selection_frames
+                              .size()) {
+                    ++label_result
+                          .observed_fingerprint_reacquisition_selection_frames
+                              [disposition];
+                  }
+                }
+                if (fingerprint_projection.projected_mask !=
+                    observed_lane_mask) {
+                  ++label_result
+                        .observed_fingerprint_reacquisition_changed_frames
+                            [fingerprint_policy];
+                  if (fingerprint_policy ==
+                      kObservedFingerprintProductionCandidatePolicy) {
+                    const std::uint8_t expected_group =
+                        spectral_expected_group_masks[label.midi_note];
+                    const auto diagnostic =
+                        diagnose_observed_fingerprint_changed_frame(
+                            diagnostic_committed, expected_group,
+                            snapshot.voice_count, other_owned);
+                    ++label_result
+                          .observed_fingerprint_changed_committed_relation_frames
+                              [static_cast<std::size_t>(
+                                  diagnostic.committed_relation)];
+                    ++label_result
+                          .observed_fingerprint_changed_committed_member_count_frames
+                              [diagnostic.committed_member_count];
+                    ++label_result
+                          .observed_fingerprint_changed_snapshot_voice_count_frames
+                              [diagnostic.snapshot_voice_count];
+                    ++label_result
+                          .observed_fingerprint_changed_other_owned_lane_count_frames
+                              [diagnostic.other_owned_lane_count];
+                    const std::size_t production_disposition =
+                        static_cast<std::size_t>(
+                            detector.spectral_reacquisition_disposition(
+                                label.midi_note));
+                    if (production_disposition <
+                        label_result
+                            .observed_fingerprint_changed_production_disposition_frames
+                            .size()) {
+                      ++label_result
+                            .observed_fingerprint_changed_production_disposition_frames
+                                [production_disposition];
+                    }
+                    const double production_cache_age =
+                        detector.unison_reacquisition_cache_age_seconds(
+                            label.midi_note);
+                    const std::size_t production_cache_age_bin =
+                        std::isfinite(production_cache_age) &&
+                                production_cache_age >= 0.0
+                            ? std::min<std::size_t>(
+                                  static_cast<std::size_t>(
+                                      production_cache_age / 0.05),
+                                  120U)
+                            : 120U;
+                    ++label_result
+                          .observed_fingerprint_changed_production_cache_age_50ms_frames
+                              [production_cache_age_bin];
+                    ++label_result
+                          .observed_fingerprint_changed_production_cache_mask_frames
+                              [detector.unison_reacquisition_cache_mask(
+                                  label.midi_note)];
+                    const std::size_t score_ratio_bin =
+                        std::isfinite(admission.score_threshold_ratio) &&
+                                admission.score_threshold_ratio >= 0.0
+                            ? std::min<std::size_t>(
+                                  static_cast<std::size_t>(
+                                      admission.score_threshold_ratio / 0.05),
+                                  20U)
+                            : 20U;
+                    ++label_result
+                          .observed_fingerprint_changed_score_threshold_ratio_05_frames
+                              [score_ratio_bin];
+                    ++label_result
+                          .observed_fingerprint_changed_direct_fundamental_frames
+                              [admission.direct_fundamental_peak ? 1U : 0U];
+                  }
+                }
+                const bool fingerprint_matches = lane_mask_matches_label(
+                    fingerprint_projection.projected_mask, label);
+                if (fingerprint_matches) {
+                  ++label_result
+                        .observed_fingerprint_reacquisition_matched_frames
+                            [fingerprint_policy];
+                }
+                label_result
+                    .observed_fingerprint_reacquisition_matched_delta
+                        [fingerprint_policy] +=
+                    static_cast<std::int64_t>(fingerprint_matches) -
+                    static_cast<std::int64_t>(observed_matches);
+                if (spectral_group_leader_indices[label.midi_note] ==
+                    label_index) {
+                  const std::uint8_t expected_group =
+                      spectral_expected_group_masks[label.midi_note];
+                  const bool observed_exact =
+                      observed_lane_mask == expected_group;
+                  const bool fingerprint_exact =
+                      fingerprint_projection.projected_mask == expected_group;
+                  if (fingerprint_exact) {
+                    ++label_result
+                          .observed_fingerprint_reacquisition_exact_frames
+                              [fingerprint_policy];
+                  }
+                  label_result
+                      .observed_fingerprint_reacquisition_exact_delta
+                          [fingerprint_policy] +=
+                      static_cast<std::int64_t>(fingerprint_exact) -
+                      static_cast<std::int64_t>(observed_exact);
+                  const std::int64_t fingerprint_wrong = mask_member_count(
+                      static_cast<std::uint8_t>(
+                          fingerprint_projection.projected_mask &
+                          static_cast<std::uint8_t>(~expected_group)));
+                  const std::int64_t observed_wrong = mask_member_count(
+                      static_cast<std::uint8_t>(
+                          observed_lane_mask &
+                          static_cast<std::uint8_t>(~expected_group)));
+                  label_result
+                      .observed_fingerprint_reacquisition_wrong_string_voices
+                          [fingerprint_policy] +=
+                      static_cast<std::uint32_t>(fingerprint_wrong);
+                  label_result
+                      .observed_fingerprint_reacquisition_wrong_string_delta
+                          [fingerprint_policy] +=
+                      fingerprint_wrong - observed_wrong;
+                }
+                ++fingerprint_policy;
+              }
               if (projection.projected_mask != observed_lane_mask) {
                 ++label_result
                       .articulated_unison_reacquisition_changed_frames
                           [policy];
               }
-              const bool observed_matches =
-                  lane_mask_matches_label(observed_lane_mask, label);
               const bool projected_matches = lane_mask_matches_label(
                   projection.projected_mask, label);
               if (projected_matches) {

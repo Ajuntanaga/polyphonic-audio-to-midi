@@ -47,8 +47,9 @@ constexpr std::uint8_t kSpectralLaneDecimation = 4U;
 constexpr double kSpectralLaneMaximumError = 0.05;
 constexpr double kSpectralLaneMinimumMargin = 0.02;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
-constexpr double kUnisonReacquisitionHoldSeconds = 0.30;
-constexpr std::uint8_t kUnisonReacquisitionDecimation = 4U;
+constexpr double kUnisonReacquisitionHoldSeconds = 0.50;
+constexpr double kUnisonReacquisitionMinimumRevalidationSeconds = 0.20;
+constexpr double kUnisonReacquisitionMaximumFingerprintDistance = 0.005;
 #endif
 constexpr std::uint32_t kFineFrequencyAnalysisStride = 5U;
 // Give close calibrated physical-string offsets three seconds of beat-time
@@ -602,11 +603,6 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   spectral_lane_decimation_ = sample_rate_ >= 32000.0
                                   ? kSpectralLaneDecimation
                                   : 1U;
-#if defined(M3_UNISON_SPECTRAL_SHADOW)
-  reacquisition_decimation_ = sample_rate_ >= 32000.0
-                                  ? kUnisonReacquisitionDecimation
-                                  : 1U;
-#endif
   slow_energy_decay =
       std::exp(-1.0 / (kSlowEnergySeconds * sample_rate_));
   lowest_note_ = config.lowest_note;
@@ -721,9 +717,6 @@ void PolyphonicPitchDetector::reset() noexcept {
   spectral_lane_decimation_count_ = 0U;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   unison_reacquisition_states_ = {};
-  reacquisition_direct_evidence_ = {};
-  reacquisition_decimation_sum_ = 0.0;
-  reacquisition_decimation_count_ = 0U;
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   quiet_disposition_ = QuietDisposition::not_quiet;
@@ -1225,6 +1218,25 @@ FineGroupDisposition PolyphonicPitchDetector::fine_group_disposition(
 }
 
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
+bool PolyphonicPitchDetector::observed_spectral_lane_fingerprint(
+    std::uint8_t midi_note,
+    UnisonSpectralFingerprint& fingerprint) const noexcept {
+  fingerprint = {};
+  if (midi_note < lowest_note_) {
+    return false;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return false;
+  }
+  const SpectralLaneState* state = find_spectral_lane_state(candidate);
+  if (state == nullptr || !state->tracking || !state->tracker.ready()) {
+    return false;
+  }
+  fingerprint = state->tracker.fingerprint();
+  return true;
+}
+
 std::uint8_t PolyphonicPitchDetector::spectral_tier_completion_proposal_mask(
     std::uint8_t midi_note) const noexcept {
   if (midi_note < lowest_note_) {
@@ -1246,16 +1258,41 @@ std::uint8_t PolyphonicPitchDetector::spectral_tier_completion_proposal_mask(
       fine.added_member_beat_coherence, fine.component_energy);
 }
 
-SpectralReacquisitionDisposition
+ObservedUnisonReacquisitionDisposition
 PolyphonicPitchDetector::spectral_reacquisition_disposition(
     std::uint8_t midi_note) const noexcept {
   if (midi_note < lowest_note_) {
-    return SpectralReacquisitionDisposition::no_cache;
+    return ObservedUnisonReacquisitionDisposition::no_cache;
   }
   const std::size_t candidate = midi_note - lowest_note_;
   return candidate < static_cast<std::size_t>(candidate_count_)
              ? spectral_reacquisition_dispositions_[candidate]
-             : SpectralReacquisitionDisposition::no_cache;
+             : ObservedUnisonReacquisitionDisposition::no_cache;
+}
+
+double PolyphonicPitchDetector::unison_reacquisition_cache_age_seconds(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_ || sample_rate_ <= 0.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  const UnisonReacquisitionState* state =
+      find_unison_reacquisition_state(candidate);
+  return state != nullptr
+             ? static_cast<double>(decision_counter_ -
+                                   state->last_confirmed_tick) *
+                   static_cast<double>(kDecisionQuantum) / sample_rate_
+             : std::numeric_limits<double>::infinity();
+}
+
+std::uint8_t PolyphonicPitchDetector::unison_reacquisition_cache_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const UnisonReacquisitionState* state =
+      find_unison_reacquisition_state(midi_note - lowest_note_);
+  return state != nullptr ? state->resolved_mask : 0U;
 }
 #endif
 
@@ -5177,147 +5214,58 @@ PolyphonicPitchDetector::acquire_unison_reacquisition_state(
     }
     state = {};
     state.candidate_index = static_cast<std::uint8_t>(candidate);
-    const double effective_rate =
-        sample_rate_ / static_cast<double>(reacquisition_decimation_);
-    const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
-    state.tracking = state.tracker.configure(effective_rate, note);
-    if (!state.tracking) {
-      state = {};
-      return nullptr;
-    }
     return &state;
   }
-  return nullptr;
-}
-
-std::uint8_t PolyphonicPitchDetector::spectral_reacquisition_mask(
-    std::size_t candidate, std::uint8_t current_assignment_mask,
-    std::uint8_t fine_frequency_mask) noexcept {
-  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
-    return 0U;
-  }
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  const auto reject = [this, candidate](
-                          SpectralReacquisitionDisposition disposition) {
-    spectral_reacquisition_dispositions_[candidate] = disposition;
-    return std::uint8_t{0U};
-  };
-#else
-  const auto reject = [](SpectralReacquisitionDisposition) {
-    return std::uint8_t{0U};
-  };
-#endif
-  const UnisonReacquisitionState* state_ptr =
-      find_unison_reacquisition_state(candidate);
-  if (state_ptr == nullptr) {
-    return reject(SpectralReacquisitionDisposition::no_cache);
-  }
-  const UnisonReacquisitionState& state = *state_ptr;
-  const std::uint8_t resolved = state.resolved_mask;
-  const std::uint8_t resolved_members = string_count(resolved);
-  const std::uint8_t current_members = string_count(current_assignment_mask);
-  const std::uint8_t fine_members = string_count(fine_frequency_mask);
   const std::uint32_t maximum_age = static_cast<std::uint32_t>(std::clamp(
       std::ceil(kUnisonReacquisitionHoldSeconds * sample_rate_ /
                 static_cast<double>(kDecisionQuantum)),
       1.0, static_cast<double>(std::numeric_limits<std::uint32_t>::max())));
-  if (resolved_members < 3U || resolved_members > 4U) {
-    return reject(SpectralReacquisitionDisposition::no_cache);
+  UnisonReacquisitionState* oldest = nullptr;
+  for (UnisonReacquisitionState& state : unison_reacquisition_states_) {
+    if (state.candidate_index == 0xffU ||
+        decision_counter_ - state.last_confirmed_tick <= maximum_age) {
+      continue;
+    }
+    if (oldest == nullptr || state.last_confirmed_tick <
+                                oldest->last_confirmed_tick) {
+      oldest = &state;
+    }
   }
-  if (!reacquisition_direct_evidence_[candidate]) {
-    return reject(
-        SpectralReacquisitionDisposition::no_direct_fundamental);
+  if (oldest != nullptr) {
+    *oldest = {};
+    oldest->candidate_index = static_cast<std::uint8_t>(candidate);
   }
-  if (!state.tracking || !state.tracker.ready()) {
-    return reject(SpectralReacquisitionDisposition::tracker_unready);
-  }
-  if (decision_counter_ - state.last_confirmed_tick > maximum_age) {
-    return reject(SpectralReacquisitionDisposition::cache_expired);
-  }
-  if (current_members < 2U || current_members > resolved_members) {
-    return reject(
-        SpectralReacquisitionDisposition::current_group_invalid);
-  }
-  if (fine_members < 2U || fine_members > resolved_members) {
-    return reject(SpectralReacquisitionDisposition::fine_group_invalid);
-  }
-  if (
-      (current_assignment_mask & static_cast<std::uint8_t>(~resolved)) != 0U ||
-      (fine_frequency_mask & static_cast<std::uint8_t>(~resolved)) != 0U ||
-      (resolved & static_cast<std::uint8_t>(~playable_string_mask(candidate))) !=
-          0U) {
-    return reject(SpectralReacquisitionDisposition::group_mismatch);
-  }
-  const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
-  const FineFrequencyEvidenceState& fine_state =
-      fine_frequency_evidence_states_[candidate];
-  const double beat_coherence =
-      fine_state.valid && fine_frequency_mask == fine_state.member_mask
-          ? fine_state.minimum_pairwise_beat_coherence
-          : 0.0;
-  if (beat_coherence < 0.20) {
-    return reject(SpectralReacquisitionDisposition::beat_below_gate);
-  }
-  UnisonSpectralTemplateSet templates;
-  if (!factory_unison_spectral_templates(state.tracker.phase(), note,
-                                         templates) &&
-      !factory_unison_spectral_templates(UnisonSpectralPhase::unready, note,
-                                         templates)) {
-    return reject(
-        SpectralReacquisitionDisposition::templates_unavailable);
-  }
-  const UnisonSpectralClassification classification =
-      classify_feasible_unison(state.tracker.fingerprint(), templates,
-                               playable_string_mask(candidate), 2U, 4U);
-  if (!classification.valid) {
-    return reject(SpectralReacquisitionDisposition::classifier_invalid);
-  }
-  if (classification.member_mask != resolved) {
-    return reject(SpectralReacquisitionDisposition::classifier_mismatch);
-  }
-  const std::uint8_t projected = bounded_cached_unison_reacquisition(
-      current_assignment_mask, resolved, fine_frequency_mask,
-      playable_string_mask(candidate), max_polyphony_,
-      reacquisition_direct_evidence_[candidate], beat_coherence, true, true,
-      false);
-  if (projected != resolved) {
-    return reject(SpectralReacquisitionDisposition::group_mismatch);
-  }
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  spectral_reacquisition_dispositions_[candidate] =
-      SpectralReacquisitionDisposition::accepted;
-#endif
-  return projected;
+  return oldest;
 }
 
 void PolyphonicPitchDetector::update_unison_reacquisition_state(
-    const std::array<bool, kMaxCandidates>& selected, bool quiet) noexcept {
-  const std::uint32_t maximum_age = static_cast<std::uint32_t>(std::clamp(
-      std::ceil(kUnisonReacquisitionHoldSeconds * sample_rate_ /
-                static_cast<double>(kDecisionQuantum)),
-      1.0, static_cast<double>(std::numeric_limits<std::uint32_t>::max())));
-  for (UnisonReacquisitionState& cache : unison_reacquisition_states_) {
-    const std::size_t candidate = cache.candidate_index;
-    if (candidate >= static_cast<std::size_t>(candidate_count_) || quiet ||
-        !candidate_states_[candidate].active) {
-      if (cache.candidate_index != 0xffU) {
-        cache = {};
-      }
-      continue;
-    }
-    if (cache.resolved_mask != 0U &&
-        decision_counter_ - cache.last_confirmed_tick > maximum_age) {
-      cache.resolved_mask = 0U;
-      cache.last_confirmed_tick = 0U;
-    }
-  }
-  if (quiet) {
+    const std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet) noexcept {
+  if (profile_mode_ != ProfileMode::m3 || sample_rate_ <= 0.0) {
     return;
   }
+  const std::size_t count = static_cast<std::size_t>(candidate_count_);
+
+  // Snapshot a newly established exact group before applying any cached
+  // restoration. A restored group therefore cannot refresh its own lifetime.
   for (std::size_t candidate = 0U;
-       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+       candidate < count; ++candidate) {
     CandidateState& candidate_state = candidate_states_[candidate];
-    if (!candidate_state.active) {
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    const std::uint8_t assignment = candidate_state.assigned_string_mask;
+    const bool above_decay_floor =
+        std::isfinite(scores[candidate]) && std::isfinite(threshold) &&
+        scores[candidate] >= threshold * kM3RetainedUnisonDecayFloorRatio;
+    if (!bounded_observed_unison_cache_refresh(
+            candidate_state.active, selected[candidate], above_decay_floor,
+            quiet, assignment, fine.member_mask)) {
+      continue;
+    }
+    const SpectralLaneState* spectral = find_spectral_lane_state(candidate);
+    if (!fine.valid) {
       continue;
     }
     UnisonReacquisitionState* cache_ptr =
@@ -5326,12 +5274,100 @@ void PolyphonicPitchDetector::update_unison_reacquisition_state(
       continue;
     }
     UnisonReacquisitionState& cache = *cache_ptr;
-    const std::uint8_t assignment = candidate_state.assigned_string_mask;
-    const std::uint8_t members = string_count(assignment);
-    if (selected[candidate] && members >= 3U && members <= 4U) {
-      cache.resolved_mask = assignment;
-      cache.last_confirmed_tick = decision_counter_;
+    const bool group_changed = cache.resolved_mask != assignment;
+    cache.resolved_mask = assignment;
+    cache.last_confirmed_tick = decision_counter_;
+    if (spectral != nullptr && spectral->tracking &&
+        spectral->tracker.ready()) {
+      cache.confirmed_fingerprint = spectral->tracker.fingerprint();
+      cache.confirmed_fingerprint_valid = true;
+    } else if (group_changed) {
+      cache.confirmed_fingerprint = {};
+      cache.confirmed_fingerprint_valid = false;
     }
+  }
+
+  if (quiet) {
+    return;
+  }
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    CandidateState& candidate_state = candidate_states_[candidate];
+    if (!selected[candidate] || !candidate_state.active) {
+      continue;
+    }
+    const UnisonReacquisitionState* cache =
+        find_unison_reacquisition_state(candidate);
+    const SpectralLaneState* spectral = find_spectral_lane_state(candidate);
+    if (cache == nullptr || spectral == nullptr || !spectral->tracking ||
+        !spectral->tracker.ready()) {
+      continue;
+    }
+    std::uint8_t other_owned = 0U;
+    for (std::size_t other = 0U; other < count; ++other) {
+      if (other == candidate || !candidate_states_[other].active) {
+        continue;
+      }
+      std::uint8_t owned = static_cast<std::uint8_t>(
+          candidate_states_[other].assigned_string_mask |
+          candidate_states_[other].midi_voice_mask);
+      if (owned == 0U &&
+          candidate_states_[other].assigned_string < kMaxVoices) {
+        owned = static_cast<std::uint8_t>(
+            1U << candidate_states_[other].assigned_string);
+      }
+      other_owned = static_cast<std::uint8_t>(other_owned | owned);
+    }
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    const std::uint8_t playable = playable_string_mask(candidate);
+    const std::uint8_t fine_mask =
+        static_cast<std::uint8_t>(fine.member_mask & playable);
+    const std::uint8_t tier_mask = bounded_spectral_tier_completion(
+        candidate_state.active, candidate_state.assigned_string_mask,
+        fine_mask, playable, string_fret_spectral_head_evidence(candidate),
+        fine.added_member_beat_coherence, fine.component_energy);
+    const UnisonSpectralFingerprint current_fingerprint =
+        spectral->tracker.fingerprint();
+    const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    ObservedUnisonReacquisitionEvidence evidence;
+    evidence.current_assignment_mask = candidate_state.assigned_string_mask;
+    evidence.cached_group_mask = cache->resolved_mask;
+    evidence.pending_fine_mask = fine.pending_member_mask;
+    evidence.spectral_tier_mask = tier_mask;
+    evidence.other_owned_mask = other_owned;
+    evidence.playable_mask = playable;
+    evidence.maximum_polyphony = max_polyphony_;
+    evidence.direct_fundamental =
+        has_direct_fundamental_peak(scores, fundamentals, candidate, count);
+    evidence.cache_age_seconds =
+        static_cast<double>(decision_counter_ - cache->last_confirmed_tick) *
+        static_cast<double>(kDecisionQuantum) / sample_rate_;
+    evidence.maximum_cache_age_seconds =
+        kUnisonReacquisitionHoldSeconds;
+    evidence.pending_evidence_seconds =
+        fine_frequency_pending_evidence_seconds(note);
+    evidence.minimum_revalidation_seconds =
+        kUnisonReacquisitionMinimumRevalidationSeconds;
+    evidence.pending_beat_coherence =
+        fine.pending_minimum_pairwise_beat_coherence;
+    evidence.cached_fingerprint_valid = cache->confirmed_fingerprint_valid;
+    evidence.current_fingerprint_valid = true;
+    evidence.fingerprint_squared_distance =
+        normalized_spectral_fingerprint_squared_distance(
+            cache->confirmed_fingerprint, current_fingerprint);
+    evidence.maximum_fingerprint_squared_distance =
+        kUnisonReacquisitionMaximumFingerprintDistance;
+    const ObservedUnisonReacquisitionResult projection =
+        diagnose_observed_unison_reacquisition(evidence);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) && \
+    defined(M3_UNISON_SPECTRAL_SHADOW)
+    spectral_reacquisition_dispositions_[candidate] = projection.disposition;
+#endif
+    // This is an offline shadow policy. Record whether the bounded
+    // counterfactual would accept, but never feed it back into the detector's
+    // assignment or MIDI/tuner state. The replay's production metrics and
+    // fingerprint must therefore remain identical with diagnostics enabled.
+    (void)projection.projected_mask;
   }
 }
 #endif
@@ -5570,6 +5606,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       temporal_group_selected = true;
       selector_group_masks_[candidate] = tier_completion;
     }
+
     if (!temporal_group_selected && state.age_ticks >= profile_ready_ticks &&
         candidate_extra_capacity > 0U) {
       const std::uint16_t long_profile_ready_ticks =
@@ -6468,7 +6505,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   candidate_admission_diagnostics_ = {};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   spectral_reacquisition_dispositions_.fill(
-      SpectralReacquisitionDisposition::no_cache);
+      ObservedUnisonReacquisitionDisposition::no_cache);
 #endif
   }
 #endif
@@ -6630,15 +6667,6 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       }
     }
 #endif
-#if defined(M3_UNISON_SPECTRAL_SHADOW)
-    if (offline_replay_diagnostics_enabled_) {
-      reacquisition_direct_evidence_.fill(false);
-      for (std::size_t candidate = 0U; candidate < count; ++candidate) {
-        reacquisition_direct_evidence_[candidate] =
-            has_direct_fundamental_peak(scores, fundamentals, candidate, count);
-      }
-    }
-#endif
     if (profile_mode_ == ProfileMode::m3) {
       select_m3_feasible_candidates(scores, fundamentals,
                                     narrow_fundamentals, threshold, selected,
@@ -6718,17 +6746,6 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     }
   }
 #endif
-#if defined(M3_UNISON_SPECTRAL_SHADOW)
-  if (offline_replay_diagnostics_enabled_) {
-    reacquisition_direct_evidence_.fill(false);
-    if (!quiet) {
-      for (std::size_t candidate = 0U; candidate < count; ++candidate) {
-        reacquisition_direct_evidence_[candidate] =
-            has_direct_fundamental_peak(scores, fundamentals, candidate, count);
-      }
-    }
-  }
-#endif
   update_phase_cents_estimates(selected);
   update_partial_detuning_evidence(selected);
   update_fine_frequency_evidence(selected, scores, fundamentals, threshold,
@@ -6740,7 +6757,8 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   infer_m3_unison_strings(selected);
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   if (offline_replay_diagnostics_enabled_) {
-    update_unison_reacquisition_state(selected, quiet);
+    update_unison_reacquisition_state(selected, scores, fundamentals,
+                                       threshold, quiet);
   }
 #endif
   update_calibration_tuning_offset(selected);
@@ -6970,26 +6988,6 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       spectral_lane_decimation_count_ = 0U;
     }
   }
-#if defined(M3_UNISON_SPECTRAL_SHADOW)
-  if (offline_replay_diagnostics_enabled_ &&
-      profile_mode_ == ProfileMode::m3) {
-    reacquisition_decimation_sum_ += dc_blocked;
-    ++reacquisition_decimation_count_;
-    if (reacquisition_decimation_count_ == reacquisition_decimation_) {
-      const double decimated =
-          reacquisition_decimation_sum_ /
-          static_cast<double>(reacquisition_decimation_count_);
-      for (UnisonReacquisitionState& state :
-           unison_reacquisition_states_) {
-        if (state.tracking) {
-          state.tracker.observe(decimated);
-        }
-      }
-      reacquisition_decimation_sum_ = 0.0;
-      reacquisition_decimation_count_ = 0U;
-    }
-  }
-#endif
   const double power = dc_blocked * dc_blocked;
   const double energy_mix = 1.0 - correlation_decay;
   fast_energy_ = correlation_decay * fast_energy_ + energy_mix * power;

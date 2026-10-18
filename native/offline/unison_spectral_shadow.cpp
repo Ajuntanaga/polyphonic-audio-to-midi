@@ -399,6 +399,32 @@ bounded_articulated_unison_reacquisition_projection(
   return {cached_group_mask, Disposition::accepted};
 }
 
+ArticulatedUnisonReacquisitionResult
+bounded_observed_fingerprint_reacquisition_projection(
+    ArticulatedUnisonReacquisitionResult base,
+    std::uint8_t fallback_assignment_mask,
+    const UnisonSpectralFingerprint& cached_fingerprint,
+    bool cached_fingerprint_valid,
+    const UnisonSpectralFingerprint& current_fingerprint,
+    bool current_fingerprint_valid,
+    double maximum_squared_distance) noexcept {
+  using Disposition = ArticulatedUnisonReacquisitionDisposition;
+  if (base.disposition != Disposition::accepted) {
+    return base;
+  }
+  if (!cached_fingerprint_valid || !current_fingerprint_valid) {
+    return {fallback_assignment_mask, Disposition::fingerprint_unavailable};
+  }
+  const double distance = normalized_spectral_fingerprint_squared_distance(
+      cached_fingerprint, current_fingerprint);
+  if (!std::isfinite(maximum_squared_distance) ||
+      maximum_squared_distance < 0.0 || !std::isfinite(distance) ||
+      distance > maximum_squared_distance) {
+    return {fallback_assignment_mask, Disposition::fingerprint_mismatch};
+  }
+  return base;
+}
+
 std::uint8_t bounded_unison_reacquisition_cache_mask(
     std::uint8_t cached_group_mask, std::uint8_t current_assignment_mask,
     std::uint8_t fine_frequency_mask, std::uint8_t committed_mask,

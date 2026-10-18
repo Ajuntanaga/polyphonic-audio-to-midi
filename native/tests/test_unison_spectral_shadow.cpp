@@ -602,6 +602,66 @@ M3_TEST(articulated_unison_reacquisition_requires_fresh_bounded_evidence) {
                ArticulatedUnisonReacquisitionDisposition::ownership_conflict);
 }
 
+M3_TEST(observed_spectral_fingerprint_rejects_a_different_articulation) {
+  using m3::UnisonSpectralFingerprint;
+  using m3::offline::ArticulatedUnisonReacquisitionDisposition;
+  using m3::offline::ArticulatedUnisonReacquisitionResult;
+  using m3::offline::bounded_observed_fingerprint_reacquisition_projection;
+  using m3::normalized_spectral_fingerprint_squared_distance;
+
+  UnisonSpectralFingerprint cached{};
+  UnisonSpectralFingerprint same_shape{};
+  UnisonSpectralFingerprint different{};
+  cached[0] = 1.0;
+  cached[1] = 2.0;
+  same_shape[0] = 3.0;
+  same_shape[1] = 6.0;
+  different[2] = 1.0;
+
+  M3_EXPECT_NEAR(normalized_spectral_fingerprint_squared_distance(
+                     cached, same_shape),
+                 0.0, 1.0e-12);
+  M3_EXPECT_NEAR(normalized_spectral_fingerprint_squared_distance(
+                     cached, different),
+                 2.0, 1.0e-12);
+
+  const ArticulatedUnisonReacquisitionResult accepted{
+      0x07U, ArticulatedUnisonReacquisitionDisposition::accepted};
+  const auto retained =
+      bounded_observed_fingerprint_reacquisition_projection(
+          accepted, 0x03U, cached, true, same_shape, true, 0.01);
+  M3_EXPECT_EQ(retained.projected_mask, 0x07U);
+  M3_EXPECT_EQ(retained.disposition,
+               ArticulatedUnisonReacquisitionDisposition::accepted);
+
+  const auto rejected =
+      bounded_observed_fingerprint_reacquisition_projection(
+          accepted, 0x03U, cached, true, different, true, 0.20);
+  M3_EXPECT_EQ(rejected.projected_mask, 0x03U);
+  M3_EXPECT_EQ(
+      rejected.disposition,
+      ArticulatedUnisonReacquisitionDisposition::fingerprint_mismatch);
+
+  const auto unavailable =
+      bounded_observed_fingerprint_reacquisition_projection(
+          accepted, 0x03U, cached, false, same_shape, true, 0.20);
+  M3_EXPECT_EQ(unavailable.projected_mask, 0x03U);
+  M3_EXPECT_EQ(
+      unavailable.disposition,
+      ArticulatedUnisonReacquisitionDisposition::fingerprint_unavailable);
+
+  const ArticulatedUnisonReacquisitionResult already_rejected{
+      0x03U,
+      ArticulatedUnisonReacquisitionDisposition::pending_insufficient};
+  const auto unchanged =
+      bounded_observed_fingerprint_reacquisition_projection(
+          already_rejected, 0x03U, cached, true, same_shape, true, 0.01);
+  M3_EXPECT_EQ(unchanged.projected_mask, 0x03U);
+  M3_EXPECT_EQ(
+      unchanged.disposition,
+      ArticulatedUnisonReacquisitionDisposition::pending_insufficient);
+}
+
 M3_TEST(unison_spectral_tier_completion_adds_only_one_beat_coherent_member) {
   constexpr std::array<std::uint8_t, m3::kSpectralTierCount + 1U> kHeads{
       0U, 1U, 2U, 1U, 2U};

@@ -188,6 +188,8 @@ enum class ArticulatedUnisonReacquisitionDisposition : std::uint8_t {
   unplayable,
   ownership_conflict,
   over_capacity,
+  fingerprint_unavailable,
+  fingerprint_mismatch,
   count,
 };
 
@@ -210,6 +212,19 @@ bounded_articulated_unison_reacquisition_projection(
     std::uint8_t maximum_polyphony, bool direct_fundamental, bool quiet,
     double cache_age_seconds, double maximum_gap_seconds,
     double minimum_revalidation_seconds) noexcept;
+
+// Replay-only secondary gate for the articulated projection above. It cannot
+// turn a rejected base projection into an accepted one; it can only withhold
+// a cached group when the observed spectrum is unavailable or has changed.
+[[nodiscard]] ArticulatedUnisonReacquisitionResult
+bounded_observed_fingerprint_reacquisition_projection(
+    ArticulatedUnisonReacquisitionResult base,
+    std::uint8_t fallback_assignment_mask,
+    const UnisonSpectralFingerprint& cached_fingerprint,
+    bool cached_fingerprint_valid,
+    const UnisonSpectralFingerprint& current_fingerprint,
+    bool current_fingerprint_valid,
+    double maximum_squared_distance) noexcept;
 
 // Tests whether the already-resolved fine-frequency group is missing exactly
 // one physical member that the independent spectral tier heads support. This
