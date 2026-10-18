@@ -1292,13 +1292,15 @@ struct PolyphonicPitchDetectorTestAccess final {
       const std::array<std::uint8_t, kSpectralTierCount + 1U>& heads,
       const std::array<double, kSpectralTierCount + 1U>& margins,
       const std::array<double, kMaxVoices>& beat_coherence,
-      double added_member_ratio = 1.0) noexcept {
+      double added_member_ratio = 1.0,
+      std::uint8_t added_string = 0U) noexcept {
     PolyphonicPitchDetector::SpectralHeadEvidence spectral;
     spectral.best_string = heads;
     spectral.margin = margins;
     std::array<double, kMaxVoices> component_energy{};
     component_energy.fill(1.0);
-    component_energy[0U] = added_member_ratio * added_member_ratio;
+    component_energy[added_string] =
+        added_member_ratio * added_member_ratio;
     return PolyphonicPitchDetector::bounded_spectral_tier_completion(
         active, current_assignment_mask, fine_frequency_mask, playable_mask,
         spectral, beat_coherence, component_energy);
@@ -1372,6 +1374,25 @@ struct PolyphonicPitchDetectorTestAccess final {
         static_cast<std::size_t>(detector.candidate_count_));
     return selected[kCandidate] ? detector.selector_group_masks_[kCandidate]
                                 : 0U;
+  }
+
+  static std::uint8_t fresh_fine_pair_completion_inference_probe(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::uint8_t kNote = 40U;
+    constexpr std::size_t kCandidate = kNote - 32U;
+    (void)retained_unison_completion_selector_probe(detector);
+    auto& state = detector.candidate_states_[kCandidate];
+    state.active = false;
+    state.assigned_string = 1U;
+    state.assigned_string_mask = 0x02U;
+    state.midi_voice_mask = 0U;
+    state.pending_unison_mask = 0U;
+    state.unison_evidence_ticks = 0U;
+    detector.selector_group_masks_ = {};
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kCandidate] = true;
+    detector.infer_m3_unison_strings(selected);
+    return state.assigned_string_mask;
   }
 
   static CompletionPriorityProbe stronger_completion_priority_probe(
@@ -2020,7 +2041,21 @@ M3_TEST(native_detector_resolved_unison_resumes_without_repaying_startup_gate) {
   M3_EXPECT_FALSE(Access::resolved_unison_resume_candidate_probe(
       true, 0b00000011U, true, true, true, 0.20, 0b00000111U));
   M3_EXPECT_FALSE(Access::resolved_unison_resume_candidate_probe(
+      true, 0b00001001U, true, true, true, 0.20, 0b00000111U));
+  M3_EXPECT_FALSE(Access::resolved_unison_resume_candidate_probe(
+      true, 0b00000001U, true, true, true, 0.20, 0b00000111U));
+  M3_EXPECT_FALSE(Access::resolved_unison_resume_candidate_probe(
       true, 0b00000001U, true, true, true, 0.20, 0b00000001U));
+  // A retained robust three- or four-string fit may re-enter after its MIDI
+  // assignment released; the selector still has to find current audio. Pairs
+  // remain on the ordinary startup path because they are much more common
+  // harmonic ambiguities.
+  M3_EXPECT_TRUE(Access::resolved_unison_resume_candidate_probe(
+      false, 0U, true, true, true, 0.20, 0b00000111U));
+  M3_EXPECT_TRUE(Access::resolved_unison_resume_candidate_probe(
+      false, 0U, true, true, true, 0.20, 0b00001111U));
+  M3_EXPECT_FALSE(Access::resolved_unison_resume_candidate_probe(
+      false, 0U, true, true, true, 0.20, 0b00000011U));
 
   std::array<bool, m3::kMaxCandidates> active{};
   std::array<bool, m3::kMaxCandidates> selected{};
@@ -3099,9 +3134,9 @@ M3_TEST(native_detector_fast_confirms_only_the_complete_bounded_playable_group) 
   M3_EXPECT_TRUE(std::abs(Access::fine_consensus_seconds(0x01U, 0x03U, 0x1fU) -
                           0.20) < 1.0e-12);
   M3_EXPECT_TRUE(std::abs(Access::fine_consensus_seconds(0x03U, 0x07U, 0x07U) -
-                          0.20) < 1.0e-12);
+                          0.0) < 1.0e-12);
   M3_EXPECT_TRUE(std::abs(Access::fine_consensus_seconds(0x07U, 0x0fU, 0x0fU) -
-                          0.20) < 1.0e-12);
+                          0.0) < 1.0e-12);
   M3_EXPECT_TRUE(std::abs(Access::fine_consensus_seconds(0x03U, 0x07U, 0x0fU) -
                           2.25) < 1.0e-12);
   M3_EXPECT_TRUE(std::abs(Access::fine_consensus_seconds(0x0fU, 0x1fU, 0x1fU) -
@@ -4075,6 +4110,19 @@ M3_TEST(native_detector_joint_selector_reserves_measured_tier_completion_atomica
       0x07U);
 }
 
+M3_TEST(native_detector_completes_a_fresh_resolved_pair_before_activation) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::
+          fresh_fine_pair_completion_inference_probe(detector),
+      0x07U);
+}
+
 M3_TEST(native_detector_joint_selector_selects_stronger_bounded_tier_completion) {
   m3::PersistentConfig config;
   config.profile_mode = m3::ProfileMode::m3;
@@ -4201,16 +4249,59 @@ M3_TEST(
   constexpr std::array<double, m3::kSpectralTierCount + 1U> kTiedMargins{
       0.0, 0.0, 0.0, 0.0, 0.0};
   std::array<double, m3::kMaxVoices> coherence{};
-  coherence[0U] = 0.25;
+  coherence[2U] = 0.25;
 
   M3_EXPECT_EQ(
       m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
-          true, 0x02U, 0x06U, 0x07U, kHeads, kTiedMargins, coherence, 0.10),
+          true, 0x01U, 0x03U, 0x07U, kHeads, kTiedMargins, coherence, 0.10,
+          2U),
       0x07U);
   M3_EXPECT_EQ(
       m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
-          true, 0x02U, 0x06U, 0x07U, kHeads, kTiedMargins, coherence, 0.09),
+          true, 0x01U, 0x03U, 0x07U, kHeads, kTiedMargins, coherence, 0.09,
+          2U),
+      0x03U);
+}
+
+M3_TEST(
+    native_detector_spectral_tier_completion_uses_measured_thickest_string_floor) {
+  constexpr std::array<double, m3::kSpectralTierCount + 1U> kMargins{
+      0.004, 0.008, 0.007, 0.006, 0.005};
+  std::array<double, m3::kMaxVoices> coherence{};
+
+  // The physical long-unison replay measured a useful weaker component only
+  // when completing the 80-gauge thickest-string lane.
+  constexpr std::array<std::uint8_t, m3::kSpectralTierCount + 1U>
+      kAddThickest{0U, 1U, 2U, 1U, 2U};
+  coherence[0U] = 0.25;
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
+          true, 0x02U, 0x06U, 0x07U, kAddThickest, kMargins, coherence, 0.06,
+          0U),
+      0x07U);
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
+          true, 0x02U, 0x06U, 0x07U, kAddThickest, kMargins, coherence, 0.059,
+          0U),
       0x06U);
+
+  // An otherwise identical weak completion of another physical string keeps
+  // the established 0.10 floor; the broad low-band trial falsely expanded a
+  // real two-string interval through this path.
+  constexpr std::array<std::uint8_t, m3::kSpectralTierCount + 1U>
+      kAddThirdString{0U, 1U, 2U, 1U, 2U};
+  coherence = {};
+  coherence[2U] = 0.25;
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
+          true, 0x01U, 0x03U, 0x07U, kAddThirdString, kMargins, coherence,
+          0.06, 2U),
+      0x03U);
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::spectral_tier_completion_probe(
+          true, 0x01U, 0x03U, 0x07U, kAddThirdString, kMargins, coherence,
+          0.10, 2U),
+      0x07U);
 }
 
 M3_TEST(native_detector_does_not_move_a_settled_lane_for_a_single_source_fine_fit) {

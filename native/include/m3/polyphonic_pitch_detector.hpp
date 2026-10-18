@@ -99,6 +99,16 @@ enum class FineGroupDisposition : std::uint8_t {
   count,
 };
 
+enum class TierCompletionDisposition : std::uint8_t {
+  unavailable,
+  missing_primary,
+  conflicts_other_owned,
+  conflicts_allocated,
+  over_capacity,
+  accepted,
+  count,
+};
+
 // Snapshot of the selector's pre-admission evidence for one pitch. This is
 // deliberately replay-only: it lets offline audits distinguish a weak but
 // direct fundamental from a harmonic or an unplayable candidate without
@@ -183,6 +193,15 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] SelectionDisposition selection_disposition(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] QuietDisposition quiet_disposition() const noexcept;
+  [[nodiscard]] std::uint8_t selector_group_mask(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] TierCompletionDisposition tier_completion_disposition(
+      std::uint8_t midi_note) const noexcept;
+  // Bit flags for the active physical-group resume predicate: active, valid
+  // fine fit, multi-source, 2-4 members, assignment match, robust beat graph,
+  // and minimum beat coherence respectively.
+  [[nodiscard]] std::uint8_t fine_resume_evidence_flags(
+      std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t fine_frequency_member_mask(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t fine_frequency_pending_member_mask(
@@ -201,6 +220,9 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] double fine_frequency_residual_improvement(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double fine_frequency_minimum_member_ratio(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::array<double, kMaxVoices>
+  fine_frequency_unique_member_improvement(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double fine_frequency_minimum_pairwise_beat_coherence(
       std::uint8_t midi_note) const noexcept;
@@ -383,6 +405,7 @@ class PolyphonicPitchDetector final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t fit_member_mask{};
     double residual_improvement{};
+    std::array<double, kMaxVoices> unique_member_improvement{};
     bool residual_rejected{};
     std::array<double, 1U << kMaxVoices>
         pairwise_beat_coherence_by_mask{};
@@ -729,6 +752,8 @@ class PolyphonicPitchDetector final {
       retained_unison_dispositions_{};
   std::array<FineGroupDisposition, kMaxCandidates>
       fine_group_dispositions_{};
+  std::array<TierCompletionDisposition, kMaxCandidates>
+      tier_completion_dispositions_{};
   std::array<CandidateAdmissionDiagnostics, kMaxCandidates>
       candidate_admission_diagnostics_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)

@@ -252,6 +252,8 @@ constexpr double kM3SpectralTierCompletionMaximumBeatCoherence = 0.35;
 // stronger energy floor replaces the weaker head-margin proxy; all existing
 // active/playable/one-member/beat gates remain mandatory.
 constexpr double kM3SpectralTierCompletionMinimumMargin = 0.0;
+constexpr double
+    kM3SpectralTierCompletionThickestStringMinimumAddedMemberRatio = 0.06;
 constexpr double kM3SpectralTierCompletionMinimumAddedMemberRatio = 0.10;
 constexpr double kM3UnisonMinimumComponent = 0.15;
 constexpr double kM3UnisonMinimumTemplateDistance = 0.0025;
@@ -844,6 +846,63 @@ QuietDisposition PolyphonicPitchDetector::quiet_disposition() const noexcept {
   return quiet_disposition_;
 }
 
+std::uint8_t PolyphonicPitchDetector::selector_group_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? selector_group_masks_[candidate]
+             : 0U;
+}
+
+TierCompletionDisposition
+PolyphonicPitchDetector::tier_completion_disposition(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return TierCompletionDisposition::unavailable;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? tier_completion_dispositions_[candidate]
+             : TierCompletionDisposition::unavailable;
+}
+
+std::uint8_t PolyphonicPitchDetector::fine_resume_evidence_flags(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return 0U;
+  }
+  const CandidateState& state = candidate_states_[candidate];
+  const FineFrequencyEvidenceState& fine =
+      fine_frequency_evidence_states_[candidate];
+  const std::uint8_t owned = static_cast<std::uint8_t>(
+      state.assigned_string_mask | state.midi_voice_mask);
+  const std::uint8_t members = string_count(fine.member_mask);
+  std::uint8_t flags = state.active ? 0x01U : 0U;
+  flags = static_cast<std::uint8_t>(flags | (fine.valid ? 0x02U : 0U));
+  flags = static_cast<std::uint8_t>(
+      flags | (fine.multi_source_observed ? 0x04U : 0U));
+  flags = static_cast<std::uint8_t>(
+      flags | (members >= 2U && members <= 4U ? 0x08U : 0U));
+  flags = static_cast<std::uint8_t>(
+      flags | (owned == fine.member_mask ? 0x10U : 0U));
+  flags = static_cast<std::uint8_t>(
+      flags | (fine.robust_pairwise_beat_connected ? 0x20U : 0U));
+  flags = static_cast<std::uint8_t>(
+      flags | (std::isfinite(fine.minimum_pairwise_beat_coherence) &&
+                       fine.minimum_pairwise_beat_coherence >=
+                           kM3RetainedUnisonMinimumBeatCoherence
+                   ? 0x40U
+                   : 0U));
+  return flags;
+}
+
 QuietDisposition PolyphonicPitchDetector::classify_quiet_disposition(
     bool minimum_evidence, bool below_signal_floor, bool had_active_voice,
     bool rapid_mute, bool below_slow_energy_ratio,
@@ -1001,6 +1060,19 @@ double PolyphonicPitchDetector::fine_frequency_minimum_member_ratio(
   return maximum > kScoreEpsilon && std::isfinite(minimum)
              ? std::sqrt(std::max(0.0, minimum / maximum))
              : 0.0;
+}
+
+std::array<double, kMaxVoices>
+PolyphonicPitchDetector::fine_frequency_unique_member_improvement(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return {};
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate]
+                   .unique_member_improvement
+             : std::array<double, kMaxVoices>{};
 }
 
 double PolyphonicPitchDetector::fine_frequency_minimum_pairwise_beat_coherence(
@@ -1495,12 +1567,15 @@ std::uint8_t PolyphonicPitchDetector::bounded_spectral_tier_completion(
           ? std::sqrt(std::max(
                 0.0, component_energy[added_string] / maximum_component))
           : 0.0;
+  const double minimum_added_member_ratio =
+      added_string == 0U
+          ? kM3SpectralTierCompletionThickestStringMinimumAddedMemberRatio
+          : kM3SpectralTierCompletionMinimumAddedMemberRatio;
   return std::isfinite(coherence) &&
                  coherence >=
                      kM3SpectralTierCompletionMinimumBeatCoherence &&
                  coherence < kM3SpectralTierCompletionMaximumBeatCoherence &&
-                 added_ratio >=
-                     kM3SpectralTierCompletionMinimumAddedMemberRatio
+                 added_ratio >= minimum_added_member_ratio
              ? qualified
              : fine_frequency_mask;
 }
@@ -1751,9 +1826,17 @@ bool PolyphonicPitchDetector::is_resolved_unison_resume_candidate(
     double fine_minimum_pairwise_beat_coherence,
     std::uint8_t fine_member_mask) noexcept {
   const std::uint8_t members = string_count(fine_member_mask);
-  return active && fine_valid && fine_multi_source &&
-         fine_robust_pairwise_beat_connected && members >= 2U &&
-         members <= 4U && owned_string_mask == fine_member_mask &&
+  const bool active_committed_group =
+      active && members >= 2U && owned_string_mask == fine_member_mask;
+  // A robust three- or four-string fit is rare enough to serve as bounded
+  // recent-history evidence after the MIDI assignment has released. Its
+  // history still expires at the ordinary fine-evidence gap, and current
+  // selector evidence is required before any lane can be emitted again.
+  const bool recent_robust_large_group =
+      !active && members >= 3U && members <= 4U;
+  return fine_valid && fine_multi_source &&
+         fine_robust_pairwise_beat_connected &&
+         (active_committed_group || recent_robust_large_group) &&
          std::isfinite(fine_minimum_pairwise_beat_coherence) &&
          fine_minimum_pairwise_beat_coherence >=
              kM3RetainedUnisonMinimumBeatCoherence;
@@ -3996,10 +4079,13 @@ double PolyphonicPitchDetector::fine_frequency_consensus_seconds(
       current_members >= 2U && proposed_members > current_members &&
       proposed_member_mask == playable_member_mask &&
       playable_members >= 2U && playable_members <= 4U;
-  return current_member_mask == 0U || first_resolved_multi ||
-                 complete_bounded_playable_expansion
-             ? kFineFrequencyInitialConsensusSeconds
-             : kFineFrequencyReplacementConsensusSeconds;
+  if (current_member_mask == 0U || first_resolved_multi) {
+    return kFineFrequencyInitialConsensusSeconds;
+  }
+  if (complete_bounded_playable_expansion) {
+    return 0.0;
+  }
+  return kFineFrequencyReplacementConsensusSeconds;
 }
 
 void PolyphonicPitchDetector::update_fine_frequency_evidence(
@@ -4345,6 +4431,9 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       correlations[row] *= inverse_count;
       gram[row][row] += kFineFrequencyRidge;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const auto diagnostic_gram = gram;
+#endif
 
     std::array<Complex, kMaxVoices> solution = correlations;
     bool solvable = true;
@@ -4494,6 +4583,9 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     std::size_t member_count = 0U;
     double minimum_member_relative_amplitude = 1.0;
     state.component_energy = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    state.unique_member_improvement = {};
+#endif
     for (std::size_t rank = 0U; rank < component_count &&
                                member_count < maximum_member_count;
          ++rank) {
@@ -4511,6 +4603,85 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       ++member_count;
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const auto fitted_error_without_component =
+        [&](std::size_t omitted_component) noexcept {
+          std::array<std::size_t, kMaxVoices> retained{};
+          std::size_t retained_count = 0U;
+          for (std::size_t component = 0U; component < component_count;
+               ++component) {
+            if (component != omitted_component) {
+              retained[retained_count++] = component;
+            }
+          }
+          if (retained_count == 0U) {
+            return signal_energy;
+          }
+          std::array<std::array<Complex, kMaxVoices>, kMaxVoices> matrix{};
+          std::array<Complex, kMaxVoices> reduced_solution{};
+          for (std::size_t row = 0U; row < retained_count; ++row) {
+            reduced_solution[row] = correlations[retained[row]];
+            for (std::size_t column = 0U; column < retained_count;
+                 ++column) {
+              matrix[row][column] =
+                  diagnostic_gram[retained[row]][retained[column]];
+            }
+          }
+          for (std::size_t column = 0U; column < retained_count; ++column) {
+            std::size_t pivot = column;
+            for (std::size_t row = column + 1U; row < retained_count; ++row) {
+              if (std::abs(matrix[row][column]) >
+                  std::abs(matrix[pivot][column])) {
+                pivot = row;
+              }
+            }
+            if (std::abs(matrix[pivot][column]) <= 1.0e-10) {
+              return signal_energy;
+            }
+            if (pivot != column) {
+              std::swap(matrix[pivot], matrix[column]);
+              std::swap(reduced_solution[pivot], reduced_solution[column]);
+            }
+            const Complex divisor = matrix[column][column];
+            for (std::size_t entry = column; entry < retained_count; ++entry) {
+              matrix[column][entry] /= divisor;
+            }
+            reduced_solution[column] /= divisor;
+            for (std::size_t row = 0U; row < retained_count; ++row) {
+              if (row == column) {
+                continue;
+              }
+              const Complex factor = matrix[row][column];
+              for (std::size_t entry = column; entry < retained_count;
+                   ++entry) {
+                matrix[row][entry] -= factor * matrix[column][entry];
+              }
+              reduced_solution[row] -= factor * reduced_solution[column];
+            }
+          }
+          Complex reduced_cross{};
+          double reduced_norm = 0.0;
+          for (std::size_t row = 0U; row < retained_count; ++row) {
+            reduced_cross += std::conj(reduced_solution[row]) *
+                             correlations[retained[row]];
+            reduced_norm += std::norm(reduced_solution[row]);
+          }
+          return std::max(0.0, signal_energy - std::real(reduced_cross) -
+                                   kFineFrequencyRidge * reduced_norm);
+        };
+    for (std::size_t component = 0U; component < component_count;
+         ++component) {
+      const std::uint8_t bit =
+          static_cast<std::uint8_t>(1U << strings[component]);
+      if ((members & bit) == 0U) {
+        continue;
+      }
+      const double without_error =
+          fitted_error_without_component(component);
+      state.unique_member_improvement[strings[component]] = std::clamp(
+          (without_error - fitted_error) /
+              std::max(without_error, kScoreEpsilon),
+          0.0, 1.0);
+    }
     state.fit_member_mask = members;
     state.residual_improvement = 0.0;
     state.residual_rejected = false;
@@ -5385,6 +5556,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     candidate_states_[candidate].diagnostic_unison_temporal = false;
   }
   fine_group_dispositions_.fill(FineGroupDisposition::unresolved);
+  tier_completion_dispositions_.fill(
+      TierCompletionDisposition::unavailable);
 #endif
 
   std::size_t selected_count = 0U;
@@ -5577,25 +5750,50 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     }
     // A settled fine-frequency pair can be missing one physical lane even
     // while the independent low/low-mid/high-mid/high spectral heads and the
-    // added member's beat envelope agree on it. Complete only that one lane,
-    // for an already-selected active pitch, through the same physical
-    // ownership and polyphony bounds used by every other group proposal.
+    // added member's beat envelope agree on it. Complete only that one lane
+    // for a selected pitch with an established or freshly resolved fine group,
+    // through the same physical ownership and polyphony bounds used by every
+    // other group proposal.
     const std::uint8_t fine_group = static_cast<std::uint8_t>(
         fine.member_mask & playable_string_mask(candidate));
     std::uint8_t tier_completion = state.assigned_string_mask;
     const std::uint8_t fine_members = string_count(fine_group);
     if (fine.valid && fine_members >= 2U && fine_members < 4U) {
+      // A selected candidate can accumulate a complete multi-source fine fit
+      // before its ordinary attack gate activates the MIDI voice.  Treat that
+      // resolved pair as the live base for a bounded one-lane completion so
+      // the first emitted frame does not unnecessarily expose only the pair.
+      const bool established_or_fresh_resolved_group =
+          state.active || fine.multi_source_observed;
       const std::uint8_t completed_fine_group =
           bounded_spectral_tier_completion(
-          state.active, state.assigned_string_mask, fine_group,
-          playable_string_mask(candidate),
-          string_fret_spectral_head_evidence(candidate),
-          fine.added_member_beat_coherence, fine.component_energy);
+              established_or_fresh_resolved_group,
+              state.assigned_string_mask, fine_group,
+              playable_string_mask(candidate),
+              string_fret_spectral_head_evidence(candidate),
+              fine.added_member_beat_coherence, fine.component_energy);
       if (completed_fine_group != fine_group) {
         tier_completion = completed_fine_group;
       }
     }
     const std::uint8_t tier_members = string_count(tier_completion);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (tier_completion != state.assigned_string_mask) {
+      TierCompletionDisposition disposition =
+          TierCompletionDisposition::accepted;
+      if ((tier_completion & primary_bit) == 0U || tier_members < 2U ||
+          tier_members > 4U) {
+        disposition = TierCompletionDisposition::missing_primary;
+      } else if ((tier_completion & other_owned_strings) != 0U) {
+        disposition = TierCompletionDisposition::conflicts_other_owned;
+      } else if ((tier_completion & allocated_extra_strings) != 0U) {
+        disposition = TierCompletionDisposition::conflicts_allocated;
+      } else if (tier_members - 1U > candidate_extra_capacity) {
+        disposition = TierCompletionDisposition::over_capacity;
+      }
+      tier_completion_dispositions_[candidate] = disposition;
+    }
+#endif
     if (tier_completion != state.assigned_string_mask &&
         (tier_completion & primary_bit) != 0U && tier_members >= 2U &&
         tier_members <= 4U &&
