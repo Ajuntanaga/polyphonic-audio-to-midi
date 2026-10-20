@@ -582,6 +582,10 @@ struct ReplayLabelResult final {
   // Mutually exclusive selector outcomes for this label's target pitch.
   // This diagnostic exists only in the offline replay/test targets.
   std::array<std::uint32_t, 6U> selection_disposition_frames{};
+  // Bitset rows from the production-shaped independent continuity tracker:
+  // cache, tracking, ready, exact classifier, tier proposal, projection,
+  // live proper subset, direct fundamental.
+  std::array<std::uint32_t, 256U> group_continuity_diagnostic_frames{};
   // First causal quiet gate for frames counted in selection_quiet. Indexes
   // follow QuietDisposition; not_quiet must remain zero here.
   std::array<std::uint32_t, kQuietDispositionCount>
@@ -606,6 +610,12 @@ struct ReplayLabelResult final {
                         static_cast<std::size_t>(ReplayTargetLaneOutcome::count)>,
              kSpectralReacquisitionDispositionCount>
       spectral_reacquisition_lane_outcome_frames{};
+  std::array<std::uint32_t, 7U>
+      unison_cache_refresh_disposition_frames{};
+  std::array<std::array<std::uint32_t,
+                        static_cast<std::size_t>(ReplayTargetLaneOutcome::count)>,
+             7U>
+      unison_cache_refresh_lane_outcome_frames{};
   // Production-feasible active-candidate classifier, passed through the same
   // bounded fine/beat/profile/temporal corroboration policy as the original
   // label-scoped shadow. These counters remain replay-only and never alter
@@ -1271,6 +1281,22 @@ struct ReplayLabelResult final {
       continuity_classifier_union_matched_delta{};
   std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
       continuity_classifier_union_wrong_string_delta{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      production_cache_continuity_changed_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      production_cache_continuity_exact_frames{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      production_cache_continuity_matched_delta{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      production_cache_continuity_wrong_string_delta{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      committed_cache_continuity_changed_frames{};
+  std::array<std::uint32_t, kSpectralShadowMarginThresholdCount>
+      committed_cache_continuity_exact_frames{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      committed_cache_continuity_matched_delta{};
+  std::array<std::int64_t, kSpectralShadowMarginThresholdCount>
+      committed_cache_continuity_wrong_string_delta{};
   std::array<std::uint32_t, kSpectralTierAddedMemberRatioFloors.size()>
       tier_ratio_completion_changed_frames{};
   std::array<std::uint32_t, kSpectralTierAddedMemberRatioFloors.size()>

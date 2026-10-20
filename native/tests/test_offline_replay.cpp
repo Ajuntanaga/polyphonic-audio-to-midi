@@ -295,6 +295,14 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
       M3_EXPECT_EQ(
           quiet_disposition_frames,
           result.label_results[0].selection_disposition_frames[0U]);
+      std::uint32_t cache_refresh_frames = 0U;
+      for (const std::uint32_t frames :
+           result.label_results[0]
+               .unison_cache_refresh_disposition_frames) {
+        cache_refresh_frames += frames;
+      }
+      M3_EXPECT_EQ(cache_refresh_frames,
+                   result.label_results[0].labeled_frames);
       for (std::size_t cause = 0U;
            cause < result.label_results[0].quiet_disposition_frames.size();
            ++cause) {
@@ -798,9 +806,13 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                        baseline.label_results[label]
                            .longest_correct_run_frames);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-          M3_EXPECT_EQ(
-              result.label_results[label].selection_disposition_frames,
-              baseline.label_results[label].selection_disposition_frames);
+      M3_EXPECT_EQ(
+          result.label_results[label].selection_disposition_frames,
+          baseline.label_results[label].selection_disposition_frames);
+      M3_EXPECT_EQ(
+          result.label_results[label].group_continuity_diagnostic_frames,
+          baseline.label_results[label]
+              .group_continuity_diagnostic_frames);
           M3_EXPECT_EQ(
               result.label_results[label].quiet_disposition_frames,
               baseline.label_results[label].quiet_disposition_frames);
@@ -845,6 +857,16 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .spectral_reacquisition_lane_outcome_frames,
               baseline.label_results[label]
                   .spectral_reacquisition_lane_outcome_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .unison_cache_refresh_disposition_frames,
+              baseline.label_results[label]
+                  .unison_cache_refresh_disposition_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .unison_cache_refresh_lane_outcome_frames,
+              baseline.label_results[label]
+                  .unison_cache_refresh_lane_outcome_frames);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .candidate_unison_projected_changed_frames,
@@ -1636,6 +1658,46 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .continuity_classifier_union_wrong_string_delta,
               baseline.label_results[label]
                   .continuity_classifier_union_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .production_cache_continuity_changed_frames,
+              baseline.label_results[label]
+                  .production_cache_continuity_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .production_cache_continuity_exact_frames,
+              baseline.label_results[label]
+                  .production_cache_continuity_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .production_cache_continuity_matched_delta,
+              baseline.label_results[label]
+                  .production_cache_continuity_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .production_cache_continuity_wrong_string_delta,
+              baseline.label_results[label]
+                  .production_cache_continuity_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .committed_cache_continuity_changed_frames,
+              baseline.label_results[label]
+                  .committed_cache_continuity_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .committed_cache_continuity_exact_frames,
+              baseline.label_results[label]
+                  .committed_cache_continuity_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .committed_cache_continuity_matched_delta,
+              baseline.label_results[label]
+                  .committed_cache_continuity_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .committed_cache_continuity_wrong_string_delta,
+              baseline.label_results[label]
+                  .committed_cache_continuity_wrong_string_delta);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .tier_ratio_completion_changed_frames,

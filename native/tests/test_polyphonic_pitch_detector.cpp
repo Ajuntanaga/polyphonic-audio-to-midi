@@ -244,9 +244,26 @@ struct PolyphonicPitchDetectorTestAccess final {
 
   static std::uint8_t projected_output_string_mask_probe(
       std::uint8_t assigned_mask, std::uint8_t assigned_string,
-      std::uint8_t spectral_lane_mask) noexcept {
+      std::uint8_t spectral_lane_mask,
+      std::uint8_t continuity_lane_mask = 0U) noexcept {
     return PolyphonicPitchDetector::projected_output_string_mask(
-        assigned_mask, assigned_string, spectral_lane_mask);
+        assigned_mask, assigned_string, spectral_lane_mask,
+        continuity_lane_mask);
+  }
+
+  static std::uint8_t group_continuity_projection_probe(
+      std::uint8_t current, std::uint8_t cached,
+      const UnisonSpectralClassification& classification,
+      UnisonSpectralPhase phase, std::uint8_t fine,
+      double beat, std::uint8_t profile, std::uint8_t temporal,
+      std::uint8_t tier, std::uint8_t other_owned,
+      std::uint8_t playable, std::uint8_t maximum_polyphony,
+      bool active, bool selected_or_coasting, bool direct,
+      bool quiet, double age) noexcept {
+    return PolyphonicPitchDetector::bounded_group_continuity_projection(
+        current, cached, classification, phase, fine, beat, profile,
+        temporal, tier, other_owned, playable, maximum_polyphony, active,
+        selected_or_coasting, direct, quiet, age);
   }
 
 
@@ -7151,4 +7168,54 @@ M3_TEST(native_detector_spectral_lane_projection_never_splits_a_physical_group) 
       m3::PolyphonicPitchDetectorTestAccess::
           projected_output_string_mask_probe(0x01U, 0U, 0U),
       0x01U);
+}
+
+M3_TEST(native_detector_group_continuity_is_output_only_and_physically_bounded) {
+  m3::UnisonSpectralClassification classification;
+  classification.valid = true;
+  classification.member_mask = 0x07U;
+  classification.member_count = 3U;
+  classification.posterior_margin = 0.001;
+  const auto project = [&](std::uint8_t current, std::uint8_t cached,
+                           std::uint8_t other_owned, bool quiet,
+                           double age) noexcept {
+    return m3::PolyphonicPitchDetectorTestAccess::
+        group_continuity_projection_probe(
+            current, cached, classification,
+            m3::UnisonSpectralPhase::settled, 0x03U, 0.20, 0x07U,
+            0U, current, other_owned, 0xffU, 5U, true, true, true,
+            quiet, age);
+  };
+
+  M3_EXPECT_EQ(project(0x03U, 0x07U, 0U, false, 0.20), 0x07U);
+  M3_EXPECT_EQ(project(0U, 0x07U, 0U, false, 0.20), 0U);
+  M3_EXPECT_EQ(project(0x03U, 0x07U, 0x04U, false, 0.20), 0x03U);
+  M3_EXPECT_EQ(project(0x03U, 0x07U, 0U, true, 0.20), 0x03U);
+  M3_EXPECT_EQ(project(0x03U, 0x07U, 0U, false, 0.51), 0x03U);
+
+  // Tier completion is only continuity evidence after a real 3–4-string
+  // output established the bounded cache. It cannot create a group alone.
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::
+          group_continuity_projection_probe(
+              0x03U, 0U, classification,
+              m3::UnisonSpectralPhase::settled, 0x03U, 0.20, 0U, 0U,
+              0x07U, 0U, 0xffU, 5U, true, true, true, false,
+              std::numeric_limits<double>::infinity()),
+      0x03U);
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::
+          group_continuity_projection_probe(
+              0x03U, 0U, classification,
+              m3::UnisonSpectralPhase::settled, 0x03U, 0.20, 0U, 0U,
+              0x03U, 0U, 0xffU, 5U, true, true, true, false,
+              std::numeric_limits<double>::infinity()),
+      0x03U);
+
+  classification.member_mask = 0x0bU;
+  M3_EXPECT_EQ(project(0x03U, 0x07U, 0U, false, 0.20), 0x03U);
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::
+          projected_output_string_mask_probe(0x03U, 0U, 0U, 0x07U),
+      0x07U);
 }

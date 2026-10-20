@@ -1017,7 +1017,8 @@ int main(int argc, char** argv) {
     std::printf(
         "\tselection_quiet\tselection_below_threshold\t"
         "selection_spectral_rejected\tselection_dp_evicted\t"
-        "selection_selected\tselection_coasting\tselection_quiet_causes\t"
+        "selection_selected\tselection_coasting\t"
+        "group_continuity_diagnostic_flags\tselection_quiet_causes\t"
         "selection_quiet_cause_runs\t"
         "selection_quiet_cause_longest_frames\t"
         "minimum_evidence_resume_flags\t"
@@ -1027,6 +1028,8 @@ int main(int argc, char** argv) {
         "candidate_unison_spectral_fitted_masks\t"
         "spectral_reacquisition_dispositions\t"
         "spectral_reacquisition_lane_outcomes\t"
+        "unison_cache_refresh_dispositions\t"
+        "unison_cache_refresh_lane_outcomes\t"
         "candidate_unison_margin_thresholds\t"
         "candidate_unison_projected_changed\t"
         "candidate_unison_projected_exact\t"
@@ -1310,6 +1313,14 @@ int main(int argc, char** argv) {
         "continuity_classifier_union_exact\t"
         "continuity_classifier_union_matched_delta\t"
         "continuity_classifier_union_wrong_string_delta\t"
+        "production_cache_continuity_changed\t"
+        "production_cache_continuity_exact\t"
+        "production_cache_continuity_matched_delta\t"
+        "production_cache_continuity_wrong_string_delta\t"
+        "committed_cache_continuity_changed\t"
+        "committed_cache_continuity_exact\t"
+        "committed_cache_continuity_matched_delta\t"
+        "committed_cache_continuity_wrong_string_delta\t"
         "tier_ratio_completion_floors\t"
         "tier_ratio_completion_changed\t"
         "tier_ratio_completion_exact\t"
@@ -1439,6 +1450,8 @@ int main(int argc, char** argv) {
           first = false;
         }
       };
+      std::printf("\t");
+      print_bins(detail.group_continuity_diagnostic_frames);
       const auto print_joint_bins = [](const auto& matrix) {
         bool first = true;
         for (std::size_t row = 0U; row < matrix.size(); ++row) {
@@ -1484,6 +1497,10 @@ int main(int argc, char** argv) {
       print_bins(detail.spectral_reacquisition_disposition_frames);
       std::printf("\t");
       print_joint_bins(detail.spectral_reacquisition_lane_outcome_frames);
+      std::printf("\t");
+      print_bins(detail.unison_cache_refresh_disposition_frames);
+      std::printf("\t");
+      print_joint_bins(detail.unison_cache_refresh_lane_outcome_frames);
       std::printf("\t");
       print_sequence(m3::offline::kSpectralShadowMarginThresholds);
       std::printf("\t");
@@ -2315,6 +2332,23 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_sequence(
           detail.continuity_classifier_union_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(detail.production_cache_continuity_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.production_cache_continuity_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.production_cache_continuity_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.production_cache_continuity_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(detail.committed_cache_continuity_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.committed_cache_continuity_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.committed_cache_continuity_matched_delta);
+      std::printf("\t");
+      print_sequence(detail.committed_cache_continuity_wrong_string_delta);
       std::printf("\t");
       print_sequence(m3::offline::kSpectralTierAddedMemberRatioFloors);
       std::printf("\t");

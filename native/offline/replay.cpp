@@ -1828,6 +1828,8 @@ bool run_detector_replay(const WaveData& wave,
     bool confirmed_fingerprint_valid{};
   };
   std::array<UnisonReacquisitionState, 128U> unison_reacquisition_states{};
+  std::array<UnisonReacquisitionState, 128U>
+      committed_three_plus_cache_states{};
   std::vector<std::array<SpectralOnsetMaskLatch,
                          kSpectralShadowMarginThresholdCount>>
       spectral_onset_latches(128U);
@@ -3089,6 +3091,13 @@ bool run_detector_replay(const WaveData& wave,
             state.confirmed_fingerprint_valid = false;
           }
         }
+        if (!quiet && members >= 3U && members <= 4U &&
+            current_assignment == committed) {
+          UnisonReacquisitionState& committed_cache =
+              committed_three_plus_cache_states[note];
+          committed_cache.resolved_mask = committed;
+          committed_cache.last_confirmed_sample = sample_index;
+        }
       }
       std::array<std::array<bool, 128U>,
                  kCalibratedPitchRebinThresholds.size()>
@@ -3216,6 +3225,13 @@ bool run_detector_replay(const WaveData& wave,
           ++label_result.selection_lane_outcome_frames[disposition]
                                                        [static_cast<std::size_t>(
                                                            lane_outcome)];
+        }
+        const std::size_t continuity_flags =
+            detector.group_continuity_diagnostic_flags(label.midi_note);
+        if (continuity_flags <
+            label_result.group_continuity_diagnostic_frames.size()) {
+          ++label_result
+                .group_continuity_diagnostic_frames[continuity_flags];
         }
         if (disposition ==
             static_cast<std::size_t>(SelectionDisposition::quiet)) {
@@ -3346,6 +3362,18 @@ bool run_detector_replay(const WaveData& wave,
                   [reacquisition_disposition];
             ++label_result.spectral_reacquisition_lane_outcome_frames
                   [reacquisition_disposition]
+                  [static_cast<std::size_t>(lane_outcome)];
+          }
+        }
+        {
+          const std::size_t refresh_disposition = static_cast<std::size_t>(
+              detector.unison_cache_refresh_disposition(label.midi_note));
+          if (refresh_disposition <
+              label_result.unison_cache_refresh_disposition_frames.size()) {
+            ++label_result.unison_cache_refresh_disposition_frames
+                  [refresh_disposition];
+            ++label_result.unison_cache_refresh_lane_outcome_frames
+                  [refresh_disposition]
                   [static_cast<std::size_t>(lane_outcome)];
           }
         }
@@ -5201,6 +5229,80 @@ bool run_detector_replay(const WaveData& wave,
               bounded_projection_union(observed_lane_mask,
                                        cached_group_combined,
                                        cached_classifier_continuity);
+          const std::uint8_t production_cache_mask =
+              detector.unison_reacquisition_cache_mask(label.midi_note);
+          const double production_cache_age =
+              detector.unison_reacquisition_cache_age_seconds(
+                  label.midi_note);
+          const bool production_cache_recent =
+              production_cache_mask != 0U &&
+              std::isfinite(production_cache_age) &&
+              production_cache_age >= 0.0 && production_cache_age <= 0.50;
+          const std::uint8_t production_cached_candidate =
+              production_cache_recent &&
+                      candidate_projected == production_cache_mask
+                  ? candidate_projected
+                  : observed_lane_mask;
+          const std::uint8_t production_cached_group =
+              bounded_projection_union(observed_lane_mask,
+                                       production_cached_candidate,
+                                       projected);
+          const std::uint8_t production_cached_classifier =
+              bounded_cached_classifier_continuity_projection(
+                  observed_lane_mask, production_cache_mask,
+                  candidate_unison_classifications[label.midi_note],
+                  candidate_unison_phases[label.midi_note],
+                  cached_other_owned, admission.playable_string_mask,
+                  config.max_polyphony, admission.active,
+                  selected_or_coasting, admission.direct_fundamental_peak,
+                  disposition == static_cast<std::size_t>(
+                                     SelectionDisposition::quiet),
+                  production_cache_age, 0.50,
+                  kSpectralShadowMarginThresholds[threshold]);
+          const std::uint8_t production_cache_continuity =
+              bounded_projection_union(observed_lane_mask,
+                                       production_cached_group,
+                                       production_cached_classifier);
+          const UnisonReacquisitionState& committed_cache =
+              committed_three_plus_cache_states[label.midi_note];
+          const bool committed_cache_recent =
+              committed_cache.resolved_mask != 0U &&
+              committed_cache.last_confirmed_sample !=
+                  std::numeric_limits<std::uint64_t>::max() &&
+              sample_index >= committed_cache.last_confirmed_sample &&
+              sample_index - committed_cache.last_confirmed_sample <=
+                  cached_group_maximum_age;
+          const double committed_cache_age =
+              committed_cache_recent
+                  ? static_cast<double>(
+                        sample_index - committed_cache.last_confirmed_sample) /
+                        static_cast<double>(wave.sample_rate)
+                  : std::numeric_limits<double>::infinity();
+          const std::uint8_t committed_cached_candidate =
+              committed_cache_recent &&
+                      candidate_projected == committed_cache.resolved_mask
+                  ? candidate_projected
+                  : observed_lane_mask;
+          const std::uint8_t committed_cached_group =
+              bounded_projection_union(observed_lane_mask,
+                                       committed_cached_candidate,
+                                       projected);
+          const std::uint8_t committed_cached_classifier =
+              bounded_cached_classifier_continuity_projection(
+                  observed_lane_mask, committed_cache.resolved_mask,
+                  candidate_unison_classifications[label.midi_note],
+                  candidate_unison_phases[label.midi_note],
+                  cached_other_owned, admission.playable_string_mask,
+                  config.max_polyphony, admission.active,
+                  selected_or_coasting, admission.direct_fundamental_peak,
+                  disposition == static_cast<std::size_t>(
+                                     SelectionDisposition::quiet),
+                  committed_cache_age, 0.50,
+                  kSpectralShadowMarginThresholds[threshold]);
+          const std::uint8_t committed_cache_continuity =
+              bounded_projection_union(observed_lane_mask,
+                                       committed_cached_group,
+                                       committed_cached_classifier);
           const bool group_leader =
               spectral_group_leader_indices[label.midi_note] == label_index;
           if (group_leader && projected != observed_lane_mask) {
@@ -5224,6 +5326,36 @@ bool run_detector_replay(const WaveData& wave,
                 mask_member_count(static_cast<std::uint8_t>(
                     projected &
                     static_cast<std::uint8_t>(~expected_group)));
+          }
+          if (group_leader &&
+              committed_cache_continuity != observed_lane_mask) {
+            ++label_result
+                  .committed_cache_continuity_changed_frames[threshold];
+          }
+          if (group_leader &&
+              committed_cache_continuity ==
+                  spectral_expected_group_masks[label.midi_note]) {
+            ++label_result
+                  .committed_cache_continuity_exact_frames[threshold];
+          }
+          label_result.committed_cache_continuity_matched_delta[threshold] +=
+              static_cast<std::int64_t>(lane_mask_matches_label(
+                  committed_cache_continuity, label)) -
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(observed_lane_mask, label));
+          if (group_leader) {
+            const std::uint8_t expected_group =
+                spectral_expected_group_masks[label.midi_note];
+            label_result
+                .committed_cache_continuity_wrong_string_delta[threshold] +=
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        committed_cache_continuity &
+                        static_cast<std::uint8_t>(~expected_group)))) -
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        observed_lane_mask &
+                        static_cast<std::uint8_t>(~expected_group))));
           }
           if (group_leader && combined != observed_lane_mask) {
             ++label_result
@@ -5314,6 +5446,36 @@ bool run_detector_replay(const WaveData& wave,
                 static_cast<std::int64_t>(mask_member_count(
                     static_cast<std::uint8_t>(
                         continuity_classifier_union &
+                        static_cast<std::uint8_t>(~expected_group)))) -
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        observed_lane_mask &
+                        static_cast<std::uint8_t>(~expected_group))));
+          }
+          if (group_leader &&
+              production_cache_continuity != observed_lane_mask) {
+            ++label_result
+                  .production_cache_continuity_changed_frames[threshold];
+          }
+          if (group_leader &&
+              production_cache_continuity ==
+                  spectral_expected_group_masks[label.midi_note]) {
+            ++label_result
+                  .production_cache_continuity_exact_frames[threshold];
+          }
+          label_result.production_cache_continuity_matched_delta[threshold] +=
+              static_cast<std::int64_t>(lane_mask_matches_label(
+                  production_cache_continuity, label)) -
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(observed_lane_mask, label));
+          if (group_leader) {
+            const std::uint8_t expected_group =
+                spectral_expected_group_masks[label.midi_note];
+            label_result
+                .production_cache_continuity_wrong_string_delta[threshold] +=
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        production_cache_continuity &
                         static_cast<std::uint8_t>(~expected_group)))) -
                 static_cast<std::int64_t>(mask_member_count(
                     static_cast<std::uint8_t>(

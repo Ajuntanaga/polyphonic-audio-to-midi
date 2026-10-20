@@ -108,11 +108,23 @@ void UnisonSpectralCorridorTracker::reset() noexcept {
 }
 
 bool UnisonSpectralCorridorTracker::ready() const noexcept {
-  return configured_ && sample_count_ >= ready_samples_;
+  return ready_with_lead(0U);
+}
+
+bool UnisonSpectralCorridorTracker::ready_with_lead(
+    std::uint64_t lead_samples) const noexcept {
+  return configured_ &&
+         (sample_count_ >= ready_samples_ ||
+          lead_samples >= ready_samples_ - sample_count_);
 }
 
 UnisonSpectralPhase UnisonSpectralCorridorTracker::phase() const noexcept {
-  if (!ready()) {
+  return phase_with_lead(0U);
+}
+
+UnisonSpectralPhase UnisonSpectralCorridorTracker::phase_with_lead(
+    std::uint64_t lead_samples) const noexcept {
+  if (!ready_with_lead(lead_samples)) {
     return UnisonSpectralPhase::unready;
   }
   return sample_count_ < settled_samples_ ? UnisonSpectralPhase::onset
@@ -121,8 +133,14 @@ UnisonSpectralPhase UnisonSpectralCorridorTracker::phase() const noexcept {
 
 UnisonSpectralFingerprint
 UnisonSpectralCorridorTracker::fingerprint() const noexcept {
+  return fingerprint_with_lead(0U);
+}
+
+UnisonSpectralFingerprint
+UnisonSpectralCorridorTracker::fingerprint_with_lead(
+    std::uint64_t lead_samples) const noexcept {
   UnisonSpectralFingerprint result{};
-  if (!ready()) {
+  if (!ready_with_lead(lead_samples)) {
     return result;
   }
   double scale = 0.0;

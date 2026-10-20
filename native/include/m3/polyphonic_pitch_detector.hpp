@@ -109,6 +109,19 @@ enum class TierCompletionDisposition : std::uint8_t {
   count,
 };
 
+// Explains why the replay-only physical-group cache did or did not refresh
+// on the current decision. This state is absent from production builds.
+enum class UnisonCacheRefreshDisposition : std::uint8_t {
+  quiet,
+  inactive,
+  below_decay_floor,
+  fine_invalid,
+  invalid_member_count,
+  assignment_fine_mismatch,
+  refreshed,
+  count,
+};
+
 // Snapshot of the selector's pre-admission evidence for one pitch. This is
 // deliberately replay-only: it lets offline audits distinguish a weak but
 // direct fundamental from a harmonic or an unplayable candidate without
@@ -257,6 +270,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateAdmissionDiagnostics candidate_admission_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t group_continuity_diagnostic_flags(
+      std::uint8_t midi_note) const noexcept;
   bool set_candidate_admission_rescue_for_diagnostics(
       double score_threshold_ratio,
       double fundamental_score_ratio) noexcept;
@@ -274,6 +289,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] ObservedUnisonReacquisitionDisposition
   spectral_reacquisition_disposition(std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] UnisonCacheRefreshDisposition
+  unison_cache_refresh_disposition(std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double unison_reacquisition_cache_age_seconds(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t unison_reacquisition_cache_mask(
@@ -346,9 +363,18 @@ class PolyphonicPitchDetector final {
     bool polyphonic_context{};
     bool calibrated_lane_committed{};
     std::uint8_t spectral_lane_mask{};
+    // Output-only restoration of a recently established physical group.
+    // This mask never participates in pitch selection or string ownership.
+    std::uint8_t continuity_lane_mask{};
+    std::uint8_t continuity_cached_group_mask{};
+    std::uint32_t continuity_cached_group_tick{};
+    std::uint8_t continuity_cached_note{kTunerNoSignalNote};
+    std::uint8_t latest_unison_proposal_mask{};
+    bool latest_unison_proposal_temporal{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t diagnostic_unison_proposal_mask{};
     bool diagnostic_unison_temporal{};
+    std::uint8_t group_continuity_diagnostic_flags{};
 #endif
   };
 
@@ -452,6 +478,14 @@ class PolyphonicPitchDetector final {
   struct SpectralLaneState final {
     UnisonSpectralCorridorTracker tracker{};
     std::uint8_t candidate_index{0xffU};
+    std::uint8_t midi_note{kTunerNoSignalNote};
+    bool tracking{};
+  };
+
+  struct GroupContinuityTrackerState final {
+    UnisonSpectralCorridorTracker tracker{};
+    std::uint8_t candidate_index{0xffU};
+    std::uint8_t midi_note{kTunerNoSignalNote};
     bool tracking{};
   };
 
@@ -627,7 +661,28 @@ class PolyphonicPitchDetector final {
       const UnisonSpectralClassification& classification) noexcept;
   [[nodiscard]] static std::uint8_t projected_output_string_mask(
       std::uint8_t assigned_string_mask, std::uint8_t assigned_string,
-      std::uint8_t spectral_lane_mask) noexcept;
+      std::uint8_t spectral_lane_mask,
+      std::uint8_t continuity_lane_mask) noexcept;
+  [[nodiscard]] static std::uint8_t bounded_group_continuity_projection(
+      std::uint8_t current_assignment_mask,
+      std::uint8_t cached_group_mask,
+      const UnisonSpectralClassification& classification,
+      UnisonSpectralPhase phase, std::uint8_t fine_frequency_mask,
+      double minimum_beat_coherence, std::uint8_t profile_mask,
+      std::uint8_t temporal_mask, std::uint8_t tier_projection_mask,
+      std::uint8_t other_owned_mask, std::uint8_t playable_mask,
+      std::uint8_t maximum_polyphony, bool active_candidate,
+      bool selected_or_coasting, bool direct_fundamental, bool quiet,
+      double cache_age_seconds) noexcept;
+  void update_group_continuity_trackers(
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet) noexcept;
+  [[nodiscard]] GroupContinuityTrackerState*
+  find_group_continuity_tracker(std::size_t candidate) noexcept;
+  [[nodiscard]] const GroupContinuityTrackerState*
+  find_group_continuity_tracker(std::size_t candidate) const noexcept;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   void update_unison_reacquisition_state(
       const std::array<bool, kMaxCandidates>& selected,
@@ -697,6 +752,12 @@ class PolyphonicPitchDetector final {
   double spectral_lane_decimation_sum_{};
   std::uint8_t spectral_lane_decimation_count_{};
   std::uint8_t spectral_lane_decimation_{1U};
+  static constexpr std::size_t kMaximumGroupContinuityTrackers = 12U;
+  std::array<GroupContinuityTrackerState,
+             kMaximumGroupContinuityTrackers>
+      group_continuity_trackers_{};
+  double group_continuity_decimation_sum_{};
+  std::uint8_t group_continuity_decimation_count_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   // Offline candidate policy only. Slots bind to at most eight active physical
   // groups so replay can test cache/reacquisition hypotheses without adding
@@ -762,6 +823,8 @@ class PolyphonicPitchDetector final {
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   std::array<ObservedUnisonReacquisitionDisposition, kMaxCandidates>
       spectral_reacquisition_dispositions_{};
+  std::array<UnisonCacheRefreshDisposition, kMaxCandidates>
+      unison_cache_refresh_dispositions_{};
 #endif
   double diagnostic_candidate_rescue_score_ratio_{};
   double diagnostic_candidate_rescue_fundamental_ratio_{};

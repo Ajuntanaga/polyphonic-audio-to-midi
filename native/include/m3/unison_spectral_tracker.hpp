@@ -24,8 +24,14 @@ class UnisonSpectralCorridorTracker final {
   void reset() noexcept;
 
   [[nodiscard]] bool ready() const noexcept;
+  [[nodiscard]] bool ready_with_lead(
+      std::uint64_t lead_samples) const noexcept;
   [[nodiscard]] UnisonSpectralPhase phase() const noexcept;
+  [[nodiscard]] UnisonSpectralPhase phase_with_lead(
+      std::uint64_t lead_samples) const noexcept;
   [[nodiscard]] UnisonSpectralFingerprint fingerprint() const noexcept;
+  [[nodiscard]] UnisonSpectralFingerprint fingerprint_with_lead(
+      std::uint64_t lead_samples) const noexcept;
   [[nodiscard]] std::uint64_t sample_count() const noexcept;
 
  private:
