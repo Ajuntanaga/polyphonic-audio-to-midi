@@ -106,7 +106,8 @@ Updated: 2026-10-27
   identical at 32/512/1024 samples; see
   `build/modal/joint-pitch-overlap-invariance-analysis.json`. All Modal jobs
   are complete. This joint-fit experiment remains offline and disconnected.
-- Next priority is the dedicated production timing failure. Statistical CPU
+- Historical timing investigation, resolved by the accepted efficiency
+  checkpoint below: statistical CPU
   samples in `build/test-results/github-callback-profile.json` identify
   spectral corridor observation and repeated single/group classification as
   substantial costs. Group classification runs once per decision after
@@ -160,12 +161,34 @@ Updated: 2026-10-27
   the previous version preserved at the backup path above. This is an accepted
   efficiency improvement, not completion of the tracking milestones. See
   `build/test-results/assignment-profile-reuse-*`.
-- Next tracking question: an older physical-long acquisition audit points to
-  selected pitches with missing string lanes while fine-frequency evidence
-  is still collecting. Measure that intersection on the current detector
-  before changing pending-group admission. Preserve the three-second evidence
-  requirement, ownership constraints and zero wrong-string headroom; an older
-  diagnostic alone does not justify enabling a pending mask.
+- Current causal replay: `build/modal/current-unison-causal-detail.json`,
+  run `current-unison-causal-detail-1793127522-a73cb366bea0`, preserves
+  fingerprint `519bc0f9f4710566` and all fourteen score metrics. Triple-group
+  frames: 25,219 exact, 8,253 absent, 5,906 incomplete. Selected incomplete
+  frames include 4,784 collecting, 902 with valid fine evidence and 210 waiting
+  for scheduled analysis. Only 54 incomplete frames already have the exact
+  fine group. `reason=none` means valid evidence, not necessarily a full group.
+  A collecting-state pending bridge is unreachable: pending masks are created
+  only after the full three-second fit and reset with the history state.
+- Joined causal replay completed:
+  `build/modal/unison-causal-joins.json`, Modal app
+  `ap-Gsjo6MuzeuwPSajsMLk6uv`; decoded results in
+  `build/modal/unison-causal-joins-analysis.json`. All fourteen score metrics,
+  fingerprint `519bc0f9f4710566`, and every previous physical-group diagnostic
+  are unchanged. Eighteen offline replay tests, source contract and diff check
+  pass. Production detector/VST3 files are unchanged.
+  All 150 pending-exact/fine-subset/incomplete triples have one fine member
+  and no production cache: existing recovery has nothing to restore. Of the
+  1,112 valid/analysis-wait incomplete triples, 30 have no expected model;
+  1,082 have expected-model rank 1, but none clears minimum pairwise beat
+  coherence 0.20. Of these, 1,014 have a connected beat graph. The joins score
+  existing frame-end state only; they do not feed labels into decisions.
+- Next: inspect the upstream beat-coherence measurement rather than promoting
+  the failed fit or bypassing consensus. Keep the three-second window, 0.20
+  gate and 0.50 retention floor. Do not reopen collecting-state bridges, cache
+  restoration for the 150 uncached cases, or the rejected fit/ranking grids.
+  The measured target still requires +676 long matches, +385 exact triples
+  and no added wrong strings.
 - Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
   motivates evaluating pitch sets jointly. This experiment uses M3's existing
   complex correlations and a real-valued weighted least-squares model.
@@ -177,7 +200,7 @@ Updated: 2026-10-27
   including an overall readiness assessment without inventing a completion
   percentage from unrelated test gates.
 
-## Current integrated product checkpoint
+## Historical product checkpoint (superseded by the current status above)
 
 - Active worktree: repository root, branch `main`. It integrates the current
   stereo/96 kHz staging and generic host tuner parameters with the native

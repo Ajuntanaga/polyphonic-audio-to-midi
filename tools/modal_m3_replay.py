@@ -203,6 +203,14 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
         "joint_pitch_changed",
     ):
         result[field] = [int(value) for value in row[field].split(",")]
+    # Keep the compact causal tables beside the scores so a remote diagnostic
+    # run does not require downloading its much larger per-label TSV. Preserve
+    # the exported encodings and sparse cell identifiers for later analysis.
+    result["physical_group_diagnostics"] = {
+        field: value
+        for field, value in row.items()
+        if field.startswith("physical_group_")
+    }
     return result
 
 

@@ -2754,6 +2754,60 @@ bool run_detector_replay(const WaveData& wave,
           const CandidateAdmissionDiagnostics admission =
               detector.candidate_admission_diagnostics(
                   static_cast<std::uint8_t>(note));
+          if (members == 3U &&
+              selection_disposition == static_cast<std::size_t>(
+                                           SelectionDisposition::selected) &&
+              classify_group_mask_relation(fine, expected, false) ==
+                  ReplayGroupMaskRelation::subset &&
+              pending == expected &&
+              outcome == ReplayTargetLaneOutcome::subset_missing) {
+            const auto midi_note = static_cast<std::uint8_t>(note);
+            const std::uint8_t cached =
+                detector.group_continuity_cached_mask(midi_note);
+            const auto projection =
+                bounded_three_member_articulated_unison_reacquisition_projection(
+                    observed, cached, pending,
+                    detector.fine_frequency_pending_evidence_seconds(midi_note),
+                    detector.fine_frequency_pending_minimum_pairwise_beat_coherence(
+                        midi_note),
+                    detector.spectral_tier_completion_proposal_mask(midi_note),
+                    other_note_lane_mask(snapshot, midi_note),
+                    admission.playable_string_mask, config.max_polyphony,
+                    admission.direct_fundamental_peak, false,
+                    detector.group_continuity_cache_age_seconds(midi_note),
+                    0.25, 0.20);
+            const std::size_t recovery_disposition =
+                !admission.active ||
+                        !std::isfinite(admission.score_threshold_ratio) ||
+                        admission.score_threshold_ratio < 0.50
+                    ? kArticulatedUnisonReacquisitionDispositionCount
+                    : static_cast<std::size_t>(projection.disposition);
+            const std::size_t cached_relation = static_cast<std::size_t>(
+                classify_group_mask_relation(cached, expected, false));
+            const std::size_t context =
+                (static_cast<std::size_t>(mask_member_count(fine)) * 4U +
+                 cached_relation) *
+                    2U +
+                ((detector.group_continuity_diagnostic_flags(midi_note) &
+                  0x20U) != 0U ? 1U : 0U);
+            ++result.physical_group_pending_triple_recovery_frames
+                  [recovery_disposition];
+            ++result.physical_group_pending_triple_recovery_context_frames
+                  [recovery_disposition][context];
+            // Deliberately bypass every gate only for error attribution.
+            // Labels score this hypothetical cached mask; they never admit it.
+            result.physical_group_pending_triple_cached_matched_delta
+                [recovery_disposition] +=
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(cached & expected))) -
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(observed & expected)));
+            result.physical_group_pending_triple_cached_exact_delta
+                [recovery_disposition] += cached == expected ? 1 : 0;
+            result.physical_group_pending_triple_cached_wrong_string_delta
+                [recovery_disposition] += mask_member_count(
+                static_cast<std::uint8_t>(cached & ~expected));
+          }
           const FineResidualExpansionEvidence residual_evidence{
               admission.active,
               selection_disposition == static_cast<std::size_t>(
@@ -5072,6 +5126,42 @@ bool run_detector_replay(const WaveData& wave,
                   mask_residuals.normalized_residual,
                   mask_residuals.valid, admission.playable_string_mask,
                   maximum_members, expected_mask, 0.0);
+          const auto unresolved =
+              detector.fine_frequency_unresolved_reason(label.midi_note);
+          if (mask_member_count(expected_mask) == 3U &&
+              disposition == static_cast<std::size_t>(
+                                 SelectionDisposition::selected) &&
+              classify_target_lane_outcome(observed_lane_mask, expected_mask) ==
+                  ReplayTargetLaneOutcome::subset_missing &&
+              (unresolved == FineFrequencyUnresolvedReason::none ||
+               unresolved == FineFrequencyUnresolvedReason::analysis_wait)) {
+            const std::uint64_t rank =
+                unpenalized.expected_available
+                    ? static_cast<std::uint64_t>(unpenalized.expected_rank) + 1U
+                    : 0U;
+            const bool valid_beat = mask_residuals.valid[expected_mask] &&
+                std::isfinite(mask_residuals.minimum_beat_coherence[expected_mask]);
+            const std::uint64_t key =
+                static_cast<std::uint64_t>(unresolved) |
+                (static_cast<std::uint64_t>(mask_member_count(
+                     detector.fine_frequency_fit_member_mask(label.midi_note))) << 3U) |
+                (static_cast<std::uint64_t>(mask_member_count(
+                     detector.fine_frequency_member_mask(label.midi_note))) << 7U) |
+                (static_cast<std::uint64_t>(
+                     detector.fine_frequency_disposition(label.midi_note)) << 11U) |
+                (rank << 15U) |
+                (static_cast<std::uint64_t>(valid_beat &&
+                     mask_residuals.minimum_beat_coherence[expected_mask] >= 0.20) << 23U) |
+                (static_cast<std::uint64_t>(mask_residuals.valid[expected_mask] &&
+                     mask_residuals.beat_graph_connected[expected_mask]) << 24U) |
+                (static_cast<std::uint64_t>(classify_group_mask_relation(
+                     detector.fine_frequency_pending_member_mask(label.midi_note),
+                     expected_mask, false)) << 25U) |
+                (static_cast<std::uint64_t>(classify_group_mask_relation(
+                     detector.committed_unison_mask(label.midi_note),
+                     expected_mask, false)) << 27U);
+            ++result.physical_group_completed_triple_fit_frames[key];
+          }
           if (unpenalized.expected_available) {
             ++label_result.fine_mask_model_expected_available_frames;
           }

@@ -834,6 +834,14 @@ int main(int argc, char** argv) {
       "physical_group_pending_causal_encoding\t"
       "physical_group_pending_causal_frames\t"
       "physical_group_member_pending_causal_frames\t"
+      "physical_group_pending_triple_recovery_encoding\t"
+      "physical_group_pending_triple_recovery_frames\t"
+      "physical_group_pending_triple_recovery_context_frames\t"
+      "physical_group_pending_triple_cached_matched_delta\t"
+      "physical_group_pending_triple_cached_exact_delta\t"
+      "physical_group_pending_triple_cached_wrong_string_delta\t"
+      "physical_group_completed_triple_fit_encoding\t"
+      "physical_group_completed_triple_fit_frames\t"
       "physical_group_member_exact_exit_frames\t"
       "physical_group_causal_runs\t"
       "physical_group_causal_longest_runs\t"
@@ -1171,6 +1179,32 @@ int main(int argc, char** argv) {
   std::printf("\t");
   print_sparse_u64_joint_bins(
       result.physical_group_member_pending_causal_frames);
+  std::printf(
+      "\tdisposition=articulated_reacquisition,15=inactive_or_low_score;"
+      "context=(fine_members*4+cached_relation)*2+continuity_changed;"
+      "frame_end_counterfactual\t");
+  print_sparse_u64_bins(result.physical_group_pending_triple_recovery_frames);
+  std::printf("\t");
+  print_sparse_u64_joint_bins(
+      result.physical_group_pending_triple_recovery_context_frames);
+  std::printf("\t");
+  print_sequence(result.physical_group_pending_triple_cached_matched_delta);
+  std::printf("\t");
+  print_sequence(result.physical_group_pending_triple_cached_exact_delta);
+  std::printf("\t");
+  print_sequence(result.physical_group_pending_triple_cached_wrong_string_delta);
+  std::printf(
+      "\treason:0..2,fit_count:3..6,fine_count:7..10,disposition:11..14,"
+      "rank_plus_one:15..22,beat_ge_0.20:23,connected:24,"
+      "pending_relation:25..26,committed_relation:27..28\t");
+  bool first_completed_fit = true;
+  for (const auto& [key, frames] :
+       result.physical_group_completed_triple_fit_frames) {
+    std::printf("%s%llu:%llu", first_completed_fit ? "" : ",",
+                static_cast<unsigned long long>(key),
+                static_cast<unsigned long long>(frames));
+    first_completed_fit = false;
+  }
   std::printf("\t");
   print_sparse_u64_joint_bins(
       result.physical_group_member_exact_exit_frames);

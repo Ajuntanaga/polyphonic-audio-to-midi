@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <vector>
 
 #include "m3/harmonic_evidence.hpp"
@@ -1882,6 +1883,35 @@ struct ReplayResult final {
   std::array<std::array<std::uint64_t, kPhysicalGroupCausalCellCount>,
              kMaxVoices + 1U>
       physical_group_member_pending_causal_frames{};
+  // Join the selected triple / fine subset / exact pending / missing output
+  // cell to the existing recovery policy, evaluated from exposed frame-end
+  // state. These are counterfactual gates, not a trace of the production call.
+  // Last disposition is the production active/score guard, which precedes
+  // the shared recovery policy. Context = (fine members * 4 + cached relation)
+  // * 2 + production continuity-changed flag.
+  std::array<std::uint64_t,
+             kArticulatedUnisonReacquisitionDispositionCount + 1U>
+      physical_group_pending_triple_recovery_frames{};
+  std::array<std::array<std::uint64_t, (kMaxVoices + 1U) * 4U * 2U>,
+             kArticulatedUnisonReacquisitionDispositionCount + 1U>
+      physical_group_pending_triple_recovery_context_frames{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionDispositionCount + 1U>
+      physical_group_pending_triple_cached_matched_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionDispositionCount + 1U>
+      physical_group_pending_triple_cached_exact_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionDispositionCount + 1U>
+      physical_group_pending_triple_cached_wrong_string_delta{};
+  // Sparse attribution of selected, incomplete triples with a valid fit or
+  // enough history but a deferred analysis. Bit fields: reason[0:2], fit
+  // member count[3:6], final fine member count[7:10], disposition[11:14],
+  // expected residual rank + 1[15:22] (zero unavailable), beat >= .20[23],
+  // connected[24], pending relation[25:26], committed relation[27:28].
+  // Available only with the offline spectral-template diagnostics enabled.
+  std::map<std::uint64_t, std::uint64_t>
+      physical_group_completed_triple_fit_frames{};
   // Counts the first non-exact causal cell after an exact physical-group
   // output. Member-indexing isolates practical triples and quads from pair
   // setup passages without retaining frame-level traces.

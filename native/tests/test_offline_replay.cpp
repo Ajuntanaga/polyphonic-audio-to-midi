@@ -1048,6 +1048,18 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                    baseline.physical_group_pending_causal_frames);
       M3_EXPECT_EQ(result.physical_group_member_pending_causal_frames,
                    baseline.physical_group_member_pending_causal_frames);
+      M3_EXPECT_EQ(result.physical_group_pending_triple_recovery_frames,
+                   baseline.physical_group_pending_triple_recovery_frames);
+      M3_EXPECT_EQ(result.physical_group_pending_triple_recovery_context_frames,
+                   baseline.physical_group_pending_triple_recovery_context_frames);
+      M3_EXPECT_EQ(result.physical_group_pending_triple_cached_matched_delta,
+                   baseline.physical_group_pending_triple_cached_matched_delta);
+      M3_EXPECT_EQ(result.physical_group_pending_triple_cached_exact_delta,
+                   baseline.physical_group_pending_triple_cached_exact_delta);
+      M3_EXPECT_EQ(result.physical_group_pending_triple_cached_wrong_string_delta,
+                   baseline.physical_group_pending_triple_cached_wrong_string_delta);
+      M3_EXPECT_EQ(result.physical_group_completed_triple_fit_frames,
+                   baseline.physical_group_completed_triple_fit_frames);
       M3_EXPECT_EQ(result.physical_group_member_exact_exit_frames,
                    baseline.physical_group_member_exact_exit_frames);
       M3_EXPECT_EQ(result.physical_group_causal_runs,
