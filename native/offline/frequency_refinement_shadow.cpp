@@ -360,8 +360,12 @@ void FrequencyWindowCapture::append(
   }
   const auto last_index = (view.oldest + view.count - 1U) % view.capacity;
   const double end_seconds = static_cast<double>(view.ticks[last_index]) * view.seconds_per_tick;
+  if (end_seconds < options_.start_seconds || end_seconds >= options_.end_seconds) {
+    return;
+  }
   if (seen_[view.midi_note] && end_seconds >= last_seconds_[view.midi_note] &&
-      end_seconds - last_seconds_[view.midi_note] < 0.5) {
+      (end_seconds == last_seconds_[view.midi_note] ||
+       end_seconds - last_seconds_[view.midi_note] < options_.min_spacing_seconds)) {
     return;
   }
   if (windows_ >= 512U) {

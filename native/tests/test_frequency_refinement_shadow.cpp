@@ -212,3 +212,80 @@ M3_TEST(frequency_refinement_capture_is_bounded_and_samples_actual_time) {
   M3_EXPECT_TRUE(std::strstr(prefix.data(), "\"note\":40") != nullptr);
   M3_EXPECT_TRUE(std::strstr(prefix.data(), "\"training_samples\":200") != nullptr);
 }
+
+M3_TEST(frequency_refinement_capture_range_preserves_complete_native_history) {
+  Fixture fixture;
+  fixture.fill({0.0, 0.0, 0.0});
+  const auto table = m3::offline::evaluate_frequency_refinement(fixture.view);
+  const auto last = (fixture.view.oldest + fixture.view.count - 1U) % fixture.view.capacity;
+  const auto origin = fixture.ticks[last];
+  const auto set_end = [&](std::uint32_t tick) {
+    const auto delta = tick - fixture.ticks[last];
+    for (auto& value : fixture.ticks) {
+      value += delta;
+    }
+  };
+  // Exact binary fractions avoid imposing floating-point boundary rounding on
+  // the time-spacing contract. Out-of-range callbacks must not consume a slot
+  // or delay the first in-range observation.
+  constexpr double start = 3.125;
+  constexpr double end = 3.375;
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> control_stream(std::tmpfile(), &std::fclose);
+  M3_EXPECT_TRUE(stream != nullptr && control_stream != nullptr);
+  m3::offline::FrequencyWindowCapture capture(stream.get(), 40, {start, end, 0.125});
+  m3::offline::FrequencyWindowCapture control(control_stream.get(), 40);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 0U);
+  set_end(31250U);
+  capture.append(fixture.view, table);
+  control.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 1U);
+  M3_EXPECT_EQ(std::fflush(stream.get()), 0);
+  M3_EXPECT_EQ(std::fflush(control_stream.get()), 0);
+  std::rewind(stream.get());
+  std::rewind(control_stream.get());
+  int actual = 0;
+  do {
+    actual = std::fgetc(stream.get());
+    M3_EXPECT_EQ(actual, std::fgetc(control_stream.get()));
+  } while (actual != EOF);
+  M3_EXPECT_TRUE(fixture.ticks[fixture.view.oldest] < origin);
+  // Restore write position after the byte comparison.
+  M3_EXPECT_EQ(std::fseek(stream.get(), 0, SEEK_END), 0);
+  capture.append(fixture.view, table);
+  set_end(32499U);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 1U);
+  set_end(32500U);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 2U);
+  set_end(33750U);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 2U);
+  M3_EXPECT_FALSE(capture.truncated());
+}
+
+M3_TEST(frequency_refinement_capture_zero_spacing_deduplicates_each_note) {
+  Fixture fixture;
+  fixture.fill({0.0, 0.0, 0.0});
+  const auto table = m3::offline::evaluate_frequency_refinement(fixture.view);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+  M3_EXPECT_TRUE(stream != nullptr);
+  m3::offline::FrequencyWindowCapture capture(
+      stream.get(), -1, {0.0, std::numeric_limits<double>::infinity(), 0.0});
+  capture.append(fixture.view, table);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 1U);
+  fixture.view.midi_note = 41U;
+  capture.append(fixture.view, table);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 2U);
+  fixture.view.midi_note = 40U;
+  for (auto& tick : fixture.ticks) {
+    ++tick;
+  }
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 3U);
+  M3_EXPECT_FALSE(capture.failed());
+}

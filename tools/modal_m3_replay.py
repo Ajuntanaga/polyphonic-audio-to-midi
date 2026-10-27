@@ -1022,6 +1022,10 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command += ["--fine-window-dump", str(fine_window_path)]
         if int(job.get("fine_window_note", -1)) >= 0:
             command += ["--fine-window-note", str(int(job["fine_window_note"]))]
+        command += ["--fine-window-start", str(job.get("fine_window_start", 0.0)),
+                    "--fine-window-min-spacing", str(job.get("fine_window_min_spacing", 0.5))]
+        if float(job.get("fine_window_end", -1.0)) >= 0.0:
+            command += ["--fine-window-end", str(job["fine_window_end"])]
     selector_margin = float(job["selector_margin"])
     if selector_margin >= 0.0:
         command += [
@@ -1082,7 +1086,11 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         if found is None:
             raise RuntimeError("fine-window export metadata is missing")
         capture_metadata = {"windows": int(found[1]), "cap": int(found[2]),
-                            "truncated": found[3] == "1"}
+                            "truncated": found[3] == "1",
+                            "sha256": _sha256(fine_window_path),
+                            "start_seconds": float(job.get("fine_window_start", 0.0)),
+                            "end_seconds": float(job.get("fine_window_end", -1.0)),
+                            "min_spacing_seconds": float(job.get("fine_window_min_spacing", 0.5))}
     if bool(job.get("persist_tsv", False)):
         output_path.write_text(completed.stdout, encoding="utf-8")
     if bool(job.get("persist_tsv", False)) or bool(job.get("fine_window_dump", False)):
@@ -1188,6 +1196,9 @@ def sweep(
     persist_tsv: bool = False,
     fine_window_dump: bool = False,
     fine_window_note: int = -1,
+    fine_window_start: float = 0.0,
+    fine_window_end: float = -1.0,
+    fine_window_min_spacing: float = 0.5,
     tag: str = "manual",
     output: str = "build/modal/m3-replay-results.json",
 ) -> None:
@@ -1196,6 +1207,13 @@ def sweep(
         raise SystemExit("fine-window capture requires --label-details")
     if fine_window_note < -1 or fine_window_note > 127 or (fine_window_note >= 0 and not fine_window_dump):
         raise SystemExit("fine-window note requires capture and must be -1 or 0..127")
+    if (not all(math.isfinite(v) for v in
+                (fine_window_start, fine_window_end, fine_window_min_spacing))
+            or fine_window_start < 0.0 or fine_window_min_spacing < 0.0
+            or (fine_window_end != -1.0 and fine_window_end <= fine_window_start)):
+        raise SystemExit("fine-window range requires 0 <= start < end (or end=-1), spacing >= 0")
+    if not fine_window_dump and (fine_window_start, fine_window_end, fine_window_min_spacing) != (0.0, -1.0, 0.5):
+        raise SystemExit("fine-window range and spacing require capture")
     unknown = sorted(set(dataset_names) - set(DATASETS))
     if unknown:
         raise SystemExit(f"unknown datasets: {','.join(unknown)}")
@@ -1278,6 +1296,9 @@ def sweep(
             "persist_tsv": persist_tsv or label_details,
             "fine_window_dump": fine_window_dump,
             "fine_window_note": fine_window_note,
+            "fine_window_start": fine_window_start,
+            "fine_window_end": fine_window_end,
+            "fine_window_min_spacing": fine_window_min_spacing,
             "dp_similarity": similarity,
             "dp_calibration_margin": calibration_margin,
             "dp_score_margin": score_margin,

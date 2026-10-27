@@ -9,6 +9,37 @@ Updated: 2026-10-27
   subsequent native/offline changes. Use `build/modal/current-status.json` and the
   newest completed Modal reports for current metrics. Sections below are
   historical checkpoints.
+- Dense native-history capture is complete. Replay now accepts
+  `--fine-window-start`, `--fine-window-end` and `--fine-window-min-spacing`.
+  The half-open range selects the newest observation time without trimming the
+  history; spacing zero captures every distinct eligible observation. Defaults
+  remain 0.5 seconds and 512 windows. Note filtering, duplicate suppression and
+  truncation reporting remain intact. No production code or MIDI changes.
+- `build/modal/dense-fine-capture.json` (app `ap-LDZwq1xqkTAPa1mHSIYCBR`)
+  captures 161 E2 histories before 38 seconds. All captures are byte-identical
+  at 32/512/1024 samples, with no truncation; all tracking metrics and existing
+  diagnostics match the accepted replay. Full native suite 445/445, five build
+  checks, native source validation, eight CLI cases, Python syntax and whitespace
+  checks pass. One diff review completed.
+- Dense controls and coupled confidence completed on Modal:
+  `dense-harmonic-control.json` (app `ap-QIa7JajL2us4PHfl5I2cEn`) and
+  `dense-coupled-confidence.json` (app `ap-EOEqUcJapDGgHi7uoV4pEl`). Native
+  fundamental reconstruction relative RMS error is 7.85e-11. There are 116 pair
+  and 45 triple decisions, including 14 incomplete prior triple assignments.
+  The alternative profile condition supports 11 consecutive triple decisions
+  from 35.87 to 36.37 seconds: 11/45 (24.4%), including 3/14 incomplete cases
+  (21.4%). No false third qualifies in 116 pair decisions. Competing wrong pair
+  masks still qualify in 62/116 (53.4%); strict two-harmonic support finds no
+  triples. These overlapping observations are not recovered MIDI frames or
+  independent examples. Production remains unchanged.
+- Next: test a bounded causal amplitude update with frequencies and harmonic
+  profiles frozen. Ten early incomplete triples fail frozen prediction; only
+  two of those also hit the decay bound. The later 37.52-second miss fails the
+  sampling/support checks. Do not relax those checks. Compare every candidate
+  with equally refreshed smaller models, keep the 3-second history, and require
+  more missing-triple support without false thirds or losses in supported
+  controls before considering production. The completed capture report and
+  `dense-coupled-confidence-analysis.json` retain the exact decision evidence.
 - Completed joint-fit and confidence experiments:
   `build/modal/coupled-harmonic-screen.json` (app `ap-XDcuPU0Ct9iHV9irwT0G8n`)
   and `build/modal/coupled-harmonic-confidence.json`
@@ -33,15 +64,6 @@ Updated: 2026-10-27
   without changing original support flags. Therefore normalization comparisons
   use the same frozen parameters within the new report, not assumed bit identity
   across separate cloud runs. Details are in the corresponding `-analysis.json`.
-- Next: collect denser authentic native histories around pair controls and the
-  missing triple before any production implementation. Existing
-  `--fine-window-dump`/`--fine-window-note` exports are limited to one window per
-  note per 0.5 seconds and 512 windows. Add range/spacing controls only in
-  `FrequencyWindowCapture` in `native/offline/frequency_refinement_shadow.*`
-  and replay CLI plumbing; keep the cap
-  and preserve output fingerprints and snapshot contents across 32/512/1024.
-  The production detector, 3-second gate and MIDI release behavior must remain
-  unchanged. No new replay is currently running.
 - Completed harmonic-balance audit: `build/modal/harmonic-balance-screen.json`,
   app `ap-BDSPM6pilNNkJ9jh5Ry10o`. Four causal/filter/holdout tests pass and one
   review found no material defect. Three ascending E2 attacks train separate

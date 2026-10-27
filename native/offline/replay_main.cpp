@@ -157,6 +157,8 @@ void usage(const char* program) {
       "[--max-polyphony 1..8] [--max-fret 0..36] [--label-details] "
       "[--spectral-shadow-templates FILE] "
       "[--fine-window-dump FILE --fine-window-note 0..127] "
+      "[--fine-window-start SECONDS --fine-window-end SECONDS "
+      "--fine-window-min-spacing SECONDS] "
       "[--candidate-rescue-score-ratio 0..1 "
       "--candidate-rescue-fundamental-ratio 0..1] "
       "[--diagnostic-fretted-fixed-penalty 0..0.20 "
@@ -193,6 +195,8 @@ int main(int argc, char** argv) {
   const char* spectral_shadow_template_path = nullptr;
   const char* fine_window_dump_path = nullptr;
   int fine_window_note = -1;
+  m3::offline::FrequencyWindowCaptureOptions fine_window_options;
+  bool fine_window_range_set = false;
   int calibration_string = -1;
   std::uint8_t excluded_calibration_pass = 0U;
   std::size_t block_size = 512U;
@@ -508,6 +512,26 @@ int main(int argc, char** argv) {
         return 2;
       }
       fine_window_note = static_cast<int>(parsed);
+    } else if ((std::strcmp(argv[index], "--fine-window-start") == 0 ||
+                std::strcmp(argv[index], "--fine-window-end") == 0 ||
+                std::strcmp(argv[index], "--fine-window-min-spacing") == 0) && has_value) {
+      const char* option = argv[index];
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < 0.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      if (std::strcmp(option, "--fine-window-start") == 0) {
+        fine_window_options.start_seconds = parsed;
+      } else if (std::strcmp(option, "--fine-window-end") == 0) {
+        fine_window_options.end_seconds = parsed;
+      } else {
+        fine_window_options.min_spacing_seconds = parsed;
+      }
+      fine_window_range_set = true;
     } else if (std::strcmp(argv[index], "--help") == 0) {
       usage(argv[0]);
       return 0;
@@ -520,8 +544,9 @@ int main(int argc, char** argv) {
     usage(argv[0]);
     return 2;
   }
-  if ((fine_window_dump_path == nullptr && fine_window_note >= 0) ||
-      (fine_window_dump_path != nullptr && spectral_shadow_template_path == nullptr)) {
+  if ((fine_window_dump_path == nullptr && (fine_window_note >= 0 || fine_window_range_set)) ||
+      (fine_window_dump_path != nullptr && spectral_shadow_template_path == nullptr) ||
+      fine_window_options.end_seconds <= fine_window_options.start_seconds) {
     usage(argv[0]);
     return 2;
   }
@@ -751,7 +776,8 @@ int main(int argc, char** argv) {
       return 1;
     }
   }
-  m3::offline::FrequencyWindowCapture fine_window_capture(fine_window_stream.get(), fine_window_note);
+  m3::offline::FrequencyWindowCapture fine_window_capture(
+      fine_window_stream.get(), fine_window_note, fine_window_options);
   if (!m3::offline::run_detector_replay(
           wave, labels, config, calibration_pointer, block_size, result,
           error, spectral_shadow_template_pointer, candidate_rescue_pointer,
@@ -777,6 +803,9 @@ int main(int argc, char** argv) {
   if (fine_window_stream != nullptr) {
     std::fprintf(stderr, "m3_replay: fine_window_capture windows=%zu cap=512 truncated=%u\n",
         fine_window_capture.windows(), fine_window_capture.truncated() ? 1U : 0U);
+    std::fprintf(stderr, "m3_replay: fine_window_range start=%.17g end=%.17g min_spacing=%.17g\n",
+        fine_window_options.start_seconds, fine_window_options.end_seconds,
+        fine_window_options.min_spacing_seconds);
   }
   std::vector<std::int16_t> all_cents_errors;
   for (const m3::offline::ReplayLabelResult& detail : result.label_results) {

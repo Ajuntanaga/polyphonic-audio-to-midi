@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <vector>
 
 #include "m3/frequency_refinement_observer.hpp"
@@ -50,10 +51,22 @@ struct FrequencyRefinementTable final {
 
 // Optional, bounded diagnostic export. It samples by elapsed time and note,
 // never labels or a desired fit result. The caller owns the output stream.
+struct FrequencyWindowCaptureOptions final {
+  // Select by the newest observation time, using a half-open interval. The
+  // complete history is exported, including observations before the start.
+  double start_seconds{};
+  double end_seconds{std::numeric_limits<double>::infinity()};
+  // Zero captures every distinct observation time; duplicate callbacks do not
+  // consume the fixed 512-window budget.
+  double min_spacing_seconds{0.5};
+};
+
 class FrequencyWindowCapture final {
  public:
-  explicit FrequencyWindowCapture(std::FILE* stream, int note = -1) noexcept
-      : stream_(stream), note_(note) {}
+  explicit FrequencyWindowCapture(
+      std::FILE* stream, int note = -1,
+      FrequencyWindowCaptureOptions options = {}) noexcept
+      : stream_(stream), note_(note), options_(options) {}
   void append(const diagnostics::FrequencyRefinementView& view,
               const FrequencyRefinementTable& table) noexcept;
   [[nodiscard]] std::size_t windows() const noexcept { return windows_; }
@@ -63,6 +76,7 @@ class FrequencyWindowCapture final {
  private:
   std::FILE* stream_{};
   int note_{-1};
+  FrequencyWindowCaptureOptions options_{};
   std::size_t windows_{};
   bool failed_{};
   bool truncated_{};
