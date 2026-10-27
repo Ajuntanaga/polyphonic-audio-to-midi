@@ -224,6 +224,7 @@ image = (
     .pip_install("numpy<3", "scipy<2")
     .add_local_file(REPO_ROOT / "tools/joint_harmonic_fit.py", "/opt/m3/joint_harmonic_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/harmonic_drift_fit.py", "/opt/m3/harmonic_drift_fit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/harmonic_balance_audit.py", "/opt/m3/harmonic_balance_audit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/generate_pitch_corrected_corpus.py", "/opt/m3/generate_pitch_corrected_corpus.py", copy=True)
     .add_local_file(REPLAY_BINARY, "/opt/m3/m3_replay", copy=True)
     .run_commands("chmod 0755 /opt/m3/m3_replay")
@@ -591,6 +592,127 @@ def joint_harmonics(report: str, output: str = "build/modal/joint-harmonic-scree
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(json.dumps({"output": output, "windows": len(results)}))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,
+              memory=1024, timeout=600)
+def inspect_harmonic_balance(manifest_path: str, fitted_report: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    import numpy as np
+    from scipy.io import wavfile
+    sys.path.insert(0, "/opt/m3")
+    from harmonic_balance_audit import measure_clip, summarize_isolated, score_existing_fit
+    volume.reload()
+    path = MOUNT_ROOT / manifest_path
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("profile manifest must be in results")
+    manifest = json.loads(path.read_text())
+    clips = []
+    center = 440 * 2 ** ((manifest['note'] - 69) / 12)
+    for clip in manifest['clips']:
+        audio = path.parent / clip['clip']
+        if Path(clip['clip']).name != clip['clip'] or _sha256(audio) != clip['sha256']:
+            raise ValueError("isolated clip identity mismatch")
+        rate, values = wavfile.read(audio)
+        clips.append({**clip, 'frames': measure_clip(values, rate, center,
+                      clip['labeled_begin'], clip['labeled_end'])})
+    isolated = summarize_isolated(clips)
+    prepared = MOUNT_ROOT / fitted_report['prepared_path']
+    if not prepared.is_relative_to(MOUNT_ROOT / 'results') or '..' in prepared.parts:
+        raise ValueError('prepared capture must be in results')
+    metadata = json.loads(prepared.with_suffix('.json').read_text())
+    windows = []
+    with np.load(prepared, allow_pickle=False) as data:
+        for row in fitted_report['results']:
+            index = row['index']
+            source = metadata['windows'][index]
+            if source['note'] != manifest['note']:
+                raise ValueError('profile note does not match recorded fit')
+            models = score_existing_fit(data[f'times_{index}'], data[f'signal_{index}'],
+                source['center_hz'], metadata['sources'], source['training_samples'],
+                metadata['sample_rate'], row['models'], isolated['prototypes'],
+                row['comparison_harmonic_mask'])
+            windows.append({k: row[k] for k in ('index', 'end_seconds', 'expected_mask_at_window_end',
+                'prior_output_mask', 'conservative_spacing_guard_passed', 'whole_window_in_labeled_hold')}
+                | {'models': models})
+    result = {'manifest': manifest, 'isolated': isolated, 'clips': clips, 'windows': windows,
+              'interpretation': 'Ascending isolated audio trains profiles. Descending/checkpoint attacks are held out. Captured fits are unchanged. Powers retain DC filtering and undo only correlation response. Overlapping frames are not independent trials; this is not a MIDI policy.'}
+    json.dumps(result, allow_nan=False)
+    return result
+
+
+@app.local_entrypoint()
+def harmonic_balance(manifest: str, report: str,
+                     output: str = 'build/modal/harmonic-balance-screen.json') -> None:
+    path = Path(manifest)
+    description = json.loads(path.read_text())
+    prefix = 'results/harmonic-balance-input-' + _sha256(path)[:16]
+    with volume.batch_upload(force=True) as batch:
+        batch.put_file(path, '/' + prefix + '/manifest.json')
+        for clip in description['clips']:
+            if Path(clip['clip']).name != clip['clip']:
+                raise ValueError('unsafe clip name')
+            batch.put_file(path.parent / clip['clip'], '/' + prefix + '/' + clip['clip'])
+    hashes = {name: _sha256(REPO_ROOT / 'tools' / name) for name in
+              ('harmonic_balance_audit.py', 'harmonic_drift_fit.py', 'joint_harmonic_fit.py')}
+    fitted = json.loads(Path(report).read_text())
+    for name, expected in fitted['fit_source_sha256'].items():
+        if hashes[name] != expected:
+            raise ValueError('fit source differs from recorded optimizer')
+    result = inspect_harmonic_balance.remote(prefix + '/manifest.json', fitted)
+    result['source_sha256'] = hashes
+    result['fitted_report'] = report
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
+    print(json.dumps({'output': output, 'isolated_clips': len(result['clips']),
+                      'recorded_windows': len(result['windows'])}))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,
+              memory=1024, timeout=120)
+def inspect_profile_outliers(manifest_path: str, selected: list[str]) -> dict[str, Any]:
+    import numpy as np
+    from scipy.io import wavfile
+    from scipy.signal import find_peaks
+    volume.reload()
+    path = MOUNT_ROOT / manifest_path
+    if not path.is_relative_to(MOUNT_ROOT / 'results') or '..' in path.parts:
+        raise ValueError('manifest must be in results')
+    manifest = json.loads(path.read_text())
+    results = []
+    for clip in manifest['clips']:
+        if clip['clip'] not in selected:
+            continue
+        audio = path.parent / clip['clip']
+        if Path(clip['clip']).name != clip['clip'] or _sha256(audio) != clip['sha256']:
+            raise ValueError('isolated clip identity mismatch')
+        rate, values = wavfile.read(audio)
+        values = values[clip['labeled_begin']:clip['labeled_end']].astype(float)
+        taper = np.hanning(len(values))
+        nfft = 4 * (1 << (len(values) - 1).bit_length())
+        frequencies = np.fft.rfftfreq(nfft, 1 / rate)
+        power = np.abs(np.fft.rfft(values * taper, nfft)) ** 2 / taper.sum() ** 2
+        peaks, _ = find_peaks(power, distance=max(1, int(nfft / rate)))
+        peaks = [i for i in peaks if 25 <= frequencies[i] <= 2000]
+        peaks = sorted(peaks, key=lambda i: -power[i])[:12]
+        results.append({'clip': clip['clip'], 'rms': float(np.sqrt(np.mean(values ** 2))),
+                        'source_start_sample': clip['source_start_sample'],
+                        'peaks': [{'hz': float(frequencies[i]), 'power': float(power[i]),
+                                   'midi_pitch': float(69 + 12 * math.log2(frequencies[i] / 440))}
+                                  for i in peaks]})
+    if len(results) != len(set(selected)):
+        raise ValueError('outlier clip not present in manifest')
+    return {'clips': results, 'interpretation': 'Broad spectral peaks describe the recorded signal; they do not by themselves establish string identity or change annotations.'}
+
+
+@app.local_entrypoint()
+def harmonic_balance_outliers(manifest: str, clips: str,
+                              output: str = 'build/modal/harmonic-balance-outliers.json') -> None:
+    prefix = 'results/harmonic-balance-input-' + _sha256(Path(manifest))[:16]
+    result = inspect_profile_outliers.remote(prefix + '/manifest.json', clips.split(','))
+    Path(output).write_text(json.dumps(result, indent=2) + '\n')
+    print(json.dumps({'output': output, 'clips': len(result['clips'])}))
 
 
 @app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,

@@ -9,6 +9,30 @@ Updated: 2026-10-27
   subsequent native/offline changes. Use `build/modal/current-status.json` and the
   newest completed Modal reports for current metrics. Sections below are
   historical checkpoints.
+- Completed harmonic-balance audit: `build/modal/harmonic-balance-screen.json`,
+  app `ap-BDSPM6pilNNkJ9jh5Ry10o`. Four causal/filter/holdout tests pass and one
+  review found no material defect. Three ascending E2 attacks train separate
+  string profiles; eleven descending/checkpoint attacks remain held out. Both
+  two- and three-harmonic profiles distinguish the expected string in 10/11
+  held-out attacks. This is a small, single-pitch diagnostic, not overall
+  precision. In the 13 recorded pair windows, with source count fixed at two
+  for analysis, harmonic balance ranks the expected mask first in 11; it fails
+  at 17.22 and 18.22 seconds. It must not control source count or MIDI alone.
+  Captured optimizer parameters and all production output remain unchanged.
+- The new comparison keeps the 15-Hz DC-filter response in both domains and
+  removes only the 40-ms correlation response from fitted complex powers.
+  Earlier static `profile_similarity` also removed DC response and therefore
+  was not an exact calibration-domain comparison. That old diagnostic is not
+  an acceptance rule; the new audit does not alter it or production behavior.
+- Two E2 checkpoint spans need signal-quality review, recorded separately in
+  `build/modal/harmonic-balance-outliers.json`, app
+  `ap-QpWd54YGFDpOvQ9E9IzX1l`. String 8's final E2 checkpoint has very little
+  E2 energy and a strongest spectral peak near 207.46 Hz (G-sharp 3). String 6's
+  final open checkpoint is dominated by 163.79 Hz (E3), with little E2
+  fundamental. These observations do not establish a replacement label or
+  string identity. Preserve the original annotations and all acceptance gates.
+  Next, evaluate harmonic balance as bounded evidence inside the joint fit,
+  with explicit pitch evidence; post-fit profile ranking alone is insufficient.
 - Latest completed offline control: `build/modal/joint-harmonic-known-bands.json`,
   app `ap-Q8sJLZxnYcfefYrPXCOJXZ`. One review found that unknown partial detuning
   was being treated as absent harmonic energy and that large observation gaps
