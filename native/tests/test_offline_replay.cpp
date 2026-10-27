@@ -2,11 +2,14 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
 
 #include "m3/pitch_math.hpp"
+#include "m3/polyphonic_pitch_detector.hpp"
 #include "replay.hpp"
 #include "test_support.hpp"
 #include "unison_spectral_shadow.hpp"
@@ -154,6 +157,23 @@ M3_TEST(offline_replay_pairwise_beat_support_requires_a_connected_graph) {
   M3_EXPECT_TRUE(spanning.connected);
 }
 
+M3_TEST(offline_adjacent_envelope_coherence_separates_shared_and_opposed_motion) {
+  m3::offline::AdjacentEnvelopeCoherenceState shared;
+  m3::offline::AdjacentEnvelopeCoherenceState opposed;
+  for (std::size_t frame = 0U; frame < 120U; ++frame) {
+    const double value = std::sin(static_cast<double>(frame) * 0.17);
+    m3::offline::observe_adjacent_envelope_coherence(shared, value, value);
+    m3::offline::observe_adjacent_envelope_coherence(opposed, value, -value);
+  }
+  M3_EXPECT_TRUE(m3::offline::adjacent_envelope_coherence(shared) > 0.99);
+  M3_EXPECT_TRUE(m3::offline::adjacent_envelope_coherence(opposed) < -0.99);
+  M3_EXPECT_EQ(m3::offline::adjacent_envelope_coherence_bin(shared), 21U);
+  M3_EXPECT_EQ(m3::offline::adjacent_envelope_coherence_bin(opposed), 1U);
+  M3_EXPECT_EQ(m3::offline::adjacent_spectral_error_gap_bin(-1.0), 1U);
+  M3_EXPECT_EQ(m3::offline::adjacent_spectral_error_gap_bin(0.0), 21U);
+  M3_EXPECT_EQ(m3::offline::adjacent_spectral_error_gap_bin(1.0), 41U);
+}
+
 M3_TEST(offline_replay_parses_overlapping_exact_sample_labels) {
   const std::string text =
       "start_sample\tend_sample\tmidi_note\tstring_mask\n"
@@ -208,6 +228,165 @@ M3_TEST(offline_replay_parses_expected_cents_for_accuracy_scoring) {
   M3_EXPECT_FALSE(m3::offline::parse_replay_labels(
       out_of_range.data(), out_of_range.size(), 12000U, labels, error));
   M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_labels);
+}
+
+M3_TEST(offline_replay_correlation_window_preserves_default_and_partitioning) {
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(24000U);
+  for (std::size_t sample = 0U; sample < 14400U; ++sample) {
+    const double phase = 6.28318530717958647692 *
+        m3::midi_to_frequency(40U, 440.0) *
+        static_cast<double>(sample) / 48000.0;
+    wave.mono_samples[sample] =
+        0.2 * std::sin(phase) + 0.04 * std::sin(2.0 * phase + 0.3);
+  }
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::general;
+  config.lowest_note = 39U;
+  config.highest_note = 41U;
+  config.max_polyphony = 1U;
+  m3::offline::ReplayError error{};
+  const auto fingerprint = [&](double seconds, std::size_t partition,
+                               bool selection_only = false,
+                               bool shadow_only = false) {
+    m3::offline::ReplayResult result;
+    M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+        wave, {}, config, nullptr, partition, result, error,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        false, false, false, seconds, selection_only, shadow_only));
+    return result.fingerprint;
+  };
+  M3_EXPECT_EQ(fingerprint(-1.0, 512U), fingerprint(0.040, 512U));
+  const auto longer = fingerprint(0.080, 512U);
+  M3_EXPECT_EQ(longer, fingerprint(0.080, 32U));
+  M3_EXPECT_EQ(longer, fingerprint(0.080, 1024U));
+  M3_EXPECT_TRUE(longer != fingerprint(0.040, 512U));
+  M3_EXPECT_EQ(fingerprint(-1.0, 512U), fingerprint(0.040, 512U, true));
+  const auto selection_longer = fingerprint(0.080, 512U, true);
+  M3_EXPECT_EQ(selection_longer, fingerprint(0.080, 32U, true));
+  M3_EXPECT_EQ(selection_longer, fingerprint(0.080, 1024U, true));
+  for (const std::size_t partition : {32U, 512U, 1024U}) {
+    M3_EXPECT_EQ(fingerprint(-1.0, 512U),
+                 fingerprint(0.120, partition, false, true));
+  }
+  for (const double seconds : {0.0, 0.019, 0.201,
+           std::numeric_limits<double>::quiet_NaN()}) {
+    m3::offline::ReplayResult result;
+    M3_EXPECT_FALSE(m3::offline::run_detector_replay(
+        wave, {}, config, nullptr, 512U, result, error,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        false, false, false, seconds));
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+}
+
+M3_TEST(offline_correlation_shadow_protects_attacks_groups_and_release) {
+  using m3::offline::correlation_shadow_projection;
+  m3::TunerSnapshot snapshot;
+  snapshot.state = m3::TunerFrameState::tracking;
+  snapshot.voice_count = 1U;
+  auto& voice = snapshot.voices[0U];
+  voice.midi_note = voice.detected_midi_note = 52U;
+  voice.state = m3::TunerVoiceState::tracking;
+  voice.age_ticks = 600U;
+  voice.string_index = 2U;
+  voice.pitch_evidence_member_mask = 4U;
+  voice.pitch_evidence_group_id = 1U;
+  std::array<double, 128U> ratios;
+  ratios.fill(std::numeric_limits<double>::quiet_NaN());
+  ratios[52U] = 0.20;
+  const m3::offline::CorrelationShadowPolicy policy{0.35, 0.30, false};
+  std::uint32_t changed = 0U;
+  M3_EXPECT_EQ(correlation_shadow_projection(
+                   snapshot, ratios, 48000.0, policy, changed).voice_count,
+               0U);
+  M3_EXPECT_EQ(changed, 1U);
+  std::array<bool, 128U> pending{};
+  pending[52U] = true;
+  auto pending_policy = policy;
+  pending_policy.protect_pending_unison = true;
+  changed = 0U;
+  M3_EXPECT_EQ(correlation_shadow_projection(
+                   snapshot, ratios, 48000.0, pending_policy, changed,
+                   &pending).voice_count,
+               1U);
+  M3_EXPECT_EQ(changed, 0U);
+  M3_EXPECT_EQ(correlation_shadow_projection(
+                   snapshot, ratios, 48000.0, policy, changed,
+                   &pending).voice_count,
+               0U);
+  M3_EXPECT_EQ(changed, 1U);
+  const auto expect_retained = [&](const m3::TunerSnapshot& protected_frame) {
+    std::uint32_t removed = 0U;
+    const auto projected = correlation_shadow_projection(
+        protected_frame, ratios, 48000.0, policy, removed);
+    M3_EXPECT_EQ(projected.voice_count, protected_frame.voice_count);
+    M3_EXPECT_EQ(removed, 0U);
+  };
+  auto protected_frame = snapshot;
+  protected_frame.voices[0U].age_ticks = 1U;
+  expect_retained(protected_frame);
+  protected_frame = snapshot;
+  protected_frame.voices[0U].state = m3::TunerVoiceState::coasting;
+  expect_retained(protected_frame);
+  protected_frame = snapshot;
+  protected_frame.voices[0U].midi_note = 53U;
+  expect_retained(protected_frame);
+  protected_frame = snapshot;
+  protected_frame.voices[0U].pitch_evidence_member_mask = 12U;
+  expect_retained(protected_frame);
+  protected_frame = snapshot;
+  protected_frame.voice_count = 2U;
+  protected_frame.voices[1U] = voice;
+  protected_frame.voices[1U].string_index = 3U;
+  expect_retained(protected_frame);
+  protected_frame = snapshot;
+  protected_frame.state = m3::TunerFrameState::no_signal;
+  expect_retained(protected_frame);
+  for (const double ratio : {0.35, 0.99, -1.0,
+           std::numeric_limits<double>::quiet_NaN()}) {
+    ratios[52U] = ratio;
+    expect_retained(snapshot);
+  }
+}
+
+M3_TEST(offline_correlation_shadow_ratio_is_scale_invariant) {
+  const auto measured = [](double amplitude) {
+    auto detector = std::make_unique<m3::PolyphonicPitchDetector>();
+    m3::PersistentConfig config;
+    config.profile_mode = m3::ProfileMode::general;
+    config.lowest_note = 51U;
+    config.highest_note = 54U;
+    M3_EXPECT_TRUE(detector->configure(48000.0, config));
+    M3_EXPECT_TRUE(detector->set_correlation_window_for_diagnostics(
+        0.080, false, true));
+    double ratio = 0.0;
+    M3_EXPECT_FALSE(detector->correlation_window_energy_ratio_for_diagnostics(
+        53U, true, ratio));
+    for (std::size_t sample = 0U; sample < 48000U; ++sample) {
+      static_cast<void>(detector->process_sample(
+          amplitude * std::sin(6.28318530717958647692 *
+              m3::midi_to_frequency(53U, 440.0) *
+              static_cast<double>(sample) / 48000.0)));
+    }
+    std::array<double, 2U> result{};
+    M3_EXPECT_TRUE(detector->correlation_window_energy_ratio_for_diagnostics(
+        53U, true, result[0U]));
+    M3_EXPECT_TRUE(detector->correlation_window_energy_ratio_for_diagnostics(
+        52U, true, result[1U]));
+    M3_EXPECT_TRUE(result[0U] > 0.90);
+    M3_EXPECT_TRUE(result[1U] < 0.50);
+    M3_EXPECT_FALSE(detector->set_correlation_window_for_diagnostics(
+        0.120, false, true));
+    return result;
+  };
+  const auto quiet = measured(0.01);
+  const auto loud = measured(0.20);
+  for (std::size_t index = 0U; index < quiet.size(); ++index) {
+    M3_EXPECT_TRUE(std::abs(quiet[index] - loud[index]) < 1.0e-10);
+  }
 }
 
 M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
@@ -672,7 +851,59 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
           result.adjacent_wrong_note_joint_context_frames[direction].begin(),
           result.adjacent_wrong_note_joint_context_frames[direction].end(),
           std::uint64_t{0});
+      const std::uint64_t raw_output_lane = std::accumulate(
+          result.adjacent_wrong_note_raw_output_lane_frames[direction].begin(),
+          result.adjacent_wrong_note_raw_output_lane_frames[direction].end(),
+          std::uint64_t{0});
+      const std::uint64_t expected_selection = std::accumulate(
+          result.adjacent_wrong_note_expected_selection_frames[direction]
+              .begin(),
+          result.adjacent_wrong_note_expected_selection_frames[direction]
+              .end(),
+          std::uint64_t{0});
+      const std::uint64_t expected_score = std::accumulate(
+          result.adjacent_wrong_note_expected_score_ratio_frames[direction]
+              .begin(),
+          result.adjacent_wrong_note_expected_score_ratio_frames[direction]
+              .end(),
+          std::uint64_t{0});
+      const std::uint64_t relative_score = std::accumulate(
+          result
+              .adjacent_wrong_note_expected_to_observed_score_ratio_frames
+                  [direction]
+              .begin(),
+          result
+              .adjacent_wrong_note_expected_to_observed_score_ratio_frames
+                  [direction]
+              .end(),
+          std::uint64_t{0});
+      const std::uint64_t expected_evidence = std::accumulate(
+          result.adjacent_wrong_note_expected_evidence_frames[direction]
+              .begin(),
+          result.adjacent_wrong_note_expected_evidence_frames[direction]
+              .end(),
+          std::uint64_t{0});
+      const std::uint64_t expected_lane = std::accumulate(
+          result
+              .adjacent_wrong_note_expected_playable_lane_frames[direction]
+              .begin(),
+          result
+              .adjacent_wrong_note_expected_playable_lane_frames[direction]
+              .end(),
+          std::uint64_t{0});
+      const std::uint64_t expected_context = std::accumulate(
+          result
+              .adjacent_wrong_note_expected_candidate_context_frames
+                  [direction]
+              .begin(),
+          result
+              .adjacent_wrong_note_expected_candidate_context_frames
+                  [direction]
+              .end(),
+          std::uint64_t{0});
       M3_EXPECT_EQ(dispositions,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(raw_output_lane,
                    result.false_wrong_note_interval_frames[interval]);
       M3_EXPECT_EQ(reasons,
                    result.false_wrong_note_interval_frames[interval]);
@@ -680,6 +911,18 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                    result.false_wrong_note_interval_frames[interval]);
       M3_EXPECT_EQ(lanes, result.false_wrong_note_interval_frames[interval]);
       M3_EXPECT_EQ(joint, result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(expected_selection,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(expected_score,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(relative_score,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(expected_evidence,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(expected_lane,
+                   result.false_wrong_note_interval_frames[interval]);
+      M3_EXPECT_EQ(expected_context,
+                   result.false_wrong_note_interval_frames[interval]);
     }
 #endif
     if (!have_baseline) {
@@ -726,6 +969,70 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                    baseline.adjacent_wrong_note_lane_disposition_frames);
       M3_EXPECT_EQ(result.adjacent_wrong_note_joint_context_frames,
                    baseline.adjacent_wrong_note_joint_context_frames);
+      M3_EXPECT_EQ(result.adjacent_wrong_note_raw_output_lane_frames,
+                   baseline.adjacent_wrong_note_raw_output_lane_frames);
+      M3_EXPECT_EQ(
+          result.adjacent_wrong_note_expected_selection_frames,
+          baseline.adjacent_wrong_note_expected_selection_frames);
+      M3_EXPECT_EQ(
+          result.adjacent_wrong_note_expected_score_ratio_frames,
+          baseline.adjacent_wrong_note_expected_score_ratio_frames);
+      M3_EXPECT_EQ(
+          result
+              .adjacent_wrong_note_expected_to_observed_score_ratio_frames,
+          baseline
+              .adjacent_wrong_note_expected_to_observed_score_ratio_frames);
+      M3_EXPECT_EQ(
+          result.adjacent_wrong_note_expected_evidence_frames,
+          baseline.adjacent_wrong_note_expected_evidence_frames);
+      M3_EXPECT_EQ(
+          result.adjacent_wrong_note_expected_playable_lane_frames,
+          baseline.adjacent_wrong_note_expected_playable_lane_frames);
+      M3_EXPECT_EQ(
+          result.adjacent_wrong_note_expected_candidate_context_frames,
+          baseline.adjacent_wrong_note_expected_candidate_context_frames);
+      M3_EXPECT_EQ(result.adjacent_envelope_coherence_frames,
+                   baseline.adjacent_envelope_coherence_frames);
+      M3_EXPECT_EQ(result.adjacent_spectral_error_gap_frames,
+                   baseline.adjacent_spectral_error_gap_frames);
+      for (std::size_t policy = 0U;
+           policy < result.adjacent_spectral_duplicate_suppression.size();
+           ++policy) {
+        const auto& actual =
+            result.adjacent_spectral_duplicate_suppression[policy];
+        const auto& expected =
+            baseline.adjacent_spectral_duplicate_suppression[policy];
+        M3_EXPECT_EQ(actual.matched_label_frames,
+                     expected.matched_label_frames);
+        M3_EXPECT_EQ(actual.false_positive_voices,
+                     expected.false_positive_voices);
+        M3_EXPECT_EQ(actual.false_gap_voices, expected.false_gap_voices);
+        M3_EXPECT_EQ(actual.false_wrong_note_voices,
+                     expected.false_wrong_note_voices);
+        M3_EXPECT_EQ(actual.false_wrong_string_voices,
+                     expected.false_wrong_string_voices);
+        M3_EXPECT_EQ(actual.changed_voices, expected.changed_voices);
+      }
+      for (std::size_t policy = 0U;
+           policy <
+           result.production_adjacent_spectral_duplicate_suppression.size();
+           ++policy) {
+        const auto& actual =
+            result.production_adjacent_spectral_duplicate_suppression[policy];
+        const auto& expected =
+            baseline.production_adjacent_spectral_duplicate_suppression
+                [policy];
+        M3_EXPECT_EQ(actual.matched_label_frames,
+                     expected.matched_label_frames);
+        M3_EXPECT_EQ(actual.false_positive_voices,
+                     expected.false_positive_voices);
+        M3_EXPECT_EQ(actual.false_gap_voices, expected.false_gap_voices);
+        M3_EXPECT_EQ(actual.false_wrong_note_voices,
+                     expected.false_wrong_note_voices);
+        M3_EXPECT_EQ(actual.false_wrong_string_voices,
+                     expected.false_wrong_string_voices);
+        M3_EXPECT_EQ(actual.changed_voices, expected.changed_voices);
+      }
       M3_EXPECT_EQ(result.multi_partial_phase_rebin_available_frames,
                    baseline.multi_partial_phase_rebin_available_frames);
       M3_EXPECT_EQ(result.multi_partial_phase_rebin_outcome_frames,
@@ -1271,6 +1578,93 @@ M3_TEST(offline_replay_result_is_invariant_across_input_partitions) {
                   .fine_unique_member_pruning_wrong_string_delta,
               baseline.label_results[label]
                   .fine_unique_member_pruning_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_complexity_changed_frames,
+              baseline.label_results[label]
+                  .fine_mask_complexity_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_complexity_exact_frames,
+              baseline.label_results[label]
+                  .fine_mask_complexity_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_complexity_matched_delta,
+              baseline.label_results[label]
+                  .fine_mask_complexity_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_complexity_wrong_string_delta,
+              baseline.label_results[label]
+                  .fine_mask_complexity_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_model_expected_available_frames,
+              baseline.label_results[label]
+                  .fine_mask_model_expected_available_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_model_expected_rank_frames,
+              baseline.label_results[label]
+                  .fine_mask_model_expected_rank_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_model_exact_frames,
+              baseline.label_results[label].fine_mask_model_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_model_tied_frames,
+              baseline.label_results[label].fine_mask_model_tied_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_model_winner_member_frames,
+              baseline.label_results[label]
+                  .fine_mask_model_winner_member_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_posterior_available_frames,
+              baseline.label_results[label]
+                  .fine_mask_posterior_available_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_posterior_exact_frames,
+              baseline.label_results[label].fine_mask_posterior_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_posterior_tied_frames,
+              baseline.label_results[label].fine_mask_posterior_tied_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_beat_expected_available_frames,
+              baseline.label_results[label]
+                  .fine_mask_beat_expected_available_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_beat_exact_frames,
+              baseline.label_results[label].fine_mask_beat_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_beat_tied_frames,
+              baseline.label_results[label].fine_mask_beat_tied_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_beat_pruning_changed_frames,
+              baseline.label_results[label]
+                  .fine_mask_beat_pruning_changed_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label].fine_mask_beat_pruning_exact_frames,
+              baseline.label_results[label]
+                  .fine_mask_beat_pruning_exact_frames);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_beat_pruning_matched_delta,
+              baseline.label_results[label]
+                  .fine_mask_beat_pruning_matched_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_beat_pruning_wrong_string_delta,
+              baseline.label_results[label]
+                  .fine_mask_beat_pruning_wrong_string_delta);
+          M3_EXPECT_EQ(
+              result.label_results[label]
+                  .fine_mask_pruning_output_mask_frames,
+              baseline.label_results[label]
+                  .fine_mask_pruning_output_mask_frames);
           M3_EXPECT_EQ(
               result.label_results[label]
                   .fine_frequency_pending_member_mask_frames,

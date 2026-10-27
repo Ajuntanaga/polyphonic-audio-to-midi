@@ -454,6 +454,27 @@ articulated_reacquisition_counterfactual(
 }
 
 ArticulatedUnisonReacquisitionResult
+bounded_three_member_articulated_unison_reacquisition_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t cached_group_mask,
+    std::uint8_t pending_fine_mask, double pending_evidence_seconds,
+    double pending_beat_coherence, std::uint8_t spectral_tier_mask,
+    std::uint8_t other_owned_mask, std::uint8_t playable_mask,
+    std::uint8_t maximum_polyphony, bool direct_fundamental, bool quiet,
+    double cache_age_seconds, double maximum_gap_seconds,
+    double minimum_revalidation_seconds) noexcept {
+  if (popcount(cached_group_mask) != 3U) {
+    return {current_assignment_mask,
+            ArticulatedUnisonReacquisitionDisposition::no_cache};
+  }
+  return bounded_articulated_unison_reacquisition_projection(
+      current_assignment_mask, cached_group_mask, pending_fine_mask,
+      pending_evidence_seconds, pending_beat_coherence, spectral_tier_mask,
+      other_owned_mask, playable_mask, maximum_polyphony,
+      direct_fundamental, quiet, cache_age_seconds, maximum_gap_seconds,
+      minimum_revalidation_seconds);
+}
+
+ArticulatedUnisonReacquisitionResult
 bounded_observed_fingerprint_reacquisition_projection(
     ArticulatedUnisonReacquisitionResult base,
     std::uint8_t fallback_assignment_mask,
@@ -589,6 +610,298 @@ std::uint8_t bounded_fine_unique_member_pruning_projection(
                                          static_cast<std::uint8_t>(
                                              ~weakest_bit))
              : current_assignment_mask;
+}
+
+std::uint8_t bounded_fine_mask_complexity_projection(
+    const FineMaskComplexityEvidence& evidence,
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    double member_penalty, std::uint8_t maximum_polyphony) noexcept {
+  if (!evidence.active || !evidence.selected ||
+      !evidence.direct_fundamental || evidence.quiet ||
+      evidence.current_assignment_mask == 0U ||
+      !std::isfinite(evidence.score_threshold_ratio) ||
+      evidence.score_threshold_ratio < 0.50 ||
+      !std::isfinite(member_penalty) || member_penalty < 0.0 ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices) {
+    return evidence.current_assignment_mask;
+  }
+  double best_score = std::numeric_limits<double>::infinity();
+  std::uint8_t best_mask = 0U;
+  bool tied = false;
+  for (std::size_t index = 0U; index < residual_valid.size(); ++index) {
+    if (!residual_valid[index]) {
+      continue;
+    }
+    const std::uint8_t mask = static_cast<std::uint8_t>(index);
+    const std::uint8_t members = popcount(mask);
+    if (members < 2U || members > 4U ||
+        (mask & static_cast<std::uint8_t>(~evidence.playable_mask)) != 0U ||
+        (mask & evidence.other_owned_mask) != 0U ||
+        (mask & static_cast<std::uint8_t>(
+                    ~evidence.current_assignment_mask)) != 0U ||
+        popcount(static_cast<std::uint8_t>(mask |
+                                           evidence.other_owned_mask)) >
+            maximum_polyphony) {
+      continue;
+    }
+    const double residual = normalized_residual[index];
+    if (!std::isfinite(residual) || residual < 0.0) {
+      continue;
+    }
+    const double score =
+        residual + member_penalty * static_cast<double>(members - 2U);
+    constexpr double kTieEpsilon = 1.0e-12;
+    if (score + kTieEpsilon < best_score) {
+      best_score = score;
+      best_mask = mask;
+      tied = false;
+    } else if (std::abs(score - best_score) <= kTieEpsilon) {
+      tied = true;
+    }
+  }
+  return !tied && best_mask != 0U ? best_mask
+                                  : evidence.current_assignment_mask;
+}
+
+FineMaskModelRanking rank_fine_masks_by_complexity(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty) noexcept {
+  return rank_fine_masks_with_string_posterior(
+      normalized_residual, residual_valid, {}, playable_mask,
+      maximum_member_count, expected_mask, member_penalty, 0.0);
+}
+
+FineMaskModelRanking rank_fine_masks_with_string_posterior(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, kMaxVoices>& string_probability,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty,
+    double posterior_weight) noexcept {
+  FineMaskModelRanking result{};
+  if (maximum_member_count < 2U || maximum_member_count > 4U ||
+      !std::isfinite(member_penalty) || member_penalty < 0.0 ||
+      !std::isfinite(posterior_weight) || posterior_weight < 0.0) {
+    return result;
+  }
+
+  if (posterior_weight > 0.0) {
+    double posterior_total = 0.0;
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      const double probability = string_probability[string];
+      if (!std::isfinite(probability) || probability < 0.0 ||
+          probability > 1.0) {
+        return result;
+      }
+      if ((playable_mask & (1U << string)) != 0U) {
+        posterior_total += probability;
+      }
+    }
+    if (!std::isfinite(posterior_total) || posterior_total <= 0.0) {
+      return result;
+    }
+  }
+
+  constexpr double kTieEpsilon = 1.0e-12;
+  constexpr double kProbabilityFloor = 1.0e-12;
+  std::array<double, 1U << kMaxVoices> scores{};
+  scores.fill(std::numeric_limits<double>::infinity());
+  double best_score = std::numeric_limits<double>::infinity();
+  for (std::size_t physical_mask = 1U;
+       physical_mask < residual_valid.size(); ++physical_mask) {
+    if (!residual_valid[physical_mask]) {
+      continue;
+    }
+    const auto mask = static_cast<std::uint8_t>(physical_mask);
+    const std::uint8_t members = popcount(mask);
+    const double residual = normalized_residual[physical_mask];
+    if (members < 2U || members > maximum_member_count ||
+        (mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+        !std::isfinite(residual) || residual < 0.0) {
+      continue;
+    }
+    double posterior_cost = 0.0;
+    if (posterior_weight > 0.0) {
+      for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+        if ((mask & (1U << string)) != 0U) {
+          posterior_cost -= std::log(
+              std::max(kProbabilityFloor, string_probability[string]));
+        }
+      }
+      posterior_cost /= static_cast<double>(members);
+    }
+    const double score =
+        residual + member_penalty * static_cast<double>(members - 2U) +
+        posterior_weight * posterior_cost;
+    scores[physical_mask] = score;
+    if (result.feasible_count != std::numeric_limits<std::uint8_t>::max()) {
+      ++result.feasible_count;
+    }
+    if (score + kTieEpsilon < best_score) {
+      best_score = score;
+      result.best_mask = mask;
+      result.tied = false;
+    } else if (std::abs(score - best_score) <= kTieEpsilon) {
+      result.tied = true;
+    }
+  }
+
+  if (result.tied) {
+    result.best_mask = 0U;
+  }
+  const double expected_score = scores[expected_mask];
+  result.expected_available = std::isfinite(expected_score);
+  if (!result.expected_available) {
+    return result;
+  }
+  std::uint16_t rank = 1U;
+  for (const double score : scores) {
+    if (std::isfinite(score) && score + kTieEpsilon < expected_score) {
+      ++rank;
+    }
+  }
+  result.expected_rank = static_cast<std::uint8_t>(
+      std::min<std::uint16_t>(rank,
+                              std::numeric_limits<std::uint8_t>::max()));
+  return result;
+}
+
+FineMaskModelRanking rank_fine_masks_with_beat_graph(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, 1U << kMaxVoices>& minimum_beat_coherence,
+    const std::array<bool, 1U << kMaxVoices>& beat_graph_connected,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty,
+    double minimum_coherence) noexcept {
+  FineMaskModelRanking result{};
+  if (maximum_member_count < 2U || maximum_member_count > 4U ||
+      !std::isfinite(member_penalty) || member_penalty < 0.0 ||
+      !std::isfinite(minimum_coherence) || minimum_coherence < 0.0 ||
+      minimum_coherence > 1.0) {
+    return result;
+  }
+
+  constexpr double kTieEpsilon = 1.0e-12;
+  std::array<double, 1U << kMaxVoices> scores{};
+  scores.fill(std::numeric_limits<double>::infinity());
+  double best_score = std::numeric_limits<double>::infinity();
+  for (std::size_t physical_mask = 1U;
+       physical_mask < residual_valid.size(); ++physical_mask) {
+    if (!residual_valid[physical_mask]) {
+      continue;
+    }
+    const auto mask = static_cast<std::uint8_t>(physical_mask);
+    const std::uint8_t members = popcount(mask);
+    const double residual = normalized_residual[physical_mask];
+    const double coherence = minimum_beat_coherence[physical_mask];
+    if (members < 2U || members > maximum_member_count ||
+        (mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+        !std::isfinite(residual) || residual < 0.0 ||
+        !std::isfinite(coherence) || coherence < minimum_coherence ||
+        !beat_graph_connected[physical_mask]) {
+      continue;
+    }
+    const double score =
+        residual + member_penalty * static_cast<double>(members - 2U);
+    scores[physical_mask] = score;
+    if (result.feasible_count != std::numeric_limits<std::uint8_t>::max()) {
+      ++result.feasible_count;
+    }
+    if (score + kTieEpsilon < best_score) {
+      best_score = score;
+      result.best_mask = mask;
+      result.tied = false;
+    } else if (std::abs(score - best_score) <= kTieEpsilon) {
+      result.tied = true;
+    }
+  }
+
+  if (result.tied) {
+    result.best_mask = 0U;
+  }
+  const double expected_score = scores[expected_mask];
+  result.expected_available = std::isfinite(expected_score);
+  if (!result.expected_available) {
+    return result;
+  }
+  std::uint16_t rank = 1U;
+  for (const double score : scores) {
+    if (std::isfinite(score) && score + kTieEpsilon < expected_score) {
+      ++rank;
+    }
+  }
+  result.expected_rank = static_cast<std::uint8_t>(
+      std::min<std::uint16_t>(rank,
+                              std::numeric_limits<std::uint8_t>::max()));
+  return result;
+}
+
+std::uint8_t bounded_fine_beat_graph_pruning_projection(
+    const FineMaskComplexityEvidence& evidence,
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, 1U << kMaxVoices>& minimum_beat_coherence,
+    const std::array<bool, 1U << kMaxVoices>& beat_graph_connected,
+    double member_penalty, double minimum_coherence,
+    std::uint8_t maximum_polyphony) noexcept {
+  const std::uint8_t current = evidence.current_assignment_mask;
+  const std::uint8_t current_members = popcount(current);
+  if (!evidence.active || !evidence.selected ||
+      !evidence.direct_fundamental || evidence.quiet ||
+      !std::isfinite(evidence.score_threshold_ratio) ||
+      evidence.score_threshold_ratio < 0.50 || current_members < 3U ||
+      current_members > 4U ||
+      (current & static_cast<std::uint8_t>(~evidence.playable_mask)) != 0U ||
+      (current & evidence.other_owned_mask) != 0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      popcount(static_cast<std::uint8_t>(current |
+                                         evidence.other_owned_mask)) >
+          maximum_polyphony ||
+      !std::isfinite(member_penalty) || member_penalty < 0.0 ||
+      !std::isfinite(minimum_coherence) || minimum_coherence < 0.0 ||
+      minimum_coherence > 1.0) {
+    return current;
+  }
+
+  constexpr double kTieEpsilon = 1.0e-12;
+  double best_score = std::numeric_limits<double>::infinity();
+  std::uint8_t best_mask = 0U;
+  bool tied = false;
+  for (std::size_t physical_mask = 1U;
+       physical_mask < residual_valid.size(); ++physical_mask) {
+    if (!residual_valid[physical_mask]) {
+      continue;
+    }
+    const auto mask = static_cast<std::uint8_t>(physical_mask);
+    const std::uint8_t members = popcount(mask);
+    const double residual = normalized_residual[physical_mask];
+    const double coherence = minimum_beat_coherence[physical_mask];
+    if (members < 2U || members >= current_members ||
+        (mask & static_cast<std::uint8_t>(~current)) != 0U ||
+        (mask & evidence.other_owned_mask) != 0U ||
+        popcount(static_cast<std::uint8_t>(mask |
+                                           evidence.other_owned_mask)) >
+            maximum_polyphony ||
+        !std::isfinite(residual) || residual < 0.0 ||
+        !std::isfinite(coherence) || coherence < minimum_coherence ||
+        !beat_graph_connected[physical_mask]) {
+      continue;
+    }
+    const double score =
+        residual + member_penalty * static_cast<double>(members - 2U);
+    if (score + kTieEpsilon < best_score) {
+      best_score = score;
+      best_mask = mask;
+      tied = false;
+    } else if (std::abs(score - best_score) <= kTieEpsilon) {
+      tied = true;
+    }
+  }
+  return !tied && best_mask != 0U ? best_mask : current;
 }
 
 std::uint8_t bounded_physical_tier_completion_projection(
@@ -778,6 +1091,17 @@ std::uint8_t bounded_projection_union(
     return first_projection;
   }
   return current_assignment_mask;
+}
+
+std::uint8_t bounded_three_four_member_projection_union(
+    std::uint8_t current_assignment_mask, std::uint8_t established_group_mask,
+    std::uint8_t first_projection, std::uint8_t second_projection) noexcept {
+  const std::uint8_t members = popcount(established_group_mask);
+  if (members < 3U || members > 4U) {
+    return current_assignment_mask;
+  }
+  return bounded_projection_union(current_assignment_mask, first_projection,
+                                  second_projection);
 }
 
 std::uint8_t bounded_cached_classifier_continuity_projection(

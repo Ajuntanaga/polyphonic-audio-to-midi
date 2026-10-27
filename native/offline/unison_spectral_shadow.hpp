@@ -239,6 +239,19 @@ bounded_articulated_unison_reacquisition_projection(
     double cache_age_seconds, double maximum_gap_seconds,
     double minimum_revalidation_seconds) noexcept;
 
+// Same causal revalidation as above, limited to the common three-string case.
+// Four-string groups remain untouched until independent replay evidence can
+// separate their true reacquisitions from dense same-pitch chord conflicts.
+[[nodiscard]] ArticulatedUnisonReacquisitionResult
+bounded_three_member_articulated_unison_reacquisition_projection(
+    std::uint8_t current_assignment_mask, std::uint8_t cached_group_mask,
+    std::uint8_t pending_fine_mask, double pending_evidence_seconds,
+    double pending_beat_coherence, std::uint8_t spectral_tier_mask,
+    std::uint8_t other_owned_mask, std::uint8_t playable_mask,
+    std::uint8_t maximum_polyphony, bool direct_fundamental, bool quiet,
+    double cache_age_seconds, double maximum_gap_seconds,
+    double minimum_revalidation_seconds) noexcept;
+
 // Replay-only secondary gate for the articulated projection above. It cannot
 // turn a rejected base projection into an accepted one; it can only withhold
 // a cached group when the observed spectrum is unavailable or has changed.
@@ -281,6 +294,85 @@ bounded_observed_fingerprint_reacquisition_projection(
     std::uint8_t current_assignment_mask, std::uint8_t fine_frequency_mask,
     const std::array<double, kMaxVoices>& unique_member_improvement,
     double minimum_unique_improvement) noexcept;
+
+struct FineMaskComplexityEvidence final {
+  bool active{};
+  bool selected{};
+  bool direct_fundamental{};
+  bool quiet{};
+  double score_threshold_ratio{};
+  std::uint8_t current_assignment_mask{};
+  std::uint8_t playable_mask{};
+  std::uint8_t other_owned_mask{};
+};
+
+// Replay-only nested-model pruning over the exact calibrated physical masks
+// fitted by the detector.  The result must be a subset of an already-emitted
+// pitch, so it cannot create/swap a lane, survive silence, use an impossible
+// string, or exceed the configured polyphony.  A non-unique optimum is
+// refused.
+[[nodiscard]] std::uint8_t bounded_fine_mask_complexity_projection(
+    const FineMaskComplexityEvidence& evidence,
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    double member_penalty, std::uint8_t maximum_polyphony) noexcept;
+
+struct FineMaskModelRanking final {
+  std::uint8_t best_mask{};
+  std::uint8_t expected_rank{};
+  std::uint8_t feasible_count{};
+  bool expected_available{};
+  bool tied{};
+};
+
+// Replay-only ranking over every calibrated 2-4-string physical model. This
+// exposes whether the labeled mask is absent, merely outranked, or becomes the
+// unique optimum under a bounded member-count penalty. It never projects an
+// output mask or changes detector state.
+[[nodiscard]] FineMaskModelRanking rank_fine_masks_by_complexity(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty) noexcept;
+
+// Extends the calibrated residual model with the detector's causal
+// per-string/fret posterior. The posterior term is the mean negative-log
+// probability of the proposed members, so it can distinguish masks with the
+// same cardinality without turning a single-string posterior into permission
+// to add a lane. This remains diagnostic-only and never projects output.
+[[nodiscard]] FineMaskModelRanking rank_fine_masks_with_string_posterior(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, kMaxVoices>& string_probability,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty,
+    double posterior_weight) noexcept;
+
+// Ranks the same calibrated models only when their independently measured
+// beat graph is connected and every pair clears the requested causal floor.
+// This tests a genuinely multi-source discriminator rather than repurposing
+// the categorical single-string posterior.
+[[nodiscard]] FineMaskModelRanking rank_fine_masks_with_beat_graph(
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, 1U << kMaxVoices>& minimum_beat_coherence,
+    const std::array<bool, 1U << kMaxVoices>& beat_graph_connected,
+    std::uint8_t playable_mask, std::uint8_t maximum_member_count,
+    std::uint8_t expected_mask, double member_penalty,
+    double minimum_coherence) noexcept;
+
+// Replay-only output counterfactual: remove unsupported extra lanes from an
+// already-active 3/4-string assignment when a unique strict subset has both
+// a calibrated fine fit and a connected beat graph. It cannot create a note,
+// add a lane, steal ownership, survive silence, or exceed total polyphony.
+[[nodiscard]] std::uint8_t bounded_fine_beat_graph_pruning_projection(
+    const FineMaskComplexityEvidence& evidence,
+    const std::array<double, 1U << kMaxVoices>& normalized_residual,
+    const std::array<bool, 1U << kMaxVoices>& residual_valid,
+    const std::array<double, 1U << kMaxVoices>& minimum_beat_coherence,
+    const std::array<bool, 1U << kMaxVoices>& beat_graph_connected,
+    double member_penalty, double minimum_coherence,
+    std::uint8_t maximum_polyphony) noexcept;
 
 // Production-shaped replay projection for the measured spectral-tier repair.
 // In addition to the tier/beat gate above, the pitch must already own a live
@@ -359,12 +451,20 @@ diagnose_classifier_subset_completion_projection(
     double pairwise_beat_coherence, bool robust_pairwise_beat_connected,
     double maximum_error, double minimum_margin, bool quiet) noexcept;
 
+
 // Combines two independently bounded counterfactuals without resolving a
 // disagreement optimistically. Agreement wins, one changed proposal wins when
 // the other remains unchanged, and conflicting changes preserve the live mask.
 [[nodiscard]] std::uint8_t bounded_projection_union(
     std::uint8_t current_assignment_mask, std::uint8_t first_projection,
     std::uint8_t second_projection) noexcept;
+
+// Applies the same conservative union only for a previously established
+// three/four-string group. Pair-only continuity is intentionally excluded:
+// replay evidence shows that it can merge unrelated ordinary-note lanes.
+[[nodiscard]] std::uint8_t bounded_three_four_member_projection_union(
+    std::uint8_t current_assignment_mask, std::uint8_t established_group_mask,
+    std::uint8_t first_projection, std::uint8_t second_projection) noexcept;
 
 // Bridges a short exposure gap only when a recent established 3-4-string
 // group is named exactly by the independent settled corridor classifier.

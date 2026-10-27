@@ -8,6 +8,12 @@
 
 namespace m3 {
 
+enum class UnisonSpectralPhase : std::uint8_t {
+  unready,
+  onset,
+  settled,
+};
+
 // Three harmonics sampled across a +/-100-cent corridor at roughly six-cent
 // spacing, including both exact corridor boundaries.
 inline constexpr std::size_t kUnisonSpectralHarmonicCount = 3U;
@@ -20,8 +26,17 @@ using UnisonSpectralFingerprint =
 
 struct UnisonSpectralTemplateSet final {
   std::array<UnisonSpectralFingerprint, kMaxVoices> fingerprint{};
+  std::array<double, kMaxVoices> prepared_norm{};
+  std::array<std::array<double, kMaxVoices>, kMaxVoices> prepared_gram{};
   std::uint8_t valid_mask{};
+  bool prepared{};
 };
+
+// Precomputes immutable template geometry used by every classification. The
+// observed fingerprint remains live input; only factory/template-only norms
+// and correlations are cached.
+[[nodiscard]] bool prepare_unison_spectral_templates(
+    UnisonSpectralTemplateSet& templates) noexcept;
 
 struct UnisonSpectralClassification final {
   std::array<double, kMaxVoices> weights{};
@@ -69,6 +84,16 @@ struct UnisonSpectralSingleScores final {
     const UnisonSpectralFingerprint& observed,
     const UnisonSpectralTemplateSet& templates,
     std::uint8_t playable_mask, std::size_t member_count) noexcept;
+
+// Bounded production search over adjacent two-, three-, and four-string
+// groups. This evaluates at most 18 masks on the eight-string instrument,
+// rather than the 154-mask unrestricted offline search.
+[[nodiscard]] UnisonSpectralClassification
+classify_consecutive_unison_range(
+    const UnisonSpectralFingerprint& observed,
+    const UnisonSpectralTemplateSet& templates,
+    std::uint8_t playable_mask, std::size_t minimum_member_count,
+    std::size_t maximum_member_count) noexcept;
 
 // Evaluates every physically feasible two- through four-string subset. This
 // is the offline shadow-classifier surface; production code must not use its

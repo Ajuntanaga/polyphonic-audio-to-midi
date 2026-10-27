@@ -41,6 +41,26 @@ M3_TEST(unison_spectral_classifier_finds_the_joint_consecutive_triple) {
   M3_EXPECT_NEAR(result.weights[3U], 0.0, 0.0);
 }
 
+M3_TEST(unison_spectral_classifier_bounded_range_selects_the_best_group_size) {
+  m3::UnisonSpectralTemplateSet templates;
+  templates.valid_mask = 0x0FU;
+  templates.fingerprint[0U] = fingerprint({{0U, 1.0}});
+  templates.fingerprint[1U] = fingerprint({{1U, 1.0}});
+  templates.fingerprint[2U] = fingerprint({{2U, 1.0}});
+  templates.fingerprint[3U] = fingerprint({{3U, 1.0}});
+  const auto observed =
+      fingerprint({{0U, 0.9}, {1U, 0.8}, {2U, 0.7}});
+
+  const m3::UnisonSpectralClassification result =
+      m3::classify_consecutive_unison_range(observed, templates, 0x0FU,
+                                            2U, 4U);
+
+  M3_EXPECT_TRUE(result.valid);
+  M3_EXPECT_EQ(result.member_mask, 0x07U);
+  M3_EXPECT_EQ(result.member_count, 3U);
+  M3_EXPECT_TRUE(result.posterior_margin > 0.0);
+}
+
 M3_TEST(unison_spectral_classifier_never_selects_a_nonconsecutive_shape) {
   m3::UnisonSpectralTemplateSet templates;
   templates.valid_mask = 0x0FU;
@@ -259,6 +279,62 @@ M3_TEST(factory_unison_spectral_templates_are_closed_and_normalized) {
   M3_EXPECT_FALSE(m3::factory_unison_spectral_templates(
       m3::UnisonSpectralPhase::settled, 127U, templates));
   M3_EXPECT_EQ(templates.valid_mask, 0U);
+}
+
+M3_TEST(factory_unison_spectral_template_availability_matches_full_expansion) {
+  for (std::size_t phase = 0U; phase <= 2U; ++phase) {
+    for (std::uint16_t note = 0U; note <= 127U; ++note) {
+      m3::UnisonSpectralTemplateSet templates;
+      const auto spectral_phase =
+          static_cast<m3::UnisonSpectralPhase>(phase);
+      const bool expanded = m3::factory_unison_spectral_templates(
+          spectral_phase, static_cast<std::uint8_t>(note), templates);
+      M3_EXPECT_EQ(m3::factory_unison_spectral_templates_available(
+                       spectral_phase, static_cast<std::uint8_t>(note)),
+                   expanded);
+    }
+  }
+}
+
+M3_TEST(prepared_unison_spectral_templates_preserve_exact_classification) {
+  m3::UnisonSpectralTemplateSet templates;
+  templates.valid_mask = 0x0fU;
+  templates.fingerprint[0U] = fingerprint({{0U, 1.0}, {4U, 0.2}});
+  templates.fingerprint[1U] = fingerprint({{1U, 0.8}, {4U, 0.3}});
+  templates.fingerprint[2U] = fingerprint({{2U, 0.7}, {4U, 0.4}});
+  templates.fingerprint[3U] = fingerprint({{3U, 0.6}, {4U, 0.5}});
+  const auto observed =
+      fingerprint({{0U, 0.9}, {1U, 0.7}, {2U, 0.5}, {4U, 0.6}});
+  const auto before =
+      m3::classify_feasible_unison(observed, templates, 0x0fU, 2U, 4U);
+  const auto single_before =
+      m3::classify_single_spectral_source(observed, templates, 0x0fU);
+
+  M3_EXPECT_TRUE(m3::prepare_unison_spectral_templates(templates));
+  const auto after =
+      m3::classify_feasible_unison(observed, templates, 0x0fU, 2U, 4U);
+  const auto single_after =
+      m3::classify_single_spectral_source(observed, templates, 0x0fU);
+
+  M3_EXPECT_EQ(after.valid, before.valid);
+  M3_EXPECT_EQ(after.member_mask, before.member_mask);
+  M3_EXPECT_EQ(after.member_count, before.member_count);
+  M3_EXPECT_NEAR(after.error, before.error, 0.0);
+  M3_EXPECT_NEAR(after.runner_up_error, before.runner_up_error, 0.0);
+  M3_EXPECT_NEAR(after.posterior_margin, before.posterior_margin, 0.0);
+  for (std::size_t string = 0U; string < m3::kMaxVoices; ++string) {
+    M3_EXPECT_NEAR(after.weights[string], before.weights[string], 0.0);
+    M3_EXPECT_NEAR(single_after.weights[string], single_before.weights[string],
+                   0.0);
+  }
+  M3_EXPECT_EQ(single_after.valid, single_before.valid);
+  M3_EXPECT_EQ(single_after.member_mask, single_before.member_mask);
+  M3_EXPECT_EQ(single_after.member_count, single_before.member_count);
+  M3_EXPECT_NEAR(single_after.error, single_before.error, 0.0);
+  M3_EXPECT_NEAR(single_after.runner_up_error, single_before.runner_up_error,
+                 0.0);
+  M3_EXPECT_NEAR(single_after.posterior_margin,
+                 single_before.posterior_margin, 0.0);
 }
 
 M3_TEST(cached_unison_reacquisition_is_bounded_by_live_physical_evidence) {

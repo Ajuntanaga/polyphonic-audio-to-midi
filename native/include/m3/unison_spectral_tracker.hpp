@@ -8,12 +8,6 @@
 
 namespace m3 {
 
-enum class UnisonSpectralPhase : std::uint8_t {
-  unready,
-  onset,
-  settled,
-};
-
 // Fixed-memory, allocation-free corridor analyzer. Callers may feed a
 // decimated stream as long as configure() receives the corresponding effective
 // sample rate.

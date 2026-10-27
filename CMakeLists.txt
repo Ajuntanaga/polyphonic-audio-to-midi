@@ -100,6 +100,7 @@ set_source_files_properties(
 )
 
 set(M3_NATIVE_TEST_SOURCES
+    native/offline/joint_pitch_residual.cpp
     native/offline/replay.cpp
     native/offline/unison_spectral_shadow.cpp
     native/tests/fake_clap_host.cpp
@@ -111,6 +112,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_factory_calibration.cpp
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_harmonic_evidence.cpp
+    native/tests/test_joint_pitch_residual.cpp
     native/tests/test_main.cpp
     native/tests/test_midi_pipeline.cpp
     native/tests/test_offline_replay.cpp
@@ -216,6 +218,7 @@ add_test(NAME m3_vst3_realtime_tests COMMAND m3_vst3_realtime_tests)
 add_executable(m3_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
     ${M3_UNISON_SPECTRAL_SHADOW_SOURCES}
+    native/offline/joint_pitch_residual.cpp
     native/offline/replay.cpp
     native/offline/unison_spectral_shadow.cpp
     native/offline/replay_main.cpp

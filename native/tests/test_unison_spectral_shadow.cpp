@@ -623,6 +623,22 @@ M3_TEST(articulated_unison_reacquisition_requires_fresh_bounded_evidence) {
   M3_EXPECT_EQ(overlap.projected_mask, 0x03U);
   M3_EXPECT_EQ(overlap.disposition,
                ArticulatedUnisonReacquisitionDisposition::ownership_conflict);
+
+  const auto three_member =
+      m3::offline::bounded_three_member_articulated_unison_reacquisition_projection(
+          0x03U, 0x07U, 0x03U, 0.36, 0.24, 0x07U, 0x80U, 0xffU,
+          5U, true, false, 0.20, 0.25, 0.20);
+  M3_EXPECT_EQ(three_member.projected_mask, 0x07U);
+  M3_EXPECT_EQ(three_member.disposition,
+               ArticulatedUnisonReacquisitionDisposition::accepted);
+
+  const auto four_member =
+      m3::offline::bounded_three_member_articulated_unison_reacquisition_projection(
+          0x06U, 0x1eU, 0x06U, 0.36, 0.24, 0x1eU, 0U, 0xffU,
+          5U, true, false, 0.20, 0.25, 0.20);
+  M3_EXPECT_EQ(four_member.projected_mask, 0x06U);
+  M3_EXPECT_EQ(four_member.disposition,
+               ArticulatedUnisonReacquisitionDisposition::no_cache);
 }
 
 M3_TEST(articulated_reacquisition_counterfactual_scores_hidden_recovery) {
@@ -784,6 +800,183 @@ M3_TEST(fine_unique_member_pruning_drops_only_one_causally_redundant_member) {
                0x07U);
 }
 
+M3_TEST(fine_mask_complexity_selects_only_one_bounded_physical_model) {
+  using m3::offline::FineMaskComplexityEvidence;
+  using m3::offline::bounded_fine_mask_complexity_projection;
+  std::array<double, 1U << m3::kMaxVoices> residual{};
+  std::array<bool, 1U << m3::kMaxVoices> valid{};
+  residual[0x03U] = 0.10;
+  residual[0x07U] = 0.09;
+  valid[0x03U] = true;
+  valid[0x07U] = true;
+  FineMaskComplexityEvidence evidence{true, true, true, false, 0.80,
+                                      0x07U, 0xffU, 0x00U};
+
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.0, 5U),
+               0x07U);
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.02, 5U),
+               0x03U);
+
+  evidence.quiet = true;
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.02, 5U),
+               0x07U);
+  evidence.quiet = false;
+  evidence.score_threshold_ratio = 0.49;
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.02, 5U),
+               0x07U);
+  evidence.score_threshold_ratio = 0.80;
+  evidence.other_owned_mask = 0x02U;
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.02, 5U),
+               0x07U);
+  evidence.other_owned_mask = 0x00U;
+  residual[0x03U] = 0.10;
+  residual[0x05U] = 0.10;
+  valid[0x05U] = true;
+  M3_EXPECT_EQ(bounded_fine_mask_complexity_projection(
+                   evidence, residual, valid, 0.02, 5U),
+               0x07U);
+}
+
+M3_TEST(fine_mask_model_ranking_exposes_when_complexity_changes_the_winner) {
+  std::array<double, 1U << m3::kMaxVoices> residuals{};
+  std::array<bool, 1U << m3::kMaxVoices> valid{};
+  residuals[0x07U] = 0.09;
+  residuals[0x0fU] = 0.08;
+  valid[0x07U] = true;
+  valid[0x0fU] = true;
+
+  auto ranking = m3::offline::rank_fine_masks_by_complexity(
+      residuals, valid, 0x0fU, 4U, 0x07U, 0.0);
+  M3_EXPECT_TRUE(ranking.expected_available);
+  M3_EXPECT_EQ(ranking.expected_rank, 2U);
+  M3_EXPECT_EQ(ranking.best_mask, 0x0fU);
+  M3_EXPECT_FALSE(ranking.tied);
+
+  ranking = m3::offline::rank_fine_masks_by_complexity(
+      residuals, valid, 0x0fU, 4U, 0x07U, 0.02);
+  M3_EXPECT_TRUE(ranking.expected_available);
+  M3_EXPECT_EQ(ranking.expected_rank, 1U);
+  M3_EXPECT_EQ(ranking.best_mask, 0x07U);
+
+  ranking = m3::offline::rank_fine_masks_by_complexity(
+      residuals, valid, 0x07U, 4U, 0x0fU, 0.02);
+  M3_EXPECT_FALSE(ranking.expected_available);
+  M3_EXPECT_EQ(ranking.expected_rank, 0U);
+  M3_EXPECT_EQ(ranking.best_mask, 0x07U);
+
+  residuals[0x0fU] = 0.07;
+  ranking = m3::offline::rank_fine_masks_by_complexity(
+      residuals, valid, 0x0fU, 4U, 0x07U, 0.02);
+  M3_EXPECT_TRUE(ranking.tied);
+  M3_EXPECT_EQ(ranking.best_mask, 0U);
+}
+
+M3_TEST(fine_mask_posterior_ranking_breaks_same_size_ambiguity) {
+  std::array<double, 1U << m3::kMaxVoices> residuals{};
+  std::array<bool, 1U << m3::kMaxVoices> valid{};
+  std::array<double, m3::kMaxVoices> posterior{};
+  residuals[0x03U] = 0.080;
+  residuals[0x0cU] = 0.079;
+  valid[0x03U] = true;
+  valid[0x0cU] = true;
+  posterior[0U] = 0.44;
+  posterior[1U] = 0.36;
+  posterior[2U] = 0.12;
+  posterior[3U] = 0.08;
+
+  auto ranking = m3::offline::rank_fine_masks_with_string_posterior(
+      residuals, valid, posterior, 0x0fU, 4U, 0x03U, 0.0, 0.0);
+  M3_EXPECT_EQ(ranking.best_mask, 0x0cU);
+  M3_EXPECT_EQ(ranking.expected_rank, 2U);
+
+  ranking = m3::offline::rank_fine_masks_with_string_posterior(
+      residuals, valid, posterior, 0x0fU, 4U, 0x03U, 0.0, 0.01);
+  M3_EXPECT_EQ(ranking.best_mask, 0x03U);
+  M3_EXPECT_EQ(ranking.expected_rank, 1U);
+  M3_EXPECT_FALSE(ranking.tied);
+
+  posterior = {};
+  ranking = m3::offline::rank_fine_masks_with_string_posterior(
+      residuals, valid, posterior, 0x0fU, 4U, 0x03U, 0.0, 0.01);
+  M3_EXPECT_EQ(ranking.best_mask, 0U);
+  M3_EXPECT_FALSE(ranking.expected_available);
+}
+
+M3_TEST(fine_mask_beat_graph_ranking_rejects_disconnected_fit) {
+  std::array<double, 1U << m3::kMaxVoices> residuals{};
+  std::array<bool, 1U << m3::kMaxVoices> valid{};
+  std::array<double, 1U << m3::kMaxVoices> minimum_coherence{};
+  std::array<bool, 1U << m3::kMaxVoices> connected{};
+  residuals[0x07U] = 0.080;
+  residuals[0x0bU] = 0.079;
+  valid[0x07U] = true;
+  valid[0x0bU] = true;
+  minimum_coherence[0x07U] = 0.14;
+  minimum_coherence[0x0bU] = 0.25;
+  connected[0x07U] = true;
+  connected[0x0bU] = false;
+
+  auto ranking = m3::offline::rank_fine_masks_with_beat_graph(
+      residuals, valid, minimum_coherence, connected, 0x0fU, 4U, 0x07U,
+      0.0, 0.10);
+  M3_EXPECT_EQ(ranking.best_mask, 0x07U);
+  M3_EXPECT_EQ(ranking.expected_rank, 1U);
+  M3_EXPECT_TRUE(ranking.expected_available);
+
+  ranking = m3::offline::rank_fine_masks_with_beat_graph(
+      residuals, valid, minimum_coherence, connected, 0x0fU, 4U, 0x07U,
+      0.0, 0.15);
+  M3_EXPECT_EQ(ranking.best_mask, 0U);
+  M3_EXPECT_FALSE(ranking.expected_available);
+}
+
+M3_TEST(fine_mask_beat_graph_pruning_only_removes_supported_extra_lanes) {
+  m3::offline::FineMaskComplexityEvidence evidence;
+  evidence.active = true;
+  evidence.selected = true;
+  evidence.direct_fundamental = true;
+  evidence.score_threshold_ratio = 0.80;
+  evidence.current_assignment_mask = 0xf0U;
+  evidence.playable_mask = 0xf0U;
+  std::array<double, 1U << m3::kMaxVoices> residuals{};
+  std::array<bool, 1U << m3::kMaxVoices> valid{};
+  std::array<double, 1U << m3::kMaxVoices> minimum_coherence{};
+  std::array<bool, 1U << m3::kMaxVoices> connected{};
+  residuals[0xc0U] = 0.080;
+  residuals[0xb0U] = 0.079;
+  valid[0xc0U] = true;
+  valid[0xb0U] = true;
+  minimum_coherence[0xc0U] = 0.30;
+  minimum_coherence[0xb0U] = 0.30;
+  connected[0xc0U] = true;
+  connected[0xb0U] = false;
+
+  M3_EXPECT_EQ(m3::offline::bounded_fine_beat_graph_pruning_projection(
+                   evidence, residuals, valid, minimum_coherence, connected,
+                   0.02, 0.20, 5U),
+               0xc0U);
+  evidence.quiet = true;
+  M3_EXPECT_EQ(m3::offline::bounded_fine_beat_graph_pruning_projection(
+                   evidence, residuals, valid, minimum_coherence, connected,
+                   0.02, 0.20, 5U),
+               0xf0U);
+  evidence.quiet = false;
+  evidence.current_assignment_mask = 0xc0U;
+  residuals[0xe0U] = 0.01;
+  valid[0xe0U] = true;
+  minimum_coherence[0xe0U] = 0.40;
+  connected[0xe0U] = true;
+  M3_EXPECT_EQ(m3::offline::bounded_fine_beat_graph_pruning_projection(
+                   evidence, residuals, valid, minimum_coherence, connected,
+                   0.02, 0.20, 5U),
+               0xc0U);
+}
+
 M3_TEST(selected_subset_completion_requires_unique_bounded_consensus) {
   using m3::offline::bounded_selected_subset_completion_projection;
   const std::array<std::uint8_t, 6U> two_votes{0x07U, 0x07U, 0x03U,
@@ -930,6 +1123,22 @@ M3_TEST(projection_union_accepts_agreement_and_refuses_conflicting_changes) {
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x07U, 0x03U), 0x07U);
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x03U, 0x07U), 0x07U);
   M3_EXPECT_EQ(bounded_projection_union(0x03U, 0x07U, 0x0bU), 0x03U);
+}
+
+M3_TEST(three_four_member_projection_union_refuses_pair_only_continuity) {
+  using m3::offline::bounded_three_four_member_projection_union;
+  M3_EXPECT_EQ(bounded_three_four_member_projection_union(
+                   0x01U, 0x07U, 0x07U, 0x01U),
+               0x07U);
+  M3_EXPECT_EQ(bounded_three_four_member_projection_union(
+                   0x01U, 0x0fU, 0x01U, 0x0fU),
+               0x0fU);
+  M3_EXPECT_EQ(bounded_three_four_member_projection_union(
+                   0x01U, 0x03U, 0x03U, 0x01U),
+               0x01U);
+  M3_EXPECT_EQ(bounded_three_four_member_projection_union(
+                   0x01U, 0x01U, 0x07U, 0x07U),
+               0x01U);
 }
 
 M3_TEST(cached_classifier_continuity_requires_an_established_live_subset) {

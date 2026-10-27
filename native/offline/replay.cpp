@@ -15,6 +15,7 @@
 #include "m3/factory_calibration.hpp"
 #include "m3/pitch_math.hpp"
 #include "m3/polyphonic_pitch_detector.hpp"
+#include "joint_pitch_residual.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace m3::offline {
@@ -278,6 +279,258 @@ bool voice_matches_label(const TunerVoice& voice,
          (label.string_mask & (1U << voice.string_index)) != 0U;
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+TunerSnapshot calibrated_dp_replacement_projection(
+    const TunerSnapshot& snapshot, const PolyphonicPitchDetector& detector,
+    const CalibratedDpReplacementPolicy& policy,
+    std::uint32_t& changed_voices) noexcept {
+  TunerSnapshot projected = snapshot;
+  for (std::size_t voice_index = 0U;
+       voice_index < snapshot.voice_count; ++voice_index) {
+    const TunerVoice& voice = snapshot.voices[voice_index];
+    if (voice.shares_pitch_evidence() ||
+        mask_member_count(
+            detector.committed_unison_mask(voice.midi_note)) >= 2U) {
+      return projected;
+    }
+  }
+  for (std::size_t note = 0U; note < 128U; ++note) {
+    const auto midi_note = static_cast<std::uint8_t>(note);
+    if (mask_member_count(detector.committed_unison_mask(midi_note)) >= 2U ||
+        mask_member_count(detector.fine_frequency_member_mask(midi_note)) >=
+            2U ||
+        mask_member_count(
+            detector.fine_frequency_pending_member_mask(midi_note)) >= 2U) {
+      return projected;
+    }
+  }
+  std::array<double, kMaxVoices> best_advantage{};
+  std::array<std::uint8_t, kMaxVoices> best_note{};
+  std::array<bool, kMaxVoices> has_proposal{};
+  for (std::size_t note = 0U; note < 128U; ++note) {
+    const auto midi_note = static_cast<std::uint8_t>(note);
+    if (detector.selection_disposition(midi_note) !=
+        SelectionDisposition::dp_evicted) {
+      continue;
+    }
+    const CandidateAdmissionDiagnostics candidate =
+        detector.candidate_admission_diagnostics(midi_note);
+    const double calibration_margin =
+        candidate.best_calibration_similarity -
+        candidate.second_calibration_similarity;
+    const std::uint8_t string = candidate.best_calibrated_string;
+    if (candidate.active || !candidate.direct_fundamental_peak ||
+        (!candidate.local_peak && !candidate.candidate_evidence) ||
+        string >= kMaxVoices ||
+        (policy.allowed_string_mask & (1U << string)) == 0U ||
+        candidate.best_calibration_similarity < policy.minimum_similarity ||
+        calibration_margin < policy.minimum_calibration_margin ||
+        (candidate.playable_string_mask & (1U << string)) == 0U ||
+        (candidate.calibrated_string_mask & (1U << string)) == 0U ||
+        mask_member_count(detector.committed_unison_mask(midi_note)) >= 2U) {
+      continue;
+    }
+    for (std::size_t voice_index = 0U;
+         voice_index < snapshot.voice_count; ++voice_index) {
+      const TunerVoice& incumbent = snapshot.voices[voice_index];
+      if (incumbent.string_index != string ||
+          incumbent.midi_note == midi_note ||
+          incumbent.state == TunerVoiceState::coasting ||
+          incumbent.shares_pitch_evidence() ||
+          mask_member_count(
+              detector.committed_unison_mask(incumbent.midi_note)) >= 2U) {
+        continue;
+      }
+      const CandidateAdmissionDiagnostics incumbent_diagnostic =
+          detector.candidate_admission_diagnostics(incumbent.midi_note);
+      const double advantage = candidate.score_threshold_ratio -
+                               incumbent_diagnostic.score_threshold_ratio;
+      if (advantage < policy.minimum_score_margin ||
+          (has_proposal[string] && advantage <= best_advantage[string])) {
+        continue;
+      }
+      has_proposal[string] = true;
+      best_advantage[string] = advantage;
+      best_note[string] = midi_note;
+    }
+  }
+  for (std::size_t voice_index = 0U;
+       voice_index < projected.voice_count; ++voice_index) {
+    TunerVoice& voice = projected.voices[voice_index];
+    if (voice.string_index >= kMaxVoices ||
+        !has_proposal[voice.string_index] ||
+        voice.midi_note == best_note[voice.string_index]) {
+      continue;
+    }
+    voice.midi_note = best_note[voice.string_index];
+    voice.detected_midi_note = best_note[voice.string_index];
+    voice.cents_valid = false;
+    voice.detected_cents_valid = false;
+    voice.pitch_evidence_group_id = kUnassignedPitchEvidenceGroup;
+    voice.pitch_evidence_member_mask = 0U;
+    ++changed_voices;
+  }
+  return projected;
+}
+
+TunerSnapshot adjacent_spectral_duplicate_projection(
+    const TunerSnapshot& snapshot,
+    const std::array<double, 128U>& single_source_error,
+    const AdjacentSpectralDuplicatePolicy& policy,
+    std::uint32_t& changed_voices) noexcept {
+  TunerSnapshot projected = snapshot;
+  std::array<bool, kMaxVoices> remove{};
+  for (std::size_t left_index = 0U; left_index < snapshot.voice_count;
+       ++left_index) {
+    const TunerVoice& left = snapshot.voices[left_index];
+    if (left.midi_note >= 127U || left.shares_pitch_evidence() ||
+        mask_member_count(left.pitch_evidence_member_mask) >= 2U) {
+      continue;
+    }
+    for (std::size_t right_index = left_index + 1U;
+         right_index < snapshot.voice_count; ++right_index) {
+      const TunerVoice& right = snapshot.voices[right_index];
+      if (right.midi_note != left.midi_note + 1U ||
+          right.shares_pitch_evidence() ||
+          mask_member_count(right.pitch_evidence_member_mask) >= 2U ||
+          left.string_index >= kMaxVoices ||
+          right.string_index >= kMaxVoices ||
+          left.string_index == right.string_index) {
+        continue;
+      }
+      const double left_error = single_source_error[left.midi_note];
+      const double right_error = single_source_error[right.midi_note];
+      if (!std::isfinite(left_error) || !std::isfinite(right_error) ||
+          std::abs(left_error - right_error) < policy.minimum_error_gap) {
+        continue;
+      }
+      remove[left_error > right_error ? left_index : right_index] = true;
+    }
+  }
+  std::size_t write_index = 0U;
+  for (std::size_t read_index = 0U; read_index < projected.voice_count;
+       ++read_index) {
+    if (remove[read_index]) {
+      ++changed_voices;
+      continue;
+    }
+    projected.voices[write_index++] = projected.voices[read_index];
+  }
+  for (std::size_t index = write_index; index < projected.voice_count;
+       ++index) {
+    projected.voices[index] = {};
+  }
+  projected.voice_count = static_cast<std::uint8_t>(write_index);
+  return projected;
+}
+
+TunerSnapshot fine_mask_complexity_projection(
+    const TunerSnapshot& snapshot, const PolyphonicPitchDetector& detector,
+    double member_penalty, std::uint8_t maximum_polyphony,
+    std::uint32_t& changed_voices) noexcept {
+  std::array<std::uint8_t, 128U> current_masks{};
+  for (std::size_t voice_index = 0U; voice_index < snapshot.voice_count;
+       ++voice_index) {
+    const TunerVoice& voice = snapshot.voices[voice_index];
+    if (voice.midi_note < current_masks.size() &&
+        voice.string_index < kMaxVoices) {
+      current_masks[voice.midi_note] = static_cast<std::uint8_t>(
+          current_masks[voice.midi_note] | (1U << voice.string_index));
+    }
+  }
+  std::array<std::uint8_t, 128U> projected_masks = current_masks;
+  for (std::size_t note = 0U; note < current_masks.size(); ++note) {
+    if (current_masks[note] == 0U ||
+        note < kFineMaskComplexityMinimumMidiNote) {
+      continue;
+    }
+    const auto midi_note = static_cast<std::uint8_t>(note);
+    const CandidateAdmissionDiagnostics admission =
+        detector.candidate_admission_diagnostics(midi_note);
+    const SelectionDisposition disposition =
+        detector.selection_disposition(midi_note);
+    const FineFrequencyMaskResidualTable& residuals =
+        detector.fine_frequency_mask_residuals(midi_note);
+    const FineMaskComplexityEvidence evidence{
+        admission.active,
+        disposition == SelectionDisposition::selected,
+        admission.direct_fundamental_peak,
+        disposition == SelectionDisposition::quiet,
+        admission.score_threshold_ratio,
+        current_masks[note],
+        admission.playable_string_mask,
+        other_note_lane_mask(snapshot, midi_note)};
+    projected_masks[note] = bounded_fine_mask_complexity_projection(
+        evidence, residuals.normalized_residual, residuals.valid,
+        member_penalty, maximum_polyphony);
+  }
+
+  TunerSnapshot projected = snapshot;
+  std::size_t write_index = 0U;
+  for (std::size_t read_index = 0U; read_index < snapshot.voice_count;
+       ++read_index) {
+    const TunerVoice& voice = snapshot.voices[read_index];
+    const bool keep =
+        voice.midi_note >= projected_masks.size() ||
+        voice.string_index >= kMaxVoices ||
+        (projected_masks[voice.midi_note] & (1U << voice.string_index)) != 0U;
+    if (!keep) {
+      ++changed_voices;
+      continue;
+    }
+    projected.voices[write_index++] = voice;
+  }
+  for (std::size_t index = write_index; index < projected.voice_count;
+       ++index) {
+    projected.voices[index] = {};
+  }
+  projected.voice_count = static_cast<std::uint8_t>(write_index);
+  return projected;
+}
+
+void accumulate_counterfactual_metrics(
+    const TunerSnapshot& snapshot, std::uint64_t sample_index,
+    const std::vector<ReplayLabel>& labels,
+    ReplayCounterfactualMetrics& metrics) noexcept {
+  bool any_active_label = false;
+  for (const ReplayLabel& label : labels) {
+    if (sample_index < label.start_sample || sample_index >= label.end_sample) {
+      continue;
+    }
+    any_active_label = true;
+    metrics.matched_label_frames += snapshot_matches_label(snapshot, label)
+                                         ? 1U
+                                         : 0U;
+  }
+  for (std::size_t voice_index = 0U;
+       voice_index < snapshot.voice_count; ++voice_index) {
+    const TunerVoice& voice = snapshot.voices[voice_index];
+    bool expected = false;
+    bool active_matching_note = false;
+    for (const ReplayLabel& label : labels) {
+      if (sample_index < label.start_sample ||
+          sample_index >= label.end_sample) {
+        continue;
+      }
+      expected = expected || voice_matches_label(voice, label);
+      active_matching_note =
+          active_matching_note || voice.midi_note == label.midi_note;
+    }
+    if (expected) {
+      continue;
+    }
+    ++metrics.false_positive_voices;
+    if (!any_active_label) {
+      ++metrics.false_gap_voices;
+    } else if (active_matching_note) {
+      ++metrics.false_wrong_string_voices;
+    } else {
+      ++metrics.false_wrong_note_voices;
+    }
+  }
+}
+#endif
+
 struct LabeledCalibrationEstimate final {
   double cents{};
   double correlation{};
@@ -519,6 +772,123 @@ bool estimate_labeled_calibration(const WaveData& wave,
 }
 
 }  // namespace
+
+TunerSnapshot correlation_shadow_projection(
+    const TunerSnapshot& snapshot, const std::array<double, 128U>& ratios,
+    double sample_rate, const CorrelationShadowPolicy& policy,
+    std::uint32_t& changed_voices,
+    const std::array<bool, 128U>* pending_unison) noexcept {
+  TunerSnapshot projected = snapshot;
+  if (snapshot.state != TunerFrameState::tracking ||
+      !std::isfinite(sample_rate) || sample_rate <= 0.0 ||
+      !std::isfinite(policy.maximum_energy_ratio) ||
+      policy.maximum_energy_ratio <= 0.0 ||
+      !std::isfinite(policy.minimum_age_seconds) ||
+      policy.minimum_age_seconds < 0.0) {
+    return projected;
+  }
+  std::array<std::uint8_t, 128U> pitch_members{};
+  for (std::size_t index = 0U; index < snapshot.voice_count; ++index) {
+    const auto note = snapshot.voices[index].detected_midi_note;
+    if (note < pitch_members.size()) {
+      ++pitch_members[note];
+    }
+  }
+  std::size_t write = 0U;
+  for (std::size_t index = 0U; index < snapshot.voice_count; ++index) {
+    const auto& voice = snapshot.voices[index];
+    const std::size_t note = voice.detected_midi_note;
+    const double age = static_cast<double>(voice.age_ticks) *
+                       static_cast<double>(kDecisionQuantum) / sample_rate;
+    const bool remove =
+        voice.state == TunerVoiceState::tracking &&
+        voice.string_index < kMaxVoices &&
+        !voice.shares_pitch_evidence() &&
+        voice.detected_midi_note == voice.midi_note &&
+        note < ratios.size() && pitch_members[note] == 1U &&
+        !(policy.protect_pending_unison && pending_unison != nullptr &&
+          (*pending_unison)[note]) &&
+        age >= policy.minimum_age_seconds &&
+        std::isfinite(ratios[note]) && ratios[note] >= 0.0 &&
+        ratios[note] < policy.maximum_energy_ratio;
+    if (remove) {
+      ++changed_voices;
+    } else {
+      projected.voices[write++] = voice;
+    }
+  }
+  for (std::size_t index = write; index < projected.voice_count; ++index) {
+    projected.voices[index] = {};
+  }
+  projected.voice_count = static_cast<std::uint8_t>(write);
+  return projected;
+}
+
+void observe_adjacent_envelope_coherence(
+    AdjacentEnvelopeCoherenceState& state, double left, double right,
+    double smoothing) noexcept {
+  if (!std::isfinite(left) || !std::isfinite(right) ||
+      !std::isfinite(smoothing) || smoothing <= 0.0 || smoothing > 1.0) {
+    return;
+  }
+  if (state.observations == 0U) {
+    state.mean_left = left;
+    state.mean_right = right;
+    state.observations = 1U;
+    return;
+  }
+  const double left_delta = left - state.mean_left;
+  const double right_delta = right - state.mean_right;
+  state.mean_left += smoothing * left_delta;
+  state.mean_right += smoothing * right_delta;
+  state.variance_left =
+      (1.0 - smoothing) *
+      (state.variance_left + smoothing * left_delta * left_delta);
+  state.variance_right =
+      (1.0 - smoothing) *
+      (state.variance_right + smoothing * right_delta * right_delta);
+  state.covariance =
+      (1.0 - smoothing) *
+      (state.covariance + smoothing * left_delta * right_delta);
+  if (state.observations < std::numeric_limits<std::uint32_t>::max()) {
+    ++state.observations;
+  }
+}
+
+double adjacent_envelope_coherence(
+    const AdjacentEnvelopeCoherenceState& state) noexcept {
+  if (state.observations < 20U || state.variance_left <= 1.0e-12 ||
+      state.variance_right <= 1.0e-12) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const double denominator =
+      std::sqrt(state.variance_left * state.variance_right);
+  if (!std::isfinite(denominator) || denominator <= 1.0e-12) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return std::clamp(state.covariance / denominator, -1.0, 1.0);
+}
+
+std::size_t adjacent_envelope_coherence_bin(
+    const AdjacentEnvelopeCoherenceState& state) noexcept {
+  const double coherence = adjacent_envelope_coherence(state);
+  if (!std::isfinite(coherence)) {
+    return 0U;
+  }
+  return 1U + static_cast<std::size_t>(
+                  std::min(20.0, std::floor((coherence + 1.0) * 10.0)));
+}
+
+std::size_t adjacent_spectral_error_gap_bin(double error_gap) noexcept {
+  if (!std::isfinite(error_gap)) {
+    return 0U;
+  }
+  return 1U + static_cast<std::size_t>(
+                  std::min(40.0, std::floor(
+                                     (std::clamp(error_gap, -1.0, 1.0) +
+                                      1.0) *
+                                     20.0)));
+}
 
 CandidateSpectralPartitionCell candidate_spectral_partition_cell(
     std::size_t policy, std::size_t gate, std::uint8_t member_mask,
@@ -1707,11 +2077,25 @@ bool run_detector_replay(const WaveData& wave,
                          const FrettedPositionPriorPolicy*
                              fretted_position_prior,
                          const DecisiveCalibratedSelectorPolicy*
-                             decisive_calibrated_selector) {
+                             decisive_calibrated_selector,
+                         const CalibratedDpReplacementPolicy*
+                             calibrated_dp_replacement,
+                         const ProductionDpReplacementLanePolicy*
+                             production_dp_replacement_lanes,
+                         bool diagnostic_fine_mask_pruning,
+                         bool diagnostic_fine_beat_pruning,
+                         bool diagnostic_collecting_fine_history_carry,
+                         double diagnostic_correlation_seconds,
+                         bool diagnostic_selection_window_only,
+                         bool diagnostic_correlation_shadow_only,
+                         bool diagnostic_joint_pitch_residual) {
   output = {};
   error = ReplayError::invalid_config;
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
       input_partition == 0U || input_partition > kMaximumInputPartition) {
+    return false;
+  }
+  if (diagnostic_joint_pitch_residual && diagnostic_correlation_seconds != -1.0) {
     return false;
   }
   for (const ReplayLabel& label : labels) {
@@ -1728,6 +2112,26 @@ bool run_detector_replay(const WaveData& wave,
   if (!detector.configure(static_cast<double>(wave.sample_rate), config)) {
     return false;
   }
+  if ((diagnostic_correlation_seconds == -1.0 &&
+       (diagnostic_selection_window_only ||
+        diagnostic_correlation_shadow_only)) ||
+      (diagnostic_correlation_seconds != -1.0 &&
+      !detector.set_correlation_window_for_diagnostics(
+          diagnostic_correlation_seconds, diagnostic_selection_window_only,
+          diagnostic_correlation_shadow_only))) {
+    return false;
+  }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  detector.set_fine_mask_complexity_diagnostics_enabled(
+      spectral_shadow_templates != nullptr || diagnostic_fine_mask_pruning ||
+      diagnostic_fine_beat_pruning);
+  detector.set_fine_mask_pruning_for_diagnostics(
+      diagnostic_fine_mask_pruning);
+  detector.set_fine_beat_pruning_for_diagnostics(
+      diagnostic_fine_beat_pruning);
+  detector.set_collecting_fine_history_carry_for_diagnostics(
+      diagnostic_collecting_fine_history_carry);
+#endif
   if (calibration != nullptr) {
     detector.set_calibration_bank(*calibration);
   }
@@ -1745,12 +2149,24 @@ bool run_detector_replay(const WaveData& wave,
   }
   if (decisive_calibrated_selector != nullptr &&
       !detector.set_decisive_calibrated_selector_for_diagnostics(
-          decisive_calibrated_selector->minimum_margin)) {
+          decisive_calibrated_selector->minimum_margin,
+          decisive_calibrated_selector->allowed_string_mask)) {
+    return false;
+  }
+  if (production_dp_replacement_lanes != nullptr &&
+      !detector.set_calibrated_dp_replacement_lane_mask_for_diagnostics(
+          production_dp_replacement_lanes->allowed_string_mask)) {
     return false;
   }
   auto result_storage = std::make_unique<ReplayResult>();
   ReplayResult& result = *result_storage;
+  std::unique_ptr<JointPitchResidual> joint_pitch_fit;
+  if (diagnostic_joint_pitch_residual) {
+    joint_pitch_fit = std::make_unique<JointPitchResidual>();
+  }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::array<AdjacentEnvelopeCoherenceState, 127U>
+      adjacent_envelope_coherence_states{};
   result.physical_group_expected_observed_mask_frames.assign(1U << 16U, 0U);
   result.physical_group_expected_fine_mask_frames.assign(1U << 16U, 0U);
   result.physical_group_expected_committed_mask_frames.assign(1U << 16U,
@@ -1998,6 +2414,204 @@ bool run_detector_replay(const WaveData& wave,
       }
       const TunerSnapshot& snapshot = decision.tuner_snapshot;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (joint_pitch_fit != nullptr) {
+        std::array<double, 128U> independent_energy;
+        independent_energy.fill(std::numeric_limits<double>::quiet_NaN());
+        std::array<bool, 128U> protected_notes{};
+        std::array<double, 128U> fundamental_overlap{};
+        std::array<bool, 128U> emitted{};
+        for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
+          const auto note = snapshot.voices[voice].detected_midi_note;
+          if (note < emitted.size()) {
+            emitted[note] = true;
+          }
+        }
+        std::array<JointPitchObservation, kMaxVoices> observations{};
+        std::size_t count = 0U;
+        double energy = 0.0;
+        double decay = 0.0;
+        for (std::size_t note = 0U; note < emitted.size(); ++note) {
+          if (!emitted[note] || count >= observations.size()) {
+            continue;
+          }
+          auto& observed = observations[count];
+          observed.note = static_cast<std::uint8_t>(note);
+          if (detector.harmonic_correlations_for_diagnostics(
+                  observed.note, observed.frequency_hz, observed.correlation,
+                  energy, decay)) {
+            ++count;
+          }
+          protected_notes[note] =
+              mask_member_count(detector.fine_frequency_member_mask(
+                  static_cast<std::uint8_t>(note))) >= 2U ||
+              mask_member_count(detector.fine_frequency_pending_member_mask(
+                  static_cast<std::uint8_t>(note))) >= 2U ||
+              mask_member_count(detector.committed_unison_mask(
+                  static_cast<std::uint8_t>(note))) >= 2U;
+        }
+        // At 20 time constants the missing pre-recording history has weight
+        // below 3e-9, so the stationary Gram matrix is a bounded approximation.
+        if (snapshot.state == TunerFrameState::tracking && count >= 2U &&
+            static_cast<double>(sample_index + 1U) >=
+                0.8 * static_cast<double>(wave.sample_rate)) {
+          const auto fit = joint_pitch_fit->evaluate(
+              observations, count, static_cast<double>(wave.sample_rate),
+              decay, energy);
+          if (fit.valid) {
+            ++result.joint_pitch_valid_frames;
+            result.joint_pitch_residual_sum += fit.residual_fraction;
+            for (std::size_t pitch = 0U; pitch < count; ++pitch) {
+              const auto note = observations[pitch].note;
+              independent_energy[note] = fit.independent_energy_fraction[pitch];
+              fundamental_overlap[note] = fit.fundamental_overlap[pitch];
+              // A shared fundamental alone cannot distinguish a real octave
+              // tone from another pitch's harmonic. Keep that ambiguity.
+              protected_notes[note] = protected_notes[note] ||
+                                      fit.shared_fundamental[pitch];
+            }
+          } else {
+            ++result.joint_pitch_invalid_frames;
+          }
+        }
+        for (std::size_t policy = 0U; policy < kJointPitchPolicies.size();
+             ++policy) {
+          const auto& settings = kJointPitchPolicies[policy];
+          std::array<bool, 128U> ambiguous = protected_notes;
+          for (std::size_t note = 0U; note < ambiguous.size(); ++note) {
+            ambiguous[note] = ambiguous[note] ||
+                fundamental_overlap[note] >= settings.maximum_fundamental_overlap;
+          }
+          const CorrelationShadowPolicy veto{
+              settings.minimum_energy_fraction, 0.30, false, true};
+          const auto projected = correlation_shadow_projection(
+              snapshot, independent_energy, static_cast<double>(wave.sample_rate),
+              veto, result.joint_pitch_shadow[policy].changed_voices,
+              &ambiguous);
+          accumulate_counterfactual_metrics(
+              projected, sample_index, labels, result.joint_pitch_shadow[policy]);
+        }
+      }
+      if (diagnostic_correlation_shadow_only) {
+        std::array<std::array<double, 128U>, 2U> ratios{};
+        std::array<bool, 128U> pending_unison{};
+        for (auto& row : ratios) {
+          row.fill(std::numeric_limits<double>::quiet_NaN());
+        }
+        for (std::size_t index = 0U; index < snapshot.voice_count; ++index) {
+          const auto note = snapshot.voices[index].detected_midi_note;
+          if (note >= ratios[0U].size()) {
+            continue;
+          }
+          pending_unison[note] =
+              mask_member_count(detector.fine_frequency_member_mask(note)) >= 2U ||
+              mask_member_count(
+                  detector.fine_frequency_pending_member_mask(note)) >= 2U ||
+              mask_member_count(detector.committed_unison_mask(note)) >= 2U;
+          for (std::size_t kind = 0U; kind < ratios.size(); ++kind) {
+            static_cast<void>(
+                detector.correlation_window_energy_ratio_for_diagnostics(
+                    note, kind != 0U, ratios[kind][note]));
+          }
+        }
+        for (std::size_t policy = 0U;
+             policy < kCorrelationShadowPolicies.size(); ++policy) {
+          const auto& settings = kCorrelationShadowPolicies[policy];
+          const auto projected = correlation_shadow_projection(
+              snapshot, ratios[settings.fundamental_only ? 1U : 0U],
+              static_cast<double>(wave.sample_rate), settings,
+              result.correlation_shadow[policy].changed_voices,
+              &pending_unison);
+          accumulate_counterfactual_metrics(
+              projected, sample_index, labels,
+              result.correlation_shadow[policy]);
+        }
+      }
+      std::array<TunerSnapshot, kAdjacentSpectralDuplicatePolicies.size()>
+          adjacent_spectral_duplicate_projected{};
+      adjacent_spectral_duplicate_projected.fill(snapshot);
+      std::array<double, 128U> production_spectral_single_best_errors{};
+      production_spectral_single_best_errors.fill(
+          std::numeric_limits<double>::infinity());
+      for (std::size_t note = 0U; note < 128U; ++note) {
+        static_cast<void>(detector.spectral_single_source_best_error(
+            static_cast<std::uint8_t>(note),
+            production_spectral_single_best_errors[note]));
+      }
+      for (std::size_t policy = 0U;
+           policy < kAdjacentSpectralDuplicatePolicies.size(); ++policy) {
+        const TunerSnapshot projected = adjacent_spectral_duplicate_projection(
+            snapshot, production_spectral_single_best_errors,
+            kAdjacentSpectralDuplicatePolicies[policy],
+            result.production_adjacent_spectral_duplicate_suppression[policy]
+                .changed_voices);
+        accumulate_counterfactual_metrics(
+            projected, sample_index, labels,
+            result.production_adjacent_spectral_duplicate_suppression[policy]);
+      }
+      std::array<bool, 128U> emitted_notes{};
+      std::array<bool, 128U> expected_notes{};
+      for (std::size_t note = 0U; note < 127U; ++note) {
+        const auto left = detector.candidate_admission_diagnostics(
+            static_cast<std::uint8_t>(note));
+        const auto right = detector.candidate_admission_diagnostics(
+            static_cast<std::uint8_t>(note + 1U));
+        observe_adjacent_envelope_coherence(
+            adjacent_envelope_coherence_states[note],
+            std::log1p(std::max(0.0, left.fundamental_score_ratio)),
+            std::log1p(std::max(0.0, right.fundamental_score_ratio)));
+      }
+      for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
+        if (snapshot.voices[voice].midi_note < emitted_notes.size()) {
+          emitted_notes[snapshot.voices[voice].midi_note] = true;
+        }
+      }
+      for (const ReplayLabel& label : labels) {
+        if (sample_index >= label.start_sample &&
+            sample_index < label.end_sample &&
+            label.midi_note < expected_notes.size()) {
+          expected_notes[label.midi_note] = true;
+        }
+      }
+      for (std::size_t note = 0U; note < 127U; ++note) {
+        if (!emitted_notes[note] || !emitted_notes[note + 1U]) {
+          continue;
+        }
+        const std::size_t expected_count =
+            static_cast<std::size_t>(expected_notes[note]) +
+            static_cast<std::size_t>(expected_notes[note + 1U]);
+        const auto pair_class =
+            expected_count == 2U
+                ? AdjacentEnvelopePairClass::both_expected
+                : expected_count == 1U
+                      ? AdjacentEnvelopePairClass::one_expected
+                      : AdjacentEnvelopePairClass::neither_expected;
+        ++result.adjacent_envelope_coherence_frames
+              [static_cast<std::size_t>(pair_class)]
+              [adjacent_envelope_coherence_bin(
+                  adjacent_envelope_coherence_states[note])];
+      }
+      if (calibrated_dp_replacement != nullptr) {
+        TunerSnapshot projected = calibrated_dp_replacement_projection(
+            snapshot, detector, *calibrated_dp_replacement,
+            result.calibrated_dp_replacement.changed_voices);
+        accumulate_counterfactual_metrics(
+            projected, sample_index, labels,
+            result.calibrated_dp_replacement);
+      }
+      if (spectral_shadow_templates != nullptr) {
+        for (std::size_t policy = 0U;
+             policy < kFineMaskComplexityPenalties.size(); ++policy) {
+          TunerSnapshot projected = fine_mask_complexity_projection(
+              snapshot, detector, kFineMaskComplexityPenalties[policy],
+              config.max_polyphony,
+              result.fine_mask_complexity[policy].changed_voices);
+          accumulate_counterfactual_metrics(
+              projected, sample_index, labels,
+              result.fine_mask_complexity[policy]);
+        }
+      }
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       for (std::size_t note = 0U; note < 128U; ++note) {
         if (spectral_active_references[note] == 0U) {
           continue;
@@ -2208,6 +2822,9 @@ bool run_detector_replay(const WaveData& wave,
           candidate_unison_classifications{};
       std::array<UnisonSpectralClassification, 128U>
           candidate_single_classifications{};
+      std::array<double, 128U> candidate_spectral_single_best_errors{};
+      candidate_spectral_single_best_errors.fill(
+          std::numeric_limits<double>::infinity());
       std::array<bool, 128U> candidate_unison_ready{};
       std::array<UnisonSpectralFingerprint, 128U>
           observed_spectral_lane_fingerprints{};
@@ -2530,6 +3147,18 @@ bool run_detector_replay(const WaveData& wave,
                             .playable_string_mask);
                 candidate_single_classifications[note] =
                     candidate_classifications[note];
+                const auto single_scores = score_single_spectral_sources(
+                    tracker.fingerprint(), *templates,
+                    candidate_spectral_admission[note]
+                        .playable_string_mask);
+                for (std::size_t string = 0U; string < kMaxVoices;
+                     ++string) {
+                  if ((single_scores.valid_mask & (1U << string)) != 0U) {
+                    candidate_spectral_single_best_errors[note] = std::min(
+                        candidate_spectral_single_best_errors[note],
+                        single_scores.error[string]);
+                  }
+                }
                 candidate_unison_classifications[note] =
                     classify_feasible_unison(
                         tracker.fingerprint(), *templates,
@@ -2539,6 +3168,47 @@ bool run_detector_replay(const WaveData& wave,
               }
               active &= active - 1U;
             }
+          }
+
+          for (std::size_t note = 0U; note < 127U; ++note) {
+            if (!emitted_notes[note] || !emitted_notes[note + 1U]) {
+              continue;
+            }
+            const double left_error =
+                candidate_spectral_single_best_errors[note];
+            const double right_error =
+                candidate_spectral_single_best_errors[note + 1U];
+            const std::size_t expected_count =
+                static_cast<std::size_t>(expected_notes[note]) +
+                static_cast<std::size_t>(expected_notes[note + 1U]);
+            const auto pair_class =
+                expected_count == 2U
+                    ? AdjacentEnvelopePairClass::both_expected
+                    : expected_count == 1U
+                          ? AdjacentEnvelopePairClass::one_expected
+                          : AdjacentEnvelopePairClass::neither_expected;
+            double error_gap = std::numeric_limits<double>::quiet_NaN();
+            if (std::isfinite(left_error) && std::isfinite(right_error)) {
+              if (expected_count == 1U) {
+                error_gap = expected_notes[note]
+                                ? right_error - left_error
+                                : left_error - right_error;
+              } else {
+                error_gap = std::abs(left_error - right_error);
+              }
+            }
+            ++result.adjacent_spectral_error_gap_frames
+                  [static_cast<std::size_t>(pair_class)]
+                  [adjacent_spectral_error_gap_bin(error_gap)];
+          }
+          for (std::size_t policy = 0U;
+               policy < kAdjacentSpectralDuplicatePolicies.size(); ++policy) {
+            adjacent_spectral_duplicate_projected[policy] =
+                adjacent_spectral_duplicate_projection(
+                snapshot, candidate_spectral_single_best_errors,
+                kAdjacentSpectralDuplicatePolicies[policy],
+                result.adjacent_spectral_duplicate_suppression[policy]
+                    .changed_voices);
           }
 
           std::array<std::array<double,
@@ -2725,12 +3395,13 @@ bool run_detector_replay(const WaveData& wave,
             if (note >= 128U) {
               continue;
             }
+            const std::uint8_t member = combined_best_member[policy];
             std::size_t population_class = 2U;
             if (spectral_active_references[note] != 0U) {
               population_class =
                   spectral_expected_group_note_only[note] ||
                           (spectral_expected_group_masks[note] &
-                           combined_best_member[policy]) != 0U
+                           member) != 0U
                       ? 0U
                       : 1U;
             }
@@ -2898,6 +3569,7 @@ bool run_detector_replay(const WaveData& wave,
           result.candidate_spectral_shadow_active_peak = std::max(
               result.candidate_spectral_shadow_active_peak,
               static_cast<std::uint64_t>(active_count));
+
         }
       } else if (spectral_shadow_templates != nullptr) {
         for (std::size_t note = 0U; note < 128U; ++note) {
@@ -2911,6 +3583,12 @@ bool run_detector_replay(const WaveData& wave,
         candidate_spectral_admission = {};
         candidate_spectral_decimation_sum = 0.0;
         candidate_spectral_decimation_count = 0U;
+      }
+      for (std::size_t policy = 0U;
+           policy < kAdjacentSpectralDuplicatePolicies.size(); ++policy) {
+        accumulate_counterfactual_metrics(
+            adjacent_spectral_duplicate_projected[policy], sample_index,
+            labels, result.adjacent_spectral_duplicate_suppression[policy]);
       }
 #endif
       if (calibration != nullptr) {
@@ -3519,6 +4197,10 @@ bool run_detector_replay(const WaveData& wave,
           const std::uint8_t tier_mask =
               detector.spectral_tier_completion_proposal_mask(
                   label.midi_note);
+          const std::uint8_t production_cached_mask =
+              detector.group_continuity_cached_mask(label.midi_note);
+          const double production_cache_age_seconds =
+              detector.group_continuity_cache_age_seconds(label.midi_note);
           const std::uint8_t other_owned =
               other_note_lane_mask(snapshot, label.midi_note);
           const bool current_fingerprint_valid =
@@ -3558,9 +4240,10 @@ bool run_detector_replay(const WaveData& wave,
                       config.max_polyphony,
                       admission.direct_fundamental_peak, continuity_quiet,
                       cache_age_seconds, 0.25, 0.20);
-          continuity_union_projection = bounded_projection_union(
-              observed_lane_mask, settled_projection,
-              articulated_projection.projected_mask);
+          continuity_union_projection =
+              bounded_three_four_member_projection_union(
+                  observed_lane_mask, reacquisition.resolved_mask,
+                  settled_projection, articulated_projection.projected_mask);
           if (continuity_union_projection != observed_lane_mask) {
             ++label_result.continuity_union_changed_frames;
           }
@@ -3618,6 +4301,42 @@ bool run_detector_replay(const WaveData& wave,
                                          SelectionDisposition::quiet),
                       cache_age_seconds, maximum_gap,
                       minimum_revalidation);
+              const ArticulatedUnisonReacquisitionResult
+                  three_member_projection =
+                      bounded_three_member_articulated_unison_reacquisition_projection(
+                          observed_lane_mask, reacquisition.resolved_mask,
+                          pending_mask, pending_seconds, pending_beat,
+                          tier_mask, other_owned,
+                          admission.playable_string_mask,
+                          config.max_polyphony,
+                          admission.direct_fundamental_peak,
+                          disposition == static_cast<std::size_t>(
+                                             SelectionDisposition::quiet),
+                          cache_age_seconds, maximum_gap,
+                          minimum_revalidation);
+              const ArticulatedUnisonReacquisitionResult
+                  production_three_member_projection =
+                      bounded_three_member_articulated_unison_reacquisition_projection(
+                          observed_lane_mask, production_cached_mask,
+                          pending_mask, pending_seconds, pending_beat,
+                          tier_mask, other_owned,
+                          admission.playable_string_mask,
+                          config.max_polyphony,
+                          admission.direct_fundamental_peak,
+                          disposition == static_cast<std::size_t>(
+                                             SelectionDisposition::quiet),
+                          production_cache_age_seconds, maximum_gap,
+                          minimum_revalidation);
+              const ArticulatedUnisonReacquisitionResult
+                  solo_three_member_projection =
+                      other_owned == 0U &&
+                              production_cached_mask ==
+                                  admission.playable_string_mask
+                          ? production_three_member_projection
+                          : ArticulatedUnisonReacquisitionResult{
+                                observed_lane_mask,
+                                ArticulatedUnisonReacquisitionDisposition::
+                                    ownership_conflict};
               const std::size_t projection_disposition =
                   static_cast<std::size_t>(projection.disposition);
               if (projection_disposition <
@@ -3652,9 +4371,123 @@ bool run_detector_replay(const WaveData& wave,
                 ++label_result
                       .articulated_unison_reacquisition_projected_frames
                           [policy];
+                if (policy == 0U) {
+                  ++label_result
+                        .articulated_unison_reacquisition_accepted_cache_mask_frames
+                            [reacquisition.resolved_mask];
+                }
               }
               const bool observed_matches =
                   lane_mask_matches_label(observed_lane_mask, label);
+              if (three_member_projection.projected_mask !=
+                  observed_lane_mask) {
+                ++label_result
+                      .three_member_articulated_reacquisition_changed_frames
+                          [policy];
+              }
+              label_result
+                  .three_member_articulated_reacquisition_matched_delta
+                      [policy] +=
+                  static_cast<std::int64_t>(lane_mask_matches_label(
+                      three_member_projection.projected_mask, label)) -
+                  static_cast<std::int64_t>(observed_matches);
+              if (spectral_group_leader_indices[label.midi_note] ==
+                  label_index) {
+                const std::uint8_t expected_group =
+                    spectral_expected_group_masks[label.midi_note];
+                label_result
+                    .three_member_articulated_reacquisition_exact_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(
+                        three_member_projection.projected_mask ==
+                        expected_group) -
+                    static_cast<std::int64_t>(
+                        observed_lane_mask == expected_group);
+                label_result
+                    .three_member_articulated_reacquisition_wrong_string_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            three_member_projection.projected_mask &
+                            static_cast<std::uint8_t>(~expected_group)))) -
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            observed_lane_mask &
+                            static_cast<std::uint8_t>(~expected_group))));
+              }
+              if (production_three_member_projection.projected_mask !=
+                  observed_lane_mask) {
+                ++label_result
+                      .production_three_member_articulated_reacquisition_changed_frames
+                          [policy];
+              }
+              label_result
+                  .production_three_member_articulated_reacquisition_matched_delta
+                      [policy] +=
+                  static_cast<std::int64_t>(lane_mask_matches_label(
+                      production_three_member_projection.projected_mask,
+                      label)) -
+                  static_cast<std::int64_t>(observed_matches);
+              if (spectral_group_leader_indices[label.midi_note] ==
+                  label_index) {
+                const std::uint8_t expected_group =
+                    spectral_expected_group_masks[label.midi_note];
+                label_result
+                    .production_three_member_articulated_reacquisition_exact_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(
+                        production_three_member_projection.projected_mask ==
+                        expected_group) -
+                    static_cast<std::int64_t>(
+                        observed_lane_mask == expected_group);
+                label_result
+                    .production_three_member_articulated_reacquisition_wrong_string_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            production_three_member_projection.projected_mask &
+                            static_cast<std::uint8_t>(~expected_group)))) -
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            observed_lane_mask &
+                            static_cast<std::uint8_t>(~expected_group))));
+              }
+              if (solo_three_member_projection.projected_mask !=
+                  observed_lane_mask) {
+                ++label_result
+                      .solo_three_member_articulated_reacquisition_changed_frames
+                          [policy];
+              }
+              label_result
+                  .solo_three_member_articulated_reacquisition_matched_delta
+                      [policy] +=
+                  static_cast<std::int64_t>(lane_mask_matches_label(
+                      solo_three_member_projection.projected_mask, label)) -
+                  static_cast<std::int64_t>(observed_matches);
+              if (spectral_group_leader_indices[label.midi_note] ==
+                  label_index) {
+                const std::uint8_t expected_group =
+                    spectral_expected_group_masks[label.midi_note];
+                label_result
+                    .solo_three_member_articulated_reacquisition_exact_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(
+                        solo_three_member_projection.projected_mask ==
+                        expected_group) -
+                    static_cast<std::int64_t>(
+                        observed_lane_mask == expected_group);
+                label_result
+                    .solo_three_member_articulated_reacquisition_wrong_string_delta
+                        [policy] +=
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            solo_three_member_projection.projected_mask &
+                            static_cast<std::uint8_t>(~expected_group)))) -
+                    static_cast<std::int64_t>(mask_member_count(
+                        static_cast<std::uint8_t>(
+                            observed_lane_mask &
+                            static_cast<std::uint8_t>(~expected_group))));
+              }
               std::size_t fingerprint_policy =
                   policy * kObservedFingerprintMaximumSquaredDistances.size();
               for (const double maximum_distance :
@@ -4225,6 +5058,217 @@ bool run_detector_replay(const WaveData& wave,
                     static_cast<std::uint8_t>(observed_lane_mask &
                                               static_cast<std::uint8_t>(
                                                   ~expected))));
+          }
+        }
+        const FineFrequencyMaskResidualTable& mask_residuals =
+            detector.fine_frequency_mask_residuals(label.midi_note);
+        if (spectral_group_leader_indices[label.midi_note] == label_index) {
+          const std::uint8_t expected_mask =
+              spectral_expected_group_masks[label.midi_note];
+          const std::uint8_t maximum_members = static_cast<std::uint8_t>(
+              std::min<std::size_t>(4U, config.max_polyphony));
+          const FineMaskModelRanking unpenalized =
+              rank_fine_masks_by_complexity(
+                  mask_residuals.normalized_residual,
+                  mask_residuals.valid, admission.playable_string_mask,
+                  maximum_members, expected_mask, 0.0);
+          if (unpenalized.expected_available) {
+            ++label_result.fine_mask_model_expected_available_frames;
+          }
+          if (unpenalized.expected_rank <
+              label_result.fine_mask_model_expected_rank_frames.size()) {
+            ++label_result.fine_mask_model_expected_rank_frames
+                  [unpenalized.expected_rank];
+          }
+          for (std::size_t policy = 0U;
+               policy < kFineMaskComplexityPenalties.size(); ++policy) {
+            const FineMaskModelRanking ranking =
+                rank_fine_masks_by_complexity(
+                    mask_residuals.normalized_residual,
+                    mask_residuals.valid, admission.playable_string_mask,
+                    maximum_members, expected_mask,
+                    kFineMaskComplexityPenalties[policy]);
+            if (ranking.best_mask == expected_mask) {
+              ++label_result.fine_mask_model_exact_frames[policy];
+            }
+            if (ranking.tied) {
+              ++label_result.fine_mask_model_tied_frames[policy];
+            }
+            const std::size_t winner_members =
+                mask_member_count(ranking.best_mask);
+            if (winner_members <
+                label_result
+                    .fine_mask_model_winner_member_frames[policy]
+                    .size()) {
+              ++label_result
+                    .fine_mask_model_winner_member_frames[policy]
+                    [winner_members];
+            }
+          }
+
+          const std::array<double, kMaxVoices> string_probability =
+              detector.string_fret_posterior_probabilities(label.midi_note);
+          double posterior_total = 0.0;
+          for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+            if ((admission.playable_string_mask & (1U << string)) != 0U) {
+              posterior_total += string_probability[string];
+            }
+          }
+          if (std::isfinite(posterior_total) && posterior_total > 0.0) {
+            ++label_result.fine_mask_posterior_available_frames;
+          }
+          for (std::size_t size_policy = 0U;
+               size_policy < kFineMaskComplexityPenalties.size();
+               ++size_policy) {
+            for (std::size_t posterior_policy = 0U;
+                 posterior_policy < kFineMaskPosteriorWeights.size();
+                 ++posterior_policy) {
+              const FineMaskModelRanking ranking =
+                  rank_fine_masks_with_string_posterior(
+                      mask_residuals.normalized_residual,
+                      mask_residuals.valid, string_probability,
+                      admission.playable_string_mask, maximum_members,
+                      expected_mask,
+                      kFineMaskComplexityPenalties[size_policy],
+                      kFineMaskPosteriorWeights[posterior_policy]);
+              if (ranking.best_mask == expected_mask) {
+                ++label_result.fine_mask_posterior_exact_frames[size_policy]
+                                                             [posterior_policy];
+              }
+              if (ranking.tied) {
+                ++label_result.fine_mask_posterior_tied_frames[size_policy]
+                                                            [posterior_policy];
+              }
+            }
+          }
+          for (std::size_t beat_policy = 0U;
+               beat_policy < kFineMaskBeatCoherenceFloors.size();
+               ++beat_policy) {
+            const FineMaskModelRanking availability =
+                rank_fine_masks_with_beat_graph(
+                    mask_residuals.normalized_residual,
+                    mask_residuals.valid,
+                    mask_residuals.minimum_beat_coherence,
+                    mask_residuals.beat_graph_connected,
+                    admission.playable_string_mask, maximum_members,
+                    expected_mask, 0.0,
+                    kFineMaskBeatCoherenceFloors[beat_policy]);
+            if (availability.expected_available) {
+              ++label_result
+                    .fine_mask_beat_expected_available_frames[beat_policy];
+            }
+            for (std::size_t size_policy = 0U;
+                 size_policy < kFineMaskComplexityPenalties.size();
+                 ++size_policy) {
+              const FineMaskModelRanking ranking =
+                  rank_fine_masks_with_beat_graph(
+                      mask_residuals.normalized_residual,
+                      mask_residuals.valid,
+                      mask_residuals.minimum_beat_coherence,
+                      mask_residuals.beat_graph_connected,
+                      admission.playable_string_mask, maximum_members,
+                      expected_mask,
+                      kFineMaskComplexityPenalties[size_policy],
+                      kFineMaskBeatCoherenceFloors[beat_policy]);
+              if (ranking.best_mask == expected_mask) {
+                ++label_result.fine_mask_beat_exact_frames[size_policy]
+                                                         [beat_policy];
+              }
+              if (ranking.tied) {
+                ++label_result.fine_mask_beat_tied_frames[size_policy]
+                                                        [beat_policy];
+              }
+            }
+          }
+        }
+        if (spectral_group_leader_indices[label.midi_note] == label_index) {
+          ++label_result.fine_mask_pruning_output_mask_frames
+                [detector.fine_mask_pruning_output_mask(label.midi_note)];
+        }
+        const FineMaskComplexityEvidence complexity_evidence{
+            admission.active,
+            disposition ==
+                static_cast<std::size_t>(SelectionDisposition::selected),
+            admission.direct_fundamental_peak,
+            disposition ==
+                static_cast<std::size_t>(SelectionDisposition::quiet),
+            admission.score_threshold_ratio,
+            observed_lane_mask,
+            admission.playable_string_mask,
+            other_note_lane_mask(snapshot, label.midi_note)};
+        const bool fine_mask_group_leader =
+            spectral_group_leader_indices[label.midi_note] == label_index;
+        const std::uint8_t beat_pruned =
+            label.midi_note >= kFineMaskBeatPruningMinimumMidiNote
+                ? bounded_fine_beat_graph_pruning_projection(
+                      complexity_evidence,
+                      mask_residuals.normalized_residual,
+                      mask_residuals.valid,
+                      mask_residuals.minimum_beat_coherence,
+                      mask_residuals.beat_graph_connected, 0.02, 0.20,
+                      config.max_polyphony)
+                : observed_lane_mask;
+        if (fine_mask_group_leader && beat_pruned != observed_lane_mask) {
+          ++label_result.fine_mask_beat_pruning_changed_frames;
+        }
+        if (fine_mask_group_leader &&
+            beat_pruned ==
+                spectral_expected_group_masks[label.midi_note]) {
+          ++label_result.fine_mask_beat_pruning_exact_frames;
+        }
+        label_result.fine_mask_beat_pruning_matched_delta +=
+            static_cast<std::int64_t>(
+                lane_mask_matches_label(beat_pruned, label)) -
+            static_cast<std::int64_t>(
+                lane_mask_matches_label(observed_lane_mask, label));
+        if (fine_mask_group_leader) {
+          const std::uint8_t expected =
+              spectral_expected_group_masks[label.midi_note];
+          label_result.fine_mask_beat_pruning_wrong_string_delta +=
+              static_cast<std::int64_t>(mask_member_count(
+                  static_cast<std::uint8_t>(
+                      beat_pruned & static_cast<std::uint8_t>(~expected)))) -
+              static_cast<std::int64_t>(mask_member_count(
+                  static_cast<std::uint8_t>(
+                      observed_lane_mask &
+                      static_cast<std::uint8_t>(~expected))));
+        }
+        for (std::size_t policy = 0U;
+             policy < kFineMaskComplexityPenalties.size(); ++policy) {
+          const std::uint8_t projected =
+              label.midi_note >= kFineMaskComplexityMinimumMidiNote
+                  ? bounded_fine_mask_complexity_projection(
+                        complexity_evidence,
+                        mask_residuals.normalized_residual,
+                        mask_residuals.valid,
+                        kFineMaskComplexityPenalties[policy],
+                        config.max_polyphony)
+                  : observed_lane_mask;
+          const bool group_leader =
+              spectral_group_leader_indices[label.midi_note] == label_index;
+          if (group_leader && projected != observed_lane_mask) {
+            ++label_result.fine_mask_complexity_changed_frames[policy];
+          }
+          if (group_leader &&
+              projected == spectral_expected_group_masks[label.midi_note]) {
+            ++label_result.fine_mask_complexity_exact_frames[policy];
+          }
+          label_result.fine_mask_complexity_matched_delta[policy] +=
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(projected, label)) -
+              static_cast<std::int64_t>(
+                  lane_mask_matches_label(observed_lane_mask, label));
+          if (group_leader) {
+            const std::uint8_t expected =
+                spectral_expected_group_masks[label.midi_note];
+            label_result.fine_mask_complexity_wrong_string_delta[policy] +=
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        projected & static_cast<std::uint8_t>(~expected)))) -
+                static_cast<std::int64_t>(mask_member_count(
+                    static_cast<std::uint8_t>(
+                        observed_lane_mask &
+                        static_cast<std::uint8_t>(~expected))));
           }
         }
         if (label.string_mask != 0U &&
@@ -6456,6 +7500,40 @@ bool run_detector_replay(const WaveData& wave,
             if (adjacent_below || adjacent_above) {
               const std::size_t direction = adjacent_below ? 0U : 1U;
               const TunerVoice& voice = snapshot.voices[voice_index];
+              const auto expected_admission =
+                  detector.candidate_admission_diagnostics(
+                      static_cast<std::uint8_t>(nearest_expected_note));
+              const auto observed_admission =
+                  detector.candidate_admission_diagnostics(
+                      static_cast<std::uint8_t>(observed_note));
+              const auto expected_selection = detector.selection_disposition(
+                  static_cast<std::uint8_t>(nearest_expected_note));
+              ++result.adjacent_wrong_note_expected_selection_frames
+                    [direction][static_cast<std::size_t>(expected_selection)];
+              ++result.adjacent_wrong_note_expected_score_ratio_frames
+                    [direction][candidate_score_ratio_bin(
+                        expected_admission.score_threshold_ratio)];
+              const double relative_score =
+                  expected_admission.score_threshold_ratio /
+                  std::max(observed_admission.score_threshold_ratio,
+                           1.0e-12);
+              ++result
+                    .adjacent_wrong_note_expected_to_observed_score_ratio_frames
+                        [direction][candidate_score_ratio_bin(relative_score)];
+              ++result.adjacent_wrong_note_expected_evidence_frames
+                    [direction][candidate_admission_evidence_flags(
+                        expected_admission)];
+              std::size_t expected_lane_feasibility = 0U;
+              if (expected_admission.playable_string_mask != 0U) {
+                expected_lane_feasibility =
+                    voice.string_index < kMaxVoices &&
+                            (expected_admission.playable_string_mask &
+                             (1U << voice.string_index)) != 0U
+                        ? 2U
+                        : 1U;
+              }
+              ++result.adjacent_wrong_note_expected_playable_lane_frames
+                    [direction][expected_lane_feasibility];
               const std::size_t members =
                   mask_member_count(voice.pitch_evidence_member_mask);
               const std::uint16_t minimum_rebin_age_ticks =
@@ -6552,6 +7630,17 @@ bool run_detector_replay(const WaveData& wave,
               ++result.adjacent_wrong_note_joint_context_frames[direction]
                     [adjacent_wrong_note_joint_context_index(
                         disposition, expected_presence, lane_disposition)];
+              ++result.adjacent_wrong_note_raw_output_lane_frames[direction]
+                    [adjacent_wrong_note_raw_output_lane_index(
+                        detected_voice.midi_note == nearest_expected_note,
+                        detected_voice.midi_note != voice.midi_note,
+                        lane_disposition)];
+              ++result
+                    .adjacent_wrong_note_expected_candidate_context_frames
+                        [direction]
+                        [adjacent_expected_candidate_context_index(
+                            static_cast<std::size_t>(expected_selection),
+                            expected_presence, lane_disposition)];
             }
           }
 #endif

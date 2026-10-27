@@ -35,6 +35,17 @@ inline constexpr std::array<double, 5U>
     kSpectralTierAddedMemberRatioFloors{0.02, 0.04, 0.06, 0.08, 0.10};
 inline constexpr std::array<double, 8U> kFineUniqueMemberImprovementFloors{
     0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.04, 0.08};
+inline constexpr std::array<double, 13U> kFineMaskComplexityPenalties{
+    0.0,    0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005,
+    0.001,  0.002,   0.005,   0.01,    0.02,   0.04};
+inline constexpr std::array<double, 10U> kFineMaskPosteriorWeights{
+    0.0, 0.00025, 0.0005, 0.001, 0.002,
+    0.005, 0.01,    0.02,   0.04,  0.08};
+inline constexpr std::array<double, 7U> kFineMaskBeatCoherenceFloors{
+    0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30};
+inline constexpr std::uint8_t kFineMaskBeatPruningMinimumMidiNote = 56U;
+inline constexpr std::size_t kFineMaskModelRankBucketCount = 155U;
+inline constexpr std::uint8_t kFineMaskComplexityMinimumMidiNote = 52U;
 inline constexpr std::array<double, 9U> kSpectralTierBeatMaximums{
     0.21, 0.22, 0.23, 0.24, 0.25, 0.275, 0.30, 0.325, 0.35};
 inline constexpr std::size_t kCandidateAdmissionRatioBinCount = 41U;
@@ -323,12 +334,62 @@ enum class AdjacentWrongNoteProjectionDisposition : std::uint8_t {
 
 inline constexpr std::size_t kAdjacentWrongNoteDirectionCount = 2U;
 
+// Replay-only amplitude-envelope relationship between neighboring pitch
+// candidates. A leaked or drifting copy of one source tends to rise and fall
+// with its real pitch, while two independently articulated chord tones need
+// not. Histogram index zero is unready; indices 1..21 cover -1 through +1.
+inline constexpr std::size_t kAdjacentEnvelopeCoherenceBinCount = 22U;
+inline constexpr std::size_t kAdjacentSpectralErrorGapBinCount = 42U;
+
+enum class AdjacentEnvelopePairClass : std::uint8_t {
+  both_expected,
+  one_expected,
+  neither_expected,
+  count,
+};
+
+struct AdjacentEnvelopeCoherenceState final {
+  double mean_left{};
+  double mean_right{};
+  double variance_left{};
+  double variance_right{};
+  double covariance{};
+  std::uint32_t observations{};
+};
+
+void observe_adjacent_envelope_coherence(
+    AdjacentEnvelopeCoherenceState& state, double left, double right,
+    double smoothing = 0.05) noexcept;
+[[nodiscard]] double adjacent_envelope_coherence(
+    const AdjacentEnvelopeCoherenceState& state) noexcept;
+[[nodiscard]] std::size_t adjacent_envelope_coherence_bin(
+    const AdjacentEnvelopeCoherenceState& state) noexcept;
+// Index zero is unavailable. Indices 1..41 cover a signed false-minus-true
+// single-source template error gap from -1 through +1. For two real or two
+// false neighbors the absolute gap is recorded instead.
+[[nodiscard]] std::size_t adjacent_spectral_error_gap_bin(
+    double error_gap) noexcept;
+
 enum class AdjacentWrongNoteLaneDisposition : std::uint8_t {
   unavailable,
   matches,
   mismatches,
   count,
 };
+
+inline constexpr std::size_t kAdjacentWrongNoteRawOutputLaneCount =
+    2U * 2U *
+    static_cast<std::size_t>(AdjacentWrongNoteLaneDisposition::count);
+
+[[nodiscard]] constexpr std::size_t adjacent_wrong_note_raw_output_lane_index(
+    bool raw_matches_nearest, bool output_changed,
+    AdjacentWrongNoteLaneDisposition lane) noexcept {
+  return ((raw_matches_nearest ? 1U : 0U) * 2U +
+          (output_changed ? 1U : 0U)) *
+             static_cast<std::size_t>(
+                 AdjacentWrongNoteLaneDisposition::count) +
+         static_cast<std::size_t>(lane);
+}
 
 enum class AdjacentWrongNoteExpectedPresence : std::uint8_t {
   absent,
@@ -349,6 +410,24 @@ inline constexpr std::size_t kAdjacentWrongNoteJointContextCount =
     AdjacentWrongNoteExpectedPresence presence,
     AdjacentWrongNoteLaneDisposition lane) noexcept {
   return (static_cast<std::size_t>(projection) *
+              static_cast<std::size_t>(
+                  AdjacentWrongNoteExpectedPresence::count) +
+          static_cast<std::size_t>(presence)) *
+             static_cast<std::size_t>(
+                 AdjacentWrongNoteLaneDisposition::count) +
+         static_cast<std::size_t>(lane);
+}
+
+inline constexpr std::size_t kAdjacentExpectedCandidateContextCount =
+    kSelectionDispositionCount *
+    static_cast<std::size_t>(AdjacentWrongNoteExpectedPresence::count) *
+    static_cast<std::size_t>(AdjacentWrongNoteLaneDisposition::count);
+
+[[nodiscard]] constexpr std::size_t
+adjacent_expected_candidate_context_index(
+    std::size_t selection, AdjacentWrongNoteExpectedPresence presence,
+    AdjacentWrongNoteLaneDisposition lane) noexcept {
+  return (selection *
               static_cast<std::size_t>(
                   AdjacentWrongNoteExpectedPresence::count) +
           static_cast<std::size_t>(presence)) *
@@ -390,7 +469,92 @@ struct FrettedPositionPriorPolicy final {
 
 struct DecisiveCalibratedSelectorPolicy final {
   double minimum_margin{};
+  std::uint8_t allowed_string_mask{0xffU};
 };
+
+// Replay-only one-for-one replacement. It cannot add a voice: a DP-evicted
+// direct candidate may only replace the non-coasting single-lane voice that
+// already occupies its strongest calibrated string.
+struct CalibratedDpReplacementPolicy final {
+  double minimum_similarity{};
+  double minimum_calibration_margin{};
+  double minimum_score_margin{};
+  std::uint8_t allowed_string_mask{0xffU};
+};
+
+struct ProductionDpReplacementLanePolicy final {
+  std::uint8_t allowed_string_mask{0xffU};
+};
+
+// Replay-only removal of the worse-fitting member of an adjacent single-voice
+// pair. It is evaluated only when both emitted pitches have ready, bounded
+// candidate spectral fingerprints; it cannot add or retune a voice.
+struct AdjacentSpectralDuplicatePolicy final {
+  double minimum_error_gap{};
+};
+
+inline constexpr std::array<AdjacentSpectralDuplicatePolicy, 5U>
+    kAdjacentSpectralDuplicatePolicies{{
+        {0.30}, {0.40}, {0.45}, {0.50}, {0.60},
+    }};
+
+struct ReplayCounterfactualMetrics final {
+  std::uint32_t matched_label_frames{};
+  std::uint32_t false_positive_voices{};
+  std::uint32_t false_gap_voices{};
+  std::uint32_t false_wrong_note_voices{};
+  std::uint32_t false_wrong_string_voices{};
+  std::uint32_t changed_voices{};
+};
+
+// Causal shadow-only veto: a second, longer correlation window may remove
+// one established single-string proposal. Labels never enter this rule.
+struct CorrelationShadowPolicy final {
+  double maximum_energy_ratio{};
+  double minimum_age_seconds{};
+  bool fundamental_only{};
+  bool protect_pending_unison{};
+};
+
+inline constexpr auto kCorrelationShadowPolicies = [] {
+  std::array<CorrelationShadowPolicy, 72U> policies{};
+  std::size_t index = 0U;
+  for (const bool protect_pending : {false, true}) {
+    for (const bool fundamental : {false, true}) {
+      for (const double age : {0.15, 0.30, 0.60}) {
+        for (const double ratio : {0.12, 0.18, 0.25, 0.35, 0.50, 0.70}) {
+          policies[index++] = {ratio, age, fundamental, protect_pending};
+        }
+      }
+    }
+  }
+  return policies;
+}();
+
+inline constexpr std::array<double, 7U> kJointPitchEnergyFloors{
+    0.0, 0.0001, 0.001, 0.005, 0.01, 0.02, 0.05};
+
+struct JointPitchShadowPolicy final {
+  double minimum_energy_fraction{};
+  double maximum_fundamental_overlap{};
+};
+inline constexpr auto kJointPitchPolicies = [] {
+  std::array<JointPitchShadowPolicy, 35U> policies{};
+  std::size_t index = 0U;
+  for (const double overlap : {1.0, 0.999, 0.99, 0.95, 0.90}) {
+    for (const double energy : kJointPitchEnergyFloors) {
+      policies[index++] = {energy, overlap};
+    }
+  }
+  return policies;
+}();
+
+[[nodiscard]] TunerSnapshot correlation_shadow_projection(
+    const TunerSnapshot& snapshot, const std::array<double, 128U>& ratios,
+    double sample_rate, const CorrelationShadowPolicy& policy,
+    std::uint32_t& changed_voices,
+    const std::array<bool, 128U>* pending_unison = nullptr) noexcept;
+
 
 enum class ReplayError : std::uint8_t {
   none,
@@ -529,6 +693,7 @@ std::uint8_t bounded_fine_residual_expansion(
     const FineResidualExpansionEvidence& evidence,
     double minimum_score_threshold_ratio, double minimum_improvement,
     std::uint8_t maximum_polyphony) noexcept;
+
 
 struct ReplayPairwiseBeatSupport final {
   std::uint8_t pair_count{};
@@ -671,6 +836,46 @@ struct ReplayLabelResult final {
   std::array<std::int64_t,
              kArticulatedUnisonReacquisitionPolicyCount>
       articulated_unison_reacquisition_wrong_string_delta{};
+  // Policy zero only (0.25 s cache, 0.20 s fresh revalidation). This exposes
+  // which causal physical group was restored without consulting label data.
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      articulated_unison_reacquisition_accepted_cache_mask_frames{};
+  std::array<std::uint32_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      three_member_articulated_reacquisition_changed_frames{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      three_member_articulated_reacquisition_exact_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      three_member_articulated_reacquisition_matched_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      three_member_articulated_reacquisition_wrong_string_delta{};
+  std::array<std::uint32_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      production_three_member_articulated_reacquisition_changed_frames{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      production_three_member_articulated_reacquisition_exact_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      production_three_member_articulated_reacquisition_matched_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      production_three_member_articulated_reacquisition_wrong_string_delta{};
+  std::array<std::uint32_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      solo_three_member_articulated_reacquisition_changed_frames{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      solo_three_member_articulated_reacquisition_exact_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      solo_three_member_articulated_reacquisition_matched_delta{};
+  std::array<std::int64_t,
+             kArticulatedUnisonReacquisitionPolicyCount>
+      solo_three_member_articulated_reacquisition_wrong_string_delta{};
   std::array<
       std::array<std::uint32_t,
                  kArticulatedUnisonReacquisitionDispositionCount>,
@@ -971,6 +1176,45 @@ struct ReplayLabelResult final {
       fine_unique_member_pruning_matched_delta{};
   std::array<std::int64_t, kFineUniqueMemberImprovementFloors.size()>
       fine_unique_member_pruning_wrong_string_delta{};
+  std::array<std::uint32_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_complexity_changed_frames{};
+  std::array<std::uint32_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_complexity_exact_frames{};
+  std::array<std::int64_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_complexity_matched_delta{};
+  std::array<std::int64_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_complexity_wrong_string_delta{};
+  std::uint32_t fine_mask_model_expected_available_frames{};
+  std::array<std::uint32_t, kFineMaskModelRankBucketCount>
+      fine_mask_model_expected_rank_frames{};
+  std::array<std::uint32_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_model_exact_frames{};
+  std::array<std::uint32_t, kFineMaskComplexityPenalties.size()>
+      fine_mask_model_tied_frames{};
+  std::array<std::array<std::uint32_t, 5U>,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_model_winner_member_frames{};
+  std::uint32_t fine_mask_posterior_available_frames{};
+  std::array<std::array<std::uint32_t, kFineMaskPosteriorWeights.size()>,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_posterior_exact_frames{};
+  std::array<std::array<std::uint32_t, kFineMaskPosteriorWeights.size()>,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_posterior_tied_frames{};
+  std::array<std::uint32_t, kFineMaskBeatCoherenceFloors.size()>
+      fine_mask_beat_expected_available_frames{};
+  std::array<std::array<std::uint32_t, kFineMaskBeatCoherenceFloors.size()>,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_beat_exact_frames{};
+  std::array<std::array<std::uint32_t, kFineMaskBeatCoherenceFloors.size()>,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_beat_tied_frames{};
+  std::uint32_t fine_mask_beat_pruning_changed_frames{};
+  std::uint32_t fine_mask_beat_pruning_exact_frames{};
+  std::int64_t fine_mask_beat_pruning_matched_delta{};
+  std::int64_t fine_mask_beat_pruning_wrong_string_delta{};
+  std::array<std::uint32_t, 1U << kMaxVoices>
+      fine_mask_pruning_output_mask_frames{};
   std::array<std::uint32_t, 1U << kMaxVoices>
       fine_frequency_pending_member_mask_frames{};
   std::array<std::uint32_t, 1U << kMaxVoices>
@@ -1402,6 +1646,25 @@ struct ReplayResult final {
   std::uint32_t partial_detuning_expected_best_frames{};
   double partial_detuning_margin_sum{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  ReplayCounterfactualMetrics calibrated_dp_replacement{};
+  std::array<ReplayCounterfactualMetrics,
+             kAdjacentSpectralDuplicatePolicies.size()>
+      adjacent_spectral_duplicate_suppression{};
+  std::array<ReplayCounterfactualMetrics,
+             kAdjacentSpectralDuplicatePolicies.size()>
+      production_adjacent_spectral_duplicate_suppression{};
+  std::array<ReplayCounterfactualMetrics,
+             kFineMaskComplexityPenalties.size()>
+      fine_mask_complexity{};
+  std::array<ReplayCounterfactualMetrics, kCorrelationShadowPolicies.size()>
+      correlation_shadow{};
+  std::array<ReplayCounterfactualMetrics, kJointPitchPolicies.size()>
+      joint_pitch_shadow{};
+  std::uint32_t joint_pitch_valid_frames{};
+  std::uint32_t joint_pitch_invalid_frames{};
+  double joint_pitch_residual_sum{};
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   std::array<std::uint64_t, kCandidateSpectralShadowIntervalBucketCount>
       false_wrong_note_interval_frames{};
   std::array<
@@ -1466,6 +1729,55 @@ struct ReplayResult final {
                         kAdjacentWrongNoteJointContextCount>,
              kAdjacentWrongNoteDirectionCount>
       adjacent_wrong_note_joint_context_frames{};
+  // Joint causal attribution for the same adjacent wrong-note frames:
+  // raw detector identity, whether output calibration changed the note, and
+  // whether the emitted lane belongs to the nearest expected pitch.
+  std::array<std::array<std::uint64_t,
+                        kAdjacentWrongNoteRawOutputLaneCount>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_raw_output_lane_frames{};
+  // Candidate-level cause of an adjacent wrong note. Direction zero means
+  // the output was one semitone below the nearest active label; direction one
+  // means it was one semitone above. These replay-only counters answer whether
+  // the intended pitch was quiet/weak/rejected/evicted, how competitive its
+  // raw score was against the emitted pitch, whether it retained direct
+  // evidence, and whether the emitted physical lane could legally host it.
+  std::array<std::array<
+                 std::uint64_t, kSelectionDispositionCount>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_selection_frames{};
+  std::array<std::array<std::uint64_t, kCandidateAdmissionRatioBinCount>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_score_ratio_frames{};
+  std::array<std::array<std::uint64_t, kCandidateAdmissionRatioBinCount>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_to_observed_score_ratio_frames{};
+  std::array<std::array<std::uint64_t, 32U>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_evidence_frames{};
+  // Columns are unavailable, playable only on other lanes, and playable on
+  // the emitted lane. This is deliberately independent of label correctness.
+  std::array<std::array<std::uint64_t, 3U>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_playable_lane_frames{};
+  // Joint selector/presence/lane table. This distinguishes a missing intended
+  // pitch from a duplicate neighboring candidate emitted beside an already
+  // correct pitch without using either marginal as a proxy for the other.
+  std::array<std::array<std::uint64_t,
+                        kAdjacentExpectedCandidateContextCount>,
+             kAdjacentWrongNoteDirectionCount>
+      adjacent_wrong_note_expected_candidate_context_frames{};
+  // Rows distinguish real adjacent chord tones, one expected tone plus one
+  // false neighbor, and two unlabeled outputs. This tests separability before
+  // any suppression policy is permitted to affect a replay snapshot.
+  std::array<
+      std::array<std::uint64_t, kAdjacentEnvelopeCoherenceBinCount>,
+      static_cast<std::size_t>(AdjacentEnvelopePairClass::count)>
+      adjacent_envelope_coherence_frames{};
+  std::array<
+      std::array<std::uint64_t, kAdjacentSpectralErrorGapBinCount>,
+      static_cast<std::size_t>(AdjacentEnvelopePairClass::count)>
+      adjacent_spectral_error_gap_frames{};
   // Offline replacement-cents shadow. Rows are minimum-partial count first,
   // then maximum-deviation threshold. Columns use the standard
   // current/projected expected outcome encoding.
@@ -1780,7 +2092,19 @@ bool run_detector_replay(const WaveData& wave,
                          const FrettedPositionPriorPolicy*
                              fretted_position_prior = nullptr,
                          const DecisiveCalibratedSelectorPolicy*
-                             decisive_calibrated_selector = nullptr);
+                             decisive_calibrated_selector = nullptr,
+                         const CalibratedDpReplacementPolicy*
+                             calibrated_dp_replacement = nullptr,
+                         const ProductionDpReplacementLanePolicy*
+                             production_dp_replacement_lanes = nullptr,
+                         bool diagnostic_fine_mask_pruning = false,
+                         bool diagnostic_fine_beat_pruning = false,
+                         bool diagnostic_collecting_fine_history_carry =
+                             false,
+                         double diagnostic_correlation_seconds = -1.0,
+                         bool diagnostic_selection_window_only = false,
+                         bool diagnostic_correlation_shadow_only = false,
+                         bool diagnostic_joint_pitch_residual = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

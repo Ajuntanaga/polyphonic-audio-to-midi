@@ -1,6 +1,128 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-09-24
+Updated: 2026-10-27
+
+## Active tuner-stability checkpoint — 2026-10-27
+
+- Continue in the repository root on `work/tuner-stability-20261027`.
+  This is a development checkpoint, not a validated release. Preserve any
+  subsequent native/offline changes. Use `build/modal/current-status.json` and the
+  newest completed Modal reports for current metrics. Sections below are
+  historical checkpoints.
+- Accepted lowest-string MIDI output correction retains selector history and
+  requires two consecutive observations. True silence clears pending
+  acquisition while preserving an emitted pitch for its matching note-off.
+- `build/modal/dp-output-silence-fix-protected.json` preserves all ten other
+  datasets and improves ordinary-chord matched frames from 145,382 to 145,385,
+  with three fewer wrong-note and false-positive frames. Physical-long stays
+  at 41,452/68,441; exact triple at 25,219/39,378; wrong strings at 2,709.
+- Prior native 431/431 and focused release 5/5 checks passed. The previous
+  claim that all three realtime checks passed was incorrect: the instrumented
+  native suite compiled out the deadline assertion and reported a dummy pass.
+  The dedicated Release test now fails at 96 kHz/32 samples: wall p99
+  1,948,855 ns versus a 166,666 ns target; maximum thread CPU time 5,119,790 ns
+  versus a 333,333 ns deadline. Its separate zero-allocation/thread test passes.
+  The timing test is now registered only in configurations that execute its
+  assertions. See `build/test-results/github-update-realtime.log`.
+  The rebuilt native suite passes all 436 registered tests after that repair.
+  Source contract, production build and Steinberg validator pass; these do
+  not establish callback deadline compliance. No new bundle may be installed
+  until the real timing gate passes. Ordinary/physical-long fingerprints agree
+  at 32, 512, and 1024 samples.
+- Installed module SHA-256:
+  `0bb5060b62f7d165b9d872321da1f2cd0d2f0b63cf7d685a206dcedace7e1aef`.
+  Prior bundle is recoverable at
+  `/home/ajuntanaga/.vst3/.m3-backup-before-dp-output-silence-20261027`.
+  REAPER was running and was left untouched: its reload/live behavior remains
+  unverified. No new bundle was installed during this publication pass.
+- Both completed correlation-window experiments were rejected. The full-window
+  grid has 66 results in `build/modal/correlation-window-grid.json`; the
+  selector-only grid has 55 in `build/modal/selector-window-grid.json`.
+  All 40 ms controls match the accepted baseline. Selector-only 50 ms gained
+  4,961 ordinary-chord matches and removed 32,540 false outputs, but lost
+  2,783 physical-long matches and 348 isolated-high matches. None was installed.
+- Rejected shadow experiment: `build/modal/correlation-shadow-grid.json`, Modal
+  app `ap-mU8JEUSva0F9iJocMxo2Dm`, completed. Thirty-three replays cover all eleven protected
+  datasets at 40/80/120 ms. The secondary window only scores 36 hypothetical
+  removal rules; actual selection, tuner and MIDI output must stay identical.
+  Rules protect attacks, coasting/release, corrected pitches and shared
+  unison groups, and use causal note age rather than label age.
+  Two scale/guard tests and all 18 offline replay tests passed. The focused
+  test also proves unchanged output at 32/512/1024 samples. Source contract,
+  Python syntax and whitespace checks pass. Inspect the report before launching
+  another run. `build/modal/correlation-shadow-analysis.json` records the
+  rejection: none of the 72 changed-window policies preserves all datasets.
+  The closest rule removes 665 false output frames but loses 314 correct
+  constructed-interval frames. Its ordinary-chord reduction is 82 wrong-note
+  frames with no correct-frame loss. All 33 actual fingerprints are unchanged.
+- Rejected narrow follow-up: `build/modal/correlation-pending-guard.json`, app
+  `ap-2iiPQG8Npo8PKffaMLyVet`, completed. It runs ordinary and constructed at 80 ms, adding
+  a conservative exemption when existing fine-frequency, pending-member or
+  committed evidence indicates multiple strings. The original 36 policies
+  remain first in the output; the additional 36 enable this exemption.
+  Guard/scale tests (2) and the block-partition test (1) pass. This still only
+  scores hypothetical removals. No guarded rule preserved both datasets. The
+  least damaging still loses the same 314 constructed matches; unresolved
+  fine-group protection did not fix the failure. Raw output fingerprints and
+  the first 36 unguarded policies exactly match the previous experiment.
+  Details: `build/modal/correlation-pending-guard-analysis.json`.
+- Keep the longer-window rejection rules offline and disconnected. Do not
+  repeat their threshold grids or install an experimental window.
+- Completed experiment: `build/modal/joint-pitch-shadow.json`, Modal app
+  `ap-Tt09dpdjyXFWIH9DXDj75w`; eleven protected recordings, baseline settings.
+  New offline `joint_pitch_residual.*` fits real sine/cosine coefficients from
+  the existing complex harmonic correlations using their exact exponential
+  window Gram matrix. A one-pitch deletion measures independent support;
+  duplicate frequencies share ownership. Seven veto thresholds are evaluated
+  without changing actual output. Shared fundamentals, unison evidence,
+  attacks, coasting, corrected identities and release remain protected.
+  Three causal/scale/partition tests and all 18 existing replay tests pass;
+  source contract and diff checks pass. One read-only review found no concrete
+  defect. All eleven actual output fingerprints and disabled-rule controls
+  match the accepted baseline. No numerical fit failed. The weakest changing
+  rule removes only two false frames without losing correct frames. A stronger
+  rule removes 3,170 false frames but loses 96 correct ordinary-chord frames;
+  it is rejected. Keep this model offline. Results are summarized in
+  `build/modal/joint-pitch-shadow-analysis.json`.
+- Completed narrow follow-up: `build/modal/joint-pitch-overlap.json`, Modal app
+  `ap-8IGggE1YyBcmqIxYn8ropq`; ordinary and constructed recordings first.
+  Protect fundamentals that nearly overlap another pitch's harmonic using
+  the measured correlation window's normalized overlap. This tests whether
+  ambiguous shared energy explains the ordinary-chord regression. Thirty-five
+  shadow rules include the original seven as controls. Three focused tests
+  pass, including near-overlap ambiguity and block-partition invariance.
+  The nine remaining sets completed in
+  `build/modal/joint-pitch-overlap-protected.json`, app
+  `ap-YkWr8wgzf53Zd3Ky1crAvL`. Energy floor 0.001 with overlap protection at
+  0.99 removes 3,137 hypothetical false-output frames with no correct-match
+  loss or increase in any scored error category across all eleven sets:
+  ordinary 10, constructed 1,526, isolated string 5 948, upper unison 653.
+  This is a modest 0.28% reduction in total extra outputs. Long-unison matched
+  counts do not improve, so this does not meet the main stability milestone.
+  Actual output fingerprints and the original seven control rules are
+  unchanged. All fits are numerically valid. Aggregate results:
+  `build/modal/joint-pitch-overlap-analysis.json`.
+  Ordinary/physical-long results, including all 35 hypothetical rules, are
+  identical at 32/512/1024 samples; see
+  `build/modal/joint-pitch-overlap-invariance-analysis.json`. All Modal jobs
+  are complete. This joint-fit experiment remains offline and disconnected.
+- Next priority is the dedicated production timing failure. Statistical CPU
+  samples in `build/test-results/github-callback-profile.json` identify
+  spectral corridor observation and repeated single/group classification as
+  substantial costs. Group classification runs once per decision after
+  readiness. Simply skipping it while ownership is infeasible changes its
+  persistent cache and can affect later restoration; do not assume that is
+  behavior-preserving. A bounded implementation needs the protected replay
+  matrix and actual production deadline test before acceptance. After that,
+  evaluate joint evidence for better selection, not just removing extras.
+- Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
+  motivates evaluating pitch sets jointly. This experiment uses M3's existing
+  complex correlations and a real-valued weighted least-squares model.
+- Keep the 3-second unison gate and measured
+  trim -9/Sensitivity 60/Response 75/Max Polyphony 5/Max Fret 24 baseline.
+  The 98.40% milestone ratio is not product completion or tracking precision.
+  Matched-label coverage and extra false notes are different measures. The
+  ntfy automation is active every 90 seconds and explains these separately.
 
 ## Current integrated product checkpoint
 

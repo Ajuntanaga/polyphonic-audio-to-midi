@@ -18,6 +18,32 @@ struct FactorySpectralRow final {
 
 }  // namespace
 
+bool factory_unison_spectral_templates_available(
+    UnisonSpectralPhase phase, std::uint8_t midi_note) noexcept {
+  const std::size_t phase_index = static_cast<std::size_t>(phase);
+  if (phase_index > static_cast<std::size_t>(UnisonSpectralPhase::settled) ||
+      midi_note > 127U) {
+    return false;
+  }
+  bool available = false;
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    const std::size_t key = (phase_index * 128U + midi_note) * kMaxVoices +
+                            string;
+    const std::int16_t row_index = kFactorySpectralIndex[key];
+    if (row_index < 0) {
+      continue;
+    }
+    const FactorySpectralRow& row =
+        kFactorySpectralRows[static_cast<std::size_t>(row_index)];
+    if (row.phase != phase_index || row.note != midi_note ||
+        row.string != string) {
+      return false;
+    }
+    available = true;
+  }
+  return available;
+}
+
 bool factory_unison_spectral_templates(
     UnisonSpectralPhase phase, std::uint8_t midi_note,
     UnisonSpectralTemplateSet& output) noexcept {
@@ -50,7 +76,8 @@ bool factory_unison_spectral_templates(
     output.valid_mask = static_cast<std::uint8_t>(
         output.valid_mask | (std::uint8_t{1U} << string));
   }
-  return output.valid_mask != 0U;
+  return output.valid_mask != 0U &&
+         prepare_unison_spectral_templates(output);
 }
 
 }  // namespace m3

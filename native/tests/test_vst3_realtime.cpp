@@ -132,15 +132,12 @@ M3_TEST(vst3_realtime_calls_allocate_zero_and_create_no_threads_100000) {
   close_instance(instance);
 }
 
+// Register the deadline test only when its assertions actually execute.
+// Instrumented/debug native-suite success must never look like a timing pass.
+// The dedicated Release m3_vst3_realtime_tests target owns this check.
+#if defined(NDEBUG) && !defined(M3_TSAN_ENABLED) && \
+    !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
 M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
-#if !defined(NDEBUG) || defined(M3_TSAN_ENABLED) || \
-    defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  // Wall-clock budgets are meaningful only for the optimized production
-  // configuration without sanitizer or replay-only instrumentation. The
-  // dedicated m3_vst3_realtime_tests target runs this exact path against a
-  // production-shaped detector.
-  M3_EXPECT_TRUE(true);
-#else
   constexpr std::uint32_t kFrames = 32U;
   constexpr double kSampleRate = 96000.0;
   // Warm for two seconds so CPU-frequency governors reach their sustained
@@ -280,5 +277,5 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations_before);
   M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations_before);
   close_instance(instance);
-#endif
 }
+#endif

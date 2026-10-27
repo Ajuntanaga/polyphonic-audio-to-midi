@@ -4,6 +4,7 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 #include "m3/constants.hpp"
 #include "m3/harmonic_evidence.hpp"
@@ -68,6 +69,15 @@ enum class FineFrequencyUnresolvedReason : std::uint8_t {
   zero_solution,
   count,
 };
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+struct FineFrequencyMaskResidualTable final {
+  std::array<double, 1U << kMaxVoices> normalized_residual{};
+  std::array<double, 1U << kMaxVoices> minimum_beat_coherence{};
+  std::array<bool, 1U << kMaxVoices> valid{};
+  std::array<bool, 1U << kMaxVoices> beat_graph_connected{};
+};
+#endif
 
 // Explains why an already-committed physical unison did or did not receive
 // the selector's reserved slot. This is replay-only evidence; production
@@ -220,6 +230,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t fine_frequency_member_mask(
       std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::uint8_t fine_mask_pruning_output_mask(
+      std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t fine_frequency_pending_member_mask(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double fine_frequency_pending_evidence_seconds(
@@ -240,6 +252,21 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] std::array<double, kMaxVoices>
   fine_frequency_unique_member_improvement(
       std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] const FineFrequencyMaskResidualTable&
+  fine_frequency_mask_residuals(std::uint8_t midi_note) const noexcept;
+  void set_fine_mask_complexity_diagnostics_enabled(bool enabled) noexcept {
+    fine_mask_complexity_diagnostics_enabled_ = enabled;
+  }
+  void set_fine_mask_pruning_for_diagnostics(bool enabled) noexcept {
+    diagnostic_fine_mask_pruning_enabled_ = enabled;
+  }
+  void set_fine_beat_pruning_for_diagnostics(bool enabled) noexcept {
+    diagnostic_fine_beat_pruning_enabled_ = enabled;
+  }
+  void set_collecting_fine_history_carry_for_diagnostics(
+      bool enabled) noexcept {
+    diagnostic_collecting_fine_history_carry_enabled_ = enabled;
+  }
   [[nodiscard]] double fine_frequency_minimum_pairwise_beat_coherence(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double fine_frequency_pairwise_beat_coherence(
@@ -253,6 +280,9 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] double string_fret_posterior_best_probability(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double string_fret_posterior_margin(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] std::array<double, kMaxVoices>
+  string_fret_posterior_probabilities(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t string_fret_posterior_playable_mask(
       std::uint8_t midi_note) const noexcept;
@@ -275,16 +305,36 @@ class PolyphonicPitchDetector final {
   bool set_candidate_admission_rescue_for_diagnostics(
       double score_threshold_ratio,
       double fundamental_score_ratio) noexcept;
+  // Replay experiment only: vary pitch resolution while keeping the input
+  // energy meter and silence threshold on their production time constant.
+  bool set_correlation_window_for_diagnostics(
+      double seconds, bool selection_only = false,
+      bool shadow_only = false) noexcept;
+  [[nodiscard]] bool correlation_window_energy_ratio_for_diagnostics(
+      std::uint8_t midi_note, bool fundamental_only,
+      double& ratio) const noexcept;
+  [[nodiscard]] bool harmonic_correlations_for_diagnostics(
+      std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+      std::array<std::complex<double>, 6U>& correlations,
+      double& signal_energy, double& decay) const noexcept;
   bool set_fretted_position_prior_for_diagnostics(
       double fixed_penalty, double per_fret_penalty) noexcept;
   bool set_decisive_calibrated_selector_for_diagnostics(
-      double minimum_margin) noexcept;
+      double minimum_margin, std::uint8_t allowed_string_mask) noexcept;
+  bool set_calibrated_dp_replacement_lane_mask_for_diagnostics(
+      std::uint8_t allowed_string_mask) noexcept;
   bool set_calibrated_selector_rescue_for_diagnostics(
       double minimum_similarity, double minimum_margin) noexcept;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
+  [[nodiscard]] std::uint8_t group_continuity_cached_mask(
+      std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] double group_continuity_cache_age_seconds(
+      std::uint8_t midi_note) const noexcept;
   [[nodiscard]] bool observed_spectral_lane_fingerprint(
       std::uint8_t midi_note,
       UnisonSpectralFingerprint& fingerprint) const noexcept;
+  [[nodiscard]] bool spectral_single_source_best_error(
+      std::uint8_t midi_note, double& error) const noexcept;
   [[nodiscard]] std::uint8_t spectral_tier_completion_proposal_mask(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] ObservedUnisonReacquisitionDisposition
@@ -337,6 +387,10 @@ class PolyphonicPitchDetector final {
     double sine_step{};
     double fast_real{};
     double fast_imaginary{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    double diagnostic_selection_real{};
+    double diagnostic_selection_imaginary{};
+#endif
     bool enabled{};
   };
 
@@ -357,11 +411,20 @@ class PolyphonicPitchDetector final {
     std::uint8_t emitted_note{kTunerNoSignalNote};
     std::uint8_t calibrated_output_target{kTunerNoSignalNote};
     std::uint8_t calibrated_output_ticks{};
+    // A bounded DP correction may change only the note rendered to MIDI for
+    // an already-active single physical lane.  Keep it separate from
+    // emitted_note so detector continuity, calibration, and string ownership
+    // continue to follow the causal pitch candidate that actually survived
+    // selection.
+    std::uint8_t dp_output_projection_note{kTunerNoSignalNote};
+    std::uint8_t dp_output_projection_target{kTunerNoSignalNote};
+    std::uint8_t dp_output_projection_ticks{};
     std::int16_t retained_cents_q8{};
     std::uint16_t retained_confidence_q15{};
     bool retained_cents_valid{};
     bool polyphonic_context{};
     bool calibrated_lane_committed{};
+    bool spectral_duplicate_output_suppressed{};
     std::uint8_t spectral_lane_mask{};
     // Output-only restoration of a recently established physical group.
     // This mask never participates in pitch selection or string ownership.
@@ -371,10 +434,18 @@ class PolyphonicPitchDetector final {
     std::uint8_t continuity_cached_note{kTunerNoSignalNote};
     std::uint8_t latest_unison_proposal_mask{};
     bool latest_unison_proposal_temporal{};
+    // A causal fine-frequency fit may remove unsupported lanes from an
+    // already-selected 3/4-string pitch group. It never creates a pitch or
+    // adds ownership.
+    std::uint8_t fine_beat_pruning_mask{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t diagnostic_unison_proposal_mask{};
     bool diagnostic_unison_temporal{};
     std::uint8_t group_continuity_diagnostic_flags{};
+    // Output-only production-shaped candidate. It can only remove lanes from
+    // the currently emitted same-pitch group and never mutates ownership.
+    std::uint8_t diagnostic_fine_mask_pruning_mask{};
+    std::uint8_t diagnostic_fine_beat_pruning_mask{};
 #endif
   };
 
@@ -429,12 +500,15 @@ class PolyphonicPitchDetector final {
     std::uint16_t pending_count{};
     std::uint8_t member_mask{};
     std::uint8_t pending_member_mask{};
+    std::uint8_t beat_pruning_source_mask{};
+    std::uint8_t beat_pruned_member_mask{};
     bool robust_pairwise_beat_connected{};
     bool pending_robust_pairwise_beat_connected{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t fit_member_mask{};
     double residual_improvement{};
     std::array<double, kMaxVoices> unique_member_improvement{};
+    FineFrequencyMaskResidualTable mask_residuals{};
     bool residual_rejected{};
     std::array<double, 1U << kMaxVoices>
         pairwise_beat_coherence_by_mask{};
@@ -477,16 +551,28 @@ class PolyphonicPitchDetector final {
 
   struct SpectralLaneState final {
     UnisonSpectralCorridorTracker tracker{};
+    UnisonSpectralTemplateSet templates{};
     std::uint8_t candidate_index{0xffU};
     std::uint8_t midi_note{kTunerNoSignalNote};
+    std::uint8_t single_source_error_mask{};
+    UnisonSpectralPhase template_phase{UnisonSpectralPhase::unready};
+    double single_source_best_error{
+        std::numeric_limits<double>::infinity()};
+    std::uint32_t single_source_error_tick{};
     bool tracking{};
+    bool templates_valid{};
+    bool single_source_error_valid{};
   };
 
   struct GroupContinuityTrackerState final {
     UnisonSpectralCorridorTracker tracker{};
+    UnisonSpectralClassification last_classification{};
+    UnisonSpectralTemplateSet templates{};
     std::uint8_t candidate_index{0xffU};
     std::uint8_t midi_note{kTunerNoSignalNote};
+    UnisonSpectralPhase template_phase{UnisonSpectralPhase::unready};
     bool tracking{};
+    bool templates_valid{};
   };
 
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
@@ -532,15 +618,18 @@ class PolyphonicPitchDetector final {
       const std::array<bool, kMaxCandidates>& active_candidates,
       std::array<bool, kMaxCandidates>& selected,
       std::size_t count) noexcept;
-  void append_transition(DetectorDecision& decision, TransitionKind kind,
-                         std::uint8_t note, std::uint8_t velocity,
-                         std::uint8_t voice_id =
-                             kUnassignedVoiceId) noexcept;
+  [[nodiscard]] bool append_transition(
+      DetectorDecision& decision, TransitionKind kind, std::uint8_t note,
+      std::uint8_t velocity,
+      std::uint8_t voice_id = kUnassignedVoiceId) noexcept;
   [[nodiscard]] bool append_candidate_note_on(
       DetectorDecision& decision, std::size_t candidate,
       std::uint8_t velocity) noexcept;
   [[nodiscard]] bool append_candidate_note_off(
       DetectorDecision& decision, std::size_t candidate) noexcept;
+  [[nodiscard]] bool append_atomic_candidate_handoff(
+      DetectorDecision& decision, std::size_t incumbent,
+      std::size_t target, std::uint8_t velocity) noexcept;
   void update_calibrated_output_notes(
       DetectorDecision& decision,
       const std::array<bool, kMaxCandidates>& selected,
@@ -548,7 +637,12 @@ class PolyphonicPitchDetector final {
   void change_candidate_output_note(DetectorDecision& decision,
                                     std::size_t candidate,
                                     std::uint8_t output_note) noexcept;
+  [[nodiscard]] bool change_candidate_dp_output_projection(
+      DetectorDecision& decision, std::size_t candidate,
+      std::uint8_t output_note) noexcept;
   [[nodiscard]] std::uint8_t candidate_output_note(
+      std::size_t candidate) const noexcept;
+  [[nodiscard]] std::uint8_t candidate_midi_output_note(
       std::size_t candidate) const noexcept;
   [[nodiscard]] std::int16_t candidate_output_cents_q8(
       std::size_t candidate, std::int16_t detected_cents_q8) const noexcept;
@@ -593,6 +687,17 @@ class PolyphonicPitchDetector final {
       std::size_t count) noexcept;
   void assign_m3_strings(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
+  void apply_calibrated_dp_replacements(
+      std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet, std::size_t count) noexcept;
+  void update_calibrated_dp_output_projections(
+      DetectorDecision& decision,
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet, std::size_t count) noexcept;
   void update_harmonic_profile_memory(
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void update_beat_evidence(
@@ -614,11 +719,41 @@ class PolyphonicPitchDetector final {
       std::uint8_t current_member_mask,
       std::uint8_t proposed_member_mask,
       std::uint8_t playable_member_mask) noexcept;
+  [[nodiscard]] static std::uint8_t bounded_fine_mask_complexity_output(
+      bool active, bool selected, bool direct_fundamental, bool quiet,
+      double score_threshold_ratio, std::uint8_t current_output_mask,
+      std::uint8_t playable_mask, std::uint8_t other_output_mask,
+      std::uint8_t maximum_polyphony,
+      const std::array<std::uint8_t, 11U>& masks,
+      const std::array<double, 11U>& normalized_residual,
+      std::size_t count) noexcept;
+  [[nodiscard]] static std::uint8_t bounded_fine_beat_pruning_output(
+      std::uint8_t midi_note, bool active, bool selected,
+      bool direct_fundamental, bool quiet, double score_threshold_ratio,
+      std::uint8_t current_output_mask, std::uint8_t playable_mask,
+      std::uint8_t other_output_mask, std::uint8_t maximum_polyphony,
+      const std::array<std::uint8_t, 10U>& masks,
+      const std::array<double, 10U>& normalized_residual,
+      const std::array<double, 10U>& minimum_beat_coherence,
+      const std::array<bool, 10U>& beat_graph_connected,
+      std::size_t count) noexcept;
   void update_fine_frequency_evidence(
       const std::array<bool, kMaxCandidates>& selected,
       const std::array<double, kMaxCandidates>& scores,
       const std::array<double, kMaxCandidates>& fundamentals,
       double threshold, bool quiet) noexcept;
+  void update_fine_beat_pruning_output_projection(
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  void update_fine_mask_pruning_output_projection(
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet) noexcept;
+#endif
   void invalidate_fine_frequency_uniform_gram_cache() noexcept;
   [[nodiscard]] SpectralHeadEvidence string_fret_spectral_head_evidence(
       std::size_t candidate) const noexcept;
@@ -644,6 +779,7 @@ class PolyphonicPitchDetector final {
       const std::array<bool, kMaxCandidates>& selected) noexcept;
   void update_spectral_lane_states(
       const std::array<bool, kMaxCandidates>& selected, bool quiet) noexcept;
+  void update_adjacent_spectral_duplicate_suppression() noexcept;
   [[nodiscard]] SpectralLaneState* find_spectral_lane_state(
       std::size_t candidate) noexcept;
   [[nodiscard]] const SpectralLaneState* find_spectral_lane_state(
@@ -651,14 +787,23 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] SpectralLaneState* acquire_spectral_lane_state(
       std::size_t candidate) noexcept;
   [[nodiscard]] std::uint8_t spectral_lane_assignment(
-      std::size_t candidate) const noexcept;
+      std::size_t candidate, bool isolated_selected_voice) noexcept;
   [[nodiscard]] static std::uint8_t bounded_spectral_lane_assignment(
       bool active, std::uint8_t current_assignment_mask,
       std::uint8_t playable_mask, std::uint8_t other_owned_mask,
       bool polyphonic_context,
       bool fine_frequency_valid, bool fine_frequency_multi_source,
       std::uint8_t fine_frequency_member_mask,
+      UnisonSpectralPhase phase,
+      bool relaxed_onset_allowed,
       const UnisonSpectralClassification& classification) noexcept;
+  [[nodiscard]] static std::uint8_t
+  bounded_adjacent_spectral_duplicate_suppression(
+      bool left_active, bool right_active, std::uint8_t left_note,
+      std::uint8_t right_note, std::uint8_t left_output_mask,
+      std::uint8_t right_output_mask, bool left_spectral_ready,
+      bool right_spectral_ready, double left_error,
+      double right_error) noexcept;
   [[nodiscard]] static std::uint8_t projected_output_string_mask(
       std::uint8_t assigned_string_mask, std::uint8_t assigned_string,
       std::uint8_t spectral_lane_mask,
@@ -673,6 +818,38 @@ class PolyphonicPitchDetector final {
       std::uint8_t other_owned_mask, std::uint8_t playable_mask,
       std::uint8_t maximum_polyphony, bool active_candidate,
       bool selected_or_coasting, bool direct_fundamental, bool quiet,
+      double cache_age_seconds) noexcept;
+  [[nodiscard]] static std::uint8_t
+  bounded_three_member_articulated_group_continuity_projection(
+      std::uint8_t current_assignment_mask,
+      std::uint8_t cached_group_mask,
+      std::uint8_t pending_fine_mask,
+      double pending_evidence_seconds,
+      double pending_beat_coherence,
+      std::uint8_t spectral_tier_mask,
+      std::uint8_t other_owned_mask,
+      std::uint8_t playable_mask,
+      std::uint8_t maximum_polyphony,
+      double score_threshold_ratio,
+      bool active_candidate,
+      bool direct_fundamental,
+      bool quiet,
+      double cache_age_seconds) noexcept;
+  [[nodiscard]] static std::uint8_t
+  bounded_solo_three_member_articulated_group_continuity_projection(
+      std::uint8_t current_assignment_mask,
+      std::uint8_t cached_group_mask,
+      std::uint8_t pending_fine_mask,
+      double pending_evidence_seconds,
+      double pending_beat_coherence,
+      std::uint8_t spectral_tier_mask,
+      std::uint8_t other_owned_mask,
+      std::uint8_t playable_mask,
+      std::uint8_t maximum_polyphony,
+      double score_threshold_ratio,
+      bool active_candidate,
+      bool direct_fundamental,
+      bool quiet,
       double cache_age_seconds) noexcept;
   void update_group_continuity_trackers(
       const std::array<bool, kMaxCandidates>& selected,
@@ -701,6 +878,10 @@ class PolyphonicPitchDetector final {
       double lower_guard_score, double upper_guard_score, bool quiet) noexcept;
   [[nodiscard]] double calibration_similarity(
       std::size_t candidate, std::size_t string) const noexcept;
+  [[nodiscard]] double calibration_similarity_from_energy_profile(
+      std::size_t candidate, std::size_t string,
+      const std::array<double, kCalibrationHarmonicCount>& current,
+      double total) const noexcept;
   [[nodiscard]] double settled_calibration_similarity(
       std::size_t candidate, std::size_t string) const noexcept;
   [[nodiscard]] double corrected_harmonic_energy(
@@ -715,6 +896,8 @@ class PolyphonicPitchDetector final {
   }
 
   std::array<Cell, kCellCount> cells_{};
+  std::array<std::uint16_t, kCellCount> enabled_cell_indices_{};
+  std::uint16_t enabled_cell_count_{};
   // Boundary-only analysis cells make the configured lowest/highest notes
   // tunable without adding selectable candidates to the pitch set.
   std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};
@@ -739,6 +922,8 @@ class PolyphonicPitchDetector final {
       fine_frequency_evidence_states_{};
   std::array<FineFrequencyUniformGramCache, kMaxCandidates>
       fine_frequency_uniform_gram_cache_{};
+  std::array<double, kFineFrequencyHistoryCapacity>
+      fine_frequency_hann_window_{};
   StringFretPosteriorBank string_fret_posteriors_{};
   std::array<double, kMaxCandidates> string_fret_energy_memory_{};
   std::array<M3PoolCandidate, kMaxVoices * kMaxVoices> m3_pool_{};
@@ -748,16 +933,34 @@ class PolyphonicPitchDetector final {
   // group intact without committing MIDI lanes before the ordinary unison
   // evidence gate runs.
   std::array<std::uint8_t, kMaxCandidates> selector_group_masks_{};
+  std::array<bool, kMaxCandidates> selector_dp_evicted_candidates_{};
+  std::array<bool, kMaxCandidates> selector_atomic_handoff_targets_{};
+  std::array<std::uint8_t, kMaxCandidates>
+      selector_atomic_handoff_target_for_incumbent_{};
+  // The protected corpus admits atomic DP replacement only on the three
+  // middle physical lanes. Wider masks improve some chord counts but regress
+  // constructed or upper-unison evidence.
+  std::uint8_t dp_replacement_allowed_string_mask_{0x38U};
   std::array<SpectralLaneState, kMaxVoices> spectral_lane_states_{};
+  // Output-only rejection of an adjacent harmonic duplicate. The selector,
+  // pitch evidence, and physical-lane ownership remain unchanged; a bit is
+  // set only when two already-active one-lane candidates have settled
+  // production spectral fingerprints separated by the protected margin.
+  std::array<bool, kMaxCandidates> spectral_duplicate_suppressed_{};
   double spectral_lane_decimation_sum_{};
   std::uint8_t spectral_lane_decimation_count_{};
   std::uint8_t spectral_lane_decimation_{1U};
-  static constexpr std::size_t kMaximumGroupContinuityTrackers = 12U;
+  // Each corridor costs 102 complex resonators. Keep at most four simultaneous
+  // pitch contexts and classify only one per decision in round-robin order so
+  // dense chords remain bounded at the 96 kHz / 32-sample callback budget.
+  static constexpr std::size_t kMaximumGroupContinuityTrackers = 4U;
   std::array<GroupContinuityTrackerState,
              kMaximumGroupContinuityTrackers>
       group_continuity_trackers_{};
+  std::uint8_t group_continuity_classification_cursor_{};
   double group_continuity_decimation_sum_{};
   std::uint8_t group_continuity_decimation_count_{};
+  std::uint8_t group_continuity_decimation_{1U};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   // Offline candidate policy only. Slots bind to at most eight active physical
   // groups so replay can test cache/reacquisition hypotheses without adding
@@ -827,12 +1030,17 @@ class PolyphonicPitchDetector final {
       unison_cache_refresh_dispositions_{};
 #endif
   double diagnostic_candidate_rescue_score_ratio_{};
+  double diagnostic_input_energy_decay_{};
+  double diagnostic_selection_decay_{};
+  bool diagnostic_selection_window_only_{};
+  bool diagnostic_correlation_shadow_only_{};
   double diagnostic_candidate_rescue_fundamental_ratio_{};
   bool diagnostic_candidate_rescue_enabled_{};
   double diagnostic_fretted_fixed_penalty_{};
   double diagnostic_fretted_per_fret_penalty_{};
   bool diagnostic_fretted_prior_enabled_{};
   double diagnostic_selector_calibration_margin_{};
+  std::uint8_t diagnostic_selector_allowed_string_mask_{0xffU};
   bool diagnostic_selector_calibration_enabled_{};
   std::array<std::uint8_t, kMaxCandidates>
       diagnostic_selector_string_masks_{};
@@ -840,6 +1048,10 @@ class PolyphonicPitchDetector final {
   double diagnostic_selector_minimum_margin_{};
   bool diagnostic_selector_rescue_enabled_{};
   bool offline_replay_diagnostics_enabled_{true};
+  bool fine_mask_complexity_diagnostics_enabled_{};
+  bool diagnostic_fine_mask_pruning_enabled_{};
+  bool diagnostic_fine_beat_pruning_enabled_{};
+  bool diagnostic_collecting_fine_history_carry_enabled_{};
 #endif
 
 #if defined(M3_TESTING)

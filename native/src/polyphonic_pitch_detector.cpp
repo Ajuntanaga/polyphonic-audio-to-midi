@@ -44,8 +44,16 @@ constexpr double kBeatCyclesToHold = 1.5;
 // patterns without adding per-sample work or allocating on the audio thread.
 constexpr double kFineFrequencyTargetRateHz = 100.0;
 constexpr std::uint8_t kSpectralLaneDecimation = 4U;
+constexpr std::uint8_t kGroupContinuityDecimation = 5U;
 constexpr double kSpectralLaneMaximumError = 0.05;
 constexpr double kSpectralLaneMinimumMargin = 0.02;
+constexpr double kSpectralLaneOnsetMaximumError = 0.15;
+constexpr double kSpectralLaneOnsetMinimumMargin = 0.005;
+constexpr double kSpectralLaneIsolatedSettledMaximumError = 0.10;
+constexpr double kSpectralLaneIsolatedSettledMinimumMargin = 0.02;
+constexpr std::uint8_t kSpectralLaneIsolatedSettledStringMask = 0x08U;
+constexpr double kAdjacentSpectralDuplicateMinimumErrorGap = 0.45;
+constexpr double kAdjacentSpectralDuplicateMaximumErrorAgeSeconds = 0.75;
 constexpr double kGroupContinuityCacheSeconds = 0.50;
 constexpr double kGroupContinuityMinimumMargin = 0.00015;
 constexpr double kGroupContinuityStartScoreRatio = 0.50;
@@ -79,6 +87,9 @@ constexpr double kFineFrequencyProfileMatchedRelativeAmplitude = 0.25;
 constexpr double kFineFrequencyMinimumResidualImprovement = 0.08;
 constexpr double kFineFrequencyMinimumPhaseDeviationHz = 0.03;
 constexpr std::size_t kFineFrequencyMaximumPhaseSamples = 64U;
+constexpr double kFineBeatPruningMemberPenalty = 0.02;
+constexpr double kFineBeatPruningMinimumCoherence = 0.20;
+constexpr double kFineBeatPruningTieEpsilon = 1.0e-12;
 // A three-second causal observation cannot resolve templates that are only a
 // few millihertz apart.  Keep the floor below the closest ordinary measured
 // pair, but above the 0.0046 Hz near-duplicate calibration that caused one
@@ -180,6 +191,19 @@ constexpr double kM3CalibratedBandRescueScorePeakRatio = 0.90;
 constexpr double kM3CalibratedBandRescueFundamentalPeakRatio = 0.80;
 constexpr double kM3CalibratedBandRescueMinimumSimilarity = 0.97;
 constexpr double kM3CalibratedBandRescueMinimumMargin = 0.02;
+constexpr double kM3DpReplacementMinimumSimilarity = 0.96;
+constexpr double kM3DpReplacementMinimumScoreMargin = 0.50;
+// The protected replay counterfactual found one safe additional policy: an
+// already-active lowest-string voice may render the stronger DP-evicted note
+// without replacing either candidate in the selector.  This intentionally
+// uses the measured replay bounds rather than the stricter stateful-replacement
+// similarity gate above; two-decision consensus and lane-zero-only ownership
+// keep the output correction bounded.
+constexpr double kM3DpOutputMinimumSimilarity = 0.50;
+constexpr double kM3DpOutputMinimumCalibrationMargin = 0.0;
+constexpr double kM3DpOutputMinimumScoreMargin = 0.50;
+constexpr std::uint8_t kM3DpOutputConsensusDecisions = 2U;
+constexpr std::uint8_t kM3DpOutputAllowedStringMask = 0x01U;
 constexpr std::uint8_t kM3CalibratedBandRescueMinimumString = 6U;
 constexpr double kM3IsolatedLowerOctaveMinimumSimilarity = 0.96;
 constexpr double kM3IsolatedThirdPartialMinimumSimilarity = 0.90;
@@ -465,17 +489,43 @@ std::uint8_t PolyphonicPitchDetector::bounded_spectral_lane_assignment(
     bool polyphonic_context,
     bool fine_frequency_valid, bool fine_frequency_multi_source,
     std::uint8_t fine_frequency_member_mask,
+    UnisonSpectralPhase phase,
+    bool relaxed_onset_allowed,
     const UnisonSpectralClassification& classification) noexcept {
   const bool fine_frequency_confirms_lane =
       fine_frequency_valid && !fine_frequency_multi_source &&
       string_count(fine_frequency_member_mask) == 1U;
-  if (!active || string_count(current_assignment_mask) != 1U ||
-      (!polyphonic_context && !fine_frequency_confirms_lane) ||
+  const bool isolated_settled_confirms_lane =
+      !polyphonic_context && !fine_frequency_valid &&
+      phase == UnisonSpectralPhase::settled && classification.valid &&
+      classification.member_count == 1U &&
+      classification.member_mask == kSpectralLaneIsolatedSettledStringMask &&
+      std::isfinite(classification.error) &&
+      classification.error <= kSpectralLaneIsolatedSettledMaximumError &&
+      std::isfinite(classification.posterior_margin) &&
+      classification.posterior_margin >=
+          kSpectralLaneIsolatedSettledMinimumMargin;
+  const double maximum_error =
+      isolated_settled_confirms_lane
+          ? kSpectralLaneIsolatedSettledMaximumError
+          : phase == UnisonSpectralPhase::onset && relaxed_onset_allowed
+          ? kSpectralLaneOnsetMaximumError
+          : kSpectralLaneMaximumError;
+  const double minimum_margin =
+      isolated_settled_confirms_lane
+          ? kSpectralLaneIsolatedSettledMinimumMargin
+          : phase == UnisonSpectralPhase::onset && relaxed_onset_allowed
+          ? kSpectralLaneOnsetMinimumMargin
+          : kSpectralLaneMinimumMargin;
+  if (phase == UnisonSpectralPhase::unready || !active ||
+      string_count(current_assignment_mask) != 1U ||
+      (!polyphonic_context && !fine_frequency_confirms_lane &&
+       !isolated_settled_confirms_lane) ||
       !classification.valid || classification.member_count != 1U ||
       !std::isfinite(classification.error) ||
-      classification.error > kSpectralLaneMaximumError ||
+      classification.error > maximum_error ||
       !std::isfinite(classification.posterior_margin) ||
-      classification.posterior_margin < kSpectralLaneMinimumMargin) {
+      classification.posterior_margin < minimum_margin) {
     return 0U;
   }
   const std::uint8_t projected = classification.member_mask;
@@ -623,6 +673,81 @@ std::uint8_t PolyphonicPitchDetector::bounded_group_continuity_projection(
   return union_projection(cached_completion, classifier_projection);
 }
 
+std::uint8_t PolyphonicPitchDetector::
+    bounded_three_member_articulated_group_continuity_projection(
+        std::uint8_t current_assignment_mask,
+        std::uint8_t cached_group_mask,
+        std::uint8_t pending_fine_mask,
+        double pending_evidence_seconds,
+        double pending_beat_coherence,
+        std::uint8_t spectral_tier_mask,
+        std::uint8_t other_owned_mask,
+        std::uint8_t playable_mask,
+        std::uint8_t maximum_polyphony,
+        double score_threshold_ratio,
+        bool active_candidate,
+        bool direct_fundamental,
+        bool quiet,
+        double cache_age_seconds) noexcept {
+  constexpr double kMaximumGapSeconds = 0.25;
+  constexpr double kMinimumRevalidationSeconds = 0.20;
+  if (quiet || !active_candidate || !direct_fundamental ||
+      !std::isfinite(score_threshold_ratio) ||
+      score_threshold_ratio < kM3RetainedUnisonDecayFloorRatio ||
+      string_count(cached_group_mask) != 3U ||
+      !std::isfinite(cache_age_seconds) || cache_age_seconds < 0.0 ||
+      cache_age_seconds > kMaximumGapSeconds ||
+      current_assignment_mask == 0U ||
+      string_count(current_assignment_mask) > 4U ||
+      (current_assignment_mask &
+       static_cast<std::uint8_t>(~cached_group_mask)) != 0U ||
+      string_count(pending_fine_mask) < 2U ||
+      string_count(pending_fine_mask) > 4U ||
+      (pending_fine_mask & static_cast<std::uint8_t>(~cached_group_mask)) !=
+          0U ||
+      !std::isfinite(pending_evidence_seconds) ||
+      pending_evidence_seconds < kMinimumRevalidationSeconds ||
+      !std::isfinite(pending_beat_coherence) ||
+      pending_beat_coherence < 0.20 ||
+      spectral_tier_mask != cached_group_mask ||
+      (cached_group_mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+      (cached_group_mask & other_owned_mask) != 0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      string_count(static_cast<std::uint8_t>(cached_group_mask |
+                                             other_owned_mask)) >
+          maximum_polyphony) {
+    return current_assignment_mask;
+  }
+  return cached_group_mask;
+}
+
+std::uint8_t PolyphonicPitchDetector::
+    bounded_solo_three_member_articulated_group_continuity_projection(
+        std::uint8_t current_assignment_mask,
+        std::uint8_t cached_group_mask,
+        std::uint8_t pending_fine_mask,
+        double pending_evidence_seconds,
+        double pending_beat_coherence,
+        std::uint8_t spectral_tier_mask,
+        std::uint8_t other_owned_mask,
+        std::uint8_t playable_mask,
+        std::uint8_t maximum_polyphony,
+        double score_threshold_ratio,
+        bool active_candidate,
+        bool direct_fundamental,
+        bool quiet,
+        double cache_age_seconds) noexcept {
+  if (other_owned_mask != 0U || cached_group_mask != playable_mask) {
+    return current_assignment_mask;
+  }
+  return bounded_three_member_articulated_group_continuity_projection(
+      current_assignment_mask, cached_group_mask, pending_fine_mask,
+      pending_evidence_seconds, pending_beat_coherence, spectral_tier_mask,
+      other_owned_mask, playable_mask, maximum_polyphony,
+      score_threshold_ratio, active_candidate, direct_fundamental, quiet,
+      cache_age_seconds);
+}
+
 PolyphonicPitchDetector::GroupContinuityTrackerState*
 PolyphonicPitchDetector::find_group_continuity_tracker(
     std::size_t candidate) noexcept {
@@ -747,10 +872,7 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
     const double band_fundamental_ratio =
         fundamentals[candidate] /
         std::max(band_fundamental_peak[band], kScoreEpsilon);
-    UnisonSpectralTemplateSet templates;
     const auto note = candidate_output_note(candidate);
-    const bool templates_available = factory_unison_spectral_templates(
-        UnisonSpectralPhase::unready, note, templates);
     const bool retain = tracking && !quiet &&
         (admitted_active ||
          (direct &&
@@ -761,7 +883,7 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
             band_score_ratio >= kGroupContinuityRetainBandScoreRatio &&
             band_fundamental_ratio >=
                 kGroupContinuityRetainBandFundamentalRatio))));
-    const bool start = !tracking && !quiet && templates_available &&
+    const bool start_evidence = !tracking && !quiet &&
         (admitted_active ||
          (!candidate_state.active && direct &&
           ((score_ratio >= kGroupContinuityStartScoreRatio &&
@@ -771,6 +893,9 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
             fundamental_ratio >= kGroupContinuityStartFundamentalRatio &&
             band_fundamental_ratio >=
                 kGroupContinuityStartBandFundamentalRatio))));
+    const bool start = start_evidence &&
+        factory_unison_spectral_templates_available(
+            UnisonSpectralPhase::unready, note);
     if (!retain && !start) {
       continue;
     }
@@ -795,16 +920,13 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
     if (state.candidate_index < count &&
         !desired[state.candidate_index] && state.tracking) {
       state.tracker.reset();
+      state.last_classification = {};
       state.tracking = false;
     }
   }
   const std::uint32_t maximum_age_ticks = static_cast<std::uint32_t>(
       std::max(1.0, std::ceil(kGroupContinuityCacheSeconds * sample_rate_ /
                              static_cast<double>(kDecisionQuantum))));
-  const std::uint64_t readiness_lead_samples =
-      static_cast<std::uint64_t>(std::ceil(
-          static_cast<double>(kDecisionQuantum) /
-          static_cast<double>(spectral_lane_decimation_)));
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     if (!desired[candidate]) {
       continue;
@@ -848,6 +970,8 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
     const std::uint8_t output_note = candidate_output_note(candidate);
     if (state->midi_note != output_note) {
       state->tracker.reset();
+      state->last_classification = {};
+      state->templates_valid = false;
       state->tracking = false;
       state->midi_note = output_note;
       CandidateState& candidate_state = candidate_states_[candidate];
@@ -857,7 +981,7 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
     }
     if (!state->tracking) {
       const double effective_rate =
-          sample_rate_ / static_cast<double>(spectral_lane_decimation_);
+          sample_rate_ / static_cast<double>(group_continuity_decimation_);
       state->tracking = state->tracker.configure(effective_rate,
                                                  output_note);
     }
@@ -899,8 +1023,32 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
 #endif
   }
 
-  for (GroupContinuityTrackerState& continuity :
-       group_continuity_trackers_) {
+  const std::uint64_t readiness_lead_samples =
+      static_cast<std::uint64_t>(std::ceil(
+          static_cast<double>(kDecisionQuantum) /
+          static_cast<double>(group_continuity_decimation_)));
+  std::size_t classification_slot = group_continuity_trackers_.size();
+  for (std::size_t offset = 0U;
+       offset < group_continuity_trackers_.size(); ++offset) {
+    const std::size_t slot =
+        (group_continuity_classification_cursor_ + offset) %
+        group_continuity_trackers_.size();
+    const GroupContinuityTrackerState& continuity =
+        group_continuity_trackers_[slot];
+    if (continuity.tracking && continuity.candidate_index < count &&
+        desired[continuity.candidate_index]) {
+      classification_slot = slot;
+      group_continuity_classification_cursor_ =
+          static_cast<std::uint8_t>(
+              (slot + 1U) % group_continuity_trackers_.size());
+      break;
+    }
+  }
+  for (std::size_t continuity_slot = 0U;
+       continuity_slot < group_continuity_trackers_.size();
+       ++continuity_slot) {
+    GroupContinuityTrackerState& continuity =
+        group_continuity_trackers_[continuity_slot];
     const std::size_t candidate = continuity.candidate_index;
     if (!continuity.tracking || candidate >= count ||
         !desired[candidate]) {
@@ -924,21 +1072,30 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
         playable_for_note(continuity.midi_note);
     const std::uint8_t fine_mask = static_cast<std::uint8_t>(
         fine.member_mask & output_playable);
-    UnisonSpectralTemplateSet templates;
     const UnisonSpectralPhase continuity_phase =
         continuity.tracker.phase_with_lead(readiness_lead_samples);
-    if (!factory_unison_spectral_templates(continuity_phase,
-                                           continuity.midi_note, templates) &&
-        !factory_unison_spectral_templates(UnisonSpectralPhase::unready,
-                                           continuity.midi_note, templates)) {
-      continue;
-    }
-    const UnisonSpectralClassification classification =
-        classify_feasible_unison(
+    if (continuity_slot == classification_slot) {
+      UnisonSpectralPhase template_phase = continuity_phase;
+      if (!factory_unison_spectral_templates_available(
+              template_phase, continuity.midi_note)) {
+        template_phase = UnisonSpectralPhase::unready;
+      }
+      if (!continuity.templates_valid ||
+          continuity.template_phase != template_phase) {
+        continuity.templates_valid = factory_unison_spectral_templates(
+            template_phase, continuity.midi_note, continuity.templates);
+        continuity.template_phase = template_phase;
+      }
+      if (!continuity.templates_valid) {
+        continue;
+      }
+      continuity.last_classification = classify_feasible_unison(
             continuity.tracker.fingerprint_with_lead(
                 readiness_lead_samples),
-            templates,
-                                 output_playable, 2U, 4U);
+            continuity.templates, output_playable, 2U, 4U);
+    }
+    const UnisonSpectralClassification classification =
+        continuity.last_classification;
     std::uint8_t other_owned = 0U;
     for (std::size_t other = 0U; other < count; ++other) {
       if (!candidate_states_[other].active ||
@@ -1053,18 +1210,41 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
       candidate_state.group_continuity_diagnostic_flags |= 0x80U;
     }
 #endif
-    candidate_state.continuity_lane_mask =
+    const std::uint8_t classified_projection =
         bounded_group_continuity_projection(
             current, candidate_state.continuity_cached_group_mask,
-            classification,
-            continuity_phase, fine_mask,
+            classification, continuity_phase, fine_mask,
             fine.minimum_pairwise_beat_coherence, profile_mask,
             temporal_mask, tier_projection, other_owned,
-            output_playable, max_polyphony_,
-            candidate_state.active,
+            output_playable, max_polyphony_, candidate_state.active,
             selected[candidate] || candidate_state.active,
-            direct_fundamental,
-            quiet, age_seconds);
+            direct_fundamental, quiet, age_seconds);
+    const std::uint8_t articulated_tier_mask =
+        bounded_spectral_tier_completion(
+            candidate_state.active, candidate_state.assigned_string_mask,
+            fine_mask, output_playable, spectral,
+            fine.added_member_beat_coherence, fine.component_energy);
+    const double pending_evidence_seconds =
+        static_cast<double>(fine.pending_count) *
+        static_cast<double>(kDecisionQuantum) *
+        static_cast<double>(fine_frequency_decimation_decisions_) *
+        static_cast<double>(kFineFrequencyAnalysisStride) / sample_rate_;
+    const std::uint8_t articulated_projection =
+        bounded_three_member_articulated_group_continuity_projection(
+            current, candidate_state.continuity_cached_group_mask,
+            fine.pending_member_mask, pending_evidence_seconds,
+            fine.pending_minimum_pairwise_beat_coherence,
+            articulated_tier_mask, other_owned, output_playable,
+            max_polyphony_,
+            scores[candidate] / std::max(threshold, kScoreEpsilon),
+            candidate_state.active, direct_fundamental, quiet, age_seconds);
+    candidate_state.continuity_lane_mask =
+        classified_projection == current
+            ? articulated_projection
+            : (articulated_projection == current ||
+                       articulated_projection == classified_projection
+                   ? classified_projection
+                   : current);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (candidate_state.continuity_lane_mask != current) {
       candidate_state.group_continuity_diagnostic_flags |= 0x20U;
@@ -1074,7 +1254,7 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
 }
 
 std::uint8_t PolyphonicPitchDetector::spectral_lane_assignment(
-    std::size_t candidate) const noexcept {
+    std::size_t candidate, bool isolated_selected_voice) noexcept {
   if (profile_mode_ != ProfileMode::m3 ||
       candidate >= static_cast<std::size_t>(candidate_count_)) {
     return 0U;
@@ -1085,13 +1265,12 @@ std::uint8_t PolyphonicPitchDetector::spectral_lane_assignment(
     current = static_cast<std::uint8_t>(
         1U << candidate_state.assigned_string);
   }
-  const SpectralLaneState* spectral = find_spectral_lane_state(candidate);
+  SpectralLaneState* spectral = find_spectral_lane_state(candidate);
   if (spectral == nullptr || !spectral->tracking ||
-      !spectral->tracker.ready() ||
-      spectral->tracker.phase() != UnisonSpectralPhase::settled ||
-      beat_evidence_states_[candidate].valid) {
+      !spectral->tracker.ready()) {
     return 0U;
   }
+  const UnisonSpectralPhase phase = spectral->tracker.phase();
   std::uint8_t other_owned = 0U;
   for (std::size_t other = 0U;
        other < static_cast<std::size_t>(candidate_count_); ++other) {
@@ -1109,23 +1288,145 @@ std::uint8_t PolyphonicPitchDetector::spectral_lane_assignment(
     other_owned = static_cast<std::uint8_t>(other_owned | owned);
   }
   const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
-  UnisonSpectralTemplateSet templates;
-  if (!factory_unison_spectral_templates(spectral->tracker.phase(), note,
-                                         templates) &&
-      !factory_unison_spectral_templates(UnisonSpectralPhase::unready, note,
-                                         templates)) {
+  UnisonSpectralPhase template_phase = phase;
+  if (!factory_unison_spectral_templates_available(template_phase, note)) {
+    template_phase = UnisonSpectralPhase::unready;
+  }
+  if (!spectral->templates_valid ||
+      spectral->template_phase != template_phase ||
+      spectral->midi_note != note) {
+    spectral->templates_valid = factory_unison_spectral_templates(
+        template_phase, note, spectral->templates);
+    spectral->template_phase = template_phase;
+    spectral->midi_note = note;
+  }
+  if (!spectral->templates_valid) {
     return 0U;
   }
   const UnisonSpectralClassification classification =
       classify_single_spectral_source(spectral->tracker.fingerprint(),
-                                      templates,
+                                      spectral->templates,
                                       playable_string_mask(candidate));
+  spectral->single_source_error_valid =
+      classification.valid && classification.member_count == 1U &&
+      std::isfinite(classification.error);
+  spectral->single_source_best_error = classification.error;
+  spectral->single_source_error_mask = classification.member_mask;
+  spectral->single_source_error_tick = decision_counter_;
   const FineFrequencyEvidenceState& fine =
       fine_frequency_evidence_states_[candidate];
+  const bool isolated_settled_confirms_lane =
+      isolated_selected_voice && !candidate_state.polyphonic_context &&
+      !fine.valid &&
+      phase == UnisonSpectralPhase::settled && classification.valid &&
+      classification.member_count == 1U &&
+      classification.member_mask == kSpectralLaneIsolatedSettledStringMask &&
+      std::isfinite(classification.error) &&
+      classification.error <= kSpectralLaneIsolatedSettledMaximumError &&
+      std::isfinite(classification.posterior_margin) &&
+      classification.posterior_margin >=
+          kSpectralLaneIsolatedSettledMinimumMargin;
+  if (beat_evidence_states_[candidate].valid &&
+      !isolated_settled_confirms_lane) {
+    return 0U;
+  }
   return bounded_spectral_lane_assignment(
       candidate_state.active, current, playable_string_mask(candidate),
-      other_owned, candidate_state.polyphonic_context, fine.valid,
-      fine.multi_source_observed, fine.member_mask, classification);
+      other_owned,
+      candidate_state.polyphonic_context || !isolated_selected_voice,
+      fine.valid,
+      fine.multi_source_observed, fine.member_mask, phase,
+      note < kM3OpenNotes.back(), classification);
+}
+
+std::uint8_t
+PolyphonicPitchDetector::bounded_adjacent_spectral_duplicate_suppression(
+    bool left_active, bool right_active, std::uint8_t left_note,
+    std::uint8_t right_note, std::uint8_t left_output_mask,
+    std::uint8_t right_output_mask, bool left_spectral_ready,
+    bool right_spectral_ready, double left_error,
+    double right_error) noexcept {
+  const auto is_single_lane = [](std::uint8_t mask) noexcept {
+    return mask != 0U && (mask & static_cast<std::uint8_t>(mask - 1U)) == 0U;
+  };
+  if (!left_active || !right_active || left_note >= 127U ||
+      right_note != static_cast<std::uint8_t>(left_note + 1U) ||
+      !is_single_lane(left_output_mask) ||
+      !is_single_lane(right_output_mask) ||
+      left_output_mask == right_output_mask || !left_spectral_ready ||
+      !right_spectral_ready || !std::isfinite(left_error) ||
+      !std::isfinite(right_error) ||
+      std::abs(left_error - right_error) <
+          kAdjacentSpectralDuplicateMinimumErrorGap) {
+    return 0U;
+  }
+  return left_error > right_error ? 0x01U : 0x02U;
+}
+
+void PolyphonicPitchDetector::
+update_adjacent_spectral_duplicate_suppression() noexcept {
+  spectral_duplicate_suppressed_.fill(false);
+  if (profile_mode_ != ProfileMode::m3) {
+    return;
+  }
+  std::array<std::uint8_t, kMaxCandidates> output_masks{};
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    if (!state.active) {
+      continue;
+    }
+    output_masks[candidate] = projected_output_string_mask(
+        state.assigned_string_mask, state.assigned_string,
+        state.spectral_lane_mask, state.continuity_lane_mask);
+    if (state.fine_beat_pruning_mask != 0U) {
+      output_masks[candidate] = state.midi_voice_mask;
+    }
+  }
+  std::array<double, kMaxCandidates> errors{};
+  std::array<bool, kMaxCandidates> ready{};
+  errors.fill(std::numeric_limits<double>::infinity());
+  const std::uint32_t maximum_age = static_cast<std::uint32_t>(std::max(
+      1.0, std::ceil(kAdjacentSpectralDuplicateMaximumErrorAgeSeconds *
+                     sample_rate_ / static_cast<double>(kDecisionQuantum))));
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    const SpectralLaneState* spectral = find_spectral_lane_state(candidate);
+    if (!state.active || spectral == nullptr ||
+        !spectral->single_source_error_valid ||
+        spectral->single_source_error_mask != output_masks[candidate] ||
+        decision_counter_ - spectral->single_source_error_tick > maximum_age) {
+      continue;
+    }
+    ready[candidate] = true;
+    errors[candidate] = spectral->single_source_best_error;
+  }
+  for (std::size_t left = 0U;
+       left < static_cast<std::size_t>(candidate_count_); ++left) {
+    if (!candidate_states_[left].active) {
+      continue;
+    }
+    const std::uint8_t left_note = candidate_output_note(left);
+    for (std::size_t right = left + 1U;
+         right < static_cast<std::size_t>(candidate_count_); ++right) {
+      if (!candidate_states_[right].active) {
+        continue;
+      }
+      const std::uint8_t right_note = candidate_output_note(right);
+      const std::uint8_t suppression =
+          bounded_adjacent_spectral_duplicate_suppression(
+              true, true, left_note, right_note, output_masks[left],
+              output_masks[right], ready[left], ready[right], errors[left],
+              errors[right]);
+      if ((suppression & 0x01U) != 0U) {
+        spectral_duplicate_suppressed_[left] = true;
+      }
+      if ((suppression & 0x02U) != 0U) {
+        spectral_duplicate_suppressed_[right] = true;
+      }
+    }
+  }
 }
 
 void PolyphonicPitchDetector::update_spectral_lane_states(
@@ -1155,6 +1456,8 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
                                         const PersistentConfig& config) noexcept {
   configured_ = false;
   cells_ = {};
+  enabled_cell_indices_ = {};
+  enabled_cell_count_ = 0U;
   lower_cents_guard_cells_ = {};
   upper_cents_guard_cells_ = {};
   if (!valid_config(sample_rate, config)) {
@@ -1165,6 +1468,12 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   sample_rate_ = sample_rate;
   dc_pole = std::exp(-kTwoPi * kDcCutoffHz / sample_rate_);
   correlation_decay = std::exp(-1.0 / (kFastEnergySeconds * sample_rate_));
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_input_energy_decay_ = correlation_decay;
+  diagnostic_selection_decay_ = correlation_decay;
+  diagnostic_selection_window_only_ = false;
+  diagnostic_correlation_shadow_only_ = false;
+#endif
   narrow_correlation_decay =
       std::exp(-1.0 / (kNarrowFundamentalSeconds * sample_rate_));
   harmonic_memory_decay = std::exp(
@@ -1185,9 +1494,28 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
                       kFineFrequencyTargetRateHz)),
           1.0,
           static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
+  const std::size_t fine_frequency_window_samples =
+      static_cast<std::size_t>(std::clamp(
+          std::ceil(kFineFrequencyMinimumEvidenceSeconds * sample_rate_ /
+                    (static_cast<double>(kDecisionQuantum) *
+                     fine_frequency_decimation_decisions_)),
+          2.0,
+          static_cast<double>(kFineFrequencyHistoryCapacity)));
+  fine_frequency_hann_window_.fill(0.0);
+  for (std::size_t sample = 0U; sample < fine_frequency_window_samples;
+       ++sample) {
+    fine_frequency_hann_window_[sample] =
+        0.5 - 0.5 *
+                  std::cos(kTwoPi * static_cast<double>(sample) /
+                           static_cast<double>(fine_frequency_window_samples -
+                                               1U));
+  }
   spectral_lane_decimation_ = sample_rate_ >= 32000.0
                                   ? kSpectralLaneDecimation
                                   : 1U;
+  group_continuity_decimation_ =
+      sample_rate_ >= 40000.0 ? kGroupContinuityDecimation
+                              : spectral_lane_decimation_;
   slow_energy_decay =
       std::exp(-1.0 / (kSlowEnergySeconds * sample_rate_));
   lowest_note_ = config.lowest_note;
@@ -1212,6 +1540,10 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
       cell.sine_step = std::sin(rotation);
       cell.enabled = std::isfinite(cell.cosine_step) &&
                      std::isfinite(cell.sine_step);
+      if (cell.enabled && enabled_cell_count_ < enabled_cell_indices_.size()) {
+        enabled_cell_indices_[enabled_cell_count_++] =
+            static_cast<std::uint16_t>(cell_index(candidate, harmonic));
+      }
     }
   }
   const auto configure_guard = [this, &config](
@@ -1303,6 +1635,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   group_continuity_trackers_ = {};
   group_continuity_decimation_sum_ = 0.0;
   group_continuity_decimation_count_ = 0U;
+  group_continuity_classification_cursor_ = 0U;
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   unison_reacquisition_states_ = {};
 #endif
@@ -1324,6 +1657,10 @@ void PolyphonicPitchDetector::reset() noexcept {
     cell.sine = 0.0;
     cell.fast_real = 0.0;
     cell.fast_imaginary = 0.0;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    cell.diagnostic_selection_real = 0.0;
+    cell.diagnostic_selection_imaginary = 0.0;
+#endif
   }
   const auto reset_guard = [](auto& cells) noexcept {
     for (Cell& cell : cells) {
@@ -1331,6 +1668,10 @@ void PolyphonicPitchDetector::reset() noexcept {
       cell.sine = 0.0;
       cell.fast_real = 0.0;
       cell.fast_imaginary = 0.0;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      cell.diagnostic_selection_real = 0.0;
+      cell.diagnostic_selection_imaginary = 0.0;
+#endif
     }
   };
   reset_guard(lower_cents_guard_cells_);
@@ -1532,6 +1873,26 @@ std::uint8_t PolyphonicPitchDetector::fine_frequency_member_mask(
   return state.valid ? state.member_mask : 0U;
 }
 
+std::uint8_t PolyphonicPitchDetector::fine_mask_pruning_output_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return 0U;
+  }
+  const CandidateState& state = candidate_states_[candidate];
+  if (state.fine_beat_pruning_mask != 0U) {
+    return state.fine_beat_pruning_mask;
+  }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  return state.diagnostic_fine_mask_pruning_mask;
+#else
+  return 0U;
+#endif
+}
+
 std::uint8_t PolyphonicPitchDetector::fine_frequency_pending_member_mask(
     std::uint8_t midi_note) const noexcept {
   if (midi_note < lowest_note_) {
@@ -1661,6 +2022,19 @@ PolyphonicPitchDetector::fine_frequency_unique_member_improvement(
              : std::array<double, kMaxVoices>{};
 }
 
+const FineFrequencyMaskResidualTable&
+PolyphonicPitchDetector::fine_frequency_mask_residuals(
+    std::uint8_t midi_note) const noexcept {
+  static const FineFrequencyMaskResidualTable empty{};
+  if (midi_note < lowest_note_) {
+    return empty;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? fine_frequency_evidence_states_[candidate].mask_residuals
+             : empty;
+}
+
 double PolyphonicPitchDetector::fine_frequency_minimum_pairwise_beat_coherence(
     std::uint8_t midi_note) const noexcept {
   if (midi_note < lowest_note_) {
@@ -1786,6 +2160,24 @@ double PolyphonicPitchDetector::string_fret_posterior_margin(
   return std::clamp(best - second, 0.0, 1.0);
 }
 
+std::array<double, kMaxVoices>
+PolyphonicPitchDetector::string_fret_posterior_probabilities(
+    std::uint8_t midi_note) const noexcept {
+  std::array<double, kMaxVoices> probabilities{};
+  if (midi_note < lowest_note_) {
+    return probabilities;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return probabilities;
+  }
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    probabilities[string] =
+        string_fret_posteriors_.probability(candidate, string);
+  }
+  return probabilities;
+}
+
 std::uint8_t PolyphonicPitchDetector::string_fret_posterior_playable_mask(
     std::uint8_t midi_note) const noexcept {
   if (midi_note < lowest_note_) {
@@ -1876,6 +2268,33 @@ FineGroupDisposition PolyphonicPitchDetector::fine_group_disposition(
 }
 
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
+std::uint8_t PolyphonicPitchDetector::group_continuity_cached_mask(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_) {
+    return 0U;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_)
+             ? candidate_states_[candidate].continuity_cached_group_mask
+             : 0U;
+}
+
+double PolyphonicPitchDetector::group_continuity_cache_age_seconds(
+    std::uint8_t midi_note) const noexcept {
+  if (midi_note < lowest_note_ || sample_rate_ <= 0.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_) ||
+      candidate_states_[candidate].continuity_cached_group_mask == 0U) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return static_cast<double>(
+             decision_counter_ -
+             candidate_states_[candidate].continuity_cached_group_tick) *
+         static_cast<double>(kDecisionQuantum) / sample_rate_;
+}
+
 bool PolyphonicPitchDetector::observed_spectral_lane_fingerprint(
     std::uint8_t midi_note,
     UnisonSpectralFingerprint& fingerprint) const noexcept {
@@ -1893,6 +2312,40 @@ bool PolyphonicPitchDetector::observed_spectral_lane_fingerprint(
   }
   fingerprint = state->tracker.fingerprint();
   return true;
+}
+
+bool PolyphonicPitchDetector::spectral_single_source_best_error(
+    std::uint8_t midi_note, double& error) const noexcept {
+  error = std::numeric_limits<double>::infinity();
+  if (midi_note < lowest_note_) {
+    return false;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return false;
+  }
+  const SpectralLaneState* state = find_spectral_lane_state(candidate);
+  if (state == nullptr || !state->tracking || !state->tracker.ready()) {
+    return false;
+  }
+  UnisonSpectralPhase template_phase = state->tracker.phase();
+  if (!factory_unison_spectral_templates_available(template_phase,
+                                                    midi_note)) {
+    template_phase = UnisonSpectralPhase::unready;
+  }
+  UnisonSpectralTemplateSet templates;
+  if (!factory_unison_spectral_templates(template_phase, midi_note,
+                                         templates)) {
+    return false;
+  }
+  const auto scores = score_single_spectral_sources(
+      state->tracker.fingerprint(), templates, playable_string_mask(candidate));
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    if ((scores.valid_mask & (1U << string)) != 0U) {
+      error = std::min(error, scores.error[string]);
+    }
+  }
+  return std::isfinite(error);
 }
 
 std::uint8_t PolyphonicPitchDetector::spectral_tier_completion_proposal_mask(
@@ -1990,6 +2443,85 @@ std::uint8_t PolyphonicPitchDetector::group_continuity_diagnostic_flags(
              : 0U;
 }
 
+bool PolyphonicPitchDetector::set_correlation_window_for_diagnostics(
+    double seconds, bool selection_only, bool shadow_only) noexcept {
+  if (!configured_ || !std::isfinite(seconds) || seconds < 0.020 ||
+      seconds > 0.200 || decision_counter_ != 0U || decision_phase_ != 0U ||
+      (selection_only && shadow_only)) {
+    return false;
+  }
+  diagnostic_selection_window_only_ = selection_only || shadow_only;
+  diagnostic_correlation_shadow_only_ = shadow_only;
+  diagnostic_selection_decay_ = std::exp(-1.0 / (seconds * sample_rate_));
+  correlation_decay = diagnostic_selection_window_only_
+                          ? diagnostic_input_energy_decay_
+                          : diagnostic_selection_decay_;
+  return true;
+}
+
+bool PolyphonicPitchDetector::correlation_window_energy_ratio_for_diagnostics(
+    std::uint8_t midi_note, bool fundamental_only,
+    double& ratio) const noexcept {
+  if (!diagnostic_selection_window_only_ || midi_note < lowest_note_) {
+    return false;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return false;
+  }
+  double reference_energy = 0.0;
+  double window_energy = 0.0;
+  const std::size_t harmonics = fundamental_only ? 1U : kHarmonicCount;
+  for (std::size_t harmonic = 0U; harmonic < harmonics; ++harmonic) {
+    const Cell& cell = cells_[cell_index(candidate, harmonic)];
+    if (!cell.enabled) {
+      continue;
+    }
+    const double weight = kHarmonicWeights[harmonic];
+    reference_energy += weight * (cell.fast_real * cell.fast_real +
+                                 cell.fast_imaginary * cell.fast_imaginary);
+    window_energy += weight *
+        (cell.diagnostic_selection_real * cell.diagnostic_selection_real +
+         cell.diagnostic_selection_imaginary *
+             cell.diagnostic_selection_imaginary);
+  }
+  if (!std::isfinite(reference_energy) || !std::isfinite(window_energy) ||
+      reference_energy <= 1.0e-24 || window_energy < 0.0) {
+    return false;
+  }
+  ratio = window_energy / reference_energy;
+  return std::isfinite(ratio);
+}
+
+bool PolyphonicPitchDetector::harmonic_correlations_for_diagnostics(
+    std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+    std::array<std::complex<double>, 6U>& correlations,
+    double& signal_energy, double& decay) const noexcept {
+  frequencies = {};
+  correlations = {};
+  if (!configured_ || midi_note < lowest_note_ ||
+      midi_note - lowest_note_ >= candidate_count_) {
+    return false;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  signal_energy = fast_energy_;
+  decay = correlation_decay;
+  bool available = false;
+  for (std::size_t harmonic = 0U; harmonic < kHarmonicCount; ++harmonic) {
+    const Cell& cell = cells_[cell_index(candidate, harmonic)];
+    if (!cell.enabled) {
+      continue;
+    }
+    frequencies[harmonic] = sample_rate_ / kTwoPi *
+        std::atan2(cell.sine_step, cell.cosine_step);
+    correlations[harmonic] =
+        std::complex<double>{cell.fast_real, cell.fast_imaginary} *
+        std::complex<double>{cell.cosine, cell.sine};
+    available = true;
+  }
+  return available;
+}
+
 bool PolyphonicPitchDetector::set_candidate_admission_rescue_for_diagnostics(
     double score_threshold_ratio,
     double fundamental_score_ratio) noexcept {
@@ -2020,13 +2552,21 @@ bool PolyphonicPitchDetector::set_fretted_position_prior_for_diagnostics(
 }
 
 bool PolyphonicPitchDetector::set_decisive_calibrated_selector_for_diagnostics(
-    double minimum_margin) noexcept {
+    double minimum_margin, std::uint8_t allowed_string_mask) noexcept {
   if (!std::isfinite(minimum_margin) || minimum_margin < 0.0 ||
-      minimum_margin > 1.0) {
+      minimum_margin > 1.0 || allowed_string_mask == 0U) {
     return false;
   }
   diagnostic_selector_calibration_margin_ = minimum_margin;
+  diagnostic_selector_allowed_string_mask_ = allowed_string_mask;
   diagnostic_selector_calibration_enabled_ = true;
+  return true;
+}
+
+bool PolyphonicPitchDetector::
+set_calibrated_dp_replacement_lane_mask_for_diagnostics(
+    std::uint8_t allowed_string_mask) noexcept {
+  dp_replacement_allowed_string_mask_ = allowed_string_mask;
   return true;
 }
 
@@ -2243,6 +2783,17 @@ void PolyphonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
                    mix * sample * next_cosine;
   cell.fast_imaginary = correlation_decay * cell.fast_imaginary -
                         mix * sample * next_sine;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_selection_window_only_) {
+    const double selection_mix = 1.0 - diagnostic_selection_decay_;
+    cell.diagnostic_selection_real =
+        diagnostic_selection_decay_ * cell.diagnostic_selection_real +
+        selection_mix * sample * next_cosine;
+    cell.diagnostic_selection_imaginary =
+        diagnostic_selection_decay_ * cell.diagnostic_selection_imaginary -
+        selection_mix * sample * next_sine;
+  }
+#endif
 }
 
 std::uint8_t PolyphonicPitchDetector::attack_decisions() const noexcept {
@@ -2477,12 +3028,16 @@ std::uint8_t PolyphonicPitchDetector::dynamic_velocity() const noexcept {
   return static_cast<std::uint8_t>(std::lround(velocity));
 }
 
-void PolyphonicPitchDetector::append_transition(
+bool PolyphonicPitchDetector::append_transition(
     DetectorDecision& decision, TransitionKind kind, std::uint8_t note,
     std::uint8_t velocity, std::uint8_t voice_id) noexcept {
   const VoiceTransition transition{
-      0U, kind, note, velocity, transition_sequence_++, voice_id};
-  static_cast<void>(decision.transitions.push_back(transition));
+      0U, kind, note, velocity, transition_sequence_, voice_id};
+  if (!decision.transitions.push_back(transition)) {
+    return false;
+  }
+  ++transition_sequence_;
+  return true;
 }
 
 std::uint8_t PolyphonicPitchDetector::candidate_output_note(
@@ -2494,6 +3049,16 @@ std::uint8_t PolyphonicPitchDetector::candidate_output_note(
       static_cast<std::uint8_t>(lowest_note_ + candidate);
   const std::uint8_t emitted = candidate_states_[candidate].emitted_note;
   return emitted < 128U ? emitted : detected;
+}
+
+std::uint8_t PolyphonicPitchDetector::candidate_midi_output_note(
+    std::size_t candidate) const noexcept {
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) {
+    return kTunerNoSignalNote;
+  }
+  const std::uint8_t projected =
+      candidate_states_[candidate].dp_output_projection_note;
+  return projected < 128U ? projected : candidate_output_note(candidate);
 }
 
 std::int16_t PolyphonicPitchDetector::candidate_output_cents_q8(
@@ -2520,9 +3085,82 @@ void PolyphonicPitchDetector::change_candidate_output_note(
     return;
   }
   CandidateState& state = candidate_states_[candidate];
-  const std::uint8_t previous_note = candidate_output_note(candidate);
-  if (previous_note == output_note) {
+  const std::uint8_t previous_note = candidate_midi_output_note(candidate);
+  const std::uint8_t previous_base = candidate_output_note(candidate);
+  if (previous_base == output_note) {
     return;
+  }
+  const std::uint8_t next_note =
+      state.dp_output_projection_note < 128U
+          ? state.dp_output_projection_note
+          : output_note;
+  if (previous_note == next_note) {
+    state.emitted_note = output_note;
+    return;
+  }
+  if (state.spectral_duplicate_output_suppressed) {
+    state.emitted_note = output_note;
+    return;
+  }
+  const std::uint8_t velocity = dynamic_velocity();
+  const std::size_t lane_count =
+      midi_routing_ == MidiRouting::per_voice
+          ? string_count(state.midi_voice_mask)
+          : 1U;
+  const std::size_t required = 2U * lane_count;
+  if (required > decision.transitions.capacity() -
+                     decision.transitions.size()) {
+    return;
+  }
+  if (midi_routing_ == MidiRouting::per_voice) {
+    for (std::uint8_t lane = 0U; lane < kMaxVoices; ++lane) {
+      if ((state.midi_voice_mask & (1U << lane)) == 0U) {
+        continue;
+      }
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_off, previous_note, 0U, lane));
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_on, next_note, velocity, lane));
+    }
+  } else {
+    static_cast<void>(append_transition(
+        decision, TransitionKind::note_off, previous_note, 0U));
+    static_cast<void>(append_transition(
+        decision, TransitionKind::note_on, next_note, velocity));
+  }
+  state.emitted_note = output_note;
+}
+
+bool PolyphonicPitchDetector::change_candidate_dp_output_projection(
+    DetectorDecision& decision, std::size_t candidate,
+    std::uint8_t output_note) noexcept {
+  if (candidate >= static_cast<std::size_t>(candidate_count_) ||
+      (output_note >= 128U && output_note != kTunerNoSignalNote)) {
+    return false;
+  }
+  CandidateState& state = candidate_states_[candidate];
+  const std::uint8_t previous_note = candidate_midi_output_note(candidate);
+  const std::uint8_t next_note =
+      output_note < 128U ? output_note : candidate_output_note(candidate);
+  if (previous_note == next_note) {
+    state.dp_output_projection_note = output_note;
+    return true;
+  }
+  if (state.spectral_duplicate_output_suppressed) {
+    state.dp_output_projection_note = output_note;
+    return true;
+  }
+  const std::size_t lane_count =
+      midi_routing_ == MidiRouting::per_voice
+          ? string_count(state.midi_voice_mask)
+          : 1U;
+  if (lane_count == 0U) {
+    return false;
+  }
+  const std::size_t required = 2U * lane_count;
+  if (required > decision.transitions.capacity() -
+                     decision.transitions.size()) {
+    return false;
   }
   const std::uint8_t velocity = dynamic_velocity();
   if (midi_routing_ == MidiRouting::per_voice) {
@@ -2530,17 +3168,19 @@ void PolyphonicPitchDetector::change_candidate_output_note(
       if ((state.midi_voice_mask & (1U << lane)) == 0U) {
         continue;
       }
-      append_transition(decision, TransitionKind::note_off, previous_note, 0U,
-                        lane);
-      append_transition(decision, TransitionKind::note_on, output_note,
-                        velocity, lane);
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_off, previous_note, 0U, lane));
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_on, next_note, velocity, lane));
     }
   } else {
-    append_transition(decision, TransitionKind::note_off, previous_note, 0U);
-    append_transition(decision, TransitionKind::note_on, output_note,
-                      velocity);
+    static_cast<void>(append_transition(
+        decision, TransitionKind::note_off, previous_note, 0U));
+    static_cast<void>(append_transition(
+        decision, TransitionKind::note_on, next_note, velocity));
   }
-  state.emitted_note = output_note;
+  state.dp_output_projection_note = output_note;
+  return true;
 }
 
 void PolyphonicPitchDetector::update_calibrated_output_notes(
@@ -2675,6 +3315,7 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
     return false;
   }
   CandidateState& state = candidate_states_[candidate];
+  state.spectral_duplicate_output_suppressed = false;
   const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
   if (profile_mode_ == ProfileMode::m3 &&
       midi_routing_ == MidiRouting::per_voice) {
@@ -2688,21 +3329,30 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
     if (desired == 0U) {
       return false;
     }
-    state.emitted_note = note;
+    const std::size_t required = string_count(desired);
+    if (required > decision.transitions.capacity() -
+                       decision.transitions.size()) {
+      return false;
+    }
     for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       if ((desired & (1U << string)) != 0U) {
-        append_transition(decision, TransitionKind::note_on, note, velocity,
-                          string);
+        if (!append_transition(decision, TransitionKind::note_on, note,
+                               velocity, string)) {
+          return false;
+        }
       }
     }
+    state.emitted_note = note;
     state.midi_voice_mask = desired;
     harmonic_energy_memory_[candidate] = {};
     long_harmonic_energy_memory_[candidate] = {};
     harmonic_memory_updates_[candidate] = 0U;
     return true;
   }
+  if (!append_transition(decision, TransitionKind::note_on, note, velocity)) {
+    return false;
+  }
   state.emitted_note = note;
-  append_transition(decision, TransitionKind::note_on, note, velocity);
   harmonic_energy_memory_[candidate] = {};
   long_harmonic_energy_memory_[candidate] = {};
   harmonic_memory_updates_[candidate] = 0U;
@@ -2715,7 +3365,10 @@ bool PolyphonicPitchDetector::append_candidate_note_off(
     return false;
   }
   CandidateState& state = candidate_states_[candidate];
-  const auto note = candidate_output_note(candidate);
+  if (state.spectral_duplicate_output_suppressed) {
+    return true;
+  }
+  const auto note = candidate_midi_output_note(candidate);
   if (profile_mode_ == ProfileMode::m3 &&
       midi_routing_ == MidiRouting::per_voice) {
     const std::size_t required = string_count(state.midi_voice_mask);
@@ -2725,8 +3378,10 @@ bool PolyphonicPitchDetector::append_candidate_note_off(
     }
     for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       if ((state.midi_voice_mask & (1U << string)) != 0U) {
-        append_transition(decision, TransitionKind::note_off, note, 0U,
-                          string);
+        if (!append_transition(decision, TransitionKind::note_off, note, 0U,
+                               string)) {
+          return false;
+        }
       }
     }
     return true;
@@ -2734,7 +3389,52 @@ bool PolyphonicPitchDetector::append_candidate_note_off(
   if (decision.transitions.size() == decision.transitions.capacity()) {
     return false;
   }
-  append_transition(decision, TransitionKind::note_off, note, 0U);
+  return append_transition(decision, TransitionKind::note_off, note, 0U);
+}
+
+bool PolyphonicPitchDetector::append_atomic_candidate_handoff(
+    DetectorDecision& decision, std::size_t incumbent, std::size_t target,
+    std::uint8_t velocity) noexcept {
+  const std::size_t count = static_cast<std::size_t>(candidate_count_);
+  if (incumbent >= count || target >= count || incumbent == target) {
+    return false;
+  }
+  CandidateState& incumbent_state = candidate_states_[incumbent];
+  CandidateState& target_state = candidate_states_[target];
+  if (!incumbent_state.active || target_state.active) {
+    return false;
+  }
+
+  std::size_t off_count = 1U;
+  std::size_t on_count = 1U;
+  if (profile_mode_ == ProfileMode::m3 &&
+      midi_routing_ == MidiRouting::per_voice) {
+    off_count = string_count(incumbent_state.midi_voice_mask);
+    std::uint8_t desired = target_state.assigned_string_mask;
+    if (desired == 0U && target_state.assigned_string < kM3OpenNotes.size()) {
+      desired = static_cast<std::uint8_t>(1U << target_state.assigned_string);
+    }
+    on_count = string_count(desired);
+    if (off_count == 0U || on_count == 0U) {
+      return false;
+    }
+  }
+  const std::size_t required = off_count + on_count;
+  if (required > decision.transitions.capacity() -
+                     decision.transitions.size()) {
+    return false;
+  }
+
+  if (!append_candidate_note_off(decision, incumbent) ||
+      !append_candidate_note_on(decision, target, velocity)) {
+    return false;
+  }
+  incumbent_state = {};
+  target_state.active = true;
+  target_state.attack_ticks = 0U;
+  target_state.evidence_ticks = 0U;
+  target_state.evidence_gap_ticks = 0U;
+  target_state.release_ticks = 0U;
   return true;
 }
 
@@ -2942,6 +3642,11 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   m3_pool_ = {};
   m3_dp_states_ = {};
   selector_group_masks_ = {};
+  if (dp_replacement_allowed_string_mask_ != 0U) {
+    selector_dp_evicted_candidates_ = {};
+    selector_atomic_handoff_targets_ = {};
+    selector_atomic_handoff_target_for_incumbent_ = {};
+  }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   selection_dispositions_.fill(SelectionDisposition::below_threshold);
   retained_unison_dispositions_.fill(
@@ -3233,6 +3938,9 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
         const double margin = diagnostic.best_calibration_similarity -
                               diagnostic.second_calibration_similarity;
         if (diagnostic.best_calibrated_string < kMaxVoices &&
+            (diagnostic_selector_allowed_string_mask_ &
+             static_cast<std::uint8_t>(
+                 1U << diagnostic.best_calibrated_string)) != 0U &&
             diagnostic.calibrated_string_mask ==
                 diagnostic.playable_string_mask &&
             diagnostic.best_calibration_similarity >=
@@ -3712,6 +4420,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
 #endif
     }
   }
+
   // A fret-position prior may rank a weak but direct high-fret candidate
   // below the empty DP state even though the candidate is a clear local
   // fundamental above the coherence floor.  The prior may choose among
@@ -3772,6 +4481,12 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       selection_dispositions_[rescued] = SelectionDisposition::selected;
 #endif
+    }
+  }
+  if (dp_replacement_allowed_string_mask_ != 0U) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      selector_dp_evicted_candidates_[candidate] =
+          in_pool[candidate] && !selected[candidate];
     }
   }
 }
@@ -4037,7 +4752,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
     std::array<Assignment, kM3StringMaskCount> next{};
     const std::size_t candidate = candidates[voice];
     std::uint8_t playable = playable_string_mask(candidate);
-    const std::uint8_t spectral_lane = spectral_lane_assignment(candidate);
+    const std::uint8_t spectral_lane =
+        spectral_lane_assignment(candidate, isolated_selected_voice);
     spectral_lane_proposals[voice] = spectral_lane;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (diagnostic_selector_string_masks_[candidate] != 0U) {
@@ -4502,13 +5218,374 @@ void PolyphonicPitchDetector::assign_m3_strings(
         beat_evidence_states_[candidates[voice]].valid ||
         string_count(fine.member_mask) > 1U ||
         string_count(fine.pending_member_mask) > 1U;
-    if (physical_group_emerging) {
+    const bool isolated_spectral_reassignment =
+        isolated_selected_voice && spectral_lane_proposals[voice] != 0U &&
+        !fine.valid && string_count(fine.member_mask) <= 1U &&
+        string_count(fine.pending_member_mask) <= 1U;
+    if (physical_group_emerging && !isolated_spectral_reassignment) {
       state.spectral_lane_mask = 0U;
     } else if (spectral_lane_proposals[voice] != 0U) {
       state.spectral_lane_mask = spectral_lane_proposals[voice];
     } else {
       state.spectral_lane_mask = 0U;
     }
+  }
+}
+
+void PolyphonicPitchDetector::apply_calibrated_dp_replacements(
+    std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet, std::size_t count) noexcept {
+  if (profile_mode_ != ProfileMode::m3 || quiet ||
+      dp_replacement_allowed_string_mask_ == 0U) {
+    return;
+  }
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    if (string_count(state.assigned_string_mask) >= 2U ||
+        string_count(state.midi_voice_mask) >= 2U ||
+        string_count(state.spectral_lane_mask) >= 2U ||
+        string_count(state.continuity_lane_mask) >= 2U ||
+        string_count(fine.member_mask) >= 2U ||
+        string_count(fine.pending_member_mask) >= 2U) {
+      return;
+    }
+  }
+
+  std::array<std::size_t, kMaxVoices> replacement_targets{};
+  std::array<std::size_t, kMaxVoices> replacement_incumbents{};
+  std::array<double, kMaxVoices> replacement_advantages{};
+  std::array<std::size_t, kMaxVoices> active_incumbents{};
+  replacement_targets.fill(count);
+  replacement_incumbents.fill(count);
+  active_incumbents.fill(count);
+  std::uint8_t occupied_replaceable_lanes = 0U;
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    std::uint8_t owned_mask = state.assigned_string_mask;
+    if (owned_mask == 0U && state.assigned_string < kMaxVoices) {
+      owned_mask = static_cast<std::uint8_t>(1U << state.assigned_string);
+    }
+    if (!selected[candidate] || !state.active ||
+        state.assigned_string >= kMaxVoices ||
+        string_count(owned_mask) != 1U) {
+      continue;
+    }
+    const std::uint8_t bit =
+        static_cast<std::uint8_t>(1U << state.assigned_string);
+    if ((dp_replacement_allowed_string_mask_ & bit) == 0U ||
+        active_incumbents[state.assigned_string] != count) {
+      continue;
+    }
+    active_incumbents[state.assigned_string] = candidate;
+    occupied_replaceable_lanes =
+        static_cast<std::uint8_t>(occupied_replaceable_lanes | bit);
+  }
+  if (occupied_replaceable_lanes == 0U) {
+    return;
+  }
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    if (!selector_dp_evicted_candidates_[candidate] ||
+        candidate_states_[candidate].active ||
+        !has_direct_fundamental_peak(scores, fundamentals, candidate, count) ||
+        (!is_local_peak(scores, candidate, count) &&
+         !has_m3_candidate_evidence(scores, fundamentals, candidate, count))) {
+      continue;
+    }
+    const std::uint8_t playable = playable_string_mask(candidate);
+    const std::uint8_t eligible_lanes =
+        static_cast<std::uint8_t>(playable & occupied_replaceable_lanes);
+    bool score_can_replace = false;
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      if ((eligible_lanes & (1U << string)) == 0U) {
+        continue;
+      }
+      const std::size_t incumbent = active_incumbents[string];
+      const double advantage =
+          (scores[candidate] - scores[incumbent]) /
+          std::max(threshold, kScoreEpsilon);
+      score_can_replace = score_can_replace ||
+                          advantage >= kM3DpReplacementMinimumScoreMargin;
+    }
+    if (!score_can_replace) {
+      continue;
+    }
+    std::array<double, kCalibrationHarmonicCount> current{};
+    double current_total = 0.0;
+    for (std::size_t harmonic = 0U; harmonic < current.size(); ++harmonic) {
+      current[harmonic] = corrected_harmonic_energy(candidate, harmonic);
+      current_total += current[harmonic];
+    }
+    if (current_total <= kScoreEpsilon) {
+      continue;
+    }
+    std::size_t best_string = kMaxVoices;
+    double best_similarity = -1.0;
+    double second_similarity = -1.0;
+    std::size_t playable_count = 0U;
+    std::size_t measured_count = 0U;
+    const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      if ((playable & (1U << string)) == 0U) {
+        continue;
+      }
+      ++playable_count;
+      const StringCalibrationPoint* point =
+          calibrator_.bank().point(string, note - kM3OpenNotes[string]);
+      if (point == nullptr ||
+          point->quality == CalibrationPointQuality::missing) {
+        continue;
+      }
+      ++measured_count;
+      const double similarity = calibration_similarity_from_energy_profile(
+          candidate, string, current, current_total);
+      if (similarity > best_similarity) {
+        second_similarity = best_similarity;
+        best_similarity = similarity;
+        best_string = string;
+      } else if (similarity > second_similarity) {
+        second_similarity = similarity;
+      }
+    }
+    if (best_string >= kMaxVoices ||
+        (dp_replacement_allowed_string_mask_ & (1U << best_string)) == 0U ||
+        !has_decisive_calibrated_shape_thresholds(
+            playable_count, measured_count, best_similarity,
+            second_similarity, kM3DpReplacementMinimumSimilarity,
+            kM3CalibratedCandidateMinimumAdvantage)) {
+      continue;
+    }
+    const std::size_t incumbent = active_incumbents[best_string];
+    if (incumbent == count) {
+      continue;
+    }
+    const double advantage =
+        (scores[candidate] - scores[incumbent]) /
+        std::max(threshold, kScoreEpsilon);
+    if (advantage < kM3DpReplacementMinimumScoreMargin ||
+        (replacement_targets[best_string] != count &&
+         advantage <= replacement_advantages[best_string])) {
+      continue;
+    }
+    replacement_targets[best_string] = candidate;
+    replacement_incumbents[best_string] = incumbent;
+    replacement_advantages[best_string] = advantage;
+  }
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    const std::size_t candidate = replacement_targets[string];
+    const std::size_t incumbent = replacement_incumbents[string];
+    if (candidate == count || incumbent == count) {
+      continue;
+    }
+    selected[incumbent] = false;
+    selected[candidate] = true;
+    CandidateState& target = candidate_states_[candidate];
+    target.assigned_string = static_cast<std::uint8_t>(string);
+    target.assigned_string_mask = static_cast<std::uint8_t>(1U << string);
+    selector_atomic_handoff_targets_[candidate] = true;
+    selector_atomic_handoff_target_for_incumbent_[incumbent] =
+        static_cast<std::uint8_t>(candidate + 1U);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    selection_dispositions_[incumbent] = SelectionDisposition::dp_evicted;
+    selection_dispositions_[candidate] = SelectionDisposition::selected;
+#endif
+  }
+}
+
+void PolyphonicPitchDetector::update_calibrated_dp_output_projections(
+    DetectorDecision& decision,
+    const std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet, std::size_t count) noexcept {
+  if (profile_mode_ != ProfileMode::m3 ||
+      midi_routing_ != MidiRouting::per_voice) {
+    return;
+  }
+  if (quiet) {
+    // Silence and coasting must release the note that was actually rendered;
+    // never re-articulate the detector's base pitch on the way to note-off.
+    // A proposal that has not yet rendered is different: clear its consensus
+    // so two separate articulations cannot combine across true silence.
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      CandidateState& state = candidate_states_[candidate];
+      state.dp_output_projection_target =
+          state.dp_output_projection_note;
+      state.dp_output_projection_ticks =
+          state.dp_output_projection_note < 128U
+              ? kM3DpOutputConsensusDecisions
+              : 0U;
+    }
+    return;
+  }
+
+  const auto stage_projection =
+      [this, &decision](std::size_t candidate,
+                        std::uint8_t desired_note) noexcept {
+        CandidateState& state = candidate_states_[candidate];
+        if (state.dp_output_projection_note == desired_note) {
+          state.dp_output_projection_target = desired_note;
+          state.dp_output_projection_ticks =
+              kM3DpOutputConsensusDecisions;
+          return;
+        }
+        if (state.dp_output_projection_target != desired_note) {
+          state.dp_output_projection_target = desired_note;
+          state.dp_output_projection_ticks = 1U;
+          return;
+        }
+        if (state.dp_output_projection_ticks <
+            std::numeric_limits<std::uint8_t>::max()) {
+          ++state.dp_output_projection_ticks;
+        }
+        if (state.dp_output_projection_ticks <
+            kM3DpOutputConsensusDecisions) {
+          return;
+        }
+        if (change_candidate_dp_output_projection(
+                decision, candidate, desired_note)) {
+          state.dp_output_projection_ticks =
+              kM3DpOutputConsensusDecisions;
+        }
+      };
+
+  bool grouped_context = false;
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    if (string_count(state.assigned_string_mask) >= 2U ||
+        string_count(state.midi_voice_mask) >= 2U ||
+        string_count(state.spectral_lane_mask) >= 2U ||
+        string_count(state.continuity_lane_mask) >= 2U ||
+        string_count(fine.member_mask) >= 2U ||
+        string_count(fine.pending_member_mask) >= 2U) {
+      grouped_context = true;
+      break;
+    }
+  }
+
+  std::size_t incumbent = count;
+  if (!grouped_context) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      const CandidateState& state = candidate_states_[candidate];
+      std::uint8_t owned = state.assigned_string_mask;
+      if (owned == 0U && state.assigned_string < kMaxVoices) {
+        owned = static_cast<std::uint8_t>(1U << state.assigned_string);
+      }
+      if (!selected[candidate] || !state.active || owned != 0x01U ||
+          state.midi_voice_mask != 0x01U ||
+          state.spectral_duplicate_output_suppressed) {
+        continue;
+      }
+      if (incumbent != count) {
+        incumbent = count;
+        break;
+      }
+      incumbent = candidate;
+    }
+  }
+
+  std::size_t best_target = count;
+  double best_advantage = -std::numeric_limits<double>::infinity();
+  if (incumbent != count) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      if (!selector_dp_evicted_candidates_[candidate] ||
+          candidate_states_[candidate].active ||
+          !has_direct_fundamental_peak(scores, fundamentals, candidate,
+                                       count) ||
+          (!is_local_peak(scores, candidate, count) &&
+           !has_m3_candidate_evidence(scores, fundamentals, candidate,
+                                      count))) {
+        continue;
+      }
+      const std::uint8_t playable = playable_string_mask(candidate);
+      if ((playable & kM3DpOutputAllowedStringMask) == 0U) {
+        continue;
+      }
+      std::array<double, kCalibrationHarmonicCount> current{};
+      double current_total = 0.0;
+      for (std::size_t harmonic = 0U; harmonic < current.size(); ++harmonic) {
+        current[harmonic] = corrected_harmonic_energy(candidate, harmonic);
+        current_total += current[harmonic];
+      }
+      if (current_total <= kScoreEpsilon) {
+        continue;
+      }
+      std::size_t best_string = kMaxVoices;
+      double best_similarity = -1.0;
+      double second_similarity = -1.0;
+      const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+      for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+        if ((playable & (1U << string)) == 0U) {
+          continue;
+        }
+        const StringCalibrationPoint* point =
+            calibrator_.bank().point(string, note - kM3OpenNotes[string]);
+        if (point == nullptr ||
+            point->quality == CalibrationPointQuality::missing) {
+          continue;
+        }
+        const double similarity = calibration_similarity_from_energy_profile(
+            candidate, string, current, current_total);
+        if (similarity > best_similarity) {
+          second_similarity = best_similarity;
+          best_similarity = similarity;
+          best_string = string;
+        } else if (similarity > second_similarity) {
+          second_similarity = similarity;
+        }
+      }
+      if (best_string != 0U ||
+          best_similarity < kM3DpOutputMinimumSimilarity ||
+          best_similarity - second_similarity <
+              kM3DpOutputMinimumCalibrationMargin) {
+        continue;
+      }
+      const double advantage =
+          (scores[candidate] - scores[incumbent]) /
+          std::max(threshold, kScoreEpsilon);
+      if (advantage < kM3DpOutputMinimumScoreMargin ||
+          (best_target != count && advantage <= best_advantage)) {
+        continue;
+      }
+      best_target = candidate;
+      best_advantage = advantage;
+    }
+  }
+
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    CandidateState& state = candidate_states_[candidate];
+    if (!state.active) {
+      state.dp_output_projection_note = kTunerNoSignalNote;
+      state.dp_output_projection_target = kTunerNoSignalNote;
+      state.dp_output_projection_ticks = 0U;
+      continue;
+    }
+    if (!selected[candidate]) {
+      // Coasting keeps the actual rendered note until the ordinary release
+      // duration emits its matching note-off.
+      state.dp_output_projection_target = state.dp_output_projection_note;
+      state.dp_output_projection_ticks =
+          state.dp_output_projection_note < 128U
+              ? kM3DpOutputConsensusDecisions
+              : 0U;
+      continue;
+    }
+    const std::uint8_t desired =
+        candidate == incumbent && best_target != count
+            ? static_cast<std::uint8_t>(lowest_note_ + best_target)
+            : kTunerNoSignalNote;
+    if (desired == kTunerNoSignalNote &&
+        state.dp_output_projection_note == kTunerNoSignalNote) {
+      state.dp_output_projection_target = kTunerNoSignalNote;
+      state.dp_output_projection_ticks = 0U;
+      continue;
+    }
+    stage_projection(candidate, desired);
   }
 }
 
@@ -4702,6 +5779,117 @@ double PolyphonicPitchDetector::fine_frequency_consensus_seconds(
   return kFineFrequencyReplacementConsensusSeconds;
 }
 
+std::uint8_t PolyphonicPitchDetector::bounded_fine_mask_complexity_output(
+    bool active, bool selected, bool direct_fundamental, bool quiet,
+    double score_threshold_ratio, std::uint8_t current_output_mask,
+    std::uint8_t playable_mask, std::uint8_t other_output_mask,
+    std::uint8_t maximum_polyphony,
+    const std::array<std::uint8_t, 11U>& masks,
+    const std::array<double, 11U>& normalized_residual,
+    std::size_t count) noexcept {
+  constexpr double kMemberPenalty = 0.02;
+  constexpr double kTieEpsilon = 1.0e-12;
+  const std::uint8_t current_members = string_count(current_output_mask);
+  if (!active || !selected || !direct_fundamental || quiet ||
+      !std::isfinite(score_threshold_ratio) ||
+      score_threshold_ratio < kM3RetainedUnisonDecayFloorRatio ||
+      current_members != 4U ||
+      other_output_mask != 0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      count == 0U || count > masks.size()) {
+    return current_output_mask;
+  }
+
+  double best_score = std::numeric_limits<double>::infinity();
+  std::uint8_t best_mask = 0U;
+  bool tied = false;
+  for (std::size_t index = 0U; index < count; ++index) {
+    const std::uint8_t mask = masks[index];
+    const std::uint8_t members = string_count(mask);
+    const double residual = normalized_residual[index];
+    if (members != 3U ||
+        (mask & static_cast<std::uint8_t>(~current_output_mask)) != 0U ||
+        (mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+        (mask & other_output_mask) != 0U ||
+        string_count(static_cast<std::uint8_t>(mask | other_output_mask)) >
+            maximum_polyphony ||
+        !std::isfinite(residual) || residual < 0.0) {
+      continue;
+    }
+    const double score =
+        residual + kMemberPenalty * static_cast<double>(members - 2U);
+    if (score + kTieEpsilon < best_score) {
+      best_score = score;
+      best_mask = mask;
+      tied = false;
+    } else if (std::abs(score - best_score) <= kTieEpsilon) {
+      tied = true;
+    }
+  }
+  return !tied && best_mask != 0U ? best_mask : current_output_mask;
+}
+
+std::uint8_t PolyphonicPitchDetector::bounded_fine_beat_pruning_output(
+    std::uint8_t midi_note, bool active, bool selected,
+    bool direct_fundamental, bool quiet, double score_threshold_ratio,
+    std::uint8_t current_output_mask, std::uint8_t playable_mask,
+    std::uint8_t other_output_mask, std::uint8_t maximum_polyphony,
+    const std::array<std::uint8_t, 10U>& masks,
+    const std::array<double, 10U>& normalized_residual,
+    const std::array<double, 10U>& minimum_beat_coherence,
+    const std::array<bool, 10U>& beat_graph_connected,
+    std::size_t count) noexcept {
+  constexpr std::uint8_t kLowestPrunedNote = 56U;
+  const std::uint8_t current_members = string_count(current_output_mask);
+  if (midi_note < kLowestPrunedNote || !active || !selected ||
+      !direct_fundamental || quiet ||
+      !std::isfinite(score_threshold_ratio) ||
+      score_threshold_ratio < kM3RetainedUnisonDecayFloorRatio ||
+      current_members < 3U || current_members > 4U ||
+      (current_output_mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+      (current_output_mask & other_output_mask) != 0U ||
+      maximum_polyphony == 0U || maximum_polyphony > kMaxVoices ||
+      string_count(static_cast<std::uint8_t>(current_output_mask |
+                                             other_output_mask)) >
+          maximum_polyphony ||
+      count == 0U || count > masks.size()) {
+    return current_output_mask;
+  }
+
+  double best_score = std::numeric_limits<double>::infinity();
+  std::uint8_t best_mask = 0U;
+  bool tied = false;
+  for (std::size_t index = 0U; index < count; ++index) {
+    const std::uint8_t mask = masks[index];
+    const std::uint8_t members = string_count(mask);
+    const double residual = normalized_residual[index];
+    const double coherence = minimum_beat_coherence[index];
+    if (members < 2U || members >= current_members ||
+        (mask & static_cast<std::uint8_t>(~current_output_mask)) != 0U ||
+        (mask & static_cast<std::uint8_t>(~playable_mask)) != 0U ||
+        (mask & other_output_mask) != 0U ||
+        string_count(static_cast<std::uint8_t>(mask | other_output_mask)) >
+            maximum_polyphony ||
+        !beat_graph_connected[index] || !std::isfinite(residual) ||
+        residual < 0.0 || !std::isfinite(coherence) ||
+        coherence < kFineBeatPruningMinimumCoherence) {
+      continue;
+    }
+    const double score = residual +
+                         kFineBeatPruningMemberPenalty *
+                             static_cast<double>(members - 2U);
+    if (score + kFineBeatPruningTieEpsilon < best_score) {
+      best_score = score;
+      best_mask = mask;
+      tied = false;
+    } else if (std::abs(score - best_score) <=
+               kFineBeatPruningTieEpsilon) {
+      tied = true;
+    }
+  }
+  return !tied && best_mask != 0U ? best_mask : current_output_mask;
+}
+
 void PolyphonicPitchDetector::update_fine_frequency_evidence(
     const std::array<bool, kMaxCandidates>& selected,
     const std::array<double, kMaxCandidates>& scores,
@@ -4732,8 +5920,8 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
   for (std::size_t candidate = 0U; candidate < candidate_count; ++candidate) {
     FineFrequencyEvidenceState& state =
         fine_frequency_evidence_states_[candidate];
+    CandidateState& candidate_state = candidate_states_[candidate];
     if (!selected[candidate]) {
-      const CandidateState& candidate_state = candidate_states_[candidate];
       const std::uint8_t members = string_count(state.member_mask);
       const bool carry_established_physical_group =
           !quiet && candidate_state.active && state.valid &&
@@ -4743,7 +5931,21 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
               threshold * kM3RetainedUnisonDecayFloorRatio &&
           has_direct_fundamental_peak(scores, fundamentals, candidate,
                                       candidate_count);
-      if (!carry_established_physical_group) {
+      bool carry_collecting_physical_group = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      carry_collecting_physical_group =
+          diagnostic_collecting_fine_history_carry_enabled_ && !quiet &&
+          candidate_state.active && !state.valid && state.count != 0U &&
+          playable_string_mask(candidate) != 0U &&
+          scores[candidate] >=
+              threshold * kM3RetainedUnisonDecayFloorRatio &&
+          has_direct_fundamental_peak(scores, fundamentals, candidate,
+                                      candidate_count) &&
+          has_m3_candidate_evidence(scores, fundamentals, candidate,
+                                    candidate_count);
+#endif
+      if (!carry_established_physical_group &&
+          !carry_collecting_physical_group) {
         if (decision_counter_ - state.last_decision_tick > maximum_gap) {
           state = {};
         }
@@ -4796,6 +5998,12 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       continue;
     }
     analysis_claimed = true;
+    const std::uint8_t previous_beat_pruning_source_mask =
+        state.beat_pruning_source_mask;
+    const std::uint8_t previous_beat_pruned_member_mask =
+        state.beat_pruned_member_mask;
+    state.beat_pruning_source_mask = 0U;
+    state.beat_pruned_member_mask = 0U;
 
     const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
     const double center_frequency =
@@ -5045,9 +6253,10 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       correlations[row] *= inverse_count;
       gram[row][row] += kFineFrequencyRidge;
     }
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    const auto diagnostic_gram = gram;
-#endif
+    // The full solve below reduces gram in place. Preserve the normalized
+    // matrix once so the bounded strict-subset fits can reuse the same causal
+    // window without a second history scan.
+    const auto subset_fit_gram = gram;
 
     std::array<Complex, kMaxVoices> solution = correlations;
     bool solvable = true;
@@ -5216,17 +6425,9 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           amplitude / maximum_amplitude);
       ++member_count;
     }
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    const auto fitted_error_without_component =
-        [&](std::size_t omitted_component) noexcept {
-          std::array<std::size_t, kMaxVoices> retained{};
-          std::size_t retained_count = 0U;
-          for (std::size_t component = 0U; component < component_count;
-               ++component) {
-            if (component != omitted_component) {
-              retained[retained_count++] = component;
-            }
-          }
+    const auto fitted_error_for_components =
+        [&](const std::array<std::size_t, kMaxVoices>& retained,
+            std::size_t retained_count) noexcept {
           if (retained_count == 0U) {
             return signal_energy;
           }
@@ -5237,7 +6438,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
             for (std::size_t column = 0U; column < retained_count;
                  ++column) {
               matrix[row][column] =
-                  diagnostic_gram[retained[row]][retained[column]];
+                  subset_fit_gram[retained[row]][retained[column]];
             }
           }
           for (std::size_t column = 0U; column < retained_count; ++column) {
@@ -5282,6 +6483,99 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           return std::max(0.0, signal_energy - std::real(reduced_cross) -
                                    kFineFrequencyRidge * reduced_norm);
         };
+    std::array<std::uint8_t, 10U> beat_pruning_masks{};
+    std::array<double, 10U> beat_pruning_residuals{};
+    std::array<double, 10U> beat_pruning_coherence{};
+    std::array<bool, 10U> beat_pruning_connected{};
+    std::size_t beat_pruning_count = 0U;
+    std::uint8_t beat_pruning_source_mask = 0U;
+    std::uint8_t beat_pruning_other_output = 0U;
+    const std::uint8_t current_output = projected_output_string_mask(
+        candidate_state.assigned_string_mask, candidate_state.assigned_string,
+        candidate_state.spectral_lane_mask,
+        candidate_state.continuity_lane_mask);
+    const std::uint8_t current_output_members = string_count(current_output);
+    const bool beat_pruning_direct = has_direct_fundamental_peak(
+        scores, fundamentals, candidate, candidate_count);
+    const bool full_output_is_fine_confirmed =
+        state.valid && state.multi_source_observed &&
+        state.member_mask == current_output;
+    if (full_output_is_fine_confirmed) {
+      // A complete fine-frequency fit already authorizes every current lane,
+      // so pruning cannot affect this decision. Keep the most recent bounded
+      // pruning cache for a later loss of fine confirmation instead of
+      // rescanning three seconds of history or erasing reacquisition state.
+      state.beat_pruning_source_mask = previous_beat_pruning_source_mask;
+      state.beat_pruned_member_mask = previous_beat_pruned_member_mask;
+    } else if (note >= 56U && candidate_state.active && selected[candidate] &&
+        !quiet && beat_pruning_direct &&
+        scores[candidate] / std::max(threshold, kScoreEpsilon) >=
+            kM3RetainedUnisonDecayFloorRatio &&
+        current_output_members >= 3U && current_output_members <= 4U &&
+        (current_output & static_cast<std::uint8_t>(~playable)) == 0U) {
+      for (std::size_t other = 0U; other < candidate_count; ++other) {
+        if (other != candidate && candidate_states_[other].active) {
+          beat_pruning_other_output = static_cast<std::uint8_t>(
+              beat_pruning_other_output |
+              candidate_states_[other].midi_voice_mask);
+        }
+      }
+      if ((current_output & beat_pruning_other_output) == 0U &&
+          string_count(static_cast<std::uint8_t>(
+              current_output | beat_pruning_other_output)) <= max_polyphony_) {
+        beat_pruning_source_mask = current_output;
+        for (std::uint8_t mask = static_cast<std::uint8_t>(
+                 (current_output - 1U) & current_output);
+             mask != 0U;
+             mask = static_cast<std::uint8_t>((mask - 1U) & current_output)) {
+          const std::uint8_t mask_members = string_count(mask);
+          if (mask_members < 2U || mask_members >= current_output_members ||
+              beat_pruning_count >= beat_pruning_masks.size()) {
+            continue;
+          }
+          std::array<std::size_t, kMaxVoices> retained{};
+          std::size_t retained_count = 0U;
+          std::uint8_t represented_mask = 0U;
+          for (std::size_t component = 0U; component < component_count;
+               ++component) {
+            const std::uint8_t bit =
+                static_cast<std::uint8_t>(1U << strings[component]);
+            if ((mask & bit) == 0U) {
+              continue;
+            }
+            retained[retained_count++] = component;
+            represented_mask =
+                static_cast<std::uint8_t>(represented_mask | bit);
+          }
+          if (represented_mask != mask || retained_count != mask_members) {
+            continue;
+          }
+          const double subset_error =
+              fitted_error_for_components(retained, retained_count);
+          if (!std::isfinite(subset_error)) {
+            continue;
+          }
+          beat_pruning_masks[beat_pruning_count] = mask;
+          beat_pruning_residuals[beat_pruning_count] =
+              subset_error / std::max(signal_energy, kScoreEpsilon);
+          ++beat_pruning_count;
+        }
+      }
+    }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    state.mask_residuals = {};
+    const auto fitted_error_without_component =
+        [&](std::size_t omitted_component) noexcept {
+          std::array<std::size_t, kMaxVoices> retained{};
+          std::size_t retained_count = 0U;
+          for (std::size_t component = 0U; component < component_count;
+               ++component) {
+            if (component != omitted_component) {
+              retained[retained_count++] = component;
+            }
+          }
+          return fitted_error_for_components(retained, retained_count);
+        };
     for (std::size_t component = 0U; component < component_count;
          ++component) {
       const std::uint8_t bit =
@@ -5295,6 +6589,42 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           (without_error - fitted_error) /
               std::max(without_error, kScoreEpsilon),
           0.0, 1.0);
+    }
+    if (fine_mask_complexity_diagnostics_enabled_) {
+      for (std::size_t physical_mask = 1U;
+           physical_mask < state.mask_residuals.valid.size();
+           ++physical_mask) {
+        const std::uint8_t mask = static_cast<std::uint8_t>(physical_mask);
+        const std::uint8_t mask_members = string_count(mask);
+        if (mask_members < 2U || mask_members > maximum_member_count) {
+          continue;
+        }
+        std::array<std::size_t, kMaxVoices> retained{};
+        std::size_t retained_count = 0U;
+        std::uint8_t represented_mask = 0U;
+        for (std::size_t component = 0U; component < component_count;
+             ++component) {
+          const std::uint8_t bit =
+              static_cast<std::uint8_t>(1U << strings[component]);
+          if ((mask & bit) == 0U) {
+            continue;
+          }
+          retained[retained_count++] = component;
+          represented_mask =
+              static_cast<std::uint8_t>(represented_mask | bit);
+        }
+        if (represented_mask != mask || retained_count != mask_members) {
+          continue;
+        }
+        const double subset_error =
+            fitted_error_for_components(retained, retained_count);
+        if (!std::isfinite(subset_error)) {
+          continue;
+        }
+        state.mask_residuals.normalized_residual[physical_mask] =
+            subset_error / std::max(signal_energy, kScoreEpsilon);
+        state.mask_residuals.valid[physical_mask] = true;
+      }
     }
     state.fit_member_mask = members;
     state.residual_improvement = 0.0;
@@ -5397,6 +6727,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
         pairwise_weighted_centered{};
     std::array<double, kFineFrequencyHistoryCapacity>
         pairwise_weighted_absolute{};
+    double pairwise_weighted_absolute_sum = 0.0;
     bool pairwise_prepared = false;
     const auto prepare_pairwise = [&]() noexcept {
       if (pairwise_prepared) {
@@ -5453,12 +6784,10 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
             energy -
             (pairwise_mean_energy +
              pairwise_slope * (seconds - pairwise_mean_time));
-        const double window =
-            0.5 - 0.5 *
-                      std::cos(kTwoPi * static_cast<double>(sample) /
-                               static_cast<double>(fit_count - 1U));
+        const double window = fine_frequency_hann_window_[sample];
         pairwise_weighted_centered[sample] = window * centered;
         pairwise_weighted_absolute[sample] = window * std::abs(centered);
+        pairwise_weighted_absolute_sum += pairwise_weighted_absolute[sample];
       }
       pairwise_prepared = true;
     };
@@ -5476,6 +6805,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       double absolute = 0.0;
       if (beat_hz >= kMinimumBeatHz && beat_hz <= kMaximumBeatHz) {
         prepare_pairwise();
+        absolute = pairwise_weighted_absolute_sum;
         if (uniformly_sampled) {
           const double step_seconds =
               static_cast<double>(uniform_tick_step) * seconds_per_decision;
@@ -5484,7 +6814,6 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           Complex phase{1.0, 0.0};
           for (std::size_t sample = 0U; sample < fit_count; ++sample) {
             correlation += pairwise_weighted_centered[sample] * phase;
-            absolute += pairwise_weighted_absolute[sample];
             phase *= phase_step;
           }
         } else {
@@ -5498,7 +6827,6 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
             const double phase = -kTwoPi * beat_hz * seconds;
             correlation += pairwise_weighted_centered[sample] *
                            Complex{std::cos(phase), std::sin(phase)};
-            absolute += pairwise_weighted_absolute[sample];
           }
         }
       }
@@ -5563,6 +6891,26 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           static_cast<std::uint8_t>(reached & mask) == mask;
       return result;
     };
+    if (beat_pruning_source_mask != 0U && beat_pruning_count != 0U) {
+      for (std::size_t index = 0U; index < beat_pruning_count; ++index) {
+        const PairwiseBeatResult support =
+            pairwise_beat_coherence(beat_pruning_masks[index]);
+        beat_pruning_coherence[index] = support.minimum;
+        beat_pruning_connected[index] = support.connected;
+      }
+      const std::uint8_t projection = bounded_fine_beat_pruning_output(
+          note, candidate_state.active, selected[candidate],
+          beat_pruning_direct, quiet,
+          scores[candidate] / std::max(threshold, kScoreEpsilon),
+          beat_pruning_source_mask, playable, beat_pruning_other_output,
+          max_polyphony_, beat_pruning_masks, beat_pruning_residuals,
+          beat_pruning_coherence, beat_pruning_connected,
+          beat_pruning_count);
+      state.beat_pruning_source_mask = beat_pruning_source_mask;
+      if (projection != beat_pruning_source_mask) {
+        state.beat_pruned_member_mask = projection;
+      }
+    }
     const PairwiseBeatResult proposed_beat_support =
         pairwise_beat_coherence(members);
     const double proposed_beat_coherence = proposed_beat_support.minimum;
@@ -5642,6 +6990,19 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     if (offline_replay_diagnostics_enabled_) {
       state.pairwise_beat_coherence_by_mask.fill(0.0);
       state.added_member_beat_coherence_by_completion_mask.fill(0.0);
+      for (std::size_t physical_mask = 1U;
+           physical_mask < state.mask_residuals.valid.size();
+           ++physical_mask) {
+        if (!state.mask_residuals.valid[physical_mask]) {
+          continue;
+        }
+        const PairwiseBeatResult support = pairwise_beat_coherence(
+            static_cast<std::uint8_t>(physical_mask));
+        state.mask_residuals.minimum_beat_coherence[physical_mask] =
+            support.minimum;
+        state.mask_residuals.beat_graph_connected[physical_mask] =
+            support.connected;
+      }
       std::array<bool, 1U << kMaxVoices> measured_masks{};
       const auto measure_completion_mask = [&](std::uint8_t mask) noexcept {
         const std::uint8_t count = string_count(mask);
@@ -5705,6 +7066,128 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     }
 #endif
     state.valid = state.member_mask != 0U;
+  }
+}
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void PolyphonicPitchDetector::update_fine_mask_pruning_output_projection(
+    const std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet) noexcept {
+  const std::size_t candidate_count =
+      static_cast<std::size_t>(candidate_count_);
+  for (std::size_t candidate = 0U; candidate < candidate_count; ++candidate) {
+    CandidateState& state = candidate_states_[candidate];
+    state.diagnostic_fine_mask_pruning_mask = 0U;
+    if (!diagnostic_fine_mask_pruning_enabled_) {
+      continue;
+    }
+    const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    if (note < 52U) {
+      continue;
+    }
+    const std::uint8_t current_output = projected_output_string_mask(
+        state.assigned_string_mask, state.assigned_string,
+        state.spectral_lane_mask, state.continuity_lane_mask);
+    if (string_count(current_output) < 3U ||
+        string_count(current_output) > 4U) {
+      continue;
+    }
+    std::array<std::uint8_t, 11U> masks{};
+    std::array<double, 11U> normalized_residual{};
+    std::size_t mask_count = 0U;
+    const FineFrequencyMaskResidualTable& residuals =
+        fine_frequency_evidence_states_[candidate].mask_residuals;
+    for (std::uint8_t mask = current_output; mask != 0U;
+         mask = static_cast<std::uint8_t>((mask - 1U) & current_output)) {
+      const std::uint8_t members = string_count(mask);
+      if (members < 2U || members > 4U || !residuals.valid[mask] ||
+          mask_count >= masks.size()) {
+        continue;
+      }
+      masks[mask_count] = mask;
+      normalized_residual[mask_count] = residuals.normalized_residual[mask];
+      ++mask_count;
+    }
+    std::uint8_t other_output = 0U;
+    for (std::size_t other = 0U; other < candidate_count; ++other) {
+      if (other != candidate && candidate_states_[other].active) {
+        other_output = static_cast<std::uint8_t>(
+            other_output | candidate_states_[other].midi_voice_mask);
+      }
+    }
+    const std::uint8_t projection = bounded_fine_mask_complexity_output(
+        state.active, selected[candidate],
+        has_direct_fundamental_peak(scores, fundamentals, candidate,
+                                    candidate_count),
+        quiet, scores[candidate] / std::max(threshold, kScoreEpsilon),
+        current_output, playable_string_mask(candidate), other_output,
+        max_polyphony_, masks, normalized_residual, mask_count);
+    if (projection != current_output) {
+      state.diagnostic_fine_mask_pruning_mask = projection;
+    }
+  }
+}
+#endif
+
+void PolyphonicPitchDetector::update_fine_beat_pruning_output_projection(
+    const std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet) noexcept {
+  const std::size_t candidate_count =
+      static_cast<std::size_t>(candidate_count_);
+  for (std::size_t candidate = 0U; candidate < candidate_count; ++candidate) {
+    CandidateState& state = candidate_states_[candidate];
+    state.fine_beat_pruning_mask = 0U;
+    const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    if (note < 56U || !state.active || !selected[candidate] || quiet ||
+        !has_direct_fundamental_peak(scores, fundamentals, candidate,
+                                     candidate_count) ||
+        scores[candidate] /
+                std::max(threshold, kScoreEpsilon) <
+            kM3RetainedUnisonDecayFloorRatio) {
+      continue;
+    }
+    const std::uint8_t current_output = projected_output_string_mask(
+        state.assigned_string_mask, state.assigned_string,
+        state.spectral_lane_mask, state.continuity_lane_mask);
+    const std::uint8_t current_members = string_count(current_output);
+    if (current_members < 3U || current_members > 4U ||
+        (current_output &
+         static_cast<std::uint8_t>(~playable_string_mask(candidate))) != 0U) {
+      continue;
+    }
+    std::uint8_t other_output = 0U;
+    for (std::size_t other = 0U; other < candidate_count; ++other) {
+      if (other != candidate && candidate_states_[other].active) {
+        other_output = static_cast<std::uint8_t>(
+            other_output | candidate_states_[other].midi_voice_mask);
+      }
+    }
+    if ((current_output & other_output) != 0U ||
+        string_count(static_cast<std::uint8_t>(current_output |
+                                               other_output)) >
+            max_polyphony_) {
+      continue;
+    }
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    const std::uint8_t projection = fine.beat_pruned_member_mask;
+    const bool full_output_is_fine_confirmed =
+        fine.valid && fine.multi_source_observed &&
+        fine.member_mask == current_output;
+    if (!full_output_is_fine_confirmed &&
+        fine.beat_pruning_source_mask == current_output &&
+        string_count(projection) >= 2U &&
+        string_count(projection) < current_members &&
+        (projection & static_cast<std::uint8_t>(~current_output)) == 0U &&
+        (projection & other_output) == 0U &&
+        string_count(static_cast<std::uint8_t>(projection | other_output)) <=
+            max_polyphony_) {
+      state.fine_beat_pruning_mask = projection;
+    }
   }
 }
 
@@ -6400,6 +7883,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     std::uint8_t tier_completion = state.assigned_string_mask;
     const std::uint8_t fine_members = string_count(fine_group);
     if (fine.valid && fine_members >= 2U && fine_members < 4U) {
+      const SpectralHeadEvidence tier_spectral =
+          string_fret_spectral_head_evidence(candidate);
       // A selected candidate can accumulate a complete multi-source fine fit
       // before its ordinary attack gate activates the MIDI voice.  Treat that
       // resolved pair as the live base for a bounded one-lane completion so
@@ -6410,8 +7895,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
           bounded_spectral_tier_completion(
               established_or_fresh_resolved_group,
               state.assigned_string_mask, fine_group,
-              playable_string_mask(candidate),
-              string_fret_spectral_head_evidence(candidate),
+              playable_string_mask(candidate), tier_spectral,
               fine.added_member_beat_coherence, fine.component_energy);
       if (completed_fine_group != fine_group) {
         tier_completion = completed_fine_group;
@@ -6981,6 +8465,27 @@ double PolyphonicPitchDetector::calibration_similarity(
       string >= kM3OpenNotes.size()) {
     return 0.0;
   }
+  double total = 0.0;
+  std::array<double, kCalibrationHarmonicCount> current{};
+  for (std::size_t harmonic = 0U; harmonic < current.size(); ++harmonic) {
+    current[harmonic] = corrected_harmonic_energy(candidate, harmonic);
+    total += current[harmonic];
+  }
+  if (total <= kScoreEpsilon) {
+    return 0.0;
+  }
+  return calibration_similarity_from_energy_profile(candidate, string,
+                                                    current, total);
+}
+
+double PolyphonicPitchDetector::calibration_similarity_from_energy_profile(
+    std::size_t candidate, std::size_t string,
+    const std::array<double, kCalibrationHarmonicCount>& current,
+    double total) const noexcept {
+  if (candidate >= static_cast<std::size_t>(candidate_count_) ||
+      string >= kM3OpenNotes.size() || total <= kScoreEpsilon) {
+    return 0.0;
+  }
   const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
   if (note < kM3OpenNotes[string]) {
     return 0.0;
@@ -6990,15 +8495,6 @@ double PolyphonicPitchDetector::calibration_similarity(
       calibrator_.bank().point(string, fret);
   if (point == nullptr ||
       point->quality == CalibrationPointQuality::missing) {
-    return 0.0;
-  }
-  double total = 0.0;
-  std::array<double, kCalibrationHarmonicCount> current{};
-  for (std::size_t harmonic = 0U; harmonic < current.size(); ++harmonic) {
-    current[harmonic] = corrected_harmonic_energy(candidate, harmonic);
-    total += current[harmonic];
-  }
-  if (total <= kScoreEpsilon) {
     return 0.0;
   }
   double dot = 0.0;
@@ -7191,12 +8687,17 @@ void PolyphonicPitchDetector::write_snapshot(
     if (!state.active && !selected[candidate]) {
       continue;
     }
+    if (state.active && state.spectral_duplicate_output_suppressed) {
+      continue;
+    }
     TunerVoice base_voice;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     base_voice.detected_midi_note =
         static_cast<std::uint8_t>(lowest_note_ + candidate);
 #endif
-    base_voice.midi_note = candidate_output_note(candidate);
+    const bool dp_output_projected =
+        state.dp_output_projection_note < 128U;
+    base_voice.midi_note = candidate_midi_output_note(candidate);
     base_voice.age_ticks = state.age_ticks;
     const BeatEvidenceState& beat = beat_evidence_states_[candidate];
     if (beat.valid && std::isfinite(beat.beat_hz)) {
@@ -7210,7 +8711,35 @@ void PolyphonicPitchDetector::write_snapshot(
                            ? TunerVoiceState::tracking
                            : (coasting ? TunerVoiceState::coasting
                                       : TunerVoiceState::settling);
-    if (coasting) {
+    if (dp_output_projected) {
+      if (coasting) {
+        const std::uint16_t release = release_decisions();
+        const double remaining =
+            release > state.release_ticks
+                ? static_cast<double>(release - state.release_ticks) /
+                      static_cast<double>(release)
+                : 0.0;
+        base_voice.confidence_q15 = static_cast<std::uint16_t>(std::lround(
+            static_cast<double>(state.retained_confidence_q15) * remaining));
+      } else {
+        const double normalized = std::clamp(
+            (scores[candidate] - threshold) /
+                (scores[candidate] + threshold),
+            0.0, 1.0);
+        base_voice.confidence_q15 = static_cast<std::uint16_t>(
+            std::lround(normalized * 32767.0));
+        if (tracking) {
+          state.retained_confidence_q15 = base_voice.confidence_q15;
+        }
+      }
+      // The projected MIDI identity belongs to a different resonator bin;
+      // reporting the incumbent bin's cents as if they described that note
+      // would make the tuner display falsely precise.
+      base_voice.cents_valid = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      base_voice.detected_cents_valid = false;
+#endif
+    } else if (coasting) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       base_voice.detected_cents_q8 = state.retained_cents_q8;
       base_voice.detected_cents_valid = state.retained_cents_valid;
@@ -7294,9 +8823,24 @@ void PolyphonicPitchDetector::write_snapshot(
       append_voice(kUnassignedTunerString);
       continue;
     }
-    const std::uint8_t strings = projected_output_string_mask(
+    std::uint8_t strings = projected_output_string_mask(
         state.assigned_string_mask, state.assigned_string,
         state.spectral_lane_mask, state.continuity_lane_mask);
+    if (state.active && state.fine_beat_pruning_mask != 0U) {
+      strings = state.midi_voice_mask;
+    }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // The fine-mask pruning experiment is output-only.  Score the exact lanes
+    // that the diagnostic MIDI path has emitted rather than the wider internal
+    // assignment that remains available for subsequent evidence updates.
+    if (state.active &&
+        ((diagnostic_fine_mask_pruning_enabled_ &&
+          state.diagnostic_fine_mask_pruning_mask != 0U) ||
+         (diagnostic_fine_beat_pruning_enabled_ &&
+          state.diagnostic_fine_beat_pruning_mask != 0U))) {
+      strings = state.midi_voice_mask;
+    }
+#endif
     // Every physical lane derived from this candidate references one stable
     // pitch-evidence group. The member mask supports the calibrated two- to
     // four-string unison ceiling and distinguishes simultaneous shared groups.
@@ -7368,19 +8912,20 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     had_active_voice = had_active_voice || state.active;
     const std::uint8_t owned = static_cast<std::uint8_t>(
         state.assigned_string_mask | state.midi_voice_mask);
-    resumable_candidates[candidate] =
+    const bool resolved_fine_resume =
         is_resolved_unison_resume_candidate(
             state.active, owned, fine.valid, fine.multi_source_observed,
             fine.robust_pairwise_beat_connected,
             fine.minimum_pairwise_beat_coherence, fine.member_mask);
+    resumable_candidates[candidate] = resolved_fine_resume;
     had_active_multi_string_group =
-        had_active_multi_string_group || resumable_candidates[candidate];
+        had_active_multi_string_group || resolved_fine_resume;
   }
   const bool ordinary_minimum_evidence =
       static_cast<double>(signal_samples_) >=
       sample_rate_ * kSingleVoiceEvidenceSeconds;
-  const bool minimum_evidence = has_minimum_signal_evidence(
-      signal_samples_, sample_rate_, had_active_multi_string_group);
+  const bool minimum_evidence =
+      had_active_multi_string_group || ordinary_minimum_evidence;
   const bool active_resume = minimum_evidence &&
                              !ordinary_minimum_evidence &&
                              had_active_multi_string_group;
@@ -7412,8 +8957,17 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         if (!cell.enabled) {
           continue;
         }
-        const double energy = cell.fast_real * cell.fast_real +
-                              cell.fast_imaginary * cell.fast_imaginary;
+        double energy = cell.fast_real * cell.fast_real +
+                        cell.fast_imaginary * cell.fast_imaginary;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (diagnostic_selection_window_only_ &&
+            !diagnostic_correlation_shadow_only_) {
+          energy = cell.diagnostic_selection_real *
+                       cell.diagnostic_selection_real +
+                   cell.diagnostic_selection_imaginary *
+                       cell.diagnostic_selection_imaginary;
+        }
+#endif
         if (harmonic == 0U) {
           fundamentals[candidate] = energy;
         }
@@ -7595,11 +9149,22 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
                                  quiet);
   update_spectral_lane_states(selected, quiet);
   assign_m3_strings(selected);
+  update_adjacent_spectral_duplicate_suppression();
+  apply_calibrated_dp_replacements(selected, scores, fundamentals, threshold,
+                                   quiet, count);
   update_harmonic_profile_memory(selected);
   update_beat_evidence(selected);
   infer_m3_unison_strings(selected);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  update_fine_mask_pruning_output_projection(
+      selected, scores, fundamentals, threshold, quiet);
+#endif
+  update_fine_beat_pruning_output_projection(
+      selected, scores, fundamentals, threshold, quiet);
   update_calibration_tuning_offset(selected);
   update_calibrated_output_notes(decision, selected, selected_voice_count);
+  update_calibrated_dp_output_projections(
+      decision, selected, scores, fundamentals, threshold, quiet, count);
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   if (offline_replay_diagnostics_enabled_) {
     update_unison_reacquisition_state(selected, scores, fundamentals,
@@ -7670,35 +9235,100 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     if (!state.active) {
       continue;
     }
+    const bool suppress_spectral_duplicate =
+        spectral_duplicate_suppressed_[candidate];
+    if (suppress_spectral_duplicate &&
+        !state.spectral_duplicate_output_suppressed) {
+      if (append_candidate_note_off(decision, candidate)) {
+        state.midi_voice_mask = 0U;
+        state.spectral_duplicate_output_suppressed = true;
+      }
+    } else if (!suppress_spectral_duplicate &&
+               state.spectral_duplicate_output_suppressed &&
+               selected[candidate]) {
+      if (midi_routing_ == MidiRouting::per_voice) {
+        state.spectral_duplicate_output_suppressed = false;
+      } else if (append_transition(
+                     decision, TransitionKind::note_on,
+                     candidate_midi_output_note(candidate),
+                     dynamic_velocity())) {
+        state.spectral_duplicate_output_suppressed = false;
+      }
+    }
     if (selected[candidate]) {
       state.release_ticks = 0U;
       if (profile_mode_ == ProfileMode::m3 &&
           midi_routing_ == MidiRouting::per_voice) {
-        const std::uint8_t desired = projected_output_string_mask(
-            state.assigned_string_mask, state.assigned_string,
-            state.spectral_lane_mask, state.continuity_lane_mask);
+        const std::uint8_t desired =
+            state.spectral_duplicate_output_suppressed
+                ? 0U
+                : projected_output_string_mask(
+                      state.assigned_string_mask, state.assigned_string,
+                      state.spectral_lane_mask,
+                      state.continuity_lane_mask);
+        std::uint8_t pruned_desired = desired;
+        if (state.fine_beat_pruning_mask != 0U) {
+          pruned_desired = static_cast<std::uint8_t>(
+              pruned_desired & state.fine_beat_pruning_mask);
+        }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (diagnostic_fine_mask_pruning_enabled_ &&
+            state.diagnostic_fine_mask_pruning_mask != 0U) {
+          pruned_desired = static_cast<std::uint8_t>(
+              pruned_desired & state.diagnostic_fine_mask_pruning_mask);
+        }
+        if (diagnostic_fine_beat_pruning_enabled_ &&
+            state.diagnostic_fine_beat_pruning_mask != 0U) {
+          pruned_desired = static_cast<std::uint8_t>(
+              pruned_desired & state.diagnostic_fine_beat_pruning_mask);
+        }
+#endif
         const std::uint8_t removed = static_cast<std::uint8_t>(
-            state.midi_voice_mask & ~desired);
+            state.midi_voice_mask & ~pruned_desired);
         const std::uint8_t added = static_cast<std::uint8_t>(
-            desired & ~state.midi_voice_mask);
-        const std::uint8_t note = candidate_output_note(candidate);
+            pruned_desired & ~state.midi_voice_mask);
+        const std::uint8_t note = candidate_midi_output_note(candidate);
+        const std::size_t required =
+            string_count(removed) + string_count(added);
+        if (required > decision.transitions.capacity() -
+                           decision.transitions.size()) {
+          ++active_count;
+          continue;
+        }
         for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
           const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
           if ((removed & bit) != 0U) {
-            append_transition(decision, TransitionKind::note_off, note, 0U,
-                              string);
+            static_cast<void>(append_transition(
+                decision, TransitionKind::note_off, note, 0U, string));
           }
         }
         const std::uint8_t velocity = dynamic_velocity();
         for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
           const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
           if ((added & bit) != 0U) {
-            append_transition(decision, TransitionKind::note_on, note,
-                              velocity, string);
+            static_cast<void>(append_transition(
+                decision, TransitionKind::note_on, note, velocity, string));
           }
         }
-        state.midi_voice_mask = desired;
+        state.midi_voice_mask = pruned_desired;
       }
+      ++active_count;
+      continue;
+    }
+    const std::uint8_t handoff_target_code =
+        selector_atomic_handoff_target_for_incumbent_[candidate];
+    if (handoff_target_code != 0U) {
+      const std::size_t handoff_target = handoff_target_code - 1U;
+      if (append_atomic_candidate_handoff(
+              decision, candidate, handoff_target, dynamic_velocity())) {
+        continue;
+      }
+      if (handoff_target < count) {
+        selected[handoff_target] = false;
+        selector_atomic_handoff_targets_[handoff_target] = false;
+      }
+      selected[candidate] = true;
+      state.release_ticks = 0U;
       ++active_count;
       continue;
     }
@@ -7745,17 +9375,19 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       state = {};
       continue;
     }
-    if (fast_energy_ < slow_energy_ * kAttackEnergyRatio) {
+    const bool atomic_handoff =
+        selector_atomic_handoff_targets_[candidate];
+    if (!atomic_handoff && fast_energy_ < slow_energy_ * kAttackEnergyRatio) {
       state.attack_ticks = 0U;
       state.evidence_ticks = 0U;
       state.evidence_gap_ticks = 0U;
       continue;
     }
-    if (state.evidence_ticks == 0U) {
+    if (!atomic_handoff && state.evidence_ticks == 0U) {
       state.attack_ticks = 0U;
       continue;
     }
-    if (had_active_voice) {
+    if (!atomic_handoff && had_active_voice) {
       const std::uint8_t total_evidence =
           candidate_evidence_decisions(false);
       const std::uint8_t attack = attack_decisions();
@@ -7767,6 +9399,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         state.attack_ticks = 0U;
         continue;
       }
+    }
+    if (atomic_handoff) {
+      state.attack_ticks = attack_decisions();
     }
     if (state.attack_ticks < 255U) {
       ++state.attack_ticks;
@@ -7834,7 +9469,7 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       spectral_lane_decimation_sum_ = 0.0;
       spectral_lane_decimation_count_ = 0U;
     }
-    if (group_continuity_decimation_count_ == spectral_lane_decimation_) {
+    if (group_continuity_decimation_count_ == group_continuity_decimation_) {
       const double decimated =
           group_continuity_decimation_sum_ /
           static_cast<double>(group_continuity_decimation_count_);
@@ -7849,14 +9484,17 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
     }
   }
   const double power = dc_blocked * dc_blocked;
-  const double energy_mix = 1.0 - correlation_decay;
-  fast_energy_ = correlation_decay * fast_energy_ + energy_mix * power;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const double input_energy_decay = diagnostic_input_energy_decay_;
+#else
+  const double input_energy_decay = correlation_decay;
+#endif
+  const double energy_mix = 1.0 - input_energy_decay;
+  fast_energy_ = input_energy_decay * fast_energy_ + energy_mix * power;
   const double slow_energy_mix = 1.0 - slow_energy_decay;
   slow_energy_ = slow_energy_decay * slow_energy_ + slow_energy_mix * power;
-  for (Cell& cell : cells_) {
-    if (cell.enabled) {
-      update_cell(cell, dc_blocked);
-    }
+  for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
+    update_cell(cells_[enabled_cell_indices_[index]], dc_blocked);
   }
   for (Cell& cell : lower_cents_guard_cells_) {
     if (cell.enabled) {

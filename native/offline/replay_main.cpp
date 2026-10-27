@@ -159,6 +159,22 @@ void usage(const char* program) {
       "[--diagnostic-fretted-fixed-penalty 0..0.20 "
       "--diagnostic-fretted-per-fret-penalty 0..0.005] "
       "[--diagnostic-calibrated-selector-margin 0..1] "
+      "[--diagnostic-calibrated-selector-string-mask 1..255] "
+      "[--diagnostic-dp-replacement-similarity 0..1 "
+      "--diagnostic-dp-replacement-calibration-margin 0..1 "
+      "--diagnostic-dp-replacement-score-margin 0..10] "
+      "[--diagnostic-dp-replacement-string-mask 1..255] "
+      "[--diagnostic-production-dp-replacement-string-mask 0..255] "
+      "[--diagnostic-correlation-seconds 0.020..0.200] "
+      "[--diagnostic-selection-window-only] "
+      "[--diagnostic-fine-mask-pruning] "
+      "[--diagnostic-fine-beat-pruning] "
+      "[--diagnostic-collecting-fine-history-carry] "
+      "[--diagnostic-joint-pitch-residual] "
+      "[--diagnostic-correlation-seconds 0.020..0.200 "
+      "[--diagnostic-selection-window-only | "
+      "--diagnostic-correlation-shadow-only]] "
+      "[--diagnostic-early-solo-three-member-continuity] "
       "[--derive-calibration-string INDEX --calibration-output FILE "
       "[--exclude-calibration-pass PASS]]\n",
       program);
@@ -186,6 +202,20 @@ int main(int argc, char** argv) {
   double diagnostic_fretted_fixed_penalty = -1.0;
   double diagnostic_fretted_per_fret_penalty = -1.0;
   double diagnostic_calibrated_selector_margin = -1.0;
+  std::uint8_t diagnostic_calibrated_selector_string_mask = 0xffU;
+  double diagnostic_dp_replacement_similarity = -1.0;
+  double diagnostic_dp_replacement_calibration_margin = -1.0;
+  double diagnostic_dp_replacement_score_margin = -1.0;
+  std::uint8_t diagnostic_dp_replacement_string_mask = 0xffU;
+  std::uint8_t diagnostic_production_dp_replacement_string_mask = 0xffU;
+  bool diagnostic_production_dp_replacement_string_mask_set = false;
+  bool diagnostic_fine_mask_pruning = false;
+  bool diagnostic_fine_beat_pruning = false;
+  bool diagnostic_collecting_fine_history_carry = false;
+  double diagnostic_correlation_seconds = -1.0;
+  bool diagnostic_selection_window_only = false;
+  bool diagnostic_correlation_shadow_only = false;
+  bool diagnostic_joint_pitch_residual = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
     const bool has_value = index + 1 < argc;
@@ -351,8 +381,114 @@ int main(int argc, char** argv) {
         return 2;
       }
       diagnostic_calibrated_selector_margin = parsed;
+    } else if (std::strcmp(
+                   argv[index],
+                   "--diagnostic-calibrated-selector-string-mask") == 0 &&
+               has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const unsigned long parsed = std::strtoul(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed == 0UL ||
+          parsed > 255UL) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_calibrated_selector_string_mask =
+          static_cast<std::uint8_t>(parsed);
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-dp-replacement-similarity") == 0 &&
+               has_value) {
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (end == argv[index] || *end != '\0' || !std::isfinite(parsed) ||
+          parsed < 0.0 || parsed > 1.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_dp_replacement_similarity = parsed;
+    } else if (std::strcmp(
+                   argv[index],
+                   "--diagnostic-dp-replacement-calibration-margin") == 0 &&
+               has_value) {
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (end == argv[index] || *end != '\0' || !std::isfinite(parsed) ||
+          parsed < 0.0 || parsed > 1.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_dp_replacement_calibration_margin = parsed;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-dp-replacement-score-margin") == 0 &&
+               has_value) {
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (end == argv[index] || *end != '\0' || !std::isfinite(parsed) ||
+          parsed < 0.0 || parsed > 10.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_dp_replacement_score_margin = parsed;
+    } else if (std::strcmp(
+                   argv[index],
+                   "--diagnostic-dp-replacement-string-mask") == 0 &&
+               has_value) {
+      char* end = nullptr;
+      const unsigned long parsed = std::strtoul(argv[++index], &end, 10);
+      if (end == argv[index] || *end != '\0' || parsed == 0UL ||
+          parsed > 255UL) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_dp_replacement_string_mask =
+          static_cast<std::uint8_t>(parsed);
+    } else if (std::strcmp(
+                   argv[index],
+                   "--diagnostic-production-dp-replacement-string-mask") ==
+                   0 &&
+               has_value) {
+      char* end = nullptr;
+      const unsigned long parsed = std::strtoul(argv[++index], &end, 10);
+      if (end == argv[index] || *end != '\0' || parsed > 255UL) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_production_dp_replacement_string_mask =
+          static_cast<std::uint8_t>(parsed);
+      diagnostic_production_dp_replacement_string_mask_set = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-correlation-seconds") == 0 &&
+               has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < 0.020 || parsed > 0.200) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_correlation_seconds = parsed;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-selection-window-only") == 0) {
+      diagnostic_selection_window_only = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-correlation-shadow-only") == 0) {
+      diagnostic_correlation_shadow_only = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-joint-pitch-residual") == 0) {
+      diagnostic_joint_pitch_residual = true;
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-fine-mask-pruning") == 0) {
+      diagnostic_fine_mask_pruning = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-fine-beat-pruning") == 0) {
+      diagnostic_fine_beat_pruning = true;
+    } else if (std::strcmp(
+                   argv[index],
+                   "--diagnostic-collecting-fine-history-carry") == 0) {
+      diagnostic_collecting_fine_history_carry = true;
     } else if (std::strcmp(argv[index], "--spectral-shadow-templates") == 0 &&
                has_value) {
       spectral_shadow_template_path = argv[++index];
@@ -542,16 +678,62 @@ int main(int argc, char** argv) {
   const m3::offline::FrettedPositionPriorPolicy* fretted_position_prior_pointer =
       diagnostic_fretted_prior_requested ? &fretted_position_prior : nullptr;
   m3::offline::DecisiveCalibratedSelectorPolicy calibrated_selector{
-      diagnostic_calibrated_selector_margin};
+      diagnostic_calibrated_selector_margin,
+      diagnostic_calibrated_selector_string_mask};
   const m3::offline::DecisiveCalibratedSelectorPolicy*
       calibrated_selector_pointer =
           diagnostic_calibrated_selector_margin >= 0.0
               ? &calibrated_selector
               : nullptr;
+  const bool diagnostic_dp_replacement_requested =
+      diagnostic_dp_replacement_similarity >= 0.0 ||
+      diagnostic_dp_replacement_calibration_margin >= 0.0 ||
+      diagnostic_dp_replacement_score_margin >= 0.0;
+  if (diagnostic_dp_replacement_requested &&
+      (diagnostic_dp_replacement_similarity < 0.0 ||
+       diagnostic_dp_replacement_calibration_margin < 0.0 ||
+       diagnostic_dp_replacement_score_margin < 0.0)) {
+    usage(argv[0]);
+    return 2;
+  }
+  m3::offline::CalibratedDpReplacementPolicy dp_replacement{
+      diagnostic_dp_replacement_similarity,
+      diagnostic_dp_replacement_calibration_margin,
+      diagnostic_dp_replacement_score_margin,
+      diagnostic_dp_replacement_string_mask};
+  const m3::offline::CalibratedDpReplacementPolicy* dp_replacement_pointer =
+      diagnostic_dp_replacement_requested ? &dp_replacement : nullptr;
+  m3::offline::ProductionDpReplacementLanePolicy production_dp_lanes{
+      diagnostic_dp_replacement_requested &&
+              !diagnostic_production_dp_replacement_string_mask_set
+          ? static_cast<std::uint8_t>(0U)
+          : diagnostic_production_dp_replacement_string_mask};
+  const m3::offline::ProductionDpReplacementLanePolicy*
+      production_dp_lanes_pointer =
+          diagnostic_dp_replacement_requested ||
+                  diagnostic_production_dp_replacement_string_mask_set
+              ? &production_dp_lanes
+              : nullptr;
+  if (((diagnostic_selection_window_only ||
+        diagnostic_correlation_shadow_only) &&
+       diagnostic_correlation_seconds < 0.0) ||
+      (diagnostic_selection_window_only &&
+       diagnostic_correlation_shadow_only)) {
+    usage(argv[0]);
+    return 2;
+  }
   if (!m3::offline::run_detector_replay(
           wave, labels, config, calibration_pointer, block_size, result,
           error, spectral_shadow_template_pointer, candidate_rescue_pointer,
-          fretted_position_prior_pointer, calibrated_selector_pointer)) {
+          fretted_position_prior_pointer, calibrated_selector_pointer,
+          dp_replacement_pointer, production_dp_lanes_pointer,
+          diagnostic_fine_mask_pruning,
+          diagnostic_fine_beat_pruning,
+          diagnostic_collecting_fine_history_carry,
+          diagnostic_correlation_seconds,
+          diagnostic_selection_window_only,
+          diagnostic_correlation_shadow_only,
+          diagnostic_joint_pitch_residual)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -590,6 +772,36 @@ int main(int argc, char** argv) {
       "adjacent_wrong_note_lane_disposition_frames\t"
       "adjacent_wrong_note_joint_context_encoding\t"
       "adjacent_wrong_note_joint_context_frames\t"
+      "adjacent_wrong_note_raw_output_lane_encoding\t"
+      "adjacent_wrong_note_raw_output_lane_frames\t"
+      "adjacent_wrong_note_expected_selection_dispositions\t"
+      "adjacent_wrong_note_expected_selection_frames\t"
+      "adjacent_wrong_note_expected_score_ratio_bins\t"
+      "adjacent_wrong_note_expected_score_ratio_frames\t"
+      "adjacent_wrong_note_expected_to_observed_score_ratio_bins\t"
+      "adjacent_wrong_note_expected_to_observed_score_ratio_frames\t"
+      "adjacent_wrong_note_expected_evidence_flags\t"
+      "adjacent_wrong_note_expected_evidence_frames\t"
+      "adjacent_wrong_note_expected_playable_lane_dispositions\t"
+      "adjacent_wrong_note_expected_playable_lane_frames\t"
+      "adjacent_wrong_note_expected_candidate_context_encoding\t"
+      "adjacent_wrong_note_expected_candidate_context_frames\t"
+      "adjacent_envelope_coherence_classes\t"
+      "adjacent_envelope_coherence_frames\t"
+      "adjacent_spectral_error_gap_frames\t"
+      "adjacent_spectral_duplicate_thresholds\t"
+      "adjacent_spectral_duplicate_matched\t"
+      "adjacent_spectral_duplicate_false_positive\t"
+      "adjacent_spectral_duplicate_false_gap\t"
+      "adjacent_spectral_duplicate_false_wrong_note\t"
+      "adjacent_spectral_duplicate_false_wrong_string\t"
+      "adjacent_spectral_duplicate_changed\t"
+      "production_adjacent_spectral_duplicate_matched\t"
+      "production_adjacent_spectral_duplicate_false_positive\t"
+      "production_adjacent_spectral_duplicate_false_gap\t"
+      "production_adjacent_spectral_duplicate_false_wrong_note\t"
+      "production_adjacent_spectral_duplicate_false_wrong_string\t"
+      "production_adjacent_spectral_duplicate_changed\t"
       "multi_partial_phase_minimum_partials\t"
       "multi_partial_phase_maximum_deviations\t"
       "multi_partial_phase_rebin_available\t"
@@ -687,7 +899,29 @@ int main(int argc, char** argv) {
       "candidate_spectral_shadow_other_false_by_string_frames\t"
       "candidate_spectral_shadow_other_false_intervals");
 #endif
-  std::printf("\tfingerprint\n");
+  std::printf(
+      "\tfine_mask_complexity_penalties\t"
+      "fine_mask_complexity_matched\t"
+      "fine_mask_complexity_false_positive\t"
+      "fine_mask_complexity_false_gap\t"
+      "fine_mask_complexity_false_wrong_note\t"
+      "fine_mask_complexity_false_wrong_string\t"
+      "fine_mask_complexity_changed\t"
+      "correlation_shadow_ratio\tcorrelation_shadow_age_seconds\t"
+      "correlation_shadow_fundamental_only\t"
+      "correlation_shadow_protect_pending_unison\t"
+      "correlation_shadow_matched\tcorrelation_shadow_false_positive\t"
+      "correlation_shadow_false_gap\tcorrelation_shadow_false_wrong_note\t"
+      "correlation_shadow_false_wrong_string\tcorrelation_shadow_changed\t"
+      "joint_pitch_thresholds\tjoint_pitch_overlap_limits\tjoint_pitch_matched\t"
+      "joint_pitch_false_positive\tjoint_pitch_false_gap\t"
+      "joint_pitch_false_wrong_note\tjoint_pitch_false_wrong_string\t"
+      "joint_pitch_changed\tjoint_pitch_valid_frames\t"
+      "joint_pitch_invalid_frames\tjoint_pitch_mean_residual\t"
+      "dp_replacement_matched\tdp_replacement_false_positive\t"
+      "dp_replacement_false_gap\tdp_replacement_false_wrong_note\t"
+      "dp_replacement_false_wrong_string\tdp_replacement_changed\t"
+      "fingerprint\n");
   std::printf(
       "%u\t%zu\t%llu\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
       "%zu\t%.6f\t%.6f\t%.6f\t%u\t%u\t%.6f\t%u\t%u\t%.6f\t%.6f",
@@ -758,6 +992,106 @@ int main(int argc, char** argv) {
       "\tcontext=((projection*4)+presence)*3+lane\t");
   print_sparse_u64_joint_bins(
       result.adjacent_wrong_note_joint_context_frames);
+  std::printf(
+      "\tcontext=((raw_matches_nearest*2)+output_changed)*3+lane\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_raw_output_lane_frames);
+  std::printf(
+      "\tquiet,below_threshold,spectral_rejected,dp_evicted,selected,"
+      "coasting\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_selection_frames);
+  std::printf("\t0_to_2_by_0.05\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_score_ratio_frames);
+  std::printf("\t0_to_2_by_0.05\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_to_observed_score_ratio_frames);
+  std::printf(
+      "\tactive=1,direct_fundamental=2,local_peak=4,candidate_evidence=8,"
+      "calibrated_direct=16\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_evidence_frames);
+  std::printf("\tunavailable,other_lanes,emitted_lane\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_playable_lane_frames);
+  std::printf(
+      "\tcontext=((expected_selection*4)+expected_presence)*3+lane\t");
+  print_sparse_u64_joint_bins(
+      result.adjacent_wrong_note_expected_candidate_context_frames);
+  std::printf("\tboth_expected,one_expected,neither_expected\t");
+  print_sparse_u64_joint_bins(result.adjacent_envelope_coherence_frames);
+  std::printf("\t");
+  print_sparse_u64_joint_bins(result.adjacent_spectral_error_gap_frames);
+  std::printf("\t");
+  for (std::size_t policy = 0U;
+       policy < m3::offline::kAdjacentSpectralDuplicatePolicies.size();
+       ++policy) {
+    std::printf(
+        "%s%.9g", policy == 0U ? "" : ",",
+        m3::offline::kAdjacentSpectralDuplicatePolicies[policy]
+            .minimum_error_gap);
+  }
+  const auto print_adjacent_spectral_duplicate_metric =
+      [&](const auto& accessor) {
+        for (std::size_t policy = 0U;
+             policy < result.adjacent_spectral_duplicate_suppression.size();
+             ++policy) {
+          std::printf(
+              "%s%u", policy == 0U ? "" : ",",
+              accessor(
+                  result.adjacent_spectral_duplicate_suppression[policy]));
+        }
+      };
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.matched_label_frames; });
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_positive_voices; });
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_gap_voices; });
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_wrong_note_voices; });
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_wrong_string_voices; });
+  std::printf("\t");
+  print_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.changed_voices; });
+  const auto print_production_adjacent_spectral_duplicate_metric =
+      [&](const auto& accessor) {
+        for (std::size_t policy = 0U;
+             policy <
+             result.production_adjacent_spectral_duplicate_suppression.size();
+             ++policy) {
+          std::printf(
+              "%s%u", policy == 0U ? "" : ",",
+              accessor(result
+                           .production_adjacent_spectral_duplicate_suppression
+                               [policy]));
+        }
+      };
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.matched_label_frames; });
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_positive_voices; });
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_gap_voices; });
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_wrong_note_voices; });
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.false_wrong_string_voices; });
+  std::printf("\t");
+  print_production_adjacent_spectral_duplicate_metric(
+      [](const auto& metrics) { return metrics.changed_voices; });
   std::printf("\t");
   print_sequence(m3::offline::kMultiPartialPhaseMinimumPartials);
   std::printf("\t");
@@ -1000,6 +1334,113 @@ int main(int argc, char** argv) {
   print_sparse_u64_joint_bins(
       result.candidate_spectral_shadow_other_false_interval_frames);
 #endif
+  const auto print_complexity_metric = [&](const auto& accessor) {
+    for (std::size_t policy = 0U;
+         policy < result.fine_mask_complexity.size(); ++policy) {
+      std::printf("%s%u", policy == 0U ? "" : ",",
+                  accessor(result.fine_mask_complexity[policy]));
+    }
+  };
+  std::printf("\t");
+  print_sequence(m3::offline::kFineMaskComplexityPenalties);
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.matched_label_frames; });
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.false_positive_voices; });
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.false_gap_voices; });
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.false_wrong_note_voices; });
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.false_wrong_string_voices; });
+  std::printf("\t");
+  print_complexity_metric(
+      [](const auto& metrics) { return metrics.changed_voices; });
+  const auto print_correlation_policy = [&](const auto& accessor) {
+    std::printf("\t");
+    for (std::size_t policy = 0U;
+         policy < m3::offline::kCorrelationShadowPolicies.size(); ++policy) {
+      std::printf("%s%.6f", policy == 0U ? "" : ",",
+                  static_cast<double>(
+                      accessor(m3::offline::kCorrelationShadowPolicies[policy])));
+    }
+  };
+  print_correlation_policy(
+      [](const auto& policy) { return policy.maximum_energy_ratio; });
+  print_correlation_policy(
+      [](const auto& policy) { return policy.minimum_age_seconds; });
+  print_correlation_policy(
+      [](const auto& policy) { return policy.fundamental_only; });
+  print_correlation_policy(
+      [](const auto& policy) { return policy.protect_pending_unison; });
+  const auto print_correlation_metric = [&](const auto& accessor) {
+    std::printf("\t");
+    for (std::size_t policy = 0U;
+         policy < result.correlation_shadow.size(); ++policy) {
+      std::printf("%s%u", policy == 0U ? "" : ",",
+                  accessor(result.correlation_shadow[policy]));
+    }
+  };
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.matched_label_frames; });
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.false_positive_voices; });
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.false_gap_voices; });
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.false_wrong_note_voices; });
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.false_wrong_string_voices; });
+  print_correlation_metric(
+      [](const auto& metrics) { return metrics.changed_voices; });
+  const auto print_joint_policy = [&](const auto& accessor) {
+    std::printf("\t");
+    for (std::size_t i = 0U; i < m3::offline::kJointPitchPolicies.size(); ++i) {
+      std::printf("%s%.6f", i == 0U ? "" : ",",
+                  accessor(m3::offline::kJointPitchPolicies[i]));
+    }
+  };
+  print_joint_policy(
+      [](const auto& policy) { return policy.minimum_energy_fraction; });
+  print_joint_policy(
+      [](const auto& policy) { return policy.maximum_fundamental_overlap; });
+  const auto print_joint_metric = [&](const auto& accessor) {
+    std::printf("\t");
+    for (std::size_t policy = 0U; policy < result.joint_pitch_shadow.size();
+         ++policy) {
+      std::printf("%s%u", policy == 0U ? "" : ",",
+                  accessor(result.joint_pitch_shadow[policy]));
+    }
+  };
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.matched_label_frames; });
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.false_positive_voices; });
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.false_gap_voices; });
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.false_wrong_note_voices; });
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.false_wrong_string_voices; });
+  print_joint_metric(
+      [](const auto& metrics) { return metrics.changed_voices; });
+  std::printf("\t%u\t%u\t%.9f", result.joint_pitch_valid_frames,
+              result.joint_pitch_invalid_frames,
+              result.joint_pitch_valid_frames == 0U ? 0.0 :
+                  result.joint_pitch_residual_sum /
+                      static_cast<double>(result.joint_pitch_valid_frames));
+  std::printf("\t%u\t%u\t%u\t%u\t%u\t%u",
+              result.calibrated_dp_replacement.matched_label_frames,
+              result.calibrated_dp_replacement.false_positive_voices,
+              result.calibrated_dp_replacement.false_gap_voices,
+              result.calibrated_dp_replacement.false_wrong_note_voices,
+              result.calibrated_dp_replacement.false_wrong_string_voices,
+              result.calibrated_dp_replacement.changed_voices);
   std::printf("\t%016llx\n",
               static_cast<unsigned long long>(result.fingerprint));
   if (label_details) {
@@ -1055,6 +1496,19 @@ int main(int argc, char** argv) {
         "articulated_unison_reacquisition_exact_delta\t"
         "articulated_unison_reacquisition_matched_delta\t"
         "articulated_unison_reacquisition_wrong_string_delta\t"
+        "articulated_unison_reacquisition_accepted_cache_masks\t"
+        "three_member_articulated_reacquisition_changed\t"
+        "three_member_articulated_reacquisition_exact_delta\t"
+        "three_member_articulated_reacquisition_matched_delta\t"
+        "three_member_articulated_reacquisition_wrong_string_delta\t"
+        "production_three_member_articulated_reacquisition_changed\t"
+        "production_three_member_articulated_reacquisition_exact_delta\t"
+        "production_three_member_articulated_reacquisition_matched_delta\t"
+        "production_three_member_articulated_reacquisition_wrong_string_delta\t"
+        "solo_three_member_articulated_reacquisition_changed\t"
+        "solo_three_member_articulated_reacquisition_exact_delta\t"
+        "solo_three_member_articulated_reacquisition_matched_delta\t"
+        "solo_three_member_articulated_reacquisition_wrong_string_delta\t"
         "articulated_unison_reacquisition_dispositions\t"
         "articulated_unison_reacquisition_counterfactual_matched_delta\t"
         "articulated_unison_reacquisition_counterfactual_exact_delta\t"
@@ -1188,6 +1642,29 @@ int main(int argc, char** argv) {
         "fine_unique_member_pruning_exact\t"
         "fine_unique_member_pruning_matched_delta\t"
         "fine_unique_member_pruning_wrong_string_delta\t"
+        "fine_mask_complexity_penalties\t"
+        "fine_mask_complexity_changed\t"
+        "fine_mask_complexity_exact\t"
+        "fine_mask_complexity_matched_delta\t"
+        "fine_mask_complexity_wrong_string_delta\t"
+        "fine_mask_model_expected_available\t"
+        "fine_mask_model_expected_ranks\t"
+        "fine_mask_model_exact\t"
+        "fine_mask_model_tied\t"
+        "fine_mask_model_winner_members\t"
+        "fine_mask_posterior_weights\t"
+        "fine_mask_posterior_available\t"
+        "fine_mask_posterior_exact\t"
+        "fine_mask_posterior_tied\t"
+        "fine_mask_beat_floors\t"
+        "fine_mask_beat_expected_available\t"
+        "fine_mask_beat_exact\t"
+        "fine_mask_beat_tied\t"
+        "fine_mask_beat_pruning_changed\t"
+        "fine_mask_beat_pruning_exact\t"
+        "fine_mask_beat_pruning_matched_delta\t"
+        "fine_mask_beat_pruning_wrong_string_delta\t"
+        "fine_mask_pruning_output_masks\t"
         "fine_frequency_pending_member_masks\t"
         "fine_frequency_fit_member_masks\t"
         "fine_exact_fit_residual_bins\t"
@@ -1558,6 +2035,45 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_sequence(
           detail.articulated_unison_reacquisition_wrong_string_delta);
+      std::printf("\t");
+      print_bins(
+          detail.articulated_unison_reacquisition_accepted_cache_mask_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.three_member_articulated_reacquisition_changed_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.three_member_articulated_reacquisition_exact_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.three_member_articulated_reacquisition_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.three_member_articulated_reacquisition_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.production_three_member_articulated_reacquisition_changed_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.production_three_member_articulated_reacquisition_exact_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.production_three_member_articulated_reacquisition_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.production_three_member_articulated_reacquisition_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.solo_three_member_articulated_reacquisition_changed_frames);
+      std::printf("\t");
+      print_sequence(
+          detail.solo_three_member_articulated_reacquisition_exact_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.solo_three_member_articulated_reacquisition_matched_delta);
+      std::printf("\t");
+      print_sequence(
+          detail.solo_three_member_articulated_reacquisition_wrong_string_delta);
       std::printf("\t");
       print_joint_bins(
           detail.articulated_unison_reacquisition_disposition_frames);
@@ -1966,6 +2482,60 @@ int main(int argc, char** argv) {
       std::printf("\t");
       print_sequence(
           detail.fine_unique_member_pruning_wrong_string_delta);
+      std::printf("\t");
+      print_sequence(m3::offline::kFineMaskComplexityPenalties);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_complexity_changed_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_complexity_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_complexity_matched_delta);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_complexity_wrong_string_delta);
+      std::printf("\t");
+      std::printf("%u", detail.fine_mask_model_expected_available_frames);
+      std::printf("\t");
+      print_bins(detail.fine_mask_model_expected_rank_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_model_exact_frames);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_model_tied_frames);
+      std::printf("\t");
+      print_joint_bins(detail.fine_mask_model_winner_member_frames);
+      std::printf("\t");
+      print_sequence(m3::offline::kFineMaskPosteriorWeights);
+      std::printf("\t%u\t", detail.fine_mask_posterior_available_frames);
+      print_joint_bins(detail.fine_mask_posterior_exact_frames);
+      std::printf("\t");
+      print_joint_bins(detail.fine_mask_posterior_tied_frames);
+      std::printf("\t");
+      print_sequence(m3::offline::kFineMaskBeatCoherenceFloors);
+      std::printf("\t");
+      print_sequence(detail.fine_mask_beat_expected_available_frames);
+      std::printf("\t");
+      print_joint_bins(detail.fine_mask_beat_exact_frames);
+      std::printf("\t");
+      print_joint_bins(detail.fine_mask_beat_tied_frames);
+      std::printf("\t%u\t%u\t%lld\t%lld\t",
+                  detail.fine_mask_beat_pruning_changed_frames,
+                  detail.fine_mask_beat_pruning_exact_frames,
+                  static_cast<long long>(
+                      detail.fine_mask_beat_pruning_matched_delta),
+                  static_cast<long long>(
+                      detail.fine_mask_beat_pruning_wrong_string_delta));
+      bool first_pruning_mask = true;
+      for (std::size_t mask = 0U;
+           mask < detail.fine_mask_pruning_output_mask_frames.size();
+           ++mask) {
+        const std::uint32_t frames =
+            detail.fine_mask_pruning_output_mask_frames[mask];
+        if (frames == 0U) {
+          continue;
+        }
+        std::printf("%s%zu:%u", first_pruning_mask ? "" : ",", mask,
+                    frames);
+        first_pruning_mask = false;
+      }
       std::printf("\t");
       bool first_pending_mask = true;
       for (std::size_t mask = 0U;
