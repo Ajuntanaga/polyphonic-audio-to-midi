@@ -344,6 +344,72 @@ void FrequencyRefinementShadow::observe(
     }
   } else if (view.midi_note < self.tables_.size()) {
     self.tables_[view.midi_note] = evaluate_frequency_refinement(view);
+    if (self.capture_ != nullptr) {
+      self.capture_->append(view, self.tables_[view.midi_note]);
+    }
+  }
+}
+
+void FrequencyWindowCapture::append(
+    const diagnostics::FrequencyRefinementView& view,
+    const FrequencyRefinementTable& table) noexcept {
+  if (stream_ == nullptr || failed_ || !table.prepared ||
+      view.midi_note >= seen_.size() ||
+      (note_ >= 0 && note_ != static_cast<int>(view.midi_note))) {
+    return;
+  }
+  const auto last_index = (view.oldest + view.count - 1U) % view.capacity;
+  const double end_seconds = static_cast<double>(view.ticks[last_index]) * view.seconds_per_tick;
+  if (seen_[view.midi_note] && end_seconds >= last_seconds_[view.midi_note] &&
+      end_seconds - last_seconds_[view.midi_note] < 0.5) {
+    return;
+  }
+  if (windows_ >= 512U) {
+    truncated_ = true;
+    return;
+  }
+  seen_[view.midi_note] = true;
+  last_seconds_[view.midi_note] = end_seconds;
+  std::fprintf(stream_, "{\"note\":%u,\"center_hz\":%.17g,\"end_seconds\":%.17g,"
+      "\"prior_output_mask\":%u,\"training_samples\":%zu,\"calibration\":[",
+      static_cast<unsigned>(view.midi_note), view.center_hz, end_seconds,
+      static_cast<unsigned>(view.prior_output_mask), table.training_samples);
+  for (std::size_t j = 0U; j < view.components; ++j) {
+    std::fprintf(stream_, "%s[%u,%.17g]", j == 0U ? "" : ",",
+        static_cast<unsigned>(view.strings[j]), view.offsets_hz[j]);
+  }
+  std::fprintf(stream_, "],\"samples\":[");
+  for (std::size_t n = 0U; n < view.count; ++n) {
+    const std::size_t index = (view.oldest + n) % view.capacity;
+    std::fprintf(stream_, "%s[%.17g,%.17g,%.17g]", n == 0U ? "" : ",",
+        static_cast<double>(view.ticks[index]) * view.seconds_per_tick,
+        view.real[index], view.imaginary[index]);
+  }
+  std::fprintf(stream_, "],\"fits\":[");
+  for (std::size_t m = 0U; m < table.masks.size(); ++m) {
+    const auto& model = table.masks[m];
+    std::fprintf(stream_, "%s{\"mask\":%u,\"arms\":[", m == 0U ? "" : ",",
+        static_cast<unsigned>(model.mask));
+    for (std::size_t arm = 0U; arm < model.arms.size(); ++arm) {
+      const auto& value = model.arms[arm];
+      if (!value.valid) {
+        std::fprintf(stream_, "%s{\"valid\":false,\"bounded\":%s}",
+            arm == 0U ? "" : ",", value.bounded ? "true" : "false");
+        continue;
+      }
+      std::fprintf(stream_, "%s{\"valid\":%s,\"bounded\":%s,"
+          "\"train\":%.17g,\"test_refit\":%.17g,\"prediction\":%.17g,\"beat\":%.17g}",
+          arm == 0U ? "" : ",", value.valid ? "true" : "false",
+          value.bounded ? "true" : "false", value.train_residual,
+          value.test_refit_residual, value.test_prediction_residual,
+          value.minimum_full_window_beat);
+    }
+    std::fprintf(stream_, "]}");
+  }
+  std::fprintf(stream_, "]}\n");
+  failed_ = std::ferror(stream_) != 0;
+  if (!failed_) {
+    ++windows_;
   }
 }
 

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <vector>
 
 #include "m3/frequency_refinement_observer.hpp"
@@ -47,10 +48,33 @@ struct FrequencyRefinementTable final {
 [[nodiscard]] FrequencyRefinementTable evaluate_frequency_refinement(
     const diagnostics::FrequencyRefinementView& view) noexcept;
 
+// Optional, bounded diagnostic export. It samples by elapsed time and note,
+// never labels or a desired fit result. The caller owns the output stream.
+class FrequencyWindowCapture final {
+ public:
+  explicit FrequencyWindowCapture(std::FILE* stream, int note = -1) noexcept
+      : stream_(stream), note_(note) {}
+  void append(const diagnostics::FrequencyRefinementView& view,
+              const FrequencyRefinementTable& table) noexcept;
+  [[nodiscard]] std::size_t windows() const noexcept { return windows_; }
+  [[nodiscard]] bool failed() const noexcept { return failed_; }
+  [[nodiscard]] bool truncated() const noexcept { return truncated_; }
+
+ private:
+  std::FILE* stream_{};
+  int note_{-1};
+  std::size_t windows_{};
+  bool failed_{};
+  bool truncated_{};
+  std::array<double, 128U> last_seconds_{};
+  std::array<bool, 128U> seen_{};
+};
+
 // Replay owns this on the heap. Production contains neither the observer nor
 // these tables. A callback stores one result per MIDI note without labels.
 class FrequencyRefinementShadow final {
  public:
+  void set_capture(FrequencyWindowCapture* capture) noexcept { capture_ = capture; }
   static void observe(void* context,
                       const diagnostics::FrequencyRefinementView& view) noexcept;
   [[nodiscard]] const FrequencyRefinementTable& at(std::uint8_t note) const {
@@ -59,6 +83,7 @@ class FrequencyRefinementShadow final {
 
  private:
   std::array<FrequencyRefinementTable, 128U> tables_{};
+  FrequencyWindowCapture* capture_{};
 };
 
 }  // namespace m3::offline

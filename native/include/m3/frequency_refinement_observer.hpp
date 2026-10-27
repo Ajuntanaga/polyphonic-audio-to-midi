@@ -27,6 +27,9 @@ struct FrequencyRefinementView final {
   // samples in chronological order. These are not the rejected weighted fit.
   const double* beat_samples{};
   double beat_absolute_sum{};
+  // Assignment entering the current fine-analysis decision, not its eventual
+  // frame-end output. Used only to select and interpret diagnostic windows.
+  std::uint8_t prior_output_mask{};
 };
 
 using FrequencyRefinementObserver =

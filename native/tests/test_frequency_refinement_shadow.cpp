@@ -2,6 +2,8 @@
 #include <array>
 #include <cmath>
 #include <complex>
+#include <cstdio>
+#include <cstring>
 #include <memory>
 
 #include "frequency_refinement_shadow.hpp"
@@ -175,4 +177,38 @@ M3_TEST(frequency_refinement_shadow_handles_four_sources_without_crossing) {
     M3_EXPECT_TRUE(corrected > previous);
     previous = corrected;
   }
+}
+
+M3_TEST(frequency_refinement_capture_is_bounded_and_samples_actual_time) {
+  Fixture fixture;
+  fixture.fill({0.0, 0.0, 0.0});
+  const auto table = m3::offline::evaluate_frequency_refinement(fixture.view);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+  M3_EXPECT_TRUE(stream != nullptr);
+  m3::offline::FrequencyWindowCapture capture(stream.get(), 40);
+  capture.append(fixture.view, table);
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 1U);
+  fixture.view.midi_note = 41U;
+  capture.append(fixture.view, table);
+  M3_EXPECT_EQ(capture.windows(), 1U);
+  fixture.view.midi_note = 40U;
+  for (std::size_t window = 1U; window < 514U; ++window) {
+    for (auto& tick : fixture.ticks) {
+      tick += 5000U;
+    }
+    capture.append(fixture.view, table);
+    if (window == 511U) {
+      M3_EXPECT_FALSE(capture.truncated());
+    }
+  }
+  M3_EXPECT_EQ(capture.windows(), 512U);
+  M3_EXPECT_TRUE(capture.truncated());
+  M3_EXPECT_FALSE(capture.failed());
+  M3_EXPECT_EQ(std::fflush(stream.get()), 0);
+  std::rewind(stream.get());
+  std::array<char, 180U> prefix{};
+  M3_EXPECT_TRUE(std::fgets(prefix.data(), static_cast<int>(prefix.size()), stream.get()) != nullptr);
+  M3_EXPECT_TRUE(std::strstr(prefix.data(), "\"note\":40") != nullptr);
+  M3_EXPECT_TRUE(std::strstr(prefix.data(), "\"training_samples\":200") != nullptr);
 }

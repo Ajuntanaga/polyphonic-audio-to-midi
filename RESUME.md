@@ -240,16 +240,45 @@ Updated: 2026-10-27
   255 denotes ambiguous string labels, not eight known sources. Synthetic-four
   produced no eligible fine models. Exact four-string refinement quality is
   not measured; the four-source numerical test passes.
-- Next mechanism: directly inspect the complex-history frequency peaks and
-  amplitude envelope in failing windows and already-correct triple controls.
-  The local correction limits were exceeded; this does not identify whether
-  calibration mismatch or a nonstationary signal model is responsible. Export
-  a small, label-free sample of admitted three-second histories through the
-  offline observer, then measure it on Modal before choosing a model change.
-  Keep physical pair passages as false-third controls. Do not widen bounds,
-  alter beat/retention gates or add classifiers merely to force a gain.
-  Preserve the 0.50 retention floor, physical limits and zero wrong-string
-  headroom. The targets remain +676 long matches and +385 exact triples.
+- Completed complex-history inspection: `build/modal/fine-window-capture.json`
+  exports 49 low-E2 windows, sampled at least 0.5 seconds apart without using
+  labels or fit outcomes to choose them. The raw JSONL captures are byte-identical
+  at 32/512/1024 samples. All fourteen actual score metrics and all previous
+  physical-group diagnostics remain identical. The final export-status repair
+  is verified by `build/modal/fine-window-review-final-analysis.json`: 49 windows,
+  cap 512, no truncation, unchanged fingerprint `519bc0f9f4710566`.
+  The capture reports the assignment entering fine analysis, not the final
+  frame output. Of the sampled contexts, 13 are physical pairs and 36 are
+  triples; two triple contexts enter with only one assigned string. These are
+  diagnostic windows, not recovered-frame counts or independent trials.
+  `build/modal/fine-window-harmonics-final.json` reconstructs the first three
+  harmonic correlations using the detector's exact DC blocker, carrier phase,
+  40 ms smoothing and original observation times. Its fundamental matches the
+  native capture to 1.323e-10 relative RMS error. Eight known-frequency/sampling
+  checks pass in `build/modal/fine-window-spectrum-checks-final.json`.
+  A review found and repaired silent export truncation and missing sampling
+  warnings. All 49 windows pass the median-spacing guard, but only 35/29/29
+  pass the conservative maximum-gap guard for harmonics 1/2/3. Those guards
+  do not prove absence of out-of-band aliasing or irregular-window sidelobes.
+  Both sampled incomplete-triple windows are uniformly sampled. Harmonic
+  inspection shows different frequency shifts where fundamental peaks overlap;
+  peaks alone do not establish source count or string identity. All prior
+  spectrum values are unchanged after adding the warnings. All 443 final native
+  tests, eight frequency/sampling checks, native source/build contracts, Python
+  syntax and whitespace pass. One read-only code review is complete.
+  This remains offline-only; no production behavior or installation changed.
+- Next mechanism: fit the measured harmonics together using each feasible
+  string/fret's calibrated partial detuning and harmonic profile. Allow current
+  pitch evidence within the physical note range rather than treating recorded
+  absolute cents as fixed truth. Fit only the older samples, measure prediction
+  and amplitude-refit residual separately on the newest samples, and require
+  independent cross-band support beyond the smaller mask. Keep physical pair
+  passages as false-third controls and already-correct triples as preservation
+  controls. Irregular sampling must retain its actual times; a denser Fourier
+  grid does not improve physical resolution. No classifier or MIDI integration
+  is justified yet. Preserve three seconds, the 0.20 beat gate, 0.50 retention
+  floor, physical limits and zero wrong-string headroom. The targets remain
+  +676 long matches and +385 exact triples, with all protected corpora preserved.
 - Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
   motivates evaluating pitch sets jointly. This experiment uses M3's existing
   complex correlations and a real-valued weighted least-squares model.

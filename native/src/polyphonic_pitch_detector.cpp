@@ -7094,7 +7094,8 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
                 kFineFrequencyHistoryCapacity, seconds_per_decision,
                 center_frequency, strings.data(), offsets.data(),
                 component_count, state.mask_residuals.valid.data(),
-                pairwise_weighted_centered.data(), pairwise_weighted_absolute_sum});
+                pairwise_weighted_centered.data(), pairwise_weighted_absolute_sum,
+                current_output});
       }
       const auto measure_completion_mask = [&](std::uint8_t mask) noexcept {
         const std::uint8_t count = string_count(mask);

@@ -17,6 +17,8 @@
 
 namespace m3::offline {
 
+class FrequencyWindowCapture;
+
 struct HannBeatEdgeSummary final {
   std::uint64_t frames{};
   double difference_hz{};
@@ -2181,7 +2183,8 @@ bool run_detector_replay(const WaveData& wave,
                          double diagnostic_correlation_seconds = -1.0,
                          bool diagnostic_selection_window_only = false,
                          bool diagnostic_correlation_shadow_only = false,
-                         bool diagnostic_joint_pitch_residual = false);
+                         bool diagnostic_joint_pitch_residual = false,
+                         FrequencyWindowCapture* frequency_window_capture = nullptr);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

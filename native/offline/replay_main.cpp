@@ -7,12 +7,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <vector>
 
 #include "m3/calibration_state_image.hpp"
 #include "m3/state_image.hpp"
 #include "replay.hpp"
+#include "frequency_refinement_shadow.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace {
@@ -154,6 +156,7 @@ void usage(const char* program) {
       "[--sensitivity 0..100] [--response 0..100] "
       "[--max-polyphony 1..8] [--max-fret 0..36] [--label-details] "
       "[--spectral-shadow-templates FILE] "
+      "[--fine-window-dump FILE --fine-window-note 0..127] "
       "[--candidate-rescue-score-ratio 0..1 "
       "--candidate-rescue-fundamental-ratio 0..1] "
       "[--diagnostic-fretted-fixed-penalty 0..0.20 "
@@ -188,6 +191,8 @@ int main(int argc, char** argv) {
   const char* calibration_path = nullptr;
   const char* calibration_output_path = nullptr;
   const char* spectral_shadow_template_path = nullptr;
+  const char* fine_window_dump_path = nullptr;
+  int fine_window_note = -1;
   int calibration_string = -1;
   std::uint8_t excluded_calibration_pass = 0U;
   std::size_t block_size = 512U;
@@ -492,6 +497,17 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--spectral-shadow-templates") == 0 &&
                has_value) {
       spectral_shadow_template_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--fine-window-dump") == 0 && has_value) {
+      fine_window_dump_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--fine-window-note") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L || parsed > 127L) {
+        usage(argv[0]);
+        return 2;
+      }
+      fine_window_note = static_cast<int>(parsed);
     } else if (std::strcmp(argv[index], "--help") == 0) {
       usage(argv[0]);
       return 0;
@@ -501,6 +517,11 @@ int main(int argc, char** argv) {
     }
   }
   if (wave_path == nullptr) {
+    usage(argv[0]);
+    return 2;
+  }
+  if ((fine_window_dump_path == nullptr && fine_window_note >= 0) ||
+      (fine_window_dump_path != nullptr && spectral_shadow_template_path == nullptr)) {
     usage(argv[0]);
     return 2;
   }
@@ -722,6 +743,15 @@ int main(int argc, char** argv) {
     usage(argv[0]);
     return 2;
   }
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> fine_window_stream(nullptr, &std::fclose);
+  if (fine_window_dump_path != nullptr) {
+    fine_window_stream.reset(std::fopen(fine_window_dump_path, "wb"));
+    if (fine_window_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open fine-window dump\n");
+      return 1;
+    }
+  }
+  m3::offline::FrequencyWindowCapture fine_window_capture(fine_window_stream.get(), fine_window_note);
   if (!m3::offline::run_detector_replay(
           wave, labels, config, calibration_pointer, block_size, result,
           error, spectral_shadow_template_pointer, candidate_rescue_pointer,
@@ -733,10 +763,20 @@ int main(int argc, char** argv) {
           diagnostic_correlation_seconds,
           diagnostic_selection_window_only,
           diagnostic_correlation_shadow_only,
-          diagnostic_joint_pitch_residual)) {
+          diagnostic_joint_pitch_residual,
+          fine_window_stream != nullptr ? &fine_window_capture : nullptr)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
+  }
+  if (fine_window_stream != nullptr &&
+      (fine_window_capture.failed() || std::fflush(fine_window_stream.get()) != 0)) {
+    std::fprintf(stderr, "m3_replay: fine-window dump write failed\n");
+    return 1;
+  }
+  if (fine_window_stream != nullptr) {
+    std::fprintf(stderr, "m3_replay: fine_window_capture windows=%zu cap=512 truncated=%u\n",
+        fine_window_capture.windows(), fine_window_capture.truncated() ? 1U : 0U);
   }
   std::vector<std::int16_t> all_cents_errors;
   for (const m3::offline::ReplayLabelResult& detail : result.label_results) {

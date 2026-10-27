@@ -17,6 +17,7 @@ import io
 import json
 import math
 import os
+import re
 from pathlib import Path
 import struct
 import subprocess
@@ -225,6 +226,299 @@ image = (
 )
 
 
+def _fine_window_spectrum(window: dict[str, Any]) -> dict[str, Any]:
+    """Describe detector correlations at actual sample times; no source labels."""
+    import numpy as np
+
+    samples = np.asarray(window["samples"], dtype=float)
+    if samples.ndim != 2 or samples.shape[1] != 3 or len(samples) < 12:
+        raise ValueError("invalid fine window dimensions")
+    if not np.isfinite(samples).all() or np.any(np.diff(samples[:, 0]) <= 0):
+        raise ValueError("invalid fine window samples")
+    times = samples[:, 0] - samples[0, 0]
+    signal = samples[:, 1] + 1j * samples[:, 2]
+    center = float(window["center_hz"])
+    harmonic = int(window.get("harmonic", 1))
+    if harmonic < 1 or harmonic > 3:
+        raise ValueError("inspection supports harmonics1..3")
+    lower, upper = center * (2 ** (-50 / 1200) - 1), center * (2 ** (50 / 1200) - 1)
+    grid = np.linspace(lower, upper, 801)
+    training = int(window["training_samples"])
+    if not 3 <= training <= len(samples) - 3:
+        raise ValueError("invalid training split")
+
+    def spectrum(begin: int, end: int) -> dict[str, Any]:
+        t = times[begin:end]
+        span = float(t[-1] - t[0])
+        weights = 0.5 - 0.5 * np.cos(2 * np.pi * (t - t[0]) / span)
+        values = signal[begin:end]
+        amplitude = np.abs(np.exp(-2j * np.pi * harmonic * grid[:, None] * t[None, :]) @
+                           (weights * values)) / weights.sum()
+        local = [i for i in range(1, len(grid) - 1)
+                 if amplitude[i] >= amplitude[i - 1] and amplitude[i] > amplitude[i + 1]]
+        strongest = int(np.argmax(amplitude))
+        if strongest in (0, len(grid) - 1):
+            local.append(strongest)
+        local.sort(key=lambda i: float(amplitude[i]), reverse=True)
+        selected: list[int] = []
+        for i in local:
+            if all(abs(grid[i] - grid[j]) >= 0.5 / (span * harmonic) for j in selected):
+                selected.append(i)
+            if len(selected) == 4:
+                break
+        denominator = max(float(amplitude[strongest]), 1e-30)
+        peaks = [{"offset_hz": float(grid[i]),
+                  "cents": float(1200 * np.log2((center + grid[i]) / center)),
+                  "relative_amplitude": float(amplitude[i]) / denominator,
+                  "at_cell_boundary": i in (0, len(grid) - 1)} for i in selected]
+        return {"span_seconds": span, "nominal_resolution_hz": 1 / (span * harmonic),
+                "peaks": peaks,
+                "at_calibration_relative_amplitude": [
+                    {"string": int(string), "offset_hz": float(hz),
+                     "relative_amplitude": float(abs(np.vdot(
+                         np.exp(2j * np.pi * harmonic * float(hz) * t), weights * values))) /
+                         float(weights.sum()) / denominator}
+                    for string, hz in window["calibration"]]}
+
+    differences = np.diff(times)
+    parts = np.array_split(np.abs(signal) ** 2, 4)
+    quarter_rms = [float(np.sqrt(p.mean())) for p in parts]
+    scanned_hz = harmonic * max(abs(lower), abs(upper))
+    gap_bound_hz = 0.5 / float(np.max(differences))
+    median_bound_hz = 0.5 / float(np.median(differences))
+    return {"note": int(window["note"]), "harmonic": harmonic,
+            "start_seconds": float(samples[0, 0]),
+            "end_seconds": float(samples[-1, 0]),
+            "prior_output_mask": int(window["prior_output_mask"]),
+            "calibration": window["calibration"], "sample_count": len(samples),
+            "uniform": bool(np.max(differences) - np.min(differences) < 1e-9),
+            "maximum_sample_gap_seconds": float(np.max(differences)),
+            "maximum_scanned_residual_hz": scanned_hz,
+            "conservative_spacing_guard_passed": scanned_hz < gap_bound_hz,
+            "median_spacing_guard_passed": scanned_hz < median_bound_hz,
+            "sampling_limit": "Spacing guards cover the scanned frequency range, not rejection of aliased out-of-band signal. Irregular gaps also create spectral-window sidelobes; unresolved or unsupported peaks cannot establish extra strings.",
+            "quarter_rms": quarter_rms,
+            "last_to_first_rms": quarter_rms[-1] / max(quarter_rms[0], 1e-30),
+            "full": spectrum(0, len(samples)),
+            "training": spectrum(0, training), "test": spectrum(training, len(samples)),
+            "fits": window["fits"]}
+
+
+def _check_fine_window_spectrum() -> int:
+    """Small known-frequency checks run before interpreting recorded data."""
+    cases = [(offset, irregular, harmonic) for harmonic in (1, 2, 3)
+             for offset, irregular in ((0.7, False), (-0.9, True))]
+    for offset, irregular, harmonic in cases:
+        times = [n * 0.01 + (0.0002 if irregular and n % 3 == 0 else 0.0)
+                 for n in range(300)]
+        window = {"samples": [[t, math.cos(2 * math.pi * harmonic * offset * t),
+                               math.sin(2 * math.pi * harmonic * offset * t)] for t in times],
+                  "center_hz": 82.4069, "training_samples": 200, "note": 40,
+                  "harmonic": harmonic, "prior_output_mask": 1,
+                  "calibration": [[0, offset]], "fits": []}
+        result = _fine_window_spectrum(window)
+        for band in ("full", "training", "test"):
+            assert abs(result[band]["peaks"][0]["offset_hz"] - offset) < 0.01
+        assert result["uniform"] is not irregular
+        assert abs(result["last_to_first_rms"] - 1) < 1e-12
+        assert result["conservative_spacing_guard_passed"]
+        if irregular and harmonic == 1:
+            window["samples"][1][0] = window["samples"][0][0]
+            try:
+                _fine_window_spectrum(window)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("duplicate observation time was accepted")
+    window["center_hz"] = 1046.502
+    window["harmonic"] = 3
+    assert not _fine_window_spectrum(window)["median_spacing_guard_passed"]
+    return 8
+
+
+@app.function(image=image, cpu=1.0, memory=512, timeout=60)
+def check_fine_window_spectrum() -> dict[str, Any]:
+    return {"known_frequency_checks_passed": _check_fine_window_spectrum()}
+
+
+@app.local_entrypoint()
+def spectrum_checks(output: str = "build/modal/fine-window-spectrum-checks.json") -> None:
+    result = check_fine_window_spectrum.remote()
+    Path(output).write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps(result))
+
+
+def _reconstruct_harmonic_correlations(samples: Any, rate: int, center: float,
+                                      indices: Any, input_trim: float) -> Any:
+    """Match the native15Hz DC blocker and40ms complex one-pole correlator."""
+    import numpy as np
+
+    indices = np.asarray(indices, dtype=np.int64)
+    if not len(indices) or indices[0] < 0 or indices[-1] >= len(samples) or np.any(np.diff(indices) <= 0):
+        raise ValueError("invalid correlation sample indices")
+    gain = 10 ** (input_trim / 20)
+    dc_decay = math.exp(-2 * math.pi * 15 / rate)
+    decay = math.exp(-1 / (0.040 * rate))
+    dc_state = 0.0
+    previous_sample = 0.0
+    states = np.zeros(3, dtype=np.complex128)
+    result = np.empty((3, len(indices)), dtype=np.complex128)
+    cursor = 0
+    for begin in range(0, int(indices[-1]) + 1, 1024):
+        end = min(begin + 1024, len(samples), int(indices[-1]) + 1)
+        values = np.asarray(samples[begin:end], dtype=float) * gain
+        count = len(values)
+        powers = dc_decay ** np.arange(1, count + 1)
+        drive = np.diff(np.concatenate(([previous_sample], values)))
+        dc = powers * (dc_state + np.cumsum(drive / powers))
+        dc_state = float(dc[-1])
+        previous_sample = float(values[-1])
+        powers = decay ** np.arange(1, count + 1)
+        selected_end = int(np.searchsorted(indices, end))
+        positions = indices[cursor:selected_end] - begin
+        sample_numbers = np.arange(begin + 1, end + 1)
+        for harmonic in range(1, 4):
+            mixed = dc * np.exp(-2j * np.pi * harmonic * center * sample_numbers / rate)
+            filtered = powers * (states[harmonic - 1] +
+                                 (1 - decay) * np.cumsum(mixed / powers))
+            states[harmonic - 1] = filtered[-1]
+            result[harmonic - 1, cursor:selected_end] = filtered[positions]
+        cursor = selected_end
+    return result
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=600)
+def inspect_window_harmonics(capture_path: str, dataset_name: str,
+                             input_trim: float) -> dict[str, Any]:
+    import numpy as np
+
+    path = MOUNT_ROOT / capture_path
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("capture must be in the replay results volume")
+    windows = [json.loads(line) for line in path.read_text().splitlines()]
+    if not windows or len(windows) > 512 or len({w["center_hz"] for w in windows}) != 1:
+        raise ValueError("harmonic inspection requires a bounded single-note capture")
+    rate, samples = _read_float_wave(MOUNT_ROOT / DATASETS[dataset_name]["wav"])
+    indices = np.unique(np.concatenate([
+        np.rint(np.asarray(w["samples"])[:, 0] * rate).astype(np.int64) - 1 for w in windows]))
+    measured = _reconstruct_harmonic_correlations(
+        samples, rate, float(windows[0]["center_hz"]), indices, input_trim)
+    error_energy = 0.0
+    reference_energy = 0.0
+    analyzed = []
+    for window in windows:
+        original = np.asarray(window["samples"])
+        locations = np.searchsorted(indices, np.rint(original[:, 0] * rate).astype(np.int64) - 1)
+        reference = original[:, 1] + 1j * original[:, 2]
+        error_energy += float(np.sum(np.abs(measured[0, locations] - reference) ** 2))
+        reference_energy += float(np.sum(np.abs(reference) ** 2))
+        for harmonic in (1, 2, 3):
+            values = measured[harmonic - 1, locations]
+            probe = {**window, "harmonic": harmonic,
+                     "samples": np.column_stack((original[:, 0], values.real, values.imag)).tolist()}
+            analyzed.append(_fine_window_spectrum(probe))
+    relative_error = math.sqrt(error_energy / reference_energy)
+    if relative_error >= 1e-6:
+        raise ValueError(f"fundamental reconstruction disagrees with native capture: {relative_error:.9g}")
+    return {"dataset": dataset_name, "capture_path": capture_path,
+            "fundamental_relative_rms_error": relative_error, "windows": analyzed,
+            "capture_windows": len(windows), "harmonics": [1, 2, 3],
+            "interpretation": "Harmonic offsets are divided by harmonic order and expressed as fundamental-equivalent Hz/cents. Inharmonicity can shift these values; peaks alone do not identify physical strings. Native fundamental reconstruction is verified first."}
+
+
+@app.local_entrypoint()
+def inspect_harmonics(report: str, output: str = "build/modal/fine-window-harmonics.json",
+                      dataset: str = "physical-long") -> None:
+    source = json.loads(Path(report).read_text())
+    row = next(r for r in source["results"] if r["dataset"] == dataset and r["block"] == 512)
+    if row.get("correlation_seconds", -1) != -1:
+        raise SystemExit("harmonic reconstruction requires the default correlation decay")
+    result = inspect_window_harmonics.remote(row["fine_window_path"], dataset, row["input_trim"])
+    result["replay_run_id"] = source["run_id"]
+    result["replay_binary_sha256"] = source["binary_sha256"]
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps({"output": output, "captures": result["capture_windows"],
+                      "fundamental_relative_rms_error": result["fundamental_relative_rms_error"]}))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=600)
+def inspect_fine_windows(capture_path: str, dataset_name: str,
+                        partition_paths: list[str]) -> dict[str, Any]:
+    selftests = _check_fine_window_spectrum()
+    path = MOUNT_ROOT / capture_path
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("capture must be in the replay results volume")
+    partition_hashes = {}
+    for capture in partition_paths:
+        partition_path = MOUNT_ROOT / capture
+        if not partition_path.is_relative_to(MOUNT_ROOT / "results") or ".." in partition_path.parts:
+            raise ValueError("capture must be in the replay results volume")
+        partition_hashes[capture] = _sha256(partition_path)
+    if len(set(partition_hashes.values())) != 1:
+        raise ValueError("fine-window captures differ between buffer sizes")
+    dataset = DATASETS[dataset_name]
+    with (MOUNT_ROOT / dataset["wav"]).open("rb") as stream:
+        if stream.read(4) != b"RIFF":
+            raise ValueError("missing RIFF")
+        stream.seek(12)
+        rate = None
+        while True:
+            header = stream.read(8)
+            if len(header) != 8:
+                raise ValueError("missing WAVE fmt")
+            name, size = struct.unpack("<4sI", header)
+            if name == b"fmt ":
+                rate = struct.unpack("<HHI", stream.read(8))[2]
+                break
+            stream.seek(size + (size & 1), 1)
+    with (MOUNT_ROOT / dataset["labels"]).open() as stream:
+        labels = list(csv.DictReader(stream, delimiter="\t"))
+    windows = []
+    with path.open() as stream:
+        for line in stream:
+            if len(windows) >= 512:
+                raise ValueError("capture exceeded bounded export")
+            item = _fine_window_spectrum(json.loads(line))
+            expected = 0
+            wholly_labeled = True
+            for label in labels:
+                if int(label["midi_note"]) != item["note"]:
+                    continue
+                start = int(label["start_sample"]) / rate
+                end = int(label["end_sample"]) / rate
+                if start <= item["end_seconds"] < end:
+                    expected |= int(label["string_mask"])
+                    wholly_labeled = wholly_labeled and start <= item["start_seconds"]
+            # Labels are attached only after all spectral measurements.
+            item["expected_mask_at_window_end"] = expected
+            item["whole_window_in_labeled_hold"] = bool(expected) and wholly_labeled
+            windows.append(item)
+    return {"capture_path": capture_path, "dataset": dataset_name, "sample_rate": rate,
+            "windows": windows, "count": len(windows), "export_cap_reached": len(windows) == 512,
+            "known_frequency_checks_passed": selftests,
+            "partition_capture_sha256": partition_hashes,
+            "interpretation": "These are40ms-smoothed complex detector correlations. Fourier grid spacing is not source-resolution precision; peaks from overlapping sources can be biased. Prior output precedes the current assignment decision. Labels only annotate measured windows."}
+
+
+@app.local_entrypoint()
+def inspect_windows(report: str, output: str = "build/modal/fine-window-inspection.json",
+                    dataset: str = "physical-long") -> None:
+    source = json.loads(Path(report).read_text())
+    row = next(r for r in source["results"] if r["dataset"] == dataset and r["block"] == 512)
+    paths = [r["fine_window_path"] for r in source["results"] if r["dataset"] == dataset]
+    result = inspect_fine_windows.remote(row["fine_window_path"], dataset, paths)
+    result["replay_run_id"] = source["run_id"]
+    result["replay_binary_sha256"] = source["binary_sha256"]
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps({"output": output, "windows": result["count"]}))
+
+
 def _read_float_wave(path: Path) -> tuple[int, Any]:
     import numpy as np
 
@@ -421,6 +715,11 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "--spectral-shadow-templates",
             str(MOUNT_ROOT / "corpus/templates.tsv"),
         ]
+    fine_window_path = output_path.with_suffix(".fine-windows.jsonl")
+    if bool(job.get("fine_window_dump", False)):
+        command += ["--fine-window-dump", str(fine_window_path)]
+        if int(job.get("fine_window_note", -1)) >= 0:
+            command += ["--fine-window-note", str(int(job["fine_window_note"]))]
     selector_margin = float(job["selector_margin"])
     if selector_margin >= 0.0:
         command += [
@@ -475,13 +774,24 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             f"m3_replay failed ({completed.returncode}): "
             f"{completed.stderr[-2000:]}"
         )
+    capture_metadata = None
+    if bool(job.get("fine_window_dump", False)):
+        found = re.search(r"fine_window_capture windows=(\d+) cap=(\d+) truncated=([01])", completed.stderr)
+        if found is None:
+            raise RuntimeError("fine-window export metadata is missing")
+        capture_metadata = {"windows": int(found[1]), "cap": int(found[2]),
+                            "truncated": found[3] == "1"}
     if bool(job.get("persist_tsv", False)):
         output_path.write_text(completed.stdout, encoding="utf-8")
+    if bool(job.get("persist_tsv", False)) or bool(job.get("fine_window_dump", False)):
         volume.commit()
     result = _parse_aggregate(completed.stdout)
     result.update(
         {
             "dataset": job["dataset"],
+            "fine_window_path": str(fine_window_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("fine_window_dump", False)) else "",
+            "fine_window_capture": capture_metadata,
             "block": int(job["block"]),
             "selector_margin": selector_margin,
             "selector_mask": int(job["selector_mask"]),
@@ -574,10 +884,16 @@ def sweep(
     max_frets: str = "24",
     label_details: bool = False,
     persist_tsv: bool = False,
+    fine_window_dump: bool = False,
+    fine_window_note: int = -1,
     tag: str = "manual",
     output: str = "build/modal/m3-replay-results.json",
 ) -> None:
     dataset_names = [value.strip() for value in datasets.split(",") if value.strip()]
+    if fine_window_dump and not label_details:
+        raise SystemExit("fine-window capture requires --label-details")
+    if fine_window_note < -1 or fine_window_note > 127 or (fine_window_note >= 0 and not fine_window_dump):
+        raise SystemExit("fine-window note requires capture and must be -1 or 0..127")
     unknown = sorted(set(dataset_names) - set(DATASETS))
     if unknown:
         raise SystemExit(f"unknown datasets: {','.join(unknown)}")
@@ -658,6 +974,8 @@ def sweep(
             "selector_mask": mask,
             "label_details": label_details,
             "persist_tsv": persist_tsv or label_details,
+            "fine_window_dump": fine_window_dump,
+            "fine_window_note": fine_window_note,
             "dp_similarity": similarity,
             "dp_calibration_margin": calibration_margin,
             "dp_score_margin": score_margin,

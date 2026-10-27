@@ -2089,7 +2089,8 @@ bool run_detector_replay(const WaveData& wave,
                          double diagnostic_correlation_seconds,
                          bool diagnostic_selection_window_only,
                          bool diagnostic_correlation_shadow_only,
-                         bool diagnostic_joint_pitch_residual) {
+                         bool diagnostic_joint_pitch_residual,
+                         FrequencyWindowCapture* frequency_window_capture) {
   output = {};
   error = ReplayError::invalid_config;
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -2114,6 +2115,7 @@ bool run_detector_replay(const WaveData& wave,
   if (spectral_shadow_templates != nullptr) {
     hann_shadow_storage = std::make_unique<HannBeatShadowBuffer>();
     frequency_shadow_storage = std::make_unique<FrequencyRefinementShadow>();
+    frequency_shadow_storage->set_capture(frequency_window_capture);
   }
 #endif
   auto detector_storage = std::make_unique<PolyphonicPitchDetector>();
