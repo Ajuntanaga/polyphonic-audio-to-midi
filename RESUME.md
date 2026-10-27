@@ -209,25 +209,47 @@ Updated: 2026-10-27
   completed; its missing denominator was fixed. The full native suite passes
   438 tests, and source-contract/whitespace checks pass. No VST3 installation
   is included.
-- Next mechanism: the fine fitter uses fixed calibrated per-string frequencies.
-  Its `frequency_deviation_hz` measures aggregate instantaneous-frequency
-  variance; it does not correct a common offset or per-string drift. Inspect
-  `update_fine_frequency_evidence`, calibrated offsets near 6044 and phase
-  variance near 6227. This may explain useful signal that a fixed basis misses;
-  it is a hypothesis, not yet a demonstrated defect.
-  Build an offline comparison of fixed offsets, one bounded common correction,
-  and one bounded per-component Gauss-Newton correction. Estimate corrections
-  on the oldest two-thirds of the same causal three-second history and compare
-  prediction/residual on the newest third. Report common-versus-independent
-  incremental held-out gain, corrections in cents, and conditioning. Keep the
-  existing .20 beat statistic on the full admitted three-second window as a
-  separate gate; a one-second held-out beat score must not replace that gate.
-  Evaluate all feasible 2-4 masks; labels only score results. Physical pair
-  passages must reject false thirds, while existing correct triples serve as
-  positive controls. No production promotion from training gain or unpenalized
-  model rank. Preserve the 0.50 retention floor, physical limits and zero
-  wrong-string headroom. The target remains +676 long matches and +385 exact
-  triples. Do not repeat the rejected weighting/ranking/carry grids.
+- Completed/rejected local frequency-refinement screen:
+  `build/modal/frequency-refinement-shadow.json`, Modal app
+  `ap-ljBdon8l1Yqm0C9vCDyyLg`; nine jobs cover physical-long, physical-four
+  and synthetic-four at 32/512/1024 samples. Analysis:
+  `build/modal/frequency-refinement-shadow-analysis.json`. All fourteen actual
+  score metrics and fingerprints match the accepted baseline; every diagnostic
+  counter agrees across partitions. Four causal math tests and the full 442
+  native tests pass. Source contract and whitespace checks pass. One focused
+  code review is complete. No production behavior or installation changed.
+  The label-free observer compares fixed calibrated frequencies, one common
+  correction and one per-component Gauss-Newton step. Training uses the oldest
+  two-thirds of the admitted history; testing uses the newest third. Separate
+  metrics report training-amplitude prediction and held-out amplitude-refit
+  residual. The full-window production beat statistic remains separate at
+  0.20. Corrections are limited to a quarter cycle over the training span,
+  five cents, and (for individual motion) a quarter of nearest-source spacing.
+  Bound hits disqualify the result. All arms use the same unregularized QR
+  amplitude solver with conditioning rejection: the fixed control is not
+  production ridge LS. Per-component motion includes a shared shift; only
+  benefit beyond the common arm could support individually different drift.
+  None of the 1,062 evaluated incomplete-triple frames gains qualified useful
+  support. All 1,062 per-component fits and 1,046 common fits hit their bounds;
+  corrected full-window beat support remains zero. Mean amplitude-refit test
+  residuals are 0.041854 fixed, 0.036478 common and 0.034598 per-component, but
+  mean prediction error is worse for per-component than common (4.5643 versus
+  2.3021). These means use the same 1,062 valid frames in every arm. A smaller
+  refit residual alone therefore does not establish recoverable strings.
+  Physical-four produced 6,064 eligible model windows, but its source mask
+  255 denotes ambiguous string labels, not eight known sources. Synthetic-four
+  produced no eligible fine models. Exact four-string refinement quality is
+  not measured; the four-source numerical test passes.
+- Next mechanism: directly inspect the complex-history frequency peaks and
+  amplitude envelope in failing windows and already-correct triple controls.
+  The local correction limits were exceeded; this does not identify whether
+  calibration mismatch or a nonstationary signal model is responsible. Export
+  a small, label-free sample of admitted three-second histories through the
+  offline observer, then measure it on Modal before choosing a model change.
+  Keep physical pair passages as false-third controls. Do not widen bounds,
+  alter beat/retention gates or add classifiers merely to force a gain.
+  Preserve the 0.50 retention floor, physical limits and zero wrong-string
+  headroom. The targets remain +676 long matches and +385 exact triples.
 - Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
   motivates evaluating pitch sets jointly. This experiment uses M3's existing
   complex correlations and a real-valued weighted least-squares model.

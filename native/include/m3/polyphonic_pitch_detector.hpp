@@ -9,6 +9,7 @@
 #include "m3/constants.hpp"
 #include "m3/harmonic_evidence.hpp"
 #include "m3/hann_beat_shadow.hpp"
+#include "m3/frequency_refinement_observer.hpp"
 #include "m3/partial_detuning_evidence.hpp"
 #include "m3/string_fret_posterior.hpp"
 #include "m3/string_calibration.hpp"
@@ -274,6 +275,14 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   void set_fine_mask_complexity_diagnostics_enabled(bool enabled) noexcept {
     fine_mask_complexity_diagnostics_enabled_ = enabled;
+  }
+  void set_frequency_refinement_observer(
+      diagnostics::FrequencyRefinementObserver observer, void* context) noexcept {
+    frequency_refinement_observer_ = observer;
+    frequency_refinement_context_ = context;
+    if (observer != nullptr) {
+      observer(context, {});
+    }
   }
   void set_fine_mask_pruning_for_diagnostics(bool enabled) noexcept {
     diagnostic_fine_mask_pruning_enabled_ = enabled;
@@ -1033,6 +1042,8 @@ class PolyphonicPitchDetector final {
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   HannBeatShadowBuffer* hann_beat_shadow_buffer_{};
+  diagnostics::FrequencyRefinementObserver frequency_refinement_observer_{};
+  void* frequency_refinement_context_{};
   QuietDisposition quiet_disposition_{QuietDisposition::not_quiet};
   SignalLossDisposition last_signal_loss_{SignalLossDisposition::none};
   std::array<SelectionDisposition, kMaxCandidates>

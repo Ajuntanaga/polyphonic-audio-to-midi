@@ -16,6 +16,7 @@
 #include "m3/pitch_math.hpp"
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "joint_pitch_residual.hpp"
+#include "frequency_refinement_shadow.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace m3::offline {
@@ -2109,8 +2110,10 @@ bool run_detector_replay(const WaveData& wave,
   // offline tool and may allocate before processing begins.
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   std::unique_ptr<HannBeatShadowBuffer> hann_shadow_storage;
+  std::unique_ptr<FrequencyRefinementShadow> frequency_shadow_storage;
   if (spectral_shadow_templates != nullptr) {
     hann_shadow_storage = std::make_unique<HannBeatShadowBuffer>();
+    frequency_shadow_storage = std::make_unique<FrequencyRefinementShadow>();
   }
 #endif
   auto detector_storage = std::make_unique<PolyphonicPitchDetector>();
@@ -2129,6 +2132,10 @@ bool run_detector_replay(const WaveData& wave,
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   detector.set_hann_beat_shadow_buffer(hann_shadow_storage.get());
+  if (frequency_shadow_storage != nullptr) {
+    detector.set_frequency_refinement_observer(
+        &FrequencyRefinementShadow::observe, frequency_shadow_storage.get());
+  }
   detector.set_fine_mask_complexity_diagnostics_enabled(
       spectral_shadow_templates != nullptr || diagnostic_fine_mask_pruning ||
       diagnostic_fine_beat_pruning);
@@ -5136,6 +5143,73 @@ bool run_detector_replay(const WaveData& wave,
           const auto& hann_shadow = detector.hann_beat_shadow(label.midi_note);
           const bool hann_eligible = admission.active && expected_mask != 0U &&
               disposition == static_cast<std::size_t>(SelectionDisposition::selected);
+          if (hann_eligible && frequency_shadow_storage != nullptr) {
+            auto& coverage = result.physical_group_frequency_refinement_coverage;
+            ++coverage[0U];
+            const auto& table = frequency_shadow_storage->at(label.midi_note);
+            bool has_model = false;
+            for (const auto& model : table.masks) {
+              has_model = has_model || (mask_residuals.valid[model.mask] &&
+                  mask_member_count(model.mask) <= maximum_members &&
+                  (model.mask & ~admission.playable_string_mask) == 0U);
+            }
+            if (has_model) {
+              ++coverage[1U];
+              coverage[2U] += table.prepared ? 1U : 0U;
+            }
+            if (has_model && table.prepared) {
+              for (const auto& model : table.masks) {
+                if (!mask_residuals.valid[model.mask] ||
+                    mask_member_count(model.mask) > maximum_members ||
+                    (model.mask & ~admission.playable_string_mask) != 0U) {
+                  continue;
+                }
+                ++coverage[3U];
+                for (std::size_t arm = 0U; arm < model.arms.size(); ++arm) {
+                  const auto& value = model.arms[arm];
+                  const auto& fixed = model.arms[0U];
+                  const std::uint64_t key = label.midi_note |
+                      (static_cast<std::uint64_t>(expected_mask) << 7U) |
+                      (static_cast<std::uint64_t>(model.mask) << 15U) |
+                      (static_cast<std::uint64_t>(classify_target_lane_outcome(
+                           observed_lane_mask, expected_mask)) << 23U) |
+                      (static_cast<std::uint64_t>(arm) << 26U);
+                  auto& summary = result.physical_group_frequency_refinement[key];
+                  ++summary.frames;
+                  summary.bounded_frames += value.bounded ? 1U : 0U;
+                  if (!value.valid) {
+                    continue;
+                  }
+                  ++summary.valid_frames;
+                  const bool beat_supported = value.minimum_full_window_beat >= 0.20;
+                  const bool gain = fixed.valid &&
+                      fixed.test_refit_residual - value.test_refit_residual >= 0.02;
+                  // Diagnose a nontrivial held-out improvement and preserve
+                  // both full-window beat and relative-amplitude support.
+                  // This qualification never edits actual or shadow MIDI.
+                  const bool qualified = !value.bounded && beat_supported &&
+                      value.minimum_amplitude_ratio >= 0.12;
+                  const bool useful_gain = qualified && gain &&
+                      value.train_residual <= fixed.train_residual &&
+                      value.test_prediction_residual < fixed.test_prediction_residual;
+                  summary.beat_supported_frames += beat_supported ? 1U : 0U;
+                  summary.heldout_gain_frames += gain ? 1U : 0U;
+                  summary.qualified_frames += qualified ? 1U : 0U;
+                  summary.useful_gain_frames += useful_gain ? 1U : 0U;
+                  summary.train_sum += value.train_residual;
+                  summary.test_refit_sum += value.test_refit_residual;
+                  summary.test_prediction_sum += value.test_prediction_residual;
+                  summary.maximum_cents = std::max(summary.maximum_cents,
+                      value.maximum_correction_cents);
+                  summary.minimum_conditioning = std::min(
+                      summary.minimum_conditioning, value.conditioning_proxy);
+                  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+                    summary.correction_cents_sum[string] += value.correction_cents[string];
+                  }
+                }
+              }
+            }
+          }
           if (hann_eligible) {
             ++result.physical_group_hann_beat_coverage[0U];
             bool has_model = false;

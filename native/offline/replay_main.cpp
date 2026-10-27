@@ -848,6 +848,10 @@ int main(int argc, char** argv) {
       "physical_group_hann_beat_coverage\t"
       "physical_group_hann_beat_edge_encoding\t"
       "physical_group_hann_beat_edges\t"
+      "physical_group_frequency_refinement_coverage_encoding\t"
+      "physical_group_frequency_refinement_coverage\t"
+      "physical_group_frequency_refinement_encoding\t"
+      "physical_group_frequency_refinement\t"
       "physical_group_member_exact_exit_frames\t"
       "physical_group_causal_runs\t"
       "physical_group_causal_longest_runs\t"
@@ -1242,6 +1246,37 @@ int main(int argc, char** argv) {
                 edge.original_minimum, edge.original_maximum,
                 edge.weighted_minimum, edge.weighted_maximum);
     first_hann_edge = false;
+  }
+  std::printf("\teligible_groups,groups_with_model,prepared_groups,evaluated_masks\t");
+  print_sequence(result.physical_group_frequency_refinement_coverage);
+  std::printf(
+      "\tkey=note:0..6,expected_mask:7..14,model_mask:15..22,"
+      "output_outcome:23..25,arm(fixed/common/independent):26..27;"
+      "value=frames/valid/bounded/beat_supported/heldout_gain/qualified/useful_gain/"
+      "train_mean/test_refit_mean/test_prediction_mean/max_cents/min_condition/"
+      "cents_mean_string0..7;gain=test_refit_drop>=0.02;qualified=not_bounded+"
+      "full_window_beat>=0.20+train_and_test_amplitude_ratio>=0.12;"
+      "useful=qualified+gain+train_nonregression+prediction_improves\t");
+  bool first_frequency = true;
+  for (const auto& [key, summary] : result.physical_group_frequency_refinement) {
+    const double denominator = static_cast<double>(
+        std::max<std::uint64_t>(1U, summary.valid_frames));
+    std::printf("%s%llu:%llu/%llu/%llu/%llu/%llu/%llu/%llu/%.9g/%.9g/%.9g/%.9g/%.9g",
+                first_frequency ? "" : ",", static_cast<unsigned long long>(key),
+                static_cast<unsigned long long>(summary.frames),
+                static_cast<unsigned long long>(summary.valid_frames),
+                static_cast<unsigned long long>(summary.bounded_frames),
+                static_cast<unsigned long long>(summary.beat_supported_frames),
+                static_cast<unsigned long long>(summary.heldout_gain_frames),
+                static_cast<unsigned long long>(summary.qualified_frames),
+                static_cast<unsigned long long>(summary.useful_gain_frames),
+                summary.train_sum / denominator, summary.test_refit_sum / denominator,
+                summary.test_prediction_sum / denominator, summary.maximum_cents,
+                summary.minimum_conditioning);
+    for (double correction_sum : summary.correction_cents_sum) {
+      std::printf("/%.9g", correction_sum / denominator);
+    }
+    first_frequency = false;
   }
   std::printf("\t");
   print_sparse_u64_joint_bins(

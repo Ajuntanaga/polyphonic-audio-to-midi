@@ -30,6 +30,22 @@ struct HannBeatEdgeSummary final {
   double weighted_maximum{};
 };
 
+struct FrequencyRefinementSummary final {
+  std::uint64_t frames{};
+  std::uint64_t valid_frames{};
+  std::uint64_t bounded_frames{};
+  std::uint64_t beat_supported_frames{};
+  std::uint64_t heldout_gain_frames{};
+  std::uint64_t qualified_frames{};
+  std::uint64_t useful_gain_frames{};
+  double train_sum{};
+  double test_refit_sum{};
+  double test_prediction_sum{};
+  double maximum_cents{};
+  double minimum_conditioning{1.0};
+  std::array<double, 8U> correction_cents_sum{};
+};
+
 enum class ReplayFineHistoryCarryDisposition : std::uint8_t {
   selected,
   quiet,
@@ -1937,6 +1953,12 @@ struct ReplayResult final {
   // Key: note[0:6], edge index[7:11], expected count[12:15],
   // both edge strings expected[16]. Each edge counted once per physical group.
   std::map<std::uint64_t, HannBeatEdgeSummary> physical_group_hann_beat_edges{};
+  // Eligible labeled groups, groups with models, prepared groups, masks.
+  std::array<std::uint64_t, 4U> physical_group_frequency_refinement_coverage{};
+  // Key: note[0:6], expected mask[7:14], proposed mask[15:22],
+  // actual output outcome[23:25], arm (fixed/common/independent)[26:27].
+  std::map<std::uint64_t, FrequencyRefinementSummary>
+      physical_group_frequency_refinement{};
   // Counts the first non-exact causal cell after an exact physical-group
   // output. Member-indexing isolates practical triples and quads from pair
   // setup passages without retaining frame-level traces.

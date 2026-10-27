@@ -100,6 +100,7 @@ set_source_files_properties(
 )
 
 set(M3_NATIVE_TEST_SOURCES
+    native/offline/frequency_refinement_shadow.cpp
     native/offline/joint_pitch_residual.cpp
     native/offline/replay.cpp
     native/offline/unison_spectral_shadow.cpp
@@ -110,6 +111,7 @@ set(M3_NATIVE_TEST_SOURCES
     native/tests/test_calibration_state_image.cpp
     native/tests/test_fixed_vector.cpp
     native/tests/test_factory_calibration.cpp
+    native/tests/test_frequency_refinement_shadow.cpp
     native/tests/test_generated_note_ledger.cpp
     native/tests/test_harmonic_evidence.cpp
     native/tests/test_joint_pitch_residual.cpp
@@ -218,6 +220,7 @@ add_test(NAME m3_vst3_realtime_tests COMMAND m3_vst3_realtime_tests)
 add_executable(m3_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
     ${M3_UNISON_SPECTRAL_SHADOW_SOURCES}
+    native/offline/frequency_refinement_shadow.cpp
     native/offline/joint_pitch_residual.cpp
     native/offline/replay.cpp
     native/offline/unison_spectral_shadow.cpp

@@ -1629,6 +1629,9 @@ void PolyphonicPitchDetector::reset() noexcept {
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (frequency_refinement_observer_ != nullptr) {
+    frequency_refinement_observer_(frequency_refinement_context_, {});
+  }
   if (hann_beat_shadow_buffer_ != nullptr) {
     *hann_beat_shadow_buffer_ = {};
   }
@@ -2772,6 +2775,9 @@ void PolyphonicPitchDetector::set_calibration_bank(
   invalidate_fine_frequency_uniform_gram_cache();
   fine_frequency_evidence_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (frequency_refinement_observer_ != nullptr) {
+    frequency_refinement_observer_(frequency_refinement_context_, {});
+  }
   if (hann_beat_shadow_buffer_ != nullptr) {
     *hann_beat_shadow_buffer_ = {};
   }
@@ -7078,6 +7084,18 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
             support.connected;
       }
       std::array<bool, 1U << kMaxVoices> measured_masks{};
+      if (fine_mask_complexity_diagnostics_enabled_ &&
+          frequency_refinement_observer_ != nullptr) {
+        prepare_pairwise();
+        frequency_refinement_observer_(frequency_refinement_context_,
+            diagnostics::FrequencyRefinementView{
+                note, state.real.data(), state.imaginary.data(),
+                state.decision_ticks.data(), oldest, fit_count,
+                kFineFrequencyHistoryCapacity, seconds_per_decision,
+                center_frequency, strings.data(), offsets.data(),
+                component_count, state.mask_residuals.valid.data(),
+                pairwise_weighted_centered.data(), pairwise_weighted_absolute_sum});
+      }
       const auto measure_completion_mask = [&](std::uint8_t mask) noexcept {
         const std::uint8_t count = string_count(mask);
         if (count < 2U || count > 4U || measured_masks[mask]) {
