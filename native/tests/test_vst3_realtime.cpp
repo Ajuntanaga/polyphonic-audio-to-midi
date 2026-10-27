@@ -251,21 +251,20 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   // and uses thread CPU time so an unrelated scheduler preemption cannot
   // masquerade as detector work; the isolated host matrix owns end-to-end
   // wall maxima.
-  if (wall_durations[p99_index] >= kP99BudgetNanoseconds ||
-      cpu_durations.back() >= kMaximumBudgetNanoseconds) {
-    std::fprintf(stderr,
-                 "96 kHz callback timing: wall-p99=%llu ns wall-max=%llu ns "
-                 "cpu-max=%llu ns budgets=%llu/%llu ns "
-                 "pool=%u edges=%u transitions=%u\n",
-                 static_cast<unsigned long long>(wall_durations[p99_index]),
-                 static_cast<unsigned long long>(wall_durations.back()),
-                 static_cast<unsigned long long>(cpu_durations.back()),
-                 static_cast<unsigned long long>(kP99BudgetNanoseconds),
-                 static_cast<unsigned long long>(kMaximumBudgetNanoseconds),
-                 maximum_selection_work.pool_candidates,
-                 maximum_selection_work.assignment_edges,
-                 maximum_selection_work.state_transitions);
-  }
+  // Keep successful measurements visible for controlled performance comparisons;
+  // a passing assertion alone does not show whether an optimization helped.
+  std::fprintf(stderr,
+               "96 kHz callback timing: wall-p99=%llu ns wall-max=%llu ns "
+               "cpu-max=%llu ns budgets=%llu/%llu ns "
+               "pool=%u edges=%u transitions=%u\n",
+               static_cast<unsigned long long>(wall_durations[p99_index]),
+               static_cast<unsigned long long>(wall_durations.back()),
+               static_cast<unsigned long long>(cpu_durations.back()),
+               static_cast<unsigned long long>(kP99BudgetNanoseconds),
+               static_cast<unsigned long long>(kMaximumBudgetNanoseconds),
+               maximum_selection_work.pool_candidates,
+               maximum_selection_work.assignment_edges,
+               maximum_selection_work.state_transitions);
   M3_EXPECT_TRUE(wall_durations[p99_index] < kP99BudgetNanoseconds);
   M3_EXPECT_TRUE(cpu_durations.back() < kMaximumBudgetNanoseconds);
   // The timing sample must include the dense/conflicting selector path, not

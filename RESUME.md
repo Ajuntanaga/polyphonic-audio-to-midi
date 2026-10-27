@@ -19,22 +19,22 @@ Updated: 2026-10-27
 - Prior native 431/431 and focused release 5/5 checks passed. The previous
   claim that all three realtime checks passed was incorrect: the instrumented
   native suite compiled out the deadline assertion and reported a dummy pass.
-  The dedicated Release test now fails at 96 kHz/32 samples: wall p99
+  At that checkpoint the dedicated Release test failed at 96 kHz/32 samples: wall p99
   1,948,855 ns versus a 166,666 ns target; maximum thread CPU time 5,119,790 ns
   versus a 333,333 ns deadline. Its separate zero-allocation/thread test passes.
   The timing test is now registered only in configurations that execute its
   assertions. See `build/test-results/github-update-realtime.log`.
   The rebuilt native suite passes all 436 registered tests after that repair.
   Source contract, production build and Steinberg validator pass; these do
-  not establish callback deadline compliance. No new bundle may be installed
-  until the real timing gate passes. Ordinary/physical-long fingerprints agree
+  not establish callback deadline compliance. The later efficiency update below
+  passes the actual timing gate. Ordinary/physical-long fingerprints agree
   at 32, 512, and 1024 samples.
 - Installed module SHA-256:
-  `0bb5060b62f7d165b9d872321da1f2cd0d2f0b63cf7d685a206dcedace7e1aef`.
+  `43d668187db33c286000e6e539809af675a86c674303a74589b646fdad6d889e`.
   Prior bundle is recoverable at
-  `/home/ajuntanaga/.vst3/.m3-backup-before-dp-output-silence-20261027`.
+  `/home/ajuntanaga/.vst3/.m3-backup-before-profile-reuse-20261027T185556Z`.
   REAPER was running and was left untouched: its reload/live behavior remains
-  unverified. No new bundle was installed during this publication pass.
+  unverified. The efficiency update was installed only after the checks below.
 - Both completed correlation-window experiments were rejected. The full-window
   grid has 66 results in `build/modal/correlation-window-grid.json`; the
   selector-only grid has 55 in `build/modal/selector-window-grid.json`.
@@ -115,6 +115,57 @@ Updated: 2026-10-27
   behavior-preserving. A bounded implementation needs the protected replay
   matrix and actual production deadline test before acceptance. After that,
   evaluate joint evidence for better selection, not just removing extras.
+- Performance follow-up: stage timing in
+  `build/test-results/callback-stage-profile.tsv` identifies assignment and
+  group classification as the largest decision spikes. The unchanged test
+  also fails at normal priority (p99 1,705,395 ns), so low build priority alone
+  does not explain the problem.
+- Rejected matrix-elimination cache: all 19 focused classifier tests passed,
+  and all eleven recording fingerprints/metrics remained identical in
+  `build/modal/spectral-solve-cache-protected-analysis.json`. A later timing
+  run reached 355,355 ns p99 but still failed the 166,666 ns limit; host timing
+  varied, so the full change cannot be attributed to the cache. The full native
+  suite then crashed. Debugger evidence in
+  `build/test-results/spectral-solve-cache-crash-diagnosis.log` identifies the
+  four-detector continuity test: adding roughly 175 KiB per detector exceeded
+  its 8 MiB stack. The optimization and its test were reverted; the failing
+  existing test was preserved. Prototype patch:
+  `build/test-results/spectral-solve-cache-only.patch`. Do not reintroduce this
+  fixed per-detector cache without resolving its memory cost.
+- Current candidate: reuse one candidate's six-value fast harmonic profile
+  throughout a single string-assignment decision. Previously each physical
+  string comparison recomputed it, and the posterior pass computed it again.
+  The settled helper now accepts the already-computed fast similarity. There
+  is no persistent audio cache and no arithmetic reordering. Only detector
+  source/header behavior changes. All eleven protected recording sets retain
+  identical fingerprints and all fourteen score metrics; see
+  `build/modal/assignment-profile-reuse-protected-analysis.json`. Ordinary
+  and physical-long results also agree at 32/512/1024 samples in
+  `build/modal/assignment-profile-reuse-invariance-analysis.json`.
+  The full native suite passes 436/436, including the four-detector test that
+  exposed the rejected cache's memory cost. Two order-reversed, normal-priority
+  timing comparisons measured candidate p99 at 119,709/118,313 ns versus
+  control 129,278/122,992 ns (7.4%/3.8% reductions). Both controls and candidates
+  pass under current host conditions; this does not attribute the earlier
+  host-dependent timing failures to this optimization. Candidate CPU maxima
+  are 161,081/175,716 ns, below 333,333 ns; allocation/thread checks pass.
+  Successful timing tests now print their measured values as well as failures.
+  The source-contract check mistook overload forwarding for recursion; the
+  helper was given a distinct name and the check passes. The final replay's
+  runtime image is byte-identical after that naming-only repair (excluding
+  non-runtime symbols/debug sections and the build-id note). The final native
+  suite again passes 436/436; both dedicated realtime tests pass with p99
+  112,445 ns and maximum CPU 180,186 ns. Production build, Steinberg validator,
+  source contract and whitespace checks pass. The bundle was installed with
+  the previous version preserved at the backup path above. This is an accepted
+  efficiency improvement, not completion of the tracking milestones. See
+  `build/test-results/assignment-profile-reuse-*`.
+- Next tracking question: an older physical-long acquisition audit points to
+  selected pitches with missing string lanes while fine-frequency evidence
+  is still collecting. Measure that intersection on the current detector
+  before changing pending-group admission. Preserve the three-second evidence
+  requirement, ownership constraints and zero wrong-string headroom; an older
+  diagnostic alone does not justify enabling a pending mask.
 - Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
   motivates evaluating pitch sets jointly. This experiment uses M3's existing
   complex correlations and a real-valued weighted least-squares model.
@@ -122,7 +173,9 @@ Updated: 2026-10-27
   trim -9/Sensitivity 60/Response 75/Max Polyphony 5/Max Fret 24 baseline.
   The 98.40% milestone ratio is not product completion or tracking precision.
   Matched-label coverage and extra false notes are different measures. The
-  ntfy automation is active every 90 seconds and explains these separately.
+  ntfy automation is active every ten minutes and explains these separately,
+  including an overall readiness assessment without inventing a completion
+  percentage from unrelated test gates.
 
 ## Current integrated product checkpoint
 

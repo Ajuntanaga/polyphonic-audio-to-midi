@@ -4780,6 +4780,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
     std::size_t learned_count = 0U;
     bool all_playable_profiles_learned = true;
     bool settled_shape_eligible = calibrated_reassignment_ready;
+    std::array<double, kHarmonicEvidenceCount> fast_energy{};
+    double fast_energy_total = 0.0;
+    bool fast_energy_ready = false;
     if (settled_shape_eligible) {
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
@@ -4812,10 +4815,25 @@ void PolyphonicPitchDetector::assign_m3_strings(
       }
       has_learned_profile[string] = true;
       learned_points[string] = point;
+      // The observed candidate profile is identical for every physical-string
+      // comparison in this decision. Reuse it without carrying audio evidence
+      // across decisions or changing the order of its harmonic accumulation.
+      if (!fast_energy_ready) {
+        for (std::size_t harmonic = 0U; harmonic < fast_energy.size();
+             ++harmonic) {
+          fast_energy[harmonic] =
+              corrected_harmonic_energy(candidate, harmonic);
+          fast_energy_total += fast_energy[harmonic];
+        }
+        fast_energy_ready = true;
+      }
+      const double fast_similarity = calibration_similarity_from_energy_profile(
+          candidate, string, fast_energy, fast_energy_total);
       learned_similarities[string] =
           settled_shape_eligible
-              ? settled_calibration_similarity(candidate, string)
-              : calibration_similarity(candidate, string);
+              ? settled_calibration_similarity_from_fast_similarity(
+                    candidate, string, fast_similarity)
+              : fast_similarity;
       best_learned_similarity =
           std::max(best_learned_similarity, learned_similarities[string]);
       learned_cents[string] =
@@ -4823,9 +4841,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
       learned_sum += learned_similarities[string];
       ++learned_count;
     }
-    std::array<double, kHarmonicEvidenceCount> fast_energy{};
     std::array<double, kHarmonicEvidenceCount> settled_energy{};
-    double fast_energy_total = 0.0;
     double transient_strength = 0.0;
     const bool posterior_available =
         all_playable_profiles_learned && learned_count > 0U;
@@ -4833,12 +4849,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       double settled_energy_total = 0.0;
       for (std::size_t harmonic = 0U; harmonic < fast_energy.size();
            ++harmonic) {
-        fast_energy[harmonic] =
-            corrected_harmonic_energy(candidate, harmonic);
         settled_energy[harmonic] =
             0.25 * harmonic_energy_memory_[candidate][harmonic] +
             0.75 * long_harmonic_energy_memory_[candidate][harmonic];
-        fast_energy_total += fast_energy[harmonic];
         settled_energy_total += settled_energy[harmonic];
       }
       if (settled_energy_total <= kScoreEpsilon) {
@@ -8528,6 +8541,13 @@ double PolyphonicPitchDetector::calibration_similarity_from_energy_profile(
 
 double PolyphonicPitchDetector::settled_calibration_similarity(
     std::size_t candidate, std::size_t string) const noexcept {
+  return settled_calibration_similarity_from_fast_similarity(
+      candidate, string, calibration_similarity(candidate, string));
+}
+
+double PolyphonicPitchDetector::settled_calibration_similarity_from_fast_similarity(
+    std::size_t candidate, std::size_t string,
+    double fast_similarity) const noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_) ||
       string >= kM3OpenNotes.size()) {
     return 0.0;
@@ -8585,7 +8605,7 @@ double PolyphonicPitchDetector::settled_calibration_similarity(
                              : 0.55;
   const double stable_shape =
       shape * quality * (0.75 + 0.25 * learned_confidence);
-  return 0.80 * calibration_similarity(candidate, string) +
+  return 0.80 * fast_similarity +
          0.20 * stable_shape;
 }
 

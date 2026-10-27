@@ -884,6 +884,9 @@ class PolyphonicPitchDetector final {
       double total) const noexcept;
   [[nodiscard]] double settled_calibration_similarity(
       std::size_t candidate, std::size_t string) const noexcept;
+  [[nodiscard]] double settled_calibration_similarity_from_fast_similarity(
+      std::size_t candidate, std::size_t string,
+      double fast_similarity) const noexcept;
   [[nodiscard]] double corrected_harmonic_energy(
       std::size_t candidate, std::size_t harmonic) const noexcept;
   [[nodiscard]] double profile_harmonic_energy(
@@ -951,8 +954,8 @@ class PolyphonicPitchDetector final {
   std::uint8_t spectral_lane_decimation_count_{};
   std::uint8_t spectral_lane_decimation_{1U};
   // Each corridor costs 102 complex resonators. Keep at most four simultaneous
-  // pitch contexts and classify only one per decision in round-robin order so
-  // dense chords remain bounded at the 96 kHz / 32-sample callback budget.
+  // pitch contexts and classify only one per decision in round-robin order.
+  // The dedicated production timing test independently enforces the deadline.
   static constexpr std::size_t kMaximumGroupContinuityTrackers = 4U;
   std::array<GroupContinuityTrackerState,
              kMaximumGroupContinuityTrackers>
