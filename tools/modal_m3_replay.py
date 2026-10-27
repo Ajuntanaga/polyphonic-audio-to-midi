@@ -219,8 +219,12 @@ app = modal.App(APP_NAME)
 volume = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
 image = (
     modal.Image.from_registry("ubuntu:24.04", add_python="3.12")
+    .env({"OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
     .apt_install("libstdc++6")
-    .pip_install("numpy<3")
+    .pip_install("numpy<3", "scipy<2")
+    .add_local_file(REPO_ROOT / "tools/joint_harmonic_fit.py", "/opt/m3/joint_harmonic_fit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/harmonic_drift_fit.py", "/opt/m3/harmonic_drift_fit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/generate_pitch_corrected_corpus.py", "/opt/m3/generate_pitch_corrected_corpus.py", copy=True)
     .add_local_file(REPLAY_BINARY, "/opt/m3/m3_replay", copy=True)
     .run_commands("chmod 0755 /opt/m3/m3_replay")
 )
@@ -442,6 +446,151 @@ def inspect_harmonics(report: str, output: str = "build/modal/fine-window-harmon
     target.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"output": output, "captures": result["capture_windows"],
                       "fundamental_relative_rms_error": result["fundamental_relative_rms_error"]}))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=600)
+def prepare_joint_harmonics(capture_path: str, dataset_name: str,
+                            input_trim: float) -> dict[str, Any]:
+    import sys
+    import numpy as np
+    sys.path.insert(0, "/opt/m3")
+    from generate_pitch_corrected_corpus import _calibration_image
+    from joint_harmonic_fit import OPEN_NOTES
+
+    path = MOUNT_ROOT / capture_path
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("capture must be in the replay results volume")
+    windows = [json.loads(line) for line in path.read_text().splitlines()]
+    if not windows or len(windows) > 512 or len({w["note"] for w in windows}) != 1:
+        raise ValueError("joint harmonic inspection requires a bounded single-note capture")
+    rate, samples = _read_float_wave(MOUNT_ROOT / DATASETS[dataset_name]["wav"])
+    indices = np.unique(np.concatenate([
+        np.rint(np.asarray(w["samples"])[:, 0] * rate).astype(np.int64) - 1 for w in windows]))
+    measured = _reconstruct_harmonic_correlations(
+        samples, rate, float(windows[0]["center_hz"]), indices, input_trim)
+    error, energy = 0.0, 0.0
+    arrays = {}
+    for i, window in enumerate(windows):
+        original = np.asarray(window["samples"])
+        locations = np.searchsorted(indices, np.rint(original[:, 0] * rate).astype(np.int64) - 1)
+        reference = original[:, 1] + 1j * original[:, 2]
+        error += float(np.sum(np.abs(measured[0, locations] - reference) ** 2))
+        energy += float(np.sum(np.abs(reference) ** 2))
+        arrays[f"times_{i}"] = original[:, 0]
+        arrays[f"signal_{i}"] = measured[:, locations]
+    relative_error = math.sqrt(error / energy)
+    if relative_error >= 1e-6:
+        raise ValueError("native correlation reconstruction failed")
+    calibration = _calibration_image(MOUNT_ROOT / "corpus/calibration.m3cb")
+    if struct.unpack_from("<H", calibration, 4)[0] != 2:
+        raise ValueError("partial detuning requires calibration version2")
+    sources = []
+    note = int(windows[0]["note"])
+    for string, opened in enumerate(OPEN_NOTES):
+        fret = note - opened
+        if not 0 <= fret <= 24:
+            continue
+        point = struct.unpack_from("<h6H6hBHHB", calibration, 25 + (string * 25 + fret) * 32)
+        if point[-1] == 0 or not (point[13] & 1):
+            continue
+        sources.append({"string": string, "fret": fret, "cents": point[0] / 256,
+                        "profile": [v / 65535 for v in point[1:4]],
+                        "partial_cents": [v / 256 for v in point[7:10]],
+                        "valid_mask": point[13] & 7})
+    prepared_path = path.with_suffix(".joint-inputs.npz")
+    np.savez_compressed(prepared_path, **arrays)
+    metadata = {"capture_path": capture_path, "dataset": dataset_name,
+                "windows": [{k: w[k] for k in ("note", "center_hz", "training_samples", "prior_output_mask")}
+                            for w in windows],
+                "sources": sources, "sample_rate": rate,
+                "fundamental_relative_rms_error": relative_error,
+                "calibration_sha256": _sha256(MOUNT_ROOT / "corpus/calibration.m3cb"),
+                "capture_sha256": _sha256(path)}
+    prepared_path.with_suffix(".json").write_text(json.dumps(metadata))
+    volume.commit()
+    return {"prepared_path": str(prepared_path.relative_to(MOUNT_ROOT)),
+            "windows": len(windows), "metadata": metadata}
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,
+              memory=1024, timeout=900, max_containers=8)
+def fit_joint_harmonic_window(job: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    import numpy as np
+    sys.path.insert(0, "/opt/m3")
+    if job.get("fit_mode", "static") == "drift":
+        from harmonic_drift_fit import fit_window
+    elif job.get("fit_mode", "static") == "static":
+        from joint_harmonic_fit import fit_window
+    else:
+        raise ValueError("unknown harmonic fit mode")
+
+    volume.reload()
+    path = MOUNT_ROOT / job["prepared_path"]
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("prepared window must be in results")
+    metadata = json.loads(path.with_suffix(".json").read_text())
+    index = int(job["window"])
+    window = metadata["windows"][index]
+    with np.load(path, allow_pickle=False) as data:
+        times = data[f"times_{index}"]
+        signal = data[f"signal_{index}"]
+    result = fit_window(times, signal, window["center_hz"], window["note"],
+                        metadata["sources"], window["training_samples"], metadata["sample_rate"])
+    result.update({"index": index, "start_seconds": float(times[0]),
+                   "end_seconds": float(times[-1]), "prior_output_mask": window["prior_output_mask"]})
+    # Annotation is deliberately after fitting; the fit module receives neither
+    # the labels nor the assignment that entered the fine-analysis decision.
+    expected, entirely_inside = 0, True
+    with (MOUNT_ROOT / DATASETS[metadata["dataset"]]["labels"]).open() as stream:
+        for label in csv.DictReader(stream, delimiter="\t"):
+            start = int(label["start_sample"]) / metadata["sample_rate"]
+            end = int(label["end_sample"]) / metadata["sample_rate"]
+            if int(label["midi_note"]) == window["note"] and start <= times[-1] < end:
+                expected |= int(label["string_mask"])
+                entirely_inside = entirely_inside and start <= times[0]
+    result["expected_mask_at_window_end"] = expected
+    result["whole_window_in_labeled_hold"] = bool(expected and entirely_inside)
+    # Keep remote results independent of NumPy in the lightweight CLI process.
+    json.dumps(result, allow_nan=False)
+    return result
+
+
+@app.local_entrypoint()
+def joint_harmonics(report: str, output: str = "build/modal/joint-harmonic-screen.json",
+                     dataset: str = "physical-long", prepared_report: str = "",
+                     fit_mode: str = "static") -> None:
+    if fit_mode not in ("static", "drift"):
+        raise SystemExit("fit-mode must be static or drift")
+    source_hashes = {name: _sha256(REPO_ROOT / "tools" / name) for name in
+                     (["joint_harmonic_fit.py", "harmonic_drift_fit.py"] if fit_mode == "drift"
+                      else ["joint_harmonic_fit.py"])}
+    source = json.loads(Path(report).read_text())
+    row = next(r for r in source["results"] if r["dataset"] == dataset and r["block"] == 512)
+    if row.get("correlation_seconds", -1) != -1:
+        raise SystemExit("joint harmonic reconstruction requires the default decay")
+    if prepared_report:
+        previous = json.loads(Path(prepared_report).read_text())
+        metadata = previous["metadata"]
+        if metadata["dataset"] != dataset or metadata["capture_path"] != row["fine_window_path"]:
+            raise SystemExit("prepared data does not match the requested capture")
+        prepared = {"prepared_path": str(Path(metadata["capture_path"]).with_suffix(".joint-inputs.npz")),
+                    "windows": len(metadata["windows"]), "metadata": metadata}
+    else:
+        prepared = prepare_joint_harmonics.remote(row["fine_window_path"], dataset, row["input_trim"])
+    jobs = [{"prepared_path": prepared["prepared_path"], "window": i, "fit_mode": fit_mode}
+            for i in range(prepared["windows"])]
+    results = list(fit_joint_harmonic_window.map(jobs, order_outputs=True))
+    result = {"dataset": dataset, "metadata": prepared["metadata"],
+              "replay_run_id": source["run_id"], "results": results,
+              "prepared_path": prepared["prepared_path"],
+              "fit_module_sha256": source_hashes["joint_harmonic_fit.py"],
+              "fit_mode": fit_mode, "fit_source_sha256": source_hashes}
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
+    print(json.dumps({"output": output, "windows": len(results)}))
 
 
 @app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,

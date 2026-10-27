@@ -9,6 +9,52 @@ Updated: 2026-10-27
   subsequent native/offline changes. Use `build/modal/current-status.json` and the
   newest completed Modal reports for current metrics. Sections below are
   historical checkpoints.
+- Latest completed offline control: `build/modal/joint-harmonic-known-bands.json`,
+  app `ap-Q8sJLZxnYcfefYrPXCOJXZ`. One review found that unknown partial detuning
+  was being treated as absent harmonic energy and that large observation gaps
+  were not blocking source qualification. Both are repaired: all masks use the
+  same calibrated harmonic bands, and both median-spacing and maximum-gap
+  checks must pass. Nine causal tests pass. Of 36 sampled triple windows, 18
+  meet sampling requirements and one supports the expected mask; neither of
+  the two incomplete triples is recovered. No false third qualifies in the
+  13 pair windows (11 meet sampling requirements). This control provides no
+  production recovery gain. Diagnostic windows overlap; they are not MIDI
+  frame counts.
+- The pitch-drift/string-decay comparison completed on Modal as
+  `ap-YoFBIFsv5rHdi0pbPAa5U0`, output `build/modal/harmonic-drift-screen.json`.
+  It reuses the same 49 recorded windows and compares steady pitch, gradual
+  pitch change, amplitude evolution and their combination. Frequencies and
+  amplitude evolution are fitted on older samples only; newer samples score
+  prediction. Every larger string mask competes with smaller masks across
+  all four model families. Four causal tests pass; recorded source hashes
+  match the checked files. Allowing string decay reduces median prediction
+  loss from 0.32680 to 0.01567 in pair windows and 1.32738 to 0.87033 in triple
+  windows, but supports neither incomplete triple. No false third qualifies
+  in the 13 pair windows; competing two-string masks nevertheless qualify in
+  six. Better signal prediction does not establish correct string identity.
+  Reject this version for production. The next uncertainty is whether measured
+  harmonic balance can distinguish those competing assignments. This remains
+  offline; no production behavior, defaults or acceptance gates change.
+- Earlier offline experiment: `build/modal/joint-harmonic-screen-v2.json`, app
+  `ap-mGUJguLggrLUcm3o3xvlxh`, completed. Its counts below predate the review
+  corrections and must not be used as the corrected control.
+  The fit uses current pitches within the note cell, calibrated partial offsets,
+  and three complex harmonic histories. Older samples fit frequencies; newer
+  samples separately measure frozen-amplitude prediction and amplitude-refit
+  residual. The physical screen supports the expected mask in 15/36 triple
+  windows and 6/13 pair windows, but neither of the two sampled incomplete
+  triples. It proposes a false third string in one pair window (17.72 seconds),
+  wholly inside the pair label and already correctly assigned by the detector.
+  These are overlapping diagnostic windows, not recovered MIDI frame counts.
+  Reject this version for production. The two incomplete triples' refit losses
+  are 0.01509 and 0.00175 while frozen-amplitude prediction losses are 1.54844
+  and 0.61139; phase/amplitude evolution remains a concrete next uncertainty.
+  Check unknown partial-detuning handling before using harmonic support as
+  independent source evidence. The new fitter and its Modal entry point are
+  offline-only; all production behavior, defaults and acceptance gates remain
+  unchanged. Current working files are `tools/joint_harmonic_fit.py`, its unit
+  tests and additions in `tools/modal_m3_replay.py`. No additional recording
+  matrix or production build is running.
 - Accepted lowest-string MIDI output correction retains selector history and
   requires two consecutive observations. True silence clears pending
   acquisition while preserving an emitted pitch for its matching note-off.
