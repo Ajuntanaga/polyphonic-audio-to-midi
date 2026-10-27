@@ -9,6 +9,39 @@ Updated: 2026-10-27
   subsequent native/offline changes. Use `build/modal/current-status.json` and the
   newest completed Modal reports for current metrics. Sections below are
   historical checkpoints.
+- Completed joint-fit and confidence experiments:
+  `build/modal/coupled-harmonic-screen.json` (app `ap-XDcuPU0Ct9iHV9irwT0G8n`)
+  and `build/modal/coupled-harmonic-confidence.json`
+  (app `ap-n3Skfuv78l8aQYhXOurfT3`). The fit jointly estimates pitch, decay,
+  complex phase and harmonic balance from older samples, with ascending-only
+  measured profiles. The 3-dB profile scale and 6-dB bound are explicit modeling
+  assumptions, not learned confidence intervals. The first fit predicts later
+  audio better in 26/36 triple windows but supports neither missing triple.
+- Scoring those fixed fits against current-band energy, while retaining the
+  original training-derived noise floor, supports one of the two missing
+  sampled triples (35.87 seconds) through the alternative allowing one supported
+  harmonic per member plus the joint profile. Two of 36 triple windows meet
+  this diagnostic condition; no false third qualifies in 13 pair windows.
+  Strict two-harmonic-per-member support still finds no triples, and competing
+  wrong pair masks still qualify in 6/13 pair windows. This is not an admission
+  policy or a recovered-frame count; production remains unchanged.
+- Six signal/causality/scale/silence tests pass. One review found incomplete
+  input-identity validation; capture, calibration, rate, source set, window
+  indices, model families and profile-extractor identity are now checked.
+  Three input-validation tests and validation of the completed run's actual
+  inputs pass. Rerunning the optimizer produced differences up to 0.0483 cents
+  without changing original support flags. Therefore normalization comparisons
+  use the same frozen parameters within the new report, not assumed bit identity
+  across separate cloud runs. Details are in the corresponding `-analysis.json`.
+- Next: collect denser authentic native histories around pair controls and the
+  missing triple before any production implementation. Existing
+  `--fine-window-dump`/`--fine-window-note` exports are limited to one window per
+  note per 0.5 seconds and 512 windows. Add range/spacing controls only in
+  `FrequencyWindowCapture` in `native/offline/frequency_refinement_shadow.*`
+  and replay CLI plumbing; keep the cap
+  and preserve output fingerprints and snapshot contents across 32/512/1024.
+  The production detector, 3-second gate and MIDI release behavior must remain
+  unchanged. No new replay is currently running.
 - Completed harmonic-balance audit: `build/modal/harmonic-balance-screen.json`,
   app `ap-BDSPM6pilNNkJ9jh5Ry10o`. Four causal/filter/holdout tests pass and one
   review found no material defect. Three ascending E2 attacks train separate

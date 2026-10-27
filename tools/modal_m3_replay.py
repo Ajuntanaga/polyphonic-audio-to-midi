@@ -225,6 +225,7 @@ image = (
     .add_local_file(REPO_ROOT / "tools/joint_harmonic_fit.py", "/opt/m3/joint_harmonic_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/harmonic_drift_fit.py", "/opt/m3/harmonic_drift_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/harmonic_balance_audit.py", "/opt/m3/harmonic_balance_audit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/coupled_harmonic_fit.py", "/opt/m3/coupled_harmonic_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/generate_pitch_corrected_corpus.py", "/opt/m3/generate_pitch_corrected_corpus.py", copy=True)
     .add_local_file(REPLAY_BINARY, "/opt/m3/m3_replay", copy=True)
     .run_commands("chmod 0755 /opt/m3/m3_replay")
@@ -515,12 +516,14 @@ def prepare_joint_harmonics(capture_path: str, dataset_name: str,
 
 
 @app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,
-              memory=1024, timeout=900, max_containers=8)
+              memory=1024, timeout=900, max_containers=16)
 def fit_joint_harmonic_window(job: dict[str, Any]) -> dict[str, Any]:
     import sys
     import numpy as np
     sys.path.insert(0, "/opt/m3")
-    if job.get("fit_mode", "static") == "drift":
+    if job.get("fit_mode", "static") == "coupled":
+        from coupled_harmonic_fit import fit_window
+    elif job.get("fit_mode", "static") == "drift":
         from harmonic_drift_fit import fit_window
     elif job.get("fit_mode", "static") == "static":
         from joint_harmonic_fit import fit_window
@@ -537,8 +540,11 @@ def fit_joint_harmonic_window(job: dict[str, Any]) -> dict[str, Any]:
     with np.load(path, allow_pickle=False) as data:
         times = data[f"times_{index}"]
         signal = data[f"signal_{index}"]
-    result = fit_window(times, signal, window["center_hz"], window["note"],
-                        metadata["sources"], window["training_samples"], metadata["sample_rate"])
+    arguments = [times, signal, window["center_hz"], window["note"],
+                 metadata["sources"], window["training_samples"], metadata["sample_rate"]]
+    if job.get('fit_mode') == 'coupled':
+        arguments.extend((job['prototypes'], job['control_models']))
+    result = fit_window(*arguments)
     result.update({"index": index, "start_seconds": float(times[0]),
                    "end_seconds": float(times[-1]), "prior_output_mask": window["prior_output_mask"]})
     # Annotation is deliberately after fitting; the fit module receives neither
@@ -561,12 +567,17 @@ def fit_joint_harmonic_window(job: dict[str, Any]) -> dict[str, Any]:
 @app.local_entrypoint()
 def joint_harmonics(report: str, output: str = "build/modal/joint-harmonic-screen.json",
                      dataset: str = "physical-long", prepared_report: str = "",
-                     fit_mode: str = "static") -> None:
-    if fit_mode not in ("static", "drift"):
-        raise SystemExit("fit-mode must be static or drift")
+                     fit_mode: str = "static", control_report: str = "",
+                     profile_report: str = "") -> None:
+    if fit_mode not in ("static", "drift", "coupled"):
+        raise SystemExit("fit-mode must be static, drift or coupled")
+    source_names = ['joint_harmonic_fit.py']
+    if fit_mode in ('drift', 'coupled'):
+        source_names.append('harmonic_drift_fit.py')
+    if fit_mode == 'coupled':
+        source_names.append('coupled_harmonic_fit.py')
     source_hashes = {name: _sha256(REPO_ROOT / "tools" / name) for name in
-                     (["joint_harmonic_fit.py", "harmonic_drift_fit.py"] if fit_mode == "drift"
-                      else ["joint_harmonic_fit.py"])}
+                     source_names}
     source = json.loads(Path(report).read_text())
     row = next(r for r in source["results"] if r["dataset"] == dataset and r["block"] == 512)
     if row.get("correlation_seconds", -1) != -1:
@@ -582,12 +593,32 @@ def joint_harmonics(report: str, output: str = "build/modal/joint-harmonic-scree
         prepared = prepare_joint_harmonics.remote(row["fine_window_path"], dataset, row["input_trim"])
     jobs = [{"prepared_path": prepared["prepared_path"], "window": i, "fit_mode": fit_mode}
             for i in range(prepared["windows"])]
+    input_hashes = {}
+    if fit_mode == 'coupled':
+        from tools.harmonic_fit_inputs import validate_coupled_inputs
+        if not control_report or not profile_report:
+            raise SystemExit('coupled fits require control and measured-profile reports')
+        control = json.loads(Path(control_report).read_text())
+        profiles = json.loads(Path(profile_report).read_text())
+        control_hashes = {name: source_hashes[name] for name in
+                          ('joint_harmonic_fit.py', 'harmonic_drift_fit.py')}
+        profile_hashes = {**control_hashes, 'harmonic_balance_audit.py':
+                          _sha256(REPO_ROOT / 'tools/harmonic_balance_audit.py')}
+        validate_coupled_inputs(prepared['metadata'], control, profiles,
+                                control_hashes, profile_hashes)
+        by_index = {r['index']: r['models'] for r in control['results']}
+        for job in jobs:
+            job['control_models'] = by_index[job['window']]
+            job['prototypes'] = profiles['isolated']['prototypes']
+        input_hashes = {'control_report_sha256': _sha256(Path(control_report)),
+                        'profile_report_sha256': _sha256(Path(profile_report))}
     results = list(fit_joint_harmonic_window.map(jobs, order_outputs=True))
     result = {"dataset": dataset, "metadata": prepared["metadata"],
               "replay_run_id": source["run_id"], "results": results,
               "prepared_path": prepared["prepared_path"],
               "fit_module_sha256": source_hashes["joint_harmonic_fit.py"],
-              "fit_mode": fit_mode, "fit_source_sha256": source_hashes}
+              "fit_mode": fit_mode, "fit_source_sha256": source_hashes,
+              **input_hashes}
     target = Path(output)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
