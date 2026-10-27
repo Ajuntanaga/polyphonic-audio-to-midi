@@ -5,12 +5,75 @@
 #include <string>
 
 #include "m3/pitch_math.hpp"
+#include "m3/hann_beat_shadow.hpp"
 #include "test_support.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace {
 
 constexpr double kTwoPi = 6.28318530717958647692;
+
+M3_TEST(hann_beat_shadow_removes_the_weighted_trend_and_preserves_beating) {
+  constexpr std::size_t kCount = 301U;
+  std::array<double, kCount> seconds{}, energy{}, weights{};
+  for (std::size_t i = 0U; i < kCount; ++i) {
+    seconds[i] = static_cast<double>(i) / 100.0;
+    weights[i] = 0.5 - 0.5 * std::cos(
+        kTwoPi * static_cast<double>(i) / static_cast<double>(kCount - 1U));
+    energy[i] = 2.0 + 0.3 * seconds[i] +
+        0.4 * std::cos(kTwoPi * 2.0 * seconds[i] + 0.7);
+  }
+  m3::diagnostics::HannDetrendedBeatShadow<kCount> shadow;
+  M3_EXPECT_TRUE(shadow.prepare(seconds, energy, weights, kCount));
+  double intercept_moment = 0.0;
+  double slope_moment = 0.0;
+  for (std::size_t i = 0U; i < kCount; ++i) {
+    intercept_moment += shadow.weighted_residual[i];
+    slope_moment += seconds[i] * shadow.weighted_residual[i];
+  }
+  M3_EXPECT_NEAR(intercept_moment, 0.0, 1.0e-10);
+  M3_EXPECT_NEAR(slope_moment, 0.0, 1.0e-10);
+  M3_EXPECT_TRUE(shadow.coherence(2.0) > 0.70);
+  M3_EXPECT_TRUE(shadow.coherence(7.0) < 0.02);
+  const double original = shadow.coherence(2.0);
+  for (double scale : {0.01, 10.0}) {
+    auto transformed = energy;
+    for (std::size_t i = 0U; i < kCount; ++i) {
+      transformed[i] = scale * energy[i] + 7.0 + 0.9 * seconds[i];
+    }
+    M3_EXPECT_TRUE(shadow.prepare(seconds, transformed, weights, kCount));
+    M3_EXPECT_NEAR(shadow.coherence(2.0), original, 1.0e-10);
+  }
+}
+
+M3_TEST(hann_beat_shadow_rejects_degenerate_samples_and_handles_irregular_time) {
+  constexpr std::size_t kCount = 301U;
+  std::array<double, kCount> seconds{}, energy{}, weights{};
+  for (std::size_t i = 0U; i < kCount; ++i) {
+    seconds[i] = static_cast<double>(i) / 100.0 +
+        (i % 3U == 0U ? 0.0001 : 0.0);
+    weights[i] = 0.5 - 0.5 * std::cos(
+        kTwoPi * static_cast<double>(i) / static_cast<double>(kCount - 1U));
+    energy[i] = 0.0001 + 0.00002 * seconds[i];
+  }
+  m3::diagnostics::HannDetrendedBeatShadow<kCount> shadow;
+  M3_EXPECT_TRUE(shadow.prepare(seconds, energy, weights, kCount));
+  M3_EXPECT_FALSE(shadow.uniform);
+  M3_EXPECT_EQ(shadow.coherence(2.0), 0.0);
+  for (std::size_t i = 0U; i < kCount; ++i) {
+    energy[i] += 0.00003 * std::cos(kTwoPi * 2.0 * seconds[i]);
+  }
+  M3_EXPECT_TRUE(shadow.prepare(seconds, energy, weights, kCount));
+  M3_EXPECT_TRUE(shadow.coherence(2.0) > 0.70);
+  M3_EXPECT_EQ(shadow.coherence(-1.0), 0.0);
+  weights[7U] = -1.0;
+  M3_EXPECT_FALSE(shadow.prepare(seconds, energy, weights, kCount));
+  M3_EXPECT_EQ(shadow.coherence(2.0), 0.0);
+  weights.fill(0.0);
+  M3_EXPECT_FALSE(shadow.prepare(seconds, energy, weights, kCount));
+  M3_EXPECT_FALSE(shadow.prepare(seconds, energy, weights, 2U));
+  M3_EXPECT_FALSE(shadow.prepare(seconds, energy, weights, kCount + 1U));
+}
 
 m3::UnisonSpectralFingerprint run_tone(double amplitude) noexcept {
   constexpr double kSampleRate = 48000.0;

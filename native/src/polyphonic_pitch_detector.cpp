@@ -1628,6 +1628,11 @@ void PolyphonicPitchDetector::reset() noexcept {
   partial_detuning_cursor_ = 0U;
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (hann_beat_shadow_buffer_ != nullptr) {
+    *hann_beat_shadow_buffer_ = {};
+  }
+#endif
   selector_group_masks_ = {};
   spectral_lane_states_ = {};
   spectral_lane_decimation_sum_ = 0.0;
@@ -2032,6 +2037,19 @@ PolyphonicPitchDetector::fine_frequency_mask_residuals(
   const std::size_t candidate = midi_note - lowest_note_;
   return candidate < static_cast<std::size_t>(candidate_count_)
              ? fine_frequency_evidence_states_[candidate].mask_residuals
+             : empty;
+}
+
+const HannBeatShadowTable& PolyphonicPitchDetector::hann_beat_shadow(
+    std::uint8_t midi_note) const noexcept {
+  static const HannBeatShadowTable empty{};
+  if (hann_beat_shadow_buffer_ == nullptr || midi_note < lowest_note_) {
+    return empty;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  return candidate < static_cast<std::size_t>(candidate_count_) &&
+                 fine_frequency_evidence_states_[candidate].count != 0U
+             ? (*hann_beat_shadow_buffer_)[candidate]
              : empty;
 }
 
@@ -2753,6 +2771,11 @@ void PolyphonicPitchDetector::set_calibration_bank(
   calibrator_.set_bank(bank);
   invalidate_fine_frequency_uniform_gram_cache();
   fine_frequency_evidence_states_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (hann_beat_shadow_buffer_ != nullptr) {
+    *hann_beat_shadow_buffer_ = {};
+  }
+#endif
   partial_detuning_trackers_ = {};
   partial_detuning_last_update_ticks_ = {};
   partial_detuning_cursor_ = 0U;
@@ -7003,6 +7026,44 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     if (offline_replay_diagnostics_enabled_) {
       state.pairwise_beat_coherence_by_mask.fill(0.0);
       state.added_member_beat_coherence_by_completion_mask.fill(0.0);
+      if (fine_mask_complexity_diagnostics_enabled_ &&
+          hann_beat_shadow_buffer_ != nullptr) {
+        auto& shadow_table = (*hann_beat_shadow_buffer_)[candidate];
+        shadow_table = {};
+        std::array<double, kFineFrequencyHistoryCapacity> shadow_seconds{};
+        std::array<double, kFineFrequencyHistoryCapacity> shadow_energy{};
+        for (std::size_t sample = 0U; sample < fit_count; ++sample) {
+          const std::size_t index =
+              (oldest + sample) % kFineFrequencyHistoryCapacity;
+          shadow_seconds[sample] =
+              static_cast<double>(state.decision_ticks[index] -
+                                  pairwise_first_tick) * seconds_per_decision;
+          shadow_energy[sample] = state.real[index] * state.real[index] +
+              state.imaginary[index] * state.imaginary[index];
+        }
+        diagnostics::HannDetrendedBeatShadow<kFineFrequencyHistoryCapacity>
+            shadow;
+        shadow_table.hann_detrending_valid = shadow.prepare(
+            shadow_seconds, shadow_energy, fine_frequency_hann_window_,
+            fit_count);
+        shadow_table.beat_window_seconds = shadow.duration_seconds;
+        if (shadow_table.hann_detrending_valid) {
+          for (std::size_t first = 0U; first < component_count; ++first) {
+            for (std::size_t second = first + 1U; second < component_count;
+                 ++second) {
+              const std::size_t edge = diagnostics::beat_pair_index(
+                  strings[first], strings[second]);
+              const double beat_hz =
+                  std::abs(offsets[first] - offsets[second]);
+              shadow_table.pair_difference_hz[edge] = beat_hz;
+              if (beat_hz >= kMinimumBeatHz && beat_hz <= kMaximumBeatHz) {
+                shadow_table.hann_detrended_pair_coherence[edge] =
+                    shadow.coherence(beat_hz);
+              }
+            }
+          }
+        }
+      }
       for (std::size_t physical_mask = 1U;
            physical_mask < state.mask_residuals.valid.size();
            ++physical_mask) {

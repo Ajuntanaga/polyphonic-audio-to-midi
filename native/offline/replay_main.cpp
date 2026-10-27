@@ -842,6 +842,12 @@ int main(int argc, char** argv) {
       "physical_group_pending_triple_cached_wrong_string_delta\t"
       "physical_group_completed_triple_fit_encoding\t"
       "physical_group_completed_triple_fit_frames\t"
+      "physical_group_hann_beat_mask_encoding\t"
+      "physical_group_hann_beat_mask_frames\t"
+      "physical_group_hann_beat_coverage_encoding\t"
+      "physical_group_hann_beat_coverage\t"
+      "physical_group_hann_beat_edge_encoding\t"
+      "physical_group_hann_beat_edges\t"
       "physical_group_member_exact_exit_frames\t"
       "physical_group_causal_runs\t"
       "physical_group_causal_longest_runs\t"
@@ -1204,6 +1210,38 @@ int main(int argc, char** argv) {
                 static_cast<unsigned long long>(key),
                 static_cast<unsigned long long>(frames));
     first_completed_fit = false;
+  }
+  std::printf(
+      "\texpected_count:0..3,proposed_count:4..7,proposed_outcome:8..10,"
+      "passes(old*2+new):11..12,cycles_bin(<1,<2,<4,>=4):13..15,"
+      "output_outcome:16..18\t");
+  bool first_hann_mask = true;
+  for (const auto& [key, frames] : result.physical_group_hann_beat_mask_frames) {
+    std::printf("%s%llu:%llu", first_hann_mask ? "" : ",",
+                static_cast<unsigned long long>(key),
+                static_cast<unsigned long long>(frames));
+    first_hann_mask = false;
+  }
+  std::printf("\teligible_groups,groups_with_model,prepared_groups,"
+              "invalid_prepare_groups,evaluated_masks\t");
+  print_sequence(result.physical_group_hann_beat_coverage);
+  std::printf(
+      "\tkey=note:0..6,edge:7..11,expected_count:12..15,expected_pair:16;"
+      "value=frames/hz/min_seconds/max_seconds/old_mean/new_mean/old_min/"
+      "old_max/new_min/new_max\t");
+  bool first_hann_edge = true;
+  for (const auto& [key, edge] : result.physical_group_hann_beat_edges) {
+    std::printf("%s%llu:%llu/%.9g/%.9g/%.9g/%.9g/%.9g/%.9g/%.9g/%.9g/%.9g",
+                first_hann_edge ? "" : ",",
+                static_cast<unsigned long long>(key),
+                static_cast<unsigned long long>(edge.frames),
+                edge.difference_hz, edge.minimum_window_seconds,
+                edge.maximum_window_seconds,
+                edge.original_sum / static_cast<double>(edge.frames),
+                edge.weighted_sum / static_cast<double>(edge.frames),
+                edge.original_minimum, edge.original_maximum,
+                edge.weighted_minimum, edge.weighted_maximum);
+    first_hann_edge = false;
   }
   std::printf("\t");
   print_sparse_u64_joint_bins(

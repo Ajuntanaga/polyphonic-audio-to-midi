@@ -17,6 +17,19 @@
 
 namespace m3::offline {
 
+struct HannBeatEdgeSummary final {
+  std::uint64_t frames{};
+  double difference_hz{};
+  double minimum_window_seconds{std::numeric_limits<double>::infinity()};
+  double maximum_window_seconds{};
+  double original_sum{};
+  double weighted_sum{};
+  double original_minimum{1.0};
+  double original_maximum{};
+  double weighted_minimum{1.0};
+  double weighted_maximum{};
+};
+
 enum class ReplayFineHistoryCarryDisposition : std::uint8_t {
   selected,
   quiet,
@@ -1912,6 +1925,18 @@ struct ReplayResult final {
   // Available only with the offline spectral-template diagnostics enabled.
   std::map<std::uint64_t, std::uint64_t>
       physical_group_completed_triple_fit_frames{};
+  // All feasible 2-4 masks on active selected labeled pitches. The hypothesis
+  // changes only nuisance-trend weighting, never the .20 per-edge threshold.
+  // Key: expected count[0:3], proposed count[4:7], proposed outcome[8:10],
+  // old/new pass bits[11:12], minimum cycles bin[13:15], output outcome[16:18].
+  std::map<std::uint64_t, std::uint64_t> physical_group_hann_beat_mask_frames{};
+  // Active selected physical groups; groups with a feasible 2-4 mask;
+  // successfully prepared groups; prepare-invalid groups with a model;
+  // evaluated masks. No-fit groups = first minus second.
+  std::array<std::uint64_t, 5U> physical_group_hann_beat_coverage{};
+  // Key: note[0:6], edge index[7:11], expected count[12:15],
+  // both edge strings expected[16]. Each edge counted once per physical group.
+  std::map<std::uint64_t, HannBeatEdgeSummary> physical_group_hann_beat_edges{};
   // Counts the first non-exact causal cell after an exact physical-group
   // output. Member-indexing isolates practical triples and quads from pair
   // setup passages without retaining frame-level traces.

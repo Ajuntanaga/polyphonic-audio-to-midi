@@ -251,12 +251,14 @@ M3_TEST(offline_replay_correlation_window_preserves_default_and_partitioning) {
   const auto fingerprint = [&](double seconds, std::size_t partition,
                                bool selection_only = false,
                                bool shadow_only = false) {
-    m3::offline::ReplayResult result;
+    // Offline reports contain large counter tables. Keep each inlined call's
+    // report off the bounded test stack, as the replay executable does.
+    auto result = std::make_unique<m3::offline::ReplayResult>();
     M3_EXPECT_TRUE(m3::offline::run_detector_replay(
-        wave, {}, config, nullptr, partition, result, error,
+        wave, {}, config, nullptr, partition, *result, error,
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
         false, false, false, seconds, selection_only, shadow_only));
-    return result.fingerprint;
+    return result->fingerprint;
   };
   M3_EXPECT_EQ(fingerprint(-1.0, 512U), fingerprint(0.040, 512U));
   const auto longer = fingerprint(0.080, 512U);
@@ -273,9 +275,9 @@ M3_TEST(offline_replay_correlation_window_preserves_default_and_partitioning) {
   }
   for (const double seconds : {0.0, 0.019, 0.201,
            std::numeric_limits<double>::quiet_NaN()}) {
-    m3::offline::ReplayResult result;
+    auto result = std::make_unique<m3::offline::ReplayResult>();
     M3_EXPECT_FALSE(m3::offline::run_detector_replay(
-        wave, {}, config, nullptr, 512U, result, error,
+        wave, {}, config, nullptr, 512U, *result, error,
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
         false, false, false, seconds));
     M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);

@@ -8,6 +8,7 @@
 
 #include "m3/constants.hpp"
 #include "m3/harmonic_evidence.hpp"
+#include "m3/hann_beat_shadow.hpp"
 #include "m3/partial_detuning_evidence.hpp"
 #include "m3/string_fret_posterior.hpp"
 #include "m3/string_calibration.hpp"
@@ -77,6 +78,15 @@ struct FineFrequencyMaskResidualTable final {
   std::array<bool, 1U << kMaxVoices> valid{};
   std::array<bool, 1U << kMaxVoices> beat_graph_connected{};
 };
+
+// Caller-owned replay storage avoids growing every detector's stack state.
+struct HannBeatShadowTable final {
+  std::array<double, 28U> hann_detrended_pair_coherence{};
+  std::array<double, 28U> pair_difference_hz{};
+  double beat_window_seconds{};
+  bool hann_detrending_valid{};
+};
+using HannBeatShadowBuffer = std::array<HannBeatShadowTable, kMaxCandidates>;
 #endif
 
 // Explains why an already-committed physical unison did or did not receive
@@ -254,6 +264,14 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] const FineFrequencyMaskResidualTable&
   fine_frequency_mask_residuals(std::uint8_t midi_note) const noexcept;
+  void set_hann_beat_shadow_buffer(HannBeatShadowBuffer* buffer) noexcept {
+    hann_beat_shadow_buffer_ = buffer;
+    if (buffer != nullptr) {
+      *buffer = {};
+    }
+  }
+  [[nodiscard]] const HannBeatShadowTable& hann_beat_shadow(
+      std::uint8_t midi_note) const noexcept;
   void set_fine_mask_complexity_diagnostics_enabled(bool enabled) noexcept {
     fine_mask_complexity_diagnostics_enabled_ = enabled;
   }
@@ -1014,6 +1032,7 @@ class PolyphonicPitchDetector final {
   bool configured_{};
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  HannBeatShadowBuffer* hann_beat_shadow_buffer_{};
   QuietDisposition quiet_disposition_{QuietDisposition::not_quiet};
   SignalLossDisposition last_signal_loss_{SignalLossDisposition::none};
   std::array<SelectionDisposition, kMaxCandidates>

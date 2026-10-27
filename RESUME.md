@@ -183,12 +183,51 @@ Updated: 2026-10-27
   1,082 have expected-model rank 1, but none clears minimum pairwise beat
   coherence 0.20. Of these, 1,014 have a connected beat graph. The joins score
   existing frame-end state only; they do not feed labels into decisions.
-- Next: inspect the upstream beat-coherence measurement rather than promoting
-  the failed fit or bypassing consensus. Keep the three-second window, 0.20
-  gate and 0.50 retention floor. Do not reopen collecting-state bridges, cache
-  restoration for the 150 uncached cases, or the rejected fit/ranking grids.
-  The measured target still requires +676 long matches, +385 exact triples
-  and no added wrong strings.
+- Completed/rejected weighted-detrending screen:
+  `build/modal/hann-beat-shadow-screen.json`, Modal app
+  `ap-u5Bmvk79JKJO9vZDFgO0VA`; nine jobs for physical-long, isolated-08 and
+  isolated-05 at 32/512/1024 samples. Analysis:
+  `build/modal/hann-beat-shadow-screen-analysis.json`. Actual fingerprints and
+  all fourteen score metrics are unchanged; every diagnostic agrees across
+  buffer sizes. No output projection or production integration was made.
+  Weighted detrending newly supports 2,325 expected triple frames, but 2,321
+  are already correctly tracked and only four incomplete frames benefit.
+  It newly supports 612 false triples during physical pairs (240 currently
+  correct pair outputs, 372 already containing extra strings), plus 1,397
+  wrong-pair model evaluations. These model counts can overlap; do not describe
+  their sum of 2,009 as unique false-triple frames. Reject global replacement.
+  The isolated recordings produced zero feasible multi-source fits, so their
+  negative-control result is not measured, not a safety pass. Real physical
+  pair passages supplied the informative negative control.
+  All 33,809 eligible physical-long model windows prepared successfully;
+  50,878 selected labeled groups were encountered. The report states both
+  denominators and all 135,236 evaluated masks.
+  Two math tests, the unchanged four-detector test, and eighteen replay tests
+  pass. A fixed detector-table implementation exceeded the test stack and was
+  replaced by replay-owned heap memory. One large-report test fixture also
+  needed heap storage; every assertion remains unchanged. One code review
+  completed; its missing denominator was fixed. The full native suite passes
+  438 tests, and source-contract/whitespace checks pass. No VST3 installation
+  is included.
+- Next mechanism: the fine fitter uses fixed calibrated per-string frequencies.
+  Its `frequency_deviation_hz` measures aggregate instantaneous-frequency
+  variance; it does not correct a common offset or per-string drift. Inspect
+  `update_fine_frequency_evidence`, calibrated offsets near 6044 and phase
+  variance near 6227. This may explain useful signal that a fixed basis misses;
+  it is a hypothesis, not yet a demonstrated defect.
+  Build an offline comparison of fixed offsets, one bounded common correction,
+  and one bounded per-component Gauss-Newton correction. Estimate corrections
+  on the oldest two-thirds of the same causal three-second history and compare
+  prediction/residual on the newest third. Report common-versus-independent
+  incremental held-out gain, corrections in cents, and conditioning. Keep the
+  existing .20 beat statistic on the full admitted three-second window as a
+  separate gate; a one-second held-out beat score must not replace that gate.
+  Evaluate all feasible 2-4 masks; labels only score results. Physical pair
+  passages must reject false thirds, while existing correct triples serve as
+  positive controls. No production promotion from training gain or unpenalized
+  model rank. Preserve the 0.50 retention floor, physical limits and zero
+  wrong-string headroom. The target remains +676 long matches and +385 exact
+  triples. Do not repeat the rejected weighting/ranking/carry grids.
 - Research context: [Klapuri 2006, section 2.5](https://archives.ismir.net/ismir2006/paper/000125.pdf)
   motivates evaluating pitch sets jointly. This experiment uses M3's existing
   complex correlations and a real-valued weighted least-squares model.

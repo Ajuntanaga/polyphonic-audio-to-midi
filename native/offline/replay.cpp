@@ -2107,6 +2107,12 @@ bool run_detector_replay(const WaveData& wave,
   // Diagnostic builds intentionally carry large fixed counter tables. Keep
   // the detector and result off callers' bounded thread stacks; replay is an
   // offline tool and may allocate before processing begins.
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::unique_ptr<HannBeatShadowBuffer> hann_shadow_storage;
+  if (spectral_shadow_templates != nullptr) {
+    hann_shadow_storage = std::make_unique<HannBeatShadowBuffer>();
+  }
+#endif
   auto detector_storage = std::make_unique<PolyphonicPitchDetector>();
   PolyphonicPitchDetector& detector = *detector_storage;
   if (!detector.configure(static_cast<double>(wave.sample_rate), config)) {
@@ -2122,6 +2128,7 @@ bool run_detector_replay(const WaveData& wave,
     return false;
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  detector.set_hann_beat_shadow_buffer(hann_shadow_storage.get());
   detector.set_fine_mask_complexity_diagnostics_enabled(
       spectral_shadow_templates != nullptr || diagnostic_fine_mask_pruning ||
       diagnostic_fine_beat_pruning);
@@ -5126,6 +5133,95 @@ bool run_detector_replay(const WaveData& wave,
                   mask_residuals.normalized_residual,
                   mask_residuals.valid, admission.playable_string_mask,
                   maximum_members, expected_mask, 0.0);
+          const auto& hann_shadow = detector.hann_beat_shadow(label.midi_note);
+          const bool hann_eligible = admission.active && expected_mask != 0U &&
+              disposition == static_cast<std::size_t>(SelectionDisposition::selected);
+          if (hann_eligible) {
+            ++result.physical_group_hann_beat_coverage[0U];
+            bool has_model = false;
+            for (std::size_t mask = 1U; mask < 256U; ++mask) {
+              const auto members = mask_member_count(static_cast<std::uint8_t>(mask));
+              has_model = has_model || (mask_residuals.valid[mask] &&
+                  members >= 2U && members <= maximum_members &&
+                  (mask & ~admission.playable_string_mask) == 0U);
+            }
+            if (has_model) {
+              ++result.physical_group_hann_beat_coverage[1U];
+              ++result.physical_group_hann_beat_coverage[
+                  hann_shadow.hann_detrending_valid ? 2U : 3U];
+            }
+          }
+          if (hann_eligible && hann_shadow.hann_detrending_valid) {
+            for (std::size_t mask_value = 1U; mask_value < 256U; ++mask_value) {
+              const auto mask = static_cast<std::uint8_t>(mask_value);
+              const std::uint8_t members = mask_member_count(mask);
+              if (!mask_residuals.valid[mask_value] || members < 2U ||
+                  members > maximum_members ||
+                  (mask & ~admission.playable_string_mask) != 0U) {
+                continue;
+              }
+              ++result.physical_group_hann_beat_coverage[4U];
+              double minimum = 1.0;
+              double minimum_cycles = std::numeric_limits<double>::infinity();
+              for (std::size_t first = 0U; first < kMaxVoices; ++first) {
+                if ((mask & (1U << first)) == 0U) {
+                  continue;
+                }
+                for (std::size_t second = first + 1U; second < kMaxVoices;
+                     ++second) {
+                  if ((mask & (1U << second)) == 0U) {
+                    continue;
+                  }
+                  const std::size_t edge =
+                      diagnostics::beat_pair_index(first, second);
+                  const double weighted =
+                      hann_shadow.hann_detrended_pair_coherence[edge];
+                  minimum = std::min(minimum, weighted);
+                  minimum_cycles = std::min(minimum_cycles,
+                      hann_shadow.pair_difference_hz[edge] *
+                          hann_shadow.beat_window_seconds);
+                  if (members == 2U) {
+                    const std::uint64_t edge_key = label.midi_note |
+                        (static_cast<std::uint64_t>(edge) << 7U) |
+                        (static_cast<std::uint64_t>(
+                             mask_member_count(expected_mask)) << 12U) |
+                        (static_cast<std::uint64_t>(
+                             (mask & expected_mask) == mask) << 16U);
+                    auto& summary = result.physical_group_hann_beat_edges[edge_key];
+                    const double original =
+                        mask_residuals.minimum_beat_coherence[mask_value];
+                    ++summary.frames;
+                    summary.difference_hz = hann_shadow.pair_difference_hz[edge];
+                    summary.minimum_window_seconds = std::min(
+                        summary.minimum_window_seconds,
+                        hann_shadow.beat_window_seconds);
+                    summary.maximum_window_seconds = std::max(
+                        summary.maximum_window_seconds,
+                        hann_shadow.beat_window_seconds);
+                    summary.original_sum += original;
+                    summary.weighted_sum += weighted;
+                    summary.original_minimum = std::min(summary.original_minimum, original);
+                    summary.original_maximum = std::max(summary.original_maximum, original);
+                    summary.weighted_minimum = std::min(summary.weighted_minimum, weighted);
+                    summary.weighted_maximum = std::max(summary.weighted_maximum, weighted);
+                  }
+                }
+              }
+              const std::uint64_t cycles_bin = minimum_cycles < 1.0 ? 0U :
+                  minimum_cycles < 2.0 ? 1U : minimum_cycles < 4.0 ? 2U : 3U;
+              const std::uint64_t passes =
+                  (mask_residuals.minimum_beat_coherence[mask_value] >= 0.20 ? 2U : 0U) |
+                  (minimum >= 0.20 ? 1U : 0U);
+              const std::uint64_t key = mask_member_count(expected_mask) |
+                  (static_cast<std::uint64_t>(members) << 4U) |
+                  (static_cast<std::uint64_t>(classify_target_lane_outcome(
+                       mask, expected_mask)) << 8U) |
+                  (passes << 11U) | (cycles_bin << 13U) |
+                  (static_cast<std::uint64_t>(classify_target_lane_outcome(
+                       observed_lane_mask, expected_mask)) << 16U);
+              ++result.physical_group_hann_beat_mask_frames[key];
+            }
+          }
           const auto unresolved =
               detector.fine_frequency_unresolved_reason(label.midi_note);
           if (mask_member_count(expected_mask) == 3U &&
