@@ -202,6 +202,17 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   M3_EXPECT_EQ(snapshot.max_polyphony, 8U);
   M3_EXPECT_EQ(snapshot.voice_count, 8U);
 
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  const auto residual_warmup =
+      m3::vst3::joint_residual_shadow_work_for_test(instance.processor);
+  M3_EXPECT_TRUE(residual_warmup.valid_frames > 0U);
+  m3::vst3::clear_joint_residual_shadow_metrics_for_test(instance.processor);
+  const auto residual_before =
+      m3::vst3::joint_residual_shadow_work_for_test(instance.processor);
+  M3_EXPECT_EQ(residual_before.evaluated_frames, 0U);
+  M3_EXPECT_EQ(residual_before.max_pitch_count, 0U);
+#endif
+
   const std::size_t allocations_before = m3::test::allocation_count();
   const std::size_t deallocations_before = m3::test::deallocation_count();
   std::array<std::uint64_t, kMeasuredBlocks> wall_durations{};
@@ -209,6 +220,14 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
   m3::PolyphonicPitchDetector::SelectionWork maximum_selection_work{};
   for (std::size_t iteration = 0U; iteration < kMeasuredBlocks; ++iteration) {
     fill_input();
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+    // Force repeated rebuilds during the measured callbacks. Reset only the
+    // shadow factor cache, never the detector or MIDI state. At 32 frames per
+    // block, 192 blocks allow the worst 88-decision rebuild to finish.
+    if (iteration % 192U == 0U) {
+      m3::vst3::reset_joint_residual_shadow_for_test(instance.processor);
+    }
+#endif
     timespec cpu_begin{};
     timespec cpu_end{};
     const auto wall_begin = std::chrono::steady_clock::now();
@@ -275,6 +294,20 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
                maximum_selection_work.assignment_edges);
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations_before);
   M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations_before);
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  const auto residual_after =
+      m3::vst3::joint_residual_shadow_work_for_test(instance.processor);
+  M3_EXPECT_TRUE(residual_after.valid_frames > residual_before.valid_frames);
+  M3_EXPECT_TRUE(residual_after.pending_frames > residual_before.pending_frames);
+  M3_EXPECT_EQ(residual_after.max_rebuild_work, 4U);
+  M3_EXPECT_EQ(residual_after.max_pitch_count, 8U);
+  std::fprintf(stderr,
+      "Residual shadow: evaluated=%llu valid=%llu pending=%llu work-max=%u pitches-max=%u\n",
+      static_cast<unsigned long long>(residual_after.evaluated_frames - residual_before.evaluated_frames),
+      static_cast<unsigned long long>(residual_after.valid_frames - residual_before.valid_frames),
+      static_cast<unsigned long long>(residual_after.pending_frames - residual_before.pending_frames),
+      residual_after.max_rebuild_work, residual_after.max_pitch_count);
+#endif
   close_instance(instance);
 }
 #endif

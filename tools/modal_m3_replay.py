@@ -157,6 +157,12 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
         "joint_pitch_invalid_frames",
         "joint_pitch_build_pending_frames",
         "joint_pitch_max_rebuild_work",
+        "core_residual_enabled",
+        "core_residual_evaluated_frames",
+        "core_residual_valid_frames",
+        "core_residual_pending_frames",
+        "core_residual_max_work",
+        "core_residual_max_pitches",
         "dp_replacement_matched",
         "dp_replacement_false_positive",
         "dp_replacement_false_gap",
@@ -168,7 +174,7 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
     for field in integer_fields:
         result[field] = int(row[field])
     for field in ("cents_mean_error", "cents_sd", "cents_p95_abs",
-                  "joint_pitch_mean_residual"):
+                  "joint_pitch_mean_residual", "core_residual_mean_residual"):
         result[field] = float(row[field])
     result["fine_mask_complexity_penalties"] = [
         float(value) for value in row["fine_mask_complexity_penalties"].split(",")

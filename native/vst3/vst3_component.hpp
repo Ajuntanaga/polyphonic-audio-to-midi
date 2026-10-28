@@ -140,6 +140,18 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   detector_selection_work_for_test() const noexcept {
     return detector_.selection_work_for_test();
   }
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  [[nodiscard]] PolyphonicPitchDetector::JointResidualShadowWork
+  joint_residual_shadow_work_for_test() const noexcept {
+    return detector_.joint_residual_shadow_work();
+  }
+  void reset_joint_residual_shadow_for_test() noexcept {
+    detector_.reset_joint_residual_shadow_for_test();
+  }
+  void clear_joint_residual_shadow_metrics_for_test() noexcept {
+    detector_.clear_joint_residual_shadow_metrics_for_test();
+  }
+#endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   void disable_offline_replay_diagnostics_for_test() noexcept {
     detector_.set_offline_replay_diagnostics_enabled_for_test(false);
@@ -289,6 +301,12 @@ bool queue_generated_note_for_test(
 [[nodiscard]] PolyphonicPitchDetector::SelectionWork
 detector_selection_work_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+[[nodiscard]] PolyphonicPitchDetector::JointResidualShadowWork
+joint_residual_shadow_work_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
+void reset_joint_residual_shadow_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
+void clear_joint_residual_shadow_metrics_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
+#endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
 void disable_offline_replay_diagnostics_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept;

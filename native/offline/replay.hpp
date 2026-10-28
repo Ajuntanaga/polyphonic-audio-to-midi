@@ -1697,6 +1697,13 @@ struct ReplayResult final {
   std::uint32_t joint_pitch_build_pending_frames{};
   std::uint32_t joint_pitch_max_rebuild_work{};
   double joint_pitch_residual_sum{};
+  std::uint32_t core_residual_enabled{};
+  std::uint64_t core_residual_evaluated_frames{};
+  std::uint64_t core_residual_valid_frames{};
+  std::uint64_t core_residual_pending_frames{};
+  std::uint32_t core_residual_max_work{};
+  std::uint32_t core_residual_max_pitches{};
+  double core_residual_sum{};
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   std::array<std::uint64_t, kCandidateSpectralShadowIntervalBucketCount>

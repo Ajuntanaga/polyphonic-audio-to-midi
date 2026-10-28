@@ -7963,6 +7963,16 @@ bool run_detector_replay(const WaveData& wave,
 #endif
     }
   }
+#if defined(M3_JOINT_RESIDUAL_SHADOW) && defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const auto core_residual = detector.joint_residual_shadow_work();
+  result.core_residual_enabled = 1U;
+  result.core_residual_evaluated_frames = core_residual.evaluated_frames;
+  result.core_residual_valid_frames = core_residual.valid_frames;
+  result.core_residual_pending_frames = core_residual.pending_frames;
+  result.core_residual_max_work = core_residual.max_rebuild_work;
+  result.core_residual_max_pitches = core_residual.max_pitch_count;
+  result.core_residual_sum = core_residual.residual_sum;
+#endif
   output = result;
   error = ReplayError::none;
   return true;

@@ -1013,6 +1013,9 @@ int main(int argc, char** argv) {
       "joint_pitch_changed\tjoint_pitch_valid_frames\t"
       "joint_pitch_invalid_frames\tjoint_pitch_mean_residual\t"
       "joint_pitch_build_pending_frames\tjoint_pitch_max_rebuild_work\t"
+      "core_residual_enabled\tcore_residual_evaluated_frames\t"
+      "core_residual_valid_frames\tcore_residual_pending_frames\t"
+      "core_residual_max_work\tcore_residual_max_pitches\tcore_residual_mean_residual\t"
       "dp_replacement_matched\tdp_replacement_false_positive\t"
       "dp_replacement_false_gap\tdp_replacement_false_wrong_note\t"
       "dp_replacement_false_wrong_string\tdp_replacement_changed\t"
@@ -1620,6 +1623,14 @@ int main(int argc, char** argv) {
                       static_cast<double>(result.joint_pitch_valid_frames));
   std::printf("\t%u\t%u", result.joint_pitch_build_pending_frames,
               result.joint_pitch_max_rebuild_work);
+  std::printf("\t%u\t%llu\t%llu\t%llu\t%u\t%u\t%.9f",
+              result.core_residual_enabled,
+              static_cast<unsigned long long>(result.core_residual_evaluated_frames),
+              static_cast<unsigned long long>(result.core_residual_valid_frames),
+              static_cast<unsigned long long>(result.core_residual_pending_frames),
+              result.core_residual_max_work, result.core_residual_max_pitches,
+              result.core_residual_valid_frames == 0U ? 0.0 :
+                  result.core_residual_sum / static_cast<double>(result.core_residual_valid_frames));
   std::printf("\t%u\t%u\t%u\t%u\t%u\t%u",
               result.calibrated_dp_replacement.matched_label_frames,
               result.calibrated_dp_replacement.false_positive_voices,

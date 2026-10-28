@@ -1455,6 +1455,12 @@ void PolyphonicPitchDetector::update_spectral_lane_states(
 bool PolyphonicPitchDetector::configure(double sample_rate,
                                         const PersistentConfig& config) noexcept {
   configured_ = false;
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  if (joint_residual_shadow_ == nullptr) {
+    reset();
+    return false;
+  }
+#endif
   cells_ = {};
   enabled_cell_indices_ = {};
   enabled_cell_count_ = 0U;
@@ -1598,6 +1604,13 @@ void PolyphonicPitchDetector::set_runtime_config(
 }
 
 void PolyphonicPitchDetector::reset() noexcept {
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  if (joint_residual_shadow_ != nullptr) {
+    JointPitchResidual& residual = *joint_residual_shadow_;
+    residual.reset();
+  }
+  joint_residual_shadow_work_ = {};
+#endif
   previous_input_ = 0.0;
   previous_dc_output_ = 0.0;
   fast_energy_ = 0.0;
@@ -2518,29 +2531,8 @@ bool PolyphonicPitchDetector::harmonic_correlations_for_diagnostics(
     std::uint8_t midi_note, std::array<double, 6U>& frequencies,
     std::array<std::complex<double>, 6U>& correlations,
     double& signal_energy, double& decay) const noexcept {
-  frequencies = {};
-  correlations = {};
-  if (!configured_ || midi_note < lowest_note_ ||
-      midi_note - lowest_note_ >= candidate_count_) {
-    return false;
-  }
-  const std::size_t candidate = midi_note - lowest_note_;
-  signal_energy = fast_energy_;
-  decay = correlation_decay;
-  bool available = false;
-  for (std::size_t harmonic = 0U; harmonic < kHarmonicCount; ++harmonic) {
-    const Cell& cell = cells_[cell_index(candidate, harmonic)];
-    if (!cell.enabled) {
-      continue;
-    }
-    frequencies[harmonic] = sample_rate_ / kTwoPi *
-        std::atan2(cell.sine_step, cell.cosine_step);
-    correlations[harmonic] =
-        std::complex<double>{cell.fast_real, cell.fast_imaginary} *
-        std::complex<double>{cell.cosine, cell.sine};
-    available = true;
-  }
-  return available;
+  return read_harmonic_correlations(midi_note, frequencies, correlations,
+                                    signal_energy, decay);
 }
 
 bool PolyphonicPitchDetector::set_candidate_admission_rescue_for_diagnostics(
@@ -8768,6 +8760,93 @@ void PolyphonicPitchDetector::observe_calibration(
   }
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_JOINT_RESIDUAL_SHADOW)
+bool PolyphonicPitchDetector::read_harmonic_correlations(
+    std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+    std::array<std::complex<double>, 6U>& correlations,
+    double& signal_energy, double& decay) const noexcept {
+  frequencies = {};
+  correlations = {};
+  if (!configured_ || midi_note < lowest_note_ ||
+      midi_note - lowest_note_ >= candidate_count_) {
+    return false;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  signal_energy = fast_energy_;
+  decay = correlation_decay;
+  bool available = false;
+  for (std::size_t harmonic = 0U; harmonic < kHarmonicCount; ++harmonic) {
+    const Cell& cell = cells_[cell_index(candidate, harmonic)];
+    if (!cell.enabled) {
+      continue;
+    }
+    frequencies[harmonic] = sample_rate_ / kTwoPi *
+        std::atan2(cell.sine_step, cell.cosine_step);
+    correlations[harmonic] =
+        std::complex<double>{cell.fast_real, cell.fast_imaginary} *
+        std::complex<double>{cell.cosine, cell.sine};
+    available = true;
+  }
+  return available;
+}
+#endif
+
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+void PolyphonicPitchDetector::observe_joint_residual_shadow(
+    const TunerSnapshot& snapshot) noexcept {
+  // Same history and eligibility as offline replay. This path observes only;
+  // it cannot modify candidate ownership, transitions, or the MIDI ledger.
+  if (joint_residual_shadow_ == nullptr) {
+    return;
+  }
+  if (profile_mode_ != ProfileMode::m3 || snapshot.state != TunerFrameState::tracking ||
+      static_cast<double>(snapshot_generation_) * kDecisionQuantum < 0.8 * sample_rate_) {
+    joint_residual_shadow_->reset();
+    return;
+  }
+  std::array<JointPitchObservation, kMaxVoices> observations{};
+  std::array<bool, kMaxCandidates> emitted{};
+  std::size_t count = 0U;
+  double energy = 0.0;
+  double decay = 0.0;
+  for (std::size_t voice = 0U; voice < snapshot.voice_count; ++voice) {
+    const auto group = snapshot.voices[voice].pitch_evidence_group_id;
+    if (group == 0U) {
+      continue;
+    }
+    const std::size_t candidate = static_cast<std::size_t>(group - 1U);
+    if (candidate >= candidate_count_ || emitted[candidate] || count >= observations.size()) {
+      continue;
+    }
+    emitted[candidate] = true;
+    auto& observation = observations[count];
+    observation.note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+    if (read_harmonic_correlations(observation.note, observation.frequency_hz,
+                                   observation.correlation, energy, decay)) {
+      ++count;
+    }
+  }
+  if (count < 2U) {
+    joint_residual_shadow_->reset();
+    return;
+  }
+  const auto result = joint_residual_shadow_->evaluate_bounded(
+      observations, count, sample_rate_, decay, energy);
+  ++joint_residual_shadow_work_.evaluated_frames;
+  joint_residual_shadow_work_.max_rebuild_work = std::max(
+      joint_residual_shadow_work_.max_rebuild_work,
+      static_cast<std::uint32_t>(joint_residual_shadow_->last_rebuild_work_units()));
+  joint_residual_shadow_work_.max_pitch_count = std::max(
+      joint_residual_shadow_work_.max_pitch_count, static_cast<std::uint32_t>(count));
+  if (result.valid) {
+    ++joint_residual_shadow_work_.valid_frames;
+    joint_residual_shadow_work_.residual_sum += result.residual_fraction;
+  } else if (joint_residual_shadow_->rebuild_pending()) {
+    ++joint_residual_shadow_work_.pending_frames;
+  }
+}
+#endif
+
 void PolyphonicPitchDetector::write_snapshot(
     DetectorDecision& decision,
     const std::array<double, kMaxCandidates>& scores,
@@ -8977,6 +9056,9 @@ void PolyphonicPitchDetector::write_snapshot(
                                : 0.0;
   }
   decision.tuner_snapshot_ready = true;
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  observe_joint_residual_shadow(snapshot);
+#endif
 }
 
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {

@@ -1304,6 +1304,27 @@ PolyphonicPitchDetector::SelectionWork detector_selection_work_for_test(
              : PolyphonicPitchDetector::SelectionWork{};
 }
 
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+PolyphonicPitchDetector::JointResidualShadowWork joint_residual_shadow_work_for_test(
+    Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  return processor != nullptr
+             ? static_cast<M3Component*>(processor)->joint_residual_shadow_work_for_test()
+             : PolyphonicPitchDetector::JointResidualShadowWork{};
+}
+
+void reset_joint_residual_shadow_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)->reset_joint_residual_shadow_for_test();
+  }
+}
+
+void clear_joint_residual_shadow_metrics_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)->clear_joint_residual_shadow_metrics_for_test();
+  }
+}
+#endif
+
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
 void disable_offline_replay_diagnostics_for_test(
     Steinberg::Vst::IAudioProcessor* processor) noexcept {

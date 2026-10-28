@@ -2,6 +2,41 @@
 
 Updated: 2026-10-28
 
+## Callback residual checkpoint — 2026-10-28
+
+- `M3_ENABLE_RESIDUAL_SHADOW_TESTS` enables the bounded residual observer only
+  in native tests, replay and the real-time test target. Compile-command checks
+  confirm that production, probe and historical CLAP bundles exclude it. The
+  observer runs on M3 snapshots at the existing 64-sample decision cadence,
+  after the initial 0.8-second history gate. Existing pitch-group identities
+  supply raw candidate notes without changing telemetry or MIDI.
+- The first full native run exposed an 8 MiB stack overflow in the existing
+  four-detector test. The fixed 52,920-byte solver workspace is now allocated
+  once when each detector is constructed, before configuration or processing.
+  Configuration, reset and audio calls reuse it. The original fixture and stack
+  limit are unchanged; the full native suite now passes 450/450.
+- A review found that the real-time test's maximum pitch counter included
+  warmup. Metrics now reset before measurement. The test repeatedly clears only
+  the solver cache and times the rebuilding inside actual audio callbacks.
+  At 96 kHz/32 samples, final p99 is 112,305 ns against 166,666 ns; maximum
+  thread CPU time is 168,136 ns against 333,333 ns. Measured-only counters show
+  6,000 evaluations, 3,417 ready and 2,583 rebuilding, with eight pitches and at
+  most four rebuild work items. The 100,000-callback allocation/thread check
+  also passes. These measurements include the prototype, not an output policy.
+- Modal reports `residual-callback-protected.json` and
+  `residual-callback-buffers.json` preserve every prior reported metric,
+  fingerprint and counterfactual policy count across eleven sets and the
+  ordinary/physical-long 32/512/1024 checks. Core and offline evaluation,
+  readiness, waiting and residual counters match exactly. The diagnostic rule
+  retains 3,110 hypothetical false-output removals with no correct loss.
+- Source-contract, Python syntax and whitespace checks pass. One focused review
+  completed; its counter issue is fixed. No installed-bundle or MIDI change.
+- Next: evaluate logical candidates before the active MIDI lifecycle and apply
+  a guarded render-suppression rule there. Suppressed candidates must remain
+  available to the model; filtering the rendered snapshot would remove their
+  own evidence. Require note-off/retrigger/release and transition-capacity tests,
+  protected replay improvement, and callback checks before production use.
+
 ## Bounded residual checkpoint — 2026-10-28
 
 - `JointPitchResidual::evaluate_bounded` now performs at most four rebuilding

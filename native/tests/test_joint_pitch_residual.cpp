@@ -153,6 +153,15 @@ M3_TEST(offline_joint_pitch_residual_replay_is_causal_and_partition_invariant) {
       if (bounded_mode) {
         M3_EXPECT_TRUE(current->joint_pitch_build_pending_frames > 0U);
         M3_EXPECT_TRUE(current->joint_pitch_max_rebuild_work <= 4U);
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+        M3_EXPECT_EQ(current->core_residual_enabled, 1U);
+        M3_EXPECT_EQ(current->core_residual_evaluated_frames,
+                     current->joint_pitch_valid_frames + current->joint_pitch_invalid_frames);
+        M3_EXPECT_EQ(current->core_residual_valid_frames, current->joint_pitch_valid_frames);
+        M3_EXPECT_EQ(current->core_residual_pending_frames, current->joint_pitch_build_pending_frames);
+        M3_EXPECT_EQ(current->core_residual_max_work, current->joint_pitch_max_rebuild_work);
+        M3_EXPECT_EQ(current->core_residual_sum, current->joint_pitch_residual_sum);
+#endif
       } else {
         M3_EXPECT_EQ(current->joint_pitch_build_pending_frames, 0U);
       }
@@ -362,3 +371,38 @@ M3_TEST(compact_joint_pitch_residual_keeps_negative_and_shared_pitch_controls) {
    }
   }
 }
+
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+M3_TEST(callback_joint_pitch_shadow_resets_and_stays_within_m3_profile) {
+  auto detector = std::make_unique<m3::PolyphonicPitchDetector>();
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_polyphony = 5U;
+  config.sensitivity = 60U;
+  config.response = 75U;
+  M3_EXPECT_TRUE(detector->configure(48000.0, config));
+  const auto feed = [&]() {
+    for (std::size_t sample = 0U; sample < 76800U; ++sample) {
+      const double t = static_cast<double>(sample) / 48000.0;
+      static_cast<void>(detector->process_sample(
+          0.2 * std::sin(6.28318530717958647692 * m3::midi_to_frequency(48U, 440.0) * t) +
+          0.12 * std::sin(6.28318530717958647692 * m3::midi_to_frequency(53U, 440.0) * t + 0.7)));
+    }
+  };
+  feed();
+  const auto active = detector->joint_residual_shadow_work();
+  M3_EXPECT_TRUE(active.valid_frames > 0U);
+  M3_EXPECT_TRUE(active.pending_frames > 0U);
+  M3_EXPECT_TRUE(active.max_rebuild_work <= 4U);
+  detector->reset();
+  M3_EXPECT_EQ(detector->joint_residual_shadow_work().evaluated_frames, 0U);
+  for (std::size_t sample = 0U; sample < 48000U; ++sample) {
+    static_cast<void>(detector->process_sample(0.0));
+  }
+  M3_EXPECT_EQ(detector->joint_residual_shadow_work().evaluated_frames, 0U);
+  config.profile_mode = m3::ProfileMode::general;
+  M3_EXPECT_TRUE(detector->configure(48000.0, config));
+  feed();
+  M3_EXPECT_EQ(detector->joint_residual_shadow_work().evaluated_frames, 0U);
+}
+#endif

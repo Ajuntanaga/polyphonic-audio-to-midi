@@ -17,6 +17,11 @@
 #include "m3/types.hpp"
 #include "m3/unison_spectral_classifier.hpp"
 #include "m3/unison_spectral_tracker.hpp"
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+#include <memory>
+#include <new>
+#include "m3/joint_pitch_residual.hpp"
+#endif
 
 namespace m3 {
 
@@ -383,6 +388,30 @@ class PolyphonicPitchDetector final {
 #endif
 #endif
 
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  struct JointResidualShadowWork final {
+    std::uint64_t evaluated_frames{};
+    std::uint64_t valid_frames{};
+    std::uint64_t pending_frames{};
+    std::uint32_t max_rebuild_work{};
+    std::uint32_t max_pitch_count{};
+    double residual_sum{};
+  };
+  [[nodiscard]] JointResidualShadowWork joint_residual_shadow_work() const noexcept {
+    return joint_residual_shadow_work_;
+  }
+#if defined(M3_TESTING)
+  void reset_joint_residual_shadow_for_test() noexcept {
+    if (joint_residual_shadow_ != nullptr) {
+      joint_residual_shadow_->reset();
+    }
+  }
+  void clear_joint_residual_shadow_metrics_for_test() noexcept {
+    joint_residual_shadow_work_ = {};
+  }
+#endif
+#endif
+
 #if defined(M3_TESTING)
   struct SelectionWork final {
     std::uint32_t pool_candidates{};
@@ -402,6 +431,21 @@ class PolyphonicPitchDetector final {
 #endif
 
  private:
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_JOINT_RESIDUAL_SHADOW)
+  [[nodiscard]] bool read_harmonic_correlations(
+      std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+      std::array<std::complex<double>, 6U>& correlations,
+      double& signal_energy, double& decay) const noexcept;
+#endif
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  void observe_joint_residual_shadow(const TunerSnapshot& snapshot) noexcept;
+  // Allocate once during construction, before configuration or audio calls.
+  // Four detectors already nearly fill an 8 MiB caller stack in native tests.
+  // The owned solver retains fixed storage; configure/reset/process never grow it.
+  std::unique_ptr<JointPitchResidual> joint_residual_shadow_{
+      new (std::nothrow) JointPitchResidual{}};
+  JointResidualShadowWork joint_residual_shadow_work_{};
+#endif
 #if defined(M3_TESTING)
   friend struct PolyphonicPitchDetectorTestAccess;
 #endif

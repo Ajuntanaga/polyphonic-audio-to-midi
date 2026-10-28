@@ -12,6 +12,7 @@ set(M3_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 option(M3_ENABLE_ASAN_UBSAN "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(M3_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+option(M3_ENABLE_RESIDUAL_SHADOW_TESTS "Exercise bounded residual work in test and replay callbacks only" OFF)
 if(M3_ENABLE_ASAN_UBSAN AND M3_ENABLE_TSAN)
     message(FATAL_ERROR "ASan/UBSan and TSan builds must remain separate")
 endif()
@@ -235,6 +236,14 @@ target_compile_definitions(m3_replay PRIVATE
 target_include_directories(m3_replay PRIVATE native/include native/offline)
 target_link_libraries(m3_replay PRIVATE Threads::Threads m)
 m3_apply_project_options(m3_replay)
+
+if(M3_ENABLE_RESIDUAL_SHADOW_TESTS)
+    # This experiment cannot enter either shipped plugin bundle through this
+    # option. The real-time target keeps the production diagnostic layout.
+    foreach(target m3_native_tests m3_vst3_realtime_tests m3_replay)
+        target_compile_definitions(${target} PRIVATE M3_JOINT_RESIDUAL_SHADOW=1)
+    endforeach()
+endif()
 
 set(M3_CLAP_HISTORY_SOURCES
     native/plugin/clap_adapter.cpp
