@@ -2176,9 +2176,9 @@ bool run_detector_replay(const WaveData& wave,
   }
   auto result_storage = std::make_unique<ReplayResult>();
   ReplayResult& result = *result_storage;
-  std::unique_ptr<JointPitchResidual> joint_pitch_fit;
+  std::unique_ptr<m3::JointPitchResidual> joint_pitch_fit;
   if (diagnostic_joint_pitch_residual) {
-    joint_pitch_fit = std::make_unique<JointPitchResidual>();
+    joint_pitch_fit = std::make_unique<m3::JointPitchResidual>();
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   std::array<AdjacentEnvelopeCoherenceState, 127U>

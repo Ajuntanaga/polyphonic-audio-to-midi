@@ -6,26 +6,13 @@
 #include <cstdint>
 
 #include "m3/constants.hpp"
+#include "m3/joint_pitch_residual.hpp"
 
 namespace m3::offline {
 
-inline constexpr std::size_t kJointPitchHarmonics = 6U;
-
-struct JointPitchObservation final {
-  std::uint8_t note{};
-  std::array<double, kJointPitchHarmonics> frequency_hz{};
-  // Correlations expressed relative to the current sample, not each cell's
-  // independently rotating oscillator phase.
-  std::array<std::complex<double>, kJointPitchHarmonics> correlation{};
-};
-
-struct JointPitchResidualResult final {
-  bool valid{};
-  double residual_fraction{};
-  std::array<double, kMaxVoices> independent_energy_fraction{};
-  std::array<bool, kMaxVoices> shared_fundamental{};
-  std::array<double, kMaxVoices> fundamental_overlap{};
-};
+using m3::kJointPitchHarmonics;
+using m3::JointPitchObservation;
+using m3::JointPitchResidualResult;
 
 // Offline weighted least-squares fit of the emitted pitch set and every
 // one-pitch deletion. It reads existing resonator observations only. Each

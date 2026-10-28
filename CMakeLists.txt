@@ -42,6 +42,7 @@ set(M3_NATIVE_CORE_SOURCES
     native/src/factory_calibration.cpp
     native/src/generated_note_ledger.cpp
     native/src/harmonic_evidence.cpp
+    native/src/joint_pitch_residual.cpp
     native/src/partial_detuning_evidence.cpp
     native/src/polyphonic_pitch_detector.cpp
     native/src/string_fret_posterior.cpp

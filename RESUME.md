@@ -1,6 +1,33 @@
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-10-27
+Updated: 2026-10-28
+
+## Compact residual checkpoint — 2026-10-28
+
+- The shared native residual kernel now uses one packed Cholesky factorization
+  and small inverse-block factors for individual pitch deletions. Shared
+  harmonics, ridge regularization and overlap protection are preserved. The
+  original offline solver remains the numerical reference. Replay diagnostics
+  use the compact kernel; the production detector does not invoke or store it.
+- Object memory falls from 671,072 to 43,680 bytes (93.5%). In an isolated
+  eight-note kernel benchmark, cached p99 falls from 31,359 to 9,150 ns;
+  rebuilding still takes 209,036 ns. Those are kernel measurements, not full
+  VST3 callback measurements. A synchronous rebuild is not ready for production.
+- Full native suite 447/447, source contract, whitespace checks and one
+  numerical review pass. Tests compare full and deletion energies across
+  1–8 pitches, shared harmonics, scaling, ordering, cache changes and four
+  sample rates, with no allocations or deallocations.
+- Modal reports `build/modal/compact-joint-protected.json` and
+  `build/modal/compact-joint-buffers.json` preserve all reported metrics,
+  fingerprints and diagnostic policy counts across eleven protected sets.
+  Ordinary and physical-long results also match at 32/512/1024 samples.
+  The conservative offline rule still removes 3,137 hypothetical false outputs
+  with no lost matches; this is not a change to actual MIDI output.
+- Next: bound rebuilding across callbacks, with no valid result until the
+  current model is ready and cancellation when its inputs change. Require
+  equivalent completed math, allocation and callback-budget checks before
+  integrating any MIDI policy. Installed production and tracking gates remain
+  unchanged.
 
 ## Active tuner-stability checkpoint — 2026-10-27
 
