@@ -2090,7 +2090,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_selection_window_only,
                          bool diagnostic_correlation_shadow_only,
                          bool diagnostic_joint_pitch_residual,
-                         FrequencyWindowCapture* frequency_window_capture) {
+                         FrequencyWindowCapture* frequency_window_capture,
+                         bool diagnostic_bounded_joint_pitch_residual) {
   output = {};
   error = ReplayError::invalid_config;
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -2098,6 +2099,9 @@ bool run_detector_replay(const WaveData& wave,
     return false;
   }
   if (diagnostic_joint_pitch_residual && diagnostic_correlation_seconds != -1.0) {
+    return false;
+  }
+  if (diagnostic_bounded_joint_pitch_residual && !diagnostic_joint_pitch_residual) {
     return false;
   }
   for (const ReplayLabel& label : labels) {
@@ -2470,9 +2474,16 @@ bool run_detector_replay(const WaveData& wave,
         if (snapshot.state == TunerFrameState::tracking && count >= 2U &&
             static_cast<double>(sample_index + 1U) >=
                 0.8 * static_cast<double>(wave.sample_rate)) {
-          const auto fit = joint_pitch_fit->evaluate(
-              observations, count, static_cast<double>(wave.sample_rate),
-              decay, energy);
+          const auto fit = diagnostic_bounded_joint_pitch_residual
+              ? joint_pitch_fit->evaluate_bounded(
+                  observations, count, static_cast<double>(wave.sample_rate),
+                  decay, energy)
+              : joint_pitch_fit->evaluate(
+                  observations, count, static_cast<double>(wave.sample_rate),
+                  decay, energy);
+          result.joint_pitch_max_rebuild_work = std::max(
+              result.joint_pitch_max_rebuild_work,
+              static_cast<std::uint32_t>(joint_pitch_fit->last_rebuild_work_units()));
           if (fit.valid) {
             ++result.joint_pitch_valid_frames;
             result.joint_pitch_residual_sum += fit.residual_fraction;
@@ -2487,7 +2498,12 @@ bool run_detector_replay(const WaveData& wave,
             }
           } else {
             ++result.joint_pitch_invalid_frames;
+            if (joint_pitch_fit->rebuild_pending()) {
+              ++result.joint_pitch_build_pending_frames;
+            }
           }
+        } else if (diagnostic_bounded_joint_pitch_residual) {
+          joint_pitch_fit->reset();
         }
         for (std::size_t policy = 0U; policy < kJointPitchPolicies.size();
              ++policy) {

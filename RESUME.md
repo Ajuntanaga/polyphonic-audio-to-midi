@@ -2,6 +2,36 @@
 
 Updated: 2026-10-28
 
+## Bounded residual checkpoint — 2026-10-28
+
+- `JointPitchResidual::evaluate_bounded` now performs at most four rebuilding
+  work items per call. It returns no usable result until the current model is
+  ready; changed topology, invalid input, silence and reset discard incomplete
+  work. Completed results use the current audio correlations. Synchronous replay
+  still uses the same math without the scheduling limit.
+- The workspace is 52,920 bytes. The isolated eight-note rebuild takes 88 calls
+  at this budget, with measured p99 10,895 ns per call. These are kernel-only
+  timings. Full callback timing is still required before production use.
+- Replay adds `--diagnostic-bounded-joint-pitch-residual`; the Modal wrapper
+  exposes `--bounded-joint-pitch-residual`. Both remain offline diagnostics.
+  Reports include waiting frames and maximum rebuild work. No MIDI, UI,
+  parameter, default or installed-bundle changes.
+- Modal `bounded-joint-protected.json` (app `ap-Oyc6Badcek8peHjH6XPQm3`)
+  preserves all actual metrics and fingerprints across eleven sets. The safe
+  policy retains 3,110/3,137 hypothetical false-output removals (99.14%):
+  ordinary 5, constructed 1,504, middle isolated 948 and upper unison 653.
+  No correct matches are removed and no error category increases. Waiting for
+  rebuilding forgoes 27 removals; these remain counterfactual results, not
+  recovered or suppressed MIDI events.
+- `bounded-joint-buffers.json` (app `ap-R2z6J2bGhEuE11bQfhnf5A`) matches
+  the ordinary and physical-long results at 32/512/1024 samples, including all
+  diagnostic counters. Full native suite 449/449, source contract, Python
+  syntax and whitespace checks pass. One focused state-machine review found
+  no material defect.
+- Next: invoke this bounded work in a production-shaped shadow path, verify
+  callback deadlines and allocations during rebuilding, then integrate a MIDI
+  policy only if the protected recording and note-release gates still pass.
+
 ## Compact residual checkpoint — 2026-10-28
 
 - The shared native residual kernel now uses one packed Cholesky factorization

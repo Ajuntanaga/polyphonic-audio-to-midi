@@ -17,113 +17,197 @@ std::complex<double> window_response(double radians, double decay) noexcept {
 }
 }  // namespace
 
-void JointPitchResidual::rebuild(std::size_t count, double sample_rate,
-                                 double decay) noexcept {
+void JointPitchResidual::reset() noexcept {
+  valid_ = false;
+  stage_ = BuildStage::idle;
+  last_rebuild_work_units_ = 0U;
+}
+
+bool JointPitchResidual::rebuild_pending() const noexcept {
+  return stage_ != BuildStage::idle && stage_ != BuildStage::ready &&
+         stage_ != BuildStage::failed;
+}
+
+void JointPitchResidual::start_rebuild(std::size_t count, double sample_rate,
+                                      double decay) noexcept {
   pitch_count_ = count;
   sample_rate_ = sample_rate;
   decay_ = decay;
   valid_ = false;
+  build_index_ = 0U;
+  build_pitch_ = 0U;
+  fundamental_overlap_.fill(0.0);
+  shared_fundamental_.fill(false);
+  stage_ = BuildStage::gram;
+}
+
+void JointPitchResidual::advance_rebuild() noexcept {
   const std::size_t dimensions = 2U * partial_count_;
-  // Fill the lower triangle in place; no second full matrix is needed.
-  for (std::size_t i = 0U; i < partial_count_; ++i) {
-    for (std::size_t j = 0U; j <= i; ++j) {
-      const auto difference = window_response(
-          kTwoPi * (frequencies_[i] - frequencies_[j]) / sample_rate, decay);
-      const auto sum = window_response(
-          kTwoPi * (frequencies_[i] + frequencies_[j]) / sample_rate, decay);
-      lower_[packed(2U * i, 2U * j)] = 0.5 * (difference.real() + sum.real());
-      lower_[packed(2U * i + 1U, 2U * j + 1U)] = 0.5 * (difference.real() - sum.real());
-      lower_[packed(2U * i + 1U, 2U * j)] = 0.5 * (sum.imag() + difference.imag());
-      if (i != j) {
-        lower_[packed(2U * i, 2U * j + 1U)] = 0.5 * (sum.imag() - difference.imag());
+  // One work item is one bounded row, unit solve, or pitch setup/overlap pass.
+  // The largest row or unit solve has at most 96 dimensions. This is a work
+  // bound; full callback timing must still be measured before integration.
+  switch (stage_) {
+    case BuildStage::gram: {
+      const auto i = build_index_;
+      for (std::size_t j = 0U; j <= i; ++j) {
+        const auto difference = window_response(
+            kTwoPi * (frequencies_[i] - frequencies_[j]) / sample_rate_, decay_);
+        const auto sum = window_response(
+            kTwoPi * (frequencies_[i] + frequencies_[j]) / sample_rate_, decay_);
+        lower_[packed(2U * i, 2U * j)] = 0.5 * (difference.real() + sum.real());
+        lower_[packed(2U * i + 1U, 2U * j + 1U)] = 0.5 * (difference.real() - sum.real());
+        lower_[packed(2U * i + 1U, 2U * j)] = 0.5 * (sum.imag() + difference.imag());
+        if (i != j) {
+          lower_[packed(2U * i, 2U * j + 1U)] = 0.5 * (sum.imag() - difference.imag());
+        }
       }
+      if (++build_index_ == partial_count_) {
+        build_index_ = 0U;
+        stage_ = BuildStage::full_factor;
+      }
+      break;
     }
-  }
-  for (std::size_t row = 0U; row < dimensions; ++row) {
-    lower_[packed(row, row)] += kRidge;
-    for (std::size_t column = 0U; column <= row; ++column) {
-      double value = lower_[packed(row, column)];
-      for (std::size_t k = 0U; k < column; ++k) {
-        value -= lower_[packed(row, k)] * lower_[packed(column, k)];
+    case BuildStage::full_factor: {
+      const auto row = build_index_;
+      lower_[packed(row, row)] += kRidge;
+      for (std::size_t column = 0U; column <= row; ++column) {
+        double value = lower_[packed(row, column)];
+        for (std::size_t k = 0U; k < column; ++k) {
+          value -= lower_[packed(row, k)] * lower_[packed(column, k)];
+        }
+        if (!std::isfinite(value) || (row == column && value <= 1.0e-12)) {
+          stage_ = BuildStage::failed;
+          return;
+        }
+        lower_[packed(row, column)] = row == column
+            ? std::sqrt(value) : value / lower_[packed(column, column)];
       }
-      if (!std::isfinite(value) || (row == column && value <= 1.0e-12)) {
-        return;
+      if (++build_index_ == dimensions) {
+        stage_ = BuildStage::deletion_setup;
       }
-      lower_[packed(row, column)] = row == column
-          ? std::sqrt(value) : value / lower_[packed(column, column)];
+      break;
     }
-  }
-  // For deleted columns U, full - omitted = beta_U^T (G^-1_UU)^-1 beta_U,
-  // with G including the same ridge as each reference deletion model.
-  // G^-1_UU = (L^-1 E_U)^T (L^-1 E_U). Only <=12 unit solves and one small
-  // factor are retained for each pitch; the temporary unit solves are reused.
-  std::array<double, kPitchDimensions * kMaxDimensions> units{};
-  for (std::size_t pitch = 0U; pitch < count; ++pitch) {
-    auto& deletion = deletions_[pitch];
-    deletion.size = 0U;
-    const auto owner = static_cast<std::uint8_t>(1U << pitch);
-    for (std::size_t partial = 0U; partial < partial_count_; ++partial) {
-      if (owners_[partial] == owner) {
-        deletion.indices[deletion.size++] = 2U * partial;
-        deletion.indices[deletion.size++] = 2U * partial + 1U;
+    case BuildStage::deletion_setup: {
+      auto& deletion = deletions_[build_pitch_];
+      deletion.size = 0U;
+      const auto owner = static_cast<std::uint8_t>(1U << build_pitch_);
+      for (std::size_t partial = 0U; partial < partial_count_; ++partial) {
+        if (owners_[partial] == owner) {
+          deletion.indices[deletion.size++] = 2U * partial;
+          deletion.indices[deletion.size++] = 2U * partial + 1U;
+        }
       }
+      build_index_ = 0U;
+      if (deletion.size != 0U) {
+        stage_ = BuildStage::unit_solve;
+      } else if (++build_pitch_ == pitch_count_) {
+        build_pitch_ = 0U;
+        stage_ = BuildStage::overlap;
+      }
+      break;
     }
-    units.fill(0.0);
-    for (std::size_t j = 0U; j < deletion.size; ++j) {
+    case BuildStage::unit_solve: {
+      // For deleted columns U, full - omitted = beta_U^T (G^-1_UU)^-1 beta_U.
+      // G^-1_UU = (L^-1 E_U)^T (L^-1 E_U), with the same ridge as the reference.
+      const auto& deletion = deletions_[build_pitch_];
+      const auto j = build_index_;
       const auto index = deletion.indices[j];
       for (std::size_t row = index; row < dimensions; ++row) {
         double value = row == index ? 1.0 : 0.0;
         for (std::size_t k = index; k < row; ++k) {
-          value -= lower_[packed(row, k)] * units[j * kMaxDimensions + k];
+          value -= lower_[packed(row, k)] * units_[j * kMaxDimensions + k];
         }
-        units[j * kMaxDimensions + row] = value / lower_[packed(row, row)];
+        units_[j * kMaxDimensions + row] = value / lower_[packed(row, row)];
       }
+      // Rows before index are implicit zero and never read. All used entries
+      // are overwritten before each solve, including after a cancelled build.
+      if (++build_index_ == deletion.size) {
+        build_index_ = 0U;
+        stage_ = BuildStage::deletion_factor;
+      }
+      break;
     }
-    for (std::size_t row = 0U; row < deletion.size; ++row) {
+    case BuildStage::deletion_factor: {
+      auto& deletion = deletions_[build_pitch_];
+      const auto row = build_index_;
       for (std::size_t column = 0U; column <= row; ++column) {
         double value = 0.0;
         for (std::size_t k = std::max(deletion.indices[row], deletion.indices[column]);
              k < dimensions; ++k) {
-          value += units[row * kMaxDimensions + k] * units[column * kMaxDimensions + k];
+          value += units_[row * kMaxDimensions + k] * units_[column * kMaxDimensions + k];
         }
         for (std::size_t k = 0U; k < column; ++k) {
           value -= deletion.lower[packed(row, k)] * deletion.lower[packed(column, k)];
         }
         if (!std::isfinite(value) || (row == column && value <= 1.0e-12)) {
+          stage_ = BuildStage::failed;
           return;
         }
         deletion.lower[packed(row, column)] = row == column
             ? std::sqrt(value) : value / deletion.lower[packed(column, column)];
       }
-    }
-  }
-  fundamental_overlap_.fill(0.0);
-  shared_fundamental_.fill(false);
-  for (std::size_t pitch = 0U; pitch < count; ++pitch) {
-    const double fundamental = fundamentals_[pitch];
-    for (std::size_t partial = 0U; partial < partial_count_; ++partial) {
-      if (fundamental > 0.0 &&
-          (owners_[partial] & static_cast<std::uint8_t>(~(1U << pitch))) != 0U) {
-        const double overlap = std::norm(window_response(
-            kTwoPi * (frequencies_[partial] - fundamental) / sample_rate, decay));
-        fundamental_overlap_[pitch] = std::max(fundamental_overlap_[pitch], overlap);
-        if (std::abs(frequencies_[partial] - fundamental) <= 1.0e-9 * fundamental) {
-          shared_fundamental_[pitch] = true;
+      if (++build_index_ == deletion.size) {
+        if (++build_pitch_ == pitch_count_) {
+          build_pitch_ = 0U;
+          stage_ = BuildStage::overlap;
+        } else {
+          stage_ = BuildStage::deletion_setup;
         }
       }
+      break;
     }
+    case BuildStage::overlap: {
+      const auto pitch = build_pitch_;
+      const double fundamental = fundamentals_[pitch];
+      for (std::size_t partial = 0U; partial < partial_count_; ++partial) {
+        if (fundamental > 0.0 &&
+            (owners_[partial] & static_cast<std::uint8_t>(~(1U << pitch))) != 0U) {
+          const double overlap = std::norm(window_response(
+              kTwoPi * (frequencies_[partial] - fundamental) / sample_rate_, decay_));
+          fundamental_overlap_[pitch] = std::max(fundamental_overlap_[pitch], overlap);
+          if (std::abs(frequencies_[partial] - fundamental) <= 1.0e-9 * fundamental) {
+            shared_fundamental_[pitch] = true;
+          }
+        }
+      }
+      if (++build_pitch_ == pitch_count_) {
+        valid_ = true;
+        stage_ = BuildStage::ready;
+      }
+      break;
+    }
+    case BuildStage::idle:
+    case BuildStage::ready:
+    case BuildStage::failed:
+      break;
   }
-  valid_ = true;
 }
 
 JointPitchResidualResult JointPitchResidual::evaluate(
     const std::array<JointPitchObservation, kMaxVoices>& observations,
     std::size_t count, double sample_rate, double decay,
     double signal_energy) noexcept {
+  return evaluate_impl(observations, count, sample_rate, decay, signal_energy, 0U, true);
+}
+
+JointPitchResidualResult JointPitchResidual::evaluate_bounded(
+    const std::array<JointPitchObservation, kMaxVoices>& observations,
+    std::size_t count, double sample_rate, double decay, double signal_energy,
+    std::size_t work_budget) noexcept {
+  return evaluate_impl(observations, count, sample_rate, decay, signal_energy,
+                       std::min(work_budget, kMaxRebuildWorkPerCall), false);
+}
+
+JointPitchResidualResult JointPitchResidual::evaluate_impl(
+    const std::array<JointPitchObservation, kMaxVoices>& observations,
+    std::size_t count, double sample_rate, double decay, double signal_energy,
+    std::size_t work_budget, bool synchronous) noexcept {
   JointPitchResidualResult result;
+  last_rebuild_work_units_ = 0U;
   if (count == 0U || count > kMaxVoices || !std::isfinite(sample_rate) ||
       sample_rate <= 0.0 || !std::isfinite(decay) || decay <= 0.0 ||
       decay >= 1.0 || !std::isfinite(signal_energy) || signal_energy <= 1.0e-20) {
+    reset();
     return result;
   }
   std::array<double, kMaxPartials> frequencies{};
@@ -142,6 +226,7 @@ JointPitchResidualResult JointPitchResidual::evaluate(
       if (!std::isfinite(frequency) || frequency <= 0.0 ||
           frequency >= 0.5 * sample_rate || !std::isfinite(observed.real()) ||
           !std::isfinite(observed.imag())) {
+        reset();
         return result;
       }
       std::size_t partial = 0U;
@@ -160,16 +245,22 @@ JointPitchResidualResult JointPitchResidual::evaluate(
     }
   }
   if (partial_count == 0U) {
+    reset();
     return result;
   }
-  if (partial_count != partial_count_ || count != pitch_count_ ||
+  if (stage_ == BuildStage::idle || partial_count != partial_count_ || count != pitch_count_ ||
       sample_rate != sample_rate_ || decay != decay_ ||
       frequencies != frequencies_ || owners != owners_ || fundamentals != fundamentals_) {
     frequencies_ = frequencies;
     owners_ = owners;
     fundamentals_ = fundamentals;
     partial_count_ = partial_count;
-    rebuild(count, sample_rate, decay);
+    start_rebuild(count, sample_rate, decay);
+  }
+  while (rebuild_pending() &&
+         (synchronous || last_rebuild_work_units_ < work_budget)) {
+    advance_rebuild();
+    ++last_rebuild_work_units_;
   }
   if (!valid_) {
     return result;

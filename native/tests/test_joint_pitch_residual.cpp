@@ -141,38 +141,47 @@ M3_TEST(offline_joint_pitch_residual_replay_is_causal_and_partition_invariant) {
       wave, labels, config, nullptr, 512U, *baseline, error));
   std::array<m3::offline::ReplayCounterfactualMetrics,
              m3::offline::kJointPitchPolicies.size()> previous{};
-  for (const std::size_t partition : {512U, 32U, 1024U}) {
-    auto current = std::make_unique<m3::offline::ReplayResult>();
-    M3_EXPECT_TRUE(m3::offline::run_detector_replay(
-        wave, labels, config, nullptr, partition, *current, error,
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        false, false, false, -1.0, false, false, true));
-    M3_EXPECT_EQ(current->fingerprint, baseline->fingerprint);
-    M3_EXPECT_TRUE(current->joint_pitch_valid_frames > 0U);
-    M3_EXPECT_EQ(current->joint_pitch_shadow[0U].matched_label_frames,
-                 baseline->matched_label_frames);
-    M3_EXPECT_EQ(current->joint_pitch_shadow[0U].false_positive_voices,
-                 baseline->false_positive_voices);
-    M3_EXPECT_EQ(current->joint_pitch_shadow[0U].changed_voices, 0U);
-    if (partition != 512U) {
-      for (std::size_t i = 0U; i < previous.size(); ++i) {
-        M3_EXPECT_EQ(current->joint_pitch_shadow[i].matched_label_frames,
-                     previous[i].matched_label_frames);
-        M3_EXPECT_EQ(current->joint_pitch_shadow[i].false_positive_voices,
-                     previous[i].false_positive_voices);
-        M3_EXPECT_EQ(current->joint_pitch_shadow[i].changed_voices,
-                     previous[i].changed_voices);
+  for (const bool bounded_mode : {false, true}) {
+    for (const std::size_t partition : {512U, 32U, 1024U}) {
+      auto current = std::make_unique<m3::offline::ReplayResult>();
+      M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+          wave, labels, config, nullptr, partition, *current, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, -1.0, false, false, true, nullptr, bounded_mode));
+      M3_EXPECT_EQ(current->fingerprint, baseline->fingerprint);
+      M3_EXPECT_TRUE(current->joint_pitch_valid_frames > 0U);
+      if (bounded_mode) {
+        M3_EXPECT_TRUE(current->joint_pitch_build_pending_frames > 0U);
+        M3_EXPECT_TRUE(current->joint_pitch_max_rebuild_work <= 4U);
+      } else {
+        M3_EXPECT_EQ(current->joint_pitch_build_pending_frames, 0U);
       }
+      M3_EXPECT_EQ(current->joint_pitch_shadow[0U].matched_label_frames,
+                   baseline->matched_label_frames);
+      M3_EXPECT_EQ(current->joint_pitch_shadow[0U].false_positive_voices,
+                   baseline->false_positive_voices);
+      M3_EXPECT_EQ(current->joint_pitch_shadow[0U].changed_voices, 0U);
+      if (partition != 512U) {
+        for (std::size_t i = 0U; i < previous.size(); ++i) {
+          M3_EXPECT_EQ(current->joint_pitch_shadow[i].matched_label_frames,
+                       previous[i].matched_label_frames);
+          M3_EXPECT_EQ(current->joint_pitch_shadow[i].false_positive_voices,
+                       previous[i].false_positive_voices);
+          M3_EXPECT_EQ(current->joint_pitch_shadow[i].changed_voices,
+                       previous[i].changed_voices);
+        }
+      }
+      previous = current->joint_pitch_shadow;
     }
-    previous = current->joint_pitch_shadow;
   }
 }
 
 M3_TEST(compact_joint_pitch_residual_matches_all_deletions_and_topology_changes) {
-  static_assert(sizeof(m3::JointPitchResidual) < 48U * 1024U);
+  static_assert(sizeof(m3::JointPitchResidual) < 64U * 1024U);
   M3_EXPECT_TRUE(sizeof(m3::JointPitchResidual) < sizeof(m3::offline::JointPitchResidual) / 10U);
   auto reference = std::make_unique<m3::offline::JointPitchResidual>();
   auto compact = std::make_unique<m3::JointPitchResidual>();
+  auto bounded = std::make_unique<m3::JointPitchResidual>();
   auto detector = std::make_unique<m3::PolyphonicPitchDetector>();
   m3::PersistentConfig config;
   config.profile_mode = m3::ProfileMode::general;
@@ -208,14 +217,27 @@ M3_TEST(compact_joint_pitch_residual_matches_all_deletions_and_topology_changes)
     const auto before_deallocations = m3::test::deallocation_count();
     const auto expected = reference->evaluate(frame.pitches, count, 48000.0, frame.decay, frame.energy);
     const auto actual = compact->evaluate(frame.pitches, count, 48000.0, frame.decay, frame.energy);
+    m3::JointPitchResidualResult scheduled;
+    std::size_t calls = 0U;
+    do {
+      scheduled = bounded->evaluate_bounded(frame.pitches, count, 48000.0,
+                                             frame.decay, frame.energy);
+      M3_EXPECT_TRUE(bounded->last_rebuild_work_units() <=
+                     m3::JointPitchResidual::kMaxRebuildWorkPerCall);
+      ++calls;
+    } while (!scheduled.valid && bounded->rebuild_pending() && calls < 128U);
     M3_EXPECT_EQ(m3::test::allocation_count(), before_allocations);
     M3_EXPECT_EQ(m3::test::deallocation_count(), before_deallocations);
-    M3_EXPECT_TRUE(expected.valid && actual.valid);
+    M3_EXPECT_TRUE(expected.valid && actual.valid && scheduled.valid);
     M3_EXPECT_NEAR(actual.residual_fraction, expected.residual_fraction, 1.0e-9);
+    M3_EXPECT_EQ(scheduled.residual_fraction, actual.residual_fraction);
     for (std::size_t pitch = 0U; pitch < count; ++pitch) {
       M3_EXPECT_NEAR(actual.independent_energy_fraction[pitch], expected.independent_energy_fraction[pitch], 1.0e-9);
       M3_EXPECT_EQ(actual.shared_fundamental[pitch], expected.shared_fundamental[pitch]);
       M3_EXPECT_NEAR(actual.fundamental_overlap[pitch], expected.fundamental_overlap[pitch], 1.0e-12);
+      M3_EXPECT_EQ(scheduled.independent_energy_fraction[pitch], actual.independent_energy_fraction[pitch]);
+      M3_EXPECT_EQ(scheduled.shared_fundamental[pitch], actual.shared_fundamental[pitch]);
+      M3_EXPECT_EQ(scheduled.fundamental_overlap[pitch], actual.fundamental_overlap[pitch]);
     }
   };
   for (std::size_t count = 1U; count <= notes.size(); ++count) {
@@ -233,6 +255,93 @@ M3_TEST(compact_joint_pitch_residual_matches_all_deletions_and_topology_changes)
   compare(notes.size());
   frame.pitches[0U].frequency_hz[5U] = 0.0;
   compare(notes.size());
+}
+
+M3_TEST(bounded_joint_pitch_residual_cancels_partial_models_and_uses_current_audio) {
+  const auto initial = measure(0.12, 0.7, 49U);
+  auto changed = initial;
+  std::swap(changed.pitches[0U], changed.pitches[1U]);
+  // A different present/absent mix uses the same model but different audio.
+  auto absent = measure(0.0, 0.2, 49U);
+  std::swap(absent.pitches[0U], absent.pitches[1U]);
+  m3::JointPitchResidual reference;
+  const auto expected = reference.evaluate(absent.pitches, 2U, 48000.0,
+                                            absent.decay, absent.energy);
+  M3_EXPECT_TRUE(expected.valid);
+  for (const auto cancel_after : {1U, 20U, 45U, 75U}) {
+    m3::JointPitchResidual bounded;
+    const auto allocations = m3::test::allocation_count();
+    const auto deallocations = m3::test::deallocation_count();
+    for (std::size_t call = 0U; call < cancel_after; ++call) {
+      M3_EXPECT_FALSE(bounded.evaluate_bounded(
+          initial.pitches, 2U, 48000.0, initial.decay, initial.energy, 1U).valid);
+      M3_EXPECT_EQ(bounded.last_rebuild_work_units(), 1U);
+    }
+    // Changing string ownership must restart even if the frequency set is the
+    // same. A zero budget must not finish or reuse the interrupted model.
+    M3_EXPECT_FALSE(bounded.evaluate_bounded(
+        changed.pitches, 2U, 48000.0, changed.decay, changed.energy, 0U).valid);
+    M3_EXPECT_EQ(bounded.last_rebuild_work_units(), 0U);
+    M3_EXPECT_TRUE(bounded.rebuild_pending());
+    m3::JointPitchResidualResult ready;
+    std::size_t calls = 0U;
+    do {
+      // Correlations can change while the structural factors are rebuilding.
+      ready = bounded.evaluate_bounded(absent.pitches, 2U, 48000.0,
+                                       absent.decay, absent.energy, 9999U);
+      M3_EXPECT_TRUE(bounded.last_rebuild_work_units() <= 4U);
+      ++calls;
+    } while (!ready.valid && bounded.rebuild_pending() && calls < 128U);
+    M3_EXPECT_TRUE(ready.valid);
+    M3_EXPECT_TRUE(calls > 1U);
+    M3_EXPECT_EQ(ready.residual_fraction, expected.residual_fraction);
+    M3_EXPECT_EQ(ready.independent_energy_fraction, expected.independent_energy_fraction);
+    M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+    M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations);
+    M3_EXPECT_TRUE(bounded.evaluate_bounded(
+        absent.pitches, 2U, 48000.0, absent.decay, absent.energy, 0U).valid);
+    M3_EXPECT_EQ(bounded.last_rebuild_work_units(), 0U);
+  }
+}
+
+M3_TEST(bounded_joint_pitch_residual_silence_invalid_input_and_reset_clear_readiness) {
+  const auto frame = measure(0.12, -0.2);
+  m3::JointPitchResidual bounded;
+  const auto complete = [&]() {
+    M3_EXPECT_TRUE(bounded.evaluate(frame.pitches, 2U, 48000.0,
+                                    frame.decay, frame.energy).valid);
+  };
+  const auto must_restart = [&]() {
+    M3_EXPECT_FALSE(bounded.rebuild_pending());
+    M3_EXPECT_FALSE(bounded.evaluate_bounded(frame.pitches, 2U, 48000.0,
+                                             frame.decay, frame.energy).valid);
+    M3_EXPECT_TRUE(bounded.rebuild_pending());
+    M3_EXPECT_EQ(bounded.last_rebuild_work_units(), 4U);
+  };
+  complete();
+  M3_EXPECT_FALSE(bounded.evaluate_bounded(frame.pitches, 2U, 48000.0,
+                                           frame.decay, 0.0).valid);
+  must_restart();
+  // Silence also cancels an in-progress model; it cannot finish in the gap.
+  M3_EXPECT_FALSE(bounded.evaluate_bounded(frame.pitches, 0U, 48000.0,
+                                           frame.decay, frame.energy).valid);
+  must_restart();
+  complete();
+  auto invalid = frame.pitches;
+  invalid[0U].correlation[0U] = {std::numeric_limits<double>::quiet_NaN(), 0.0};
+  M3_EXPECT_FALSE(bounded.evaluate_bounded(invalid, 2U, 48000.0,
+                                           frame.decay, frame.energy).valid);
+  must_restart();
+  complete();
+  bounded.reset();
+  must_restart();
+  // A changed partial layout cannot borrow the old completed factors.
+  complete();
+  auto reduced = frame.pitches;
+  reduced[0U].frequency_hz[5U] = 0.0;
+  M3_EXPECT_FALSE(bounded.evaluate_bounded(reduced, 2U, 48000.0,
+                                           frame.decay, frame.energy).valid);
+  M3_EXPECT_TRUE(bounded.rebuild_pending());
 }
 
 M3_TEST(compact_joint_pitch_residual_keeps_negative_and_shared_pitch_controls) {

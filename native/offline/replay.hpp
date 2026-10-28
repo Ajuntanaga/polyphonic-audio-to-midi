@@ -1694,6 +1694,8 @@ struct ReplayResult final {
       joint_pitch_shadow{};
   std::uint32_t joint_pitch_valid_frames{};
   std::uint32_t joint_pitch_invalid_frames{};
+  std::uint32_t joint_pitch_build_pending_frames{};
+  std::uint32_t joint_pitch_max_rebuild_work{};
   double joint_pitch_residual_sum{};
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -2184,7 +2186,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_selection_window_only = false,
                          bool diagnostic_correlation_shadow_only = false,
                          bool diagnostic_joint_pitch_residual = false,
-                         FrequencyWindowCapture* frequency_window_capture = nullptr);
+                         FrequencyWindowCapture* frequency_window_capture = nullptr,
+                         bool diagnostic_bounded_joint_pitch_residual = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

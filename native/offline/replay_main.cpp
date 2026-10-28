@@ -176,6 +176,7 @@ void usage(const char* program) {
       "[--diagnostic-fine-beat-pruning] "
       "[--diagnostic-collecting-fine-history-carry] "
       "[--diagnostic-joint-pitch-residual] "
+      "[--diagnostic-bounded-joint-pitch-residual] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
       "[--diagnostic-selection-window-only | "
       "--diagnostic-correlation-shadow-only]] "
@@ -225,6 +226,7 @@ int main(int argc, char** argv) {
   bool diagnostic_selection_window_only = false;
   bool diagnostic_correlation_shadow_only = false;
   bool diagnostic_joint_pitch_residual = false;
+  bool diagnostic_bounded_joint_pitch_residual = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
     const bool has_value = index + 1 < argc;
@@ -486,6 +488,10 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-joint-pitch-residual") == 0) {
       diagnostic_joint_pitch_residual = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-bounded-joint-pitch-residual") == 0) {
+      diagnostic_joint_pitch_residual = true;
+      diagnostic_bounded_joint_pitch_residual = true;
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
     } else if (std::strcmp(argv[index],
@@ -790,7 +796,8 @@ int main(int argc, char** argv) {
           diagnostic_selection_window_only,
           diagnostic_correlation_shadow_only,
           diagnostic_joint_pitch_residual,
-          fine_window_stream != nullptr ? &fine_window_capture : nullptr)) {
+          fine_window_stream != nullptr ? &fine_window_capture : nullptr,
+          diagnostic_bounded_joint_pitch_residual)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1005,6 +1012,7 @@ int main(int argc, char** argv) {
       "joint_pitch_false_wrong_note\tjoint_pitch_false_wrong_string\t"
       "joint_pitch_changed\tjoint_pitch_valid_frames\t"
       "joint_pitch_invalid_frames\tjoint_pitch_mean_residual\t"
+      "joint_pitch_build_pending_frames\tjoint_pitch_max_rebuild_work\t"
       "dp_replacement_matched\tdp_replacement_false_positive\t"
       "dp_replacement_false_gap\tdp_replacement_false_wrong_note\t"
       "dp_replacement_false_wrong_string\tdp_replacement_changed\t"
@@ -1610,6 +1618,8 @@ int main(int argc, char** argv) {
               result.joint_pitch_valid_frames == 0U ? 0.0 :
                   result.joint_pitch_residual_sum /
                       static_cast<double>(result.joint_pitch_valid_frames));
+  std::printf("\t%u\t%u", result.joint_pitch_build_pending_frames,
+              result.joint_pitch_max_rebuild_work);
   std::printf("\t%u\t%u\t%u\t%u\t%u\t%u",
               result.calibrated_dp_replacement.matched_label_frames,
               result.calibrated_dp_replacement.false_positive_voices,

@@ -29,13 +29,28 @@ struct JointPitchResidualResult final {
 // Allocation-free fit of an emitted pitch set. A single factorization supplies
 // all one-pitch deletions through Schur complements. Identical partials remain
 // shared; omitting a pitch removes only the columns that it owns exclusively.
-// Rebuild cost still requires a callback-budget measurement before integration.
+// The bounded entry point spreads rebuilding over calls and returns invalid
+// until the current model is complete. No previous model is used as a fallback.
 class JointPitchResidual final {
  public:
+  static constexpr std::size_t kMaxRebuildWorkPerCall = 4U;
+
+  // Synchronous numerical reference path for offline replay.
   [[nodiscard]] JointPitchResidualResult evaluate(
       const std::array<JointPitchObservation, kMaxVoices>& observations,
       std::size_t count, double sample_rate, double decay,
       double signal_energy) noexcept;
+
+  [[nodiscard]] JointPitchResidualResult evaluate_bounded(
+      const std::array<JointPitchObservation, kMaxVoices>& observations,
+      std::size_t count, double sample_rate, double decay, double signal_energy,
+      std::size_t work_budget = kMaxRebuildWorkPerCall) noexcept;
+
+  void reset() noexcept;
+  [[nodiscard]] std::size_t last_rebuild_work_units() const noexcept {
+    return last_rebuild_work_units_;
+  }
+  [[nodiscard]] bool rebuild_pending() const noexcept;
 
  private:
   static constexpr std::size_t kMaxPartials = kMaxVoices * kJointPitchHarmonics;
@@ -50,7 +65,16 @@ class JointPitchResidual final {
     // Cholesky factor of the corresponding block of the full Gram inverse.
     std::array<double, kPitchDimensions * (kPitchDimensions + 1U) / 2U> lower{};
   };
-  void rebuild(std::size_t count, double sample_rate, double decay) noexcept;
+  enum class BuildStage : std::uint8_t {
+    idle, gram, full_factor, deletion_setup, unit_solve, deletion_factor,
+    overlap, ready, failed
+  };
+  void start_rebuild(std::size_t count, double sample_rate, double decay) noexcept;
+  void advance_rebuild() noexcept;
+  [[nodiscard]] JointPitchResidualResult evaluate_impl(
+      const std::array<JointPitchObservation, kMaxVoices>& observations,
+      std::size_t count, double sample_rate, double decay, double signal_energy,
+      std::size_t work_budget, bool synchronous) noexcept;
 
   std::array<double, kMaxPartials> frequencies_{};
   std::array<std::uint8_t, kMaxPartials> owners_{};
@@ -62,8 +86,13 @@ class JointPitchResidual final {
   double sample_rate_{};
   double decay_{};
   bool valid_{};
+  BuildStage stage_{BuildStage::idle};
+  std::size_t build_index_{};
+  std::size_t build_pitch_{};
+  std::size_t last_rebuild_work_units_{};
   std::array<double, kMaxDimensions * (kMaxDimensions + 1U) / 2U> lower_{};
   std::array<Deletion, kMaxVoices> deletions_{};
+  std::array<double, kPitchDimensions * kMaxDimensions> units_{};
 };
 
 }  // namespace m3

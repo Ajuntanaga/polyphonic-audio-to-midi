@@ -155,6 +155,8 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
         "cents_observations",
         "joint_pitch_valid_frames",
         "joint_pitch_invalid_frames",
+        "joint_pitch_build_pending_frames",
+        "joint_pitch_max_rebuild_work",
         "dp_replacement_matched",
         "dp_replacement_false_positive",
         "dp_replacement_false_gap",
@@ -1046,6 +1048,7 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         f"-so{int(job.get('selection_window_only', False))}"
         f"-cs{int(job.get('correlation_shadow_only', False))}"
         f"-jp{int(job.get('joint_pitch_residual', False))}"
+        f"-bjp{int(job.get('bounded_joint_pitch_residual', False))}"
         f"-t{job['input_trim']}"
         f"-se{job['sensitivity']}-r{job['response']}"
         f"-p{job['max_polyphony']}-f{job['max_fret']}.tsv"
@@ -1130,6 +1133,8 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command.append("--diagnostic-correlation-shadow-only")
     if bool(job.get("joint_pitch_residual", False)):
         command.append("--diagnostic-joint-pitch-residual")
+    if bool(job.get("bounded_joint_pitch_residual", False)):
+        command.append("--diagnostic-bounded-joint-pitch-residual")
     started = time.monotonic()
     completed = subprocess.run(
         command,
@@ -1184,6 +1189,7 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "selection_window_only": bool(job.get("selection_window_only", False)),
             "correlation_shadow_only": bool(job.get("correlation_shadow_only", False)),
             "joint_pitch_residual": bool(job.get("joint_pitch_residual", False)),
+            "bounded_joint_pitch_residual": bool(job.get("bounded_joint_pitch_residual", False)),
             "sensitivity": int(job["sensitivity"]),
             "response": int(job["response"]),
             "max_polyphony": int(job["max_polyphony"]),
@@ -1251,6 +1257,7 @@ def sweep(
     selection_window_only: bool = False,
     correlation_shadow_only: bool = False,
     joint_pitch_residual: bool = False,
+    bounded_joint_pitch_residual: bool = False,
     input_trims: str = "-9",
     sensitivities: str = "60",
     responses: str = "75",
@@ -1266,6 +1273,7 @@ def sweep(
     tag: str = "manual",
     output: str = "build/modal/m3-replay-results.json",
 ) -> None:
+    joint_pitch_residual = joint_pitch_residual or bounded_joint_pitch_residual
     dataset_names = [value.strip() for value in datasets.split(",") if value.strip()]
     if fine_window_dump and not label_details:
         raise SystemExit("fine-window capture requires --label-details")
@@ -1375,6 +1383,7 @@ def sweep(
             "selection_window_only": selection_window_only,
             "correlation_shadow_only": correlation_shadow_only,
             "joint_pitch_residual": joint_pitch_residual,
+            "bounded_joint_pitch_residual": bounded_joint_pitch_residual,
             "input_trim": input_trim,
             "sensitivity": sensitivity,
             "response": response,
