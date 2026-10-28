@@ -7,7 +7,7 @@ import itertools
 
 def validate_coupled_inputs(prepared, control, profiles, control_hashes, profile_hashes):
     identity = ('dataset', 'capture_path', 'capture_sha256', 'calibration_sha256',
-                'sample_rate', 'sources', 'windows')
+                'sample_rate', 'sources', 'windows', 'prepared_npz_sha256')
     if any(control.get('metadata', {}).get(key) != prepared.get(key) for key in identity):
         raise ValueError('control capture, calibration or observation identity differs')
     if control.get('fit_source_sha256') != control_hashes:

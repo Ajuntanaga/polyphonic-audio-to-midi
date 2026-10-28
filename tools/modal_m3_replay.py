@@ -226,6 +226,7 @@ image = (
     .add_local_file(REPO_ROOT / "tools/harmonic_drift_fit.py", "/opt/m3/harmonic_drift_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/harmonic_balance_audit.py", "/opt/m3/harmonic_balance_audit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/coupled_harmonic_fit.py", "/opt/m3/coupled_harmonic_fit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/harmonic_amplitude_audit.py", "/opt/m3/harmonic_amplitude_audit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/generate_pitch_corrected_corpus.py", "/opt/m3/generate_pitch_corrected_corpus.py", copy=True)
     .add_local_file(REPLAY_BINARY, "/opt/m3/m3_replay", copy=True)
     .run_commands("chmod 0755 /opt/m3/m3_replay")
@@ -508,6 +509,7 @@ def prepare_joint_harmonics(capture_path: str, dataset_name: str,
                 "sources": sources, "sample_rate": rate,
                 "fundamental_relative_rms_error": relative_error,
                 "calibration_sha256": _sha256(MOUNT_ROOT / "corpus/calibration.m3cb"),
+                "prepared_npz_sha256": _sha256(prepared_path),
                 "capture_sha256": _sha256(path)}
     prepared_path.with_suffix(".json").write_text(json.dumps(metadata))
     volume.commit()
@@ -535,6 +537,8 @@ def fit_joint_harmonic_window(job: dict[str, Any]) -> dict[str, Any]:
     if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
         raise ValueError("prepared window must be in results")
     metadata = json.loads(path.with_suffix(".json").read_text())
+    if metadata.get('prepared_npz_sha256') and _sha256(path) != metadata['prepared_npz_sha256']:
+        raise ValueError('prepared harmonic array identity mismatch')
     index = int(job["window"])
     window = metadata["windows"][index]
     with np.load(path, allow_pickle=False) as data:
@@ -623,6 +627,66 @@ def joint_harmonics(report: str, output: str = "build/modal/joint-harmonic-scree
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(json.dumps({"output": output, "windows": len(results)}))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,
+              memory=2048, timeout=900)
+def audit_harmonic_amplitudes(fitted: dict[str, Any], control: dict[str, Any]) -> list[dict[str, Any]]:
+    import sys
+    import numpy as np
+    sys.path.insert(0, '/opt/m3')
+    from harmonic_amplitude_audit import audit_window
+    volume.reload()
+    capture = MOUNT_ROOT / fitted['metadata']['capture_path']
+    if not capture.is_relative_to(MOUNT_ROOT / 'results') or '..' in capture.parts:
+        raise ValueError('capture must be in results')
+    path = capture.with_suffix('.joint-inputs.npz')
+    metadata = json.loads(path.with_suffix('.json').read_text())
+    if metadata != fitted['metadata'] or _sha256(capture) != metadata['capture_sha256']:
+        raise ValueError('frozen report does not match prepared native observations')
+    if metadata.get('prepared_npz_sha256') and _sha256(path) != metadata['prepared_npz_sha256']:
+        raise ValueError('prepared harmonic array identity mismatch')
+    controls = {r['index']: r for r in control['results']}
+    results = []
+    with np.load(path, allow_pickle=False) as data:
+        for row in fitted['results']:
+            index = row['index']
+            window = metadata['windows'][index]
+            refreshed = audit_window(
+                data[f'times_{index}'], data[f'signal_{index}'], window['center_hz'],
+                window['note'], metadata['sources'], window['training_samples'],
+                row['comparison_harmonic_mask'], row['models'] + controls[index]['models'],
+                row['current_energy_audit'], row['median_spacing_guard_passed'],
+                row['conservative_spacing_guard_passed'])
+            # Labels and prior assignments stay outside the numerical audit.
+            results.append({**row, 'previous_current_energy_audit': row['current_energy_audit'],
+                            'current_energy_audit': refreshed})
+    return results
+
+
+@app.local_entrypoint()
+def refresh_harmonic_amplitudes(report: str, control_report: str,
+                               output: str = 'build/modal/harmonic-amplitude-refresh.json') -> None:
+    source, control = (json.loads(Path(p).read_text()) for p in (report, control_report))
+    names = ('joint_harmonic_fit.py', 'harmonic_drift_fit.py', 'coupled_harmonic_fit.py')
+    hashes = {name: _sha256(REPO_ROOT / 'tools' / name) for name in names}
+    if (source.get('fit_mode') != 'coupled' or control.get('fit_mode') != 'drift' or
+            source['fit_source_sha256'] != hashes or
+            control['fit_source_sha256'] != {name: hashes[name] for name in names[:2]} or
+            source['metadata'] != control['metadata'] or
+            source['control_report_sha256'] != _sha256(Path(control_report))):
+        raise ValueError('frozen fit/control source or observation identity mismatch')
+    expected = list(range(len(source['metadata']['windows'])))
+    if any(sorted(r['index'] for r in dataset['results']) != expected for dataset in (source, control)):
+        raise ValueError('frozen window indices mismatch')
+    results = audit_harmonic_amplitudes.remote(source, control)
+    result = {**source, 'fit_mode': 'amplitude_refresh', 'results': results,
+              'frozen_report_sha256': _sha256(Path(report)),
+              'amplitude_audit_sha256': _sha256(REPO_ROOT / 'tools/harmonic_amplitude_audit.py')}
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
+    print(json.dumps({'output': output, 'windows': len(results)}))
 
 
 @app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=1.0,

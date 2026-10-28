@@ -32,14 +32,35 @@ Updated: 2026-10-27
   masks still qualify in 62/116 (53.4%); strict two-harmonic support finds no
   triples. These overlapping observations are not recovered MIDI frames or
   independent examples. Production remains unchanged.
-- Next: test a bounded causal amplitude update with frequencies and harmonic
-  profiles frozen. Ten early incomplete triples fail frozen prediction; only
-  two of those also hit the decay bound. The later 37.52-second miss fails the
-  sampling/support checks. Do not relax those checks. Compare every candidate
-  with equally refreshed smaller models, keep the 3-second history, and require
-  more missing-triple support without false thirds or losses in supported
-  controls before considering production. The completed capture report and
-  `dense-coupled-confidence-analysis.json` retain the exact decision evidence.
+- A bounded amplitude update is rejected for integration. The new
+  `tools/harmonic_amplitude_audit.py` fits a positive 0.5–2 gain per string using
+  only the later half of training audio, preserving pitch, phase, decay and
+  harmonic ratios. Every model receives the same update. Modal report
+  `dense-amplitude-refresh.json` (app `ap-nStC6Mxl6PygnYGLoXFLkJ`) increases
+  diagnostic triple support from 11/45 to 12/45 and incomplete support from
+  3/14 to 4/14, but loses a supported pair at 24.77 seconds. Pair support rises
+  from 94/116 to 95/116 through two gains and one loss; false thirds remain
+  0/116 and wrong-pair alternatives fall from 62 to 57. When larger models must
+  beat the best smaller model across both original and updated states, triple
+  support returns to 11/45 and 3/14; pair support falls to 93/116. The apparent
+  recovery gain therefore does not survive that comparison. Do not combine
+  previously qualified states with an unconditional OR. The shared comparison
+  is recorded in `dense-amplitude-model-pool-analysis.json`.
+- One review found that reopened prepared arrays were not bound to frozen
+  reports. New prepared files now carry a SHA-256 checked by fitting workers
+  and input validation. Legacy amplitude audits recompute and match every saved
+  current-energy audit field before using a reopened window. Five amplitude
+  tests and three provenance tests pass, including mutated audio and saved-score
+  rejection, future-audio isolation, scale, bounds, pair and silence controls.
+  All 161 existing windows reproduce their saved audits through the repaired
+  path in `dense-amplitude-refresh-verified.json` (app
+  `ap-HEGt95JVR08uyxWAwSONQg`); qualification results are unchanged.
+  No production/native changes accompany this Python-only experiment.
+- Next: move to the already measured joint-pitch residual/overlap rule for
+  intervals and chords, while retaining the dense unison evidence. Its offline
+  removal of 3,137 false outputs across eleven protected sets still needs a
+  bounded production implementation and real-time proof. Do not revive rejected
+  classifiers or relax the unison sampling, decay, silence or release guards.
 - Completed joint-fit and confidence experiments:
   `build/modal/coupled-harmonic-screen.json` (app `ap-XDcuPU0Ct9iHV9irwT0G8n`)
   and `build/modal/coupled-harmonic-confidence.json`

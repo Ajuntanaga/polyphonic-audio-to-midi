@@ -8,6 +8,7 @@ class HarmonicFitInputTests(unittest.TestCase):
     def setUp(self):
         self.metadata = {'dataset': 'physical-long', 'capture_path': 'results/capture.jsonl',
                          'capture_sha256': 'capture', 'calibration_sha256': 'calibration',
+                         'prepared_npz_sha256': 'prepared-arrays',
                          'sample_rate': 96000, 'sources': [{'string': 0}, {'string': 1}],
                          'windows': [{'note': 40, 'training_samples': 200}] * 2}
         self.control_hashes = {'joint.py': 'a', 'drift.py': 'b'}
