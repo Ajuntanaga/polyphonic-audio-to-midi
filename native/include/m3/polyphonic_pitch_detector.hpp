@@ -17,9 +17,11 @@
 #include "m3/types.hpp"
 #include "m3/unison_spectral_classifier.hpp"
 #include "m3/unison_spectral_tracker.hpp"
-#if defined(M3_JOINT_RESIDUAL_SHADOW)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_JOINT_RESIDUAL_SHADOW)
 #include <memory>
 #include <new>
+#endif
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
 #include "m3/joint_pitch_residual.hpp"
 #endif
 
@@ -192,6 +194,140 @@ struct CandidateAdmissionDiagnostics final {
   bool local_peak{};
   bool candidate_evidence{};
   bool calibrated_direct_support{};
+  // Selector-local evidence, captured before fallback and additive rescue.
+  // A positive feasible lane may still lose to a more valuable assignment.
+  bool selector_pool_member{};
+  double selector_raw_score{};
+  double selector_best_adjusted_score{};
+  std::uint8_t selector_option_mask{};
+  std::uint8_t selector_positive_mask{};
+  std::uint8_t selector_used_mask{};
+  std::uint8_t selector_voice_count{};
+  std::uint8_t selector_open_count{};
+};
+
+enum class FineHistoryResetReason : std::uint8_t {
+  none = 0U,
+  unselected_gap,
+  invalid_fundamental,
+  selected_gap,
+  signal_floor_loss,
+  inactive_energy_loss,
+};
+
+struct FineHistoryResetDiagnostics final {
+  std::uint32_t serial{};
+  std::uint32_t decision_tick{};
+  std::uint32_t prior_last_tick{};
+  std::uint16_t prior_count{};
+  FineHistoryResetReason reason{FineHistoryResetReason::none};
+};
+
+// Read-only timeline snapshot for bounded offline causal comparisons.
+struct CandidateTrackingDiagnostics final {
+  std::uint32_t decision_tick{};
+  std::uint32_t signal_samples{};
+  double phase_cents{};
+  std::uint16_t phase_updates{};
+  std::uint16_t age_ticks{};
+  std::uint16_t release_ticks{};
+  std::uint8_t attack_ticks{};
+  std::uint8_t evidence_ticks{};
+  std::uint8_t evidence_gap_ticks{};
+  std::uint32_t fine_last_tick{};
+  std::uint32_t fine_oldest_tick{};
+  std::uint16_t fine_count{};
+  std::uint16_t fine_pending_count{};
+  std::uint8_t assigned_mask{};
+  std::uint8_t rescue_mask{};
+  bool active{};
+  bool phase_valid{};
+  bool fine_valid{};
+  bool multi_source{};
+  bool fine_update_scheduled{};
+  FineHistoryResetDiagnostics fine_reset{};
+};
+
+// Fixed two-template fit of one independently normalized observation window.
+// Missing/quiet energy is invalid, rather than evidence for a single string.
+struct ProfilePairWindowDiagnostics final {
+  bool valid{};
+  double energy{};
+  double primary_error{};
+  double best_single_error{};
+  double pair_error{};
+  double secondary_weight{};
+  std::array<double, kCalibrationHarmonicCount> observed{};
+};
+
+// One assignment decision, with costs before any later output projection.
+// This is observational state and is absent from production builds.
+struct StringAssignmentDiagnostics final {
+  std::array<std::array<double, 7U>, kMaxVoices> lane_terms{};
+  std::array<double, kMaxVoices> lane_totals{};
+  double joint_cost{};
+  std::uint32_t joint_strings{};
+  std::uint8_t selected_count{};
+  std::uint8_t ordinal{};
+  std::uint8_t playable{};
+  std::uint8_t reserved_coasting{};
+  std::uint8_t reserved_extras{};
+  std::uint8_t prior_primary{255U};
+  std::uint8_t prior_mask{};
+  std::uint8_t dp_primary{255U};
+  std::uint8_t spectral_proposal{};
+  std::uint8_t final_primary{255U};
+  std::uint8_t final_mask{};
+  std::uint8_t final_spectral{};
+  std::uint8_t final_continuity{};
+  bool observed{};
+  bool valid{};
+  bool isolated{};
+  bool reassignment_ready{};
+  bool prior_committed{};
+  bool use_posterior{};
+  bool calibrated_replacement{};
+  double phase_cents{};
+  double phase_raw_cents{};
+  double phase_previous_cents{};
+  double assignment_cents{};
+  std::array<double, kMaxVoices> learned_cents{};
+  std::uint16_t phase_updates{};
+  std::uint8_t group_before{};
+  std::uint8_t group_proposal{};
+  // 0 primary, 1 fine, 2 tier, 3 profile, 4 profile complement.
+  std::uint8_t group_origin{};
+  // 0 unchanged, 1 evidence commit, 2 joint commit, 3 dropout hold,
+  // 4 primary reset, 5 capacity reset, 6 pending evidence.
+  std::uint8_t group_transition{};
+  std::uint8_t group_after{};
+  std::uint8_t fine_mask{};
+  std::uint8_t fine_pending_mask{};
+  std::uint8_t continuity_at_render{};
+  std::uint8_t primary_only_render{};
+  std::uint8_t primary_only_snapshot{};
+  bool phase_accepted{};
+  bool phase_valid{};
+  bool complete_calibration{};
+  bool beat_valid{};
+  bool fine_valid{};
+  bool render_observed{};
+  bool profile_fit_observed{};
+  bool profile_uses_long_memory{};
+  double profile_primary_error{};
+  double profile_best_single_error{};
+  double profile_mixture_error{};
+  std::array<double, kMaxVoices> profile_weights{};
+  std::array<double, kCalibrationHarmonicCount> profile_observed{};
+  // -1 means that a string has no playable calibrated template.
+  std::array<double, kMaxVoices> profile_single_errors{};
+  std::uint8_t profile_pair_primary{0xffU};
+  std::uint8_t profile_pair_mask{};
+  // Current correlation energy, 350ms memory, then 1.5s memory. These fits
+  // measure recency disagreement without changing the chosen/blended fit.
+  std::array<ProfilePairWindowDiagnostics, 3U> profile_pair_windows{};
+  std::uint16_t candidate_age_ticks{};
+  std::uint8_t midi_mask{};
 };
 #endif
 
@@ -332,11 +468,40 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateAdmissionDiagnostics candidate_admission_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  [[nodiscard]] CandidateTrackingDiagnostics candidate_tracking_diagnostics(
+      std::uint8_t midi_note) const noexcept;
+  void set_assignment_diagnostics_enabled(bool enabled) noexcept {
+    assignment_diagnostics_enabled_ = enabled && assignment_diagnostics_ != nullptr;
+  }
+  [[nodiscard]] StringAssignmentDiagnostics string_assignment_diagnostics(
+      std::uint8_t midi_note) const noexcept;
   [[nodiscard]] std::uint8_t group_continuity_diagnostic_flags(
       std::uint8_t midi_note) const noexcept;
   bool set_candidate_admission_rescue_for_diagnostics(
       double score_threshold_ratio,
       double fundamental_score_ratio) noexcept;
+  void set_calibrated_collision_revalidation_for_diagnostics(
+      bool enabled) noexcept {
+    diagnostic_calibrated_collision_revalidation_ = enabled;
+  }
+  void set_polyphonic_posterior_assignment_for_diagnostics(
+      bool enabled) noexcept {
+    diagnostic_polyphonic_posterior_assignment_ = enabled;
+  }
+  void set_profile_pair_corroboration_for_diagnostics(bool enabled) noexcept {
+    diagnostic_profile_pair_corroboration_ = enabled;
+  }
+  void set_profile_memory_partial_correction_for_diagnostics(bool enabled) noexcept {
+    diagnostic_profile_memory_partial_correction_ = enabled;
+  }
+  void set_assignment_partial_correction_for_diagnostics(bool enabled) noexcept {
+    diagnostic_assignment_partial_correction_ = enabled;
+  }
+  void set_profile_pair_output_filter_for_diagnostics(
+      bool enabled, bool continuity_echo = false) noexcept {
+    diagnostic_profile_pair_output_filter_ = enabled;
+    diagnostic_profile_pair_continuity_echo_ = continuity_echo;
+  }
   // Replay experiment only: vary pitch resolution while keeping the input
   // energy meter and silence threshold on their production time constant.
   bool set_correlation_window_for_diagnostics(
@@ -396,7 +561,19 @@ class PolyphonicPitchDetector final {
     std::uint32_t max_rebuild_work{};
     std::uint32_t max_pitch_count{};
     double residual_sum{};
+    std::uint64_t output_veto_frames{};
+    std::uint64_t output_note_offs{};
+    std::uint64_t output_retriggers{};
+    std::uint64_t output_joint_restores_valid{};
+    std::uint64_t output_joint_restores_pending{};
+    std::uint64_t output_joint_restores_unavailable{};
+    std::uint64_t output_joint_restores_energy_low{};
+    std::uint64_t output_joint_restores_energy_mid{};
+    std::uint64_t output_joint_restores_energy_high{};
+    std::uint64_t output_joint_restores_safety{};
   };
+  // Test/replay opt-in only; this is not a plug-in parameter.
+  void enable_joint_residual_output(bool enabled) noexcept;
   [[nodiscard]] JointResidualShadowWork joint_residual_shadow_work() const noexcept {
     return joint_residual_shadow_work_;
   }
@@ -439,6 +616,22 @@ class PolyphonicPitchDetector final {
 #endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   void observe_joint_residual_shadow(const TunerSnapshot& snapshot) noexcept;
+  void evaluate_joint_residual_output(
+      const std::array<bool, kMaxCandidates>& selected, bool quiet,
+      std::array<bool, kMaxCandidates>& veto) noexcept;
+  [[nodiscard]] bool joint_residual_veto_eligible(
+      std::size_t candidate, bool selected,
+      const JointPitchResidualResult& result, std::size_t pitch,
+      bool ignore_energy_ceiling = false) const noexcept;
+  void reconcile_joint_residual_output(
+      DetectorDecision& decision, std::size_t candidate,
+      bool selected, bool spectral_veto, bool joint_veto) noexcept;
+  bool joint_residual_output_enabled_{};
+  bool joint_residual_output_valid_{};
+  bool joint_residual_output_pending_{};
+  // Valid-result restore causes: safety=0, energy [0.001,0.002)=1,
+  // [0.002,0.005)=2, >=0.005=3. Count only successful MIDI restores.
+  std::array<std::uint8_t, kMaxCandidates> joint_residual_restore_reason_{};
   // Allocate once during construction, before configuration or audio calls.
   // Four detectors already nearly fill an 8 MiB caller stack in native tests.
   // The owned solver retains fixed storage; configure/reset/process never grow it.
@@ -496,6 +689,10 @@ class PolyphonicPitchDetector final {
     bool polyphonic_context{};
     bool calibrated_lane_committed{};
     bool spectral_duplicate_output_suppressed{};
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+    // Rendering only: selection, string ownership and model membership persist.
+    bool joint_residual_output_suppressed{};
+#endif
     std::uint8_t spectral_lane_mask{};
     // Output-only restoration of a recently established physical group.
     // This mask never participates in pitch selection or string ownership.
@@ -517,6 +714,7 @@ class PolyphonicPitchDetector final {
     // the currently emitted same-pitch group and never mutates ownership.
     std::uint8_t diagnostic_fine_mask_pruning_mask{};
     std::uint8_t diagnostic_fine_beat_pruning_mask{};
+    bool diagnostic_profile_pair_output_filtered{};
 #endif
   };
 
@@ -693,6 +891,7 @@ class PolyphonicPitchDetector final {
       DetectorDecision& decision, TransitionKind kind, std::uint8_t note,
       std::uint8_t velocity,
       std::uint8_t voice_id = kUnassignedVoiceId) noexcept;
+  [[nodiscard]] static bool output_suppressed(const CandidateState& state) noexcept;
   [[nodiscard]] bool append_candidate_note_on(
       DetectorDecision& decision, std::size_t candidate,
       std::uint8_t velocity) noexcept;
@@ -704,7 +903,11 @@ class PolyphonicPitchDetector final {
   void update_calibrated_output_notes(
       DetectorDecision& decision,
       const std::array<bool, kMaxCandidates>& selected,
-      std::size_t selected_note_count) noexcept;
+      std::size_t selected_note_count, bool quiet = false) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] bool reset_candidate_output_projections(
+      DetectorDecision& decision, std::size_t candidate) noexcept;
+#endif
   void change_candidate_output_note(DetectorDecision& decision,
                                     std::size_t candidate,
                                     std::uint8_t output_note) noexcept;
@@ -819,6 +1022,10 @@ class PolyphonicPitchDetector final {
       const std::array<double, kMaxCandidates>& fundamentals,
       double threshold, bool quiet) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] std::uint8_t diagnostic_profile_pair_output_mask(
+      std::size_t candidate, std::uint8_t desired) const noexcept;
+  void record_fine_history_reset(std::size_t candidate,
+                                 FineHistoryResetReason reason) noexcept;
   void update_fine_mask_pruning_output_projection(
       const std::array<bool, kMaxCandidates>& selected,
       const std::array<double, kMaxCandidates>& scores,
@@ -994,6 +1201,10 @@ class PolyphonicPitchDetector final {
   std::array<BeatEvidenceState, kMaxCandidates> beat_evidence_states_{};
   std::array<FineFrequencyEvidenceState, kMaxCandidates>
       fine_frequency_evidence_states_{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::array<FineHistoryResetDiagnostics, kMaxCandidates>
+      fine_history_reset_diagnostics_{};
+#endif
   std::array<FineFrequencyUniformGramCache, kMaxCandidates>
       fine_frequency_uniform_gram_cache_{};
   std::array<double, kFineFrequencyHistoryCapacity>
@@ -1106,6 +1317,11 @@ class PolyphonicPitchDetector final {
   std::array<UnisonCacheRefreshDisposition, kMaxCandidates>
       unison_cache_refresh_dispositions_{};
 #endif
+  bool assignment_diagnostics_enabled_{};
+  // Replay diagnostics can exceed the remaining stack space when a caller
+  // owns several detectors. Allocate once; configuration and processing reuse it.
+  std::unique_ptr<StringAssignmentDiagnostics[]> assignment_diagnostics_{
+      new (std::nothrow) StringAssignmentDiagnostics[kMaxCandidates]{}};
   double diagnostic_candidate_rescue_score_ratio_{};
   double diagnostic_input_energy_decay_{};
   double diagnostic_selection_decay_{};
@@ -1113,6 +1329,15 @@ class PolyphonicPitchDetector final {
   bool diagnostic_correlation_shadow_only_{};
   double diagnostic_candidate_rescue_fundamental_ratio_{};
   bool diagnostic_candidate_rescue_enabled_{};
+  std::array<std::uint8_t, kMaxCandidates>
+      diagnostic_candidate_rescue_string_masks_{};
+  bool diagnostic_calibrated_collision_revalidation_{};
+  bool diagnostic_polyphonic_posterior_assignment_{};
+  bool diagnostic_profile_pair_corroboration_{};
+  bool diagnostic_profile_memory_partial_correction_{};
+  bool diagnostic_assignment_partial_correction_{};
+  bool diagnostic_profile_pair_output_filter_{};
+  bool diagnostic_profile_pair_continuity_echo_{};
   double diagnostic_fretted_fixed_penalty_{};
   double diagnostic_fretted_per_fret_penalty_{};
   bool diagnostic_fretted_prior_enabled_{};

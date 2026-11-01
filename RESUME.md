@@ -1,6 +1,372 @@
+## 2026-11-01T22:13:41.183797+00:00 — requested window and follow-up checkpointed
+
+- Requested 08:37–20:37 UTC twelve-hour window ended; recorded execution gaps remain explicit. Broader project goal is active and incomplete. No active local/Modal jobs, no install/commit/push. Root sole writer; preserve dirty worktree.
+- Latest native486/486 and eleven recency captures preserve accepted output. V1 remains offline with all11 protections/66 buffer cases passed, constructed+3339 and synthetic-four+1551 matches; physical-long/exact-three unchanged and constructed transitions+16. Recency rule rejected:236 correct versus195 false sampled holdout removals. Scratch input-hoist rejected on timing. No further repetition of rejected trials without a new mechanism.
+- Corrected causal interpretation: ordinary minimum evidence40ms (multivoice50ms) differs from the accepted3s close-unison gate. Saved floor-reentry analysis already shows6654/6785 quiet2 triple misses also belowfloor,131 signalpresent. Prior floor-relief trials increased false outputs; do not repeat or call this a new recovery gain.
+- Next: Compare the saved assignment-conflict reports before selecting a distinct new replay-only trial; do not repeat rejected signal-floor, recency, or continuity-echo rules. Preserve V1 offline. Require physical-long matches >=42128, exact triples >=25604, wrong strings <=2709, no protected corpus regression, and repeatable normal callback timing before installation.
+- Full closeout: `build/modal/autonomous-window-20261101-followup.md`; status and JSON summary updated. Ntfy remains every10min; latest receipt is authoritative. No defensible overall-completion percentage; live readiness remains unverified.
+
+## 2026-11-01T22:07:58.081981+00:00 — shared-input optimization rejected; existing code retained
+
+- Scratch-only resonator input hoist failed its performance gate. Fixed-CPU ABBA: control wall p99 137169/133188 ns; trial 130953/174186 ns. Second trial CPU max 371795 ns also exceeds 333333 ns budget. Report `build/test-results/mixed-sample-timing-pinned.json`. No production source change, no corpus sweep, no further timing retries without a new mechanism.
+- Modal idle; latest completed recency capture/analysis remains rejected. All accepted metrics and installed bundle unchanged. No install/commit/push.
+- Read-only reader `next_long_failure` partitions 8253 physical-long three-string no-rendered-pitch observations using existing reports. Separate accepted initial3s collection from later selector/lifecycle misses; feasible string masks alone cannot prove multiple sources.
+- Latest ntfy22:05UTC; next~22:15. Scheduled12h window ended20:37 with recorded gaps; broader goal active. Keep laptop light.
+
+## 2026-11-01T21:55:08.025506+00:00 — profile-pair recency rejected; full suite passed
+
+- Completed Modal capture/analysis apps `ap-fIADRKq3jSLzSRexhhxXuc` and `ap-QTlpV6rFWGarScxMtz7l7C`. All eleven recording outputs preserve accepted fingerprints and all14 output fields; no truncated captures. `profile-pair-recency-output-parity.json`. No active cloud replay.
+- Locked current-window gain-ratio<=.05/blended-gain>=.01 rule selected only on ordinary/isolated05 training data: 60 false sampled outputs removed, zero correct. Nine holdouts reject it:236 correct removed versus195 false,159 unscoped. `profile-pair-recency-verdict.json`. These are sampled observations, not full-frame MIDI gains. No output trial and no holdout retuning. Weak recent support alone is unsafe for genuine pairs.
+- Full native486/486 passed. Three focused causal/observational tests, Python6/6, source32/32, native source contract, diff and one review passed. Production unchanged; no install/commit/push. Earlier normal runtime failures remain unresolved.
+- Next: choose a distinct evidence-backed mechanism from existing failure diagnostics; preserve V1 offline. Broader goal active; scheduled12h window already ended with interruptions recorded. Latest successful ntfy receipt controls ten-minute schedule.
+
+## 2026-11-01T21:49:59.135057+00:00 — recency diagnostics capturing on Modal
+
+- Offline-only current/350ms/1.5s fixed-pair spectral diagnostics added; no output change. Causal stale-vs-real pair, scale/zero-energy/reset, observational and buffer/label-independence tests pass. Python6/6, source32/32, native source contract and diff pass; one focused review complete.
+- Eleven-corpus capture RUNNING ap-fIADRKq3jSLzSRexhhxXuc, local session84445, `build/modal/profile-pair-recency.{json,log}`. Frozen plan `profile-pair-recency-plan.json`: train ordinary/isolated05 only; choose zero-correct-loss rule, lock it before nine holdouts. No duplicate replay. Then existing cloud `profile_pair_analysis` entrypoint. Static sampled removals are not MIDI gains.
+- Preserve rejected V2 and offline V1 results. Accepted installed metrics unchanged; no install/commit/push. Latest ntfy receipt controls ten-minute schedule. Broader project goal active; scheduled12h window already ended.
+
+## 2026-11-01T21:31:48.503993+00:00 — V2 rejected; work window and follow-up checkpointed
+
+- No active local or Modal jobs. Latest completed apps: `ap-K738ZVflc3FsbR8j3bBBdU` and `ap-eF7CSWRcaN9U2oAVqwhSlC`. Root sole writer; preserve dirty worktree. Scheduled 08:37–20:37 UTC window is over. Broader project goal remains incomplete; do not mark it complete. Execution gaps are recorded in the window report.
+- V2 continuity-echo filter REJECTED: physical-long loses 7,401 correct pair frames (41,452→34,051); constructed exact pairs 447→1. Middle-string gain 3,508 and constructed gain 17,681 do not offset these losses. All six controls preserve the 14 accepted fields. Report `build/modal/profile-pair-output-v2-analysis.json`. No wider V2 sweep or production integration.
+- Preserve V1 offline: eleven corpus protections pass; 66 control/trial cases invariant across 32/512/1024; native 485/485. Constructed +3,339 matches/-1,528 false outputs; synthetic-four +1,551/-1,069; long matches/exact triples unchanged. Constructed held-note transitions +16. Long improvement gates remain unmet. V2 separately built and passed two causal tests before rejection; no post-V2 full-suite claim.
+- Latest normal paired timing run passes (wall p99 131,026 ns; CPU max 185,716 ns), but prior normal failures remain unresolved. No timing-repair claim. Prior production builds/validators predate V1/V2 follow-up. No install/commit/push this slice; installed bundle unchanged.
+- Next: independently distinguish false profile pairs from genuine two-string unisons using saved evidence before another output change. Existing mixture/phase/continuity-echo rules were rejected. Start at `build/modal/profile-pair-evidence-analysis.json`, `profile-pair-phase-analysis.json` and V2 outcomes; do not rerun completed sweeps. Primary targets still long ≥42,128, exact triples ≥25,604, wrong strings ≤2,709; current 41,452/25,219/2,709.
+- Full results: `build/modal/autonomous-window-20261101-summary.{json,md}`; live state: `build/modal/current-status.json`. Latest ntfy receipt is authoritative; retain the authorized ten-minute monitor. No duplicate publisher loop. Overall readiness remains unverified; no defensible overall completion percentage.
+
+## 2026-11-01T21:20:32.476710+00:00 — output-filter V1 invariant; continuity-echo diagnosis
+
+- Both buffer sweeps completed. All66 replay rows (2 arms x11 datasets x3 blocks) invariant across14 fields/fingerprints and physical-group diagnostics. Report `build/modal/profile-pair-output-v1-invariance.json`. No active Modal job; do not duplicate. Native485/485 passed. V1 remains offline; long improvement gates unmet.
+- All229 traced middle-string profile pairs carry continuity masks identical to assigned masks, no spectral projection. V1 treats any nonzero continuity as independent support, explaining unchanged isolated05 results. Next narrow V2 differentiates an unchanged echo, retaining V1 mode and other evidence guards. Root sole writer. No install/commit/push.
+- Last ntfy21:17:21 UTC, next21:27:21. Scheduled12h ended20:37; active goal continues.
+
+## 2026-11-01T21:17 UTC — all eleven corpus screens passed; buffers running
+
+- Offline output-only profile-pair filter: six-set and remaining-five controls match accepted output across14 fields. Trial gains: ordinary +4 matches/-500 false outputs; constructed +3339/-1528; synthetic-four +1551/-1069. Long matches/exact3 unchanged with347 fewer false outputs; physical-four matches unchanged with376 fewer extra gap outputs. Isolated low/middle/high and all three short upper-unison sets bit-identical. Constructed held-note transitions+16 (+0.313%). Reports `profile-pair-output-v1{,-protected}-analysis.json`. Native485/485 PASS. Not production-accepted: long improvement gate unmet.
+- Buffer sweeps RUNNING: control `ap-eywZgXYcT5O1wSXvxadv0d` session24661; trial `ap-xbxqLeRcV7N1pSsAe7CQRy` session96847. Reports `build/modal/profile-pair-output-v1-buffers-{control,trial}.json`, all11 datasets at32/1024; combine with512 reports. Do not duplicate. Compare14 fields/fingerprints and physical-group diagnostics perarm/perdataset.
+- Installed unchanged. No install/commit/push. Notification receipt authoritative; next21:18:12 UTC. Scheduled12h ended20:37; active goal continues.
+
+## 2026-11-01T21:14 UTC — output-only screen passed; protected expansion
+
+- Six-set same-binary controls preserve accepted output across14 fields. Trial: ordinary +4 matches/-500 false outputs; constructed +3339/-1528; long matches/exact3 unchanged, false outputs-347. All three isolated sets bit-identical. Constructed held-note transitions+16 (0.313%); wider gates pending. Report `build/modal/profile-pair-output-v1-analysis.json`. Offline only, not accepted for production.
+- Remaining-five paired Modal screen RUNNING: `ap-EdAocM0qx7xVgfH783rHMl` control/session39327 and `ap-fX2SlkK54odTBMIP06Ef8a` trial/session98197. Reports `profile-pair-output-v1-protected-{control,trial}.json`; short unisons and physical/synthetic4 at512. No duplicate. Same comparison helper supports all11 accepted datasets. If safe, run32/1024 invariance; otherwise reject.
+- Guarded full native suite RUNNING session18771, `build/test-results/profile-pair-output-v1-native.log`. Installed unchanged. Next ntfy21:18:12 UTC. No install/commit/push.
+
+## 2026-11-01T21:11 UTC — paired output-only filter screen
+
+- Guarded native/replay build and both causal lifecycle/handoff tests PASS. Source contract, Python syntax and whitespace pass. One focused review completed; snapshot projection is limited to actually filtered candidates. No production integration.
+- Paired six-set Modal screen RUNNING: control `ap-6cp1zgnEl0JGsORMRmB83L` (session69090), trial `ap-xVEWMEa7d2Yr0z7QNk24Vx` (session19070). Reports `build/modal/profile-pair-output-v1-{control,trial}.json`; ordinary/constructed/physical-long/isolated08/05/02 at512, selector=-1. Do not duplicate. Compare with `python3 build/modal/compare-profile-pair-screen.py profile-pair-output-v1` once complete.
+- Accepted installed metrics unchanged. No install/commit/push. Last ntfy21:08:12 UTC; next21:18:12, receipt authoritative. Scheduled12h window ended20:37; active goal continues.
+
+## 2026-11-01T21:08 UTC — profile-pair output filter build
+
+- Offline-only output filter implemented in detector/replay/Modal plumbing. Causal lifecycle and atomic-handoff fixtures added. Source contract, Python syntax and whitespace checks pass. Review correction: only actually filtered candidates use the emitted ledger for snapshots; preserve state on capacity failure and coasting.
+- Guarded rebuild RUNNING session40128, `build/test-results/profile-pair-output-v1-build.log`. Then `M3_TEST_FILTER=profile_pair_output_filter` causal tests and paired six-set cloud screen (`ordinary,constructed,physical-long,isolated-08,isolated-05,isolated-02`,512,selector=-1). No cloud job active yet. Do not duplicate.
+- No production integration/install/commit/push. Accepted metrics unchanged; ntfy receipt authoritative, ten-minute interval. Active goal continues after scheduled12h window ended.
+
+## 2026-11-01T20:58 UTC — output-only profile-pair trial
+
+- Latest paired normal callback timing run PASSED2/2: wallp99131026ns, CPUmax185716ns, zero in-callback migrations. Log `build/test-results/paired-callback-timing-normal-run1.log`. Earlier normal failures unresolved; no timing repair claim or install. Diagnostic instrumentation only.
+- Root implements offline-only final-output profile-pair projection, preserving internal ownership; causal tests then paired six-corpus Modal screen. No active job; no duplicate. All accepted output metrics unchanged.
+- Scheduled12-hour window ended20:37; active goal continues. Check notification receipt for actual last send; ten-minute interval. No install/commit/push.
+
+## 2026-11-01 20:32 UTC — window closeout: diagnostics repaired, tracking unchanged
+
+- The scheduled window ends at 20:37 UTC. Root owns the dirty worktree; no local or Modal jobs remain active. Last completed Modal app: `ap-OwSi6fp03qmqNcXKQr79Z5`. Preserve all prior work. No install, commit or push this window.
+- Ten replay-only tracking candidates were rejected; zero tracking changes were accepted. Per-corpus match and false-output deltas are in `build/modal/autonomous-window-20261101-summary.{json,md}`. Do not repeat these candidates. An execution interruption around 16:00–19:54 UTC is recorded; uninterrupted work or notification delivery is not claimed.
+- The offline stack crash was repaired with constructor-owned diagnostic storage. All 483 native tests pass. Final Modal replay: 33/33 checks (11 datasets at 32, 512 and 1024 samples) are bit-identical to accepted output across all 14 fields and fingerprints. See `build/modal/diagnostic-storage-parity-verification.json`. The 32 source-contract checks, Python checks and focused review passed. Both production configurations build; contributor and Release validators each passed 47 tests with zero failures. Saved Release result: `build/test-results/diagnostic-storage-release-validator-result.json`.
+- **The runtime gate remains FAILED.** Final normal Release p99 is 181,938 ns against a 166,666 ns limit; CPU maximum is 306,355 ns against 333,333 ns. An earlier normal Release run also failed. Current fixed-CPU runs passed at 133,817 and 128,998 ns p99; an old-build run had a CPU outlier. See `build/test-results/diagnostic-timing-abba.json` and `build/test-results/diagnostic-storage-release-realtime-final.log`. Allocation and thread checks pass. Fixed-CPU passes do not clear the normal failure. Do not install this build.
+- Next, capture paired wall/CPU durations and CPU migration for slow callbacks in the normal unpinned fixture. Independent sorting currently loses pairing, so aggregate results cannot distinguish scheduling delay from detector work. Preserve strict deadlines. The read-only Ryzen 7 7730U topology snapshot in `build/test-results/diagnostic-timing-topology.json` does not establish frequencies during prior tests. Once timing is resolved, consider filtering unsupported profile pairs only at final output while preserving internal ownership and release. The broader pair guard improved middle-string and ordinary results but damaged constructed chords and physical pairs. Keep output experiments offline until corpus, runtime and lifecycle gates pass.
+- Accepted long matches: 41,452/68,441 (60.57%), target 42,128. Exact three-string assignment: 25,219/39,378 (64.04%), target 25,604. Wrong strings: 2,709, at the maximum of 2,709. These are test results, not overall completion. The latest successful ntfy time is authoritative in `build/modal/latest-notification-receipt.json`; the final window update is due at 20:36:37 UTC.
+
+## 2026-11-01 20:12 UTC — assignment trial rejected; offline storage repair
+
+- `assignment-partial-v1-analysis.json`: six controls match accepted output across14 fields. Trial rejected: long matches unchanged41452 but false outputs+314/wrong strings+14; ordinary matches-84/false outputs+111; constructed matches-28/false outputs+66; isolated02 matches-6/false outputs+6; isolated05/08 identical. Both apps completed. Flag stays disabled.
+- Full native suite SIGSEGV diagnosed by GDB at the four-detector continuity test: each detector2139968 bytes, exceeding the8MiB stack. Assignment trace storage moved to constructor-owned offline memory; reset/process reuse it and allocation-failure disables capture. Extended causal trace test checks reset and no configure/process allocations. Guarded rebuild RUNNING session62739, `build/test-results/diagnostic-storage-build.log`.
+- Next full native suite, runtime/source/diff checks and Modal default-output/buffer invariance. Accepted installed output unchanged; no install/commit/push. Continue through20:37 UTC. Last ntfy20:06:29, next20:16:29; receipt authoritative.
+
+## 2026-11-01 20:02 UTC — shared memory correction rejected; assignment-only trial
+
+- Shared-memory partial correction rejected: long matches -12,664, wrong strings +8,578; constructed false outputs +84,948. Low/high identical; middle +20 matches. All six controls match accepted output across14 fields. Report `build/modal/profile-memory-partial-v1-analysis.json`.
+- Replay-only assignment-fast-profile correction implemented separately; shared EMA, fine/group evidence remain unchanged. Causal measured-template test added; guarded native/replay build running session91974. Source32/Python/diff pass. Next causal test, then paired six-set Modal screen. No active cloud sweep now.
+- Reader verified saved templates use partial-peak energies; other direct-support/projection consumers remain outside this isolated experiment.
+- Continue through20:37 UTC. Last notification receipt authoritative (19:55:12); next20:05:12. No install/commit/push.
+
+## 2026-11-01 19:55 UTC — harmonic-memory representation trial
+
+- Mixture-fit and phase-proximity filters rejected in saved cloud analysis: each useful phase policy removes correct secondary voices. No output change.
+- Replay-only partial correction now aligns runtime harmonic memory with calibration measurement. Two focused tests and32 source checks pass, build and diff pass. Production excluded.
+- Paired six-set Modal control/trial RUNNING: ap-efeMXetP6ov4VX0aRvtBoc / ap-0zuPuUjDIA6EBSzEuxB4Vu; local sessions19280/21312; reports `build/modal/profile-memory-partial-v1-{control,trial}.json`. Next compare14 actual fields, then only widen if no regressions. No duplicate sweeps.
+- Continue through20:37 UTC. Last ntfy receipt authoritative. No install/commit/push.
+
+## 2026-11-01 15:09 UTC — broad profile-pair guard rejected
+
+- Paired six-set control/trial complete; all14 control fields match accepted output. `build/modal/profile-pair-corroboration-v1-analysis.json`: isolated05 +3558 matches/-4208 false outputs; ordinary +4040/-14286; constructed +30914 but +23592 false outputs; physical-long -7960 pair matches, triples unchanged25219. Rejected; offline flag stays disabled.
+- Reader identifies internal ownership/release/adjacent-handoff coupling as a supported cause of constructed wrong-note growth. Root next captures profile single/mixture residuals and component weights on genuine and false pairs, then considers a narrower final-output projection preserving internal ownership. No new cloud job yet.
+- Continue through20:37 UTC; next ntfy10min after latest successful receipt. No install/commit/push. Laptop-light Modal replay only.
+
+## 2026-11-01 14:44 UTC — unsupported profile-pair experiment
+
+- Phase/group capture COMPLETE: `assignment-phase-group-observation-verification.json`; six runs preserve all14 actual fields and TSV hashes across32/512/1024. Both512 traces downloaded and SHA verified.
+- Reader found all222 middle-string false-extra sampled rows from profile pairs lacking fine/beat support. Early phase readiness admits adverse correct rows; defer that idea. Root implementing replay-only pair corroboration guard; no production changes.
+- Last ntfy success14:37 UTC; next14:47. Continue through20:37 UTC. No install/commit/push. Build/causal tests and paired protected Modal screen next.
+
+## 2026-11-01 14:21 UTC — phase and group-origin capture
+
+- Extended assignment trace with raw/filtered/previous phase, calibrated cents, group proposal origin, pre/post group masks, and primary-only projection. Offline-only. Build, causal output/label/buffer fixture, source contract and diff pass; root review complete.
+- RUNNING Modal `ap-Z7T4e9F7bFXOwIrXDLRypx`, local session36410, `build/modal/assignment-phase-group-observation.{json,log}`. Six isolated02/05 runs at32/512/1024. Compare14 actual fields and trace hashes; then download512 traces and analyze phase readiness and false group origins. Do not duplicate.
+- Previous capture completed; isolated05 has222 sampled post-DP false groups and30 wrong primaries; isolated02 has60 wrong primary with correct lane free and27 reserved. Not recovered frames.
+- Continue through20:37 UTC. Last successful ntfy14:03;14:18 DNS failed, retrying. Receipt is authoritative. No install/commit/push.
+
+## 2026-11-01 13:39 UTC — string assignment capture
+
+- Offline string-assignment cost trace implemented; winner-cost, output and label-independence test passes at32/512/1024. Source contract, Python syntax, diff and one root review pass. Production trace state excluded.
+- Modal capture RUNNING `ap-pmJt2Z9o1Fcmp255OCFhFw`, session76523, `build/modal/assignment-cost-observation.{json,log}`: isolated02/05 at32/512/1024. Next compare14 accepted output fields and trace hashes, then analyze primary cost/reservations and later projection. No duplicate replay.
+- Residual persistence exploratory: third consecutive strong observation gives106 expected-pitch observations,0 wrong pitch,1 gap;72/106 still wrong calibrated string. No independent chord validation, no output gain.
+- Continue through20:37 UTC; ntfy last13:33:35, next13:43:35. No install/commit/push.
+
+## 2026-11-01 13:23 UTC — residual admission results
+
+- Capture and cloud analysis completed: `build/modal/residual-admission-screen{,-analysis}.json`; all14 output fields identical accepted control on4/4 sets, saved invariance report. Gain>=0.2 gives180 expected-pitch vs11 false-pitch sampled observations in ordinary chords, with misleading calibrated string in100 expected-free cases. This is not recovered MIDI coverage; no safe scalar threshold/string assignment yet.
+- Ordinary trace downloaded and SHA verified: `build/modal/residual-admission-ordinary.tsv` (364619B). Reader weak_candidate_evidence analyzes temporal persistence; reader primary_state_rescue_effects diagnoses isolated5/2. Root owns implementation. Cloud idle, no duplicate replay.
+- Numerical1/replay1/analyzer5/source/Python/diff checks pass; root review complete. No production change, install, commit or push. Continue through20:37 UTC. Latest ntfy timestamp is in latest-notification-receipt.json.
+
+## 2026-11-01 13:13 UTC — residual admission cloud capture
+
+- Fine-proposal evidence verdict: false pair triples outlast the true missed triple and have stronger residual improvement. Do not shorten consensus or relax spectral threshold. Evidence saved in `build/modal/fine-proposal-evidence-verdict.json`.
+- Offline added-pitch residual trace is implemented. Its synthetic replay fixture now uses two strong open tones (40/44) and weaker fretted tone 51; the original adjacent 40/41 fixture never reached the DP and was replaced.
+- Numerical test, buffer/label independence test, five streaming-analysis tests, source contract, Python syntax and diff check pass. One root review complete. No production/MIDI changes.
+- Modal `residual-admission-screen` captures ordinary, constructed, physical-long and isolated-08 at512. App/session and report are in current-status/log; local exec session66590. Run cloud `residual_admission_analysis` after it completes; compare all14 actual fields/fingerprints with accepted control.
+- Last ntfy13:11:21 UTC, next due13:21:21. Continue through20:37 UTC.
+
 # M3 Polyphonic Audio to MIDI — Resume
 
-Updated: 2026-10-28
+Updated: 2026-11-01
+
+## Autonomous continuation — 2026-11-01
+
+- 13:06 UTC: fine-proposal capture COMPLETED; 88,232 rows and all14 output fields identical at32/512/1024. Verified downloaded TSV and `build/modal/fine-proposal-evidence-invariance.json`. Reader primary_state_rescue_effects compares actual analysis ticks for false pair vs true triple proposals. Root implements residual-admission offline trace; native build running session3816; Python analyzer5 tests PASS. New helper measures base pitch model versus base+missed candidate with truth attached after fitting; no MIDI change. Next focused native tests, then four-set Modal trace. Last ntfy13:03:28, next13:13:28. No install/commit/push.
+
+- 12:49 UTC: initial unison timing shortcut REJECTED: false pair proposals last3 actual fine analyses, missed true triple lasts2; current threshold4. No timing change. Trace-only residual/ratio/beat/unique-member getters added; candidate trace partition/output test, source contract, diff check PASS. Physical-long capture RUNNING app `ap-KjvJYcOmMEgWtN2AnxqZYc`, session61841, `build/modal/fine-proposal-evidence.{json,log}` at32/512/1024. Reader confirms residual candidate-addition is distinct from prior deletion/veto trials; root implements shadow-only discriminator next. Last ntfy12:44:43,next12:54. No install/commit/push.
+
+- 12:40 UTC: saved-trace half-penalty outcome comparison COMPLETED, app `ap-afPqRCGh9ZgXaQg7wsZJDd`, `build/modal/fretted-penalty-half-outcomes.json`. Ordinary gained12387/lost4218 matched labels; added12856 correct voices but11894 wrong-string,11098 wrong-note,4276 extra gap outputs. No safe simple directness rule. Root continues offline work; primary_state_rescue_effects joins physical candidate trace with exact labels for initial complete-group false-pair exposure; weak_candidate_evidence reads existing residual lane for a distinct counterfactual-admission hypothesis. No new jobs active. Last ntfy12:34:22,next12:44.
+
+- 12:35 UTC: half-fret-penalty screen COMPLETED and REJECTED. Ordinary +8169 matches/+10399 false outputs; constructed +9455/+20102; long -1325/+7088, triples -17. Isolated08 bit-identical. Analysis `build/modal/fretted-penalty-half-analysis.json`. Same-binary ordinary/long controls decisive. Next cloud outcome comparison from saved traces; subset `fretted-penalty-half-paired.json`. Reader checks narrow initial complete-playable fine consensus; first multi already uses0.20sec, not2.25. No install/commit/push.
+
+- 12:27 UTC: selector-local capture completed and all14 output fields/fingerprints equal accepted ordinary/long baseline; `build/modal/selector-local-invariance.json`. Cloud analysis `selector-local-analysis.json`: of28,694 strong ordinary misses,27,724(96.62%) have no positive fret-adjusted option;917 occupied,45 free-but-capacity-full,8 unpooled. Half-strength fixed/per-fret penalty screen now RUNNING on ordinary/constructed/long/isolated08; report/log `build/modal/fretted-penalty-half.{json,log}`. Existing offline penalty controls only; no DSP change. Root handles screen; reader primary_state_rescue_effects examines new fine_disposition trace `selector-local-physical-candidate.tsv`. Capture/analysis apps completed. Last ntfy12:26 UTC, next12:36. No install/commit/push.
+
+- 12:21 UTC: offline selector-local observations and fine disposition added. New causal negative-fret-score test plus candidate/outcome partition-invariance tests pass; Python25/25, source contract and diff pass. Root focused review found no behavioral edits. Modal capture RUNNING app `ap-F4qocB0f7DmwZ1O6myVEja`, session56652, `build/modal/selector-local-observation.{json,log}` on ordinary/physical-long at512; both traces, note40 first60sec. Next compare14 output fields, analyze strong evictions by pool/adjusted score/free ownership and triple fit7 narrowing by fine disposition. Three-second gate unchanged. Last ntfy12:15 UTC; next12:25. No install/commit/push.
+
+- 12:04 UTC: fine reset capture and posterior trace COMPLETED. Physical-long output/trace identical32/512/1024; 4467/4784 selected triple collecting frames are uninterrupted3sec warmup. No gate change. Posterior v1 causal mechanism: tick34855 harmonic note52 takes lane1, blocking later valid note40 fine pairmask3 at35805. Trial remains rejected; no gain elsewhere. Ordinary joint eviction analysis COMPLETED: 27807/28694 strong expected-pitch misses occur with selector capacity unused. Report `build/modal/ordinary-eviction-joint-analysis.json`. Next offline pool/score/ownership diagnostics, then causal narrow trial if evidence supports. Reader primary_state_rescue_effects handles remaining post-warmup triple gaps; root handles ordinary. Last ntfy12:04 UTC. No install/commit/push.
+
+- 11:48 UTC: joint-posterior v1 COMPLETED and REJECTED: long41452->38059, all3393 lost matches are pairs, triples25219 unchanged; ordinary/constructed/isolated08 bit-identical. Analysis `build/modal/polyphonic-posterior-v1-analysis.json`. No install. Follow-up read-only diagnosis says commit flag indirectly freezes primary correction, not a direct unison gate; causal corpus mechanism still unproven. New offline fine-reset provenance implemented (unselected gap, selected gap, invalid fundamental, floor loss, inactive energy loss; decimation separately marked). Two focused native tests, source contract and diff pass. Capture RUNNING app `ap-93JmriucndS9afIfF3ychG`, session98304, `build/modal/fine-history-reset-control.{json,log}` at32/512/1024, note40 first60sec. Next verify14-field invariance, then locate resets; do not repeat collecting-fine-history-carry trials (already rejected). Last ntfy11:44:06 UTC. Root sole writer; weak_candidate_evidence reads ordinary failure data for next distinct-pitch target.
+
+- 11:29 UTC: floor-reentry group analysis COMPLETED;6,654/6,785 quiet triple misses remain below input gate,131 occur with signal present. Strong ordinary wrong-string assignment is next. Offline joint-posterior exception implemented: all2–4 selected pitches require complete >=.95 distinct posteriors, mature direct evidence, no multi-source/committed/coasting conflict. New causal test red2->green; six posterior tests pass. One read-only review pending. Four-set disabled control RUNNING app `ap-WktwCnoBQZFunBmYIbcCRo`, session66502, `build/modal/polyphonic-posterior-v1-control.{json,log}`. Trial not launched yet. Source contract repaired conditional-brace parsing without behavior change, passes; do not rebuild replay until matched trial has used this binary. Second reader isolates fine-history reset diagnostics. Last ntfy11:21:24 UTC.
+
+- 11:18 UTC: floor-reentry observation COMPLETED and all14 output fields/fingerprints match both accepted and prior diagnostic controls on4/4 sets; `build/modal/floor-reentry-output-parity.json`. Cloud group analysis RUNNING, app `ap-WWfIK7JT7j7g3xU1sa6jeN`, session70443, `build/modal/floor-reentry-group-analysis.{json,log}`. Quiet-specific signal/score/directness axes added; Python21/21 pass. Next distinguish below-floor audio from returned pitch inside the40ms wait. Two read-only agents cover strong ordinary wrong-string assignments and non-quiet long partial triples. Last ntfy11:10:51 UTC.
+
+- 11:10 UTC: offline floor-reentry observation RUNNING, app `ap-ZsibaCJb7IWZHdTnYCLKvl` / session85755; report/log `build/modal/floor-reentry-observation.{json,log}`. Four sets ordinary/constructed/long/isolated08,512 samples, rescue disabled. New quiet2 read-only scoring causal test failed3 assertions before repair, now passes; related diagnostics test passes; native/replay build and diff pass. Selection remains disabled and temporary scores cleared before downstream evidence updates. Native/Python group matched and denominator totals agree on4/4; automatic parity guard added, Python20/20 tests pass. Next: all14-field output invariance, then cloud group analysis. Last ntfy11:02 UTC.
+
+- 11:02 UTC: physical-group attribution COMPLETED, app `ap-NzQjJtE7FrUDlRDnXmUrEv`; report `build/modal/group-failures-control.json`. Constructed exact groups5,715/433,208; partial305,633. Lane-only typed-row coverage332,733/1,614,601; historical exact-row259,074 unchanged. Ordinary/long/isolated08 group results equal historical counts. Python19/19 tests, syntax/diff and one review pass; no tracking gain claimed. Next: offline read-only spectral evidence in quiet2 after input-floor reset. No active cloud job.
+
+- 10:48 UTC: label failure attribution RUNNING on existing control traces, app `ap-r4siJ5GKVdbKHrHBnq5Buj` / session80882. Report `build/modal/label-failures-control.json`, same-stem log. No new audio replay. Added exact rendered-mask attribution, five tests (14 total pass), syntax/diff check, one root review. Separate missing pitch, wrong string, partial group, extra member, rebinning and selection state. Two read-only agents separately diagnose physical-long cause tables and strong assignment source. Next notification due10:52:52 UTC.
+
+- 10:43 UTC: population analysis COMPLETED, report `build/modal/candidate-population-control.json`. No tested weak-admission rule separates expected notes safely across sets. Missed weak labeled frames ordinary57,058, constructed1,069, long0, isolated08 zero. Move to strong expected-note assignment and missing unison evidence; no duplicate capture needed. Notification timestamp in receipt.
+
+- 10:38 UTC: pre-selection population analysis RUNNING on existing cloud traces, app `ap-zlITIAHikhdlNJJgJoO4YY` / session61652. Output `build/modal/candidate-population-control.json`; log same stem. No new capture/replay. Added streaming analysis and five causal Python tests (nine total pass), syntax/diff check and one root review pass. Rules exclude output/phase/onset/selection/fine state; labels only score hypotheses. Last ntfy actual timestamp10:35:30 UTC; next due10:45:30.
+- 10:37 UTC: V5 COMPLETED and REJECTED. All four controls preserve all14 metrics. Ordinary +8,840 matches/+20,120 false outputs; constructed -11,601 matches/+29,543 false outputs; long unchanged from V4 matches36,284/wrong strings7,723, triples25,107. Analysis `build/modal/rescue-onset-v5-analysis.json`. Focused onset repair works but is insufficient. Next use existing pre-selection weak-direct candidate population from cloud traces; no new capture. Last ntfy sent10:37 UTC.
+- 10:30 UTC: V5 onset guard implemented offline; nine focused rescue tests pass (four sample rates), native/replay builds and diff check pass. Paired Modal screen RUNNING: control `ap-9pT7HV2MecfQFpxGulYl52` / session42338; trial `ap-Ac79aCs4nB9SBp3r3YQX7I` / session43280. Reports `build/modal/rescue-onset-v5{,-control}.json`; compare with `python3 build/modal/compare-rescue-screen.py rescue-onset-v5` after completion. Do not duplicate. Outcome-feature review found no globally safe admission threshold; phase/voice-string agreement is post-selection and confounded. Last ntfy sent10:25 UTC.
+- 10:25 UTC: paired outcome analysis COMPLETED (`ap-8yr1jxHg305ceJqv5WZieS`), `build/modal/outcome-attribution-analysis.json`. All four capture controls/trials reproduce V4 metrics. Direct rescued notes recover7,276 ordinary matches but add8,418 wrong-string and2,397 wrong-note outputs; constructed/long/isolated direct rescues recover zero correct outputs. Downstream primary-state changes dominate additional regressions. Read-only primary-state review finished: weak selection can raise the global onset wait40->50ms and clear mature primary selection. New causal test reproduces eight failed assertions at four sample rates; log `build/test-results/rescue-onset-v5-red.log`. Next: offline admission guard at50ms, then paired Modal screen. No active cloud job or duplicate capture needed.
+- User requested another 12 hours from approximately 08:37 UTC, through 20:37 UTC.
+  Continue bounded improvement work, with recording tests on Modal and detailed
+  ntfy summaries every 10 minutes. Keep this checkpoint current across compaction.
+- Use the authenticated publisher `$HOME/.local/bin/researchos-ntfy-publish`
+  with topic `Reaper_PolyphonicVST`; never read or expose the saved credential.
+- Completed v2 comparisons (rejected): control `ap-iigYDvpmNmaxaWlIJD41a3` / session35342;
+  trial `ap-ZA7vi0a9PoPD6V0RFXtmrS` / session20644. Reports/logs
+  `build/modal/rescue-ownership-v2{,-control}.{json,log}`. Do not duplicate.
+- V1 pair diagnosis: expected06 observed06 loses5,131 frames, observed07
+  gains4,918. Expected05 observed07 gains2,477. Fine evidence expands toward
+  mask07. Most pair loss is an extra third string; primary-lane retention alone
+  is not an established fix. Read-only diagnosis is complete.
+- Fine-window capture comparisons completed: control `ap-7E5wUZvSq8H4KpooBFZb2w`,
+  trial `ap-2ocsC2ZQlBQeI8OnduJ44j`. Reports/captures:
+  `build/modal/rescue-v2-fine-trace{,-control}.{json,fine-windows.jsonl}`;
+  analysis `build/modal/rescue-v2-fine-trace-analysis.json`. Every control
+  solve time exists in the trial (72 control, 125 trial); shared audio samples
+  are identical. Scheduling starvation is disproved. Rescue adds observations,
+  displaces older samples from the bounded history, and advances false group
+  expansion in two physical pair sections.
+- V3 completed and REJECTED: control `ap-YEg6Q3Hp9KgC4WmTKVHgn7`, trial
+  `ap-PTfLZaWk6nY0LBZlSW7LFI`; analysis `build/modal/rescue-history-v3-analysis.json`.
+  Direct rescue-only selections now cannot seed fine history (causal test red
+  then green; seven focused tests and group carry test pass). Nevertheless,
+  all output counts equal the rejected v2 result on four screened sets. The
+  same-binary disabled control preserves all14 fields on4/4. Do not repeat.
+- Bounded offline candidate timeline implemented and verified: output fingerprint
+  and trace identical at32/512/1024; invalid ranges rejected. Focused test passes,
+  Python syntax and diff checks pass. No production trace state.
+- Completed Modal trace pair: control `ap-vWFHRN0FXIOhSp6okJodAS`, trial
+  `ap-4AXdL7KiXqJ1bdpeH2aWRc`. Captures downloaded; analysis:
+  `build/modal/rescue-history-v3-trace-timeline-analysis.json`. At tick8324,
+  weak note59 changes the isolated octave-classifier context for note40,
+  permitting its relaxed threshold. Fine history then diverges at tick8325.
+  A separate earlier quiet-state divergence remains outside this repair.
+- V4 excludes diagnostic rescue candidates from primary spectral context;
+  their active ownership still counts normally. A causal test reproduced eight
+  assertions before repair; all eight focused rescue tests now pass. Logs:
+  `build/test-results/rescue-context-v4-{red,focused}.log`. Native test and replay
+  targets build, and diff check passes. All changes remain offline-only.
+- V4 completed and REJECTED: control `ap-fWrLYoEfeuCxyW0mlB6u4m`, trial
+  `ap-y5jbRKYY0Y43v7ZyO3Y8n8`. Reports and analysis:
+  `build/modal/rescue-context-v4{,-control,-analysis}.json`. All four control
+  datasets preserve all14 fields. Long matches41452->36284, wrong strings
+  2709->7723; triples25219->25107. Ordinary +8825 matches also adds20106
+  false outputs; constructed loses11680 matches. No install or wider gates.
+- Next: identify a measured discriminator between real weak notes and false
+  overtones before another rescue policy. Existing population diagnostics show
+  almost no below-threshold labeled targets in constructed/long/isolated08,
+  despite abundant extra candidates. Do not repeat the broad rescue screen.
+- Last phone summary sent10:15 UTC; subsequent summaries every10 minutes.
+
+## Free-string rescue ownership screen — 2026-11-01
+
+- The collision-v2 label diagnosis is complete: only three of 499 labels change.
+  Two sustained ordinary notes lose 136 exact frames in total, offset by three
+  recovered frames in another label. Resetting a coincident pitch is insufficient
+  evidence to invalidate its calibration. Keep that experiment disabled.
+- Repaired the separate, offline-only weak-candidate rescue: account for
+  unselected active/coasting string owners and their physical voice capacity;
+  carry the admitted free-string mask into final assignment. Established
+  multi-string candidates remain on the existing fine/retention path. The
+  calibrated production rescue is unchanged.
+- A causal test reproduced two ownership failures before the repair. Four
+  focused rescue tests passed; native test and replay targets built. Log:
+  `build/test-results/rescue-ownership-focused.log`. One focused review completed.
+  The selector's lane allocation is not itself proof of final lane ownership;
+  recording evidence must establish whether this narrow repair is useful.
+- Same-binary Modal comparisons completed over ordinary/constructed chords,
+  physical-long, and isolated strings8/5/2 at512 samples. Control app
+  `ap-ebiRqIzVA6HaD0DLggtpep`, trial app
+  `ap-8b4DimJXRgsHC5yHOB3hSW`. Reports/logs:
+  `build/modal/rescue-ownership{,-control}.{json,log}`. Do not duplicate them.
+  Trial ratios0.20/0.80; measured baseline trim-9, sensitivity60, response75,
+  polyphony5, fret24. V1 rejected: ordinary matches145,385->156,926 but false
+  outputs319,772->343,481; constructed matches259,074->247,394; long
+  matches41,452->35,909 and wrong strings2,709->10,273. Exact triples
+  25,219->25,107; exact pairs16,233->10,802. Only isolated string2 remains
+  bit-identical. Disabled control preserves all14 fields on all six datasets.
+  Analysis: `build/modal/rescue-ownership-analysis.json`. No install/commit/push.
+- Review found two additional conflicts: rescue ignored the decisive selector
+  string mask, and overlapping DP/coasting lane masks undercounted occupied
+  voices while claiming an alternative lane was free. Two new causal tests
+  reproduced six failed assertions. V2 respects the effective selector mask,
+  counts logical voices separately, and conservatively refuses rescue when
+  the DP lane witness overlaps a coasting owner. All six focused rescue tests
+  now pass: `build/test-results/rescue-ownership-v2-focused.log`.
+- V2 comparisons completed and remain REJECTED. Analysis:
+  `build/modal/rescue-ownership-v2-analysis.json`. Ordinary matches145,385->154,210,
+  false outputs319,772->339,878. Constructed259,074->247,394; long41,452->35,909,
+  wrong strings2,709->10,275. Exact pairs16,233->10,802; triples25,219->25,107.
+  The disabled control preserves all14 fields on6/6 sets. No wider acceptance
+  tests, install, commit or push for this rejected policy.
+- Fine-history trace and v3 follow-up are recorded in the continuation section
+  above. Only a passing screen proceeds to full corpus/buffer/runtime gates.
+
+## Calibrated-pitch collision experiment — 2026-11-01
+
+- Both v1 Modal jobs completed; rejected. Reports:
+  `build/modal/calibrated-collision{,-control}.json`; comparison:
+  `build/modal/calibrated-collision-analysis.json`.
+- Ordinary matches 145,385 ->145,252, false outputs319,772 ->320,509;
+  constructed matches259,074 ->259,748, false outputs294,652 ->296,654.
+  Long unison and all three isolated sets are bit-identical. Same-binary
+  disabled control preserves all14 output fields on6/6 sets. No installed change.
+- One focused review found that base-note reset leaves a second MIDI projection
+  active, ignores other projected owners, and can terminate another candidate
+  in single-channel routing. Stronger lifecycle tests reproduced33 assertions;
+  log: `build/test-results/calibrated-collision-v2-red.log`.
+- V2 implemented: compare actual MIDI notes; atomically reset both projections
+  and consensus after queue-capacity preflight; protect established groups;
+  restrict to per-voice routing and non-quiet audio. Added silence regression.
+  Replay-only/default-disabled. Native/replay build passed; rebin13/13,
+  release19/19, panic9/9, native-source contract and whitespace checks pass.
+- V2 Modal comparisons completed over ordinary/constructed chords,
+  physical-long, and isolated strings8/5/2 at512 samples. Control app
+  `ap-8A5b2lZRj4EWpPUhwoEeVC` (local session54045), trial app
+  `ap-N1HNTYfxMl4SyO5lWhMEAV` (local session12868). Both completed.
+  Reports: `build/modal/calibrated-collision-v2{,-control}.json`; logs share
+  those stems. Analysis: `build/modal/calibrated-collision-v2-analysis.json`.
+  Rejected: ordinary matches145,385->145,252, false outputs319,772->320,509,
+  wrong notes164,263->165,007, transitions11,903->12,009. Constructed scores
+  unchanged but fingerprint differs; long and isolated outputs bit-identical.
+  Same-binary control preserves all14 fields on all six datasets.
+- Label-span diagnosis completed in
+  `build/modal/calibrated-collision-v2-label-analysis.json`. A coincident output
+  pitch alone does not establish invalid calibration. Keep v2 offline; no
+  further acceptance checks for this rejected policy. Installed bundle unchanged.
+
+## Candidate-admission recovery screen — 2026-11-01
+
+- Completed Modal app `ap-gP9djZPb9nxTKG0DWrL6Gz`; rejected the six-recording
+  experiment. Analysis: `build/modal/candidate-admission-rescue-analysis.json`.
+- Ordinary matches improved 145,385 to159,578, but false outputs increased
+  319,772 to364,432. Physical-long matches fell41,452 to35,913; wrong-string
+  outputs rose2,709 to9,408. Constructed matches fell259,074 to247,536.
+- The installed bundle and its accepted metrics remain unchanged. The weak
+  candidate policy is replay-only, default disabled. No commit/push.
+- Implemented replay-only correction: require pitch-band dominance, prevent a
+  diagnostic-only candidate from suppressing a baseline candidate as a harmonic,
+  and preserve priority of the existing calibrated rescue slot. Three focused
+  tests reproduced conflicts before the correction and pass afterward (3/3).
+- Both guarded-comparison Modal apps completed and stopped with zero tasks:
+  control `ap-3XR9Sg2XbhOwyvmtyQEndl`, candidate `ap-Gj8U1Dxtaf4MdwslSjgNiZ`.
+  Analysis: `build/modal/candidate-admission-guards-analysis.json`. No rerun needed.
+- Guarded experiment rejected: ordinary matches145,385->157,468, but false
+  outputs319,772->345,909; constructed matches259,074->247,399; long matches
+  41,452->35,909 and wrong strings2,709->10,275. Exact triples25,219->25,107;
+  correct pairs16,233->10,802 account for5,431 of5,543 lost long matches.
+- Same-binary disabled control preserves all14 metrics/fingerprints on all six
+  sets. One focused review found no material code defect; tests establish
+  selection guards, not downstream ownership. No full-suite run for this repair.
+- Next: diagnose lost pair/string assignments and added false pitches before
+  another policy. Keep the experimental rescue disabled and production unchanged.
+- Same measured baseline: trim -9 dB, Sensitivity60, Response75, polyphony5,
+  fret24. Any protected match/error regression rejects the experiment.
+
+## Assignment-cost optimization checkpoint — 2026-11-01
+
+The assignment-cost optimization is accepted and installed. The guarded
+false-note rule remains opt-in in replay/test builds and is excluded from
+production. Global defaults remain unchanged.
+
+- Candidate/string lane costs are computed once per decision before the
+  assignment-state loop. Arithmetic order and ownership constraints are
+  preserved. One focused review found no material defect.
+- Full native suite: 455/455. Runtime checks: 2/2, including 100,000 callbacks
+  without allocations or thread creation. p99 147,435 ns <166,666 ns; maximum
+  CPU 221,810 ns <333,333 ns. Maximum wall time 403,755 ns; live glitch-free
+  behavior is not established. Logs: `build/test-results/assignment-cost-hoist-*`.
+- Both Modal jobs completed: enabled 33 rows (eleven sets at 32/512/1024),
+  disabled eleven rows at 512. All enabled deterministic fields and 22 buffer
+  comparisons are identical. All disabled actual output fields are identical;
+  its older control predates the physical-model repair, so observer counters
+  are not claimed identical. Analysis: `build/modal/assignment-cost-hoist-analysis.json`.
+- Production build, Steinberg validator and whitespace checks passed. Bundle
+  installed with SHA `c3a877dfeacba6293013ef4c4372a6dbe0210baabc2c9ee0728dfd33be62518f`.
+  Backup: `~/.vst3/.m3-backup-before-assignment-cost-20261101T045637Z`.
+  Live host reload is unverified. Receipt: `build/test-results/assignment-cost-hoist-install.json`.
+- Experimental false-note suppression (entry 0.001, restore 0.005) preserves all
+  eleven correct-match and wrong-string totals, removing 5,575 wrong-note frames
+  and 271 extra outputs in unlabeled gaps, with six extra transitions. Seven
+  recordings are bit-identical. It remains excluded from the installed plugin.
+- Long-unison matching remains 41,452/68,441 (target 42,128); exact three-string
+  assignment remains 25,219/39,378 (target 25,604). Wrong strings 2,709 have zero
+  safety headroom. Overall live-use readiness remains incomplete.
+- Next: use existing missed-note diagnostics to target an actual recovery
+  mechanism across intervals/chords and practical unisons. Do not repeat the
+  completed optimization checks or resurrect rejected classifier/beat fits.
 
 ## Callback residual checkpoint — 2026-10-28
 
@@ -270,7 +636,7 @@ Updated: 2026-10-28
 - Installed module SHA-256:
   `43d668187db33c286000e6e539809af675a86c674303a74589b646fdad6d889e`.
   Prior bundle is recoverable at
-  `/home/ajuntanaga/.vst3/.m3-backup-before-profile-reuse-20261027T185556Z`.
+  `$HOME/.vst3/.m3-backup-before-profile-reuse-20261027T185556Z`.
   REAPER was running and was left untouched: its reload/live behavior remains
   unverified. The efficiency update was installed only after the checks below.
 - Both completed correlation-window experiments were rejected. The full-window

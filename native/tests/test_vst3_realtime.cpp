@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <sched.h>
 #include <time.h>
 
 #include <algorithm>
@@ -72,11 +73,18 @@ bool open_instance(RealtimeInstance& instance, double sample_rate = 48000.0,
   setup.symbolicSampleSize = Steinberg::Vst::kSample32;
   setup.maxSamplesPerBlock = maximum_block_size;
   setup.sampleRate = sample_rate;
-  return instance.processor->setupProcessing(setup) == Steinberg::kResultOk &&
-         instance.component->setActive(Steinberg::TBool{1}) ==
-             Steinberg::kResultOk &&
-         instance.processor->setProcessing(Steinberg::TBool{1}) ==
-             Steinberg::kResultOk;
+  const bool ready =
+      instance.processor->setupProcessing(setup) == Steinberg::kResultOk &&
+      instance.component->setActive(Steinberg::TBool{1}) ==
+          Steinberg::kResultOk &&
+      instance.processor->setProcessing(Steinberg::TBool{1}) ==
+          Steinberg::kResultOk;
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  if (ready) {
+    m3::vst3::enable_joint_residual_output_for_test(instance.processor, true);
+  }
+#endif
+  return ready;
 }
 
 void close_instance(RealtimeInstance& instance) noexcept {
@@ -215,6 +223,17 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
 
   const std::size_t allocations_before = m3::test::allocation_count();
   const std::size_t deallocations_before = m3::test::deallocation_count();
+  struct CallbackTiming final {
+    std::uint64_t wall_ns{};
+    std::uint64_t cpu_ns{};
+    int cpu_before{-1};
+    int cpu_after{-1};
+    m3::PolyphonicPitchDetector::SelectionWork selection{};
+  };
+  // Preserve paired observations: separately sorted percentiles cannot tell
+  // whether a slow wall sample also consumed more detector CPU time. Read CPU
+  // placement outside the timed region and print only after measurements.
+  std::array<CallbackTiming, kMeasuredBlocks> callback_timings{};
   std::array<std::uint64_t, kMeasuredBlocks> wall_durations{};
   std::array<std::uint64_t, kMeasuredBlocks> cpu_durations{};
   m3::PolyphonicPitchDetector::SelectionWork maximum_selection_work{};
@@ -230,11 +249,13 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
 #endif
     timespec cpu_begin{};
     timespec cpu_end{};
+    const int cpu_before = sched_getcpu();
     const auto wall_begin = std::chrono::steady_clock::now();
     M3_EXPECT_EQ(clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cpu_begin), 0);
     const Steinberg::tresult result = instance.processor->process(block.data());
     M3_EXPECT_EQ(clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cpu_end), 0);
     const auto wall_end = std::chrono::steady_clock::now();
+    const int cpu_after = sched_getcpu();
     M3_EXPECT_EQ(result, Steinberg::kResultOk);
     const auto wall_duration =
         std::chrono::duration_cast<std::chrono::nanoseconds>(wall_end - wall_begin)
@@ -250,6 +271,9 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
     cpu_durations[iteration] = static_cast<std::uint64_t>(cpu_duration);
     const auto selection_work =
         m3::vst3::detector_selection_work_for_test(instance.processor);
+    callback_timings[iteration] = {
+        wall_durations[iteration], cpu_durations[iteration],
+        cpu_before, cpu_after, selection_work};
     maximum_selection_work.pool_candidates =
         std::max(maximum_selection_work.pool_candidates,
                  selection_work.pool_candidates);
@@ -284,6 +308,93 @@ M3_TEST(vst3_realtime_release_96khz_max8_p99_stays_within_block_budget) {
                maximum_selection_work.pool_candidates,
                maximum_selection_work.assignment_edges,
                maximum_selection_work.state_transitions);
+  std::size_t wall_over_p99 = 0U;
+  std::size_t cpu_over_p99 = 0U;
+  std::size_t wall_over_deadline = 0U;
+  std::size_t cpu_over_deadline = 0U;
+  std::size_t migrated_callbacks = 0U;
+  std::size_t migrated_between_callbacks = 0U;
+  std::size_t placement_unavailable = 0U;
+  struct CoreTiming final {
+    std::size_t callbacks{};
+    std::size_t wall_over_p99{};
+    std::size_t cpu_over_p99{};
+    std::uint64_t cpu_max_ns{};
+  };
+  std::array<CoreTiming, CPU_SETSIZE> core_timings{};
+  std::array<std::size_t, kMeasuredBlocks> timing_order{};
+  for (std::size_t index = 0U; index < callback_timings.size(); ++index) {
+    const auto& timing = callback_timings[index];
+    timing_order[index] = index;
+    wall_over_p99 += timing.wall_ns >= kP99BudgetNanoseconds ? 1U : 0U;
+    cpu_over_p99 += timing.cpu_ns >= kP99BudgetNanoseconds ? 1U : 0U;
+    wall_over_deadline +=
+        timing.wall_ns >= kMaximumBudgetNanoseconds ? 1U : 0U;
+    cpu_over_deadline +=
+        timing.cpu_ns >= kMaximumBudgetNanoseconds ? 1U : 0U;
+    if (timing.cpu_before < 0 || timing.cpu_after < 0) {
+      ++placement_unavailable;
+      continue;
+    }
+    migrated_callbacks += timing.cpu_before != timing.cpu_after ? 1U : 0U;
+    if (index > 0U && callback_timings[index - 1U].cpu_after >= 0) {
+      migrated_between_callbacks +=
+          timing.cpu_before != callback_timings[index - 1U].cpu_after ? 1U : 0U;
+    }
+    if (timing.cpu_before == timing.cpu_after &&
+        timing.cpu_before < CPU_SETSIZE) {
+      auto& core = core_timings[static_cast<std::size_t>(timing.cpu_before)];
+      ++core.callbacks;
+      core.wall_over_p99 += timing.wall_ns >= kP99BudgetNanoseconds ? 1U : 0U;
+      core.cpu_over_p99 += timing.cpu_ns >= kP99BudgetNanoseconds ? 1U : 0U;
+      core.cpu_max_ns = std::max(core.cpu_max_ns, timing.cpu_ns);
+    }
+  }
+  std::fprintf(stderr,
+      "Paired callback timing: samples=%zu cpu-p99=%llu ns "
+      "wall-over-p99=%zu cpu-over-p99=%zu wall-over-deadline=%zu "
+      "cpu-over-deadline=%zu migrated-callbacks=%zu "
+      "migrated-between=%zu placement-unavailable=%zu\n",
+      kMeasuredBlocks,
+      static_cast<unsigned long long>(cpu_durations[p99_index]),
+      wall_over_p99, cpu_over_p99, wall_over_deadline, cpu_over_deadline,
+      migrated_callbacks, migrated_between_callbacks, placement_unavailable);
+  for (std::size_t core = 0U; core < core_timings.size(); ++core) {
+    const auto& timing = core_timings[core];
+    if (timing.callbacks == 0U) {
+      continue;
+    }
+    std::fprintf(stderr,
+        "Callback CPU %zu: samples=%zu wall-over-p99=%zu cpu-over-p99=%zu "
+        "cpu-max=%llu ns\n",
+        core, timing.callbacks, timing.wall_over_p99, timing.cpu_over_p99,
+        static_cast<unsigned long long>(timing.cpu_max_ns));
+  }
+  const auto print_slowest = [&](const char* label, bool by_cpu) {
+    std::sort(timing_order.begin(), timing_order.end(),
+        [&](std::size_t left, std::size_t right) {
+          const auto left_ns = by_cpu ? callback_timings[left].cpu_ns
+                                      : callback_timings[left].wall_ns;
+          const auto right_ns = by_cpu ? callback_timings[right].cpu_ns
+                                       : callback_timings[right].wall_ns;
+          return left_ns != right_ns ? left_ns > right_ns : left < right;
+        });
+    for (std::size_t rank = 0U; rank < 8U; ++rank) {
+      const std::size_t index = timing_order[rank];
+      const auto& timing = callback_timings[index];
+      std::fprintf(stderr,
+          "Slow callback %s: rank=%zu block=%zu wall=%llu ns cpu=%llu ns "
+          "cpu-placement=%d/%d pool=%u edges=%u transitions=%u\n",
+          label, rank, index,
+          static_cast<unsigned long long>(timing.wall_ns),
+          static_cast<unsigned long long>(timing.cpu_ns),
+          timing.cpu_before, timing.cpu_after,
+          timing.selection.pool_candidates, timing.selection.assignment_edges,
+          timing.selection.state_transitions);
+    }
+  };
+  print_slowest("wall", false);
+  print_slowest("cpu", true);
   M3_EXPECT_TRUE(wall_durations[p99_index] < kP99BudgetNanoseconds);
   M3_EXPECT_TRUE(cpu_durations.back() < kMaximumBudgetNanoseconds);
   // The timing sample must include the dense/conflicting selector path, not

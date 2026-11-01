@@ -71,6 +71,46 @@ M3_TEST(offline_joint_pitch_residual_separates_leakage_from_adjacent_tones) {
   }
 }
 
+M3_TEST(compact_joint_pitch_residual_candidate_addition_requires_new_sound) {
+  auto base_fit = std::make_unique<m3::JointPitchResidual>();
+  auto added_fit = std::make_unique<m3::JointPitchResidual>();
+  for (const double phase : {-0.8, 0.0, 1.2}) {
+    for (const double amplitude : {0.0, 0.12}) {
+      auto frame = measure(amplitude, phase);
+      const auto base = base_fit->evaluate(frame.pitches, 1U, 48000.0,
+                                           frame.decay, frame.energy);
+      const auto added = added_fit->evaluate(frame.pitches, 2U, 48000.0,
+                                             frame.decay, frame.energy);
+      M3_EXPECT_TRUE(base.valid && added.valid);
+      const double gain = base.residual_fraction - added.residual_fraction;
+      if (amplitude == 0.0) {
+        M3_EXPECT_TRUE(std::abs(gain) < 1.0e-6);
+        M3_EXPECT_TRUE(added.independent_energy_fraction[1U] < 1.0e-6);
+      } else {
+        M3_EXPECT_TRUE(gain > 0.05);
+        M3_EXPECT_TRUE(added.independent_energy_fraction[1U] > 0.05);
+        M3_EXPECT_FALSE(added.shared_fundamental[1U]);
+      }
+      for (auto& pitch : frame.pitches)
+        for (auto& value : pitch.correlation) value *= 0.01;
+      frame.energy *= 0.0001;
+      const auto scaled_base = base_fit->evaluate(frame.pitches, 1U, 48000.0,
+                                                  frame.decay, frame.energy);
+      const auto scaled_added = added_fit->evaluate(frame.pitches, 2U, 48000.0,
+                                                    frame.decay, frame.energy);
+      M3_EXPECT_TRUE(scaled_base.valid && scaled_added.valid);
+      M3_EXPECT_NEAR(scaled_base.residual_fraction - scaled_added.residual_fraction,
+                     gain, 1.0e-9);
+    }
+  }
+  const auto octave = measure(0.12, 0.4, 60U);
+  const auto ambiguous = added_fit->evaluate(octave.pitches, 2U, 48000.0,
+                                               octave.decay, octave.energy);
+  M3_EXPECT_TRUE(ambiguous.valid);
+  M3_EXPECT_TRUE(ambiguous.shared_fundamental[1U]);
+  M3_EXPECT_TRUE(ambiguous.independent_energy_fraction[1U] < 1.0e-6);
+}
+
 M3_TEST(offline_joint_pitch_residual_shares_harmonics_and_preserves_scale) {
   auto fit = std::make_unique<m3::offline::JointPitchResidual>();
   auto frame = measure(0.12, 0.4, 60U);

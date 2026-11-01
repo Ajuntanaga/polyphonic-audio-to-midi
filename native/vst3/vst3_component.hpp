@@ -151,6 +151,9 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void clear_joint_residual_shadow_metrics_for_test() noexcept {
     detector_.clear_joint_residual_shadow_metrics_for_test();
   }
+  void enable_joint_residual_output_for_test(bool enabled) noexcept {
+    detector_.enable_joint_residual_output(enabled);
+  }
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   void disable_offline_replay_diagnostics_for_test() noexcept {
@@ -306,6 +309,8 @@ detector_selection_work_for_test(
 joint_residual_shadow_work_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
 void reset_joint_residual_shadow_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
 void clear_joint_residual_shadow_metrics_for_test(Steinberg::Vst::IAudioProcessor* processor) noexcept;
+void enable_joint_residual_output_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, bool enabled) noexcept;
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
 void disable_offline_replay_diagnostics_for_test(

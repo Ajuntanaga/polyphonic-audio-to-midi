@@ -1323,6 +1323,13 @@ void clear_joint_residual_shadow_metrics_for_test(Steinberg::Vst::IAudioProcesso
     static_cast<M3Component*>(processor)->clear_joint_residual_shadow_metrics_for_test();
   }
 }
+
+void enable_joint_residual_output_for_test(
+    Steinberg::Vst::IAudioProcessor* processor, bool enabled) noexcept {
+  if (processor != nullptr) {
+    static_cast<M3Component*>(processor)->enable_joint_residual_output_for_test(enabled);
+  }
+}
 #endif
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)

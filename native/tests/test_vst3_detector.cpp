@@ -180,6 +180,9 @@ M3_TEST(vst3_panic_discards_detector_voice_state_before_midi_recovery) {
     close_active(instance);
     return;
   }
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  m3::vst3::enable_joint_residual_output_for_test(instance.processor, true);
+#endif
 
   constexpr std::uint32_t kFrames = 256U;
   constexpr double kSampleRate = 48000.0;

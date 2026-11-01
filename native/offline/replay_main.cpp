@@ -156,6 +156,9 @@ void usage(const char* program) {
       "[--sensitivity 0..100] [--response 0..100] "
       "[--max-polyphony 1..8] [--max-fret 0..36] [--label-details] "
       "[--spectral-shadow-templates FILE] "
+      "[--candidate-trace FILE --candidate-trace-note 0..127 "
+      "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
+      "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
       "[--fine-window-dump FILE --fine-window-note 0..127] "
       "[--fine-window-start SECONDS --fine-window-end SECONDS "
       "--fine-window-min-spacing SECONDS] "
@@ -177,6 +180,14 @@ void usage(const char* program) {
       "[--diagnostic-collecting-fine-history-carry] "
       "[--diagnostic-joint-pitch-residual] "
       "[--diagnostic-bounded-joint-pitch-residual] "
+      "[--diagnostic-joint-residual-output] "
+      "[--diagnostic-calibrated-collision-revalidation] "
+      "[--diagnostic-polyphonic-posterior-assignment] "
+      "[--diagnostic-profile-pair-corroboration] "
+      "[--diagnostic-profile-memory-partial-correction] "
+      "[--diagnostic-assignment-partial-correction] "
+      "[--diagnostic-profile-pair-output-filter] "
+      "[--diagnostic-profile-pair-continuity-echo] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
       "[--diagnostic-selection-window-only | "
       "--diagnostic-correlation-shadow-only]] "
@@ -195,6 +206,15 @@ int main(int argc, char** argv) {
   const char* calibration_output_path = nullptr;
   const char* spectral_shadow_template_path = nullptr;
   const char* fine_window_dump_path = nullptr;
+  const char* candidate_trace_path = nullptr;
+  m3::offline::CandidateDecisionTrace candidate_trace;
+  const char* outcome_trace_path = nullptr;
+  m3::offline::CandidateOutcomeTrace outcome_trace;
+  const char* residual_admission_trace_path = nullptr;
+  m3::offline::ResidualAdmissionTrace residual_admission_trace;
+  const char* assignment_trace_path = nullptr;
+  m3::offline::StringAssignmentTrace assignment_trace;
+  bool candidate_trace_options_set = false;
   int fine_window_note = -1;
   m3::offline::FrequencyWindowCaptureOptions fine_window_options;
   bool fine_window_range_set = false;
@@ -227,6 +247,14 @@ int main(int argc, char** argv) {
   bool diagnostic_correlation_shadow_only = false;
   bool diagnostic_joint_pitch_residual = false;
   bool diagnostic_bounded_joint_pitch_residual = false;
+  bool diagnostic_joint_residual_output = false;
+  bool diagnostic_calibrated_collision_revalidation = false;
+  bool diagnostic_polyphonic_posterior_assignment = false;
+  bool diagnostic_profile_pair_corroboration = false;
+  bool diagnostic_profile_memory_partial_correction = false;
+  bool diagnostic_assignment_partial_correction = false;
+  bool diagnostic_profile_pair_output_filter = false;
+  bool diagnostic_profile_pair_continuity_echo = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
     const bool has_value = index + 1 < argc;
@@ -492,6 +520,30 @@ int main(int argc, char** argv) {
                            "--diagnostic-bounded-joint-pitch-residual") == 0) {
       diagnostic_joint_pitch_residual = true;
       diagnostic_bounded_joint_pitch_residual = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-joint-residual-output") == 0) {
+      diagnostic_joint_residual_output = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-calibrated-collision-revalidation") == 0) {
+      diagnostic_calibrated_collision_revalidation = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-polyphonic-posterior-assignment") == 0) {
+      diagnostic_polyphonic_posterior_assignment = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-profile-pair-corroboration") == 0) {
+      diagnostic_profile_pair_corroboration = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-profile-memory-partial-correction") == 0) {
+      diagnostic_profile_memory_partial_correction = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-assignment-partial-correction") == 0) {
+      diagnostic_assignment_partial_correction = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-profile-pair-output-filter") == 0) {
+      diagnostic_profile_pair_output_filter = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-profile-pair-continuity-echo") == 0) {
+      diagnostic_profile_pair_continuity_echo = true;
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
     } else if (std::strcmp(argv[index],
@@ -507,6 +559,37 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--spectral-shadow-templates") == 0 &&
                has_value) {
       spectral_shadow_template_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--candidate-trace") == 0 && has_value) {
+      candidate_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--outcome-trace") == 0 && has_value) {
+      outcome_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--assignment-trace") == 0 && has_value) {
+      assignment_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--residual-admission-trace") == 0 && has_value) {
+      residual_admission_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--candidate-trace-note") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L || parsed > 127L) {
+        usage(argv[0]);
+        return 2;
+      }
+      candidate_trace.midi_note = static_cast<int>(parsed);
+      candidate_trace_options_set = true;
+    } else if ((std::strcmp(argv[index], "--candidate-trace-start") == 0 ||
+                std::strcmp(argv[index], "--candidate-trace-end") == 0) && has_value) {
+      const bool start = std::strcmp(argv[index], "--candidate-trace-start") == 0;
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < 0.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      (start ? candidate_trace.start_seconds : candidate_trace.end_seconds) = parsed;
+      candidate_trace_options_set = true;
     } else if (std::strcmp(argv[index], "--fine-window-dump") == 0 && has_value) {
       fine_window_dump_path = argv[++index];
     } else if (std::strcmp(argv[index], "--fine-window-note") == 0 && has_value) {
@@ -547,6 +630,11 @@ int main(int argc, char** argv) {
     }
   }
   if (wave_path == nullptr) {
+    usage(argv[0]);
+    return 2;
+  }
+  if ((candidate_trace_path == nullptr && candidate_trace_options_set) ||
+      candidate_trace.end_seconds <= candidate_trace.start_seconds) {
     usage(argv[0]);
     return 2;
   }
@@ -784,6 +872,42 @@ int main(int argc, char** argv) {
   }
   m3::offline::FrequencyWindowCapture fine_window_capture(
       fine_window_stream.get(), fine_window_note, fine_window_options);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> candidate_trace_stream(nullptr, &std::fclose);
+  if (candidate_trace_path != nullptr) {
+    candidate_trace_stream.reset(std::fopen(candidate_trace_path, "wb"));
+    if (candidate_trace_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open candidate trace\n");
+      return 1;
+    }
+    candidate_trace.stream = candidate_trace_stream.get();
+  }
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> outcome_trace_stream(nullptr, &std::fclose);
+  if (outcome_trace_path != nullptr) {
+    outcome_trace_stream.reset(std::fopen(outcome_trace_path, "wb"));
+    if (outcome_trace_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open outcome trace\n");
+      return 1;
+    }
+    outcome_trace.stream = outcome_trace_stream.get();
+  }
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> residual_admission_stream(nullptr, &std::fclose);
+  if (residual_admission_trace_path != nullptr) {
+    residual_admission_stream.reset(std::fopen(residual_admission_trace_path, "wb"));
+    if (residual_admission_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open residual admission trace\n");
+      return 1;
+    }
+    residual_admission_trace.stream = residual_admission_stream.get();
+  }
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> assignment_stream(nullptr, &std::fclose);
+  if (assignment_trace_path != nullptr) {
+    assignment_stream.reset(std::fopen(assignment_trace_path, "wb"));
+    if (assignment_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open assignment trace\n");
+      return 1;
+    }
+    assignment_trace.stream = assignment_stream.get();
+  }
   if (!m3::offline::run_detector_replay(
           wave, labels, config, calibration_pointer, block_size, result,
           error, spectral_shadow_template_pointer, candidate_rescue_pointer,
@@ -797,10 +921,75 @@ int main(int argc, char** argv) {
           diagnostic_correlation_shadow_only,
           diagnostic_joint_pitch_residual,
           fine_window_stream != nullptr ? &fine_window_capture : nullptr,
-          diagnostic_bounded_joint_pitch_residual)) {
+          diagnostic_bounded_joint_pitch_residual,
+          diagnostic_joint_residual_output,
+          diagnostic_calibrated_collision_revalidation,
+          candidate_trace_stream != nullptr ? &candidate_trace : nullptr,
+          outcome_trace_stream != nullptr ? &outcome_trace : nullptr,
+          diagnostic_polyphonic_posterior_assignment,
+          residual_admission_stream != nullptr ? &residual_admission_trace : nullptr,
+          assignment_stream != nullptr ? &assignment_trace : nullptr,
+          diagnostic_profile_pair_corroboration,
+          diagnostic_profile_memory_partial_correction,
+          diagnostic_assignment_partial_correction,
+          diagnostic_profile_pair_output_filter,
+          diagnostic_profile_pair_continuity_echo)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
+  }
+  if (assignment_stream != nullptr) {
+    if (assignment_trace.failed || std::fflush(assignment_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: assignment trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr,
+        "m3_replay: assignment_trace rows=%zu cap=%zu truncated=%u sampled_frames=%zu decimation=%u\n",
+        assignment_trace.rows, m3::offline::StringAssignmentTrace::kMaximumRows,
+        assignment_trace.truncated ? 1U : 0U, assignment_trace.sampled_frames,
+        m3::offline::StringAssignmentTrace::kTickDecimation);
+    if (assignment_trace.truncated) {
+      std::fprintf(stderr, "m3_replay: refusing incomplete assignment trace\n");
+      return 1;
+    }
+  }
+  if (residual_admission_stream != nullptr) {
+    if (residual_admission_trace.failed || std::fflush(residual_admission_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: residual admission trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr,
+        "m3_replay: residual_admission_trace rows=%zu cap=%zu truncated=%u sampled_frames=%zu candidates=%zu decimation=%u\n",
+        residual_admission_trace.rows, m3::offline::ResidualAdmissionTrace::kMaximumRows,
+        residual_admission_trace.truncated ? 1U : 0U,
+        residual_admission_trace.sampled_frames, residual_admission_trace.candidates,
+        m3::offline::ResidualAdmissionTrace::kTickDecimation);
+    if (residual_admission_trace.truncated) {
+      std::fprintf(stderr, "m3_replay: refusing incomplete residual admission trace\n");
+      return 1;
+    }
+  }
+  if (outcome_trace_stream != nullptr) {
+    if (outcome_trace.failed || std::fflush(outcome_trace_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: outcome trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr, "m3_replay: outcome_trace frames=%zu cap=%zu truncated=%u\n",
+        outcome_trace.frames, m3::offline::CandidateOutcomeTrace::kMaximumFrames,
+        outcome_trace.truncated ? 1U : 0U);
+    if (outcome_trace.truncated) {
+      std::fprintf(stderr, "m3_replay: refusing incomplete outcome trace\n");
+      return 1;
+    }
+  }
+  if (candidate_trace_stream != nullptr) {
+    if (candidate_trace.failed || std::fflush(candidate_trace_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: candidate trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr, "m3_replay: candidate_trace frames=%zu cap=%zu truncated=%u\n",
+        candidate_trace.frames, m3::offline::CandidateDecisionTrace::kMaximumFrames,
+        candidate_trace.truncated ? 1U : 0U);
   }
   if (fine_window_stream != nullptr &&
       (fine_window_capture.failed() || std::fflush(fine_window_stream.get()) != 0)) {
@@ -1016,6 +1205,15 @@ int main(int argc, char** argv) {
       "core_residual_enabled\tcore_residual_evaluated_frames\t"
       "core_residual_valid_frames\tcore_residual_pending_frames\t"
       "core_residual_max_work\tcore_residual_max_pitches\tcore_residual_mean_residual\t"
+      "core_residual_output_enabled\tcore_residual_output_veto_frames\t"
+      "core_residual_output_note_offs\tcore_residual_output_retriggers\t"
+      "core_residual_output_joint_restores_valid\t"
+      "core_residual_output_joint_restores_pending\t"
+      "core_residual_output_joint_restores_unavailable\t"
+      "core_residual_output_joint_restores_energy_low\t"
+      "core_residual_output_joint_restores_energy_mid\t"
+      "core_residual_output_joint_restores_energy_high\t"
+      "core_residual_output_joint_restores_safety\t"
       "dp_replacement_matched\tdp_replacement_false_positive\t"
       "dp_replacement_false_gap\tdp_replacement_false_wrong_note\t"
       "dp_replacement_false_wrong_string\tdp_replacement_changed\t"
@@ -1631,6 +1829,20 @@ int main(int argc, char** argv) {
               result.core_residual_max_work, result.core_residual_max_pitches,
               result.core_residual_valid_frames == 0U ? 0.0 :
                   result.core_residual_sum / static_cast<double>(result.core_residual_valid_frames));
+  std::printf("\t%u\t%llu\t%llu\t%llu",
+              result.core_residual_output_enabled,
+              static_cast<unsigned long long>(result.core_residual_output_veto_frames),
+              static_cast<unsigned long long>(result.core_residual_output_note_offs),
+              static_cast<unsigned long long>(result.core_residual_output_retriggers));
+  std::printf("\t%llu\t%llu\t%llu",
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_valid),
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_pending),
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_unavailable));
+  std::printf("\t%llu\t%llu\t%llu\t%llu",
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_energy_low),
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_energy_mid),
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_energy_high),
+              static_cast<unsigned long long>(result.core_residual_output_joint_restores_safety));
   std::printf("\t%u\t%u\t%u\t%u\t%u\t%u",
               result.calibrated_dp_replacement.matched_label_frames,
               result.calibrated_dp_replacement.false_positive_voices,

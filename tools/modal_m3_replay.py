@@ -163,6 +163,17 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
         "core_residual_pending_frames",
         "core_residual_max_work",
         "core_residual_max_pitches",
+        "core_residual_output_enabled",
+        "core_residual_output_veto_frames",
+        "core_residual_output_note_offs",
+        "core_residual_output_retriggers",
+        "core_residual_output_joint_restores_valid",
+        "core_residual_output_joint_restores_pending",
+        "core_residual_output_joint_restores_unavailable",
+        "core_residual_output_joint_restores_energy_low",
+        "core_residual_output_joint_restores_energy_mid",
+        "core_residual_output_joint_restores_energy_high",
+        "core_residual_output_joint_restores_safety",
         "dp_replacement_matched",
         "dp_replacement_false_positive",
         "dp_replacement_false_gap",
@@ -220,6 +231,11 @@ def _parse_aggregate(tsv: str) -> dict[str, Any]:
         for field, value in row.items()
         if field.startswith("physical_group_")
     }
+    result["candidate_admission_diagnostics"] = {
+        field: value
+        for field, value in row.items()
+        if field.startswith("candidate_population_")
+    }
     return result
 
 
@@ -235,6 +251,9 @@ image = (
     .add_local_file(REPO_ROOT / "tools/harmonic_balance_audit.py", "/opt/m3/harmonic_balance_audit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/coupled_harmonic_fit.py", "/opt/m3/coupled_harmonic_fit.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/harmonic_amplitude_audit.py", "/opt/m3/harmonic_amplitude_audit.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/candidate_outcome_analysis.py", "/opt/m3/candidate_outcome_analysis.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/residual_admission_analysis.py", "/opt/m3/residual_admission_analysis.py", copy=True)
+    .add_local_file(REPO_ROOT / "tools/profile_pair_analysis.py", "/opt/m3/profile_pair_analysis.py", copy=True)
     .add_local_file(REPO_ROOT / "tools/generate_pitch_corrected_corpus.py", "/opt/m3/generate_pitch_corrected_corpus.py", copy=True)
     .add_local_file(REPLAY_BINARY, "/opt/m3/m3_replay", copy=True)
     .run_commands("chmod 0755 /opt/m3/m3_replay")
@@ -1055,6 +1074,17 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         f"-cs{int(job.get('correlation_shadow_only', False))}"
         f"-jp{int(job.get('joint_pitch_residual', False))}"
         f"-bjp{int(job.get('bounded_joint_pitch_residual', False))}"
+        f"-jro{int(job.get('joint_residual_output', False))}"
+        f"-ccr{int(job.get('calibrated_collision_revalidation', False))}"
+        f"-ppa{int(job.get('polyphonic_posterior_assignment', False))}"
+        f"-ppc{int(job.get('profile_pair_corroboration', False))}"
+        f"-pmp{int(job.get('profile_memory_partial_correction', False))}"
+        f"-apc{int(job.get('assignment_partial_correction', False))}"
+        f"-ppof{int(job.get('profile_pair_output_filter', False))}"
+        f"-ppce{int(job.get('profile_pair_continuity_echo', False))}"
+        f"-fp{job.get('fretted_penalty_scale', -1.0)}"
+        f"-cr{job.get('candidate_rescue_score_ratio', -1.0)}"
+        f"-{job.get('candidate_rescue_fundamental_ratio', -1.0)}"
         f"-t{job['input_trim']}"
         f"-se{job['sensitivity']}-r{job['response']}"
         f"-p{job['max_polyphony']}-f{job['max_fret']}.tsv"
@@ -1091,6 +1121,21 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             str(MOUNT_ROOT / "corpus/templates.tsv"),
         ]
     fine_window_path = output_path.with_suffix(".fine-windows.jsonl")
+    candidate_trace_path = output_path.with_suffix(".candidate-trace.tsv")
+    outcome_trace_path = output_path.with_suffix(".outcome-trace.tsv")
+    assignment_path = output_path.with_suffix(".assignment.tsv")
+    if bool(job.get("assignment_trace", False)):
+        command += ["--assignment-trace", str(assignment_path)]
+    residual_admission_path = output_path.with_suffix(".residual-admission.tsv")
+    if bool(job.get("residual_admission_trace", False)):
+        command += ["--residual-admission-trace", str(residual_admission_path)]
+    if bool(job.get("outcome_trace", False)):
+        command += ["--outcome-trace", str(outcome_trace_path)]
+    if bool(job.get("candidate_trace", False)):
+        command += ["--candidate-trace", str(candidate_trace_path),
+                    "--candidate-trace-note", str(job["candidate_trace_note"]),
+                    "--candidate-trace-start", str(job["candidate_trace_start"]),
+                    "--candidate-trace-end", str(job["candidate_trace_end"])]
     if bool(job.get("fine_window_dump", False)):
         command += ["--fine-window-dump", str(fine_window_path)]
         if int(job.get("fine_window_note", -1)) >= 0:
@@ -1099,6 +1144,35 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
                     "--fine-window-min-spacing", str(job.get("fine_window_min_spacing", 0.5))]
         if float(job.get("fine_window_end", -1.0)) >= 0.0:
             command += ["--fine-window-end", str(job["fine_window_end"])]
+    candidate_rescue_score_ratio = float(job.get("candidate_rescue_score_ratio", -1.0))
+    candidate_rescue_fundamental_ratio = float(job.get("candidate_rescue_fundamental_ratio", -1.0))
+    if candidate_rescue_score_ratio >= 0.0:
+        command += [
+            "--candidate-rescue-score-ratio",
+            f"{candidate_rescue_score_ratio:.9g}",
+            "--candidate-rescue-fundamental-ratio",
+            f"{candidate_rescue_fundamental_ratio:.9g}",
+        ]
+    if bool(job.get("calibrated_collision_revalidation", False)):
+        command += ["--diagnostic-calibrated-collision-revalidation"]
+    if bool(job.get("polyphonic_posterior_assignment", False)):
+        command += ["--diagnostic-polyphonic-posterior-assignment"]
+    if bool(job.get("profile_pair_corroboration", False)):
+        command += ["--diagnostic-profile-pair-corroboration"]
+    if bool(job.get("profile_memory_partial_correction", False)):
+        command += ["--diagnostic-profile-memory-partial-correction"]
+    if bool(job.get("assignment_partial_correction", False)):
+        command += ["--diagnostic-assignment-partial-correction"]
+    if bool(job.get("profile_pair_output_filter", False)):
+        command += ["--diagnostic-profile-pair-output-filter"]
+    if bool(job.get("profile_pair_continuity_echo", False)):
+        command += ["--diagnostic-profile-pair-continuity-echo"]
+    fretted_penalty_scale = float(job.get("fretted_penalty_scale", -1.0))
+    if fretted_penalty_scale >= 0.0:
+        command += [
+            "--diagnostic-fretted-fixed-penalty", f"{0.20 * fretted_penalty_scale:.9g}",
+            "--diagnostic-fretted-per-fret-penalty", f"{0.005 * fretted_penalty_scale:.9g}",
+        ]
     selector_margin = float(job["selector_margin"])
     if selector_margin >= 0.0:
         command += [
@@ -1141,6 +1215,8 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command.append("--diagnostic-joint-pitch-residual")
     if bool(job.get("bounded_joint_pitch_residual", False)):
         command.append("--diagnostic-bounded-joint-pitch-residual")
+    if bool(job.get("joint_residual_output", False)):
+        command.append("--diagnostic-joint-residual-output")
     started = time.monotonic()
     completed = subprocess.run(
         command,
@@ -1168,12 +1244,59 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
                             "min_spacing_seconds": float(job.get("fine_window_min_spacing", 0.5))}
     if bool(job.get("persist_tsv", False)):
         output_path.write_text(completed.stdout, encoding="utf-8")
-    if bool(job.get("persist_tsv", False)) or bool(job.get("fine_window_dump", False)):
+    trace_metadata = None
+    if bool(job.get("candidate_trace", False)):
+        found = re.search(r"candidate_trace frames=(\d+) cap=(\d+) truncated=([01])", completed.stderr)
+        if found is None:
+            raise RuntimeError("candidate trace metadata is missing")
+        trace_metadata = {"frames": int(found[1]), "cap": int(found[2]),
+                          "truncated": found[3] == "1", "sha256": _sha256(candidate_trace_path)}
+    outcome_metadata = None
+    if bool(job.get("outcome_trace", False)):
+        found = re.search(r"outcome_trace frames=(\d+) cap=(\d+) truncated=([01])", completed.stderr)
+        if found is None or found[3] != "0":
+            raise RuntimeError("outcome trace is missing or incomplete")
+        outcome_metadata = {"frames": int(found[1]), "cap": int(found[2]),
+                            "truncated": False, "sha256": _sha256(outcome_trace_path)}
+    assignment_metadata = None
+    if bool(job.get("assignment_trace", False)):
+        found = re.search(r"assignment_trace rows=(\d+) cap=(\d+) truncated=([01]) sampled_frames=(\d+) decimation=(\d+)", completed.stderr)
+        if found is None or found[3] != "0":
+            raise RuntimeError("assignment trace is missing or incomplete")
+        assignment_metadata = {
+            "rows": int(found[1]), "cap": int(found[2]), "truncated": False,
+            "sampled_frames": int(found[4]), "decimation": int(found[5]),
+            "sha256": _sha256(assignment_path)}
+    residual_admission_metadata = None
+    if bool(job.get("residual_admission_trace", False)):
+        found = re.search(r"residual_admission_trace rows=(\d+) cap=(\d+) truncated=([01]) sampled_frames=(\d+) candidates=(\d+) decimation=(\d+)", completed.stderr)
+        if found is None or found[3] != "0":
+            raise RuntimeError("residual admission trace is missing or incomplete")
+        residual_admission_metadata = {
+            "rows": int(found[1]), "cap": int(found[2]), "truncated": False,
+            "sampled_frames": int(found[4]), "candidates": int(found[5]),
+            "decimation": int(found[6]), "sha256": _sha256(residual_admission_path)}
+    if (bool(job.get("persist_tsv", False)) or bool(job.get("fine_window_dump", False))
+            or bool(job.get("candidate_trace", False)) or bool(job.get("outcome_trace", False))
+            or bool(job.get("residual_admission_trace", False))
+            or bool(job.get("assignment_trace", False))):
         volume.commit()
     result = _parse_aggregate(completed.stdout)
     result.update(
         {
             "dataset": job["dataset"],
+            "candidate_trace_path": str(candidate_trace_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("candidate_trace", False)) else "",
+            "candidate_trace_capture": trace_metadata,
+            "outcome_trace_path": str(outcome_trace_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("outcome_trace", False)) else "",
+            "outcome_trace_capture": outcome_metadata,
+            "residual_admission_path": str(residual_admission_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("residual_admission_trace", False)) else "",
+            "residual_admission_capture": residual_admission_metadata,
+            "assignment_path": str(assignment_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("assignment_trace", False)) else "",
+            "assignment_capture": assignment_metadata,
             "fine_window_path": str(fine_window_path.relative_to(MOUNT_ROOT))
                 if bool(job.get("fine_window_dump", False)) else "",
             "fine_window_capture": capture_metadata,
@@ -1196,6 +1319,17 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "correlation_shadow_only": bool(job.get("correlation_shadow_only", False)),
             "joint_pitch_residual": bool(job.get("joint_pitch_residual", False)),
             "bounded_joint_pitch_residual": bool(job.get("bounded_joint_pitch_residual", False)),
+            "joint_residual_output": bool(job.get("joint_residual_output", False)),
+            "calibrated_collision_revalidation": bool(job.get("calibrated_collision_revalidation", False)),
+            "polyphonic_posterior_assignment": bool(job.get("polyphonic_posterior_assignment", False)),
+            "profile_pair_corroboration": bool(job.get("profile_pair_corroboration", False)),
+            "profile_memory_partial_correction": bool(job.get("profile_memory_partial_correction", False)),
+            "assignment_partial_correction": bool(job.get("assignment_partial_correction", False)),
+            "profile_pair_output_filter": bool(job.get("profile_pair_output_filter", False)),
+            "profile_pair_continuity_echo": bool(job.get("profile_pair_continuity_echo", False)),
+            "fretted_penalty_scale": fretted_penalty_scale,
+            "candidate_rescue_score_ratio": candidate_rescue_score_ratio,
+            "candidate_rescue_fundamental_ratio": candidate_rescue_fundamental_ratio,
             "sensitivity": int(job["sensitivity"]),
             "response": int(job["response"]),
             "max_polyphony": int(job["max_polyphony"]),
@@ -1208,6 +1342,224 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         }
     )
     return result
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=1800)
+def compare_candidate_outcomes(pair: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    sys.path.insert(0, "/opt/m3")
+    from candidate_outcome_analysis import compare_streams
+
+    volume.reload()
+    rows = [pair["control"], pair["trial"]]
+    paths = []
+    for row in rows:
+        path = MOUNT_ROOT / row["outcome_trace_path"]
+        if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+            raise ValueError("outcome trace must be in the replay results volume")
+        capture = row["outcome_trace_capture"]
+        if capture["truncated"] or _sha256(path) != capture["sha256"]:
+            raise ValueError("outcome trace is incomplete or changed")
+        paths.append(path)
+    with paths[0].open() as control, paths[1].open() as trial:
+        result = compare_streams(control, trial, *rows)
+    for name, row in zip(("control", "trial"), rows):
+        if result[name]["snapshots"] != row["outcome_trace_capture"]["frames"]:
+            raise ValueError("outcome trace frame count disagrees with capture metadata")
+    result.update(dataset=rows[0]["dataset"], block=rows[0]["block"],
+                  binary_sha256=rows[0]["binary_sha256"],
+                  control_path=rows[0]["outcome_trace_path"],
+                  trial_path=rows[1]["outcome_trace_path"])
+    output_path = paths[1].with_suffix(".comparison.json")
+    output_path.write_text(json.dumps(result, indent=2) + "\n")
+    volume.commit()
+    result["result_path"] = str(output_path.relative_to(MOUNT_ROOT))
+    return result
+
+
+@app.local_entrypoint()
+def outcome_analysis(control: str, trial: str,
+                     output: str = "build/modal/candidate-outcome-analysis.json") -> None:
+    reports = [json.loads(Path(path).read_text()) for path in (control, trial)]
+    indexed = []
+    for report in reports:
+        rows = {(row["dataset"], row["block"]): row for row in report["results"]}
+        if len(rows) != len(report["results"]):
+            raise SystemExit("outcome analysis requires one row per dataset/block")
+        indexed.append(rows)
+    if indexed[0].keys() != indexed[1].keys() or not indexed[0]:
+        raise SystemExit("outcome analysis requires the same nonempty dataset/block set")
+    common_settings = (
+        "binary_sha256", "input_trim", "sensitivity", "response", "max_polyphony", "max_fret",
+        "selector_margin", "selector_mask", "dp_similarity", "dp_calibration_margin",
+        "dp_score_margin", "dp_replacement_mask", "production_dp_mask", "fine_mask_pruning",
+        "fine_beat_pruning", "collecting_fine_history_carry", "correlation_seconds",
+        "selection_window_only", "correlation_shadow_only", "joint_pitch_residual",
+        "bounded_joint_pitch_residual", "joint_residual_output", "calibrated_collision_revalidation")
+    pairs = []
+    for key in sorted(indexed[0]):
+        a, b = indexed[0][key], indexed[1][key]
+        if any(a.get(name) != b.get(name) for name in common_settings):
+            raise SystemExit(f"outcome pair settings differ for {key}")
+        if not all(row.get("outcome_trace_path") and row.get("outcome_trace_capture") for row in (a, b)):
+            raise SystemExit(f"outcome trace missing for {key}")
+        pairs.append(dict(control=a, trial=b))
+    results = list(compare_candidate_outcomes.map(pairs, order_outputs=True))
+    path = Path(output)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(control_report=control, trial_report=trial, results=results),
+                               indent=2) + "\n")
+    print(json.dumps(dict(output=str(path), datasets=len(results))))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=1800)
+def analyze_candidate_capture(row: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    sys.path.insert(0, "/opt/m3")
+    from candidate_outcome_analysis import (
+        analyze_candidate_population, analyze_label_failures, analyze_group_failures,
+    )
+
+    mode = row.get("analysis_kind", "population")
+    analyzers = {"population": analyze_candidate_population,
+                 "label_failures": analyze_label_failures,
+                 "group_failures": analyze_group_failures}
+    if mode not in analyzers:
+        raise ValueError("unknown candidate analysis kind")
+
+    volume.reload()
+    path = MOUNT_ROOT / row["outcome_trace_path"]
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("outcome trace must be in the replay results volume")
+    capture = row["outcome_trace_capture"]
+    if capture["truncated"] or _sha256(path) != capture["sha256"]:
+        raise ValueError("outcome trace is incomplete or changed")
+    with path.open() as stream:
+        result = analyzers[mode](stream, row)
+    if result["totals"]["snapshots"] != capture["frames"]:
+        raise ValueError("outcome trace frame count disagrees with capture metadata")
+    result.update(dataset=row["dataset"], block=row["block"],
+                  binary_sha256=row["binary_sha256"], trace_path=row["outcome_trace_path"])
+    output_path = path.with_suffix(f".{mode}.json")
+    output_path.write_text(json.dumps(result, indent=2) + "\n")
+    volume.commit()
+    result["result_path"] = str(output_path.relative_to(MOUNT_ROOT))
+    return result
+
+
+def _candidate_analysis(report: str, output: str, mode: str) -> None:
+    rows = json.loads(Path(report).read_text())["results"]
+    keys = {(row["dataset"], row["block"]) for row in rows}
+    if not rows or len(keys) != len(rows):
+        raise SystemExit("population analysis requires one row per dataset/block")
+    if not all(row.get("outcome_trace_path") and row.get("outcome_trace_capture") for row in rows):
+        raise SystemExit("population analysis requires completed outcome traces")
+    results = list(analyze_candidate_capture.map(
+        [dict(row, analysis_kind=mode) for row in rows], order_outputs=True))
+    path = Path(output)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(source_report=report, results=results), indent=2) + "\n")
+    print(json.dumps(dict(output=str(path), datasets=len(results))))
+
+
+@app.local_entrypoint()
+def candidate_population(report: str,
+                         output: str = "build/modal/candidate-population.json") -> None:
+    _candidate_analysis(report, output, "population")
+
+
+@app.local_entrypoint()
+def label_failure_analysis(report: str,
+                           output: str = "build/modal/label-failure-analysis.json") -> None:
+    _candidate_analysis(report, output, "label_failures")
+
+
+@app.local_entrypoint()
+def group_failure_analysis(report: str,
+                          output: str = "build/modal/group-failure-analysis.json") -> None:
+    _candidate_analysis(report, output, "group_failures")
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=1800)
+def analyze_residual_admission_capture(row: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    sys.path.insert(0, "/opt/m3")
+    from residual_admission_analysis import analyze_stream
+
+    volume.reload()
+    path = MOUNT_ROOT / row["residual_admission_path"]
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("residual admission trace must be in the replay results volume")
+    capture = row["residual_admission_capture"]
+    if capture["truncated"] or _sha256(path) != capture["sha256"]:
+        raise ValueError("residual admission trace is incomplete or changed")
+    with path.open() as stream:
+        result = analyze_stream(stream, capture)
+    result.update(dataset=row["dataset"], block=row["block"],
+                  binary_sha256=row["binary_sha256"],
+                  trace_path=row["residual_admission_path"])
+    output_path = path.with_suffix(".analysis.json")
+    output_path.write_text(json.dumps(result, indent=2) + "\n")
+    volume.commit()
+    result["result_path"] = str(output_path.relative_to(MOUNT_ROOT))
+    return result
+
+
+@app.local_entrypoint()
+def residual_admission_analysis(
+        report: str, output: str = "build/modal/residual-admission-analysis.json") -> None:
+    rows = json.loads(Path(report).read_text())["results"]
+    keys = {(row["dataset"], row["block"]) for row in rows}
+    if not rows or len(keys) != len(rows):
+        raise SystemExit("residual admission analysis requires one row per dataset/block")
+    if not all(row.get("residual_admission_path") and row.get("residual_admission_capture")
+               for row in rows):
+        raise SystemExit("residual admission analysis requires completed traces")
+    results = list(analyze_residual_admission_capture.map(rows, order_outputs=True))
+    path = Path(output)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(source_report=report, results=results), indent=2) + "\n")
+    print(json.dumps(dict(output=str(path), datasets=len(results))))
+
+
+@app.function(image=image, volumes={str(MOUNT_ROOT): volume}, cpu=2.0,
+              memory=2048, timeout=1800)
+def analyze_profile_pair_capture(row: dict[str, Any]) -> dict[str, Any]:
+    import sys
+    sys.path.insert(0, "/opt/m3")
+    from profile_pair_analysis import analyze_stream
+
+    volume.reload()
+    path = MOUNT_ROOT / row["assignment_path"]
+    if not path.is_relative_to(MOUNT_ROOT / "results") or ".." in path.parts:
+        raise ValueError("assignment trace must be in the replay results volume")
+    capture = row["assignment_capture"]
+    if capture["truncated"] or _sha256(path) != capture["sha256"]:
+        raise ValueError("assignment trace is incomplete or changed")
+    with path.open() as stream:
+        result = analyze_stream(stream, capture)
+    result.update(dataset=row["dataset"], block=row["block"],
+                  binary_sha256=row["binary_sha256"], trace_path=row["assignment_path"])
+    return result
+
+
+@app.local_entrypoint()
+def profile_pair_analysis(
+        report: str, output: str = "build/modal/profile-pair-analysis.json") -> None:
+    rows = json.loads(Path(report).read_text())["results"]
+    keys = {(row["dataset"], row["block"]) for row in rows}
+    if not rows or len(keys) != len(rows):
+        raise SystemExit("profile pair analysis requires one row per dataset/block")
+    if not all(row.get("assignment_path") and row.get("assignment_capture") for row in rows):
+        raise SystemExit("profile pair analysis requires completed traces")
+    results = list(analyze_profile_pair_capture.map(rows, order_outputs=True))
+    path = Path(output)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(source_report=report, results=results), indent=2) + "\n")
+    print(json.dumps(dict(output=str(path), datasets=len(results))))
 
 
 @app.local_entrypoint()
@@ -1264,6 +1616,17 @@ def sweep(
     correlation_shadow_only: bool = False,
     joint_pitch_residual: bool = False,
     bounded_joint_pitch_residual: bool = False,
+    joint_residual_output: bool = False,
+    calibrated_collision_revalidation: bool = False,
+    polyphonic_posterior_assignment: bool = False,
+    profile_pair_corroboration: bool = False,
+    profile_memory_partial_correction: bool = False,
+    assignment_partial_correction: bool = False,
+    profile_pair_output_filter: bool = False,
+    profile_pair_continuity_echo: bool = False,
+    fretted_penalty_scale: float = -1.0,
+    candidate_rescue_score_ratio: float = -1.0,
+    candidate_rescue_fundamental_ratio: float = -1.0,
     input_trims: str = "-9",
     sensitivities: str = "60",
     responses: str = "75",
@@ -1276,10 +1639,32 @@ def sweep(
     fine_window_start: float = 0.0,
     fine_window_end: float = -1.0,
     fine_window_min_spacing: float = 0.5,
+    candidate_trace: bool = False,
+    outcome_trace: bool = False,
+    residual_admission_trace: bool = False,
+    assignment_trace: bool = False,
+    candidate_trace_note: int = 40,
+    candidate_trace_start: float = 0.0,
+    candidate_trace_end: float = 20.0,
     tag: str = "manual",
     output: str = "build/modal/m3-replay-results.json",
 ) -> None:
     joint_pitch_residual = joint_pitch_residual or bounded_joint_pitch_residual
+    if fretted_penalty_scale != -1.0 and not (
+        math.isfinite(fretted_penalty_scale) and 0.0 <= fretted_penalty_scale <= 1.0
+    ):
+        raise SystemExit("fretted penalty scale must be -1 (disabled) or in 0..1")
+    if (candidate_trace_note < 0 or candidate_trace_note > 127
+            or not math.isfinite(candidate_trace_start) or not math.isfinite(candidate_trace_end)
+            or candidate_trace_start < 0.0 or candidate_trace_end <= candidate_trace_start):
+        raise SystemExit("candidate trace requires note 0..127 and 0 <= start < end")
+    if not candidate_trace and (candidate_trace_note, candidate_trace_start, candidate_trace_end) != (40, 0.0, 20.0):
+        raise SystemExit("candidate trace options require --candidate-trace")
+    rescue_ratios = (candidate_rescue_score_ratio, candidate_rescue_fundamental_ratio)
+    if rescue_ratios != (-1.0, -1.0) and not all(
+        math.isfinite(value) and 0.0 <= value <= 1.0 for value in rescue_ratios
+    ):
+        raise SystemExit("candidate rescue requires both ratios in 0..1, or both -1 to disable")
     dataset_names = [value.strip() for value in datasets.split(",") if value.strip()]
     if fine_window_dump and not label_details:
         raise SystemExit("fine-window capture requires --label-details")
@@ -1324,7 +1709,9 @@ def sweep(
         raise SystemExit("secondary windows require an explicit duration")
     if selection_window_only and correlation_shadow_only:
         raise SystemExit("selection-only and shadow-only modes are exclusive")
-    if joint_pitch_residual and any(value != -1.0 for value in correlation_windows):
+    if (joint_pitch_residual or joint_residual_output) and any(
+        value != -1.0 for value in correlation_windows
+    ):
         raise SystemExit("joint pitch residual requires the production window")
     trims = [float(value) for value in input_trims.split(",")]
     sensitivity_values = [int(value) for value in sensitivities.split(",")]
@@ -1377,6 +1764,13 @@ def sweep(
             "fine_window_start": fine_window_start,
             "fine_window_end": fine_window_end,
             "fine_window_min_spacing": fine_window_min_spacing,
+            "candidate_trace": candidate_trace,
+            "outcome_trace": outcome_trace,
+            "residual_admission_trace": residual_admission_trace,
+            "assignment_trace": assignment_trace,
+            "candidate_trace_note": candidate_trace_note,
+            "candidate_trace_start": candidate_trace_start,
+            "candidate_trace_end": candidate_trace_end,
             "dp_similarity": similarity,
             "dp_calibration_margin": calibration_margin,
             "dp_score_margin": score_margin,
@@ -1390,6 +1784,17 @@ def sweep(
             "correlation_shadow_only": correlation_shadow_only,
             "joint_pitch_residual": joint_pitch_residual,
             "bounded_joint_pitch_residual": bounded_joint_pitch_residual,
+            "joint_residual_output": joint_residual_output,
+            "calibrated_collision_revalidation": calibrated_collision_revalidation,
+            "polyphonic_posterior_assignment": polyphonic_posterior_assignment,
+            "profile_pair_corroboration": profile_pair_corroboration,
+            "profile_memory_partial_correction": profile_memory_partial_correction,
+            "assignment_partial_correction": assignment_partial_correction,
+            "profile_pair_output_filter": profile_pair_output_filter,
+            "profile_pair_continuity_echo": profile_pair_continuity_echo,
+            "fretted_penalty_scale": fretted_penalty_scale,
+            "candidate_rescue_score_ratio": candidate_rescue_score_ratio,
+            "candidate_rescue_fundamental_ratio": candidate_rescue_fundamental_ratio,
             "input_trim": input_trim,
             "sensitivity": sensitivity,
             "response": response,

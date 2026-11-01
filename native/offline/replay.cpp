@@ -281,6 +281,298 @@ bool voice_matches_label(const TunerVoice& voice,
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void write_string_assignment_frame(
+    StringAssignmentTrace& trace, std::size_t sample_index,
+    const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
+    const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels) {
+  const auto tick = detector.candidate_tracking_diagnostics(0U).decision_tick;
+  if (trace.failed || tick % trace.kTickDecimation != 0U) return;
+  ++trace.sampled_frames;
+  for (std::uint16_t n = 0U; n < 128U; ++n) {
+    const auto note = static_cast<std::uint8_t>(n);
+    const auto a = detector.string_assignment_diagnostics(note);
+    if (!a.observed && !a.calibrated_replacement) continue;
+    if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
+    bool any_label = false, expected_note = false;
+    std::uint8_t expected_mask = 0U, rendered_mask = 0U;
+    for (std::size_t i = 0U; i < labels.size(); ++i) {
+      if (!active_labels[i]) continue;
+      any_label = true;
+      if (labels[i].midi_note == note) {
+        expected_note = true;
+        expected_mask |= labels[i].string_mask;
+      }
+    }
+    for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+      const auto& voice = snapshot.voices[v];
+      if (voice.midi_note == note && voice.string_index < kMaxVoices)
+        rendered_mask |= static_cast<std::uint8_t>(1U << voice.string_index);
+    }
+    std::fprintf(trace.stream, "%llu\t%u\t%u",
+        static_cast<unsigned long long>(sample_index), tick, note);
+    for (const unsigned field : {
+             unsigned(a.observed), unsigned(a.valid), unsigned(a.selected_count),
+             unsigned(a.ordinal), unsigned(a.isolated), unsigned(a.reassignment_ready),
+             unsigned(a.prior_committed), unsigned(a.use_posterior), unsigned(a.playable),
+             unsigned(a.reserved_coasting), unsigned(a.reserved_extras),
+             unsigned(a.prior_primary), unsigned(a.prior_mask), unsigned(a.dp_primary),
+             unsigned(a.spectral_proposal), unsigned(a.final_primary), unsigned(a.final_mask),
+             unsigned(a.final_spectral), unsigned(a.final_continuity),
+             unsigned(a.calibrated_replacement), unsigned(a.joint_strings),
+             unsigned(any_label), unsigned(expected_note), unsigned(expected_mask),
+             unsigned(rendered_mask)}) std::fprintf(trace.stream, "\t%u", field);
+    std::fprintf(trace.stream, "\t%.17g\t", a.joint_cost);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",", a.lane_totals[string]);
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      if (string != 0U) std::fputc(',', trace.stream);
+      for (std::size_t term = 0U; term < a.lane_terms[string].size(); ++term)
+        std::fprintf(trace.stream, "%s%.17g", term == 0U ? "" : ":",
+                     a.lane_terms[string][term]);
+    }
+    std::fputc('\t', trace.stream);
+    // Source pitch, rendered pitch, string. This exposes later projection or
+    // replacement without attributing another candidate's voice to this row.
+    for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+      const auto& voice = snapshot.voices[v];
+      std::fprintf(trace.stream, "%s%u:%u:%u", v == 0U ? "" : ",",
+                   voice.detected_midi_note, voice.midi_note, voice.string_index);
+    }
+    std::fprintf(trace.stream, "\t%.17g\t%.17g\t%.17g\t%u\t%u\t%u\t%.17g\t%u\t",
+        a.phase_cents, a.phase_raw_cents, a.phase_previous_cents,
+        unsigned(a.phase_updates), unsigned(a.phase_accepted), unsigned(a.phase_valid),
+        a.assignment_cents, unsigned(a.complete_calibration));
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",", a.learned_cents[string]);
+    for (const unsigned field : {unsigned(a.group_before), unsigned(a.group_proposal),
+             unsigned(a.group_origin), unsigned(a.group_transition), unsigned(a.group_after),
+             unsigned(a.beat_valid), unsigned(a.fine_mask), unsigned(a.fine_valid),
+             unsigned(a.fine_pending_mask), unsigned(a.continuity_at_render),
+             unsigned(a.primary_only_render), unsigned(a.render_observed),
+             unsigned(a.primary_only_snapshot)}) std::fprintf(trace.stream, "\t%u", field);
+    std::fprintf(trace.stream, "\t%u\t%u\t%.17g\t%.17g\t%.17g\t",
+        unsigned(a.profile_fit_observed), unsigned(a.profile_uses_long_memory),
+        a.profile_primary_error, a.profile_best_single_error, a.profile_mixture_error);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",", a.profile_weights[string]);
+    std::fputc('\t', trace.stream);
+    for (std::size_t harmonic = 0U; harmonic < a.profile_observed.size(); ++harmonic)
+      std::fprintf(trace.stream, "%s%.17g", harmonic == 0U ? "" : ",", a.profile_observed[harmonic]);
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",", a.profile_single_errors[string]);
+    std::fprintf(trace.stream, "\t%u\t%u", unsigned(a.candidate_age_ticks), unsigned(a.midi_mask));
+    std::fprintf(trace.stream, "\t%u\t%u", unsigned(a.profile_pair_primary), unsigned(a.profile_pair_mask));
+    for (const auto& fit : a.profile_pair_windows) {
+      std::fprintf(trace.stream, "\t%u:%.17g:%.17g:%.17g:%.17g:%.17g",
+          unsigned(fit.valid), fit.energy, fit.primary_error, fit.best_single_error,
+          fit.pair_error, fit.secondary_weight);
+      for (const double value : fit.observed) std::fprintf(trace.stream, ":%.17g", value);
+    }
+    std::fputc('\n', trace.stream);
+    trace.failed = std::ferror(trace.stream) != 0;
+    ++trace.rows;
+    if (trace.failed) return;
+  }
+}
+
+void write_residual_admission_frame(
+    ResidualAdmissionTrace& trace, std::size_t sample_index,
+    const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
+    const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels,
+    const PersistentConfig& config, double sample_rate,
+    m3::JointPitchResidual& base_fit, m3::JointPitchResidual& added_fit) {
+  const auto frame = detector.candidate_tracking_diagnostics(0U);
+  if (trace.failed || frame.decision_tick % trace.kTickDecimation != 0U) return;
+  ++trace.sampled_frames;
+  if (detector.quiet_disposition() != QuietDisposition::not_quiet ||
+      static_cast<double>(sample_index + 1U) < 0.8 * sample_rate) return;
+
+  std::array<bool, 128U> owned{};
+  std::uint8_t used_mask = 0U;
+  std::size_t selected_count = 0U;
+  for (std::size_t n = 0U; n < owned.size(); ++n) {
+    const auto note = static_cast<std::uint8_t>(n);
+    const auto selection = detector.selection_disposition(note);
+    const auto tracking = detector.candidate_tracking_diagnostics(note);
+    if (selection != SelectionDisposition::selected &&
+        selection != SelectionDisposition::coasting && !tracking.active) continue;
+    owned[n] = true;
+    ++selected_count;
+    used_mask = static_cast<std::uint8_t>(
+        used_mask | tracking.assigned_mask | detector.selector_group_mask(note));
+  }
+  for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+    const auto& voice = snapshot.voices[v];
+    if (voice.detected_midi_note < owned.size() && !owned[voice.detected_midi_note]) {
+      owned[voice.detected_midi_note] = true;
+      ++selected_count;
+    }
+    if (voice.string_index < kMaxVoices) {
+      used_mask = static_cast<std::uint8_t>(used_mask | (1U << voice.string_index));
+    }
+  }
+  const auto used_voices = std::max<std::size_t>(mask_member_count(used_mask), selected_count);
+  if (selected_count == 0U || selected_count >= kMaxVoices ||
+      used_voices >= config.max_polyphony) return;
+
+  std::array<m3::JointPitchObservation, kMaxVoices> observations{};
+  std::size_t count = 0U;
+  double energy = 0.0, decay = 0.0;
+  for (std::size_t n = 0U; n < owned.size(); ++n) {
+    if (!owned[n]) continue;
+    auto& observed = observations[count];
+    observed.note = static_cast<std::uint8_t>(n);
+    if (!detector.harmonic_correlations_for_diagnostics(
+            observed.note, observed.frequency_hz, observed.correlation,
+            energy, decay)) return;
+    ++count;
+  }
+  const auto base = base_fit.evaluate(observations, count, sample_rate, decay, energy);
+  for (std::size_t n = 0U; n < owned.size(); ++n) {
+    const auto note = static_cast<std::uint8_t>(n);
+    if (owned[n] || detector.selection_disposition(note) != SelectionDisposition::dp_evicted)
+      continue;
+    const auto a = detector.candidate_admission_diagnostics(note);
+    const auto free_mask = static_cast<std::uint8_t>(a.playable_string_mask & ~used_mask);
+    if (a.score_threshold_ratio < 1.0 || free_mask == 0U ||
+        mask_member_count(detector.fine_frequency_member_mask(note)) >= 2U ||
+        mask_member_count(detector.fine_frequency_pending_member_mask(note)) >= 2U ||
+        mask_member_count(detector.committed_unison_mask(note)) >= 2U) continue;
+    ++trace.candidates;
+    if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
+    auto& added = observations[count];
+    added.note = note;
+    if (!detector.harmonic_correlations_for_diagnostics(
+            note, added.frequency_hz, added.correlation, energy, decay)) continue;
+    const auto fit = added_fit.evaluate(observations, count + 1U, sample_rate, decay, energy);
+
+    // Truth is attached after both counterfactual models have been evaluated.
+    bool any_label = false, expected_note = false, already_emitted = false;
+    std::uint8_t expected_mask = 0U;
+    for (std::size_t i = 0U; i < labels.size(); ++i) {
+      if (!active_labels[i]) continue;
+      any_label = true;
+      if (labels[i].midi_note == note) {
+        expected_note = true;
+        expected_mask |= labels[i].string_mask;
+      }
+    }
+    for (std::size_t v = 0U; v < snapshot.voice_count; ++v)
+      already_emitted = already_emitted || snapshot.voices[v].midi_note == note;
+    std::fprintf(trace.stream,
+        "%llu\t%u\t%u\t%zu\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
+        "%.17g\t%.17g\t%.17g\t%.17g\t%u\t%.17g\t%.17g\t%.17g\t%u\t%u\t%.17g\t%u\t",
+        static_cast<unsigned long long>(sample_index), frame.decision_tick, note,
+        count, used_mask, free_mask, any_label, expected_note, expected_mask,
+        already_emitted, base.valid, fit.valid,
+        base.residual_fraction, fit.residual_fraction,
+        base.valid && fit.valid ? base.residual_fraction - fit.residual_fraction : 0.0,
+        fit.independent_energy_fraction[count], fit.shared_fundamental[count],
+        fit.fundamental_overlap[count], a.score_threshold_ratio, a.fundamental_score_ratio,
+        a.direct_fundamental_peak, a.local_peak, a.best_calibration_similarity,
+        a.best_calibrated_string);
+    for (std::size_t i = 0U; i < count; ++i)
+      std::fprintf(trace.stream, "%s%u", i == 0U ? "" : ",", observations[i].note);
+    std::fputc('\n', trace.stream);
+    trace.failed = std::ferror(trace.stream) != 0;
+    ++trace.rows;
+    if (trace.failed) return;
+  }
+}
+
+void write_candidate_outcome_frame(
+    CandidateOutcomeTrace& trace, std::size_t sample_index,
+    const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
+    const std::vector<ReplayLabel>& labels,
+    const std::vector<bool>& active_labels) {
+  if (trace.frames >= CandidateOutcomeTrace::kMaximumFrames) {
+    trace.truncated = true;
+    return;
+  }
+  if (trace.failed) return;
+  const auto frame = detector.candidate_tracking_diagnostics(0U);
+  std::fprintf(trace.stream, "%llu\t%u\t%u\t%u\t",
+      static_cast<unsigned long long>(sample_index), frame.decision_tick,
+      static_cast<unsigned>(detector.quiet_disposition()), frame.signal_samples);
+  bool first = true;
+  bool any_label = false;
+  for (std::size_t index = 0U; index < labels.size(); ++index) {
+    if (!active_labels[index]) continue;
+    any_label = true;
+    std::fprintf(trace.stream, "%s%zu:%u:%u", first ? "" : ",", index,
+        labels[index].midi_note, labels[index].string_mask);
+    first = false;
+  }
+  std::fputc('\t', trace.stream);
+  first = true;
+  for (std::size_t index = 0U; index < labels.size(); ++index) {
+    if (!active_labels[index] || !snapshot_matches_label(snapshot, labels[index])) continue;
+    std::fprintf(trace.stream, "%s%zu", first ? "" : ",", index);
+    first = false;
+  }
+  std::fputc('\t', trace.stream);
+  std::array<bool, 128U> emitted{};
+  for (std::size_t index = 0U; index < snapshot.voice_count; ++index) {
+    const auto& voice = snapshot.voices[index];
+    bool expected = false;
+    bool matching_note = false;
+    for (std::size_t label = 0U; label < labels.size(); ++label) {
+      if (!active_labels[label]) continue;
+      expected = expected || voice_matches_label(voice, labels[label]);
+      matching_note = matching_note || voice.midi_note == labels[label].midi_note;
+    }
+    // These classes use precisely the aggregate replay metric's definitions:
+    // 0 correct; 1 wrong note; 2 wrong string; 3 extra output in an unlabeled gap.
+    const unsigned outcome = expected ? 0U : !any_label ? 3U : matching_note ? 2U : 1U;
+    std::fprintf(trace.stream, "%s%u:%u:%u:%u:%u:%u:%d:%u",
+        index == 0U ? "" : ",", voice.detected_midi_note, voice.midi_note,
+        voice.string_index, outcome, voice.age_ticks, voice.cents_valid,
+        voice.cents_q8, voice.pitch_evidence_member_mask);
+    if (voice.detected_midi_note < emitted.size()) emitted[voice.detected_midi_note] = true;
+  }
+  std::fputc('\t', trace.stream);
+  first = true;
+  for (std::size_t note = 0U; note < 128U; ++note) {
+    const auto midi_note = static_cast<std::uint8_t>(note);
+    const auto a = detector.candidate_admission_diagnostics(midi_note);
+    const auto t = detector.candidate_tracking_diagnostics(midi_note);
+    const auto selection = detector.selection_disposition(midi_note);
+    // Include the same weak direct candidates on both sides of a comparison,
+    // even when rescue is disabled, plus every selected, held or emitted pitch.
+    const bool weak_direct = a.score_threshold_ratio >= 0.20 &&
+        a.direct_fundamental_peak && (a.local_peak || a.candidate_evidence);
+    if (!emitted[note] && !t.active && t.rescue_mask == 0U && !weak_direct &&
+        selection != SelectionDisposition::selected &&
+        selection != SelectionDisposition::coasting) continue;
+    std::fprintf(trace.stream,
+        "%s%zu:%u:%u:%u:%u:%u:%.8g:%.8g:%.8g:%.8g:%u:%u:%u:%u:%u:%u:"
+        "%.8g:%.8g:%u:%.8g:%u:%.8g:%u:%u:%u:%u:%u:%u:%u:%u:%u:%d:%u:%u"
+        ":%u:%.8g:%.8g:%u:%u:%u:%u:%u",
+        first ? "" : ",", note, static_cast<unsigned>(selection), t.active,
+        t.assigned_mask, t.rescue_mask, detector.selector_group_mask(midi_note),
+        a.score_threshold_ratio, a.fundamental_score_ratio,
+        a.pitch_band_score_peak_ratio, a.pitch_band_fundamental_peak_ratio,
+        a.direct_fundamental_peak, a.local_peak, a.candidate_evidence,
+        a.calibrated_direct_support, a.playable_string_mask, a.calibrated_string_mask,
+        a.best_calibration_similarity, a.second_calibration_similarity,
+        a.best_calibrated_string, a.string_fret_onset_strength,
+        t.phase_valid, t.phase_cents, t.phase_updates, t.age_ticks,
+        t.attack_ticks, t.release_ticks, t.evidence_ticks, t.evidence_gap_ticks,
+        t.fine_valid, detector.fine_frequency_member_mask(midi_note),
+        detector.committed_unison_mask(midi_note), a.spectral_shadow_interval,
+        a.spectral_shadow_kind, a.pitch_band, a.selector_pool_member,
+        a.selector_raw_score, a.selector_best_adjusted_score,
+        a.selector_option_mask, a.selector_positive_mask,
+        a.selector_used_mask, a.selector_voice_count, a.selector_open_count);
+    first = false;
+  }
+  std::fputc('\n', trace.stream);
+  trace.failed = std::ferror(trace.stream) != 0;
+  ++trace.frames;
+}
+
 TunerSnapshot calibrated_dp_replacement_projection(
     const TunerSnapshot& snapshot, const PolyphonicPitchDetector& detector,
     const CalibratedDpReplacementPolicy& policy,
@@ -2091,16 +2383,119 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_correlation_shadow_only,
                          bool diagnostic_joint_pitch_residual,
                          FrequencyWindowCapture* frequency_window_capture,
-                         bool diagnostic_bounded_joint_pitch_residual) {
+                         bool diagnostic_bounded_joint_pitch_residual,
+                         bool diagnostic_joint_residual_output,
+                         bool diagnostic_calibrated_collision_revalidation,
+                         CandidateDecisionTrace* candidate_trace,
+                         CandidateOutcomeTrace* outcome_trace,
+                         bool diagnostic_polyphonic_posterior_assignment,
+                         ResidualAdmissionTrace* residual_admission_trace,
+                         StringAssignmentTrace* assignment_trace,
+                         bool diagnostic_profile_pair_corroboration,
+                         bool diagnostic_profile_memory_partial_correction,
+                         bool diagnostic_assignment_partial_correction,
+                         bool diagnostic_profile_pair_output_filter,
+                         bool diagnostic_profile_pair_continuity_echo) {
   output = {};
   error = ReplayError::invalid_config;
+  if (assignment_trace != nullptr) {
+    auto& trace = *assignment_trace;
+    trace.rows = trace.sampled_frames = 0U;
+    trace.truncated = trace.failed = false;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    return false;
+#else
+    if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3) return false;
+    trace.failed = std::fprintf(trace.stream,
+        "sample\ttick\tnote\tobserved\tvalid\tselected_count\tordinal\tisolated\t"
+        "reassignment_ready\tprior_committed\tuse_posterior\tplayable\t"
+        "reserved_coasting\treserved_extras\tprior_primary\tprior_mask\tdp_primary\t"
+        "spectral_proposal\tfinal_primary\tfinal_mask\tfinal_spectral\tfinal_continuity\t"
+        "replacement\tjoint_strings\tany_label\texpected_note\texpected_mask\t"
+        "rendered_mask\tjoint_cost\tlane_totals\tlane_terms\tvoices\t"
+        "phase_cents\tphase_raw_cents\tphase_previous_cents\tphase_updates\t"
+        "phase_accepted\tphase_valid\tassignment_cents\tcomplete_calibration\tlearned_cents\t"
+        "group_before\tgroup_proposal\tgroup_origin\tgroup_transition\tgroup_after\t"
+        "beat_valid\tfine_mask\tfine_valid\tfine_pending_mask\tcontinuity_at_render\t"
+        "primary_only_render\trender_observed\tprimary_only_snapshot\t"
+        "profile_fit_observed\tprofile_uses_long_memory\tprofile_primary_error\t"
+        "profile_best_single_error\tprofile_mixture_error\tprofile_weights\t"
+        "profile_observed\tprofile_single_errors\tcandidate_age_ticks\tmidi_mask\t"
+        "profile_pair_primary\tprofile_pair_mask\tprofile_pair_current\t"
+        "profile_pair_short\tprofile_pair_long\n") < 0;
+#endif
+  }
+  if (residual_admission_trace != nullptr) {
+    auto& trace = *residual_admission_trace;
+    trace.rows = trace.sampled_frames = trace.candidates = 0U;
+    trace.truncated = trace.failed = false;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    return false;
+#else
+    if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3 ||
+        diagnostic_correlation_seconds != -1.0) return false;
+    trace.failed = std::fprintf(trace.stream,
+        "sample\ttick\tnote\tbase_count\tused_mask\tfree_mask\tany_label\t"
+        "expected_note\texpected_mask\talready_emitted\tbase_valid\tadded_valid\t"
+        "base_residual\tadded_residual\tresidual_gain\tindependent_energy\t"
+        "shared_fundamental\tfundamental_overlap\tscore_ratio\tfund_ratio\t"
+        "direct\tlocal\tcalibration_similarity\tcalibration_string\tbase_notes\n") < 0;
+#endif
+  }
+  if (outcome_trace != nullptr) {
+    auto& trace = *outcome_trace;
+    trace.frames = 0U;
+    trace.truncated = false;
+    trace.failed = false;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    return false;
+#else
+    if (trace.stream == nullptr) return false;
+    trace.failed = std::fprintf(trace.stream,
+        "# m3_candidate_outcome_v2\n"
+        "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n") < 0;
+#endif
+  }
+  if (candidate_trace != nullptr) {
+    auto& trace = *candidate_trace;
+    trace.frames = 0U;
+    trace.truncated = false;
+    trace.failed = false;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    return false;
+#else
+    if (trace.stream == nullptr || trace.midi_note < 0 || trace.midi_note > 127 ||
+        !std::isfinite(trace.start_seconds) ||
+        !std::isfinite(trace.end_seconds) || trace.start_seconds < 0.0 ||
+        trace.end_seconds <= trace.start_seconds) {
+      return false;
+    }
+    trace.failed = std::fprintf(trace.stream,
+        "sample\ttick\tnote\tquiet\tselection\tscore_ratio\tfund_ratio\t"
+        "direct\tlocal\tevidence\tshadow_interval\tshadow_kind\t"
+        "other_eligible\tother_active\tactive\tassigned_mask\trescue_mask\t"
+        "selector_mask\tphase_valid\tfine_count\tfine_last\tfine_oldest\t"
+        "fine_valid\tfine_mask\tfit_mask\tpending_mask\tpending_count\t"
+        "fine_reason\tcommitted_mask\tselected_or_coasting\t"
+        "fine_update_scheduled\treset_serial\treset_tick\treset_prior_count\t"
+        "reset_prior_last_tick\treset_reason\tfine_disposition\t"
+        "fit_residual_improvement\tfit_min_member_ratio\tpending_beat_min\t"
+        "pending_seconds\tfit_unique_improvement\n") < 0;
+#endif
+  }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
       input_partition == 0U || input_partition > kMaximumInputPartition) {
     return false;
   }
-  if (diagnostic_joint_pitch_residual && diagnostic_correlation_seconds != -1.0) {
+  if ((diagnostic_joint_pitch_residual || diagnostic_joint_residual_output) &&
+      diagnostic_correlation_seconds != -1.0) {
     return false;
   }
+#if !defined(M3_JOINT_RESIDUAL_SHADOW)
+  if (diagnostic_joint_residual_output) {
+    return false;
+  }
+#endif
   if (diagnostic_bounded_joint_pitch_residual && !diagnostic_joint_pitch_residual) {
     return false;
   }
@@ -2127,6 +2522,9 @@ bool run_detector_replay(const WaveData& wave,
   if (!detector.configure(static_cast<double>(wave.sample_rate), config)) {
     return false;
   }
+#if defined(M3_JOINT_RESIDUAL_SHADOW)
+  detector.enable_joint_residual_output(diagnostic_joint_residual_output);
+#endif
   if ((diagnostic_correlation_seconds == -1.0 &&
        (diagnostic_selection_window_only ||
         diagnostic_correlation_shadow_only)) ||
@@ -2151,6 +2549,28 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_fine_beat_pruning);
   detector.set_collecting_fine_history_carry_for_diagnostics(
       diagnostic_collecting_fine_history_carry);
+  detector.set_calibrated_collision_revalidation_for_diagnostics(
+      diagnostic_calibrated_collision_revalidation);
+  detector.set_polyphonic_posterior_assignment_for_diagnostics(
+      diagnostic_polyphonic_posterior_assignment);
+  detector.set_profile_pair_corroboration_for_diagnostics(
+      diagnostic_profile_pair_corroboration);
+  detector.set_profile_memory_partial_correction_for_diagnostics(
+      diagnostic_profile_memory_partial_correction);
+  detector.set_assignment_partial_correction_for_diagnostics(
+      diagnostic_assignment_partial_correction);
+  detector.set_profile_pair_output_filter_for_diagnostics(
+      diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo,
+      diagnostic_profile_pair_continuity_echo);
+#else
+  if (diagnostic_calibrated_collision_revalidation ||
+      diagnostic_polyphonic_posterior_assignment ||
+      diagnostic_profile_pair_corroboration ||
+      diagnostic_profile_memory_partial_correction ||
+      diagnostic_assignment_partial_correction ||
+      diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo) {
+    return false;
+  }
 #endif
   if (calibration != nullptr) {
     detector.set_calibration_bank(*calibration);
@@ -2185,6 +2605,12 @@ bool run_detector_replay(const WaveData& wave,
     joint_pitch_fit = std::make_unique<m3::JointPitchResidual>();
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  detector.set_assignment_diagnostics_enabled(assignment_trace != nullptr);
+  std::unique_ptr<m3::JointPitchResidual> admission_base_fit, admission_added_fit;
+  if (residual_admission_trace != nullptr) {
+    admission_base_fit = std::make_unique<m3::JointPitchResidual>();
+    admission_added_fit = std::make_unique<m3::JointPitchResidual>();
+  }
   std::array<AdjacentEnvelopeCoherenceState, 127U>
       adjacent_envelope_coherence_states{};
   result.physical_group_expected_observed_mask_frames.assign(1U << 16U, 0U);
@@ -2434,6 +2860,87 @@ bool run_detector_replay(const WaveData& wave,
       }
       const TunerSnapshot& snapshot = decision.tuner_snapshot;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (assignment_trace != nullptr) {
+        write_string_assignment_frame(*assignment_trace, sample_index, detector,
+                                      snapshot, labels, spectral_active_labels);
+      }
+      if (residual_admission_trace != nullptr) {
+        write_residual_admission_frame(*residual_admission_trace, sample_index,
+            detector, snapshot, labels, spectral_active_labels, config,
+            static_cast<double>(wave.sample_rate), *admission_base_fit, *admission_added_fit);
+      }
+      if (outcome_trace != nullptr) {
+        write_candidate_outcome_frame(*outcome_trace, sample_index, detector,
+                                     snapshot, labels, spectral_active_labels);
+      }
+      if (candidate_trace != nullptr) {
+        auto& trace = *candidate_trace;
+        const double seconds = static_cast<double>(sample_index) /
+                               static_cast<double>(wave.sample_rate);
+        if (seconds >= trace.start_seconds && seconds < trace.end_seconds) {
+          if (trace.frames >= CandidateDecisionTrace::kMaximumFrames) {
+            trace.truncated = true;
+          } else if (!trace.failed) {
+            const auto note = static_cast<std::uint8_t>(trace.midi_note);
+            const auto admission = detector.candidate_admission_diagnostics(note);
+            const auto tracking = detector.candidate_tracking_diagnostics(note);
+            trace.failed = std::fprintf(trace.stream,
+                "%llu\t%u\t%u\t%u\t%u\t%.17g\t%.17g\t%u\t%u\t%u\t%d\t%u\t"
+                "%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t",
+                static_cast<unsigned long long>(sample_index),
+                tracking.decision_tick, note,
+                static_cast<unsigned>(detector.quiet_disposition()),
+                static_cast<unsigned>(detector.selection_disposition(note)),
+                admission.score_threshold_ratio, admission.fundamental_score_ratio,
+                admission.direct_fundamental_peak, admission.local_peak,
+                admission.candidate_evidence, admission.spectral_shadow_interval,
+                admission.spectral_shadow_kind,
+                admission.spectral_shadow_other_eligible_count,
+                admission.spectral_shadow_other_active_count,
+                tracking.active, tracking.assigned_mask, tracking.rescue_mask,
+                detector.selector_group_mask(note), tracking.phase_valid,
+                tracking.fine_count, tracking.fine_last_tick,
+                tracking.fine_oldest_tick, tracking.fine_valid,
+                detector.fine_frequency_member_mask(note),
+                detector.fine_frequency_fit_member_mask(note),
+                detector.fine_frequency_pending_member_mask(note),
+                tracking.fine_pending_count,
+                static_cast<unsigned>(detector.fine_frequency_unresolved_reason(note)),
+                detector.committed_unison_mask(note)) < 0;
+            bool first = true;
+            for (std::size_t other = 0U; other < 128U; ++other) {
+              const auto other_note = static_cast<std::uint8_t>(other);
+              const auto disposition = detector.selection_disposition(other_note);
+              if (disposition != SelectionDisposition::selected &&
+                  disposition != SelectionDisposition::coasting) {
+                continue;
+              }
+              const auto state = detector.candidate_tracking_diagnostics(other_note);
+              trace.failed = std::fprintf(trace.stream, "%s%zu:%u:%u:%u",
+                  first ? "" : ",", other, static_cast<unsigned>(disposition),
+                  state.assigned_mask, state.rescue_mask) < 0 || trace.failed;
+              first = false;
+            }
+            trace.failed = std::fprintf(trace.stream, "\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%.17g\t%.17g\t%.17g\t%.17g\t",
+                tracking.fine_update_scheduled, tracking.fine_reset.serial,
+                tracking.fine_reset.decision_tick, tracking.fine_reset.prior_count,
+                tracking.fine_reset.prior_last_tick,
+                static_cast<unsigned>(tracking.fine_reset.reason),
+                static_cast<unsigned>(detector.fine_frequency_disposition(note)),
+                detector.fine_frequency_residual_improvement(note),
+                detector.fine_frequency_minimum_member_ratio(note),
+                detector.fine_frequency_pending_minimum_pairwise_beat_coherence(note),
+                detector.fine_frequency_pending_evidence_seconds(note)) < 0 || trace.failed;
+            const auto unique = detector.fine_frequency_unique_member_improvement(note);
+            for (std::size_t string = 0U; string < unique.size(); ++string) {
+              trace.failed = std::fprintf(trace.stream, "%s%.17g",
+                  string == 0U ? "" : ",", unique[string]) < 0 || trace.failed;
+            }
+            trace.failed = std::fputc('\n', trace.stream) == EOF || trace.failed;
+            ++trace.frames;
+          }
+        }
+      }
       if (joint_pitch_fit != nullptr) {
         std::array<double, 128U> independent_energy;
         independent_energy.fill(std::numeric_limits<double>::quiet_NaN());
@@ -7972,6 +8479,17 @@ bool run_detector_replay(const WaveData& wave,
   result.core_residual_max_work = core_residual.max_rebuild_work;
   result.core_residual_max_pitches = core_residual.max_pitch_count;
   result.core_residual_sum = core_residual.residual_sum;
+  result.core_residual_output_enabled = diagnostic_joint_residual_output ? 1U : 0U;
+  result.core_residual_output_veto_frames = core_residual.output_veto_frames;
+  result.core_residual_output_note_offs = core_residual.output_note_offs;
+  result.core_residual_output_retriggers = core_residual.output_retriggers;
+  result.core_residual_output_joint_restores_valid = core_residual.output_joint_restores_valid;
+  result.core_residual_output_joint_restores_pending = core_residual.output_joint_restores_pending;
+  result.core_residual_output_joint_restores_unavailable = core_residual.output_joint_restores_unavailable;
+  result.core_residual_output_joint_restores_energy_low = core_residual.output_joint_restores_energy_low;
+  result.core_residual_output_joint_restores_energy_mid = core_residual.output_joint_restores_energy_mid;
+  result.core_residual_output_joint_restores_energy_high = core_residual.output_joint_restores_energy_high;
+  result.core_residual_output_joint_restores_safety = core_residual.output_joint_restores_safety;
 #endif
   output = result;
   error = ReplayError::none;

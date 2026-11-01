@@ -5,6 +5,7 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -228,6 +229,472 @@ M3_TEST(offline_replay_parses_expected_cents_for_accuracy_scoring) {
   M3_EXPECT_FALSE(m3::offline::parse_replay_labels(
       out_of_range.data(), out_of_range.size(), 12000U, labels, error));
   M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_labels);
+}
+
+M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(24000U);
+  for (std::size_t sample = 0U; sample < 14400U; ++sample) {
+    const double phase = 6.28318530717958647692 *
+        m3::midi_to_frequency(40U, 440.0) *
+        static_cast<double>(sample) / wave.sample_rate;
+    wave.mono_samples[sample] =
+        0.2 * std::sin(phase) + 0.04 * std::sin(2.0 * phase + 0.3);
+  }
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::general;
+  config.lowest_note = 39U;
+  config.highest_note = 41U;
+  config.max_polyphony = 1U;
+  auto baseline = std::make_unique<m3::offline::ReplayResult>();
+  auto observed = std::make_unique<m3::offline::ReplayResult>();
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      wave, {}, config, nullptr, 512U, *baseline, error));
+  std::string reference;
+  for (const std::size_t partition : {32U, 512U, 1024U}) {
+    const auto close_stream = [](std::FILE* file) { std::fclose(file); };
+    std::unique_ptr<std::FILE, decltype(close_stream)> stream(
+        std::tmpfile(), close_stream);
+    M3_EXPECT_TRUE(stream != nullptr);
+    if (!stream) return;
+    m3::offline::CandidateDecisionTrace trace;
+    trace.stream = stream.get();
+    trace.start_seconds = 0.12;
+    trace.end_seconds = 0.30;
+    const auto run = [&] {
+      return m3::offline::run_detector_replay(
+          wave, {}, config, nullptr, partition, *observed, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, -1.0, false, false, false, nullptr,
+          false, false, false, &trace);
+    };
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_TRUE(trace.frames > 0U);
+    M3_EXPECT_TRUE(trace.frames < trace.kMaximumFrames);
+    M3_EXPECT_FALSE(trace.truncated);
+    M3_EXPECT_FALSE(trace.failed);
+    std::rewind(stream.get());
+    std::string captured;
+    std::array<char, 4096U> line{};
+    std::size_t rows = 0U;
+    while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
+      captured += line.data();
+      if (rows++ == 0U) continue;
+      unsigned long long sample = 0U;
+      unsigned tick = 0U;
+      unsigned note = 0U;
+      M3_EXPECT_EQ(std::sscanf(line.data(), "%llu\t%u\t%u",
+                              &sample, &tick, &note), 3);
+      M3_EXPECT_TRUE(sample >= 5760U && sample < 14400U);
+      M3_EXPECT_TRUE(tick > 0U);
+      M3_EXPECT_EQ(note, 40U);
+    }
+    M3_EXPECT_EQ(rows, trace.frames + 1U);
+    M3_EXPECT_TRUE(captured.find("fine_update_scheduled\treset_serial\treset_tick\t"
+        "reset_prior_count\treset_prior_last_tick\treset_reason\tfine_disposition\t"
+        "fit_residual_improvement\tfit_min_member_ratio\tpending_beat_min\t"
+        "pending_seconds\tfit_unique_improvement\n") !=
+        std::string::npos);
+    if (reference.empty()) reference = captured;
+    M3_EXPECT_EQ(captured, reference);
+    trace.end_seconds = trace.start_seconds;
+    M3_EXPECT_FALSE(run());
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+#endif
+}
+
+M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(43200U);
+  for (std::size_t sample = 0U; sample < 33600U; ++sample) {
+    const double phase = 6.28318530717958647692 *
+        m3::midi_to_frequency(40U, 440.0) *
+        static_cast<double>(sample) / wave.sample_rate;
+    wave.mono_samples[sample] =
+        0.2 * std::sin(phase) + 0.04 * std::sin(2.0 * phase + 0.3);
+  }
+  const std::string label_text =
+      "start_sample\tend_sample\tmidi_note\tstring_mask\n"
+      "0\t9600\t41\t0\n"
+      "9600\t19200\t40\t128\n"
+      "19200\t28800\t40\t0\n";
+  std::vector<m3::offline::ReplayLabel> labels;
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::parse_replay_labels(
+      label_text.data(), label_text.size(), wave.mono_samples.size(), labels, error));
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::general;
+  config.lowest_note = 39U;
+  config.highest_note = 41U;
+  config.max_polyphony = 1U;
+  auto baseline = std::make_unique<m3::offline::ReplayResult>();
+  auto observed = std::make_unique<m3::offline::ReplayResult>();
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      wave, labels, config, nullptr, 512U, *baseline, error));
+  std::string reference;
+  const auto split = [](const std::string& text, char separator) {
+    std::vector<std::string> parts;
+    std::size_t start = 0U;
+    while (true) {
+      const auto end = text.find(separator, start);
+      parts.push_back(text.substr(start, end - start));
+      if (end == std::string::npos) break;
+      start = end + 1U;
+    }
+    return parts;
+  };
+  for (const std::size_t partition : {32U, 512U, 1024U}) {
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+    M3_EXPECT_TRUE(stream != nullptr);
+    if (!stream) return;
+    m3::offline::CandidateOutcomeTrace trace;
+    trace.stream = stream.get();
+    const auto run = [&] {
+      return m3::offline::run_detector_replay(
+          wave, labels, config, nullptr, partition, *observed, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, -1.0, false, false, false, nullptr,
+          false, false, false, nullptr, &trace);
+    };
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_EQ(trace.frames, observed->snapshot_frames);
+    M3_EXPECT_FALSE(trace.failed);
+    M3_EXPECT_FALSE(trace.truncated);
+    std::rewind(stream.get());
+    std::string captured;
+    std::array<char, 8192U> chunk{};
+    std::size_t count = 0U;
+    while ((count = std::fread(chunk.data(), 1U, chunk.size(), stream.get())) != 0U)
+      captured.append(chunk.data(), count);
+    std::istringstream lines(captured);
+    std::string line;
+    std::getline(lines, line);
+    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v2");
+    std::getline(lines, line);
+    std::size_t rows = 0U, labeled = 0U, matched = 0U;
+    std::array<std::size_t, 4U> outcomes{};
+    bool observed_candidate = false;
+    while (std::getline(lines, line)) {
+      const auto fields = split(line, '\t');
+      M3_EXPECT_EQ(fields.size(), 8U);
+      if (fields.size() != 8U) continue;
+      ++rows;
+      if (!fields[4].empty()) labeled += split(fields[4], ',').size();
+      if (!fields[5].empty()) matched += split(fields[5], ',').size();
+      if (!fields[6].empty()) {
+        for (const auto& voice : split(fields[6], ',')) {
+          const auto values = split(voice, ':');
+          M3_EXPECT_EQ(values.size(), 8U);
+          if (values.size() != 8U) continue;
+          const auto outcome = static_cast<std::size_t>(std::stoul(values[3]));
+          M3_EXPECT_TRUE(outcome < outcomes.size());
+          if (outcome < outcomes.size()) ++outcomes[outcome];
+        }
+      }
+      if (!fields[7].empty()) {
+        for (const auto& candidate : split(fields[7], ',')) {
+          const auto values = split(candidate, ':');
+          M3_EXPECT_EQ(values.size(), 42U);
+          if (!values.empty() && values[0] == "40") observed_candidate = true;
+        }
+      }
+    }
+    M3_EXPECT_TRUE(observed_candidate);
+    for (const auto outcome : outcomes) M3_EXPECT_TRUE(outcome > 0U);
+    M3_EXPECT_EQ(rows, observed->snapshot_frames);
+    M3_EXPECT_EQ(labeled, observed->labeled_frames);
+    M3_EXPECT_EQ(matched, observed->matched_label_frames);
+    M3_EXPECT_EQ(outcomes[1], observed->false_wrong_note_voices);
+    M3_EXPECT_EQ(outcomes[2], observed->false_wrong_string_voices);
+    M3_EXPECT_EQ(outcomes[3], observed->false_gap_voices);
+    M3_EXPECT_EQ(outcomes[1] + outcomes[2] + outcomes[3], observed->false_positive_voices);
+    if (reference.empty()) reference = captured;
+    M3_EXPECT_EQ(captured, reference);
+    trace.stream = nullptr;
+    M3_EXPECT_FALSE(run());
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+#endif
+}
+
+M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(96000U);
+  for (std::size_t sample = 0U; sample < 76800U; ++sample) {
+    // Two open notes make the weaker fretted note compete with the ordinary
+    // fret penalty. Unlike an adjacent unresolved peak, it reaches the DP.
+    for (const auto note : std::array<std::uint8_t, 3U>{40U, 44U, 51U}) {
+      const double angle = 6.28318530717958647692 *
+          m3::midi_to_frequency(note, 440.0) * static_cast<double>(sample) / wave.sample_rate;
+      const double gain = note == 51U ? 0.06 : 0.2;
+      wave.mono_samples[sample] += gain *
+          (std::sin(angle) + 0.3 * std::sin(2.0 * angle + 0.4));
+    }
+  }
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_polyphony = 5U;
+  config.sensitivity = 60U;
+  config.response = 75U;
+  std::vector<m3::offline::ReplayLabel> labels(1U);
+  labels[0].midi_note = 51U;
+  labels[0].end_sample = 76800U;
+  labels[0].string_mask = 16U;
+  auto baseline = std::make_unique<m3::offline::ReplayResult>();
+  auto observed = std::make_unique<m3::offline::ReplayResult>();
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      wave, labels, config, nullptr, 512U, *baseline, error));
+  std::string reference;
+  for (const std::size_t partition : {32U, 512U, 1024U}) {
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+    M3_EXPECT_TRUE(stream != nullptr);
+    if (!stream) return;
+    m3::offline::ResidualAdmissionTrace trace;
+    trace.stream = stream.get();
+    double correlation_seconds = -1.0;
+    const auto run = [&] {
+      return m3::offline::run_detector_replay(
+          wave, labels, config, nullptr, partition, *observed, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, correlation_seconds, false, false, false, nullptr,
+          false, false, false, nullptr, nullptr, false, &trace);
+    };
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_TRUE(trace.rows > 0U);
+    M3_EXPECT_EQ(trace.rows, trace.candidates);
+    M3_EXPECT_FALSE(trace.failed);
+    M3_EXPECT_FALSE(trace.truncated);
+    std::rewind(stream.get());
+    std::array<char, 4096U> line{};
+    std::string captured;
+    std::size_t rows = 0U;
+    while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
+      captured += line.data();
+      if (rows++ == 0U) continue;
+      unsigned long long sample = 0U;
+      unsigned tick = 0U, note = 0U, base_count = 0U, used_mask = 0U, free_mask = 0U;
+      M3_EXPECT_EQ(std::sscanf(line.data(), "%llu\t%u\t%u\t%u\t%u\t%u",
+          &sample, &tick, &note, &base_count, &used_mask, &free_mask), 6);
+      M3_EXPECT_EQ(tick % trace.kTickDecimation, 0U);
+      M3_EXPECT_TRUE(sample >= 38399U);
+      M3_EXPECT_TRUE(sample < 86400U); // settled silence cannot propose notes
+      M3_EXPECT_TRUE(base_count > 0U && base_count < config.max_polyphony);
+      M3_EXPECT_TRUE(free_mask != 0U);
+      M3_EXPECT_EQ(used_mask & free_mask, 0U);
+    }
+    M3_EXPECT_EQ(rows, trace.rows + 1U);
+    if (reference.empty()) reference = captured;
+    M3_EXPECT_EQ(captured, reference);
+    if (partition == 512U) {
+      // Labels may change the score columns, never which models are fitted or
+      // any measured evidence. A fresh stream also checks repeatable reset.
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> unlabeled_stream(
+          std::tmpfile(), &std::fclose);
+      M3_EXPECT_TRUE(unlabeled_stream != nullptr);
+      if (!unlabeled_stream) return;
+      trace.stream = unlabeled_stream.get();
+      labels.clear();
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+      std::rewind(unlabeled_stream.get());
+      std::istringstream expected(captured);
+      std::string expected_line;
+      while (std::fgets(line.data(), line.size(), unlabeled_stream.get()) != nullptr) {
+        M3_EXPECT_TRUE(static_cast<bool>(std::getline(expected, expected_line)));
+        std::istringstream labeled_fields(expected_line);
+        std::istringstream unlabeled_fields(line.data());
+        std::string labeled_field, unlabeled_field;
+        std::size_t field = 0U;
+        while (std::getline(labeled_fields, labeled_field, '\t')) {
+          M3_EXPECT_TRUE(static_cast<bool>(
+              std::getline(unlabeled_fields, unlabeled_field, '\t')));
+          if (field < 6U || field > 8U) {
+            if (!unlabeled_field.empty() && unlabeled_field.back() == '\n')
+              unlabeled_field.pop_back();
+            M3_EXPECT_EQ(unlabeled_field, labeled_field);
+          }
+          ++field;
+        }
+      }
+      M3_EXPECT_FALSE(static_cast<bool>(std::getline(expected, expected_line)));
+      labels.resize(1U);
+      labels[0].midi_note = 51U;
+      labels[0].end_sample = 76800U;
+      labels[0].string_mask = 16U;
+      trace.stream = stream.get();
+    }
+    correlation_seconds = 0.06;
+    M3_EXPECT_FALSE(run());
+    correlation_seconds = -1.0;
+    config.profile_mode = m3::ProfileMode::general;
+    M3_EXPECT_FALSE(run());
+    config.profile_mode = m3::ProfileMode::m3;
+    trace.stream = nullptr;
+    M3_EXPECT_FALSE(run());
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+#endif
+}
+
+M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(115200U);
+  for (std::size_t sample = 0U; sample < 96000U; ++sample) {
+    for (const auto note : std::array<std::uint8_t, 2U>{56U, 60U}) {
+      if (note == 60U && sample < 48000U) continue;
+      const double angle = 6.28318530717958647692 *
+          m3::midi_to_frequency(note, 440.0) * static_cast<double>(sample) / wave.sample_rate;
+      wave.mono_samples[sample] += 0.15 *
+          (std::sin(angle) + 0.3 * std::sin(2.0 * angle + 0.4));
+    }
+  }
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_polyphony = 5U;
+  config.sensitivity = 60U;
+  config.response = 75U;
+  std::vector<m3::offline::ReplayLabel> labels(1U);
+  labels[0].midi_note = 56U;
+  labels[0].end_sample = 96000U;
+  labels[0].string_mask = 64U;
+  auto baseline = std::make_unique<m3::offline::ReplayResult>();
+  auto observed = std::make_unique<m3::offline::ReplayResult>();
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      wave, labels, config, nullptr, 512U, *baseline, error));
+  const auto fields = [](const std::string& line, char delimiter) {
+    std::vector<std::string> result;
+    std::istringstream input(line);
+    std::string value;
+    while (std::getline(input, value, delimiter)) result.push_back(value);
+    return result;
+  };
+  std::string reference;
+  for (const std::size_t partition : {32U, 512U, 1024U}) {
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+    M3_EXPECT_TRUE(stream != nullptr);
+    if (!stream) return;
+    m3::offline::StringAssignmentTrace trace;
+    trace.stream = stream.get();
+    const auto run = [&] {
+      return m3::offline::run_detector_replay(
+          wave, labels, config, nullptr, partition, *observed, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, -1.0, false, false, false, nullptr,
+          false, false, false, nullptr, nullptr, false, nullptr, &trace);
+    };
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_TRUE(trace.rows > 0U);
+    M3_EXPECT_FALSE(trace.failed);
+    M3_EXPECT_FALSE(trace.truncated);
+    std::rewind(stream.get());
+    std::array<char, 8192U> line{};
+    std::string captured;
+    std::size_t rows = 0U, solitary = 0U, joint = 0U;
+    while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
+      captured += line.data();
+      if (rows++ == 0U) continue;
+      const auto columns = fields(line.data(), '\t');
+      M3_EXPECT_EQ(columns.size(), 69U);
+      if (columns.size() != 69U) return;
+      M3_EXPECT_EQ(fields(columns[40], ',').size(), 8U);
+      M3_EXPECT_EQ(fields(columns[59], ',').size(), 8U);
+      M3_EXPECT_EQ(fields(columns[60], ',').size(), 6U);
+      M3_EXPECT_EQ(fields(columns[61], ',').size(), 8U);
+      for (std::size_t column = 66U; column < 69U; ++column)
+        M3_EXPECT_EQ(fields(columns[column], ':').size(), 12U);
+      if (columns[37] == "1") {
+        M3_EXPECT_EQ(columns[36], "1");
+        M3_EXPECT_TRUE(std::stoul(columns[35]) >= 120U);
+        M3_EXPECT_TRUE(std::abs(std::stod(columns[32])) <= 50.0);
+      }
+      M3_EXPECT_EQ(std::stoul(columns[1]) % trace.kTickDecimation, 0U);
+      if (columns[4] != "1") continue;
+      const auto playable = std::stoul(columns[11]);
+      const auto reserved = std::stoul(columns[12]) | std::stoul(columns[13]);
+      const auto winner = std::stoul(columns[16]);
+      M3_EXPECT_TRUE(winner < 8U);
+      if (winner >= 8U) return;
+      M3_EXPECT_TRUE((playable & (1U << winner)) != 0U);
+      M3_EXPECT_EQ(reserved & (1U << winner), 0U);
+      const auto totals = fields(columns[29], ',');
+      const auto terms = fields(columns[30], ',');
+      M3_EXPECT_EQ(totals.size(), 8U);
+      M3_EXPECT_EQ(terms.size(), 8U);
+      if (totals.size() != 8U || terms.size() != 8U) return;
+      for (std::size_t lane = 0U; lane < 8U; ++lane) {
+        double sum = 0.0;
+        const auto lane_terms = fields(terms[lane], ':');
+        M3_EXPECT_EQ(lane_terms.size(), 7U);
+        for (const auto& term : lane_terms) sum += std::stod(term);
+        M3_EXPECT_NEAR(sum, std::stod(totals[lane]), 1.0e-10);
+        if (columns[5] == "1" && (playable & ~reserved & (1U << lane)) != 0U)
+          M3_EXPECT_TRUE(std::stod(totals[winner]) <= std::stod(totals[lane]) + 1.0e-10);
+      }
+      if (columns[5] == "1") {
+        ++solitary;
+        M3_EXPECT_NEAR(std::stod(columns[28]), std::stod(totals[winner]), 1.0e-10);
+      } else {
+        ++joint;
+      }
+    }
+    M3_EXPECT_EQ(rows, trace.rows + 1U);
+    M3_EXPECT_TRUE(solitary > 0U);
+    M3_EXPECT_TRUE(joint > 0U);
+    if (reference.empty()) reference = captured;
+    M3_EXPECT_EQ(captured, reference);
+    if (partition == 512U) {
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> unlabeled(std::tmpfile(), &std::fclose);
+      M3_EXPECT_TRUE(unlabeled != nullptr);
+      if (!unlabeled) return;
+      trace.stream = unlabeled.get();
+      labels.clear();
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+      std::rewind(unlabeled.get());
+      std::istringstream expected(captured);
+      std::string expected_line;
+      while (std::fgets(line.data(), line.size(), unlabeled.get()) != nullptr) {
+        M3_EXPECT_TRUE(static_cast<bool>(std::getline(expected, expected_line)));
+        const auto before = fields(expected_line, '\t');
+        auto after = fields(line.data(), '\t');
+        if (!after.empty() && !after.back().empty() && after.back().back() == '\n')
+          after.back().pop_back();
+        M3_EXPECT_EQ(before.size(), after.size());
+        for (std::size_t column = 0U; column < before.size() && column < after.size(); ++column)
+          if (column < 24U || column > 26U) M3_EXPECT_EQ(before[column], after[column]);
+      }
+      M3_EXPECT_FALSE(static_cast<bool>(std::getline(expected, expected_line)));
+      labels.resize(1U);
+      labels[0].midi_note = 56U;
+      labels[0].end_sample = 96000U;
+      labels[0].string_mask = 64U;
+      trace.stream = stream.get();
+    }
+    trace.stream = nullptr;
+    M3_EXPECT_FALSE(run());
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+#endif
 }
 
 M3_TEST(offline_replay_correlation_window_preserves_default_and_partitioning) {

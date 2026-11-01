@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <limits>
 #include <map>
 #include <vector>
@@ -18,6 +19,53 @@
 namespace m3::offline {
 
 class FrequencyWindowCapture;
+
+// Optional bounded timeline. Writing this stream never changes detector state.
+struct CandidateDecisionTrace final {
+  static constexpr std::size_t kMaximumFrames = 90000U;
+  std::FILE* stream{};
+  int midi_note{40};
+  double start_seconds{};
+  double end_seconds{20.0};
+  std::size_t frames{};
+  bool truncated{};
+  bool failed{};
+};
+
+// Full-frame attribution stream, bounded independently of recording length.
+// Labels are reported only for analysis and never enter detector decisions.
+struct CandidateOutcomeTrace final {
+  static constexpr std::size_t kMaximumFrames = 2000000U;
+  std::FILE* stream{};
+  std::size_t frames{};
+  bool truncated{};
+  bool failed{};
+};
+
+// Counterfactual pitch-addition evidence, sampled on detector ticks. No output
+// policy consumes this stream; labels are attached only after fitting audio.
+struct ResidualAdmissionTrace final {
+  static constexpr std::size_t kMaximumRows = 500000U;
+  static constexpr std::uint32_t kTickDecimation = 16U;
+  std::FILE* stream{};
+  std::size_t rows{};
+  std::size_t sampled_frames{};
+  std::size_t candidates{};
+  bool truncated{};
+  bool failed{};
+};
+
+// Per-string costs and ownership at the actual assignment decision. Labels
+// are attached afterwards, and enabling capture does not change the decision.
+struct StringAssignmentTrace final {
+  static constexpr std::size_t kMaximumRows = 500000U;
+  static constexpr std::uint32_t kTickDecimation = 16U;
+  std::FILE* stream{};
+  std::size_t rows{};
+  std::size_t sampled_frames{};
+  bool truncated{};
+  bool failed{};
+};
 
 struct HannBeatEdgeSummary final {
   std::uint64_t frames{};
@@ -1704,6 +1752,17 @@ struct ReplayResult final {
   std::uint32_t core_residual_max_work{};
   std::uint32_t core_residual_max_pitches{};
   double core_residual_sum{};
+  std::uint32_t core_residual_output_enabled{};
+  std::uint64_t core_residual_output_veto_frames{};
+  std::uint64_t core_residual_output_note_offs{};
+  std::uint64_t core_residual_output_retriggers{};
+  std::uint64_t core_residual_output_joint_restores_valid{};
+  std::uint64_t core_residual_output_joint_restores_pending{};
+  std::uint64_t core_residual_output_joint_restores_unavailable{};
+  std::uint64_t core_residual_output_joint_restores_energy_low{};
+  std::uint64_t core_residual_output_joint_restores_energy_mid{};
+  std::uint64_t core_residual_output_joint_restores_energy_high{};
+  std::uint64_t core_residual_output_joint_restores_safety{};
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   std::array<std::uint64_t, kCandidateSpectralShadowIntervalBucketCount>
@@ -2194,7 +2253,19 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_correlation_shadow_only = false,
                          bool diagnostic_joint_pitch_residual = false,
                          FrequencyWindowCapture* frequency_window_capture = nullptr,
-                         bool diagnostic_bounded_joint_pitch_residual = false);
+                         bool diagnostic_bounded_joint_pitch_residual = false,
+                         bool diagnostic_joint_residual_output = false,
+                         bool diagnostic_calibrated_collision_revalidation = false,
+                         CandidateDecisionTrace* candidate_trace = nullptr,
+                         CandidateOutcomeTrace* outcome_trace = nullptr,
+                         bool diagnostic_polyphonic_posterior_assignment = false,
+                         ResidualAdmissionTrace* residual_admission_trace = nullptr,
+                         StringAssignmentTrace* assignment_trace = nullptr,
+                         bool diagnostic_profile_pair_corroboration = false,
+                         bool diagnostic_profile_memory_partial_correction = false,
+                         bool diagnostic_assignment_partial_correction = false,
+                         bool diagnostic_profile_pair_output_filter = false,
+                         bool diagnostic_profile_pair_continuity_echo = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.
