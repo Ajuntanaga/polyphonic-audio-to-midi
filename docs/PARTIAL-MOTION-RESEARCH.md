@@ -1,7 +1,8 @@
 # Research route: measured motion across harmonics
 
-Updated 2026-11-03. This is an offline experiment design, not an accepted
-detector change. The installed plugin and its parameters are unchanged.
+Updated 2026-11-03. The offline capture and control experiment are implemented.
+This is not an accepted detector change. The installed plugin and its
+parameters are unchanged.
 
 ## Decision
 
@@ -157,10 +158,104 @@ cases, and require identical fingerprints at blocks 32, 512 and 1024. Run the
 native, deadline/allocation, source-contract, production-build and validator
 gates and one code review before any installation.
 
+## Implemented capture and checks
+
+`tools/modal_m3_partial_motion.py` now captures the measured complex baseband
+tracks and the existing eight-string posterior at the same decision tick.
+The native getter and JSONL writer are compiled only into offline replay.
+The writer records the audio clock, demodulation centers, selection/onset
+state, assignment masks and signal availability. Labels are used only in
+later evaluation; removing labels leaves the capture unchanged.
+
+These are **filtered mixture measurements**, not separated source tracks.
+The posterior is the cached single-string distribution, not a fresh joint
+mask probability. Audio, calibration, settings and trace hashes identify
+each capture. Missing or mismatched join identities fail closed.
+
+Run `partial-motion-20261103T1151Z` completed on Modal:
+
+| Capture | Observed frames | Complete annotated three-second windows |
+| --- | ---: | ---: |
+| Physical long unisons | 88,232 | 13: five pair, eight triple |
+| Isolated string 8, note 40 | 34,800 | 0 |
+| Single source with amplitude modulation | 6,000 | 2 |
+| Single source with two decay rates | 6,000 | 2 |
+| Simultaneous pair | 6,000 | 2 |
+| Staggered triple | 6,000 | 2 |
+
+The physical WAV clocks are **96 kHz**; the synthetic controls are 48 kHz.
+The isolated note-40 hold is 2.3 seconds, so it cannot supply a complete
+three-second control window. There is one physical long-unison take, not an
+independent held-out take. Synthetic masks describe the generator and are
+not calibrated physical string labels.
+
+For both physical recordings, output fingerprints, counts and diagnostic
+bytes are identical at block sizes 32, 512 and 1024. All four synthetic
+captures also preserve their control replay output. The two new native
+diagnostic tests and all 46 offline-replay tests passed; the latter count
+includes the former. Eight Python measurement tests and the native source
+contract passed. One independent code review found no material defect after
+correcting a test's assumption about enabled harmonic bands. These checks
+validate observation and measurement behavior; they are not a new full
+production build, deadline/validator pass or live-host certification.
+
+The capture exposed a measurement problem before any classifier was trained:
+raw phase derivatives showed large apparent motion even in known single
+sources. The resonator's one-pole filter leaves fast spectral contamination;
+differentiating its phase twice amplifies that contamination. This is a
+plausible mechanism, not evidence of multiple strings. The offline module
+therefore also provides a fixed two-stage causal 15 ms complex filter, using
+the existing production fundamental phasor filter as its reference. It runs
+over the full captured prefix and never resets at annotation boundaries.
+It does not reproduce production candidate-state gating, undo prior aliasing,
+or establish a source-dominant reference.
+
+The saved-capture comparison uses `--source-run` and launches no build or new
+audio replay. It compares raw and conditioned measurements on the same
+observations. No filter sweep, string-count threshold or MIDI policy is
+introduced.
+
+Run `partial-motion-conditioning-20261103T1158Z` completed using the saved
+capture. It verified each decompressed trace against its recorded SHA-256.
+For the two known single sources, after one second of settling:
+
+| Control | Raw frequency-error RMS across the six bands | Conditioned frequency-error RMS across the six bands |
+| --- | --- | --- |
+| Amplitude-modulated single | 48.83–89.94 cents | 0.213–0.683 cents |
+| Two-decay single | 48.38–89.04 cents | 0.205–0.653 cents |
+
+These ranges report individual band errors, not string-assignment accuracy.
+The raw error's strongest oscillations were at roughly 165–338 Hz, consistent
+with harmonic leakage/images. Filtering greatly reduces them, but the
+remaining derivatives still exaggerate small fast errors. For harmonics one
+and two, conditioned differential-motion RMS spans 630–2646 cents/second in
+single-source windows, 5683–5726 in the simultaneous pair, and 913–2300 in
+the staggered triple. **Motion magnitude alone does not separate the source
+counts:** the entire tested triple range overlaps the single-source range.
+That observation rejects a magnitude threshold on these features; it does
+not test every possible conditioned feature or establish classifier gain.
+
+The next measurement change should use a fixed past-only local phase slope
+over the existing 160 ms phase-evidence timescale, instead of differentiating
+every sub-millisecond phase estimate. Check it against the known modulated
+and two-decay singles before any mask model. If a slow-motion cue survives,
+compare posterior-only versus posterior-plus-motion on whole held-out takes.
+The current one-take physical data cannot establish that generalization
+result. The three-second unison admission window remains unchanged.
+
+Reproduce the saved comparison with a new output ID:
+
+```sh
+MODAL_PROFILE=research modal run --detach tools/modal_m3_partial_motion.py \
+  --run-id partial-motion-conditioning-NEW \
+  --source-run partial-motion-20261103T1151Z
+```
+
 ## Current conclusion
 
-The literature offers a credible test of *where additional information might
-come from*. It has not yet produced a measured improvement in this project.
-The next implementation decision depends on that conditional measurement.
-Repeated ownership or retention tweaks should not proceed on the strength of
-the rejected handoff screen.
+The literature led to a working causal capture and a concrete measurement
+correction. It has not yet produced a measured improvement in note/string
+assignment. The single-source controls prevented a false interpretation of
+filter leakage as extra strings. The next implementation decision depends on
+the slower conditional measurement above. Repeated ownership or retention
+tweaks should not proceed on the strength of the rejected handoff screen.

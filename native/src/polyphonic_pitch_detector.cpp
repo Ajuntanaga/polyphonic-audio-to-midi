@@ -2717,6 +2717,30 @@ bool PolyphonicPitchDetector::harmonic_correlations_for_diagnostics(
                                     signal_energy, decay);
 }
 
+bool PolyphonicPitchDetector::demodulated_harmonic_tracks_for_diagnostics(
+    std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+    std::array<std::complex<double>, 6U>& tracks,
+    double& signal_energy, double& decay) const noexcept {
+  frequencies = {};
+  tracks = {};
+  signal_energy = decay = 0.0;
+  if (!configured_ || midi_note < lowest_note_ ||
+      midi_note - lowest_note_ >= candidate_count_) return false;
+  const std::size_t candidate = midi_note - lowest_note_;
+  signal_energy = fast_energy_;
+  decay = correlation_decay;
+  bool available = false;
+  for (std::size_t harmonic = 0U; harmonic < kHarmonicCount; ++harmonic) {
+    const Cell& cell = cells_[cell_index(candidate, harmonic)];
+    if (!cell.enabled) continue;
+    frequencies[harmonic] = sample_rate_ / kTwoPi *
+        std::atan2(cell.sine_step, cell.cosine_step);
+    tracks[harmonic] = {cell.fast_real, cell.fast_imaginary};
+    available = true;
+  }
+  return available;
+}
+
 bool PolyphonicPitchDetector::set_candidate_admission_rescue_for_diagnostics(
     double score_threshold_ratio,
     double fundamental_score_ratio) noexcept {

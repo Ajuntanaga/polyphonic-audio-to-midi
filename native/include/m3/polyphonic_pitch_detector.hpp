@@ -599,6 +599,12 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note, std::array<double, 6U>& frequencies,
       std::array<std::complex<double>, 6U>& correlations,
       double& signal_energy, double& decay) const noexcept;
+  // Measured baseband mixture tracks, without the carrier rotation used by
+  // the residual solver. Reading them does not refresh or mutate any state.
+  [[nodiscard]] bool demodulated_harmonic_tracks_for_diagnostics(
+      std::uint8_t midi_note, std::array<double, 6U>& frequencies,
+      std::array<std::complex<double>, 6U>& tracks,
+      double& signal_energy, double& decay) const noexcept;
   bool set_fretted_position_prior_for_diagnostics(
       double fixed_penalty, double per_fret_penalty) noexcept;
   bool set_decisive_calibrated_selector_for_diagnostics(

@@ -76,6 +76,20 @@ struct StringAssignmentTrace final {
   bool failed{};
 };
 
+// One requested pitch on every decision tick in a bounded time range, including
+// inactive ticks. Labels never choose rows. No classifier consumes this stream.
+struct PartialMotionTrace final {
+  static constexpr std::size_t kMaximumFrames = 90000U;
+  std::FILE* stream{};
+  int midi_note{40};
+  double start_seconds{};
+  double end_seconds{40.0};
+  std::size_t frame_limit{kMaximumFrames};
+  std::size_t frames{};
+  bool truncated{};
+  bool failed{};
+};
+
 struct HannBeatEdgeSummary final {
   std::uint64_t frames{};
   double difference_hz{};
@@ -2294,7 +2308,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_residual_recovery_continuity = false,
                          bool diagnostic_joint_spectral_ownership = false,
                          JointOwnershipAblation joint_ownership_ablation =
-                             JointOwnershipAblation::none);
+                             JointOwnershipAblation::none,
+                         PartialMotionTrace* partial_motion_trace = nullptr);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

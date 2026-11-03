@@ -159,6 +159,8 @@ void usage(const char* program) {
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "[--partial-motion-trace FILE --partial-motion-note 0..127 "
+      "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-joint-spectral-ownership] "
       "[--diagnostic-joint-ownership-ablation solver|midi-guard] "
@@ -227,6 +229,9 @@ int main(int argc, char** argv) {
   m3::offline::ResidualAdmissionTrace residual_admission_trace;
   const char* assignment_trace_path = nullptr;
   m3::offline::StringAssignmentTrace assignment_trace;
+  const char* partial_motion_path = nullptr;
+  m3::offline::PartialMotionTrace partial_motion_trace;
+  bool partial_motion_options_set = false;
   bool candidate_trace_options_set = false;
   int fine_window_note = -1;
   m3::offline::FrequencyWindowCaptureOptions fine_window_options;
@@ -617,6 +622,31 @@ int main(int argc, char** argv) {
       midi_event_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--assignment-trace") == 0 && has_value) {
       assignment_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--partial-motion-trace") == 0 && has_value) {
+      partial_motion_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--partial-motion-note") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0L || parsed > 127L) {
+        usage(argv[0]);
+        return 2;
+      }
+      partial_motion_trace.midi_note = static_cast<int>(parsed);
+      partial_motion_options_set = true;
+    } else if ((std::strcmp(argv[index], "--partial-motion-start") == 0 ||
+                std::strcmp(argv[index], "--partial-motion-end") == 0) && has_value) {
+      const bool start = std::strcmp(argv[index], "--partial-motion-start") == 0;
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < 0.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      (start ? partial_motion_trace.start_seconds : partial_motion_trace.end_seconds) = parsed;
+      partial_motion_options_set = true;
     } else if (std::strcmp(argv[index], "--residual-admission-trace") == 0 && has_value) {
       residual_admission_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--candidate-trace-note") == 0 && has_value) {
@@ -682,6 +712,11 @@ int main(int argc, char** argv) {
     }
   }
   if (wave_path == nullptr) {
+    usage(argv[0]);
+    return 2;
+  }
+  if ((partial_motion_path == nullptr && partial_motion_options_set) ||
+      partial_motion_trace.end_seconds <= partial_motion_trace.start_seconds) {
     usage(argv[0]);
     return 2;
   }
@@ -969,6 +1004,15 @@ int main(int argc, char** argv) {
     }
     assignment_trace.stream = assignment_stream.get();
   }
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> partial_motion_stream(nullptr, &std::fclose);
+  if (partial_motion_path != nullptr) {
+    partial_motion_stream.reset(std::fopen(partial_motion_path, "wb"));
+    if (partial_motion_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open partial motion trace\n");
+      return 1;
+    }
+    partial_motion_trace.stream = partial_motion_stream.get();
+  }
   if (!m3::offline::run_detector_replay(
           wave, labels, config, calibration_pointer, block_size, result,
           error, spectral_shadow_template_pointer, candidate_rescue_pointer,
@@ -1003,7 +1047,8 @@ int main(int argc, char** argv) {
           midi_event_trace_stream != nullptr ? &midi_event_trace : nullptr,
           diagnostic_residual_recovery_continuity,
           diagnostic_joint_spectral_ownership,
-          joint_ownership_ablation)) {
+          joint_ownership_ablation,
+          partial_motion_stream != nullptr ? &partial_motion_trace : nullptr)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1016,6 +1061,19 @@ int main(int argc, char** argv) {
         result.residual_recovery_note_ons);
   }
 #endif
+  if (partial_motion_stream != nullptr) {
+    if (partial_motion_trace.failed || std::fflush(partial_motion_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: partial motion trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr, "m3_replay: partial_motion frames=%zu cap=%zu truncated=%u\n",
+        partial_motion_trace.frames, partial_motion_trace.frame_limit,
+        unsigned(partial_motion_trace.truncated));
+    if (partial_motion_trace.truncated) {
+      std::fprintf(stderr, "m3_replay: refusing incomplete partial motion trace\n");
+      return 1;
+    }
+  }
   if (midi_event_trace_stream != nullptr) {
     if (midi_event_trace.failed || std::fflush(midi_event_trace_stream.get()) != 0) {
       std::fprintf(stderr, "m3_replay: MIDI event trace write failed\n");

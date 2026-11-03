@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -1029,6 +1030,158 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
     config.profile_mode = m3::ProfileMode::general;
     M3_EXPECT_FALSE(run());
     config.profile_mode = m3::ProfileMode::m3;
+    trace.stream = nullptr;
+    M3_EXPECT_FALSE(run());
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+  }
+#endif
+}
+
+M3_TEST(offline_partial_motion_getter_measures_baseband_without_mutation) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  constexpr double rate = 48000.0, two_pi = 6.28318530717958647692;
+  constexpr std::uint8_t note = 52U;
+  const double center = m3::midi_to_frequency(note, 440.0);
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  auto detector = std::make_unique<m3::PolyphonicPitchDetector>();
+  std::array<double, 6U> frequencies{};
+  std::array<std::complex<double>, 6U> measured{}, previous{};
+  double energy{}, decay{};
+  M3_EXPECT_FALSE(detector->demodulated_harmonic_tracks_for_diagnostics(
+      note, frequencies, measured, energy, decay));
+  for (std::size_t h = 0U; h < 6U; ++h) {
+    M3_EXPECT_TRUE(detector->configure(rate, config));
+    double phase_sum = 0.0;
+    std::size_t intervals = 0U;
+    bool have_previous = false;
+    const double harmonic = static_cast<double>(h + 1U);
+    for (std::size_t sample = 0U; sample < 48000U; ++sample) {
+      (void)detector->process_sample(0.2 * std::sin(
+          two_pi * harmonic * (center + 1.25) * static_cast<double>(sample) / rate));
+      if (sample < 24000U || sample % 64U != 0U) continue;
+      const auto allocations = m3::test::allocation_count();
+      M3_EXPECT_TRUE(detector->demodulated_harmonic_tracks_for_diagnostics(
+          note, frequencies, measured, energy, decay));
+      std::array<std::complex<double>, 6U> again{};
+      M3_EXPECT_TRUE(detector->demodulated_harmonic_tracks_for_diagnostics(
+          note, frequencies, again, energy, decay));
+      M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+      M3_EXPECT_EQ(measured, again);
+      M3_EXPECT_NEAR(frequencies[h], center * harmonic, 1.0e-8);
+      M3_EXPECT_TRUE(energy > 0.0 && decay > 0.0 && decay < 1.0);
+      if (have_previous) {
+        phase_sum += std::arg(measured[h] * std::conj(previous[h]));
+        ++intervals;
+      }
+      previous = measured;
+      have_previous = true;
+    }
+    M3_EXPECT_TRUE(intervals > 300U);
+    const double seconds = static_cast<double>(intervals) * 64.0 / rate;
+    M3_EXPECT_NEAR(phase_sum / (two_pi * seconds * harmonic), 1.25, 0.04);
+  }
+  M3_EXPECT_FALSE(detector->demodulated_harmonic_tracks_for_diagnostics(
+      0U, frequencies, measured, energy, decay));
+  M3_EXPECT_EQ(frequencies, (std::array<double, 6U>{}));
+  M3_EXPECT_EQ(measured, (std::array<std::complex<double>, 6U>{}));
+  // The production bank deliberately uses fewer bands for higher pitches.
+  // Disabled bands must stay unavailable rather than becoming measurements.
+  for (const std::uint8_t upper_note : std::array<std::uint8_t, 2U>{69U, 76U}) {
+    M3_EXPECT_TRUE(detector->configure(rate, config));
+    M3_EXPECT_TRUE(detector->demodulated_harmonic_tracks_for_diagnostics(
+        upper_note, frequencies, measured, energy, decay));
+    const std::size_t enabled_bands = upper_note == 69U ? 4U : 3U;
+    for (std::size_t h = 0U; h < 6U; ++h) {
+      const double expected = h < enabled_bands
+          ? m3::midi_to_frequency(upper_note, 440.0) * static_cast<double>(h + 1U)
+          : 0.0;
+      M3_EXPECT_NEAR(frequencies[h], expected, 1.0e-8);
+      M3_EXPECT_EQ(measured[h], std::complex<double>{});
+    }
+  }
+#endif
+}
+
+M3_TEST(offline_partial_motion_trace_preserves_output_clock_and_labels) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::offline::WaveData wave;
+  wave.sample_rate = 48000U;
+  wave.source_channels = 1U;
+  wave.mono_samples.resize(38400U);
+  for (std::size_t sample = 4800U; sample < 28800U; ++sample) {
+    const double angle = 6.28318530717958647692 *
+        m3::midi_to_frequency(56U, 440.0) * static_cast<double>(sample) / wave.sample_rate;
+    wave.mono_samples[sample] = 0.2 * (std::sin(angle) + 0.3 * std::sin(2.0 * angle));
+  }
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_polyphony = 5U;
+  config.sensitivity = 60U;
+  config.response = 75U;
+  std::vector<m3::offline::ReplayLabel> labels(1U);
+  labels[0].midi_note = 56U;
+  labels[0].end_sample = 28800U;
+  labels[0].string_mask = 64U;
+  auto baseline = std::make_unique<m3::offline::ReplayResult>();
+  auto observed = std::make_unique<m3::offline::ReplayResult>();
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::run_detector_replay(
+      wave, labels, config, nullptr, 512U, *baseline, error));
+  const auto read = [](std::FILE* stream) {
+    std::rewind(stream);
+    std::array<char, 4096U> buffer{};
+    std::string output;
+    while (std::fgets(buffer.data(), buffer.size(), stream) != nullptr)
+      output += buffer.data();
+    return output;
+  };
+  std::string reference;
+  for (const std::size_t block : {32U, 512U, 1024U}) {
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> stream(std::tmpfile(), &std::fclose);
+    M3_EXPECT_TRUE(stream != nullptr);
+    if (!stream) return;
+    m3::offline::PartialMotionTrace trace;
+    trace.stream = stream.get();
+    trace.midi_note = 56;
+    trace.end_seconds = 0.8;
+    const auto run = [&] {
+      return m3::offline::run_detector_replay(
+          wave, labels, config, nullptr, block, *observed, error,
+          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+          false, false, false, -1.0, false, false, false, nullptr,
+          false, false, false, nullptr, nullptr, false, nullptr, nullptr,
+          false, false, false, false, false, false, false, false, false,
+          false, nullptr, false, false, m3::offline::JointOwnershipAblation::none, &trace);
+    };
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_FALSE(trace.failed);
+    M3_EXPECT_FALSE(trace.truncated);
+    M3_EXPECT_TRUE(trace.frames > 100U);
+    const auto captured = read(stream.get());
+    M3_EXPECT_TRUE(captured.find("\"tracks\":\"measured_demodulated_mixture\"") != std::string::npos);
+    M3_EXPECT_TRUE(captured.find("\"harmonics\":6,\"strings\":8") != std::string::npos);
+    M3_EXPECT_TRUE(captured.find("\"active\":0") != std::string::npos);
+    M3_EXPECT_EQ(static_cast<std::size_t>(std::count(captured.begin(), captured.end(), '\n')),
+                 trace.frames + 1U);
+    if (reference.empty()) reference = captured;
+    M3_EXPECT_EQ(captured, reference);
+    if (block == 512U) {
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> unlabeled(std::tmpfile(), &std::fclose);
+      M3_EXPECT_TRUE(unlabeled != nullptr);
+      if (!unlabeled) return;
+      trace.stream = unlabeled.get();
+      labels.clear();
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+      M3_EXPECT_EQ(read(unlabeled.get()), captured);
+      trace.frame_limit = 2U;
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(trace.frames, 2U);
+      M3_EXPECT_TRUE(trace.truncated);
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    }
     trace.stream = nullptr;
     M3_EXPECT_FALSE(run());
     M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);

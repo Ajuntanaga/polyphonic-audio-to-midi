@@ -282,6 +282,71 @@ bool voice_matches_label(const TunerVoice& voice,
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+bool write_motion_number(std::FILE* stream, double value) {
+  return std::isfinite(value) ? std::fprintf(stream, "%.17g", value) >= 0
+                              : std::fputs("null", stream) >= 0;
+}
+
+template <std::size_t N>
+bool write_motion_array(std::FILE* stream, const char* key,
+                        const std::array<double, N>& values) {
+  if (std::fprintf(stream, ",\"%s\":[", key) < 0) return false;
+  for (std::size_t i = 0U; i < N; ++i) {
+    if (i != 0U && std::fputc(',', stream) == EOF) return false;
+    if (!write_motion_number(stream, values[i])) return false;
+  }
+  return std::fputc(']', stream) != EOF;
+}
+
+void write_partial_motion_frame(
+    PartialMotionTrace& trace, std::size_t sample_index, double sample_rate,
+    const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot) {
+  const double seconds = static_cast<double>(sample_index) / sample_rate;
+  if (trace.failed || seconds < trace.start_seconds || seconds >= trace.end_seconds)
+    return;
+  if (trace.frames >= trace.frame_limit) { trace.truncated = true; return; }
+  const auto note = static_cast<std::uint8_t>(trace.midi_note);
+  const auto state = detector.candidate_tracking_diagnostics(note);
+  std::array<double, 6U> frequencies{}, real{}, imaginary{};
+  std::array<std::complex<double>, 6U> tracks{};
+  double energy{}, decay{};
+  const bool available = detector.demodulated_harmonic_tracks_for_diagnostics(
+      note, frequencies, tracks, energy, decay);
+  for (std::size_t h = 0U; h < tracks.size(); ++h) {
+    real[h] = tracks[h].real();
+    imaginary[h] = tracks[h].imag();
+  }
+  std::uint8_t rendered_mask = 0U;
+  for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+    const auto& voice = snapshot.voices[v];
+    if (voice.midi_note == note && voice.string_index < kMaxVoices)
+      rendered_mask |= static_cast<std::uint8_t>(1U << voice.string_index);
+  }
+  trace.failed = std::fprintf(trace.stream,
+      "{\"kind\":\"frame\",\"sample\":%zu,\"tick\":%u,\"note\":%u,"
+      "\"active\":%u,\"age_ticks\":%u,\"signal_samples\":%u,"
+      "\"quiet\":%u,\"selection\":%u,\"assigned_mask\":%u,\"rendered_mask\":%u,"
+      "\"posterior_playable_mask\":%u,\"tracks_available\":%u,\"phase_valid\":%u",
+      sample_index, state.decision_tick, unsigned(note), unsigned(state.active),
+      unsigned(state.age_ticks), state.signal_samples, unsigned(detector.quiet_disposition()),
+      unsigned(detector.selection_disposition(note)), unsigned(state.assigned_mask),
+      unsigned(rendered_mask), unsigned(detector.string_fret_posterior_playable_mask(note)),
+      unsigned(available), unsigned(state.phase_valid)) < 0;
+  trace.failed = !write_motion_array(trace.stream, "frequency_hz", frequencies) || trace.failed;
+  trace.failed = !write_motion_array(trace.stream, "real", real) || trace.failed;
+  trace.failed = !write_motion_array(trace.stream, "imaginary", imaginary) || trace.failed;
+  trace.failed = !write_motion_array(trace.stream, "posterior",
+      detector.string_fret_posterior_probabilities(note)) || trace.failed;
+  trace.failed = std::fputs(",\"signal_energy\":", trace.stream) < 0 || trace.failed;
+  trace.failed = !write_motion_number(trace.stream, energy) || trace.failed;
+  trace.failed = std::fputs(",\"decay\":", trace.stream) < 0 || trace.failed;
+  trace.failed = !write_motion_number(trace.stream, decay) || trace.failed;
+  trace.failed = std::fputs(",\"phase_cents\":", trace.stream) < 0 || trace.failed;
+  trace.failed = !write_motion_number(trace.stream, state.phase_cents) || trace.failed;
+  trace.failed = std::fputs("}\n", trace.stream) < 0 || trace.failed;
+  ++trace.frames;
+}
+
 void write_string_assignment_frame(
     StringAssignmentTrace& trace, std::size_t sample_index,
     const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
@@ -2497,9 +2562,32 @@ bool run_detector_replay(const WaveData& wave,
                          MidiEventTrace* midi_event_trace,
                          bool diagnostic_residual_recovery_continuity,
                          bool diagnostic_joint_spectral_ownership,
-                         JointOwnershipAblation joint_ownership_ablation) {
+                         JointOwnershipAblation joint_ownership_ablation,
+                         PartialMotionTrace* partial_motion_trace) {
   output = {};
   error = ReplayError::invalid_config;
+  if (partial_motion_trace != nullptr) {
+    auto& trace = *partial_motion_trace;
+    trace.frames = 0U;
+    trace.truncated = trace.failed = false;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    return false;
+#else
+    if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3 ||
+        trace.midi_note < 0 || trace.midi_note > 127 ||
+        !std::isfinite(trace.start_seconds) || !std::isfinite(trace.end_seconds) ||
+        trace.start_seconds < 0.0 || trace.end_seconds <= trace.start_seconds ||
+        trace.frame_limit == 0U || trace.frame_limit > trace.kMaximumFrames) return false;
+    trace.failed = std::fprintf(trace.stream,
+        "{\"kind\":\"header\",\"schema\":\"m3_partial_motion_v1\",\"sample_rate\":%u,"
+        "\"sample_origin\":0,\"sample_clock\":\"zero_based_input_sample\","
+        "\"tracks\":\"measured_demodulated_mixture\","
+        "\"posterior_kind\":\"cached_single_string_distribution_not_mask_posterior\","
+        "\"note\":%d,\"harmonics\":6,\"strings\":%zu,\"frame_limit\":%zu}\n",
+        wave.sample_rate, trace.midi_note, kMaxVoices, trace.frame_limit) < 0;
+    if (trace.failed) return false;
+#endif
+  }
   if (joint_ownership_ablation != JointOwnershipAblation::none &&
       (joint_ownership_ablation != JointOwnershipAblation::solver_only &&
        joint_ownership_ablation != JointOwnershipAblation::midi_guard_only))
@@ -3034,6 +3122,10 @@ bool run_detector_replay(const WaveData& wave,
       }
       const TunerSnapshot& snapshot = decision.tuner_snapshot;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (partial_motion_trace != nullptr) {
+        write_partial_motion_frame(*partial_motion_trace, sample_index,
+            static_cast<double>(wave.sample_rate), detector, snapshot);
+      }
       if (assignment_trace != nullptr) {
         write_string_assignment_frame(*assignment_trace, sample_index, detector,
                                       snapshot, labels, spectral_active_labels);
