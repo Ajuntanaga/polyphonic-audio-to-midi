@@ -656,3 +656,67 @@ weight. Fifty-seven Python checks passed, including the source contract.
 One focused review is complete. The installed bundle is unchanged; no new
 production build, callback deadline result, validator result or installation
 is claimed for this diagnostic slice.
+
+### Matched isolated and chord evidence, 2026-11-03
+
+The saved traces support a narrow comparison: string 8 at MIDI notes 36–40,
+against playable competing strings 7 and, for note 40, 6. Notes 32–35 have no
+alternative playable string, and the older middle/high-string captures lack
+the required per-frame likelihood fields. Those cases cannot answer this
+question. Both compared captures use the same calibration, settings and
+sample rate; their decompressed trace hashes are verified before analysis.
+
+`tools/string_descriptor_context.py` compares the expected-minus-competing
+descriptor margin at the same pitch, string, fret and annotation age. Negative
+means the descriptor favors the competing string. Attack is 0–100 ms; sustain
+starts at 350 ms. The middle interval is excluded from this comparison. Each
+annotation segment receives equal weight within a comparison, and the report
+retains segment and connected-episode counts. These are repeated observations
+from two recordings, not independent performances. Missing rows, unavailable
+likelihoods and reserved string pairs are excluded rather than scored as zero.
+
+For sustained observations, the percentage favoring the wrong competing
+string is:
+
+| MIDI note / competitor | Isolated string 8 | Ordinary chords | Difference | Chord segments / isolated segments |
+| --- | ---: | ---: | ---: | ---: |
+| 36 / string 7 | 0.00% | 98.65% | +98.65 pp | 2 / 1 |
+| 37 / string 7 | 13.66% | 85.61% | +71.94 pp | 5 / 1 |
+| 38 / string 7 | 55.19% | 85.46% | +30.27 pp | 6 / 1 |
+| 39 / string 7 | 4.37% | 72.97% | +68.60 pp | 3 / 1 |
+| 40 / string 7 | 0.00% | 43.86% | +43.86 pp | 3 / 1 |
+| 40 / string 6 | 0.00% | 7.89% | +7.89 pp | 2 / 1 |
+
+All six attack comparisons also worsen in chords, by 10–100 percentage
+points. Across attack and sustain, the analysis measures 721 eligible chord
+pairs and 1,130 isolated pairs. These are pairwise descriptor measurements,
+not complete string rankings or final MIDI errors. In particular, note 38
+already has substantial isolated ambiguity. Chord context is associated with
+worse evidence, but the different performances prevent attributing the whole
+difference to overlap.
+
+The physical route is specific. The descriptor uses harmonic-centered
+heterodyne cells with a 40 ms one-pole memory, then normalizes harmonic energy
+and compares log ratios and spectral balance against calibrated strings.
+Other notes can contribute energy to these cells; normalization then changes
+the whole descriptor. Fast and settled memories can carry that contamination
+forward. This mechanism is plausible from the implementation and the matched
+results; it is not yet a measured causal effect.
+
+The next experiment should hold the target waveform fixed: replay an isolated
+target alone, then mix that exact target with an existing isolated note.
+Compare harmonically colliding and separated notes at declared mix levels,
+with target onset and calibration unchanged. Report the induced descriptor
+margin change and candidate/phase availability separately. Synthetic mixing
+can test interference in this signal path; it cannot establish accuracy on
+independent physical performances or justify changing production weights.
+Only a signal-derived reliability rule that passes held-out correction-versus-
+spoil and downstream-recovery checks may advance to causal MIDI replay.
+
+Modal `descriptor-context-20261103T1407Z` completed this saved-trace analysis
+at 14:07:07 UTC, app `ap-HpS34OtwJINmvZ0iaWK3wi`. The result is
+`build/modal/descriptor-context-20261103T1407Z.json`. It used one CPU and
+performed no audio replay or native build. Thirty-three focused Python tests
+pass. The earlier ordinary/string-8 capture parity checks remain valid;
+this analysis supplies no new production, deadline, validator or live-use
+result. The installed plugin and acceptance targets are unchanged.
