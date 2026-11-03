@@ -39,6 +39,8 @@ OVERLAP_MODULES = ('controlled_descriptor_overlap', 'string_likelihood_decomposi
 for module in OVERLAP_MODULES:
     image = image.add_local_file(ROOT / 'tools' / (module + '.py'),
                                  '/opt/m3/tools/' + module + '.py', copy=True)
+image = image.add_local_file(ROOT / 'tools/selection_trace_diagnosis.py',
+                             '/opt/m3/tools/selection_trace_diagnosis.py', copy=True)
 
 
 def sha256(path):
@@ -734,12 +736,108 @@ def capture_controlled_overlap(run_id: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=900, max_containers=1)
+def capture_controlled_selection(run_id: str, source_run: str):
+    """One saved nearby_0dB replay; expose where its target leaves selection."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.selection_trace_diagnosis import summarize_selection
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if previous.get('state') != 'completed' or not previous.get('final'):
+        raise ValueError('source capture is not final')
+    saved = previous['datasets']['nearby_0dB']
+    wav, labels = source / 'nearby_0dB.wav', source / 'nearby_0dB.tsv'
+    calibration = MOUNT / 'corpus/calibration.m3cb'
+    for path, expected in ((wav, saved['audio_sha256']), (labels, saved['labels_sha256']),
+                           (calibration, previous['calibration_sha256'])):
+        if sha256(path) != expected:
+            raise ValueError('saved audio, labels or calibration changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
+                  stage='build identical diagnostic replay', installed_changed=False,
+                  started_at=datetime.now(timezone.utc).isoformat(),
+                  source_report_sha256=sha256(source / 'report.json'),
+                  analysis_sha256=sha256('/opt/m3/tools/selection_trace_diagnosis.py'))
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        binary = build(out) / 'm3_replay'
+        report['binary_sha256'] = sha256(binary)
+        if report['binary_sha256'] != previous['binary_sha256']:
+            raise ValueError('rebuilt binary differs from the saved control')
+        report['calibration_sha256'] = sha256(calibration)
+        with labels.open() as stream:
+            target = [row for row in csv.DictReader(stream, delimiter='\t')
+                      if int(row['midi_note']) == 36 and int(row['string_mask']) == 1]
+        if len(target) != 1:
+            raise ValueError('expected one target span')
+        start, end = int(target[0]['start_sample']), int(target[0]['end_sample'])
+        rate = saved['sample_rate']
+        candidate, outcome = out / 'candidate.tsv', out / 'outcome.tsv'
+        args = [str(binary), '--wav', str(wav), '--labels', str(labels),
+                '--calibration', str(calibration), '--block', '512',
+                '--candidate-trace', str(candidate), '--candidate-trace-note', '36',
+                '--candidate-trace-start', str(start / rate),
+                '--candidate-trace-end', str(end / rate), '--outcome-trace', str(outcome)]
+        for key, value in previous['settings'].items():
+            args += ['--' + key, str(value)]
+        report.update(stage='one saved-mixture replay', command=args, settings=previous['settings'])
+        save()
+        replay, log_path = out / 'replay.tsv', out / 'replay.log'
+        with replay.open('w') as stdout, log_path.open('w') as log:
+            subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+        report['output'] = aggregate(replay)
+        report['control'] = saved['control']
+        report['output_identical'] = report['output'] == report['control']
+        if not report['output_identical']:
+            raise ValueError('diagnostics changed output')
+        for name in ('candidate', 'outcome'):
+            counts = re.findall(rf'{name}_trace frames=(\d+) cap=(\d+) truncated=(\d+)',
+                                log_path.read_text())
+            if len(counts) != 1 or int(counts[0][2]) or int(counts[0][0]) > int(counts[0][1]):
+                raise ValueError('incomplete trace accounting')
+        assignment = out / 'source-assignment.tsv'
+        with gzip.open(source / 'nearby_0dB-assignment.tsv.gz', 'rb') as src, assignment.open('wb') as dst:
+            shutil.copyfileobj(src, dst, length=1024 * 1024)
+        if sha256(assignment) != saved['trace_sha256']:
+            raise ValueError('saved assignment trace changed')
+        with candidate.open() as c, outcome.open() as o, assignment.open() as a:
+            if next(o).strip() != '# m3_candidate_outcome_v2':
+                raise ValueError('unknown outcome format')
+            report['diagnosis'] = summarize_selection(
+                csv.DictReader(c, delimiter='\t'), csv.DictReader(o, delimiter='\t'),
+                csv.DictReader(a, delimiter='\t'), note=36, start=start, end=end,
+                sample_count=saved['sample_count'])
+        for trace in (candidate, outcome):
+            report[trace.stem + '_trace_sha256'] = sha256(trace)
+            with trace.open('rb') as src, gzip.open(str(trace) + '.gz', 'wb', compresslevel=1) as dst:
+                shutil.copyfileobj(src, dst, length=1024 * 1024)
+            trace.unlink()
+        assignment.unlink()
+        report.update(state='completed', final=True, stage='selection loss diagnosed')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
-         controlled_overlap: bool = False):
-    if bool(source_run) + string_evidence + controlled_overlap > 1:
+         controlled_overlap: bool = False, selection_source: str = ''):
+    if bool(source_run) + string_evidence + controlled_overlap + bool(selection_source) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_controlled_overlap.remote(run_id) if controlled_overlap else
+    result = (capture_controlled_selection.remote(run_id, selection_source) if selection_source else
+              capture_controlled_overlap.remote(run_id) if controlled_overlap else
               capture_string_evidence.remote(run_id) if string_evidence else
               analyze_saved_capture.remote(run_id, source_run) if source_run else capture.remote(run_id))
     target = ROOT / 'build/modal' / f'{run_id}.json'

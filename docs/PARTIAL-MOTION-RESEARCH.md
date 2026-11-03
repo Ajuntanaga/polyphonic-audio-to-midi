@@ -6,6 +6,16 @@ parameters are unchanged.
 
 ## Decision
 
+The latest controlled mixture points to candidate admission before string
+assignment. In the equal-RMS MIDI-49 mixture, 117 of 130 sampled frames without
+the MIDI-36 assignment candidate fail the active/local-peak/candidate-evidence
+gate despite scores above the scalar amplitude threshold. Only four are
+selector evictions. The next implementation target is this evidence gate,
+with signal-derived rejection of neighboring harmonic impostors. A global
+sensitivity reduction, larger selector capacity or blanket descriptor
+reweighting does not follow from this result. See the final section for the
+measured limits and the next acceptance test.
+
 The causal measurement experiment is complete. A physical single-string
 counterexample rejects motion magnitude as a standalone source-count cue.
 Keep the capture and availability diagnostics offline. Defer a learned
@@ -795,3 +805,64 @@ have identical output fingerprints and trace bytes at blocks 32, 512 and
 check pass; one focused code review found no consequential issues. This is
 an offline diagnostic with no changed native policy or installed output.
 No new production, callback deadline, validator or live-use result is claimed.
+
+### Saved-mixture selection diagnosis, 2026-11-03
+
+One additional replay of the saved equal-RMS MIDI-49 mixture separates the
+loss before assignment from string-ranking errors. It reuses the exact
+waveform, annotations, calibration and native binary from the five-case
+control. `tools/selection_trace_diagnosis.py` joins every labeled target
+candidate tick to the outcome trace and the saved sampled assignment trace.
+It checks clock alignment, full candidate/outcome coverage and agreement of
+selection dispositions. An absent outcome entry keeps selector-pool
+membership unknown; it is never converted into zero evidence.
+
+| Sampled MIDI-36 assignment row | Frames | Selection disposition |
+| --- | ---: | --- |
+| Present | 86 / 216 | Selected on all 86 |
+| Absent: raw eligibility failed | 117 / 216 | `below_threshold` |
+| Absent: quiet/startup | 5 / 216 | `quiet` |
+| Absent: coasting | 4 / 216 | `coasting` |
+| Absent: selector eviction | 4 / 216 | `dp_evicted`, confirmed in selector pool |
+
+Thus 117/130 (90.00%) of the missing sampled assignment rows fail the earlier
+eligibility gate. Across all 3450 labeled target ticks, the dispositions are
+1800 below threshold, 1459 selected, 66 coasting, 50 selector evictions and
+75 quiet/startup. These are intermediate candidate observations, not final
+MIDI error counts or independent performances.
+
+The diagnostic name `below_threshold` is broader than a low amplitude score.
+All 1800 such ticks have `score_ratio > 1`: minimum 2.840, median 4.087,
+maximum 5.096. All have active, local-peak and candidate-evidence flags false;
+1273 still have direct-fundamental support. The sampled 117-tick subset has
+the same three false flags, 117 scores above threshold and 84 direct peaks.
+The production expression is `active || local_peak || candidate_evidence`
+after the scalar threshold check. Its failure explains this exclusion; a
+general reduction of the amplitude threshold would not satisfy that gate.
+MIDI 37 is selected/coasting on 93 of those 117 sampled ticks, and the added
+MIDI 49 on all 117. That association motivates inspecting neighboring pitch
+competition, but does not yet prove why the evidence flags fail.
+
+The next bounded implementation should address that admission decision in
+offline mode. First distinguish an independent low fundamental from the
+added note's lower-octave candidate using the existing peak, harmonic and
+calibration evidence. Do not admit a candidate merely because it has a direct
+peak or an expected annotation. A proposed guard must improve the saved
+mixture without more wrong notes, wrong strings or extra gap outputs, then
+improve ordinary matches beyond 145385 with wrong notes <=164263, wrong
+strings <=92653 and extra gap outputs <=62856. Every protected unison,
+isolated and constructed-chord gate and all realtime/lifecycle checks still
+follow. This single detuned target take cannot establish generalization.
+
+Modal `controlled-selection-20261103T1438Z`, app
+`ap-EdN3xo0azmWOcY5DHaerud`, completed at 14:38:07 UTC. Report:
+`build/modal/controlled-selection-20261103T1438Z.json`. Its binary hash equals
+the source control and output fingerprint remains `095d8d9a3e2d65ec`:
+3250/6900 matches (47.10%), 3383 wrong notes, 1642 wrong strings, 740 extra
+outputs during unlabeled gaps and 5765 total false outputs. Every count is
+unchanged. The supplemental `-threshold-breakdown.json` comes from the
+hash-verified saved candidate trace. The source five-case 32/512/1024 parity
+checks remain valid; this follow-up uses block 512 only and does not claim a
+new three-block matrix. Three focused tests, Python compilation and the
+whitespace check pass; one focused review found no consequential issue.
+No native policy, installed output or release-gate result changed.
