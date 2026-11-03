@@ -34,6 +34,11 @@ image = (modal.Image.from_registry('ubuntu:24.04', add_python='3.12')
                          '/opt/m3/partial_motion_evidence.py', copy=True)
          .add_local_file(ROOT / 'tools/string_evidence_audit.py',
                          '/opt/m3/string_evidence_audit.py', copy=True))
+OVERLAP_MODULES = ('controlled_descriptor_overlap', 'string_likelihood_decomposition',
+                   'string_observation_shadow', 'string_evidence_audit')
+for module in OVERLAP_MODULES:
+    image = image.add_local_file(ROOT / 'tools' / (module + '.py'),
+                                 '/opt/m3/tools/' + module + '.py', copy=True)
 
 
 def sha256(path):
@@ -580,11 +585,162 @@ def capture_string_evidence(run_id: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2.0,
+              memory=4096, timeout=1800, max_containers=1)
+def capture_controlled_overlap(run_id: str):
+    """Five same-target mixtures: one solo and two added notes at two levels."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_descriptor_overlap import (
+        read_float_wave, write_float_wave, controlled_mixtures, observations, compare_to_solo)
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', run_id):
+        raise ValueError('invalid run identifier')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, state='running', final=False, stage='prepare controlled mixtures',
+                  installed_changed=False, datasets={}, started_at=datetime.now(timezone.utc).isoformat(),
+                  limits=['One cropped target take, one competing string; no independent-take generalization.',
+                          'Added-note spectra, detuning and envelopes differ; this does not isolate collision alone.',
+                          'Paired descriptor observations are conditional on both lanes being available and unreserved.',
+                          'Annotations score evidence only; no labels enter a MIDI policy.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        # Fixed before the run. No note/time/phase shifts or per-mixture gain fitting.
+        definitions = [('target', 'isolated-08', 1003200, 1224000, 36, 1),
+                       ('octave', 'isolated-05', 1003200, 1224000, 48, 8),
+                       ('nearby', 'isolated-05', 1248000, 1468800, 49, 8)]
+        arrays, components, rate = {}, {}, None
+        for name, corpus, start, end, note, mask in definitions:
+            wav, labels = (MOUNT / 'corpus' / (corpus + suffix) for suffix in ('.wav', '.tsv'))
+            current_rate, audio = read_float_wave(wav)
+            if rate not in (None, current_rate) or current_rate != 96000 or end > len(audio):
+                raise ValueError('corpus clock or crop differs from the planned experiment')
+            rate = current_rate
+            with labels.open() as stream:
+                matching = [row for row in csv.DictReader(stream, delimiter='\t')
+                            if (int(row['start_sample']), int(row['end_sample']),
+                                int(row['midi_note']), int(row['string_mask'])) == (start, end, note, mask)]
+            if len(matching) != 1:
+                raise ValueError('planned source annotation is missing or duplicated')
+            arrays[name] = audio[start:end]
+            components[name] = dict(corpus=corpus, audio_sha256=sha256(wav),
+                                    labels_sha256=sha256(labels), start_sample=start, end_sample=end,
+                                    midi_note=note, string_mask=mask,
+                                    component_sha256=hashlib.sha256(arrays[name].tobytes()).hexdigest(),
+                                    source_annotation=matching[0])
+        prefix, suffix = rate // 4, rate
+        cases = controlled_mixtures(arrays['target'], {key: arrays[key] for key in ('octave', 'nearby')},
+                                     prefix=prefix, suffix=suffix)
+        report['components'] = components
+        report['analysis_source_sha256'] = {
+            module: sha256('/opt/m3/tools/' + module + '.py') for module in OVERLAP_MODULES}
+        report['source_files_sha256'] = {
+            str(path.relative_to('/opt/m3')): sha256(path)
+            for path in sorted(Path('/opt/m3/native').rglob('*')) if path.is_file()}
+        report['stage'] = 'build diagnostic replay'
+        save()
+        binary = build(out) / 'm3_replay'
+        report['binary_sha256'] = sha256(binary)
+        calibration = MOUNT / 'corpus/calibration.m3cb'
+        settings = {'a4': 440, 'input-trim': -9, 'sensitivity': 60, 'response': 75,
+                    'max-polyphony': 5, 'max-fret': 24}
+        report['calibration_sha256'] = sha256(calibration)
+        report['settings'] = settings
+        solo = None
+        for name, case in cases.items():
+            wav, labels = out / (name + '.wav'), out / (name + '.tsv')
+            write_float_wave(wav, rate, case['audio'])
+            end = prefix + len(arrays['target'])
+            label_text = f'start_sample\tend_sample\tmidi_note\tstring_mask\n{prefix}\t{end}\t36\t1\n'
+            added = case['metadata']['interferer']
+            if added is not None:
+                label_text += f"{prefix}\t{end}\t{components[added]['midi_note']}\t8\n"
+            labels.write_text(label_text)
+            base = [str(binary), '--wav', str(wav), '--labels', str(labels), '--calibration', str(calibration)]
+            for key, value in settings.items():
+                base += ['--' + key, str(value)]
+            result = dict(mixture=case['metadata'], audio_sha256=sha256(wav), labels_sha256=sha256(labels),
+                          sample_rate=rate, sample_count=len(case['audio']), replays={},
+                          all_outputs_identical=True, all_traces_identical=True)
+            report['datasets'][name] = result
+            reference = None
+            # An untraced control proves diagnostics do not alter output; three blocks test clock invariance.
+            for block, traced in ((512, False), (32, True), (512, True), (1024, True)):
+                tag = str(block) if traced else 'control'
+                report['stage'] = f'{name} replay {tag}'
+                save()
+                replay, trace = out / f'{name}-{tag}.tsv', out / f'{name}-{tag}-assignment.tsv'
+                log_path = out / f'{name}-{tag}.log'
+                args = base + ['--block', str(block)]
+                if traced:
+                    args += ['--assignment-trace', str(trace)]
+                with replay.open('w') as stdout, log_path.open('w') as log:
+                    subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+                current = aggregate(replay)
+                if not traced:
+                    result['control'] = current
+                    continue
+                result['replays'][tag] = current
+                metadata = re.findall(
+                    r'assignment_trace rows=(\d+) cap=(\d+) truncated=(\d+) sampled_frames=(\d+) decimation=(\d+)',
+                    log_path.read_text())
+                if len(metadata) != 1:
+                    raise ValueError('missing or duplicate trace accounting')
+                rows, cap, truncated, sampled_frames, decimation = map(int, metadata[0])
+                stride = decimation * 64
+                if truncated or rows > cap or decimation != 16 or sampled_frames != len(case['audio']) // stride:
+                    raise ValueError('incomplete or incompatible assignment trace')
+                trace_hash = sha256(trace)
+                result['all_outputs_identical'] &= current == result['control']
+                result['all_traces_identical'] &= reference in (None, trace_hash)
+                if not result['all_outputs_identical'] or not result['all_traces_identical']:
+                    raise ValueError(f'{name}: diagnostic parity failed at block {block}')
+                if reference is None:
+                    reference = trace_hash
+                    result['trace_sha256'] = trace_hash
+                    with trace.open() as stream:
+                        measured = observations(csv.DictReader(stream, delimiter='\t'), note=36, lane=0,
+                                                competitor=1, start=prefix, end=end, sample_rate=rate,
+                                                sample_count=len(case['audio']), stride=stride)
+                    if measured['trace_rows'] != rows:
+                        raise ValueError('parsed trace accounting mismatch')
+                    result['coverage'] = measured['coverage']
+                    pair_path = out / f'{name}-pair.json'
+                    pair_path.write_text(json.dumps(measured, indent=2, allow_nan=False) + '\n')
+                    result['pair_observation_sha256'] = sha256(pair_path)
+                    if name == 'solo':
+                        solo = measured
+                    else:
+                        result['paired_comparison'] = compare_to_solo(solo, measured)
+                    with trace.open('rb') as src, gzip.open(out / f'{name}-assignment.tsv.gz', 'wb',
+                                                           compresslevel=1) as dest:
+                        shutil.copyfileobj(src, dest, length=1024 * 1024)
+                trace.unlink()
+                save()
+        report.update(state='completed', final=True, stage='controlled overlap comparison complete',
+                      conclusion='Measured paired effect of added recordings; no production candidate or live-use claim.')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        path = out / 'build.log'
+        if path.exists():
+            report['build_log_tail'] = path.read_text()[-6000:]
+    save()
+    return report
+
+
 @app.local_entrypoint()
-def main(run_id: str, source_run: str = '', string_evidence: bool = False):
-    if source_run and string_evidence:
-        raise ValueError('saved motion analysis and string evidence capture are separate jobs')
-    result = (capture_string_evidence.remote(run_id) if string_evidence else
+def main(run_id: str, source_run: str = '', string_evidence: bool = False,
+         controlled_overlap: bool = False):
+    if bool(source_run) + string_evidence + controlled_overlap > 1:
+        raise ValueError('select one analysis or capture job')
+    result = (capture_controlled_overlap.remote(run_id) if controlled_overlap else
+              capture_string_evidence.remote(run_id) if string_evidence else
               analyze_saved_capture.remote(run_id, source_run) if source_run else capture.remote(run_id))
     target = ROOT / 'build/modal' / f'{run_id}.json'
     target.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')

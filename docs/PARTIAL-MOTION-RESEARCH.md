@@ -720,3 +720,78 @@ performed no audio replay or native build. Thirty-three focused Python tests
 pass. The earlier ordinary/string-8 capture parity checks remain valid;
 this analysis supplies no new production, deadline, validator or live-use
 result. The installed plugin and acceptance targets are unchanged.
+
+### Controlled waveform overlap, 2026-11-03
+
+The controlled experiment holds one physical string-8 MIDI-36 waveform fixed
+and adds a physical string-5 MIDI-48 or MIDI-49 waveform at -12 dB and 0 dB
+relative RMS. The source crops, annotations, calibration and analysis files
+are hashed in the report. All five cases share the target samples, onset,
+gain, 250 ms leading silence and one-second release tail. A common peak-safe
+gain is computed across every case; it was 1.0 for these recordings. There
+is no individual mixture normalization, pitch correction or phase alignment.
+
+`tools/controlled_descriptor_overlap.py` pairs descriptor observations at the
+same sample and compares the expected string 8 with playable competitor
+string 7. Missing target rows and reserved/infeasible pairs are retained as
+separate coverage counts. They never become zero-valued evidence. A negative
+descriptor margin favors the competing string.
+
+| Case | Eligible paired observations / 216 sampled target frames | Missing target row | Reserved/infeasible pair | Sustained wrong descriptor margins | Mean sustained margin change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Target alone | 211 | 5 | 0 | 0 / 183 | Reference |
+| Added MIDI 48, -12 dB | 142 | 6 | 68 | 2 / 116 (1.72%) | +1.849 |
+| Added MIDI 48, 0 dB | 154 | 5 | 57 | 0 / 142 (0.00%) | +5.706 |
+| Added MIDI 49, -12 dB | 211 | 5 | 0 | 0 / 183 (0.00%) | -1.443 |
+| Added MIDI 49, 0 dB | 85 | 130 | 1 | 2 / 66 (3.03%) | -4.374 |
+
+The target-alone descriptor favors the expected string on every eligible
+paired row. The positive changes in the MIDI-48 cases strengthen that pairwise
+preference. Added MIDI 49 weakens it, and short attack/early observations can
+flip, but this experiment does not reproduce the broad sustained descriptor
+collapse suggested by the earlier comparison between different performances.
+Blanket descriptor reweighting is not supported by these results.
+
+The generated probes do expose downstream failures:
+
+| Case | Matched / labeled frames | Match rate | Wrong notes | Wrong strings | Extra outputs in unlabeled gaps |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Target alone | 3210 / 3450 | 93.04% | 486 | 163 | 326 |
+| Added MIDI 48, -12 dB | 2077 / 6900 | 30.10% | 384 | 1292 | 325 |
+| Added MIDI 48, 0 dB | 471 / 6900 | 6.83% | 2066 | 6169 | 652 |
+| Added MIDI 49, -12 dB | 0 / 6900 | 0.00% | 3378 | 4047 | 646 |
+| Added MIDI 49, 0 dB | 3250 / 6900 | 47.10% | 3383 | 1642 | 740 |
+
+These percentages measure expected note/string assignments found in labeled
+audio; false outputs are separate. They are not overall accuracy. The solo
+and mixture denominators differ because each mixture has two expected voices.
+These short constructed probes are not replacements for the protected corpus
+or independent physical performances.
+
+Two observations narrow the next diagnosis. With quiet added MIDI 49, the
+target is available on 211 sampled rows and its descriptor favors the expected
+string throughout, yet neither expected voice matches in the full replay.
+With equal-RMS added MIDI 49, the target row is absent on 130 sampled frames,
+compared with five in the solo control. An absent assignment-trace row is not
+by itself proof of missing MIDI or a particular detector failure. Inspect the
+saved assignment/selection path to distinguish candidate admission, ownership
+and final rendering before proposing a policy change.
+
+The target source is approximately -43.21 cents from its nominal note; the
+added sources are +7.18 and +4.51 cents. Thus MIDI 48 is a nominal octave,
+not an exact coincidence of harmonics. Added spectra, tuning and envelopes
+differ together. One target take and one competing string cannot establish
+generalization, and descriptor comparisons are conditional on both lanes
+being available and unreserved. The experiment establishes the effect of
+adding these exact recorded waveforms, not an isolated collision mechanism.
+
+Modal `controlled-descriptor-overlap-20261103T1423Z`, app
+`ap-zrlKXf4xao0BqzCa6toH18`, completed at 14:24:59 UTC. The final report is
+`build/modal/controlled-descriptor-overlap-20261103T1423Z.json`; the persistent
+volume retains each waveform, label file, compressed assignment trace and
+paired observation file. All five cases match their untraced controls and
+have identical output fingerprints and trace bytes at blocks 32, 512 and
+1024. Twenty focused Python tests, Python compilation and the whitespace
+check pass; one focused code review found no consequential issues. This is
+an offline diagnostic with no changed native policy or installed output.
+No new production, callback deadline, validator or live-use result is claimed.
