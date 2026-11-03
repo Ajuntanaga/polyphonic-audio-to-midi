@@ -35,7 +35,8 @@ image = (modal.Image.from_registry('ubuntu:24.04', add_python='3.12')
          .add_local_file(ROOT / 'tools/string_evidence_audit.py',
                          '/opt/m3/string_evidence_audit.py', copy=True))
 OVERLAP_MODULES = ('controlled_descriptor_overlap', 'string_likelihood_decomposition',
-                   'string_observation_shadow', 'string_evidence_audit')
+                   'string_observation_shadow', 'string_evidence_audit',
+                   'controlled_admission_gate')
 for module in OVERLAP_MODULES:
     image = image.add_local_file(ROOT / 'tools' / (module + '.py'),
                                  '/opt/m3/tools/' + module + '.py', copy=True)
@@ -74,7 +75,7 @@ def wave_duration(path):
     return rate, size / align / rate
 
 
-def build(out):
+def build(out, detector_tests=False):
     source = Path('/opt/m3')
     text = (source / 'project.cmake').read_text()
     core = re.search(r'set\(M3_NATIVE_CORE_SOURCES\s+(.*?)\)', text, re.S)
@@ -100,7 +101,12 @@ target_link_libraries(m3_replay PRIVATE core pthread m)
 add_executable(m3_motion_tests native/tests/test_offline_replay.cpp
  native/tests/test_support.cpp motion_test_main.cpp)
 target_link_libraries(m3_motion_tests PRIVATE core pthread m)
-''')
+''' + ('''
+add_compile_definitions(M3_TESTING=1)
+add_executable(m3_detector_tests native/tests/test_polyphonic_pitch_detector.cpp
+ native/tests/test_support.cpp motion_test_main.cpp)
+target_link_libraries(m3_detector_tests PRIVATE core pthread m)
+''' if detector_tests else ''))
     directory = Path('/tmp/m3-motion-build')
     with (out / 'build.log').open('w') as log:
         subprocess.run(['cmake', '-S', str(source), '-B', str(directory)],
@@ -831,12 +837,119 @@ def capture_controlled_selection(run_id: str, source_run: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=900, max_containers=1)
+def capture_controlled_admission(run_id: str, source_run: str):
+    """Paired admission OFF/ON using the five cached, unchanged waveforms."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_admission_gate import CASES, evaluate_admission, read_target_detail
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    cases = CASES
+    if previous.get('state') != 'completed' or not previous.get('final'):
+        raise ValueError('source capture is not final')
+    if set(previous['datasets']) != set(cases):
+        raise ValueError('expected the five controlled mixtures')
+    calibration = MOUNT / 'corpus/calibration.m3cb'
+    if sha256(calibration) != previous['calibration_sha256']:
+        raise ValueError('calibration changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
+                  stage='build offline admission trial', installed_changed=False,
+                  started_at=datetime.now(timezone.utc).isoformat(),
+                  source_report_sha256=sha256(source / 'report.json'),
+                  baseline_binary_sha256=previous['binary_sha256'],
+                  calibration_sha256=sha256(calibration), settings=previous['settings'],
+                  gate_source_sha256=sha256('/opt/m3/tools/controlled_admission_gate.py'),
+                  detector_test_access_enabled=True,
+                  source_files_sha256={str(p.relative_to('/opt/m3')): sha256(p)
+                                       for p in sorted(Path('/opt/m3/native').rglob('*'))
+                                       if p.is_file()}, datasets={}, tests={})
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        directory = build(out, detector_tests=True)
+        binary = directory / 'm3_replay'
+        report['binary_sha256'] = sha256(binary)
+        report['binary_path'] = str(out / 'm3_replay')
+        shutil.copy2(binary, report['binary_path'])
+        report['stage'] = 'causal unit tests and replay tests'
+        save()
+        for name, executable, test_filter in (
+                ('fundamental-admission', 'm3_detector_tests', 'native_detector_fundamental_admission'),
+                ('harmonic-admission', 'm3_detector_tests', 'native_detector_calibrated_harmonic_admission'),
+                ('offline-replay', 'm3_motion_tests', '')):
+            log_path = out / (name + '-tests.log')
+            env = dict(os.environ, M3_TEST_FILTER=test_filter)
+            with log_path.open('w') as log:
+                subprocess.run([str(directory / executable)], stdout=log,
+                               stderr=subprocess.STDOUT, env=env, check=True, timeout=240)
+            summary = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', log_path.read_text())
+            if len(summary) != 1 or int(summary[0][0]) == 0 or int(summary[0][1]) != 0:
+                raise ValueError('missing successful test accounting')
+            report['tests'][name] = dict(count=int(summary[0][0]), failures=0,
+                                         log_sha256=sha256(log_path))
+        for case in cases:
+            saved = previous['datasets'][case]
+            wav, labels = source / (case + '.wav'), source / (case + '.tsv')
+            for path, key in ((wav, 'audio_sha256'), (labels, 'labels_sha256')):
+                if sha256(path) != saved[key]:
+                    raise ValueError(f'{case}: cached {key} changed')
+            item = {key: saved[key] for key in ('audio_sha256', 'labels_sha256',
+                                               'sample_rate', 'sample_count')}
+            item['replays'] = {}
+            report['datasets'][case] = item
+            for enabled in (False, True):
+                mode = 'on' if enabled else 'off'
+                report['stage'] = f'{case}: admission {mode}, block 512'
+                save()
+                args = [str(binary), '--wav', str(wav), '--labels', str(labels),
+                        '--calibration', str(calibration), '--block', '512', '--label-details']
+                for key, value in previous['settings'].items():
+                    args += ['--' + key, str(value)]
+                if enabled:
+                    args += ['--diagnostic-fundamental-admission']
+                output = out / f'{case}-{mode}.tsv'
+                with output.open('w') as stdout, (out / f'{case}-{mode}.log').open('w') as log:
+                    subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+                item['replays'][mode] = dict(command=args, output=aggregate(output),
+                                              target=read_target_detail(output))
+            off, on = (item['replays'][mode]['output'] for mode in ('off', 'on'))
+            item['control_identical'] = off == saved['control']
+            if not item['control_identical'] or on['labeled'] != off['labeled']:
+                raise ValueError(f'{case}: control or label accounting changed')
+            save()
+        gate = evaluate_admission(report['datasets'])
+        for case, result in gate.pop('cases').items():
+            report['datasets'][case].update(result)
+        report.update(state='completed', final=True, stage='controlled admission screen complete',
+                      **gate)
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        report['log_tails'] = {path.name: path.read_text()[-4000:]
+                              for path in out.glob('*.log')}
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
-         controlled_overlap: bool = False, selection_source: str = ''):
-    if bool(source_run) + string_evidence + controlled_overlap + bool(selection_source) > 1:
+         controlled_overlap: bool = False, selection_source: str = '',
+         admission_source: str = ''):
+    if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
+            + bool(admission_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_controlled_selection.remote(run_id, selection_source) if selection_source else
+    result = (capture_controlled_admission.remote(run_id, admission_source) if admission_source else
+              capture_controlled_selection.remote(run_id, selection_source) if selection_source else
               capture_controlled_overlap.remote(run_id) if controlled_overlap else
               capture_string_evidence.remote(run_id) if string_evidence else
               analyze_saved_capture.remote(run_id, source_run) if source_run else capture.remote(run_id))

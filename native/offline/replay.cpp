@@ -2578,7 +2578,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_residual_recovery_continuity,
                          bool diagnostic_joint_spectral_ownership,
                          JointOwnershipAblation joint_ownership_ablation,
-                         PartialMotionTrace* partial_motion_trace) {
+                         PartialMotionTrace* partial_motion_trace,
+                         bool diagnostic_fundamental_admission) {
   output = {};
   error = ReplayError::invalid_config;
   if (partial_motion_trace != nullptr) {
@@ -2805,6 +2806,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_coasting_harmonic_handoff);
   detector.set_calibrated_harmonic_admission_guard_for_diagnostics(
       diagnostic_calibrated_harmonic_admission_guard);
+  detector.set_fundamental_admission_for_diagnostics(
+      diagnostic_fundamental_admission);
   detector.set_provisional_open_retention_guard_for_diagnostics(
       diagnostic_provisional_open_retention_guard);
   detector.set_residual_pitch_recovery_for_diagnostics(
@@ -2826,6 +2829,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo ||
       diagnostic_state_local_open_prior || diagnostic_coasting_harmonic_handoff ||
       diagnostic_calibrated_harmonic_admission_guard ||
+      diagnostic_fundamental_admission ||
       diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||
       diagnostic_joint_spectral_ownership) {
     return false;

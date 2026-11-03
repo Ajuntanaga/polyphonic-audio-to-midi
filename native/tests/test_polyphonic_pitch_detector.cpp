@@ -502,6 +502,57 @@ struct PolyphonicPitchDetectorTestAccess final {
     return detector.candidate_states_[candidate].assigned_string;
   }
 
+  enum class FundamentalAdmissionCase {
+    masked, weak_fundamental, no_direct_peak, below_threshold, harmonic,
+    infeasible, capacity, narrow
+  };
+
+  static bool fundamental_admission_probe(
+      PolyphonicPitchDetector& detector, bool enabled,
+      FundamentalAdmissionCase scenario = FundamentalAdmissionCase::masked,
+      double scale = 1.0) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 87U;
+    config.max_polyphony = scenario == FundamentalAdmissionCase::capacity ? 1U : 5U;
+    config.max_fret = scenario == FundamentalAdmissionCase::narrow ? 2U : 24U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_fundamental_admission_for_diagnostics(enabled);
+    detector.fast_energy_ = scale;
+    constexpr std::size_t target = 36U - 32U;
+    const std::size_t parent =
+        (scenario == FundamentalAdmissionCase::harmonic ? 48U : 49U) - 32U;
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow{};
+    std::array<bool, kMaxCandidates> selected{};
+    scores[target] = 0.30 * scale;
+    fundamentals[target] = 0.27 * scale;
+    // The adjacent summed score hides the real fundamental. Its own small
+    // fundamental is explained by the higher parent and must not be rescued.
+    scores[target + 1U] = 0.40 * scale;
+    fundamentals[target + 1U] = 0.02 * scale;
+    scores[parent] = 0.80 * scale;
+    fundamentals[parent] = 0.76 * scale;
+    double threshold = 0.05 * scale;
+    if (scenario == FundamentalAdmissionCase::weak_fundamental)
+      fundamentals[target] = 0.24 * scale;
+    if (scenario == FundamentalAdmissionCase::no_direct_peak)
+      fundamentals[target + 1U] = 0.28 * scale;
+    if (scenario == FundamentalAdmissionCase::below_threshold)
+      threshold = scores[target];
+    if (scenario == FundamentalAdmissionCase::infeasible)
+      detector.playable_string_masks_[target] = 0U;
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow, threshold, selected, detector.candidate_count_);
+    unsigned total = 0U;
+    for (const bool value : selected) total += value ? 1U : 0U;
+    M3_EXPECT_TRUE(total <= config.max_polyphony);
+    return selected[target];
+  }
+
   static std::uint8_t calibrated_harmonic_admission_probe(
       PolyphonicPitchDetector& detector, bool enabled, bool active_upper = false,
       double upper_score = 0.02, unsigned interval = 19U,
@@ -8319,6 +8370,33 @@ M3_TEST(native_detector_release_hold_is_time_based_at_supported_sample_rates) {
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::FundamentalAdmissionCase;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, false));
+  M3_EXPECT_TRUE(Access::fundamental_admission_probe(detector, true));
+  for (const auto scenario : {Case::weak_fundamental, Case::no_direct_peak,
+       Case::below_threshold, Case::harmonic, Case::infeasible, Case::capacity,
+       Case::narrow}) {
+    M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, true, scenario));
+  }
+}
+
+M3_TEST(native_detector_fundamental_admission_preserves_common_gain_and_silence) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const double scale : {0.0001, 0.01, 1.0, 100.0}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_TRUE(Access::fundamental_admission_probe(
+        detector, true, Access::FundamentalAdmissionCase::masked, scale));
+    detector.reset();
+    for (unsigned sample = 0U; sample < 4800U; ++sample) {
+      const auto decision = detector.process_sample(0.0);
+      M3_EXPECT_EQ(decision.transitions.size(), 0U);
+    }
+  }
+}
+
 M3_TEST(native_detector_calibrated_harmonic_admission_rejects_only_new_faint_partial) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   m3::PolyphonicPitchDetector detector;

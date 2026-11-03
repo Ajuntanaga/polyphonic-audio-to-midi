@@ -564,6 +564,9 @@ class PolyphonicPitchDetector final {
   void set_calibrated_harmonic_admission_guard_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_harmonic_admission_guard_ = enabled;
   }
+  void set_fundamental_admission_for_diagnostics(bool enabled) noexcept {
+    diagnostic_fundamental_admission_ = enabled;
+  }
   void set_provisional_open_retention_guard_for_diagnostics(bool enabled) noexcept {
     diagnostic_provisional_open_retention_guard_ = enabled;
   }
@@ -1500,6 +1503,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_state_local_open_prior_{};
   bool diagnostic_coasting_harmonic_handoff_{};
   bool diagnostic_calibrated_harmonic_admission_guard_{};
+  bool diagnostic_fundamental_admission_{};
   bool diagnostic_provisional_open_retention_guard_{};
   bool diagnostic_joint_spectral_ownership_{};
   bool diagnostic_joint_midi_owner_guard_{};

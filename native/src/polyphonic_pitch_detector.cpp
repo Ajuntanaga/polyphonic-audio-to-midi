@@ -4728,6 +4728,36 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
 #endif
   }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_fundamental_admission_ && !narrow_profile) {
+    // Trial only: a direct fundamental may be hidden by a neighbour's summed
+    // harmonic score. Never lower the amplitude threshold, boost its rank, or
+    // let an admission depend on another admission in this decision.
+    const auto ordinary_eligible = raw_eligible;
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      if (ordinary_eligible[candidate] || playable_string_mask(candidate) == 0U ||
+          scores[candidate] <= threshold ||
+          fundamentals[candidate] < 0.85 * scores[candidate] ||
+          !has_direct_fundamental_peak(scores, fundamentals, candidate, count)) {
+        continue;
+      }
+      bool shadowed = false;
+      for (std::size_t stronger = 0U; stronger < count; ++stronger) {
+        if (ordinary_eligible[stronger] && scores[stronger] > scores[candidate] &&
+            (is_harmonic_shadow(candidate, stronger, fundamentals) ||
+             is_m3_lower_cross_harmonic_shadow(candidate, stronger, fundamentals))) {
+          shadowed = true;
+          break;
+        }
+      }
+      if (!shadowed) {
+        raw_eligible[candidate] = true;
+        selection_dispositions_[candidate] = SelectionDisposition::spectral_rejected;
+      }
+    }
+  }
+#endif
+
   // Classify harmonic shadows in descending spectral rank before considering
   // physical strings. A feasibility decision must never turn a spectral
   // subharmonic into a separate voice merely because a stronger candidate

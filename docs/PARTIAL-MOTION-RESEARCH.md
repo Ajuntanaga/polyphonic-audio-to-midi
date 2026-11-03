@@ -6,15 +6,15 @@ parameters are unchanged.
 
 ## Decision
 
-The latest controlled mixture points to candidate admission before string
-assignment. In the equal-RMS MIDI-49 mixture, 117 of 130 sampled frames without
-the MIDI-36 assignment candidate fail the active/local-peak/candidate-evidence
-gate despite scores above the scalar amplitude threshold. Only four are
-selector evictions. The next implementation target is this evidence gate,
-with signal-derived rejection of neighboring harmonic impostors. A global
-sensitivity reduction, larger selector capacity or blanket descriptor
-reweighting does not follow from this result. See the final section for the
-measured limits and the next acceptance test.
+The controlled mixture locates a candidate-admission failure before string
+assignment, but the first repair is rejected. A strong direct fundamental
+with no stronger eligible harmonic explanation raised matches from 3250 to
+3507/6900 in the equal-RMS MIDI-49 mixture while adding 1666 false outputs.
+That tradeoff is unsuitable for real-time MIDI. The installed plugin is
+unchanged. The next route needs an independent partial or source reference
+that distinguishes the low note from overlapping energy; direct-peak strength
+alone is insufficient. The final section records the result and the corrected
+target-specific acceptance gate.
 
 The causal measurement experiment is complete. A physical single-string
 counterexample rejects motion magnitude as a standalone source-count cue.
@@ -866,3 +866,86 @@ checks remain valid; this follow-up uses block 512 only and does not claim a
 new three-block matrix. Three focused tests, Python compilation and the
 whitespace check pass; one focused review found no consequential issue.
 No native policy, installed output or release-gate result changed.
+
+### Controlled fundamental-admission trial, 2026-11-03
+
+The saved selection trace located the exclusion before assignment. A bounded
+offline intervention then tested whether direct fundamental evidence could
+recover that candidate safely. `--diagnostic-fundamental-admission` is off by
+default and compiled only with offline diagnostics. It requires a playable
+candidate outside the narrow profile, a score above the unchanged threshold,
+a direct peak and fundamental support at least 0.85 of its score. A stronger
+ordinary-eligible candidate must not explain it through the existing harmonic
+or lower-crossharmonic checks. Ordinary eligibility is frozen before this
+check, so new admissions cannot recursively justify others. Existing ranking,
+polyphony and downstream behavior remain in place.
+
+One Modal build replayed the five exact cached waveforms with the flag OFF
+and ON at block 512. All five OFF controls match their saved output fields,
+including fingerprints. Counts below describe final replay output, not the
+intermediate candidate trace. WN is wrong-note outputs, WS wrong-string
+outputs, EG extra outputs during unlabeled gaps, and FP total false outputs.
+EG does not count missing notes. Match percentages measure expected annotated
+note/string assignments found; they do not include the false-output penalty.
+
+| Case | Matches OFF → ON / labeled | Match rate OFF → ON | Δ WN | Δ WS | Δ EG | Δ FP | Result |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| Solo low note | 3210 → 3210 / 3450 | 93.04% → 93.04% | 0 | 0 | 0 | 0 | Unchanged |
+| Added octave, -12 dB | 2077 → 2071 / 6900 | 30.10% → 30.01% | +26 | +6 | 0 | +32 | Rejected |
+| Added octave, equal RMS | 471 → 1271 / 6900 | 6.83% → 18.42% | -829 | -800 | 0 | -1629 | Aggregate improvement |
+| Added nearby note, -12 dB | 0 → 0 / 6900 | 0.00% → 0.00% | 0 | 0 | 0 | 0 | Unchanged |
+| Added nearby note, equal RMS | 3250 → 3507 / 6900 | 47.10% → 50.83% | +149 | +1505 | +12 | +1666 | Rejected |
+
+In the main nearby-note case, 257 additional matches are a 7.91% relative
+increase and a 3.72 percentage-point increase in matched frames. Total false
+outputs rise from 5765 to 7431, or 28.90%. The quieter octave also loses six
+matches. Those regressions reject the rule before a full corpus screen.
+No production integration or installation follows from the favorable octave
+case. This experiment does not isolate which admitted candidate causes every
+extra output, and it does not support a threshold sweep.
+
+One review found a scoring defect: the original report's `target_improved`
+field actually measures aggregate matches across both notes. Its value is
+not evidence that the intended low MIDI-36/string-8 target improved. This
+completed run did not save label details, so target-specific gain is **not
+measured**. The original report remains unchanged; higher false-output counts
+are sufficient to reject the rule without rerunning it.
+
+Future runs use `tools/controlled_admission_gate.py`, gate version
+`target-note-v2`. They save `--label-details` and require exactly one matching
+MIDI-36/string-mask-1 label with identical identity, span and frame accounting
+between OFF and ON. Every case must preserve target matches and aggregate
+matches, with no increase in WN, WS, EG or FP. The equal-RMS nearby-note case
+must strictly improve the target's matches. Missing, duplicate, inconsistent
+or malformed target evidence fails closed. An improvement confined to the
+added note cannot satisfy this gate or hide a target loss.
+
+Modal `controlled-admission-20261103T1457Z`, app
+`ap-IAhnUeIrJYnBEkFjBz9CCs`, completed at 14:59:37 UTC. Report:
+`build/modal/controlled-admission-20261103T1457Z.json`. The cloud build passed
+53 focused native tests: two fundamental-admission, five calibrated harmonic
+admission and 46 offline replay tests. Six local tests cover the corrected
+gate and parser, including misleading aggregate gains, target losses,
+individual safety regressions and absent or inconsistent evidence. Python
+compilation, the source contract and whitespace checks pass. One review is
+complete and its scoring correction is addressed. The first build attempt
+failed before replay because test access was not enabled consistently; the
+successful build applies `M3_TESTING` across the optional test build.
+
+This ON trial has no three-block parity, full native-suite, callback deadline,
+allocation, production-build, validator or live-use result. Earlier control
+parity at 32/512/1024 remains separate. The accepted three-second evidence
+window, 0.20 beat-coherence gate, 0.50 retention floor and measured baseline
+settings remain unchanged.
+
+The next useful experiment must first establish an independent source cue:
+for example, a usable non-overlapping higher partial whose causal frequency
+and envelope changes support the low candidate across these fixed mixtures.
+The overlapping-partial papers above supply a method to investigate, not a
+validated cue for these recordings. A single-string counterexample and the
+quiet/equal-level controls must reject harmonic impostors before another
+output trial. A successful proposal must then pass the target-specific gate,
+improve ordinary matches beyond 145385 while preserving its error ceilings,
+and pass every protected corpus and real-time/lifecycle gate. If no usable
+reference exists, keep the evidence unavailable rather than infer a source
+from a better-fitting mixture alone.

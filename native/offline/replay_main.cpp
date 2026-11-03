@@ -196,6 +196,7 @@ void usage(const char* program) {
       "[--diagnostic-state-local-open-prior] "
       "[--diagnostic-coasting-harmonic-handoff] "
       "[--diagnostic-calibrated-harmonic-admission-guard] "
+      "[--diagnostic-fundamental-admission] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -276,6 +277,7 @@ int main(int argc, char** argv) {
   bool diagnostic_state_local_open_prior = false;
   bool diagnostic_coasting_harmonic_handoff = false;
   bool diagnostic_calibrated_harmonic_admission_guard = false;
+  bool diagnostic_fundamental_admission = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -576,6 +578,8 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-calibrated-harmonic-admission-guard") == 0) {
       diagnostic_calibrated_harmonic_admission_guard = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-fundamental-admission") == 0) {
+      diagnostic_fundamental_admission = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -1048,7 +1052,8 @@ int main(int argc, char** argv) {
           diagnostic_residual_recovery_continuity,
           diagnostic_joint_spectral_ownership,
           joint_ownership_ablation,
-          partial_motion_stream != nullptr ? &partial_motion_trace : nullptr)) {
+          partial_motion_stream != nullptr ? &partial_motion_trace : nullptr,
+          diagnostic_fundamental_admission)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
