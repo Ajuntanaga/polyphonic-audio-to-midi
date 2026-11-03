@@ -2114,13 +2114,18 @@ struct PolyphonicPitchDetectorTestAccess final {
   static bool adjacent_coasting_handoff_probe(
       PolyphonicPitchDetector& detector, std::uint8_t coasting_member_mask,
       double adjacent_age_seconds, bool coasting_direct, bool adjacent_direct,
-      bool quiet) noexcept {
+      bool quiet, std::uint8_t adjacent_assigned_mask = 0x02U,
+      std::uint8_t adjacent_midi_mask = 0x02U,
+      double coasting_score = 0.75, bool coasting_phase_valid = true) noexcept {
     constexpr std::size_t kCoasting = 1U;
     constexpr std::size_t kAdjacent = 2U;
     detector.sample_rate_ = 48000.0;
     detector.profile_mode_ = ProfileMode::m3;
     detector.candidate_count_ = 4U;
     detector.candidate_states_ = {};
+    detector.fast_energy_ = 1.0;
+    detector.phase_cents_states_ = {};
+    detector.phase_cents_states_[kCoasting].valid = coasting_phase_valid;
     auto& coasting = detector.candidate_states_[kCoasting];
     coasting.active = true;
     coasting.assigned_string = 0U;
@@ -2129,15 +2134,15 @@ struct PolyphonicPitchDetectorTestAccess final {
     auto& adjacent = detector.candidate_states_[kAdjacent];
     adjacent.active = true;
     adjacent.assigned_string = 1U;
-    adjacent.assigned_string_mask = 1U << 1U;
-    adjacent.midi_voice_mask = 1U << 1U;
+    adjacent.assigned_string_mask = adjacent_assigned_mask;
+    adjacent.midi_voice_mask = adjacent_midi_mask;
     adjacent.age_ticks = static_cast<std::uint16_t>(std::ceil(
         adjacent_age_seconds * detector.sample_rate_ /
         static_cast<double>(kDecisionQuantum)));
     std::array<double, kMaxCandidates> scores{};
     std::array<double, kMaxCandidates> fundamentals{};
     std::array<bool, kMaxCandidates> selected{};
-    scores[kCoasting] = 0.75;
+    scores[kCoasting] = coasting_score;
     fundamentals[kCoasting] = coasting_direct ? 0.60 : 0.05;
     scores[kAdjacent] = 1.0;
     fundamentals[kAdjacent] = adjacent_direct ? 0.50 : 0.10;
@@ -8557,6 +8562,42 @@ M3_TEST(native_detector_handoffs_a_single_coasting_lane_to_a_fresh_adjacent_fund
   M3_EXPECT_TRUE(
       m3::PolyphonicPitchDetectorTestAccess::adjacent_coasting_handoff_probe(
           detector, 1U << 0U, 0.050, false, true, false));
+}
+
+M3_TEST(native_detector_guarded_adjacent_handoff_preserves_only_supported_owners) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  // The legacy control retains its existing cross-string handoff behavior.
+  M3_EXPECT_TRUE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false));
+  detector.set_joint_spectral_ownership_for_diagnostics(false, true);
+  // A fresh note on a different string must not cut off this supported voice,
+  // even when the held fundamental is no longer a local spectral maximum.
+  M3_EXPECT_FALSE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false));
+  // The recording exposed a stale neighbor with valid phase but score below
+  // the ordinary coherence threshold. Ownership alone must not keep it alive.
+  M3_EXPECT_TRUE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false, 0x02U, 0x02U,
+      0.049, true));
+  M3_EXPECT_FALSE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false, 0x02U, 0x02U,
+      0.050, true));
+  // Strong energy without a valid fine-frequency estimate is insufficient.
+  M3_EXPECT_TRUE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false, 0x02U, 0x02U,
+      0.75, false));
+  // Both an emitted owner and a pending move to the held string may hand off.
+  M3_EXPECT_TRUE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false, 0x02U, 0x01U));
+  M3_EXPECT_TRUE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, false, 0x01U, 0x02U));
+  M3_EXPECT_FALSE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x01U, 0.050, false, true, true, 0x01U, 0x01U));
+  M3_EXPECT_FALSE(Access::adjacent_coasting_handoff_probe(
+      detector, 0x07U, 0.050, false, true, false, 0x01U, 0x01U));
+#endif
 }
 
 M3_TEST(native_detector_adjacent_handoff_preserves_groups_old_notes_and_silence) {

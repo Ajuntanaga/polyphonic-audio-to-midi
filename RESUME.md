@@ -1,3 +1,19 @@
+## 2026-11-03 11:19 UTC — supported-owner screen rejected; research route recorded
+
+- Narrowed the offline ownership guard to preserve a disjoint owner only while its signal clears the existing coherence threshold and its phase estimate is valid. Weak, invalid-phase, overlapping and quiet cases retain ordinary handoff/release behavior. Production defaults and the installed bundle are unchanged.
+- Verification: full native suite 530/530 PASS; five source-contract checks PASS; causal weak-signal/invalid-phase test fails against the broad guard and passes against the narrowed guard. Production preprocessing excludes the diagnostic guard and state. One focused review completed. Logs: `build/test-results/supported-owner-native-suite.log`, `supported-owner-source-contract.log`, `supported-owner-green-test.log`; exclusion report: `supported-owner-production-preprocess.json`. No production build, validator or install for this rejected trial.
+- Modal `supported-owner-handoff-20261103T105408Z`, app `ap-Cm0YTF7v3JilPJ0i9iCqOK`, completed both paired replays. Report: `build/modal/supported-owner-handoff-screen.json`.
+
+| Ordinary recording, block 512 | Matched / 528632 | Wrong note | Wrong string | Extra outputs in unlabeled gaps | Total false outputs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control | 145397 (27.504%) | 163749 | 92641 | 62856 | 319246 |
+| Supported-owner handoff | 146147 (27.646%) | 166731 | 93001 | 63368 | 323100 |
+
+- Verdict: REJECTED. Matching gains 750 frames (+0.516%, +0.142 percentage points), but wrong notes rise by 2982, wrong strings by 360 and extra gap outputs by 512. These are offline counts; the installed baseline is unchanged. No protected replay expansion.
+- Research: [measured motion across harmonics](docs/PARTIAL-MOTION-RESEARCH.md) records six primary sources, the relevant physical limits, completed negative experiments, and a bounded Modal comparison. The next question is whether observed cross-partial frequency/envelope motion adds held-out information beyond the existing string posterior. Reuse saved measurements only when recording, calibration and sample identities agree. A fitted component cannot serve as independent evidence. If fields or independent physical takes are missing, report that and keep the feature disconnected.
+- Next acceptance: first demonstrate conditional gain on held-out physical recordings without added-member errors on modulated/decaying single-string controls. Any later output trial must improve ordinary matches above 145397 with wrong notes <=163749, wrong strings <=92641 and extra gap outputs <=62856, then pass every protected and production gate. Preserve 3 seconds / 0.20 coherence / 0.50 retention and -9/60/75/poly5/fret24.
+- Host housekeeping completed: 835 inactive history/backup files compressed from 5,362,465,648 to 1,694,065,463 bytes, reclaiming 3,668,400,185 bytes (3.67 GB). Every archive passed decompression and SHA-256 verification before its unchanged original was removed. Manifest and restore instructions are outside the repo at `~/.codex/session-archives/m3-20261103/`. Current conversation, recent histories, session database and index were preserved. The separate io24 archive batch reclaimed another 1,831,401,649 bytes; combined savings are 5.50 GB. No compression job remains active.
+
 ## 2026-11-03T10:15:13.818535+00:00 — simultaneous attack selection checked; recording screen rejected
 
 - Added offline-only arbitration for simultaneous ready attacks. It chooses compatible complete string groups from current direct-fundamental evidence, fundamental energy and harmonic score, while preserving held/coasting MIDI ownership, attack eligibility, playable frets, event capacity and Max Polyphony. Production defaults and the installed bundle are unchanged.

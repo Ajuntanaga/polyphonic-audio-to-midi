@@ -2,6 +2,10 @@
 
 Date: 2026-10-03
 
+Follow-up, 2026-11-03: [measured motion across harmonics](PARTIAL-MOTION-RESEARCH.md)
+compares additional primary research with the completed fitting, beat and
+ownership experiments, and defines the next bounded offline comparison.
+
 This note records the external methods and bounded reference data that are
 useful for improving M3's eight physical tuner lanes. It distinguishes
 ordinary multi-pitch detection from the harder requirement here: assigning

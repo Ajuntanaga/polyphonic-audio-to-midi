@@ -3075,6 +3075,20 @@ bool PolyphonicPitchDetector::should_handoff_adjacent_coasting_candidate(
         replacement.age_ticks > onset_ticks) {
       continue;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // Preserve a supported owner when the new pitch uses another string.
+    // Ownership alone must not prolong a weak or unresolved neighbor. Include
+    // intended moves so a same-string articulation can still hand off before
+    // its new MIDI ownership is emitted.
+    if (diagnostic_joint_midi_owner_guard_ && replacement.active &&
+        scores[candidate] > kScoreEpsilon &&
+        scores[candidate] >= fast_energy_ * kCandidateCoherenceRatio &&
+        phase_cents_states_[candidate].valid &&
+        (owned & static_cast<std::uint8_t>(replacement.assigned_string_mask |
+                                           replacement.midi_voice_mask)) == 0U) {
+      continue;
+    }
+#endif
     if (!replacement.active) {
       if (selected_count < 2U ||
           !has_decisive_calibrated_shape(other, count)) {
