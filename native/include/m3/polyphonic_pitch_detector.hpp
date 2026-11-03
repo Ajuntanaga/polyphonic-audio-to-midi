@@ -1137,6 +1137,12 @@ class PolyphonicPitchDetector final {
       const std::array<double, kMaxCandidates>& fundamentals,
       double threshold, bool quiet) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  void append_joint_candidate_attacks_for_diagnostics(
+      DetectorDecision& decision,
+      const std::array<bool, kMaxCandidates>& ready,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      std::size_t& active_count) noexcept;
   [[nodiscard]] bool diagnostic_midi_owner_conflict(
       std::size_t candidate, std::uint8_t desired,
       std::size_t releasing_candidate) const noexcept;

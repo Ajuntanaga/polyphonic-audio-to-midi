@@ -3679,6 +3679,123 @@ bool PolyphonicPitchDetector::output_suppressed(
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void PolyphonicPitchDetector::append_joint_candidate_attacks_for_diagnostics(
+    DetectorDecision& decision,
+    const std::array<bool, kMaxCandidates>& ready,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    std::size_t& active_count) noexcept {
+  if (!diagnostic_joint_midi_owner_guard_ ||
+      profile_mode_ != ProfileMode::m3 ||
+      midi_routing_ != MidiRouting::per_voice ||
+      active_count >= max_polyphony_ ||
+      std::none_of(ready.begin(), ready.end(), [](bool value) { return value; })) {
+    return;
+  }
+  // The caller has applied the ordinary onset and evidence gates to every
+  // pending attack before any of them emits MIDI. Optimize complete masks,
+  // retaining the actual emitted lanes of selected and coasting owners.
+  std::uint8_t occupied = 0U;
+  const auto count = static_cast<std::size_t>(candidate_count_);
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    if (candidate_states_[candidate].active) {
+      occupied = static_cast<std::uint8_t>(
+          occupied | candidate_states_[candidate].midi_voice_mask);
+    }
+  }
+  const auto slots = std::min<std::size_t>(max_polyphony_ - active_count, kMaxVoices);
+  const auto capacity = decision.transitions.capacity() - decision.transitions.size();
+  struct Choice final {
+    double direct_power{};
+    double fundamental_power{};
+    double score{};
+    std::array<std::uint64_t, (kMaxCandidates + 63U) / 64U> members{};
+    bool valid{};
+  };
+  const auto better = [](const Choice& left, const Choice& right) noexcept {
+    if (!right.valid) return true;
+    if (left.direct_power != right.direct_power)
+      return left.direct_power > right.direct_power;
+    if (left.fundamental_power != right.fundamental_power)
+      return left.fundamental_power > right.fundamental_power;
+    return left.score > right.score;
+  };
+  // At most 87 candidates, 256 physical masks and 9 pitch counts. Distinct
+  // pitch counts must remain separate: a unison uses several strings but one
+  // pitch slot. Storage and work are bounded; no heap allocation is needed.
+  std::array<std::array<Choice, kMaxVoices + 1U>, 1U << kMaxVoices> choices{};
+  choices[0U][0U].valid = true;
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const CandidateState& state = candidate_states_[candidate];
+    if (!ready[candidate] || state.active ||
+        !std::isfinite(scores[candidate]) || scores[candidate] <= kScoreEpsilon ||
+        !std::isfinite(fundamentals[candidate]) || fundamentals[candidate] < 0.0) {
+      continue;
+    }
+    auto desired = state.assigned_string_mask;
+    if (desired == 0U && state.assigned_string < kM3OpenNotes.size()) {
+      desired = static_cast<std::uint8_t>(1U << state.assigned_string);
+    }
+    desired = diagnostic_profile_pair_output_mask(candidate, desired);
+    if (desired == 0U || string_count(desired) > 4U ||
+        (desired & playable_string_mask(candidate)) != desired ||
+        (desired & occupied) != 0U) {
+      continue;
+    }
+    const double direct_power =
+        has_direct_fundamental_peak(scores, fundamentals, candidate, count)
+            ? fundamentals[candidate] : 0.0;
+    // Descending masks prevent this candidate from entering the same choice
+    // twice. A non-overlapping mask always has a larger numeric value.
+    for (std::size_t used = choices.size(); used-- > 0U;) {
+      if ((used & desired) != 0U) continue;
+      const auto combined = static_cast<std::uint8_t>(used | desired);
+      if (string_count(combined) > capacity) continue;
+      for (std::size_t pitches = 0U; pitches < slots; ++pitches) {
+        if (!choices[used][pitches].valid) continue;
+        auto next = choices[used][pitches];
+        next.direct_power += direct_power;
+        next.fundamental_power += fundamentals[candidate];
+        next.score += scores[candidate];
+        next.members[candidate / 64U] |= std::uint64_t{1U} << (candidate % 64U);
+        auto& target = choices[combined][pitches + 1U];
+        if (better(next, target)) target = next;
+      }
+    }
+  }
+  Choice best = choices[0U][0U];
+  for (const auto& mask_choices : choices) {
+    for (std::size_t pitches = 1U; pitches <= slots; ++pitches) {
+      if (mask_choices[pitches].valid && better(mask_choices[pitches], best)) {
+        best = mask_choices[pitches];
+      }
+    }
+  }
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    if ((best.members[candidate / 64U] &
+         (std::uint64_t{1U} << (candidate % 64U))) == 0U) {
+      continue;
+    }
+    if (!append_candidate_note_on(decision, candidate, dynamic_velocity())) {
+      continue;
+    }
+    if (diagnostic_residual_recovery_lease_.valid &&
+        diagnostic_residual_recovery_lease_.note == lowest_note_ + candidate) {
+      ++diagnostic_residual_recovery_stats_.note_ons;
+      if (diagnostic_residual_recovery_continuity_)
+        diagnostic_residual_recovery_owners_[candidate] =
+            diagnostic_residual_recovery_lease_.string;
+      else
+        diagnostic_residual_recovery_lease_ = {};
+    }
+    CandidateState& state = candidate_states_[candidate];
+    state.active = true;
+    state.attack_ticks = 0U;
+    state.evidence_ticks = 0U;
+    ++active_count;
+  }
+}
+
 std::uint8_t PolyphonicPitchDetector::diagnostic_profile_pair_output_mask(
     std::size_t candidate, std::uint8_t desired) const noexcept {
   if (!diagnostic_profile_pair_output_filter_ ||
@@ -11286,6 +11403,11 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       ++active_count;
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const bool joint_attacks = diagnostic_joint_midi_owner_guard_ &&
+      profile_mode_ == ProfileMode::m3 && midi_routing_ == MidiRouting::per_voice;
+  std::array<bool, kMaxCandidates> joint_ready{};
+#endif
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     CandidateState& state = candidate_states_[candidate];
     if (!selected[candidate]) {
@@ -11341,6 +11463,13 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       ++state.age_ticks;
     }
     if (state.attack_ticks >= attack_decisions()) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (joint_attacks) {
+        joint_ready[candidate] = true;
+        state.attack_ticks = attack_decisions();
+        continue;
+      }
+#endif
       const std::uint8_t velocity = dynamic_velocity();
       if (!append_candidate_note_on(decision, candidate, velocity)) {
         // Preserve the accumulated causal evidence so the candidate can be
@@ -11365,6 +11494,12 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       ++active_count;
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (joint_attacks) {
+    append_joint_candidate_attacks_for_diagnostics(
+        decision, joint_ready, scores, fundamentals, active_count);
+  }
+#endif
   update_group_continuity_trackers(selected, scores, fundamentals, threshold,
                                    quiet);
   const auto guard_score = [](const auto& cells) noexcept {

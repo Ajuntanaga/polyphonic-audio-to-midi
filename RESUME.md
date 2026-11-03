@@ -1,3 +1,17 @@
+## 2026-11-03T10:15:13.818535+00:00 — simultaneous attack selection checked; recording screen rejected
+
+- Added offline-only arbitration for simultaneous ready attacks. It chooses compatible complete string groups from current direct-fundamental evidence, fundamental energy and harmonic score, while preserving held/coasting MIDI ownership, attack eligibility, playable frets, event capacity and Max Polyphony. Production defaults and the installed bundle are unchanged.
+- Validation: contributor native/replay build PASS; full native suite 529/529 PASS, including both new arbitration tests and existing buffer/label independence, release, panic and allocation checks. Source contract, production-target preprocessing exclusion and whitespace checks PASS. One focused review found no actionable issues. Report: `build/test-results/joint-attack-verification.json`. No new production build, validator or install.
+- Modal `joint-simultaneous-attacks-20261103T101209Z`, app `ap-rNtgOFgqotLD2BbtUWWEdn`, completed. Report: `build/modal/joint-simultaneous-attacks-screen.json`.
+
+| Ordinary recording, block 512 | Matched / 528632 | Wrong note | Wrong string | Extra outputs in unlabeled gaps | Total false outputs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control | 145397 (27.504%) | 163749 | 92641 | 62856 | 319246 |
+| Simultaneous attacks | 145676 (27.557%) | 166660 | 93205 | 63273 | 323138 |
+
+- Verdict: REJECTED. Matching gains 279 frames (+0.192%, +0.053 percentage points), but wrong notes rise by 2911, wrong strings by 564 and extra gap outputs by 417. The control fingerprint remains `36150c8ba7813405`. These are offline comparison counts, not a change to the installed baseline. No protected expansion.
+- Next: inspect the saved MIDI and candidate timelines for the first lost correct assignment before changing policy again. Require ordinary matches >145397, wrong notes <=163749, wrong strings <=92641 and extra outputs in unlabeled gaps <=62856 before protected expansion. Preserve 3 seconds / 0.20 coherence / 0.50 retention and the measured -9/60/75/poly5/fret24 settings.
+
 ## 2026-11-03T09:56:13.772713+00:00 — ownership controls separated; attack-order failure isolated
 
 - Scope: offline diagnostic controls only. The solver and MIDI ownership guard can now run independently. Production defaults and the installed bundle are unchanged.

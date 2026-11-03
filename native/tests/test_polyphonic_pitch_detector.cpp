@@ -1697,6 +1697,151 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void joint_simultaneous_attack_evidence(
+      PolyphonicPitchDetector& detector, bool upper_wins) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 36U;
+    config.highest_note = 37U;
+    config.max_polyphony = 5U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_joint_spectral_ownership_for_diagnostics(false, true);
+    std::array<bool, kMaxCandidates> ready{};
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    const std::size_t winner = upper_wins ? 1U : 0U;
+    const std::size_t loser = 1U - winner;
+    for (std::size_t candidate = 0U; candidate < 2U; ++candidate) {
+      auto& state = detector.candidate_states_[candidate];
+      state.assigned_string = 0U;
+      state.assigned_string_mask = 1U;
+      state.attack_ticks = detector.attack_decisions();
+      state.evidence_ticks = detector.candidate_evidence_decisions(false);
+      ready[candidate] = true;
+    }
+    // More total harmonic power must not beat a competing direct fundamental.
+    scores[loser] = 5.0;
+    scores[winner] = 4.0;
+    fundamentals[loser] = 0.7;
+    fundamentals[winner] = 1.2;
+    const auto evidence = detector.candidate_states_[loser].evidence_ticks;
+    const auto allocations = test::allocation_count();
+    std::size_t active = 0U;
+    DetectorDecision attack;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        attack, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(attack.transitions.size(), 1U);
+    M3_EXPECT_EQ(attack.transitions[0U].note, 36U + winner);
+    M3_EXPECT_EQ(attack.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(active, 1U);
+    M3_EXPECT_TRUE(detector.candidate_states_[winner].active);
+    M3_EXPECT_FALSE(detector.candidate_states_[loser].active);
+    M3_EXPECT_EQ(detector.candidate_states_[winner].evidence_ticks, 0U);
+    M3_EXPECT_EQ(detector.candidate_states_[loser].evidence_ticks, evidence);
+    M3_EXPECT_EQ(detector.candidate_states_[loser].attack_ticks, detector.attack_decisions());
+    // Coasting ownership is authoritative even if the DP primary has moved.
+    detector.candidate_states_[winner].release_ticks = 1U;
+    detector.candidate_states_[winner].assigned_string_mask = 2U;
+    ready[winner] = false;
+    DetectorDecision blocked;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        blocked, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(blocked.transitions.size(), 0U);
+    M3_EXPECT_EQ(detector.candidate_states_[loser].evidence_ticks, evidence);
+    DetectorDecision stop;
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(stop, winner));
+    M3_EXPECT_EQ(stop.transitions[0U].note, 36U + winner);
+    M3_EXPECT_EQ(stop.transitions[0U].voice_id, 0U);
+    detector.candidate_states_[winner] = {};
+    active = 0U;
+    DetectorDecision retry;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        retry, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(retry.transitions.size(), 1U);
+    M3_EXPECT_EQ(retry.transitions[0U].note, 36U + loser);
+    M3_EXPECT_TRUE(detector.candidate_states_[loser].active);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void joint_simultaneous_attack_constraints(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 48U;
+    config.highest_note = 52U;
+    config.max_polyphony = 2U;
+    config.max_fret = 24U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_joint_spectral_ownership_for_diagnostics(false, true);
+    std::array<bool, kMaxCandidates> ready{};
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    const auto setup = [&]() {
+      detector.candidate_states_ = {};
+      for (std::size_t c = 0U; c < 5U; ++c) {
+        ready[c] = true;
+        scores[c] = 1.0;
+        fundamentals[c] = c % 2U == 0U ? 0.4 : 0.1;
+        detector.candidate_states_[c].attack_ticks = detector.attack_decisions();
+        detector.candidate_states_[c].evidence_ticks = 20U;
+      }
+      detector.candidate_states_[0U].assigned_string_mask = 3U;
+      detector.candidate_states_[2U].assigned_string_mask = 1U;
+      detector.candidate_states_[4U].assigned_string_mask = 2U;
+      // Neither an unplayable string nor a five-string group may enter MIDI.
+      detector.candidate_states_[1U].assigned_string_mask = 128U;
+      detector.candidate_states_[3U].assigned_string_mask = 31U;
+      scores[1U] = scores[3U] = 10.0;
+      fundamentals[1U] = fundamentals[3U] = 0.0;
+    };
+    setup();
+    const auto allocations = test::allocation_count();
+    std::size_t active = 0U;
+    DetectorDecision joint;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        joint, ready, scores, fundamentals, active);
+    // Two compatible direct fundamentals outweigh one overlapping group.
+    M3_EXPECT_EQ(active, 2U);
+    M3_EXPECT_EQ(joint.transitions.size(), 2U);
+    M3_EXPECT_EQ(joint.transitions[0U].note, 50U);
+    M3_EXPECT_EQ(joint.transitions[1U].note, 52U);
+    M3_EXPECT_EQ(joint.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(joint.transitions[1U].voice_id, 1U);
+    setup();
+    ready[2U] = ready[4U] = false;
+    active = 0U;
+    DetectorDecision full;
+    while (full.transitions.size() + 1U < full.transitions.capacity()) {
+      M3_EXPECT_TRUE(detector.append_transition(full, TransitionKind::note_off, 60U, 0U));
+    }
+    const auto before = full.transitions.size();
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        full, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(full.transitions.size(), before);
+    M3_EXPECT_EQ(active, 0U);
+    M3_EXPECT_FALSE(detector.candidate_states_[0U].active);
+    M3_EXPECT_EQ(detector.candidate_states_[0U].evidence_ticks, 20U);
+    DetectorDecision group;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        group, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(active, 1U);
+    M3_EXPECT_EQ(group.transitions.size(), 2U);
+    M3_EXPECT_EQ(detector.candidate_states_[0U].midi_voice_mask, 3U);
+    setup();
+    active = config.max_polyphony;
+    DetectorDecision capped;
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        capped, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(capped.transitions.size(), 0U);
+    active = 0U;
+    ready = {};
+    detector.append_joint_candidate_attacks_for_diagnostics(
+        capped, ready, scores, fundamentals, active);
+    M3_EXPECT_EQ(capped.transitions.size(), 0U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static std::array<std::uint8_t, kMaxVoices> joint_spectral_lanes_probe(
       const std::array<std::uint8_t, kMaxVoices>& proposals,
       const std::array<std::uint8_t, kMaxVoices>& primary_masks,
@@ -11343,6 +11488,21 @@ M3_TEST(native_detector_joint_spectral_handoff_checks_ownership_before_note_off)
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   m3::PolyphonicPitchDetector detector;
   m3::PolyphonicPitchDetectorTestAccess::joint_spectral_handoff_ownership(detector);
+#endif
+}
+
+M3_TEST(native_detector_joint_attacks_use_evidence_before_pitch_order) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::joint_simultaneous_attack_evidence(detector, true);
+  m3::PolyphonicPitchDetectorTestAccess::joint_simultaneous_attack_evidence(detector, false);
+#endif
+}
+
+M3_TEST(native_detector_joint_attacks_preserve_complete_masks_capacity_and_limits) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::joint_simultaneous_attack_constraints(detector);
 #endif
 }
 
