@@ -358,6 +358,15 @@ struct StringAssignmentDiagnostics final {
   std::array<ProfilePairWindowDiagnostics, 3U> profile_pair_windows{};
   std::uint16_t candidate_age_ticks{};
   std::uint8_t midi_mask{};
+  // Current update likelihood (already causally filtered), cached state before
+  // the update, and state immediately afterward. The cached prior is not the
+  // transition-predicted prior. Fixed-context rows never update this bank.
+  bool posterior_observation_available{};
+  bool posterior_updated{};
+  double posterior_onset_strength{};
+  std::array<double, kMaxVoices> posterior_log_likelihood{};
+  std::array<double, kMaxVoices> posterior_prior{};
+  std::array<double, kMaxVoices> posterior_probability{};
 };
 #endif
 

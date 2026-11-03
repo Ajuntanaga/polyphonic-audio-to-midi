@@ -868,8 +868,8 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 71U);
-      if (columns.size() != 71U) return;
+      M3_EXPECT_EQ(columns.size(), 77U);
+      if (columns.size() != 77U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
@@ -1209,6 +1209,18 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
   config.max_polyphony = 5U;
   config.sensitivity = 60U;
   config.response = 75U;
+  m3::StringCalibrationBank calibration;
+  calibration.calibrated_string_mask = 255U;
+  for (std::size_t string = 0U; string < m3::kMaxVoices; ++string) {
+    for (auto& point : calibration.points[string]) {
+      point.harmonic_profile_q15 = {24000U, 7000U, 900U, 400U, 200U, 100U};
+      point.harmonic_profile_q15[1U] =
+          static_cast<std::uint16_t>(3000U + string * 1200U);
+      point.confidence_q15 = 32767U;
+      point.observation_count = 64U;
+      point.quality = m3::CalibrationPointQuality::measured;
+    }
+  }
   std::vector<m3::offline::ReplayLabel> labels(1U);
   labels[0].midi_note = 56U;
   labels[0].end_sample = 96000U;
@@ -1217,7 +1229,7 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
   auto observed = std::make_unique<m3::offline::ReplayResult>();
   m3::offline::ReplayError error{};
   M3_EXPECT_TRUE(m3::offline::run_detector_replay(
-      wave, labels, config, nullptr, 512U, *baseline, error));
+      wave, labels, config, &calibration, 512U, *baseline, error));
   const auto fields = [](const std::string& line, char delimiter) {
     std::vector<std::string> result;
     std::istringstream input(line);
@@ -1234,7 +1246,7 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
     trace.stream = stream.get();
     const auto run = [&] {
       return m3::offline::run_detector_replay(
-          wave, labels, config, nullptr, partition, *observed, error,
+          wave, labels, config, &calibration, partition, *observed, error,
           nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
           false, false, false, -1.0, false, false, false, nullptr,
           false, false, false, nullptr, nullptr, false, nullptr, &trace);
@@ -1247,15 +1259,40 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
     std::rewind(stream.get());
     std::array<char, 8192U> line{};
     std::string captured;
-    std::size_t rows = 0U, solitary = 0U, joint = 0U;
+    std::size_t rows = 0U, solitary = 0U, joint = 0U, posterior_rows = 0U;
     while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 71U);
-      if (columns.size() != 71U) return;
+      M3_EXPECT_EQ(columns.size(), 77U);
+      if (columns.size() != 77U) return;
       M3_EXPECT_EQ(std::stoul(columns[69]), 0U);
       M3_EXPECT_EQ(std::stoul(columns[70]), 0U);
+      for (std::size_t column = 74U; column < 77U; ++column)
+        M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
+      if (columns[71] == "1") {
+        ++posterior_rows;
+        M3_EXPECT_EQ(columns[72], "1");
+        const double onset = std::stod(columns[73]);
+        M3_EXPECT_TRUE(onset >= 0.0 && onset <= 1.0);
+        const auto likelihood = fields(columns[74], ',');
+        const auto prior = fields(columns[75], ',');
+        const auto posterior = fields(columns[76], ',');
+        const auto mask = std::stoul(columns[11]);
+        double before = 0.0, after = 0.0;
+        for (std::size_t lane = 0U; lane < 8U; ++lane) {
+          M3_EXPECT_TRUE(std::isfinite(std::stod(likelihood[lane])));
+          const double p = std::stod(posterior[lane]);
+          M3_EXPECT_TRUE(p >= 0.0 && p <= 1.0);
+          if ((mask & (1U << lane)) == 0U) M3_EXPECT_EQ(p, 0.0);
+          before += std::stod(prior[lane]);
+          after += p;
+        }
+        M3_EXPECT_TRUE(before == 0.0 || std::abs(before - 1.0) < 1.0e-10);
+        M3_EXPECT_NEAR(after, 1.0, 1.0e-10);
+      } else {
+        M3_EXPECT_EQ(columns[72], "0");
+      }
       M3_EXPECT_EQ(fields(columns[40], ',').size(), 8U);
       M3_EXPECT_EQ(fields(columns[59], ',').size(), 8U);
       M3_EXPECT_EQ(fields(columns[60], ',').size(), 6U);
@@ -1300,6 +1337,7 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
     M3_EXPECT_EQ(rows, trace.rows + 1U);
     M3_EXPECT_TRUE(solitary > 0U);
     M3_EXPECT_TRUE(joint > 0U);
+    M3_EXPECT_TRUE(posterior_rows > 0U);
     if (reference.empty()) reference = captured;
     M3_EXPECT_EQ(captured, reference);
     if (partition == 512U) {

@@ -31,7 +31,9 @@ image = (modal.Image.from_registry('ubuntu:24.04', add_python='3.12')
          .add_local_dir(ROOT / 'native', '/opt/m3/native', copy=True)
          .add_local_file(ROOT / 'CMakeLists.txt', '/opt/m3/project.cmake', copy=True)
          .add_local_file(ROOT / 'tools/partial_motion_evidence.py',
-                         '/opt/m3/partial_motion_evidence.py', copy=True))
+                         '/opt/m3/partial_motion_evidence.py', copy=True)
+         .add_local_file(ROOT / 'tools/string_evidence_audit.py',
+                         '/opt/m3/string_evidence_audit.py', copy=True))
 
 
 def sha256(path):
@@ -468,10 +470,122 @@ def analyze_saved_capture(run_id: str, source_run: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2.0,
+              memory=4096, timeout=7200, max_containers=1)
+def capture_string_evidence(run_id: str):
+    """Capture current likelihood, history and assignment; no policy experiment."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from string_evidence_audit import summarize_files
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', run_id):
+        raise ValueError('invalid run identifier')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = {'run_id': run_id, 'state': 'running', 'final': False,
+              'installed_changed': False, 'datasets': {}, 'stage': 'build',
+              'started_at': datetime.now(timezone.utc).isoformat()}
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    try:
+        report['source_files_sha256'] = {
+            str(path.relative_to('/opt/m3')): sha256(path)
+            for path in sorted(Path('/opt/m3/native').rglob('*')) if path.is_file()}
+        report['analysis_module_sha256'] = sha256('/opt/m3/string_evidence_audit.py')
+        save()
+        directory = build(out)
+        binary = directory / 'm3_replay'
+        report['binary_sha256'] = sha256(binary)
+        report['stage'] = 'native offline tests'
+        save()
+        with (out / 'offline-tests.log').open('w') as log:
+            subprocess.run([str(directory / 'm3_motion_tests')], check=True,
+                           env={**os.environ, 'M3_TEST_FILTER': 'offline_'},
+                           stdout=log, stderr=subprocess.STDOUT, timeout=600)
+        report['offline_tests'] = (out / 'offline-tests.log').read_text().splitlines()[-1]
+        settings = {'a4': 440, 'input-trim': -9, 'sensitivity': 60, 'response': 75,
+                    'max-polyphony': 5, 'max-fret': 24}
+        calibration = MOUNT / 'corpus/calibration.m3cb'
+        for name in ('ordinary', 'isolated-08'):
+            wav, labels = (MOUNT / 'corpus' / (name + suffix) for suffix in ('.wav', '.tsv'))
+            rate, duration = wave_duration(wav)
+            sample_count = round(rate * duration)
+            base = [str(binary), '--wav', str(wav), '--labels', str(labels),
+                    '--calibration', str(calibration)]
+            for key, value in settings.items():
+                base += ['--' + key, str(value)]
+            report['stage'] = f'{name} untraced control'
+            save()
+            control_path = out / f'{name}-control.tsv'
+            with control_path.open('w') as stdout, (out / f'{name}-control.log').open('w') as log:
+                subprocess.run(base + ['--block', '512'], stdout=stdout, stderr=log,
+                               check=True, timeout=900)
+            result = {'control': aggregate(control_path), 'replays': {},
+                      'all_outputs_identical': True, 'all_traces_identical': True,
+                      'provenance': {'audio_sha256': sha256(wav), 'labels_sha256': sha256(labels),
+                                     'calibration_sha256': sha256(calibration), 'settings': settings,
+                                     'sample_rate': rate, 'sample_count': sample_count,
+                                     'take_identity': name + ':original-recording'}}
+            report['datasets'][name] = result
+            reference = None
+            for block in (32, 512, 1024):
+                report['stage'] = f'{name} assignment trace block {block}'
+                save()
+                trace = out / f'{name}-{block}-assignment.tsv'
+                replay = out / f'{name}-{block}.tsv'
+                log_path = out / f'{name}-{block}.log'
+                with replay.open('w') as stdout, log_path.open('w') as log:
+                    subprocess.run(base + ['--block', str(block), '--assignment-trace', str(trace)],
+                                   stdout=stdout, stderr=log, check=True, timeout=900)
+                metadata = re.findall(
+                    r'assignment_trace rows=(\d+) cap=(\d+) truncated=(\d+) sampled_frames=(\d+) decimation=(\d+)',
+                    log_path.read_text())
+                if len(metadata) != 1:
+                    raise ValueError(f'{name}: missing or duplicate trace accounting')
+                rows, cap, truncated, sampled_frames, decimation = map(int, metadata[0])
+                if truncated or rows > cap or decimation != 16:
+                    raise ValueError(f'{name}: incomplete or incompatible trace')
+                current, trace_hash = aggregate(replay), sha256(trace)
+                result['replays'][str(block)] = current
+                result['all_outputs_identical'] &= current == result['control']
+                result['all_traces_identical'] &= reference in (None, trace_hash)
+                if not result['all_outputs_identical'] or not result['all_traces_identical']:
+                    raise ValueError(f'{name}: diagnostic parity failed at block {block}')
+                if reference is None:
+                    reference = trace_hash
+                    result['provenance']['trace_sha256'] = trace_hash
+                    result['analysis'] = summarize_files(
+                        trace, labels, sample_rate=rate, sample_count=sample_count,
+                        sampled_frames=sampled_frames, source_identity=name,
+                        decimation=decimation)
+                    if result['analysis']['trace_rows'] != rows:
+                        raise ValueError(f'{name}: parsed trace row count mismatch')
+                    with trace.open('rb') as src, gzip.open(out / f'{name}-assignment.tsv.gz', 'wb',
+                                                           compresslevel=1) as dest:
+                        shutil.copyfileobj(src, dest, length=1024 * 1024)
+                trace.unlink()
+                save()
+        report.update(state='completed', final=True, stage='onset/settled evidence audit complete',
+                      conclusion='Aligned disagreement measurements only; classifier gain and live improvement unmeasured.')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        for name in ('build.log', 'offline-tests.log'):
+            path = out / name
+            if path.exists():
+                report[name + '_tail'] = path.read_text()[-12000:]
+    save()
+    return report
+
+
 @app.local_entrypoint()
-def main(run_id: str, source_run: str = ''):
-    result = (analyze_saved_capture.remote(run_id, source_run)
-              if source_run else capture.remote(run_id))
+def main(run_id: str, source_run: str = '', string_evidence: bool = False):
+    if source_run and string_evidence:
+        raise ValueError('saved motion analysis and string evidence capture are separate jobs')
+    result = (capture_string_evidence.remote(run_id) if string_evidence else
+              analyze_saved_capture.remote(run_id, source_run) if source_run else capture.remote(run_id))
     target = ROOT / 'build/modal' / f'{run_id}.json'
     target.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
     print(json.dumps({'state': result['state'], 'report': str(target),

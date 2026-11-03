@@ -415,8 +415,11 @@ recording.
 The immediate research decision is to close the standalone motion experiment.
 The existing `StringFretPosteriorBank::update()` already propagates an eight-way
 string distribution through time, combines it with current observations and
-weakens prior history at an onset. The detector consumes that distribution in
-its joint allocation. A second temporal smoother would duplicate this work.
+weakens prior history at an onset. The detector can consume that distribution
+in its joint allocation, but the production cost gate requires stable isolated
+reassignment. The completed diagnostic below finds no posterior cost use in
+the ordinary-chord capture. A second temporal smoother would duplicate an
+existing estimator without resolving that allocation gate.
 
 The next bounded step is to measure observation quality:
 
@@ -442,3 +445,101 @@ matches and 25,604/39,378 exact three-string frames, with wrong strings no highe
 than 2,709, plus the protected corpus and real-time gates. The literature gives
 a testable route; no additional classifier gain or live-readiness improvement
 has been measured.
+
+## Completed string-evidence diagnostic — 2026-11-03
+
+The next measurement is complete. Offline assignment traces now capture the
+current likelihood inputs, cached prior, updated eight-string posterior and
+onset strength at the same decision. The prior is the cached bank state before
+its transition, not the transition-predicted distribution. Current likelihood
+inputs already include causal filtering; they are not raw audio observations.
+All new state and trace work is behind the offline diagnostic build guard.
+Annotations enter scoring after the decision and never affect allocation.
+
+Modal run `string-evidence-20261103T1258Z`, app
+`ap-NqWlIq6poZhVuSSxuzutvJ`, completed at 13:05:27 UTC. The report is
+`build/modal/string-evidence-20261103T1258Z.json`. Ordinary chords and isolated
+string 8 have identical output fingerprints, counts and trace bytes at block
+sizes 32, 512 and 1024. The traced outputs also match the untraced control.
+The native offline suite passes 46 tests; the streaming analysis passes 10
+Python tests and the source-contract suite passes 32. One focused review found
+no consequential defect. These results do not constitute a new production
+build, deadline result, validator result or installation.
+
+The diagnostic samples every 1,024 audio samples. Its counts below are
+annotated note/tick pairs, not full replay frames or a count of independent
+performances. Ranks require one feasible expected string, available likelihood
+inputs and a successful posterior update. The complete scoring grid retains
+ticks without an assignment row as unavailable; it does not assume these are
+missing MIDI notes.
+
+| Ordinary chords: annotation age | Target pairs | Available ranks | Current likelihood correct | Updated posterior correct | Exact rendered string mask |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0–100 ms | 4,679 | 1,331 | 633 | 621 | 362 |
+| 100–350 ms | 11,684 | 5,232 | 3,314 | 3,350 | 2,638 |
+| At least 350 ms | 16,676 | 7,544 | 4,954 | 5,007 | 5,349 |
+| Total | 33,039 | 14,107 | 8,901 | 8,978 | 8,349 |
+
+History corrects 386 likelihood rankings and spoils 309: a net 77 additional
+correct rankings, from 63.10% to 63.64% of the available ranks. It is not the
+dominant explanation for the observed allocation disagreements. In 2,725
+valid allocation decisions, both rankings favor the labeled string while the
+joint allocator chooses another. Later rendering recovers the expected string
+in 402 of these decisions; it remains absent in 2,323. Intermediate allocator
+disagreement must therefore be separated from final output failure.
+
+The saved ordinary trace gives this breakdown of the 2,323 unresolved cases:
+
+| Observed allocation obstacle | Decimated decisions |
+| --- | ---: |
+| Expected string reserved by a coasting voice | 622 |
+| Expected string reserved by an extra unison member | 1 |
+| Expected string has lower local cost, but joint allocation differs | 567 |
+| Wrong string has lower local cost; profile term is the largest contributor | 391 |
+| Same, fret term | 236 |
+| Same, cents term | 202 |
+| Same, open-string term | 67 |
+| Same, retention term | 237 |
+
+Reservations are classified first; remaining local costs are compared only on
+valid decisions. The largest positive cost difference is descriptive, not an
+isolated causal effect. These counts do not predict gains from changing a
+weight: changing ownership also changes later evidence and MIDI lifecycle.
+The reproducible saved-trace extraction is
+`build/modal/string_evidence_cost_diagnosis.py`, with results in
+`build/modal/string-evidence-20261103T1258Z-cost-diagnosis.json`.
+
+Isolated string 8 supplies an important control. Of 1,902 available ranks,
+current likelihood is correct in 1,891 and the posterior in 1,895. All 1,647
+settled annotated pairs render the expected string exactly, despite 144
+intermediate allocator disagreements. A blanket replacement of downstream
+assignment would risk removing a correction that already works. These are
+conditional diagnostic counts; the full replay remains 29,816/31,050 matched
+frames, with 2,462 wrong-note outputs, 579 wrong-string outputs and 2,928 extra
+outputs during unlabeled gaps. Ordinary replay remains 145,385/528,632, with
+164,263 wrong-note outputs, 92,653 wrong-string outputs and 62,856 extra gap
+outputs. Extra outputs are separate from matched-frame percentages.
+
+### Route selected from the evidence
+
+Investigate provisional string cost ordering on fresh ordinary chord attacks
+before adding a new classifier or more history. The existing likelihood can
+favor the right string while profile/fret costs favor another, and its
+posterior penalty is disabled for these chord decisions. Start with those
+unreserved local-cost disagreements, keeping coasting owners, committed
+strings and resolved unison groups intact. Do not weaken release or retention
+to recover the reserved cases; earlier ownership and joint-posterior trials
+already failed protected replay checks.
+
+The next bounded step is a saved-trace shadow comparison of one observation
+cost formulation, using the captured likelihood and feasible strings. It must
+account for both corrected and spoiled assignments and for downstream
+recoveries, with no annotation-dependent proposal rule. It cannot establish
+MIDI improvement because it does not evolve state. Only a useful shadow result
+justifies one opt-in causal replay on Modal. That replay must improve ordinary
+matches above 145,385 while keeping wrong notes <=164,263, wrong strings
+<=92,653 and extra gap outputs <=62,856 on the same control source. It must
+then preserve every isolated, constructed-chord, short-unison and four-string
+gate and meet the physical-long targets above. The full native, real-time,
+allocation, lifecycle, source-contract, build and validator gates still apply
+before installation. No new output candidate has passed those gates.

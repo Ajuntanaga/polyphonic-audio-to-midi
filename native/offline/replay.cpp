@@ -436,8 +436,19 @@ void write_string_assignment_frame(
           fit.pair_error, fit.secondary_weight);
       for (const double value : fit.observed) std::fprintf(trace.stream, ":%.17g", value);
     }
-    std::fprintf(trace.stream, "\t%u\t%u\n", unsigned(a.fixed_context),
+    std::fprintf(trace.stream, "\t%u\t%u", unsigned(a.fixed_context),
                  unsigned(a.phase_shadow));
+    std::fprintf(trace.stream, "\t%u\t%u\t%.17g",
+                 unsigned(a.posterior_observation_available),
+                 unsigned(a.posterior_updated), a.posterior_onset_strength);
+    for (const auto* values : {&a.posterior_log_likelihood, &a.posterior_prior,
+                              &a.posterior_probability}) {
+      std::fputc('\t', trace.stream);
+      for (std::size_t string = 0U; string < kMaxVoices; ++string)
+        std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
+                     (*values)[string]);
+    }
+    std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
     if (trace.failed) return;
@@ -2635,7 +2646,9 @@ bool run_detector_replay(const WaveData& wave,
         "profile_best_single_error\tprofile_mixture_error\tprofile_weights\t"
         "profile_observed\tprofile_single_errors\tcandidate_age_ticks\tmidi_mask\t"
         "profile_pair_primary\tprofile_pair_mask\tprofile_pair_current\t"
-        "profile_pair_short\tprofile_pair_long\tfixed_context\tphase_shadow\n") < 0;
+        "profile_pair_short\tprofile_pair_long\tfixed_context\tphase_shadow\t"
+        "posterior_observation_available\tposterior_updated\tposterior_onset_strength\t"
+        "posterior_log_likelihood\tposterior_prior\tposterior_probability\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {

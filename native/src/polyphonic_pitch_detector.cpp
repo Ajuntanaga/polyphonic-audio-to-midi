@@ -6094,8 +6094,29 @@ void PolyphonicPitchDetector::assign_m3_strings(
               0.5 * std::min(32.0, normalized_error * normalized_error);
         }
       }
-      static_cast<void>(
-          string_fret_posteriors_.update(candidate, posterior_frame));
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (assignment_diagnostics_enabled_) {
+        auto& observation = assignment_diagnostics_[candidate];
+        observation.posterior_observation_available = true;
+        observation.posterior_onset_strength = posterior_frame.onset_strength;
+        observation.posterior_log_likelihood = posterior_frame.log_likelihood;
+        for (std::size_t string = 0U; string < kMaxVoices; ++string)
+          observation.posterior_prior[string] =
+              string_fret_posteriors_.probability(candidate, string);
+      }
+#endif
+      const bool posterior_updated =
+          string_fret_posteriors_.update(candidate, posterior_frame);
+      static_cast<void>(posterior_updated);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (assignment_diagnostics_enabled_) {
+        auto& observation = assignment_diagnostics_[candidate];
+        observation.posterior_updated = posterior_updated;
+        for (std::size_t string = 0U; string < kMaxVoices; ++string)
+          observation.posterior_probability[string] =
+              string_fret_posteriors_.probability(candidate, string);
+      }
+#endif
       string_fret_energy_memory_[candidate] = fast_energy_total;
     } else {
       string_fret_posteriors_.reset(candidate);
