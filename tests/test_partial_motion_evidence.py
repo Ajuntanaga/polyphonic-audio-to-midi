@@ -5,7 +5,7 @@ import numpy as np
 
 from tools.partial_motion_evidence import (
     condition_mixture_tracks, phase_window_trajectories, summarize_motion,
-    summarize_phase_windows, trajectories, validate_join,
+    summarize_phase_windows, summarize_reference_quality, trajectories, validate_join,
 )
 
 
@@ -200,6 +200,75 @@ class PartialMotionEvidenceTests(unittest.TestCase):
         expected = 1200 * np.log2(1 + 0.37 / 82.4)
         self.assertAlmostEqual(float(np.mean(fitted['cents'][0, fitted['increment_times'] > 1])),
                                expected, places=2)
+
+    def test_rejection_reasons_explain_each_invalid_increment_and_window(self):
+        damaged = self.signal.copy()
+        damaged[0, 100] = np.nan
+        damaged[1, 200:] *= np.exp(0.99j * np.pi)
+        damaged[2] *= 1e-7
+        keep = np.r_[0:300, 350:401]
+        times, signal = self.times[keep], damaged[:, keep]
+        increments = trajectories(times, signal, self.center)
+        windows = phase_window_trajectories(times, signal, self.center)
+        for track in (increments, windows):
+            union = np.logical_or.reduce(list(track['rejection_reasons'].values()))
+            np.testing.assert_equal(union, ~track['valid'])
+        reasons = increments['rejection_reasons']
+        self.assertEqual(int(reasons['nonfinite_sample'][0].sum()), 2)
+        self.assertEqual(int(reasons['phase_step'][1].sum()), 1)
+        self.assertTrue(reasons['weak_or_zero_amplitude'][2].all())
+        self.assertEqual(reasons['observation_gap'].sum(axis=1).tolist(), [1, 1, 1])
+        # A negative inferred absolute frequency is a distinct causal failure.
+        negative = np.exp(-0.1j * np.arange(10))[None, :]
+        track = trajectories(np.arange(10) / 100, negative, 0.1)
+        self.assertTrue(track['rejection_reasons']['invalid_frequency'].all())
+        self.assertFalse(track['valid'].any())
+
+    def test_quality_separates_disabled_bands_silence_and_empty_spans(self):
+        signal = self.signal.copy()
+        signal[2] = 0
+        increments = trajectories(self.times, signal, self.center)
+        windows = phase_window_trajectories(self.times, signal, self.center)
+        quality = summarize_reference_quality(increments, windows, [True, True, False], 0, 4)
+        disabled = quality['bands'][2]
+        self.assertEqual(disabled['rejected_window_counts'], {'disabled_band': disabled['windows']})
+        self.assertIsNone(disabled['minimum_endpoint_amplitude_ratio'])
+        self.assertIsNone(quality['string_mask_decision'])
+        self.assertEqual(quality['source_dominant_reference'], 'not measured')
+        weak = summarize_reference_quality(increments, windows, [True] * 3, 0, 4)['bands'][2]
+        self.assertEqual(weak['rejected_window_counts']['weak_or_zero_amplitude'], weak['windows'])
+        empty = summarize_reference_quality(increments, windows, [True] * 3, 10, 11)
+        self.assertTrue(all(b['valid_window_fraction'] is None for b in empty['bands']))
+        json.dumps([quality, empty], allow_nan=False)
+
+    def test_quality_is_prefix_and_gain_invariant_with_labels_used_only_for_scoring(self):
+        def quality(times, signal):
+            return summarize_reference_quality(
+                trajectories(times, signal, self.center),
+                phase_window_trajectories(times, signal, self.center), [True] * 3, 0.5, 2)
+        full = quality(self.times, self.signal)
+        prefix = quality(self.times[:220], self.signal[:, :220])
+        self.assertEqual(full, prefix)
+        scaled = quality(self.times, self.signal * 0.017)
+        for original, changed in zip(full['bands'], scaled['bands']):
+            for key in ('valid_increments', 'valid_windows', 'rejected_increment_counts',
+                        'rejected_window_counts'):
+                self.assertEqual(original[key], changed[key])
+            for key in ('minimum_endpoint_amplitude_ratio', 'phase_fit_rms_radians'):
+                np.testing.assert_allclose(list(original[key].values()), list(changed[key].values()), atol=1e-12)
+
+    def test_phase_fit_residual_detects_nonlinearity_but_never_vetoes_it(self):
+        h = np.arange(1, 4)[:, None]
+        linear = np.exp(2j * np.pi * h * self.times)
+        curved = np.exp(2j * np.pi * h * (self.times + 0.1 * self.times ** 2))
+        straight = phase_window_trajectories(self.times, linear, self.center)
+        bending = phase_window_trajectories(self.times, curved, self.center)
+        self.assertTrue(straight['valid'].all() and bending['valid'].all())
+        self.assertLess(float(straight['phase_fit_rms_radians'].max()), 1e-12)
+        self.assertGreater(float(bending['phase_fit_rms_radians'].min()), 0.001)
+        self.assertIsNone(summarize_reference_quality(
+            trajectories(self.times, curved, self.center), bending,
+            [True] * 3, 0, 4)['string_mask_decision'])
 
 
 if __name__ == '__main__':

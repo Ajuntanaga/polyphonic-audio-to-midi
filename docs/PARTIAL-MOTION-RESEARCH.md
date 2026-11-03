@@ -313,15 +313,72 @@ note/string assignment. Both fast filter contamination and real single-string
 motion can mislead a source-count rule. The standalone motion-magnitude cue
 is rejected; no classifier or MIDI change is promoted.
 
-The next prerequisite for the reference-based separation methods is a measured
-reference-quality check on physical isolated recordings. Determine which
-harmonic tracks are unavailable because they are weak, have phase slips, or
-fail the clock check; do not turn missing bands into agreement. Reference
-selection must use signal evidence alone. If a reliable reference and
-independent physical takes are available, compare posterior-only against
+The reference-quality check below separates weak measurements from clock gaps
+and phase failures. It does not establish that an available harmonic belongs
+mainly to one string. Reference selection must use signal evidence alone.
+If a reliable reference and independent physical takes are available, compare posterior-only against
 posterior-plus-motion on whole held-out takes, with false added strings as
 an explicit rejection condition. This remains a hypothesis about conditional
 information, not another threshold on motion magnitude. The current single
 physical unison take cannot establish that generalization result. Repeated
 ownership or retention tweaks should not proceed on the strength of the
 rejected handoff screen.
+
+## Reference-quality measurement
+
+The saved-capture analysis now explains availability for each enabled harmonic,
+on every matching annotated hold. It counts weak or zero amplitude, nonfinite
+samples, clock gaps, excessive phase increments and invalid inferred frequencies.
+The same reasons propagate to the fixed 160 ms windows. Counts can overlap;
+their union explains rejected measurements. Disabled detector bands are reported
+separately. None of these diagnostics changes a validity decision.
+
+Amplitude is reported relative to the largest amplitude observed so far across
+the captured bands. This is the estimator's existing causal floor, not an SNR
+or a measured noise floor. Phase-fit residuals describe departure from a straight
+phase trajectory on accepted windows. A small residual establishes smoothness,
+not a source-pure harmonic. Neither statistic selects a string or supplies a
+classifier vote. Annotations select reporting spans after the full causal trace
+has been processed; a window available near an onset can include earlier audio.
+
+Seventeen focused tests pass. The four new tests check rejection accounting,
+disabled/weak/empty observations, gain and prefix invariance, and the distinction
+between phase curvature and a rejected observation. The Modal analysis reuses
+the saved trace and annotation hashes and requires no new audio replay or
+production build.
+
+Run `partial-motion-reference-quality-20261103T1222Z` completed on Modal at
+12:20:55 UTC. All earlier window statistics, short-hold diagnostics and
+single-source control results are unchanged across the six saved datasets.
+The new diagnostics explain the physical isolated note-40 measurement:
+
+| Harmonic | Raw valid windows | Conditioned valid windows | Conditioned windows rejected for weak amplitude |
+| --- | ---: | ---: | ---: |
+| H1 | 13/14 | 13/14 | 1/14 |
+| H2 | 6/14 | 13/14 | 1/14 |
+| H3 | 3/14 | 5/14 | 9/14 |
+| H4 | 10/14 | 0/14 | 14/14 |
+| H5 | 8/14 | 0/14 | 14/14 |
+| H6 | 6/14 | 0/14 | 14/14 |
+
+All six bands are enabled, with no nonfinite samples or clock gaps in this
+hold. After conditioning, the median H4/H5/H6 amplitude ratios are
+0.000108, 0.0000748 and 0.0000310 against the existing 0.001 floor. Thus the
+upper-band absence is a measurement-floor rejection, not a disabled band or
+a missing capture. Filtering also removes much of their
+apparent amplitude. The floor is relative to the past peak, so these numbers
+do not establish a physical noise level or justify lowering the floor.
+
+On the physical triple hold, conditioned availability is 152/164, 163/164,
+150/164, 107/164, 82/164 and 69/164 windows for H1 through H6. H2 is available
+in 99.39% of windows, but availability and a smooth phase fit do not identify
+which string dominates it. The synthetic controls have much fuller upper-band
+coverage than the physical isolated note. Training on those controls alone
+would hide this mismatch.
+
+This finishes the measurement diagnostic, not the source-separation decision.
+Use the explicit availability masks in any conditional comparison. Do not
+recover missing bands by relaxing the floor or interpret a smooth mixture
+as an independent reference. Source-dominant reference coverage and added
+information beyond the existing posterior remain unmeasured; the installed
+MIDI output is unchanged.

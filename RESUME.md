@@ -1,3 +1,13 @@
+## 2026-11-03 12:21 UTC — harmonic measurement availability explained
+
+- Offline diagnostics only. New per-harmonic counters report weak amplitude, phase-step, invalid-frequency, nonfinite and clock-gap causes; fixed-window phase-fit residuals report smoothness, not source purity. No validity rule, source-count decision or MIDI behavior changed.
+- Modal `partial-motion-reference-quality-20261103T1222Z`, app `ap-VFZn2Qz136qdPMeap4Fg0b`, completed at 12:20:55 UTC. Report: `build/modal/partial-motion-reference-quality-20261103T1222Z.json`. All prior window, short-hold and single-source statistics remain identical across six saved datasets. No new replay or build.
+- Physical isolated note 40 has conditioned valid windows H1–H6 = 13/14, 13/14, 5/14, 0/14, 0/14, 0/14. All six bands are enabled. No nonfinite samples or clock gaps; H4–H6 each fail the existing relative amplitude floor in all 14 windows. H2 improves from 6/14 raw to 13/14 conditioned. The floor is relative to the past peak, not a measured noise level. Do not lower it to manufacture references.
+- Physical triple conditioned coverage H1–H6 = 152/164, 163/164, 150/164, 107/164, 82/164, 69/164. Available mixture tracks do not establish a source-dominant reference. The earlier isolated 40.592 cents/second counterexample still rejects standalone motion magnitude; no classifier is promoted.
+- Verification: 17 focused Python tests PASS, Python compilation and `git diff --check` PASS, one focused review complete. Earlier capture parity and native/source checks remain as recorded below; no new production, deadline, validator or install result is claimed.
+- Next: use explicit availability masks when assessing whether measured motion adds information beyond the existing posterior. A source-dominant reference is still unmeasured and the current physical unison capture has one take. Keep corpus identities separate and report this limitation; synthetic separation cannot stand in for physical acceptance. Preserve 3 seconds / 0.20 / 0.50 and every protected output gate.
+- Log compression remains complete: 835 inactive files, 3,668,400,185 bytes reclaimed, verified archives and restore manifest at `~/.codex/session-archives/m3-20261103/`. Active and recent history remain intact. No compression job remains active.
+
 ## 2026-11-03 12:12 UTC — partial-motion controls complete; standalone cue rejected
 
 - Offline measurement only; production defaults, installed output and the three-second evidence window are unchanged. Added fixed past-window 160 ms phase slopes after the two causal 15 ms conditioning stages. Annotations choose scoring spans and never reset state. Missing/weak/jumping observations produce unavailable scores.

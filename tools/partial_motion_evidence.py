@@ -85,6 +85,21 @@ def trajectories(times, signal, center_hz, *, relative_floor=1e-3,
     relative_hz = step_phase / (2 * np.pi * dt[None, :] * harmonic)
     ratio = 1 + relative_hz / center_hz
     valid &= ratio > 0
+    # These diagnostic flags may overlap. Their union is the existing rejection
+    # rule; recording a reason must not change a measurement or admit a sample.
+    rejection_reasons = {
+        'nonfinite_sample': ~(finite[:, 1:] & finite[:, :-1]),
+        'weak_or_zero_amplitude': ((finite[:, 1:] & ~observed[:, 1:])
+                                   | (finite[:, :-1] & ~observed[:, :-1])),
+        'observation_gap': np.broadcast_to(~contiguous, valid.shape).copy(),
+        'nonfinite_phase_step': ((finite[:, 1:] & finite[:, :-1]) & ~np.isfinite(step_phase)),
+        'phase_step': np.isfinite(step_phase) & (np.abs(step_phase) >= maximum_phase_increment),
+        'invalid_frequency': np.isfinite(step_phase) & ~(ratio > 0),
+    }
+    amplitude_ratio = np.zeros_like(amplitude)
+    np.divide(amplitude, prior_peak[None, :], out=amplitude_ratio,
+              where=finite & (prior_peak[None, :] > 0))
+    amplitude_ratio[~finite] = np.nan
     cents = np.full_like(relative_hz, np.nan)
     np.log2(ratio, out=cents, where=valid)
     cents *= 1200
@@ -99,7 +114,11 @@ def trajectories(times, signal, center_hz, *, relative_floor=1e-3,
     frequency_motion[~motion_valid] = np.nan
     return {'increment_times': times[1:], 'valid': valid, 'cents': cents,
             'envelope_rate': envelope_rate, 'motion_times': times[2:],
-            'motion_valid': motion_valid, 'frequency_motion': frequency_motion}
+            'motion_valid': motion_valid, 'frequency_motion': frequency_motion,
+            'rejection_reasons': rejection_reasons,
+            'minimum_endpoint_amplitude_ratio': np.minimum(
+                amplitude_ratio[:, 1:], amplitude_ratio[:, :-1]),
+            'relative_amplitude_floor': relative_floor}
 
 
 def _correlation(a, b):
@@ -135,30 +154,41 @@ def phase_window_trajectories(times, signal, center_hz, *, window_seconds=0.160)
     valid = np.zeros((len(signal), len(ends)), dtype=bool)
     cents = np.full(valid.shape, np.nan)
     envelope_rate = np.full(valid.shape, np.nan)
+    phase_fit_rms = np.full(valid.shape, np.nan)
+    rejection_reasons = {key: np.zeros_like(valid)
+                         for key in increments['rejection_reasons']}
+    rejection_reasons['insufficient_observations'] = np.zeros_like(valid)
     estimate_times = np.full(len(ends), np.nan)
     phase_steps = np.angle(signal[:, 1:] * np.conj(signal[:, :-1]))
     for column, (start, end) in enumerate(zip(starts, ends)):
         if start < 0 or end - start < 2:
+            rejection_reasons['insufficient_observations'][:, column] = True
             continue
         relative_time = times[start:end + 1] - times[start]
         centered = relative_time - np.mean(relative_time)
         variance = float(np.dot(centered, centered))
         if variance <= 0:
+            rejection_reasons['insufficient_observations'][:, column] = True
             continue
         # Effective slope time for a quadratic phase, including irregular clocks.
         estimate_times[column] = (times[start] + np.mean(relative_time)
                                   + np.sum(centered ** 3) / (2 * variance))
         for band in range(len(signal)):
+            for reason, rejected in increments['rejection_reasons'].items():
+                rejection_reasons[reason][band, column] = rejected[band, start:end].any()
             if not increments['valid'][band, start:end].all():
                 continue
             phase = np.r_[0., np.cumsum(phase_steps[band, start:end])]
             slope = np.dot(centered, phase) / variance
             ratio = 1 + slope / (2 * np.pi * (band + 1) * center_hz)
             if not np.isfinite(ratio) or ratio <= 0:
+                rejection_reasons['invalid_frequency'][band, column] = True
                 continue
             cents[band, column] = 1200 * np.log2(ratio)
             log_amplitude = np.log(np.abs(signal[band, start:end + 1]))
             envelope_rate[band, column] = np.dot(centered, log_amplitude) / variance
+            residual = phase - np.mean(phase) - slope * centered
+            phase_fit_rms[band, column] = np.sqrt(np.mean(residual ** 2))
             valid[band, column] = True
     elapsed = np.diff(estimate_times)
     consecutive = ((np.diff(times[ends]) <= 1.5 * window_seconds)
@@ -169,7 +199,67 @@ def phase_window_trajectories(times, signal, center_hz, *, window_seconds=0.160)
     return {'increment_times': times[ends], 'estimate_times': estimate_times,
             'valid': valid, 'cents': cents, 'envelope_rate': envelope_rate,
             'motion_times': times[ends[1:]], 'motion_valid': motion_valid,
-            'frequency_motion': motion, 'window_seconds': window_seconds}
+            'frequency_motion': motion, 'window_seconds': window_seconds,
+            'phase_fit_rms_radians': phase_fit_rms,
+            'rejection_reasons': rejection_reasons}
+
+
+def summarize_reference_quality(increments, windows, enabled_bands, start_time, end_time):
+    """Explain measurement availability; never infer SNR or source purity.
+
+    Inputs must already cover the full causal prefix. Scoring boundaries only
+    choose observations by their availability time. Disabled detector bands are
+    reported separately from weak signal. Rejection reasons overlap, and a low
+    phase-fit residual means a locally smooth mixture, not a source reference.
+    """
+    enabled = np.asarray(enabled_bands, dtype=bool)
+    bands = len(increments['valid'])
+    if (enabled.shape != (bands,) or len(windows['valid']) != bands
+            or not np.isfinite(start_time) or not np.isfinite(end_time)
+            or end_time <= start_time):
+        raise ValueError('expected matching bands and a finite increasing scoring span')
+
+    def select(track):
+        return ((track['increment_times'] >= start_time)
+                & (track['increment_times'] < end_time))
+
+    def quantiles(values):
+        values = values[np.isfinite(values)]
+        return ({'p10': float(np.percentile(values, 10)),
+                 'p50': float(np.percentile(values, 50)),
+                 'p90': float(np.percentile(values, 90))} if len(values)
+                else {'p10': None, 'p50': None, 'p90': None})
+
+    increment_keep, window_keep = select(increments), select(windows)
+    total_increments, total_windows = int(increment_keep.sum()), int(window_keep.sum())
+    result = []
+    for band in range(bands):
+        active = bool(enabled[band])
+        valid_increments = int(increments['valid'][band, increment_keep].sum()) if active else 0
+        valid_windows = int(windows['valid'][band, window_keep].sum()) if active else 0
+        result.append({
+            'harmonic': band + 1, 'enabled': active,
+            'increments': total_increments, 'valid_increments': valid_increments,
+            'valid_increment_fraction': valid_increments / total_increments if total_increments else None,
+            'windows': total_windows, 'valid_windows': valid_windows,
+            'valid_window_fraction': valid_windows / total_windows if total_windows else None,
+            'rejected_increment_counts': {key: int(flags[band, increment_keep].sum())
+                                          for key, flags in increments['rejection_reasons'].items()}
+                if active else {'disabled_band': total_increments},
+            'rejected_window_counts': {key: int(flags[band, window_keep].sum())
+                                       for key, flags in windows['rejection_reasons'].items()}
+                if active else {'disabled_band': total_windows},
+            'minimum_endpoint_amplitude_ratio': quantiles(
+                increments['minimum_endpoint_amplitude_ratio'][band, increment_keep]) if active else None,
+            'phase_fit_rms_radians': quantiles(
+                windows['phase_fit_rms_radians'][band, window_keep]) if active else None,
+        })
+    return {'bands': result, 'rejection_counts_overlap': True,
+            'amplitude_reference': 'largest amplitude across bands observed so far; not a noise floor',
+            'relative_amplitude_floor': increments['relative_amplitude_floor'],
+            'phase_fit_meaning': 'linear-phase fit residual on accepted windows; not source purity',
+            'scoring': 'availability timestamp inside span; past window may begin before span',
+            'source_dominant_reference': 'not measured', 'string_mask_decision': None}
 
 
 def _summarize_tracks(track, bands, samples, minimum_increments):
