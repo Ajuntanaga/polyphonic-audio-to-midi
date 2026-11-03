@@ -6,11 +6,16 @@ parameters are unchanged.
 
 ## Decision
 
-Test whether the *measured motion* of different harmonics contains useful
-string evidence after accounting for the existing string posterior. Start with
-saved physical recordings and adversarial single-string controls on Modal.
-Do not repeat the stationary harmonic fit, add another general classifier, or
-change MIDI admission before this narrower question has an answer.
+The causal measurement experiment is complete. A physical single-string
+counterexample rejects motion magnitude as a standalone source-count cue.
+Keep the capture and availability diagnostics offline. Defer a learned
+posterior-plus-motion comparison until independent physical takes and a
+defensible source reference exist; the current capture supplies neither.
+
+The original hypothesis was that *measured motion* across harmonics might add
+string evidence beyond the existing string posterior. The experiments below
+test the measurement and its failure modes. They do not justify repeating the
+stationary harmonic fit, adding a general classifier or changing MIDI admission.
 
 A string's harmonics can move together as its tension and vibration change.
 An overlapping harmonic may follow a different mixture of those movements.
@@ -382,3 +387,58 @@ recover missing bands by relaxing the floor or interpret a smooth mixture
 as an independent reference. Source-dominant reference coverage and added
 information beyond the existing posterior remain unmeasured; the installed
 MIDI output is unchanged.
+
+## Additional literature and a useful stopping point
+
+Three further primary sources clarify the next route:
+
+| Source | Useful idea | Decision for M3 |
+| --- | --- | --- |
+| [Simionato and Bigo, 2026: Noise2Fret](https://arxiv.org/html/2608.30854v1) | Joint audio-to-tablature prediction with explicit fretboard constraints. Its ablation separates pitch detection from string assignment. | Consider as an offline comparator, not a callback replacement. The GOAT experiment uses annotated onset crops, standard tuning and excludes electric timbres; its six-string output is not our M3 representation. The reported real-time factor uses an RTX 3090 and does not establish callback deadlines. |
+| [Benetos and Dixon, 2013: Temporally constrained shift-invariant transcription](https://openaccess.city.ac.uk/id/eprint/2155/) | Ordered attack, sustain and decay templates combine spectral evidence with a temporal model. | Check whether errors need state-dependent observations before adding persistence. The published multi-instrument task does not establish unison string identity. |
+| [Wohlmayr, Stark and Pernkopf, 2011: Multipitch tracking with factorial hidden Markov models](https://tugraz.elsevierpure.com/en/publications/a-probabilistic-interaction-model-for-multipitch-tracking-with-fa/) | Keeps interacting source hypotheses through time and discusses an online inference schedule. | Useful as a design principle for joint temporal alternatives. The experiment is two-speaker speech, so neither its error reduction nor its mixture model transfers directly to guitar. |
+
+The present physical motion capture contains four labeled plucks from one
+original recording. Its thirteen complete windows are not thirteen independent
+takes. The isolated note-40 hold lasts 2.3 seconds and supplies no complete
+three-second admission window. Calibration recordings identify individual
+strings; they do not create additional physical multi-string takes.
+
+Also, the captured eight-value posterior is over one string at a time. A
+playable mask or a rendered mask is not a joint-mask probability. Multiplying
+those values would introduce an unvalidated independence assumption. There
+is consequently no defensible held-out learned posterior-plus-motion result
+to report from this capture. Keep the measurements for later independent-take
+evaluation; do not run a classifier sweep on overlapping windows from this
+recording.
+
+The immediate research decision is to close the standalone motion experiment.
+The existing `StringFretPosteriorBank::update()` already propagates an eight-way
+string distribution through time, combines it with current observations and
+weakens prior history at an onset. The detector consumes that distribution in
+its joint allocation. A second temporal smoother would duplicate this work.
+
+The next bounded step is to measure observation quality:
+
+1. Inventory the saved isolated-note and ordinary-chord captures for posterior,
+   onset and label alignment. Report missing fields before scheduling any
+   additional capture. Reuse valid captures without rerunning the replay.
+2. Report the labeled string's posterior rank and probability separately at
+   onset and during settled sound, keeping recording identities and physical
+   takes separate. A correct posterior followed by a wrong allocation directs
+   inspection downstream to allocation. A wrong posterior requires separating
+   current observation likelihoods from accumulated history before blaming
+   either. Report unavailable likelihood fields instead of inferring this
+   cause from the posterior or final MIDI counts alone.
+3. Only if those results identify a repeatable observation failure, test
+   attack/sustain-specific evidence offline against the current posterior.
+   Require improvement on independent physical recordings and no protected
+   corpus regression before considering an output trial. A learned comparison
+   without independent physical coverage remains deferred.
+
+This diagnostic has no MIDI output change and must preserve replay fingerprints.
+Any later output candidate still needs at least 42,128/68,441 physical-long
+matches and 25,604/39,378 exact three-string frames, with wrong strings no higher
+than 2,709, plus the protected corpus and real-time gates. The literature gives
+a testable route; no additional classifier gain or live-readiness improvement
+has been measured.
