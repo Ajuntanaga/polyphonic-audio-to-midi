@@ -531,7 +531,7 @@ strings and resolved unison groups intact. Do not weaken release or retention
 to recover the reserved cases; earlier ownership and joint-posterior trials
 already failed protected replay checks.
 
-The next bounded step is a saved-trace shadow comparison of one observation
+The selected bounded step was a saved-trace shadow comparison of one observation
 cost formulation, using the captured likelihood and feasible strings. It must
 account for both corrected and spoiled assignments and for downstream
 recoveries, with no annotation-dependent proposal rule. It cannot establish
@@ -543,3 +543,47 @@ then preserve every isolated, constructed-chord, short-unison and four-string
 gate and meet the physical-long targets above. The full native, real-time,
 allocation, lifecycle, source-contract, build and validator gates still apply
 before installation. No new output candidate has passed those gates.
+
+### Observation-cost shadow result, 2026-11-03
+
+The fixed formulation replaces profile and cents penalties with the captured
+current log likelihood, once, at the existing native posterior scale:
+`0.005 * fret + 2 * (maximum feasible likelihood - lane likelihood)`, plus the
+existing open-string and provisional retention terms. There was no parameter
+search or fit to annotations. Existing reserved lanes stay reserved; rows
+outside the recorded eligibility guards keep their native primary string.
+Labels and rendered output are used only to score decisions.
+
+Before comparing costs, the auditor reproduces native sequential floating-point
+additions, state order and packed-string tie breaking. It exactly reproduces
+8,663 feasible sampled frames, with no mismatches; 746 native-infeasible frames
+are excluded. Of 19,212 compared candidate rows, 12,232 are eligible for the
+alternative cost. The trace lacks pre-assignment selector and pending-group
+state, so this remains a conditional diagnostic, not an integration-ready guard.
+
+| Single-string targets in reconstructed decisions | Correct / 12,867 | Match percentage |
+| --- | ---: | ---: |
+| Native intermediate assignment | 7,636 | 59.35% |
+| Observation-cost shadow | 7,307 | 56.79% |
+
+**Rejected.** The formulation corrects 607 assignments and spoils 936: net
+-329 (-4.31% relative, -2.56 percentage points). None of the 607 corrections
+was already recovered in the rendered mask. Another 928 changed assignments
+have a correct rendered string at risk, without proving that final MIDI would
+lose it. The shadow also changes 1,125 unlabeled decisions; those are not
+claimed as gains. These sampled intermediate counts are not audio replay
+results or a prediction of the full MIDI error count.
+
+The tool is `tools/string_observation_shadow.py`; its report is
+`build/modal/provisional-observation-cost-shadow-20261103.json`. It streams the
+saved trace and verifies its uncompressed SHA-256 against the capture report.
+Twenty focused Python tests cover this comparison and the earlier evidence
+auditor. The installed plugin is unchanged. The failed shadow does not justify
+a new causal replay or protected-corpus expansion.
+
+The next useful question is which likelihood components cause the spoiled
+ordinary-chord choices. Reconstruct available profile, cents and detuning
+contributions before adding measurements. Separate mixture contamination from
+calibration bias and history; promoting the existing likelihood wholesale has
+now failed its first screen. Any later candidate retains the acceptance and
+production gates above.

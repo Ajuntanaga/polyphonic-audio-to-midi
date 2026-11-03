@@ -1,3 +1,13 @@
+## 2026-11-03 13:26 UTC — observation-cost shadow rejected
+
+- Compared one fixed observation-cost replacement on the saved ordinary-chord trace. No audio replay, native output change, new Modal job or installation. Current Modal capture `string-evidence-20261103T1258Z` remains completed and final.
+- Result: REJECTED. Of 12,867 scored single-string targets, native intermediate assignment was correct in 7,636 (59.35%); shadow assignment in 7,307 (56.79%). It corrected 607 and spoiled 936, net -329 (-4.31%, -2.56 percentage points). These are sampled intermediate decisions, not full replay or MIDI counts. Another 1,125 changed decisions were unlabeled.
+- The auditor exactly reconstructs native cost and packed assignment for 8,663 feasible frames; 746 native-infeasible frames remain unavailable. No reconstruction mismatches. Existing reservations are enforced and ineligible rows keep their native lanes. Missing pre-assignment selector/pending-group state prevents treating these eligibility checks as sufficient native guards.
+- Reproduce with `python3 -m tools.string_observation_shadow --trace build/modal/string-evidence-20261103T1258Z-ordinary.tsv.gz --capture-report build/modal/string-evidence-20261103T1258Z.json --dataset ordinary --output build/modal/provisional-observation-cost-shadow-20261103.json`. The tool streams the trace and verifies its SHA-256 against the capture report.
+- Checks: 20 focused Python tests PASS, including later frozen-lane contention; one focused review complete. Earlier capture/native checks remain as recorded below; no new production, real-time, validator or install result is claimed.
+- Next: identify the likelihood components that reverse correct ordinary string choices using saved evidence and calibration inputs. No weight sweep or causal replay for the rejected formulation. A new candidate first needs positive corrected-minus-spoiled shadow results, then ordinary matches >145385 with wrong notes <=164263, wrong strings <=92653 and extra gap outputs <=62856, followed by all protected/live gates.
+- Log cleanup remains complete: 835 inactive files, 3,668,400,185 bytes reclaimed; current/recent history preserved. Inline notification confirmed at 13:28:35 UTC: `kGPUvV14zBVU`, HTTP 200, 2945 bytes, no attachment. Next periodic attempt no earlier than 13:38:33 UTC.
+
 ## 2026-11-03 13:05 UTC — string evidence separated from assignment
 
 - Diagnostic slice complete; installed output and defaults unchanged. Offline traces capture current likelihood, cached prior, updated posterior and onset at the same decision. The streaming auditor retains missing rows and splits annotation age into 0–100 ms, 100–350 ms and settled sound. Labels never enter policy.
