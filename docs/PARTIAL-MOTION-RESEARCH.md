@@ -949,3 +949,70 @@ improve ordinary matches beyond 145385 while preserving its error ceilings,
 and pass every protected corpus and real-time/lifecycle gate. If no usable
 reference exists, keep the evidence unavailable rather than infer a source
 from a better-fitting mixture alone.
+
+### Local reference for weak odd overtones, 2026-11-03
+
+The first independent-partial measurement found no usable third/fifth-overtone
+pair: 0/1080 target-present frames and 0/864 source-only frames for the target
+hypothesis. Inspection explains the zero without establishing a new cue. The
+fifth overtone has a measurable peak in most frames, including the isolated
+low note, but none clears the fixed 1% global power floor. Removing that
+floor alone would also admit weak peaks from the upper-string controls.
+
+The additive measurement in `tools/independent_partial_evidence.py` compares
+each peak with the larger median power in two fixed sidebands. The sidebands
+sit three to five window-frequency bins away from the nominal harmonic;
+FFT padding does not change their width. Missing, zero or out-of-range
+references remain unavailable. Raw third/fifth pitch agreement is recorded
+regardless of the original power-floor result. Source-component powers are
+used only to score attribution, never to select a peak or form the feature.
+
+Modal `independent-partials-local-reference-20261103T2226Z`, app
+`ap-OSl5pMhurkBJzMeraAhu5J`, completed at 22:27:17 UTC. It reconstructed the
+five exact saved mixtures and four source-only controls from hash-verified
+crops. Report: `build/modal/independent-partials-local-reference-20261103T2226Z.json`.
+All nine original case metric groups match the earlier
+`build/modal/independent-partials-20261103T1517Z.json` report. No native build,
+MIDI replay or installed-output change was made.
+
+The paired feature is the smaller of the third- and fifth-overtone local
+contrasts. Negative observations include both MIDI 36 and absent MIDI 37 in
+source-only controls, plus absent MIDI 37 in the mixtures. Their observed
+maximum is `8.593275855114637` dB for the pair and `15.308089377125054` dB
+for the fifth overtone alone. These are descriptive maxima from the same
+recordings, not independently validated decision thresholds.
+
+| Case | Scored target frames | Fifth above control maximum | Pair above control maximum | Both pair peaks target-dominated |
+| --- | ---: | ---: | ---: | ---: |
+| Solo low note | 216 | 71 | 97 | 97 |
+| Added octave, -12 dB | 216 | 52 | 79 | 76 |
+| Added octave, equal RMS | 216 | 27 | 64 | 49 |
+| Added nearby note, -12 dB | 216 | 51 | 76 | 76 |
+| Added nearby note, equal RMS | 216 | 0 | 31 | 31 |
+
+Target-dominated means a source-component power share of at least 0.90 for
+both selected peaks. This accounting omits interference cross terms and does
+not prove source independence. The hardest mixture gives 31/216 paired
+contrast frames (14.35%), while the fifth alone gives none. The table does
+not apply the pitch-agreement condition, count recovered MIDI or establish
+safety. Overlapping windows and gain variants of the same low-note take are
+not independent observations or performances.
+
+The next experiment freezes the paired contrast threshold at strictly above
+`8.593275855114637` dB and retains the existing 25-cent pitch-agreement limit.
+Test separate recorded low and upper-string takes, keeping source-only and
+absent-neighbor controls, before considering any admission change. Report
+joint feature availability and accepted frames, including note-free intervals;
+require useful target evidence with zero false cues in those controls. If no
+separate takes exist, report that coverage gap rather than relabeling the
+same samples as held-out evidence. Passing this screen only permits the
+existing target-specific MIDI replay gate. It does not replace the ordinary
+match/error limits, protected recordings or realtime/lifecycle checks.
+
+Eleven focused Python tests pass. They cover causality, gain invariance,
+source-component separation, weak but measurable fifth overtones, fixed
+sideband selection, absent-note/source-only control accounting and missing
+reference handling. Compilation passes, and one focused review is complete.
+The analysis uses a past-only 16384-sample window at 96 kHz (170.7 ms); it is
+an offline measurement, not a callback timing result or a replacement for
+the accepted three-second evidence window.
