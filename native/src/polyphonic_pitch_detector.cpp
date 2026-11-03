@@ -6515,6 +6515,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (assignment_diagnostics_enabled_) {
+    // Record the original DP solution and its cost before any replay policy.
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       auto& observation = assignment_diagnostics_[candidates[voice]];
       observation.valid = best.valid;
@@ -6522,6 +6523,74 @@ void PolyphonicPitchDetector::assign_m3_strings(
       observation.joint_strings = best.strings;
       if (best.valid) observation.dp_primary = static_cast<std::uint8_t>(
           (best.strings >> (voice * 3U)) & 0x07U);
+    }
+  }
+  if (diagnostic_cue_free_lane_reassignment_ && best.valid) {
+    // Freeze occupancy before proposing any move. Never use a lane freed by
+    // this experiment, take another voice's output, or partially move a group.
+    std::array<std::uint8_t, kMaxVoices> proposals{};
+    for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+      const auto candidate = candidates[voice];
+      const auto& state = candidate_states_[candidate];
+      const auto& fine = fine_frequency_evidence_states_[candidate];
+      const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+      const bool cue = (diagnostic_odd_partial_cue_mask_[note / 64U] &
+                       (std::uint64_t{1U} << (note % 64U))) != 0U;
+      if (!cue || !state.active) continue;
+      const bool protected_group =
+          string_count(state.assigned_string_mask) != 1U ||
+          string_count(state.midi_voice_mask) > 1U ||
+          state.continuity_lane_mask != 0U ||
+          state.pending_unison_mask != 0U ||
+          string_count(selector_group_masks_[candidate]) > 1U ||
+          beat_evidence_states_[candidate].valid || fine.multi_source_observed ||
+          string_count(fine.member_mask) > 1U ||
+          string_count(fine.pending_member_mask) > 1U ||
+          spectral_lane_proposals[voice] != 0U;
+      std::uint8_t occupied = reserved_strings;
+      for (std::size_t other = 0U; other < selected_count; ++other) {
+        if (other == voice) continue;
+        occupied |= static_cast<std::uint8_t>(1U <<
+            ((best.strings >> (other * 3U)) & 0x07U));
+        occupied |= spectral_lane_proposals[other];
+      }
+      for (std::size_t other = 0U; other < candidate_count_; ++other) {
+        if (other == candidate || !candidate_states_[other].active) continue;
+        const auto& owner = candidate_states_[other];
+        occupied |= static_cast<std::uint8_t>(owner.assigned_string_mask |
+            owner.midi_voice_mask | owner.spectral_lane_mask |
+            owner.continuity_lane_mask);
+      }
+      const auto playable = playable_string_mask(candidate);
+      std::uint8_t calibrated = 0U;
+      std::array<double, kMaxVoices> similarities{};
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        const auto bit = static_cast<std::uint8_t>(1U << string);
+        if ((playable & bit) == 0U) continue;
+        const auto* point = calibrator_.bank().point(string, note - kM3OpenNotes[string]);
+        if (point == nullptr || point->quality == CalibrationPointQuality::missing) continue;
+        calibrated |= bit;
+        similarities[string] = calibration_similarity(candidate, string);
+      }
+      const auto primary = static_cast<std::uint8_t>(1U <<
+          ((best.strings >> (voice * 3U)) & 0x07U));
+      proposals[voice] = bounded_cue_free_lane_reassignment(
+          cue, primary, playable, calibrated, similarities, occupied, protected_group);
+    }
+    for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+      const auto proposal = proposals[voice];
+      if (proposal == 0U) continue;
+      bool unique = true;
+      for (std::size_t other = 0U; other < selected_count; ++other) {
+        if (other != voice && proposals[other] == proposal) unique = false;
+      }
+      if (!unique) continue;
+      for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+        if (proposal != (1U << string)) continue;
+        const auto shift = static_cast<std::uint32_t>(voice * 3U);
+        best.strings = (best.strings & ~(std::uint32_t{7U} << shift)) |
+                       (static_cast<std::uint32_t>(string) << shift);
+      }
     }
   }
 #endif
@@ -6586,6 +6655,36 @@ void PolyphonicPitchDetector::assign_m3_strings(
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
+    bool pitch_confirmed, std::uint8_t current_mask,
+    std::uint8_t playable_mask, std::uint8_t calibrated_mask,
+    const std::array<double, kMaxVoices>& similarities,
+    std::uint8_t occupied_mask, bool protected_group) noexcept {
+  if (!pitch_confirmed || protected_group || string_count(current_mask) != 1U ||
+      (current_mask & playable_mask) != current_mask ||
+      string_count(playable_mask) < 2U ||
+      (calibrated_mask & playable_mask) != playable_mask) return 0U;
+  double best = -1.0, second = -1.0;
+  std::uint8_t preferred = 0U;
+  for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+    const auto bit = static_cast<std::uint8_t>(1U << string);
+    if ((playable_mask & bit) == 0U) continue;
+    const double similarity = similarities[string];
+    if (!std::isfinite(similarity) || similarity < 0.0 || similarity > 1.0) return 0U;
+    if (similarity > best) {
+      second = best;
+      best = similarity;
+      preferred = bit;
+    } else if (similarity > second) {
+      second = similarity;
+    }
+  }
+  if (best < kM3CalibratedCandidateMinimumSimilarity ||
+      best - second < kM3CalibratedBandRescueMinimumMargin ||
+      preferred == current_mask || (preferred & occupied_mask) != 0U) return 0U;
+  return preferred;
+}
+
 std::array<std::uint8_t, kMaxVoices>
 PolyphonicPitchDetector::bounded_joint_spectral_lanes(
     const std::array<std::uint8_t, kMaxVoices>& proposals,

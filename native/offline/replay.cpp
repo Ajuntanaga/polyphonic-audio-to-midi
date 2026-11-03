@@ -2581,9 +2581,12 @@ bool run_detector_replay(const WaveData& wave,
                          JointOwnershipAblation joint_ownership_ablation,
                          PartialMotionTrace* partial_motion_trace,
                          bool diagnostic_fundamental_admission,
-                         FrozenNoteCues* diagnostic_odd_partial_cues) {
+                         FrozenNoteCues* diagnostic_odd_partial_cues,
+                         bool diagnostic_cue_free_lane_reassignment) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues == nullptr)
+    return false;
   if (diagnostic_odd_partial_cues != nullptr) {
     if (diagnostic_fundamental_admission || config.profile_mode != ProfileMode::m3 ||
         !diagnostic_odd_partial_cues->matches(wave.sample_rate, wave.mono_samples.size())) {
@@ -2817,6 +2820,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_harmonic_admission_guard);
   detector.set_fundamental_admission_for_diagnostics(
       diagnostic_fundamental_admission);
+  detector.set_cue_free_lane_reassignment_for_diagnostics(
+      diagnostic_cue_free_lane_reassignment);
   detector.set_provisional_open_retention_guard_for_diagnostics(
       diagnostic_provisional_open_retention_guard);
   detector.set_residual_pitch_recovery_for_diagnostics(
@@ -2839,6 +2844,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_state_local_open_prior || diagnostic_coasting_harmonic_handoff ||
       diagnostic_calibrated_harmonic_admission_guard ||
       diagnostic_fundamental_admission || diagnostic_odd_partial_cues != nullptr ||
+      diagnostic_cue_free_lane_reassignment ||
       diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||
       diagnostic_joint_spectral_ownership) {
     return false;

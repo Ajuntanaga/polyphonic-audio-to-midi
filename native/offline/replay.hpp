@@ -2312,7 +2312,8 @@ bool run_detector_replay(const WaveData& wave,
                              JointOwnershipAblation::none,
                          PartialMotionTrace* partial_motion_trace = nullptr,
                          bool diagnostic_fundamental_admission = false,
-                         FrozenNoteCues* diagnostic_odd_partial_cues = nullptr);
+                         FrozenNoteCues* diagnostic_odd_partial_cues = nullptr,
+                         bool diagnostic_cue_free_lane_reassignment = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

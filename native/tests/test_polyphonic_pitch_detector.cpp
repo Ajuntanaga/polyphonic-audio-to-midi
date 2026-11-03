@@ -8383,6 +8383,71 @@ M3_TEST(native_detector_release_hold_is_time_based_at_supported_sample_rates) {
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_cue_free_lane_requires_cue_complete_calibration_and_a_free_string) {
+  using Detector = m3::PolyphonicPitchDetector;
+  std::array<double, m3::kMaxVoices> similarity{};
+  similarity[0U] = 0.98;
+  similarity[1U] = 0.90;
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, 2U, false), 1U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      false, 2U, 3U, 3U, similarity, 0U, false), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 1U, similarity, 0U, false), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, 1U, false), 0U);
+}
+
+M3_TEST(native_detector_cue_free_lane_preserves_groups_and_existing_best_assignments) {
+  using Detector = m3::PolyphonicPitchDetector;
+  std::array<double, m3::kMaxVoices> similarity{};
+  similarity[0U] = 0.98;
+  similarity[1U] = 0.90;
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, 0U, true), 0U);
+  for (const auto current : std::array<std::uint8_t, 4U>{0U, 1U, 3U, 4U}) {
+    M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+        true, current, 3U, 3U, similarity, 0U, false), 0U);
+  }
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 2U, 2U, similarity, 0U, false), 0U);
+}
+
+M3_TEST(native_detector_cue_free_lane_rejects_weak_ambiguous_or_invalid_evidence) {
+  using Detector = m3::PolyphonicPitchDetector;
+  std::array<double, m3::kMaxVoices> similarity{};
+  similarity[1U] = 0.90;
+  for (const double invalid : {0.96, -0.1, 1.01,
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::infinity()}) {
+    similarity[0U] = invalid;
+    M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+        true, 2U, 3U, 3U, similarity, 0U, false), 0U);
+  }
+  similarity[0U] = 0.98;
+  for (const double ambiguous : {0.965, 0.98,
+       std::numeric_limits<double>::quiet_NaN()}) {
+    similarity[1U] = ambiguous;
+    M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+        true, 2U, 3U, 3U, similarity, 0U, false), 0U);
+  }
+}
+
+M3_TEST(native_detector_cue_free_lane_uses_measured_preference_without_string_bias) {
+  using Detector = m3::PolyphonicPitchDetector;
+  for (std::size_t target = 0U; target < m3::kMaxVoices; ++target) {
+    const auto other = (target + 1U) % m3::kMaxVoices;
+    const auto preferred = static_cast<std::uint8_t>(1U << target);
+    const auto current = static_cast<std::uint8_t>(1U << other);
+    const auto playable = static_cast<std::uint8_t>(preferred | current);
+    std::array<double, m3::kMaxVoices> similarity{};
+    similarity[target] = 0.98;
+    similarity[other] = 0.90;
+    M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+        true, current, playable, playable, similarity, current, false), preferred);
+  }
+}
+
 M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   using Case = Access::FundamentalAdmissionCase;

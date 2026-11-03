@@ -571,6 +571,14 @@ class PolyphonicPitchDetector final {
       const std::array<std::uint64_t, 2U>& mask) noexcept {
     diagnostic_odd_partial_cue_mask_ = mask;
   }
+  void set_cue_free_lane_reassignment_for_diagnostics(bool enabled) noexcept {
+    diagnostic_cue_free_lane_reassignment_ = enabled;
+  }
+  [[nodiscard]] static std::uint8_t bounded_cue_free_lane_reassignment(
+      bool pitch_confirmed, std::uint8_t current_mask,
+      std::uint8_t playable_mask, std::uint8_t calibrated_mask,
+      const std::array<double, kMaxVoices>& similarities,
+      std::uint8_t occupied_mask, bool protected_group) noexcept;
   void set_provisional_open_retention_guard_for_diagnostics(bool enabled) noexcept {
     diagnostic_provisional_open_retention_guard_ = enabled;
   }
@@ -1509,6 +1517,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_fundamental_admission_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
+  bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
   bool diagnostic_joint_spectral_ownership_{};
   bool diagnostic_joint_midi_owner_guard_{};

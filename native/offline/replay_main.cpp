@@ -200,6 +200,7 @@ void usage(const char* program) {
       "[--diagnostic-calibrated-harmonic-admission-guard] "
       "[--diagnostic-fundamental-admission] "
       "[--diagnostic-odd-partial-cues FILE] "
+      "[--diagnostic-cue-free-lane-reassignment] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -282,6 +283,7 @@ int main(int argc, char** argv) {
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
+  bool diagnostic_cue_free_lane_reassignment = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -586,6 +588,8 @@ int main(int argc, char** argv) {
       diagnostic_fundamental_admission = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
       diagnostic_odd_partial_cues_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--diagnostic-cue-free-lane-reassignment") == 0) {
+      diagnostic_cue_free_lane_reassignment = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -775,6 +779,10 @@ int main(int argc, char** argv) {
   }
 
   m3::offline::FrozenNoteCues diagnostic_odd_partial_cues;
+  if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues_path == nullptr) {
+    std::fprintf(stderr, "m3_replay: free-lane reassignment requires frozen odd-partial cues\n");
+    return 1;
+  }
   if (diagnostic_odd_partial_cues_path != nullptr) {
     std::vector<std::uint8_t> cue_bytes;
     if (diagnostic_fundamental_admission ||
@@ -1073,7 +1081,8 @@ int main(int argc, char** argv) {
           joint_ownership_ablation,
           partial_motion_stream != nullptr ? &partial_motion_trace : nullptr,
           diagnostic_fundamental_admission,
-          diagnostic_odd_partial_cues_path != nullptr ? &diagnostic_odd_partial_cues : nullptr)) {
+          diagnostic_odd_partial_cues_path != nullptr ? &diagnostic_odd_partial_cues : nullptr,
+          diagnostic_cue_free_lane_reassignment)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

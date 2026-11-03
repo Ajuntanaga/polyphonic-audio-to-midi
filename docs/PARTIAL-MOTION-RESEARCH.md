@@ -1151,3 +1151,80 @@ boundaries, missing-trace rejection and separate wrong-string, changed-pitch
 and absent-output accounting. No broader corpus, callback timing, allocation,
 lifecycle or live-use result is claimed for this trial. Production defaults
 and installed output remain unchanged.
+
+### Guarded correction of an unused string, 2026-11-03
+
+The assignment diagnosis identified 20 missed target frames whose preferred
+string was unused and whose raw string evidence cleared the proposed guard.
+The next experiment tests that narrow correction. It does not evict a competing
+note or add a voice.
+
+The default-off `--diagnostic-cue-free-lane-reassignment` path requires the
+frozen causal pitch cue, one selected string, complete calibration for every
+playable string, a best raw similarity of at least 0.97 and a margin of at least
+0.02 over the next string. The preferred string must differ from the current
+assignment and be unused. Reserved strings, other selected or active voices,
+continuity, and established or emerging unison groups protect their assignments.
+All proposals use the same occupancy snapshot. Conflicting proposals are
+rejected together; a correction cannot free a string for a second correction
+in the same decision. The replay option requires the frozen cue sidecar.
+
+Modal `cue-free-lane-replay-20261103T2332Z`, app
+`ap-hVxZH1KTjz7dZpNUQwBEwy`, completed at 23:35:06 UTC. It passes the
+small held-out replay gate and is accepted for corpus screening.
+
+| Case | Target matches before → after | Aggregate matches before → after | Wrong-string outputs before → after |
+| --- | ---: | ---: | ---: |
+| Solo low note | 3219→3236/3450 | 3219→3236/3450 | 159→142 |
+| Added octave, -12 dB | 2070→2079/3450 | 2070→2079/6900 | 1314→1305 |
+| Added nearby note, equal RMS | 815→835/3450 | 2987→3007/6900 | 1548→1528 |
+
+The hardest target improves from 23.62% to 24.20% matched frames: 20 additional
+frames, a 2.45% relative gain and 0.58 percentage points. Its aggregate match
+rate rises from 43.29% to 43.58%. Wrong-note outputs remain 3178 and extra
+outputs during unlabeled gaps remain 668; total false outputs fall from 5394
+to 5374. Extra-gap outputs are not missing-note counts. The other two improved
+cases also preserve wrong-note and extra-gap counts. All seven remaining cases
+are bit-identical, including source-only and silence controls.
+
+All ten saved-baseline/new-OFF controls are identical. Every ON result is
+identical at blocks 32/512/1024. Sixty focused native tests pass, covering the
+new correction guards, existing admission guards and offline replay. The
+accepted binary has SHA-256
+`0d6a856314563c7302d87f7fa6948e925acda6cbe2ead07796b3af5a77a0ff8c`.
+The final report is
+`build/modal/cue-free-lane-replay-20261103T2332Z.json`.
+
+This establishes a small assignment gain on separate plucks from the same
+recording session. It does not establish broad chord safety, another guitar's
+behavior, live latency or reliable live use. Production defaults and installed
+output are unchanged. The causal spectral window remains 16384 samples at
+96 kHz (170.7 ms), which is not a measured pick-to-MIDI latency.
+
+The next run, `cue-corpus-ordinary-20261103T2350Z`, app
+`ap-8WBrg4VJWESiT6oBdQOi97`, screens the complete ordinary recording. It
+measures the frozen cue across MIDI 32–84 at every feature frame, without
+using annotations to choose pitch hypotheses. Saved source, calibration and
+binary hashes must agree before replay. The gate compares each annotated
+passage, so an aggregate gain cannot hide a loss elsewhere. Every false-output
+count must stay at or below its paired baseline, OFF must match exactly, and
+ON must be buffer invariant. Exact three/four-string groups are reported
+separately when their labels exist.
+
+The paired ordinary offline baseline is 145397/528632 matches, with
+163749 wrong-note, 92641 wrong-string and 62856 extra-gap outputs. It differs
+from the installed baseline of 145385/528632 and must not be substituted for
+it in the installed scoreboard. A safe ordinary result permits sequential
+protected-corpus screening; a regression stops expansion. Timing/allocation,
+lifecycle/routing and actual-host checks remain required before any default
+MIDI change.
+
+The first corpus attempt, `cue-corpus-ordinary-20261103T2346Z`, failed
+before feature measurement because the recording is PCM16 and the reader
+accepted only float32 WAV. The reader now accepts both, with native-equivalent
+PCM16 scaling by 32768 and no resampling. Seven focused reader/scoring tests
+and twenty related tests pass. They cover per-label losses hidden by aggregate
+gains, each error ceiling, label identity, exact-group accounting, PCM16 bounds
+and truncation, float32 preservation and unsupported stereo input. Python
+compilation and whitespace checks pass. This input failure was not a candidate
+rejection.
