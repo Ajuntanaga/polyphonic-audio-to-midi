@@ -41,6 +41,36 @@ def frozen_pair_screen(value):
     return 'cue'
 
 
+def frozen_cue_intervals(rows, *, sample_count, hop_samples=CONFIG['hop_samples']):
+    """Export past-only note cues with a fixed expiry and no annotation input.
+
+    A window ending at inclusive sample s is usable starting at s+1. Its cue
+    expires one analysis hop later even if observations are missing. Intervals
+    are half-open and contain no string assignment or component provenance.
+    """
+    if (type(sample_count) is not int or sample_count <= 0 or
+            type(hop_samples) is not int or hop_samples <= 0):
+        raise ValueError('invalid sidecar sample clock')
+    previous = -1
+    result = []
+    for row in rows:
+        sample = row['sample']
+        if (type(sample) is not int or not previous < sample < sample_count or
+                (sample + 1) % hop_samples != 0):
+            raise ValueError('invalid observation clock for sidecar')
+        previous = sample
+        begin, end = sample + 1, min(sample + 1 + hop_samples, sample_count)
+        if not row['history_available'] or begin == end:
+            continue
+        for note, value in sorted(row['notes'].items(), key=lambda item: int(item[0])):
+            number = int(note)
+            if str(number) != note or not 0 <= number <= 127:
+                raise ValueError('invalid sidecar note')
+            if frozen_pair_screen(value) == 'cue':
+                result.append(dict(begin_sample=begin, end_sample=end, midi_note=number))
+    return result
+
+
 def score_frozen_screen(rows, *, start_sample, end_sample, window_samples):
     """Score fixed observations, separating causal window tail from clear gaps.
 

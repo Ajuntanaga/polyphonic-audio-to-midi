@@ -36,7 +36,8 @@ image = (modal.Image.from_registry('ubuntu:24.04', add_python='3.12')
                          '/opt/m3/string_evidence_audit.py', copy=True))
 OVERLAP_MODULES = ('controlled_descriptor_overlap', 'string_likelihood_decomposition',
                    'string_observation_shadow', 'string_evidence_audit',
-                   'controlled_admission_gate')
+                   'controlled_admission_gate', 'independent_partial_evidence',
+                   'frozen_cue_diagnosis')
 for module in OVERLAP_MODULES:
     image = image.add_local_file(ROOT / 'tools' / (module + '.py'),
                                  '/opt/m3/tools/' + module + '.py', copy=True)
@@ -941,14 +942,291 @@ def capture_controlled_admission(run_id: str, source_run: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_frozen_partial_cues(run_id: str, source_run: str):
+    """Replay frozen, past-only cues on the unchanged held-out waveforms."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    import numpy as np
+    from tools.controlled_admission_gate import CASES, FIELDS, evaluate_admission, read_target_detail
+    from tools.controlled_descriptor_overlap import read_float_wave, write_float_wave, controlled_mixtures
+    from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN, frozen_cue_intervals
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final') or
+            not previous.get('screen_passed') or previous['config'] != CONFIG or
+            previous['frozen_screen'] != FROZEN_SCREEN):
+        raise ValueError('source is not a completed frozen held-out screen')
+    corpus_id = previous['corpus_id']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', corpus_id):
+        raise ValueError('invalid corpus identifier')
+    corpus = MOUNT / 'corpus' / corpus_id
+    manifest = json.loads((corpus / 'manifest.json').read_text())
+    if (sha256(corpus / 'manifest.json') != previous['manifest_sha256'] or
+            manifest != previous['manifest'] or manifest['calibration_pass'] != 2):
+        raise ValueError('held-out manifest changed')
+    baseline = MOUNT / 'results/controlled-admission-20261103T1457Z/m3_replay'
+    calibration = MOUNT / 'corpus/calibration.m3cb'
+    baseline_hash = 'b7c698019bcb5a669fae523c6b1d0b3eac3acf21cc120725b20bb2e55f025646'
+    calibration_hash = 'b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997'
+    if sha256(baseline) != baseline_hash or sha256(calibration) != calibration_hash:
+        raise ValueError('baseline binary or calibration changed')
+    settings = {'a4': 440, 'input-trim': -9, 'sensitivity': 60, 'response': 75,
+                'max-polyphony': 5, 'max-fret': 24}
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, corpus_id=corpus_id,
+        state='running', final=False, stage='prepare frozen-cue replay', installed_changed=False,
+        started_at=datetime.now(timezone.utc).isoformat(), config=CONFIG, frozen_screen=FROZEN_SCREEN,
+        source_report_sha256=sha256(source / 'report.json'), manifest_sha256=previous['manifest_sha256'],
+        baseline_binary_sha256=baseline_hash, calibration_sha256=calibration_hash, settings=settings,
+        source_files_sha256={str(p.relative_to('/opt/m3')): sha256(p)
+                            for p in sorted(Path('/opt/m3/native').rglob('*')) if p.is_file()},
+        analysis_source_sha256={name: sha256('/opt/m3/tools/' + name + '.py') for name in OVERLAP_MODULES},
+        datasets={}, tests={}, limits=[
+            'Separate plucks from the same session; mixtures and frames are correlated.',
+            'Frozen feature sidecars are offline; their spectral computation is not in the audio callback.',
+            'The causal window is 170.7 ms; cue release waits for its end. Live latency is not measured.',
+            'No broad corpus, room-noise, lifecycle or installed-plugin acceptance follows from this screen.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        components = {}
+        for name in ('target', 'octave', 'nearby'):
+            identity, path = manifest['components'][name], corpus / (name + '.wav')
+            if sha256(path) != identity['wave_sha256']:
+                raise ValueError('held-out crop changed')
+            rate, values = read_float_wave(path)
+            if (rate != 96000 or len(values) != 220800 or
+                    hashlib.sha256(values.tobytes()).hexdigest() != identity['samples_sha256']):
+                raise ValueError('held-out clock or samples changed')
+            components[name] = values.astype(np.float64)
+        mixtures = controlled_mixtures(components['target'],
+            {key: components[key] for key in ('octave', 'nearby')}, prefix=24000, suffix=96000)
+        cases = {}
+        for name, item in mixtures.items():
+            metadata = item['metadata']
+            cases[name] = (item['audio'], True, metadata['interferer'])
+            if metadata['interferer'] is not None:
+                added = components[metadata['interferer']] * metadata['interferer_scale'] * metadata['common_gain']
+                cases[name + '_source_only'] = (np.pad(np.asarray(added, dtype='<f4'),
+                                                      (24000, 96000)), False, metadata['interferer'])
+        cases['silence'] = (np.zeros(340800, dtype='<f4'), False, None)
+        if set(cases) != set(previous['cases']):
+            raise ValueError('held-out case coverage changed')
+        for name, (values, has_target, added) in cases.items():
+            saved = previous['cases'][name]
+            if (saved['sample_rate'] != 96000 or len(values) != saved['sample_count'] or
+                    hashlib.sha256(values.tobytes()).hexdigest() != saved['audio_sha256']):
+                raise ValueError(f'{name}: reconstructed audio differs from frozen features')
+            trace = source / (name + '-partials.jsonl.gz')
+            if sha256(trace) != saved['trace_sha256']:
+                raise ValueError(f'{name}: frozen feature trace changed')
+            # Only mixture features enter this exporter. Labels score the replay below.
+            with gzip.open(trace, 'rt') as stream:
+                intervals = frozen_cue_intervals((json.loads(line) for line in stream),
+                                                  sample_count=len(values))
+            cues = out / (name + '-cues.tsv')
+            cues.write_text('m3_frozen_note_cues_v1\t96000\t1024\n' + ''.join(
+                f"{row['begin_sample']}\t{row['end_sample']}\t{row['midi_note']}\n" for row in intervals))
+            wav, labels = out / (name + '.wav'), out / (name + '.tsv')
+            write_float_wave(wav, 96000, values)
+            text = 'start_sample\tend_sample\tmidi_note\tstring_mask\tcalibration_pass\n'
+            if has_target:
+                text += '24000\t244800\t36\t1\t2\n'
+            if added is not None:
+                text += f"24000\t244800\t{manifest['components'][added]['midi_note']}\t8\t2\n"
+            labels.write_text(text)
+            report['datasets'][name] = dict(sample_rate=96000, sample_count=len(values),
+                audio_sha256=sha256(wav), samples_sha256=saved['audio_sha256'], labels_sha256=sha256(labels),
+                cue_sha256=sha256(cues), cue_intervals=len(intervals), feature_trace_sha256=saved['trace_sha256'],
+                has_target=has_target, replays={})
+        report['stage'] = 'build diagnostic replay and focused tests'
+        save()
+        directory = build(out, detector_tests=True)
+        binary = directory / 'm3_replay'
+        report['binary_sha256'] = sha256(binary)
+        shutil.copy2(binary, out / 'm3_replay')
+        for name, executable, test_filter in (
+                ('fundamental-admission', 'm3_detector_tests', 'native_detector_fundamental_admission'),
+                ('harmonic-admission', 'm3_detector_tests', 'native_detector_calibrated_harmonic_admission'),
+                ('offline-replay', 'm3_motion_tests', '')):
+            report['stage'] = name + ' tests'
+            save()
+            log_path = out / (name + '-tests.log')
+            with log_path.open('w') as log:
+                subprocess.run([str(directory / executable)], stdout=log, stderr=subprocess.STDOUT,
+                    env=dict(os.environ, M3_TEST_FILTER=test_filter), check=True, timeout=240)
+            summary = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', log_path.read_text())
+            if len(summary) != 1 or int(summary[0][0]) == 0 or int(summary[0][1]) != 0:
+                raise ValueError('missing successful test accounting')
+            report['tests'][name] = dict(count=int(summary[0][0]), failures=0, log_sha256=sha256(log_path))
+        for name, item in report['datasets'].items():
+            wav, labels, cues = (out / (name + suffix) for suffix in ('.wav', '.tsv', '-cues.tsv'))
+            for mode, executable, block in (('baseline', baseline, 512), ('off', binary, 512),
+                    ('on', binary, 512), ('on32', binary, 32), ('on1024', binary, 1024)):
+                report['stage'] = f'{name}: {mode}, block {block}'
+                save()
+                args = [str(executable), '--wav', str(wav), '--labels', str(labels),
+                        '--calibration', str(calibration), '--block', str(block), '--label-details']
+                for key, value in settings.items():
+                    args += ['--' + key, str(value)]
+                if mode.startswith('on'):
+                    args += ['--diagnostic-odd-partial-cues', str(cues)]
+                output = out / f'{name}-{mode}.tsv'
+                with output.open('w') as stdout, (out / f'{name}-{mode}.log').open('w') as log:
+                    subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+                replay = dict(output=aggregate(output))
+                if item['has_target']:
+                    replay['target'] = read_target_detail(output)
+                item['replays'][mode] = replay
+            replays = item['replays']
+            item['control_identical'] = replays['off'] == replays['baseline']
+            item['buffer_outputs_identical'] = replays['on32'] == replays['on'] == replays['on1024']
+            if not item['control_identical'] or not item['buffer_outputs_identical']:
+                raise ValueError(f'{name}: baseline OFF or buffer parity failed')
+            if not item['has_target']:
+                off, on = (replays[key]['output'] for key in ('off', 'on'))
+                if off['labeled'] != on['labeled']:
+                    raise ValueError(f'{name}: label accounting changed')
+                item['delta'] = {key: int(on[key]) - int(off[key]) for key in FIELDS}
+                item['gate_pass'] = item['delta']['matched'] >= 0 and all(
+                    item['delta'][key] <= 0 for key in FIELDS[1:])
+            save()
+        gate = evaluate_admission({name: report['datasets'][name] for name in CASES})
+        for name, result in gate.pop('cases').items():
+            report['datasets'][name].update(result)
+        negative_regressions = [name for name, item in report['datasets'].items()
+                                if not item['has_target'] and not item['gate_pass']]
+        gate['negative_regressions'] = negative_regressions
+        gate['accepted_for_corpus_screen'] &= not negative_regressions
+        gate['verdict'] = 'advance to corpus screen' if gate['accepted_for_corpus_screen'] else 'rejected'
+        report.update(state='completed', final=True, stage='frozen cue replay complete',
+                      completed_at=datetime.now(timezone.utc).isoformat(), **gate)
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        logs = sorted(out.glob('*.log'), key=lambda path: path.stat().st_mtime)[-3:]
+        report['log_tails'] = {path.name: path.read_text()[-4000:] for path in logs}
+    save()
+    return report
+
+
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=900, max_containers=1)
+def capture_frozen_cue_selection(run_id: str, source_run: str):
+    """Trace one frozen-cue replay with its saved binary; no build or sweep."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_admission_gate import read_target_detail
+    from tools.frozen_cue_diagnosis import summarize_cues
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if previous.get('state') != 'completed' or not previous.get('final'):
+        raise ValueError('source capture is not final')
+    saved = previous['datasets']['nearby_0dB']
+    binary, wav, labels, cues = (source / name for name in
+        ('m3_replay', 'nearby_0dB.wav', 'nearby_0dB.tsv', 'nearby_0dB-cues.tsv'))
+    calibration = MOUNT / 'corpus/calibration.m3cb'
+    identities = ((binary, previous['binary_sha256']), (wav, saved['audio_sha256']),
+                  (labels, saved['labels_sha256']), (cues, saved['cue_sha256']),
+                  (calibration, previous['calibration_sha256']))
+    if any(sha256(path) != expected for path, expected in identities):
+        raise ValueError('saved binary, audio, labels, cues or calibration changed')
+    target = saved['replays']['on']['target']
+    start, end = target['start_sample'], target['end_sample']
+    rate = saved['sample_rate']
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
+        stage='trace saved frozen-cue replay', installed_changed=False,
+        started_at=datetime.now(timezone.utc).isoformat(),
+        source_report_sha256=sha256(source / 'report.json'),
+        binary_sha256=previous['binary_sha256'], calibration_sha256=previous['calibration_sha256'],
+        analysis_sha256=sha256('/opt/m3/tools/frozen_cue_diagnosis.py'),
+        saved_input_hashes={path.name: digest for path, digest in identities},
+        settings=previous['settings'], control=saved['replays']['on'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        candidate, outcome = out / 'candidate.tsv', out / 'outcome.tsv'
+        args = [str(binary), '--wav', str(wav), '--labels', str(labels),
+                '--calibration', str(calibration), '--block', '512', '--label-details',
+                '--diagnostic-odd-partial-cues', str(cues),
+                '--candidate-trace', str(candidate), '--candidate-trace-note', str(target['midi_note']),
+                '--candidate-trace-start', str(start / rate),
+                '--candidate-trace-end', str(end / rate), '--outcome-trace', str(outcome)]
+        for key, value in previous['settings'].items():
+            args += ['--' + key, str(value)]
+        report['command'] = args
+        save()
+        replay, log_path = out / 'replay.tsv', out / 'replay.log'
+        with replay.open('w') as stdout, log_path.open('w') as log:
+            subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+        report['replay'] = dict(output=aggregate(replay), target=read_target_detail(replay))
+        report['output_identical'] = report['replay'] == report['control']
+        if not report['output_identical']:
+            raise ValueError('diagnostics changed saved output or target matches')
+        report['trace_counts'] = {}
+        for name in ('candidate', 'outcome'):
+            counts = re.findall(rf'{name}_trace frames=(\d+) cap=(\d+) truncated=(\d+)',
+                                log_path.read_text())
+            if len(counts) != 1 or int(counts[0][2]) or int(counts[0][0]) > int(counts[0][1]):
+                raise ValueError('incomplete trace accounting')
+            report['trace_counts'][name] = dict(zip(('frames', 'cap', 'truncated'), map(int, counts[0])))
+        with cues.open() as stream:
+            if next(stream).strip() != 'm3_frozen_note_cues_v1\t96000\t1024':
+                raise ValueError('unknown frozen cue format')
+            intervals = [tuple(map(int, line.split('\t'))) for line in stream if line.strip()]
+        if len(intervals) != saved['cue_intervals']:
+            raise ValueError('saved cue count changed')
+        with candidate.open() as c, outcome.open() as o:
+            if next(o).strip() != '# m3_candidate_outcome_v2':
+                raise ValueError('unknown outcome format')
+            report['diagnosis'] = summarize_cues(
+                csv.DictReader(c, delimiter='\t'), csv.DictReader(o, delimiter='\t'), intervals,
+                note=target['midi_note'], start=start, end=end, sample_count=saved['sample_count'],
+                label_index=target['label_index'], string_mask=target['string_mask'])
+        joined = report['diagnosis']['all_labeled']
+        if joined['frames'] != target['labeled'] or joined['target_matched'] != target['matched']:
+            raise ValueError('joined trace disagrees with native target scoring')
+        for trace in (candidate, outcome):
+            report[trace.stem + '_trace_sha256'] = sha256(trace)
+            with trace.open('rb') as src, gzip.open(str(trace) + '.gz', 'wb', compresslevel=1) as dst:
+                shutil.copyfileobj(src, dst, length=1024 * 1024)
+            trace.unlink()
+        report.update(state='completed', final=True, stage='frozen-cue selection diagnosed',
+                      completed_at=datetime.now(timezone.utc).isoformat())
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
-         admission_source: str = ''):
+         admission_source: str = '', cue_source: str = '', cue_selection_source: str = ''):
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
-            + bool(admission_source)) > 1:
+            + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_controlled_admission.remote(run_id, admission_source) if admission_source else
+    result = (capture_frozen_cue_selection.remote(run_id, cue_selection_source) if cue_selection_source else
+              capture_frozen_partial_cues.remote(run_id, cue_source) if cue_source else
+              capture_controlled_admission.remote(run_id, admission_source) if admission_source else
               capture_controlled_selection.remote(run_id, selection_source) if selection_source else
               capture_controlled_overlap.remote(run_id) if controlled_overlap else
               capture_string_evidence.remote(run_id) if string_evidence else

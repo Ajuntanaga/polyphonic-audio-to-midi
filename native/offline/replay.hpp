@@ -19,6 +19,7 @@
 namespace m3::offline {
 
 class FrequencyWindowCapture;
+class FrozenNoteCues;
 
 // Actual public detector transitions, independent of tuner snapshots/labels.
 struct MidiEventTrace final {
@@ -2310,7 +2311,8 @@ bool run_detector_replay(const WaveData& wave,
                          JointOwnershipAblation joint_ownership_ablation =
                              JointOwnershipAblation::none,
                          PartialMotionTrace* partial_motion_trace = nullptr,
-                         bool diagnostic_fundamental_admission = false);
+                         bool diagnostic_fundamental_admission = false,
+                         FrozenNoteCues* diagnostic_odd_partial_cues = nullptr);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

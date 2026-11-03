@@ -17,6 +17,7 @@
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "joint_pitch_residual.hpp"
 #include "frequency_refinement_shadow.hpp"
+#include "frozen_note_cues.hpp"
 #include "residual_recovery.hpp"
 #include "unison_spectral_shadow.hpp"
 
@@ -2579,9 +2580,17 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_joint_spectral_ownership,
                          JointOwnershipAblation joint_ownership_ablation,
                          PartialMotionTrace* partial_motion_trace,
-                         bool diagnostic_fundamental_admission) {
+                         bool diagnostic_fundamental_admission,
+                         FrozenNoteCues* diagnostic_odd_partial_cues) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_odd_partial_cues != nullptr) {
+    if (diagnostic_fundamental_admission || config.profile_mode != ProfileMode::m3 ||
+        !diagnostic_odd_partial_cues->matches(wave.sample_rate, wave.mono_samples.size())) {
+      return false;
+    }
+    diagnostic_odd_partial_cues->reset();
+  }
   if (partial_motion_trace != nullptr) {
     auto& trace = *partial_motion_trace;
     trace.frames = 0U;
@@ -2829,7 +2838,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo ||
       diagnostic_state_local_open_prior || diagnostic_coasting_harmonic_handoff ||
       diagnostic_calibrated_harmonic_admission_guard ||
-      diagnostic_fundamental_admission ||
+      diagnostic_fundamental_admission || diagnostic_odd_partial_cues != nullptr ||
       diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||
       diagnostic_joint_spectral_ownership) {
     return false;
@@ -3106,6 +3115,12 @@ bool run_detector_replay(const WaveData& wave,
           candidate_spectral_decimation_sum = 0.0;
           candidate_spectral_decimation_count = 0U;
         }
+      }
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (diagnostic_odd_partial_cues != nullptr &&
+          diagnostic_odd_partial_cues->advance(sample_index)) {
+        detector.set_odd_partial_cue_mask_for_diagnostics(diagnostic_odd_partial_cues->mask());
       }
 #endif
       const DetectorDecision decision = detector.process_sample(sample);

@@ -1074,3 +1074,80 @@ pitch boundaries, missing/nonfinite rejection, unavailable history, explicit
 absent-note false cues, and the exact tail-to-gap boundary. Compilation and
 whitespace checks pass. The installed plugin and default MIDI policy are
 unchanged.
+
+### Frozen-cue replay and assignment diagnosis, 2026-11-03
+
+The frozen signal cue did not improve native replay. The default-off
+`--diagnostic-odd-partial-cues` sidecar admits only cue-backed candidates
+through the existing direct-fundamental diagnostic guard. It does not boost
+their rank, force a string, lower a threshold or bypass later harmonic and
+assignment checks. Cue intervals start after the feature's last observed
+sample, and each decision uses only the interval active at that sample.
+
+Modal `frozen-cue-replay-20261103T2259Z`, app
+`ap-eOOpj5SiCoAPpXf684Oi3V`, completed at 23:02:07 UTC. All ten held-out
+cases have identical saved-baseline, new-OFF and new-ON output fingerprints
+and counts. ON also matches at block sizes 32/512/1024. The target-specific
+gate rejects the candidate because it recovers no additional target frames.
+
+| Equal-level nearby-note mixture | Before | After |
+| --- | ---: | ---: |
+| Expected MIDI 36 / string-mask 1 matches | 815/3450 (23.62%) | 815/3450 (23.62%) |
+| Aggregate expected assignments | 2987/6900 (43.29%) | 2987/6900 (43.29%) |
+| Wrong-note outputs | 3178 | 3178 |
+| Wrong-string outputs | 1548 | 1548 |
+| Extra outputs during unlabeled gaps | 668 | 668 |
+| Total false outputs | 5394 | 5394 |
+
+No control loses target or aggregate matches or increases an error count.
+These are expected-assignment match rates; false outputs are counted
+separately. The passing feature screen remains evidence that the cue exists,
+not evidence that the native policy uses it to recover notes.
+
+One follow-up, `frozen-cue-selection-20261103T2310Z`, app
+`ap-6bdpsEetQf7CRlyZ5q5uN3`, completed at 23:09:44 UTC. It reused the
+saved binary, waveform, labels, calibration and cue file, preserved the
+output fingerprint, and captured all 3450 target candidate rows and 5325
+outcome rows without truncation. Downloaded traces and cues match the
+recorded hashes. `tools/frozen_cue_diagnosis.py` joins each causal interval
+to the native matched-label flags and checks those flags against emitted
+note/string identities.
+
+The cue is active for 544 labeled decisions: 222 match the target (40.81%)
+and 322 do not. The misses break down as follows:
+
+| Target disposition | Wrong string | No target output |
+| --- | ---: | ---: |
+| Selected | 186 | 0 |
+| Coasting | 24 | 2 |
+| Below admission | 0 | 97 |
+| Selector eviction | 0 | 13 |
+| Total | 210 | 112 |
+
+All 210 wrong-string outputs retain MIDI 36 but use internal string index 1
+instead of the annotated index 0. None of the misses changes a detected
+MIDI 36 to another output pitch. Every below-admission miss exceeds the
+scalar score threshold; seven lack a direct peak, 47 fail the 0.85
+fundamental-ratio check, and 43 fail both. Relaxing a scalar threshold cannot
+address these observed prerequisites.
+
+The expected string carries another output in 148 misses, MIDI 35 in 147
+and MIDI 47 in one. The target descriptor prefers the expected string in
+153 of the 223 misses with a reported target candidate; the remaining 99
+entries are unreported. These observations motivate an assignment experiment,
+but do not establish that evicting a competitor would be safe. The next
+candidate must use signal-derived pitch and string evidence without reading
+the expected labels or forcing this particular note onto a known string.
+
+Require a strict gain above 815/3450 target matches in nearby_0dB, no target
+or aggregate loss and no higher false-output count in any control, plus exact
+OFF equality. Only a passing result advances to the ordinary-recording and
+protected corpus gates. Reports remain in `build/modal/`; the supplemental
+saved-trace analysis is
+`frozen-cue-selection-20261103T2310Z-output-diagnosis.json`.
+
+Fifty-six focused native tests and 28 Python tests pass, including causal
+boundaries, missing-trace rejection and separate wrong-string, changed-pitch
+and absent-output accounting. No broader corpus, callback timing, allocation,
+lifecycle or live-use result is claimed for this trial. Production defaults
+and installed output remain unchanged.

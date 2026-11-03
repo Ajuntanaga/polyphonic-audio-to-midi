@@ -510,7 +510,7 @@ struct PolyphonicPitchDetectorTestAccess final {
   static bool fundamental_admission_probe(
       PolyphonicPitchDetector& detector, bool enabled,
       FundamentalAdmissionCase scenario = FundamentalAdmissionCase::masked,
-      double scale = 1.0) noexcept {
+      double scale = 1.0, int cue_note = -1) noexcept {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.lowest_note = 32U;
@@ -520,6 +520,12 @@ struct PolyphonicPitchDetectorTestAccess final {
     config.response = 75U;
     M3_EXPECT_TRUE(detector.configure(48000.0, config));
     detector.set_fundamental_admission_for_diagnostics(enabled);
+    std::array<std::uint64_t, 2U> cue_mask{};
+    if (cue_note >= 0 && cue_note <= 127) {
+      const auto note = static_cast<std::size_t>(cue_note);
+      cue_mask[note / 64U] = std::uint64_t{1U} << (note % 64U);
+    }
+    detector.set_odd_partial_cue_mask_for_diagnostics(cue_mask);
     detector.fast_energy_ = scale;
     constexpr std::size_t target = 36U - 32U;
     const std::size_t parent =
@@ -551,6 +557,13 @@ struct PolyphonicPitchDetectorTestAccess final {
     for (const bool value : selected) total += value ? 1U : 0U;
     M3_EXPECT_TRUE(total <= config.max_polyphony);
     return selected[target];
+  }
+
+  static bool odd_partial_cues_clear_on_reset(PolyphonicPitchDetector& detector) noexcept {
+    detector.set_odd_partial_cue_mask_for_diagnostics({1U, 1U});
+    detector.reset();
+    return detector.diagnostic_odd_partial_cue_mask_[0U] == 0U &&
+           detector.diagnostic_odd_partial_cue_mask_[1U] == 0U;
   }
 
   static std::uint8_t calibrated_harmonic_admission_probe(
@@ -8395,6 +8408,20 @@ M3_TEST(native_detector_fundamental_admission_preserves_common_gain_and_silence)
       M3_EXPECT_EQ(decision.transitions.size(), 0U);
     }
   }
+}
+
+M3_TEST(native_detector_fundamental_admission_cue_is_note_specific_and_keeps_guards) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::FundamentalAdmissionCase;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, false, Case::masked, 1.0, 37));
+  M3_EXPECT_TRUE(Access::fundamental_admission_probe(detector, false, Case::masked, 1.0, 36));
+  for (const auto scenario : {Case::weak_fundamental, Case::no_direct_peak,
+       Case::below_threshold, Case::harmonic, Case::infeasible, Case::capacity,
+       Case::narrow}) {
+    M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, false, scenario, 1.0, 36));
+  }
+  M3_EXPECT_TRUE(Access::odd_partial_cues_clear_on_reset(detector));
 }
 
 M3_TEST(native_detector_calibrated_harmonic_admission_rejects_only_new_faint_partial) {

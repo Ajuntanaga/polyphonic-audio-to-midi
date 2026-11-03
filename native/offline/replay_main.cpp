@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -15,6 +16,7 @@
 #include "m3/state_image.hpp"
 #include "replay.hpp"
 #include "frequency_refinement_shadow.hpp"
+#include "frozen_note_cues.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace {
@@ -197,6 +199,7 @@ void usage(const char* program) {
       "[--diagnostic-coasting-harmonic-handoff] "
       "[--diagnostic-calibrated-harmonic-admission-guard] "
       "[--diagnostic-fundamental-admission] "
+      "[--diagnostic-odd-partial-cues FILE] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -278,6 +281,7 @@ int main(int argc, char** argv) {
   bool diagnostic_coasting_harmonic_handoff = false;
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
+  const char* diagnostic_odd_partial_cues_path = nullptr;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -580,6 +584,8 @@ int main(int argc, char** argv) {
       diagnostic_calibrated_harmonic_admission_guard = true;
     } else if (std::strcmp(argv[index], "--diagnostic-fundamental-admission") == 0) {
       diagnostic_fundamental_admission = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
+      diagnostic_odd_partial_cues_path = argv[++index];
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -766,6 +772,19 @@ int main(int argc, char** argv) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
+  }
+
+  m3::offline::FrozenNoteCues diagnostic_odd_partial_cues;
+  if (diagnostic_odd_partial_cues_path != nullptr) {
+    std::vector<std::uint8_t> cue_bytes;
+    if (diagnostic_fundamental_admission ||
+        !read_file(diagnostic_odd_partial_cues_path, cue_bytes) || cue_bytes.empty() ||
+        !diagnostic_odd_partial_cues.parse(
+            std::string_view(reinterpret_cast<const char*>(cue_bytes.data()), cue_bytes.size()),
+            wave.sample_rate, wave.mono_samples.size())) {
+      std::fprintf(stderr, "m3_replay: invalid frozen odd-partial cues\n");
+      return 1;
+    }
   }
 
   std::vector<m3::offline::ReplayLabel> labels;
@@ -1053,7 +1072,8 @@ int main(int argc, char** argv) {
           diagnostic_joint_spectral_ownership,
           joint_ownership_ablation,
           partial_motion_stream != nullptr ? &partial_motion_trace : nullptr,
-          diagnostic_fundamental_admission)) {
+          diagnostic_fundamental_admission,
+          diagnostic_odd_partial_cues_path != nullptr ? &diagnostic_odd_partial_cues : nullptr)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

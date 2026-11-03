@@ -1607,6 +1607,9 @@ void PolyphonicPitchDetector::set_runtime_config(
 }
 
 void PolyphonicPitchDetector::reset() noexcept {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_odd_partial_cue_mask_ = {};
+#endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   if (joint_residual_shadow_ != nullptr) {
     JointPitchResidual& residual = *joint_residual_shadow_;
@@ -4729,12 +4732,17 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_fundamental_admission_ && !narrow_profile) {
+  if ((diagnostic_fundamental_admission_ || diagnostic_odd_partial_cue_mask_[0U] != 0U ||
+       diagnostic_odd_partial_cue_mask_[1U] != 0U) && !narrow_profile) {
     // Trial only: a direct fundamental may be hidden by a neighbour's summed
     // harmonic score. Never lower the amplitude threshold, boost its rank, or
     // let an admission depend on another admission in this decision.
     const auto ordinary_eligible = raw_eligible;
     for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      const auto note = static_cast<std::size_t>(lowest_note_) + candidate;
+      if (!diagnostic_fundamental_admission_ &&
+          (diagnostic_odd_partial_cue_mask_[note / 64U] &
+           (std::uint64_t{1U} << (note % 64U))) == 0U) continue;
       if (ordinary_eligible[candidate] || playable_string_mask(candidate) == 0U ||
           scores[candidate] <= threshold ||
           fundamentals[candidate] < 0.85 * scores[candidate] ||

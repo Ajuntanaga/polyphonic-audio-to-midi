@@ -4,7 +4,7 @@ import numpy as np
 
 from tools.independent_partial_evidence import (
     CONFIG, FROZEN_SCREEN, _local_reference, compare_local_reference,
-    frozen_pair_screen, measure, score_frozen_screen, summarize,
+    frozen_cue_intervals, frozen_pair_screen, measure, score_frozen_screen, summarize,
 )
 
 
@@ -188,6 +188,21 @@ class IndependentPartialTests(unittest.TestCase):
         self.assertEqual(groups['clear_gap']['notes']['36']['first_cue_sample'], 13)
         with self.assertRaisesRegex(ValueError, 'clock'):
             score_frozen_screen(rows + [rows[0]], start_sample=5, end_sample=10, window_samples=4)
+
+    def test_cue_sidecar_waits_for_window_completion_and_expires_without_new_data(self):
+        cue = dict(partials=[None, None, dict(local_prominence_db=20), None,
+                            dict(local_prominence_db=20), None], odd_raw_agreement_cents=0)
+        rows = [dict(sample=sample, history_available=sample > 3, notes={'36': cue})
+                for sample in (3, 7, 15, 19)]
+        self.assertEqual(frozen_cue_intervals(rows, sample_count=20, hop_samples=4), [
+            dict(begin_sample=8, end_sample=12, midi_note=36),
+            dict(begin_sample=16, end_sample=20, midi_note=36)])
+        self.assertEqual(frozen_cue_intervals(rows[:3], sample_count=18, hop_samples=4)[-1],
+                         dict(begin_sample=16, end_sample=18, midi_note=36))
+        for invalid in (rows + [rows[0]], [dict(rows[1], sample=8)],
+                        [dict(rows[1], notes={'128': cue})]):
+            with self.assertRaises(ValueError):
+                frozen_cue_intervals(invalid, sample_count=20, hop_samples=4)
 
 
 if __name__ == '__main__':

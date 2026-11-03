@@ -15,11 +15,62 @@
 #include "m3/pitch_math.hpp"
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "replay.hpp"
+#include "frozen_note_cues.hpp"
 #include "residual_recovery.hpp"
 #include "test_support.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace {
+
+M3_TEST(offline_frozen_cues_are_causal_expiring_and_allocation_free) {
+  m3::offline::FrozenNoteCues cues;
+  M3_EXPECT_TRUE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n"
+      "16384\t17408\t36\n16384\t17408\t100\n"
+      "17408\t18432\t36\n19456\t20000\t37\n", 96000U, 20000U));
+  M3_EXPECT_TRUE(cues.matches(96000U, 20000U));
+  M3_EXPECT_FALSE(cues.matches(48000U, 20000U));
+  M3_EXPECT_FALSE(cues.matches(96000U, 20001U));
+  const auto allocations = m3::test::allocation_count();
+  for (std::uint64_t sample = 0U; sample < 16384U; ++sample)
+    M3_EXPECT_FALSE(cues.advance(sample));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  M3_EXPECT_TRUE(cues.advance(16384U));
+  M3_EXPECT_EQ(cues.mask()[0U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_EQ(cues.mask()[1U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_TRUE(cues.advance(17408U));
+  M3_EXPECT_EQ(cues.mask()[0U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_EQ(cues.mask()[1U], 0U);
+  M3_EXPECT_TRUE(cues.advance(18432U));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  M3_EXPECT_FALSE(cues.advance(19455U));
+  M3_EXPECT_TRUE(cues.advance(19456U));
+  M3_EXPECT_EQ(cues.mask()[0U], std::uint64_t{1U} << 37U);
+  M3_EXPECT_TRUE(cues.advance(20000U));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  cues.reset();
+  M3_EXPECT_FALSE(cues.advance(16383U));
+  M3_EXPECT_TRUE(cues.advance(16384U));
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+}
+
+M3_TEST(offline_frozen_cues_reject_malformed_or_ambiguous_clocks) {
+  m3::offline::FrozenNoteCues cues;
+  const std::string header = "m3_frozen_note_cues_v1\t96000\t1024\n";
+  for (const char* rows : {"16383\t17407\t36\n", "15360\t16384\t36\n",
+       "16384\t17408\t128\n", "16384\t17408\t-1\n", "16384\t17408\t36",
+       "16384\t18432\t36\n", "16384\t17408\t36\n16384\t17408\t36\n",
+       "17408\t18432\t36\n16384\t17408\t37\n", "19456\t20480\t36\n"}) {
+    M3_EXPECT_FALSE(cues.parse(header + rows, 96000U, 20000U));
+    M3_EXPECT_FALSE(cues.matches(96000U, 20000U));
+    M3_EXPECT_FALSE(cues.advance(19456U));
+    M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  }
+  M3_EXPECT_FALSE(cues.parse(header, 48000U, 20000U));
+  M3_EXPECT_FALSE(cues.parse(header, 96000U, 0U));
+  M3_EXPECT_FALSE(cues.parse("", 96000U, 20000U));
+  M3_EXPECT_TRUE(cues.parse(header, 96000U, 20000U));
+  M3_EXPECT_FALSE(cues.advance(19456U));
+}
 
 M3_TEST(offline_residual_recovery_requires_consecutive_fixed_audio_evidence) {
   using namespace m3::offline;
