@@ -587,3 +587,72 @@ contributions before adding measurements. Separate mixture contamination from
 calibration bias and history; promoting the existing likelihood wholesale has
 now failed its first screen. Any later candidate retains the acceptance and
 production gates above.
+
+### Which likelihood terms overturn correct string choices
+
+The next capture records the exact weighted, centered partial-detuning
+contribution for each feasible string, with a separate availability mask.
+Both fields exist only in offline diagnostics. Zero contribution does not
+mean missing evidence. The native calculation and production state are
+unchanged.
+
+`tools/string_likelihood_decomposition.py` separates the captured likelihood
+into profile, phase-derived cents, partial detuning and the remaining spectral
+descriptor contribution. It compares only playable, unreserved lanes: native
+profile costs are not computed for reserved lanes. It verifies the trace hash,
+sample clock and row count before reporting results. The margins below are
+expected-string likelihood minus competing-string likelihood; positive favors
+the expected string.
+
+| Changed assignments in the rejected shadow | Corrected: 607 | Spoiled: 936 |
+| --- | ---: | ---: |
+| Descriptor favors the expected string | 558 | 133 |
+| Descriptor favors the competing string | 49 | 803 |
+| Cents favor the expected string | 36 | 758 |
+| Both strings have detuning evidence | 221 | 178 |
+| Mean profile margin | -0.0615 | +0.0646 |
+| Mean cents margin | -0.9265 | +6.0796 |
+| Mean detuning margin | +1.9015 | -2.8259 |
+| Mean descriptor margin | +24.4819 | -18.7109 |
+
+In 623 of the 936 spoiled pairs, the descriptor contribution reverses a
+positive sum of the other likelihood terms. Detuning does so in 95 pairs;
+these are separate component comparisons, not disjoint error categories.
+Descriptor plus detuning reverse the profile-plus-cents preference in 799
+pairs. Among the corrected pairs, however, the descriptor rescues 350 that
+the other terms favor incorrectly. Removing this cue wholesale is therefore
+not supported by this diagnosis.
+
+The decomposition reproduces all 607 corrections and 936 spoiled assignments
+from the earlier shadow. Of 1,067 changes between two wrong strings, 429 have
+an unavailable expected lane and are excluded from component comparisons.
+None of these pairwise margins is a causal MIDI gain or an independent
+performance. The result is in
+`build/modal/string-likelihood-components-20261103.json`, from capture
+`string-detuning-evidence-20261103T1340Z`.
+
+The next bounded question is whether overlapping notes distort the spectral
+descriptor, or whether the isolated calibration itself is biased. Compare
+the existing isolated and chord observations at the same note/string, with
+attack and sustain kept separate. Examine corridor overlap and individual
+descriptor residuals before changing weights. Missing detuning evidence must
+remain distinct from a measured neutral result. Hold out whole recorded
+segments and preserve corpus identities; a single physical take cannot prove
+generalization across performances.
+
+Only a fixed, signal-derived reliability rule with more corrected than
+spoiled assignments and no loss of protected downstream recoveries should
+advance to one causal Modal replay. The existing ordinary, physical-unison,
+isolated, constructed-chord, false-output and real-time gates still apply.
+This finding narrows the research route; it does not accept a new output
+candidate.
+
+The Modal capture completed at 13:48:45 UTC. Ordinary chords and isolated
+string 8 retain their untraced control counts and fingerprints at blocks 32,
+512 and 1024; the new trace bytes are identical across those block sizes.
+All 46 native offline tests passed. A separate targeted cloud check passed
+the strengthened known-signal assertion for the detuning term's sign and
+weight. Fifty-seven Python checks passed, including the source contract.
+One focused review is complete. The installed bundle is unchanged; no new
+production build, callback deadline result, validator result or installation
+is claimed for this diagnostic slice.

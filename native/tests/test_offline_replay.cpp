@@ -868,8 +868,8 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 77U);
-      if (columns.size() != 77U) return;
+      M3_EXPECT_EQ(columns.size(), 79U);
+      if (columns.size() != 79U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
@@ -1216,6 +1216,8 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       point.harmonic_profile_q15 = {24000U, 7000U, 900U, 400U, 200U, 100U};
       point.harmonic_profile_q15[1U] =
           static_cast<std::uint16_t>(3000U + string * 1200U);
+      point.partial_detuning_valid_mask = 0x02U;
+      point.partial_detuning_q8[1U] = static_cast<std::int16_t>(string * 256U);
       point.confidence_q15 = 32767U;
       point.observation_count = 64U;
       point.quality = m3::CalibrationPointQuality::measured;
@@ -1260,16 +1262,46 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
     std::array<char, 8192U> line{};
     std::string captured;
     std::size_t rows = 0U, solitary = 0U, joint = 0U, posterior_rows = 0U;
+    std::size_t detuning_rows = 0U, detuning_nonzero_rows = 0U;
+    std::size_t weighted_detuning_rows = 0U;
     while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 77U);
-      if (columns.size() != 77U) return;
+      M3_EXPECT_EQ(columns.size(), 79U);
+      if (columns.size() != 79U) return;
       M3_EXPECT_EQ(std::stoul(columns[69]), 0U);
       M3_EXPECT_EQ(std::stoul(columns[70]), 0U);
       for (std::size_t column = 74U; column < 77U; ++column)
         M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
+      const auto detuning_mask = std::stoul(columns[77]);
+      const auto detuning = fields(columns[78], ',');
+      M3_EXPECT_EQ(detuning.size(), 8U);
+      M3_EXPECT_EQ(detuning_mask & ~std::stoul(columns[11]), 0U);
+      bool nonzero_detuning = false;
+      double detuning_sum = 0.0;
+      for (std::size_t lane = 0U; lane < detuning.size(); ++lane) {
+        const double contribution = std::stod(detuning[lane]);
+        M3_EXPECT_TRUE(std::isfinite(contribution));
+        if ((detuning_mask & (1U << lane)) == 0U)
+          M3_EXPECT_EQ(contribution, 0.0);
+        nonzero_detuning |= contribution != 0.0;
+        detuning_sum += contribution;
+      }
+      M3_EXPECT_NEAR(detuning_sum, 0.0, 1.0e-10);
+      // One-cent reference spacing makes the unsaturated quadratic's second
+      // difference -2/9: weight 2 and comparison scale 3 cents. Centering and
+      // the unknown observed offset cancel, so this checks sign and weight.
+      bool correct_curvature = false;
+      for (std::size_t lane = 0U; lane + 2U < detuning.size(); ++lane) {
+        if ((detuning_mask & (7U << lane)) != (7U << lane)) continue;
+        const double curvature = std::stod(detuning[lane + 2U]) -
+            2.0 * std::stod(detuning[lane + 1U]) + std::stod(detuning[lane]);
+        correct_curvature |= std::abs(curvature + 2.0 / 9.0) < 1.0e-10;
+      }
+      weighted_detuning_rows += correct_curvature ? 1U : 0U;
+      detuning_rows += detuning_mask != 0U ? 1U : 0U;
+      detuning_nonzero_rows += nonzero_detuning ? 1U : 0U;
       if (columns[71] == "1") {
         ++posterior_rows;
         M3_EXPECT_EQ(columns[72], "1");
@@ -1292,6 +1324,7 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
         M3_EXPECT_NEAR(after, 1.0, 1.0e-10);
       } else {
         M3_EXPECT_EQ(columns[72], "0");
+        M3_EXPECT_EQ(detuning_mask, 0U);
       }
       M3_EXPECT_EQ(fields(columns[40], ',').size(), 8U);
       M3_EXPECT_EQ(fields(columns[59], ',').size(), 8U);
@@ -1338,6 +1371,9 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
     M3_EXPECT_TRUE(solitary > 0U);
     M3_EXPECT_TRUE(joint > 0U);
     M3_EXPECT_TRUE(posterior_rows > 0U);
+    M3_EXPECT_TRUE(detuning_rows > 0U);
+    M3_EXPECT_TRUE(detuning_nonzero_rows > 0U);
+    M3_EXPECT_TRUE(weighted_detuning_rows > 0U);
     if (reference.empty()) reference = captured;
     M3_EXPECT_EQ(captured, reference);
     if (partition == 512U) {

@@ -448,6 +448,10 @@ void write_string_assignment_frame(
         std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
                      (*values)[string]);
     }
+    std::fprintf(trace.stream, "\t%u\t", unsigned(a.posterior_detuning_valid_mask));
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
+                   a.posterior_detuning_log_likelihood[string]);
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -2648,7 +2652,8 @@ bool run_detector_replay(const WaveData& wave,
         "profile_pair_primary\tprofile_pair_mask\tprofile_pair_current\t"
         "profile_pair_short\tprofile_pair_long\tfixed_context\tphase_shadow\t"
         "posterior_observation_available\tposterior_updated\tposterior_onset_strength\t"
-        "posterior_log_likelihood\tposterior_prior\tposterior_probability\n") < 0;
+        "posterior_log_likelihood\tposterior_prior\tposterior_probability\t"
+        "posterior_detuning_valid_mask\tposterior_detuning_log_likelihood\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {

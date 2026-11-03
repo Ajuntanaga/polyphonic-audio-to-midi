@@ -367,6 +367,10 @@ struct StringAssignmentDiagnostics final {
   std::array<double, kMaxVoices> posterior_log_likelihood{};
   std::array<double, kMaxVoices> posterior_prior{};
   std::array<double, kMaxVoices> posterior_probability{};
+  // The weighted, centered detuning term actually added to the likelihood.
+  // A valid comparison can contribute zero; keep availability separate.
+  std::uint8_t posterior_detuning_valid_mask{};
+  std::array<double, kMaxVoices> posterior_detuning_log_likelihood{};
 };
 #endif
 

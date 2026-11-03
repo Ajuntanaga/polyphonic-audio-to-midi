@@ -6086,6 +6086,17 @@ void PolyphonicPitchDetector::assign_m3_strings(
           posterior_frame.log_likelihood[string] +=
               kM3StringPosteriorDetuningWeight *
               (detuning_log_likelihoods[string] - detuning_center);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+          if (assignment_diagnostics_enabled_) {
+            auto& observation = assignment_diagnostics_[candidate];
+            observation.posterior_detuning_valid_mask =
+                static_cast<std::uint8_t>(
+                    observation.posterior_detuning_valid_mask | bit);
+            observation.posterior_detuning_log_likelihood[string] =
+                kM3StringPosteriorDetuningWeight *
+                (detuning_log_likelihoods[string] - detuning_center);
+          }
+#endif
         }
         if (phase.valid) {
           const double normalized_error =
