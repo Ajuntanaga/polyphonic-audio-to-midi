@@ -159,6 +159,8 @@ void usage(const char* program) {
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
+      "[--diagnostic-joint-spectral-ownership] "
       "[--fine-window-dump FILE --fine-window-note 0..127] "
       "[--fine-window-start SECONDS --fine-window-end SECONDS "
       "--fine-window-min-spacing SECONDS] "
@@ -188,6 +190,11 @@ void usage(const char* program) {
       "[--diagnostic-assignment-partial-correction] "
       "[--diagnostic-profile-pair-output-filter] "
       "[--diagnostic-profile-pair-continuity-echo] "
+      "[--diagnostic-state-local-open-prior] "
+      "[--diagnostic-coasting-harmonic-handoff] "
+      "[--diagnostic-calibrated-harmonic-admission-guard] "
+      "[--diagnostic-provisional-open-retention-guard] "
+      "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
       "[--diagnostic-selection-window-only | "
       "--diagnostic-correlation-shadow-only]] "
@@ -210,6 +217,10 @@ int main(int argc, char** argv) {
   m3::offline::CandidateDecisionTrace candidate_trace;
   const char* outcome_trace_path = nullptr;
   m3::offline::CandidateOutcomeTrace outcome_trace;
+  const char* midi_event_trace_path = nullptr;
+  m3::offline::MidiEventTrace midi_event_trace;
+  bool diagnostic_residual_recovery_continuity = false;
+  bool diagnostic_joint_spectral_ownership = false;
   const char* residual_admission_trace_path = nullptr;
   m3::offline::ResidualAdmissionTrace residual_admission_trace;
   const char* assignment_trace_path = nullptr;
@@ -255,6 +266,11 @@ int main(int argc, char** argv) {
   bool diagnostic_assignment_partial_correction = false;
   bool diagnostic_profile_pair_output_filter = false;
   bool diagnostic_profile_pair_continuity_echo = false;
+  bool diagnostic_state_local_open_prior = false;
+  bool diagnostic_coasting_harmonic_handoff = false;
+  bool diagnostic_calibrated_harmonic_admission_guard = false;
+  bool diagnostic_provisional_open_retention_guard = false;
+  bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
     const bool has_value = index + 1 < argc;
@@ -544,6 +560,27 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-profile-pair-continuity-echo") == 0) {
       diagnostic_profile_pair_continuity_echo = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-state-local-open-prior") == 0) {
+      diagnostic_state_local_open_prior = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-coasting-harmonic-handoff") == 0) {
+      diagnostic_coasting_harmonic_handoff = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-calibrated-harmonic-admission-guard") == 0) {
+      diagnostic_calibrated_harmonic_admission_guard = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-provisional-open-retention-guard") == 0) {
+      diagnostic_provisional_open_retention_guard = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-residual-pitch-recovery") == 0) {
+      diagnostic_residual_pitch_recovery = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-residual-recovery-continuity") == 0) {
+      diagnostic_residual_recovery_continuity = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-joint-spectral-ownership") == 0) {
+      diagnostic_joint_spectral_ownership = true;
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
     } else if (std::strcmp(argv[index],
@@ -563,6 +600,8 @@ int main(int argc, char** argv) {
       candidate_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--outcome-trace") == 0 && has_value) {
       outcome_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--midi-event-trace") == 0 && has_value) {
+      midi_event_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--assignment-trace") == 0 && has_value) {
       assignment_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--residual-admission-trace") == 0 && has_value) {
@@ -882,6 +921,15 @@ int main(int argc, char** argv) {
     candidate_trace.stream = candidate_trace_stream.get();
   }
   std::unique_ptr<std::FILE, int (*)(std::FILE*)> outcome_trace_stream(nullptr, &std::fclose);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> midi_event_trace_stream(nullptr, &std::fclose);
+  if (midi_event_trace_path != nullptr) {
+    midi_event_trace_stream.reset(std::fopen(midi_event_trace_path, "wb"));
+    if (midi_event_trace_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open MIDI event trace\n");
+      return 1;
+    }
+    midi_event_trace.stream = midi_event_trace_stream.get();
+  }
   if (outcome_trace_path != nullptr) {
     outcome_trace_stream.reset(std::fopen(outcome_trace_path, "wb"));
     if (outcome_trace_stream == nullptr) {
@@ -933,10 +981,39 @@ int main(int argc, char** argv) {
           diagnostic_profile_memory_partial_correction,
           diagnostic_assignment_partial_correction,
           diagnostic_profile_pair_output_filter,
-          diagnostic_profile_pair_continuity_echo)) {
+          diagnostic_profile_pair_continuity_echo,
+          diagnostic_state_local_open_prior,
+          diagnostic_coasting_harmonic_handoff,
+          diagnostic_calibrated_harmonic_admission_guard,
+          diagnostic_provisional_open_retention_guard,
+          diagnostic_residual_pitch_recovery,
+          midi_event_trace_stream != nullptr ? &midi_event_trace : nullptr,
+          diagnostic_residual_recovery_continuity,
+          diagnostic_joint_spectral_ownership)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
+  }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_residual_pitch_recovery) {
+    std::fprintf(stderr,
+        "m3_replay: residual_recovery proposals=%u selected_ticks=%u note_ons=%u\n",
+        result.residual_recovery_proposals, result.residual_recovery_selected_ticks,
+        result.residual_recovery_note_ons);
+  }
+#endif
+  if (midi_event_trace_stream != nullptr) {
+    if (midi_event_trace.failed || std::fflush(midi_event_trace_stream.get()) != 0) {
+      std::fprintf(stderr, "m3_replay: MIDI event trace write failed\n");
+      return 1;
+    }
+    std::fprintf(stderr, "m3_replay: midi_event_trace rows=%zu cap=%zu truncated=%u\n",
+        midi_event_trace.rows, m3::offline::MidiEventTrace::kMaximumRows,
+        midi_event_trace.truncated ? 1U : 0U);
+    if (midi_event_trace.truncated) {
+      std::fprintf(stderr, "m3_replay: refusing incomplete MIDI event trace\n");
+      return 1;
+    }
   }
   if (assignment_stream != nullptr) {
     if (assignment_trace.failed || std::fflush(assignment_stream.get()) != 0) {

@@ -20,6 +20,15 @@ namespace m3::offline {
 
 class FrequencyWindowCapture;
 
+// Actual public detector transitions, independent of tuner snapshots/labels.
+struct MidiEventTrace final {
+  static constexpr std::size_t kMaximumRows = 1000000U;
+  std::FILE* stream{};
+  std::size_t rows{};
+  bool truncated{};
+  bool failed{};
+};
+
 // Optional bounded timeline. Writing this stream never changes detector state.
 struct CandidateDecisionTrace final {
   static constexpr std::size_t kMaximumFrames = 90000U;
@@ -1726,6 +1735,9 @@ struct ReplayResult final {
   std::uint32_t partial_detuning_expected_best_frames{};
   double partial_detuning_margin_sum{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::uint32_t residual_recovery_proposals{};
+  std::uint32_t residual_recovery_selected_ticks{};
+  std::uint32_t residual_recovery_note_ons{};
   ReplayCounterfactualMetrics calibrated_dp_replacement{};
   std::array<ReplayCounterfactualMetrics,
              kAdjacentSpectralDuplicatePolicies.size()>
@@ -2265,7 +2277,15 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_profile_memory_partial_correction = false,
                          bool diagnostic_assignment_partial_correction = false,
                          bool diagnostic_profile_pair_output_filter = false,
-                         bool diagnostic_profile_pair_continuity_echo = false);
+                         bool diagnostic_profile_pair_continuity_echo = false,
+                         bool diagnostic_state_local_open_prior = false,
+                         bool diagnostic_coasting_harmonic_handoff = false,
+                         bool diagnostic_calibrated_harmonic_admission_guard = false,
+                         bool diagnostic_provisional_open_retention_guard = false,
+                         bool diagnostic_residual_pitch_recovery = false,
+                         MidiEventTrace* midi_event_trace = nullptr,
+                         bool diagnostic_residual_recovery_continuity = false,
+                         bool diagnostic_joint_spectral_ownership = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

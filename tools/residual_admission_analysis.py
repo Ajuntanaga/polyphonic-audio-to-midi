@@ -18,6 +18,10 @@ FLOAT_FIELDS = set((
     "base_residual added_residual residual_gain independent_energy "
     "fundamental_overlap score_ratio fund_ratio calibration_similarity"
 ).split())
+LANE_COST_FIELDS = tuple(f"lane_cost_{string}" for string in range(8))
+LANE_FIELDS = ["lane_fixed_context", "lane_selected_count", "lane_available_mask",
+               *LANE_COST_FIELDS]
+EXTENDED_FIELDS = FIELDS + LANE_FIELDS
 CLASSES = ("expected_free_string", "expected_unscoped", "expected_occupied_string",
            "already_emitted", "wrong_note", "extra_gap")
 
@@ -33,27 +37,48 @@ def _truth(row):
             else "expected_occupied_string")
 
 
+def _lane_choice(row):
+    """Native cost units, not posterior probabilities; no label-based ranking."""
+    ranked = sorted((row[f"lane_cost_{s}"], s) for s in range(8)
+                    if row["lane_available_mask"] & (1 << s))
+    if not ranked:
+        return None, None
+    margin = ranked[1][0] - ranked[0][0] if len(ranked) > 1 else None
+    if margin == 0.0:
+        return None, margin
+    return ranked[0][1], margin
+
+
 def analyze_stream(stream, capture):
     """Counts are sampled candidate observations, never extrapolated frame gains."""
     if capture.get("truncated") or capture.get("decimation") != 16:
         raise ValueError("complete decimation-16 capture required")
     reader = csv.DictReader(stream, delimiter="\t")
-    if reader.fieldnames != FIELDS:
+    if reader.fieldnames not in (FIELDS, EXTENDED_FIELDS):
         raise ValueError("unexpected residual-admission trace schema")
+    has_lane_costs = reader.fieldnames == EXTENDED_FIELDS
+    float_fields = FLOAT_FIELDS | (set(LANE_COST_FIELDS) if has_lane_costs else set())
     totals = Counter()
     population = Counter()
     policies = [dict(gain_floor=g, energy_floor=e, observations=Counter(),
                      sole_free_string=Counter(), calibrated_free_string=Counter(),
                      calibrated_wrong_string=0)
                 for g in GAIN_FLOORS for e in ENERGY_FLOORS]
+    persistent_pitch = {hold: Counter() for hold in (1, 3, 5)}
+    native_policies = [dict(sampled_observations_required=hold, margin_floor=margin,
+                            observations=Counter(), wrong_string=0,
+                            sole_available_string=0, labeled_string_unavailable=0)
+                       for hold in (1, 3, 5) for margin in (0.0, 8.0, 32.0, 64.0)]
+    pitch_runs = {}
+    lane_runs = [{} for _ in native_policies]
     previous_key = (-1, -1)
     previous_sample = -1
     for source in reader:
         if None in source or any(v is None for v in source.values()):
             raise ValueError("incomplete trace row")
-        row = {k: (float(v) if k in FLOAT_FIELDS else int(v))
+        row = {k: (float(v) if k in float_fields else int(v))
                for k, v in source.items() if k != "base_notes"}
-        if not all(math.isfinite(row[k]) for k in FLOAT_FIELDS):
+        if not all(math.isfinite(row[k]) for k in float_fields):
             raise ValueError("nonfinite residual evidence")
         key = (row["tick"], row["note"])
         if key <= previous_key or row["sample"] < previous_sample:
@@ -69,6 +94,17 @@ def analyze_stream(stream, capture):
                 or len(set(base_notes)) != len(base_notes) or row["note"] in base_notes
                 or any(not 0 <= n < 128 for n in base_notes)):
             raise ValueError("invalid base pitch model")
+        if has_lane_costs:
+            mask = row["lane_available_mask"]
+            if (row["lane_fixed_context"] not in (0, 1) or not 0 <= mask < 256
+                    or mask & ~row["free_mask"]
+                    or (row["lane_fixed_context"] and
+                        not 2 <= row["lane_selected_count"] <= 8)
+                    or (not row["lane_fixed_context"] and
+                        (mask or row["lane_selected_count"]))
+                    or any(row[f"lane_cost_{s}"] != 0.0 for s in range(8)
+                           if not mask & (1 << s))):
+                raise ValueError("invalid fixed-context lane evidence")
         totals["rows"] += 1
         truth = _truth(row)
         population[truth] += 1
@@ -104,6 +140,38 @@ def analyze_stream(stream, capture):
                 if row["expected_note"] and row["expected_mask"] and not (
                         row["expected_mask"] & (1 << row["calibration_string"])):
                     policy["calibrated_wrong_string"] += 1
+        # A fixed, audio-only screen from the prior capture. Persistence counts
+        # consecutive sampled rows for the same pitch, not native decisions.
+        if row["residual_gain"] < 0.2 or row["independent_energy"] < 0.0001:
+            continue
+        previous_tick, run = pitch_runs.get(row["note"], (-1, 0))
+        run = run + 1 if row["tick"] - previous_tick == capture["decimation"] else 1
+        pitch_runs[row["note"]] = (row["tick"], run)
+        for hold, counts in persistent_pitch.items():
+            if run >= hold:
+                counts[truth] += 1
+        if not has_lane_costs or not row["lane_fixed_context"]:
+            continue
+        best, margin = _lane_choice(row)
+        if best is None:
+            continue
+        for policy, runs in zip(native_policies, lane_runs):
+            if ((margin is None and policy["margin_floor"] > 0.0) or
+                    (margin is not None and margin < policy["margin_floor"])):
+                continue
+            previous_tick, previous_best, run = runs.get(row["note"], (-1, -1, 0))
+            run = (run + 1 if previous_best == best and
+                   row["tick"] - previous_tick == capture["decimation"] else 1)
+            runs[row["note"]] = (row["tick"], best, run)
+            if run < policy["sampled_observations_required"]:
+                continue
+            policy["observations"][truth] += 1
+            policy["sole_available_string"] += margin is None
+            if row["expected_note"] and row["expected_mask"]:
+                if not row["expected_mask"] & row["lane_available_mask"]:
+                    policy["labeled_string_unavailable"] += 1
+                elif not row["expected_mask"] & (1 << best):
+                    policy["wrong_string"] += 1
     if totals["rows"] != capture["rows"]:
         raise ValueError("trace rows disagree with capture metadata")
     for policy in policies:
@@ -113,8 +181,16 @@ def analyze_stream(stream, capture):
         policy["expected_pitch_samples"] = (counts["expected_free_string"] +
             counts["expected_unscoped"] + counts["expected_occupied_string"])
         policy["false_pitch_samples"] = counts["wrong_note"] + counts["extra_gap"]
+    for policy in native_policies:
+        policy["observations"] = {name: policy["observations"][name] for name in CLASSES}
     return dict(
         units="decimated candidate observations, not recovered MIDI frames",
         decimation=capture["decimation"], totals=dict(totals), population=dict(population),
         policies=policies, production_changed=False,
-        limitation="A pitch fit does not prove string ownership or sequence-level MIDI benefit.")
+        lane_costs_available=has_lane_costs,
+        persistence_screen=dict(gain_floor=0.2, energy_floor=0.0001,
+            pitch_observations={str(hold): {name: counts[name] for name in CLASSES}
+                                for hold, counts in persistent_pitch.items()},
+            native_lane_policies=native_policies if has_lane_costs else [],
+            units="Consecutive sampled observations; 3 span 32 native decision ticks."),
+        limitation="Fixed-context costs do not simulate admitting a pitch. Counts are not recovered MIDI frames.")

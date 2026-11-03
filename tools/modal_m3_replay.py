@@ -137,11 +137,17 @@ def _sha256(path: Path) -> str:
 
 
 def _parse_aggregate(tsv: str) -> dict[str, Any]:
-    rows = csv.DictReader(tsv.splitlines(), delimiter="\t")
+    # Sparse diagnostic tables can exceed csv's 128 KiB default in one field.
+    # Keep a finite cap and restore the caller's limit after reading the row.
+    previous_limit = csv.field_size_limit(8 * 1024 * 1024)
     try:
-        row = next(rows)
-    except StopIteration as error:
-        raise ValueError("replay produced no aggregate row") from error
+        rows = csv.DictReader(io.StringIO(tsv), delimiter="\t")
+        try:
+            row = next(rows)
+        except StopIteration as error:
+            raise ValueError("replay produced no aggregate row") from error
+    finally:
+        csv.field_size_limit(previous_limit)
     integer_fields = (
         "labeled",
         "matched",
@@ -1082,6 +1088,13 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         f"-apc{int(job.get('assignment_partial_correction', False))}"
         f"-ppof{int(job.get('profile_pair_output_filter', False))}"
         f"-ppce{int(job.get('profile_pair_continuity_echo', False))}"
+        f"-slop{int(job.get('state_local_open_prior', False))}"
+        f"-chh{int(job.get('coasting_harmonic_handoff', False))}"
+        f"-chag{int(job.get('calibrated_harmonic_admission_guard', False))}"
+        f"-porg{int(job.get('provisional_open_retention_guard', False))}"
+        f"-rpr{int(job.get('residual_pitch_recovery', False))}"
+        f"-rrc{int(job.get('residual_recovery_continuity', False))}"
+        f"-jso{int(job.get('joint_spectral_ownership', False))}"
         f"-fp{job.get('fretted_penalty_scale', -1.0)}"
         f"-cr{job.get('candidate_rescue_score_ratio', -1.0)}"
         f"-{job.get('candidate_rescue_fundamental_ratio', -1.0)}"
@@ -1123,6 +1136,7 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
     fine_window_path = output_path.with_suffix(".fine-windows.jsonl")
     candidate_trace_path = output_path.with_suffix(".candidate-trace.tsv")
     outcome_trace_path = output_path.with_suffix(".outcome-trace.tsv")
+    midi_event_path = output_path.with_suffix(".midi-events.tsv")
     assignment_path = output_path.with_suffix(".assignment.tsv")
     if bool(job.get("assignment_trace", False)):
         command += ["--assignment-trace", str(assignment_path)]
@@ -1131,6 +1145,8 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command += ["--residual-admission-trace", str(residual_admission_path)]
     if bool(job.get("outcome_trace", False)):
         command += ["--outcome-trace", str(outcome_trace_path)]
+    if bool(job.get("midi_event_trace", False)):
+        command += ["--midi-event-trace", str(midi_event_path)]
     if bool(job.get("candidate_trace", False)):
         command += ["--candidate-trace", str(candidate_trace_path),
                     "--candidate-trace-note", str(job["candidate_trace_note"]),
@@ -1167,6 +1183,20 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command += ["--diagnostic-profile-pair-output-filter"]
     if bool(job.get("profile_pair_continuity_echo", False)):
         command += ["--diagnostic-profile-pair-continuity-echo"]
+    if bool(job.get("state_local_open_prior", False)):
+        command += ["--diagnostic-state-local-open-prior"]
+    if bool(job.get("coasting_harmonic_handoff", False)):
+        command += ["--diagnostic-coasting-harmonic-handoff"]
+    if bool(job.get("calibrated_harmonic_admission_guard", False)):
+        command += ["--diagnostic-calibrated-harmonic-admission-guard"]
+    if bool(job.get("provisional_open_retention_guard", False)):
+        command += ["--diagnostic-provisional-open-retention-guard"]
+    if bool(job.get("residual_pitch_recovery", False)):
+        command += ["--diagnostic-residual-pitch-recovery"]
+    if bool(job.get("residual_recovery_continuity", False)):
+        command += ["--diagnostic-residual-recovery-continuity"]
+    if bool(job.get("joint_spectral_ownership", False)):
+        command += ["--diagnostic-joint-spectral-ownership"]
     fretted_penalty_scale = float(job.get("fretted_penalty_scale", -1.0))
     if fretted_penalty_scale >= 0.0:
         command += [
@@ -1258,6 +1288,13 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             raise RuntimeError("outcome trace is missing or incomplete")
         outcome_metadata = {"frames": int(found[1]), "cap": int(found[2]),
                             "truncated": False, "sha256": _sha256(outcome_trace_path)}
+    midi_event_metadata = None
+    if bool(job.get("midi_event_trace", False)):
+        found = re.search(r"midi_event_trace rows=(\d+) cap=(\d+) truncated=([01])", completed.stderr)
+        if found is None or found[3] != "0":
+            raise RuntimeError("MIDI event trace is missing or incomplete")
+        midi_event_metadata = {"rows": int(found[1]), "cap": int(found[2]),
+                               "truncated": False, "sha256": _sha256(midi_event_path)}
     assignment_metadata = None
     if bool(job.get("assignment_trace", False)):
         found = re.search(r"assignment_trace rows=(\d+) cap=(\d+) truncated=([01]) sampled_frames=(\d+) decimation=(\d+)", completed.stderr)
@@ -1267,6 +1304,13 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "rows": int(found[1]), "cap": int(found[2]), "truncated": False,
             "sampled_frames": int(found[4]), "decimation": int(found[5]),
             "sha256": _sha256(assignment_path)}
+    recovery_metadata = None
+    if bool(job.get("residual_pitch_recovery", False)):
+        found = re.search(r"residual_recovery proposals=(\d+) selected_ticks=(\d+) note_ons=(\d+)", completed.stderr)
+        if found is None:
+            raise RuntimeError("residual recovery counters are missing")
+        recovery_metadata = {"proposals": int(found[1]), "selected_ticks": int(found[2]),
+                             "note_ons": int(found[3])}
     residual_admission_metadata = None
     if bool(job.get("residual_admission_trace", False)):
         found = re.search(r"residual_admission_trace rows=(\d+) cap=(\d+) truncated=([01]) sampled_frames=(\d+) candidates=(\d+) decimation=(\d+)", completed.stderr)
@@ -1279,7 +1323,8 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
     if (bool(job.get("persist_tsv", False)) or bool(job.get("fine_window_dump", False))
             or bool(job.get("candidate_trace", False)) or bool(job.get("outcome_trace", False))
             or bool(job.get("residual_admission_trace", False))
-            or bool(job.get("assignment_trace", False))):
+            or bool(job.get("assignment_trace", False))
+            or bool(job.get("midi_event_trace", False))):
         volume.commit()
     result = _parse_aggregate(completed.stdout)
     result.update(
@@ -1291,6 +1336,9 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "outcome_trace_path": str(outcome_trace_path.relative_to(MOUNT_ROOT))
                 if bool(job.get("outcome_trace", False)) else "",
             "outcome_trace_capture": outcome_metadata,
+            "midi_event_path": str(midi_event_path.relative_to(MOUNT_ROOT))
+                if bool(job.get("midi_event_trace", False)) else "",
+            "midi_event_capture": midi_event_metadata,
             "residual_admission_path": str(residual_admission_path.relative_to(MOUNT_ROOT))
                 if bool(job.get("residual_admission_trace", False)) else "",
             "residual_admission_capture": residual_admission_metadata,
@@ -1327,6 +1375,14 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "assignment_partial_correction": bool(job.get("assignment_partial_correction", False)),
             "profile_pair_output_filter": bool(job.get("profile_pair_output_filter", False)),
             "profile_pair_continuity_echo": bool(job.get("profile_pair_continuity_echo", False)),
+            "state_local_open_prior": bool(job.get("state_local_open_prior", False)),
+            "coasting_harmonic_handoff": bool(job.get("coasting_harmonic_handoff", False)),
+            "calibrated_harmonic_admission_guard": bool(job.get("calibrated_harmonic_admission_guard", False)),
+            "provisional_open_retention_guard": bool(job.get("provisional_open_retention_guard", False)),
+            "residual_pitch_recovery": bool(job.get("residual_pitch_recovery", False)),
+            "residual_recovery_counters": recovery_metadata,
+            "residual_recovery_continuity": bool(job.get("residual_recovery_continuity", False)),
+            "joint_spectral_ownership": bool(job.get("joint_spectral_ownership", False)),
             "fretted_penalty_scale": fretted_penalty_scale,
             "candidate_rescue_score_ratio": candidate_rescue_score_ratio,
             "candidate_rescue_fundamental_ratio": candidate_rescue_fundamental_ratio,
@@ -1420,12 +1476,15 @@ def analyze_candidate_capture(row: dict[str, Any]) -> dict[str, Any]:
     sys.path.insert(0, "/opt/m3")
     from candidate_outcome_analysis import (
         analyze_candidate_population, analyze_label_failures, analyze_group_failures,
+        analyze_fret_relief, analyze_calibrated_harmonic_admission,
     )
 
     mode = row.get("analysis_kind", "population")
     analyzers = {"population": analyze_candidate_population,
                  "label_failures": analyze_label_failures,
-                 "group_failures": analyze_group_failures}
+                 "group_failures": analyze_group_failures,
+                 "fret_relief": analyze_fret_relief,
+                 "calibrated_harmonic_admission": analyze_calibrated_harmonic_admission}
     if mode not in analyzers:
         raise ValueError("unknown candidate analysis kind")
 
@@ -1442,7 +1501,14 @@ def analyze_candidate_capture(row: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("outcome trace frame count disagrees with capture metadata")
     result.update(dataset=row["dataset"], block=row["block"],
                   binary_sha256=row["binary_sha256"], trace_path=row["outcome_trace_path"])
-    output_path = path.with_suffix(f".{mode}.json")
+    # Keep previous interpretations when the analyzer schema changes.
+    output_path = path.with_suffix(f".{mode}.{result['schema']}.json")
+    if len(output_path.name.encode("utf-8")) > 255:
+        # Replay parameter names can already fill most of NAME_MAX. The
+        # result retains trace_path, while this digest keeps its name bounded.
+        trace_id = hashlib.sha256(path.name.encode("utf-8")).hexdigest()[:24]
+        output_path = path.with_name(
+            f"analysis-{trace_id}.{mode}.{result['schema']}.json")
     output_path.write_text(json.dumps(result, indent=2) + "\n")
     volume.commit()
     result["result_path"] = str(output_path.relative_to(MOUNT_ROOT))
@@ -1465,6 +1531,12 @@ def _candidate_analysis(report: str, output: str, mode: str) -> None:
 
 
 @app.local_entrypoint()
+def calibrated_harmonic_admission(report: str,
+        output: str = "build/modal/calibrated-harmonic-admission.json") -> None:
+    _candidate_analysis(report, output, "calibrated_harmonic_admission")
+
+
+@app.local_entrypoint()
 def candidate_population(report: str,
                          output: str = "build/modal/candidate-population.json") -> None:
     _candidate_analysis(report, output, "population")
@@ -1474,6 +1546,12 @@ def candidate_population(report: str,
 def label_failure_analysis(report: str,
                            output: str = "build/modal/label-failure-analysis.json") -> None:
     _candidate_analysis(report, output, "label_failures")
+
+
+@app.local_entrypoint()
+def fret_relief_analysis(report: str,
+                         output: str = "build/modal/fret-relief-analysis.json") -> None:
+    _candidate_analysis(report, output, "fret_relief")
 
 
 @app.local_entrypoint()
@@ -1624,6 +1702,13 @@ def sweep(
     assignment_partial_correction: bool = False,
     profile_pair_output_filter: bool = False,
     profile_pair_continuity_echo: bool = False,
+    state_local_open_prior: bool = False,
+    coasting_harmonic_handoff: bool = False,
+    calibrated_harmonic_admission_guard: bool = False,
+    provisional_open_retention_guard: bool = False,
+    residual_pitch_recovery: bool = False,
+    residual_recovery_continuity: bool = False,
+    joint_spectral_ownership: bool = False,
     fretted_penalty_scale: float = -1.0,
     candidate_rescue_score_ratio: float = -1.0,
     candidate_rescue_fundamental_ratio: float = -1.0,
@@ -1641,6 +1726,7 @@ def sweep(
     fine_window_min_spacing: float = 0.5,
     candidate_trace: bool = False,
     outcome_trace: bool = False,
+    midi_event_trace: bool = False,
     residual_admission_trace: bool = False,
     assignment_trace: bool = False,
     candidate_trace_note: int = 40,
@@ -1766,6 +1852,7 @@ def sweep(
             "fine_window_min_spacing": fine_window_min_spacing,
             "candidate_trace": candidate_trace,
             "outcome_trace": outcome_trace,
+            "midi_event_trace": midi_event_trace,
             "residual_admission_trace": residual_admission_trace,
             "assignment_trace": assignment_trace,
             "candidate_trace_note": candidate_trace_note,
@@ -1792,6 +1879,13 @@ def sweep(
             "assignment_partial_correction": assignment_partial_correction,
             "profile_pair_output_filter": profile_pair_output_filter,
             "profile_pair_continuity_echo": profile_pair_continuity_echo,
+            "state_local_open_prior": state_local_open_prior,
+            "coasting_harmonic_handoff": coasting_harmonic_handoff,
+            "calibrated_harmonic_admission_guard": calibrated_harmonic_admission_guard,
+            "provisional_open_retention_guard": provisional_open_retention_guard,
+            "residual_pitch_recovery": residual_pitch_recovery,
+            "residual_recovery_continuity": residual_recovery_continuity,
+            "joint_spectral_ownership": joint_spectral_ownership,
             "fretted_penalty_scale": fretted_penalty_scale,
             "candidate_rescue_score_ratio": candidate_rescue_score_ratio,
             "candidate_rescue_fundamental_ratio": candidate_rescue_fundamental_ratio,

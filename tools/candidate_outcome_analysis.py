@@ -33,6 +33,14 @@ FLOAT_FIELDS = set(("score_ratio fund_ratio band_score band_fund best_cal second
 SCHEMAS = {"# m3_candidate_outcome_v1\n", "# m3_candidate_outcome_v2\n"}
 OUTCOMES = ("correct_voice", "wrong_note", "wrong_string", "extra_gap_output")
 HEADER = "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n"
+# Native score includes the fundamental with weight 1 plus nonnegative upper
+# partials. This fraction is not the score/admission-threshold ratio.
+FUNDAMENTAL_SHARE_BINS = (.15, .2, .5, .7, .9, 1)
+NATIVE_FUNDAMENTAL_SHARE_FLOOR = .2
+RATIO_UNITS = {
+    "score_ratio": "candidate score / admission threshold; may exceed one",
+    "fund_ratio": "fundamental energy / weighted total harmonic energy; fraction in [0,1]",
+}
 
 
 def _tuples(text: str, width: int) -> list[tuple[int, ...]]:
@@ -70,6 +78,8 @@ def _candidates(frame: dict) -> dict[int, dict]:
                for name, value in zip(fields, values)}
         if any(not math.isfinite(row[name]) for name in FLOAT_FIELDS & row.keys()):
             raise ValueError("nonfinite candidate feature")
+        if not 0 <= row["fund_ratio"] <= 1:
+            raise ValueError("fundamental share must be in [0,1]")
         if not 0 <= row["note"] <= 127 or row["note"] in result:
             raise ValueError("invalid or duplicate candidate note")
         result[row["note"]] = row
@@ -98,7 +108,7 @@ def _features(candidate: dict | None, voice: tuple, frame: dict) -> dict[str, st
         "local": str(c["local"]), "evidence": str(c["evidence"]),
         "cal_direct": str(c["cal_direct"]),
         "score_ratio": _bucket(c["score_ratio"], (.3, .4, .6, .8, 1, 1.5, 2)),
-        "fund_ratio": _bucket(c["fund_ratio"], (.8, 1, 1.5, 2, 3, 5)),
+        "fund_ratio": _bucket(c["fund_ratio"], FUNDAMENTAL_SHARE_BINS),
         "band_score": _bucket(c["band_score"], (.01, .03, .1, .3, 1)),
         "band_fund": _bucket(c["band_fund"], (.01, .03, .1, .3, 1)),
         "cal_margin": _bucket(c["best_cal"] - c["second_cal"], (.005, .01, .02, .05, .1)),
@@ -195,10 +205,229 @@ def compare_streams(control: TextIO, trial: TextIO,
             for key in ("labeled", "matched", "false_positive_voices", *aliases.values()):
                 if total[key] != int(expected[key]):
                     raise ValueError(f"trace/report mismatch for {key}: {total[key]} != {expected[key]}")
-    return dict(schema="m3_candidate_outcome_comparison_v1", control=dict(totals[0]), trial=dict(totals[1]),
+    return dict(schema="m3_candidate_outcome_comparison_v2", ratio_units=RATIO_UNITS,
+                control=dict(totals[0]), trial=dict(totals[1]),
                 changes=dict(deltas), label_changes=dict(label_changes.most_common()),
                 feature_outcomes={key: dict(value) for key, value in sorted(axes.items())}, examples=examples,
                 limitation="Associations only: state is observed after each decision. A proposed rule requires causal replay.")
+
+
+def analyze_calibrated_harmonic_admission(stream: TextIO, expected: dict | None = None) -> dict:
+    """Measure the existing below-threshold calibration exception at +19.
+
+    This is a screen of captured decisions, not a proposed suppression policy.
+    Labels score the screen only. The preceding frame identifies an already
+    active candidate because current tracking fields are post-decision.
+    """
+    if stream.readline() not in SCHEMAS or stream.readline() != HEADER:
+        raise ValueError("unsupported outcome trace schema")
+    totals = Counter()
+    observations = defaultdict(Counter)
+    starts = defaultdict(Counter)
+    controls = Counter()
+    features = defaultdict(Counter)
+    examples = defaultdict(list)
+    previous_active = set()
+    last_sample = -1
+    for line in stream:
+        frame = _frame(line)
+        if frame["sample"] <= last_sample:
+            raise ValueError("samples are not strictly increasing")
+        has_preceding_frame = last_sample >= 0
+        last_sample = frame["sample"]
+        candidates = _candidates(frame)
+        totals["snapshots"] += 1
+        totals["labeled"] += len(frame["labels"])
+        totals["matched"] += len(frame["matched"])
+        for voice in frame["voices"]:
+            totals[OUTCOMES[voice[3]]] += 1
+        notes = {note for _, note, _ in frame["labels"]}
+        selected_count = sum(c["selection"] == 4 for c in candidates.values())
+        for upper_note in sorted(notes):
+            if upper_note - 19 not in notes:
+                continue
+            controls["labeled_plus19_pair_frames"] += 1
+            upper = candidates.get(upper_note)
+            if upper is not None:
+                controls["upper_captured"] += 1
+                controls["upper_selected"] += upper["selection"] == 4
+                controls["upper_calibrated_direct"] += bool(upper["cal_direct"])
+                controls["upper_below_threshold"] += upper["score_ratio"] <= 1
+        if not frame["quiet"]:
+            for upper in candidates.values():
+                lower = candidates.get(upper["note"] - 19)
+                if (upper["selection"] != 4 or not upper["cal_direct"] or
+                        upper["score_ratio"] > 1 or upper["playable_mask"].bit_count() != 2 or
+                        lower is None or lower["selection"] != 4 or not lower["direct"] or
+                        lower["score_ratio"] <= upper["score_ratio"]):
+                    continue
+                upper_fund = upper["score_ratio"] * upper["fund_ratio"]
+                lower_fund = lower["score_ratio"] * lower["fund_ratio"]
+                if lower_fund <= 0 or upper_fund >= .70 * lower_fund:
+                    continue
+                if not notes:
+                    outcome = "unlabeled_gap"
+                elif upper["note"] in notes:
+                    outcome = "expected_upper_pitch"
+                else:
+                    outcome = "unexpected_upper_pitch"
+                stage = ("established" if upper["note"] in previous_active else
+                         "starting" if has_preceding_frame else "initial_state_unknown")
+                observations[stage][outcome] += 1
+                active_start = has_preceding_frame and upper["active"] and stage == "starting"
+                if active_start:
+                    starts[stage][outcome] += 1
+                feature_values = {
+                    "selected_count": str(selected_count),
+                    "same_best_string": str(upper["best_string"] == lower["best_string"]),
+                    "fundamental_ratio": _bucket(upper_fund / lower_fund, (.05, .1, .2, .4, .7)),
+                    "score_ratio": _bucket(upper["score_ratio"] / lower["score_ratio"], (.05, .1, .2, .4, .7)),
+                    "upper_phase_valid": str(upper["phase_valid"]),
+                    "lower_phase_valid": str(lower["phase_valid"]),
+                    "lower_expected_pitch": str(lower["note"] in notes),
+                }
+                for name, value in feature_values.items():
+                    features[f"{stage}/{name}/{value}"][outcome] += 1
+                if active_start and len(examples[outcome]) < 16:
+                    examples[outcome].append(dict(sample=frame["sample"], labels=frame["labels"],
+                        upper=upper["note"], lower=lower["note"], selected_count=selected_count,
+                        upper_score_ratio=upper["score_ratio"], lower_score_ratio=lower["score_ratio"],
+                        fundamental_ratio=upper_fund / lower_fund,
+                        upper_best_string=upper["best_string"], lower_best_string=lower["best_string"],
+                        upper_phase_valid=upper["phase_valid"], lower_phase_valid=lower["phase_valid"]))
+        previous_active = {c["note"] for c in candidates.values() if c["active"]}
+    aliases = {"wrong_note": "false_wrong_note_voices", "wrong_string": "false_wrong_string_voices",
+               "extra_gap_output": "false_gap_voices"}
+    for original, aggregate in aliases.items():
+        totals[aggregate] = totals[original]
+    totals["false_positive_voices"] = sum(totals[x] for x in aliases)
+    if expected is not None:
+        for key in ("labeled", "matched", "false_positive_voices", *aliases.values()):
+            if totals[key] != int(expected[key]):
+                raise ValueError(f"trace/report mismatch for {key}: {totals[key]} != {expected[key]}")
+    return dict(schema="m3_calibrated_harmonic_admission_v1", totals=dict(totals),
+                observations={k: dict(v) for k, v in observations.items()},
+                active_starts={k: dict(v) for k, v in starts.items()},
+                controls=dict(controls), features={k: dict(v) for k, v in sorted(features.items())},
+                examples=dict(examples), ratio_units=RATIO_UNITS,
+                limitation="Selected baseline observations only, not recovered MIDI frames. "
+                           "Phase validity and reported onset do not prove an independent source. "
+                           "Initial active state is unknown; active starts require a preceding frame.")
+
+
+def analyze_fret_relief(stream: TextIO, expected: dict | None = None) -> dict:
+    """Screen fixed, small score relief using baseline selector evidence only.
+
+    Positive atomic groups and calibrated penalty waivers are excluded. Rebuilt
+    edge scores must agree with the captured best score before they are scored.
+    Labels and rendered state describe outcomes; they never select candidates.
+    Counts are candidate observations, not counterfactual MIDI or frame gains.
+    """
+    if stream.readline() != "# m3_candidate_outcome_v2\n" or stream.readline() != HEADER:
+        raise ValueError("fret relief requires outcome trace schema v2")
+    if expected and (expected.get("max_fret", 24) != 24 or expected.get("selector_margin", -1) != -1):
+        raise ValueError("fret relief requires the baseline 24-fret selector")
+    opens = (32, 36, 40, 44, 48, 52, 56, 60)
+    caps = (.025, .05)
+    totals = Counter()
+    exclusions = Counter()
+    deficit_bins = Counter()
+    probes = defaultdict(Counter)
+    last_sample = -1
+    for line in stream:
+        frame = _frame(line)
+        if frame["sample"] <= last_sample:
+            raise ValueError("samples are not strictly increasing")
+        last_sample = frame["sample"]
+        labels = frame["labels"]
+        if (len({label[0] for label in labels}) != len(labels) or
+                any(not 0 <= note <= 127 or not 0 <= mask <= 255 for _, note, mask in labels)):
+            raise ValueError("invalid or duplicate label")
+        totals["snapshots"] += 1
+        totals["labeled"] += len(labels)
+        totals["matched"] += len(frame["matched"])
+        for voice in frame["voices"]:
+            totals[OUTCOMES[voice[3]]] += 1
+        for c in _candidates(frame).values():
+            if "selector_pool_member" not in c:
+                raise ValueError("fret relief requires v2 candidate fields")
+            if (frame["quiet"] or c["selection"] != 3 or not c["selector_pool_member"] or
+                    c["selector_positive_mask"] or c["selector_raw_score"] <= 0 or
+                    c["score_ratio"] < .2 or not c["direct"] or
+                    not (c["local"] or c["evidence"])):
+                continue
+            totals["eligible_observations"] += 1
+            mask, note = c["selector_option_mask"], c["note"]
+            if not 0 < mask <= 255 or mask & ~c["playable_mask"]:
+                exclusions["invalid_option_mask"] += 1
+                continue
+            frets = {i: note - open_note for i, open_note in enumerate(opens) if mask & (1 << i)}
+            if any(not 0 <= fret <= 24 for fret in frets.values()):
+                exclusions["invalid_fret"] += 1
+                continue
+            scores = {i: c["selector_raw_score"] - (.20 + .005 * fret if fret > 0 and
+                      (c["selector_open_count"] >= 2 or note > opens[-1]) else 0)
+                      for i, fret in frets.items()}
+            best = max(scores.values())
+            if best > 1e-9 or abs(best - c["selector_best_adjusted_score"]) > 2e-7:
+                exclusions["score_reconstruction_mismatch"] += 1
+                continue
+            totals["reconstructed_observations"] += 1
+            register = "low" if note < 48 else "middle" if note < 60 else "high"
+            topology = "single_option" if mask.bit_count() == 1 else "multiple_options"
+            # Repeat the native direct-peak energy floor for readable strata.
+            # This is not independent evidence or a newly fitted classifier.
+            evidence = ("direct_local_native_fundamental" if c["local"] and
+                        c["fund_ratio"] >= NATIVE_FUNDAMENTAL_SHARE_FLOOR else "other")
+            deficit = -best
+            bucket = "le_0.025" if deficit <= .025 else "le_0.05" if deficit <= .05 else "gt_0.05"
+            deficit_bins[(register, topology, evidence, bucket)] += 1
+            targets = [target for _, pitch, target in labels if pitch == note]
+            target_mask = 0
+            for target in targets:
+                target_mask |= target
+            rendered_mask = 0
+            for voice in frame["voices"]:
+                if voice[1] == note and 0 <= voice[2] < 8:
+                    rendered_mask |= 1 << voice[2]
+            for cap in caps:
+                newly_positive = sum(1 << i for i, score in scores.items() if score + cap > 1e-9)
+                if not newly_positive:
+                    continue
+                if not labels:
+                    outcome = "unlabeled_gap_candidate"
+                elif not targets:
+                    outcome = "unexpected_pitch"
+                elif any(target == 0 for target in targets):
+                    outcome = "expected_pitch_string_unspecified"
+                elif newly_positive & target_mask and newly_positive & ~target_mask:
+                    outcome = "mixed_expected_and_wrong_string_options"
+                elif not newly_positive & target_mask:
+                    outcome = "wrong_string_options_only"
+                elif newly_positive & ~rendered_mask:
+                    outcome = "expected_options_only_with_missing_lane"
+                else:
+                    outcome = "expected_options_only_already_rendered"
+                probes[(cap, register, topology, evidence)][outcome] += 1
+    aliases = {"wrong_note": "false_wrong_note_voices", "wrong_string": "false_wrong_string_voices",
+               "extra_gap_output": "false_gap_voices"}
+    for original, aggregate in aliases.items():
+        totals[aggregate] = totals[original]
+    totals["false_positive_voices"] = sum(totals[x] for x in aliases)
+    if expected is not None:
+        for key in ("labeled", "matched", "false_positive_voices", *aliases.values()):
+            if totals[key] != int(expected[key]):
+                raise ValueError(f"trace/report mismatch for {key}: {totals[key]} != {expected[key]}")
+    return dict(schema="m3_fret_relief_screen_v2", ratio_units=RATIO_UNITS,
+                evidence_definition="direct/local candidates with fundamental share >=0.20 repeat "
+                                    "the native direct-peak floor; not independent classification evidence",
+                totals=dict(totals), exclusions=dict(exclusions),
+                deficit_bins=[dict(register=r, topology=t, evidence=e, deficit=b, observations=n)
+                              for (r, t, e, b), n in sorted(deficit_bins.items())],
+                probes=[dict(cap=cap, register=r, topology=t, evidence=e, outcomes=dict(counts))
+                        for (cap, r, t, e), counts in sorted(probes.items())],
+                limitation="Fixed baseline M3/24-fret scores; observations only. No DP competition, "
+                           "hysteresis or MIDI replay. Positive options are not recovered frames.")
 
 
 def analyze_candidate_population(stream: TextIO, expected: dict | None = None) -> dict:
@@ -284,7 +513,7 @@ def analyze_candidate_population(stream: TextIO, expected: dict | None = None) -
             margin = c["best_cal"] - c["second_cal"]
             features = {
                 "score": _bucket(c["score_ratio"], (.3, .4, .6, .8, 1, 1.5, 2)),
-                "fundamental": _bucket(c["fund_ratio"], (.8, 1, 1.5, 2, 3, 5)),
+                "fundamental": _bucket(c["fund_ratio"], FUNDAMENTAL_SHARE_BINS),
                 "band_score": _bucket(c["band_score"], (.01, .03, .1, .3, 1)),
                 "band_fundamental": _bucket(c["band_fund"], (.01, .03, .1, .3, 1)),
                 "calibration": _bucket(c["best_cal"], (.8, .9, .95, .98)),
@@ -299,15 +528,17 @@ def analyze_candidate_population(stream: TextIO, expected: dict | None = None) -
                 axes[f"{strength}/{name}/{value}"][outcome] += 1
             # A small, declared family of label-free probes, not a fitted model.
             # None uses selection, emitted voices, phase, onset or group state.
-            probes = {"all": True, "fundamental_ge_1": c["fund_ratio"] >= 1,
+            probes = {"all": True, "fundamental_share_ge_020":
+                          c["fund_ratio"] >= NATIVE_FUNDAMENTAL_SHARE_FLOOR,
                       "calibrated_direct": bool(c["cal_direct"]),
                       "calibrated_best_feasible": calibrated_best,
                       "calibration_ge_095_margin_ge_005": calibrated_best and
                           c["best_cal"] >= .95 and margin >= .05,
                       "calibration_ge_095_margin_ge_010": calibrated_best and
                           c["best_cal"] >= .95 and margin >= .1,
-                      "fund_ge_1_cal_ge_095_margin_ge_010": calibrated_best and
-                          c["fund_ratio"] >= 1 and c["best_cal"] >= .95 and margin >= .1,
+                      "fund_share_ge_020_cal_ge_095_margin_ge_010": calibrated_best and
+                          c["fund_ratio"] >= NATIVE_FUNDAMENTAL_SHARE_FLOOR and
+                          c["best_cal"] >= .95 and margin >= .1,
                       "persistent_10": runs[note] >= 10,
                       "persistent_30": runs[note] >= 30,
                       "persistent_30_cal_ge_095_margin_ge_010": runs[note] >= 30 and
@@ -319,7 +550,10 @@ def analyze_candidate_population(stream: TextIO, expected: dict | None = None) -
         for key in ("labeled", "matched"):
             if totals[key] != int(expected[key]):
                 raise ValueError(f"trace/report mismatch for {key}: {totals[key]} != {expected[key]}")
-    return dict(schema="m3_candidate_population_v1", totals=dict(totals),
+    return dict(schema="m3_candidate_population_v2", ratio_units=RATIO_UNITS,
+                fundamental_probe="The 0.20 share floor repeats native direct-peak support; "
+                                  "it is not an independent classifier",
+                totals=dict(totals),
                 label_coverage=dict(coverage), per_label={k: dict(v) for k, v in labels.items()},
                 feature_population={k: dict(v) for k, v in sorted(axes.items())},
                 rule_population={k: dict(v) for k, v in sorted(rules.items())},
@@ -467,7 +701,7 @@ def analyze_label_failures(stream: TextIO, expected: dict | None = None,
                     "signal_strength": f'{frame["signal_samples"] > 0}/{strength}',
                     "score_ratio": _bucket(c["score_ratio"], (.2, .5, 1, 1.5, 2, 4)),
                     "direct_local": f'{c["direct"]}:{c["local"]}',
-                    "fund_ratio": _bucket(c["fund_ratio"], (.5, 1, 2, 4)),
+                    "fund_ratio": _bucket(c["fund_ratio"], FUNDAMENTAL_SHARE_BINS),
                     "active": str(bool(c["active"])),
                     "assigned": relation(c["assigned_mask"], mask),
                     "playable": relation(c["playable_mask"], mask),
@@ -507,7 +741,8 @@ def analyze_label_failures(stream: TextIO, expected: dict | None = None,
                                   ("attributed_matches", "physical_group_matched")):
                 if totals[local] != int(native[source]):
                     raise ValueError(f"trace/report mismatch for {source}: {totals[local]} != {native[source]}")
-    return dict(schema="m3_label_failures_v2", totals=dict(totals), outcomes=dict(outcomes),
+    return dict(schema="m3_label_failures_v3", ratio_units=RATIO_UNITS,
+                totals=dict(totals), outcomes=dict(outcomes),
                 scoring="physical_group" if physical_groups else "legacy_label",
                 feature_outcomes={k: dict(v) for k, v in sorted(axes.items())},
                 strong_eviction_joint=[dict(true_pitch_count=k[0],

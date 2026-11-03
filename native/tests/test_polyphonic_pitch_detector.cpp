@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 
 #include "m3/generated_note_ledger.hpp"
@@ -16,6 +17,708 @@
 namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void residual_recovery_guards(PolyphonicPitchDetector& detector) noexcept {
+    enum class Case {
+      eligible, disabled, general, quiet, signal_lost, expired, same_tick,
+      score_floor, invalid_score, infeasible, capacity, solo, coasting_owner,
+      extra_owner, continuity_owner, fine_group, pending_group, active,
+      below_threshold, end
+    };
+    constexpr std::size_t target = 44U - 32U;
+    for (unsigned scenario = 0U; scenario < static_cast<unsigned>(Case::end);
+         ++scenario) {
+      const auto test_case = static_cast<Case>(scenario);
+      PersistentConfig config;
+      config.profile_mode = ProfileMode::m3;
+      config.lowest_note = 32U;
+      config.highest_note = 72U;
+      config.max_polyphony = 5U;
+      config.max_fret = 24U;
+      M3_EXPECT_TRUE(detector.configure(48000.0, config));
+      detector.set_residual_pitch_recovery_for_diagnostics(true);
+      detector.decision_counter_ = 16U;
+      detector.signal_present_ = true;
+      std::array<bool, kMaxCandidates> selected{};
+      std::array<double, kMaxCandidates> scores{}, fundamentals{};
+      scores[target] = fundamentals[target] = 1.0;
+      auto& state = detector.candidate_states_[target];
+      for (std::size_t i = 0U; i < 2U; ++i) {
+        auto& owner = detector.candidate_states_[4U * i];
+        owner.active = true;
+        owner.assigned_string = static_cast<std::uint8_t>(i);
+        owner.assigned_string_mask = static_cast<std::uint8_t>(1U << i);
+        owner.midi_voice_mask = owner.assigned_string_mask;
+        selected[4U * i] = true;
+      }
+      detector.selection_dispositions_[target] = SelectionDisposition::dp_evicted;
+      detector.submit_residual_recovery_for_diagnostics(15U, 44U, 3U);
+      detector.submit_residual_recovery_for_diagnostics(16U, 44U, 8U);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().proposals, 0U);
+      detector.submit_residual_recovery_for_diagnostics(
+          16U, 44U, test_case == Case::infeasible ? 4U : 3U);
+      detector.decision_counter_ = 17U;
+      switch (test_case) {
+        case Case::disabled:
+          detector.set_residual_pitch_recovery_for_diagnostics(false); break;
+        case Case::general: detector.profile_mode_ = ProfileMode::general; break;
+        case Case::signal_lost: detector.signal_present_ = false; break;
+        case Case::expired: detector.decision_counter_ = 33U; break;
+        case Case::same_tick: detector.decision_counter_ = 16U; break;
+        case Case::score_floor: scores[target] = 0.099; break;
+        case Case::invalid_score:
+          scores[target] = std::numeric_limits<double>::quiet_NaN(); break;
+        case Case::capacity: detector.max_polyphony_ = 2U; break;
+        case Case::solo:
+          selected[4U] = false; detector.candidate_states_[4U] = {}; break;
+        case Case::coasting_owner:
+          selected[4U] = false;
+          detector.candidate_states_[4U].midi_voice_mask = 8U; break;
+        case Case::extra_owner:
+          detector.candidate_states_[4U].assigned_string_mask = 10U; break;
+        case Case::continuity_owner:
+          detector.candidate_states_[4U].continuity_lane_mask = 8U; break;
+        case Case::fine_group:
+          detector.fine_frequency_evidence_states_[target].valid = true;
+          detector.fine_frequency_evidence_states_[target].member_mask = 3U; break;
+        case Case::pending_group:
+          detector.fine_frequency_evidence_states_[target].pending_member_mask = 3U;
+          break;
+        case Case::active: state.active = true; break;
+        case Case::below_threshold:
+          detector.selection_dispositions_[target] = SelectionDisposition::below_threshold;
+          break;
+        default: break;
+      }
+      const auto allocations = test::allocation_count();
+      detector.apply_residual_recovery_for_diagnostics(
+          selected, scores, fundamentals, 0.1, test_case == Case::quiet,
+          detector.candidate_count_);
+      M3_EXPECT_EQ(test::allocation_count(), allocations);
+      M3_EXPECT_EQ(selected[target], test_case == Case::eligible);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().selected_ticks,
+                   test_case == Case::eligible ? 1U : 0U);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().note_ons, 0U);
+      M3_EXPECT_EQ(state.attack_ticks, 0U);
+      M3_EXPECT_EQ(state.evidence_ticks, 0U);
+      M3_EXPECT_EQ(state.midi_voice_mask, 0U);
+      M3_EXPECT_FALSE(detector.phase_cents_states_[target].valid);
+      if (test_case != Case::eligible) continue;
+      M3_EXPECT_EQ(state.assigned_string_mask, 8U);
+      M3_EXPECT_FALSE(state.active);
+      // Every intervening decision remains guarded; expiry never renews itself.
+      for (std::uint32_t tick = 18U; tick <= 33U; ++tick) {
+        selected[target] = false;
+        detector.selection_dispositions_[target] = SelectionDisposition::dp_evicted;
+        detector.decision_counter_ = tick;
+        detector.apply_residual_recovery_for_diagnostics(
+            selected, scores, fundamentals, 0.1, false, detector.candidate_count_);
+        M3_EXPECT_EQ(selected[target], tick <= 32U);
+      }
+      M3_EXPECT_EQ(detector.residual_recovery_stats().selected_ticks, 16U);
+    }
+    detector.reset();
+    M3_EXPECT_FALSE(detector.diagnostic_residual_recovery_lease_.valid);
+    M3_EXPECT_EQ(detector.residual_recovery_stats().proposals, 0U);
+  }
+
+  static void residual_recovery_renewal_guards(PolyphonicPitchDetector& detector) noexcept {
+    enum class Case {
+      eligible, already_selected, exact_capacity, disabled, continuity_off,
+      quiet, signal_lost, expired, same_tick, score_floor, invalid_score,
+      infeasible, capacity, solo, coasting_owner, continuity_owner,
+      fine_group, pending_group, committed_group, wrong_owner, not_owner, end
+    };
+    constexpr std::size_t target = 44U - 32U;
+    for (unsigned scenario = 0U; scenario < static_cast<unsigned>(Case::end);
+         ++scenario) {
+      const auto test_case = static_cast<Case>(scenario);
+      PersistentConfig config;
+      config.profile_mode = ProfileMode::m3;
+      config.lowest_note = 32U;
+      config.highest_note = 72U;
+      config.max_polyphony = 5U;
+      config.max_fret = 24U;
+      M3_EXPECT_TRUE(detector.configure(48000.0, config));
+      detector.set_residual_pitch_recovery_for_diagnostics(true, true);
+      detector.decision_counter_ = 16U;
+      detector.signal_present_ = true;
+      std::array<bool, kMaxCandidates> selected{};
+      std::array<double, kMaxCandidates> scores{}, fundamentals{};
+      scores[target] = fundamentals[target] = 1.0;
+      auto& state = detector.candidate_states_[target];
+      state.active = true;
+      state.assigned_string = 3U;
+      state.assigned_string_mask = state.midi_voice_mask = 8U;
+      state.attack_ticks = 7U;
+      state.evidence_ticks = 11U;
+      detector.diagnostic_residual_recovery_owners_[target] = 3U;
+      for (std::size_t i = 0U; i < 2U; ++i) {
+        auto& other = detector.candidate_states_[4U * i];
+        other.active = true;
+        other.assigned_string = static_cast<std::uint8_t>(i);
+        other.assigned_string_mask = static_cast<std::uint8_t>(1U << i);
+        other.midi_voice_mask = other.assigned_string_mask;
+        selected[4U * i] = true;
+      }
+      detector.selection_dispositions_[target] = SelectionDisposition::coasting;
+      M3_EXPECT_EQ(detector.residual_recovery_owner_for_diagnostics(44U), 3U);
+      if (test_case == Case::not_owner)
+        detector.diagnostic_residual_recovery_owners_[target] = kMaxVoices;
+      detector.submit_residual_recovery_for_diagnostics(
+          16U, 44U, test_case == Case::wrong_owner ? 2U : 3U);
+      detector.decision_counter_ = 17U;
+      switch (test_case) {
+        case Case::already_selected: selected[target] = true; break;
+        case Case::exact_capacity: detector.max_polyphony_ = 3U; break;
+        case Case::disabled:
+          detector.set_residual_pitch_recovery_for_diagnostics(false); break;
+        case Case::continuity_off:
+          detector.set_residual_pitch_recovery_for_diagnostics(true, false); break;
+        case Case::signal_lost: detector.signal_present_ = false; break;
+        case Case::expired: detector.decision_counter_ = 33U; break;
+        case Case::same_tick: detector.decision_counter_ = 16U; break;
+        case Case::score_floor: scores[target] = 0.099; break;
+        case Case::invalid_score:
+          scores[target] = std::numeric_limits<double>::quiet_NaN(); break;
+        case Case::infeasible: detector.playable_string_masks_[target] = 7U; break;
+        case Case::capacity: detector.max_polyphony_ = 2U; break;
+        case Case::solo:
+          selected[4U] = false; detector.candidate_states_[4U] = {}; break;
+        case Case::coasting_owner:
+          selected[4U] = false;
+          detector.candidate_states_[4U].midi_voice_mask = 8U; break;
+        case Case::continuity_owner:
+          detector.candidate_states_[4U].continuity_lane_mask = 8U; break;
+        case Case::fine_group:
+          detector.fine_frequency_evidence_states_[target].valid = true;
+          detector.fine_frequency_evidence_states_[target].member_mask = 3U; break;
+        case Case::pending_group:
+          detector.fine_frequency_evidence_states_[target].pending_member_mask = 3U;
+          break;
+        case Case::committed_group: state.assigned_string_mask = 12U; break;
+        default: break;
+      }
+      const auto allocations = test::allocation_count();
+      detector.apply_residual_recovery_for_diagnostics(
+          selected, scores, fundamentals, 0.1, test_case == Case::quiet,
+          detector.candidate_count_);
+      const bool retained = test_case == Case::eligible ||
+          test_case == Case::already_selected || test_case == Case::exact_capacity;
+      M3_EXPECT_EQ(test::allocation_count(), allocations);
+      M3_EXPECT_EQ(selected[target], retained);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().selected_ticks, retained ? 1U : 0U);
+      // This guard fixture cannot donate attack/evidence or emit MIDI.
+      M3_EXPECT_EQ(state.attack_ticks, 7U);
+      M3_EXPECT_EQ(state.evidence_ticks, 11U);
+      M3_EXPECT_EQ(state.midi_voice_mask, 8U);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().note_ons, 0U);
+      M3_EXPECT_FALSE(detector.phase_cents_states_[target].valid);
+      if (test_case == Case::quiet || test_case == Case::signal_lost)
+        M3_EXPECT_EQ(detector.residual_recovery_owner_for_diagnostics(44U), kMaxVoices);
+      if (test_case != Case::eligible) continue;
+      for (std::uint32_t tick = 18U; tick <= 33U; ++tick) {
+        selected[target] = false;
+        detector.decision_counter_ = tick;
+        detector.apply_residual_recovery_for_diagnostics(
+            selected, scores, fundamentals, 0.1, false, detector.candidate_count_);
+        M3_EXPECT_EQ(selected[target], tick <= 32U);
+      }
+      M3_EXPECT_FALSE(detector.diagnostic_residual_recovery_lease_.valid);
+    }
+    detector.reset();
+    M3_EXPECT_FALSE(detector.diagnostic_residual_recovery_lease_.valid);
+    for (const auto owner : detector.diagnostic_residual_recovery_owners_)
+      M3_EXPECT_EQ(owner, kMaxVoices);
+  }
+
+  static void discarded_phase_shadow_probe(PolyphonicPitchDetector& detector) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 72U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_assignment_diagnostics_enabled(true);
+    detector.set_residual_assignment_diagnostics_enabled(true);
+    constexpr std::size_t candidate = 60U - 32U;
+    constexpr double expected_cents = 10.0;
+    auto& fundamental = detector.cells_[detector.cell_index(candidate, 0U)];
+    auto& shadow = detector.diagnostic_discarded_phase_states_[candidate];
+    auto& native = detector.phase_cents_states_[candidate];
+    const double center = std::atan2(fundamental.sine_step, fundamental.cosine_step) *
+                          48000.0 / 6.28318530717958647692;
+    const double offset = center * (std::exp2(expected_cents / 1200.0) - 1.0);
+    std::array<bool, kMaxCandidates> selected{};
+    std::size_t tick = 0U;
+    const auto feed = [&](std::size_t count) {
+      detector.signal_present_ = true;
+      for (std::size_t i = 0U; i < count; ++i) {
+        const double angle = 6.28318530717958647692 * offset *
+                             static_cast<double>(tick++) * 64.0 / 48000.0;
+        fundamental.fast_real = 0.2 * std::cos(angle);
+        fundamental.fast_imaginary = 0.2 * std::sin(angle);
+        detector.update_phase_cents_estimates(selected);
+      }
+    };
+    const auto allocations = test::allocation_count();
+    feed(120U);
+    M3_EXPECT_FALSE(shadow.valid); // first observation cannot supply a phase delta
+    M3_EXPECT_EQ(shadow.accepted_updates, 119U);
+    feed(480U);
+    M3_EXPECT_TRUE(shadow.valid);
+    M3_EXPECT_NEAR(shadow.cents, expected_cents, 0.01);
+    M3_EXPECT_FALSE(native.valid);
+    M3_EXPECT_EQ(native.accepted_updates, 0U);
+    M3_EXPECT_FALSE(detector.candidate_states_[candidate].active);
+    M3_EXPECT_EQ(detector.candidate_states_[candidate].midi_voice_mask, 0U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+
+    // An actual selection starts ordinary evidence from scratch; diagnostics
+    // cannot donate their settled estimate to the production path.
+    selected[candidate] = true;
+    feed(1U);
+    M3_EXPECT_FALSE(shadow.valid);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    M3_EXPECT_FALSE(native.valid);
+    M3_EXPECT_EQ(native.accepted_updates, 0U);
+    selected[candidate] = false;
+    feed(600U);
+    M3_EXPECT_TRUE(shadow.valid);
+    detector.set_assignment_diagnostics_enabled(false);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    feed(600U);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    detector.set_assignment_diagnostics_enabled(true);
+    feed(600U);
+    M3_EXPECT_TRUE(shadow.valid);
+    detector.set_residual_assignment_diagnostics_enabled(false);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    feed(600U);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    detector.set_residual_assignment_diagnostics_enabled(true);
+    feed(600U);
+    M3_EXPECT_TRUE(shadow.valid);
+
+    // The ordinary signal-loss path clears shadow evidence immediately.
+    detector.fast_energy_ = 0.0;
+    detector.slow_energy_ = 0.0;
+    (void)detector.process_sample(0.0);
+    M3_EXPECT_FALSE(detector.signal_present_);
+    M3_EXPECT_FALSE(shadow.valid);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+    feed(600U);
+    M3_EXPECT_TRUE(shadow.valid);
+    detector.reset();
+    M3_EXPECT_FALSE(shadow.valid);
+    M3_EXPECT_EQ(shadow.accepted_updates, 0U);
+  }
+
+  static StringAssignmentDiagnostics residual_lane_probe(
+      PolyphonicPitchDetector& detector, bool select_target = false,
+      bool enabled = true, std::uint32_t tick = 16U, bool isolated = false,
+      bool target_active = false, bool evicted = true,
+      bool restrict_mask = false) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 60U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_assignment_diagnostics_enabled(true);
+    detector.set_residual_assignment_diagnostics_enabled(enabled);
+    detector.decision_counter_ = tick;
+    constexpr std::uint8_t note = 44U;
+    constexpr std::size_t candidate = note - 32U;
+    StringCalibrationBank bank;
+    for (std::size_t string = 0U; string < 4U; ++string) {
+      auto& point = bank.points[string][note - kM3OpenNotes[string]];
+      point.harmonic_profile_q15[string] = 32767U;
+      point.cents_offset_q8 = static_cast<std::int16_t>(string * 256U);
+      point.confidence_q15 = 32767U;
+      point.observation_count = 128U;
+      point.quality = CalibrationPointQuality::measured;
+      bank.calibrated_string_mask |= static_cast<std::uint8_t>(1U << string);
+    }
+    detector.set_calibration_bank(bank);
+    for (std::size_t h = 0U; h < kCalibrationHarmonicCount; ++h) {
+      auto& cell = detector.cells_[detector.cell_index(candidate, h)];
+      cell.enabled = true;
+      cell.fast_real = 0.8 / static_cast<double>(h + 1U);
+    }
+    auto& phase = detector.phase_cents_states_[candidate];
+    phase.valid = true;
+    phase.cents = 5.0;
+    detector.diagnostic_discarded_phase_states_[candidate] = phase;
+    auto& target = detector.candidate_states_[candidate];
+    target.active = target_active;
+    detector.selection_dispositions_[candidate] = evicted
+        ? SelectionDisposition::dp_evicted : SelectionDisposition::below_threshold;
+    detector.candidate_admission_diagnostics_[candidate].string_fret_onset_strength = 0.37;
+    if (restrict_mask) {
+      detector.diagnostic_selector_string_masks_[candidate] = 7U;
+      detector.diagnostic_candidate_rescue_string_masks_[candidate] = 13U;
+    }
+    // These two selected notes reserve their primary lanes; one also has an
+    // extra committed lane. The unselected active note reserves a coasting lane.
+    for (std::size_t i = 0U; i < 3U; ++i) {
+      auto& state = detector.candidate_states_[i * 4U];
+      state.active = true;
+      state.assigned_string = static_cast<std::uint8_t>(i);
+      state.assigned_string_mask = static_cast<std::uint8_t>(1U << i);
+      state.midi_voice_mask = state.assigned_string_mask;
+    }
+    detector.candidate_states_[4U].assigned_string_mask = 10U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = true;
+    selected[4U] = !isolated;
+    selected[candidate] = select_target;
+    // A ready cache would be rewritten if the shadow path called the native
+    // spectral classifier. Preserve its entire representation across this call.
+    auto& spectral = detector.spectral_lane_states_[0U];
+    spectral.candidate_index = candidate;
+    spectral.tracking = true;
+    M3_EXPECT_TRUE(spectral.tracker.configure(48000.0, note));
+    for (std::size_t i = 0U; i < 30000U; ++i) spectral.tracker.observe(0.1);
+    M3_EXPECT_TRUE(spectral.tracker.ready());
+    std::array<unsigned char, sizeof(spectral)> spectral_before{};
+    std::memcpy(spectral_before.data(), &spectral, sizeof(spectral));
+    const auto allocation_count = test::allocation_count();
+    const auto owner_before = target.assigned_string;
+    const auto mask_before = target.assigned_string_mask;
+    detector.assign_m3_strings(selected);
+    M3_EXPECT_EQ(test::allocation_count(), allocation_count);
+    if (!select_target) {
+      M3_EXPECT_EQ(target.assigned_string, owner_before);
+      M3_EXPECT_EQ(target.assigned_string_mask, mask_before);
+      M3_EXPECT_EQ(target.midi_voice_mask, 0U);
+      M3_EXPECT_FALSE(target.calibrated_lane_committed);
+      M3_EXPECT_EQ(detector.candidate_admission_diagnostics_[candidate]
+                       .string_fret_onset_strength, 0.37);
+      M3_EXPECT_EQ(detector.string_fret_energy_memory_[candidate], 0.0);
+      for (std::size_t string = 0U; string < kMaxVoices; ++string)
+        M3_EXPECT_EQ(detector.string_fret_posteriors_.probability(candidate, string), 0.0);
+      M3_EXPECT_EQ(std::memcmp(spectral_before.data(), &spectral, sizeof(spectral)), 0);
+    }
+    return detector.string_assignment_diagnostics(note);
+  }
+
+  enum class ProvisionalOpenCase {
+    eligible, invalid_phase, committed, polyphonic, another_active,
+    assigned_group, pending_group, continuity_group, fine_group,
+    pending_fine_group, selector_group, beat_group, multi_source, no_suppression
+  };
+
+  static std::uint8_t provisional_open_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled,
+      const std::array<double, kCalibrationHarmonicCount>& amplitudes,
+      ProvisionalOpenCase scenario = ProvisionalOpenCase::eligible) noexcept {
+    constexpr std::uint8_t note = 36U;
+    const std::size_t candidate = note - detector.lowest_note_;
+    detector.set_provisional_open_retention_guard_for_diagnostics(enabled);
+    auto& state = detector.candidate_states_[candidate];
+    state.active = true;
+    state.age_ticks = 8U;
+    state.assigned_string = 1U;
+    state.assigned_string_mask = 2U;
+    state.midi_voice_mask = 2U;
+    state.emitted_note = note;
+    for (std::size_t h = 0U; h < amplitudes.size(); ++h) {
+      auto& cell = detector.cells_[detector.cell_index(candidate, h)];
+      cell.enabled = true;
+      cell.fast_real = amplitudes[h];
+      cell.fast_imaginary = 0.0;
+    }
+    detector.phase_cents_states_[candidate].valid = true;
+    detector.diagnostic_calibrated_harmonic_reassignment_candidates_[candidate] =
+        scenario != ProvisionalOpenCase::no_suppression;
+    auto& fine = detector.fine_frequency_evidence_states_[candidate];
+    switch (scenario) {
+      case ProvisionalOpenCase::invalid_phase:
+        detector.phase_cents_states_[candidate].valid = false; break;
+      case ProvisionalOpenCase::committed: state.calibrated_lane_committed = true; break;
+      case ProvisionalOpenCase::polyphonic: state.polyphonic_context = true; break;
+      case ProvisionalOpenCase::another_active:
+        detector.candidate_states_[candidate + 4U].active = true; break;
+      case ProvisionalOpenCase::assigned_group: state.assigned_string_mask = 3U; break;
+      case ProvisionalOpenCase::pending_group: state.pending_unison_mask = 3U; break;
+      case ProvisionalOpenCase::continuity_group: state.continuity_cached_group_mask = 3U; break;
+      case ProvisionalOpenCase::fine_group: fine.member_mask = 3U; break;
+      case ProvisionalOpenCase::pending_fine_group: fine.pending_member_mask = 3U; break;
+      case ProvisionalOpenCase::selector_group: detector.selector_group_masks_[candidate] = 3U; break;
+      case ProvisionalOpenCase::beat_group: detector.beat_evidence_states_[candidate].valid = true; break;
+      case ProvisionalOpenCase::multi_source: fine.multi_source_observed = true; break;
+      default: break;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    detector.assign_m3_strings(selected);
+    // Assignment may change the tuner lane; the MIDI owner changes only through
+    // normal emitted transitions, never through this cost adjustment itself.
+    M3_EXPECT_EQ(state.midi_voice_mask, 2U);
+    return state.assigned_string;
+  }
+
+  static bool has_harmonic_reassignment_provenance(
+      const PolyphonicPitchDetector& detector, std::uint8_t note) noexcept {
+    return detector.diagnostic_calibrated_harmonic_reassignment_candidates_[
+        note - detector.lowest_note_];
+  }
+
+  static void verify_harmonic_provenance_does_not_survive_decisions(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::size_t lower = 60U - 32U;
+    M3_EXPECT_TRUE(detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower]);
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow{};
+    std::array<bool, kMaxCandidates> selected{};
+    scores[lower] = 0.30;
+    fundamentals[lower] = 0.28;
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow, 0.05, selected, detector.candidate_count_);
+    M3_EXPECT_TRUE(selected[lower]);
+    M3_EXPECT_FALSE(detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower]);
+    for (const bool trace_enabled : {false, true}) {
+      detector.offline_replay_diagnostics_enabled_ = trace_enabled;
+      detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower] = true;
+      detector.fast_energy_ = 0.0;
+      detector.slow_energy_ = 0.0;
+      (void)detector.make_decision();
+      M3_EXPECT_FALSE(detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower]);
+    }
+    detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower] = true;
+    detector.reset();
+    M3_EXPECT_FALSE(detector.diagnostic_calibrated_harmonic_reassignment_candidates_[lower]);
+  }
+
+  static std::uint8_t provisional_assignment_after_suppression_ends(
+      PolyphonicPitchDetector& detector) noexcept {
+    constexpr std::size_t candidate = 36U - 32U;
+    detector.diagnostic_calibrated_harmonic_reassignment_candidates_.fill(false);
+    std::array<bool, kMaxCandidates> selected{};
+    selected[candidate] = true;
+    detector.assign_m3_strings(selected);
+    return detector.candidate_states_[candidate].assigned_string;
+  }
+
+  static std::uint8_t calibrated_harmonic_admission_probe(
+      PolyphonicPitchDetector& detector, bool enabled, bool active_upper = false,
+      double upper_score = 0.02, unsigned interval = 19U,
+      double lower_score = 0.30, bool direct_lower = true,
+      double energy_scale = 1.0,
+      MidiRouting routing = MidiRouting::single) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = routing;
+    config.lowest_note = 32U;
+    config.highest_note = 87U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_calibrated_harmonic_admission_guard_for_diagnostics(enabled);
+    constexpr std::uint8_t kUpperNote = 79U;
+    constexpr std::size_t upper = kUpperNote - 32U;
+    const std::size_t lower = upper - interval;
+    StringCalibrationBank bank;
+    // Give the upper observation an unambiguous measured profile. A calibration
+    // match alone must not exempt a faint third partial from harmonic rejection.
+    for (const std::size_t string : {6U, 7U}) {
+      auto& point = bank.points[string][kUpperNote - kM3OpenNotes[string]];
+      point.harmonic_profile_q15[string - 6U] = 32767U;
+      point.confidence_q15 = 32767U;
+      point.observation_count = 128U;
+      point.quality = CalibrationPointQuality::measured;
+      bank.calibrated_string_mask |= static_cast<std::uint8_t>(1U << string);
+    }
+    detector.set_calibration_bank(bank);
+    detector.fast_energy_ = energy_scale;
+    for (std::size_t h = 0U; h < kCalibrationHarmonicCount; ++h) {
+      auto& cell = detector.cells_[detector.cell_index(upper, h)];
+      cell.enabled = true;
+      cell.fast_real = h == 0U ? std::sqrt(energy_scale) : 0.0;
+      cell.fast_imaginary = 0.0;
+    }
+    if (active_upper) {
+      auto& state = detector.candidate_states_[upper];
+      state.active = true;
+      state.assigned_string = 6U;
+      state.assigned_string_mask = 0x40U;
+      state.midi_voice_mask = 0x40U;
+      state.emitted_note = kUpperNote;
+    }
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow_fundamentals{};
+    std::array<bool, kMaxCandidates> selected{};
+    scores[lower] = lower_score * energy_scale;
+    fundamentals[lower] = scores[lower] * (direct_lower ? 0.95 : 0.01);
+    scores[upper] = upper_score * energy_scale;
+    fundamentals[upper] = 0.95 * scores[upper];
+    const double threshold = 0.05 * energy_scale;
+    const auto count = static_cast<std::size_t>(detector.candidate_count_);
+    M3_EXPECT_TRUE(detector.has_calibrated_direct_support(
+        scores, fundamentals, upper, count, threshold));
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow_fundamentals, threshold, selected, count);
+    return static_cast<std::uint8_t>((selected[lower] ? 1U : 0U) |
+                                    (selected[upper] ? 2U : 0U));
+  }
+
+  enum class HarmonicHandoffCase {
+    blocked_lane, disabled, direct_upper, resolved_upper_phase, quiet,
+    general, lower_unresolved, lower_not_direct, lower_inactive,
+    upper_selected, another_active, infeasible_lane, full_queue,
+    owner_pair, owner_triple, owner_four, lower_pair, pending_group,
+    fine_group, beat_group, continuity_group
+  };
+
+  static DetectorDecision coasting_harmonic_handoff_probe(
+      PolyphonicPitchDetector& detector, HarmonicHandoffCase scenario,
+      MidiRouting routing = MidiRouting::per_voice) noexcept {
+    constexpr std::size_t lower = 60U - 32U;
+    constexpr std::size_t upper = 79U - 32U;
+    detector.profile_mode_ = ProfileMode::m3;
+    detector.midi_routing_ = routing;
+    detector.lowest_note_ = 32U;
+    detector.candidate_count_ = 56U;
+    detector.candidate_states_ = {};
+    detector.phase_cents_states_ = {};
+    detector.selector_group_masks_ = {};
+    detector.beat_evidence_states_ = {};
+    for (auto& fine : detector.fine_frequency_evidence_states_) fine = {};
+    detector.playable_string_masks_ = {};
+    detector.playable_string_masks_[lower] = 0xf0U;
+    detector.playable_string_masks_[upper] = 0xc0U;
+    auto& incumbent = detector.candidate_states_[upper];
+    incumbent.active = true;
+    incumbent.assigned_string = 6U;
+    incumbent.assigned_string_mask = 0x40U;
+    incumbent.midi_voice_mask = 0x40U;
+    incumbent.emitted_note = 79U;
+    auto& replacement = detector.candidate_states_[lower];
+    replacement.active = true;
+    replacement.assigned_string = 7U;
+    replacement.assigned_string_mask = 0x80U;
+    replacement.midi_voice_mask = 0x80U;
+    replacement.emitted_note = 60U;
+    detector.phase_cents_states_[lower].valid = true;
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<bool, kMaxCandidates> selected{};
+    scores[lower] = 1.0;
+    fundamentals[lower] = 0.8;
+    scores[upper] = 0.2;
+    fundamentals[upper] = 0.01;
+    selected[lower] = true;
+    bool quiet = false;
+    if (scenario != HarmonicHandoffCase::disabled)
+      detector.set_coasting_harmonic_handoff_for_diagnostics(true);
+    switch (scenario) {
+      case HarmonicHandoffCase::direct_upper: fundamentals[upper] = 0.16; break;
+      case HarmonicHandoffCase::resolved_upper_phase:
+        detector.phase_cents_states_[upper].valid = true; break;
+      case HarmonicHandoffCase::quiet: quiet = true; break;
+      case HarmonicHandoffCase::general: detector.profile_mode_ = ProfileMode::general; break;
+      case HarmonicHandoffCase::lower_unresolved:
+        detector.phase_cents_states_[lower].valid = false; break;
+      case HarmonicHandoffCase::lower_not_direct: fundamentals[lower] = 0.1; break;
+      case HarmonicHandoffCase::lower_inactive: replacement.active = false; break;
+      case HarmonicHandoffCase::upper_selected: selected[upper] = true; break;
+      case HarmonicHandoffCase::another_active:
+        detector.candidate_states_[lower + 4U].active = true; break;
+      case HarmonicHandoffCase::infeasible_lane:
+        detector.playable_string_masks_[lower] = 0x80U; break;
+      case HarmonicHandoffCase::owner_pair: incumbent.assigned_string_mask = 0x60U; break;
+      case HarmonicHandoffCase::owner_triple: incumbent.assigned_string_mask = 0x70U; break;
+      case HarmonicHandoffCase::owner_four: incumbent.assigned_string_mask = 0x78U; break;
+      case HarmonicHandoffCase::lower_pair: replacement.assigned_string_mask = 0x90U; break;
+      case HarmonicHandoffCase::pending_group: incumbent.pending_unison_mask = 0x60U; break;
+      case HarmonicHandoffCase::fine_group:
+        detector.fine_frequency_evidence_states_[upper].member_mask = 0x60U; break;
+      case HarmonicHandoffCase::beat_group:
+        detector.beat_evidence_states_[upper].valid = true; break;
+      case HarmonicHandoffCase::continuity_group:
+        incumbent.continuity_cached_group_mask = 0x60U; break;
+      default: break;
+    }
+    DetectorDecision decision;
+    if (scenario == HarmonicHandoffCase::full_queue) {
+      while (decision.transitions.size() < decision.transitions.capacity()) {
+        static_cast<void>(decision.transitions.push_back(VoiceTransition{}));
+      }
+    }
+    const auto before_size = decision.transitions.size();
+    const auto before_mask = incumbent.assigned_string_mask;
+    const bool released = detector.try_coasting_harmonic_handoff_for_diagnostics(
+        decision, upper, scores, fundamentals, selected, quiet);
+    if (scenario == HarmonicHandoffCase::blocked_lane) {
+      M3_EXPECT_TRUE(released);
+      M3_EXPECT_FALSE(incumbent.active);
+      M3_EXPECT_EQ(incumbent.assigned_string_mask, 0U);
+      M3_EXPECT_EQ(incumbent.midi_voice_mask, 0U);
+      M3_EXPECT_EQ(decision.transitions.size(), 1U);
+      M3_EXPECT_TRUE(decision.transitions[0U].kind == TransitionKind::note_off);
+      M3_EXPECT_EQ(decision.transitions[0U].note, 79U);
+      M3_EXPECT_EQ(decision.transitions[0U].voice_id,
+                   routing == MidiRouting::per_voice ? 6U : kUnassignedVoiceId);
+      M3_EXPECT_FALSE(detector.try_coasting_harmonic_handoff_for_diagnostics(
+          decision, upper, scores, fundamentals, selected, quiet));
+      M3_EXPECT_EQ(decision.transitions.size(), 1U);  // No duplicate note-off.
+    } else {
+      M3_EXPECT_FALSE(released);
+      M3_EXPECT_TRUE(incumbent.active);
+      M3_EXPECT_EQ(incumbent.assigned_string_mask, before_mask);
+      M3_EXPECT_EQ(incumbent.midi_voice_mask, 0x40U);
+      M3_EXPECT_EQ(decision.transitions.size(), before_size);
+    }
+    // The helper must neither invent a pitch nor silently migrate its MIDI lane.
+    M3_EXPECT_EQ(replacement.active, scenario != HarmonicHandoffCase::lower_inactive);
+    M3_EXPECT_EQ(replacement.midi_voice_mask, 0x80U);
+    M3_EXPECT_EQ(replacement.emitted_note, 60U);
+    return decision;
+  }
+
+  struct OwnershipFixture final {
+    std::uint8_t note, primary, assigned_mask, midi_mask, fine_mask;
+    bool selected{true};
+  };
+
+  template <std::size_t N>
+  static std::array<std::uint8_t, N> capture_ownership_fixture(
+      PolyphonicPitchDetector& detector,
+      const std::array<OwnershipFixture, N>& inputs) noexcept {
+    detector.candidate_states_ = {};
+    for (std::size_t i = 0U; i < detector.candidate_count_; ++i)
+      detector.fine_frequency_evidence_states_[i] = {};
+    std::array<bool, kMaxCandidates> selected{};
+    for (const auto& input : inputs) {
+      const auto candidate = input.note - detector.lowest_note_;
+      auto& state = detector.candidate_states_[candidate];
+      state.active = true;
+      state.age_ticks = 1000U;
+      state.assigned_string = input.primary;
+      state.assigned_string_mask = input.assigned_mask;
+      state.midi_voice_mask = input.midi_mask;
+      auto& fine = detector.fine_frequency_evidence_states_[candidate];
+      fine.valid = input.fine_mask != 0U;
+      fine.multi_source_observed = fine.valid;
+      fine.member_mask = input.fine_mask;
+      auto& admission = detector.candidate_admission_diagnostics_[candidate];
+      admission = {};
+      admission.score_threshold_ratio = 0.25;
+      admission.fundamental_score_ratio = 0.05;
+      selected[candidate] = input.selected;
+    }
+    detector.infer_m3_unison_strings(selected);
+    std::array<std::uint8_t, N> result{};
+    for (std::size_t i = 0U; i < N; ++i)
+      result[i] = detector.candidate_states_[inputs[i].note -
+          detector.lowest_note_].assigned_string_mask;
+    return result;
+  }
+#endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) && defined(M3_JOINT_RESIDUAL_SHADOW)
   static void profile_pair_output_filter_lifecycle(
       PolyphonicPitchDetector& detector) noexcept {
@@ -993,6 +1696,20 @@ struct PolyphonicPitchDetectorTestAccess final {
         classification);
   }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static std::array<std::uint8_t, kMaxVoices> joint_spectral_lanes_probe(
+      const std::array<std::uint8_t, kMaxVoices>& proposals,
+      const std::array<std::uint8_t, kMaxVoices>& primary_masks,
+      const std::array<std::uint8_t, kMaxVoices>& playable_masks,
+      const std::array<double, kMaxVoices>& posterior_margins,
+      const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
+      std::uint8_t reserved_mask, std::size_t count) noexcept {
+    return PolyphonicPitchDetector::bounded_joint_spectral_lanes(
+        proposals, primary_masks, playable_masks, posterior_margins,
+        incumbent_masks, reserved_mask, count);
+  }
+#endif
+
   static std::uint8_t adjacent_spectral_duplicate_suppression_probe(
       bool left_active, bool right_active, std::uint8_t left_note,
       std::uint8_t right_note, std::uint8_t left_output_mask,
@@ -1357,7 +2074,8 @@ struct PolyphonicPitchDetectorTestAccess final {
       PolyphonicPitchDetector& detector, std::uint8_t string,
       bool multi_string_context, bool quiet, bool retract,
       bool change_base_note, bool append_release,
-      bool quiet_between_observations = false) noexcept {
+      bool quiet_between_observations = false,
+      [[maybe_unused]] bool recovery_collision = false) noexcept {
     constexpr std::uint8_t kIncumbentNote = 44U;
     constexpr std::uint8_t kTargetNote = 52U;
     constexpr double kThreshold = 0.05;
@@ -1424,9 +2142,47 @@ struct PolyphonicPitchDetectorTestAccess final {
           decision, selected, scores, fundamentals, kThreshold, true,
           static_cast<std::size_t>(detector.candidate_count_));
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (recovery_collision) {
+      // A proposal made before the final projection-consensus tick must see
+      // the rendered pitch after that tick, including a second coasting voice.
+      detector.set_residual_pitch_recovery_for_diagnostics(true, true);
+      detector.signal_present_ = true;
+      detector.decision_counter_ = 16U;
+      auto& coasting = detector.candidate_states_[0U];
+      coasting.active = true;
+      coasting.assigned_string = 1U;
+      coasting.assigned_string_mask = coasting.midi_voice_mask = 2U;
+      detector.playable_string_masks_[target] |= 8U;
+      detector.selection_dispositions_[target] = SelectionDisposition::dp_evicted;
+      detector.submit_residual_recovery_for_diagnostics(16U, kTargetNote, 3U);
+      M3_EXPECT_TRUE(detector.diagnostic_residual_recovery_lease_.valid);
+      M3_EXPECT_EQ(detector.candidate_midi_output_note(incumbent), kIncumbentNote);
+      detector.decision_counter_ = 17U;
+    }
+#endif
     detector.update_calibrated_dp_output_projections(
         decision, selected, scores, fundamentals, kThreshold, quiet,
         static_cast<std::size_t>(detector.candidate_count_));
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (recovery_collision) {
+      M3_EXPECT_EQ(detector.candidate_midi_output_note(incumbent), kTargetNote);
+      detector.apply_residual_recovery_for_diagnostics(
+          selected, scores, fundamentals, kThreshold, false, detector.candidate_count_);
+      M3_EXPECT_FALSE(selected[target]);
+      M3_EXPECT_FALSE(detector.diagnostic_residual_recovery_lease_.valid);
+      M3_EXPECT_EQ(detector.residual_recovery_stats().selected_ticks, 0U);
+      std::size_t ons = 0U;
+      for (std::size_t i = 0U; i < decision.transitions.size(); ++i) {
+        const auto& event = decision.transitions[i];
+        if (event.kind != TransitionKind::note_on || event.note != kTargetNote) continue;
+        ++ons;
+        M3_EXPECT_EQ(event.voice_id, string);
+      }
+      M3_EXPECT_EQ(ons, 1U);
+      M3_EXPECT_FALSE(detector.candidate_states_[target].active);
+    }
+#endif
 
     if (change_base_note) {
       detector.change_candidate_output_note(
@@ -2244,6 +3000,67 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  struct OpenPriorOption final {
+    std::uint8_t note{};
+    std::uint8_t mask{};
+    double score{};
+    std::uint8_t atomic_mask{};
+    bool active{};
+    bool direct{true};
+  };
+
+  struct OpenPriorResult final {
+    std::array<bool, 128U> selected{};
+    double score{};
+    std::uint8_t used_mask{};
+    std::uint8_t voices{};
+    std::uint8_t open_pitches{};
+  };
+
+  template <std::size_t N>
+  static OpenPriorResult open_prior_assignment(
+      PolyphonicPitchDetector& detector,
+      const std::array<OpenPriorOption, N>& options,
+      OpenPriorOption priority = {}) noexcept {
+    detector.m3_pool_ = {};
+    detector.diagnostic_selector_string_masks_ = {};
+    detector.fast_energy_ = 1.0;
+    std::array<std::uint8_t, kMaxVoices * kMaxVoices> atomic_groups{};
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    for (std::size_t index = 0U; index < N; ++index) {
+      const auto& option = options[index];
+      const auto candidate = static_cast<std::uint8_t>(
+          option.note - detector.lowest_note_);
+      detector.m3_pool_[index] =
+          {candidate, option.mask, option.score, option.active};
+      atomic_groups[index] = option.atomic_mask;
+      scores[candidate] = option.score;
+      fundamentals[candidate] = option.direct ? option.score : 0.0;
+    }
+    std::size_t seed = detector.candidate_count_;
+    if (priority.mask != 0U) {
+      seed = priority.note - detector.lowest_note_;
+      scores[seed] = priority.score;
+      fundamentals[seed] = priority.direct ? priority.score : 0.0;
+    }
+    OpenPriorResult result;
+    const auto state = detector.select_state_local_open_prior(
+        N, atomic_groups, scores, fundamentals, seed, priority.mask,
+        0.20, 0.005, result.used_mask, result.open_pitches);
+    M3_EXPECT_TRUE(state.valid);
+    result.score = state.score_sum;
+    result.voices = state.voice_count;
+    for (std::size_t index = 0U; index < N; ++index) {
+      result.selected[options[index].note] =
+          (state.chosen & (std::uint64_t{1U} << index)) != 0U;
+    }
+    if (priority.mask != 0U) {
+      result.selected[priority.note] = true;
+    }
+    return result;
+  }
+
   static CandidateAdmissionDiagnostics selector_penalty_observation_probe(
       PolyphonicPitchDetector& detector, bool include_fretted) noexcept {
     const std::size_t open = 40U - detector.lowest_note_;
@@ -6698,6 +7515,160 @@ M3_TEST(native_detector_selector_diagnostics_expose_negative_fret_scores) {
   M3_EXPECT_EQ(absent.selector_positive_mask, 0U);
 }
 
+M3_TEST(native_detector_state_local_open_prior_ignores_unselected_open_pitch) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  // The weak second open-pitch identity cannot own the occupied lowest string.
+  // It must not penalize the independently feasible fretted note on string 7.
+  const std::array<Access::OpenPriorOption, 3U> options{{
+      {32U, 0x01U, 1.0}, {36U, 0x01U, 0.05}, {39U, 0x02U, 0.10}}};
+  const auto result = Access::open_prior_assignment(detector, options);
+  M3_EXPECT_TRUE(result.selected[32U]);
+  M3_EXPECT_TRUE(result.selected[39U]);
+  M3_EXPECT_FALSE(result.selected[36U]);
+  M3_EXPECT_EQ(result.open_pitches, 1U);
+  M3_EXPECT_EQ(result.voices, 2U);
+  M3_EXPECT_NEAR(result.score, 1.10, 1.0e-12);
+}
+
+M3_TEST(native_detector_state_local_open_prior_charges_whole_chord_in_any_order) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const std::array<Access::OpenPriorOption, 3U> options{{
+      {32U, 0x01U, 1.0}, {36U, 0x02U, 0.60}, {41U, 0x04U, 0.10}}};
+  std::array<std::size_t, 3U> order{0U, 1U, 2U};
+  do {
+    const std::array<Access::OpenPriorOption, 3U> shuffled{
+        options[order[0U]], options[order[1U]], options[order[2U]]};
+    const auto result = Access::open_prior_assignment(detector, shuffled);
+    M3_EXPECT_TRUE(result.selected[32U]);
+    M3_EXPECT_TRUE(result.selected[36U]);
+    M3_EXPECT_FALSE(result.selected[41U]);
+    M3_EXPECT_EQ(result.open_pitches, 2U);
+    M3_EXPECT_EQ(result.used_mask, 0x03U);
+    M3_EXPECT_NEAR(result.score, 1.60, 1.0e-12);
+  } while (std::next_permutation(order.begin(), order.end()));
+}
+
+M3_TEST(native_detector_state_local_open_prior_preserves_high_note_penalty) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  M3_EXPECT_TRUE(detector.set_state_local_open_prior_for_diagnostics(true));
+  // Exercise the actual selector, including eligibility and diagnostics.
+  const auto observed = m3::PolyphonicPitchDetectorTestAccess::
+      selector_penalty_observation_probe(detector, true);
+  M3_EXPECT_NEAR(observed.selector_best_adjusted_score, -0.125, 1.0e-12);
+  M3_EXPECT_EQ(observed.selector_positive_mask, 0U);
+  M3_EXPECT_EQ(observed.selector_voice_count, 1U);
+}
+
+M3_TEST(native_detector_state_local_open_prior_counts_retained_group_once) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const Access::OpenPriorOption seed{40U, 0x03U, 0.70};
+  const std::array<Access::OpenPriorOption, 1U> interval{{
+      {47U, 0x08U, 0.10}}};
+  const auto pair = Access::open_prior_assignment(detector, interval, seed);
+  M3_EXPECT_TRUE(pair.selected[40U]);
+  M3_EXPECT_TRUE(pair.selected[47U]);
+  M3_EXPECT_EQ(pair.open_pitches, 1U);
+  M3_EXPECT_EQ(pair.voices, 3U);
+  M3_EXPECT_NEAR(pair.score, 0.80, 1.0e-12);
+  const std::array<Access::OpenPriorOption, 2U> chord{{
+      {44U, 0x04U, 0.60}, {47U, 0x08U, 0.10}}};
+  const auto three = Access::open_prior_assignment(detector, chord, seed);
+  M3_EXPECT_TRUE(three.selected[40U]);
+  M3_EXPECT_TRUE(three.selected[44U]);
+  M3_EXPECT_FALSE(three.selected[47U]);
+  M3_EXPECT_EQ(three.open_pitches, 2U);
+  M3_EXPECT_EQ(three.voices, 3U);
+}
+
+M3_TEST(native_detector_state_local_open_prior_preserves_atomic_ownership_and_capacity) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 3U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const std::array<Access::OpenPriorOption, 4U> options{{
+      {40U, 0x03U, 1.0, 0x03U}, {39U, 0x02U, 0.10},
+      {47U, 0x08U, 0.15}, {51U, 0x10U, 0.10}}};
+  const auto result = Access::open_prior_assignment(detector, options);
+  M3_EXPECT_TRUE(result.selected[40U]);
+  M3_EXPECT_TRUE(result.selected[47U]);
+  M3_EXPECT_FALSE(result.selected[39U]);
+  M3_EXPECT_FALSE(result.selected[51U]);
+  M3_EXPECT_EQ(result.open_pitches, 1U);
+  M3_EXPECT_EQ(result.voices, 3U);
+  M3_EXPECT_EQ(result.used_mask, 0x0bU);
+  M3_EXPECT_NEAR(result.score, 1.15, 1.0e-12);
+}
+
+M3_TEST(native_detector_state_local_open_prior_rejects_infeasible_large_group) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 8U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const std::array<Access::OpenPriorOption, 3U> options{{
+      {48U, 0x1fU, 10.0, 0x1fU}, {44U, 0x02U, 9.0, 0x03U},
+      {47U, 0x08U, 0.10}}};
+  const auto result = Access::open_prior_assignment(detector, options);
+  M3_EXPECT_FALSE(result.selected[48U]);
+  M3_EXPECT_FALSE(result.selected[44U]);
+  M3_EXPECT_TRUE(result.selected[47U]);
+  M3_EXPECT_EQ(result.voices, 1U);
+}
+
+M3_TEST(native_detector_state_local_open_prior_requires_direct_open_evidence) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  const std::array<Access::OpenPriorOption, 3U> options{{
+      {32U, 0x01U, 1.0}, {36U, 0x02U, 0.60, 0U, false, false},
+      {41U, 0x04U, 0.10}}};
+  const auto result = Access::open_prior_assignment(detector, options);
+  M3_EXPECT_TRUE(result.selected[41U]);
+  M3_EXPECT_EQ(result.open_pitches, 1U);
+  M3_EXPECT_NEAR(result.score, 1.70, 1.0e-12);
+}
+
 M3_TEST(native_detector_floor_reentry_observation_does_not_admit_or_seed_notes) {
   for (const bool diagnostics : {false, true}) {
     for (const bool signal_present : {false, true}) {
@@ -7063,6 +8034,245 @@ M3_TEST(native_detector_release_hold_is_time_based_at_supported_sample_rates) {
     }
   }
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_calibrated_harmonic_admission_rejects_only_new_faint_partial) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(detector, false), 3U);
+  M3_EXPECT_FALSE(Access::has_harmonic_reassignment_provenance(detector, 60U));
+  M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(detector, true), 1U);
+  M3_EXPECT_TRUE(Access::has_harmonic_reassignment_provenance(detector, 60U));
+  M3_EXPECT_FALSE(Access::has_harmonic_reassignment_provenance(detector, 79U));
+}
+
+M3_TEST(native_detector_calibrated_harmonic_provenance_is_decision_local) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(detector, true), 1U);
+  Access::verify_harmonic_provenance_does_not_survive_decisions(detector);
+}
+
+M3_TEST(native_detector_calibrated_harmonic_admission_preserves_active_and_strong_upper_notes) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const bool enabled : {false, true}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, enabled, true), 3U);
+    M3_EXPECT_FALSE(Access::has_harmonic_reassignment_provenance(detector, 60U));
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, enabled, false, 0.051), 3U);
+    M3_EXPECT_FALSE(Access::has_harmonic_reassignment_provenance(detector, 60U));
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, enabled, false, 0.28), 3U);
+    M3_EXPECT_FALSE(Access::has_harmonic_reassignment_provenance(detector, 60U));
+  }
+}
+
+M3_TEST(native_detector_calibrated_harmonic_admission_needs_the_direct_third_partial_parent) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const bool enabled : {false, true}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, enabled, false, 0.02, 12U), 3U);
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, enabled, false, 0.02, 19U, 0.0), 2U);
+    M3_EXPECT_TRUE((Access::calibrated_harmonic_admission_probe(
+                       detector, enabled, false, 0.02, 19U, 0.30, false) & 2U) != 0U);
+  }
+}
+
+M3_TEST(native_detector_calibrated_harmonic_admission_is_invariant_to_common_gain) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const double scale : {0.0001, 0.01, 1.0, 100.0}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, false, false, 0.02, 19U, 0.30, true, scale), 3U);
+    M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+                     detector, true, false, 0.02, 19U, 0.30, true, scale), 1U);
+  }
+}
+
+M3_TEST(native_detector_coasting_harmonic_releases_only_the_upper_midi_owner) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  Access::coasting_harmonic_handoff_probe(detector, Access::HarmonicHandoffCase::blocked_lane);
+  Access::coasting_harmonic_handoff_probe(detector, Access::HarmonicHandoffCase::blocked_lane,
+                                        m3::MidiRouting::single);
+}
+
+M3_TEST(native_detector_coasting_harmonic_preserves_direct_upper_notes_and_default_behavior) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::HarmonicHandoffCase;
+  for (const auto scenario : {Case::disabled, Case::direct_upper,
+       Case::resolved_upper_phase, Case::quiet, Case::general,
+       Case::lower_unresolved, Case::lower_not_direct, Case::lower_inactive,
+       Case::upper_selected, Case::another_active, Case::infeasible_lane}) {
+    m3::PolyphonicPitchDetector detector;
+    Access::coasting_harmonic_handoff_probe(detector, scenario);
+  }
+}
+
+M3_TEST(native_detector_calibrated_harmonic_admission_preserves_silence_and_panic_release) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const auto routing : {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
+    for (const bool panic : {false, true}) {
+      std::uint32_t control_release_sample = 0U;
+      for (const bool enabled : {false, true}) {
+        struct Capture final {
+          bool active = false;
+          unsigned offs = 0U;
+          std::uint8_t expected_channel = 1U;
+          static bool push(void* context, const m3::VoiceTransition& event,
+                           std::uint8_t channel) noexcept {
+            auto& self = *static_cast<Capture*>(context);
+            M3_EXPECT_EQ(event.note, 79U);
+            M3_EXPECT_EQ(channel, self.expected_channel);
+            M3_EXPECT_EQ(self.active, event.kind == m3::TransitionKind::note_off);
+            self.active = event.kind == m3::TransitionKind::note_on;
+            if (!self.active) ++self.offs;
+            return true;
+          }
+        } capture;
+        capture.expected_channel = routing == m3::MidiRouting::per_voice ? 7U : 1U;
+        m3::GeneratedNoteLedger ledger;
+        M3_EXPECT_TRUE(ledger.activate(64U));
+        const auto deliver = [&](const m3::DetectorDecision& decision) {
+          if (decision.transitions.size() == 0U) return;
+          ledger.begin_block();
+          for (const auto& event : decision.transitions) {
+            M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+          }
+          M3_EXPECT_FALSE(ledger.deliver(
+              64U, {&capture, &Capture::push}, 0.5, true, true, routing, 1U)
+                              .output_blocked);
+        };
+        m3::PolyphonicPitchDetector detector;
+        // Seed an already-established upper note through the selector fixture.
+        // The guard must preserve that voice and its ordinary release timing.
+        M3_EXPECT_EQ(Access::calibrated_harmonic_admission_probe(
+            detector, enabled, true, 0.02, 19U, 0.30, true, 1.0, routing), 3U);
+        m3::DetectorDecision note_on;
+        m3::VoiceTransition event;
+        event.kind = m3::TransitionKind::note_on;
+        event.note = 79U;
+        event.velocity = 90U;
+        event.voice_id = routing == m3::MidiRouting::per_voice
+                             ? 6U : m3::kUnassignedVoiceId;
+        M3_EXPECT_TRUE(note_on.transitions.push_back(event));
+        deliver(note_on);
+        if (panic) {
+          ledger.request_release_all();
+          M3_EXPECT_TRUE(ledger.retry_pending_releases({&capture, &Capture::push}));
+          detector.reset();
+        }
+        std::uint32_t release_sample = 0U;
+        for (std::uint32_t sample = 1U; sample <= 24000U; ++sample) {
+          deliver(detector.process_sample(0.0));
+          if (release_sample == 0U && !capture.active) release_sample = sample;
+        }
+        M3_EXPECT_EQ(capture.offs, 1U);
+        M3_EXPECT_TRUE(release_sample != 0U);
+        M3_EXPECT_FALSE(capture.active);
+        M3_EXPECT_FALSE(ledger.is_active(79U));
+        M3_EXPECT_FALSE(ledger.release_pending());
+        if (enabled) M3_EXPECT_EQ(release_sample, control_release_sample);
+        else control_release_sample = release_sample;
+      }
+    }
+  }
+}
+
+M3_TEST(native_detector_coasting_harmonic_preserves_groups_and_pending_evidence) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::HarmonicHandoffCase;
+  for (const auto scenario : {Case::owner_pair, Case::owner_triple, Case::owner_four,
+       Case::lower_pair, Case::pending_group, Case::fine_group, Case::beat_group,
+       Case::continuity_group}) {
+    m3::PolyphonicPitchDetector detector;
+    Access::coasting_harmonic_handoff_probe(detector, scenario);
+  }
+}
+
+M3_TEST(native_detector_coasting_harmonic_keeps_ownership_when_note_off_cannot_fit) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  Access::coasting_harmonic_handoff_probe(detector, Access::HarmonicHandoffCase::full_queue);
+}
+
+M3_TEST(native_detector_coasting_harmonic_silence_and_panic_leave_no_sticky_midi) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const auto routing : {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
+    for (const bool panic : {false, true}) {
+      struct Capture final {
+        std::array<std::array<bool, 128U>, 16U> active{};
+        std::array<unsigned, 128U> offs{};
+        static bool push(void* context, const m3::VoiceTransition& event,
+                         std::uint8_t channel) noexcept {
+          auto& self = *static_cast<Capture*>(context);
+          if (channel == 0U || channel > 16U || event.note >= 128U) return false;
+          bool& active = self.active[channel - 1U][event.note];
+          M3_EXPECT_EQ(active, event.kind == m3::TransitionKind::note_off);
+          active = event.kind == m3::TransitionKind::note_on;
+          if (!active) ++self.offs[event.note];
+          return true;
+        }
+      } capture;
+      m3::GeneratedNoteLedger ledger;
+      M3_EXPECT_TRUE(ledger.activate(64U));
+      const auto deliver = [&](const m3::DetectorDecision& decision) {
+        if (decision.transitions.size() == 0U) return;
+        ledger.begin_block();
+        for (const auto& event : decision.transitions) {
+          M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+        }
+        M3_EXPECT_FALSE(ledger.deliver(
+            64U, {&capture, &Capture::push}, 0.5, true, true, routing, 1U)
+                            .output_blocked);
+      };
+      m3::PersistentConfig config;
+      config.profile_mode = m3::ProfileMode::m3;
+      config.midi_routing = routing;
+      config.lowest_note = 32U;
+      config.highest_note = 87U;
+      config.max_polyphony = 5U;
+      config.response = 75U;
+      m3::PolyphonicPitchDetector detector;
+      M3_EXPECT_TRUE(detector.configure(48000.0, config));
+      m3::DetectorDecision notes_on;
+      for (const auto note : {60U, 79U}) {
+        m3::VoiceTransition event;
+        event.kind = m3::TransitionKind::note_on;
+        event.note = static_cast<std::uint8_t>(note);
+        event.velocity = 90U;
+        event.voice_id = routing == m3::MidiRouting::per_voice
+                             ? (note == 60U ? 7U : 6U) : m3::kUnassignedVoiceId;
+        M3_EXPECT_TRUE(notes_on.transitions.push_back(event));
+      }
+      deliver(notes_on);
+      deliver(Access::coasting_harmonic_handoff_probe(
+          detector, Access::HarmonicHandoffCase::blocked_lane, routing));
+      M3_EXPECT_FALSE(ledger.is_active(79U));
+      M3_EXPECT_TRUE(ledger.is_active(60U));
+      if (panic) {
+        ledger.request_release_all();
+        M3_EXPECT_TRUE(ledger.retry_pending_releases({&capture, &Capture::push}));
+        detector.reset();
+      }
+      // Exercise normal quiet processing, not a test-only direct note-off.
+      for (std::uint32_t sample = 0U; sample < 24000U; ++sample) {
+        deliver(detector.process_sample(0.0));
+      }
+      M3_EXPECT_EQ(capture.offs[79U], 1U);
+      M3_EXPECT_EQ(capture.offs[60U], 1U);
+      M3_EXPECT_FALSE(ledger.release_pending());
+      for (const auto& channel : capture.active) {
+        for (const bool active : channel) M3_EXPECT_FALSE(active);
+      }
+    }
+  }
+}
+#endif
 
 M3_TEST(native_detector_handoffs_a_single_coasting_lane_to_a_fresh_adjacent_fundamental) {
   m3::PolyphonicPitchDetector detector;
@@ -8422,6 +9632,97 @@ M3_TEST(native_detector_reports_when_a_valid_fine_group_conflicts_with_an_owner)
                m3::FineGroupDisposition::conflicts_other_owned);
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_ownership_trace_captures_selected_harmonic_without_changes) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  const std::array<Access::OwnershipFixture, 2U> inputs{{
+      {40U, 2U, 4U, 4U, 7U}, {52U, 1U, 2U, 8U, 0U}}};
+  const auto control = Access::capture_ownership_fixture(detector, inputs);
+  M3_EXPECT_FALSE(detector.fine_group_ownership_diagnostics(52U).observed);
+  M3_EXPECT_TRUE(detector.set_fine_group_ownership_diagnostics_enabled(true));
+  M3_EXPECT_EQ(Access::capture_ownership_fixture(detector, inputs), control);
+  const auto target = detector.fine_group_ownership_diagnostics(40U);
+  const auto owner = detector.fine_group_ownership_diagnostics(52U);
+  M3_EXPECT_EQ(detector.fine_group_disposition(40U),
+               m3::FineGroupDisposition::conflicts_other_owned);
+  M3_EXPECT_TRUE(target.group_evaluated);
+  M3_EXPECT_EQ(target.group_mask, 7U);
+  M3_EXPECT_EQ(target.other_owned_mask, 2U);
+  M3_EXPECT_EQ(target.overlap_mask, 2U);
+  M3_EXPECT_TRUE(owner.observed && owner.selected && owner.active);
+  M3_EXPECT_EQ(owner.owned_mask, 2U);  // Selected ownership excludes stale MIDI.
+  M3_EXPECT_EQ(owner.assigned_mask, 2U);
+  M3_EXPECT_EQ(owner.midi_mask, 8U);
+  M3_EXPECT_EQ(owner.primary, 1U);
+  M3_EXPECT_EQ(owner.age_ticks, 1000U);
+  M3_EXPECT_EQ(owner.score_threshold_ratio, 0.25);
+  M3_EXPECT_EQ(owner.fundamental_score_ratio, 0.05);
+  M3_EXPECT_FALSE(owner.direct_fundamental || owner.fine_valid);
+}
+
+M3_TEST(native_detector_ownership_trace_keeps_coasting_midi_and_all_owners) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  M3_EXPECT_TRUE(detector.set_fine_group_ownership_diagnostics_enabled(true));
+  const std::array<Access::OwnershipFixture, 3U> inputs{{
+      {40U, 2U, 4U, 4U, 7U}, {36U, 1U, 0U, 2U, 0U, false},
+      {56U, 1U, 2U, 2U, 0U}}};
+  Access::capture_ownership_fixture(detector, inputs);
+  const auto coast = detector.fine_group_ownership_diagnostics(36U);
+  const auto selected = detector.fine_group_ownership_diagnostics(56U);
+  M3_EXPECT_TRUE(coast.observed && coast.active && !coast.selected);
+  M3_EXPECT_EQ(coast.assigned_mask, 0U);
+  M3_EXPECT_EQ(coast.midi_mask, 2U);
+  M3_EXPECT_EQ(coast.owned_mask, 2U);
+  M3_EXPECT_TRUE(selected.observed && selected.selected);
+  M3_EXPECT_EQ(selected.owned_mask, 2U);
+  M3_EXPECT_EQ(detector.fine_group_ownership_diagnostics(40U).overlap_mask, 2U);
+  M3_EXPECT_EQ(detector.fine_group_disposition(40U),
+               m3::FineGroupDisposition::conflicts_other_owned);
+}
+
+M3_TEST(native_detector_ownership_trace_precedes_group_mutation) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  M3_EXPECT_TRUE(detector.set_fine_group_ownership_diagnostics_enabled(true));
+  // The earlier owner's mask lacks its primary. Inference normalizes it,
+  // but the ownership gate uses the counts built before that mutation.
+  const std::array<Access::OwnershipFixture, 2U> inputs{{
+      {36U, 1U, 1U, 1U, 0U}, {40U, 2U, 4U, 4U, 5U}}};
+  const auto after = Access::capture_ownership_fixture(detector, inputs);
+  M3_EXPECT_EQ(after[0U], 2U);
+  const auto before = detector.fine_group_ownership_diagnostics(36U);
+  M3_EXPECT_EQ(before.assigned_mask, 1U);
+  M3_EXPECT_EQ(before.owned_mask, 1U);
+  M3_EXPECT_EQ(detector.fine_group_ownership_diagnostics(40U).overlap_mask, 1U);
+  M3_EXPECT_EQ(detector.fine_group_disposition(40U),
+               m3::FineGroupDisposition::conflicts_other_owned);
+}
+
+M3_TEST(native_detector_ownership_trace_clears_on_empty_inference_and_reset) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  M3_EXPECT_TRUE(detector.set_fine_group_ownership_diagnostics_enabled(true));
+  const std::array<Access::OwnershipFixture, 1U> input{{
+      {40U, 2U, 4U, 4U, 5U}}};
+  Access::capture_ownership_fixture(detector, input);
+  M3_EXPECT_TRUE(detector.fine_group_ownership_diagnostics(40U).observed);
+  M3_EXPECT_FALSE(detector.fine_group_ownership_diagnostics(31U).observed);
+  M3_EXPECT_FALSE(detector.fine_group_ownership_diagnostics(127U).observed);
+  Access::capture_ownership_fixture(detector,
+      std::array<Access::OwnershipFixture, 0U>{});
+  M3_EXPECT_FALSE(detector.fine_group_ownership_diagnostics(40U).observed);
+  Access::capture_ownership_fixture(detector, input);
+  detector.reset();
+  M3_EXPECT_FALSE(detector.fine_group_ownership_diagnostics(40U).observed);
+}
+#endif
+
 M3_TEST(native_detector_counts_coasting_lanes_against_the_unison_budget) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   constexpr std::size_t kUnison = kSharedUnisonNote - 32U;
@@ -8807,6 +10108,171 @@ M3_TEST(native_detector_string_posterior_retains_alternatives_until_onset) {
   M3_EXPECT_EQ(sequence[1U], 0U);
   M3_EXPECT_EQ(sequence[2U], 1U);
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+namespace {
+constexpr std::array<double, m3::kCalibrationHarmonicCount> kProvisionalFretted{
+    0.91, 0.31, 0.14, 0.05, 0.01, 0.00};
+constexpr std::array<double, m3::kCalibrationHarmonicCount> kProvisionalOpen{
+    0.72, 0.50, 0.31, 0.18, 0.09, 0.04};
+
+void prepare_provisional_open_probe(
+    m3::PolyphonicPitchDetector& detector, bool complete_bank = true,
+    m3::MidiRouting routing = m3::MidiRouting::single) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = routing;
+  config.lowest_note = 32U;
+  config.highest_note = 60U;
+  config.max_polyphony = 5U;
+  config.max_fret = 24U;
+  config.response = 75U;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  m3::StringCalibrationBank bank;
+  set_measured_string_profile(bank, 0U, 4U, 0.0, kProvisionalFretted);
+  if (complete_bank)
+    set_measured_string_profile(bank, 1U, 0U, 0.0, kProvisionalOpen);
+  detector.set_calibration_bank(bank);
+}
+}  // namespace
+
+M3_TEST(native_detector_provisional_open_guard_corrects_only_the_conflicting_prior) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const bool enabled : {false, true}) {
+    m3::PolyphonicPitchDetector detector;
+    prepare_provisional_open_probe(detector);
+    M3_EXPECT_EQ(Access::provisional_open_retention_probe(
+                     detector, enabled, kProvisionalFretted), enabled ? 0U : 1U);
+    prepare_provisional_open_probe(detector);
+    M3_EXPECT_EQ(Access::provisional_open_retention_probe(
+                     detector, enabled, kProvisionalOpen), 1U);
+  }
+}
+
+M3_TEST(native_detector_provisional_open_guard_preserves_ambiguous_and_group_evidence) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::ProvisionalOpenCase;
+  for (const auto scenario : {Case::invalid_phase, Case::committed,
+       Case::polyphonic, Case::another_active, Case::assigned_group,
+       Case::pending_group, Case::continuity_group, Case::fine_group,
+       Case::pending_fine_group, Case::selector_group, Case::beat_group,
+       Case::multi_source, Case::no_suppression}) {
+    std::uint8_t baseline = 255U;
+    for (const bool enabled : {false, true}) {
+      m3::PolyphonicPitchDetector detector;
+      prepare_provisional_open_probe(detector);
+      const auto assigned = Access::provisional_open_retention_probe(
+          detector, enabled, kProvisionalFretted, scenario);
+      if (enabled) M3_EXPECT_EQ(assigned, baseline);
+      else baseline = assigned;
+    }
+  }
+  std::uint8_t baseline = 255U;
+  for (const bool enabled : {false, true}) {
+    m3::PolyphonicPitchDetector detector;
+    prepare_provisional_open_probe(detector, false);
+    const auto assigned = Access::provisional_open_retention_probe(
+        detector, enabled, kProvisionalFretted);
+    if (enabled) M3_EXPECT_EQ(assigned, baseline);
+    else baseline = assigned;
+  }
+}
+
+M3_TEST(native_detector_provisional_open_guard_does_not_need_persistent_privilege) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PolyphonicPitchDetector detector;
+  prepare_provisional_open_probe(detector);
+  M3_EXPECT_EQ(Access::provisional_open_retention_probe(
+                   detector, true, kProvisionalFretted), 0U);
+  for (unsigned decision = 0U; decision < 4U; ++decision) {
+    M3_EXPECT_EQ(Access::provisional_assignment_after_suppression_ends(detector), 0U);
+  }
+}
+
+M3_TEST(native_detector_provisional_open_guard_is_invariant_to_common_gain) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const double gain : {0.001, 0.1, 1.0, 10.0}) {
+    auto observed = kProvisionalFretted;
+    for (auto& amplitude : observed) amplitude *= gain;
+    for (const bool enabled : {false, true}) {
+      m3::PolyphonicPitchDetector detector;
+      prepare_provisional_open_probe(detector);
+      M3_EXPECT_EQ(Access::provisional_open_retention_probe(
+                       detector, enabled, observed), enabled ? 0U : 1U);
+    }
+  }
+}
+
+M3_TEST(native_detector_provisional_open_guard_preserves_original_midi_release_owner) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const auto routing : {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
+    for (const bool panic : {false, true}) {
+      std::uint32_t baseline_release = 0U;
+      for (const bool enabled : {false, true}) {
+        struct Capture final {
+          bool active = false;
+          unsigned offs = 0U;
+          std::uint8_t channel = 1U;
+          static bool push(void* context, const m3::VoiceTransition& event,
+                           std::uint8_t channel) noexcept {
+            auto& self = *static_cast<Capture*>(context);
+            M3_EXPECT_EQ(event.note, 36U);
+            M3_EXPECT_EQ(channel, self.channel);
+            M3_EXPECT_EQ(self.active, event.kind == m3::TransitionKind::note_off);
+            self.active = event.kind == m3::TransitionKind::note_on;
+            if (!self.active) ++self.offs;
+            return true;
+          }
+        } capture;
+        capture.channel = routing == m3::MidiRouting::per_voice ? 2U : 1U;
+        m3::GeneratedNoteLedger ledger;
+        M3_EXPECT_TRUE(ledger.activate(64U));
+        const auto deliver = [&](const m3::DetectorDecision& decision) {
+          if (decision.transitions.size() == 0U) return;
+          ledger.begin_block();
+          for (const auto& event : decision.transitions)
+            M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+          M3_EXPECT_FALSE(ledger.deliver(
+              64U, {&capture, &Capture::push}, 0.5, true, true, routing, 1U)
+                              .output_blocked);
+        };
+        m3::PolyphonicPitchDetector detector;
+        prepare_provisional_open_probe(detector, true, routing);
+        M3_EXPECT_EQ(Access::provisional_open_retention_probe(
+            detector, enabled, kProvisionalFretted), enabled ? 0U : 1U);
+        // The previously emitted note belongs to the old lane even when the
+        // tuner assignment changes. Silence/panic must release that same owner.
+        m3::DetectorDecision note_on;
+        m3::VoiceTransition event;
+        event.kind = m3::TransitionKind::note_on;
+        event.note = 36U;
+        event.velocity = 90U;
+        event.voice_id = routing == m3::MidiRouting::per_voice
+                             ? 1U : m3::kUnassignedVoiceId;
+        M3_EXPECT_TRUE(note_on.transitions.push_back(event));
+        deliver(note_on);
+        if (panic) {
+          ledger.request_release_all();
+          M3_EXPECT_TRUE(ledger.retry_pending_releases({&capture, &Capture::push}));
+          detector.reset();
+        }
+        std::uint32_t released = 0U;
+        for (std::uint32_t sample = 1U; sample <= 24000U; ++sample) {
+          deliver(detector.process_sample(0.0));
+          if (released == 0U && !capture.active) released = sample;
+        }
+        M3_EXPECT_EQ(capture.offs, 1U);
+        M3_EXPECT_TRUE(released != 0U);
+        M3_EXPECT_FALSE(capture.active);
+        M3_EXPECT_FALSE(ledger.is_active(36U));
+        M3_EXPECT_FALSE(ledger.release_pending());
+        if (enabled) M3_EXPECT_EQ(released, baseline_release);
+        else baseline_release = released;
+      }
+    }
+  }
+}
+#endif
 
 M3_TEST(native_detector_complete_calibration_does_not_force_a_fresh_note_onto_a_mismatched_open_string) {
   // Physical walk regression: C2 plucked at string 8 fret 4 was routed for
@@ -9653,6 +11119,75 @@ M3_TEST(native_detector_keeps_an_independent_open_string_when_fret_masks_conflic
   M3_EXPECT_FALSE(lifecycle.unexpected_on);
 }
 
+M3_TEST(native_detector_joint_spectral_lanes_preserve_exclusive_physical_ownership) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  using Masks = std::array<std::uint8_t, m3::kMaxVoices>;
+  using Margins = std::array<double, m3::kMaxVoices>;
+  const Masks primary{4U, 8U};
+  const Masks playable{0xffU, 0xffU};
+  const Margins margins{0.02, 0.04};
+  const auto check = [&](const Masks& proposed, const Masks& expected,
+                         std::uint8_t reserved = 0U,
+                         const Masks& feasible = Masks{0xffU, 0xffU}) {
+    const auto allocations = m3::test::allocation_count();
+    const auto accepted = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+        proposed, primary, feasible, margins, Masks{}, reserved, 2U);
+    M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+    M3_EXPECT_TRUE(accepted == expected);
+  };
+  // Two simultaneous claims cannot see one another through prior MIDI state.
+  // Retain the stronger measured proposal; the other pitch keeps its DP lane.
+  check(Masks{2U, 2U}, Masks{0U, 2U});
+  check(Masks{2U, 16U}, Masks{2U, 16U});
+  // A complete legal chain or swap vacates the neighbour's former lane.
+  check(Masks{8U, 16U}, Masks{8U, 16U});
+  check(Masks{8U, 4U}, Masks{8U, 4U});
+  // A neighbour that cannot move still owns its DP lane.
+  check(Masks{8U, 0U}, Masks{});
+  // Coasting voices and committed group members retain reserved ownership.
+  check(Masks{2U, 16U}, Masks{0U, 16U}, 2U);
+  check(Masks{2U, 16U}, Masks{0U, 16U}, 0U, Masks{4U, 0xffU});
+  check(Masks{3U, 16U}, Masks{0U, 16U});
+  check(Masks{4U, 8U}, primary);
+  const auto reversed = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{16U, 2U}, Masks{8U, 4U}, playable,
+      Margins{0.04, 0.02}, Masks{}, 0U, 2U);
+  M3_EXPECT_TRUE(reversed == (Masks{16U, 2U}));
+  const auto reversed_conflict = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{2U, 2U}, Masks{8U, 4U}, playable,
+      Margins{0.04, 0.02}, Masks{}, 0U, 2U);
+  M3_EXPECT_TRUE(reversed_conflict == (Masks{2U, 0U}));
+  const auto tied = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{2U, 2U}, primary, playable,
+      Margins{0.04, 0.04}, Masks{2U, 8U}, 0U, 2U);
+  M3_EXPECT_TRUE(tied == (Masks{2U, 0U}));
+  const auto tied_reversed = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{2U, 2U}, Masks{8U, 4U}, playable,
+      Margins{0.04, 0.04}, Masks{8U, 2U}, 0U, 2U);
+  M3_EXPECT_TRUE(tied_reversed == (Masks{0U, 2U}));
+  const auto invalid_evidence = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{2U, 16U}, primary, playable,
+      Margins{std::numeric_limits<double>::quiet_NaN(), -0.01}, Masks{}, 0U, 2U);
+  M3_EXPECT_TRUE(invalid_evidence == Masks{});
+  // The bounded eight-voice solver can resolve a complete cycle without
+  // allocating, duplicating a physical string, or exceeding voice capacity.
+  const Masks all_primary{1U, 2U, 4U, 8U, 16U, 32U, 64U, 128U};
+  const Masks cycle{2U, 4U, 8U, 16U, 32U, 64U, 128U, 1U};
+  Masks all_playable{};
+  all_playable.fill(0xffU);
+  Margins all_margins{};
+  all_margins.fill(0.04);
+  const auto allocations = m3::test::allocation_count();
+  const auto cycle_result = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      cycle, all_primary, all_playable, all_margins, Masks{}, 0U, 8U);
+  const auto excessive_count = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      cycle, all_primary, all_playable, all_margins, Masks{}, 0U, 9U);
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+  M3_EXPECT_TRUE(cycle_result == cycle);
+  M3_EXPECT_TRUE(excessive_count == Masks{});
+#endif
+}
+
 M3_TEST(native_detector_spectral_lane_evidence_only_reassigns_one_active_free_lane) {
   constexpr std::uint8_t kCurrent = 0x01U;
   constexpr std::uint8_t kProjected = 0x08U;
@@ -10267,5 +11802,81 @@ M3_TEST(native_detector_residual_output_mute_reasons_preserve_measured_evidence)
   for (const auto route : {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
     m3::PolyphonicPitchDetectorTestAccess::residual_output_reason_handoff(detector, route);
   }
+}
+#endif
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_residual_recovery_preserves_capacity_evidence_and_ownership) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::residual_recovery_guards(detector);
+}
+
+M3_TEST(native_detector_residual_recovery_renewal_preserves_guards_and_expires) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::residual_recovery_renewal_guards(detector);
+}
+
+M3_TEST(native_detector_residual_recovery_refuses_newly_projected_midi_collision) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PersistentConfig config;
+  config.lowest_note = 32U;
+  config.highest_note = 72U;
+  config.max_polyphony = 5U;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  m3::PolyphonicPitchDetectorTestAccess::calibrated_dp_output_projection_probe(
+      detector, 0U, false, false, false, false, false, false, true);
+}
+
+M3_TEST(native_detector_discarded_phase_shadow_is_causal_and_resets) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::discarded_phase_shadow_probe(detector);
+}
+
+M3_TEST(native_detector_residual_lane_costs_match_native_nonisolated_costs) {
+  m3::PolyphonicPitchDetector detector;
+  const auto shadow =
+      m3::PolyphonicPitchDetectorTestAccess::residual_lane_probe(detector);
+  const auto selected =
+      m3::PolyphonicPitchDetectorTestAccess::residual_lane_probe(detector, true);
+  M3_EXPECT_TRUE(shadow.fixed_context);
+  M3_EXPECT_TRUE(shadow.phase_shadow);
+  M3_EXPECT_FALSE(shadow.observed);
+  M3_EXPECT_EQ(shadow.ordinal, 255U);
+  M3_EXPECT_EQ(shadow.selected_count, 2U);
+  M3_EXPECT_EQ(shadow.playable, 15U);
+  M3_EXPECT_EQ(shadow.reserved_coasting, 4U);
+  M3_EXPECT_EQ(shadow.reserved_extras, 8U);
+  M3_EXPECT_FALSE(shadow.isolated);
+  M3_EXPECT_FALSE(shadow.use_posterior);
+  M3_EXPECT_FALSE(shadow.reassignment_ready);
+  M3_EXPECT_TRUE(selected.observed);
+  M3_EXPECT_FALSE(selected.fixed_context);
+  M3_EXPECT_FALSE(selected.phase_shadow);
+  bool has_cost = false;
+  for (std::size_t string = 0U; string < m3::kMaxVoices; ++string) {
+    M3_EXPECT_EQ(shadow.lane_totals[string], selected.lane_totals[string]);
+    has_cost = has_cost || shadow.lane_totals[string] != 0.0;
+    for (std::size_t term = 0U; term < shadow.lane_terms[string].size(); ++term)
+      M3_EXPECT_EQ(shadow.lane_terms[string][term], selected.lane_terms[string][term]);
+  }
+  M3_EXPECT_TRUE(has_cost);
+}
+
+M3_TEST(native_detector_residual_lane_costs_respect_capture_and_candidate_gates) {
+  m3::PolyphonicPitchDetector detector;
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  M3_EXPECT_FALSE(Access::residual_lane_probe(detector, false, false).fixed_context);
+  M3_EXPECT_FALSE(Access::residual_lane_probe(detector, false, true, 17U).fixed_context);
+  M3_EXPECT_FALSE(Access::residual_lane_probe(detector, false, true, 16U, true).fixed_context);
+  M3_EXPECT_FALSE(Access::residual_lane_probe(detector, false, true, 16U, false, true)
+                      .fixed_context);
+  M3_EXPECT_FALSE(Access::residual_lane_probe(detector, false, true, 16U, false, false,
+                                            false).fixed_context);
+  const auto restricted = Access::residual_lane_probe(
+      detector, false, true, 16U, false, false, true, true);
+  M3_EXPECT_TRUE(restricted.fixed_context);
+  M3_EXPECT_EQ(restricted.playable, 5U);
+  M3_EXPECT_EQ(restricted.lane_totals[1U], 0.0);
+  M3_EXPECT_EQ(restricted.lane_totals[3U], 0.0);
 }
 #endif

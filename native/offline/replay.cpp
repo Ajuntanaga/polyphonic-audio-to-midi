@@ -17,6 +17,7 @@
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "joint_pitch_residual.hpp"
 #include "frequency_refinement_shadow.hpp"
+#include "residual_recovery.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace m3::offline {
@@ -291,7 +292,7 @@ void write_string_assignment_frame(
   for (std::uint16_t n = 0U; n < 128U; ++n) {
     const auto note = static_cast<std::uint8_t>(n);
     const auto a = detector.string_assignment_diagnostics(note);
-    if (!a.observed && !a.calibrated_replacement) continue;
+    if (!a.observed && !a.calibrated_replacement && !a.fixed_context) continue;
     if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
     bool any_label = false, expected_note = false;
     std::uint8_t expected_mask = 0U, rendered_mask = 0U;
@@ -370,22 +371,84 @@ void write_string_assignment_frame(
           fit.pair_error, fit.secondary_weight);
       for (const double value : fit.observed) std::fprintf(trace.stream, ":%.17g", value);
     }
-    std::fputc('\n', trace.stream);
+    std::fprintf(trace.stream, "\t%u\t%u\n", unsigned(a.fixed_context),
+                 unsigned(a.phase_shadow));
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
     if (trace.failed) return;
   }
 }
 
-void write_residual_admission_frame(
-    ResidualAdmissionTrace& trace, std::size_t sample_index,
+void evaluate_residual_recovery_renewals(
+    ResidualRecoveryScreen& recovery, std::uint32_t tick,
+    const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
+    const std::array<bool, 128U>& owned, double sample_rate,
+    m3::JointPitchResidual& base_fit, m3::JointPitchResidual& added_fit) {
+  for (std::size_t n = 0U; n < owned.size(); ++n) {
+    const auto note = static_cast<std::uint8_t>(n);
+    const auto owner = detector.residual_recovery_owner_for_diagnostics(note);
+    if (!owned[n] || owner >= kMaxVoices) continue;
+    std::array<m3::JointPitchObservation, kMaxVoices> observations{};
+    std::size_t count = 0U;
+    std::uint8_t occupied = 0U;
+    double energy = 0.0, decay = 0.0;
+    bool complete = true;
+    for (std::size_t other = 0U; other < owned.size(); ++other) {
+      if (!owned[other] || other == n) continue;
+      if (count >= kMaxVoices - 1U) { complete = false; break; }
+      auto& observed = observations[count++];
+      observed.note = static_cast<std::uint8_t>(other);
+      if (!detector.harmonic_correlations_for_diagnostics(
+              observed.note, observed.frequency_hz, observed.correlation,
+              energy, decay)) { complete = false; break; }
+      const auto assignment = detector.string_assignment_diagnostics(observed.note);
+      const auto tracking = detector.candidate_tracking_diagnostics(observed.note);
+      occupied = static_cast<std::uint8_t>(occupied | tracking.assigned_mask |
+          assignment.midi_mask | assignment.final_continuity |
+          detector.selector_group_mask(observed.note));
+    }
+    if (!complete || count < 2U) continue;
+    for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+      const auto& voice = snapshot.voices[v];
+      if (voice.detected_midi_note == note) continue;
+      if (voice.midi_note == note) { complete = false; break; }
+      if (voice.string_index < kMaxVoices)
+        occupied = static_cast<std::uint8_t>(occupied | (1U << voice.string_index));
+    }
+    if (!complete) continue;
+    const auto admission = detector.candidate_admission_diagnostics(note);
+    const auto available = static_cast<std::uint8_t>(
+        admission.playable_string_mask & ~occupied);
+    if ((available & (1U << owner)) == 0U) continue;
+    // Leave the recovered pitch OUT of the base. Fitting it against a model
+    // already containing that pitch would manufacture its own renewal evidence.
+    const auto base = base_fit.evaluate(observations, count, sample_rate, decay, energy);
+    auto& added = observations[count];
+    added.note = note;
+    if (!detector.harmonic_correlations_for_diagnostics(
+            note, added.frequency_hz, added.correlation, energy, decay)) continue;
+    const auto fit = added_fit.evaluate(observations, count + 1U, sample_rate, decay, energy);
+    recovery.observe({tick, note, available, static_cast<std::uint8_t>(count),
+        base.valid && fit.valid, true, fit.shared_fundamental[count],
+        base.residual_fraction - fit.residual_fraction,
+        fit.independent_energy_fraction[count], fit.fundamental_overlap[count], {}}, owner);
+  }
+}
+
+void evaluate_residual_admission_frame(
+    ResidualAdmissionTrace* trace, ResidualRecoveryScreen* recovery,
+    std::size_t sample_index,
     const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
     const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels,
     const PersistentConfig& config, double sample_rate,
     m3::JointPitchResidual& base_fit, m3::JointPitchResidual& added_fit) {
   const auto frame = detector.candidate_tracking_diagnostics(0U);
-  if (trace.failed || frame.decision_tick % trace.kTickDecimation != 0U) return;
-  ++trace.sampled_frames;
+  if (recovery != nullptr) recovery->begin_tick();
+  if (detector.quiet_disposition() != QuietDisposition::not_quiet &&
+      recovery != nullptr) *recovery = {};
+  if ((recovery == nullptr && (trace == nullptr || trace->failed)) ||
+      frame.decision_tick % ResidualRecoveryScreen::kDecimation != 0U) return;
+  if (trace != nullptr && !trace->failed) ++trace->sampled_frames;
   if (detector.quiet_disposition() != QuietDisposition::not_quiet ||
       static_cast<double>(sample_index + 1U) < 0.8 * sample_rate) return;
 
@@ -414,6 +477,9 @@ void write_residual_admission_frame(
     }
   }
   const auto used_voices = std::max<std::size_t>(mask_member_count(used_mask), selected_count);
+  if (recovery != nullptr)
+    evaluate_residual_recovery_renewals(*recovery, frame.decision_tick, detector,
+        snapshot, owned, sample_rate, base_fit, added_fit);
   if (selected_count == 0U || selected_count >= kMaxVoices ||
       used_voices >= config.max_polyphony) return;
 
@@ -440,16 +506,40 @@ void write_residual_admission_frame(
         mask_member_count(detector.fine_frequency_member_mask(note)) >= 2U ||
         mask_member_count(detector.fine_frequency_pending_member_mask(note)) >= 2U ||
         mask_member_count(detector.committed_unison_mask(note)) >= 2U) continue;
-    ++trace.candidates;
-    if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
+    bool log_row = trace != nullptr && !trace->failed;
+    if (log_row) {
+      ++trace->candidates;
+      if (trace->rows >= trace->kMaximumRows) {
+        trace->truncated = true;
+        if (recovery == nullptr) return;
+        log_row = false;
+      }
+    }
     auto& added = observations[count];
     added.note = note;
     if (!detector.harmonic_correlations_for_diagnostics(
             note, added.frequency_hz, added.correlation, energy, decay)) continue;
     const auto fit = added_fit.evaluate(observations, count + 1U, sample_rate, decay, energy);
 
+    bool already_emitted = false;
+    for (std::size_t v = 0U; v < snapshot.voice_count; ++v)
+      already_emitted = already_emitted || snapshot.voices[v].midi_note == note;
+    const auto lane = detector.string_assignment_diagnostics(note);
+    const auto lane_available = static_cast<std::uint8_t>(lane.fixed_context
+        ? lane.playable & ~lane.reserved_coasting & ~lane.reserved_extras & ~used_mask
+        : 0U);
+    if (recovery != nullptr && !already_emitted) {
+      recovery->observe({frame.decision_tick, note, lane_available,
+          static_cast<std::uint8_t>(count), base.valid && fit.valid,
+          lane.fixed_context, fit.shared_fundamental[count],
+          base.residual_fraction - fit.residual_fraction,
+          fit.independent_energy_fraction[count], fit.fundamental_overlap[count],
+          lane.lane_totals});
+    }
+    if (!log_row) continue;
+
     // Truth is attached after both counterfactual models have been evaluated.
-    bool any_label = false, expected_note = false, already_emitted = false;
+    bool any_label = false, expected_note = false;
     std::uint8_t expected_mask = 0U;
     for (std::size_t i = 0U; i < labels.size(); ++i) {
       if (!active_labels[i]) continue;
@@ -459,9 +549,7 @@ void write_residual_admission_frame(
         expected_mask |= labels[i].string_mask;
       }
     }
-    for (std::size_t v = 0U; v < snapshot.voice_count; ++v)
-      already_emitted = already_emitted || snapshot.voices[v].midi_note == note;
-    std::fprintf(trace.stream,
+    std::fprintf(trace->stream,
         "%llu\t%u\t%u\t%zu\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
         "%.17g\t%.17g\t%.17g\t%.17g\t%u\t%.17g\t%.17g\t%.17g\t%u\t%u\t%.17g\t%u\t",
         static_cast<unsigned long long>(sample_index), frame.decision_tick, note,
@@ -474,11 +562,16 @@ void write_residual_admission_frame(
         a.direct_fundamental_peak, a.local_peak, a.best_calibration_similarity,
         a.best_calibrated_string);
     for (std::size_t i = 0U; i < count; ++i)
-      std::fprintf(trace.stream, "%s%u", i == 0U ? "" : ",", observations[i].note);
-    std::fputc('\n', trace.stream);
-    trace.failed = std::ferror(trace.stream) != 0;
-    ++trace.rows;
-    if (trace.failed) return;
+      std::fprintf(trace->stream, "%s%u", i == 0U ? "" : ",", observations[i].note);
+    std::fprintf(trace->stream, "\t%u\t%u\t%u", lane.fixed_context,
+                 lane.fixed_context ? lane.selected_count : 0U, lane_available);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace->stream, "\t%.17g", (lane_available & (1U << string)) != 0U
+          ? lane.lane_totals[string] : 0.0);
+    std::fputc('\n', trace->stream);
+    trace->failed = std::ferror(trace->stream) != 0;
+    ++trace->rows;
+    if (trace->failed && recovery == nullptr) return;
   }
 }
 
@@ -2395,9 +2488,33 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_profile_memory_partial_correction,
                          bool diagnostic_assignment_partial_correction,
                          bool diagnostic_profile_pair_output_filter,
-                         bool diagnostic_profile_pair_continuity_echo) {
+                         bool diagnostic_profile_pair_continuity_echo,
+                         bool diagnostic_state_local_open_prior,
+                         bool diagnostic_coasting_harmonic_handoff,
+                         bool diagnostic_calibrated_harmonic_admission_guard,
+                         bool diagnostic_provisional_open_retention_guard,
+                         bool diagnostic_residual_pitch_recovery,
+                         MidiEventTrace* midi_event_trace,
+                         bool diagnostic_residual_recovery_continuity,
+                         bool diagnostic_joint_spectral_ownership) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_residual_recovery_continuity && !diagnostic_residual_pitch_recovery)
+    return false;
+  if (midi_event_trace != nullptr) {
+    auto& trace = *midi_event_trace;
+    trace.rows = 0U;
+    trace.truncated = false;
+    trace.failed = trace.stream == nullptr;
+    if (trace.failed) return false;
+    trace.failed = std::fputs(
+        "# m3_midi_events_v1\nsample\tkind\tnote\tvelocity\tvoice_id\tsequence\n",
+        trace.stream) < 0;
+    if (trace.failed) return false;
+  }
+  if ((diagnostic_residual_pitch_recovery || diagnostic_joint_spectral_ownership) &&
+      config.profile_mode != ProfileMode::m3)
+    return false;
   if (assignment_trace != nullptr) {
     auto& trace = *assignment_trace;
     trace.rows = trace.sampled_frames = 0U;
@@ -2422,7 +2539,7 @@ bool run_detector_replay(const WaveData& wave,
         "profile_best_single_error\tprofile_mixture_error\tprofile_weights\t"
         "profile_observed\tprofile_single_errors\tcandidate_age_ticks\tmidi_mask\t"
         "profile_pair_primary\tprofile_pair_mask\tprofile_pair_current\t"
-        "profile_pair_short\tprofile_pair_long\n") < 0;
+        "profile_pair_short\tprofile_pair_long\tfixed_context\tphase_shadow\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
@@ -2439,7 +2556,10 @@ bool run_detector_replay(const WaveData& wave,
         "expected_note\texpected_mask\talready_emitted\tbase_valid\tadded_valid\t"
         "base_residual\tadded_residual\tresidual_gain\tindependent_energy\t"
         "shared_fundamental\tfundamental_overlap\tscore_ratio\tfund_ratio\t"
-        "direct\tlocal\tcalibration_similarity\tcalibration_string\tbase_notes\n") < 0;
+        "direct\tlocal\tcalibration_similarity\tcalibration_string\tbase_notes\t"
+        "lane_fixed_context\tlane_selected_count\tlane_available_mask\t"
+        "lane_cost_0\tlane_cost_1\tlane_cost_2\tlane_cost_3\t"
+        "lane_cost_4\tlane_cost_5\tlane_cost_6\tlane_cost_7\n") < 0;
 #endif
   }
   if (outcome_trace != nullptr) {
@@ -2480,7 +2600,11 @@ bool run_detector_replay(const WaveData& wave,
         "fine_update_scheduled\treset_serial\treset_tick\treset_prior_count\t"
         "reset_prior_last_tick\treset_reason\tfine_disposition\t"
         "fit_residual_improvement\tfit_min_member_ratio\tpending_beat_min\t"
-        "pending_seconds\tfit_unique_improvement\n") < 0;
+        "pending_seconds\tfit_unique_improvement\t"
+        "fine_group_disposition\townership_observed\tfine_group_evaluated\t"
+        "fine_group_mask\tfine_group_other_owned\tfine_group_overlap\t"
+        "fine_group_allocated\tfine_group_extra_capacity\tfine_group_owners\t"
+        "fine_group_owner_counts\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -2559,6 +2683,20 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_profile_memory_partial_correction);
   detector.set_assignment_partial_correction_for_diagnostics(
       diagnostic_assignment_partial_correction);
+  if (!detector.set_state_local_open_prior_for_diagnostics(
+          diagnostic_state_local_open_prior)) {
+    return false;
+  }
+  detector.set_coasting_harmonic_handoff_for_diagnostics(
+      diagnostic_coasting_harmonic_handoff);
+  detector.set_calibrated_harmonic_admission_guard_for_diagnostics(
+      diagnostic_calibrated_harmonic_admission_guard);
+  detector.set_provisional_open_retention_guard_for_diagnostics(
+      diagnostic_provisional_open_retention_guard);
+  detector.set_residual_pitch_recovery_for_diagnostics(
+      diagnostic_residual_pitch_recovery, diagnostic_residual_recovery_continuity);
+  detector.set_joint_spectral_ownership_for_diagnostics(
+      diagnostic_joint_spectral_ownership);
   detector.set_profile_pair_output_filter_for_diagnostics(
       diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo,
       diagnostic_profile_pair_continuity_echo);
@@ -2568,7 +2706,11 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_profile_pair_corroboration ||
       diagnostic_profile_memory_partial_correction ||
       diagnostic_assignment_partial_correction ||
-      diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo) {
+      diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo ||
+      diagnostic_state_local_open_prior || diagnostic_coasting_harmonic_handoff ||
+      diagnostic_calibrated_harmonic_admission_guard ||
+      diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||
+      diagnostic_joint_spectral_ownership) {
     return false;
   }
 #endif
@@ -2605,9 +2747,19 @@ bool run_detector_replay(const WaveData& wave,
     joint_pitch_fit = std::make_unique<m3::JointPitchResidual>();
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  detector.set_assignment_diagnostics_enabled(assignment_trace != nullptr);
+  static_assert(ResidualAdmissionTrace::kTickDecimation ==
+                PolyphonicPitchDetector::kResidualAssignmentDiagnosticDecimation);
+  static_assert(ResidualRecoveryScreen::kDecimation == ResidualAdmissionTrace::kTickDecimation);
+  const bool needs_residual_evidence =
+      residual_admission_trace != nullptr || diagnostic_residual_pitch_recovery;
+  detector.set_assignment_diagnostics_enabled(
+      assignment_trace != nullptr || needs_residual_evidence);
+  detector.set_residual_assignment_diagnostics_enabled(needs_residual_evidence);
+  if (!detector.set_fine_group_ownership_diagnostics_enabled(
+          candidate_trace != nullptr)) return false;
   std::unique_ptr<m3::JointPitchResidual> admission_base_fit, admission_added_fit;
-  if (residual_admission_trace != nullptr) {
+  ResidualRecoveryScreen residual_recovery;
+  if (needs_residual_evidence) {
     admission_base_fit = std::make_unique<m3::JointPitchResidual>();
     admission_added_fit = std::make_unique<m3::JointPitchResidual>();
   }
@@ -2837,6 +2989,17 @@ bool run_detector_replay(const WaveData& wave,
 #endif
       const DetectorDecision decision = detector.process_sample(sample);
       for (const VoiceTransition& transition : decision.transitions) {
+        if (midi_event_trace != nullptr && !midi_event_trace->failed) {
+          auto& trace = *midi_event_trace;
+          if (trace.rows >= trace.kMaximumRows) trace.truncated = true;
+          else {
+            trace.failed = std::fprintf(trace.stream, "%zu\t%s\t%u\t%u\t%u\t%u\n",
+                sample_index, transition.kind == TransitionKind::note_on ? "on" : "off",
+                unsigned(transition.note), unsigned(transition.velocity),
+                unsigned(transition.voice_id), unsigned(transition.sequence)) < 0;
+            ++trace.rows;
+          }
+        }
         ++result.transition_count;
         if (sample_is_inside_label(sample_index, labels)) {
           ++result.transition_inside_hold_count;
@@ -2864,10 +3027,15 @@ bool run_detector_replay(const WaveData& wave,
         write_string_assignment_frame(*assignment_trace, sample_index, detector,
                                       snapshot, labels, spectral_active_labels);
       }
-      if (residual_admission_trace != nullptr) {
-        write_residual_admission_frame(*residual_admission_trace, sample_index,
+      if (needs_residual_evidence) {
+        evaluate_residual_admission_frame(residual_admission_trace,
+            diagnostic_residual_pitch_recovery ? &residual_recovery : nullptr, sample_index,
             detector, snapshot, labels, spectral_active_labels, config,
             static_cast<double>(wave.sample_rate), *admission_base_fit, *admission_added_fit);
+        const auto proposal = residual_recovery.proposal();
+        if (diagnostic_residual_pitch_recovery && proposal.valid)
+          detector.submit_residual_recovery_for_diagnostics(
+              proposal.tick, proposal.note, proposal.string);
       }
       if (outcome_trace != nullptr) {
         write_candidate_outcome_frame(*outcome_trace, sample_index, detector,
@@ -2936,6 +3104,50 @@ bool run_detector_replay(const WaveData& wave,
               trace.failed = std::fprintf(trace.stream, "%s%.17g",
                   string == 0U ? "" : ",", unique[string]) < 0 || trace.failed;
             }
+            // Keep the older fine_disposition field (FineFrequencyDisposition)
+            // separate from this named FineGroupDisposition. Their numeric
+            // values have different meanings.
+            constexpr std::array<const char*,
+                static_cast<std::size_t>(FineGroupDisposition::count)> group_names{
+                "unresolved", "missing_primary", "invalid_size",
+                "conflicts_other_owned", "conflicts_allocated", "over_capacity",
+                "accepted"};
+            const auto ownership = detector.fine_group_ownership_diagnostics(note);
+            trace.failed = std::fprintf(trace.stream,
+                "\t%s\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t",
+                group_names[static_cast<std::size_t>(
+                    detector.fine_group_disposition(note))],
+                ownership.observed, ownership.group_evaluated, ownership.group_mask,
+                ownership.other_owned_mask, ownership.overlap_mask,
+                ownership.allocated_mask, ownership.extra_capacity) < 0 || trace.failed;
+            std::array<unsigned, kMaxVoices> owner_counts{};
+            first = true;
+            for (std::size_t other = 0U; other < 128U; ++other) {
+              if (other == note) continue;
+              const auto owner = detector.fine_group_ownership_diagnostics(
+                  static_cast<std::uint8_t>(other));
+              const auto overlap = static_cast<std::uint8_t>(
+                  owner.owned_mask & ownership.overlap_mask);
+              if (!owner.observed || overlap == 0U) continue;
+              // note:selected:active:owned:assigned:midi:primary:age:
+              // score_ratio:fund_ratio:direct:fine_valid:fine_mask.
+              // selected=0 denotes an active coasting owner. Include every
+              // owner, not just the last pitch encountered for each lane.
+              trace.failed = std::fprintf(trace.stream,
+                  "%s%zu:%u:%u:%u:%u:%u:%u:%u:%.17g:%.17g:%u:%u:%u",
+                  first ? "" : ",", other, owner.selected, owner.active,
+                  owner.owned_mask, owner.assigned_mask, owner.midi_mask,
+                  owner.primary, owner.age_ticks, owner.score_threshold_ratio,
+                  owner.fundamental_score_ratio, owner.direct_fundamental,
+                  owner.fine_valid, owner.fine_mask) < 0 || trace.failed;
+              first = false;
+              for (std::size_t string = 0U; string < owner_counts.size(); ++string)
+                owner_counts[string] += (overlap & (1U << string)) != 0U ? 1U : 0U;
+            }
+            trace.failed = std::fputc('\t', trace.stream) == EOF || trace.failed;
+            for (std::size_t string = 0U; string < owner_counts.size(); ++string)
+              trace.failed = std::fprintf(trace.stream, "%s%u",
+                  string == 0U ? "" : ",", owner_counts[string]) < 0 || trace.failed;
             trace.failed = std::fputc('\n', trace.stream) == EOF || trace.failed;
             ++trace.frames;
           }
@@ -8490,6 +8702,12 @@ bool run_detector_replay(const WaveData& wave,
   result.core_residual_output_joint_restores_energy_mid = core_residual.output_joint_restores_energy_mid;
   result.core_residual_output_joint_restores_energy_high = core_residual.output_joint_restores_energy_high;
   result.core_residual_output_joint_restores_safety = core_residual.output_joint_restores_safety;
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const auto recovery_stats = detector.residual_recovery_stats();
+  result.residual_recovery_proposals = recovery_stats.proposals;
+  result.residual_recovery_selected_ticks = recovery_stats.selected_ticks;
+  result.residual_recovery_note_ons = recovery_stats.note_ons;
 #endif
   output = result;
   error = ReplayError::none;

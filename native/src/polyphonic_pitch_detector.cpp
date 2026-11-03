@@ -1311,6 +1311,9 @@ std::uint8_t PolyphonicPitchDetector::spectral_lane_assignment(
       classification.valid && classification.member_count == 1U &&
       std::isfinite(classification.error);
   spectral->single_source_best_error = classification.error;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  spectral->single_source_posterior_margin = classification.posterior_margin;
+#endif
   spectral->single_source_error_mask = classification.member_mask;
   spectral->single_source_error_tick = decision_counter_;
   const FineFrequencyEvidenceState& fine =
@@ -1645,6 +1648,10 @@ void PolyphonicPitchDetector::reset() noexcept {
   beat_evidence_states_ = {};
   fine_frequency_evidence_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_discarded_phase_states_ = {};
+  diagnostic_residual_recovery_lease_ = {};
+  diagnostic_residual_recovery_stats_ = {};
+  diagnostic_residual_recovery_owners_.fill(kMaxVoices);
   fine_history_reset_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
@@ -1672,10 +1679,15 @@ void PolyphonicPitchDetector::reset() noexcept {
     std::fill_n(assignment_diagnostics_.get(), kMaxCandidates,
                 StringAssignmentDiagnostics{});
   }
+  if (fine_group_ownership_diagnostics_ != nullptr) {
+    std::fill_n(fine_group_ownership_diagnostics_.get(), kMaxCandidates,
+                FineGroupOwnershipDiagnostics{});
+  }
   retained_unison_dispositions_ = {};
   fine_group_dispositions_ = {};
   candidate_admission_diagnostics_ = {};
   diagnostic_candidate_rescue_string_masks_ = {};
+  diagnostic_calibrated_harmonic_reassignment_candidates_ = {};
 #endif
   string_fret_posteriors_.reset();
   string_fret_energy_memory_ = {};
@@ -2462,6 +2474,14 @@ std::uint8_t PolyphonicPitchDetector::unison_reacquisition_cache_mask(
 }
 #endif
 
+FineGroupOwnershipDiagnostics
+PolyphonicPitchDetector::fine_group_ownership_diagnostics(
+    std::uint8_t midi_note) const noexcept {
+  if (!fine_group_ownership_diagnostics_enabled_ || midi_note < lowest_note_ ||
+      midi_note - lowest_note_ >= candidate_count_) return {};
+  return fine_group_ownership_diagnostics_[midi_note - lowest_note_];
+}
+
 CandidateAdmissionDiagnostics
 PolyphonicPitchDetector::candidate_admission_diagnostics(
     std::uint8_t midi_note) const noexcept {
@@ -2488,7 +2508,9 @@ PolyphonicPitchDetector::string_assignment_diagnostics(
   result.final_continuity = state.continuity_lane_mask;
   result.candidate_age_ticks = state.age_ticks;
   result.midi_mask = state.midi_voice_mask;
-  const auto& phase = phase_cents_states_[candidate];
+  const auto& phase = result.phase_shadow
+                          ? diagnostic_discarded_phase_states_[candidate]
+                          : phase_cents_states_[candidate];
   result.phase_cents = phase.cents;
   result.phase_updates = phase.accepted_updates;
   result.phase_valid = phase.valid;
@@ -2500,6 +2522,86 @@ PolyphonicPitchDetector::string_assignment_diagnostics(
       state.assigned_string < kMaxVoices ? static_cast<std::uint8_t>(1U << state.assigned_string) : 0U,
       state.assigned_string, state.spectral_lane_mask, state.continuity_lane_mask);
   return result;
+}
+
+std::uint8_t PolyphonicPitchDetector::residual_recovery_owner_for_diagnostics(
+    std::uint8_t note) const noexcept {
+  if (!diagnostic_residual_pitch_recovery_ ||
+      !diagnostic_residual_recovery_continuity_ || note < lowest_note_ ||
+      note - lowest_note_ >= candidate_count_) return kMaxVoices;
+  const auto candidate = static_cast<std::size_t>(note - lowest_note_);
+  return candidate_states_[candidate].active
+      ? diagnostic_residual_recovery_owners_[candidate] : kMaxVoices;
+}
+
+void PolyphonicPitchDetector::submit_residual_recovery_for_diagnostics(
+    std::uint32_t tick, std::uint8_t note, std::uint8_t string) noexcept {
+  if (!diagnostic_residual_pitch_recovery_ || tick != decision_counter_ ||
+      note < lowest_note_ || note - lowest_note_ >= candidate_count_ ||
+      string >= kMaxVoices) return;
+  if (candidate_states_[note - lowest_note_].active &&
+      residual_recovery_owner_for_diagnostics(note) != string) return;
+  // The counterfactual fit is from the completed decision, never the future.
+  diagnostic_residual_recovery_lease_ = {tick, note, string, true};
+  ++diagnostic_residual_recovery_stats_.proposals;
+}
+
+void PolyphonicPitchDetector::apply_residual_recovery_for_diagnostics(
+    std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    double threshold, bool quiet, std::size_t count) noexcept {
+  auto& lease = diagnostic_residual_recovery_lease_;
+  if (diagnostic_residual_recovery_continuity_) {
+    for (std::size_t i = 0U; i < count; ++i)
+      if (quiet || !signal_present_ || !candidate_states_[i].active)
+        diagnostic_residual_recovery_owners_[i] = kMaxVoices;
+  }
+  if (!lease.valid) return;
+  const auto cancel = [&]() noexcept { lease = {}; };
+  if (!diagnostic_residual_pitch_recovery_ || profile_mode_ != ProfileMode::m3 ||
+      quiet || !signal_present_ || decision_counter_ <= lease.tick ||
+      decision_counter_ - lease.tick > kResidualAssignmentDiagnosticDecimation ||
+      lease.note < lowest_note_ ||
+      static_cast<std::size_t>(lease.note - lowest_note_) >= count ||
+      lease.string >= kMaxVoices) { cancel(); return; }
+  const std::size_t candidate = lease.note - lowest_note_;
+  auto& state = candidate_states_[candidate];
+  const auto bit = static_cast<std::uint8_t>(1U << lease.string);
+  const bool renewal = state.active &&
+      residual_recovery_owner_for_diagnostics(lease.note) == lease.string;
+  if ((!renewal && (state.active || selected[candidate] ||
+       selection_dispositions_[candidate] != SelectionDisposition::dp_evicted)) ||
+      !std::isfinite(scores[candidate]) || scores[candidate] < threshold ||
+      (playable_string_mask(candidate) & bit) == 0U ||
+      string_count(fine_frequency_member_mask(lease.note)) >= 2U ||
+      string_count(fine_frequency_pending_member_mask(lease.note)) >= 2U ||
+      string_count(committed_unison_mask(lease.note)) >= 2U ||
+      !(has_direct_fundamental_peak(scores, fundamentals, candidate, count) ||
+        is_local_peak(scores, candidate, count) ||
+        has_m3_candidate_evidence(scores, fundamentals, candidate, count))) {
+    cancel(); return;
+  }
+  std::uint8_t occupied = 0U;
+  std::size_t pitches = 0U;
+  for (std::size_t other = 0U; other < count; ++other) {
+    const auto& owner = candidate_states_[other];
+    if (other == candidate || (!owner.active && !selected[other])) continue;
+    ++pitches;
+    occupied = static_cast<std::uint8_t>(occupied | owner.assigned_string_mask |
+        owner.midi_voice_mask | selector_group_masks_[other] |
+        owner.continuity_lane_mask);
+    if (candidate_midi_output_note(other) == lease.note) { cancel(); return; }
+  }
+  if (pitches < 2U || std::max<std::size_t>(pitches, string_count(occupied)) >=
+          max_polyphony_ || (occupied & bit) != 0U) { cancel(); return; }
+  // Assignment and projection have finished. Add only a free lane and leave
+  // ordinary evidence, attack, MIDI emission, coasting and release untouched.
+  selected[candidate] = true;
+  state.assigned_string = lease.string;
+  state.assigned_string_mask = bit;
+  selection_dispositions_[candidate] = SelectionDisposition::selected;
+  ++diagnostic_residual_recovery_stats_.selected_ticks;
 }
 
 CandidateTrackingDiagnostics
@@ -3056,6 +3158,92 @@ bool PolyphonicPitchDetector::
   }
   return false;
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+bool PolyphonicPitchDetector::reject_calibrated_harmonic_admission_for_diagnostics(
+    std::size_t candidate, std::size_t stronger,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    std::size_t count, double threshold) const noexcept {
+  // A calibrated upper partial can resemble a thin string even though its
+  // fundamental is much weaker than an eligible lower note's fundamental.
+  // Test only new, below-threshold two-lane candidates. Existing voices and
+  // the highest-open-string calibration exception keep their normal paths.
+  return diagnostic_calibrated_harmonic_admission_guard_ &&
+         profile_mode_ == ProfileMode::m3 && candidate < count &&
+         stronger < candidate && candidate - stronger == 19U &&
+         !candidate_states_[candidate].active && scores[candidate] > 0.0 &&
+         scores[candidate] <= threshold &&
+         scores[stronger] > scores[candidate] &&
+         string_count(playable_string_mask(candidate)) == 2U &&
+         has_direct_fundamental_peak(scores, fundamentals, stronger, count) &&
+         is_harmonic_shadow(candidate, stronger, fundamentals);
+}
+
+bool PolyphonicPitchDetector::try_coasting_harmonic_handoff_for_diagnostics(
+    DetectorDecision& decision, std::size_t candidate,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    const std::array<bool, kMaxCandidates>& selected, bool quiet) noexcept {
+  const std::size_t count = static_cast<std::size_t>(candidate_count_);
+  if (!diagnostic_coasting_harmonic_handoff_ || quiet ||
+      profile_mode_ != ProfileMode::m3 || candidate >= count ||
+      !candidate_states_[candidate].active || selected[candidate] ||
+      phase_cents_states_[candidate].valid ||
+      has_direct_fundamental_peak(scores, fundamentals, candidate, count)) {
+    return false;
+  }
+  // This experiment addresses an observed +19-semitone coasting owner only.
+  // A harmonic interval alone cannot distinguish a real upper chord note.
+  const auto single_owner = [&](std::size_t index) noexcept {
+    const auto& state = candidate_states_[index];
+    const auto owned = static_cast<std::uint8_t>(
+        state.assigned_string_mask | state.midi_voice_mask);
+    const auto& fine = fine_frequency_evidence_states_[index];
+    const auto group = static_cast<std::uint8_t>(
+        owned | selector_group_masks_[index] | state.spectral_lane_mask |
+        state.continuity_lane_mask | state.continuity_cached_group_mask |
+        state.pending_unison_mask | state.latest_unison_proposal_mask |
+        fine.member_mask | fine.pending_member_mask);
+    return state.assigned_string < kM3OpenNotes.size() &&
+           owned == static_cast<std::uint8_t>(1U << state.assigned_string) &&
+           string_count(group) == 1U && !fine.multi_source_observed &&
+           !beat_evidence_states_[index].valid;
+  };
+  std::size_t active_count = 0U;
+  std::size_t selected_count = 0U;
+  std::size_t lower = count;
+  for (std::size_t index = 0U; index < count; ++index) {
+    active_count += candidate_states_[index].active ? 1U : 0U;
+    if (selected[index]) {
+      ++selected_count;
+      lower = index;
+    }
+  }
+  if (active_count != 2U || selected_count != 1U || lower >= candidate ||
+      candidate - lower != 19U || !candidate_states_[lower].active ||
+      !phase_cents_states_[lower].valid || !single_owner(candidate) ||
+      !single_owner(lower) ||
+      !has_direct_fundamental_peak(scores, fundamentals, lower, count) ||
+      scores[lower] < scores[candidate] ||
+      !is_harmonic_shadow(candidate, lower, fundamentals)) {
+    return false;
+  }
+  auto& incumbent = candidate_states_[candidate];
+  const auto lane = static_cast<std::uint8_t>(1U << incumbent.assigned_string);
+  const auto& replacement = candidate_states_[lower];
+  if ((playable_string_mask(lower) & lane) == 0U ||
+      ((replacement.assigned_string_mask | replacement.midi_voice_mask) &
+       lane) != 0U || !append_candidate_note_off(decision, candidate)) {
+    return false;
+  }
+  // Commit only after its note-off fits. Ordinary assignment may reconsider
+  // the freed lane next quantum; do not invent a new pitch or move the lower
+  // note's MIDI ownership here.
+  incumbent = {};
+  return true;
+}
+#endif
 
 std::uint8_t PolyphonicPitchDetector::candidate_evidence_decisions(
     bool multi_voice) const noexcept {
@@ -3865,6 +4053,140 @@ bool PolyphonicPitchDetector::has_isolated_third_partial_context(
          !strongest_other_has_decisive_shape;
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+PolyphonicPitchDetector::M3DpState
+PolyphonicPitchDetector::select_state_local_open_prior(
+    std::size_t pool_count,
+    const std::array<std::uint8_t, kMaxVoices * kMaxVoices>& atomic_groups,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    std::size_t priority_candidate, std::uint8_t priority_mask,
+    double fixed_penalty, double per_fret_penalty,
+    std::uint8_t& best_mask, std::uint8_t& selected_open_count) noexcept {
+  M3DpState best{};
+  best_mask = selected_open_count = 0U;
+  if (diagnostic_open_prior_states_ == nullptr) {
+    return best;
+  }
+  const auto is_qualified_open = [&](std::size_t candidate) noexcept {
+    return is_m3_open_note(static_cast<std::uint8_t>(lowest_note_ + candidate)) &&
+           (max_fret_ <= 2U || fundamentals[candidate] >= 0.50 * scores[candidate]);
+  };
+  const auto better = [](const M3DpState& proposal,
+                         const M3DpState& current) noexcept {
+    return proposal.valid &&
+           (!current.valid || proposal.score_sum > current.score_sum ||
+            (proposal.score_sum == current.score_sum &&
+             (proposal.retained_active > current.retained_active ||
+              (proposal.retained_active == current.retained_active &&
+               proposal.voice_count > current.voice_count))));
+  };
+
+  // Partition complete assignments, not insertion prefixes. Applying a chord
+  // penalty only when the second open pitch is inserted would leave earlier
+  // fretted choices uncharged and make the answer depend on pool order.
+  // Each pass keeps separate 0/1/2+ open-pitch states for every used-string mask.
+  for (const bool chord_prior : {false, true}) {
+    std::fill_n(diagnostic_open_prior_states_.get(),
+                3U * kM3StringMaskCount, M3DpState{});
+    const bool seeded = priority_candidate <
+                        static_cast<std::size_t>(candidate_count_);
+    const std::size_t seed_open =
+        seeded && is_qualified_open(priority_candidate) ? 1U : 0U;
+    auto& seed = diagnostic_open_prior_states_[
+        seed_open * kM3StringMaskCount + priority_mask];
+    seed.valid = true;
+    if (seeded) {
+      seed.score_sum = scores[priority_candidate] /
+                       std::max(fast_energy_, kScoreEpsilon);
+      seed.voice_count = string_count(priority_mask);
+      seed.retained_active = 1U;
+    }
+    for (std::size_t option_index = 0U; option_index < pool_count; ++option_index) {
+      const auto& option = m3_pool_[option_index];
+      const auto note = static_cast<std::uint8_t>(lowest_note_ + option.detector_index);
+      const std::uint8_t atomic = atomic_groups[option_index];
+      const std::uint8_t members = string_count(atomic);
+      const bool grouped = members >= 2U;
+      if (members > 4U || (grouped && (atomic & option.string_mask) != atomic)) {
+        continue;
+      }
+      const std::size_t open_increment = is_qualified_open(option.detector_index) ? 1U : 0U;
+      std::array<double, kMaxVoices> lane_scores{};
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        if ((option.string_mask & (1U << string)) == 0U) {
+          continue;
+        }
+        const auto fret = static_cast<std::uint8_t>(note - kM3OpenNotes[string]);
+        const bool bypass_penalty =
+            (diagnostic_selector_string_masks_[option.detector_index] & (1U << string)) != 0U;
+        const double penalty = !bypass_penalty && fret > 0U &&
+                                       (chord_prior || note > kM3OpenNotes.back())
+                                   ? fixed_penalty + per_fret_penalty * fret
+                                   : 0.0;
+        lane_scores[string] = option.score - penalty;
+      }
+      for (std::size_t used = kM3StringMaskCount; used-- > 0U;) {
+        for (std::size_t open_count = 0U; open_count < 3U; ++open_count) {
+          const auto state = diagnostic_open_prior_states_[
+              open_count * kM3StringMaskCount + used];
+          if (!state.valid) {
+            continue;
+          }
+          const auto add = [&](std::uint8_t mask, std::uint8_t voices,
+                               double score) noexcept {
+            if ((used & mask) != 0U || state.voice_count + voices > max_polyphony_) {
+              return;
+            }
+            auto proposal = state;
+            proposal.score_sum += score;
+            proposal.chosen |= std::uint64_t{1U} << option_index;
+            proposal.voice_count = static_cast<std::uint8_t>(proposal.voice_count + voices);
+            proposal.retained_active = static_cast<std::uint8_t>(
+                proposal.retained_active + (option.active ? 1U : 0U));
+            const std::size_t next_open = std::min<std::size_t>(2U, open_count + open_increment);
+            auto& current = diagnostic_open_prior_states_[
+                next_open * kM3StringMaskCount + (used | mask)];
+            if (better(proposal, current)) {
+              current = proposal;
+            }
+#if defined(M3_TESTING)
+            selection_work_.assignment_edges += voices;
+            ++selection_work_.state_transitions;
+#endif
+          };
+          if (grouped) {
+            add(atomic, members, option.score);
+          } else {
+            for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+              const auto bit = static_cast<std::uint8_t>(1U << string);
+              if ((option.string_mask & bit) != 0U) {
+                add(bit, 1U, lane_scores[string]);
+              }
+            }
+          }
+        }
+      }
+    }
+    for (std::size_t used = 0U; used < kM3StringMaskCount; ++used) {
+      for (std::size_t open_count = 0U; open_count < 3U; ++open_count) {
+        if ((open_count >= 2U) != chord_prior) {
+          continue;
+        }
+        const auto& state = diagnostic_open_prior_states_[
+            open_count * kM3StringMaskCount + used];
+        if (better(state, best)) {
+          best = state;
+          best_mask = static_cast<std::uint8_t>(used);
+          selected_open_count = static_cast<std::uint8_t>(open_count);
+        }
+      }
+    }
+  }
+  return best;
+}
+#endif
+
 void PolyphonicPitchDetector::select_m3_feasible_candidates(
     const std::array<double, kMaxCandidates>& scores,
     const std::array<double, kMaxCandidates>& fundamentals,
@@ -3886,6 +4208,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       RetainedUnisonDisposition::not_applicable);
   diagnostic_selector_string_masks_.fill(0U);
   diagnostic_candidate_rescue_string_masks_.fill(0U);
+  diagnostic_calibrated_harmonic_reassignment_candidates_.fill(false);
   for (auto& diagnostics : candidate_admission_diagnostics_) {
     diagnostics.selector_pool_member = false;
     diagnostics.selector_raw_score = 0.0;
@@ -4262,14 +4585,23 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       const bool retained_higher_voice =
           candidate_states_[candidate].active &&
           has_direct_fundamental_peak(scores, fundamentals, candidate, count);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      bool calibrated_harmonic_exception_rejected = false;
+#endif
       const bool distinct_higher_peak =
           candidate > stronger &&
           (retained_higher_voice ||
            (is_local_peak(scores, candidate, count) &&
             fundamentals[candidate] >= 0.85 * scores[candidate] &&
             (fundamentals[candidate] >= 0.85 * fundamentals[stronger] ||
-             has_calibrated_direct_support(scores, fundamentals, candidate,
-                                           count, threshold))));
+             (has_calibrated_direct_support(scores, fundamentals, candidate,
+                                            count, threshold)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+              && !(calibrated_harmonic_exception_rejected =
+                  reject_calibrated_harmonic_admission_for_diagnostics(
+                      candidate, stronger, scores, fundamentals, count, threshold))
+#endif
+             ))));
       const bool harmonic_shadow =
           is_harmonic_shadow(candidate, stronger, fundamentals);
       const bool lower_cross_harmonic_shadow =
@@ -4283,6 +4615,12 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
             (harmonic_shadow ? 1U : 0U) |
             (lower_cross_harmonic_shadow ? 2U : 0U));
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        // Assignment may reconsider the lower note's provisional open prior
+        // only when this decision actually removed its calibrated upper partial.
+        // An independent higher peak or a previous decision grants no privilege.
+        if (calibrated_harmonic_exception_rejected) {
+          diagnostic_calibrated_harmonic_reassignment_candidates_[stronger] = true;
+        }
         CandidateAdmissionDiagnostics& diagnostic =
             candidate_admission_diagnostics_[candidate];
         diagnostic.spectral_shadow_interval = static_cast<std::int8_t>(
@@ -4514,6 +4852,9 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   } else {
     m3_dp_states_[0U].valid = true;
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::array<std::uint8_t, kMaxVoices * kMaxVoices> diagnostic_atomic_groups{};
+#endif
   for (std::size_t option_index = 0U; option_index < pool_count; ++option_index) {
     const M3PoolCandidate& option = m3_pool_[option_index];
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -4552,6 +4893,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
     }
     if (atomic_members >= 2U) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      diagnostic_atomic_groups[option_index] = atomic_group;
       selector_diagnostics.selector_option_mask = atomic_group;
       selector_diagnostics.selector_best_adjusted_score = option.score;
       selector_diagnostics.selector_positive_mask =
@@ -4699,6 +5041,46 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       best_used_mask = static_cast<std::uint8_t>(used);
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_state_local_open_prior_) {
+    std::uint8_t selected_open_count = 0U;
+    best = select_state_local_open_prior(
+        pool_count, diagnostic_atomic_groups, scores, fundamentals,
+        priority_unison, priority_unison_mask,
+        fretted_fixed_penalty, fretted_per_fret_penalty,
+        best_used_mask, selected_open_count);
+    open_candidate_count = selected_open_count;
+    // Under this explicit trial, report scores for the winning terminal
+    // context. Default replay keeps its original pool-wide diagnostics.
+    for (std::size_t option_index = 0U; option_index < pool_count; ++option_index) {
+      if (diagnostic_atomic_groups[option_index] != 0U) {
+        continue;
+      }
+      const auto& option = m3_pool_[option_index];
+      auto& diagnostics = candidate_admission_diagnostics_[option.detector_index];
+      diagnostics.selector_best_adjusted_score = -std::numeric_limits<double>::max();
+      diagnostics.selector_positive_mask = 0U;
+      const auto note = static_cast<std::uint8_t>(lowest_note_ + option.detector_index);
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        const auto bit = static_cast<std::uint8_t>(1U << string);
+        if ((option.string_mask & bit) == 0U) {
+          continue;
+        }
+        const auto fret = static_cast<std::uint8_t>(note - kM3OpenNotes[string]);
+        const double penalty = fret > 0U &&
+                (selected_open_count >= 2U || note > kM3OpenNotes.back()) &&
+                (diagnostic_selector_string_masks_[option.detector_index] & bit) == 0U
+            ? fretted_fixed_penalty + fretted_per_fret_penalty * fret : 0.0;
+        const double adjusted = option.score - penalty;
+        diagnostics.selector_best_adjusted_score =
+            std::max(diagnostics.selector_best_adjusted_score, adjusted);
+        if (adjusted > 0.0) {
+          diagnostics.selector_positive_mask |= bit;
+        }
+      }
+    }
+  }
+#endif
   for (std::size_t option_index = 0U; option_index < pool_count; ++option_index) {
     if ((best.chosen & (std::uint64_t{1U} << option_index)) != 0U) {
       const std::size_t candidate = m3_pool_[option_index].detector_index;
@@ -5158,12 +5540,46 @@ void PolyphonicPitchDetector::assign_m3_strings(
   }
 #endif
   current[reserved_strings].valid = true;
-  for (std::size_t voice = 0U; voice < selected_count; ++voice) {
-    std::array<Assignment, kM3StringMaskCount> next{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Reuse the native costs without running the posterior, spectral cache, or
+  // assignment updates for these misses. Restrict this to non-isolated context:
+  // the isolated reassignment path has different costs and state transitions.
+  std::array<std::size_t, kMaxCandidates> cost_candidates{};
+  std::copy_n(candidates.begin(), selected_count, cost_candidates.begin());
+  std::size_t cost_count = selected_count;
+  if (assignment_diagnostics_enabled_ && residual_assignment_diagnostics_enabled_ &&
+      selected_count >= 2U &&
+      decision_counter_ % kResidualAssignmentDiagnosticDecimation == 0U) {
+    for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate) {
+      if (!selected[candidate] && !candidate_states_[candidate].active &&
+          selection_dispositions_[candidate] == SelectionDisposition::dp_evicted) {
+        cost_candidates[cost_count++] = candidate;
+      }
+    }
+  }
+#endif
+  for (std::size_t voice = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+       voice < cost_count;
+#else
+       voice < selected_count;
+#endif
+       ++voice) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const bool fixed_context = voice >= selected_count;
+    const std::size_t candidate = cost_candidates[voice];
+#else
     const std::size_t candidate = candidates[voice];
+#endif
     std::uint8_t playable = playable_string_mask(candidate);
     const std::uint8_t spectral_lane =
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        fixed_context ? 0U :
+#endif
         spectral_lane_assignment(candidate, isolated_selected_voice);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (!fixed_context)
+#endif
     spectral_lane_proposals[voice] = spectral_lane;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (diagnostic_selector_string_masks_[candidate] != 0U) {
@@ -5179,9 +5595,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
     if (assignment_diagnostics_enabled_) {
       auto& observation = assignment_diagnostics_[candidate];
       const auto& prior = candidate_states_[candidate];
-      observation.observed = true;
+      observation.observed = !fixed_context;
+      observation.fixed_context = fixed_context;
       observation.selected_count = static_cast<std::uint8_t>(selected_count);
-      observation.ordinal = static_cast<std::uint8_t>(voice);
+      observation.ordinal = fixed_context ? 255U : static_cast<std::uint8_t>(voice);
       observation.playable = playable;
       observation.reserved_coasting = diagnostic_reserved_coasting;
       observation.reserved_extras = diagnostic_reserved_extras;
@@ -5373,7 +5790,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
     if (calibrated_reassignment_ready && all_playable_profiles_learned) {
       candidate_states_[candidate].calibrated_lane_committed = true;
     }
-    const PhaseCentsState& phase = phase_cents_states_[candidate];
+    const PhaseCentsState& phase =
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        fixed_context ? diagnostic_discarded_phase_states_[candidate] :
+#endif
+        phase_cents_states_[candidate];
     const double assignment_cents =
         calibration_tuning_evidence_ != 0U
             ? phase.cents - calibration_tuning_offset_cents_
@@ -5381,6 +5802,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (assignment_diagnostics_enabled_) {
       auto& observation = assignment_diagnostics_[candidate];
+      observation.phase_shadow = fixed_context;
       observation.assignment_cents = assignment_cents;
       observation.learned_cents = learned_cents;
       observation.complete_calibration = all_playable_profiles_learned;
@@ -5438,6 +5860,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       distinctive_cents_override =
           profile_distance >= kM3DistinctiveCalibrationProfileDistance;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (!fixed_context) {
+#endif
     if (posterior_available) {
       StringFretLikelihoodFrame posterior_frame;
       posterior_frame.playable_mask = playable;
@@ -5485,6 +5910,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       string_fret_posteriors_.reset(candidate);
       string_fret_energy_memory_[candidate] = 0.0;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    }
+#endif
     // These terms depend on the candidate and physical lane, not on which
     // other strings a DP state occupies. Compute them once per decision, but
     // retain each addition/subtraction separately so accumulation and tie
@@ -5569,11 +5997,35 @@ void PolyphonicPitchDetector::assign_m3_strings(
       const bool retained_lane =
           candidate_states_[candidate].active &&
           candidate_states_[candidate].assigned_string == string;
+      bool retain_open_prior = !calibrated_reassignment_ready && retained_lane;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      // Correct a provisional open prior only in the decision that removed a
+      // calibrated upper partial of this candidate. One selected pitch alone
+      // is not evidence that only one physical string is sounding.
+      const auto& provisional_state = candidate_states_[candidate];
+      if (diagnostic_provisional_open_retention_guard_ &&
+          diagnostic_calibrated_harmonic_reassignment_candidates_[candidate] &&
+          isolated_selected_voice && provisional_state.active &&
+          !provisional_state.calibrated_lane_committed && phase.valid &&
+          all_playable_profiles_learned &&
+          string_count(provisional_state.assigned_string_mask) == 1U &&
+          string_count(provisional_state.pending_unison_mask) <= 1U &&
+          string_count(provisional_state.continuity_cached_group_mask) <= 1U &&
+          !fine.multi_source_observed &&
+          string_count(fine.member_mask) <= 1U &&
+          string_count(fine.pending_member_mask) <= 1U &&
+          string_count(selector_group_masks_[candidate]) <= 1U &&
+          !beat_evidence_states_[candidate].valid &&
+          best_learned_similarity - learned_similarities[string] >=
+              kM3CalibratedCandidateMinimumAdvantage) {
+        retain_open_prior = false;
+      }
+#endif
       // An open lane must earn its prior from competitive calibration. An
       // already retained open lane keeps it while fast evidence fluctuates.
       cost.use_open_bonus =
           all_playable_profiles_learned && fret == 0U &&
-          ((!calibrated_reassignment_ready && retained_lane) ||
+          (retain_open_prior ||
            (best_learned_similarity - learned_similarities[string] <
                 kM3CalibratedCandidateMinimumAdvantage &&
             !contradicted_by_calibrated_cents));
@@ -5614,7 +6066,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
       }
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_joint_ready) {
+    if (diagnostic_joint_ready && !fixed_context) {
       const CandidateState& state = candidate_states_[candidate];
       const auto& admission = candidate_admission_diagnostics_[candidate];
       const std::size_t posterior_best =
@@ -5684,11 +6136,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
             cost.use_cents ? cost.cents_penalty : 0.0,
             cost.use_fine_bonus ? -512.0 : 0.0,
             cost.use_retention ? -cost.retention_bonus : 0.0};
+        observation.lane_totals[string] = 0.0;
         for (double term : observation.lane_terms[string])
           observation.lane_totals[string] += term;
       }
     }
+    if (fixed_context) continue;
 #endif
+    std::array<Assignment, kM3StringMaskCount> next{};
     for (std::size_t used = 0U; used < current.size(); ++used) {
       if (!current[used].valid) {
         continue;
@@ -5834,7 +6289,114 @@ void PolyphonicPitchDetector::assign_m3_strings(
       state.spectral_lane_mask = 0U;
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_joint_spectral_ownership_) {
+    std::array<std::uint8_t, kMaxVoices> proposals{};
+    std::array<std::uint8_t, kMaxVoices> primary_masks{};
+    std::array<std::uint8_t, kMaxVoices> playable_masks{};
+    std::array<double, kMaxVoices> posterior_margins{};
+    std::array<std::uint8_t, kMaxVoices> incumbent_masks{};
+    for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+      const auto& state = candidate_states_[candidates[voice]];
+      proposals[voice] = state.spectral_lane_mask;
+      primary_masks[voice] = static_cast<std::uint8_t>(1U << state.assigned_string);
+      playable_masks[voice] = playable_string_mask(candidates[voice]);
+      incumbent_masks[voice] = state.midi_voice_mask;
+      const auto* spectral = find_spectral_lane_state(candidates[voice]);
+      if (spectral != nullptr && spectral->single_source_error_valid &&
+          spectral->single_source_error_tick == decision_counter_ &&
+          spectral->single_source_error_mask == proposals[voice]) {
+        posterior_margins[voice] = spectral->single_source_posterior_margin;
+      }
+    }
+    const auto accepted = bounded_joint_spectral_lanes(
+        proposals, primary_masks, playable_masks, posterior_margins,
+        incumbent_masks, reserved_strings, selected_count);
+    for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+      candidate_states_[candidates[voice]].spectral_lane_mask = accepted[voice];
+    }
+  }
+#endif
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+std::array<std::uint8_t, kMaxVoices>
+PolyphonicPitchDetector::bounded_joint_spectral_lanes(
+    const std::array<std::uint8_t, kMaxVoices>& proposals,
+    const std::array<std::uint8_t, kMaxVoices>& primary_masks,
+    const std::array<std::uint8_t, kMaxVoices>& playable_masks,
+    const std::array<double, kMaxVoices>& posterior_margins,
+    const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
+    std::uint8_t reserved_mask, std::size_t count) noexcept {
+  std::array<std::uint8_t, kMaxVoices> eligible{};
+  std::array<std::uint8_t, kMaxVoices> accepted{};
+  if (count > kMaxVoices) return accepted;
+  for (std::size_t voice = 0U; voice < count; ++voice) {
+    const auto proposal = proposals[voice];
+    if (string_count(proposal) == 1U &&
+        (proposal & playable_masks[voice]) == proposal &&
+        (proposal & reserved_mask) == 0U &&
+        std::isfinite(posterior_margins[voice]) &&
+        posterior_margins[voice] > 0.0 &&
+        posterior_margins[voice] <= 1.0) {
+      eligible[voice] = proposal;
+    }
+  }
+  // Evaluate complete assignments, not a union of mutually exclusive futures.
+  // Each qualified spectral proposal contributes its measured advantage over
+  // the runner-up. At most 256 combinations preserve every selected pitch and
+  // allow a neighbouring DP lane to be vacated in the same decision.
+  double best_margin = -1.0;
+  std::size_t best_retained = 0U;
+  std::uint32_t best_key = std::numeric_limits<std::uint32_t>::max();
+  const std::size_t combinations = std::size_t{1U} << count;
+  for (std::size_t choice = 0U; choice < combinations; ++choice) {
+    std::array<std::uint8_t, kMaxVoices> trial{};
+    std::array<double, kMaxVoices> margins_by_primary{};
+    std::uint8_t occupied = reserved_mask;
+    std::size_t retained = 0U;
+    std::uint32_t key = 0U;
+    bool valid = true;
+    for (std::size_t voice = 0U; voice < count; ++voice) {
+      const bool use_proposal = (choice & (std::size_t{1U} << voice)) != 0U;
+      const auto projected = use_proposal ? eligible[voice] : primary_masks[voice];
+      if (string_count(primary_masks[voice]) != 1U ||
+          string_count(projected) != 1U ||
+          (projected & playable_masks[voice]) != projected ||
+          (projected & occupied) != 0U) {
+        valid = false;
+        break;
+      }
+      occupied = static_cast<std::uint8_t>(occupied | projected);
+      retained += projected == incumbent_masks[voice] ? 1U : 0U;
+      std::size_t primary = 0U;
+      std::size_t destination = 0U;
+      while ((primary_masks[voice] & (1U << primary)) == 0U) ++primary;
+      while ((projected & (1U << destination)) == 0U) ++destination;
+      key |= static_cast<std::uint32_t>(destination) << (primary * 3U);
+      if (use_proposal) {
+        trial[voice] = projected;
+        margins_by_primary[primary] = posterior_margins[voice];
+      }
+    }
+    if (!valid) continue;
+    // Sum and break exact ties in physical-string order, independently of
+    // candidate iteration order. Equal evidence first preserves live ownership.
+    double margin = 0.0;
+    for (const double value : margins_by_primary) margin += value;
+    if (margin > best_margin ||
+        (margin == best_margin &&
+         (retained > best_retained ||
+          (retained == best_retained && key < best_key)))) {
+      best_margin = margin;
+      best_retained = retained;
+      best_key = key;
+      accepted = trial;
+    }
+  }
+  return accepted;
+}
+#endif
 
 void PolyphonicPitchDetector::apply_calibrated_dp_replacements(
     std::array<bool, kMaxCandidates>& selected,
@@ -8001,12 +8563,25 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
                      std::numeric_limits<std::uint16_t>::max())));
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+    PhaseCentsState* phase_state = &phase_cents_states_[candidate];
     if (!selected[candidate] && !candidate_states_[candidate].active) {
       phase_cents_states_[candidate] = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (assignment_diagnostics_enabled_ &&
+          residual_assignment_diagnostics_enabled_ && signal_present_) {
+        phase_state = &diagnostic_discarded_phase_states_[candidate];
+      } else {
+        diagnostic_discarded_phase_states_[candidate] = {};
+        continue;
+      }
+    } else {
+      diagnostic_discarded_phase_states_[candidate] = {};
+#else
       continue;
+#endif
     }
     const Cell& fundamental = cells_[cell_index(candidate, 0U)];
-    PhaseCentsState& state = phase_cents_states_[candidate];
+    PhaseCentsState& state = *phase_state;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (assignment_diagnostics_enabled_)
       assignment_diagnostics_[candidate].phase_previous_cents = state.cents;
@@ -8378,6 +8953,12 @@ void PolyphonicPitchDetector::update_unison_reacquisition_state(
 
 void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (fine_group_ownership_diagnostics_enabled_) {
+    std::fill_n(fine_group_ownership_diagnostics_.get(), kMaxCandidates,
+                FineGroupOwnershipDiagnostics{});
+  }
+#endif
   if (profile_mode_ != ProfileMode::m3) {
     return;
   }
@@ -8409,6 +8990,26 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
     const CandidateState& candidate_state = candidate_states_[candidate];
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (fine_group_ownership_diagnostics_enabled_ &&
+        (selected[candidate] || candidate_state.active)) {
+      auto& diagnostic = fine_group_ownership_diagnostics_[candidate];
+      const auto& admission = candidate_admission_diagnostics_[candidate];
+      const auto& fine = fine_frequency_evidence_states_[candidate];
+      diagnostic.observed = true;
+      diagnostic.selected = selected[candidate];
+      diagnostic.active = candidate_state.active;
+      diagnostic.primary = candidate_state.assigned_string;
+      diagnostic.assigned_mask = candidate_state.assigned_string_mask;
+      diagnostic.midi_mask = candidate_state.midi_voice_mask;
+      diagnostic.age_ticks = candidate_state.age_ticks;
+      diagnostic.score_threshold_ratio = admission.score_threshold_ratio;
+      diagnostic.fundamental_score_ratio = admission.fundamental_score_ratio;
+      diagnostic.direct_fundamental = admission.direct_fundamental_peak;
+      diagnostic.fine_valid = fine.valid;
+      diagnostic.fine_mask = fine.member_mask;
+    }
+#endif
     if (!selected[candidate]) {
       if (candidate_state.active) {
         std::uint8_t owned = static_cast<std::uint8_t>(
@@ -8421,6 +9022,10 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
         }
         coasting_strings =
             static_cast<std::uint8_t>(coasting_strings | owned);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (fine_group_ownership_diagnostics_enabled_)
+          fine_group_ownership_diagnostics_[candidate].owned_mask = owned;
+#endif
       }
       continue;
     }
@@ -8435,6 +9040,10 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
               : primary_bit;
       committed_selected_strings = static_cast<std::uint8_t>(
           committed_selected_strings | committed);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (fine_group_ownership_diagnostics_enabled_)
+        fine_group_ownership_diagnostics_[candidate].owned_mask = committed;
+#endif
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         if ((committed & (1U << string)) != 0U &&
             committed_owner_counts[string] <
@@ -8581,6 +9190,17 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
         fine_group_disposition = FineGroupDisposition::accepted;
       }
       fine_group_dispositions_[candidate] = fine_group_disposition;
+      if (fine_group_ownership_diagnostics_enabled_) {
+        auto& diagnostic = fine_group_ownership_diagnostics_[candidate];
+        diagnostic.group_evaluated = true;
+        diagnostic.group_mask = raw_temporal_group;
+        diagnostic.other_owned_mask = other_owned_strings;
+        diagnostic.overlap_mask = static_cast<std::uint8_t>(
+            raw_temporal_group & other_owned_strings);
+        diagnostic.allocated_mask = allocated_extra_strings;
+        diagnostic.extra_capacity =
+            static_cast<std::uint8_t>(candidate_extra_capacity);
+      }
 #endif
       if ((raw_temporal_group & primary_bit) != 0U &&
           raw_temporal_count >= 2U && raw_temporal_count <= 4U &&
@@ -10069,6 +10689,8 @@ void PolyphonicPitchDetector::write_snapshot(
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   DetectorDecision decision;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Also clear on quiet decisions and with trace collection disabled.
+  diagnostic_calibrated_harmonic_reassignment_candidates_.fill(false);
   selection_dispositions_.fill(SelectionDisposition::quiet);
   retained_unison_dispositions_.fill(
       RetainedUnisonDisposition::not_applicable);
@@ -10087,6 +10709,10 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   if (assignment_diagnostics_enabled_) {
     std::fill_n(assignment_diagnostics_.get(), kMaxCandidates,
                 StringAssignmentDiagnostics{});
+  }
+  if (fine_group_ownership_diagnostics_enabled_) {
+    std::fill_n(fine_group_ownership_diagnostics_.get(), kMaxCandidates,
+                FineGroupOwnershipDiagnostics{});
   }
 #endif
   ++decision_counter_;
@@ -10377,6 +11003,10 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   update_calibrated_output_notes(decision, selected, selected_voice_count, quiet);
   update_calibrated_dp_output_projections(
       decision, selected, scores, fundamentals, threshold, quiet, count);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  apply_residual_recovery_for_diagnostics(
+      selected, scores, fundamentals, threshold, quiet, count);
+#endif
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   if (offline_replay_diagnostics_enabled_) {
     update_unison_reacquisition_state(selected, scores, fundamentals,
@@ -10581,6 +11211,12 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       ++active_count;
       continue;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (try_coasting_harmonic_handoff_for_diagnostics(
+            decision, candidate, scores, fundamentals, selected, quiet)) {
+      continue;
+    }
+#endif
     if (should_handoff_coasting_candidate_to_resolved_group(candidate,
                                                              selected) ||
         should_handoff_adjacent_coasting_candidate(
@@ -10666,6 +11302,17 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         state.attack_ticks = attack_decisions();
         continue;
       }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (diagnostic_residual_recovery_lease_.valid &&
+          diagnostic_residual_recovery_lease_.note == lowest_note_ + candidate) {
+        ++diagnostic_residual_recovery_stats_.note_ons;
+        if (diagnostic_residual_recovery_continuity_)
+          diagnostic_residual_recovery_owners_[candidate] =
+              diagnostic_residual_recovery_lease_.string;
+        else
+          diagnostic_residual_recovery_lease_ = {};
+      }
+#endif
       state.active = true;
       state.attack_ticks = 0U;
       state.evidence_ticks = 0U;
@@ -10796,6 +11443,10 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       long_harmonic_energy_memory_ = {};
       harmonic_memory_updates_ = {};
       phase_cents_states_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      diagnostic_discarded_phase_states_ = {};
+      diagnostic_residual_recovery_lease_ = {};
+#endif
       beat_evidence_states_ = {};
       const std::uint16_t established_group_samples =
           static_cast<std::uint16_t>(std::clamp(

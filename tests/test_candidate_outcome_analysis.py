@@ -3,13 +3,13 @@ import unittest
 
 from tools.candidate_outcome_analysis import (
     CANDIDATE_FIELDS, CANDIDATE_FIELDS_V1, HEADER, analyze_candidate_population, analyze_label_failures,
-    analyze_group_failures, compare_streams,
+    analyze_group_failures, analyze_fret_relief, analyze_calibrated_harmonic_admission, compare_streams,
 )
 
 
 def candidate(note=40, **features):
     row = dict.fromkeys(CANDIDATE_FIELDS, 0)
-    row.update(note=note, score_ratio=.4, fund_ratio=1.2, direct=1,
+    row.update(note=note, score_ratio=.4, fund_ratio=.6, direct=1,
                best_cal=.95, second_cal=.91, best_string=0, playable_mask=3)
     row.update(features)
     return ':'.join(str(row[name]) for name in CANDIDATE_FIELDS)
@@ -75,8 +75,183 @@ class CandidateOutcomeAnalysisTests(unittest.TestCase):
             with self.subTest(), self.assertRaises(ValueError):
                 compare_streams(stream(frame(100)), stream(bad))
 
+    def test_fundamental_share_cannot_exceed_total_harmonic_energy(self):
+        for share in (-.01, 1.2):
+            with self.subTest(share=share), self.assertRaisesRegex(ValueError, 'fundamental share'):
+                analyze_candidate_population(stream(frame(100, candidates=candidate(
+                    local=1, fund_ratio=share))))
+
+
+class CalibratedHarmonicAdmissionTests(unittest.TestCase):
+    def pair(self, active=0, upper_changes=None):
+        upper = dict(selection=4, cal_direct=1, score_ratio=.4, fund_ratio=.98,
+                     playable_mask=192, active=active)
+        upper.update(upper_changes or {})
+        return ','.join((candidate(60, selection=4, score_ratio=6, fund_ratio=.7,
+                                  active=active), candidate(79, **upper)))
+
+    def test_labels_only_score_same_screen_and_real_interval_controls(self):
+        for labels, outcome in [('0:60:64', 'unexpected_upper_pitch'),
+                                ('0:60:64,1:79:128', 'expected_upper_pitch'),
+                                ('', 'unlabeled_gap')]:
+            r = analyze_calibrated_harmonic_admission(stream(
+                frame(100), frame(200, labels, candidates=self.pair())))
+            self.assertEqual(r['observations'], {'starting': {outcome: 1}})
+            self.assertEqual(r['active_starts'], {})
+            self.assertEqual(r['controls'].get('labeled_plus19_pair_frames', 0),
+                             int(outcome == 'expected_upper_pitch'))
+
+    def test_start_is_counted_once_using_prior_state_and_initial_state_unknown(self):
+        r = analyze_calibrated_harmonic_admission(stream(
+            frame(100, '0:60:64', candidates=self.pair()),
+            frame(200, '0:60:64', candidates=self.pair(1)),
+            frame(300, '0:60:64', candidates=self.pair(1))))
+        self.assertEqual(r['observations']['initial_state_unknown'], {'unexpected_upper_pitch': 1})
+        self.assertEqual(r['observations']['established'], {'unexpected_upper_pitch': 1})
+        self.assertEqual(r['active_starts'], {'starting': {'unexpected_upper_pitch': 1}})
+        self.assertEqual(r['examples']['unexpected_upper_pitch'][0]['sample'], 200)
+
+    def test_quiet_strong_upper_noncalibrated_and_ineligible_lanes_excluded(self):
+        for changes in ({'score_ratio': 1.1}, {'cal_direct': 0},
+                        {'selection': 5}, {'playable_mask': 128}):
+            r = analyze_calibrated_harmonic_admission(stream(
+                frame(100, candidates=self.pair(upper_changes=changes))))
+            self.assertEqual(r['observations'], {})
+        r = analyze_calibrated_harmonic_admission(stream(
+            frame(100, candidates=self.pair(), quiet=1)))
+        self.assertEqual(r['observations'], {})
+
+    def test_fundamental_relation_uses_energy_not_share_alone(self):
+        r = analyze_calibrated_harmonic_admission(stream(
+            frame(100), frame(200, candidates=self.pair(1))))
+        example = r['examples']['unlabeled_gap'][0]
+        self.assertAlmostEqual(example['fundamental_ratio'], .4 * .98 / (6 * .7))
+
+    def test_aggregate_and_order_mismatches_fail(self):
+        row = frame(100, '0:60:64')
+        with self.assertRaisesRegex(ValueError, 'strictly increasing'):
+            analyze_calibrated_harmonic_admission(stream(row, row))
+        expected = dict(labeled=1, matched=1, false_positive_voices=0,
+                        false_wrong_note_voices=0, false_wrong_string_voices=0, false_gap_voices=0)
+        with self.assertRaisesRegex(ValueError, 'trace/report mismatch for matched'):
+            analyze_calibrated_harmonic_admission(stream(row), expected)
+
+
+class FretReliefTests(unittest.TestCase):
+    def option(self, **changes):
+        features = dict(note=44, selection=3, local=1, playable_mask=3,
+                        selector_pool_member=1, selector_raw_score=.22,
+                        selector_best_adjusted_score=-.02, selector_option_mask=3,
+                        selector_open_count=2)
+        features.update(changes)
+        return candidate(**features)
+
+    def test_realistic_overtones_do_not_disqualify_fundamental_support(self):
+        # Equal energy in the fundamental and two upper partials. The native
+        # weighted total is 1 + .72 + .55, so support is real but below one.
+        share = 1 / (1 + .72 + .55)
+        for gain_squared in (.01, 1, 100):
+            with self.subTest(gain_squared=gain_squared):
+                scaled_share = gain_squared / (gain_squared * (1 + .72 + .55))
+                r = analyze_fret_relief(stream(frame(100, '0:44:2', candidates=self.option(
+                    fund_ratio=scaled_share))))
+                self.assertAlmostEqual(scaled_share, share)
+                self.assertEqual({p['evidence'] for p in r['probes']},
+                                 {'direct_local_native_fundamental'})
+
+    def test_native_fundamental_floor_is_not_an_independent_classifier(self):
+        for share, expected in ((.199, 'other'), (.2, 'direct_local_native_fundamental'),
+                                (1, 'direct_local_native_fundamental')):
+            with self.subTest(share=share):
+                r = analyze_fret_relief(stream(frame(100, '0:44:2', candidates=self.option(
+                    fund_ratio=share))))
+                self.assertEqual({p['evidence'] for p in r['probes']}, {expected})
+
+    def test_small_relief_opens_shorter_fret_before_deeper_wrong_string(self):
+        result = analyze_fret_relief(stream(frame(100, '0:44:2', candidates=self.option())))
+        by_cap = {p['cap']: p['outcomes'] for p in result['probes']}
+        self.assertEqual(by_cap[.025], {'expected_options_only_with_missing_lane': 1})
+        self.assertEqual(by_cap[.05], {'mixed_expected_and_wrong_string_options': 1})
+        self.assertEqual(result['totals']['reconstructed_observations'], 1)
+
+    def test_labels_and_tracking_do_not_gate_the_screen(self):
+        a = analyze_fret_relief(stream(frame(100, '0:44:2', candidates=self.option())))
+        b = analyze_fret_relief(stream(frame(100, candidates=self.option(
+            active=1, phase_valid=1, onset=8, age=99, assigned_mask=1))))
+        self.assertEqual(a['deficit_bins'], b['deficit_bins'])
+        self.assertEqual([sum(p['outcomes'].values()) for p in a['probes']],
+                         [sum(p['outcomes'].values()) for p in b['probes']])
+        self.assertTrue(all(p['outcomes'] == {'unlabeled_gap_candidate': 1} for p in b['probes']))
+
+    def test_quiet_atomic_positive_and_capture_exceptions_are_excluded(self):
+        for fields, quiet in [({}, 1), ({}, 2), ({'selector_positive_mask': 3}, 0),
+                              ({'selector_pool_member': 0}, 0), ({'direct': 0}, 0),
+                              ({'score_ratio': .199}, 0), ({'local': 0}, 0),
+                              ({'selection': 4}, 0), ({'selector_raw_score': 0}, 0)]:
+            with self.subTest(fields=fields, quiet=quiet):
+                r = analyze_fret_relief(stream(frame(100, candidates=self.option(**fields), quiet=quiet)))
+                self.assertEqual(r['probes'], [])
+
+    def test_reconstruction_failures_and_impossible_frets_are_separate(self):
+        for fields, reason in [({'selector_best_adjusted_score': -.01}, 'score_reconstruction_mismatch'),
+                               ({'selector_open_count': 1}, 'score_reconstruction_mismatch'),
+                               ({'selector_option_mask': 8}, 'invalid_option_mask'),
+                               ({'note': 80}, 'invalid_fret')]:
+            with self.subTest(fields=fields):
+                r = analyze_fret_relief(stream(frame(100, candidates=self.option(**fields))))
+                self.assertEqual(r['exclusions'], {reason: 1})
+                self.assertEqual(r['probes'], [])
+
+    def test_zero_at_boundary_is_not_a_positive_option(self):
+        r = analyze_fret_relief(stream(frame(100, '0:44:2', candidates=self.option(
+            selector_raw_score=.215, selector_best_adjusted_score=-.025))))
+        self.assertEqual([p['cap'] for p in r['probes']], [.05])
+
+    def test_expected_wrong_note_wrong_string_and_untyped_are_distinct(self):
+        rows = [frame(100, '0:48:2', candidates=self.option()),
+                frame(200, '0:44:1', candidates=self.option()),
+                frame(300, '0:44:0', candidates=self.option()),
+                frame(400, '0:44:2', '0', '44:44:1:0:10:1:0:0', self.option())]
+        r = analyze_fret_relief(stream(*rows))
+        p = next(p for p in r['probes'] if p['cap'] == .025)
+        self.assertEqual(p['outcomes'], {'unexpected_pitch': 1, 'wrong_string_options_only': 1,
+                         'expected_pitch_string_unspecified': 1,
+                         'expected_options_only_already_rendered': 1})
+
+    def test_high_note_penalty_applies_with_fewer_than_two_open_notes(self):
+        r = analyze_fret_relief(stream(frame(100, '0:64:128', candidates=self.option(
+            note=64, playable_mask=128, selector_option_mask=128,
+            selector_raw_score=.20, selector_open_count=0))))
+        self.assertEqual(r['probes'][0]['register'], 'high')
+        self.assertEqual(r['probes'][0]['topology'], 'single_option')
+
+    def test_full_output_totals_and_schema_are_verified(self):
+        row = frame(100, '0:44:2', voices='45:45:1:1:1:0:0:0', candidates=self.option())
+        expected = dict(labeled=1, matched=0, false_positive_voices=1,
+                        false_wrong_note_voices=1, false_wrong_string_voices=0, false_gap_voices=0)
+        analyze_fret_relief(stream(row), expected)
+        with self.assertRaisesRegex(ValueError, 'trace/report mismatch'):
+            analyze_fret_relief(stream(row), dict(expected, matched=1))
+        for fields in ({'max_fret': 12}, {'selector_margin': .02}):
+            with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, 'baseline'):
+                analyze_fret_relief(stream(row), expected | fields)
+        for bad in [io.StringIO('# m3_candidate_outcome_v1\n' + HEADER + row),
+                    stream(frame(100, candidates=':'.join(self.option().split(':')[:len(CANDIDATE_FIELDS_V1)]))),
+                    stream(row, row), stream(frame(100, '0:44:256'))]:
+            with self.subTest(), self.assertRaises(ValueError):
+                analyze_fret_relief(bad)
+
 
 class CandidatePopulationTests(unittest.TestCase):
+    def test_fundamental_bins_and_probes_use_fractional_energy_share(self):
+        r = analyze_candidate_population(stream(frame(100, '0:40:1', candidates=candidate(
+            local=1, fund_ratio=1 / (1 + .72 + .55), cal_mask=3))))
+        self.assertEqual(r['feature_population']['weak/fundamental/<0.5'],
+                         {'expected_pitch_best_string_agrees': 1})
+        self.assertEqual(r['rule_population']['weak/fundamental_share_ge_020'],
+                         {'expected_pitch_best_string_agrees': 1})
+        self.assertFalse(any('ge_1' in key for key in r['rule_population']))
+
     def test_unselected_candidates_count_without_output_conditioning(self):
         before = frame(100, '0:40:1', candidates=candidate(local=1, cal_mask=3))
         after = frame(100, '0:40:1', voices='40:40:0:0:10:1:0:0',

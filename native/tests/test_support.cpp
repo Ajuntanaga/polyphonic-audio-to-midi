@@ -91,9 +91,12 @@ void operator delete[](void* memory, std::align_val_t,
 namespace m3::test {
 
 Registration::Registration(const char* name, void (*function)() noexcept) noexcept {
-  static TestCase storage[512]{};
+  constexpr std::size_t capacity = 1024;
+  static TestCase storage[capacity]{};
   static std::size_t count = 0;
-  if (count >= 512) {
+  if (count >= capacity) {
+    std::fprintf(stderr, "Native test registration capacity exceeded (%zu)\n",
+                 capacity);
     std::abort();
   }
   TestCase& test = storage[count++];

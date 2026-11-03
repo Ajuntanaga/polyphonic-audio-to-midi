@@ -127,6 +127,32 @@ enum class FineGroupDisposition : std::uint8_t {
   count,
 };
 
+// Ownership at entry to unison inference, before any candidate changes its
+// group. One record per pitch preserves multiple owners of the same lane.
+// Group fields record the actual gate inputs; owner fields are never rebuilt
+// from the final tuner snapshot.
+struct FineGroupOwnershipDiagnostics final {
+  double score_threshold_ratio{};
+  double fundamental_score_ratio{};
+  std::uint16_t age_ticks{};
+  std::uint8_t primary{kUnassignedTunerString};
+  std::uint8_t assigned_mask{};
+  std::uint8_t midi_mask{};
+  std::uint8_t owned_mask{};
+  std::uint8_t fine_mask{};
+  std::uint8_t group_mask{};
+  std::uint8_t other_owned_mask{};
+  std::uint8_t overlap_mask{};
+  std::uint8_t allocated_mask{};
+  std::uint8_t extra_capacity{};
+  bool observed{};
+  bool selected{};
+  bool active{};
+  bool direct_fundamental{};
+  bool fine_valid{};
+  bool group_evaluated{};
+};
+
 enum class TierCompletionDisposition : std::uint8_t {
   unavailable,
   missing_primary,
@@ -281,6 +307,10 @@ struct StringAssignmentDiagnostics final {
   std::uint8_t final_spectral{};
   std::uint8_t final_continuity{};
   bool observed{};
+  // Costs for an inactive selector miss, holding the selected context fixed.
+  // This does not simulate admitting the note or assigning it a string.
+  bool fixed_context{};
+  bool phase_shadow{};
   bool valid{};
   bool isolated{};
   bool reassignment_ready{};
@@ -466,12 +496,25 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] FineGroupDisposition fine_group_disposition(
       std::uint8_t midi_note) const noexcept;
+  bool set_fine_group_ownership_diagnostics_enabled(bool enabled) noexcept {
+    fine_group_ownership_diagnostics_enabled_ =
+        enabled && fine_group_ownership_diagnostics_ != nullptr;
+    return !enabled || fine_group_ownership_diagnostics_enabled_;
+  }
+  [[nodiscard]] FineGroupOwnershipDiagnostics fine_group_ownership_diagnostics(
+      std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateAdmissionDiagnostics candidate_admission_diagnostics(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateTrackingDiagnostics candidate_tracking_diagnostics(
       std::uint8_t midi_note) const noexcept;
   void set_assignment_diagnostics_enabled(bool enabled) noexcept {
     assignment_diagnostics_enabled_ = enabled && assignment_diagnostics_ != nullptr;
+    if (!assignment_diagnostics_enabled_) diagnostic_discarded_phase_states_ = {};
+  }
+  static constexpr std::uint32_t kResidualAssignmentDiagnosticDecimation = 16U;
+  void set_residual_assignment_diagnostics_enabled(bool enabled) noexcept {
+    residual_assignment_diagnostics_enabled_ = enabled;
+    if (!enabled) diagnostic_discarded_phase_states_ = {};
   }
   [[nodiscard]] StringAssignmentDiagnostics string_assignment_diagnostics(
       std::uint8_t midi_note) const noexcept;
@@ -496,6 +539,42 @@ class PolyphonicPitchDetector final {
   }
   void set_assignment_partial_correction_for_diagnostics(bool enabled) noexcept {
     diagnostic_assignment_partial_correction_ = enabled;
+  }
+  bool set_state_local_open_prior_for_diagnostics(bool enabled) noexcept {
+    diagnostic_state_local_open_prior_ =
+        enabled && diagnostic_open_prior_states_ != nullptr;
+    return !enabled || diagnostic_state_local_open_prior_;
+  }
+  void set_coasting_harmonic_handoff_for_diagnostics(bool enabled) noexcept {
+    diagnostic_coasting_harmonic_handoff_ = enabled;
+  }
+  void set_calibrated_harmonic_admission_guard_for_diagnostics(bool enabled) noexcept {
+    diagnostic_calibrated_harmonic_admission_guard_ = enabled;
+  }
+  void set_provisional_open_retention_guard_for_diagnostics(bool enabled) noexcept {
+    diagnostic_provisional_open_retention_guard_ = enabled;
+  }
+  void set_joint_spectral_ownership_for_diagnostics(bool enabled) noexcept {
+    diagnostic_joint_spectral_ownership_ = enabled;
+  }
+  struct ResidualRecoveryStats final {
+    std::uint32_t proposals{};
+    std::uint32_t selected_ticks{};
+    std::uint32_t note_ons{};
+  };
+  void set_residual_pitch_recovery_for_diagnostics(
+      bool enabled, bool continuity = false) noexcept {
+    diagnostic_residual_pitch_recovery_ = enabled;
+    diagnostic_residual_recovery_continuity_ = enabled && continuity;
+    diagnostic_residual_recovery_lease_ = {};
+    diagnostic_residual_recovery_owners_.fill(kMaxVoices);
+  }
+  void submit_residual_recovery_for_diagnostics(
+      std::uint32_t tick, std::uint8_t note, std::uint8_t string) noexcept;
+  [[nodiscard]] std::uint8_t residual_recovery_owner_for_diagnostics(
+      std::uint8_t note) const noexcept;
+  [[nodiscard]] ResidualRecoveryStats residual_recovery_stats() const noexcept {
+    return diagnostic_residual_recovery_stats_;
   }
   void set_profile_pair_output_filter_for_diagnostics(
       bool enabled, bool continuity_echo = false) noexcept {
@@ -818,6 +897,17 @@ class PolyphonicPitchDetector final {
     bool valid{};
   };
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  M3DpState select_state_local_open_prior(
+      std::size_t pool_count,
+      const std::array<std::uint8_t, kMaxVoices * kMaxVoices>& atomic_groups,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      std::size_t priority_candidate, std::uint8_t priority_mask,
+      double fixed_penalty, double per_fret_penalty,
+      std::uint8_t& best_mask, std::uint8_t& selected_open_count) noexcept;
+#endif
+
   struct SpectralLaneState final {
     UnisonSpectralCorridorTracker tracker{};
     UnisonSpectralTemplateSet templates{};
@@ -827,6 +917,9 @@ class PolyphonicPitchDetector final {
     UnisonSpectralPhase template_phase{UnisonSpectralPhase::unready};
     double single_source_best_error{
         std::numeric_limits<double>::infinity()};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    double single_source_posterior_margin{};
+#endif
     std::uint32_t single_source_error_tick{};
     bool tracking{};
     bool templates_valid{};
@@ -871,6 +964,18 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] bool should_handoff_coasting_candidate_to_resolved_group(
       std::size_t candidate,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] bool reject_calibrated_harmonic_admission_for_diagnostics(
+      std::size_t candidate, std::size_t stronger,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      std::size_t count, double threshold) const noexcept;
+  [[nodiscard]] bool try_coasting_harmonic_handoff_for_diagnostics(
+      DetectorDecision& decision, std::size_t candidate,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      const std::array<bool, kMaxCandidates>& selected, bool quiet) noexcept;
+#endif
   [[nodiscard]] std::uint8_t candidate_evidence_decisions(
       bool multi_voice) const noexcept;
   [[nodiscard]] double signal_floor() const noexcept;
@@ -1082,6 +1187,16 @@ class PolyphonicPitchDetector final {
       std::uint8_t right_output_mask, bool left_spectral_ready,
       bool right_spectral_ready, double left_error,
       double right_error) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] static std::array<std::uint8_t, kMaxVoices>
+  bounded_joint_spectral_lanes(
+      const std::array<std::uint8_t, kMaxVoices>& proposals,
+      const std::array<std::uint8_t, kMaxVoices>& primary_masks,
+      const std::array<std::uint8_t, kMaxVoices>& playable_masks,
+      const std::array<double, kMaxVoices>& posterior_margins,
+      const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
+      std::uint8_t reserved_mask, std::size_t count) noexcept;
+#endif
   [[nodiscard]] static std::uint8_t projected_output_string_mask(
       std::uint8_t assigned_string_mask, std::uint8_t assigned_string,
       std::uint8_t spectral_lane_mask,
@@ -1202,6 +1317,9 @@ class PolyphonicPitchDetector final {
   std::array<FineFrequencyEvidenceState, kMaxCandidates>
       fine_frequency_evidence_states_{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Fine-pitch evidence for discarded candidates, used only by fixed-context
+  // assignment diagnostics. Never transferred to native candidate state.
+  std::array<PhaseCentsState, kMaxCandidates> diagnostic_discarded_phase_states_{};
   std::array<FineHistoryResetDiagnostics, kMaxCandidates>
       fine_history_reset_diagnostics_{};
 #endif
@@ -1318,10 +1436,14 @@ class PolyphonicPitchDetector final {
       unison_cache_refresh_dispositions_{};
 #endif
   bool assignment_diagnostics_enabled_{};
+  bool residual_assignment_diagnostics_enabled_{};
   // Replay diagnostics can exceed the remaining stack space when a caller
   // owns several detectors. Allocate once; configuration and processing reuse it.
   std::unique_ptr<StringAssignmentDiagnostics[]> assignment_diagnostics_{
       new (std::nothrow) StringAssignmentDiagnostics[kMaxCandidates]{}};
+  bool fine_group_ownership_diagnostics_enabled_{};
+  std::unique_ptr<FineGroupOwnershipDiagnostics[]> fine_group_ownership_diagnostics_{
+      new (std::nothrow) FineGroupOwnershipDiagnostics[kMaxCandidates]{}};
   double diagnostic_candidate_rescue_score_ratio_{};
   double diagnostic_input_energy_decay_{};
   double diagnostic_selection_decay_{};
@@ -1336,6 +1458,33 @@ class PolyphonicPitchDetector final {
   bool diagnostic_profile_pair_corroboration_{};
   bool diagnostic_profile_memory_partial_correction_{};
   bool diagnostic_assignment_partial_correction_{};
+  bool diagnostic_state_local_open_prior_{};
+  bool diagnostic_coasting_harmonic_handoff_{};
+  bool diagnostic_calibrated_harmonic_admission_guard_{};
+  bool diagnostic_provisional_open_retention_guard_{};
+  bool diagnostic_joint_spectral_ownership_{};
+  bool diagnostic_residual_pitch_recovery_{};
+  bool diagnostic_residual_recovery_continuity_{};
+  std::array<std::uint8_t, kMaxCandidates> diagnostic_residual_recovery_owners_{};
+  struct ResidualRecoveryLease final {
+    std::uint32_t tick{};
+    std::uint8_t note{};
+    std::uint8_t string{8U};
+    bool valid{};
+  };
+  ResidualRecoveryLease diagnostic_residual_recovery_lease_{};
+  ResidualRecoveryStats diagnostic_residual_recovery_stats_{};
+  void apply_residual_recovery_for_diagnostics(
+      std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      double threshold, bool quiet, std::size_t count) noexcept;
+
+  std::array<bool, kMaxCandidates>
+      diagnostic_calibrated_harmonic_reassignment_candidates_{};
+  // Constructor-owned replay workspace; processing never allocates or grows it.
+  std::unique_ptr<M3DpState[]> diagnostic_open_prior_states_{
+      new (std::nothrow) M3DpState[3U * (1U << kMaxVoices)]{}};
   bool diagnostic_profile_pair_output_filter_{};
   bool diagnostic_profile_pair_continuity_echo_{};
   double diagnostic_fretted_fixed_penalty_{};

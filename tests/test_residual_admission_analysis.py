@@ -2,11 +2,11 @@ import csv
 import io
 import unittest
 
-from tools.residual_admission_analysis import FIELDS, analyze_stream
+from tools.residual_admission_analysis import FIELDS, EXTENDED_FIELDS, analyze_stream
 
 
 def observation(**changes):
-    row = dict.fromkeys(FIELDS, 0)
+    row = dict.fromkeys(EXTENDED_FIELDS, 0)
     row.update(sample=40000, tick=1008, note=49, base_count=2,
                used_mask=3, free_mask=4, any_label=1, expected_note=1,
                expected_mask=4, base_valid=1, added_valid=1,
@@ -18,9 +18,9 @@ def observation(**changes):
     return row
 
 
-def analyze(*rows, **capture_changes):
+def analyze(*rows, fields=EXTENDED_FIELDS, **capture_changes):
     stream = io.StringIO()
-    writer = csv.DictWriter(stream, fieldnames=FIELDS, delimiter='\t')
+    writer = csv.DictWriter(stream, fieldnames=fields, delimiter='\t', extrasaction='ignore')
     writer.writeheader()
     writer.writerows(rows)
     stream.seek(0)
@@ -30,6 +30,71 @@ def analyze(*rows, **capture_changes):
 
 
 class ResidualAdmissionAnalysisTests(unittest.TestCase):
+    def test_old_capture_is_explicitly_supported_without_inventing_lane_costs(self):
+        result = analyze(observation(), fields=FIELDS)
+        self.assertFalse(result['lane_costs_available'])
+        self.assertEqual(result['persistence_screen']['native_lane_policies'], [])
+        with self.assertRaises(ValueError):
+            analyze(observation(), fields=EXTENDED_FIELDS[:-1])
+
+    def test_persistence_requires_adjacent_samples_and_the_same_best_string(self):
+        def row(tick, **changes):
+            data = dict(tick=tick, sample=tick * 64, free_mask=12,
+                        lane_fixed_context=1, lane_selected_count=2,
+                        lane_available_mask=12, lane_cost_2=0., lane_cost_3=12.)
+            data.update(changes)
+            return observation(**data)
+        result = analyze(row(1008), row(1024), row(1040, expected_mask=8),
+                         row(1056, lane_cost_2=20., lane_cost_3=0.),
+                         row(1088), row(1104), row(1120, any_label=0, expected_note=0))
+        screen = result['persistence_screen']
+        counts = screen['pitch_observations']['3']
+        self.assertEqual(counts['expected_free_string'], 2)
+        self.assertEqual(counts['extra_gap'], 1)
+        policy = next(p for p in screen['native_lane_policies']
+                      if p['sampled_observations_required'] == 3 and p['margin_floor'] == 8.)
+        self.assertEqual(policy['observations']['expected_free_string'], 1)
+        self.assertEqual(policy['observations']['extra_gap'], 1)
+        self.assertEqual(policy['wrong_string'], 1)
+        strict = next(p for p in screen['native_lane_policies']
+                      if p['sampled_observations_required'] == 3 and p['margin_floor'] == 32.)
+        self.assertEqual(sum(strict['observations'].values()), 0)
+
+    def test_tied_costs_do_not_claim_a_best_string_and_sole_choices_are_labeled(self):
+        result = analyze(
+            observation(free_mask=12, lane_fixed_context=1, lane_selected_count=2,
+                        lane_available_mask=12),
+            observation(tick=1024, lane_fixed_context=1, lane_selected_count=2,
+                        lane_available_mask=4, lane_cost_2=-12.))
+        policy = result['persistence_screen']['native_lane_policies'][0]
+        self.assertEqual(policy['observations']['expected_free_string'], 1)
+        self.assertEqual(policy['sole_available_string'], 1)
+        for strict in result['persistence_screen']['native_lane_policies']:
+            if strict['margin_floor'] > 0.:
+                self.assertEqual(sum(strict['observations'].values()), 0)
+
+    def test_unavailable_labeled_strings_are_not_native_ranking_errors(self):
+        result = analyze(
+            observation(expected_mask=8, lane_fixed_context=1, lane_selected_count=2,
+                        lane_available_mask=4, lane_cost_2=-12.),
+            observation(tick=1024, free_mask=12, expected_mask=8,
+                        lane_fixed_context=1, lane_selected_count=2,
+                        lane_available_mask=4, lane_cost_2=-12.))
+        policy = result['persistence_screen']['native_lane_policies'][0]
+        self.assertEqual(policy['observations']['expected_occupied_string'], 1)
+        self.assertEqual(policy['observations']['expected_free_string'], 1)
+        self.assertEqual(policy['wrong_string'], 0)
+        self.assertEqual(policy['labeled_string_unavailable'], 2)
+
+    def test_invalid_lane_evidence_fails_closed(self):
+        for changes in (dict(lane_available_mask=4), dict(lane_cost_2=1.),
+                        dict(lane_fixed_context=2),
+                        dict(lane_fixed_context=1, lane_selected_count=1),
+                        dict(lane_fixed_context=1, lane_selected_count=2, lane_available_mask=1),
+                        dict(lane_cost_2=float('nan'))):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                analyze(observation(**changes))
+
     def test_pitch_and_string_evidence_remain_separate(self):
         result = analyze(
             observation(),
