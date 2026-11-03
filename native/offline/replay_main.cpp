@@ -161,6 +161,7 @@ void usage(const char* program) {
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
       "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-joint-spectral-ownership] "
+      "[--diagnostic-joint-ownership-ablation solver|midi-guard] "
       "[--fine-window-dump FILE --fine-window-note 0..127] "
       "[--fine-window-start SECONDS --fine-window-end SECONDS "
       "--fine-window-min-spacing SECONDS] "
@@ -221,6 +222,7 @@ int main(int argc, char** argv) {
   m3::offline::MidiEventTrace midi_event_trace;
   bool diagnostic_residual_recovery_continuity = false;
   bool diagnostic_joint_spectral_ownership = false;
+  auto joint_ownership_ablation = m3::offline::JointOwnershipAblation::none;
   const char* residual_admission_trace_path = nullptr;
   m3::offline::ResidualAdmissionTrace residual_admission_trace;
   const char* assignment_trace_path = nullptr;
@@ -581,6 +583,17 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-joint-spectral-ownership") == 0) {
       diagnostic_joint_spectral_ownership = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-joint-ownership-ablation") == 0 && has_value) {
+      const char* mode = argv[++index];
+      if (std::strcmp(mode, "solver") == 0) {
+        joint_ownership_ablation = m3::offline::JointOwnershipAblation::solver_only;
+      } else if (std::strcmp(mode, "midi-guard") == 0) {
+        joint_ownership_ablation = m3::offline::JointOwnershipAblation::midi_guard_only;
+      } else {
+        std::fprintf(stderr, "m3_replay: invalid joint ownership ablation\n");
+        return 1;
+      }
     } else if (std::strcmp(argv[index], "--label-details") == 0) {
       label_details = true;
     } else if (std::strcmp(argv[index],
@@ -989,7 +1002,8 @@ int main(int argc, char** argv) {
           diagnostic_residual_pitch_recovery,
           midi_event_trace_stream != nullptr ? &midi_event_trace : nullptr,
           diagnostic_residual_recovery_continuity,
-          diagnostic_joint_spectral_ownership)) {
+          diagnostic_joint_spectral_ownership,
+          joint_ownership_ablation)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

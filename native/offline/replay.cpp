@@ -2496,9 +2496,17 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_residual_pitch_recovery,
                          MidiEventTrace* midi_event_trace,
                          bool diagnostic_residual_recovery_continuity,
-                         bool diagnostic_joint_spectral_ownership) {
+                         bool diagnostic_joint_spectral_ownership,
+                         JointOwnershipAblation joint_ownership_ablation) {
   output = {};
   error = ReplayError::invalid_config;
+  if (joint_ownership_ablation != JointOwnershipAblation::none &&
+      (joint_ownership_ablation != JointOwnershipAblation::solver_only &&
+       joint_ownership_ablation != JointOwnershipAblation::midi_guard_only))
+    return false;
+  if (joint_ownership_ablation != JointOwnershipAblation::none &&
+      !diagnostic_joint_spectral_ownership)
+    return false;
   if (diagnostic_residual_recovery_continuity && !diagnostic_residual_pitch_recovery)
     return false;
   if (midi_event_trace != nullptr) {
@@ -2696,7 +2704,10 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_residual_pitch_recovery_for_diagnostics(
       diagnostic_residual_pitch_recovery, diagnostic_residual_recovery_continuity);
   detector.set_joint_spectral_ownership_for_diagnostics(
-      diagnostic_joint_spectral_ownership);
+      diagnostic_joint_spectral_ownership &&
+          joint_ownership_ablation != JointOwnershipAblation::midi_guard_only,
+      diagnostic_joint_spectral_ownership &&
+          joint_ownership_ablation != JointOwnershipAblation::solver_only);
   detector.set_profile_pair_output_filter_for_diagnostics(
       diagnostic_profile_pair_output_filter || diagnostic_profile_pair_continuity_echo,
       diagnostic_profile_pair_continuity_echo);

@@ -2238,6 +2238,13 @@ bool parse_replay_labels(const char* text, std::size_t size,
                          std::vector<ReplayLabel>& output,
                          ReplayError& error);
 
+// Without an ablation, the diagnostic ownership switch enables both policies.
+enum class JointOwnershipAblation : std::uint8_t {
+  none,
+  solver_only,
+  midi_guard_only,
+};
+
 bool run_detector_replay(const WaveData& wave,
                          const std::vector<ReplayLabel>& labels,
                          const PersistentConfig& config,
@@ -2285,7 +2292,9 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_residual_pitch_recovery = false,
                          MidiEventTrace* midi_event_trace = nullptr,
                          bool diagnostic_residual_recovery_continuity = false,
-                         bool diagnostic_joint_spectral_ownership = false);
+                         bool diagnostic_joint_spectral_ownership = false,
+                         JointOwnershipAblation joint_ownership_ablation =
+                             JointOwnershipAblation::none);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

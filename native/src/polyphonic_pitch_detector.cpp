@@ -3714,7 +3714,7 @@ std::uint8_t PolyphonicPitchDetector::diagnostic_profile_pair_output_mask(
 bool PolyphonicPitchDetector::diagnostic_midi_owner_conflict(
     std::size_t candidate, std::uint8_t desired,
     std::size_t releasing_candidate) const noexcept {
-  if (!diagnostic_joint_spectral_ownership_) {
+  if (!diagnostic_joint_midi_owner_guard_) {
     return false;
   }
   for (std::size_t other = 0U;

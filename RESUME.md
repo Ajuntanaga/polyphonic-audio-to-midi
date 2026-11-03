@@ -1,3 +1,20 @@
+## 2026-11-03T09:56:13.772713+00:00 — ownership controls separated; attack-order failure isolated
+
+- Scope: offline diagnostic controls only. The solver and MIDI ownership guard can now run independently. Production defaults and the installed bundle are unchanged.
+- Validation: native/replay build PASS; full native suite 527/527 PASS; six CLI success/rejection checks PASS; native source contract, production preprocessing exclusion and whitespace checks PASS. One focused review found no actionable issues. Reports: `build/test-results/joint-ownership-ablation-native-suite.log`, `joint-ownership-ablation-cli.json` and `joint-ownership-ablation-review.json`. No new production build, validator or install.
+- Modal ablation `joint-ownership-ablation-20261103T093837Z`, app `ap-XHpdxynmANE0ksnERk09MU`, completed. Report: `build/modal/joint-ownership-ablation-screen.json`.
+
+| Ordinary recording, block 512 | Matched / 528632 | Wrong note | Wrong string | Extra outputs in unlabeled gaps | Total false outputs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control | 145397 (27.504%) | 163749 | 92641 | 62856 | 319246 |
+| Solver only | 145141 (27.456%) | 163749 | 92897 | 62856 | 319502 |
+| MIDI guard only | 145629 (27.548%) | 166899 | 93074 | 63378 | 323351 |
+
+- Verdict: both trials REJECTED. Solver-only loses 256 matched frames and adds 256 wrong-string outputs. Guard-only gains 232 matches but adds 3150 wrong-note outputs, 433 wrong-string outputs and 522 extra outputs during unlabeled gaps. The control is an offline comparison, not the installed baseline.
+- Causal finding: saved-event analysis completed in app `ap-8yogpvTwJC85C8WI2bdaiQ`; report `build/modal/ownership-guard-first-divergence.json`. At sample 1149183, simultaneous ready candidates 36 and 37 claim lane 0. Ascending pitch order admits 36 first and blocks 37. Candidate 37 has a direct fundamental peak; 36 does not. The missing active 37 later changes harmonic rejection. Labels identify 37 as correct but do not enter the detector policy. This analysis reused saved captures; no new replay.
+- Next: Test bounded simultaneous attack arbitration using current spectral evidence and complete string masks before emitting note-ons. Keep existing owners, attack eligibility, silence/release and capacity checks. Require ordinary matches >145397, wrong notes <=163749, wrong strings <=92641 and extra outputs in unlabeled gaps <=62856 before protected expansion.
+- Preserve 3 seconds / 0.20 coherence / 0.50 retention and trim -9 dB, Sensitivity 60, Response 75, Max Polyphony 5, Max Fret 24. No broad retuning or annotation-dependent rule. Continue checked GitHub checkpoints and ten-minute inline notifications under 4000 UTF-8 bytes.
+
 ## 2026-11-03T08:34:45.317568+00:00 — provisional ownership screen rejected
 
 - Scope: offline, opt-in joint string assignment. Production code and installed output unchanged. GitHub cadence remains checked milestones, with replay outcomes recorded.

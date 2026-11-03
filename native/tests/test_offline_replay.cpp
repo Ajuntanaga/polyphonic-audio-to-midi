@@ -714,15 +714,28 @@ M3_TEST(offline_residual_recovery_is_partition_and_label_independent_and_release
         m3::offline::CandidateOutcomeTrace trace;
         trace.stream = stream.get();
         const auto run = [&](m3::offline::CandidateOutcomeTrace* output_trace,
-                             m3::offline::MidiEventTrace* output_events) {
+                             m3::offline::MidiEventTrace* output_events,
+                             m3::offline::JointOwnershipAblation ablation =
+                                 m3::offline::JointOwnershipAblation::none) {
           return m3::offline::run_detector_replay(
               wave, labels, config, nullptr, partition, *observed, error,
               nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
               false, false, false, -1.0, false, false, false, nullptr,
               false, false, false, nullptr, output_trace, false, nullptr, nullptr,
               false, false, false, false, false, false, false, false, false, true,
-              output_events, continuity, joint_ownership);
+              output_events, continuity, joint_ownership, ablation);
         };
+        if (!joint_ownership) {
+          M3_EXPECT_FALSE(run(nullptr, nullptr,
+              m3::offline::JointOwnershipAblation::solver_only));
+          M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+          M3_EXPECT_FALSE(run(nullptr, nullptr,
+              m3::offline::JointOwnershipAblation::midi_guard_only));
+          M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+          M3_EXPECT_FALSE(run(nullptr, nullptr,
+              static_cast<m3::offline::JointOwnershipAblation>(255U)));
+          M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+        }
         M3_EXPECT_TRUE(run(&trace, &event_trace));
         M3_EXPECT_FALSE(event_trace.failed);
         M3_EXPECT_FALSE(event_trace.truncated);

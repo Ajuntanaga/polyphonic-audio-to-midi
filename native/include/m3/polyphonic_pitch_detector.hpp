@@ -556,6 +556,12 @@ class PolyphonicPitchDetector final {
   }
   void set_joint_spectral_ownership_for_diagnostics(bool enabled) noexcept {
     diagnostic_joint_spectral_ownership_ = enabled;
+    diagnostic_joint_midi_owner_guard_ = enabled;
+  }
+  void set_joint_spectral_ownership_for_diagnostics(
+      bool solver, bool midi_guard) noexcept {
+    diagnostic_joint_spectral_ownership_ = solver;
+    diagnostic_joint_midi_owner_guard_ = midi_guard;
   }
   struct ResidualRecoveryStats final {
     std::uint32_t proposals{};
@@ -1471,6 +1477,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_provisional_open_retention_guard_{};
   bool diagnostic_joint_spectral_ownership_{};
+  bool diagnostic_joint_midi_owner_guard_{};
   bool diagnostic_residual_pitch_recovery_{};
   bool diagnostic_residual_recovery_continuity_{};
   std::array<std::uint8_t, kMaxCandidates> diagnostic_residual_recovery_owners_{};

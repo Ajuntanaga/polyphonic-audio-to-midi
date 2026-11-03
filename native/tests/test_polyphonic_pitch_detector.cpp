@@ -1710,14 +1710,15 @@ struct PolyphonicPitchDetectorTestAccess final {
         incumbent_masks, reserved_mask, count, active_owner_mask);
   }
 
-  static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector) {
+  static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector,
+                                              bool solver = true) {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.midi_routing = MidiRouting::per_voice;
     config.lowest_note = 48U;
     config.highest_note = 49U;
     M3_EXPECT_TRUE(detector.configure(48000.0, config));
-    detector.set_joint_spectral_ownership_for_diagnostics(true);
+    detector.set_joint_spectral_ownership_for_diagnostics(solver, true);
     auto& owner = detector.candidate_states_[0U];
     auto& pending = detector.candidate_states_[1U];
     owner.assigned_string = 0U;
@@ -1766,6 +1767,13 @@ struct PolyphonicPitchDetectorTestAccess final {
     owner.assigned_string_mask = 1U;
     DetectorDecision control;
     M3_EXPECT_TRUE(detector.append_candidate_note_on(control, 0U, 100U));
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(control, 0U));
+    // Solver-only replay retains the ordinary MIDI admission path.
+    detector.set_joint_spectral_ownership_for_diagnostics(true, false);
+    DetectorDecision solver_only;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(solver_only, 0U, 100U));
+    M3_EXPECT_EQ(solver_only.transitions.size(), 1U);
+    M3_EXPECT_EQ(solver_only.transitions[0U].voice_id, 0U);
   }
 
   static void joint_spectral_handoff_ownership(PolyphonicPitchDetector& detector) {
@@ -11335,6 +11343,13 @@ M3_TEST(native_detector_joint_spectral_handoff_checks_ownership_before_note_off)
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   m3::PolyphonicPitchDetector detector;
   m3::PolyphonicPitchDetectorTestAccess::joint_spectral_handoff_ownership(detector);
+#endif
+}
+
+M3_TEST(native_detector_joint_midi_guard_works_without_spectral_solver) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::joint_spectral_attack_ownership(detector, false);
 #endif
 }
 

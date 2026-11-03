@@ -1066,6 +1066,12 @@ def build_extended_upper() -> None:
     timeout=3600,
 )
 def run_replay(job: dict[str, Any]) -> dict[str, Any]:
+    ownership_ablation = job.get("joint_ownership_ablation", "none")
+    ownership_ablation_ids = {"none": 0, "solver": 1, "midi-guard": 2}
+    if ownership_ablation not in ownership_ablation_ids:
+        raise ValueError("invalid joint ownership ablation")
+    if ownership_ablation != "none" and not job.get("joint_spectral_ownership", False):
+        raise ValueError("joint ownership ablation requires joint spectral ownership")
     dataset = DATASETS[job["dataset"]]
     output_relative = Path("results") / job["run_id"] / (
         f"{job['dataset']}-b{job['block']}-m{job['selector_margin']}"
@@ -1095,6 +1101,7 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         f"-rpr{int(job.get('residual_pitch_recovery', False))}"
         f"-rrc{int(job.get('residual_recovery_continuity', False))}"
         f"-jso{int(job.get('joint_spectral_ownership', False))}"
+        f"-joa{ownership_ablation_ids[ownership_ablation]}"
         f"-fp{job.get('fretted_penalty_scale', -1.0)}"
         f"-cr{job.get('candidate_rescue_score_ratio', -1.0)}"
         f"-{job.get('candidate_rescue_fundamental_ratio', -1.0)}"
@@ -1197,6 +1204,8 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
         command += ["--diagnostic-residual-recovery-continuity"]
     if bool(job.get("joint_spectral_ownership", False)):
         command += ["--diagnostic-joint-spectral-ownership"]
+    if ownership_ablation != "none":
+        command += ["--diagnostic-joint-ownership-ablation", ownership_ablation]
     fretted_penalty_scale = float(job.get("fretted_penalty_scale", -1.0))
     if fretted_penalty_scale >= 0.0:
         command += [
@@ -1383,6 +1392,7 @@ def run_replay(job: dict[str, Any]) -> dict[str, Any]:
             "residual_recovery_counters": recovery_metadata,
             "residual_recovery_continuity": bool(job.get("residual_recovery_continuity", False)),
             "joint_spectral_ownership": bool(job.get("joint_spectral_ownership", False)),
+            "joint_ownership_ablation": ownership_ablation,
             "fretted_penalty_scale": fretted_penalty_scale,
             "candidate_rescue_score_ratio": candidate_rescue_score_ratio,
             "candidate_rescue_fundamental_ratio": candidate_rescue_fundamental_ratio,
