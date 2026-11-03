@@ -139,3 +139,122 @@ def main(run_id: str, source_run: str):
     print(json.dumps({key: result[key] for key in ('run_id', 'state', 'stage', 'final')}))
     if result['state'] != 'completed':
         raise SystemExit(1)
+
+
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=1.0,
+              memory=2048, timeout=600, max_containers=1)
+def analyze_held_out(run_id: str, corpus_id: str):
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    import numpy as np
+    from tools.independent_partial_evidence import (
+        CONFIG, FROZEN_SCREEN, measure, score_frozen_screen, summarize,
+    )
+    from tools.controlled_descriptor_overlap import controlled_mixtures, read_float_wave
+    for identifier in (run_id, corpus_id):
+        if not re.fullmatch(r'[a-zA-Z0-9_-]+', identifier):
+            raise ValueError('invalid run or corpus identifier')
+    out, source = MOUNT / 'results' / run_id, MOUNT / 'corpus' / corpus_id
+    out.mkdir(parents=True, exist_ok=False)
+    report = dict(run_id=run_id, corpus_id=corpus_id, state='running', final=False,
+        stage='verify held-out crops and frozen screen', installed_changed=False,
+        config=CONFIG, frozen_screen=FROZEN_SCREEN,
+        started_at=datetime.now(timezone.utc).isoformat(), cases={},
+        acceptance='A cue in each target mixture, zero absent-note cues, zero clear-gap cues. Diagnostic only.',
+        limits=['New plucks from the same recording session, not a new guitar or session.',
+                'Mixtures reuse the same held-out plucks; frames and gain variants are correlated.',
+                'Silence is digital zero; recorded room-noise safety is not measured.',
+                'The causal window spans 170.7 ms at 96 kHz; no live latency claim.',
+                'No string assignment, MIDI replay, native build or installed-output change.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        manifest = json.loads((source / 'manifest.json').read_text())
+        if (manifest['corpus_id'] != corpus_id or manifest['frozen_screen'] != FROZEN_SCREEN or
+                manifest['analysis_config'] != CONFIG or manifest['calibration_pass'] != 2):
+            raise ValueError('manifest identity, frozen policy or held-out pass differs')
+        report['manifest_sha256'] = digest(source / 'manifest.json')
+        report['manifest'] = manifest
+        report['analysis_source_sha256'] = {name: digest('/opt/m3/tools/' + name + '.py') for name in MODULES}
+        components = {}
+        for name in ('target', 'octave', 'nearby'):
+            identity = manifest['components'][name]
+            path = source / (name + '.wav')
+            if digest(path) != identity['wave_sha256']:
+                raise ValueError('held-out crop file changed')
+            rate, audio = read_float_wave(path)
+            if (rate != 96000 or len(audio) != 220800 or
+                    hashlib.sha256(audio.tobytes()).hexdigest() != identity['samples_sha256'] or
+                    not identity['training_crop_equals_raw_pass1'] or
+                    identity['source_start_sample'] < identity['training_source_end_sample']):
+                raise ValueError('held-out source clock, crop or disjointness differs')
+            components[name] = audio.astype(np.float64)
+        mixtures = controlled_mixtures(components['target'],
+            {name: components[name] for name in ('octave', 'nearby')},
+            prefix=24000, suffix=96000)
+        cases = {}
+        for name, case in mixtures.items():
+            metadata = case['metadata']
+            cases[name] = (case['audio'], False)
+            if metadata['interferer'] is not None:
+                added = components[metadata['interferer']] * metadata['interferer_scale'] * metadata['common_gain']
+                cases[name + '_source_only'] = (np.pad(np.asarray(added, dtype='<f4'),
+                                                      (24000, 96000)), True)
+        cases['silence'] = (np.zeros(340800, dtype='<f4'), True)
+        counts = dict(target_frames=0, target_cue_frames=0, negative_frames=0,
+                      negative_cue_frames=0, clear_gap_frames=0, clear_gap_cue_frames=0,
+                      target_cases=0, target_cases_with_cues=0)
+        for name, (values, source_only) in cases.items():
+            report['stage'] = name + ' frozen screen'
+            save()
+            rows = list(measure(values, 96000))
+            trace = out / (name + '-partials.jsonl.gz')
+            with gzip.open(trace, 'wt', compresslevel=1) as stream:
+                for row in rows:
+                    stream.write(json.dumps(row, separators=(',', ':'), allow_nan=False) + '\n')
+            scored = score_frozen_screen(rows, start_sample=24000, end_sample=244800,
+                                          window_samples=CONFIG['window_samples'])
+            report['cases'][name] = dict(source_only=source_only, sample_rate=96000,
+                sample_count=len(values), audio_sha256=hashlib.sha256(values.tobytes()).hexdigest(),
+                trace_sha256=digest(trace), frozen_groups=scored,
+                original_groups=summarize(rows, start_sample=24000, end_sample=244800, sample_rate=96000),
+                mixture=mixtures[name]['metadata'] if name in mixtures else None)
+            for note, scored_note in scored['note_interval']['notes'].items():
+                target = not source_only and note == '36'
+                prefix = 'target' if target else 'negative'
+                counts[prefix + '_frames'] += scored_note['observed_frames']
+                counts[prefix + '_cue_frames'] += scored_note['cue_frames']
+                if target:
+                    counts['target_cases'] += 1
+                    counts['target_cases_with_cues'] += int(scored_note['cue_frames'] > 0)
+            for section in ('before_note', 'clear_gap'):
+                for scored_note in scored[section]['notes'].values():
+                    counts['clear_gap_frames'] += scored_note['observed_frames']
+                    counts['clear_gap_cue_frames'] += scored_note['cue_frames']
+            save()
+        passed = (counts['target_cases_with_cues'] == counts['target_cases'] == 5 and
+                  counts['negative_frames'] > 0 and counts['clear_gap_frames'] > 0 and
+                  counts['negative_cue_frames'] == counts['clear_gap_cue_frames'] == 0)
+        report.update(counts=counts, screen_passed=passed,
+            result='diagnostic_screen_passed' if passed else 'rejected',
+            state='completed', final=True, stage='held-out frozen screen complete',
+            completed_at=datetime.now(timezone.utc).isoformat())
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+    save()
+    return report
+
+
+@app.local_entrypoint()
+def holdout(run_id: str, corpus_id: str):
+    result = analyze_held_out.remote(run_id, corpus_id)
+    path = ROOT / 'build/modal' / (run_id + '.json')
+    path.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
+    print(json.dumps({key: result[key] for key in ('run_id', 'state', 'stage', 'final')}))
+    if result['state'] != 'completed':
+        raise SystemExit(1)

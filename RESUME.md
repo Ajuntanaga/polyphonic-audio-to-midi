@@ -1,3 +1,13 @@
+## 2026-11-03 22:41 UTC — frozen overtone screen passes on second plucks
+
+- Modal `independent-partials-heldout-20261103T2239Z`, app `ap-y9qUIPMP9TxRFAquViIciT`, completed at 22:39:53 UTC. Final report: `build/modal/independent-partials-heldout-20261103T2239Z.json`. The diagnostic is accepted for the next replay step; installed output is unchanged.
+- The rule was frozen before measuring pass 2: both third/fifth-overtone local contrasts strictly above `8.593275855114637` dB, with pitch agreement at most 25 cents. It gives 520/1080 target-present cues (48.15%), 0/3240 absent-note cues and 0/1700 clear-gap cues. Every target case has evidence; the equal-level nearby-note mixture gives 34/216 (15.74%). These are feature observations, not matched MIDI frames.
+- The first pass-2 pluck of each source note was selected before spectral analysis. The pass-1 raw crops match the earlier training crops byte-for-byte; pass-2 spans are disjoint and have different sample hashes. This tests repeatability within one recording session, not another guitar/session. Silence is digital zero, not recorded room noise. Windows and reused mixtures are correlated.
+- The first cue arrives 155.33–166.00 ms after the labeled crop starts. The causal window remains 16384 samples at 96 kHz (170.7 ms). No native MIDI replay, callback timing, allocation, lifecycle or live-use result is claimed. The accepted three-second unison evidence window is unchanged.
+- Validation: 13 focused Python tests, compilation and whitespace checks pass. Boundary tests retain absent-note false cues, reject missing/nonfinite features, and separate window tails from clear gaps.
+- Next: add a default-off offline replay path for the frozen cue. Require strict MIDI36/string-mask1 recovery in nearby_0dB, no target/aggregate loss or increased safety count in any control, and exact OFF equality. Only then expand to ordinary matches >145385 with preserved error ceilings and the protected/live gates. Preserve 3 seconds / 0.20 / 0.50 and -9/60/75/poly5/fret24.
+- Research and inactive-log compression are complete. Continue ten-minute inline ntfy updates from current evidence, <=4000 UTF-8 bytes, with delivery state in `build/modal/latest-notification-receipt.json`; never retry an ambiguous send. GitHub/checkpoint prose uses Precise mode.
+
 ## 2026-11-03 22:32 UTC — local overtone reference measured; separate-take test next
 
 - Modal `independent-partials-local-reference-20261103T2226Z`, app `ap-OSl5pMhurkBJzMeraAhu5J`, completed at 22:27:17 UTC. Final report: `build/modal/independent-partials-local-reference-20261103T2226Z.json`. No job from this slice is running. The installed plugin and MIDI policy are unchanged.

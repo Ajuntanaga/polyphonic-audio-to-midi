@@ -1016,3 +1016,61 @@ reference handling. Compilation passes, and one focused review is complete.
 The analysis uses a past-only 16384-sample window at 96 kHz (170.7 ms); it is
 an offline measurement, not a callback timing result or a replacement for
 the accepted three-second evidence window.
+
+### Frozen overtone screen on held-out plucks, 2026-11-03
+
+The first pluck in calibration pass 2 was selected for each of MIDI 36, 48
+and 49 before measuring the spectrum. Pass-1 raw crops are byte-identical to
+the earlier representative training crops; the selected pass-2 spans are
+disjoint, with different sample hashes. The manifest records source spans,
+label hashes, crop hashes and the frozen rule. No pitch correction,
+resampling or crop-specific gain was applied.
+
+The rule requires both H3/H5 local contrasts to exceed
+`8.593275855114637` dB and their fundamental-frequency estimates to agree
+within 25 cents. Neither labels nor component spectra enter that decision.
+The feature code rejects missing and nonfinite evidence. The scorer separates
+the causal window tail from wholly note-free windows; the first clear window
+ends at `end_sample + window_samples - 1`.
+
+Modal `independent-partials-heldout-20261103T2239Z`, app
+`ap-y9qUIPMP9TxRFAquViIciT`, completed at 22:39:53 UTC. Final report:
+`build/modal/independent-partials-heldout-20261103T2239Z.json`.
+
+| Held-out target case | Cue frames / observed frames | Cue percentage | First cue after labeled crop start |
+| --- | ---: | ---: | ---: |
+| Solo low note | 141/216 | 65.28% | 155.33 ms |
+| Added octave, -12 dB | 140/216 | 64.81% | 155.33 ms |
+| Added octave, equal RMS | 83/216 | 38.43% | 166.00 ms |
+| Added nearby note, -12 dB | 122/216 | 56.48% | 155.33 ms |
+| Added nearby note, equal RMS | 34/216 | 15.74% | 155.33 ms |
+
+The frozen diagnostic passes its stated screen: useful evidence in all five
+target cases, 520/1080 target-present cue frames (48.15%), no cues in 3240
+absent-note observations, and no cues in 1700 clear-gap observations. The
+negative set includes absent MIDI 37 in each mixture, MIDI 36/37 in the four
+higher-note-only controls, and both hypotheses in digital silence. The clear
+gap count includes available history before the crop and wholly empty windows
+after it. Window-tail cues are zero and reported separately.
+
+This is repeatability on separate plucks from the same source recording
+session. Mixtures reuse those plucks, so gain variants and overlapping frames
+are correlated. Digital silence does not measure room-noise safety. The
+16384-sample causal window spans 170.7 ms at 96 kHz; first-cue timing is
+relative to the annotated crop boundary, not a measured pick-to-MIDI latency.
+No string assignment, recovered MIDI, native timing, installation or live-use
+improvement follows from these counts.
+
+The next step is a default-off native replay experiment using the frozen
+signal-derived cues. The target-specific gate must show a strict MIDI36 /
+string-mask1 gain in the equal-level nearby-note case, no target or aggregate
+match loss and no higher error count in any control. OFF output must remain
+identical. A passing output experiment can then advance to ordinary matches
+above 145385 with its error ceilings preserved, protected recordings,
+partition parity, timing/allocation and lifecycle/actual-host checks.
+
+Thirteen focused Python tests pass, including strict contrast and inclusive
+pitch boundaries, missing/nonfinite rejection, unavailable history, explicit
+absent-note false cues, and the exact tail-to-gap boundary. Compilation and
+whitespace checks pass. The installed plugin and default MIDI policy are
+unchanged.

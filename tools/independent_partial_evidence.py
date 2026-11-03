@@ -16,6 +16,69 @@ CONFIG = dict(window_samples=16384, fft_samples=65536, hop_samples=1024,
               odd_agreement_cents=25.0,
               sideband_inner_window_bins=3.0, sideband_outer_window_bins=5.0)
 
+# Frozen before examining calibration-pass-2 crops. This is a diagnostic screen,
+# not a MIDI admission rule, and does not inherit the global power-floor cue.
+FROZEN_SCREEN = dict(pair_prominence_db_exclusive=8.593275855114637,
+                     agreement_cents_inclusive=25.0,
+                     fitting_run='independent-partials-local-reference-20261103T2226Z')
+
+
+def frozen_pair_screen(value):
+    """Use mixture features only; missing evidence always abstains."""
+    third, fifth = (value['partials'][h] for h in (2, 4))
+    if third is None or fifth is None:
+        return 'missing_peak'
+    contrast = [peak.get('local_prominence_db') for peak in (third, fifth)]
+    if any(number is None or not math.isfinite(number) for number in contrast):
+        return 'missing_reference'
+    if min(contrast) <= FROZEN_SCREEN['pair_prominence_db_exclusive']:
+        return 'below_prominence'
+    agreement = value.get('odd_raw_agreement_cents')
+    if agreement is None or not math.isfinite(agreement):
+        return 'missing_agreement'
+    if not 0 <= agreement <= FROZEN_SCREEN['agreement_cents_inclusive']:
+        return 'pitch_disagreement'
+    return 'cue'
+
+
+def score_frozen_screen(rows, *, start_sample, end_sample, window_samples):
+    """Score fixed observations, separating causal window tail from clear gaps.
+
+    Sample indices are inclusive; the first window wholly after the labeled
+    interval ends at end_sample + window_samples - 1. Tail cues are reported,
+    not silently counted as either note recovery or false output in a clear gap.
+    """
+    if not 0 <= start_sample < end_sample or window_samples < 1:
+        raise ValueError('invalid scoring span or window')
+    groups = {}
+    previous = -1
+    for row in rows:
+        sample = row['sample']
+        if sample <= previous:
+            raise ValueError('non-increasing observation clock')
+        previous = sample
+        section = ('before_note' if sample < start_sample else
+                   'note_interval' if sample < end_sample else
+                   'window_tail' if sample < end_sample + window_samples - 1 else
+                   'clear_gap')
+        group = groups.setdefault(section, dict(frames=0, unavailable_history=0, notes={}))
+        group['frames'] += 1
+        if not row['history_available']:
+            group['unavailable_history'] += 1
+            continue
+        for note, value in row['notes'].items():
+            destination = group['notes'].setdefault(note, dict(observed_frames=0,
+                cue_frames=0, first_cue_sample=None, last_cue_sample=None, reasons={}))
+            destination['observed_frames'] += 1
+            reason = frozen_pair_screen(value)
+            destination['reasons'][reason] = destination['reasons'].get(reason, 0) + 1
+            if reason == 'cue':
+                destination['cue_frames'] += 1
+                if destination['first_cue_sample'] is None:
+                    destination['first_cue_sample'] = sample
+                destination['last_cue_sample'] = sample
+    return groups
+
 
 def _distribution(values):
     return (dict(count=len(values), minimum=float(min(values)),

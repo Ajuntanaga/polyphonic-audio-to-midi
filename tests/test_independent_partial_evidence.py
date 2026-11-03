@@ -3,7 +3,8 @@ import unittest
 import numpy as np
 
 from tools.independent_partial_evidence import (
-    CONFIG, _local_reference, compare_local_reference, measure, summarize,
+    CONFIG, FROZEN_SCREEN, _local_reference, compare_local_reference,
+    frozen_pair_screen, measure, score_frozen_screen, summarize,
 )
 
 
@@ -152,6 +153,41 @@ class IndependentPartialTests(unittest.TestCase):
             observe(signal(), components={'target': [1]})
         with self.assertRaises(ValueError):
             list(measure(signal(), RATE, config={**SETTINGS, 'fft_samples': 1000}))
+
+    def test_frozen_screen_requires_both_contrasts_and_pitch_agreement(self):
+        threshold = FROZEN_SCREEN['pair_prominence_db_exclusive']
+
+        def evidence(third, fifth, agreement):
+            return dict(partials=[None, None, dict(local_prominence_db=third), None,
+                                  dict(local_prominence_db=fifth), None],
+                        odd_raw_agreement_cents=agreement)
+
+        self.assertEqual(frozen_pair_screen(evidence(threshold, 40, 0)), 'below_prominence')
+        self.assertEqual(frozen_pair_screen(evidence(40, threshold, 0)), 'below_prominence')
+        self.assertEqual(frozen_pair_screen(evidence(40, 40, 25)), 'cue')
+        self.assertEqual(frozen_pair_screen(evidence(40, 40, 25.001)), 'pitch_disagreement')
+        for missing in (None, float('nan'), float('inf')):
+            self.assertEqual(frozen_pair_screen(evidence(40, missing, 0)), 'missing_reference')
+            self.assertEqual(frozen_pair_screen(evidence(40, 40, missing)), 'missing_agreement')
+        self.assertEqual(frozen_pair_screen(dict(partials=[None] * 6)), 'missing_peak')
+
+    def test_frozen_scoring_separates_window_tail_and_does_not_drop_false_controls(self):
+        cue = dict(partials=[None, None, dict(local_prominence_db=20), None,
+                            dict(local_prominence_db=20), None], odd_raw_agreement_cents=0)
+        absent = dict(partials=[None] * 6)
+        rows = [dict(sample=sample, history_available=sample >= 3,
+                     notes={'36': cue, '37': cue if sample in (5, 13) else absent})
+                for sample in (1, 3, 5, 9, 10, 12, 13, 14)]
+        groups = score_frozen_screen(rows, start_sample=5, end_sample=10, window_samples=4)
+        self.assertEqual(groups['before_note']['unavailable_history'], 1)
+        self.assertEqual(groups['note_interval']['notes']['36']['cue_frames'], 2)
+        self.assertEqual(groups['note_interval']['notes']['37']['cue_frames'], 1)
+        self.assertEqual(groups['window_tail']['notes']['36']['cue_frames'], 2)
+        self.assertEqual(groups['clear_gap']['notes']['36']['cue_frames'], 2)
+        self.assertEqual(groups['clear_gap']['notes']['37']['cue_frames'], 1)
+        self.assertEqual(groups['clear_gap']['notes']['36']['first_cue_sample'], 13)
+        with self.assertRaisesRegex(ValueError, 'clock'):
+            score_frozen_screen(rows + [rows[0]], start_sample=5, end_sample=10, window_samples=4)
 
 
 if __name__ == '__main__':
