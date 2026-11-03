@@ -111,13 +111,72 @@ def _correlation(a, b):
     return float(np.clip(np.dot(a, b) / denominator, -1, 1))
 
 
-def summarize_motion(times, signal, center_hz, *, minimum_increments=12):
-    """Extract window features; absent motion remains null, not a zero vote."""
+def phase_window_trajectories(times, signal, center_hz, *, window_seconds=0.160):
+    """Fit phase slopes on complete past windows, emitting once per window.
+
+    This offline observation uses the existing 160 ms phase-evidence timescale.
+    It neither shortens the three-second unison admission window nor identifies
+    strings. A least-squares slope describes the preceding window, not the
+    instantaneous frequency at its end. All increments in a window must pass
+    the causal amplitude, gap and phase-step checks; none are interpolated.
+    """
+    if not np.isfinite(window_seconds) or window_seconds <= 0:
+        raise ValueError('phase window must be positive and finite')
+    times = np.asarray(times, dtype=float)
+    signal = np.asarray(signal, dtype=complex)
+    increments = trajectories(times, signal, center_hz)
+    count = int(np.ceil((times[-1] - times[0]) / window_seconds))
+    deadlines = times[0] + window_seconds * np.arange(1, count + 1)
+    # Emit only once that deadline has actually been observed. Repeated indexes
+    # after a capture gap cannot manufacture additional measurements.
+    ends = np.unique(np.searchsorted(times, deadlines, side='left'))
+    ends = ends[ends < len(times)]
+    starts = np.searchsorted(times, times[ends] - window_seconds, side='right') - 1
+    valid = np.zeros((len(signal), len(ends)), dtype=bool)
+    cents = np.full(valid.shape, np.nan)
+    envelope_rate = np.full(valid.shape, np.nan)
+    estimate_times = np.full(len(ends), np.nan)
+    phase_steps = np.angle(signal[:, 1:] * np.conj(signal[:, :-1]))
+    for column, (start, end) in enumerate(zip(starts, ends)):
+        if start < 0 or end - start < 2:
+            continue
+        relative_time = times[start:end + 1] - times[start]
+        centered = relative_time - np.mean(relative_time)
+        variance = float(np.dot(centered, centered))
+        if variance <= 0:
+            continue
+        # Effective slope time for a quadratic phase, including irregular clocks.
+        estimate_times[column] = (times[start] + np.mean(relative_time)
+                                  + np.sum(centered ** 3) / (2 * variance))
+        for band in range(len(signal)):
+            if not increments['valid'][band, start:end].all():
+                continue
+            phase = np.r_[0., np.cumsum(phase_steps[band, start:end])]
+            slope = np.dot(centered, phase) / variance
+            ratio = 1 + slope / (2 * np.pi * (band + 1) * center_hz)
+            if not np.isfinite(ratio) or ratio <= 0:
+                continue
+            cents[band, column] = 1200 * np.log2(ratio)
+            log_amplitude = np.log(np.abs(signal[band, start:end + 1]))
+            envelope_rate[band, column] = np.dot(centered, log_amplitude) / variance
+            valid[band, column] = True
+    elapsed = np.diff(estimate_times)
+    consecutive = ((np.diff(times[ends]) <= 1.5 * window_seconds)
+                   & np.isfinite(elapsed) & (elapsed > 0))
+    motion_valid = valid[:, 1:] & valid[:, :-1] & consecutive[None, :]
+    motion = np.full((len(signal), max(0, len(ends) - 1)), np.nan)
+    np.divide(np.diff(cents, axis=1), elapsed[None, :], out=motion, where=motion_valid)
+    return {'increment_times': times[ends], 'estimate_times': estimate_times,
+            'valid': valid, 'cents': cents, 'envelope_rate': envelope_rate,
+            'motion_times': times[ends[1:]], 'motion_valid': motion_valid,
+            'frequency_motion': motion, 'window_seconds': window_seconds}
+
+
+def _summarize_tracks(track, bands, samples, minimum_increments):
     if minimum_increments < 3:
         raise ValueError('at least three increments are required')
-    track = trajectories(times, signal, center_hz)
     pairs = []
-    for first, second in itertools.combinations(range(len(signal)), 2):
+    for first, second in itertools.combinations(range(bands), 2):
         phase_valid = track['motion_valid'][first] & track['motion_valid'][second]
         envelope_valid = track['valid'][first] & track['valid'][second]
         phase_count, envelope_count = int(phase_valid.sum()), int(envelope_valid.sum())
@@ -136,12 +195,41 @@ def summarize_motion(times, signal, center_hz, *, minimum_increments=12):
                 if phase_count >= minimum_increments else None,
         })
     return {
-        'harmonic_bands': len(signal), 'samples': len(times),
+        'harmonic_bands': bands, 'samples': samples,
         'valid_increment_counts': track['valid'].sum(axis=1).tolist(),
         'pairs': pairs, 'measurement_kind': 'filtered_mixture_tracks',
         'source_dominant_reference': 'not measured',
         'string_mask_decision': None, 'posterior_probability': None,
     }
+
+
+def summarize_motion(times, signal, center_hz, *, minimum_increments=12):
+    """Extract window features; absent motion remains null, not a zero vote."""
+    return _summarize_tracks(trajectories(times, signal, center_hz),
+                             len(signal), len(times), minimum_increments)
+
+
+def summarize_phase_windows(track, start_time, end_time, *, minimum_increments=12):
+    """Score already-causal measurements whose availability is inside a span.
+
+    Annotations select the scoring span only. They never reset the estimator or
+    supply its frequency, phase, window clock, or valid-signal history.
+    """
+    if not np.isfinite(start_time) or not np.isfinite(end_time) or end_time <= start_time:
+        raise ValueError('expected a finite increasing scoring span')
+    slope_keep = ((track['increment_times'] >= start_time)
+                  & (track['increment_times'] < end_time))
+    motion_keep = ((track['motion_times'] >= start_time)
+                   & (track['motion_times'] < end_time))
+    selected = {key: track[key][:, slope_keep]
+                for key in ('valid', 'cents', 'envelope_rate')}
+    selected.update({key: track[key][:, motion_keep]
+                     for key in ('motion_valid', 'frequency_motion')})
+    result = _summarize_tracks(selected, len(track['cents']), int(slope_keep.sum()),
+                               minimum_increments)
+    result.update(window_seconds=track['window_seconds'],
+                  frequency_estimator='past-window least-squares phase slope')
+    return result
 
 
 def validate_join(first, second):

@@ -300,7 +300,8 @@ def analyze_saved_capture(run_id: str, source_run: str):
     import numpy as np
     sys.path.insert(0, '/opt/m3')
     from partial_motion_evidence import (
-        condition_mixture_tracks, summarize_motion, trajectories,
+        condition_mixture_tracks, phase_window_trajectories, summarize_motion,
+        summarize_phase_windows, trajectories,
     )
     if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value)
            for value in (run_id, source_run)):
@@ -319,6 +320,10 @@ def analyze_saved_capture(run_id: str, source_run: str):
         'conditioning': {'stages': 2, 'time_constant_seconds': 0.015,
                          'selection': 'fixed production phasor reference; not tuned',
                          'warmup': 'full captured prefix; never reset at annotation'},
+        'phase_window': {'seconds': 0.160, 'emission_period_seconds': 0.160,
+                         'selection': 'fixed phase-evidence timescale; not tuned',
+                         'causality': 'complete past window; no annotation resets',
+                         'minimum_motion_observations': 12},
         'started_at': datetime.now(timezone.utc).isoformat(),
     }
 
@@ -353,6 +358,31 @@ def analyze_saved_capture(run_id: str, source_run: str):
             del rows
             conditioned = condition_mixture_tracks(
                 times, signal, observation_period=64 / header['sample_rate'])
+            phase_track = phase_window_trajectories(times, conditioned, center)
+            labels_path = ((MOUNT / 'corpus' / f'{name}.tsv')
+                           if name in ('physical-long', 'isolated-08')
+                           else source / f'{name}.tsv')
+            if sha256(labels_path) != previous['provenance']['labels_sha256']:
+                raise ValueError(f'{name}: source annotation hash mismatch')
+            short_spans = []
+            with labels_path.open() as stream:
+                for index, label in enumerate(csv.DictReader(stream, delimiter='\t')):
+                    if int(label['midi_note']) != previous['provenance']['note']:
+                        continue
+                    start, end = int(label['start_sample']), int(label['end_sample'])
+                    if not 0 < end - start < 3 * header['sample_rate']:
+                        continue
+                    # Diagnostic control only. A short annotated hold cannot
+                    # satisfy the unchanged three-second unison admission rule.
+                    short_spans.append({
+                        'annotation_index': index, 'start_sample': start,
+                        'end_sample': end, 'expected_mask': int(label['string_mask']),
+                        'duration_seconds': (end - start) / header['sample_rate'],
+                        'eligible_unison_admission_window': False,
+                        'phase_window': summarize_phase_windows(
+                            phase_track, start / header['sample_rate'],
+                            end / header['sample_rate']),
+                    })
             windows = []
             for earlier in previous['measurement']['windows']:
                 chosen = ((samples >= earlier['start_sample'])
@@ -365,14 +395,21 @@ def analyze_saved_capture(run_id: str, source_run: str):
                     'raw': {'pairs': earlier['pairs'],
                             'valid_increment_counts': earlier['valid_increment_counts']},
                     'conditioned': features,
+                    'phase_window': summarize_phase_windows(
+                        phase_track, earlier['start_sample'] / header['sample_rate'],
+                        earlier['end_sample'] / header['sample_rate']),
                 })
             result = {'frames': len(samples), 'sample_rate': header['sample_rate'],
                       'demodulation_centers_hz': centers, 'windows': windows,
+                      'short_annotation_diagnostics': short_spans,
+                      'labels_sha256': previous['provenance']['labels_sha256'],
                       'classifier_gain': 'not measured'}
             if name in ('single-am', 'single-two-decays'):
                 controls = {}
-                for mode, values in (('raw', signal), ('conditioned', conditioned)):
-                    track = trajectories(times, values, center)
+                for mode, track in (
+                        ('raw', trajectories(times, signal, center)),
+                        ('conditioned', trajectories(times, conditioned, center)),
+                        ('phase_window', phase_track)):
                     # One second after the known synthetic attack, not a
                     # label-derived input to the feature or conditioner.
                     steady = track['increment_times'] >= 1.5
@@ -382,7 +419,7 @@ def analyze_saved_capture(run_id: str, source_run: str):
                         valid = np.isfinite(band)
                         rms.append(float(np.sqrt(np.mean(band[valid] ** 2)))
                                    if valid.any() else None)
-                        if valid.all() and len(band) > 2:
+                        if mode != 'phase_window' and valid.all() and len(band) > 2:
                             power = np.abs(np.fft.rfft(band - np.mean(band))) ** 2
                             frequencies = np.fft.rfftfreq(len(band), 64 / header['sample_rate'])
                             dominant.append(float(frequencies[1 + np.argmax(power[1:])]))
@@ -392,6 +429,8 @@ def analyze_saved_capture(run_id: str, source_run: str):
                         'expected_frequency_cents': 0.0,
                         'rms_frequency_error_cents_by_harmonic': rms,
                         'dominant_frequency_error_modulation_hz': dominant,
+                        'valid_frequency_observations_by_harmonic':
+                            np.isfinite(measured).sum(axis=1).tolist(),
                     }
                 result['known_single_source_control'] = controls
             report['datasets'][name] = result
