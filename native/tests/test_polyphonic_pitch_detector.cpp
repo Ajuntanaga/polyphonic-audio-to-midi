@@ -1703,10 +1703,135 @@ struct PolyphonicPitchDetectorTestAccess final {
       const std::array<std::uint8_t, kMaxVoices>& playable_masks,
       const std::array<double, kMaxVoices>& posterior_margins,
       const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
-      std::uint8_t reserved_mask, std::size_t count) noexcept {
+      std::uint8_t reserved_mask, std::size_t count,
+      std::uint8_t active_owner_mask = 0xffU) noexcept {
     return PolyphonicPitchDetector::bounded_joint_spectral_lanes(
         proposals, primary_masks, playable_masks, posterior_margins,
-        incumbent_masks, reserved_mask, count);
+        incumbent_masks, reserved_mask, count, active_owner_mask);
+  }
+
+  static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 48U;
+    config.highest_note = 49U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_joint_spectral_ownership_for_diagnostics(true);
+    auto& owner = detector.candidate_states_[0U];
+    auto& pending = detector.candidate_states_[1U];
+    owner.assigned_string = 0U;
+    owner.assigned_string_mask = 1U;
+    DetectorDecision start;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(start, 0U, 100U));
+    owner.active = true;
+    // The live overlay is string 0; its ordinary DP primary is string 2.
+    owner.assigned_string = 2U;
+    owner.assigned_string_mask = 4U;
+    owner.spectral_lane_mask = 1U;
+    pending.assigned_string = 0U;
+    pending.assigned_string_mask = 1U;
+    pending.attack_ticks = detector.attack_decisions();
+    pending.evidence_ticks = detector.candidate_evidence_decisions(false);
+    const auto evidence = pending.evidence_ticks;
+    const auto allocations = test::allocation_count();
+    DetectorDecision blocked;
+    M3_EXPECT_FALSE(detector.append_candidate_note_on(blocked, 1U, 100U));
+    M3_EXPECT_EQ(blocked.transitions.size(), 0U);
+    M3_EXPECT_FALSE(pending.active);
+    M3_EXPECT_EQ(pending.midi_voice_mask, 0U);
+    M3_EXPECT_EQ(pending.attack_ticks, detector.attack_decisions());
+    M3_EXPECT_EQ(pending.evidence_ticks, evidence);
+    // A partly free group cannot emit a partial attack while one lane is busy.
+    pending.assigned_string_mask = 3U;
+    M3_EXPECT_FALSE(detector.append_candidate_note_on(blocked, 1U, 100U));
+    M3_EXPECT_EQ(blocked.transitions.size(), 0U);
+    pending.assigned_string_mask = 1U;
+    DetectorDecision stop;
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(stop, 0U));
+    M3_EXPECT_EQ(stop.transitions.size(), 1U);
+    M3_EXPECT_EQ(stop.transitions[0U].voice_id, 0U);
+    owner = {};
+    DetectorDecision retry;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(retry, 1U, 100U));
+    M3_EXPECT_EQ(retry.transitions.size(), 1U);
+    M3_EXPECT_EQ(retry.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(retry.transitions[0U].note, 49U);
+    M3_EXPECT_EQ(pending.midi_voice_mask, 1U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+    // Keep the control path unchanged when the experiment is disabled.
+    detector.set_joint_spectral_ownership_for_diagnostics(false);
+    pending.active = true;
+    owner.assigned_string = 0U;
+    owner.assigned_string_mask = 1U;
+    DetectorDecision control;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(control, 0U, 100U));
+  }
+
+  static void joint_spectral_handoff_ownership(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 48U;
+    config.highest_note = 50U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_joint_spectral_ownership_for_diagnostics(true);
+    auto& incumbent = detector.candidate_states_[0U];
+    auto& target = detector.candidate_states_[1U];
+    auto& third_owner = detector.candidate_states_[2U];
+    incumbent.assigned_string = 0U;
+    incumbent.assigned_string_mask = 1U;
+    third_owner.assigned_string = 1U;
+    third_owner.assigned_string_mask = 2U;
+    DetectorDecision start;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(start, 0U, 100U));
+    incumbent.active = true;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(start, 2U, 100U));
+    third_owner.active = true;
+    target.assigned_string = 0U;
+    target.assigned_string_mask = 3U;
+    const auto allocations = test::allocation_count();
+    // Releasing the incumbent cannot authorize stealing another live lane.
+    // Rejection must happen before any note-off reaches the event ledger.
+    DetectorDecision conflict;
+    M3_EXPECT_FALSE(detector.append_atomic_candidate_handoff(conflict, 0U, 1U, 100U));
+    M3_EXPECT_EQ(conflict.transitions.size(), 0U);
+    M3_EXPECT_TRUE(incumbent.active);
+    M3_EXPECT_EQ(incumbent.midi_voice_mask, 1U);
+    M3_EXPECT_TRUE(third_owner.active);
+    M3_EXPECT_EQ(third_owner.midi_voice_mask, 2U);
+    M3_EXPECT_FALSE(target.active);
+    M3_EXPECT_EQ(target.midi_voice_mask, 0U);
+
+    target.assigned_string_mask = 1U;
+    DetectorDecision full;
+    while (full.transitions.size() + 1U < full.transitions.capacity()) {
+      M3_EXPECT_TRUE(detector.append_transition(
+          full, TransitionKind::note_on, 60U, 100U));
+    }
+    const auto occupied = full.transitions.size();
+    M3_EXPECT_FALSE(detector.append_atomic_candidate_handoff(full, 0U, 1U, 100U));
+    M3_EXPECT_EQ(full.transitions.size(), occupied);
+    M3_EXPECT_TRUE(incumbent.active);
+    M3_EXPECT_FALSE(target.active);
+
+    // The designated predecessor is allowed to transfer its own emitted lane.
+    DetectorDecision transfer;
+    M3_EXPECT_TRUE(detector.append_atomic_candidate_handoff(transfer, 0U, 1U, 100U));
+    M3_EXPECT_EQ(transfer.transitions.size(), 2U);
+    M3_EXPECT_EQ(transfer.transitions[0U].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(transfer.transitions[0U].note, 48U);
+    M3_EXPECT_EQ(transfer.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(transfer.transitions[1U].kind, TransitionKind::note_on);
+    M3_EXPECT_EQ(transfer.transitions[1U].note, 49U);
+    M3_EXPECT_EQ(transfer.transitions[1U].voice_id, 0U);
+    M3_EXPECT_FALSE(incumbent.active);
+    M3_EXPECT_EQ(incumbent.midi_voice_mask, 0U);
+    M3_EXPECT_TRUE(target.active);
+    M3_EXPECT_EQ(target.midi_voice_mask, 1U);
+    M3_EXPECT_TRUE(third_owner.active);
+    M3_EXPECT_EQ(third_owner.midi_voice_mask, 2U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 #endif
 
@@ -11144,6 +11269,17 @@ M3_TEST(native_detector_joint_spectral_lanes_preserve_exclusive_physical_ownersh
   check(Masks{8U, 4U}, Masks{8U, 4U});
   // A neighbour that cannot move still owns its DP lane.
   check(Masks{8U, 0U}, Masks{});
+  // An inactive selection is only a provisional reservation. It cannot block
+  // an active overlay or contribute its own proposal to the output solve.
+  const auto provisional = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{8U, 2U}, primary, playable, margins, Masks{8U, 0U}, 0U, 2U, 1U);
+  M3_EXPECT_TRUE(provisional == (Masks{8U, 0U}));
+  const auto inactive_only = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{8U, 2U}, primary, playable, margins, Masks{}, 0U, 2U, 0U);
+  M3_EXPECT_TRUE(inactive_only == Masks{});
+  const auto reserved_provisional = m3::PolyphonicPitchDetectorTestAccess::joint_spectral_lanes_probe(
+      Masks{8U, 2U}, primary, playable, margins, Masks{}, 8U, 2U, 1U);
+  M3_EXPECT_TRUE(reserved_provisional == Masks{});
   // Coasting voices and committed group members retain reserved ownership.
   check(Masks{2U, 16U}, Masks{0U, 16U}, 2U);
   check(Masks{2U, 16U}, Masks{0U, 16U}, 0U, Masks{4U, 0xffU});
@@ -11185,6 +11321,20 @@ M3_TEST(native_detector_joint_spectral_lanes_preserve_exclusive_physical_ownersh
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
   M3_EXPECT_TRUE(cycle_result == cycle);
   M3_EXPECT_TRUE(excessive_count == Masks{});
+#endif
+}
+
+M3_TEST(native_detector_joint_spectral_attack_defers_until_emitted_lane_is_free) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::joint_spectral_attack_ownership(detector);
+#endif
+}
+
+M3_TEST(native_detector_joint_spectral_handoff_checks_ownership_before_note_off) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::joint_spectral_handoff_ownership(detector);
 #endif
 }
 

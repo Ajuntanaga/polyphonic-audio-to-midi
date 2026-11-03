@@ -3710,11 +3710,32 @@ std::uint8_t PolyphonicPitchDetector::diagnostic_profile_pair_output_mask(
   // evidence histories still see the complete group; release uses the ledger.
   return primary;
 }
+
+bool PolyphonicPitchDetector::diagnostic_midi_owner_conflict(
+    std::size_t candidate, std::uint8_t desired,
+    std::size_t releasing_candidate) const noexcept {
+  if (!diagnostic_joint_spectral_ownership_) {
+    return false;
+  }
+  for (std::size_t other = 0U;
+       other < static_cast<std::size_t>(candidate_count_); ++other) {
+    if (other != candidate && other != releasing_candidate &&
+        candidate_states_[other].active &&
+        (candidate_states_[other].midi_voice_mask & desired) != 0U) {
+      return true;
+    }
+  }
+  return false;
+}
 #endif
 
 bool PolyphonicPitchDetector::append_candidate_note_on(
     DetectorDecision& decision, std::size_t candidate,
-    std::uint8_t velocity) noexcept {
+    std::uint8_t velocity
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    , std::size_t releasing_candidate
+#endif
+    ) noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_)) {
     return false;
   }
@@ -3730,6 +3751,12 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     const auto unfiltered_desired = desired;
     desired = diagnostic_profile_pair_output_mask(candidate, desired);
+    if (diagnostic_midi_owner_conflict(candidate, desired, releasing_candidate)) {
+      // Active spectral overlays are rendered before pending attacks. A
+      // provisional DP reservation cannot activate over an emitted MIDI lane.
+      // Defer the whole attack, preserving the caller's evidence for retry.
+      return false;
+    }
 #endif
     // A selected pitch is not a MIDI voice until it owns at least one
     // physical string lane.  Activating an unassigned candidate would later
@@ -3834,6 +3861,11 @@ bool PolyphonicPitchDetector::append_atomic_candidate_handoff(
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     desired = diagnostic_profile_pair_output_mask(target, desired);
+    // Only the designated incumbent may release a lane in this transaction.
+    // Reject any third owner before queuing the incumbent's note-off.
+    if (diagnostic_midi_owner_conflict(target, desired, incumbent)) {
+      return false;
+    }
 #endif
     on_count = string_count(desired);
     if ((!externally_silent && off_count == 0U) || on_count == 0U) {
@@ -3847,7 +3879,11 @@ bool PolyphonicPitchDetector::append_atomic_candidate_handoff(
   }
 
   if (!append_candidate_note_off(decision, incumbent) ||
-      !append_candidate_note_on(decision, target, velocity)) {
+      !append_candidate_note_on(decision, target, velocity
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                                , incumbent
+#endif
+                                )) {
     return false;
   }
   incumbent_state = {};
@@ -6296,8 +6332,13 @@ void PolyphonicPitchDetector::assign_m3_strings(
     std::array<std::uint8_t, kMaxVoices> playable_masks{};
     std::array<double, kMaxVoices> posterior_margins{};
     std::array<std::uint8_t, kMaxVoices> incumbent_masks{};
+    std::uint8_t active_owner_mask = 0U;
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       const auto& state = candidate_states_[candidates[voice]];
+      if (state.active) {
+        active_owner_mask = static_cast<std::uint8_t>(
+            active_owner_mask | (1U << voice));
+      }
       proposals[voice] = state.spectral_lane_mask;
       primary_masks[voice] = static_cast<std::uint8_t>(1U << state.assigned_string);
       playable_masks[voice] = playable_string_mask(candidates[voice]);
@@ -6311,7 +6352,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
     }
     const auto accepted = bounded_joint_spectral_lanes(
         proposals, primary_masks, playable_masks, posterior_margins,
-        incumbent_masks, reserved_strings, selected_count);
+        incumbent_masks, reserved_strings, selected_count, active_owner_mask);
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       candidate_states_[candidates[voice]].spectral_lane_mask = accepted[voice];
     }
@@ -6327,11 +6368,13 @@ PolyphonicPitchDetector::bounded_joint_spectral_lanes(
     const std::array<std::uint8_t, kMaxVoices>& playable_masks,
     const std::array<double, kMaxVoices>& posterior_margins,
     const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
-    std::uint8_t reserved_mask, std::size_t count) noexcept {
+    std::uint8_t reserved_mask, std::size_t count,
+    std::uint8_t active_owner_mask) noexcept {
   std::array<std::uint8_t, kMaxVoices> eligible{};
   std::array<std::uint8_t, kMaxVoices> accepted{};
   if (count > kMaxVoices) return accepted;
   for (std::size_t voice = 0U; voice < count; ++voice) {
+    if ((active_owner_mask & (1U << voice)) == 0U) continue;
     const auto proposal = proposals[voice];
     if (string_count(proposal) == 1U &&
         (proposal & playable_masks[voice]) == proposal &&
@@ -6344,8 +6387,10 @@ PolyphonicPitchDetector::bounded_joint_spectral_lanes(
   }
   // Evaluate complete assignments, not a union of mutually exclusive futures.
   // Each qualified spectral proposal contributes its measured advantage over
-  // the runner-up. At most 256 combinations preserve every selected pitch and
-  // allow a neighbouring DP lane to be vacated in the same decision.
+  // the runner-up. At most 256 combinations preserve every active pitch and
+  // allow a neighbouring DP lane to be vacated in the same decision. Inactive
+  // selections keep their ordinary DP assignment and attack gating; they do
+  // not own an output lane until append_candidate_note_on acquires it.
   double best_margin = -1.0;
   std::size_t best_retained = 0U;
   std::uint32_t best_key = std::numeric_limits<std::uint32_t>::max();
@@ -6358,6 +6403,7 @@ PolyphonicPitchDetector::bounded_joint_spectral_lanes(
     std::uint32_t key = 0U;
     bool valid = true;
     for (std::size_t voice = 0U; voice < count; ++voice) {
+      if ((active_owner_mask & (1U << voice)) == 0U) continue;
       const bool use_proposal = (choice & (std::size_t{1U} << voice)) != 0U;
       const auto projected = use_proposal ? eligible[voice] : primary_masks[voice];
       if (string_count(primary_masks[voice]) != 1U ||

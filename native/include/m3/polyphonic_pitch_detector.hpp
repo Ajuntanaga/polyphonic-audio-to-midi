@@ -999,7 +999,11 @@ class PolyphonicPitchDetector final {
   [[nodiscard]] static bool output_suppressed(const CandidateState& state) noexcept;
   [[nodiscard]] bool append_candidate_note_on(
       DetectorDecision& decision, std::size_t candidate,
-      std::uint8_t velocity) noexcept;
+      std::uint8_t velocity
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      , std::size_t releasing_candidate = kMaxCandidates
+#endif
+      ) noexcept;
   [[nodiscard]] bool append_candidate_note_off(
       DetectorDecision& decision, std::size_t candidate) noexcept;
   [[nodiscard]] bool append_atomic_candidate_handoff(
@@ -1127,6 +1131,9 @@ class PolyphonicPitchDetector final {
       const std::array<double, kMaxCandidates>& fundamentals,
       double threshold, bool quiet) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] bool diagnostic_midi_owner_conflict(
+      std::size_t candidate, std::uint8_t desired,
+      std::size_t releasing_candidate) const noexcept;
   [[nodiscard]] std::uint8_t diagnostic_profile_pair_output_mask(
       std::size_t candidate, std::uint8_t desired) const noexcept;
   void record_fine_history_reset(std::size_t candidate,
@@ -1195,7 +1202,8 @@ class PolyphonicPitchDetector final {
       const std::array<std::uint8_t, kMaxVoices>& playable_masks,
       const std::array<double, kMaxVoices>& posterior_margins,
       const std::array<std::uint8_t, kMaxVoices>& incumbent_masks,
-      std::uint8_t reserved_mask, std::size_t count) noexcept;
+      std::uint8_t reserved_mask, std::size_t count,
+      std::uint8_t active_owner_mask) noexcept;
 #endif
   [[nodiscard]] static std::uint8_t projected_output_string_mask(
       std::uint8_t assigned_string_mask, std::uint8_t assigned_string,

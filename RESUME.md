@@ -1,3 +1,20 @@
+## 2026-11-03T08:34:45.317568+00:00 — provisional ownership screen rejected
+
+- Scope: offline, opt-in joint string assignment. Production code and installed output unchanged. GitHub cadence remains checked milestones, with replay outcomes recorded.
+- Change: inactive selected candidates no longer reserve experimental solver lanes. Actual emitted MIDI ownership guards new attacks. Atomic handoffs check all other owners before queuing the predecessor note-off; capacity failures leave both event buffer and ownership intact.
+- Checks: native/replay build PASS; full native suite 526/526 PASS; six focused ownership, handoff, recovery, silence/panic, partition and label-independence tests PASS; native source contract PASS; production preprocessing exclusion PASS. One focused review found the partial handoff risk; its fix and regression test are included. No new production build, validator or install.
+- Modal: `joint-provisional-ownership-20261103T083013Z`, app `ap-bdhTl1v7MuaLw25ekgiQMe`, completed. Report: `build/modal/joint-provisional-ownership-screen.json`. Binary SHA: `b821048920198af92ee12fd98f7229272389e5568a2dea58b86e9848ed933d96`.
+
+| Ordinary recording, block 512 | Matched / 528632 | Wrong note | Wrong string | Extra outputs in unlabeled gaps | Total false outputs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control | 145397 (27.504%) | 163749 | 92641 | 62856 | 319246 |
+| Provisional ownership | 145378 (27.501%) | 166918 | 93325 | 63378 | 323621 |
+| Provisional ownership + recovery v2 | 146900 (27.789%) | 166918 | 92930 | 63517 | 323365 |
+
+- Verdict: both trials REJECTED. The combined trial adds 1503 matched frames (+1.034%, +0.284 percentage points), but also adds 3169 wrong-note outputs, 289 wrong-string outputs and 661 extra outputs during unlabeled gaps. Control fingerprint `36150c8ba7813405` is unchanged. Protected corpus and buffer expansion not started.
+- Next: inspect the captured assignment and MIDI-event divergences to identify the extra-output mechanism before another output change. Acceptance remains matched >145397, wrong note <=163749, wrong string <=92641, extra outputs in unlabeled gaps <=62856. Preserve 3 seconds / 0.20 coherence / 0.50 retention and the measured -9/60/75/poly5/fret24 baseline.
+- Notification: ten-minute cadence, encrypted publisher, inline UTF-8 <=4000 bytes. Most recent confirmed receipt: `40xsBCwnUsLA`, HTTP 200, 2830 bytes, no attachment. Use fresh status/report evidence for each update.
+
 ## 2026-11-03T07:47:53.824461+00:00 — offline joint-assignment checkpoint
 
 - GitHub cadence: commit and push completed, checked checkpoints on `work/tuner-stability-20261027`. Keep replay experiments and rejected candidates identified. Heartbeat polls do not create commits. This entry supersedes older instructions below that say the GitHub request has already been fulfilled.
