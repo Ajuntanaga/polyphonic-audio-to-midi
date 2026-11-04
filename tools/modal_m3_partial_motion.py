@@ -1701,7 +1701,9 @@ def capture_cue_decisions(run_id: str, source_run: str):
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False):
+def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
+                              worker_delay_run: str = '', worker_timer_diagnostic: bool = False,
+                              worker_wait_diagnostic: bool = False):
     """Build a standalone native measurement; never run or replace the plugin."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -1709,7 +1711,13 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
     from tools.frozen_cue_corpus_gate import read_corpus_wave
     from tools.frozen_cue_native_gate import compare_native_observations, TOLERANCES
     from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
-    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+    if worker_timer_diagnostic and worker_wait_diagnostic:
+        raise ValueError('select one worker diagnosis')
+    worker_diagnostic = worker_timer_diagnostic or worker_wait_diagnostic
+    if worker_diagnostic and not worker_delay_run:
+        raise ValueError('worker diagnosis requires the worker experiment')
+    identifiers = (run_id, source_run) + ((worker_delay_run,) if worker_delay_run else ())
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in identifiers):
         raise ValueError('invalid run identifier')
     source = MOUNT / 'results' / source_run
     previous = json.loads((source / 'report.json').read_text())
@@ -1717,10 +1725,29 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
             not previous.get('accepted_for_corpus_screen') or
             previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
         raise ValueError('source is not a completed frozen cue replay screen')
+    delay_report = None
+    if worker_delay_run:
+        if not pffft:
+            raise ValueError('worker experiment requires the optimized native measurement')
+        delay_path = MOUNT / 'results' / worker_delay_run / 'report.json'
+        delay_report = json.loads(delay_path.read_text())
+        if (delay_report.get('state') != 'completed' or not delay_report.get('final') or
+                not delay_report.get('accepted_for_corpus_screen') or
+                delay_report.get('availability_delay_samples') != 128 or
+                delay_report.get('source_run') != source_run or
+                delay_report.get('reference_binary_sha256') != previous['binary_sha256'] or
+                set(delay_report.get('datasets', {})) != set(previous['datasets']) or
+                not all(item.get('control_identical') and item.get('undelayed_output_identical') and
+                        item.get('undelayed_gain_preserved') and item.get('buffer_outputs_identical')
+                        for item in delay_report['datasets'].values())):
+            raise ValueError('worker delay has not passed the complete controlled replay screen')
     out = MOUNT / 'results' / run_id
     out.mkdir(exist_ok=False, parents=True)
     report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
-        experiment='native_frozen_cue', replay_binary_sha256=previous['binary_sha256'],
+        experiment=('worker_wait_control' if worker_wait_diagnostic else
+                    'worker_timer_slack' if worker_timer_diagnostic else
+                    'worker_frozen_cue' if worker_delay_run else 'native_frozen_cue'),
+        replay_binary_sha256=previous['binary_sha256'],
         fft_backend='pffft-double-avx' if pffft else 'reference-radix2',
         stage='build standalone native measurement', installed_changed=False,
         started_at=datetime.now(timezone.utc).isoformat(), config=CONFIG, frozen_screen=FROZEN_SCREEN,
@@ -1737,6 +1764,33 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
                 'Modal CPU timing is not a live-host deadline guarantee.',
                 'The causal measurement window remains 170.7 ms at 96 kHz.',
                 'This probe is not linked into either installed plugin.'])
+    if delay_report is not None:
+        report.update(delay_source_run=worker_delay_run, delay_source_sha256=sha256(delay_path),
+                      delayed_replay_binary_sha256=delay_report['binary_sha256'],
+                      availability_delay_samples=128, blocks=[32, 512, 1024])
+        for path in [*Path('/opt/m3/native/offline').glob('frozen_cue_worker*'),
+                     Path('/opt/m3/native/tests/test_frozen_cue_worker.cpp')]:
+            report['source_files_sha256'][str(path.relative_to('/opt/m3'))] = sha256(path)
+        report['limits'] += ['The worker is compared with this native measurement at every sample.',
+                             'Earlier Python parity and MIDI replay results are separate evidence.',
+                             'Cloud wakeup jitter is measured separately from callback processing.']
+    if worker_timer_diagnostic:
+        conditions = [('default', 0, 0), ('pace', 1, 0), ('worker', 0, 1), ('both', 1, 1)]
+        report.update(blocks=[32], timer_conditions=[
+            dict(name=f'{name}_{repeat}', pace_ns=pace, worker_ns=worker)
+            for repeat, sequence in ((1, conditions), (2, list(reversed(conditions))))
+            for name, pace, worker in sequence])
+        report['limits'].append('One recording, four thread-local timer conditions, repeated in reverse order; not full worker coverage.')
+    if worker_wait_diagnostic:
+        conditions = [('default', False, False), ('pace', True, False),
+                      ('worker', False, True), ('both', True, True)]
+        report.update(blocks=[32], wait_conditions=[
+            dict(name=f'{name}_{repeat}', pace_poll=pace, worker_poll=worker)
+            for repeat, sequence in ((1, conditions), (2, list(reversed(conditions))))
+            for name, pace, worker in sequence])
+        report['limits'] += ['One recording, four wait conditions, repeated in reverse order; not full worker coverage.',
+                             'Busy polling is a timing control outside the audio callback, not a production policy.',
+                             'Process CPU time covers pacing, callback and worker together; two threads may exceed one CPU.']
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -1775,7 +1829,8 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
                       '-DPFFFT_STATIC_DEFINE', '-I' + str(vendor / 'include/pffft')]
         report['compiler_flags'] = flags
         obj = out / 'frozen_partial_cue.o'
-        probe, tests = out / 'm3_frozen_cue_probe', out / 'm3_frozen_cue_tests'
+        probe = out / ('m3_frozen_cue_worker_probe' if worker_delay_run else 'm3_frozen_cue_probe')
+        tests = out / 'm3_frozen_cue_tests'
         library_objects = []
         with (out / 'build.log').open('w') as log:
             if pffft:
@@ -1790,12 +1845,21 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
                     library_objects.append(str(target))
             subprocess.run(flags + ['-c', '/opt/m3/native/offline/frozen_partial_cue.cpp',
                            '-o', str(obj)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+            if worker_delay_run:
+                worker_object = out / 'frozen_cue_worker.o'
+                subprocess.run(flags + ['-c', '/opt/m3/native/offline/frozen_cue_worker.cpp',
+                               '-o', str(worker_object)], stdout=log, stderr=subprocess.STDOUT,
+                               check=True, timeout=120)
+                library_objects.append(str(worker_object))
             for executable, sources in (
-                    (probe, ['native/offline/frozen_partial_cue_main.cpp']),
+                    (probe, ['native/offline/frozen_cue_worker_main.cpp', 'native/tests/test_support.cpp']
+                     if worker_delay_run else ['native/offline/frozen_partial_cue_main.cpp']),
                     (tests, ['native/tests/test_frozen_partial_cue.cpp',
                              'native/tests/test_support.cpp', 'native/tests/offline_test_main.cpp'])):
                 extra = []
-                if pffft and executable == tests:
+                if worker_delay_run and executable == tests:
+                    sources += ['native/tests/test_frozen_cue_worker.cpp']
+                if pffft and (executable == tests or worker_delay_run):
                     sources += ['native/tests/offline_c_allocation_guard.cpp']
                     extra = ['-DM3_OFFLINE_C_ALLOCATION_GUARD=1'] + [
                         '-Wl,--wrap=' + name for name in
@@ -1810,12 +1874,15 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
         with (out / 'tests.log').open('w') as log:
             subprocess.run([str(tests)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
         summaries = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', (out / 'tests.log').read_text())
-        if len(summaries) != 1 or int(summaries[0][0]) != (5 if pffft else 4) or int(summaries[0][1]) != 0:
+        expected_tests = 11 if worker_delay_run else (5 if pffft else 4)
+        if len(summaries) != 1 or int(summaries[0][0]) != expected_tests or int(summaries[0][1]) != 0:
             raise ValueError('missing successful native test accounting')
         report['tests'] = dict(count=int(summaries[0][0]), failures=0,
                                allocation_coverage='C++ operators and linked C functions' if pffft else 'C++ operators',
                                log_sha256=sha256(out / 'tests.log'))
-        for name, saved in previous['datasets'].items():
+        selected_cases = ({'solo': previous['datasets']['solo']} if worker_diagnostic
+                          else previous['datasets'])
+        for name, saved in selected_cases.items():
             if not re.fullmatch(r'[a-zA-Z0-9_-]+', name):
                 raise ValueError('invalid case name')
             wav = source / (name + '.wav')
@@ -1830,6 +1897,59 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
             raw, observations, cues, timing = (out / (name + suffix) for suffix in
                 ('.f32', '-native.tsv', '-native-cues.tsv', '-timing.json'))
             samples.tofile(raw)
+            if worker_diagnostic:
+                item = dict(sample_count=len(samples), sample_rate=rate,
+                            samples_sha256=saved['samples_sha256'], trials={})
+                report['datasets'][name] = item
+                kind = 'wait' if worker_wait_diagnostic else 'timer'
+                for condition in report[kind + '_conditions']:
+                    trial_name = condition['name']
+                    report['stage'] = f'solo: {kind} condition {trial_name}, block 32'
+                    save()
+                    timing = out / f'solo-{kind}-{trial_name}.json'
+                    args = (['0', '0', str(int(condition['pace_poll'])), str(int(condition['worker_poll']))]
+                            if worker_wait_diagnostic else
+                            [str(condition['pace_ns']), str(condition['worker_ns'])])
+                    with (out / f'solo-{kind}-{trial_name}.log').open('w') as log:
+                        subprocess.run([str(probe), str(raw), '32', str(timing)] + args,
+                            stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
+                    measured = json.loads(timing.read_text())
+                    item['trials'][trial_name] = measured
+                    save()
+                    if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate or
+                            measured['block_size'] != 32 or measured['delay_samples'] != 128):
+                        raise ValueError('worker diagnostic clock or delay mismatch')
+                    if worker_wait_diagnostic:
+                        if (measured['pace_poll'] != condition['pace_poll'] or
+                                measured['worker_poll'] != condition['worker_poll'] or
+                                measured['elapsed_ns'] <= 0 or measured['process_cpu_ns'] < 0):
+                            raise ValueError('worker wait setting or CPU accounting mismatch')
+                    else:
+                        original = measured['timer_slack_original_ns']
+                        if (original <= 0 or
+                                measured['pace_slack_effective_ns'] != (condition['pace_ns'] or original) or
+                                measured['worker_slack_effective_ns'] != (condition['worker_ns'] or original) or
+                                measured['worker_slack_inherited_ns'] != measured['pace_slack_effective_ns']):
+                            raise ValueError('worker timer setting mismatch')
+                continue
+            if worker_delay_run:
+                item = dict(sample_count=len(samples), sample_rate=rate,
+                            samples_sha256=saved['samples_sha256'], blocks={})
+                report['datasets'][name] = item
+                for block in report['blocks']:
+                    report['stage'] = f'{name}: paced worker delivery, block {block}'
+                    save()
+                    timing = out / f'{name}-worker-{block}.json'
+                    with (out / f'{name}-worker-{block}.log').open('w') as log:
+                        subprocess.run([str(probe), str(raw), str(block), str(timing)],
+                            stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
+                    measured = json.loads(timing.read_text())
+                    if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate or
+                            measured['block_size'] != block or measured['delay_samples'] != 128):
+                        raise ValueError('worker clock or delay mismatch')
+                    item['blocks'][str(block)] = measured
+                    save()
+                continue
             report['stage'] = name + ': native measurement and frozen-reference comparison'
             save()
             with (out / (name + '.log')).open('w') as log:
@@ -1846,6 +1966,36 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
                 samples_sha256=saved['samples_sha256'], observations_sha256=sha256(observations),
                 cues_sha256=sha256(cues), comparison=comparison, timing=measured)
             save()
+        if worker_diagnostic:
+            trials = report['datasets']['solo']['trials']
+            both = [trials[name] for name in ('both_1', 'both_2')]
+            label = 'wait-control' if worker_wait_diagnostic else 'timer-slack'
+            report['wait_controls_verified' if worker_wait_diagnostic else 'timer_slack_verified'] = len(trials) == 8
+            report.update(
+                both_conditions_pass=all(item['delivery_pass'] and item['allocation_pass'] and
+                                         item['callback_pass'] for item in both),
+                accepted_for_detector_integration=False, state='completed', final=True,
+                stage=f'bounded {label} diagnosis complete',
+                completed_at=datetime.now(timezone.utc).isoformat())
+            report['verdict'] = (f'bounded {label} check passed; full worker and host gates remain open'
+                if report['both_conditions_pass'] else
+                f'{label} check did not establish reliable cue delivery')
+            save()
+            return report
+        if worker_delay_run:
+            measured = [result for item in report['datasets'].values() for result in item['blocks'].values()]
+            report['delivery_pass'] = all(item['delivery_pass'] for item in measured)
+            report['allocation_pass'] = all(item['allocation_pass'] for item in measured)
+            report['callback_timing_pass'] = all(item['callback_pass'] for item in measured)
+            report['accepted_for_detector_integration'] = (len(measured) == len(previous['datasets']) * 3
+                and report['delivery_pass'] and report['allocation_pass'] and report['callback_timing_pass'])
+            report.update(state='completed', final=True, stage='paced worker delivery and timing complete',
+                completed_at=datetime.now(timezone.utc).isoformat(),
+                verdict=('standalone worker passed; detector and host integration unverified'
+                         if report['accepted_for_detector_integration'] else
+                         'rejected for detector integration: worker delivery, allocation or timing failed'))
+            save()
+            return report
         report['parity_pass'] = all(item['comparison']['parity_pass'] for item in report['datasets'].values())
         report['standalone_timing_pass'] = all(item['timing']['standalone_budget_pass'] for item in report['datasets'].values())
         report.update(state='completed', final=True, stage='native cue parity and timing complete',
@@ -2048,9 +2198,17 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
          cue_trace_checkpoint_run: str = '', cue_decision_source: str = '',
          reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = '',
-         native_cue_pffft: bool = False, cue_delay_samples: int = 1024):
+         native_cue_pffft: bool = False, cue_delay_samples: int = 1024,
+         native_cue_worker_delay_source: str = '', native_cue_worker_timer_diagnostic: bool = False,
+         native_cue_worker_wait_diagnostic: bool = False):
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
+    if native_cue_worker_delay_source and not (native_cue_source and native_cue_pffft):
+        raise ValueError('worker delay source requires an optimized standalone native cue run')
+    if native_cue_worker_timer_diagnostic and native_cue_worker_wait_diagnostic:
+        raise ValueError('select one worker diagnosis')
+    if (native_cue_worker_timer_diagnostic or native_cue_worker_wait_diagnostic) and not native_cue_worker_delay_source:
+        raise ValueError('worker diagnosis requires a worker delay source')
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if cue_checkpoint_run and not cue_corpus_source:
@@ -2065,7 +2223,9 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
             + bool(native_cue_source) + bool(delayed_cue_source)) > 1:
         raise ValueError('select one analysis or capture job')
     result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
-              capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft) if native_cue_source else
+              capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft,
+                  native_cue_worker_delay_source, native_cue_worker_timer_diagnostic,
+                  native_cue_worker_wait_diagnostic) if native_cue_source else
               capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else

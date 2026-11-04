@@ -271,15 +271,28 @@ if(M3_BUILD_FROZEN_CUE_PROBE)
         target_compile_definitions(m3_offline_pffft PUBLIC PFFFT_STATIC_DEFINE)
         target_compile_options(m3_offline_pffft PRIVATE -mavx -ffp-contract=off)
         set_target_properties(m3_offline_pffft PROPERTIES C_STANDARD 99 C_EXTENSIONS ON)
-        foreach(target m3_frozen_cue_probe m3_frozen_cue_tests)
+        add_executable(m3_frozen_cue_worker_probe
+            native/offline/frozen_partial_cue.cpp
+            native/offline/frozen_cue_worker.cpp
+            native/offline/frozen_cue_worker_main.cpp
+            native/tests/test_support.cpp
+            native/tests/offline_c_allocation_guard.cpp)
+        target_include_directories(m3_frozen_cue_worker_probe PRIVATE native/offline native/tests)
+        target_link_libraries(m3_frozen_cue_worker_probe PRIVATE Threads::Threads m)
+        m3_apply_project_options(m3_frozen_cue_worker_probe)
+        target_sources(m3_frozen_cue_tests PRIVATE
+            native/offline/frozen_cue_worker.cpp native/tests/test_frozen_cue_worker.cpp)
+        foreach(target m3_frozen_cue_probe m3_frozen_cue_tests m3_frozen_cue_worker_probe)
             target_compile_definitions(${target} PRIVATE M3_FROZEN_CUE_PFFFT=1)
             target_compile_options(${target} PRIVATE -mavx -ffp-contract=off)
             target_link_libraries(${target} PRIVATE m3_offline_pffft)
         endforeach()
         target_sources(m3_frozen_cue_tests PRIVATE native/tests/offline_c_allocation_guard.cpp)
-        target_compile_definitions(m3_frozen_cue_tests PRIVATE M3_OFFLINE_C_ALLOCATION_GUARD=1)
-        foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
-            target_link_options(m3_frozen_cue_tests PRIVATE "-Wl,--wrap=${function}")
+        foreach(target m3_frozen_cue_tests m3_frozen_cue_worker_probe)
+            target_compile_definitions(${target} PRIVATE M3_OFFLINE_C_ALLOCATION_GUARD=1)
+            foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
+                target_link_options(${target} PRIVATE "-Wl,--wrap=${function}")
+            endforeach()
         endforeach()
     endif()
     add_test(NAME m3_frozen_cue_tests COMMAND m3_frozen_cue_tests)

@@ -2,11 +2,13 @@
 
 Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
-initial-settling guard. Native cues match the reference. The optimized FFT
-reduces measured cost but still exceeds the callback budget. A one-hop delay
-loses five solo matches; a fixed 128-sample delay preserves all ten controlled
-results. The next step is to measure bounded background delivery. The
-installed plugin and its parameters are unchanged.
+initial-settling guard. Native cues match the reference, but synchronous
+processing still exceeds the callback budget. A fixed 128-sample delay
+preserves all ten controlled results. A background worker avoids callback
+overruns but loses cues at the smallest buffer. Keeping the worker awake
+removes that loss in a repeated solo control, at roughly one CPU core.
+The next screen limits polling to the time near each cue calculation.
+The installed plugin and its parameters are unchanged.
 
 ## Decision
 
@@ -93,11 +95,55 @@ an undelayed gain remain bit-identical to OFF. Replay SHA-256 is
 The earlier nine corpus passes use the undelayed reference binary and do not
 cover this build or policy.
 
-This establishes delay tolerance, not worker scheduling. Next, measure a
-bounded background handoff with sample-tagged availability and expiry. Require
-exact masks, no lost or late frames, no callback allocation or waiting, safe
-reset/overflow behavior and callback timing. Standalone scheduling still leaves
-detector integration, the remaining corpora and live MIDI behavior untested.
+### Background delivery and wakeup cost
+
+The standalone worker uses fixed-capacity queues and sample-tagged cue
+availability and expiry. It discards late and stale output; reset and overflow
+start a new generation. The callback side does bounded copies and atomic
+queue operations, with no allocation, waiting, mutex or wakeup syscall.
+The component is optional and is not linked into either installed plugin.
+
+`native-cue-worker-20261104T1126Z` is rejected for integration. Across ten
+recordings and blocks 32/512/1024, it delivers 9863/9960 cue frames (99.0261%).
+The 97 late frames occur at block 32 and lose 57344 cue samples. All ten
+block-32 cases fail exact delivery; all twenty larger-buffer cases pass.
+There are no queue drops, extra cues or callback overruns. All thirty
+allocation and callback timing checks pass, as do eleven focused tests.
+Worst callback p99 is 6.170/29.800/38.770 us at blocks 32/512/1024, below the
+respective 166.666/2666.666/5333.333 us budgets. Fast callbacks alone do not
+establish reliable delivery.
+
+The bounded control `cue-worker-waits-20261104T1144Z` tests the solo recording
+at block 32. It runs four wait conditions, then repeats them in reverse order.
+The fixed delay and cue math are unchanged. CPU time covers the callback
+driver and worker together; 100% means one fully occupied CPU core.
+
+| Wait condition | Delivered cues, first/repeat | Late cues, first/repeat | CPU, first/repeat |
+| --- | --- | --- | --- |
+| Both sleep | 289/332; 293/332 | 43; 39 | 23.03%; 18.82% |
+| Driver polls, worker sleeps | 331/332; 331/332 | 1; 1 | 101.40%; 103.37% |
+| Driver sleeps, worker polls | 332/332; 332/332 | 0; 0 | 101.95%; 102.52% |
+| Both poll | 332/332; 332/332 | 0; 0 | 196.63%; 196.63% |
+
+The worker-polling conditions preserve every cue at every sample. All eight
+conditions have zero extra cue samples, callback allocations and overruns.
+The native build and all eleven tests pass. These controls show that waiting
+contributes to this probe's missed cues. They do not justify continuous
+polling in the plugin or establish full worker coverage. The native binary is
+`a05e165de5b560281605c57820c39a9108b1948a61cc752e9a92f5b385abf6a9`.
+
+The earlier `cue-worker-timers-20261104T1138Z` run failed timer-setting
+verification: readback returned -1, without a recorded error code. None of
+its eight planned timer conditions was verified. The default trial completed
+with 280/332 cues, but the run does not establish timer slack as the cause.
+
+Next, screen one fixed hybrid wait policy: sleep between calculations and
+poll during the final 384 samples before each 1024-sample hop. Require exact
+cue delivery, zero extra cues or callback overruns, and process CPU below 50%
+of one core. That CPU threshold is a new diagnostic budget. It is not a
+verified plugin limit. Full delayed-corpus replay, detector integration,
+MIDI lifecycle/routing and live-host checks remain open. The 170.7 ms input
+window also remains; the 1.333333 ms delay is additional cue availability.
 
 ## Relevant primary sources
 
