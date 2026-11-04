@@ -137,13 +137,53 @@ verification: readback returned -1, without a recorded error code. None of
 its eight planned timer conditions was verified. The default trial completed
 with 280/332 cues, but the run does not establish timer slack as the cause.
 
-Next, screen one fixed hybrid wait policy: sleep between calculations and
-poll during the final 384 samples before each 1024-sample hop. Require exact
-cue delivery, zero extra cues or callback overruns, and process CPU below 50%
-of one core. That CPU threshold is a new diagnostic budget. It is not a
-verified plugin limit. Full delayed-corpus replay, detector integration,
-MIDI lifecycle/routing and live-host checks remain open. The 170.7 ms input
-window also remains; the 1.333333 ms delay is additional cue availability.
+The fixed hybrid policy polls during the final 384 samples before each
+1024-sample hop and sleeps otherwise. Its diagnostic acceptance condition is
+exact delivery, zero extra cues or callback overruns, and process CPU below
+50% of one core. This is a screening budget, not a verified plugin limit.
+
+`cue-worker-hybrid-20261104T1150Z` is rejected. Its two hybrid repeats deliver
+331/332 and 332/332 cues, at 44.38% and 48.87% process CPU. The missing frame
+has an empty mask, so it loses no active cue samples, but exact delivery still
+fails. All eleven native tests pass.
+
+The timestamp probe `cue-worker-hybrid-trace-20261104T1158Z` is also rejected:
+
+| Wait condition | Delivered cues | Late cues | Lost cue samples | Process CPU | Callback overruns |
+| --- | --- | --- | --- | --- | --- |
+| Sleeping, first | 296/332 | 36 | 26624 | 19.66% | 0 |
+| Hybrid, first | 331/332 | 1 | 1024 | 65.16% | 1 |
+| Hybrid, repeat | 332/332 | 0 | 0 | 69.37% | 0 |
+| Sleeping, repeat | 309/332 | 23 | 11264 | 21.63% | 0 |
+
+Both hybrid repeats exceed the CPU limit, so zero of two passes all gates.
+All eleven native tests pass. Extra cues, queue drops, stale outputs,
+discontinuities and callback allocations remain zero in every condition.
+The binary is
+`a8dd4c355c86376b8c2aa4dc0613a1db0c281d6dd97f25a62b111e1e6cc63aab`.
+
+The missing hybrid frame begins at sample 169088 and has a nonempty mask.
+Its worker step starts 10.174 us after the input callback begins, but takes
+3.348120 ms. The target callback begins after 1.133487 ms and finishes after
+1.136703 ms. This miss occurs despite a prompt worker start. In the sleeping
+controls, 42 of 59 missing cues have not started processing before the target
+callback finishes. Waiting contributes to misses; calculation steps also
+exceed the available delivery window. Worker wall time includes possible
+descheduling, so this probe does not isolate arithmetic cost.
+
+Timestamp arrays are preallocated. Their stores can still affect scheduling,
+and callback timestamps bound queue publication and cue consumption rather
+than recording those exact events. CPU differences across instrumented and
+uninstrumented runs are not a controlled comparison. Neither run includes a
+new MIDI replay or live-host result.
+
+Next, split the calculation into bounded pieces while preserving the
+symmetric Hann window, zero padding, cue thresholds and 128-sample delay.
+Require frozen cue parity, zero callback allocation, block-32 callback p99 at
+most 166.666 us and no callback above 333.333 us before integration. Further
+sleep/poll tuning is not the next route. Full delayed-corpus replay, detector
+integration, MIDI lifecycle/routing and live-host checks remain open. The
+170.7 ms input window remains; 1.333333 ms is additional cue availability.
 
 ## Relevant primary sources
 

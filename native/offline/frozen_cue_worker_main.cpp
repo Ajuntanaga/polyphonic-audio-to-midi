@@ -20,6 +20,8 @@ namespace {
 using namespace m3::offline;
 using Clock = std::chrono::steady_clock;
 using Nanoseconds = std::chrono::nanoseconds;
+constexpr std::uint64_t kHybridPollLead = 384U;
+static_assert(kHybridPollLead < FrozenPartialCue::kHop);
 long timer_slack() noexcept {
 #if defined(__linux__)
   return ::prctl(PR_GET_TIMERSLACK, 0UL, 0UL, 0UL, 0UL);
@@ -52,12 +54,20 @@ struct Observation final {
     return begin == other.begin && mask == other.mask;
   }
 };
+struct StepTiming final {
+  std::uint64_t start{}, finish{}, samples{};
+};
 std::uint64_t ns(Clock::duration value) noexcept {
   const auto count = std::chrono::duration_cast<Nanoseconds>(value).count();
   return count > 0 ? static_cast<std::uint64_t>(count) : 0U;
 }
 std::uint64_t sample_time(std::size_t sample) noexcept {
   return static_cast<std::uint64_t>(sample) * 1000000000ULL / 96000ULL;
+}
+std::uint64_t tick(Clock::time_point value) noexcept { return ns(value.time_since_epoch()); }
+std::int64_t relative_ns(std::uint64_t value, std::uint64_t origin) noexcept {
+  return value >= origin ? static_cast<std::int64_t>(value - origin)
+                         : -static_cast<std::int64_t>(origin - value);
 }
 std::uint64_t percentile(std::vector<std::uint64_t>& values, double fraction) {
   if (values.empty()) return 0U;
@@ -74,14 +84,14 @@ void write_timing(std::ostream& out, const char* label, std::vector<std::uint64_
 
 int main(int argc, char** argv) {
   if (argc != 4 && argc != 6 && argc != 8) {
-    std::fprintf(stderr, "usage: m3_frozen_cue_worker_probe raw-float32le-96k block-size report.json [pace-slack-ns worker-slack-ns [pace-poll worker-poll]]\n");
+    std::fprintf(stderr, "usage: m3_frozen_cue_worker_probe raw-float32le-96k block-size report.json [pace-slack-ns worker-slack-ns [pace-poll worker-wait-mode(0=sleep,1=poll,2=hybrid)]]\n");
     return 1;
   }
   unsigned long pace_slack = 0UL, worker_slack = 0UL;
   if (argc >= 6 && (!parse_slack(argv[4], pace_slack) || !parse_slack(argv[5], worker_slack))) return 1;
-  unsigned long pace_poll = 0UL, worker_poll = 0UL;
-  if (argc == 8 && (!parse_slack(argv[6], pace_poll) || !parse_slack(argv[7], worker_poll) ||
-                   pace_poll > 1UL || worker_poll > 1UL)) return 1;
+  unsigned long pace_poll = 0UL, worker_wait_mode = 0UL;
+  if (argc == 8 && (!parse_slack(argv[6], pace_poll) || !parse_slack(argv[7], worker_wait_mode) ||
+                   pace_poll > 1UL || worker_wait_mode > 2UL)) return 1;
   char* end = nullptr;
   const auto parsed = std::strtoul(argv[2], &end, 10);
   if (*argv[2] == '\0' || !end || *end != '\0' ||
@@ -120,6 +130,11 @@ int main(int argc, char** argv) {
   }
   const auto block_count = (samples.size() + block_size - 1U) / block_size;
   std::vector<std::uint64_t> callbacks(block_count), wake_late(block_count), worker_times(block_count);
+  // Store the timestamps already taken by the timing probe. Diagnosis is
+  // performed after joining, without adding clock calls or allocations to
+  // either measured path.
+  std::vector<std::uint64_t> callback_starts(block_count), callback_finishes(block_count);
+  std::vector<StepTiming> worker_steps(block_count);
   FrozenCueInputQueue input;
   FrozenCueOutputQueue output;
   FrozenCueClient client(input, output);
@@ -147,12 +162,21 @@ int main(int argc, char** argv) {
     while (true) {
       const auto start = Clock::now();
       if (worker.step()) {
-        if (worker_count < worker_times.size()) worker_times[worker_count++] = ns(Clock::now() - start);
+        const auto finish = Clock::now();
+        if (worker_count < worker_times.size()) {
+          worker_times[worker_count] = ns(finish - start);
+          worker_steps[worker_count] = {tick(start), tick(finish), worker.stats().samples};
+          ++worker_count;
+        }
       } else {
         if (stop.load(std::memory_order_acquire)) break;
-        // Polling is a diagnostic timing control, never a plugin policy.
-        // Neither wait runs in the measured callback.
-        if (worker_poll) std::atomic_signal_fence(std::memory_order_seq_cst);
+        // Both polling policies are standalone diagnostics, outside the
+        // measured callback. This uninterrupted recording has no resets;
+        // worker-owned sample progress locates its next calculation hop.
+        const bool near_hop = worker.stats().samples % FrozenPartialCue::kHop >=
+            FrozenPartialCue::kHop - kHybridPollLead;
+        if (worker_wait_mode == 1UL || (worker_wait_mode == 2UL && near_hop))
+          std::atomic_signal_fence(std::memory_order_seq_cst);
         else std::this_thread::sleep_for(std::chrono::microseconds(25));
       }
     }
@@ -183,7 +207,10 @@ int main(int argc, char** argv) {
       const auto& frame = client.advance(begin + i);
       observed[begin + i] = {frame.begin, frame.mask};
     }
-    callbacks[block] = ns(Clock::now() - callback_start);
+    const auto callback_finish = Clock::now();
+    callbacks[block] = ns(callback_finish - callback_start);
+    callback_starts[block] = tick(callback_start);
+    callback_finishes[block] = tick(callback_finish);
     if (callbacks[block] > sample_time(count)) ++callback_overruns;
   }
   const auto cpp_allocations = m3::test::allocation_count() - cpp_before;
@@ -227,7 +254,9 @@ int main(int argc, char** argv) {
          << ",\"worker_slack_inherited_ns\":" << worker_inherited_slack
          << ",\"worker_slack_effective_ns\":" << worker_effective_slack
          << ",\"pace_poll\":" << (pace_poll != 0UL)
-         << ",\"worker_poll\":" << (worker_poll != 0UL)
+         << ",\"worker_poll\":" << (worker_wait_mode == 1UL)
+         << ",\"worker_wait_mode\":" << worker_wait_mode
+         << ",\"worker_poll_lead_samples\":" << (worker_wait_mode == 2UL ? kHybridPollLead : 0U)
          << ",\"elapsed_ns\":" << elapsed_ns << ",\"process_cpu_ns\":" << process_cpu_ns
          << ",\"delay_samples\":" << kCueWorkerDelay << ",\"queue_capacity\":" << kCueQueueCapacity
          << ",\"expected_frames\":" << expected_frames << ",\"delivered_frames\":" << audio.accepted
@@ -244,6 +273,47 @@ int main(int argc, char** argv) {
          << ",\"callback_deadline_ns\":" << deadline << ",\"callback_p99_budget_ns\":" << deadline / 2U
          << ",\"delivery_pass\":" << delivery_pass << ",\"allocation_pass\":" << allocation_pass
          << ",\"callback_pass\":" << callback_pass;
+  std::uint64_t missing_frames = 0U, missing_empty_frames = 0U;
+  std::uint64_t worker_not_started_before_deadline = 0U, worker_finished_after_deadline = 0U;
+  std::uint64_t minimum_available_ns = std::numeric_limits<std::uint64_t>::max();
+  std::size_t emitted = 0U;
+  report << ",\"missed_frame_trace\":[";
+  for (std::size_t begin = FrozenPartialCue::kHop + kCueWorkerDelay;
+       begin < samples.size(); begin += FrozenPartialCue::kHop) {
+    const auto end_sample = begin - kCueWorkerDelay;
+    const auto producer = (end_sample - 1U) / block_size;
+    const auto target = begin / block_size;
+    const auto available = callback_starts[target] - callback_starts[producer];
+    minimum_available_ns = std::min(minimum_available_ns, available);
+    if (observed[begin].begin == expected[begin].begin) continue;
+    ++missing_frames;
+    const bool empty = expected[begin].mask[0U] == 0U && expected[begin].mask[1U] == 0U;
+    if (empty) ++missing_empty_frames;
+    const auto last = worker_steps.begin() + static_cast<std::ptrdiff_t>(worker_count);
+    const auto step = std::lower_bound(worker_steps.begin(), last, end_sample,
+        [](const StepTiming& value, std::size_t sample) { return value.samples < sample; });
+    if (step == last) continue;
+    if (step->start > callback_finishes[target]) ++worker_not_started_before_deadline;
+    if (step->finish > callback_finishes[target]) ++worker_finished_after_deadline;
+    if (emitted >= 32U) continue;
+    if (emitted++) report << ',';
+    const auto origin = callback_starts[producer];
+    report << "{\"cue_begin_sample\":" << begin << ",\"empty_mask\":" << empty
+           << ",\"input_block_begin_sample\":" << producer * block_size
+           << ",\"input_callback_duration_ns\":" << callback_finishes[producer] - origin
+           << ",\"input_wake_lateness_ns\":" << wake_late[producer]
+           << ",\"target_callback_start_after_input_ns\":" << available
+           << ",\"target_callback_finish_after_input_ns\":" << callback_finishes[target] - origin
+           << ",\"worker_start_after_input_ns\":" << relative_ns(step->start, origin)
+           << ",\"worker_finish_after_input_ns\":" << relative_ns(step->finish, origin)
+           << ",\"worker_step_duration_ns\":" << step->finish - step->start << '}';
+  }
+  report << "],\"trace_missing_frames\":" << missing_frames
+         << ",\"trace_missing_empty_frames\":" << missing_empty_frames
+         << ",\"trace_worker_not_started_before_deadline\":" << worker_not_started_before_deadline
+         << ",\"trace_worker_finished_after_deadline\":" << worker_finished_after_deadline
+         << ",\"minimum_input_to_target_callback_ns\":"
+         << (expected_frames ? minimum_available_ns : 0U);
   write_timing(report, "callback", callbacks);
   write_timing(report, "wake_late", wake_late);
   write_timing(report, "worker_step", worker_times);

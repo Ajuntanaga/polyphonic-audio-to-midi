@@ -1703,7 +1703,8 @@ def capture_cue_decisions(run_id: str, source_run: str):
               timeout=1800, max_containers=1)
 def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                               worker_delay_run: str = '', worker_timer_diagnostic: bool = False,
-                              worker_wait_diagnostic: bool = False):
+                              worker_wait_diagnostic: bool = False,
+                              worker_hybrid_diagnostic: bool = False):
     """Build a standalone native measurement; never run or replace the plugin."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -1711,9 +1712,9 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
     from tools.frozen_cue_corpus_gate import read_corpus_wave
     from tools.frozen_cue_native_gate import compare_native_observations, TOLERANCES
     from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
-    if worker_timer_diagnostic and worker_wait_diagnostic:
+    if sum((worker_timer_diagnostic, worker_wait_diagnostic, worker_hybrid_diagnostic)) > 1:
         raise ValueError('select one worker diagnosis')
-    worker_diagnostic = worker_timer_diagnostic or worker_wait_diagnostic
+    worker_diagnostic = worker_timer_diagnostic or worker_wait_diagnostic or worker_hybrid_diagnostic
     if worker_diagnostic and not worker_delay_run:
         raise ValueError('worker diagnosis requires the worker experiment')
     identifiers = (run_id, source_run) + ((worker_delay_run,) if worker_delay_run else ())
@@ -1744,7 +1745,8 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
     out = MOUNT / 'results' / run_id
     out.mkdir(exist_ok=False, parents=True)
     report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
-        experiment=('worker_wait_control' if worker_wait_diagnostic else
+        experiment=('worker_hybrid_wait' if worker_hybrid_diagnostic else
+                    'worker_wait_control' if worker_wait_diagnostic else
                     'worker_timer_slack' if worker_timer_diagnostic else
                     'worker_frozen_cue' if worker_delay_run else 'native_frozen_cue'),
         replay_binary_sha256=previous['binary_sha256'],
@@ -1773,7 +1775,9 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
             report['source_files_sha256'][str(path.relative_to('/opt/m3'))] = sha256(path)
         report['limits'] += ['The worker is compared with this native measurement at every sample.',
                              'Earlier Python parity and MIDI replay results are separate evidence.',
-                             'Cloud wakeup jitter is measured separately from callback processing.']
+                             'Cloud wakeup jitter is measured separately from callback processing.',
+                             'Missed-frame traces reuse existing clock readings and add preallocated timestamp stores.',
+                             'Worker completion and callback start/end are bounds, not the exact queue publication or sample-read instant.']
     if worker_timer_diagnostic:
         conditions = [('default', 0, 0), ('pace', 1, 0), ('worker', 0, 1), ('both', 1, 1)]
         report.update(blocks=[32], timer_conditions=[
@@ -1791,6 +1795,14 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
         report['limits'] += ['One recording, four wait conditions, repeated in reverse order; not full worker coverage.',
                              'Busy polling is a timing control outside the audio callback, not a production policy.',
                              'Process CPU time covers pacing, callback and worker together; two threads may exceed one CPU.']
+    if worker_hybrid_diagnostic:
+        report.update(blocks=[32], hybrid_poll_lead_samples=384, hybrid_cpu_max_percent=50.0,
+                      hybrid_conditions=[dict(name=name, pace_poll=False, worker_wait_mode=mode)
+                        for name, mode in [('default_1', 0), ('hybrid_1', 2), ('hybrid_2', 2), ('default_2', 0)]])
+        report['limits'] += ['One uninterrupted recording, sleeping controls around two fixed hybrid repeats; not full worker coverage.',
+                             'Hybrid polling starts 384 samples before each 1024-sample hop, outside the callback.',
+                             'Process CPU includes pacing, callback and worker; below 50% of one CPU is a diagnostic screening budget.',
+                             'Reset-aware scheduling, detector integration and host lifecycle remain unverified.']
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -1901,13 +1913,14 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                 item = dict(sample_count=len(samples), sample_rate=rate,
                             samples_sha256=saved['samples_sha256'], trials={})
                 report['datasets'][name] = item
-                kind = 'wait' if worker_wait_diagnostic else 'timer'
+                kind = 'hybrid' if worker_hybrid_diagnostic else 'wait' if worker_wait_diagnostic else 'timer'
                 for condition in report[kind + '_conditions']:
                     trial_name = condition['name']
                     report['stage'] = f'solo: {kind} condition {trial_name}, block 32'
                     save()
                     timing = out / f'solo-{kind}-{trial_name}.json'
-                    args = (['0', '0', str(int(condition['pace_poll'])), str(int(condition['worker_poll']))]
+                    args = (['0', '0', '0', str(condition['worker_wait_mode'])] if worker_hybrid_diagnostic else
+                            ['0', '0', str(int(condition['pace_poll'])), str(int(condition['worker_poll']))]
                             if worker_wait_diagnostic else
                             [str(condition['pace_ns']), str(condition['worker_ns'])])
                     with (out / f'solo-{kind}-{trial_name}.log').open('w') as log:
@@ -1919,7 +1932,16 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                     if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate or
                             measured['block_size'] != 32 or measured['delay_samples'] != 128):
                         raise ValueError('worker diagnostic clock or delay mismatch')
-                    if worker_wait_diagnostic:
+                    if (measured['trace_missing_frames'] != measured['expected_frames'] - measured['delivered_frames'] or
+                            measured['trace_missing_empty_frames'] > measured['trace_missing_frames'] or
+                            len(measured['missed_frame_trace']) > min(32, measured['trace_missing_frames'])):
+                        raise ValueError('missed-frame trace disagrees with delivery counts')
+                    if worker_hybrid_diagnostic:
+                        if (measured['pace_poll'] or measured['worker_wait_mode'] != condition['worker_wait_mode'] or
+                                measured['worker_poll_lead_samples'] != (384 if condition['worker_wait_mode'] == 2 else 0) or
+                                measured['elapsed_ns'] <= 0 or measured['process_cpu_ns'] < 0):
+                            raise ValueError('hybrid worker setting or CPU accounting mismatch')
+                    elif worker_wait_diagnostic:
                         if (measured['pace_poll'] != condition['pace_poll'] or
                                 measured['worker_poll'] != condition['worker_poll'] or
                                 measured['elapsed_ns'] <= 0 or measured['process_cpu_ns'] < 0):
@@ -1968,6 +1990,19 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
             save()
         if worker_diagnostic:
             trials = report['datasets']['solo']['trials']
+            if worker_hybrid_diagnostic:
+                hybrid = [trials[name] for name in ('hybrid_1', 'hybrid_2')]
+                passed = all(item['delivery_pass'] and item['allocation_pass'] and item['callback_pass'] and
+                             100 * item['process_cpu_ns'] / item['elapsed_ns'] < report['hybrid_cpu_max_percent']
+                             for item in hybrid)
+                report.update(hybrid_controls_verified=len(trials) == 4, hybrid_screen_pass=passed,
+                    accepted_for_detector_integration=False, state='completed', final=True,
+                    stage='bounded hybrid wait diagnosis complete',
+                    completed_at=datetime.now(timezone.utc).isoformat(),
+                    verdict=('fixed hybrid wait passed the small delivery and CPU screen; full worker and host gates remain open'
+                             if passed else 'fixed hybrid wait rejected: delivery, allocation, callback timing or CPU budget failed'))
+                save()
+                return report
             both = [trials[name] for name in ('both_1', 'both_2')]
             label = 'wait-control' if worker_wait_diagnostic else 'timer-slack'
             report['wait_controls_verified' if worker_wait_diagnostic else 'timer_slack_verified'] = len(trials) == 8
@@ -2200,14 +2235,16 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = '',
          native_cue_pffft: bool = False, cue_delay_samples: int = 1024,
          native_cue_worker_delay_source: str = '', native_cue_worker_timer_diagnostic: bool = False,
-         native_cue_worker_wait_diagnostic: bool = False):
+         native_cue_worker_wait_diagnostic: bool = False, native_cue_worker_hybrid_diagnostic: bool = False):
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
     if native_cue_worker_delay_source and not (native_cue_source and native_cue_pffft):
         raise ValueError('worker delay source requires an optimized standalone native cue run')
-    if native_cue_worker_timer_diagnostic and native_cue_worker_wait_diagnostic:
+    if sum((native_cue_worker_timer_diagnostic, native_cue_worker_wait_diagnostic,
+            native_cue_worker_hybrid_diagnostic)) > 1:
         raise ValueError('select one worker diagnosis')
-    if (native_cue_worker_timer_diagnostic or native_cue_worker_wait_diagnostic) and not native_cue_worker_delay_source:
+    if (native_cue_worker_timer_diagnostic or native_cue_worker_wait_diagnostic or
+            native_cue_worker_hybrid_diagnostic) and not native_cue_worker_delay_source:
         raise ValueError('worker diagnosis requires a worker delay source')
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
@@ -2225,7 +2262,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
     result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
               capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft,
                   native_cue_worker_delay_source, native_cue_worker_timer_diagnostic,
-                  native_cue_worker_wait_diagnostic) if native_cue_source else
+                  native_cue_worker_wait_diagnostic, native_cue_worker_hybrid_diagnostic) if native_cue_source else
               capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else
