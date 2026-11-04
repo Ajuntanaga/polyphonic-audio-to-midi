@@ -14,6 +14,35 @@ LABEL_FIELDS = ('label_index', 'start_sample', 'end_sample', 'midi_note',
                 'string_mask', 'calibration_pass', 'labeled', 'matched')
 
 
+def reuse_frozen_cue_checkpoint(saved, expected, *, cue_sha256):
+    """Reuse completed cue extraction, never an interrupted replay result."""
+    identities = ('source_run', 'dataset', 'settings', 'cue_free_lane_reassignment',
+                  'cue_pitch_admission', 'config', 'frozen_screen', 'cue_notes',
+                  'sample_rate', 'sample_count', 'source_report_sha256',
+                  'corpus_manifest_sha256', 'baseline_binary_sha256', 'binary_sha256',
+                  'calibration_sha256', 'wav_sha256', 'tsv_sha256')
+    for key in identities:
+        if key not in saved or key not in expected or saved[key] != expected[key]:
+            raise ValueError('cue checkpoint differs: ' + key)
+    if (saved.get('analysis_source_sha256', {}).get('independent_partial_evidence') !=
+            expected['analysis_source_sha256']['independent_partial_evidence']):
+        raise ValueError('cue checkpoint calculation changed')
+    if (type(saved['sample_count']) is not int or saved['sample_count'] <= 0 or
+            saved.get('feature_samples_processed') != saved['sample_count']):
+        raise ValueError('cue checkpoint extraction is incomplete')
+    if (not re.fullmatch(r'[0-9a-f]{64}', cue_sha256)
+            or saved.get('cue_sha256') != cue_sha256):
+        raise ValueError('cue checkpoint file hash differs')
+    total, counts = saved.get('cue_intervals'), saved.get('cue_intervals_by_note')
+    if (type(total) is not int or not 0 <= total <= 100000 or not isinstance(counts, dict)
+            or set(counts) != {str(note) for note in expected['cue_notes']}
+            or any(type(value) is not int or value < 0 for value in counts.values())
+            or sum(counts.values()) != total):
+        raise ValueError('cue checkpoint counts are incomplete')
+    return {key: saved[key] for key in ('cue_sha256', 'cue_intervals',
+            'cue_intervals_by_note', 'feature_samples_processed')}
+
+
 def read_corpus_wave(path):
     """Decode mono PCM16 exactly like native replay, or retain float32 samples."""
     import numpy as np

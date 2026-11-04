@@ -1232,18 +1232,21 @@ def capture_frozen_cue_selection(run_id: str, source_run: str):
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=7200, max_containers=1)
-def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str):
+def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str,
+                             cue_checkpoint_run: str = ''):
     """Screen one untouched corpus with saved binaries and label-blind cues."""
     import sys
     sys.path.insert(0, '/opt/m3')
-    from tools.frozen_cue_corpus_gate import read_corpus_wave, read_replay, compare_replays
+    from tools.frozen_cue_corpus_gate import (read_corpus_wave, read_replay, compare_replays,
+                                            reuse_frozen_cue_checkpoint)
     from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN, measure, frozen_cue_intervals
     datasets = ('ordinary', 'constructed', 'isolated-08', 'isolated-05', 'isolated-02',
                 'physical-long', 'physical-middle', 'physical-highmid', 'physical-high',
                 'extended-middle', 'extended-highmid', 'extended-high',
                 'physical-four', 'synthetic-four')
     if (any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run))
-            or dataset not in datasets):
+            or dataset not in datasets
+            or (cue_checkpoint_run and not re.fullmatch(r'[a-zA-Z0-9_-]+', cue_checkpoint_run))):
         raise ValueError('invalid corpus or run identifier')
     source = MOUNT / 'results' / source_run
     previous = json.loads((source / 'report.json').read_text())
@@ -1307,28 +1310,41 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str):
                       stage='measure frozen cues across the playable pitch range')
         save()
         cue_path = out / (dataset + '-cues.tsv')
-        cue_counts = {str(note): 0 for note in report['cue_notes']}
-        cue_total = 0
+        if cue_checkpoint_run:
+            report['stage'] = 'verify saved cue checkpoint'
+            save()
+            checkpoint = MOUNT / 'results' / cue_checkpoint_run
+            checkpoint_report = checkpoint / 'report.json'
+            saved = json.loads(checkpoint_report.read_text())
+            saved_cues = checkpoint / (dataset + '-cues.tsv')
+            cue_fields = reuse_frozen_cue_checkpoint(saved, report, cue_sha256=sha256(saved_cues))
+            shutil.copyfile(saved_cues, cue_path)
+            report.update(cue_fields, cue_checkpoint_run=cue_checkpoint_run,
+                          cue_checkpoint_report_sha256=sha256(checkpoint_report))
+        else:
+            cue_counts = {str(note): 0 for note in report['cue_notes']}
+            cue_total = 0
 
-        def observations():
-            for index, row in enumerate(measure(values, rate, notes=tuple(report['cue_notes']))):
-                if index % 1000 == 0:
-                    report['feature_samples_processed'] = row['sample'] + 1
-                    save()
-                yield row
+            def observations():
+                for index, row in enumerate(measure(values, rate, notes=tuple(report['cue_notes']))):
+                    if index % 1000 == 0:
+                        report['feature_samples_processed'] = row['sample'] + 1
+                        save()
+                    yield row
 
-        intervals = frozen_cue_intervals(observations(), sample_count=len(values))
-        if len(intervals) > 100000:
-            raise ValueError('cue count exceeds saved binary sidecar capacity; no cues were dropped')
-        with cue_path.open('w') as stream:
-            stream.write('m3_frozen_note_cues_v1\t96000\t1024\n')
-            for row in intervals:
-                stream.write(f"{row['begin_sample']}\t{row['end_sample']}\t{row['midi_note']}\n")
-                cue_counts[str(row['midi_note'])] += 1
-                cue_total += 1
-        report.update(cue_intervals=cue_total, cue_intervals_by_note=cue_counts,
-                      cue_sha256=sha256(cue_path), feature_samples_processed=len(values))
-        del values, intervals
+            intervals = frozen_cue_intervals(observations(), sample_count=len(values))
+            if len(intervals) > 100000:
+                raise ValueError('cue count exceeds saved binary sidecar capacity; no cues were dropped')
+            with cue_path.open('w') as stream:
+                stream.write('m3_frozen_note_cues_v1\t96000\t1024\n')
+                for row in intervals:
+                    stream.write(f"{row['begin_sample']}\t{row['end_sample']}\t{row['midi_note']}\n")
+                    cue_counts[str(row['midi_note'])] += 1
+                    cue_total += 1
+            report.update(cue_intervals=cue_total, cue_intervals_by_note=cue_counts,
+                          cue_sha256=sha256(cue_path), feature_samples_processed=len(values))
+            del intervals
+        del values
         for mode, executable, block in (('baseline', baseline, 512), ('off', binary, 512),
                 ('on', binary, 512), ('on32', binary, 32), ('on1024', binary, 1024)):
             report['stage'] = f'{dataset}: {mode}, block {block}'
@@ -1517,15 +1533,17 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          admission_source: str = '', cue_source: str = '', cue_selection_source: str = '',
          cue_free_lane: bool = False, cue_corpus_source: str = '',
          cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
-         cue_corpus_trace_label: int = -1):
+         cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = ''):
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
+    if cue_checkpoint_run and not cue_corpus_source:
+        raise ValueError('cue checkpoint requires a corpus screen')
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source)) > 1:
         raise ValueError('select one analysis or capture job')
     result = (capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source, cue_corpus_trace_label) if cue_corpus_trace_source else
-              capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset) if cue_corpus_source else
+              capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset, cue_checkpoint_run) if cue_corpus_source else
               capture_frozen_cue_selection.remote(run_id, cue_selection_source) if cue_selection_source else
               capture_frozen_partial_cues.remote(run_id, cue_source, cue_free_lane) if cue_source else
               capture_controlled_admission.remote(run_id, admission_source) if admission_source else

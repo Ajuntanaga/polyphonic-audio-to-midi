@@ -1,10 +1,12 @@
 from pathlib import Path
+from copy import deepcopy
 import tempfile
 import unittest
 import wave
 
 from tools.frozen_cue_corpus_gate import (
     COUNTS, ERRORS, LABEL_FIELDS, compare_replays, read_corpus_wave, read_replay,
+    reuse_frozen_cue_checkpoint,
 )
 
 
@@ -18,6 +20,60 @@ def fixture():
 
 
 class FrozenCueCorpusGateTests(unittest.TestCase):
+    def cue_checkpoint(self):
+        return dict(source_run='accepted-small-screen', dataset='constructed',
+            settings={'max-polyphony': 5}, cue_free_lane_reassignment=True,
+            cue_pitch_admission=False, config={'window_samples': 16384},
+            frozen_screen={'agreement_cents_inclusive': 25.0}, cue_notes=[36],
+            sample_rate=96000, sample_count=32768, source_report_sha256='1' * 64,
+            corpus_manifest_sha256='2' * 64, baseline_binary_sha256='3' * 64,
+            binary_sha256='4' * 64, calibration_sha256='5' * 64,
+            wav_sha256='6' * 64, tsv_sha256='7' * 64,
+            analysis_source_sha256={'independent_partial_evidence': '8' * 64},
+            feature_samples_processed=32768, cue_sha256='9' * 64,
+            cue_intervals=1, cue_intervals_by_note={'36': 1},
+            state='running', final=False, replays={'baseline': {'partial': True}})
+
+    def test_finished_cues_can_resume_without_reusing_partial_replays(self):
+        saved = self.cue_checkpoint()
+        reused = reuse_frozen_cue_checkpoint(saved, saved, cue_sha256='9' * 64)
+        self.assertEqual(reused['cue_intervals'], 1)
+        self.assertEqual(reused['feature_samples_processed'], 32768)
+        self.assertNotIn('replays', reused)
+        self.assertNotIn('state', reused)
+
+    def test_checkpoint_must_match_recording_calibration_binary_and_rules(self):
+        expected = self.cue_checkpoint()
+        for key in ('source_run', 'dataset', 'settings', 'cue_pitch_admission', 'config',
+                    'frozen_screen', 'binary_sha256', 'calibration_sha256', 'wav_sha256',
+                    'tsv_sha256', 'source_report_sha256', 'corpus_manifest_sha256'):
+            saved = deepcopy(expected)
+            saved[key] = None
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
+        saved = deepcopy(expected)
+        saved['analysis_source_sha256']['independent_partial_evidence'] = 'a' * 64
+        with self.assertRaisesRegex(ValueError, 'calculation changed'):
+            reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
+
+    def test_partial_extraction_and_missing_counts_are_rejected(self):
+        expected = self.cue_checkpoint()
+        for key, value in (('feature_samples_processed', 31744),
+                           ('cue_intervals_by_note', {}), ('cue_intervals', 2)):
+            saved = deepcopy(expected)
+            saved[key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
+
+    def test_changed_or_unhashed_cue_file_is_rejected(self):
+        expected = self.cue_checkpoint()
+        with self.assertRaisesRegex(ValueError, 'file hash differs'):
+            reuse_frozen_cue_checkpoint(expected, expected, cue_sha256='a' * 64)
+        saved = deepcopy(expected)
+        del saved['cue_sha256']
+        with self.assertRaisesRegex(ValueError, 'file hash differs'):
+            reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
+
     def test_pcm16_decoding_matches_native_endpoint_scale(self):
         import numpy as np
         samples = np.array([-32768, -1, 0, 1, 32767], dtype='<i2')

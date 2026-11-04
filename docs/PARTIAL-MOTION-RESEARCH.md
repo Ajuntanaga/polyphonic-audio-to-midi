@@ -1385,8 +1385,19 @@ regressions while retaining the small-screen gains. It adds no matches on
 this ordinary recording.
 
 `cue-assignment-constructed-20261104T0653Z`, app `ap-5pXg4vh3Ok2EBe90snEbEx`,
-now checks constructed chords with the same binary. Require at least
-259074/1614601 matches, no lost label, wrong-note/wrong-string/extra-gap counts
-no higher than 167722/103754/23176, exact OFF equality and ON buffer parity.
-Isolated strings follow only after that gate passes. Installed output is
-unchanged; this remains an offline experiment.
+finished cue extraction across 29491200 samples with 59536 intervals. The
+local client disconnected at 07:11:33 UTC, canceling the app during baseline
+replay. It produced no constructed-corpus verdict.
+
+The detached continuation `cue-assignment-constructed-resume-20261104T0726Z`,
+app `ap-BTk31v3Lc3HqrR4BXFOgfK`, reuses the completed cue file. The new
+`--cue-checkpoint-run` option checks recording, calibration, source report,
+binary, frozen rules, cue hash and complete counts before reuse. It retains
+no partial replay result. Eleven focused Python tests pass, including refusal
+of incomplete extraction, changed inputs and a changed cue file; runner
+syntax and whitespace checks also pass. No native detector code changed.
+
+Require at least 259074/1614601 matches, no lost label, wrong-note/wrong-string/
+extra-gap counts no higher than 167722/103754/23176, exact OFF equality and ON
+buffer parity. Isolated strings follow only after that gate passes. Installed
+output is unchanged; this remains an offline experiment.
