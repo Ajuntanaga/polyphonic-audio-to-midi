@@ -1,20 +1,29 @@
 # Research route: measured motion across harmonics
 
-Updated 2026-11-03. The offline capture and control experiment are implemented.
-This is not an accepted detector change. The installed plugin and its
-parameters are unchanged.
+Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
+string-assignment gain. Nine of fourteen corpus screens pass with the
+initial-settling guard. Native cues match the reference, but their synchronous
+FFT exceeds the callback budget. A one-hop delay loses five solo matches,
+so that scheduling route is rejected. The next step is to reduce calculation
+cost while retaining immediate cue availability. The
+installed plugin and its parameters are unchanged.
 
 ## Decision
 
-The controlled mixture locates a candidate-admission failure before string
-assignment, but the first repair is rejected. A strong direct fundamental
-with no stronger eligible harmonic explanation raised matches from 3250 to
-3507/6900 in the equal-RMS MIDI-49 mixture while adding 1666 false outputs.
-That tradeoff is unsuitable for real-time MIDI. The installed plugin is
-unchanged. The next route needs an independent partial or source reference
-that distinguishes the low note from overlapping energy; direct-peak strength
-alone is insufficient. The final section records the result and the corrected
-target-specific acceptance gate.
+Continue the frozen-cue route as an offline string-assignment correction.
+The current guard acts only during the first 160 ms of candidate history;
+later corrections caused measured passage losses. It retains the nearby-note
+gain of 815 to 835 matches out of 3450, with fewer wrong-string outputs.
+Pitch admission stays unchanged. Nine corpus screens preserve all passage
+matches and false-output limits; this establishes regression coverage, not
+better broad-corpus tracking or live readiness. Before integration, require
+a faster native calculation to retain reference parity and pass the callback
+budget. The remaining corpus and MIDI lifecycle checks stay open.
+
+The earlier direct-fundamental admission repair is rejected. It raised
+matches from 3250 to 3507/6900 in the equal-RMS MIDI-49 mixture while adding
+1666 false outputs. Direct-peak strength alone was insufficient. The sections
+below record that failure and the later frozen-partial and assignment results.
 
 The causal measurement experiment is complete. A physical single-string
 counterexample rejects motion magnitude as a standalone source-count cue.
@@ -31,6 +40,34 @@ A string's harmonics can move together as its tension and vibration change.
 An overlapping harmonic may follow a different mixture of those movements.
 The useful question is whether those differences survive in our recordings,
 not whether a sufficiently flexible model can reconstruct the waveform.
+
+## Native measurement and the callback constraint
+
+Run `native-frozen-cue-20261104T1023Z` completed on Modal. The native
+implementation matches all 175960 note observations across ten controlled
+cases; clock, reasons, peaks and numeric features pass the frozen tolerances,
+and exported cue files are identical. Four focused boundary, clock, reset and
+allocation tests pass. This is a standalone measurement component, not an
+installed output change.
+
+Its synchronous FFT fails the callback budget in every case. Worst block
+p99 is 5.991700 ms against 0.166666 ms, with a 14.391048 ms maximum against
+0.333333 ms. Timing excludes the detector and the rest of the plugin. Numerical
+parity therefore does not justify putting this implementation on the audio
+thread.
+
+Run `cue-fixed-delay-20261104T1034Z` tested one fixed scheduling delay of
+1024 samples (10.6667 ms), using the saved replay binary. Both cue availability
+and expiry move by one hop; the measurement window and thresholds stay fixed.
+The delay is rejected: solo matches fall from 3236 to 3231/3450
+(93.7971% to 93.6522%; five fewer matches), while wrong-string outputs rise
+from 142 to 147. The original OFF baseline is 3219 matches and 159 wrong
+strings; retaining a smaller improvement does not satisfy the stated gate
+of preserving every undelayed gain. Nearby matches remain 835/3450 and
+quiet-octave matches remain 2079/3450. No other case changes. Further buffer
+checks stopped after the failed gate. OFF and unit-test evidence are reused
+from the identical saved binary; earlier undelayed corpus passes do not cover
+the delayed policy. No incremental FFT was implemented.
 
 ## Relevant primary sources
 

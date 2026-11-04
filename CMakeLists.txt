@@ -13,6 +13,7 @@ set(M3_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 option(M3_ENABLE_ASAN_UBSAN "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(M3_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(M3_ENABLE_RESIDUAL_SHADOW_TESTS "Exercise bounded residual work in test and replay callbacks only" OFF)
+option(M3_BUILD_FROZEN_CUE_PROBE "Build the standalone frozen cue parity and timing probe" OFF)
 if(M3_ENABLE_ASAN_UBSAN AND M3_ENABLE_TSAN)
     message(FATAL_ERROR "ASan/UBSan and TSan builds must remain separate")
 endif()
@@ -236,6 +237,24 @@ target_compile_definitions(m3_replay PRIVATE
 target_include_directories(m3_replay PRIVATE native/include native/offline)
 target_link_libraries(m3_replay PRIVATE Threads::Threads m)
 m3_apply_project_options(m3_replay)
+
+if(M3_BUILD_FROZEN_CUE_PROBE)
+    # Standalone measurement only; neither plugin links this implementation.
+    add_executable(m3_frozen_cue_probe
+        native/offline/frozen_partial_cue.cpp
+        native/offline/frozen_partial_cue_main.cpp)
+    add_executable(m3_frozen_cue_tests
+        native/offline/frozen_partial_cue.cpp
+        native/tests/test_frozen_partial_cue.cpp
+        native/tests/test_support.cpp
+        native/tests/offline_test_main.cpp)
+    foreach(target m3_frozen_cue_probe m3_frozen_cue_tests)
+        target_include_directories(${target} PRIVATE native/offline native/tests)
+        target_link_libraries(${target} PRIVATE Threads::Threads m)
+        m3_apply_project_options(${target})
+    endforeach()
+    add_test(NAME m3_frozen_cue_tests COMMAND m3_frozen_cue_tests)
+endif()
 
 if(M3_ENABLE_RESIDUAL_SHADOW_TESTS)
     # This experiment cannot enter either shipped plugin bundle through this

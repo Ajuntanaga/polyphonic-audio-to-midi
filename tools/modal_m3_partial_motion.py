@@ -37,7 +37,7 @@ image = (modal.Image.from_registry('ubuntu:24.04', add_python='3.12')
 OVERLAP_MODULES = ('controlled_descriptor_overlap', 'string_likelihood_decomposition',
                    'string_observation_shadow', 'string_evidence_audit',
                    'controlled_admission_gate', 'independent_partial_evidence',
-                   'frozen_cue_diagnosis', 'frozen_cue_corpus_gate')
+                   'frozen_cue_diagnosis', 'frozen_cue_corpus_gate', 'frozen_cue_native_gate')
 for module in OVERLAP_MODULES:
     image = image.add_local_file(ROOT / 'tools' / (module + '.py'),
                                  '/opt/m3/tools/' + module + '.py', copy=True)
@@ -1699,6 +1699,269 @@ def capture_cue_decisions(run_id: str, source_run: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_native_frozen_cue(run_id: str, source_run: str):
+    """Build a standalone native measurement; never run or replace the plugin."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    import numpy as np
+    from tools.frozen_cue_corpus_gate import read_corpus_wave
+    from tools.frozen_cue_native_gate import compare_native_observations, TOLERANCES
+    from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final') or
+            not previous.get('accepted_for_corpus_screen') or
+            previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
+        raise ValueError('source is not a completed frozen cue replay screen')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
+        experiment='native_frozen_cue', replay_binary_sha256=previous['binary_sha256'],
+        stage='build standalone native measurement', installed_changed=False,
+        started_at=datetime.now(timezone.utc).isoformat(), config=CONFIG, frozen_screen=FROZEN_SCREEN,
+        source_report_sha256=sha256(source / 'report.json'), numeric_tolerances=TOLERANCES,
+        cue_notes=list(range(32, 85)), datasets={}, tests={},
+        source_files_sha256={str(path.relative_to('/opt/m3')): sha256(path) for path in [
+            *Path('/opt/m3/native/offline').glob('frozen_partial_cue*'),
+            Path('/opt/m3/native/tests/test_frozen_partial_cue.cpp'),
+            Path('/opt/m3/native/tests/offline_test_main.cpp'),
+            Path('/opt/m3/tools/frozen_cue_native_gate.py'),
+            Path('/opt/m3/tools/independent_partial_evidence.py')]},
+        limits=['Standalone cue timing excludes detector and plugin work.',
+                'Modal CPU timing is not a live-host deadline guarantee.',
+                'The causal measurement window remains 170.7 ms at 96 kHz.',
+                'This probe is not linked into either installed plugin.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        flags = ['g++', '-std=c++17', '-O2', '-DNDEBUG', '-Wall', '-Wextra', '-Wpedantic',
+                 '-Wconversion', '-Wshadow', '-Werror', '-fno-exceptions', '-fno-rtti',
+                 '-fstack-protector-strong', '-fvisibility=hidden',
+                 '-I/opt/m3/native/offline', '-I/opt/m3/native/tests']
+        obj = out / 'frozen_partial_cue.o'
+        probe, tests = out / 'm3_frozen_cue_probe', out / 'm3_frozen_cue_tests'
+        with (out / 'build.log').open('w') as log:
+            subprocess.run(flags + ['-c', '/opt/m3/native/offline/frozen_partial_cue.cpp',
+                           '-o', str(obj)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+            for executable, sources in (
+                    (probe, ['native/offline/frozen_partial_cue_main.cpp']),
+                    (tests, ['native/tests/test_frozen_partial_cue.cpp',
+                             'native/tests/test_support.cpp', 'native/tests/offline_test_main.cpp'])):
+                subprocess.run(flags + [str(obj)] + ['/opt/m3/' + name for name in sources]
+                               + ['-pthread', '-lm', '-o', str(executable)],
+                               stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+        report['binary_sha256'] = sha256(probe)
+        report['stage'] = 'native boundary, clock and allocation tests'
+        save()
+        with (out / 'tests.log').open('w') as log:
+            subprocess.run([str(tests)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+        summaries = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', (out / 'tests.log').read_text())
+        if len(summaries) != 1 or int(summaries[0][0]) != 4 or int(summaries[0][1]) != 0:
+            raise ValueError('missing successful native test accounting')
+        report['tests'] = dict(count=int(summaries[0][0]), failures=0,
+                               log_sha256=sha256(out / 'tests.log'))
+        for name, saved in previous['datasets'].items():
+            if not re.fullmatch(r'[a-zA-Z0-9_-]+', name):
+                raise ValueError('invalid case name')
+            wav = source / (name + '.wav')
+            if sha256(wav) != saved['audio_sha256']:
+                raise ValueError('saved audio changed: ' + name)
+            rate, values = read_corpus_wave(wav)
+            if rate != 96000 or len(values) != saved['sample_count']:
+                raise ValueError('saved audio clock changed: ' + name)
+            samples = np.asarray(values, dtype='<f4')
+            if hashlib.sha256(samples.tobytes()).hexdigest() != saved['samples_sha256']:
+                raise ValueError('saved samples changed: ' + name)
+            raw, observations, cues, timing = (out / (name + suffix) for suffix in
+                ('.f32', '-native.tsv', '-native-cues.tsv', '-timing.json'))
+            samples.tofile(raw)
+            report['stage'] = name + ': native measurement and frozen-reference comparison'
+            save()
+            with (out / (name + '.log')).open('w') as log:
+                subprocess.run([str(probe), str(raw), str(observations), str(cues), str(timing)],
+                    stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
+            comparison = compare_native_observations(samples, observations, cues)
+            measured = json.loads(timing.read_text())
+            if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate
+                    or measured['block_size'] != 32):
+                raise ValueError('native timing clock mismatch')
+            measured['standalone_budget_pass'] = (measured['block_p99_ns'] <= measured['p99_budget_ns']
+                and measured['block_max_ns'] <= measured['block_deadline_ns'])
+            report['datasets'][name] = dict(sample_count=len(samples), sample_rate=rate,
+                samples_sha256=saved['samples_sha256'], observations_sha256=sha256(observations),
+                cues_sha256=sha256(cues), comparison=comparison, timing=measured)
+            save()
+        report['parity_pass'] = all(item['comparison']['parity_pass'] for item in report['datasets'].values())
+        report['standalone_timing_pass'] = all(item['timing']['standalone_budget_pass'] for item in report['datasets'].values())
+        report.update(state='completed', final=True, stage='native cue parity and timing complete',
+            completed_at=datetime.now(timezone.utc).isoformat(),
+            verdict=('native parity and standalone timing passed; host integration unverified'
+                     if report['parity_pass'] and report['standalone_timing_pass'] else
+                     'rejected for audio callback: native parity or timing gate failed'))
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        logs = sorted(out.glob('*.log'), key=lambda path: path.stat().st_mtime)[-3:]
+        report['log_tails'] = {path.name: path.read_text()[-4000:] for path in logs}
+    save()
+    return report
+
+
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_delayed_frozen_cues(run_id: str, source_run: str):
+    """Test one fixed scheduling delay with the saved binary; no build or sweep."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_admission_gate import CASES, FIELDS, evaluate_admission, read_target_detail
+    from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid run identifier')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final') or
+            not previous.get('accepted_for_corpus_screen') or
+            not previous.get('cue_free_lane_reassignment') or
+            previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
+        raise ValueError('source is not an accepted frozen string-correction screen')
+    binary, calibration = source / 'm3_replay', MOUNT / 'corpus/calibration.m3cb'
+    if sha256(binary) != previous['binary_sha256'] or sha256(calibration) != previous['calibration_sha256']:
+        raise ValueError('saved binary or calibration changed')
+    expected_cases = set(CASES) | {name + '_source_only' for name in CASES if name != 'solo'} | {'silence'}
+    if set(previous['datasets']) != expected_cases:
+        raise ValueError('controlled case coverage changed')
+    delay = 1024
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
+        experiment='delayed_frozen_cue', stage='prepare fixed one-hop cue delay',
+        started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
+        source_report_sha256=sha256(source / 'report.json'),
+        binary_sha256=previous['binary_sha256'], calibration_sha256=previous['calibration_sha256'],
+        config=CONFIG, frozen_screen=FROZEN_SCREEN, settings=previous['settings'],
+        availability_delay_samples=delay, availability_delay_ms=1000.0 * delay / 96000,
+        cue_duration_samples=1024, controls_reused=True, datasets={},
+        limits=['Saved cue intervals are shifted by one hop, including their expiry.',
+                'The measurement window is unchanged; cue evidence is one hop older.',
+                'OFF and unit-test evidence are reused from the identical saved binary.',
+                'This delay screen neither implements nor times an incremental FFT.',
+                'No installed or live-host behavior changes.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    def replay(name, block, mode):
+        args = [str(binary), '--wav', str(source / (name + '.wav')),
+                '--labels', str(source / (name + '.tsv')), '--calibration', str(calibration),
+                '--block', str(block), '--label-details', '--diagnostic-odd-partial-cues',
+                str(out / (name + '-cues.tsv')), '--diagnostic-cue-free-lane-reassignment']
+        for key, value in previous['settings'].items():
+            args += ['--' + key, str(value)]
+        output = out / f'{name}-{mode}.tsv'
+        with output.open('w') as stdout, (out / f'{name}-{mode}.log').open('w') as log:
+            subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=180)
+        result = dict(output=aggregate(output))
+        if previous['datasets'][name]['has_target']:
+            result['target'] = read_target_detail(output)
+        return result
+
+    save()
+    try:
+        for name, saved in previous['datasets'].items():
+            for suffix, key in (('.wav', 'audio_sha256'), ('.tsv', 'labels_sha256'),
+                                ('-cues.tsv', 'cue_sha256')):
+                if sha256(source / (name + suffix)) != saved[key]:
+                    raise ValueError(name + ': saved input changed')
+            if not saved['control_identical'] or not saved['buffer_outputs_identical']:
+                raise ValueError(name + ': original control or buffer checks failed')
+            old_off = dict(output=aggregate(source / (name + '-off.tsv')))
+            if saved['has_target']:
+                old_off['target'] = read_target_detail(source / (name + '-off.tsv'))
+            if old_off != saved['replays']['off']:
+                raise ValueError(name + ': saved OFF evidence changed')
+            intervals, original_count, last = [], 0, (-1, -1)
+            with (source / (name + '-cues.tsv')).open() as stream:
+                if next(stream).rstrip('\n') != 'm3_frozen_note_cues_v1\t96000\t1024':
+                    raise ValueError('unexpected cue clock')
+                for line in stream:
+                    begin, end, note = map(int, line.split())
+                    if (not 0 <= begin < end <= saved['sample_count'] or
+                            begin % 1024 or end != min(begin + 1024, saved['sample_count']) or
+                            not 32 <= note <= 84 or (begin, note) <= last):
+                        raise ValueError(name + ': malformed original cue')
+                    last = (begin, note)
+                    original_count += 1
+                    shifted = begin + delay
+                    if shifted < saved['sample_count']:
+                        intervals.append((shifted, min(end + delay, saved['sample_count']), note))
+            if original_count != saved['cue_intervals']:
+                raise ValueError(name + ': original cue accounting changed')
+            cues = out / (name + '-cues.tsv')
+            cues.write_text('m3_frozen_note_cues_v1\t96000\t1024\n' + ''.join(
+                f'{begin}\t{end}\t{note}\n' for begin, end, note in intervals))
+            item = dict(sample_rate=96000, sample_count=saved['sample_count'],
+                has_target=saved['has_target'], cue_intervals=len(intervals), cue_sha256=sha256(cues),
+                original_cue_sha256=saved['cue_sha256'], control_identical=True,
+                buffer_outputs_identical=False,
+                replays={key: saved['replays'][key] for key in ('baseline', 'off')})
+            report['datasets'][name] = item
+            report['stage'] = name + ': delayed cue replay, block 512'
+            save()
+            item['replays']['on'] = replay(name, 512, 'on')
+            old, new = saved['replays']['on'], item['replays']['on']
+            if old['output']['labeled'] != new['output']['labeled']:
+                raise ValueError(name + ': label accounting changed')
+            delta = {key: int(new['output'][key]) - int(old['output'][key]) for key in FIELDS}
+            target_delta = new['target']['matched'] - old['target']['matched'] if saved['has_target'] else 0
+            item.update(delta_against_undelayed=delta, target_delta_against_undelayed=target_delta,
+                undelayed_gain_preserved=target_delta >= 0 and delta['matched'] >= 0
+                    and all(delta[key] <= 0 for key in FIELDS[1:]))
+            if not saved['has_target']:
+                off, on = (item['replays'][mode]['output'] for mode in ('off', 'on'))
+                item['delta'] = {key: int(on[key]) - int(off[key]) for key in FIELDS}
+                item['gate_pass'] = item['delta']['matched'] >= 0 and all(
+                    item['delta'][key] <= 0 for key in FIELDS[1:])
+            save()
+        gate = evaluate_admission({name: report['datasets'][name] for name in CASES})
+        for name, result in gate.pop('cases').items():
+            report['datasets'][name].update(result)
+        negative_regressions = [name for name, item in report['datasets'].items()
+                                if not item['has_target'] and not item['gate_pass']]
+        lost_gains = [name for name, item in report['datasets'].items() if not item['undelayed_gain_preserved']]
+        gate['negative_regressions'], gate['lost_undelayed_gains'] = negative_regressions, lost_gains
+        gate['accepted_for_corpus_screen'] &= not negative_regressions and not lost_gains
+        if gate['accepted_for_corpus_screen']:
+            for name, item in report['datasets'].items():
+                for block in (32, 1024):
+                    report['stage'] = f'{name}: delayed cue buffer check, block {block}'
+                    save()
+                    item['replays']['on' + str(block)] = replay(name, block, 'on' + str(block))
+                item['buffer_outputs_identical'] = item['replays']['on32'] == item['replays']['on'] == item['replays']['on1024']
+                if not item['buffer_outputs_identical']:
+                    raise ValueError(name + ': delayed cue buffer invariance failed')
+                save()
+        gate['verdict'] = ('fixed one-hop delay preserves all demonstrated gains; native scheduling remains unverified'
+                           if gate['accepted_for_corpus_screen'] else 'rejected: fixed delay loses matches or exceeds error limits')
+        report.update(state='completed', final=True, stage='fixed cue delay screen complete',
+                      completed_at=datetime.now(timezone.utc).isoformat(), **gate)
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        report['log_tails'] = {path.name: path.read_text()[-3000:]
+                              for path in sorted(out.glob('*.log'))[-3:]}
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
@@ -1707,7 +1970,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
          cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
          cue_trace_checkpoint_run: str = '', cue_decision_source: str = '',
-         reuse_cue_features: bool = False):
+         reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = ''):
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if cue_checkpoint_run and not cue_corpus_source:
@@ -1718,9 +1981,12 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
         raise ValueError('trace checkpoint requires a corpus failure diagnosis')
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
-            + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)) > 1:
+            + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)
+            + bool(native_cue_source) + bool(delayed_cue_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
+    result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source) if delayed_cue_source else
+              capture_native_frozen_cue.remote(run_id, native_cue_source) if native_cue_source else
+              capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else
               capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset,
