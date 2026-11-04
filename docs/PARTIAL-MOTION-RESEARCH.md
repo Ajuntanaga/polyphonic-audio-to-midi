@@ -1573,3 +1573,28 @@ The same saved binary is now checking middle strings in
 and physical/synthetic unisons follow. These checks preserve the earlier
 small-screen gain without establishing live behavior; installed output is
 unchanged.
+
+Middle-string run `cue-initial-assignment-isolated05-20261104T0945Z` passed
+at 09:46:37 UTC: 25681/31050 matches (82.7085%), wrong-note/wrong-string/
+extra-gap counts 12028/4037/3860 and total false outputs 19925. High-string
+run `cue-initial-assignment-isolated02-20261104T0949Z` passed at 09:52:21 UTC:
+29240/35550 matches (82.2504%), errors 2491/1400/1840 and total false outputs
+5731. Both are bit-identical to OFF and the baseline, with no lost passage
+matches, no added false outputs and identical ON output at blocks 32/512/1024.
+This completes the three representative isolated-string screens on the
+initial-settling binary; ordinary and constructed chords also pass.
+
+Long physical-unison run `cue-initial-assignment-physical-long-20261104T0953Z`
+passed at 09:59:10 UTC. Overall matches remain 41452/68441 (60.5660%) and
+exact-three matches remain 25219/39378 (64.0434%). Wrong-note/wrong-string/
+extra-gap counts remain 67769/2709/5403, with total false outputs 75881 and
+fingerprint `519bc0f9f4710566`. ON, OFF and baseline are bit-identical, and
+ON agrees at blocks 32/512/1024. Six of the fixed fourteen corpus screens
+now pass on this binary.
+
+The primary improvement targets remain 42128/68441 overall matches and
+25604/39378 exact-three matches, with wrong strings at most 2709. A
+preservation pass alone does not reach those targets. Middle physical
+unisons are running as `cue-initial-assignment-physical-middle-20261104T1001Z`.
+Installed output is unchanged; remaining corpus, native cue timing and
+MIDI lifecycle/host checks are still required.
