@@ -4,10 +4,11 @@ Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
 initial-settling guard. A fixed 256-sample delay preserves all ten controlled
 results. The native implementation reproduces those delayed replay outputs
-without processing allocations. Spacing the transforms between detector
-decisions passes p99 timing in all ten cases, but four exceed the maximum
-block time. A three-case diagnosis preserves the outputs but finds that the
-cloud thread CPU timer is too coarse to explain the short timing spikes.
+without processing allocations. Its full timing gate remains rejected.
+A three-case diagnosis finds that the cloud thread CPU timer is too coarse
+to explain the short timing spikes. An offline switch that skips redundant
+empty-history clears preserves outputs but also fails the full timing gate;
+a paired comparison with one saved binary does not show a repeatable saving.
 The installed plugin and its parameters are unchanged.
 
 ## Decision
@@ -144,16 +145,41 @@ The block ending at sample 58560 is no longer among the slowest in every
 measurement. Its available snapshots show collecting tuning histories with
 no recorded nonempty-history reset. The snapshots neither locate the cost
 within a block nor establish that scheduling caused it. Code inspection
-identifies a separate optimization to test: the detector repeatedly clears
-already-empty fine-frequency histories after their selection gap expires.
-Skipping only those redundant clears may reduce memory writes; a speedup
-has not been measured.
+identifies a separate cost lead: the detector repeatedly clears already-empty
+fine-frequency histories after their selection gap expires.
 
-Next, test that skip behind an offline diagnostic option. Require all ten
-reference outputs, zero processing allocations, combined p99 at most
-166666 ns, maximum at most 333333 ns and zero deadline overruns before wider
-native corpus testing. Preserve the default detector behavior until the
-output, corpus and lifecycle gates pass.
+Run `cue-empty-reset-20261104T1355Z` tests a default-off diagnostic switch
+that skips those empty clears. Nonempty history resets and other reset causes
+remain unchanged. All 80 tests pass, including seeded history-reset checks.
+Every saved OFF and ON reference is exact, ON agrees at blocks 32/512/1024,
+and timed and scored fingerprints agree. Processing allocations and frees
+remain zero. Binary SHA-256:
+`f90f17ee37b513ea02b2628296fc01298faf17f0fc428ddbb2a70a157edba2a6`.
+
+No recording passes both timing gates. Nine fail p99; silence passes p99 but
+fails the maximum. Worst ON p99 is 196470 ns against 166666 ns, maximum is
+652129 ns against 333333 ns, and ON has six deadline overruns. This run is
+rejected for wider native corpus testing. Differences from earlier cloud
+runs do not isolate the switch's cost or establish a timing regression.
+
+Run `cue-empty-reset-cost-20261104T1406Z` reuses this binary and solo audio
+in one container, changing only the reset switch in OFF/ON/ON/OFF order.
+All four outputs remain exact with zero processing allocations. The first
+pair uses 1500 to 1490 ms of total child user-plus-system CPU, saving 10 ms
+or 0.6667%; the second uses 1590 to 1500 ms, saving 90 ms or 5.6604%.
+Only one of the two pairs meets the predeclared minimum of both 5% and
+50 ms. The saving is not repeatable, so this optimization is rejected and
+its diagnostic switch remains disabled.
+
+Total child CPU includes process startup, scoring and the timed replay pass;
+it does not measure callback CPU in isolation. Its clock resolution is not
+measured. These results do not establish the source of timing spikes.
+The next implementation route is to separate cue transform and peak work
+across blocks while preserving the fixed output schedule. Require exact
+outputs, zero processing allocations, p99 at most 166666 ns, maximum at most
+333333 ns and zero deadline overruns before wider native corpus checks.
+Preserve the default detector behavior until output, corpus and lifecycle
+gates pass.
 The 170.7 ms measurement window remains; 2.666667 ms is only the added
 availability delay. Earlier undelayed corpus checks do not cover this native
 build. Host timing, MIDI lifecycle and routing, remaining corpus coverage,

@@ -7571,6 +7571,11 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           !carry_collecting_physical_group) {
         if (decision_counter_ - state.last_decision_tick > maximum_gap) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+          // A zero count denotes an already-cleared history. Keep this cost
+          // experiment offline until replay and timing gates are satisfied.
+          if (diagnostic_skip_empty_fine_reset_enabled_ && state.count == 0U) {
+            continue;
+          }
           record_fine_history_reset(candidate,
                                    FineHistoryResetReason::unselected_gap);
 #endif

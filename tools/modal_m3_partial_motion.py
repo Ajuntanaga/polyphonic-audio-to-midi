@@ -2283,7 +2283,8 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str, delay: int = 1024)
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis: bool = False):
+def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis: bool = False,
+                              skip_empty_fine_reset: bool = False):
     """Compare the integrated native cue with the accepted delayed replay."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -2319,6 +2320,7 @@ def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis
         state='running', final=False,
         experiment='native_cue_timing_diagnosis' if timing_diagnosis else 'native_cue_replay',
         stage='build native cue replay integration',
+        diagnostic_skip_empty_fine_reset=skip_empty_fine_reset,
         started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
         source_report_sha256=sha256(source / 'report.json'),
         delayed_report_sha256=sha256(delayed / 'report.json'),
@@ -2354,6 +2356,8 @@ def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis
                 '--block', str(block), '--label-details']
         if native:
             args += ['--diagnostic-native-partial-cues', '--diagnostic-cue-free-lane-reassignment']
+        if skip_empty_fine_reset:
+            args += ['--diagnostic-skip-empty-fine-reset']
         timing_path = out / f'{name}-{mode}-timing.json'
         if timing:
             args += ['--diagnostic-core-timing', str(timing_path)]
@@ -2418,6 +2422,7 @@ def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis
                 ('cue-free-lane', 'm3_detector_tests', 'native_detector_cue_free_lane'),
                 ('fundamental-admission', 'm3_detector_tests', 'native_detector_fundamental_admission'),
                 ('harmonic-admission', 'm3_detector_tests', 'native_detector_calibrated_harmonic_admission'),
+                ('fine-history-reset', 'm3_detector_tests', 'native_detector_fine_history_reset'),
                 ('offline', 'm3_motion_tests', 'offline_')):
             log_path = out / (name + '-tests.log')
             with log_path.open('w') as log:
@@ -2511,6 +2516,116 @@ def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=900, max_containers=1)
+def capture_empty_reset_cost(run_id: str, native_source: str):
+    """Compare one reset switch with the same saved binary in ABBA order."""
+    import resource
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_admission_gate import read_target_detail
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, native_source)):
+        raise ValueError('invalid reset cost run identifier')
+    source = MOUNT / 'results' / native_source
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final') or
+            previous.get('experiment') != 'native_cue_replay' or
+            not previous.get('native_replay_parity_pass') or
+            not previous.get('native_processing_allocation_pass') or
+            previous.get('diagnostic_skip_empty_fine_reset') is not True):
+        raise ValueError('source must have passed empty-reset output and allocation checks')
+    input_run = previous['source_run']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', input_run):
+        raise ValueError('invalid input source identifier')
+    inputs = MOUNT / 'results' / input_run
+    original = json.loads((inputs / 'report.json').read_text())
+    binary, calibration = source / 'm3_replay', MOUNT / 'corpus/calibration.m3cb'
+    identities = ((source / 'm3_replay', previous['binary_sha256']),
+                  (inputs / 'report.json', previous['source_report_sha256']),
+                  (inputs / 'solo.wav', original['datasets']['solo']['audio_sha256']),
+                  (inputs / 'solo.tsv', original['datasets']['solo']['labels_sha256']),
+                  (calibration, previous['calibration_sha256']))
+    if any(sha256(path) != digest for path, digest in identities):
+        raise ValueError('saved reset cost input changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=native_source, experiment='empty_reset_cost',
+        state='running', final=False, stage='paired saved-binary reset cost',
+        started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
+        binary_sha256=previous['binary_sha256'], source_report_sha256=sha256(source / 'report.json'),
+        saved_input_hashes={path.name: digest for path, digest in identities},
+        settings=previous['settings'], trials=[], pairs=[],
+        cost_gate=dict(minimum_cpu_reduction_percent=5, required_pairs=2,
+                       minimum_cpu_reduction_ns=50000000),
+        accepted_for_native_corpus_screen=False,
+        limits=['One solo recording; same binary, native cues enabled, only the reset switch changes.',
+                'ABBA order pairs baseline 0 with candidate 1, and baseline 3 with candidate 2.',
+                'Child user plus system CPU includes startup, scoring and the timed replay pass.',
+                'Require at least 5% and 50 ms less total child CPU in each pair; this is a practical cost gate, not a clock precision guarantee.',
+                'Per-block CPU is not used; wall timing is recorded separately. Child CPU clock resolution is not measured.',
+                'A cost reduction does not replace the rejected full timing or corpus gates.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        for index, skip in enumerate((False, True, True, False)):
+            timing_path, output = out / f'{index}-timing.json', out / f'{index}.tsv'
+            args = [str(binary), '--wav', str(inputs / 'solo.wav'),
+                    '--labels', str(inputs / 'solo.tsv'), '--calibration', str(calibration),
+                    '--block', '32', '--label-details', '--diagnostic-native-partial-cues',
+                    '--diagnostic-cue-free-lane-reassignment',
+                    '--diagnostic-core-timing', str(timing_path)]
+            if skip:
+                args += ['--diagnostic-skip-empty-fine-reset']
+            for key, value in previous['settings'].items():
+                args += ['--' + key, str(value)]
+            report['stage'] = f'paired solo trial {index + 1}/4, reset skip {skip}'
+            save()
+            before = resource.getrusage(resource.RUSAGE_CHILDREN)
+            with output.open('w') as stdout, (out / f'{index}.log').open('w') as log:
+                subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=150)
+            after = resource.getrusage(resource.RUSAGE_CHILDREN)
+            child_cpu_ns = round(1e9 * (after.ru_utime + after.ru_stime - before.ru_utime - before.ru_stime))
+            measured = json.loads(timing_path.read_text())
+            result = dict(output=aggregate(output), target=read_target_detail(output))
+            expected = previous['datasets']['solo']['replays']['on']
+            if (result != expected or measured.get('schema') != 'm3_replay_core_timing_v1' or
+                    measured['sample_rate'] != 96000 or measured['block_samples'] != 32 or
+                    not measured['fingerprint_identical'] or
+                    measured['fingerprint'] != result['output']['fingerprint']):
+                raise ValueError('paired reset trial changed reference outputs')
+            allocation_pass = measured['allocation_guard'] and all(measured[key] == 0 for key in
+                ('cpp_allocations', 'cpp_frees', 'c_allocations', 'c_frees'))
+            if not allocation_pass or child_cpu_ns <= 0:
+                raise ValueError('invalid allocation or aggregate CPU measurement')
+            report['trials'].append(dict(index=index, skip_empty_fine_reset=skip,
+                output_identical=True, allocation_pass=allocation_pass,
+                total_child_cpu_ns=child_cpu_ns, timing=measured))
+            save()
+        for baseline_index, candidate_index in ((0, 1), (3, 2)):
+            baseline, candidate = (report['trials'][i]['total_child_cpu_ns']
+                                   for i in (baseline_index, candidate_index))
+            reduction = baseline - candidate
+            percent = 100 * reduction / baseline
+            report['pairs'].append(dict(baseline_index=baseline_index, candidate_index=candidate_index,
+                baseline_cpu_ns=baseline, candidate_cpu_ns=candidate,
+                reduction_ns=reduction, reduction_percent=percent,
+                cost_pass=reduction >= 50000000 and percent >= 5))
+        report.update(state='completed', final=True, stage='paired empty-reset cost comparison complete',
+            completed_at=datetime.now(timezone.utc).isoformat(),
+            repeatable_cost_reduction=all(pair['cost_pass'] for pair in report['pairs']))
+        report['verdict'] = ('retain offline switch for further timing work' if report['repeatable_cost_reduction']
+                             else 'reject empty-reset switch as an unproven cost improvement')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
@@ -2524,9 +2639,12 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          native_cue_worker_delay_source: str = '', native_cue_worker_timer_diagnostic: bool = False,
          native_cue_worker_wait_diagnostic: bool = False, native_cue_worker_hybrid_diagnostic: bool = False,
          native_cue_cooperative: bool = False, native_cue_solo: bool = False,
-         native_replay_source: str = '', native_replay_timing_diagnosis: bool = False):
+         native_replay_source: str = '', native_replay_timing_diagnosis: bool = False,
+         native_replay_skip_empty_fine_reset: bool = False, empty_reset_cost_source: str = ''):
     if native_replay_timing_diagnosis and not native_replay_source:
         raise ValueError('thread CPU diagnosis requires a native replay source')
+    if native_replay_skip_empty_fine_reset and not native_replay_source:
+        raise ValueError('empty fine history reset experiment requires a native replay source')
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
     if native_cue_worker_delay_source and not (native_cue_source and native_cue_pffft):
@@ -2552,9 +2670,12 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)
-            + bool(native_cue_source) + bool(delayed_cue_source) + bool(native_replay_source)) > 1:
+            + bool(native_cue_source) + bool(delayed_cue_source) + bool(native_replay_source)
+            + bool(empty_reset_cost_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_native_cue_replay.remote(run_id, native_replay_source, native_replay_timing_diagnosis) if native_replay_source else
+    result = (capture_empty_reset_cost.remote(run_id, empty_reset_cost_source) if empty_reset_cost_source else
+              capture_native_cue_replay.remote(run_id, native_replay_source,
+                  native_replay_timing_diagnosis, native_replay_skip_empty_fine_reset) if native_replay_source else
               capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
               capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft,
                   native_cue_worker_delay_source, native_cue_worker_timer_diagnostic,

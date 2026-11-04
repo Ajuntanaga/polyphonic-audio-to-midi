@@ -2785,9 +2785,13 @@ bool run_detector_replay(const WaveData& wave,
                          FrozenNoteCues* diagnostic_odd_partial_cues,
                          bool diagnostic_cue_free_lane_reassignment,
                          ReplayCoreTiming* core_timing,
-                         bool diagnostic_thread_cpu) {
+                         bool diagnostic_thread_cpu,
+                         bool diagnostic_skip_empty_fine_reset) {
   output = {};
   error = ReplayError::invalid_config;
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_skip_empty_fine_reset) return false;
+#endif
   if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
     return false;
   if (core_timing != nullptr) {
@@ -3020,6 +3024,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_fine_beat_pruning);
   detector.set_collecting_fine_history_carry_for_diagnostics(
       diagnostic_collecting_fine_history_carry);
+  detector.set_skip_empty_fine_reset_for_diagnostics(
+      diagnostic_skip_empty_fine_reset);
   detector.set_calibrated_collision_revalidation_for_diagnostics(
       diagnostic_calibrated_collision_revalidation);
   detector.set_polyphonic_posterior_assignment_for_diagnostics(

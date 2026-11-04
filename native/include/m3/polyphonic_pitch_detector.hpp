@@ -491,6 +491,9 @@ class PolyphonicPitchDetector final {
       bool enabled) noexcept {
     diagnostic_collecting_fine_history_carry_enabled_ = enabled;
   }
+  void set_skip_empty_fine_reset_for_diagnostics(bool enabled) noexcept {
+    diagnostic_skip_empty_fine_reset_enabled_ = enabled;
+  }
   [[nodiscard]] double fine_frequency_minimum_pairwise_beat_coherence(
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] double fine_frequency_pairwise_beat_coherence(
@@ -1578,6 +1581,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_fine_mask_pruning_enabled_{};
   bool diagnostic_fine_beat_pruning_enabled_{};
   bool diagnostic_collecting_fine_history_carry_enabled_{};
+  bool diagnostic_skip_empty_fine_reset_enabled_{};
 #endif
 
 #if defined(M3_TESTING)

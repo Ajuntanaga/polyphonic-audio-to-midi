@@ -205,6 +205,7 @@ void usage(const char* program) {
       "[--diagnostic-native-partial-cues] "
       "[--diagnostic-core-timing FILE] "
       "[--diagnostic-thread-cpu] "
+      "[--diagnostic-skip-empty-fine-reset] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -293,6 +294,7 @@ int main(int argc, char** argv) {
   bool diagnostic_native_partial_cues = false;
   const char* diagnostic_core_timing_path = nullptr;
   bool diagnostic_thread_cpu = false;
+  bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -615,6 +617,8 @@ int main(int argc, char** argv) {
       diagnostic_core_timing_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-thread-cpu") == 0) {
       diagnostic_thread_cpu = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-skip-empty-fine-reset") == 0) {
+      diagnostic_skip_empty_fine_reset = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -1128,7 +1132,7 @@ int main(int argc, char** argv) {
               &diagnostic_odd_partial_cues : nullptr,
           diagnostic_cue_free_lane_reassignment,
           diagnostic_core_timing_path != nullptr ? &core_timing : nullptr,
-          diagnostic_thread_cpu)) {
+          diagnostic_thread_cpu, diagnostic_skip_empty_fine_reset)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

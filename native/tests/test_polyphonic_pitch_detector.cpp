@@ -1575,6 +1575,12 @@ struct PolyphonicPitchDetectorTestAccess final {
       fine.count = 2U;
       fine.write_index = 2U;
       fine.last_decision_tick = last_tick;
+      fine.real.front() = 0.25;
+      fine.real.back() = 0.5;
+      fine.imaginary.front() = -0.25;
+      fine.imaginary.back() = -0.5;
+      fine.decision_ticks.front() = last_tick - 1U;
+      fine.decision_ticks.back() = last_tick;
     };
     const auto snapshot = [&] {
       return detector.candidate_tracking_diagnostics(
@@ -1602,6 +1608,14 @@ struct PolyphonicPitchDetectorTestAccess final {
     // Empty histories must not overwrite the last actual loss of evidence.
     detector.decision_counter_ = 1002U;
     update();
+    M3_EXPECT_EQ(fine.count, 0U);
+    M3_EXPECT_EQ(fine.write_index, 0U);
+    M3_EXPECT_EQ(fine.last_decision_tick, 0U);
+    for (std::size_t index = 0U; index < fine.real.size(); ++index) {
+      M3_EXPECT_EQ(fine.real[index], 0.0);
+      M3_EXPECT_EQ(fine.imaginary[index], 0.0);
+      M3_EXPECT_EQ(fine.decision_ticks[index], 0U);
+    }
     M3_EXPECT_EQ(snapshot().fine_reset.serial, 1U);
     M3_EXPECT_EQ(snapshot().fine_reset.decision_tick, 1000U);
     seed(1002U);
@@ -5601,6 +5615,20 @@ M3_TEST(native_detector_fine_history_reset_trace_distinguishes_causes) {
   config.highest_note = 34U;
   m3::PolyphonicPitchDetector detector;
   M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  m3::PolyphonicPitchDetectorTestAccess::verify_fine_history_reset_provenance(
+      detector);
+#endif
+}
+
+M3_TEST(native_detector_fine_history_reset_skip_preserves_losses_and_collection) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 34U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  detector.set_skip_empty_fine_reset_for_diagnostics(true);
   m3::PolyphonicPitchDetectorTestAccess::verify_fine_history_reset_provenance(
       detector);
 #endif
