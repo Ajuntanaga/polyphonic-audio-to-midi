@@ -919,11 +919,13 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 79U);
-      if (columns.size() != 79U) return;
+      M3_EXPECT_EQ(columns.size(), 90U);
+      if (columns.size() != 90U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
+        M3_EXPECT_EQ(columns[79], "cue_evaluated");
+        M3_EXPECT_EQ(columns[89], "cue_cents_errors");
         continue;
       }
       if (columns[69] != "1") {
@@ -1319,8 +1321,15 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 79U);
-      if (columns.size() != 79U) return;
+      M3_EXPECT_EQ(columns.size(), 90U);
+      if (columns.size() != 90U) return;
+      for (std::size_t column = 79U; column < 88U; ++column)
+        M3_EXPECT_EQ(std::stod(columns[column]), 0.0);
+      for (std::size_t column = 88U; column < 90U; ++column) {
+        const auto values = fields(columns[column], ',');
+        M3_EXPECT_EQ(values.size(), 8U);
+        for (const auto& value : values) M3_EXPECT_EQ(std::stod(value), 0.0);
+      }
       M3_EXPECT_EQ(std::stoul(columns[69]), 0U);
       M3_EXPECT_EQ(std::stoul(columns[70]), 0U);
       for (std::size_t column = 74U; column < 77U; ++column)

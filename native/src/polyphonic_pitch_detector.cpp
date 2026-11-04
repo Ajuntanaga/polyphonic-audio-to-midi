@@ -6585,9 +6585,25 @@ void PolyphonicPitchDetector::assign_m3_strings(
       }
       const auto primary = static_cast<std::uint8_t>(1U <<
           ((best.strings >> (voice * 3U)) & 0x07U));
+      // Keep the contradiction veto available across the narrower pitch-bin
+      // boundary. Output projection already requires a settled phase estimate
+      // within 60 cents; unsettled tuning still permits an early cue correction.
       proposals[voice] = bounded_cue_free_lane_reassignment(
-          cue, primary, playable, calibrated, similarities, phase.valid,
+          cue, primary, playable, calibrated, similarities, phase.output_projection_valid,
           cents_errors, occupied, protected_group);
+      if (assignment_diagnostics_enabled_) {
+        auto& diagnostic = assignment_diagnostics_[candidate];
+        diagnostic.cue_evaluated = true;
+        diagnostic.cue_protected_group = protected_group;
+        diagnostic.cue_occupied_mask = occupied;
+        diagnostic.cue_calibrated_mask = calibrated;
+        diagnostic.cue_primary_mask = primary;
+        diagnostic.cue_proposal_mask = proposals[voice];
+        diagnostic.cue_tuning_valid = phase.output_projection_valid;
+        diagnostic.cue_assignment_cents = assignment_cents;
+        diagnostic.cue_similarities = similarities;
+        diagnostic.cue_cents_errors = cents_errors;
+      }
     }
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       const auto proposal = proposals[voice];
@@ -6597,6 +6613,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
         if (other != voice && proposals[other] == proposal) unique = false;
       }
       if (!unique) continue;
+      if (assignment_diagnostics_enabled_)
+        assignment_diagnostics_[candidates[voice]].cue_applied = true;
       for (std::size_t string = 0U; string < kMaxVoices; ++string) {
         if (proposal != (1U << string)) continue;
         const auto shift = static_cast<std::uint32_t>(voice * 3U);

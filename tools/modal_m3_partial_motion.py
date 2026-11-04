@@ -989,6 +989,7 @@ def capture_frozen_partial_cues(run_id: str, source_run: str, cue_free_lane: boo
         cue_free_lane_reassignment=cue_free_lane,
         cue_pitch_admission=not cue_free_lane,
         cue_free_lane_tuning_guard=(dict(mode='contradiction_veto', valid_phase_required=False,
+            tuning_availability='settled_output_projection', maximum_absolute_cents=60.0,
             minimum_incumbent_advantage_cents=0.75) if cue_free_lane else None),
         datasets={}, tests={}, limits=[
             'Separate plucks from the same session; mixtures and frames are correlated.',
@@ -1233,7 +1234,7 @@ def capture_frozen_cue_selection(run_id: str, source_run: str):
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=7200, max_containers=1)
 def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str,
-                             cue_checkpoint_run: str = ''):
+                             cue_checkpoint_run: str = '', reuse_cue_features: bool = False):
     """Screen one untouched corpus with saved binaries and label-blind cues."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -1246,6 +1247,7 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str,
                 'physical-four', 'synthetic-four')
     if (any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run))
             or dataset not in datasets
+            or (reuse_cue_features and not cue_checkpoint_run)
             or (cue_checkpoint_run and not re.fullmatch(r'[a-zA-Z0-9_-]+', cue_checkpoint_run))):
         raise ValueError('invalid corpus or run identifier')
     source = MOUNT / 'results' / source_run
@@ -1317,9 +1319,11 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str,
             checkpoint_report = checkpoint / 'report.json'
             saved = json.loads(checkpoint_report.read_text())
             saved_cues = checkpoint / (dataset + '-cues.tsv')
-            cue_fields = reuse_frozen_cue_checkpoint(saved, report, cue_sha256=sha256(saved_cues))
+            cue_fields = reuse_frozen_cue_checkpoint(saved, report, cue_sha256=sha256(saved_cues),
+                                                     allow_native_change=reuse_cue_features)
             shutil.copyfile(saved_cues, cue_path)
             report.update(cue_fields, cue_checkpoint_run=cue_checkpoint_run,
+                          cue_features_reused_across_native_versions=reuse_cue_features,
                           cue_checkpoint_report_sha256=sha256(checkpoint_report))
         else:
             cue_counts = {str(note): 0 for note in report['cue_notes']}
@@ -1562,6 +1566,135 @@ def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int,
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_cue_decisions(run_id: str, source_run: str):
+    """Record exact reassignment inputs without changing the saved ON output."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.frozen_cue_corpus_gate import read_replay
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
+        raise ValueError('invalid decision trace source')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final')
+            or previous.get('dataset') != 'constructed' or previous.get('verdict') != 'rejected'):
+        raise ValueError('expected a completed rejected constructed screen')
+    small_run = previous['source_run']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', small_run):
+        raise ValueError('invalid saved small-screen source')
+    small = MOUNT / 'results' / small_run
+    small_report = json.loads((small / 'report.json').read_text())
+    if small_report.get('state') != 'completed' or not small_report.get('final'):
+        raise ValueError('small screen is incomplete')
+    nearby = small_report['datasets']['nearby_0dB']
+    corpus = MOUNT / 'corpus'
+    calibration = corpus / 'calibration.m3cb'
+    cases = {
+        'nearby_0dB': dict(wav=small / 'nearby_0dB.wav', labels=small / 'nearby_0dB.tsv',
+            cues=small / 'nearby_0dB-cues.tsv', expected=read_replay(small / 'nearby_0dB-on.tsv'),
+            hashes=(nearby['audio_sha256'], nearby['labels_sha256'], nearby['cue_sha256']),
+            target_sample=44799, target_note=36),
+        'constructed': dict(wav=corpus / 'constructed.wav', labels=corpus / 'constructed.tsv',
+            cues=source / 'constructed-cues.tsv', expected=previous['replays']['on'],
+            hashes=(previous['wav_sha256'], previous['tsv_sha256'], previous['cue_sha256']),
+            target_sample=4751551, target_note=49)}
+    if sha256(calibration) != previous['calibration_sha256']:
+        raise ValueError('saved calibration changed')
+    for case in cases.values():
+        if any(sha256(case[key]) != digest for key, digest in
+               zip(('wav', 'labels', 'cues'), case['hashes'])):
+            raise ValueError('saved audio, labels or cues changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, small_source_run=small_run,
+        state='running', final=False, stage='build exact decision instrumentation',
+        installed_changed=False, started_at=datetime.now(timezone.utc).isoformat(),
+        settings=previous['settings'], source_report_sha256=sha256(source / 'report.json'),
+        small_report_sha256=sha256(small / 'report.json'),
+        calibration_sha256=previous['calibration_sha256'], tests={}, datasets={},
+        limits=['Offline instrumentation only; the reassignment rule is unchanged.',
+                'Every nonzero cue proposal is recorded, plus regular sampled context.',
+                'Known good and harmful sample positions select report rows, not detector inputs.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        directory = build(out, detector_tests=True)
+        binary = out / 'm3_replay'
+        shutil.copy2(directory / 'm3_replay', binary)
+        report['binary_sha256'] = sha256(binary)
+        report['stage'] = 'native cue and offline trace tests'
+        save()
+        for name, executable, test_filter in (
+                ('cue-free-lane', 'm3_detector_tests', 'native_detector_cue_free_lane'),
+                ('offline', 'm3_motion_tests', 'offline_')):
+            log_path = out / (name + '-tests.log')
+            with log_path.open('w') as log:
+                subprocess.run([str(directory / executable)], stdout=log, stderr=subprocess.STDOUT,
+                    env=dict(os.environ, M3_TEST_FILTER=test_filter), check=True, timeout=240)
+            counts = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', log_path.read_text())
+            if len(counts) != 1 or int(counts[0][0]) == 0 or int(counts[0][1]):
+                raise ValueError('missing or failed native test accounting: ' + name)
+            report['tests'][name] = dict(tests=int(counts[0][0]), failures=int(counts[0][1]))
+        for name, case in cases.items():
+            report['stage'] = name + ': replay unchanged ON policy with decision inputs'
+            save()
+            trace, replay, log_path = (out / (name + suffix) for suffix in
+                                       ('-assignment.tsv', '-on.tsv', '-on.log'))
+            args = [str(binary), '--wav', str(case['wav']), '--labels', str(case['labels']),
+                    '--calibration', str(calibration), '--block', '512', '--label-details',
+                    '--assignment-trace', str(trace), '--diagnostic-odd-partial-cues', str(case['cues']),
+                    '--diagnostic-cue-free-lane-reassignment']
+            for key, value in previous['settings'].items():
+                args += ['--' + key, str(value)]
+            with replay.open('w') as stdout, log_path.open('w') as log:
+                subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=600)
+            measured = read_replay(replay)
+            if measured != case['expected']:
+                raise ValueError(name + ': instrumentation changed output or per-label counts')
+            counts = re.findall(r'assignment_trace rows=(\d+) cap=(\d+) truncated=(\d+) sampled_frames=(\d+) decimation=(\d+)',
+                                log_path.read_text())
+            if len(counts) != 1 or int(counts[0][2]) or int(counts[0][0]) > int(counts[0][1]):
+                raise ValueError(name + ': incomplete assignment trace')
+            proposals, target, rows = [], None, 0
+            with trace.open() as stream:
+                for row in csv.DictReader(stream, delimiter='\t'):
+                    rows += 1
+                    if int(row['cue_proposal_mask']):
+                        proposals.append(row)
+                    if int(row['sample']) == case['target_sample'] and int(row['note']) == case['target_note']:
+                        target = row
+            if rows != int(counts[0][0]) or target is None or not proposals:
+                raise ValueError(name + ': missing decision or inconsistent trace row count')
+            proposal_path = out / (name + '-proposals.json')
+            proposal_path.write_text(json.dumps(proposals, indent=2, allow_nan=False) + '\n')
+            compressed = out / (trace.name + '.gz')
+            raw_hash, raw_bytes = sha256(trace), trace.stat().st_size
+            with trace.open('rb') as src, gzip.open(compressed, 'wb', compresslevel=1) as dst:
+                shutil.copyfileobj(src, dst, length=1024 * 1024)
+            trace.unlink()
+            report['datasets'][name] = dict(output=measured['output'], output_identical=True,
+                all_labels_identical=True, trace_counts=list(map(int, counts[0])),
+                proposal_count=len(proposals), applied_count=sum(int(row['cue_applied']) for row in proposals),
+                first_proposal=proposals[0], target_decision=target,
+                proposal_file=proposal_path.name, proposal_sha256=sha256(proposal_path),
+                trace_file=compressed.name, trace_sha256=sha256(compressed),
+                raw_trace_sha256=raw_hash, raw_trace_bytes=raw_bytes, command=args)
+            save()
+        report.update(state='completed', final=True, stage='exact cue decisions captured; output unchanged',
+                      completed_at=datetime.now(timezone.utc).isoformat())
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        report['log_tails'] = {path.name: path.read_text()[-3000:] for path in out.glob('*.log')}
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
@@ -1569,20 +1702,25 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          cue_free_lane: bool = False, cue_corpus_source: str = '',
          cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
          cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
-         cue_trace_checkpoint_run: str = ''):
+         cue_trace_checkpoint_run: str = '', cue_decision_source: str = '',
+         reuse_cue_features: bool = False):
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if cue_checkpoint_run and not cue_corpus_source:
         raise ValueError('cue checkpoint requires a corpus screen')
+    if reuse_cue_features and not (cue_checkpoint_run and cue_corpus_source):
+        raise ValueError('feature reuse requires a corpus screen and saved cue checkpoint')
     if cue_trace_checkpoint_run and not cue_corpus_trace_source:
         raise ValueError('trace checkpoint requires a corpus failure diagnosis')
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
-            + bool(cue_corpus_source) + bool(cue_corpus_trace_source)) > 1:
+            + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
+    result = (capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
+              capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else
-              capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset, cue_checkpoint_run) if cue_corpus_source else
+              capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset,
+              cue_checkpoint_run, reuse_cue_features) if cue_corpus_source else
               capture_frozen_cue_selection.remote(run_id, cue_selection_source) if cue_selection_source else
               capture_frozen_partial_cues.remote(run_id, cue_source, cue_free_lane) if cue_source else
               capture_controlled_admission.remote(run_id, admission_source) if admission_source else

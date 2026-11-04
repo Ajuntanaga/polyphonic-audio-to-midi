@@ -1435,3 +1435,41 @@ Any revised guard must preserve at least 259074/1614601 matches, every label,
 and wrong-note/wrong-string/extra-gap ceilings of 167722/103754/23176, with
 exact OFF equality and ON buffer parity. Isolated strings follow only after
 that gate passes. This remains an offline experiment.
+
+## The harmful move loses a settled tuning veto at the pitch-bin boundary
+
+`cue-decision-inputs-20261104T0806Z` completed at 08:10:11 UTC on
+2026-11-04. Added diagnostics record the inputs used by the string correction,
+its proposed destination and whether it was applied. Every proposed move is
+recorded, including those between regularly sampled trace rows. The helpful
+nearby recording and harmful constructed recording reproduce every saved label
+score and output fingerprint. Eight cue tests and 48 offline tests pass.
+
+At sample 4751551, the harmful MIDI-49 move from string 2 to string 4 has
+descriptor similarity 0.98767. It passes the 0.97 threshold; the earlier
+snapshot did not expose a bypass. Its phase estimate has settled after
+2280 updates, but −51.6409 cents falls outside the narrow ±50-cent pitch bin.
+That disables the tuning veto even though the incumbent has 32.2070 cents
+less tuning error. The same estimate remains valid under the existing
+±60-cent output-projection range. By contrast, the helpful nearby MIDI-36
+move at sample 44799 has only 181 updates and remains unsettled.
+
+The candidate uses output-projection validity for the existing contradiction
+veto: settled tuning can reject a move across that narrow bin boundary, while
+unsettled tuning still permits an otherwise qualified early correction. The
+0.75-cent threshold, tuning calculation, pitch admission and other assignment
+guards are unchanged. `cue-tuning-range-20261104T0819Z` completed at 08:21:54
+UTC and passed the small screen: nearby matches remain 815→835/3450, with
+wrong strings reduced 1548→1528 and no added wrong notes or gap outputs.
+All ten OFF controls match the baseline, all ten ON outputs agree across
+blocks 32/512/1024, and all 64 focused native tests pass. The constructed
+corpus is now running as `cue-tuning-range-constructed-20261104T0824Z`.
+Installed output is unchanged; corpus acceptance is still pending.
+
+Corpus screening can now explicitly reuse completed cue features across native
+versions. It requires identical audio, annotations, calibration, settings,
+feature source and rules, sample clock, cue hash and complete extraction. The
+new binary reruns every output and label score; old replays are never reused.
+Thirteen focused Python tests pass, including refusal of changed inputs,
+changed extraction code and incomplete features. Normal interrupted-run
+recovery still requires the original native binary.

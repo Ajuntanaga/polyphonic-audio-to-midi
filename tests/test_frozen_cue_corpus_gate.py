@@ -65,6 +65,34 @@ class FrozenCueCorpusGateTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
 
+    def test_explicit_feature_reuse_can_cross_native_versions_but_never_reuse_scores(self):
+        saved, expected = self.cue_checkpoint(), self.cue_checkpoint()
+        expected.update(source_run='new-small-screen', source_report_sha256='a' * 64,
+                        binary_sha256='b' * 64)
+        with self.assertRaises(ValueError):
+            reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64)
+        reused = reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64,
+                                             allow_native_change=True)
+        self.assertEqual(reused['cue_sha256'], saved['cue_sha256'])
+        self.assertNotIn('replays', reused)
+        self.assertNotIn('binary_sha256', reused)
+
+    def test_feature_reuse_preserves_audio_rules_clock_and_completeness_checks(self):
+        expected = self.cue_checkpoint()
+        for key in ('wav_sha256', 'tsv_sha256', 'settings', 'config', 'frozen_screen',
+                    'cue_notes', 'sample_rate', 'sample_count', 'feature_samples_processed',
+                    'cue_sha256', 'cue_intervals_by_note'):
+            saved = deepcopy(expected)
+            saved[key] = None
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64,
+                                             allow_native_change=True)
+        saved = deepcopy(expected)
+        saved['analysis_source_sha256']['independent_partial_evidence'] = 'a' * 64
+        with self.assertRaisesRegex(ValueError, 'calculation changed'):
+            reuse_frozen_cue_checkpoint(saved, expected, cue_sha256='9' * 64,
+                                         allow_native_change=True)
+
     def test_changed_or_unhashed_cue_file_is_rejected(self):
         expected = self.cue_checkpoint()
         with self.assertRaisesRegex(ValueError, 'file hash differs'):

@@ -14,14 +14,21 @@ LABEL_FIELDS = ('label_index', 'start_sample', 'end_sample', 'midi_note',
                 'string_mask', 'calibration_pass', 'labeled', 'matched')
 
 
-def reuse_frozen_cue_checkpoint(saved, expected, *, cue_sha256):
-    """Reuse completed cue extraction, never an interrupted replay result."""
+def reuse_frozen_cue_checkpoint(saved, expected, *, cue_sha256, allow_native_change=False):
+    """Reuse completed cue extraction, never a replay result.
+
+    Explicit feature reuse can cross native versions because cue extraction
+    depends on the recording and frozen feature rules, not the replay binary.
+    Normal interrupted-run recovery still requires the original native version.
+    """
     identities = ('source_run', 'dataset', 'settings', 'cue_free_lane_reassignment',
                   'cue_pitch_admission', 'config', 'frozen_screen', 'cue_notes',
                   'sample_rate', 'sample_count', 'source_report_sha256',
                   'corpus_manifest_sha256', 'baseline_binary_sha256', 'binary_sha256',
                   'calibration_sha256', 'wav_sha256', 'tsv_sha256')
     for key in identities:
+        if allow_native_change and key in ('source_run', 'source_report_sha256', 'binary_sha256'):
+            continue
         if key not in saved or key not in expected or saved[key] != expected[key]:
             raise ValueError('cue checkpoint differs: ' + key)
     if (saved.get('analysis_source_sha256', {}).get('independent_partial_evidence') !=

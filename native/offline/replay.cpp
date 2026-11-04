@@ -353,11 +353,15 @@ void write_string_assignment_frame(
     const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
     const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels) {
   const auto tick = detector.candidate_tracking_diagnostics(0U).decision_tick;
-  if (trace.failed || tick % trace.kTickDecimation != 0U) return;
-  ++trace.sampled_frames;
+  if (trace.failed) return;
+  const bool sampled = tick % trace.kTickDecimation == 0U;
+  if (sampled) ++trace.sampled_frames;
   for (std::uint16_t n = 0U; n < 128U; ++n) {
     const auto note = static_cast<std::uint8_t>(n);
     const auto a = detector.string_assignment_diagnostics(note);
+    // Keep bounded regular context and every cue proposal, including decisions
+    // between sampled ticks. sampled_frames still counts only regular ticks.
+    if (!sampled && a.cue_proposal_mask == 0U) continue;
     if (!a.observed && !a.calibrated_replacement && !a.fixed_context) continue;
     if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
     bool any_label = false, expected_note = false;
@@ -453,6 +457,18 @@ void write_string_assignment_frame(
     for (std::size_t string = 0U; string < kMaxVoices; ++string)
       std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
                    a.posterior_detuning_log_likelihood[string]);
+    for (const unsigned field : {unsigned(a.cue_evaluated),
+             unsigned(a.cue_protected_group), unsigned(a.cue_occupied_mask),
+             unsigned(a.cue_calibrated_mask), unsigned(a.cue_primary_mask),
+             unsigned(a.cue_proposal_mask), unsigned(a.cue_applied),
+             unsigned(a.cue_tuning_valid)}) std::fprintf(trace.stream, "\t%u", field);
+    std::fprintf(trace.stream, "\t%.17g", a.cue_assignment_cents);
+    for (const auto* values : {&a.cue_similarities, &a.cue_cents_errors}) {
+      std::fputc('\t', trace.stream);
+      for (std::size_t string = 0U; string < kMaxVoices; ++string)
+        std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
+                     (*values)[string]);
+    }
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -2666,7 +2682,10 @@ bool run_detector_replay(const WaveData& wave,
         "profile_pair_short\tprofile_pair_long\tfixed_context\tphase_shadow\t"
         "posterior_observation_available\tposterior_updated\tposterior_onset_strength\t"
         "posterior_log_likelihood\tposterior_prior\tposterior_probability\t"
-        "posterior_detuning_valid_mask\tposterior_detuning_log_likelihood\n") < 0;
+        "posterior_detuning_valid_mask\tposterior_detuning_log_likelihood\t"
+        "cue_evaluated\tcue_protected_group\tcue_occupied_mask\tcue_calibrated_mask\t"
+        "cue_primary_mask\tcue_proposal_mask\tcue_applied\tcue_tuning_valid\t"
+        "cue_assignment_cents\tcue_similarities\tcue_cents_errors\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {

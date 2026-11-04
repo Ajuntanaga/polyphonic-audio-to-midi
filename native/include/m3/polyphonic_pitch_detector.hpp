@@ -371,6 +371,19 @@ struct StringAssignmentDiagnostics final {
   // A valid comparison can contribute zero; keep availability separate.
   std::uint8_t posterior_detuning_valid_mask{};
   std::array<double, kMaxVoices> posterior_detuning_log_likelihood{};
+  // Exact inputs after the current phase update, at the optional cue decision.
+  // Admission snapshots precede that update and can use different energies.
+  bool cue_evaluated{};
+  bool cue_protected_group{};
+  std::uint8_t cue_occupied_mask{};
+  std::uint8_t cue_calibrated_mask{};
+  std::uint8_t cue_primary_mask{};
+  std::uint8_t cue_proposal_mask{};
+  bool cue_applied{};
+  bool cue_tuning_valid{};
+  double cue_assignment_cents{};
+  std::array<double, kMaxVoices> cue_similarities{};
+  std::array<double, kMaxVoices> cue_cents_errors{};
 };
 #endif
 
