@@ -64,9 +64,16 @@ def summarize_cues(candidate_rows, outcome_rows, intervals, *, note, start, end,
                 raise ValueError('target label identity mismatch')
             if label_index in match_ids:
                 matched.add(sample)
-            voice_match = any(v[1] == note and
-                              (string_mask == 0 or 0 <= v[2] < 8 and
-                               string_mask & (1 << v[2])) for v in voice_entries)
+            # Native snapshot_matches_label compares the complete rendered
+            # string set. A correct member plus an extra same-pitch string is
+            # not an exact match; an unconstrained label only needs the note.
+            note_voices = [v for v in voice_entries if v[1] == note]
+            rendered_mask = 0
+            for voice in note_voices:
+                if 0 <= voice[2] < 8:
+                    rendered_mask |= 1 << voice[2]
+            voice_match = (bool(note_voices) if string_mask == 0
+                           else rendered_mask == string_mask)
             if voice_match != (label_index in match_ids):
                 raise ValueError('native match and voice output mismatch')
         elif label_index in labels:
@@ -100,7 +107,7 @@ def summarize_cues(candidate_rows, outcome_rows, intervals, *, note, start, end,
             if sample in matched:
                 output_class = 'target_matched'
             elif any(v[1] == note for v in frame_voices):
-                output_class = 'target_note_wrong_string'
+                output_class = 'target_note_string_set_mismatch'
             elif any(v[0] == note for v in frame_voices):
                 output_class = 'target_detected_but_output_note_changed'
             else:

@@ -1397,7 +1397,41 @@ no partial replay result. Eleven focused Python tests pass, including refusal
 of incomplete extraction, changed inputs and a changed cue file; runner
 syntax and whitespace checks also pass. No native detector code changed.
 
-Require at least 259074/1614601 matches, no lost label, wrong-note/wrong-string/
-extra-gap counts no higher than 167722/103754/23176, exact OFF equality and ON
-buffer parity. Isolated strings follow only after that gate passes. Installed
-output is unchanged; this remains an offline experiment.
+The continuation completed at 07:33:40 UTC and is rejected. Matches fall
+259074→254400/1614601 (16.0457%→15.7562%; −4674 frames, −1.8041% relative).
+Wrong-note/wrong-string/extra-gap counts rise
+167722/103754/23176→170861/104719/24077; total false outputs rise
+294652→299657. Eighteen passages lose matches. OFF exactly reproduces the
+baseline and every label score. Further ON buffer and corpus checks stopped.
+The ordinary-corpus pass remains separate; installed output is unchanged.
+
+Diagnostic `cue-assignment-failure-20261104T0739Z` reproduced the saved OFF
+output, then failed in Python summarization. The native scorer requires the
+complete rendered string set to equal the annotation. The summary incorrectly
+accepted any matching member, including a correct string plus an extra
+same-pitch string. The correction follows native scoring without changing it.
+Eleven focused tests pass, including extra strings, incomplete groups and
+unconstrained labels; runner syntax and whitespace checks pass.
+
+Detached diagnostic `cue-assignment-failure-resume-20261104T0749Z`, app
+`ap-YoCHSm396HwqfBLUURdVXZ`, completed at 07:50:37 UTC. It reused the completed
+raw OFF traces after checking the saved inputs, target, window, binary and
+replay scores; only ON needed a new replay. Both outputs and every label score
+reproduce the saved rejection, with complete trace row counts.
+
+The saved-trace comparison, app `ap-zxkzowp2C7p0otV81VHrTe`, verified all four
+raw trace hashes. The first output difference and lost match occur at sample
+4751551: MIDI 49 moves from string 2 to string 4 after identical earlier
+output. Label 69 falls 1455→507/3448. Pitch selection and admission evidence
+are unchanged at the first loss. Report:
+`build/modal/cue-assignment-failure-resume-20261104T0749Z-first-assignment-difference.json`.
+
+The admission descriptor snapshot precedes the phase-tuning update, while
+assignment recomputes the descriptor afterward. The snapshot similarity of
+0.938 therefore does not establish that the move bypassed its 0.97 threshold.
+Capture the actual decision inputs before changing that guard.
+
+Any revised guard must preserve at least 259074/1614601 matches, every label,
+and wrong-note/wrong-string/extra-gap ceilings of 167722/103754/23176, with
+exact OFF equality and ON buffer parity. Isolated strings follow only after
+that gate passes. This remains an offline experiment.

@@ -1389,13 +1389,15 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str,
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int):
+def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int,
+                               trace_checkpoint_run: str = ''):
     """Trace one failed passage with the saved binary and full recording history."""
     import sys
     sys.path.insert(0, '/opt/m3')
     from tools.frozen_cue_corpus_gate import read_replay
     from tools.frozen_cue_diagnosis import summarize_cues
-    if (any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run))
+    if (any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in
+            (run_id, source_run, *([trace_checkpoint_run] if trace_checkpoint_run else [])))
             or label_index < 0):
         raise ValueError('invalid trace source or label')
     source = MOUNT / 'results' / source_run
@@ -1445,6 +1447,28 @@ def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int):
         limits=['Same saved binary, complete audio history and frozen cues; no build or policy change.',
                 'Assignment rows are sampled every 16 detector ticks; outcome rows cover every tick.',
                 'Annotations select the reported passage only, never detector evidence.'])
+    checkpoint = None
+    if trace_checkpoint_run:
+        checkpoint = MOUNT / 'results' / trace_checkpoint_run
+        saved = json.loads((checkpoint / 'report.json').read_text())
+        if (saved.get('state') != 'failed' or not saved.get('final')
+                or set(saved.get('replays', {})) != {'off'}
+                or saved['replays']['off'].get('output_identical') is not True
+                or saved['replays']['off'].get('traces')):
+            raise ValueError('trace checkpoint must contain only a completed raw OFF replay')
+        for key in ('source_run', 'dataset', 'settings', 'source_report_sha256',
+                    'binary_sha256', 'saved_input_hashes', 'target', 'window_start',
+                    'window_end', 'sample_count', 'sample_rate'):
+            if saved.get(key) != report[key]:
+                raise ValueError('trace checkpoint differs: ' + key)
+        for name in ('off.tsv', 'off.log', 'off-candidate.tsv',
+                     'off-outcome.tsv', 'off-assignment.tsv'):
+            if not (checkpoint / name).is_file() or not (checkpoint / name).stat().st_size:
+                raise ValueError('trace checkpoint missing: ' + name)
+        if read_replay(checkpoint / 'off.tsv') != previous['replays']['off']:
+            raise ValueError('trace checkpoint OFF output differs from source')
+        report['trace_checkpoint'] = dict(run_id=trace_checkpoint_run, reused_mode='off',
+            report_sha256=sha256(checkpoint / 'report.json'))
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -1471,13 +1495,20 @@ def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int):
                 args += ['--diagnostic-odd-partial-cues', str(cues),
                          '--diagnostic-cue-free-lane-reassignment']
             replay, log_path = out / (mode + '.tsv'), out / (mode + '.log')
-            with replay.open('w') as stdout, log_path.open('w') as log:
-                subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=600)
+            reused = mode == 'off' and checkpoint is not None
+            if reused:
+                paths = {kind: checkpoint / path.name for kind, path in paths.items()}
+                for name in (replay.name, log_path.name):
+                    shutil.copyfile(checkpoint / name, out / name)
+                args = saved['replays']['off']['command']
+            else:
+                with replay.open('w') as stdout, log_path.open('w') as log:
+                    subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=600)
             measured = read_replay(replay)
             if measured != previous['replays'][mode]:
                 raise ValueError(mode + ' diagnostics changed the saved corpus output')
             details = dict(output=measured['output'], target=targets[mode], output_identical=True,
-                           command=args, trace_counts={}, traces={})
+                           command=args, reused_trace=reused, trace_counts={}, traces={})
             report['replays'][mode] = details
             for kind in paths:
                 pattern = (r'assignment_trace rows=(\d+) cap=(\d+) truncated=(\d+) sampled_frames=(\d+) decimation=(\d+)'
@@ -1506,18 +1537,22 @@ def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int):
                         line = next(src)
                     dst.write(line)
                     sample_column = line.rstrip('\n').split('\t').index('sample')
-                    kept = 0
+                    kept = total_rows = 0
                     for line in src:
+                        total_rows += 1
                         sample = int(line.split('\t')[sample_column])
                         if window_start <= sample < window_end:
                             dst.write(line)
                             kept += 1
-                full = Path(str(path) + '.gz')
+                if total_rows != details['trace_counts'][kind][0]:
+                    raise ValueError('trace file row count differs: ' + kind)
+                full = out / (path.name + '.gz')
                 details['traces'][kind] = dict(raw_sha256=sha256(path), raw_bytes=path.stat().st_size,
                     window_file=window.name, window_rows=kept, window_sha256=sha256(window))
                 with path.open('rb') as src, gzip.open(full, 'wb', compresslevel=1) as dst:
                     shutil.copyfileobj(src, dst, length=1024 * 1024)
-                path.unlink()
+                if not reused:
+                    path.unlink()
             save()
         report.update(state='completed', final=True, stage='paired corpus failure traced',
                       completed_at=datetime.now(timezone.utc).isoformat())
@@ -1533,16 +1568,20 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          admission_source: str = '', cue_source: str = '', cue_selection_source: str = '',
          cue_free_lane: bool = False, cue_corpus_source: str = '',
          cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
-         cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = ''):
+         cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
+         cue_trace_checkpoint_run: str = ''):
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if cue_checkpoint_run and not cue_corpus_source:
         raise ValueError('cue checkpoint requires a corpus screen')
+    if cue_trace_checkpoint_run and not cue_corpus_trace_source:
+        raise ValueError('trace checkpoint requires a corpus failure diagnosis')
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source, cue_corpus_trace_label) if cue_corpus_trace_source else
+    result = (capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
+              cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else
               capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset, cue_checkpoint_run) if cue_corpus_source else
               capture_frozen_cue_selection.remote(run_id, cue_selection_source) if cue_selection_source else
               capture_frozen_partial_cues.remote(run_id, cue_source, cue_free_lane) if cue_source else

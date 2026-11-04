@@ -77,7 +77,7 @@ class FrozenCueDiagnosisTests(unittest.TestCase):
         o[18]['matched_labels'] = ''
         o[18]['voices'] = ''
         result = measure(c, o)['cue_on_unmatched']
-        self.assertEqual(result['output'], dict(target_note_wrong_string=1,
+        self.assertEqual(result['output'], dict(target_note_string_set_mismatch=1,
             target_detected_but_output_note_changed=1, no_target_voice_output=1))
         self.assertEqual(result['selection_detail']['selected']['output'], result['output'])
         self.assertEqual(result['selection_detail']['selected']['admission_prerequisite_combinations'],
@@ -90,6 +90,41 @@ class FrozenCueDiagnosisTests(unittest.TestCase):
         o[16]['voices'] = '36:36:1:2:12:1:0:2'
         with self.assertRaisesRegex(ValueError, 'native match and voice'):
             measure(c, o)
+
+    def test_same_pitch_extra_string_is_not_an_exact_match(self):
+        c, o = traces()
+        o[16]['voices'] += ',36:36:1:2:12:1:0:2'
+        o[16]['matched_labels'] = ''
+        result = measure(c, o)['cue_on']
+        self.assertEqual(result['target_matched'], 15)
+        self.assertEqual(result['output']['target_note_string_set_mismatch'], 1)
+        o[16]['matched_labels'] = '0'
+        with self.assertRaisesRegex(ValueError, 'native match and voice'):
+            measure(c, o)
+
+    def test_group_label_requires_all_and_only_its_strings(self):
+        c, o = traces()
+        for row in o:
+            row['labels'] = '0:36:3'
+            if row['voices']:
+                row['voices'] += ',36:36:1:0:12:1:0:2'
+        result = summarize_cues(c, o, (), note=36, start=0, end=4096,
+                                sample_count=4096, string_mask=3)
+        self.assertEqual(result['all_labeled']['target_matched'], 16)
+        o[16]['voices'] = o[16]['voices'].split(',')[0]
+        with self.assertRaisesRegex(ValueError, 'native match and voice'):
+            summarize_cues(c, o, (), note=36, start=0, end=4096,
+                           sample_count=4096, string_mask=3)
+
+    def test_unconstrained_label_accepts_a_note_without_a_string(self):
+        c, o = traces()
+        for row in o:
+            row['labels'] = '0:36:0'
+            if row['voices']:
+                row['voices'] = '36:36:255:0:12:1:0:0'
+        result = summarize_cues(c, o, (), note=36, start=0, end=4096,
+                                sample_count=4096, string_mask=0)
+        self.assertEqual(result['all_labeled']['target_matched'], 16)
 
 
 if __name__ == '__main__':
