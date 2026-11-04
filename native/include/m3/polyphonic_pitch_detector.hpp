@@ -572,6 +572,8 @@ class PolyphonicPitchDetector final {
     diagnostic_odd_partial_cue_mask_ = mask;
   }
   void set_cue_free_lane_reassignment_for_diagnostics(bool enabled) noexcept {
+    // Use frozen cues for string assignment only. Explicit fundamental admission
+    // remains a separate opt-in diagnostic.
     diagnostic_cue_free_lane_reassignment_ = enabled;
   }
   [[nodiscard]] static std::uint8_t bounded_cue_free_lane_reassignment(

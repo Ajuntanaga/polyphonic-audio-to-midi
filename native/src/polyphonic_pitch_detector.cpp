@@ -4732,8 +4732,13 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if ((diagnostic_fundamental_admission_ || diagnostic_odd_partial_cue_mask_[0U] != 0U ||
-       diagnostic_odd_partial_cue_mask_[1U] != 0U) && !narrow_profile) {
+  // String reassignment consumes cues only for already selected pitches. Letting
+  // those cues admit another pitch can change harmonic suppression and voice
+  // history before any string correction, confounding this separate trial.
+  const bool cue_pitch_admission = !diagnostic_cue_free_lane_reassignment_ &&
+      (diagnostic_odd_partial_cue_mask_[0U] != 0U ||
+       diagnostic_odd_partial_cue_mask_[1U] != 0U);
+  if ((diagnostic_fundamental_admission_ || cue_pitch_admission) && !narrow_profile) {
     // Trial only: a direct fundamental may be hidden by a neighbour's summed
     // harmonic score. Never lower the amplitude threshold, boost its rank, or
     // let an admission depend on another admission in this decision.

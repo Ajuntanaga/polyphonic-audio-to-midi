@@ -510,7 +510,7 @@ struct PolyphonicPitchDetectorTestAccess final {
   static bool fundamental_admission_probe(
       PolyphonicPitchDetector& detector, bool enabled,
       FundamentalAdmissionCase scenario = FundamentalAdmissionCase::masked,
-      double scale = 1.0, int cue_note = -1) noexcept {
+      double scale = 1.0, int cue_note = -1, bool cue_free_lane = false) noexcept {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.lowest_note = 32U;
@@ -520,6 +520,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     config.response = 75U;
     M3_EXPECT_TRUE(detector.configure(48000.0, config));
     detector.set_fundamental_admission_for_diagnostics(enabled);
+    detector.set_cue_free_lane_reassignment_for_diagnostics(cue_free_lane);
     std::array<std::uint64_t, 2U> cue_mask{};
     if (cue_note >= 0 && cue_note <= 127) {
       const auto note = static_cast<std::size_t>(cue_note);
@@ -8565,6 +8566,23 @@ M3_TEST(native_detector_fundamental_admission_cue_is_note_specific_and_keeps_gua
     M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, false, scenario, 1.0, 36));
   }
   M3_EXPECT_TRUE(Access::odd_partial_cues_clear_on_reset(detector));
+}
+
+M3_TEST(native_detector_cue_free_lane_keeps_pitch_admission_separate) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Case = Access::FundamentalAdmissionCase;
+  m3::PolyphonicPitchDetector detector;
+  for (const double scale : {0.0001, 0.01, 1.0, 100.0}) {
+    // A cue alone admits this masked direct peak. The assignment-only trial
+    // must preserve ordinary pitch selection, even with the same strong cue.
+    M3_EXPECT_TRUE(Access::fundamental_admission_probe(
+        detector, false, Case::masked, scale, 36, false));
+    M3_EXPECT_FALSE(Access::fundamental_admission_probe(
+        detector, false, Case::masked, scale, 36, true));
+    // A separately requested admission trial still works with reassignment on.
+    M3_EXPECT_TRUE(Access::fundamental_admission_probe(
+        detector, true, Case::masked, scale, 36, true));
+  }
 }
 
 M3_TEST(native_detector_calibrated_harmonic_admission_rejects_only_new_faint_partial) {

@@ -1342,3 +1342,42 @@ string mask 8, whose matches fall 902→871/1122. It reuses the saved binary,
 frozen cues and full recording history. The next implementation depends on
 locating the correction that causes this loss. Installed output is unchanged;
 the candidate remains rejected until all per-passage and safety gates pass.
+
+## Assignment-only cue trial
+
+The saved full-history traces change the diagnosis of the ordinary-corpus loss.
+The first outcome difference occurs at sample 3205247, before any string move:
+OFF emits candidate 52, while ON suppresses it as a harmonic shadow of 71.
+At the next decision, 52 returns with different phase history. Later, MIDI 54
+loses its active slot while five earlier voices remain. The target passage
+falls 902→871/1122 matches. The first divergence is pitch selection; the later
+slot loss does not establish that a string correction caused it.
+
+Both diagnostic replays reproduce their saved outputs and per-label scores.
+The full outcome traces were hash-verified and compared on Modal without a new
+replay. Evidence: `build/modal/cue-veto-failure-20261104T0609Z.json` and
+`build/modal/cue-veto-failure-20261104T0609Z-first-outcome-difference.json`.
+
+The free-lane experiment now uses frozen cues only for string assignment of
+already selected pitches. It disables cue-based pitch admission while retaining
+the separately requested fundamental-admission diagnostic. The regression test
+covers that separation at four common gain levels. The tuning contradiction,
+calibration, occupancy and unison guards remain in place. Reports record the
+pitch-admission policy explicitly, including propagation to corpus screens.
+
+`cue-assignment-only-20261104T0639Z`, app `ap-N7Iaje4GF6raT6EF3uj2Le`,
+completed at 06:42:02 UTC on 2026-11-04. Nearby target matches remain
+815→835/3450 (23.62%→24.20%; +20 frames, +2.45% relative), with wrong-string
+outputs falling 1548→1528. Wrong notes remain 3178 and extra outputs in
+unlabeled gaps remain 668. Solo gains 17 matches and quiet octave gains nine;
+the other seven cases are bit-identical. All ten OFF controls reproduce the
+old baseline, and ON output is identical at blocks 32/512/1024. All 64 focused
+native tests pass. Separating pitch admission preserves the measured benefit
+on this small screen; it does not yet establish ordinary-chord safety.
+
+The same saved binary is now being tested by
+`cue-assignment-ordinary-20261104T0643Z`, app `ap-f5lhBeUP48VhBVuJEWuDpE`.
+Require at least 145385/528632 matches, no lost label or higher wrong-note,
+wrong-string or extra-gap count, exact OFF equality and ON buffer parity before
+expanding to the other recordings. Installed output is unchanged; this remains
+an offline experiment.

@@ -987,6 +987,7 @@ def capture_frozen_partial_cues(run_id: str, source_run: str, cue_free_lane: boo
                             for p in sorted(Path('/opt/m3/native').rglob('*')) if p.is_file()},
         analysis_source_sha256={name: sha256('/opt/m3/tools/' + name + '.py') for name in OVERLAP_MODULES},
         cue_free_lane_reassignment=cue_free_lane,
+        cue_pitch_admission=not cue_free_lane,
         cue_free_lane_tuning_guard=(dict(mode='contradiction_veto', valid_phase_required=False,
             minimum_incumbent_advantage_cents=0.75) if cue_free_lane else None),
         datasets={}, tests={}, limits=[
@@ -1263,6 +1264,8 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str):
     report = dict(run_id=run_id, source_run=source_run, dataset=dataset,
         state='running', final=False, stage='verify saved binaries and corpus', installed_changed=False,
         started_at=datetime.now(timezone.utc).isoformat(), settings=settings,
+        cue_free_lane_reassignment=previous['cue_free_lane_reassignment'],
+        cue_pitch_admission=previous.get('cue_pitch_admission', True),
         config=CONFIG, frozen_screen=FROZEN_SCREEN, cue_notes=list(range(32, 85)),
         source_report_sha256=sha256(source / 'report.json'),
         corpus_manifest_sha256=sha256(corpus / 'manifest.json'),
