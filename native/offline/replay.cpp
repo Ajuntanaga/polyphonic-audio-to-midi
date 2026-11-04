@@ -11,6 +11,9 @@
 #include <numeric>
 #include <string_view>
 #include <type_traits>
+#if defined(__linux__) && defined(M3_FROZEN_CUE_COOPERATIVE)
+#include <time.h>
+#endif
 
 #include "m3/constants.hpp"
 #include "m3/factory_calibration.hpp"
@@ -212,12 +215,29 @@ DetectorDecision process_replay_sample(PolyphonicPitchDetector& detector,
 }
 
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
+bool read_thread_cpu_ns(std::uint64_t& result) noexcept {
+#if defined(__linux__)
+  timespec value{};
+  if (::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &value) != 0) return false;
+  result = static_cast<std::uint64_t>(value.tv_sec) * 1000000000ULL +
+           static_cast<std::uint64_t>(value.tv_nsec);
+  return true;
+#else
+  (void)result;
+  return false;
+#endif
+}
+
 void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues,
-    const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output) {
+    const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output,
+    bool thread_cpu) {
   output = {};
   output.fingerprint = kFnvOffset;
+  output.thread_cpu_enabled = thread_cpu;
+  output.thread_cpu_valid = thread_cpu;
   std::vector<DetectorDecision> decisions(block);
   std::vector<std::uint64_t> times((wave.mono_samples.size() + block - 1U) / block);
+  std::vector<std::uint64_t> cpu_times(thread_cpu ? times.size() : 0U);
   detector.reset();
   if (cues != nullptr) cues->reset();
   for (std::size_t begin = 0U; begin < wave.mono_samples.size(); begin += block) {
@@ -226,6 +246,8 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     const auto cpp_before = m3::test::allocation_count(), cpp_free_before = m3::test::deallocation_count();
     const auto c_before = m3::test::c_allocation_count(), c_free_before = m3::test::c_deallocation_count();
 #endif
+    std::uint64_t cpu_start{}, cpu_end{};
+    const bool cpu_started = !thread_cpu || read_thread_cpu_ns(cpu_start);
     const auto start = std::chrono::steady_clock::now();
     for (std::size_t index = 0U; index < count; ++index) {
       const double raw = wave.mono_samples[begin + index];
@@ -234,6 +256,7 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     }
     const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
         std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+    const bool cpu_ended = !thread_cpu || read_thread_cpu_ns(cpu_end);
 #if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
     output.allocation_guard = true;
     output.cpp_allocations += m3::test::allocation_count() - cpp_before;
@@ -241,17 +264,87 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     output.c_allocations += m3::test::c_allocation_count() - c_before;
     output.c_frees += m3::test::c_deallocation_count() - c_free_before;
 #endif
-    times[output.blocks++] = elapsed;
+    times[output.blocks] = elapsed;
     output.total_ns += elapsed;
     const auto budget = static_cast<std::uint64_t>(count) * 1000000000ULL / wave.sample_rate;
     output.half_budget_overruns += elapsed > budget / 2U ? 1U : 0U;
     output.deadline_overruns += elapsed > budget ? 1U : 0U;
+    if (thread_cpu) {
+      const bool valid = cpu_started && cpu_ended && cpu_end >= cpu_start;
+      output.thread_cpu_valid = output.thread_cpu_valid && valid;
+      const auto cpu_ns = valid ? cpu_end - cpu_start : 0U;
+      cpu_times[output.blocks] = cpu_ns;
+      output.cpu_total_ns += cpu_ns;
+      output.cpu_zero_duration_blocks += cpu_ns == 0U ? 1U : 0U;
+      output.cpu_observed_quantum_ns = std::gcd(output.cpu_observed_quantum_ns, cpu_ns);
+      // Reject clocks whose observed duration grid is coarser than 1% of the
+      // block deadline. A nanosecond API can still deliver scheduler ticks.
+      const std::uint64_t resolution_limit = budget / 100U;
+      output.cpu_resolution_limit_ns = output.blocks == 0U ? resolution_limit :
+          std::min(output.cpu_resolution_limit_ns, resolution_limit);
+      output.cpu_deadline_overruns += cpu_ns > budget ? 1U : 0U;
+      auto& phase = output.phases[((begin + count) % 1024U) / 32U];
+      ++phase.blocks;
+      phase.wall_maximum_ns = std::max(phase.wall_maximum_ns, elapsed);
+      phase.cpu_maximum_ns = std::max(phase.cpu_maximum_ns, cpu_ns);
+      phase.wall_minus_cpu_maximum_ns = std::max(phase.wall_minus_cpu_maximum_ns,
+                                                elapsed > cpu_ns ? elapsed - cpu_ns : 0U);
+      phase.wall_deadline_overruns += elapsed > budget ? 1U : 0U;
+      phase.cpu_deadline_overruns += cpu_ns > budget ? 1U : 0U;
+      // Read state only for blocks entering the slow set, outside timing and
+      // allocation accounting. No detector state or update cadence is changed.
+      if (elapsed > output.slowest_blocks.back().wall_ns) {
+        ReplayCoreTiming::SlowBlock slow{begin + count, elapsed, cpu_ns};
+        for (std::size_t index = 0U; index < count; ++index) {
+          if (!decisions[index].tuner_snapshot_ready) continue;
+          ++slow.decision_snapshots;
+          slow.snapshot_voice_count = decisions[index].tuner_snapshot.voice_count;
+        }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        slow.detector_state_available = true;
+        for (std::uint16_t note = 0U; note < 128U; ++note) {
+          const auto state = detector.candidate_tracking_diagnostics(static_cast<std::uint8_t>(note));
+          slow.decision_tick = state.decision_tick;
+          slow.signal_samples = state.signal_samples;
+          slow.active_candidates += state.active ? 1U : 0U;
+          slow.assigned_candidates += state.assigned_mask != 0U ? 1U : 0U;
+          slow.fine_valid_candidates += state.fine_valid ? 1U : 0U;
+          slow.fine_max_count = std::max(slow.fine_max_count, static_cast<std::uint32_t>(state.fine_count));
+          slow.fine_update_scheduled = slow.fine_update_scheduled || state.fine_update_scheduled;
+          slow.fine_reset_serial_sum += state.fine_reset.serial;
+          slow.last_fine_reset_tick = std::max(slow.last_fine_reset_tick, state.fine_reset.decision_tick);
+          if (state.fine_reset.serial != 0U && state.fine_reset.reason == FineHistoryResetReason::signal_floor_loss) {
+            ++slow.signal_floor_reset_candidates;
+            slow.last_signal_floor_reset_tick = std::max(slow.last_signal_floor_reset_tick, state.fine_reset.decision_tick);
+          }
+        }
+#endif
+#if defined(M3_TESTING)
+        slow.selection_work_available = true;
+        const auto work = detector.selection_work_for_test();
+        slow.selection_pool_candidates = work.pool_candidates;
+        slow.selection_state_transitions = work.state_transitions;
+        slow.selection_assignment_edges = work.assignment_edges;
+#endif
+        for (auto& saved : output.slowest_blocks)
+          if (slow.wall_ns > saved.wall_ns) std::swap(slow, saved);
+      }
+    }
+    ++output.blocks;
     for (std::size_t index = 0U; index < count; ++index)
       hash_decision(output.fingerprint, begin + index, decisions[index]);
   }
   std::sort(times.begin(), times.end());
   output.p99_ns = times[(times.size() * 99U + 99U) / 100U - 1U];
   output.maximum_ns = times.back();
+  if (thread_cpu) {
+    std::sort(cpu_times.begin(), cpu_times.end());
+    output.cpu_p99_ns = cpu_times[(cpu_times.size() * 99U + 99U) / 100U - 1U];
+    output.cpu_maximum_ns = cpu_times.back();
+    output.thread_cpu_resolution_pass = output.thread_cpu_valid &&
+        output.cpu_observed_quantum_ns != 0U &&
+        output.cpu_observed_quantum_ns <= output.cpu_resolution_limit_ns;
+  }
 }
 #endif
 
@@ -2691,9 +2784,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_fundamental_admission,
                          FrozenNoteCues* diagnostic_odd_partial_cues,
                          bool diagnostic_cue_free_lane_reassignment,
-                         ReplayCoreTiming* core_timing) {
+                         ReplayCoreTiming* core_timing,
+                         bool diagnostic_thread_cpu) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
+    return false;
   if (core_timing != nullptr) {
     *core_timing = {};
 #if !defined(M3_FROZEN_CUE_COOPERATIVE)
@@ -8954,7 +9050,7 @@ bool run_detector_replay(const WaveData& wave,
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   if (core_timing != nullptr) {
     measure_replay_core(detector, diagnostic_odd_partial_cues, wave, input_gain,
-                        input_partition, *core_timing);
+                        input_partition, *core_timing, diagnostic_thread_cpu);
     core_timing->fingerprint_identical = core_timing->fingerprint == result.fingerprint;
   }
 #endif

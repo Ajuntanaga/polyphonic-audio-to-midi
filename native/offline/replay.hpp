@@ -1733,10 +1733,34 @@ struct ReplayLabelResult final {
 // Offline detector-only second pass. Label scoring and fingerprint hashing are
 // outside the timed blocks; the fingerprint must equal the scored replay.
 struct ReplayCoreTiming final {
+  struct Phase final {
+    std::uint64_t blocks{}, wall_maximum_ns{}, cpu_maximum_ns{}, wall_minus_cpu_maximum_ns{};
+    std::uint64_t wall_deadline_overruns{}, cpu_deadline_overruns{};
+  };
+  struct SlowBlock final {
+    std::uint64_t end_sample{}, wall_ns{}, cpu_ns{};
+    // Read after the timed block, only when it enters the bounded slow set.
+    // Selection work and fine-update scheduling describe the latest decision;
+    // decision_snapshots says whether that decision occurred in this block.
+    bool detector_state_available{}, selection_work_available{}, fine_update_scheduled{};
+    std::uint32_t decision_tick{}, signal_samples{}, decision_snapshots{}, snapshot_voice_count{};
+    std::uint32_t active_candidates{}, assigned_candidates{}, fine_valid_candidates{}, fine_max_count{};
+    std::uint64_t fine_reset_serial_sum{};
+    std::uint32_t last_fine_reset_tick{}, signal_floor_reset_candidates{}, last_signal_floor_reset_tick{};
+    std::uint32_t selection_pool_candidates{}, selection_state_transitions{}, selection_assignment_edges{};
+  };
   std::uint64_t fingerprint{}, blocks{}, total_ns{}, p99_ns{}, maximum_ns{};
   std::uint64_t half_budget_overruns{}, deadline_overruns{};
   std::uint64_t cpp_allocations{}, cpp_frees{}, c_allocations{}, c_frees{};
   bool fingerprint_identical{}, allocation_guard{};
+  // Optional Linux thread-clock diagnosis, restricted to 32-sample blocks.
+  // Successful clock reads alone do not establish useful block resolution.
+  // Even usable readings do not replace wall-time acceptance gates.
+  bool thread_cpu_enabled{}, thread_cpu_valid{}, thread_cpu_resolution_pass{};
+  std::uint64_t cpu_total_ns{}, cpu_p99_ns{}, cpu_maximum_ns{}, cpu_deadline_overruns{};
+  std::uint64_t cpu_observed_quantum_ns{}, cpu_resolution_limit_ns{}, cpu_zero_duration_blocks{};
+  std::array<Phase, 32U> phases{};
+  std::array<SlowBlock, 16U> slowest_blocks{};
 };
 
 struct ReplayResult final {
@@ -2323,7 +2347,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_fundamental_admission = false,
                          FrozenNoteCues* diagnostic_odd_partial_cues = nullptr,
                          bool diagnostic_cue_free_lane_reassignment = false,
-                         ReplayCoreTiming* core_timing = nullptr);
+                         ReplayCoreTiming* core_timing = nullptr,
+                         bool diagnostic_thread_cpu = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

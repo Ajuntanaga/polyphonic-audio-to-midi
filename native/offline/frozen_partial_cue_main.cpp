@@ -74,7 +74,8 @@ int main(int argc, char** argv) {
   const auto process_samples = samples.size() + Cue::kAvailabilityDelay;
   blocks.reserve((process_samples + kBlock - 1U) / kBlock);
   transforms.reserve(samples.size() / Cue::kHop);
-  std::array<std::vector<std::uint64_t>, 8U> stages;
+  constexpr std::array<std::size_t, 10U> stage_phases{896U, 928U, 960U, 992U, 0U, 32U, 96U, 160U, 224U, 256U};
+  std::array<std::vector<std::uint64_t>, stage_phases.size()> stages;
   for (auto& stage : stages) stage.reserve(process_samples / Cue::kHop + 1U);
   std::size_t frames = 0U, clock_errors = 0U;
   std::uint64_t cpp_allocations = 0U, cpp_frees = 0U, c_allocations = 0U, c_frees = 0U;
@@ -103,10 +104,11 @@ int main(int argc, char** argv) {
     blocks.push_back(static_cast<std::uint64_t>(elapsed));
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
     const auto phase = end % Cue::kHop;
-    if (end >= Cue::kWindow && phase >= 896U && phase % kBlock == 0U) {
-      stages[(phase - 896U) / kBlock].push_back(static_cast<std::uint64_t>(elapsed));
-    } else if (end > Cue::kWindow && phase > 0U && phase <= 128U && phase % kBlock == 0U) {
-      stages[4U + phase / kBlock - 1U].push_back(static_cast<std::uint64_t>(elapsed));
+    if (end >= Cue::kWindow) {
+      const auto stage = std::find(stage_phases.begin(), stage_phases.end(), phase);
+      if (stage != stage_phases.end()) {
+        stages[static_cast<std::size_t>(stage - stage_phases.begin())].push_back(static_cast<std::uint64_t>(elapsed));
+      }
     }
 #endif
     if (!produced) continue;
@@ -170,7 +172,8 @@ int main(int argc, char** argv) {
     auto& stage = stages[index];
     std::sort(stage.begin(), stage.end());
     if (index) timing << ',';
-    timing << "{\"stage\":" << index << ",\"count\":" << stage.size()
+    timing << "{\"stage\":" << index << ",\"phase_samples\":" << stage_phases[index]
+           << ",\"count\":" << stage.size()
            << ",\"p99_ns\":" << percentile(stage, 0.99) << ",\"max_ns\":" << percentile(stage, 1.0) << '}';
   }
   timing << "]}\n";

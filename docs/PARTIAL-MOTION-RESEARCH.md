@@ -2,12 +2,13 @@
 
 Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
-initial-settling guard. A fixed 128-sample delay preserves all ten controlled
+initial-settling guard. A fixed 256-sample delay preserves all ten controlled
 results. The native implementation reproduces those delayed replay outputs
-without processing allocations. Direct squared magnitude preserves the cues
-and replay results, but combined timing still fails. The next change moves
-final cue work away from a detector decision boundary while keeping its
-release time unchanged. The installed plugin and its parameters are unchanged.
+without processing allocations. Spacing the transforms between detector
+decisions passes p99 timing in all ten cases, but four exceed the maximum
+block time. A three-case diagnosis preserves the outputs but finds that the
+cloud thread CPU timer is too coarse to explain the short timing spikes.
+The installed plugin and its parameters are unchanged.
 
 ## Decision
 
@@ -96,12 +97,64 @@ maximum is 2219376 ns against 333333 ns. The arithmetic change does not close
 the combined timing gap. Replay SHA-256:
 `37e74e44779271c80ce18635ce3846537b47659d4260311de6900f1d036c9616`.
 
-Next, move the final transform and peak selection away from a detector
-decision boundary, retaining the exact 128-sample release time. This is a
-scheduling experiment, not a measured improvement yet. Require all ten
+The first phase shift, `cue-phase-shift-replay-20261104T1305Z`, preserves all
+ten replay outputs and passes 78 tests with zero processing allocations or
+frees. Six cases pass p99 and five pass both timing limits. Worst p99 is
+179405 ns and maximum is 646814 ns. The 128-sample schedule remains rejected.
+
+The revised schedule transforms at phases 32/96/160/224 of each 1024-sample
+hop, between detector decisions, and publishes at phase 256. Before native
+testing, `cue-fixed-delay256-20261104T1311Z` verifies that this longer release
+delay preserves all ten OFF and ON references and outputs at blocks
+32/512/1024. Its 68 tests pass. Replay SHA-256:
+`5b67030ab795a9f204f22433b4d3b9b5087aa2b6f418e812d51f3743051437fa`.
+
+The combined run, `cue-spaced-replay-20261104T1316Z`, preserves all ten
+references, tested buffer outputs and timed fingerprints. Its 78 tests pass,
+including reset before publication, and processing allocations and frees
+remain zero. All ten p99 measurements pass; worst p99 is 143700 ns against
+166666 ns. Six cases pass both limits. Solo, equal-level octave, quiet nearby
+source-only and equal-level nearby exceed the 333333 ns maximum. The largest
+block takes 2345030 ns; ON has nine deadline overruns. Six OFF controls also
+exceed the maximum. Separate cloud runs do not isolate the schedule's speedup
+or the cause of these spikes. The full timing gate remains rejected. Binary
+SHA-256: `194564c03dc0a9321f0ccb7f312219f76f61c4ba69ef8b523f55d0ea03539a05`.
+
+The paired diagnosis, `cue-thread-cpu-20261104T1326Z`, preserves OFF and ON
+outputs for solo, equal-level octave and equal-level nearby. All 78 tests
+pass, with zero processing allocations or frees. However, CPU p99 is zero
+and CPU maximum is exactly 10000000 ns in all six measurements. Clock calls
+succeeded, but the readings cannot resolve a 333333 ns block deadline.
+CPU deadline counts and wall-minus-CPU values cannot explain the wall spikes
+or support a scheduler attribution. The report's `valid` field means only
+that clock calls succeeded and were monotonic. Binary SHA-256:
+`58ef8a461425a476d3445060d9926eb4188a353f3a5ac22f22c620c64a9bd7aa`.
+
+Run `cue-state-clock-20261104T1344Z` adds an explicit CPU clock resolution
+gate and bounded detector snapshots after timing ends. All 78 tests pass;
+the three paired OFF/ON outputs remain exact, with zero processing allocations
+or frees. The observed CPU duration grid is 10000000 ns against a maximum
+of 3333 ns, so all six resolution checks fail. The check uses the greatest
+common divisor of measured durations; successful clock calls alone are
+insufficient. All six wall-time measurements pass in this diagnostic run,
+but they do not replace the rejected ten-case timing screen. Binary SHA-256:
+`30e7ba2ecc0fd74e4fda7ebf1ed42b75d6248c1ecac729625d2bc0f29639a38f`.
+
+The block ending at sample 58560 is no longer among the slowest in every
+measurement. Its available snapshots show collecting tuning histories with
+no recorded nonempty-history reset. The snapshots neither locate the cost
+within a block nor establish that scheduling caused it. Code inspection
+identifies a separate optimization to test: the detector repeatedly clears
+already-empty fine-frequency histories after their selection gap expires.
+Skipping only those redundant clears may reduce memory writes; a speedup
+has not been measured.
+
+Next, test that skip behind an offline diagnostic option. Require all ten
 reference outputs, zero processing allocations, combined p99 at most
-166666 ns and maximum at most 333333 ns before wider native corpus testing.
-The measured 170.7 ms window remains; 1.333333 ms is only the added
+166666 ns, maximum at most 333333 ns and zero deadline overruns before wider
+native corpus testing. Preserve the default detector behavior until the
+output, corpus and lifecycle gates pass.
+The 170.7 ms measurement window remains; 2.666667 ms is only the added
 availability delay. Earlier undelayed corpus checks do not cover this native
 build. Host timing, MIDI lifecycle and routing, remaining corpus coverage,
 and the unmet physical-long and exact-three targets remain open.

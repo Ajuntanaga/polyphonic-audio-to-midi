@@ -204,6 +204,7 @@ void usage(const char* program) {
       "[--diagnostic-cue-free-lane-reassignment] "
       "[--diagnostic-native-partial-cues] "
       "[--diagnostic-core-timing FILE] "
+      "[--diagnostic-thread-cpu] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -291,6 +292,7 @@ int main(int argc, char** argv) {
   bool diagnostic_cue_free_lane_reassignment = false;
   bool diagnostic_native_partial_cues = false;
   const char* diagnostic_core_timing_path = nullptr;
+  bool diagnostic_thread_cpu = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -611,6 +613,8 @@ int main(int argc, char** argv) {
       diagnostic_native_partial_cues = true;
     } else if (std::strcmp(argv[index], "--diagnostic-core-timing") == 0 && has_value) {
       diagnostic_core_timing_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--diagnostic-thread-cpu") == 0) {
+      diagnostic_thread_cpu = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -1123,7 +1127,8 @@ int main(int argc, char** argv) {
           (diagnostic_odd_partial_cues_path != nullptr || diagnostic_native_partial_cues) ?
               &diagnostic_odd_partial_cues : nullptr,
           diagnostic_cue_free_lane_reassignment,
-          diagnostic_core_timing_path != nullptr ? &core_timing : nullptr)) {
+          diagnostic_core_timing_path != nullptr ? &core_timing : nullptr,
+          diagnostic_thread_cpu)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1141,16 +1146,72 @@ int main(int argc, char** argv) {
         "\"blocks\":%llu,\"total_ns\":%llu,\"p99_ns\":%llu,\"maximum_ns\":%llu,"
         "\"half_budget_overruns\":%llu,\"deadline_overruns\":%llu,"
         "\"allocation_guard\":%s,\"cpp_allocations\":%llu,\"cpp_frees\":%llu,"
-        "\"c_allocations\":%llu,\"c_frees\":%llu}\n",
+        "\"c_allocations\":%llu,\"c_frees\":%llu",
         wave.sample_rate, block_size, number(core_timing.fingerprint),
         core_timing.fingerprint_identical ? "true" : "false", number(core_timing.blocks),
         number(core_timing.total_ns), number(core_timing.p99_ns), number(core_timing.maximum_ns),
         number(core_timing.half_budget_overruns), number(core_timing.deadline_overruns),
         core_timing.allocation_guard ? "true" : "false", number(core_timing.cpp_allocations),
         number(core_timing.cpp_frees), number(core_timing.c_allocations), number(core_timing.c_frees)) < 0;
+    if (diagnostic_thread_cpu) {
+      failed = std::fprintf(stream,
+          ",\"thread_cpu\":{\"valid\":%s,\"total_ns\":%llu,\"p99_ns\":%llu,"
+          "\"maximum_ns\":%llu,\"deadline_overruns\":%llu,"
+          "\"block_resolution_pass\":%s,\"observed_duration_quantum_ns\":%llu,"
+          "\"resolution_limit_ns\":%llu,\"zero_duration_blocks\":%llu,"
+          "\"clock\":\"CLOCK_THREAD_CPUTIME_ID\","
+          "\"scope\":\"valid means clock reads succeeded; quantum is GCD of measured durations. "
+          "CPU bracket includes wall clock read overhead. CPU block and wall-minus-CPU statistics "
+          "are unusable when block_resolution_pass is false; diagnostic only\",\"phases\":[",
+          core_timing.thread_cpu_valid ? "true" : "false", number(core_timing.cpu_total_ns),
+          number(core_timing.cpu_p99_ns), number(core_timing.cpu_maximum_ns),
+          number(core_timing.cpu_deadline_overruns),
+          core_timing.thread_cpu_resolution_pass ? "true" : "false",
+          number(core_timing.cpu_observed_quantum_ns), number(core_timing.cpu_resolution_limit_ns),
+          number(core_timing.cpu_zero_duration_blocks)) < 0 || failed;
+      for (std::size_t index = 0U; index < core_timing.phases.size(); ++index) {
+        const auto& phase = core_timing.phases[index];
+        failed = std::fprintf(stream,
+            "%s{\"end_sample_mod_1024\":%zu,\"blocks\":%llu,\"wall_maximum_ns\":%llu,"
+            "\"cpu_maximum_ns\":%llu,\"wall_minus_cpu_maximum_ns\":%llu,"
+            "\"wall_deadline_overruns\":%llu,\"cpu_deadline_overruns\":%llu}",
+            index == 0U ? "" : ",", index * 32U, number(phase.blocks),
+            number(phase.wall_maximum_ns), number(phase.cpu_maximum_ns),
+            number(phase.wall_minus_cpu_maximum_ns), number(phase.wall_deadline_overruns),
+            number(phase.cpu_deadline_overruns)) < 0 || failed;
+      }
+      failed = std::fprintf(stream,
+          "],\"slow_block_state_scope\":\"Read after timing; counts span all MIDI candidates. "
+          "Selection work and fine-update scheduling describe the latest decision, which may precede this block. "
+          "snapshot_voice_count is available only when decision_snapshots is nonzero. "
+          "Reset ticks are latest recorded events, not proof that a reset occurred in this block\",\"slowest_blocks\":[") < 0 || failed;
+      bool first = true;
+      for (const auto& block : core_timing.slowest_blocks) {
+        if (block.wall_ns == 0U) continue;
+        failed = std::fprintf(stream,
+            "%s{\"end_sample\":%llu,\"wall_ns\":%llu,\"cpu_ns\":%llu,"
+            "\"detector_state_available\":%s,\"selection_work_available\":%s,"
+            "\"decision_tick\":%u,\"signal_samples\":%u,\"decision_snapshots\":%u,\"snapshot_voice_count\":%u,"
+            "\"active_candidates\":%u,\"assigned_candidates\":%u,\"fine_valid_candidates\":%u,\"fine_max_count\":%u,"
+            "\"fine_update_scheduled\":%s,\"fine_reset_serial_sum\":%llu,\"last_fine_reset_tick\":%u,"
+            "\"signal_floor_reset_candidates\":%u,\"last_signal_floor_reset_tick\":%u,"
+            "\"selection_pool_candidates\":%u,\"selection_state_transitions\":%u,\"selection_assignment_edges\":%u}",
+            first ? "" : ",", number(block.end_sample), number(block.wall_ns), number(block.cpu_ns),
+            block.detector_state_available ? "true" : "false", block.selection_work_available ? "true" : "false",
+            block.decision_tick, block.signal_samples, block.decision_snapshots, block.snapshot_voice_count,
+            block.active_candidates, block.assigned_candidates, block.fine_valid_candidates, block.fine_max_count,
+            block.fine_update_scheduled ? "true" : "false", number(block.fine_reset_serial_sum), block.last_fine_reset_tick,
+            block.signal_floor_reset_candidates, block.last_signal_floor_reset_tick,
+            block.selection_pool_candidates, block.selection_state_transitions, block.selection_assignment_edges) < 0 || failed;
+        first = false;
+      }
+      failed = std::fprintf(stream, "]}") < 0 || failed;
+    }
+    failed = std::fprintf(stream, "}\n") < 0 || failed;
     failed = std::fclose(stream) != 0 || failed;
-    if (failed || !core_timing.fingerprint_identical) {
-      std::fprintf(stderr, "m3_replay: core timing output failed or replay fingerprint differed\n");
+    if (failed || !core_timing.fingerprint_identical ||
+        (diagnostic_thread_cpu && !core_timing.thread_cpu_valid)) {
+      std::fprintf(stderr, "m3_replay: core timing output failed, thread clock failed or replay fingerprint differed\n");
       return 1;
     }
   }

@@ -158,26 +158,42 @@ M3_TEST(frozen_cooperative_delayed_clock_and_mid_calculation_reset) {
   M3_EXPECT_FALSE(cue.prepare(48000U));
   M3_EXPECT_TRUE(cue.prepare(96000U));
   for (std::size_t count = 1U; count <= Cue::kWindow + Cue::kAvailabilityDelay; ++count) {
-    const bool emitted = cue.push(0.0F);
+    const auto previous_end = cue.frame().end_sample;
+    const auto previous_mask = cue.frame().mask;
+    const bool emitted = cue.push(tone(count - 1U));
     const bool expected = count > Cue::kHop && count % Cue::kHop == Cue::kAvailabilityDelay;
     M3_EXPECT_EQ(emitted, expected);
     if (emitted) {
       M3_EXPECT_EQ(cue.frame().end_sample, count - Cue::kAvailabilityDelay);
       M3_EXPECT_EQ(cue.frame().valid, cue.frame().end_sample >= Cue::kWindow);
-      M3_EXPECT_EQ(cue.frame().mask[0U], 0U);
-      M3_EXPECT_EQ(cue.frame().mask[1U], 0U);
+      if (!cue.frame().valid) {
+        M3_EXPECT_EQ(cue.frame().mask[0U], 0U);
+        M3_EXPECT_EQ(cue.frame().mask[1U], 0U);
+      }
+    } else {
+      M3_EXPECT_EQ(cue.frame().end_sample, previous_end);
+      M3_EXPECT_EQ(cue.frame().mask, previous_mask);
     }
   }
-  // Cancel in the middle of a valid transform, then require fresh warmup.
-  for (std::size_t count = Cue::kAvailabilityDelay; count < Cue::kHop + 64U; ++count) cue.push(0.0F);
-  cue.reset();
-  M3_EXPECT_EQ(cue.frame().end_sample, 0U);
-  for (std::size_t count = 1U; count < Cue::kHop + Cue::kAvailabilityDelay; ++count) {
-    M3_EXPECT_FALSE(cue.push(0.0F));
+  M3_EXPECT_EQ(cue.frame().notes[36U - Cue::kFirstNote].reason, Cue::Reason::cue);
+  // Cancel both unfinished work and a completed but unpublished cue. Neither
+  // may survive reset or bypass the next stream's warmup.
+  for (const auto cancellation_phase : {160U, 224U}) {
+    cue.reset();
+    for (std::size_t count = 0U; count < Cue::kWindow + cancellation_phase; ++count) cue.push(tone(count));
+    M3_EXPECT_EQ(cue.frame().end_sample, Cue::kWindow - Cue::kHop);
+    M3_EXPECT_FALSE(cue.frame().valid);
+    cue.reset();
+    M3_EXPECT_EQ(cue.frame().end_sample, 0U);
+    for (std::size_t count = 1U; count < Cue::kHop + Cue::kAvailabilityDelay; ++count) {
+      M3_EXPECT_FALSE(cue.push(0.0F));
+    }
+    M3_EXPECT_TRUE(cue.push(0.0F));
+    M3_EXPECT_EQ(cue.frame().end_sample, Cue::kHop);
+    M3_EXPECT_FALSE(cue.frame().valid);
+    M3_EXPECT_EQ(cue.frame().mask[0U], 0U);
+    M3_EXPECT_EQ(cue.frame().mask[1U], 0U);
   }
-  M3_EXPECT_TRUE(cue.push(0.0F));
-  M3_EXPECT_EQ(cue.frame().end_sample, Cue::kHop);
-  M3_EXPECT_FALSE(cue.frame().valid);
 }
 
 M3_TEST(frozen_cooperative_snapshot_ignores_samples_after_evidence_end) {

@@ -10,14 +10,14 @@ namespace m3::offline {
 // Native reference for the frozen offline cue, not an audio-thread policy.
 // Raw input and the fixed A4=440 geometry are its only evidence. A completed
 // frame is usable on the NEXT sample and expires after one analysis hop.
-// The standalone cooperative build delays publication by exactly 128 samples.
+// The cooperative build delays publication by exactly 256 samples.
 class FrozenPartialCue final {
  public:
   static constexpr std::size_t kWindow = 16384U;
   static constexpr std::size_t kFft = 65536U;
   static constexpr std::size_t kHop = 1024U;
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
-  static constexpr std::size_t kAvailabilityDelay = 128U;
+  static constexpr std::size_t kAvailabilityDelay = 256U;
 #else
   static constexpr std::size_t kAvailabilityDelay = 0U;
 #endif
@@ -69,8 +69,9 @@ class FrozenPartialCue final {
   std::size_t next_{}, invalid_samples_{};
   bool prepared_{};
   void measure() noexcept;
-  void select_peaks() noexcept;
+  void select_peaks(Frame& frame) noexcept;
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
+  static constexpr std::size_t kPreparationLead = 128U;
   Frame pending_{};
   bool pending_ready_{};
   void prepare_residue(std::size_t residue, std::size_t until_end) noexcept;

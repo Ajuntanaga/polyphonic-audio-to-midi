@@ -207,12 +207,12 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
   const auto phase = static_cast<std::size_t>(samples_ % kHop);
   // Each residue's old samples are copied before the frame ends. The final
   // 128 arriving samples are patched directly, retaining the exact window.
-  if (phase == 0U || phase > kHop - kAvailabilityDelay) {
+  if (phase == 0U || phase > kHop - kPreparationLead) {
     const auto index = phase == 0U ? kWindow - 1U : kWindow - kHop + phase - 1U;
     workspace_->input[index % 4U][index / 4U] = static_cast<double>(raw_sample) * workspace_->taper[index];
   }
-  if (phase >= kHop - kAvailabilityDelay && phase % 32U == 0U) {
-    prepare_residue((phase - (kHop - kAvailabilityDelay)) / 32U, kHop - phase);
+  if (phase >= kHop - kPreparationLead && phase % 32U == 0U) {
+    prepare_residue((phase - (kHop - kPreparationLead)) / 32U, kHop - phase);
   }
   if (phase == 0U) {
     pending_ = {};
@@ -221,10 +221,15 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
     pending_.valid = pending_.history_available && invalid_samples_ == 0U;
     pending_ready_ = true;
   } else if (pending_ready_ && phase <= kAvailabilityDelay && phase % 32U == 0U) {
-    if (pending_.valid) transform_residue(phase / 32U - 1U);
+    // Transform at 32/96/160/224, between the detector's 64-sample decisions.
+    // The finished frame remains private until its fixed publication at 256.
+    if (pending_.valid && phase % 64U == 32U) {
+      const auto residue = phase / 64U;
+      transform_residue(residue);
+      if (residue == 3U) select_peaks(pending_);
+    }
     if (phase == kAvailabilityDelay) {
       frame_ = pending_;
-      if (frame_.valid) select_peaks();
       pending_ready_ = false;
       return true;
     }
@@ -245,7 +250,7 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
 void FrozenPartialCue::prepare_residue(std::size_t residue, std::size_t until_end) noexcept {
   auto& work = *workspace_;
   const auto start = (next_ + until_end) % kWindow;
-  for (auto index = residue; index < kWindow - kAvailabilityDelay; index += 4U) {
+  for (auto index = residue; index < kWindow - kPreparationLead; index += 4U) {
     work.input[residue][index / 4U] = work.ring[(start + index) % kWindow] * work.taper[index];
   }
 }
@@ -309,20 +314,20 @@ void FrozenPartialCue::measure() noexcept {
     work.power[index] = amplitude * amplitude;
   }
 #endif
-  select_peaks();
+  select_peaks(frame_);
 }
 #endif
 
-void FrozenPartialCue::select_peaks() noexcept {
+void FrozenPartialCue::select_peaks(Frame& frame) noexcept {
   auto& work = *workspace_;
   for (std::size_t index = 0U; index < kNotes; ++index) {
-    auto& note = frame_.notes[index];
+    auto& note = frame.notes[index];
     note.third = peak(work.power.data(), work.regions[index][0U]);
     note.fifth = peak(work.power.data(), work.regions[index][1U]);
     note.reason = screen(note.third, note.fifth);
     if (note.reason == Reason::cue) {
       const auto midi = index + kFirstNote;
-      frame_.mask[midi / 64U] |= std::uint64_t{1U} << (midi % 64U);
+      frame.mask[midi / 64U] |= std::uint64_t{1U} << (midi % 64U);
     }
   }
 }

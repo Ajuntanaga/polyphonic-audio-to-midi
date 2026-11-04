@@ -1797,13 +1797,13 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                 'The causal measurement window remains 170.7 ms at 96 kHz.',
                 'This probe is not linked into either installed plugin.'])
     if cooperative:
-        report.update(cooperative=True, availability_delay_samples=128,
+        report.update(cooperative=True, availability_delay_samples=256,
                       scope='solo screen' if solo_only else 'ten-recording screen',
                       accepted_for_detector_integration=False)
         report['limits'] += [
-            'Four residue streams are prepared before each evidence boundary, then transformed in four successive 32-sample blocks.',
-            'Cue availability is exactly 128 samples after its evidence boundary; numeric tolerances are unchanged.',
-            'Stages 0-3 prepare streams; stages 4-7 transform and combine them, with peak selection in stage 7.',
+            'Four residue streams are prepared before each evidence boundary, then transformed at phases 32/96/160/224.',
+            'Cue availability is exactly 256 samples after its evidence boundary; numeric tolerances are unchanged.',
+            'Stage phase_samples identifies preparation, capture, transform and publication blocks; peak selection finishes at phase 224.',
             'The transform_blocks timing fields measure the publication block only, not the entire split calculation.']
     if delay_report is not None:
         report.update(delay_source_run=worker_delay_run, delay_source_sha256=sha256(delay_path),
@@ -2021,7 +2021,7 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
             with (out / (name + '.log')).open('w') as log:
                 subprocess.run([str(probe), str(raw), str(observations), str(cues), str(timing)],
                     stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
-            delay = 128 if cooperative else 0
+            delay = 256 if cooperative else 0
             comparison = compare_native_observations(samples, observations, cues, delay)
             measured = json.loads(timing.read_text())
             if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate
@@ -2283,7 +2283,7 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str, delay: int = 1024)
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_native_cue_replay(run_id: str, delayed_source: str):
+def capture_native_cue_replay(run_id: str, delayed_source: str, timing_diagnosis: bool = False):
     """Compare the integrated native cue with the accepted delayed replay."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -2295,7 +2295,7 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
     previous = json.loads((delayed / 'report.json').read_text())
     if (previous.get('state') != 'completed' or not previous.get('final') or
             not previous.get('accepted_for_corpus_screen') or
-            previous.get('availability_delay_samples') != 128 or
+            previous.get('availability_delay_samples') != 256 or
             previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
         raise ValueError('source is not an accepted fixed-delay screen')
     source_run = previous['source_run']
@@ -2314,8 +2314,10 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
     out = MOUNT / 'results' / run_id
     out.mkdir(exist_ok=False, parents=True)
     binary = out / 'm3_replay'
+    selected_cases = ('solo', 'octave_0dB', 'nearby_0dB') if timing_diagnosis else tuple(previous['datasets'])
     report = dict(run_id=run_id, source_run=source_run, delayed_source=delayed_source,
-        state='running', final=False, experiment='native_cue_replay',
+        state='running', final=False,
+        experiment='native_cue_timing_diagnosis' if timing_diagnosis else 'native_cue_replay',
         stage='build native cue replay integration',
         started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
         source_report_sha256=sha256(source / 'report.json'),
@@ -2323,15 +2325,23 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
         reference_binary_sha256=previous['binary_sha256'],
         calibration_sha256=previous['calibration_sha256'], config=CONFIG,
         frozen_screen=FROZEN_SCREEN, settings=previous['settings'],
-        availability_delay_samples=128, availability_delay_ms=128000 / 96000,
+        availability_delay_samples=256, availability_delay_ms=256000 / 96000,
         timing_gate=dict(sample_rate=96000, block_samples=32,
                          p99_ns_max=166666, maximum_ns_max=333333),
-        tests={}, datasets={}, limits=[
+        selected_cases=list(selected_cases), tests={}, datasets={}, limits=[
             'Offline opt-in only; installed plugins do not link the cue implementation.',
             'Timing includes cue generation, input trim and detector work in a second pass.',
             'Scoring, labels, fingerprint hashing and report formatting are outside the timer.',
             'The timed pass must reproduce the scored pass fingerprint exactly.',
             'Cloud detector timing is not live host callback or lifecycle certification.'])
+    if timing_diagnosis:
+        report['limits'] += [
+            'Three affected cases only; this diagnosis cannot accept the full native corpus gate.',
+            'Thread CPU is paired with wall time per block; CPU includes wall clock read overhead.',
+            'Clock-read success is not block resolution: reject an observed duration grid coarser than 1% of the block deadline.',
+            'CPU block and wall-minus-CPU statistics are unusable if the resolution gate fails; do not attribute spikes to scheduling.',
+            'Only the bounded slow-block set captures detector state, after timing; latest-decision work and historic reset ticks do not locate time spent inside a decision.',
+            'Phase bins use block-end sample modulo 1024; a block may include detector and cue work.']
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -2347,6 +2357,8 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
         timing_path = out / f'{name}-{mode}-timing.json'
         if timing:
             args += ['--diagnostic-core-timing', str(timing_path)]
+            if timing_diagnosis:
+                args += ['--diagnostic-thread-cpu']
         for key, value in previous['settings'].items():
             args += ['--' + key, str(value)]
         output = out / f'{name}-{mode}.tsv'
@@ -2368,6 +2380,30 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
             measured['timing_pass'] = (measured['p99_ns'] <= report['timing_gate']['p99_ns_max'] and
                 measured['maximum_ns'] <= report['timing_gate']['maximum_ns_max'] and
                 measured['deadline_overruns'] == 0)
+            if timing_diagnosis:
+                cpu = measured['thread_cpu']
+                if (not cpu['valid'] or cpu['total_ns'] <= 0 or len(cpu['phases']) != 32 or
+                        cpu['resolution_limit_ns'] != 3333 or
+                        not 0 <= cpu['zero_duration_blocks'] <= measured['blocks'] or
+                        cpu['block_resolution_pass'] != (0 < cpu['observed_duration_quantum_ns'] <= 3333) or
+                        sum(phase['blocks'] for phase in cpu['phases']) != measured['blocks'] or
+                        sum(phase['wall_deadline_overruns'] for phase in cpu['phases']) != measured['deadline_overruns'] or
+                        sum(phase['cpu_deadline_overruns'] for phase in cpu['phases']) != cpu['deadline_overruns'] or
+                        not 0 < len(cpu['slowest_blocks']) <= 16 or
+                        cpu['slowest_blocks'][0]['wall_ns'] != measured['maximum_ns']):
+                    raise ValueError(name + ': incomplete thread CPU diagnosis')
+                for slow in cpu['slowest_blocks']:
+                    if (not slow['detector_state_available'] or not slow['selection_work_available'] or
+                            not 0 <= slow['decision_snapshots'] <= 1 or
+                            not 0 <= slow['snapshot_voice_count'] <= 8 or
+                            slow['decision_tick'] != slow['end_sample'] // 64 or
+                            slow['signal_samples'] > slow['end_sample'] or
+                            any(not 0 <= slow[key] <= 128 for key in (
+                                'active_candidates', 'assigned_candidates', 'fine_valid_candidates',
+                                'signal_floor_reset_candidates', 'selection_pool_candidates')) or
+                            slow['last_fine_reset_tick'] > slow['decision_tick'] or
+                            slow['last_signal_floor_reset_tick'] > slow['decision_tick']):
+                        raise ValueError(name + ': inconsistent post-block detector state')
         return result, measured
 
     save()
@@ -2393,7 +2429,8 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
             report['tests'][name] = dict(tests=int(counts[0][0]), failures=int(counts[0][1]),
                                        log_sha256=sha256(log_path))
         save()
-        for name, saved in previous['datasets'].items():
+        for name in selected_cases:
+            saved = previous['datasets'][name]
             for suffix, key in (('.wav', 'audio_sha256'), ('.tsv', 'labels_sha256'),
                                 ('-cues.tsv', 'cue_sha256')):
                 if sha256(source / (name + suffix)) != original['datasets'][name][key]:
@@ -2410,27 +2447,47 @@ def capture_native_cue_replay(run_id: str, delayed_source: str):
                 has_target=saved['has_target'], replays={}, timing={},
                 control_identical=False, native_output_identical=False, buffer_outputs_identical=False)
             report['datasets'][name] = item
-            for mode, block, native, timing in (('off', 512, False, False), ('on', 512, True, False),
-                    ('off32', 32, False, True), ('on32', 32, True, True), ('on1024', 1024, True, False)):
+            modes = (('off32', 32, False, True), ('on32', 32, True, True)) if timing_diagnosis else (
+                ('off', 512, False, False), ('on', 512, True, False),
+                ('off32', 32, False, True), ('on32', 32, True, True), ('on1024', 1024, True, False))
+            for mode, block, native, timing in modes:
                 report['stage'] = f'{name}: {mode}, block {block}'
                 save()
                 result, measured = replay(name, block, mode, native, timing)
                 item['replays'][mode] = result
                 if measured is not None:
                     item['timing'][mode] = measured
-                if mode == 'off':
+                if mode == 'off' or (timing_diagnosis and mode == 'off32'):
                     item['control_identical'] = result == saved['replays']['off']
                     if not item['control_identical']:
                         raise ValueError(name + ': fresh OFF differs from saved OFF')
-                if mode == 'on':
+                if mode == 'on' or (timing_diagnosis and mode == 'on32'):
                     item['native_output_identical'] = result == saved['replays']['on']
                     if not item['native_output_identical']:
                         raise ValueError(name + ': native cue differs from saved delayed cue')
-            item['buffer_outputs_identical'] = (item['replays']['off32'] == item['replays']['off'] and
-                item['replays']['on32'] == item['replays']['on'] == item['replays']['on1024'])
-            if not item['buffer_outputs_identical']:
-                raise ValueError(name + ': native cue replay depends on buffer size')
+            if timing_diagnosis:
+                item['buffer_outputs_identical'] = None
+            else:
+                item['buffer_outputs_identical'] = (item['replays']['off32'] == item['replays']['off'] and
+                    item['replays']['on32'] == item['replays']['on'] == item['replays']['on1024'])
+                if not item['buffer_outputs_identical']:
+                    raise ValueError(name + ': native cue replay depends on buffer size')
             save()
+        if timing_diagnosis:
+            cpu_resolution_pass = all(timing['thread_cpu']['block_resolution_pass']
+                for item in report['datasets'].values() for timing in item['timing'].values())
+            report.update(diagnostic_replay_parity_pass=True,
+                diagnostic_allocation_pass=all(timing['allocation_pass'] for item in report['datasets'].values()
+                                               for timing in item['timing'].values()),
+                diagnostic_cpu_block_resolution_pass=cpu_resolution_pass,
+                accepted_for_native_corpus_screen=False, state='completed', final=True,
+                stage='paired wall and thread CPU diagnosis complete',
+                completed_at=datetime.now(timezone.utc).isoformat(),
+                verdict=('diagnostic measurement only; full native timing acceptance unchanged'
+                    if cpu_resolution_pass else
+                    'thread CPU clock resolution rejected; wall timing remains valid, spike cause unresolved'))
+            save()
+            return report
         admission = evaluate_admission({name: report['datasets'][name] for name in CASES})
         for name, result in admission.pop('cases').items():
             report['datasets'][name].update(result)
@@ -2467,7 +2524,9 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          native_cue_worker_delay_source: str = '', native_cue_worker_timer_diagnostic: bool = False,
          native_cue_worker_wait_diagnostic: bool = False, native_cue_worker_hybrid_diagnostic: bool = False,
          native_cue_cooperative: bool = False, native_cue_solo: bool = False,
-         native_replay_source: str = ''):
+         native_replay_source: str = '', native_replay_timing_diagnosis: bool = False):
+    if native_replay_timing_diagnosis and not native_replay_source:
+        raise ValueError('thread CPU diagnosis requires a native replay source')
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
     if native_cue_worker_delay_source and not (native_cue_source and native_cue_pffft):
@@ -2495,7 +2554,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)
             + bool(native_cue_source) + bool(delayed_cue_source) + bool(native_replay_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_native_cue_replay.remote(run_id, native_replay_source) if native_replay_source else
+    result = (capture_native_cue_replay.remote(run_id, native_replay_source, native_replay_timing_diagnosis) if native_replay_source else
               capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
               capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft,
                   native_cue_worker_delay_source, native_cue_worker_timer_diagnostic,
