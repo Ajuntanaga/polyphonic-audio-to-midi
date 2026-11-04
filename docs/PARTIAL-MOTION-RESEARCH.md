@@ -1211,10 +1211,11 @@ count must stay at or below its paired baseline, OFF must match exactly, and
 ON must be buffer invariant. Exact three/four-string groups are reported
 separately when their labels exist.
 
-The paired ordinary offline baseline is 145397/528632 matches, with
-163749 wrong-note, 92641 wrong-string and 62856 extra-gap outputs. It differs
-from the installed baseline of 145385/528632 and must not be substituted for
-it in the installed scoreboard. A safe ordinary result permits sequential
+The new baseline replay returned 145385/528632 matches, with 164263
+wrong-note, 92653 wrong-string and 62856 extra-gap outputs. These match the
+installed scoreboard. The older offline reference of 145397 matches was used
+when preparing this run; it is not this run's measured baseline. Candidate
+gates use the current paired replay. A safe ordinary result permits sequential
 protected-corpus screening; a regression stops expansion. Timing/allocation,
 lifecycle/routing and actual-host checks remain required before any default
 MIDI change.
@@ -1228,3 +1229,54 @@ gains, each error ceiling, label identity, exact-group accounting, PCM16 bounds
 and truncation, float32 preservation and unsupported stereo input. Python
 compilation and whitespace checks pass. This input failure was not a candidate
 rejection.
+
+## Ordinary-corpus rejection and paired trace
+
+The complete ordinary recording rejects the free-string correction. The final
+`cue-corpus-ordinary-20261103T2350Z` report records 145385→144719 matches
+out of 528632 labeled frames (27.50%→27.38%; −666 frames, −0.46% relative).
+Wrong-string outputs increase 92653→94531, while wrong-note outputs decrease
+164263→163561 and extra outputs during unlabeled gaps decrease 62856→62795.
+The combined false-output count rises 319772→320887. These gap outputs are
+extra notes, not missing-note counts.
+
+The old baseline and candidate with the correction disabled are bit-identical.
+Eight labeled passages lose matches. The largest loss is label 243: MIDI 55,
+string mask 8, samples 4406586–4478400 at 96 kHz, falling 858→0/1123 matches.
+The small controlled gain therefore does not justify advancing this candidate.
+The screen stopped before additional buffers or protected corpora; neither
+has passed for this candidate. Installed output and production defaults remain
+unchanged.
+
+The paired diagnostic `cue-corpus-failure-20261104T0025Z` completed at
+05:20:32 UTC. It reused the saved binary and frozen cues and processed the
+complete recording with correction OFF and ON, preserving earlier detector
+history. Both replays reproduce the saved aggregate counts, per-label counts
+and output fingerprints exactly. The downloaded assignment traces match their
+recorded hashes. No detector policy changed during this diagnostic.
+
+The largest loss is history-dependent. The earlier MIDI-48 assignment first
+differs between sampled decisions 4341759 and 4342783: OFF retains the annotated
+string index 4, while ON moves to index 3. The ON assignment persists into the
+next chord, occupying the string needed by MIDI 55. In label 243, OFF has
+858 matched, 240 wrong-string and 25 absent-output frames; ON has 0 matched,
+1098 wrong-string and the same 25 absent-output frames. This is an earlier
+assignment contaminating the later chord, rather than an immediate correction
+of MIDI 55 to the wrong string.
+
+The bracketing measurements suggest an independent guard. At sample 4341759,
+the measured tuning is 1.1286319073040731 cents, compared with learned values
+of 1.04296875 cents for the original string and 6.19140625 cents for the
+competing string. Sound similarity prefers the competing string, but calibrated
+tuning favors the original. After the move, the retention bonus follows the
+wrong string. Assignment rows sample every 16 ticks, so the exact initiating
+tick still needs the saved per-tick outcome trace; no additional replay is
+needed to read it.
+
+Next, check whether calibrated tuning agreement can reject the move while
+preserving the separate-pluck gain. This is a repair hypothesis, not an accepted
+candidate. Require a strict held-out gain with no control regression before
+repeating the ordinary screen. Ordinary acceptance requires at least 145385
+matches, no lost label, no higher false-output count, exact OFF equality and
+buffer-invariant ON output. Timing/allocation, lifecycle/routing and actual-host
+gates remain open; installed output is unchanged.

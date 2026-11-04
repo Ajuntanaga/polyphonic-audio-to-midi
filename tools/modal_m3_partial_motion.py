@@ -1365,19 +1365,161 @@ def capture_frozen_cue_corpus(run_id: str, source_run: str, dataset: str):
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int):
+    """Trace one failed passage with the saved binary and full recording history."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.frozen_cue_corpus_gate import read_replay
+    from tools.frozen_cue_diagnosis import summarize_cues
+    if (any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run))
+            or label_index < 0):
+        raise ValueError('invalid trace source or label')
+    source = MOUNT / 'results' / source_run
+    previous = json.loads((source / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final')
+            or previous.get('verdict') != 'rejected'):
+        raise ValueError('source must be a completed rejected corpus screen')
+    dataset = previous['dataset']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', dataset):
+        raise ValueError('invalid saved corpus name')
+    binary_source = previous['source_run']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', binary_source):
+        raise ValueError('invalid saved binary source')
+    binary = MOUNT / 'results' / binary_source / 'm3_replay'
+    corpus = MOUNT / 'corpus'
+    wav, labels, calibration = (corpus / name for name in
+                               (dataset + '.wav', dataset + '.tsv', 'calibration.m3cb'))
+    cues = source / (dataset + '-cues.tsv')
+    identities = ((binary, previous['binary_sha256']), (wav, previous['wav_sha256']),
+                  (labels, previous['tsv_sha256']), (calibration, previous['calibration_sha256']),
+                  (cues, previous['cue_sha256']))
+    if any(sha256(path) != expected for path, expected in identities):
+        raise ValueError('saved binary, corpus or cues changed')
+    targets = {mode: next(row for row in previous['replays'][mode]['labels']
+                         if row['label_index'] == label_index) for mode in ('off', 'on')}
+    if targets['on']['matched'] >= targets['off']['matched']:
+        raise ValueError('selected passage did not lose matches')
+    target = targets['off']
+    start, end, rate = target['start_sample'], target['end_sample'], previous['sample_rate']
+    window_start, window_end = max(0, start - 32768), min(previous['sample_count'], end + 16384)
+    with cues.open() as stream:
+        if next(stream).strip() != 'm3_frozen_note_cues_v1\t96000\t1024':
+            raise ValueError('unknown frozen cue format')
+        intervals = [tuple(map(int, line.split('\t'))) for line in stream if line.strip()]
+    if len(intervals) != previous['cue_intervals']:
+        raise ValueError('cue interval count changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    report = dict(run_id=run_id, source_run=source_run, dataset=dataset,
+        state='running', final=False, stage='trace paired corpus failure', installed_changed=False,
+        started_at=datetime.now(timezone.utc).isoformat(), settings=previous['settings'],
+        source_report_sha256=sha256(source / 'report.json'),
+        binary_sha256=previous['binary_sha256'],
+        saved_input_hashes={path.name: digest for path, digest in identities},
+        target=target, window_start=window_start, window_end=window_end,
+        sample_count=previous['sample_count'], sample_rate=rate, replays={},
+        limits=['Same saved binary, complete audio history and frozen cues; no build or policy change.',
+                'Assignment rows are sampled every 16 detector ticks; outcome rows cover every tick.',
+                'Annotations select the reported passage only, never detector evidence.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    save()
+    try:
+        for mode in ('off', 'on'):
+            report['stage'] = mode + ': trace full recording, summarize failed passage'
+            save()
+            paths = {kind: out / f'{mode}-{kind}.tsv' for kind in ('candidate', 'outcome', 'assignment')}
+            args = [str(binary), '--wav', str(wav), '--labels', str(labels),
+                    '--calibration', str(calibration), '--block', '512', '--label-details',
+                    '--candidate-trace', str(paths['candidate']),
+                    '--candidate-trace-note', str(target['midi_note']),
+                    '--candidate-trace-start', str(window_start / rate),
+                    '--candidate-trace-end', str(window_end / rate),
+                    '--outcome-trace', str(paths['outcome']),
+                    '--assignment-trace', str(paths['assignment'])]
+            for key, value in previous['settings'].items():
+                args += ['--' + key, str(value)]
+            if mode == 'on':
+                args += ['--diagnostic-odd-partial-cues', str(cues),
+                         '--diagnostic-cue-free-lane-reassignment']
+            replay, log_path = out / (mode + '.tsv'), out / (mode + '.log')
+            with replay.open('w') as stdout, log_path.open('w') as log:
+                subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=600)
+            measured = read_replay(replay)
+            if measured != previous['replays'][mode]:
+                raise ValueError(mode + ' diagnostics changed the saved corpus output')
+            details = dict(output=measured['output'], target=targets[mode], output_identical=True,
+                           command=args, trace_counts={}, traces={})
+            report['replays'][mode] = details
+            for kind in paths:
+                pattern = (r'assignment_trace rows=(\d+) cap=(\d+) truncated=(\d+) sampled_frames=(\d+) decimation=(\d+)'
+                           if kind == 'assignment' else rf'{kind}_trace frames=(\d+) cap=(\d+) truncated=(\d+)')
+                counts = re.findall(pattern, log_path.read_text())
+                if len(counts) != 1 or int(counts[0][2]) or int(counts[0][0]) > int(counts[0][1]):
+                    raise ValueError('incomplete ' + kind + ' trace accounting')
+                details['trace_counts'][kind] = list(map(int, counts[0]))
+            with paths['candidate'].open() as c, paths['outcome'].open() as o:
+                if next(o).strip() != '# m3_candidate_outcome_v2':
+                    raise ValueError('unknown outcome format')
+                details['diagnosis'] = summarize_cues(
+                    (row for row in csv.DictReader(c, delimiter='\t') if start <= int(row['sample']) < end),
+                    csv.DictReader(o, delimiter='\t'), intervals,
+                    note=target['midi_note'], start=start, end=end, sample_count=previous['sample_count'],
+                    label_index=label_index, string_mask=target['string_mask'])
+            joined = details['diagnosis']['all_labeled']
+            if joined['frames'] != target['labeled'] or joined['target_matched'] != targets[mode]['matched']:
+                raise ValueError('joined trace disagrees with native target scoring')
+            for kind, path in paths.items():
+                window = out / f'{mode}-{kind}-window.tsv.gz'
+                with path.open() as src, gzip.open(window, 'wt', compresslevel=1) as dst:
+                    line = next(src)
+                    if line.startswith('#'):
+                        dst.write(line)
+                        line = next(src)
+                    dst.write(line)
+                    sample_column = line.rstrip('\n').split('\t').index('sample')
+                    kept = 0
+                    for line in src:
+                        sample = int(line.split('\t')[sample_column])
+                        if window_start <= sample < window_end:
+                            dst.write(line)
+                            kept += 1
+                full = Path(str(path) + '.gz')
+                details['traces'][kind] = dict(raw_sha256=sha256(path), raw_bytes=path.stat().st_size,
+                    window_file=window.name, window_rows=kept, window_sha256=sha256(window))
+                with path.open('rb') as src, gzip.open(full, 'wb', compresslevel=1) as dst:
+                    shutil.copyfileobj(src, dst, length=1024 * 1024)
+                path.unlink()
+            save()
+        report.update(state='completed', final=True, stage='paired corpus failure traced',
+                      completed_at=datetime.now(timezone.utc).isoformat())
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
          admission_source: str = '', cue_source: str = '', cue_selection_source: str = '',
          cue_free_lane: bool = False, cue_corpus_source: str = '',
-         cue_corpus_dataset: str = 'ordinary'):
+         cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
+         cue_corpus_trace_label: int = -1):
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
-            + bool(cue_corpus_source)) > 1:
+            + bool(cue_corpus_source) + bool(cue_corpus_trace_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset) if cue_corpus_source else
+    result = (capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source, cue_corpus_trace_label) if cue_corpus_trace_source else
+              capture_frozen_cue_corpus.remote(run_id, cue_corpus_source, cue_corpus_dataset) if cue_corpus_source else
               capture_frozen_cue_selection.remote(run_id, cue_selection_source) if cue_selection_source else
               capture_frozen_partial_cues.remote(run_id, cue_source, cue_free_lane) if cue_source else
               capture_controlled_admission.remote(run_id, admission_source) if admission_source else
