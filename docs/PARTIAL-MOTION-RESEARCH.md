@@ -1555,3 +1555,21 @@ small-screen gain. Ordinary run `cue-initial-assignment-ordinary-20261104T0933Z`
 now checks the same binary with verified saved cue features. The remaining
 corpus, realtime and MIDI lifecycle/host gates are open; installed output is
 unchanged.
+
+Ordinary run `cue-initial-assignment-ordinary-20261104T0933Z` subsequently
+passed at 09:38:30 UTC. ON, OFF and baseline are bit-identical:
+145385/528632 matches (27.5021%), wrong-note/wrong-string/extra-gap counts
+164263/92653/62856 and total false outputs 319772. Low-string run
+`cue-initial-assignment-isolated08-20261104T0940Z` passed at 09:42:41 UTC:
+29816/31050 matches (96.0258%), errors 2462/579/2928 and total false outputs
+5969. It is also bit-identical to OFF and the baseline. Neither corpus loses
+any passage matches, and both agree at blocks 32/512/1024. Extra-gap counts
+are extra outputs during unlabeled gaps, not missing notes.
+
+The same saved binary is now checking middle strings in
+`cue-initial-assignment-isolated05-20261104T0945Z`. Its gate requires at least
+25681/31050 matches, no passage loss and error counts at or below
+12028/4037/3860, plus exact OFF equality and ON buffer parity. High strings
+and physical/synthetic unisons follow. These checks preserve the earlier
+small-screen gain without establishing live behavior; installed output is
+unchanged.
