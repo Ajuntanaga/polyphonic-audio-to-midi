@@ -1543,7 +1543,15 @@ checks that the early correction remains eligible. The small screen
 `cue-initial-assignment-20261104T0913Z` completed at 09:17:23 UTC: all 66 focused
 native tests pass, nearby matches remain 815→835/3450, solo gains 17 and quiet
 octave nine. All ten OFF controls reproduce the baseline, ON is identical
-across blocks 32/512/1024, and seven cases remain bit-identical. Constructed
-run `cue-initial-assignment-constructed-20261104T0918Z` is now checking every
-passage and false-output ceiling using the same binary and verified cue
-features. Broad corpus acceptance is pending; installed output is unchanged.
+across blocks 32/512/1024, and seven cases remain bit-identical.
+
+Constructed run `cue-initial-assignment-constructed-20261104T0918Z` completed
+at 09:32:02 UTC and passed. ON, OFF and baseline are bit-identical:
+259074/1614601 matches (16.0457%), wrong-note/wrong-string/extra-gap counts
+167722/103754/23176 and total false outputs 294652. No passage changes, and
+ON agrees at blocks 32/512/1024. Restricting corrections to initial settling
+removes the recorded constructed-corpus regression while retaining the
+small-screen gain. Ordinary run `cue-initial-assignment-ordinary-20261104T0933Z`
+now checks the same binary with verified saved cue features. The remaining
+corpus, realtime and MIDI lifecycle/host gates are open; installed output is
+unchanged.
