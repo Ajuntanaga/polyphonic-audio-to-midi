@@ -8527,6 +8527,31 @@ M3_TEST(native_detector_cue_free_lane_preserves_tuning_when_sound_shape_disagree
       true, 16U, 24U, 24U, similarity, true, cents_errors, 0U, false), 0U);
 }
 
+M3_TEST(native_detector_cue_free_lane_blocks_lost_mature_tuning) {
+  using Detector = m3::PolyphonicPitchDetector;
+  // Constructed recording, MIDI 49 at sample 4751807. After 2284 accepted
+  // updates, phase leaves the output-projection range at -60.7600 cents.
+  // Losing validity must not enable the harmful string-2 to string-4 move.
+  std::array<double, m3::kMaxVoices> similarity{
+      0.67986766, 0.67625440, 0.68061175, 0.83872354, 0.97218148};
+  std::array<double, m3::kMaxVoices> cents_errors{
+      33.72876892, 37.23658142, 51.28736267, 65.26783142, 83.49439392};
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, false, cents_errors, 0U, false, true), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, true, cents_errors, 0U, false, true), 0U);
+  // Before enough evidence has accumulated, the existing early-correction
+  // path remains available. A valid mature estimate may also support a move.
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, false, cents_errors, 0U, false, false), 16U);
+  cents_errors[4U] = 10.0;
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, true, cents_errors, 0U, false, true), 16U);
+  // Stale favorable values cannot stand in for current valid evidence.
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, false, cents_errors, 0U, false, true), 0U);
+}
+
 M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   using Case = Access::FundamentalAdmissionCase;

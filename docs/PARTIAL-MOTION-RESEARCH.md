@@ -1462,9 +1462,31 @@ guards are unchanged. `cue-tuning-range-20261104T0819Z` completed at 08:21:54
 UTC and passed the small screen: nearby matches remain 815→835/3450, with
 wrong strings reduced 1548→1528 and no added wrong notes or gap outputs.
 All ten OFF controls match the baseline, all ten ON outputs agree across
-blocks 32/512/1024, and all 64 focused native tests pass. The constructed
-corpus is now running as `cue-tuning-range-constructed-20261104T0824Z`.
-Installed output is unchanged; corpus acceptance is still pending.
+blocks 32/512/1024, and all 64 focused native tests pass.
+
+The constructed screen `cue-tuning-range-constructed-20261104T0824Z` completed
+at 08:28:31 UTC and rejects this candidate. Matches fall
+259074→257470/1614601 (16.0457%→15.9464%; −1604 frames, −0.6191% relative).
+Wrong-note/wrong-string/extra-gap counts change
+167722/103754/23176→175058/102380/23627. Total false outputs rise
+294652→301065, and sixteen labels lose matches. The reduction in wrong-string
+outputs does not offset the other safety failures. OFF exactly reproduces the
+baseline; further ON buffer and corpus checks stopped. Installed output is
+unchanged. Paired diagnostic `cue-tuning-range-failure-20261104T0832Z` completed
+at 08:38:43 UTC. Both complete-history replays reproduce every saved score,
+and the traces are complete. The first differing output is sample 4751807:
+MIDI 49 moves from string 2 to string 4 as phase reaches −60.7600 cents after
+2284 accepted updates. Descriptor similarity is 0.97218, and the incumbent
+still has 32.2070 cents less tuning error. Crossing the wider validity boundary
+again disables the veto. It delayed the same harmful switch by four detector
+frames (256 samples, 2.667 ms).
+
+The next candidate distinguishes early missing evidence from lost mature
+evidence. After the existing 160 ms phase-evidence threshold, reassignment
+requires a valid output-projection estimate. Before that threshold, an
+otherwise qualified early correction remains possible. Valid estimates still
+use the existing 0.75-cent contradiction veto. This is an offline candidate;
+the small-screen gains and full corpus protections must be measured again.
 
 Corpus screening can now explicitly reuse completed cue features across native
 versions. It requires identical audio, annotations, calibration, settings,
@@ -1473,3 +1495,30 @@ new binary reruns every output and label score; old replays are never reused.
 Thirteen focused Python tests pass, including refusal of changed inputs,
 changed extraction code and incomplete features. Normal interrupted-run
 recovery still requires the original native binary.
+
+## Mature tuning must remain valid before a string correction
+
+The conditional guard preserves the useful early correction in
+`cue-mature-tuning-20261104T0847Z`, completed at 08:49:16 UTC on 2026-11-04.
+Nearby matches remain 815→835/3450 (23.62%→24.20%; +20 frames, +2.45% relative),
+with wrong-string outputs reduced 1548→1528. Wrong-note and extra-gap outputs
+remain 3178 and 668. Solo and quiet octave gain 17 and nine matches; the seven
+other cases are bit-identical. All ten OFF controls reproduce the baseline,
+and all ten ON outputs agree across blocks 32/512/1024. All 65 focused native
+tests pass, including a new regression using the first harmful decision's
+actual inputs. It distinguishes invalid mature tuning from early evidence and
+checks that valid mature tuning still permits a supported correction.
+
+The constructed screen `cue-mature-tuning-constructed-20261104T0850Z` completed
+at 08:59:19 UTC and rejects the candidate. Matches fall
+259074→258558/1614601 (16.0457%→16.0137%; −516 frames, −0.1992% relative).
+Wrong-note/wrong-string/extra-gap counts change
+167722/103754/23176→167046/103725/23176, and total false outputs fall
+294652→293947. Eight passages lose matches, so the safety gate fails despite
+fewer false outputs. OFF exactly reproduces the baseline; further ON buffer
+and corpus checks stopped. The earlier MIDI-49 failure no longer changes any
+label score. The first remaining loss is label 98, MIDI 51 on string 2:
+2305→584/3450. Paired diagnostic `cue-mature-tuning-failure-20261104T0901Z`
+is tracing that passage with the same binary and complete audio history.
+Installed output remains unchanged. The next candidate must preserve every
+passage and the small-screen gains before the corpus screen can advance.
