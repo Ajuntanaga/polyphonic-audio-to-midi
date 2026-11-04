@@ -1319,9 +1319,26 @@ when the incumbent has at least a 0.75-cent advantage. The known harmful
 MIDI-48 move is rejected by the unit fixture; whether the complete ordinary
 recording avoids that failure remains a separate gate.
 
-The same saved binary is now being tested by
+The same saved binary was tested by
 `cue-veto-ordinary-20261104T0600Z`, app `ap-ACqoR75uNSyJ7mt8NCCBsZ`.
-It must preserve aggregate and per-label matches and every false-output ceiling,
+The gate requires aggregate and per-label matches and every false-output ceiling,
 with exact OFF controls and buffer-invariant ON output, before further corpus
 work. This is acceptance for a corpus screen, not an installed improvement or
 proof of live performance.
+
+## Ordinary corpus rejects the contradiction veto
+
+The ordinary screen completed at 06:07:03 UTC on 2026-11-04. Matches rise
+145385→145596/528632 (27.502%→27.542%; +211 frames, +0.145% relative).
+Wrong notes fall 164263→163561, but wrong strings rise 92653→93192 and
+extra outputs in unlabeled gaps rise 62856→62947. Total false outputs fall
+319772→319700. The lower total does not offset either increased error category.
+Labels 187/188/192/196 lose 31/7/11/8 matches, respectively. The previous
+858-frame loss on label 243 is absent. OFF reproduces the baseline exactly;
+further ON buffer checks and other corpora stopped after the regression.
+
+Diagnostic `cue-veto-failure-20261104T0609Z` traces label 187, MIDI 54 on
+string mask 8, whose matches fall 902→871/1122. It reuses the saved binary,
+frozen cues and full recording history. The next implementation depends on
+locating the correction that causes this loss. Installed output is unchanged;
+the candidate remains rejected until all per-passage and safety gates pass.
