@@ -6592,10 +6592,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
       // Missing early evidence and lost mature evidence are different states.
       // Once the phase estimator has enough updates, an invalid estimate must
       // block reassignment rather than remove the tuning contradiction veto.
+      // The cue confirms pitch, not string identity. Limit its correction to
+      // the same settling period; later sound-shape drift must not replace an
+      // established assignment even when tuning also favors the wrong string.
       proposals[voice] = bounded_cue_free_lane_reassignment(
           cue, primary, playable, calibrated, similarities, phase.output_projection_valid,
           cents_errors, occupied, protected_group,
-          phase.accepted_updates >= required_tuning_updates);
+          phase.accepted_updates >= required_tuning_updates,
+          state.age_ticks >= required_tuning_updates);
       if (assignment_diagnostics_enabled_) {
         auto& diagnostic = assignment_diagnostics_[candidate];
         diagnostic.cue_evaluated = true;
@@ -6695,8 +6699,10 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
     std::uint8_t playable_mask, std::uint8_t calibrated_mask,
     const std::array<double, kMaxVoices>& similarities,
     bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
-    std::uint8_t occupied_mask, bool protected_group, bool tuning_required) noexcept {
-  if (!pitch_confirmed || protected_group || (tuning_required && !tuning_valid) ||
+    std::uint8_t occupied_mask, bool protected_group, bool tuning_required,
+    bool established_assignment) noexcept {
+  if (!pitch_confirmed || protected_group || established_assignment ||
+      (tuning_required && !tuning_valid) ||
       string_count(current_mask) != 1U ||
       (current_mask & playable_mask) != current_mask ||
       string_count(playable_mask) < 2U ||

@@ -595,7 +595,7 @@ class PolyphonicPitchDetector final {
       const std::array<double, kMaxVoices>& similarities,
       bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
       std::uint8_t occupied_mask, bool protected_group,
-      bool tuning_required = false) noexcept;
+      bool tuning_required = false, bool established_assignment = false) noexcept;
   void set_provisional_open_retention_guard_for_diagnostics(bool enabled) noexcept {
     diagnostic_provisional_open_retention_guard_ = enabled;
   }

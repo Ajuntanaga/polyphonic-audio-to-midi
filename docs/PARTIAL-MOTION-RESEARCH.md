@@ -1519,6 +1519,31 @@ fewer false outputs. OFF exactly reproduces the baseline; further ON buffer
 and corpus checks stopped. The earlier MIDI-49 failure no longer changes any
 label score. The first remaining loss is label 98, MIDI 51 on string 2:
 2305→584/3450. Paired diagnostic `cue-mature-tuning-failure-20261104T0901Z`
-is tracing that passage with the same binary and complete audio history.
+completed at 09:06:01 UTC. Both complete-history outputs exactly reproduce
+the saved results, and the traces are complete.
 Installed output remains unchanged. The next candidate must preserve every
 passage and the small-screen gains before the corpus screen can advance.
+
+## A confirmed pitch does not establish a new string identity
+
+The first differing output is sample 6317119. MIDI 51 moves from correct
+string 2 to free string 4 after 1258 candidate decisions, about 838.7 ms. Tuning
+is valid at +29.3153 cents after 1485 updates. The wrong string has descriptor
+similarity 0.988216 and tuning error 14.5067 cents; the incumbent's error is
+41.7098 cents. Selection and pitch detection remain identical. This is a
+late assignment error despite valid tuning, distinct from the earlier
+invalid-tuning failure. The pitch cue does not identify which string played it.
+
+The next candidate allows cue corrections only while candidate age is below
+the existing 160 ms evidence period. It preserves established assignments
+and retains the other guards. This conservative bound keeps the known useful
+correction at about 93 ms eligible; it is not evidence of a generally optimal
+settling time. The regression test uses the recorded harmful inputs and
+checks that the early correction remains eligible. The small screen
+`cue-initial-assignment-20261104T0913Z` completed at 09:17:23 UTC: all 66 focused
+native tests pass, nearby matches remain 815→835/3450, solo gains 17 and quiet
+octave nine. All ten OFF controls reproduce the baseline, ON is identical
+across blocks 32/512/1024, and seven cases remain bit-identical. Constructed
+run `cue-initial-assignment-constructed-20261104T0918Z` is now checking every
+passage and false-output ceiling using the same binary and verified cue
+features. Broad corpus acceptance is pending; installed output is unchanged.

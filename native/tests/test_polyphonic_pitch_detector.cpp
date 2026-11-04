@@ -8552,6 +8552,33 @@ M3_TEST(native_detector_cue_free_lane_blocks_lost_mature_tuning) {
       true, 4U, 31U, 31U, similarity, false, cents_errors, 0U, false, true), 0U);
 }
 
+M3_TEST(native_detector_cue_free_lane_preserves_established_assignment) {
+  using Detector = m3::PolyphonicPitchDetector;
+  // Constructed MIDI 51 at sample 6317119: the correct string-2 assignment
+  // is 1258 decisions old. Both the descriptor and valid tuning prefer the
+  // wrong free string 4, so neither is sufficient to replace the stable lane.
+  std::array<double, m3::kMaxVoices> similarity{
+      0.93461168, 0.90546361, 0.95336621, 0.96255927, 0.98821634};
+  std::array<double, m3::kMaxVoices> cents_errors{
+      42.83481831, 55.40903706, 41.70981831, 27.58481831, 14.50669331};
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, true, cents_errors, 8U, false,
+      true, false), 16U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, true, cents_errors, 8U, false,
+      true, true), 0U);
+  // An established lane also survives unavailable phase evidence.
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 4U, 31U, 31U, similarity, false, cents_errors, 8U, false,
+      false, true), 0U);
+  // The useful nearby-note correction occurs before the settling period ends.
+  similarity = {0.97266255, 0.88838787};
+  cents_errors = {2.10639258, 16.22173242};
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, false, cents_errors, 0U, false,
+      false, false), 1U);
+}
+
 M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   using Case = Access::FundamentalAdmissionCase;

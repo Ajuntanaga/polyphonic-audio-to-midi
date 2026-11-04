@@ -992,6 +992,8 @@ def capture_frozen_partial_cues(run_id: str, source_run: str, cue_free_lane: boo
             tuning_availability='settled_output_projection', maximum_absolute_cents=60.0,
             valid_phase_required_after_evidence_seconds=0.160,
             missing_mature_tuning='reject_reassignment',
+            maximum_assignment_age_seconds_exclusive=0.160,
+            established_assignment='preserve_existing_lane',
             minimum_incumbent_advantage_cents=0.75) if cue_free_lane else None),
         datasets={}, tests={}, limits=[
             'Separate plucks from the same session; mixtures and frames are correlated.',
