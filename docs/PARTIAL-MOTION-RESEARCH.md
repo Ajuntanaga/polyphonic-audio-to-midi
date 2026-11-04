@@ -1375,9 +1375,18 @@ old baseline, and ON output is identical at blocks 32/512/1024. All 64 focused
 native tests pass. Separating pitch admission preserves the measured benefit
 on this small screen; it does not yet establish ordinary-chord safety.
 
-The same saved binary is now being tested by
-`cue-assignment-ordinary-20261104T0643Z`, app `ap-f5lhBeUP48VhBVuJEWuDpE`.
-Require at least 145385/528632 matches, no lost label or higher wrong-note,
-wrong-string or extra-gap count, exact OFF equality and ON buffer parity before
-expanding to the other recordings. Installed output is unchanged; this remains
-an offline experiment.
+The same saved binary passed `cue-assignment-ordinary-20261104T0643Z`,
+app `ap-f5lhBeUP48VhBVuJEWuDpE`, at 06:51:49 UTC. ON is bit-identical to
+OFF and the old baseline: 145385/528632 matches (27.50%), with wrong-note,
+wrong-string and extra-gap counts of 164263/92653/62856; total false outputs
+remain 319772. No passage loses matches, and ON is identical at blocks
+32/512/1024. Separating pitch admission removes the earlier ordinary-corpus
+regressions while retaining the small-screen gains. It adds no matches on
+this ordinary recording.
+
+`cue-assignment-constructed-20261104T0653Z`, app `ap-5pXg4vh3Ok2EBe90snEbEx`,
+now checks constructed chords with the same binary. Require at least
+259074/1614601 matches, no lost label, wrong-note/wrong-string/extra-gap counts
+no higher than 167722/103754/23176, exact OFF equality and ON buffer parity.
+Isolated strings follow only after that gate passes. Installed output is
+unchanged; this remains an offline experiment.
