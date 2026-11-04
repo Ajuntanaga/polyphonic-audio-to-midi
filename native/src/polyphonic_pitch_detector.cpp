@@ -6564,6 +6564,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
       const auto playable = playable_string_mask(candidate);
       std::uint8_t calibrated = 0U;
       std::array<double, kMaxVoices> similarities{};
+      std::array<double, kMaxVoices> cents_errors{};
+      const auto& phase = phase_cents_states_[candidate];
+      const double assignment_cents = calibration_tuning_evidence_ != 0U
+          ? phase.cents - calibration_tuning_offset_cents_ : phase.cents;
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         const auto bit = static_cast<std::uint8_t>(1U << string);
         if ((playable & bit) == 0U) continue;
@@ -6571,11 +6575,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
         if (point == nullptr || point->quality == CalibrationPointQuality::missing) continue;
         calibrated |= bit;
         similarities[string] = calibration_similarity(candidate, string);
+        cents_errors[string] = std::abs(assignment_cents -
+            static_cast<double>(point->cents_offset_q8) / 256.0);
       }
       const auto primary = static_cast<std::uint8_t>(1U <<
           ((best.strings >> (voice * 3U)) & 0x07U));
       proposals[voice] = bounded_cue_free_lane_reassignment(
-          cue, primary, playable, calibrated, similarities, occupied, protected_group);
+          cue, primary, playable, calibrated, similarities, phase.valid,
+          cents_errors, occupied, protected_group);
     }
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       const auto proposal = proposals[voice];
@@ -6659,22 +6666,29 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
     bool pitch_confirmed, std::uint8_t current_mask,
     std::uint8_t playable_mask, std::uint8_t calibrated_mask,
     const std::array<double, kMaxVoices>& similarities,
+    bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
     std::uint8_t occupied_mask, bool protected_group) noexcept {
-  if (!pitch_confirmed || protected_group || string_count(current_mask) != 1U ||
+  if (!pitch_confirmed || !tuning_valid || protected_group ||
+      string_count(current_mask) != 1U ||
       (current_mask & playable_mask) != current_mask ||
       string_count(playable_mask) < 2U ||
       (calibrated_mask & playable_mask) != playable_mask) return 0U;
   double best = -1.0, second = -1.0;
+  double current_error = 0.0, preferred_error = 0.0;
   std::uint8_t preferred = 0U;
   for (std::size_t string = 0U; string < kMaxVoices; ++string) {
     const auto bit = static_cast<std::uint8_t>(1U << string);
     if ((playable_mask & bit) == 0U) continue;
     const double similarity = similarities[string];
     if (!std::isfinite(similarity) || similarity < 0.0 || similarity > 1.0) return 0U;
+    const double error = cents_errors[string];
+    if (!std::isfinite(error) || error < 0.0) return 0U;
+    if (bit == current_mask) current_error = error;
     if (similarity > best) {
       second = best;
       best = similarity;
       preferred = bit;
+      preferred_error = error;
     } else if (similarity > second) {
       second = similarity;
     }
@@ -6682,6 +6696,9 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
   if (best < kM3CalibratedCandidateMinimumSimilarity ||
       best - second < kM3CalibratedBandRescueMinimumMargin ||
       preferred == current_mask || (preferred & occupied_mask) != 0U) return 0U;
+  // A mistaken move becomes a retention prior in later chords. Sound shape
+  // alone must not override tuning that still supports the incumbent string.
+  if (current_error - preferred_error < kM3CalibratedCentsMinimumAdvantage) return 0U;
   return preferred;
 }
 

@@ -1264,19 +1264,40 @@ next chord, occupying the string needed by MIDI 55. In label 243, OFF has
 assignment contaminating the later chord, rather than an immediate correction
 of MIDI 55 to the wrong string.
 
-The bracketing measurements suggest an independent guard. At sample 4341759,
-the measured tuning is 1.1286319073040731 cents, compared with learned values
-of 1.04296875 cents for the original string and 6.19140625 cents for the
-competing string. Sound similarity prefers the competing string, but calibrated
-tuning favors the original. After the move, the retention bonus follows the
-wrong string. Assignment rows sample every 16 ticks, so the exact initiating
-tick still needs the saved per-tick outcome trace; no additional replay is
-needed to read it.
+The saved per-tick outcome trace locates the move at sample 4341823. Its raw
+SHA-256 matches the diagnostic report. MIDI 48 moves from string index 4 to 3
+with measured tuning of 1.163126 cents, compared with learned values of
+1.04296875 cents for the original string and 6.19140625 cents for the competing
+string. The tuning errors are about 0.12 and 5.03 cents, respectively. Sound
+similarity prefers the competing string, but tuning favors the original.
+After the move, the retention bonus follows the wrong string.
 
-Next, check whether calibrated tuning agreement can reject the move while
-preserving the separate-pluck gain. This is a repair hypothesis, not an accepted
-candidate. Require a strict held-out gain with no control regression before
-repeating the ordinary screen. Ordinary acceptance requires at least 145385
-matches, no lost label, no higher false-output count, exact OFF equality and
+The strict tuning-agreement candidate required valid tuning and a reduction of
+at least 0.75 cents in error before a sound-based string correction. This reused
+the existing calibrated-cents threshold. Modal `cue-tuning-guard-20261104T0541Z`,
+app `ap-WBakhcGtZ9Pz5dSuYRrG5A`, completed at 05:45:40 UTC. All 62 focused native
+tests pass, but the candidate is rejected: all ten ON cases are bit-identical
+to OFF. The nearby target remains 815/3450 (23.62%), losing the earlier gain of
+20 frames. OFF matches the baseline and ON is identical across blocks
+32/512/1024. The ordinary corpus was not repeated for this candidate.
+
+The saved target trace distinguishes missing evidence from contradictory
+evidence. There are 20 sound-qualified decisions with an apparently free
+destination; all have invalid phase tuning. Five sound-qualified decisions
+with valid tuning have an occupied destination. The calibration file matches
+the replay hash. These are pre-correction snapshots, not a simulation of the
+next policy or a complete view of internal lane reservations. Compact evidence
+is in `build/modal/cue-tuning-guard-20261104T0541Z-target-diagnosis.json`.
+
+The next hypothesis is a contradiction veto: reject a sound-based move when
+valid tuning favors the incumbent by at least 0.75 cents. Unavailable tuning
+must not be treated as a measured disagreement. Complete calibration, an
+independent pitch cue, an unused destination, unison protection and the
+existing sound-similarity gates remain required. The measured ordinary failure
+must still be rejected by the unit fixture.
+
+Require a strict held-out gain with no control or error regression before
+repeating ordinary. Ordinary acceptance requires at least 145385 matches,
+no lost label, no higher false-output count, exact OFF equality and
 buffer-invariant ON output. Timing/allocation, lifecycle/routing and actual-host
 gates remain open; installed output is unchanged.
