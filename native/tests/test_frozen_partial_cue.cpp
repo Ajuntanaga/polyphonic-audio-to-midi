@@ -3,6 +3,9 @@
 
 #include <cmath>
 #include <limits>
+#if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
+#include "offline_c_allocation_guard.hpp"
+#endif
 
 namespace {
 using Cue = m3::offline::FrozenPartialCue;
@@ -91,3 +94,22 @@ M3_TEST(frozen_partial_cue_recovers_after_invalid_window_without_processing_allo
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
   M3_EXPECT_EQ(m3::test::deallocation_count(), frees);
 }
+
+#if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
+M3_TEST(frozen_partial_cue_c_allocations_are_confined_to_preparation) {
+  Cue cue;
+  const auto before_prepare = m3::test::c_allocation_count();
+  M3_EXPECT_TRUE(cue.prepare(96000U));
+  // Prove that the linked wrappers observe allocation before testing absence.
+  M3_EXPECT_TRUE(m3::test::c_allocation_count() > before_prepare);
+  const auto allocations = m3::test::c_allocation_count();
+  const auto frees = m3::test::c_deallocation_count();
+  for (std::size_t sample = 0U; sample < Cue::kWindow + 4U * Cue::kHop; ++sample) {
+    cue.push(tone(sample));
+  }
+  M3_EXPECT_EQ(cue.frame().notes[36U - Cue::kFirstNote].reason, Cue::Reason::cue);
+  cue.reset();
+  M3_EXPECT_EQ(m3::test::c_allocation_count(), allocations);
+  M3_EXPECT_EQ(m3::test::c_deallocation_count(), frees);
+}
+#endif

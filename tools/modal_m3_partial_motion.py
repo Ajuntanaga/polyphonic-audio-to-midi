@@ -1701,7 +1701,7 @@ def capture_cue_decisions(run_id: str, source_run: str):
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_native_frozen_cue(run_id: str, source_run: str):
+def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False):
     """Build a standalone native measurement; never run or replace the plugin."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -1721,6 +1721,7 @@ def capture_native_frozen_cue(run_id: str, source_run: str):
     out.mkdir(exist_ok=False, parents=True)
     report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
         experiment='native_frozen_cue', replay_binary_sha256=previous['binary_sha256'],
+        fft_backend='pffft-double-avx' if pffft else 'reference-radix2',
         stage='build standalone native measurement', installed_changed=False,
         started_at=datetime.now(timezone.utc).isoformat(), config=CONFIG, frozen_screen=FROZEN_SCREEN,
         source_report_sha256=sha256(source / 'report.json'), numeric_tolerances=TOLERANCES,
@@ -1728,6 +1729,7 @@ def capture_native_frozen_cue(run_id: str, source_run: str):
         source_files_sha256={str(path.relative_to('/opt/m3')): sha256(path) for path in [
             *Path('/opt/m3/native/offline').glob('frozen_partial_cue*'),
             Path('/opt/m3/native/tests/test_frozen_partial_cue.cpp'),
+            Path('/opt/m3/native/tests/test_support.cpp'),
             Path('/opt/m3/native/tests/offline_test_main.cpp'),
             Path('/opt/m3/tools/frozen_cue_native_gate.py'),
             Path('/opt/m3/tools/independent_partial_evidence.py')]},
@@ -1743,20 +1745,63 @@ def capture_native_frozen_cue(run_id: str, source_run: str):
 
     save()
     try:
+        vendor = Path('/opt/m3/native/offline/vendor/pffft')
+        if pffft:
+            cpu = Path('/proc/cpuinfo').read_text()
+            features = re.search(r'^flags\s*:\s*(.*)$', cpu, re.M)
+            if not features or 'avx' not in features[1].split():
+                raise ValueError('AVX is required for this standalone FFT experiment')
+            model = re.search(r'^model name\s*:\s*(.*)$', cpu, re.M)
+            report['cpu_model'] = model[1] if model else 'not reported'
+            upstream = json.loads((vendor / 'UPSTREAM.json').read_text())
+            if upstream['commit'] != '7ae36e8c1d352cba66231de953cfa35f235b9e7a':
+                raise ValueError('unexpected PFFFT revision')
+            for relative, digest in upstream['files_sha256'].items():
+                path = vendor / relative
+                if not path.resolve().is_relative_to(vendor) or sha256(path) != digest:
+                    raise ValueError('vendored PFFFT source changed: ' + relative)
+            report['fft_upstream'] = upstream
+            for path in [vendor / 'UPSTREAM.json',
+                         Path('/opt/m3/native/tests/offline_c_allocation_guard.cpp'),
+                         Path('/opt/m3/native/tests/offline_c_allocation_guard.hpp')]:
+                report['source_files_sha256'][str(path.relative_to('/opt/m3'))] = sha256(path)
+            report['limits'].append('Fixed workspace size excludes the opaque FFT setup; setup OOM handling is unverified.')
         flags = ['g++', '-std=c++17', '-O2', '-DNDEBUG', '-Wall', '-Wextra', '-Wpedantic',
                  '-Wconversion', '-Wshadow', '-Werror', '-fno-exceptions', '-fno-rtti',
                  '-fstack-protector-strong', '-fvisibility=hidden',
                  '-I/opt/m3/native/offline', '-I/opt/m3/native/tests']
+        if pffft:
+            flags += ['-mavx', '-ffp-contract=off', '-DM3_FROZEN_CUE_PFFFT=1',
+                      '-DPFFFT_STATIC_DEFINE', '-I' + str(vendor / 'include/pffft')]
+        report['compiler_flags'] = flags
         obj = out / 'frozen_partial_cue.o'
         probe, tests = out / 'm3_frozen_cue_probe', out / 'm3_frozen_cue_tests'
+        library_objects = []
         with (out / 'build.log').open('w') as log:
+            if pffft:
+                cflags = ['gcc', '-std=gnu99', '-O2', '-DNDEBUG', '-mavx', '-ffp-contract=off',
+                          '-DPFFFT_STATIC_DEFINE', '-I' + str(vendor / 'include/pffft')]
+                report['fft_compiler_flags'] = cflags
+                for stem in ('pffft_double', 'pffft_common'):
+                    target = out / (stem + '.o')
+                    subprocess.run(cflags + ['-c', str(vendor / 'src' / (stem + '.c')),
+                                   '-o', str(target)], stdout=log, stderr=subprocess.STDOUT,
+                                   check=True, timeout=120)
+                    library_objects.append(str(target))
             subprocess.run(flags + ['-c', '/opt/m3/native/offline/frozen_partial_cue.cpp',
                            '-o', str(obj)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
             for executable, sources in (
                     (probe, ['native/offline/frozen_partial_cue_main.cpp']),
                     (tests, ['native/tests/test_frozen_partial_cue.cpp',
                              'native/tests/test_support.cpp', 'native/tests/offline_test_main.cpp'])):
-                subprocess.run(flags + [str(obj)] + ['/opt/m3/' + name for name in sources]
+                extra = []
+                if pffft and executable == tests:
+                    sources += ['native/tests/offline_c_allocation_guard.cpp']
+                    extra = ['-DM3_OFFLINE_C_ALLOCATION_GUARD=1'] + [
+                        '-Wl,--wrap=' + name for name in
+                        ('malloc', 'calloc', 'realloc', 'aligned_alloc', 'posix_memalign', 'free')]
+                subprocess.run(flags + extra + [str(obj)] + library_objects
+                               + ['/opt/m3/' + name for name in sources]
                                + ['-pthread', '-lm', '-o', str(executable)],
                                stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
         report['binary_sha256'] = sha256(probe)
@@ -1765,9 +1810,10 @@ def capture_native_frozen_cue(run_id: str, source_run: str):
         with (out / 'tests.log').open('w') as log:
             subprocess.run([str(tests)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
         summaries = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', (out / 'tests.log').read_text())
-        if len(summaries) != 1 or int(summaries[0][0]) != 4 or int(summaries[0][1]) != 0:
+        if len(summaries) != 1 or int(summaries[0][0]) != (5 if pffft else 4) or int(summaries[0][1]) != 0:
             raise ValueError('missing successful native test accounting')
         report['tests'] = dict(count=int(summaries[0][0]), failures=0,
+                               allocation_coverage='C++ operators and linked C functions' if pffft else 'C++ operators',
                                log_sha256=sha256(out / 'tests.log'))
         for name, saved in previous['datasets'].items():
             if not re.fullmatch(r'[a-zA-Z0-9_-]+', name):
@@ -1970,7 +2016,10 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          cue_corpus_dataset: str = 'ordinary', cue_corpus_trace_source: str = '',
          cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
          cue_trace_checkpoint_run: str = '', cue_decision_source: str = '',
-         reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = ''):
+         reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = '',
+         native_cue_pffft: bool = False):
+    if native_cue_pffft and not native_cue_source:
+        raise ValueError('PFFFT requires a standalone native cue source')
     if cue_free_lane and not cue_source:
         raise ValueError('free-lane reassignment requires a frozen cue source')
     if cue_checkpoint_run and not cue_corpus_source:
@@ -1985,7 +2034,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
             + bool(native_cue_source) + bool(delayed_cue_source)) > 1:
         raise ValueError('select one analysis or capture job')
     result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source) if delayed_cue_source else
-              capture_native_frozen_cue.remote(run_id, native_cue_source) if native_cue_source else
+              capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft) if native_cue_source else
               capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else

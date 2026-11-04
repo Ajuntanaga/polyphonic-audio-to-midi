@@ -5,6 +5,9 @@
 #include <complex>
 #include <limits>
 #include <new>
+#if defined(M3_FROZEN_CUE_PFFFT)
+#include "pffft_double.h"
+#endif
 
 namespace m3::offline {
 namespace {
@@ -83,9 +86,16 @@ FrozenPartialCue::Peak peak(const double* power, const Region& range) noexcept {
 
 struct FrozenPartialCue::Workspace final {
   std::array<double, kWindow> ring{}, taper{};
+#if defined(M3_FROZEN_CUE_PFFFT)
+  alignas(64) std::array<double, kFft> input{}, transform{}, scratch{};
+  PFFFTD_Setup* setup{};
+  std::size_t power_end{};
+  ~Workspace() { pffftd_destroy_setup(setup); }
+#else
   std::array<std::complex<double>, kFft> transform{};
   std::array<std::complex<double>, kFft / 2U> twiddles{};
   std::array<std::uint32_t, kFft> reversed{};
+#endif
   std::array<double, kFft / 2U + 1U> power{};
   std::array<std::array<Region, 2U>, kNotes> regions{};
   double normalizer{};
@@ -112,6 +122,11 @@ bool FrozenPartialCue::prepare(std::uint32_t sample_rate) noexcept {
     sum += work.taper[index];
   }
   work.normalizer = 2.0 / sum;
+#if defined(M3_FROZEN_CUE_PFFFT)
+  if (!work.setup) work.setup = pffftd_new_setup(static_cast<int>(kFft), PFFFT_REAL);
+  if (!work.setup) return false;
+  work.power_end = 0U;
+#else
   for (std::size_t index = 0U; index < kFft / 2U; ++index) {
     const double angle = -2.0 * kPi * static_cast<double>(index) / static_cast<double>(kFft);
     work.twiddles[index] = {std::cos(angle), std::sin(angle)};
@@ -125,10 +140,19 @@ bool FrozenPartialCue::prepare(std::uint32_t sample_rate) noexcept {
     }
     work.reversed[index] = reversed;
   }
+#endif
   for (std::size_t index = 0U; index < kNotes; ++index) {
     const double fundamental = 440.0 * std::pow(2.0,
         (static_cast<double>(index + kFirstNote) - 69.0) / 12.0);
     work.regions[index] = {region(fundamental * 3.0), region(fundamental * 5.0)};
+#if defined(M3_FROZEN_CUE_PFFFT)
+    // Include the peak search's neighbouring bins and both reference bands.
+    // Higher spectrum bins are never read by the frozen note screen.
+    for (const auto& range : work.regions[index]) {
+      work.power_end = std::max({work.power_end, range.last + 1U,
+                                range.left_last, range.right_last});
+    }
+#endif
   }
   prepared_ = true;
   return true;
@@ -161,6 +185,21 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
 
 void FrozenPartialCue::measure() noexcept {
   auto& work = *workspace_;
+#if defined(M3_FROZEN_CUE_PFFFT)
+  for (std::size_t index = 0U; index < kWindow; ++index) {
+    work.input[index] = work.ring[(next_ + index) % kWindow] * work.taper[index];
+  }
+  // The zero-padded tail stays zero; the transform treats its input as const.
+  pffftd_transform_ordered(work.setup, work.input.data(), work.transform.data(),
+                          work.scratch.data(), PFFFT_FORWARD);
+  const double dc = work.transform[0U] * work.normalizer;
+  work.power[0U] = dc * dc;
+  for (std::size_t index = 1U; index < work.power_end; ++index) {
+    const std::complex<double> value{work.transform[2U * index], work.transform[2U * index + 1U]};
+    const double amplitude = std::abs(value * work.normalizer);
+    work.power[index] = amplitude * amplitude;
+  }
+#else
   work.transform.fill({0.0, 0.0});
   for (std::size_t index = 0U; index < kWindow; ++index) {
     work.transform[work.reversed[index]] = {work.ring[(next_ + index) % kWindow] * work.taper[index], 0.0};
@@ -181,6 +220,7 @@ void FrozenPartialCue::measure() noexcept {
     const double amplitude = std::abs(work.transform[index] * work.normalizer);
     work.power[index] = amplitude * amplitude;
   }
+#endif
   for (std::size_t index = 0U; index < kNotes; ++index) {
     auto& note = frame_.notes[index];
     note.third = peak(work.power.data(), work.regions[index][0U]);

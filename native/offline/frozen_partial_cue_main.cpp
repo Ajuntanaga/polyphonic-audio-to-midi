@@ -7,6 +7,9 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#if defined(M3_FROZEN_CUE_PFFFT)
+#include "pffft_double.h"
+#endif
 
 namespace {
 using Cue = m3::offline::FrozenPartialCue;
@@ -96,7 +99,14 @@ int main(int argc, char** argv) {
   }
   std::sort(blocks.begin(), blocks.end());
   std::sort(transforms.begin(), transforms.end());
-  timing << "{\"sample_rate\":96000,\"block_size\":32,\"sample_count\":" << samples.size()
+  timing << "{\"fft_backend\":";
+#if defined(M3_FROZEN_CUE_PFFFT)
+  timing << "\"pffft-double\",\"fft_simd\":\"" << pffftd_simd_arch()
+         << "\",\"storage_bytes_excludes_fft_setup\":true";
+#else
+  timing << "\"reference-radix2\",\"fft_simd\":\"scalar\",\"storage_bytes_excludes_fft_setup\":false";
+#endif
+  timing << ",\"sample_rate\":96000,\"block_size\":32,\"sample_count\":" << samples.size()
          << ",\"blocks\":" << blocks.size() << ",\"analysis_frames\":" << frames
          << ",\"transform_blocks\":" << transforms.size()
          << ",\"prepare_ns\":" << prepare_ns << ",\"storage_bytes\":" << Cue::storage_bytes()

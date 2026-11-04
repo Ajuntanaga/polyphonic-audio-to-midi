@@ -2,11 +2,11 @@
 
 Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
-initial-settling guard. Native cues match the reference, but their synchronous
-FFT exceeds the callback budget. A one-hop delay loses five solo matches,
-so that scheduling route is rejected. The next step is to reduce calculation
-cost while retaining immediate cue availability. The
-installed plugin and its parameters are unchanged.
+initial-settling guard. Native cues match the reference. The optimized FFT
+reduces measured cost but still exceeds the callback budget. A one-hop delay
+loses five solo matches. The next step is to screen a shorter, fixed delay
+before implementing a worker. The installed plugin and its parameters are
+unchanged.
 
 ## Decision
 
@@ -17,8 +17,8 @@ gain of 815 to 835 matches out of 3450, with fewer wrong-string outputs.
 Pitch admission stays unchanged. Nine corpus screens preserve all passage
 matches and false-output limits; this establishes regression coverage, not
 better broad-corpus tracking or live readiness. Before integration, require
-a faster native calculation to retain reference parity and pass the callback
-budget. The remaining corpus and MIDI lifecycle checks stay open.
+a scheduling route that preserves the undelayed gains and meets callback
+timing. The remaining corpus and MIDI lifecycle checks stay open.
 
 The earlier direct-fundamental admission repair is rejected. It raised
 matches from 3250 to 3507/6900 in the equal-RMS MIDI-49 mixture while adding
@@ -56,6 +56,18 @@ p99 is 5.991700 ms against 0.166666 ms, with a 14.391048 ms maximum against
 parity therefore does not justify putting this implementation on the audio
 thread.
 
+The optional double-precision AVX probe in
+`native-frozen-cue-pffft-20261104T1051Z` preserves all ten cue files and all
+175960 observations within the same tolerances. All five boundary, reset and
+allocation tests pass, including linked C allocations. Worst p99 is
+0.291410 ms and maximum is 0.730550 ms: reductions of 95.14% and 94.92%
+from the scalar results across separate cloud runs. This is not a controlled
+same-CPU comparison. Every case still misses the stated callback gates, so
+the synchronous route remains rejected. The fixed workspace is 2110416 bytes,
+excluding opaque FFT setup storage. PFFFT is pinned to
+`7ae36e8c1d352cba66231de953cfa35f235b9e7a`; source hashes and license notices
+are retained. The optional probe defaults off and does not alter the plugin.
+
 Run `cue-fixed-delay-20261104T1034Z` tested one fixed scheduling delay of
 1024 samples (10.6667 ms), using the saved replay binary. Both cue availability
 and expiry move by one hop; the measurement window and thresholds stay fixed.
@@ -68,6 +80,16 @@ quiet-octave matches remain 2079/3450. No other case changes. Further buffer
 checks stopped after the failed gate. OFF and unit-test evidence are reused
 from the identical saved binary; earlier undelayed corpus passes do not cover
 the delayed policy. No incremental FFT was implemented.
+
+The next screen uses a fixed 128-sample delay (1.333333 ms) to test whether a
+short worker handoff could preserve the gains. The saved replay reader only
+accepts cue times on the original 1024-sample grid, so the screen requires a
+diagnostic clock option and a fresh cloud build. Keep original cue validation;
+shift availability and expiry after parsing. Before delayed output is scored,
+OFF and zero-delay ON must exactly reproduce the source screen. Require every
+undelayed gain and error ceiling, unchanged negative controls, then agreement
+at blocks 32/512/1024. This screen would establish delay tolerance only; worker
+scheduling, the remaining corpora and live MIDI behavior would remain untested.
 
 ## Relevant primary sources
 

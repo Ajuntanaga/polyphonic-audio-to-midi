@@ -52,6 +52,7 @@ class FrozenPartialCue final {
   const Frame& frame() const noexcept { return frame_; }
   static Reason screen(const Peak& third, const Peak& fifth) noexcept;
   static const char* reason_name(Reason reason) noexcept;
+  // Fixed workspace only; excludes the optional library FFT setup.
   static std::size_t storage_bytes() noexcept;
 
  private:

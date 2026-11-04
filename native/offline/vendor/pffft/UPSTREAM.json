@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/marton78/pffft",
+  "commit": "7ae36e8c1d352cba66231de953cfa35f235b9e7a",
+  "files_sha256": {
+    "LICENSE.txt": "6c99fce38c991ff104307ecebe20ff014b5e1f5d9e3426da292da8417c7a78cd",
+    "include/pffft/pffft_double.h": "56d9e530359810adbf6f41b485cc014ef3ed9340d79b9f47180fb503707daf59",
+    "src/pffft_double.c": "4880d8109b12a87d19e81bd762301cff30a0977fab5de75b2ae822a29170c268",
+    "src/pffft_priv_impl.h": "c2d07ced60648e2a968633f3b461fa6b15171e77390ea474391c5c8e277afba7",
+    "src/pffft_common.c": "3e89b8c5d345227f5e8f3a35ba04c6713b119687c752834784cdf48823ed0467",
+    "src/simd/pf_double.h": "b4ffa59382367f0c795ccd51e5111eeda0cc2caab822eba83c0d2b7ffcd1aca9",
+    "src/simd/pf_avx_double.h": "3485115c4fc68c405d0014fbbf64677107cd176ccf4373bb29154d84b447f45b",
+    "src/simd/pf_sse2_double.h": "654ae2e1141d5898cbd1e6e9900f78e4bd2c368f350081df482773fd15d09b92",
+    "src/simd/pf_scalar_double.h": "38898ed3cc273fbd921fa07e3d7499b672f19ac9a7cd96c89672ea14dd283f3a",
+    "src/simd/pf_neon_double.h": "9dc601c6073c27b292b9bb2f1f905d23789fb501d42477b37817f22d3d1ab0c1",
+    "src/simd/pf_wasm_double.h": "b76eb23987410cf0e1e045e2076dae951676c00c77790470698156bfa535c461",
+    "src/simd/pf_rvv_double.h": "0cbff668c5d4b76b2a25cbb691a7f3c73bc083cad2613e5ede7c207dbead4ebf",
+    "src/simd/pf_fma_x86.h": "bc01552a085229f3c33089077a68868736567cf6c24b6d1998dfc27f15a279f6",
+    "include/pffft/pffft.h": "0935379f8b7904b1140050b2c6196c1b86dc08b11fc67da8773df965678469fb"
+  }
+}
