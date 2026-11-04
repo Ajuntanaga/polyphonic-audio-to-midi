@@ -1730,6 +1730,15 @@ struct ReplayLabelResult final {
 #endif
 };
 
+// Offline detector-only second pass. Label scoring and fingerprint hashing are
+// outside the timed blocks; the fingerprint must equal the scored replay.
+struct ReplayCoreTiming final {
+  std::uint64_t fingerprint{}, blocks{}, total_ns{}, p99_ns{}, maximum_ns{};
+  std::uint64_t half_budget_overruns{}, deadline_overruns{};
+  std::uint64_t cpp_allocations{}, cpp_frees{}, c_allocations{}, c_frees{};
+  bool fingerprint_identical{}, allocation_guard{};
+};
+
 struct ReplayResult final {
   std::uint64_t fingerprint{};
   std::uint64_t sample_count{};
@@ -2313,7 +2322,8 @@ bool run_detector_replay(const WaveData& wave,
                          PartialMotionTrace* partial_motion_trace = nullptr,
                          bool diagnostic_fundamental_admission = false,
                          FrozenNoteCues* diagnostic_odd_partial_cues = nullptr,
-                         bool diagnostic_cue_free_lane_reassignment = false);
+                         bool diagnostic_cue_free_lane_reassignment = false,
+                         ReplayCoreTiming* core_timing = nullptr);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

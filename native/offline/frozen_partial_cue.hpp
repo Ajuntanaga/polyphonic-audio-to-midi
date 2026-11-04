@@ -10,11 +10,17 @@ namespace m3::offline {
 // Native reference for the frozen offline cue, not an audio-thread policy.
 // Raw input and the fixed A4=440 geometry are its only evidence. A completed
 // frame is usable on the NEXT sample and expires after one analysis hop.
+// The standalone cooperative build delays publication by exactly 128 samples.
 class FrozenPartialCue final {
  public:
   static constexpr std::size_t kWindow = 16384U;
   static constexpr std::size_t kFft = 65536U;
   static constexpr std::size_t kHop = 1024U;
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  static constexpr std::size_t kAvailabilityDelay = 128U;
+#else
+  static constexpr std::size_t kAvailabilityDelay = 0U;
+#endif
   static constexpr unsigned kFirstNote = 32U;
   static constexpr unsigned kLastNote = 84U;
   static constexpr std::size_t kNotes = kLastNote - kFirstNote + 1U;
@@ -33,7 +39,7 @@ class FrozenPartialCue final {
     Reason reason{Reason::missing_peak};
   };
   struct Frame final {
-    std::uint64_t end_sample{};  // Exclusive; first sample that may use this cue.
+    std::uint64_t end_sample{};  // Exclusive evidence end; excludes availability delay.
     bool history_available{}, valid{};
     std::array<Note, kNotes> notes{};
     std::array<std::uint64_t, 2U> mask{};
@@ -47,7 +53,7 @@ class FrozenPartialCue final {
   // Only the already-frozen 96 kHz sidecar clock is supported in this probe.
   bool prepare(std::uint32_t sample_rate) noexcept;
   void reset() noexcept;
-  // True once per hop, including warmup/invalid frames that clear the cue.
+  // True once per hop after kAvailabilityDelay, including empty frames.
   bool push(float raw_sample) noexcept;
   const Frame& frame() const noexcept { return frame_; }
   static Reason screen(const Peak& third, const Peak& fifth) noexcept;
@@ -63,6 +69,13 @@ class FrozenPartialCue final {
   std::size_t next_{}, invalid_samples_{};
   bool prepared_{};
   void measure() noexcept;
+  void select_peaks() noexcept;
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  Frame pending_{};
+  bool pending_ready_{};
+  void prepare_residue(std::size_t residue, std::size_t until_end) noexcept;
+  void transform_residue(std::size_t residue) noexcept;
+#endif
 };
 
 }  // namespace m3::offline

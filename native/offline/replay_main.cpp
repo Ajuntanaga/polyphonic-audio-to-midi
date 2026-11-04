@@ -202,6 +202,8 @@ void usage(const char* program) {
       "[--diagnostic-odd-partial-cues FILE] "
       "[--diagnostic-cue-delay-samples 0..1024] "
       "[--diagnostic-cue-free-lane-reassignment] "
+      "[--diagnostic-native-partial-cues] "
+      "[--diagnostic-core-timing FILE] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
       "[--diagnostic-correlation-seconds 0.020..0.200 "
@@ -285,7 +287,10 @@ int main(int argc, char** argv) {
   bool diagnostic_fundamental_admission = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
+  bool diagnostic_cue_delay_explicit = false;
   bool diagnostic_cue_free_lane_reassignment = false;
+  bool diagnostic_native_partial_cues = false;
+  const char* diagnostic_core_timing_path = nullptr;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
@@ -591,6 +596,7 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
       diagnostic_odd_partial_cues_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-cue-delay-samples") == 0 && has_value) {
+      diagnostic_cue_delay_explicit = true;
       errno = 0;
       char* end = nullptr;
       const long parsed = std::strtol(argv[++index], &end, 10);
@@ -601,6 +607,10 @@ int main(int argc, char** argv) {
       diagnostic_cue_delay_samples = static_cast<std::uint32_t>(parsed);
     } else if (std::strcmp(argv[index], "--diagnostic-cue-free-lane-reassignment") == 0) {
       diagnostic_cue_free_lane_reassignment = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-native-partial-cues") == 0) {
+      diagnostic_native_partial_cues = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-core-timing") == 0 && has_value) {
+      diagnostic_core_timing_path = argv[++index];
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
@@ -790,13 +800,26 @@ int main(int argc, char** argv) {
   }
 
   m3::offline::FrozenNoteCues diagnostic_odd_partial_cues;
-  if (diagnostic_cue_delay_samples != 0U && diagnostic_odd_partial_cues_path == nullptr) {
+  if (diagnostic_cue_delay_explicit && diagnostic_odd_partial_cues_path == nullptr) {
     std::fprintf(stderr, "m3_replay: cue delay requires frozen odd-partial cues\n");
     return 1;
   }
-  if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues_path == nullptr) {
+  if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues_path == nullptr &&
+      !diagnostic_native_partial_cues) {
     std::fprintf(stderr, "m3_replay: free-lane reassignment requires frozen odd-partial cues\n");
     return 1;
+  }
+  if (diagnostic_native_partial_cues) {
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+    if (diagnostic_odd_partial_cues_path != nullptr || diagnostic_fundamental_admission ||
+        !diagnostic_odd_partial_cues.prepare_native(wave.sample_rate, wave.mono_samples.size())) {
+      std::fprintf(stderr, "m3_replay: native cues require 96 kHz input and no other cue source\n");
+      return 1;
+    }
+#else
+    std::fprintf(stderr, "m3_replay: native cues require the cooperative offline build\n");
+    return 1;
+#endif
   }
   if (diagnostic_odd_partial_cues_path != nullptr) {
     std::vector<std::uint8_t> cue_bytes;
@@ -941,6 +964,7 @@ int main(int argc, char** argv) {
   }
 
   m3::offline::ReplayResult result;
+  m3::offline::ReplayCoreTiming core_timing;
   m3::offline::CandidateAdmissionRescuePolicy candidate_rescue{
       candidate_rescue_score_ratio, candidate_rescue_fundamental_ratio};
   const m3::offline::CandidateAdmissionRescuePolicy* candidate_rescue_pointer =
@@ -1096,11 +1120,39 @@ int main(int argc, char** argv) {
           joint_ownership_ablation,
           partial_motion_stream != nullptr ? &partial_motion_trace : nullptr,
           diagnostic_fundamental_admission,
-          diagnostic_odd_partial_cues_path != nullptr ? &diagnostic_odd_partial_cues : nullptr,
-          diagnostic_cue_free_lane_reassignment)) {
+          (diagnostic_odd_partial_cues_path != nullptr || diagnostic_native_partial_cues) ?
+              &diagnostic_odd_partial_cues : nullptr,
+          diagnostic_cue_free_lane_reassignment,
+          diagnostic_core_timing_path != nullptr ? &core_timing : nullptr)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
+  }
+  if (diagnostic_core_timing_path != nullptr) {
+    std::FILE* stream = std::fopen(diagnostic_core_timing_path, "w");
+    if (stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: cannot open core timing output\n");
+      return 1;
+    }
+    const auto number = [](std::uint64_t value) { return static_cast<unsigned long long>(value); };
+    bool failed = std::fprintf(stream,
+        "{\"schema\":\"m3_replay_core_timing_v1\",\"sample_rate\":%u,\"block_samples\":%zu,"
+        "\"fingerprint\":\"%016llx\",\"fingerprint_identical\":%s,"
+        "\"blocks\":%llu,\"total_ns\":%llu,\"p99_ns\":%llu,\"maximum_ns\":%llu,"
+        "\"half_budget_overruns\":%llu,\"deadline_overruns\":%llu,"
+        "\"allocation_guard\":%s,\"cpp_allocations\":%llu,\"cpp_frees\":%llu,"
+        "\"c_allocations\":%llu,\"c_frees\":%llu}\n",
+        wave.sample_rate, block_size, number(core_timing.fingerprint),
+        core_timing.fingerprint_identical ? "true" : "false", number(core_timing.blocks),
+        number(core_timing.total_ns), number(core_timing.p99_ns), number(core_timing.maximum_ns),
+        number(core_timing.half_budget_overruns), number(core_timing.deadline_overruns),
+        core_timing.allocation_guard ? "true" : "false", number(core_timing.cpp_allocations),
+        number(core_timing.cpp_frees), number(core_timing.c_allocations), number(core_timing.c_frees)) < 0;
+    failed = std::fclose(stream) != 0 || failed;
+    if (failed || !core_timing.fingerprint_identical) {
+      std::fprintf(stderr, "m3_replay: core timing output failed or replay fingerprint differed\n");
+      return 1;
+    }
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (diagnostic_residual_pitch_recovery) {

@@ -2,13 +2,12 @@
 
 Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
-initial-settling guard. Native cues match the reference, but synchronous
-processing still exceeds the callback budget. A fixed 128-sample delay
-preserves all ten controlled results. A background worker avoids callback
-overruns but loses cues at the smallest buffer. Keeping the worker awake
-removes that loss in a repeated solo control, at roughly one CPU core.
-The next screen limits polling to the time near each cue calculation.
-The installed plugin and its parameters are unchanged.
+initial-settling guard. A fixed 128-sample delay preserves all ten controlled
+results. The native implementation reproduces those delayed replay outputs
+without processing allocations. Direct squared magnitude preserves the cues
+and replay results, but combined timing still fails. The next change moves
+final cue work away from a detector decision boundary while keeping its
+release time unchanged. The installed plugin and its parameters are unchanged.
 
 ## Decision
 
@@ -18,9 +17,9 @@ later corrections caused measured passage losses. It retains the nearby-note
 gain of 815 to 835 matches out of 3450, with fewer wrong-string outputs.
 Pitch admission stays unchanged. Nine corpus screens preserve all passage
 matches and false-output limits; this establishes regression coverage, not
-better broad-corpus tracking or live readiness. Before integration, require
-a scheduling route that preserves the undelayed gains and meets callback
-timing. The remaining corpus and MIDI lifecycle checks stay open.
+better broad-corpus tracking or live readiness. Before wider native corpus checks, require
+combined cue and detector processing to preserve the gains and meet the timing
+limits. The remaining corpus and MIDI lifecycle checks stay open.
 
 The earlier direct-fundamental admission repair is rejected. It raised
 matches from 3250 to 3507/6900 in the equal-RMS MIDI-49 mixture while adding
@@ -42,6 +41,70 @@ A string's harmonics can move together as its tension and vibration change.
 An overlapping harmonic may follow a different mixture of those movements.
 The useful question is whether those differences survive in our recordings,
 not whether a sufficiently flexible model can reconstruct the waveform.
+
+## Split calculation and native replay integration
+
+The split calculation in `cue-cooperative-corpus-20261104T1216Z` preserves all
+ten reference cue files with the fixed 128-sample delay. All 175960 note
+observations pass the frozen tolerances, and all five tests pass. Processing
+allocations and frees are zero. Worst block p99 is 146034 ns and maximum is
+322800 ns, within the standalone limits of 166666 ns and 333333 ns. The
+calculation uses four decimated transforms prepared before each evidence
+boundary, then combined across four successive 32-sample blocks. Cue
+availability remains exactly 128 samples later. No background worker is used.
+
+The combined replay in `cue-native-replay-20261104T1240Z` preserves every saved
+OFF and delayed ON result across ten cases. Outputs agree at blocks
+32/512/1024; timed and scored passes have identical fingerprints. All 78 tests
+pass, including the native cue adapter's delay, expiry, reset and invalid-input
+checks. Both C and C++ processing allocation guards remain at zero.
+
+The note gains survive: solo matches rise from 3219 to 3236/3450
+(93.3043% to 93.7971%), quiet-octave target matches from 2070 to 2079/3450
+(60.0000% to 60.2609%), and nearby-note target matches from 815 to 835/3450
+(23.6232% to 24.2029%). Wrong-string counts fall from 159 to 142, 1314 to 1305,
+and 1548 to 1528 respectively. Wrong-note and extra-gap outputs are unchanged;
+extra-gap means extra outputs during unlabeled gaps. The other seven cases
+are bit-identical to OFF.
+
+Combined processing timing passes only on silence. Non-silent p99 ranges
+from 185039 to 234139 ns against 166666 ns; the largest observed block is
+1836909 ns against 333333 ns. Timing includes cue generation, trim and the
+detector, while scoring, hashing and reports remain outside the timer. Wall
+time can include descheduling, and OFF also has occasional outliers; neither
+fact makes the failed ON timing gate pass. This candidate is rejected for
+wider native corpus testing. Binary SHA-256:
+`730e3021bcec091fb7d579868cb28e2f0a8abb4f01a0033ec57dbb880e831d5c`.
+
+Direct squared magnitude replaces magnitude-then-square in the final
+cooperative step. Run `cue-direct-power-20261104T1251Z` preserves all ten
+reference cue files, passes all six tests, and reports zero processing
+allocations or frees. Every p99 meets the 166666 ns limit; the worst is
+155090 ns. Two maximum block times fail: 479739 ns on the quiet-octave
+source-only recording and 340919 ns on nearby-note source-only, against
+333333 ns. Eight of ten recordings pass both timing limits. This result is
+rejected for callback use. Selected cases are faster than the preceding run,
+but its worst-case p99 and maximum are higher; separate cloud runs do not
+establish a uniform speedup. Probe SHA-256:
+`fde84f3dddd1fcd7074aaf205566869e53b653cfbe134eacb8fc049e8da4d909`.
+
+The combined direct-power replay, `cue-direct-power-replay-20261104T1257Z`,
+also preserves all ten OFF and ON references, tested buffer outputs and timed
+fingerprints. All 78 tests pass; processing allocations and frees remain zero.
+Only solo meets both timing limits. Worst p99 is 202121 ns against 166666 ns;
+maximum is 2219376 ns against 333333 ns. The arithmetic change does not close
+the combined timing gap. Replay SHA-256:
+`37e74e44779271c80ce18635ce3846537b47659d4260311de6900f1d036c9616`.
+
+Next, move the final transform and peak selection away from a detector
+decision boundary, retaining the exact 128-sample release time. This is a
+scheduling experiment, not a measured improvement yet. Require all ten
+reference outputs, zero processing allocations, combined p99 at most
+166666 ns and maximum at most 333333 ns before wider native corpus testing.
+The measured 170.7 ms window remains; 1.333333 ms is only the added
+availability delay. Earlier undelayed corpus checks do not cover this native
+build. Host timing, MIDI lifecycle and routing, remaining corpus coverage,
+and the unmet physical-long and exact-three targets remain open.
 
 ## Native measurement and the callback constraint
 

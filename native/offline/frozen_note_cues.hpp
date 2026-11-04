@@ -5,9 +5,13 @@
 #include <charconv>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <string_view>
 #include <system_error>
 #include <vector>
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+#include "frozen_partial_cue.hpp"
+#endif
 
 namespace m3::offline {
 
@@ -17,6 +21,9 @@ class FrozenNoteCues final {
  public:
   bool parse(std::string_view text, std::uint32_t sample_rate,
              std::uint64_t sample_count, std::uint32_t availability_delay_samples = 0U) {
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+    native_.reset();
+#endif
     spans_.clear();
     reset();
     valid_ = false;
@@ -64,10 +71,42 @@ class FrozenNoteCues final {
     return true;
   }
 
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  // Explicit offline opt-in. Preparation may allocate; observe/advance do not.
+  bool prepare_native(std::uint32_t rate, std::uint64_t count) {
+    valid_ = false;
+    spans_.clear();
+    native_ = std::make_unique<FrozenPartialCue>();
+    reset();
+    if (count == 0U || !native_->prepare(rate)) return false;
+    sample_count_ = count;
+    valid_ = true;
+    return true;
+  }
+#endif
+  void observe(float raw_sample) noexcept {
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+    if (valid_ && native_ != nullptr && native_->push(raw_sample)) {
+      const auto& frame = native_->frame();
+      pending_mask_ = frame.valid ? frame.mask : std::array<std::uint64_t, 2U>{};
+      pending_at_ = frame.end_sample + FrozenPartialCue::kAvailabilityDelay;
+      pending_ = true;
+    }
+#else
+    (void)raw_sample;
+#endif
+  }
+
   bool matches(std::uint32_t rate, std::uint64_t count) const noexcept {
     return valid_ && rate == 96000U && count == sample_count_;
   }
   void reset() noexcept {
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+    if (native_ != nullptr) native_->reset();
+    pending_mask_ = {};
+    pending_at_ = native_expiry_ = 0U;
+    pending_ = false;
+#endif
     cursor_ = 0U;
     next_transition_ = 0U;
     expiry_.fill(0U);
@@ -75,6 +114,21 @@ class FrozenNoteCues final {
   }
   // Called in increasing sample order, before consuming the current sample.
   bool advance(std::uint64_t sample) noexcept {
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+    if (valid_ && native_ != nullptr) {
+      const auto previous = mask_;
+      if (sample >= native_expiry_ || sample >= sample_count_) mask_ = {};
+      if (pending_ && sample >= pending_at_) {
+        if (pending_at_ < sample_count_) {
+          native_expiry_ = pending_at_ + std::min<std::uint64_t>(
+              FrozenPartialCue::kHop, sample_count_ - pending_at_);
+          if (sample < native_expiry_) mask_ = pending_mask_;
+        }
+        pending_ = false;
+      }
+      return mask_ != previous;
+    }
+#endif
     if (!valid_ || sample < next_transition_) return false;
     const auto previous = mask_;
     for (std::size_t note = 0U; note < expiry_.size(); ++note) {
@@ -106,6 +160,12 @@ class FrozenNoteCues final {
   std::size_t cursor_{};
   std::uint64_t next_transition_{}, sample_count_{};
   bool valid_{};
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  std::unique_ptr<FrozenPartialCue> native_;
+  std::array<std::uint64_t, 2U> pending_mask_{};
+  std::uint64_t pending_at_{}, native_expiry_{};
+  bool pending_{};
+#endif
 };
 
 }  // namespace m3::offline

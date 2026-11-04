@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <limits>
@@ -20,6 +21,10 @@
 #include "frozen_note_cues.hpp"
 #include "residual_recovery.hpp"
 #include "unison_spectral_shadow.hpp"
+#if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
+#include "offline_c_allocation_guard.hpp"
+#include "test_support.hpp"
+#endif
 
 namespace m3::offline {
 namespace {
@@ -162,6 +167,93 @@ void hash_integer(std::uint64_t& hash, Integer value) noexcept {
                         bits >> static_cast<unsigned>(index * 8U)));
   }
 }
+
+void hash_decision(std::uint64_t& hash, std::size_t sample,
+                   const DetectorDecision& decision) noexcept {
+  for (const auto& transition : decision.transitions) {
+    hash_integer(hash, sample);
+    hash_byte(hash, static_cast<std::uint8_t>(transition.kind));
+    hash_byte(hash, transition.note);
+    hash_byte(hash, transition.velocity);
+    hash_byte(hash, transition.voice_id);
+    hash_integer(hash, transition.sequence);
+  }
+  if (!decision.tuner_snapshot_ready) return;
+  const auto& snapshot = decision.tuner_snapshot;
+  hash_integer(hash, sample);
+  hash_byte(hash, static_cast<std::uint8_t>(snapshot.state));
+  hash_byte(hash, snapshot.voice_count);
+  for (std::size_t index = 0U; index < snapshot.voice_count; ++index) {
+    const auto& voice = snapshot.voices[index];
+    hash_byte(hash, voice.midi_note);
+    hash_integer(hash, voice.cents_q8);
+    hash_integer(hash, voice.confidence_q15);
+    hash_integer(hash, voice.age_ticks);
+    hash_byte(hash, static_cast<std::uint8_t>(voice.state));
+    hash_byte(hash, voice.cents_valid ? 1U : 0U);
+    hash_byte(hash, voice.string_index);
+    hash_byte(hash, voice.pitch_evidence_group_id);
+    hash_byte(hash, voice.pitch_evidence_member_mask);
+    hash_integer(hash, voice.beat_hz_q8);
+  }
+}
+
+DetectorDecision process_replay_sample(PolyphonicPitchDetector& detector,
+    FrozenNoteCues* cues, std::size_t sample_index, double raw, double sample) noexcept {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (cues != nullptr) {
+    if (cues->advance(sample_index)) detector.set_odd_partial_cue_mask_for_diagnostics(cues->mask());
+    cues->observe(static_cast<float>(raw));
+  }
+#else
+  (void)cues; (void)sample_index; (void)raw;
+#endif
+  return detector.process_sample(sample);
+}
+
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues,
+    const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output) {
+  output = {};
+  output.fingerprint = kFnvOffset;
+  std::vector<DetectorDecision> decisions(block);
+  std::vector<std::uint64_t> times((wave.mono_samples.size() + block - 1U) / block);
+  detector.reset();
+  if (cues != nullptr) cues->reset();
+  for (std::size_t begin = 0U; begin < wave.mono_samples.size(); begin += block) {
+    const auto count = std::min(block, wave.mono_samples.size() - begin);
+#if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
+    const auto cpp_before = m3::test::allocation_count(), cpp_free_before = m3::test::deallocation_count();
+    const auto c_before = m3::test::c_allocation_count(), c_free_before = m3::test::c_deallocation_count();
+#endif
+    const auto start = std::chrono::steady_clock::now();
+    for (std::size_t index = 0U; index < count; ++index) {
+      const double raw = wave.mono_samples[begin + index];
+      decisions[index] = process_replay_sample(detector, cues, begin + index, raw,
+                                              raw * gain);
+    }
+    const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
+        std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+#if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
+    output.allocation_guard = true;
+    output.cpp_allocations += m3::test::allocation_count() - cpp_before;
+    output.cpp_frees += m3::test::deallocation_count() - cpp_free_before;
+    output.c_allocations += m3::test::c_allocation_count() - c_before;
+    output.c_frees += m3::test::c_deallocation_count() - c_free_before;
+#endif
+    times[output.blocks++] = elapsed;
+    output.total_ns += elapsed;
+    const auto budget = static_cast<std::uint64_t>(count) * 1000000000ULL / wave.sample_rate;
+    output.half_budget_overruns += elapsed > budget / 2U ? 1U : 0U;
+    output.deadline_overruns += elapsed > budget ? 1U : 0U;
+    for (std::size_t index = 0U; index < count; ++index)
+      hash_decision(output.fingerprint, begin + index, decisions[index]);
+  }
+  std::sort(times.begin(), times.end());
+  output.p99_ns = times[(times.size() * 99U + 99U) / 100U - 1U];
+  output.maximum_ns = times.back();
+}
+#endif
 
 bool parse_u64(std::string_view field, std::uint64_t& value) noexcept {
   if (field.empty()) {
@@ -2598,9 +2690,22 @@ bool run_detector_replay(const WaveData& wave,
                          PartialMotionTrace* partial_motion_trace,
                          bool diagnostic_fundamental_admission,
                          FrozenNoteCues* diagnostic_odd_partial_cues,
-                         bool diagnostic_cue_free_lane_reassignment) {
+                         bool diagnostic_cue_free_lane_reassignment,
+                         ReplayCoreTiming* core_timing) {
   output = {};
   error = ReplayError::invalid_config;
+  if (core_timing != nullptr) {
+    *core_timing = {};
+#if !defined(M3_FROZEN_CUE_COOPERATIVE)
+    return false;
+#else
+    if (wave.mono_samples.empty() || input_partition == 0U || input_partition > 1024U ||
+        frequency_window_capture != nullptr || candidate_trace != nullptr ||
+        outcome_trace != nullptr || residual_admission_trace != nullptr ||
+        assignment_trace != nullptr || midi_event_trace != nullptr || partial_motion_trace != nullptr)
+      return false;
+#endif
+  }
   if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues == nullptr)
     return false;
   if (diagnostic_odd_partial_cues != nullptr) {
@@ -3142,13 +3247,9 @@ bool run_detector_replay(const WaveData& wave,
         }
       }
 #endif
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-      if (diagnostic_odd_partial_cues != nullptr &&
-          diagnostic_odd_partial_cues->advance(sample_index)) {
-        detector.set_odd_partial_cue_mask_for_diagnostics(diagnostic_odd_partial_cues->mask());
-      }
-#endif
-      const DetectorDecision decision = detector.process_sample(sample);
+      const DetectorDecision decision = process_replay_sample(detector,
+          diagnostic_odd_partial_cues, sample_index, wave.mono_samples[sample_index], sample);
+      hash_decision(result.fingerprint, sample_index, decision);
       for (const VoiceTransition& transition : decision.transitions) {
         if (midi_event_trace != nullptr && !midi_event_trace->failed) {
           auto& trace = *midi_event_trace;
@@ -3167,13 +3268,6 @@ bool run_detector_replay(const WaveData& wave,
         } else {
           ++result.transition_gap_count;
         }
-        hash_integer(result.fingerprint, sample_index);
-        hash_byte(result.fingerprint,
-                  static_cast<std::uint8_t>(transition.kind));
-        hash_byte(result.fingerprint, transition.note);
-        hash_byte(result.fingerprint, transition.velocity);
-        hash_byte(result.fingerprint, transition.voice_id);
-        hash_integer(result.fingerprint, transition.sequence);
       }
       if (!decision.tuner_snapshot_ready) {
         continue;
@@ -4657,9 +4751,6 @@ bool run_detector_replay(const WaveData& wave,
           }
         }
       }
-      hash_integer(result.fingerprint, sample_index);
-      hash_byte(result.fingerprint, static_cast<std::uint8_t>(snapshot.state));
-      hash_byte(result.fingerprint, snapshot.voice_count);
       std::size_t snapshot_distinct_note_count = 0U;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       std::size_t snapshot_selected_distinct_note_count = 0U;
@@ -4691,20 +4782,6 @@ bool run_detector_replay(const WaveData& wave,
           snapshot_selected_distinct_note_count += first_selected ? 1U : 0U;
         }
 #endif
-      }
-      for (std::size_t voice_index = 0U;
-           voice_index < snapshot.voice_count; ++voice_index) {
-        const TunerVoice& voice = snapshot.voices[voice_index];
-        hash_byte(result.fingerprint, voice.midi_note);
-        hash_integer(result.fingerprint, voice.cents_q8);
-        hash_integer(result.fingerprint, voice.confidence_q15);
-        hash_integer(result.fingerprint, voice.age_ticks);
-        hash_byte(result.fingerprint, static_cast<std::uint8_t>(voice.state));
-        hash_byte(result.fingerprint, voice.cents_valid ? 1U : 0U);
-        hash_byte(result.fingerprint, voice.string_index);
-        hash_byte(result.fingerprint, voice.pitch_evidence_group_id);
-        hash_byte(result.fingerprint, voice.pitch_evidence_member_mask);
-        hash_integer(result.fingerprint, voice.beat_hz_q8);
       }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -8873,6 +8950,13 @@ bool run_detector_replay(const WaveData& wave,
   result.residual_recovery_proposals = recovery_stats.proposals;
   result.residual_recovery_selected_ticks = recovery_stats.selected_ticks;
   result.residual_recovery_note_ons = recovery_stats.note_ons;
+#endif
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  if (core_timing != nullptr) {
+    measure_replay_core(detector, diagnostic_odd_partial_cues, wave, input_gain,
+                        input_partition, *core_timing);
+    core_timing->fingerprint_identical = core_timing->fingerprint == result.fingerprint;
+  }
 #endif
   output = result;
   error = ReplayError::none;

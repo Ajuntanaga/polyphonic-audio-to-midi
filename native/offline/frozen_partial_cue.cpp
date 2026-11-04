@@ -5,6 +5,9 @@
 #include <complex>
 #include <limits>
 #include <new>
+#if defined(M3_FROZEN_CUE_COOPERATIVE) && !defined(M3_FROZEN_CUE_PFFFT)
+#error Cooperative cue calculation requires PFFFT.
+#endif
 #if defined(M3_FROZEN_CUE_PFFFT)
 #include "pffft_double.h"
 #endif
@@ -87,7 +90,15 @@ FrozenPartialCue::Peak peak(const double* power, const Region& range) noexcept {
 struct FrozenPartialCue::Workspace final {
   std::array<double, kWindow> ring{}, taper{};
 #if defined(M3_FROZEN_CUE_PFFFT)
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  static constexpr std::size_t kPartFft = kFft / 4U;
+  alignas(64) std::array<std::array<double, kPartFft>, 4U> input{};
+  alignas(64) std::array<double, kPartFft> transform{}, scratch{};
+  std::array<std::complex<double>, kPartFft / 2U> accumulator{};
+  std::array<std::array<std::complex<double>, kPartFft / 2U>, 3U> twiddles{};
+#else
   alignas(64) std::array<double, kFft> input{}, transform{}, scratch{};
+#endif
   PFFFTD_Setup* setup{};
   std::size_t power_end{};
   ~Workspace() { pffftd_destroy_setup(setup); }
@@ -123,7 +134,17 @@ bool FrozenPartialCue::prepare(std::uint32_t sample_rate) noexcept {
   }
   work.normalizer = 2.0 / sum;
 #if defined(M3_FROZEN_CUE_PFFFT)
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  if (!work.setup) work.setup = pffftd_new_setup(static_cast<int>(Workspace::kPartFft), PFFFT_REAL);
+  for (std::size_t residue = 1U; residue < 4U; ++residue) {
+    for (std::size_t bin = 0U; bin < work.accumulator.size(); ++bin) {
+      const double angle = -2.0 * kPi * static_cast<double>(residue * bin) / static_cast<double>(kFft);
+      work.twiddles[residue - 1U][bin] = {std::cos(angle), std::sin(angle)};
+    }
+  }
+#else
   if (!work.setup) work.setup = pffftd_new_setup(static_cast<int>(kFft), PFFFT_REAL);
+#endif
   if (!work.setup) return false;
   work.power_end = 0U;
 #else
@@ -154,6 +175,10 @@ bool FrozenPartialCue::prepare(std::uint32_t sample_rate) noexcept {
     }
 #endif
   }
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  // Only these positive bins are read; no wrapped or Nyquist bins are needed.
+  if (work.power_end > work.accumulator.size()) return false;
+#endif
   prepared_ = true;
   return true;
 }
@@ -163,6 +188,10 @@ void FrozenPartialCue::reset() noexcept {
   next_ = 0U;
   invalid_samples_ = 0U;
   frame_ = {};
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  pending_ = {};
+  pending_ready_ = false;
+#endif
   if (workspace_) workspace_->ring.fill(0.0);
 }
 
@@ -174,6 +203,34 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
   if (!std::isfinite(ring[next_])) ++invalid_samples_;
   next_ = (next_ + 1U) % kWindow;
   ++samples_;
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+  const auto phase = static_cast<std::size_t>(samples_ % kHop);
+  // Each residue's old samples are copied before the frame ends. The final
+  // 128 arriving samples are patched directly, retaining the exact window.
+  if (phase == 0U || phase > kHop - kAvailabilityDelay) {
+    const auto index = phase == 0U ? kWindow - 1U : kWindow - kHop + phase - 1U;
+    workspace_->input[index % 4U][index / 4U] = static_cast<double>(raw_sample) * workspace_->taper[index];
+  }
+  if (phase >= kHop - kAvailabilityDelay && phase % 32U == 0U) {
+    prepare_residue((phase - (kHop - kAvailabilityDelay)) / 32U, kHop - phase);
+  }
+  if (phase == 0U) {
+    pending_ = {};
+    pending_.end_sample = samples_;
+    pending_.history_available = samples_ >= kWindow;
+    pending_.valid = pending_.history_available && invalid_samples_ == 0U;
+    pending_ready_ = true;
+  } else if (pending_ready_ && phase <= kAvailabilityDelay && phase % 32U == 0U) {
+    if (pending_.valid) transform_residue(phase / 32U - 1U);
+    if (phase == kAvailabilityDelay) {
+      frame_ = pending_;
+      if (frame_.valid) select_peaks();
+      pending_ready_ = false;
+      return true;
+    }
+  }
+  return false;
+#else
   if (samples_ % kHop != 0U) return false;
   frame_ = {};
   frame_.end_sample = samples_;
@@ -181,8 +238,39 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
   frame_.valid = frame_.history_available && invalid_samples_ == 0U;
   if (frame_.valid) measure();
   return true;
+#endif
 }
 
+#if defined(M3_FROZEN_CUE_COOPERATIVE)
+void FrozenPartialCue::prepare_residue(std::size_t residue, std::size_t until_end) noexcept {
+  auto& work = *workspace_;
+  const auto start = (next_ + until_end) % kWindow;
+  for (auto index = residue; index < kWindow - kAvailabilityDelay; index += 4U) {
+    work.input[residue][index / 4U] = work.ring[(start + index) % kWindow] * work.taper[index];
+  }
+}
+
+void FrozenPartialCue::transform_residue(std::size_t residue) noexcept {
+  auto& work = *workspace_;
+  // For a[n] = the zero-padded window, e_r[m] = a[4m+r].
+  // X[k] = sum_r exp(-2*pi*i*k*r/65536) * DFT16384(e_r)[k].
+  pffftd_transform_ordered(work.setup, work.input[residue].data(), work.transform.data(),
+                          work.scratch.data(), PFFFT_FORWARD);
+  for (std::size_t bin = 0U; bin < work.power_end; ++bin) {
+    const std::complex<double> value = bin == 0U ? std::complex<double>{work.transform[0U], 0.0}
+        : std::complex<double>{work.transform[2U * bin], work.transform[2U * bin + 1U]};
+    if (residue == 0U) work.accumulator[bin] = value;
+    else work.accumulator[bin] += work.twiddles[residue - 1U][bin] * value;
+    if (residue == 3U) {
+      // Finite float input leaves ample double range after the windowed FFT.
+      // Compute squared magnitude directly instead of squaring hypot's result.
+      const double real = work.accumulator[bin].real() * work.normalizer;
+      const double imaginary = work.accumulator[bin].imag() * work.normalizer;
+      work.power[bin] = real * real + imaginary * imaginary;
+    }
+  }
+}
+#else
 void FrozenPartialCue::measure() noexcept {
   auto& work = *workspace_;
 #if defined(M3_FROZEN_CUE_PFFFT)
@@ -221,6 +309,12 @@ void FrozenPartialCue::measure() noexcept {
     work.power[index] = amplitude * amplitude;
   }
 #endif
+  select_peaks();
+}
+#endif
+
+void FrozenPartialCue::select_peaks() noexcept {
+  auto& work = *workspace_;
   for (std::size_t index = 0U; index < kNotes; ++index) {
     auto& note = frame_.notes[index];
     note.third = peak(work.power.data(), work.regions[index][0U]);

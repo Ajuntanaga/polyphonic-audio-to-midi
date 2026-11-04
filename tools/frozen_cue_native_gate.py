@@ -17,9 +17,11 @@ TOLERANCES = {
 }
 
 
-def compare_native_observations(audio, observations, native_cues):
+def compare_native_observations(audio, observations, native_cues, availability_delay=0):
     from tools.independent_partial_evidence import measure, frozen_pair_screen, frozen_cue_intervals
 
+    if availability_delay not in (0, 128):
+        raise ValueError('unsupported native cue availability delay')
     counts = dict(clock=0, reason=0, peak_presence=0, peak_bin=0,
                   reference_presence=0, numeric=0)
     examples, intervals = [], []
@@ -37,7 +39,11 @@ def compare_native_observations(audio, observations, native_cues):
         for row in measure(audio, 96000, notes=tuple(range(32, 85))):
             frames += 1
             end, history = row['sample'] + 1, row['history_available']
-            intervals.extend(frozen_cue_intervals([row], sample_count=len(audio)))
+            for item in frozen_cue_intervals([row], sample_count=len(audio)):
+                begin = item['begin_sample'] + availability_delay
+                if begin < len(audio):
+                    intervals.append(dict(item, begin_sample=begin,
+                                          end_sample=min(begin + 1024, len(audio))))
             for note in range(32, 85):
                 got = next(reader, None)
                 if got is None:
@@ -47,6 +53,9 @@ def compare_native_observations(audio, observations, native_cues):
                 actual_clock = [int(got[key]) for key in ('end_sample', 'note', 'history', 'valid')]
                 if actual_clock != expected_clock:
                     mismatch('clock', end, note, 'sample/history', expected_clock, actual_clock)
+                if int(got['available_sample']) != end + availability_delay:
+                    mismatch('clock', end, note, 'availability', end + availability_delay,
+                             int(got['available_sample']))
                 value = row['notes'].get(str(note))
                 reason = frozen_pair_screen(value) if history else 'missing_peak'
                 if got['reason'] != reason:

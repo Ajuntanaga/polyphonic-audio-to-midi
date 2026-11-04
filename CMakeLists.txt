@@ -15,8 +15,12 @@ option(M3_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(M3_ENABLE_RESIDUAL_SHADOW_TESTS "Exercise bounded residual work in test and replay callbacks only" OFF)
 option(M3_BUILD_FROZEN_CUE_PROBE "Build the standalone frozen cue parity and timing probe" OFF)
 option(M3_FROZEN_CUE_PFFFT "Use the experimental AVX double FFT in the standalone cue probe" OFF)
+option(M3_FROZEN_CUE_COOPERATIVE "Enable bounded native cue work in offline probes and replay only" OFF)
 if(M3_FROZEN_CUE_PFFFT AND NOT M3_BUILD_FROZEN_CUE_PROBE)
     message(FATAL_ERROR "M3_FROZEN_CUE_PFFFT requires M3_BUILD_FROZEN_CUE_PROBE")
+endif()
+if(M3_FROZEN_CUE_COOPERATIVE AND NOT M3_FROZEN_CUE_PFFFT)
+    message(FATAL_ERROR "M3_FROZEN_CUE_COOPERATIVE requires M3_FROZEN_CUE_PFFFT")
 endif()
 if(M3_ENABLE_ASAN_UBSAN AND M3_ENABLE_TSAN)
     message(FATAL_ERROR "ASan/UBSan and TSan builds must remain separate")
@@ -243,7 +247,7 @@ target_link_libraries(m3_replay PRIVATE Threads::Threads m)
 m3_apply_project_options(m3_replay)
 
 if(M3_BUILD_FROZEN_CUE_PROBE)
-    # Standalone measurement only; neither plugin links this implementation.
+    # Offline measurement only; neither plugin links this implementation.
     add_executable(m3_frozen_cue_probe
         native/offline/frozen_partial_cue.cpp
         native/offline/frozen_partial_cue_main.cpp)
@@ -271,24 +275,45 @@ if(M3_BUILD_FROZEN_CUE_PROBE)
         target_compile_definitions(m3_offline_pffft PUBLIC PFFFT_STATIC_DEFINE)
         target_compile_options(m3_offline_pffft PRIVATE -mavx -ffp-contract=off)
         set_target_properties(m3_offline_pffft PROPERTIES C_STANDARD 99 C_EXTENSIONS ON)
-        add_executable(m3_frozen_cue_worker_probe
-            native/offline/frozen_partial_cue.cpp
-            native/offline/frozen_cue_worker.cpp
-            native/offline/frozen_cue_worker_main.cpp
-            native/tests/test_support.cpp
-            native/tests/offline_c_allocation_guard.cpp)
-        target_include_directories(m3_frozen_cue_worker_probe PRIVATE native/offline native/tests)
-        target_link_libraries(m3_frozen_cue_worker_probe PRIVATE Threads::Threads m)
-        m3_apply_project_options(m3_frozen_cue_worker_probe)
-        target_sources(m3_frozen_cue_tests PRIVATE
-            native/offline/frozen_cue_worker.cpp native/tests/test_frozen_cue_worker.cpp)
-        foreach(target m3_frozen_cue_probe m3_frozen_cue_tests m3_frozen_cue_worker_probe)
+        set(cue_targets m3_frozen_cue_probe m3_frozen_cue_tests)
+        set(cue_guard_targets m3_frozen_cue_tests)
+        if(NOT M3_FROZEN_CUE_COOPERATIVE)
+            add_executable(m3_frozen_cue_worker_probe
+                native/offline/frozen_partial_cue.cpp
+                native/offline/frozen_cue_worker.cpp
+                native/offline/frozen_cue_worker_main.cpp
+                native/tests/test_support.cpp
+                native/tests/offline_c_allocation_guard.cpp)
+            target_include_directories(m3_frozen_cue_worker_probe PRIVATE native/offline native/tests)
+            target_link_libraries(m3_frozen_cue_worker_probe PRIVATE Threads::Threads m)
+            m3_apply_project_options(m3_frozen_cue_worker_probe)
+            target_sources(m3_frozen_cue_tests PRIVATE
+                native/offline/frozen_cue_worker.cpp native/tests/test_frozen_cue_worker.cpp)
+            list(APPEND cue_targets m3_frozen_cue_worker_probe)
+            list(APPEND cue_guard_targets m3_frozen_cue_worker_probe)
+        else()
+            add_library(m3_offline_native_cue STATIC native/offline/frozen_partial_cue.cpp)
+            target_include_directories(m3_offline_native_cue PRIVATE native/offline)
+            m3_apply_project_options(m3_offline_native_cue)
+            list(APPEND cue_targets m3_offline_native_cue)
+            foreach(target ${cue_targets} m3_replay)
+                target_compile_definitions(${target} PRIVATE M3_FROZEN_CUE_COOPERATIVE=1)
+            endforeach()
+            # Preserve detector arithmetic; only the cue library uses AVX flags.
+            target_compile_definitions(m3_replay PRIVATE M3_FROZEN_CUE_PFFFT=1)
+            target_link_libraries(m3_replay PRIVATE m3_offline_native_cue)
+            target_include_directories(m3_replay PRIVATE native/tests)
+            target_sources(m3_replay PRIVATE native/tests/test_support.cpp
+                native/tests/offline_c_allocation_guard.cpp)
+            list(APPEND cue_guard_targets m3_replay)
+        endif()
+        foreach(target ${cue_targets})
             target_compile_definitions(${target} PRIVATE M3_FROZEN_CUE_PFFFT=1)
             target_compile_options(${target} PRIVATE -mavx -ffp-contract=off)
             target_link_libraries(${target} PRIVATE m3_offline_pffft)
         endforeach()
         target_sources(m3_frozen_cue_tests PRIVATE native/tests/offline_c_allocation_guard.cpp)
-        foreach(target m3_frozen_cue_tests m3_frozen_cue_worker_probe)
+        foreach(target ${cue_guard_targets})
             target_compile_definitions(${target} PRIVATE M3_OFFLINE_C_ALLOCATION_GUARD=1)
             foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
                 target_link_options(${target} PRIVATE "-Wl,--wrap=${function}")

@@ -76,7 +76,7 @@ def wave_duration(path):
     return rate, size / align / rate
 
 
-def build(out, detector_tests=False):
+def build(out, detector_tests=False, native_cue=False):
     source = Path('/opt/m3')
     text = (source / 'project.cmake').read_text()
     core = re.search(r'set\(M3_NATIVE_CORE_SOURCES\s+(.*?)\)', text, re.S)
@@ -88,13 +88,37 @@ def build(out, detector_tests=False):
         'native/offline/unison_spectral_shadow.cpp']
     (source / 'motion_test_main.cpp').write_text(
         '#include "test_support.hpp"\nint main(){return m3::test::run_all_tests();}\n')
+    native_cmake = '''
+add_compile_definitions(M3_FROZEN_CUE_COOPERATIVE=1 M3_FROZEN_CUE_PFFFT=1
+ M3_OFFLINE_C_ALLOCATION_GUARD=1)
+set(pffft_root native/offline/vendor/pffft)
+add_library(offline_pffft STATIC ${pffft_root}/src/pffft_double.c
+ ${pffft_root}/src/pffft_common.c)
+target_include_directories(offline_pffft PUBLIC ${pffft_root}/include/pffft)
+target_compile_definitions(offline_pffft PUBLIC PFFFT_STATIC_DEFINE)
+target_compile_options(offline_pffft PRIVATE -O2 -DNDEBUG -mavx -ffp-contract=off)
+set_target_properties(offline_pffft PROPERTIES C_STANDARD 99 C_EXTENSIONS ON)
+add_library(native_cue STATIC native/offline/frozen_partial_cue.cpp)
+target_compile_options(native_cue PRIVATE -mavx -ffp-contract=off)
+target_link_libraries(native_cue PRIVATE offline_pffft)
+target_link_libraries(core PUBLIC native_cue)
+target_sources(m3_replay PRIVATE native/tests/test_support.cpp)
+target_sources(m3_motion_tests PRIVATE native/tests/test_frozen_partial_cue.cpp)
+foreach(target m3_replay m3_motion_tests m3_detector_tests)
+ if(TARGET ${target})
+  target_sources(${target} PRIVATE native/tests/offline_c_allocation_guard.cpp)
+  foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
+   target_link_options(${target} PRIVATE "-Wl,--wrap=${function}")
+  endforeach()
+ endif()
+endforeach()
+''' if native_cue else ''
     (source / 'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.20)
-project(m3_motion LANGUAGES CXX)
+project(m3_motion LANGUAGES ''' + ('C CXX' if native_cue else 'CXX') + ''')
 set(CMAKE_CXX_STANDARD 17)
 add_compile_definitions(M3_OFFLINE_REPLAY_DIAGNOSTICS=1 M3_SPECTRAL_TIER_DIAGNOSTICS=1
  M3_UNISON_SPECTRAL_SHADOW=1 M3_JOINT_RESIDUAL_SHADOW=1)
-add_compile_options(-O2 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wshadow
- -Werror -fno-exceptions -fno-rtti -fstack-protector-strong -fvisibility=hidden)
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-O2;-DNDEBUG;-Wall;-Wextra;-Wpedantic;-Wconversion;-Wshadow;-Werror;-fno-exceptions;-fno-rtti;-fstack-protector-strong;-fvisibility=hidden>")
 include_directories(native/include native/offline native/tests)
 add_library(core STATIC ''' + ' '.join(sources) + ''')
 add_executable(m3_replay native/offline/replay_main.cpp)
@@ -107,7 +131,7 @@ add_compile_definitions(M3_TESTING=1)
 add_executable(m3_detector_tests native/tests/test_polyphonic_pitch_detector.cpp
  native/tests/test_support.cpp motion_test_main.cpp)
 target_link_libraries(m3_detector_tests PRIVATE core pthread m)
-''' if detector_tests else ''))
+''' if detector_tests else '') + native_cmake)
     directory = Path('/tmp/m3-motion-build')
     with (out / 'build.log').open('w') as log:
         subprocess.run(['cmake', '-S', str(source), '-B', str(directory)],
@@ -1704,7 +1728,8 @@ def capture_cue_decisions(run_id: str, source_run: str):
 def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                               worker_delay_run: str = '', worker_timer_diagnostic: bool = False,
                               worker_wait_diagnostic: bool = False,
-                              worker_hybrid_diagnostic: bool = False):
+                              worker_hybrid_diagnostic: bool = False,
+                              cooperative: bool = False, solo_only: bool = False):
     """Build a standalone native measurement; never run or replace the plugin."""
     import sys
     sys.path.insert(0, '/opt/m3')
@@ -1717,6 +1742,10 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
     worker_diagnostic = worker_timer_diagnostic or worker_wait_diagnostic or worker_hybrid_diagnostic
     if worker_diagnostic and not worker_delay_run:
         raise ValueError('worker diagnosis requires the worker experiment')
+    if cooperative and (not pffft or worker_delay_run):
+        raise ValueError('cooperative measurement requires PFFFT without a worker')
+    if solo_only and not cooperative:
+        raise ValueError('solo-only native screen requires cooperative measurement')
     identifiers = (run_id, source_run) + ((worker_delay_run,) if worker_delay_run else ())
     if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in identifiers):
         raise ValueError('invalid run identifier')
@@ -1750,7 +1779,8 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                     'worker_timer_slack' if worker_timer_diagnostic else
                     'worker_frozen_cue' if worker_delay_run else 'native_frozen_cue'),
         replay_binary_sha256=previous['binary_sha256'],
-        fft_backend='pffft-double-avx' if pffft else 'reference-radix2',
+        fft_backend=('pffft-double-avx-radix4' if cooperative else
+                     'pffft-double-avx' if pffft else 'reference-radix2'),
         stage='build standalone native measurement', installed_changed=False,
         started_at=datetime.now(timezone.utc).isoformat(), config=CONFIG, frozen_screen=FROZEN_SCREEN,
         source_report_sha256=sha256(source / 'report.json'), numeric_tolerances=TOLERANCES,
@@ -1766,6 +1796,15 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                 'Modal CPU timing is not a live-host deadline guarantee.',
                 'The causal measurement window remains 170.7 ms at 96 kHz.',
                 'This probe is not linked into either installed plugin.'])
+    if cooperative:
+        report.update(cooperative=True, availability_delay_samples=128,
+                      scope='solo screen' if solo_only else 'ten-recording screen',
+                      accepted_for_detector_integration=False)
+        report['limits'] += [
+            'Four residue streams are prepared before each evidence boundary, then transformed in four successive 32-sample blocks.',
+            'Cue availability is exactly 128 samples after its evidence boundary; numeric tolerances are unchanged.',
+            'Stages 0-3 prepare streams; stages 4-7 transform and combine them, with peak selection in stage 7.',
+            'The transform_blocks timing fields measure the publication block only, not the entire split calculation.']
     if delay_report is not None:
         report.update(delay_source_run=worker_delay_run, delay_source_sha256=sha256(delay_path),
                       delayed_replay_binary_sha256=delay_report['binary_sha256'],
@@ -1839,6 +1878,8 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
         if pffft:
             flags += ['-mavx', '-ffp-contract=off', '-DM3_FROZEN_CUE_PFFFT=1',
                       '-DPFFFT_STATIC_DEFINE', '-I' + str(vendor / 'include/pffft')]
+        if cooperative:
+            flags += ['-DM3_FROZEN_CUE_COOPERATIVE=1']
         report['compiler_flags'] = flags
         obj = out / 'frozen_partial_cue.o'
         probe = out / ('m3_frozen_cue_worker_probe' if worker_delay_run else 'm3_frozen_cue_probe')
@@ -1871,7 +1912,9 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
                 extra = []
                 if worker_delay_run and executable == tests:
                     sources += ['native/tests/test_frozen_cue_worker.cpp']
-                if pffft and (executable == tests or worker_delay_run):
+                if cooperative and executable == probe:
+                    sources += ['native/tests/test_support.cpp']
+                if pffft and (executable == tests or worker_delay_run or cooperative):
                     sources += ['native/tests/offline_c_allocation_guard.cpp']
                     extra = ['-DM3_OFFLINE_C_ALLOCATION_GUARD=1'] + [
                         '-Wl,--wrap=' + name for name in
@@ -1886,14 +1929,15 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
         with (out / 'tests.log').open('w') as log:
             subprocess.run([str(tests)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
         summaries = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', (out / 'tests.log').read_text())
-        expected_tests = 11 if worker_delay_run else (5 if pffft else 4)
+        expected_tests = 11 if worker_delay_run else (6 if cooperative else 5 if pffft else 4)
         if len(summaries) != 1 or int(summaries[0][0]) != expected_tests or int(summaries[0][1]) != 0:
             raise ValueError('missing successful native test accounting')
         report['tests'] = dict(count=int(summaries[0][0]), failures=0,
                                allocation_coverage='C++ operators and linked C functions' if pffft else 'C++ operators',
                                log_sha256=sha256(out / 'tests.log'))
-        selected_cases = ({'solo': previous['datasets']['solo']} if worker_diagnostic
+        selected_cases = ({'solo': previous['datasets']['solo']} if worker_diagnostic or solo_only
                           else previous['datasets'])
+        report['expected_datasets'] = list(selected_cases)
         for name, saved in selected_cases.items():
             if not re.fullmatch(r'[a-zA-Z0-9_-]+', name):
                 raise ValueError('invalid case name')
@@ -1977,11 +2021,18 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
             with (out / (name + '.log')).open('w') as log:
                 subprocess.run([str(probe), str(raw), str(observations), str(cues), str(timing)],
                     stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
-            comparison = compare_native_observations(samples, observations, cues)
+            delay = 128 if cooperative else 0
+            comparison = compare_native_observations(samples, observations, cues, delay)
             measured = json.loads(timing.read_text())
             if (measured['sample_count'] != len(samples) or measured['sample_rate'] != rate
-                    or measured['block_size'] != 32):
+                    or measured['block_size'] != 32 or measured['availability_delay_samples'] != delay
+                    or measured['flush_samples'] != delay or measured['availability_clock_errors'] != 0
+                    or measured['analysis_frames'] != len(samples) // 1024):
                 raise ValueError('native timing clock mismatch')
+            if cooperative:
+                measured['allocation_pass'] = measured['processing_allocation_guarded'] and all(
+                    measured[key] == 0 for key in ('processing_cpp_allocations', 'processing_cpp_frees',
+                                                  'processing_c_allocations', 'processing_c_frees'))
             measured['standalone_budget_pass'] = (measured['block_p99_ns'] <= measured['p99_budget_ns']
                 and measured['block_max_ns'] <= measured['block_deadline_ns'])
             report['datasets'][name] = dict(sample_count=len(samples), sample_rate=rate,
@@ -2033,11 +2084,17 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False,
             return report
         report['parity_pass'] = all(item['comparison']['parity_pass'] for item in report['datasets'].values())
         report['standalone_timing_pass'] = all(item['timing']['standalone_budget_pass'] for item in report['datasets'].values())
+        passed = report['parity_pass'] and report['standalone_timing_pass']
+        if cooperative:
+            report['allocation_pass'] = all(item['timing']['allocation_pass'] for item in report['datasets'].values())
+            report['cooperative_screen_pass'] = (passed and report['allocation_pass'] and
+                                                set(report['datasets']) == set(selected_cases))
+            passed = report['cooperative_screen_pass']
         report.update(state='completed', final=True, stage='native cue parity and timing complete',
             completed_at=datetime.now(timezone.utc).isoformat(),
             verdict=('native parity and standalone timing passed; host integration unverified'
-                     if report['parity_pass'] and report['standalone_timing_pass'] else
-                     'rejected for audio callback: native parity or timing gate failed'))
+                     if passed else
+                     'rejected for audio callback: native parity, allocation or timing gate failed'))
     except Exception as error:
         report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
         logs = sorted(out.glob('*.log'), key=lambda path: path.stat().st_mtime)[-3:]
@@ -2224,6 +2281,179 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str, delay: int = 1024)
     return report
 
 
+@app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
+              timeout=1800, max_containers=1)
+def capture_native_cue_replay(run_id: str, delayed_source: str):
+    """Compare the integrated native cue with the accepted delayed replay."""
+    import sys
+    sys.path.insert(0, '/opt/m3')
+    from tools.controlled_admission_gate import CASES, evaluate_admission, read_target_detail
+    from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
+    if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, delayed_source)):
+        raise ValueError('invalid run identifier')
+    delayed = MOUNT / 'results' / delayed_source
+    previous = json.loads((delayed / 'report.json').read_text())
+    if (previous.get('state') != 'completed' or not previous.get('final') or
+            not previous.get('accepted_for_corpus_screen') or
+            previous.get('availability_delay_samples') != 128 or
+            previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
+        raise ValueError('source is not an accepted fixed-delay screen')
+    source_run = previous['source_run']
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', source_run):
+        raise ValueError('invalid input source identifier')
+    source = MOUNT / 'results' / source_run
+    original = json.loads((source / 'report.json').read_text())
+    calibration = MOUNT / 'corpus/calibration.m3cb'
+    if (sha256(source / 'report.json') != previous['source_report_sha256'] or
+            sha256(delayed / 'm3_replay') != previous['binary_sha256'] or
+            sha256(calibration) != previous['calibration_sha256']):
+        raise ValueError('saved reference evidence changed')
+    expected_cases = set(CASES) | {name + '_source_only' for name in CASES if name != 'solo'} | {'silence'}
+    if set(previous['datasets']) != expected_cases or set(original['datasets']) != expected_cases:
+        raise ValueError('controlled case coverage changed')
+    out = MOUNT / 'results' / run_id
+    out.mkdir(exist_ok=False, parents=True)
+    binary = out / 'm3_replay'
+    report = dict(run_id=run_id, source_run=source_run, delayed_source=delayed_source,
+        state='running', final=False, experiment='native_cue_replay',
+        stage='build native cue replay integration',
+        started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
+        source_report_sha256=sha256(source / 'report.json'),
+        delayed_report_sha256=sha256(delayed / 'report.json'),
+        reference_binary_sha256=previous['binary_sha256'],
+        calibration_sha256=previous['calibration_sha256'], config=CONFIG,
+        frozen_screen=FROZEN_SCREEN, settings=previous['settings'],
+        availability_delay_samples=128, availability_delay_ms=128000 / 96000,
+        timing_gate=dict(sample_rate=96000, block_samples=32,
+                         p99_ns_max=166666, maximum_ns_max=333333),
+        tests={}, datasets={}, limits=[
+            'Offline opt-in only; installed plugins do not link the cue implementation.',
+            'Timing includes cue generation, input trim and detector work in a second pass.',
+            'Scoring, labels, fingerprint hashing and report formatting are outside the timer.',
+            'The timed pass must reproduce the scored pass fingerprint exactly.',
+            'Cloud detector timing is not live host callback or lifecycle certification.'])
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        volume.commit()
+
+    def replay(name, block, mode, native, timing=False):
+        args = [str(binary), '--wav', str(source / (name + '.wav')),
+                '--labels', str(source / (name + '.tsv')), '--calibration', str(calibration),
+                '--block', str(block), '--label-details']
+        if native:
+            args += ['--diagnostic-native-partial-cues', '--diagnostic-cue-free-lane-reassignment']
+        timing_path = out / f'{name}-{mode}-timing.json'
+        if timing:
+            args += ['--diagnostic-core-timing', str(timing_path)]
+        for key, value in previous['settings'].items():
+            args += ['--' + key, str(value)]
+        output = out / f'{name}-{mode}.tsv'
+        with output.open('w') as stdout, (out / f'{name}-{mode}.log').open('w') as log:
+            subprocess.run(args, stdout=stdout, stderr=log, check=True, timeout=240)
+        result = dict(output=aggregate(output))
+        if previous['datasets'][name]['has_target']:
+            result['target'] = read_target_detail(output)
+        measured = None
+        if timing:
+            measured = json.loads(timing_path.read_text())
+            if (measured.get('schema') != 'm3_replay_core_timing_v1' or
+                    measured['sample_rate'] != 96000 or measured['block_samples'] != block or
+                    not measured['fingerprint_identical'] or
+                    measured['fingerprint'] != result['output']['fingerprint']):
+                raise ValueError(name + ': timing pass did not reproduce scored output')
+            measured['allocation_pass'] = measured['allocation_guard'] and all(
+                measured[key] == 0 for key in ('cpp_allocations', 'cpp_frees', 'c_allocations', 'c_frees'))
+            measured['timing_pass'] = (measured['p99_ns'] <= report['timing_gate']['p99_ns_max'] and
+                measured['maximum_ns'] <= report['timing_gate']['maximum_ns_max'] and
+                measured['deadline_overruns'] == 0)
+        return result, measured
+
+    save()
+    try:
+        directory = build(out, detector_tests=True, native_cue=True)
+        shutil.copy2(directory / 'm3_replay', binary)
+        report['binary_sha256'] = sha256(binary)
+        report['stage'] = 'native cue adapter, admission and offline replay tests'
+        save()
+        for name, executable, test_filter in (
+                ('frozen-native-cue', 'm3_motion_tests', 'frozen_'),
+                ('cue-free-lane', 'm3_detector_tests', 'native_detector_cue_free_lane'),
+                ('fundamental-admission', 'm3_detector_tests', 'native_detector_fundamental_admission'),
+                ('harmonic-admission', 'm3_detector_tests', 'native_detector_calibrated_harmonic_admission'),
+                ('offline', 'm3_motion_tests', 'offline_')):
+            log_path = out / (name + '-tests.log')
+            with log_path.open('w') as log:
+                subprocess.run([str(directory / executable)], stdout=log, stderr=subprocess.STDOUT,
+                    env=dict(os.environ, M3_TEST_FILTER=test_filter), check=True, timeout=240)
+            counts = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', log_path.read_text())
+            if len(counts) != 1 or int(counts[0][0]) == 0 or int(counts[0][1]):
+                raise ValueError('missing or failed test accounting: ' + name)
+            report['tests'][name] = dict(tests=int(counts[0][0]), failures=int(counts[0][1]),
+                                       log_sha256=sha256(log_path))
+        save()
+        for name, saved in previous['datasets'].items():
+            for suffix, key in (('.wav', 'audio_sha256'), ('.tsv', 'labels_sha256'),
+                                ('-cues.tsv', 'cue_sha256')):
+                if sha256(source / (name + suffix)) != original['datasets'][name][key]:
+                    raise ValueError(name + ': saved input changed')
+            if not saved['control_identical'] or not saved['buffer_outputs_identical']:
+                raise ValueError(name + ': accepted reference is incomplete')
+            for mode in ('off', 'on'):
+                evidence = dict(output=aggregate(delayed / f'{name}-{mode}.tsv'))
+                if saved['has_target']:
+                    evidence['target'] = read_target_detail(delayed / f'{name}-{mode}.tsv')
+                if evidence != saved['replays'][mode]:
+                    raise ValueError(name + ': saved replay evidence changed')
+            item = dict(sample_rate=96000, sample_count=saved['sample_count'],
+                has_target=saved['has_target'], replays={}, timing={},
+                control_identical=False, native_output_identical=False, buffer_outputs_identical=False)
+            report['datasets'][name] = item
+            for mode, block, native, timing in (('off', 512, False, False), ('on', 512, True, False),
+                    ('off32', 32, False, True), ('on32', 32, True, True), ('on1024', 1024, True, False)):
+                report['stage'] = f'{name}: {mode}, block {block}'
+                save()
+                result, measured = replay(name, block, mode, native, timing)
+                item['replays'][mode] = result
+                if measured is not None:
+                    item['timing'][mode] = measured
+                if mode == 'off':
+                    item['control_identical'] = result == saved['replays']['off']
+                    if not item['control_identical']:
+                        raise ValueError(name + ': fresh OFF differs from saved OFF')
+                if mode == 'on':
+                    item['native_output_identical'] = result == saved['replays']['on']
+                    if not item['native_output_identical']:
+                        raise ValueError(name + ': native cue differs from saved delayed cue')
+            item['buffer_outputs_identical'] = (item['replays']['off32'] == item['replays']['off'] and
+                item['replays']['on32'] == item['replays']['on'] == item['replays']['on1024'])
+            if not item['buffer_outputs_identical']:
+                raise ValueError(name + ': native cue replay depends on buffer size')
+            save()
+        admission = evaluate_admission({name: report['datasets'][name] for name in CASES})
+        for name, result in admission.pop('cases').items():
+            report['datasets'][name].update(result)
+        report['admission_gate'] = admission
+        allocation_pass = all(timing['allocation_pass'] for item in report['datasets'].values()
+                              for timing in item['timing'].values())
+        timing_pass = all(item['timing']['on32']['timing_pass'] for item in report['datasets'].values())
+        report.update(native_replay_parity_pass=True, native_processing_allocation_pass=allocation_pass,
+            native_timing_pass=timing_pass,
+            accepted_for_native_corpus_screen=allocation_pass and timing_pass and admission['accepted_for_corpus_screen'],
+            state='completed', final=True, stage='native cue replay integration screen complete',
+            completed_at=datetime.now(timezone.utc).isoformat())
+        report['verdict'] = ('native cue reproduces accepted replay and passes offline processing gates'
+            if report['accepted_for_native_corpus_screen'] else
+            'native replay parity passed; rejected for processing cost or allocation')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        logs = sorted(out.glob('*.log'), key=lambda path: path.stat().st_mtime)[-3:]
+        report['log_tails'] = {path.name: path.read_text()[-4000:] for path in logs}
+    save()
+    return report
+
+
 @app.local_entrypoint()
 def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          controlled_overlap: bool = False, selection_source: str = '',
@@ -2235,11 +2465,17 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = '',
          native_cue_pffft: bool = False, cue_delay_samples: int = 1024,
          native_cue_worker_delay_source: str = '', native_cue_worker_timer_diagnostic: bool = False,
-         native_cue_worker_wait_diagnostic: bool = False, native_cue_worker_hybrid_diagnostic: bool = False):
+         native_cue_worker_wait_diagnostic: bool = False, native_cue_worker_hybrid_diagnostic: bool = False,
+         native_cue_cooperative: bool = False, native_cue_solo: bool = False,
+         native_replay_source: str = ''):
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
     if native_cue_worker_delay_source and not (native_cue_source and native_cue_pffft):
         raise ValueError('worker delay source requires an optimized standalone native cue run')
+    if native_cue_cooperative and (not (native_cue_source and native_cue_pffft) or native_cue_worker_delay_source):
+        raise ValueError('cooperative measurement requires an optimized standalone native cue run without a worker')
+    if native_cue_solo and not native_cue_cooperative:
+        raise ValueError('solo-only native screen requires cooperative measurement')
     if sum((native_cue_worker_timer_diagnostic, native_cue_worker_wait_diagnostic,
             native_cue_worker_hybrid_diagnostic)) > 1:
         raise ValueError('select one worker diagnosis')
@@ -2257,12 +2493,14 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
     if (bool(source_run) + string_evidence + controlled_overlap + bool(selection_source)
             + bool(admission_source) + bool(cue_source) + bool(cue_selection_source)
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)
-            + bool(native_cue_source) + bool(delayed_cue_source)) > 1:
+            + bool(native_cue_source) + bool(delayed_cue_source) + bool(native_replay_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
+    result = (capture_native_cue_replay.remote(run_id, native_replay_source) if native_replay_source else
+              capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
               capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft,
                   native_cue_worker_delay_source, native_cue_worker_timer_diagnostic,
-                  native_cue_worker_wait_diagnostic, native_cue_worker_hybrid_diagnostic) if native_cue_source else
+                  native_cue_worker_wait_diagnostic, native_cue_worker_hybrid_diagnostic,
+                  native_cue_cooperative, native_cue_solo) if native_cue_source else
               capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,
               cue_corpus_trace_label, cue_trace_checkpoint_run) if cue_corpus_trace_source else
