@@ -16,12 +16,12 @@ namespace m3::offline {
 class FrozenNoteCues final {
  public:
   bool parse(std::string_view text, std::uint32_t sample_rate,
-             std::uint64_t sample_count) {
+             std::uint64_t sample_count, std::uint32_t availability_delay_samples = 0U) {
     spans_.clear();
     reset();
     valid_ = false;
     constexpr std::string_view header = "m3_frozen_note_cues_v1\t96000\t1024\n";
-    if (sample_rate != 96000U || sample_count == 0U ||
+    if (sample_rate != 96000U || sample_count == 0U || availability_delay_samples > 1024U ||
         text.substr(0U, header.size()) != header) return false;
     text.remove_prefix(header.size());
     std::array<std::uint64_t, 128U> previous_end{};
@@ -46,6 +46,18 @@ class FrozenNoteCues final {
       previous_begin = begin;
       previous_note = static_cast<unsigned>(note);
       previous_end[note] = end;
+    }
+    // Validate the original clock first. This offline scheduling experiment
+    // shifts both availability and expiry without changing the source cues.
+    if (availability_delay_samples != 0U) {
+      std::size_t retained = 0U;
+      for (auto& span : spans_) {
+        if (availability_delay_samples >= sample_count - span.begin) break;
+        span.begin += availability_delay_samples;
+        span.end += std::min<std::uint64_t>(availability_delay_samples, sample_count - span.end);
+        ++retained;
+      }
+      spans_.resize(retained);
     }
     sample_count_ = sample_count;
     valid_ = true;

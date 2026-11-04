@@ -1863,14 +1863,16 @@ def capture_native_frozen_cue(run_id: str, source_run: str, pffft: bool = False)
 
 @app.function(image=image, volumes={str(MOUNT): volume}, cpu=2, memory=4096,
               timeout=1800, max_containers=1)
-def capture_delayed_frozen_cues(run_id: str, source_run: str):
-    """Test one fixed scheduling delay with the saved binary; no build or sweep."""
+def capture_delayed_frozen_cues(run_id: str, source_run: str, delay: int = 1024):
+    """Build and test one fixed cue-availability delay, with fresh controls."""
     import sys
     sys.path.insert(0, '/opt/m3')
     from tools.controlled_admission_gate import CASES, FIELDS, evaluate_admission, read_target_detail
     from tools.independent_partial_evidence import CONFIG, FROZEN_SCREEN
     if any(not re.fullmatch(r'[a-zA-Z0-9_-]+', value) for value in (run_id, source_run)):
         raise ValueError('invalid run identifier')
+    if not 1 <= delay <= 1024:
+        raise ValueError('cue delay must be between 1 and 1024 samples')
     source = MOUNT / 'results' / source_run
     previous = json.loads((source / 'report.json').read_text())
     if (previous.get('state') != 'completed' or not previous.get('final') or
@@ -1878,27 +1880,27 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
             not previous.get('cue_free_lane_reassignment') or
             previous.get('config') != CONFIG or previous.get('frozen_screen') != FROZEN_SCREEN):
         raise ValueError('source is not an accepted frozen string-correction screen')
-    binary, calibration = source / 'm3_replay', MOUNT / 'corpus/calibration.m3cb'
-    if sha256(binary) != previous['binary_sha256'] or sha256(calibration) != previous['calibration_sha256']:
+    reference_binary, calibration = source / 'm3_replay', MOUNT / 'corpus/calibration.m3cb'
+    if sha256(reference_binary) != previous['binary_sha256'] or sha256(calibration) != previous['calibration_sha256']:
         raise ValueError('saved binary or calibration changed')
     expected_cases = set(CASES) | {name + '_source_only' for name in CASES if name != 'solo'} | {'silence'}
     if set(previous['datasets']) != expected_cases:
         raise ValueError('controlled case coverage changed')
-    delay = 1024
     out = MOUNT / 'results' / run_id
     out.mkdir(exist_ok=False, parents=True)
+    binary = out / 'm3_replay'
     report = dict(run_id=run_id, source_run=source_run, state='running', final=False,
-        experiment='delayed_frozen_cue', stage='prepare fixed one-hop cue delay',
+        experiment='delayed_frozen_cue', stage='build diagnostic cue delay',
         started_at=datetime.now(timezone.utc).isoformat(), installed_changed=False,
         source_report_sha256=sha256(source / 'report.json'),
-        binary_sha256=previous['binary_sha256'], calibration_sha256=previous['calibration_sha256'],
+        reference_binary_sha256=previous['binary_sha256'], calibration_sha256=previous['calibration_sha256'],
         config=CONFIG, frozen_screen=FROZEN_SCREEN, settings=previous['settings'],
         availability_delay_samples=delay, availability_delay_ms=1000.0 * delay / 96000,
-        cue_duration_samples=1024, controls_reused=True, datasets={},
-        limits=['Saved cue intervals are shifted by one hop, including their expiry.',
-                'The measurement window is unchanged; cue evidence is one hop older.',
-                'OFF and unit-test evidence are reused from the identical saved binary.',
-                'This delay screen neither implements nor times an incremental FFT.',
+        cue_duration_samples=1024, controls_reused=False, tests={}, datasets={},
+        limits=['Saved cue files remain unchanged; the reader shifts availability and expiry.',
+                'The measurement window is unchanged; cue evidence arrives a fixed number of samples later.',
+                'Fresh OFF and zero-delay ON must reproduce the saved baseline before delayed ON.',
+                'This screen neither implements nor times a worker or incremental FFT.',
                 'No installed or live-host behavior changes.'])
 
     def save():
@@ -1906,11 +1908,14 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
         (out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
         volume.commit()
 
-    def replay(name, block, mode):
+    def replay(name, block, mode, cue_delay=None):
         args = [str(binary), '--wav', str(source / (name + '.wav')),
                 '--labels', str(source / (name + '.tsv')), '--calibration', str(calibration),
-                '--block', str(block), '--label-details', '--diagnostic-odd-partial-cues',
-                str(out / (name + '-cues.tsv')), '--diagnostic-cue-free-lane-reassignment']
+                '--block', str(block), '--label-details']
+        if cue_delay is not None:
+            args += ['--diagnostic-odd-partial-cues', str(source / (name + '-cues.tsv')),
+                     '--diagnostic-cue-free-lane-reassignment',
+                     '--diagnostic-cue-delay-samples', str(cue_delay)]
         for key, value in previous['settings'].items():
             args += ['--' + key, str(value)]
         output = out / f'{name}-{mode}.tsv'
@@ -1923,6 +1928,26 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
 
     save()
     try:
+        directory = build(out, detector_tests=True)
+        shutil.copy2(directory / 'm3_replay', binary)
+        report['binary_sha256'] = sha256(binary)
+        report['stage'] = 'native admission, cue delay and replay tests'
+        save()
+        for name, executable, test_filter in (
+                ('cue-free-lane', 'm3_detector_tests', 'native_detector_cue_free_lane'),
+                ('fundamental-admission', 'm3_detector_tests', 'native_detector_fundamental_admission'),
+                ('harmonic-admission', 'm3_detector_tests', 'native_detector_calibrated_harmonic_admission'),
+                ('offline', 'm3_motion_tests', 'offline_')):
+            log_path = out / (name + '-tests.log')
+            with log_path.open('w') as log:
+                subprocess.run([str(directory / executable)], stdout=log, stderr=subprocess.STDOUT,
+                    env=dict(os.environ, M3_TEST_FILTER=test_filter), check=True, timeout=240)
+            counts = re.findall(r'Ran (\d+) tests: (\d+) failure\(s\)', log_path.read_text())
+            if len(counts) != 1 or int(counts[0][0]) == 0 or int(counts[0][1]):
+                raise ValueError('missing or failed native test accounting: ' + name)
+            report['tests'][name] = dict(tests=int(counts[0][0]), failures=int(counts[0][1]),
+                                       log_sha256=sha256(log_path))
+        save()
         for name, saved in previous['datasets'].items():
             for suffix, key in (('.wav', 'audio_sha256'), ('.tsv', 'labels_sha256'),
                                 ('-cues.tsv', 'cue_sha256')):
@@ -1935,7 +1960,7 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
                 old_off['target'] = read_target_detail(source / (name + '-off.tsv'))
             if old_off != saved['replays']['off']:
                 raise ValueError(name + ': saved OFF evidence changed')
-            intervals, original_count, last = [], 0, (-1, -1)
+            retained, original_count, last = 0, 0, (-1, -1)
             with (source / (name + '-cues.tsv')).open() as stream:
                 if next(stream).rstrip('\n') != 'm3_frozen_note_cues_v1\t96000\t1024':
                     raise ValueError('unexpected cue clock')
@@ -1949,21 +1974,27 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
                     original_count += 1
                     shifted = begin + delay
                     if shifted < saved['sample_count']:
-                        intervals.append((shifted, min(end + delay, saved['sample_count']), note))
+                        retained += 1
             if original_count != saved['cue_intervals']:
                 raise ValueError(name + ': original cue accounting changed')
-            cues = out / (name + '-cues.tsv')
-            cues.write_text('m3_frozen_note_cues_v1\t96000\t1024\n' + ''.join(
-                f'{begin}\t{end}\t{note}\n' for begin, end, note in intervals))
             item = dict(sample_rate=96000, sample_count=saved['sample_count'],
-                has_target=saved['has_target'], cue_intervals=len(intervals), cue_sha256=sha256(cues),
-                original_cue_sha256=saved['cue_sha256'], control_identical=True,
+                has_target=saved['has_target'], cue_intervals=retained, cue_sha256=saved['cue_sha256'],
+                original_cue_sha256=saved['cue_sha256'], control_identical=False,
+                undelayed_output_identical=False,
                 buffer_outputs_identical=False,
-                replays={key: saved['replays'][key] for key in ('baseline', 'off')})
+                replays={'baseline': saved['replays']['off']})
             report['datasets'][name] = item
+            report['stage'] = name + ': reproduce OFF and zero-delay ON'
+            save()
+            item['replays']['off'] = replay(name, 512, 'off')
+            item['control_identical'] = item['replays']['off'] == saved['replays']['off']
+            item['replays']['undelayed'] = replay(name, 512, 'undelayed', 0)
+            item['undelayed_output_identical'] = item['replays']['undelayed'] == saved['replays']['on']
+            if not item['control_identical'] or not item['undelayed_output_identical']:
+                raise ValueError(name + ': fresh binary changed OFF or zero-delay ON')
             report['stage'] = name + ': delayed cue replay, block 512'
             save()
-            item['replays']['on'] = replay(name, 512, 'on')
+            item['replays']['on'] = replay(name, 512, 'on', delay)
             old, new = saved['replays']['on'], item['replays']['on']
             if old['output']['labeled'] != new['output']['labeled']:
                 raise ValueError(name + ': label accounting changed')
@@ -1991,12 +2022,12 @@ def capture_delayed_frozen_cues(run_id: str, source_run: str):
                 for block in (32, 1024):
                     report['stage'] = f'{name}: delayed cue buffer check, block {block}'
                     save()
-                    item['replays']['on' + str(block)] = replay(name, block, 'on' + str(block))
+                    item['replays']['on' + str(block)] = replay(name, block, 'on' + str(block), delay)
                 item['buffer_outputs_identical'] = item['replays']['on32'] == item['replays']['on'] == item['replays']['on1024']
                 if not item['buffer_outputs_identical']:
                     raise ValueError(name + ': delayed cue buffer invariance failed')
                 save()
-        gate['verdict'] = ('fixed one-hop delay preserves all demonstrated gains; native scheduling remains unverified'
+        gate['verdict'] = ('fixed cue delay preserves all demonstrated gains; native scheduling remains unverified'
                            if gate['accepted_for_corpus_screen'] else 'rejected: fixed delay loses matches or exceeds error limits')
         report.update(state='completed', final=True, stage='fixed cue delay screen complete',
                       completed_at=datetime.now(timezone.utc).isoformat(), **gate)
@@ -2017,7 +2048,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
          cue_corpus_trace_label: int = -1, cue_checkpoint_run: str = '',
          cue_trace_checkpoint_run: str = '', cue_decision_source: str = '',
          reuse_cue_features: bool = False, native_cue_source: str = '', delayed_cue_source: str = '',
-         native_cue_pffft: bool = False):
+         native_cue_pffft: bool = False, cue_delay_samples: int = 1024):
     if native_cue_pffft and not native_cue_source:
         raise ValueError('PFFFT requires a standalone native cue source')
     if cue_free_lane and not cue_source:
@@ -2033,7 +2064,7 @@ def main(run_id: str, source_run: str = '', string_evidence: bool = False,
             + bool(cue_corpus_source) + bool(cue_corpus_trace_source) + bool(cue_decision_source)
             + bool(native_cue_source) + bool(delayed_cue_source)) > 1:
         raise ValueError('select one analysis or capture job')
-    result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source) if delayed_cue_source else
+    result = (capture_delayed_frozen_cues.remote(run_id, delayed_cue_source, cue_delay_samples) if delayed_cue_source else
               capture_native_frozen_cue.remote(run_id, native_cue_source, native_cue_pffft) if native_cue_source else
               capture_cue_decisions.remote(run_id, cue_decision_source) if cue_decision_source else
               capture_corpus_cue_failure.remote(run_id, cue_corpus_trace_source,

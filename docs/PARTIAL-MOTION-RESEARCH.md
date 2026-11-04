@@ -4,9 +4,9 @@ Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
 initial-settling guard. Native cues match the reference. The optimized FFT
 reduces measured cost but still exceeds the callback budget. A one-hop delay
-loses five solo matches. The next step is to screen a shorter, fixed delay
-before implementing a worker. The installed plugin and its parameters are
-unchanged.
+loses five solo matches; a fixed 128-sample delay preserves all ten controlled
+results. The next step is to measure bounded background delivery. The
+installed plugin and its parameters are unchanged.
 
 ## Decision
 
@@ -81,15 +81,23 @@ checks stopped after the failed gate. OFF and unit-test evidence are reused
 from the identical saved binary; earlier undelayed corpus passes do not cover
 the delayed policy. No incremental FFT was implemented.
 
-The next screen uses a fixed 128-sample delay (1.333333 ms) to test whether a
-short worker handoff could preserve the gains. The saved replay reader only
-accepts cue times on the original 1024-sample grid, so the screen requires a
-diagnostic clock option and a fresh cloud build. Keep original cue validation;
-shift availability and expiry after parsing. Before delayed output is scored,
-OFF and zero-delay ON must exactly reproduce the source screen. Require every
-undelayed gain and error ceiling, unchanged negative controls, then agreement
-at blocks 32/512/1024. This screen would establish delay tolerance only; worker
-scheduling, the remaining corpora and live MIDI behavior would remain untested.
+The fixed 128-sample delay (1.333333 ms) passes in
+`cue-fixed-delay128-20261104T1108Z`. The diagnostic reader keeps the original
+cue-file validation, then shifts availability and expiry. Fresh OFF and
+zero-delay ON reproduce every saved result. Delayed ON preserves all ten
+counts, false-output counts and fingerprints, including solo 3236/3450,
+nearby 835/3450 and quiet-octave target 2079/3450. All delayed outputs agree
+at blocks 32/512/1024, and all 68 native tests pass. The seven cases without
+an undelayed gain remain bit-identical to OFF. Replay SHA-256 is
+`8126916ac76d07a4b00932d4c051633015a172f71b3655a7045de853f3a61889`.
+The earlier nine corpus passes use the undelayed reference binary and do not
+cover this build or policy.
+
+This establishes delay tolerance, not worker scheduling. Next, measure a
+bounded background handoff with sample-tagged availability and expiry. Require
+exact masks, no lost or late frames, no callback allocation or waiting, safe
+reset/overflow behavior and callback timing. Standalone scheduling still leaves
+detector integration, the remaining corpora and live MIDI behavior untested.
 
 ## Relevant primary sources
 

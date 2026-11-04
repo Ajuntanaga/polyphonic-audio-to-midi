@@ -200,6 +200,7 @@ void usage(const char* program) {
       "[--diagnostic-calibrated-harmonic-admission-guard] "
       "[--diagnostic-fundamental-admission] "
       "[--diagnostic-odd-partial-cues FILE] "
+      "[--diagnostic-cue-delay-samples 0..1024] "
       "[--diagnostic-cue-free-lane-reassignment] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
@@ -283,6 +284,7 @@ int main(int argc, char** argv) {
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
+  std::uint32_t diagnostic_cue_delay_samples = 0U;
   bool diagnostic_cue_free_lane_reassignment = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
@@ -588,6 +590,15 @@ int main(int argc, char** argv) {
       diagnostic_fundamental_admission = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
       diagnostic_odd_partial_cues_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--diagnostic-cue-delay-samples") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0 || parsed > 1024) {
+        std::fprintf(stderr, "m3_replay: invalid frozen cue delay\n");
+        return 1;
+      }
+      diagnostic_cue_delay_samples = static_cast<std::uint32_t>(parsed);
     } else if (std::strcmp(argv[index], "--diagnostic-cue-free-lane-reassignment") == 0) {
       diagnostic_cue_free_lane_reassignment = true;
     } else if (std::strcmp(argv[index],
@@ -779,6 +790,10 @@ int main(int argc, char** argv) {
   }
 
   m3::offline::FrozenNoteCues diagnostic_odd_partial_cues;
+  if (diagnostic_cue_delay_samples != 0U && diagnostic_odd_partial_cues_path == nullptr) {
+    std::fprintf(stderr, "m3_replay: cue delay requires frozen odd-partial cues\n");
+    return 1;
+  }
   if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues_path == nullptr) {
     std::fprintf(stderr, "m3_replay: free-lane reassignment requires frozen odd-partial cues\n");
     return 1;
@@ -789,7 +804,7 @@ int main(int argc, char** argv) {
         !read_file(diagnostic_odd_partial_cues_path, cue_bytes) || cue_bytes.empty() ||
         !diagnostic_odd_partial_cues.parse(
             std::string_view(reinterpret_cast<const char*>(cue_bytes.data()), cue_bytes.size()),
-            wave.sample_rate, wave.mono_samples.size())) {
+            wave.sample_rate, wave.mono_samples.size(), diagnostic_cue_delay_samples)) {
       std::fprintf(stderr, "m3_replay: invalid frozen odd-partial cues\n");
       return 1;
     }

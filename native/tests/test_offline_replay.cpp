@@ -72,6 +72,55 @@ M3_TEST(offline_frozen_cues_reject_malformed_or_ambiguous_clocks) {
   M3_EXPECT_FALSE(cues.advance(19456U));
 }
 
+M3_TEST(offline_frozen_cue_delay_preserves_causal_renewal_and_clips_expiry) {
+  m3::offline::FrozenNoteCues cues;
+  M3_EXPECT_TRUE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n"
+      "16384\t17408\t36\n16384\t17408\t100\n"
+      "17408\t18432\t36\n19456\t20000\t37\n", 96000U, 20000U, 128U));
+  M3_EXPECT_TRUE(cues.matches(96000U, 20000U));
+  const auto allocations = m3::test::allocation_count();
+  M3_EXPECT_FALSE(cues.advance(16384U));
+  M3_EXPECT_FALSE(cues.advance(16511U));
+  M3_EXPECT_TRUE(cues.advance(16512U));
+  M3_EXPECT_EQ(cues.mask()[0U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_EQ(cues.mask()[1U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_FALSE(cues.advance(17535U));
+  M3_EXPECT_TRUE(cues.advance(17536U));
+  M3_EXPECT_EQ(cues.mask()[0U], std::uint64_t{1U} << 36U);
+  M3_EXPECT_EQ(cues.mask()[1U], 0U);
+  M3_EXPECT_FALSE(cues.advance(18559U));
+  M3_EXPECT_TRUE(cues.advance(18560U));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  M3_EXPECT_FALSE(cues.advance(19583U));
+  M3_EXPECT_TRUE(cues.advance(19584U));
+  M3_EXPECT_FALSE(cues.advance(19999U));
+  M3_EXPECT_TRUE(cues.advance(20000U));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  cues.reset();
+  M3_EXPECT_FALSE(cues.advance(16511U));
+  M3_EXPECT_TRUE(cues.advance(16512U));
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+}
+
+M3_TEST(offline_frozen_cue_delay_validates_source_and_drops_unavailable_tail) {
+  m3::offline::FrozenNoteCues cues;
+  constexpr const char* tail = "m3_frozen_note_cues_v1\t96000\t1024\n19456\t20000\t37\n";
+  M3_EXPECT_TRUE(cues.parse(tail, 96000U, 20000U, 1024U));
+  M3_EXPECT_FALSE(cues.advance(20000U));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+  M3_EXPECT_FALSE(cues.parse(tail, 96000U, 20000U, 1025U));
+  M3_EXPECT_FALSE(cues.matches(96000U, 20000U));
+  M3_EXPECT_FALSE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n"
+      "16512\t17536\t36\n", 96000U, 20000U, 128U));
+  M3_EXPECT_TRUE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n"
+      "18446744073709550592\t18446744073709551615\t36\n", 96000U,
+      std::numeric_limits<std::uint64_t>::max(), 128U));
+  M3_EXPECT_FALSE(cues.advance(18446744073709550719ULL));
+  M3_EXPECT_TRUE(cues.advance(18446744073709550720ULL));
+  M3_EXPECT_TRUE(cues.advance(std::numeric_limits<std::uint64_t>::max()));
+  M3_EXPECT_EQ(cues.mask()[0U], 0U);
+}
+
 M3_TEST(offline_residual_recovery_requires_consecutive_fixed_audio_evidence) {
   using namespace m3::offline;
   ResidualRecoveryScreen screen;
