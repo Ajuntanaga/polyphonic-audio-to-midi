@@ -8460,24 +8460,23 @@ M3_TEST(native_detector_cue_free_lane_uses_measured_preference_without_string_bi
   }
 }
 
-M3_TEST(native_detector_cue_free_lane_requires_valid_decisive_tuning) {
+M3_TEST(native_detector_cue_free_lane_vetoes_measured_tuning_contradictions) {
   using Detector = m3::PolyphonicPitchDetector;
   std::array<double, m3::kMaxVoices> similarity{};
   similarity[0U] = 0.98;
   similarity[1U] = 0.90;
   std::array<double, m3::kMaxVoices> cents_errors{};
-  cents_errors[0U] = 1.0;
-  cents_errors[1U] = 2.0;
-  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
-      true, 2U, 3U, 3U, similarity, false, cents_errors, 0U, false), 0U);
-  for (const double current_error : {0.0, 1.0, 1.749}) {
-    cents_errors[1U] = current_error;
+  cents_errors[1U] = 1.0;
+  for (const double preferred_error : {0.0, 1.0, 1.749}) {
+    cents_errors[0U] = preferred_error;
+    M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+        true, 2U, 3U, 3U, similarity, true, cents_errors, 0U, false), 1U);
+  }
+  for (const double preferred_error : {1.75, 1.751, 4.0}) {
+    cents_errors[0U] = preferred_error;
     M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
         true, 2U, 3U, 3U, similarity, true, cents_errors, 0U, false), 0U);
   }
-  cents_errors[1U] = 1.75;
-  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
-      true, 2U, 3U, 3U, similarity, true, cents_errors, 0U, false), 1U);
   for (const double invalid : {-0.1, std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::infinity()}) {
     cents_errors[0U] = invalid;
@@ -8487,8 +8486,29 @@ M3_TEST(native_detector_cue_free_lane_requires_valid_decisive_tuning) {
     cents_errors[1U] = invalid;
     M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
         true, 2U, 3U, 3U, similarity, true, cents_errors, 0U, false), 0U);
-    cents_errors[1U] = 1.75;
+    cents_errors[1U] = 1.0;
   }
+}
+
+M3_TEST(native_detector_cue_free_lane_allows_missing_tuning_without_bypassing_other_guards) {
+  using Detector = m3::PolyphonicPitchDetector;
+  std::array<double, m3::kMaxVoices> similarity{};
+  // Held-out nearby-note recording, MIDI 36 at sample 44799. The independent
+  // pitch cue and sound preference qualify before phase tuning becomes valid.
+  similarity[0U] = 0.97266255;
+  similarity[1U] = 0.97266255 - 0.08427468;
+  std::array<double, m3::kMaxVoices> cents_errors{};
+  cents_errors.fill(std::numeric_limits<double>::quiet_NaN());
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, false, cents_errors, 8U, false), 1U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      false, 2U, 3U, 3U, similarity, false, cents_errors, 8U, false), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 1U, similarity, false, cents_errors, 8U, false), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, false, cents_errors, 9U, false), 0U);
+  M3_EXPECT_EQ(Detector::bounded_cue_free_lane_reassignment(
+      true, 2U, 3U, 3U, similarity, false, cents_errors, 8U, true), 0U);
 }
 
 M3_TEST(native_detector_cue_free_lane_preserves_tuning_when_sound_shape_disagrees) {

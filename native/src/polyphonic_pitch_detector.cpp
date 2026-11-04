@@ -6668,7 +6668,7 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
     const std::array<double, kMaxVoices>& similarities,
     bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
     std::uint8_t occupied_mask, bool protected_group) noexcept {
-  if (!pitch_confirmed || !tuning_valid || protected_group ||
+  if (!pitch_confirmed || protected_group ||
       string_count(current_mask) != 1U ||
       (current_mask & playable_mask) != current_mask ||
       string_count(playable_mask) < 2U ||
@@ -6682,7 +6682,7 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
     const double similarity = similarities[string];
     if (!std::isfinite(similarity) || similarity < 0.0 || similarity > 1.0) return 0U;
     const double error = cents_errors[string];
-    if (!std::isfinite(error) || error < 0.0) return 0U;
+    if (tuning_valid && (!std::isfinite(error) || error < 0.0)) return 0U;
     if (bit == current_mask) current_error = error;
     if (similarity > best) {
       second = best;
@@ -6696,9 +6696,11 @@ std::uint8_t PolyphonicPitchDetector::bounded_cue_free_lane_reassignment(
   if (best < kM3CalibratedCandidateMinimumSimilarity ||
       best - second < kM3CalibratedBandRescueMinimumMargin ||
       preferred == current_mask || (preferred & occupied_mask) != 0U) return 0U;
-  // A mistaken move becomes a retention prior in later chords. Sound shape
-  // alone must not override tuning that still supports the incumbent string.
-  if (current_error - preferred_error < kM3CalibratedCentsMinimumAdvantage) return 0U;
+  // A mistaken move becomes a retention prior in later chords. Veto measured
+  // tuning contradictions, but let the independent pitch cue and sound shape
+  // qualify an early correction while phase tuning is still unavailable.
+  if (tuning_valid && preferred_error - current_error >=
+      kM3CalibratedCentsMinimumAdvantage) return 0U;
   return preferred;
 }
 

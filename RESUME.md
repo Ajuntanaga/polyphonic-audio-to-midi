@@ -1,3 +1,15 @@
+## 2026-11-04 05:58 UTC — tuning veto passes small screen; ordinary corpus running
+
+- Active run: `cue-veto-ordinary-20261104T0600Z`, app `ap-ACqoR75uNSyJ7mt8NCCBsZ`. It reuses the saved binary from `cue-tuning-veto-20261104T0556Z`; no rebuild or installation. Do not launch a duplicate. Acceptance requires at least 145385/528632 matches, no lost label, wrong notes <=164263, wrong strings <=92653, extra gap outputs <=62856, exact OFF equality and ON parity at blocks 32/512/1024. Stop on any regression before expanding protected recordings.
+- The small screen completed at 05:57:35 UTC. Nearby target matches rise 815→835/3450 (23.62%→24.20%; +20 frames, +2.45% relative), while wrong strings fall 1548→1528. Wrong notes remain 3178 and extra gap outputs 668. Solo gains 17 matches and quiet octave gains nine; the other seven cases are bit-identical. All ten OFF controls match the old baseline, and ON is identical across the tested buffers. All 63 focused native tests pass. Final report: `build/modal/cue-tuning-veto-20261104T0556Z.json`.
+- Valid tuning vetoes a sound-based correction when it favors the incumbent by at least 0.75 cents. Missing tuning does not bypass pitch, sound, calibration, occupancy or unison guards. This candidate is accepted only for corpus screening. Installed output and defaults are unchanged; full-corpus, unison, realtime and MIDI lifecycle/host gates remain open. GitHub/checkpoint prose uses Precise mode; research and inactive-log compression are complete.
+
+## 2026-11-04 05:54 UTC — contradiction-only tuning guard on Modal
+
+- Active run: `cue-tuning-veto-20261104T0556Z`, app `ap-RhosvE88lEw9GUILd7kq5m`. Do not launch a duplicate. The candidate vetoes a sound-based move when valid tuning favors the incumbent by at least 0.75 cents. Unavailable tuning leaves the independent pitch, sound, calibration, occupancy and unison guards in control. Installed output is unchanged.
+- The focused tests cover the known harmful MIDI-48 move, the missing-tuning MIDI-36 opportunity, the tuning boundary and invalid measurements. Results are pending. The small screen must exceed 815/3450 nearby matches with no control/error regression, exact OFF and ON buffer parity before ordinary-corpus verification. Ordinary must preserve every labeled passage and all false-output ceilings.
+- GitHub checkpoint `428c013` records the rejected strict guard. This candidate remains unaccepted until the Modal report is final. Use Precise prose and inline ntfy summaries of at most 4000 UTF-8 bytes. Research and inactive-log compression are complete.
+
 ## 2026-11-04 05:50 UTC — strict tuning guard rejected without a held-out gain
 
 - Modal `cue-tuning-guard-20261104T0541Z`, app `ap-WBakhcGtZ9Pz5dSuYRrG5A`, completed at 05:45:40 UTC. All 62 focused native tests pass. Every one of the ten ON cases is bit-identical to OFF; OFF matches the saved baseline, and ON matches across blocks 32/512/1024. The nearby target stays 815/3450 (23.62%), so this candidate is rejected. No broad-corpus replay was started. Installed output and defaults are unchanged.

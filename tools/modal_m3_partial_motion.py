@@ -987,8 +987,8 @@ def capture_frozen_partial_cues(run_id: str, source_run: str, cue_free_lane: boo
                             for p in sorted(Path('/opt/m3/native').rglob('*')) if p.is_file()},
         analysis_source_sha256={name: sha256('/opt/m3/tools/' + name + '.py') for name in OVERLAP_MODULES},
         cue_free_lane_reassignment=cue_free_lane,
-        cue_free_lane_tuning_guard=(dict(valid_phase_required=True,
-            minimum_cents_error_improvement=0.75) if cue_free_lane else None),
+        cue_free_lane_tuning_guard=(dict(mode='contradiction_veto', valid_phase_required=False,
+            minimum_incumbent_advantage_cents=0.75) if cue_free_lane else None),
         datasets={}, tests={}, limits=[
             'Separate plucks from the same session; mixtures and frames are correlated.',
             'Frozen feature sidecars are offline; their spectral computation is not in the audio callback.',

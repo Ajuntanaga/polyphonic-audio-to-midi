@@ -1289,7 +1289,7 @@ the replay hash. These are pre-correction snapshots, not a simulation of the
 next policy or a complete view of internal lane reservations. Compact evidence
 is in `build/modal/cue-tuning-guard-20261104T0541Z-target-diagnosis.json`.
 
-The next hypothesis is a contradiction veto: reject a sound-based move when
+The next candidate uses a contradiction veto: reject a sound-based move when
 valid tuning favors the incumbent by at least 0.75 cents. Unavailable tuning
 must not be treated as a measured disagreement. Complete calibration, an
 independent pitch cue, an unused destination, unison protection and the
@@ -1301,3 +1301,27 @@ repeating ordinary. Ordinary acceptance requires at least 145385 matches,
 no lost label, no higher false-output count, exact OFF equality and
 buffer-invariant ON output. Timing/allocation, lifecycle/routing and actual-host
 gates remain open; installed output is unchanged.
+
+## Contradiction veto passes the small screen
+
+Modal `cue-tuning-veto-20261104T0556Z` completed at 05:57:35 UTC on
+2026-11-04. The candidate preserves the earlier nearby-note gain:
+815→835/3450 target matches (23.62%→24.20%; +20 frames, +2.45% relative).
+Aggregate matches rise 2987→3007/6900. Wrong-string outputs fall 1548→1528;
+wrong-note outputs remain 3178 and extra outputs in unlabeled gaps remain 668.
+Solo gains 17 matches and quiet octave gains nine. The other seven cases
+are bit-identical. All ten OFF controls match the old baseline, and ON output
+is identical at blocks 32/512/1024. All 63 focused native tests pass.
+
+Unlike the strict guard, this rule allows an otherwise qualified correction
+before phase tuning becomes valid. Valid tuning still blocks a correction
+when the incumbent has at least a 0.75-cent advantage. The known harmful
+MIDI-48 move is rejected by the unit fixture; whether the complete ordinary
+recording avoids that failure remains a separate gate.
+
+The same saved binary is now being tested by
+`cue-veto-ordinary-20261104T0600Z`, app `ap-ACqoR75uNSyJ7mt8NCCBsZ`.
+It must preserve aggregate and per-label matches and every false-output ceiling,
+with exact OFF controls and buffer-invariant ON output, before further corpus
+work. This is acceptance for a corpus screen, not an installed improvement or
+proof of live performance.
