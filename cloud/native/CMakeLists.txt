@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 3.20)
+project(m3_portable_replay LANGUAGES C CXX)
+# Linux x86-64 offline research build, matching the former Modal diagnostic build.
+# No SDK, GUI, installed plugin, or Modal dependency.
+get_filename_component(root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+file(READ "${root}/CMakeLists.txt" project_text)
+string(REGEX MATCH "set\\(M3_NATIVE_CORE_SOURCES[ \r\n]+([^)]*)\\)" source_block "${project_text}")
+if(NOT source_block)
+    message(FATAL_ERROR "Native core source list missing")
+endif()
+string(REGEX MATCHALL "native/[^ \r\n\t]+\\.cpp" core_sources "${CMAKE_MATCH_1}")
+list(APPEND core_sources native/offline/frequency_refinement_shadow.cpp
+    native/offline/joint_pitch_residual.cpp native/offline/replay.cpp
+    native/offline/unison_spectral_shadow.cpp)
+list(TRANSFORM core_sources PREPEND "${root}/")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_definitions(M3_OFFLINE_REPLAY_DIAGNOSTICS=1 M3_SPECTRAL_TIER_DIAGNOSTICS=1
+    M3_UNISON_SPECTRAL_SHADOW=1 M3_JOINT_RESIDUAL_SHADOW=1 M3_TESTING=1
+    M3_FROZEN_CUE_COOPERATIVE=1 M3_FROZEN_CUE_PFFFT=1 M3_OFFLINE_C_ALLOCATION_GUARD=1)
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-O2;-DNDEBUG;-Wall;-Wextra;-Wpedantic;-Wconversion;-Wshadow;-Werror;-fno-exceptions;-fno-rtti;-fstack-protector-strong;-fvisibility=hidden>")
+include_directories("${root}/native/include" "${root}/native/offline" "${root}/native/tests")
+set(pffft_root "${root}/native/offline/vendor/pffft")
+add_library(offline_pffft STATIC "${pffft_root}/src/pffft_double.c" "${pffft_root}/src/pffft_common.c")
+target_include_directories(offline_pffft PUBLIC "${pffft_root}/include/pffft")
+target_compile_definitions(offline_pffft PUBLIC PFFFT_STATIC_DEFINE)
+target_compile_options(offline_pffft PRIVATE -O2 -DNDEBUG -mavx -ffp-contract=off)
+set_target_properties(offline_pffft PROPERTIES C_STANDARD 99 C_EXTENSIONS ON)
+add_library(native_cue STATIC "${root}/native/offline/frozen_partial_cue.cpp")
+target_compile_options(native_cue PRIVATE -mavx -ffp-contract=off)
+target_link_libraries(native_cue PRIVATE offline_pffft)
+add_library(core STATIC ${core_sources})
+target_link_libraries(core PUBLIC native_cue pthread m)
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp" "#include \"test_support.hpp\"\nint main(){return m3::test::run_all_tests();}\n")
+add_executable(m3_replay "${root}/native/offline/replay_main.cpp")
+add_executable(m3_motion_tests "${root}/native/tests/test_offline_replay.cpp"
+    "${root}/native/tests/test_frozen_partial_cue.cpp" "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp")
+add_executable(m3_detector_tests "${root}/native/tests/test_polyphonic_pitch_detector.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp")
+enable_testing()
+foreach(target m3_replay m3_motion_tests m3_detector_tests)
+    target_sources(${target} PRIVATE "${root}/native/tests/test_support.cpp"
+        "${root}/native/tests/offline_c_allocation_guard.cpp")
+    target_link_libraries(${target} PRIVATE core)
+    foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
+        target_link_options(${target} PRIVATE "-Wl,--wrap=${function}")
+    endforeach()
+endforeach()
+add_test(NAME m3_motion_tests COMMAND m3_motion_tests)
+add_test(NAME m3_detector_tests COMMAND m3_detector_tests)
