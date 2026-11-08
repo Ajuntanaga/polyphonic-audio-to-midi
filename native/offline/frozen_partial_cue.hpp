@@ -69,7 +69,7 @@ class FrozenPartialCue final {
   std::size_t next_{}, invalid_samples_{};
   bool prepared_{};
   void measure() noexcept;
-  void select_peaks(Frame& frame) noexcept;
+  void select_peaks(Frame& frame, std::size_t first = 0U, std::size_t stride = 1U) noexcept;
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   static constexpr std::size_t kPreparationLead = 128U;
   Frame pending_{};

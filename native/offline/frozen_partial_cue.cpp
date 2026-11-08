@@ -222,13 +222,15 @@ bool FrozenPartialCue::push(float raw_sample) noexcept {
     pending_ready_ = true;
   } else if (pending_ready_ && phase <= kAvailabilityDelay && phase % 32U == 0U) {
     // Transform at 32/96/160/224, between the detector's 64-sample decisions.
-    // The finished frame remains private until its fixed publication at 256.
+    // Split independent note searches across the final two blocks. Alternating
+    // notes balance low/high frequency ranges; publication stays fixed at 256.
     if (pending_.valid && phase % 64U == 32U) {
       const auto residue = phase / 64U;
       transform_residue(residue);
-      if (residue == 3U) select_peaks(pending_);
+      if (residue == 3U) select_peaks(pending_, 0U, 2U);
     }
     if (phase == kAvailabilityDelay) {
+      if (pending_.valid) select_peaks(pending_, 1U, 2U);
       frame_ = pending_;
       pending_ready_ = false;
       return true;
@@ -318,9 +320,9 @@ void FrozenPartialCue::measure() noexcept {
 }
 #endif
 
-void FrozenPartialCue::select_peaks(Frame& frame) noexcept {
+void FrozenPartialCue::select_peaks(Frame& frame, std::size_t first, std::size_t stride) noexcept {
   auto& work = *workspace_;
-  for (std::size_t index = 0U; index < kNotes; ++index) {
+  for (std::size_t index = first; index < kNotes; index += stride) {
     auto& note = frame.notes[index];
     note.third = peak(work.power.data(), work.regions[index][0U]);
     note.fifth = peak(work.power.data(), work.regions[index][1U]);

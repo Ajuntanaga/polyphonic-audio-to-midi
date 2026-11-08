@@ -1,6 +1,6 @@
 # Research route: measured motion across harmonics
 
-Updated 2026-11-04. Frozen third/fifth-partial cues support a small offline
+Updated 2026-11-08. Frozen third/fifth-partial cues support a small offline
 string-assignment gain. Nine of fourteen corpus screens pass with the
 initial-settling guard. A fixed 256-sample delay preserves all ten controlled
 results. The native implementation reproduces those delayed replay outputs
@@ -9,7 +9,10 @@ A three-case diagnosis finds that the cloud thread CPU timer is too coarse
 to explain the short timing spikes. An offline switch that skips redundant
 empty-history clears preserves outputs but also fails the full timing gate;
 a paired comparison with one saved binary does not show a repeatable saving.
-The installed plugin and its parameters are unchanged.
+The next split-search trial passes 81 tests and preserves seven completed
+reference comparisons in its saved partial report, but observed timing fails.
+Its final report is unavailable because Modal access is denied; the job state
+is unverified. The installed plugin and its parameters are unchanged.
 
 ## Decision
 
@@ -184,6 +187,34 @@ The 170.7 ms measurement window remains; 2.666667 ms is only the added
 availability delay. Earlier undelayed corpus checks do not cover this native
 build. Host timing, MIDI lifecycle and routing, remaining corpus coverage,
 and the unmet physical-long and exact-three targets remain open.
+
+## Split note searches: partial result and access failure
+
+The offline candidate in `cue-split-peaks-20261104T1415Z` searches alternating
+notes at phase 224 and the remaining notes at phase 256. It retains the
+measurement window, thresholds and fixed publication time. Each note search
+reads the completed spectrum independently. The empty-history reset switch
+is disabled. A new regression checks that notes from both search groups
+become visible only at the publication deadline.
+
+The saved report was updated on November 4 at 14:19:11 UTC. All 81 native
+tests pass. Seven cases have completed exact OFF/ON reference and buffer
+comparisons with zero processing allocations or frees: solo, both octave
+mixtures and their source-only controls, and the quieter nearby mixture
+with its source-only control. Three pass both timing limits. Worst observed
+ON p99 is 203338 ns against 166666 ns, maximum is 1775391 ns against
+333333 ns, and the seven cases contain 19 deadline overruns. The remaining
+three cases are not complete in this snapshot. This is enough to reject
+promotion, but it is not the full trial result or a causal cost comparison
+with earlier cloud runs.
+
+On November 8, the configured `research` profile still resolves to
+`snorkelai`. Requests for the app state and saved volume report both fail
+with permission errors in `main`. The final state of app
+`ap-NDVgzocHRPf04mXeH56JE7` is therefore unverified. No replacement job was
+launched. Recover the existing report from `m3-protected-replay-data` before
+another run; retain the timing gate, native corpus requirement and installed
+behavior while access is restored.
 
 ## Native measurement and the callback constraint
 

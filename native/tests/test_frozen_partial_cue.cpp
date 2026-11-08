@@ -176,7 +176,7 @@ M3_TEST(frozen_cooperative_delayed_clock_and_mid_calculation_reset) {
     }
   }
   M3_EXPECT_EQ(cue.frame().notes[36U - Cue::kFirstNote].reason, Cue::Reason::cue);
-  // Cancel both unfinished work and a completed but unpublished cue. Neither
+  // Cancel work before and after peak searches begin. Neither partial result
   // may survive reset or bypass the next stream's warmup.
   for (const auto cancellation_phase : {160U, 224U}) {
     cue.reset();
@@ -193,6 +193,29 @@ M3_TEST(frozen_cooperative_delayed_clock_and_mid_calculation_reset) {
     M3_EXPECT_FALSE(cue.frame().valid);
     M3_EXPECT_EQ(cue.frame().mask[0U], 0U);
     M3_EXPECT_EQ(cue.frame().mask[1U], 0U);
+  }
+}
+
+M3_TEST(frozen_cooperative_adjacent_notes_share_publication_deadline) {
+  constexpr double kPi = 3.141592653589793238462643383279502884;
+  for (const auto midi : {36U, 37U}) {
+    Cue cue;
+    M3_EXPECT_TRUE(cue.prepare(96000U));
+    const auto bit = std::uint64_t{1U} << midi;
+    const double hz = 440.0 * std::pow(2.0, (static_cast<double>(midi) - 69.0) / 12.0);
+    for (std::size_t sample = 0U; sample < Cue::kWindow + Cue::kAvailabilityDelay; ++sample) {
+      const double phase = 2.0 * kPi * hz * static_cast<double>(sample) / 96000.0;
+      const auto signal = static_cast<float>(0.2 * std::cos(3.0 * phase) + 0.15 * std::cos(5.0 * phase));
+      const bool published = cue.push(signal);
+      if (sample + 1U < Cue::kWindow + Cue::kAvailabilityDelay) {
+        M3_EXPECT_EQ(cue.frame().mask[0U] & bit, 0U);
+      } else {
+        M3_EXPECT_TRUE(published);
+        M3_EXPECT_EQ(cue.frame().end_sample, Cue::kWindow);
+        M3_EXPECT_EQ(cue.frame().notes[midi - Cue::kFirstNote].reason, Cue::Reason::cue);
+        M3_EXPECT_EQ(cue.frame().mask[0U] & bit, bit);
+      }
+    }
   }
 }
 
