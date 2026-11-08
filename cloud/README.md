@@ -248,6 +248,10 @@ supports that format without converting the recording. Native regression tests
 cover precision, stereo mixing, nonfinite input and incomplete samples. The
 bootstrap writes `bootstrap-report.json` at every stage, including failures;
 the corpus report retains the failed dataset, mode, buffer and stderr excerpt.
-These changes require a fresh cloud build before another corpus run. Zero-match
-recovered datasets still need a WAV/label/calibration pairing check. Neither the
-format fix nor successful input recovery changes the installed scoreboard.
+Native tests, source contracts and the production build passed in GitHub run
+[`42533147556`](https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42533147556)
+at commit `0576d61`; portable replay checks passed in run
+[`42533147507`](https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42533147507).
+Zero-match recovered datasets still need a WAV/label/calibration pairing check
+before another corpus run. Neither the format fix nor successful input recovery
+changes the installed scoreboard.
