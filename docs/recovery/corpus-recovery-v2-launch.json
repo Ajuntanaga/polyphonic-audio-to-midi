@@ -1,0 +1,47 @@
+{
+  "schema": "m3-corpus-recovery-launch-v1",
+  "dataset_id": "anthovargas/m3-recovered-corpus-20261108",
+  "dataset_version": 2,
+  "dataset_status": "ready",
+  "kernel_id": "anthovargas/m3-recovered-corpus",
+  "kernel_version": 2,
+  "kernel_status": "RUNNING",
+  "kernel_status_observed_at": "2026-11-08T23:49:37.522374+00:00",
+  "submission": {
+    "started_at": "2026-11-08T23:48:53.992538+00:00",
+    "finished_at": "2026-11-08T23:48:56.192242+00:00",
+    "command": [
+      "kaggle",
+      "kernels",
+      "push",
+      "-p",
+      "build/kaggle-recovery-20261108T2352Z/kernel",
+      "--timeout",
+      "11400"
+    ],
+    "exit_code": 0,
+    "output_file": "build/kaggle-recovery-20261108T2352Z/kernel-push-output.txt"
+  },
+  "output_target": "build/kaggle-results/recovered-corpus-v2",
+  "source_provenance": {
+    "base_commit": "6cb88d5011c6170371bd82c59091dbc5d162f192",
+    "archive_sha256": "82483d163b917f1ea4a2aba39872c6709031a5510df7cbf584af1c96029c9b2d",
+    "manifest_sha256": "202367fa290ea50d0b33f06ffb18423cc0e4e16388d0a038de49810de62bf000"
+  },
+  "input_manifest_sha256": "082bd630ec172869b012ff557f9704e02a3b5f10d17742e38e206b6cf166da31",
+  "declared_inputs_present": 30,
+  "declared_inputs_total": 30,
+  "bytes": 307122490,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "measurement_state": "not yet collected",
+  "previous_version": {
+    "version": 1,
+    "state": "ERROR",
+    "off_references": 10,
+    "declared_datasets": 14,
+    "on_references": 0,
+    "final": true
+  },
+  "next": "Collect version 2 reports and stage logs once it finishes. Require all 14 OFF references, safe OFF/ON comparisons, zero processing allocations, buffer parity and p99/max/deadline gates. Then trace physical-middle assignments using unchanged labels; installed output remains unchanged."
+}
