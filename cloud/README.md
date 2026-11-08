@@ -97,3 +97,46 @@ lost labeled match, no increased false output, buffer parity, zero processing
 allocations, p99 at most 166666 ns, maximum at most 333333 ns, and zero overruns,
 followed by the remaining host and MIDI lifecycle checks. The installed plugin
 is unchanged; reliable live use and overall completion are not measured.
+
+## Private corpus replay on replacement compute
+
+The recovery runner rebuilds the native detector on Kaggle CPU and creates new
+OFF/ON references from the surviving recordings. The GPU probe above remains a
+separate numerical check; it does not accelerate this native C++ replay.
+
+```sh
+python3 -B -m cloud.kaggle.prepare_recovery --username YOUR_USERNAME --output build/kaggle-recovery-UNIQUE
+kaggle datasets create -p build/kaggle-recovery-UNIQUE/dataset --keep-tabular
+kaggle kernels push -p build/kaggle-recovery-UNIQUE/kernel --timeout 11400
+kaggle kernels status YOUR_USERNAME/m3-recovered-corpus
+kaggle kernels output YOUR_USERNAME/m3-recovered-corpus -p build/kaggle-results/recovered-corpus
+```
+
+Preparation copies the declared inputs and snapshots the native source, build
+entry point and replay tools. The manifests record SHA-256 hashes and the base
+commit, including the exact bytes of any uncommitted source changes. Creation
+is exclusive: choose a new local output directory for each attempt. Dataset
+creation is private by default; do not add `--public`. The kernel is explicitly
+private, with Internet and GPU disabled. The license field is `other`, with a
+description retaining the original authors' rights and granting no public
+redistribution license; the service rejected its documented `copyright-authors` value.
+The [official dataset metadata](https://github.com/Kaggle/kaggle-cli/blob/main/docs/datasets_metadata.md)
+and [kernel metadata](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels_metadata.md)
+describe these fields. Dataset uploads and kernel launches are separate actions.
+
+The cloud bootstrap verifies source and input hashes, builds with two compiler
+workers, and runs the native tests before replaying. It first saves all fourteen
+OFF references. Physical-long is the first ON screen; ON enables both native
+partial cues and free-lane reassignment. Wider ON recovery proceeds only after
+no label loss or extra false output, zero C/C++ processing allocations and frees,
+and exact OFF/ON buffer consistency at 32, 512 and 1024 samples. A later regression
+stops wider ON work and preserves completed results.
+
+Timing is measured at 32 samples and 96 kHz. ON must meet p99 <=166666 ns,
+maximum <=333333 ns and zero deadline overruns. A timing failure is recorded as
+a failed native gate; reference recovery may continue, but promotion remains
+false. The replay budget is three hours with a thirty-minute per-process cap.
+Each completed replay updates `corpus-results/report.json` and retains its TSV,
+command, source/binary/input hashes, stderr and available timing JSON. These new
+references do not restore historical Modal identity, missing control crops, or
+the unavailable final Modal report. They do not establish live-host readiness.
