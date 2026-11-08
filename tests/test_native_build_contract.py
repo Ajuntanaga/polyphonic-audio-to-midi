@@ -75,7 +75,10 @@ class NativeBuildContractTests(unittest.TestCase):
             for path in sorted(candidate for candidate in source_root.rglob("*") if candidate.is_file()):
                 text = path.read_text(encoding="utf-8", errors="ignore")
                 for token in forbidden:
-                    self.assertNotIn(token, text, f"{token!r} found in {path}")
+                    if token == ".pt":
+                        self.assertNotRegex(text.lower(), r"\.pt(?:h|2)?\b", str(path))
+                    else:
+                        self.assertNotIn(token, text, f"{token!r} found in {path}")
 
     def test_native_makefile_is_a_thin_guarded_cmake_wrapper(self):
         text = (ROOT / "native/Makefile").read_text(encoding="utf-8")

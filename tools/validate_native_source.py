@@ -355,7 +355,12 @@ def validate_entries(
             errors.append(f"unapproved dependency token vstgui: {relative}")
         if relative.startswith(NATIVE_PREFIXES):
             for token in UNAPPROVED_DEPENDENCIES:
-                if token in lowered:
+                # Match model-file extensions, not C++ members such as .ptr.
+                present = (
+                    re.search(r"\.pt(?:h|2)?\b", lowered) is not None
+                    if token == ".pt" else token in lowered
+                )
+                if present:
                     errors.append(f"unapproved dependency token {token}: {relative}")
             for token in NETWORK_TOKENS:
                 if token in lowered:

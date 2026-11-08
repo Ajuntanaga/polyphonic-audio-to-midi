@@ -61,6 +61,14 @@ class Vst3BuildContractTests(unittest.TestCase):
         self.assertIsNotNone(validator, "validate_entries() is absent")
         return validator(entries, sdk_present=sdk_present)
 
+    def test_model_dependency_check_distinguishes_extensions_from_pointer_members(self):
+        path = "native/offline/example.cpp"
+        self.assertEqual(self.validation_errors([(path, "parsed.ptr != end")]), [])
+        for suffix in (".pt", ".pth", ".pt2", ".PT"):
+            with self.subTest(suffix=suffix):
+                errors = self.validation_errors([(path, f'load("model{suffix}")')])
+                self.assertIn(f"unapproved dependency token .pt: {path}", errors)
+
     def test_sanitizer_keeps_memory_checks_without_vst3_abi_vptr_checks(self):
         compiler_options = (
             ROOT / "cmake/M3CompilerOptions.cmake"
