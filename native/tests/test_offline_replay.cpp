@@ -312,6 +312,72 @@ std::vector<std::uint8_t> float32_wave(
   return bytes;
 }
 
+std::vector<std::uint8_t> float64_wave(
+    std::uint16_t channels, const std::vector<double>& samples) {
+  std::vector<std::uint8_t> bytes;
+  bytes.insert(bytes.end(), {'R', 'I', 'F', 'F'});
+  append_u32(bytes, 0U);
+  bytes.insert(bytes.end(), {'W', 'A', 'V', 'E', 'f', 'm', 't', ' '});
+  append_u32(bytes, 18U);
+  append_u16(bytes, 3U);
+  append_u16(bytes, channels);
+  append_u32(bytes, 96000U);
+  append_u32(bytes, 96000U * 8U * channels);
+  append_u16(bytes, static_cast<std::uint16_t>(8U * channels));
+  append_u16(bytes, 64U);
+  append_u16(bytes, 0U);
+  bytes.insert(bytes.end(), {'d', 'a', 't', 'a'});
+  append_u32(bytes, static_cast<std::uint32_t>(samples.size() * 8U));
+  for (const double sample : samples) {
+    std::uint64_t bits = 0U;
+    std::memcpy(&bits, &sample, sizeof(bits));
+    append_u32(bytes, static_cast<std::uint32_t>(bits));
+    append_u32(bytes, static_cast<std::uint32_t>(bits >> 32U));
+  }
+  patch_u32(bytes, 4U, static_cast<std::uint32_t>(bytes.size() - 8U));
+  return bytes;
+}
+
+M3_TEST(offline_replay_decodes_float64_without_narrowing_recovered_inputs) {
+  const double precise = 0.5 + std::ldexp(1.0, -40);
+  const auto mono = float64_wave(1U, {-0.25, precise});
+  m3::offline::WaveData wave;
+  m3::offline::ReplayError error{};
+  M3_EXPECT_TRUE(m3::offline::decode_wave_bytes(
+      mono.data(), mono.size(), wave, error));
+  M3_EXPECT_EQ(error, m3::offline::ReplayError::none);
+  M3_EXPECT_EQ(wave.sample_rate, 96000U);
+  M3_EXPECT_EQ(wave.source_channels, 1U);
+  M3_EXPECT_EQ(wave.mono_samples.size(), 2U);
+  M3_EXPECT_EQ(wave.mono_samples[1], precise);
+  const auto stereo = float64_wave(2U, {-0.25, 0.75, 2.0, 2.0});
+  M3_EXPECT_TRUE(m3::offline::decode_wave_bytes(
+      stereo.data(), stereo.size(), wave, error));
+  M3_EXPECT_EQ(wave.source_channels, 2U);
+  M3_EXPECT_EQ(wave.mono_samples[0], 0.25);
+  M3_EXPECT_EQ(wave.mono_samples[1], 1.0);
+}
+
+M3_TEST(offline_replay_rejects_nonfinite_or_partial_float64_samples) {
+  m3::offline::WaveData wave;
+  m3::offline::ReplayError error{};
+  for (const double bad : {std::numeric_limits<double>::infinity(),
+                           std::numeric_limits<double>::quiet_NaN()}) {
+    const auto bytes = float64_wave(1U, {bad});
+    M3_EXPECT_FALSE(m3::offline::decode_wave_bytes(
+        bytes.data(), bytes.size(), wave, error));
+    M3_EXPECT_EQ(error, m3::offline::ReplayError::nonfinite_audio);
+    M3_EXPECT_TRUE(wave.mono_samples.empty());
+  }
+  auto partial = float64_wave(1U, {0.5});
+  partial.resize(partial.size() - 2U);
+  patch_u32(partial, 4U, static_cast<std::uint32_t>(partial.size() - 8U));
+  patch_u32(partial, 42U, 6U);
+  M3_EXPECT_FALSE(m3::offline::decode_wave_bytes(
+      partial.data(), partial.size(), wave, error));
+  M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_wave);
+}
+
 M3_TEST(offline_replay_decodes_pcm16_stereo_and_float32_mono) {
   const std::vector<std::uint8_t> pcm =
       pcm16_wave(48000U, 2U, {32767, -32768, 16384, 16384});

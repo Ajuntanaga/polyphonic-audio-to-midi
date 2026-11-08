@@ -104,6 +104,8 @@ def main():
         if key in results:
             return results[key]
         report['stage'] = f'{name}: {mode}, block {block}'
+        report['current_run'] = dict(dataset=name, mode=mode, block=block,
+                                     stderr_file=f'{name}-{mode}-{block}.stderr')
         save()
         print(report['stage'], flush=True)
         stem = f'{name}-{mode}-{block}'
@@ -176,8 +178,17 @@ def main():
         else:
             report['stopped_on_regression'] = 'physical-long'
         report.update(state='completed', final=True, stage='reference recovery finished')
-    except (OSError, ValueError, TimeoutError, subprocess.SubprocessError) as error:
+    except Exception as error:
         report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        failure = dict(report.get('current_run', {}),
+                       returncode=getattr(error, 'returncode', None),
+                       timed_out=isinstance(error, (TimeoutError, subprocess.TimeoutExpired)))
+        stderr = args.output / failure.get('stderr_file', '')
+        if stderr.is_file():
+            with stderr.open('rb') as stream:
+                stream.seek(max(0, stderr.stat().st_size - 2048))
+                failure['stderr_tail'] = stream.read(2048).decode('utf-8', errors='replace')
+        report['failure'] = failure
         raise
     finally:
         report['off_references'] = sum('off-512' in row['runs'] for row in report['datasets'].values())

@@ -1,3 +1,13 @@
+## 2026-11-08 22:54 UTC — replacement cloud routes; recovery parser fix
+
+- Modal remains unavailable. Oracle signup was rejected, so no OCI VM is configured. GitHub Actions and private Kaggle are the active execution routes; no local gateway service, local build or render was started.
+- GitHub CI now retains the production Linux x86-64 VST3, SHA-256 and source provenance for seven days. The added Linux sandbox checks shell and systemd configuration in a disposable runner; it does not establish kernel, driver, resource-limit or audio-host behavior.
+- Private static binary triage is prepared with `cloud.kaggle.prepare_analysis`: file/binutils inspection, bounded time and output, hash-checked inputs, no sample execution or LLM server. Smoke kernel `anthovargas/m3-static-triage-smoke`, version 1, completed: all four inspection tools passed on a generated fixture. Reports and logs are saved in `build/kaggle-results/triage-smoke-v1`. No user binary was uploaded or executed, and no LLM inference was tested.
+- Corpus recovery version 1 ended ERROR, not running: ten of fourteen OFF references, no ON references, no native corpus acceptance. Retrieved `extended-highmid-off-512.stderr` says `unsupported_wave`; that input is valid mono float64 at 96 kHz. The offline reader now supports float64 without converting the recording. Native regression tests await the new cloud build. Bootstrap and replay failures now preserve final reports and diagnosis.
+- Nine focused Python contracts passed locally. No local native build or corpus replay was run. Cloud test and artifact results will be recorded in `build/modal/current-status.json`; do not treat this pending checkpoint as a passing CI result.
+- The existing ten-minute `m3-modal-heartbeat` was updated to follow recorded replacement jobs, retain inline ntfy summaries, and avoid polling terminal corpus version 1. No duplicate automation was created.
+- Next: verify the new GitHub build, then check the three zero-match recordings against their labels and calibration before wider reference recovery. Input checklist remains 30/30; historical control crops, OFF/ON TSVs and the final Modal report are still missing. Installed scores and all acceptance gates are unchanged; reliable live use and overall completion remain unmeasured.
+
 ## 2026-11-08 20:13 UTC — private corpus recovery running
 
 - Recovery source is committed and pushed as `82a683030149f72ba229641811368f58392ab53f`. GitHub Actions run `42518745279` passed the native build, native tests, Python comparison contracts and synthetic buffer checks at 20:11 UTC. No production C++ or installed output changed.

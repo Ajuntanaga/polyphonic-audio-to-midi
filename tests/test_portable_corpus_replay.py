@@ -1,7 +1,12 @@
 from pathlib import Path
+import json
+import subprocess
+import tempfile
 import unittest
+from unittest.mock import patch
 
-from tools.portable_corpus_replay import command_for, timing_gates
+from tools.portable_corpus_replay import command_for, timing_gates, main
+from tools.replay_corpus import DATASETS
 
 
 class PortableCorpusTests(unittest.TestCase):
@@ -32,6 +37,47 @@ class PortableCorpusTests(unittest.TestCase):
         self.assertFalse(timing_gates(dict(timing, fingerprint='bad'), replay, 32)['timing_pass'])
         self.assertFalse(timing_gates({}, replay, 32)['zero_processing_allocations'])
         self.assertIsNone(timing_gates(dict(timing, block_samples=512), replay, 512)['timing_pass'])
+
+    def test_failed_eleventh_input_preserves_ten_references_and_stderr(self):
+        self.check_failed_recovery(subprocess.CalledProcessError(1, ['replay']))
+
+    def test_unexpected_failure_also_leaves_a_final_report(self):
+        self.check_failed_recovery(RuntimeError('unexpected parser failure'))
+
+    def check_failed_recovery(self, failure):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / 'results'
+            manifest = root / 'manifest.json'
+            names = {'calibration.m3cb', 'templates.tsv'} | {
+                name + suffix for name in DATASETS for suffix in ('.wav', '.tsv')}
+            manifest.write_text(json.dumps({'files': {name: {'sha256': 'hash'} for name in names}}))
+            calls = []
+
+            def replay(command, **kwargs):
+                calls.append(command)
+                if len(calls) == 11:
+                    kwargs['stderr'].write('m3_replay: unsupported_wave\n')
+                    raise failure
+                return subprocess.CompletedProcess(command, 0)
+
+            argv = ['recovery', '--binary', str(root / 'replay'), '--corpus', str(root),
+                    '--manifest', str(manifest), '--output', str(output)]
+            parsed = {'output': {'fingerprint': 'unchanged'}, 'exact_matches_by_string_count': {}}
+            with patch('sys.argv', argv), patch('tools.portable_corpus_replay.digest', return_value='hash'), \
+                 patch('tools.portable_corpus_replay.subprocess.run', side_effect=replay), \
+                 patch('tools.portable_corpus_replay.read_replay', return_value=parsed), patch('builtins.print'):
+                with self.assertRaises(type(failure)):
+                    main()
+            report = json.loads((output / 'report.json').read_text())
+            self.assertEqual(report['state'], 'failed')
+            self.assertTrue(report['final'])
+            self.assertEqual(report['off_references'], 10)
+            self.assertEqual(report['on_references'], 0)
+            self.assertEqual(report['failure']['dataset'], 'extended-highmid')
+            self.assertIn('unsupported_wave', report['failure']['stderr_tail'])
+            self.assertFalse(report['promotion_accepted'])
+            self.assertFalse(report['installed_output_changed'])
 
 
 if __name__ == '__main__':

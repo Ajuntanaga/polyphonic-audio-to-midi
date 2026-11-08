@@ -1,8 +1,109 @@
-# Portable offline research
+# Cloud execution without Modal
 
-GitHub Actions builds and tests the native replay executable. Kaggle runs a
-bounded GPU spectral probe. Neither depends on Modal or changes the installed
-plugin. Recordings and credentials stay out of this public repository.
+GitHub Actions builds the VST3 and tests the native replay executable. Private
+Kaggle jobs handle recorded-audio replay, GPU experiments and static binary
+inspection. Oracle signup is not a dependency. Recordings and credentials stay
+out of this public repository, and cloud results do not change the installed plugin.
+
+| Work | Execution route | Saved result |
+| --- | --- | --- |
+| Production VST3 | GitHub `CI`, Ubuntu x86-64 | Bundle, checksums and source commit |
+| Native replay tests | GitHub `Portable offline replay` | Test log and generated-audio parity report |
+| Private recordings | Kaggle CPU recovery job | OFF/ON references and acceptance report |
+| Spectral GPU experiments | Kaggle private GPU notebook | Numerical comparison and measured timings |
+| Static binary triage | Kaggle private CPU batch | File headers, disassembly, symbols and strings |
+| Linux configuration | GitHub `Linux sandbox` | Shell and systemd-unit verification logs |
+| Blender previews | Explicit local CPU render | Separate preview output; no automatic render |
+
+Codex can prepare work, submit the appropriate finite job, read its status and
+download its results through the existing CLIs. This needs no local API server,
+LiteLLM service or new background agent. A hosted language model runs inference;
+it does not automatically move that model's shell tools to the cloud.
+
+## Production VST3 artifact
+
+Pushes on `work/tuner-stability-*`, pull requests to main and manual dispatch run
+`CI`. Its native job builds and tests with two compiler workers, then packages
+the production VST3. Download the artifact for the **specific successful run**:
+
+```sh
+gh run view RUN_ID --json status,conclusion,headSha,url
+gh run download RUN_ID --pattern 'm3-vst3-linux-x86_64-*' --dir build/downloaded-vst3/RUN_ID
+```
+
+The archive includes the `.vst3` directory; its companion files record SHA-256,
+the source commit and pinned submodules. Artifacts expire after seven days.
+Download does not install the plugin. A successful build does not establish
+REAPER loading, MIDI lifecycle, latency or performance on the audio workstation.
+The repository and its Actions artifacts are public, so this route accepts only
+public project source and generated fixtures.
+
+## Linux configuration without a cloud account
+
+`Linux sandbox` checks `cloud/linux/check.sh` and the example worker service in
+a disposable GitHub Ubuntu runner. It has a ten-minute job limit, a five-minute
+check limit and one active run per branch. The service is a configuration
+fixture: it is never installed or started, and its resource limits have not
+been measured at runtime. Add project-specific software tests to this route
+when they are needed. Kernel reboots, hardware drivers and laptop audio timing
+remain outside its scope.
+
+This public repository can use standard hosted runners without Actions-minute
+charges under [GitHub's published billing rules](https://docs.github.com/en/actions/concepts/billing-and-usage).
+Free Kaggle GPU allocation is account- and availability-dependent; a batch job
+is not a persistent VM. [Hugging Face's current Spaces documentation](https://huggingface.co/docs/hub/spaces-overview)
+does not offer the assumed free private Docker compute route: its free exception
+is limited to qualifying personal ZeroGPU Gradio Spaces. Oracle's
+[signup FAQ](https://www.oracle.com/cloud/free/faq/) excludes prepaid and virtual
+cards. We use the already-connected providers instead.
+
+## Private static binary inspection
+
+This route runs `file`, `objdump`, `readelf` for ELF files, and `strings` on
+Kaggle CPU. It does not execute uploaded samples, run a decompiler or host an
+LLM. Use owned or authorized binaries; it is not a malware detonation sandbox.
+
+To test the route without uploading any project binary:
+
+```sh
+python3 -B -m cloud.kaggle.prepare_analysis --username YOUR_USERNAME --slug m3-static-triage-smoke --output build/triage-smoke-UNIQUE --smoke
+kaggle kernels push -p build/triage-smoke-UNIQUE/kernel --timeout 600
+kaggle kernels status YOUR_USERNAME/m3-static-triage-smoke
+kaggle kernels output YOUR_USERNAME/m3-static-triage-smoke/VERSION -p build/kaggle-results/triage-smoke-VERSION
+```
+
+The smoke job compiles a tiny generated fixture remotely and inspects it; it
+never executes that fixture. For a deliberately selected binary, prepare a
+private dataset instead. Preparation itself stays local:
+
+```sh
+python3 -B -m cloud.kaggle.prepare_analysis --username YOUR_USERNAME --slug private-analysis --output build/triage-UNIQUE --binary /path/to/authorized-binary
+```
+
+Review `preparation.json` before authorizing an upload. Then use
+`kaggle datasets create -p build/triage-UNIQUE/dataset --keep-tabular` followed by
+`kaggle kernels push -p build/triage-UNIQUE/kernel --timeout 600`. Never add
+`--public`. The prepared kernel is private, with Internet and GPU disabled.
+It verifies input hashes and limits the batch to four files totaling 128 MiB.
+Each tool has a 45-second wall timeout, 30-second CPU limit, 3 GiB address-space
+limit and 2 MiB output limit. A tool failure or reached output limit is recorded
+as failure, not a complete analysis. Logs and `triage/report.json` are retained
+with the kernel output. No user binary is attached to the smoke job.
+
+## Local Blender previews
+
+Keep existing Blender project launchers and files unchanged. For an explicitly
+requested preview, this example uses Cycles CPU rendering with two threads and
+a separate output directory:
+
+```sh
+nice -n 10 ionice -c 3 timeout --kill-after=10s 5m blender --disable-autoexec --background /path/to/scene.blend --engine CYCLES --threads 2 --render-output /path/to/new-preview/frame_ --render-format PNG --render-frame 1 -- --cycles-device CPU
+```
+
+[Blender documents these render-device and thread options](https://docs.blender.org/manual/en/4.4/advanced/command_line/arguments.html).
+This is an opt-in command, not a change to saved preferences. CPU rendering can
+still consume substantial RAM; reduce the scene or stop the auxiliary render
+under pressure. This setup does not launch Blender or claim measured UI gains.
 
 ## Native replay on GitHub Actions
 
@@ -140,3 +241,13 @@ Each completed replay updates `corpus-results/report.json` and retains its TSV,
 command, source/binary/input hashes, stderr and available timing JSON. These new
 references do not restore historical Modal identity, missing control crops, or
 the unavailable final Modal report. They do not establish live-host readiness.
+
+Recovery version 1 stopped after ten OFF references because the offline reader
+rejected a valid 64-bit floating-point WAV as `unsupported_wave`. The reader now
+supports that format without converting the recording. Native regression tests
+cover precision, stereo mixing, nonfinite input and incomplete samples. The
+bootstrap writes `bootstrap-report.json` at every stage, including failures;
+the corpus report retains the failed dataset, mode, buffer and stderr excerpt.
+These changes require a fresh cloud build before another corpus run. Zero-match
+recovered datasets still need a WAV/label/calibration pairing check. Neither the
+format fix nor successful input recovery changes the installed scoreboard.

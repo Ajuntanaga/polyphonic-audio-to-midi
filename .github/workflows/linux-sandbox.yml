@@ -1,0 +1,30 @@
+name: Linux sandbox
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'work/tuner-stability-*']
+    paths: ['cloud/linux/**', '.github/workflows/linux-sandbox.yml']
+  pull_request:
+    branches: [main]
+    paths: ['cloud/linux/**', '.github/workflows/linux-sandbox.yml']
+permissions:
+  contents: read
+concurrency:
+  group: linux-sandbox-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  configuration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check configuration in the disposable runner
+        run: timeout --kill-after=10s 5m bash cloud/linux/check.sh build/linux-sandbox
+      - name: Save results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-sandbox-${{ github.sha }}
+          path: build/linux-sandbox/
+          retention-days: 7
+          if-no-files-found: error

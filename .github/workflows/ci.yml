@@ -1,8 +1,15 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'work/tuner-stability-*']
+    paths:
+      - 'native/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'third_party/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
 
@@ -72,3 +79,26 @@ jobs:
         run: ctest --test-dir build/ci --output-on-failure -R '^m3_native_tests$'
       - name: Build production VST3
         run: cmake --build build/ci --target m3_vst3_production --parallel 2
+      - name: Package production VST3
+        run: |
+          mkdir -p build/cloud-artifacts
+          tar -C build/ci/VST3 -czf build/cloud-artifacts/M3_Polyphonic_Audio_to_MIDI-linux-x86_64.tar.gz M3_Polyphonic_Audio_to_MIDI.vst3
+          (cd build/cloud-artifacts && sha256sum *.tar.gz > SHA256SUMS)
+          git rev-parse HEAD > build/cloud-artifacts/source-commit.txt
+          git submodule status --recursive > build/cloud-artifacts/submodules.txt
+      - name: Save production bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-vst3-linux-x86_64-${{ github.sha }}
+          path: build/cloud-artifacts/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Save build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-build-diagnostics-${{ github.sha }}
+          path: |
+            build/ci/Testing/Temporary/LastTest.log
+            build/ci/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7

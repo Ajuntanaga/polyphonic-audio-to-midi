@@ -2225,7 +2225,8 @@ bool decode_wave_bytes(const std::uint8_t* bytes, std::size_t size,
                               (bits_per_sample == 16U ||
                                bits_per_sample == 24U ||
                                bits_per_sample == 32U);
-  const bool float_format = format == 3U && bits_per_sample == 32U;
+  const bool float_format = format == 3U &&
+                            (bits_per_sample == 32U || bits_per_sample == 64U);
   if (!integer_format && !float_format) {
     error = ReplayError::unsupported_wave;
     return false;
@@ -2248,15 +2249,22 @@ bool decode_wave_bytes(const std::uint8_t* bytes, std::size_t size,
           data + frame * block_align + channel * bytes_per_sample;
       double value = 0.0;
       if (format == 3U) {
-        const std::uint32_t bits = read_u32(sample);
-        float decoded = 0.0F;
-        std::memcpy(&decoded, &bits, sizeof(decoded));
-        if (!std::isfinite(decoded)) {
+        if (bits_per_sample == 64U) {
+          const std::uint64_t bits =
+              static_cast<std::uint64_t>(read_u32(sample)) |
+              (static_cast<std::uint64_t>(read_u32(sample + 4U)) << 32U);
+          std::memcpy(&value, &bits, sizeof(value));
+        } else {
+          const std::uint32_t bits = read_u32(sample);
+          float decoded = 0.0F;
+          std::memcpy(&decoded, &bits, sizeof(decoded));
+          value = static_cast<double>(decoded);
+        }
+        if (!std::isfinite(value)) {
           output = {};
           error = ReplayError::nonfinite_audio;
           return false;
         }
-        value = static_cast<double>(decoded);
       } else if (bits_per_sample == 16U) {
         value = static_cast<double>(
                     static_cast<std::int16_t>(read_u16(sample))) /

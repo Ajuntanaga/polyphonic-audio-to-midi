@@ -1,0 +1,18 @@
+# Validation fixture only. This file is never installed by the cloud workflow.
+[Unit]
+Description=Bounded M3 auxiliary worker example
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+CPUQuota=200%
+MemoryHigh=2G
+MemoryMax=3G
+TasksMax=64
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=5min
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
