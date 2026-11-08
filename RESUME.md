@@ -1,3 +1,10 @@
+## 2026-11-08 — upper-unison reference comparison and disk cleanup
+
+- The three zero-match upper-unison cases predate the migration. November 4 Modal OFF summaries and November 8 Kaggle OFF summaries agree on every count and output fingerprint: middle 0/24,139, high-middle 0/23,452, high 0/28,043. Audio, label and calibration hashes match the recovered input inventory. Evidence: `docs/recovery/upper-unison-reference-comparison-20261108.json`.
+- This removes a suspected migration regression; it does not establish correct annotations, successful string assignment or full historical TSV identity. The matcher requires the expected note/string assignment, so zero matches must not be described as no detected audio. Installed scores remain unchanged.
+- Removed 30 duplicate upload-staging inputs from `build/kaggle-recovery-20261108T2010Z/dataset`, reclaiming 307,122,490 bytes (292.9 MiB). Each staged file and retained source was hashed against the recovery inventory before removal. Original recordings, labels, calibration, reports and launch metadata remain. Local manifest: `build/recovery/duplicate-cleanup-20261108.json`. Recreate staging from retained inputs before any future upload.
+- Next: resume bounded reference recovery with the cloud-tested float64 reader; retain upper-unison zero scores as known baseline limitations. Diagnose assignment separately without changing labels to raise scores. No new cloud run or local build was launched by this checkpoint; timing, false-output and host gates still apply.
+
 ## 2026-11-08 23:06 UTC — replacement execution routes verified
 
 - Modal remains unavailable. Oracle signup was rejected, so no OCI VM is configured. GitHub Actions and private Kaggle are the active execution routes; no local gateway, native build or render was started.

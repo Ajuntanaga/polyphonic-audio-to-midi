@@ -1,0 +1,65 @@
+{
+  "historical_date": "2026-11-04",
+  "recovery_report": "build/kaggle-results/recovered-corpus-v1/corpus-results/report.json",
+  "comparisons": [
+    {
+      "dataset": "physical-middle",
+      "historical_report": "build/modal/cue-initial-assignment-physical-middle-20261104T1001Z.json",
+      "input_hashes_match": {
+        ".wav": true,
+        ".tsv": true,
+        "calibration": true
+      },
+      "historical_off_equals_recovered_off": true,
+      "output": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      }
+    },
+    {
+      "dataset": "physical-highmid",
+      "historical_report": "build/modal/cue-initial-assignment-physical-highmid-20261104T1007Z.json",
+      "input_hashes_match": {
+        ".wav": true,
+        ".tsv": true,
+        "calibration": true
+      },
+      "historical_off_equals_recovered_off": true,
+      "output": {
+        "labeled": 23452,
+        "matched": 0,
+        "false_wrong_note_voices": 3729,
+        "false_wrong_string_voices": 15251,
+        "false_gap_voices": 46672,
+        "false_positive_voices": 65652,
+        "fingerprint": "fcabcff914676ab2"
+      }
+    },
+    {
+      "dataset": "physical-high",
+      "historical_report": "build/modal/cue-initial-assignment-physical-high-20261104T1014Z.json",
+      "input_hashes_match": {
+        ".wav": true,
+        ".tsv": true,
+        "calibration": true
+      },
+      "historical_off_equals_recovered_off": true,
+      "output": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      }
+    }
+  ],
+  "conclusion": "Zero matches predate migration. Counts and fingerprints agree; full historical TSV identity and label correctness are not established by this comparison.",
+  "installed_output_changed": false
+}
