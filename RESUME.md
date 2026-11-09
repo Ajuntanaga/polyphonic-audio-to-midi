@@ -1,8 +1,9 @@
-## 2026-11-09 — update replay checks for the extended diagnostic trace
+## 2026-11-09 — native tests and VST3 build verified
 
-- GitHub portable run `42547527428` compiled the new diagnostics and passed detector tests. Two replay tests failed because they still required 90 trace columns; the format now has 93. The checks now require the appended field names and eight string entries per field, while retaining existing output-identity assertions. Native verification remains on GitHub Actions.
-- Cancelled queued private trace `42547542721` before execution. Queue one replacement at the corrected source only after portable tests pass. The full-corpus run `42545080876` remains active and must not be duplicated.
-- The reported NumPy import failure belongs to an older worker contract step. Both the canonical and active private workflows already install `numpy>=2,<3`; the active corpus run passed that step. No additional dependency installation or workflow change is needed.
+- Source `996596e4f03826f0243631e7e7bde52b43fd3e19` fixes the two replay tests that still expected 90 trace columns after the format expanded to 93. Public CI `42547835491` passed source contracts, all native tests, the production VST3 build and packaging. Portable workflow `42547835417` also passed native tests, Python contracts and buffer parity. No binary was installed.
+- At 01:58 UTC, full-corpus run `42545080876` was still recovering OFF and ON references at measured source `96509a4c8c212f2587865f5cd9d78164da0f0167`. Focused physical-middle, note-52 diagnostic `42548007356` was pending behind it at the corrected source. The private concurrency group serializes processing. Cancelled trace `42547542721` never ran. Do not duplicate either active job.
+- Collect the corpus report into `build/github-results/corpus-recovery-42545080876` and the diagnostic into `build/github-results/profile-rejection-trace-42548007356` once each finishes. The corpus source predates the paired timing acceptance fix: preserve its original report and apply the corrected check to its saved OFF and ON measurements. Require complete traced/untraced output identity before interpreting the diagnostic's first-pass rejection counts. Keep the two source provenances separate in `build/modal/current-status.json`.
+- The older NumPy import failure is resolved in the current workflows, which install `numpy>=2,<3` before the Python contracts. Installed scores remain unchanged. Corpus acceptance, assignment improvement and live-host verification remain open; overall completion is not measured. The next tuner change depends on the recorded results.
 
 ## 2026-11-09 — trace the missing secondary string before changing assignment
 
