@@ -1,3 +1,9 @@
+## 2026-11-09 — update replay checks for the extended diagnostic trace
+
+- GitHub portable run `42547527428` compiled the new diagnostics and passed detector tests. Two replay tests failed because they still required 90 trace columns; the format now has 93. The checks now require the appended field names and eight string entries per field, while retaining existing output-identity assertions. Native verification remains on GitHub Actions.
+- Cancelled queued private trace `42547542721` before execution. Queue one replacement at the corrected source only after portable tests pass. The full-corpus run `42545080876` remains active and must not be duplicated.
+- The reported NumPy import failure belongs to an older worker contract step. Both the canonical and active private workflows already install `numpy>=2,<3`; the active corpus run passed that step. No additional dependency installation or workflow change is needed.
+
 ## 2026-11-09 — trace the missing secondary string before changing assignment
 
 - The saved physical-middle note-52 trace localizes the missing string before proposal formation. For label 0, primary string 5 is valid for expected strings 3 and 5 in all 216 sampled rows, but string 3 never enters the proposal. Of 211 observed profile fits, string 3 has the best single-string fit in 100 rows, including 65 with beat support. This rules out primary commitment and the no-beat independent-resolution gate as complete explanations. Keep the original labels and calibration.
