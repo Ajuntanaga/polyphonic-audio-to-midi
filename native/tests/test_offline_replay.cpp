@@ -539,6 +539,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
   config.lowest_note = 39U;
   config.highest_note = 41U;
   config.max_polyphony = 1U;
+  config.midi_routing = m3::MidiRouting::per_voice;
   auto baseline = std::make_unique<m3::offline::ReplayResult>();
   auto observed = std::make_unique<m3::offline::ReplayResult>();
   m3::offline::ReplayError error{};
@@ -578,8 +579,16 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     std::size_t calibrated_tick_column = 0U;
     std::size_t calibrated_reason_column = 0U;
     std::size_t calibrated_failures_column = 0U;
+    std::size_t routing_column = 0U;
+    std::size_t routing_render_column = 0U;
+    std::size_t routing_continuity_column = 0U;
+    std::size_t routing_pruned_column = 0U;
+    std::size_t routing_after_column = 0U;
+    std::size_t routing_blocked_column = 0U;
     bool saw_ownership = false;
     bool saw_calibrated = false;
+    bool saw_routing = false;
+    bool saw_unobserved_routing = false;
     bool saw_quiet = false;
     bool saw_released_quiet = false;
     while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
@@ -597,15 +606,35 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
           if (fields[column] == "cal_reason") calibrated_reason_column = column;
           if (fields[column] == "cal_eligibility_failures")
             calibrated_failures_column = column;
+          if (fields[column] == "route_tick") routing_column = column;
+          if (fields[column] == "route_render_observed") routing_render_column = column;
+          if (fields[column] == "route_continuity_observed") routing_continuity_column = column;
+          if (fields[column] == "route_pruned_mask") routing_pruned_column = column;
+          if (fields[column] == "route_midi_after") routing_after_column = column;
+          if (fields[column] == "route_capacity_blocked\n") routing_blocked_column = column;
         }
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
         M3_EXPECT_TRUE(calibrated_column > evaluated_column);
         M3_EXPECT_TRUE(calibrated_failures_column > calibrated_column);
+        M3_EXPECT_TRUE(routing_column > calibrated_failures_column);
+        M3_EXPECT_TRUE(routing_blocked_column > routing_after_column);
         continue;
       }
-      M3_EXPECT_TRUE(fields.size() > calibrated_failures_column);
-      if (fields.size() <= calibrated_failures_column) return;
+      M3_EXPECT_TRUE(fields.size() > routing_blocked_column);
+      if (fields.size() <= routing_blocked_column) return;
+      if (fields[routing_render_column] == "1" ||
+          fields[routing_continuity_column] == "1") {
+        M3_EXPECT_EQ(fields[routing_column], fields[1U]);
+      } else {
+        saw_unobserved_routing = true;
+        M3_EXPECT_EQ(fields[routing_column], std::string("0"));
+      }
+      if (fields[routing_render_column] == "1") {
+        saw_routing = true;
+        M3_EXPECT_EQ(std::stoul(fields[routing_blocked_column]), 0UL);
+        M3_EXPECT_EQ(fields[routing_pruned_column], fields[routing_after_column]);
+      }
       if (fields[calibrated_column] == "1") {
         saw_calibrated = true;
         M3_EXPECT_EQ(fields[calibrated_tick_column], fields[1U]);
@@ -636,6 +665,8 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     M3_EXPECT_EQ(rows, trace.frames + 1U);
     M3_EXPECT_TRUE(saw_ownership);
     M3_EXPECT_TRUE(saw_calibrated);
+    M3_EXPECT_TRUE(saw_routing);
+    M3_EXPECT_TRUE(saw_unobserved_routing);
     M3_EXPECT_TRUE(saw_quiet);
     M3_EXPECT_TRUE(saw_released_quiet);
     M3_EXPECT_TRUE(captured.find("fine_update_scheduled\treset_serial\treset_tick\t"

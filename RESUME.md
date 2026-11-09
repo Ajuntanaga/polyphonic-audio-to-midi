@@ -1,3 +1,9 @@
+## 2026-11-09 — routing diagnostic prepared
+
+- The next GitHub task, `routing-trace`, records logical note 52 before MIDI rendering and after continuity ownership updates around the first lost matches of label 54. It covers samples 944832–945535 while replaying the complete ordinary recording. Both full OFF and rejected ON outputs must match their recorded hashes before the trace is interpreted.
+- The recorder is disabled by default and excluded from production builds. No runtime rule or installed output changes. Five new routing contracts and ten existing retention contracts pass locally; the cloud task also runs the focused native trace test. Native build and replay verification are pending on GitHub Actions.
+- Keep only the small report and compressed diagnostic window locally. A later runtime fix still needs a full-recording gain with zero per-label loss and no increased wrong-note, wrong-string or extra gap outputs, followed by protected corpus, buffer, allocation, timing and host gates.
+
 ## 2026-11-09 — preview ownership trial rejected; routing regression isolated
 
 - GitHub run `42586000548` completed successfully at source `d0646b8c70f2e674c5b9f158222575c49bf2e2a9` and worker `18cfddfbcdb80c7d93ba4cc74093fd07d1a51835`. The runtime trial is rejected. Its report and bounded traces are final; do not poll, download or repeat this completed job. Checkpoint: `docs/recovery/github-projection-preview-20261109.json`.

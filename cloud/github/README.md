@@ -120,3 +120,12 @@ New measurements remain offline evidence. Preserve installed scores and
 default-off behavior until label/error, allocation, buffer, timing, host and
 MIDI lifecycle gates pass. Successful compilation or a completed cloud job
 alone does not establish reliable live use.
+
+`routing-trace` diagnoses the first wrong-string transfer in the rejected
+preview-ownership trial. Use `-f dataset=ordinary -f note=52 -f label_index=54`.
+Both full ordinary replays must match the recorded OFF and rejected ON hashes
+in `docs/recovery/github-projection-preview-20261109.json`. It retains a short
+window of pre-render routing inputs, actual MIDI events and the later continuity
+ownership state. Separate stage flags distinguish an unobserved stage from a
+measured zero mask. The trace is compiled out of the production plugin and does
+not introduce a routing rule, new acceptance result or timing measurement.

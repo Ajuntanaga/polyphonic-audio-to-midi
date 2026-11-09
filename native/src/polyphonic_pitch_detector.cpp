@@ -1114,6 +1114,15 @@ void PolyphonicPitchDetector::update_group_continuity_trackers(
       other_owned = static_cast<std::uint8_t>(other_owned | owned);
     }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (routing_diagnostics_enabled_) {
+      auto& observation = routing_diagnostics_[candidate];
+      if (observation.decision_tick != decision_counter_) observation = {};
+      observation.decision_tick = decision_counter_;
+      observation.continuity_observed = true;
+      observation.other_owned = other_owned;
+    }
+#endif
     std::uint8_t tier_projection = current;
     const SpectralHeadEvidence spectral =
         string_fret_spectral_head_evidence(candidate);
@@ -1669,6 +1678,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
+  routing_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -2665,6 +2675,13 @@ PolyphonicPitchDetector::candidate_tracking_diagnostics(
       calibrated.decision_tick == decision_counter_) {
     result.calibrated_output = calibrated;
   }
+  const auto& routing = routing_diagnostics_[candidate];
+  if (routing_diagnostics_enabled_ && routing.decision_tick == decision_counter_ &&
+      (routing.render_observed || routing.continuity_observed)) {
+    result.routing = routing;
+    result.routing.final_continuity_mask = state.continuity_lane_mask;
+    result.routing.final_cached_group_mask = state.continuity_cached_group_mask;
+  }
   return result;
 }
 
@@ -2996,6 +3013,7 @@ void PolyphonicPitchDetector::set_calibration_bank(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
+  routing_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -11839,6 +11857,25 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         const std::uint8_t note = candidate_midi_output_note(candidate);
         const std::size_t required =
             string_count(removed) + string_count(added);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (routing_diagnostics_enabled_) {
+          auto& observation = routing_diagnostics_[candidate];
+          observation = {};
+          observation.decision_tick = decision_counter_;
+          observation.render_observed = true;
+          observation.assigned_mask = state.assigned_string_mask;
+          observation.primary_string = state.assigned_string;
+          observation.spectral_mask = state.spectral_lane_mask;
+          observation.continuity_mask = state.continuity_lane_mask;
+          observation.cached_group_mask = state.continuity_cached_group_mask;
+          observation.desired_mask = desired;
+          observation.pruned_mask = pruned_desired;
+          observation.midi_before = state.midi_voice_mask;
+          observation.midi_after = state.midi_voice_mask;
+          observation.capacity_blocked = required > decision.transitions.capacity() -
+                                                      decision.transitions.size();
+        }
+#endif
         if (required > decision.transitions.capacity() -
                            decision.transitions.size()) {
           ++active_count;
@@ -11861,6 +11898,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         }
         state.midi_voice_mask = pruned_desired;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (routing_diagnostics_enabled_) {
+          routing_diagnostics_[candidate].midi_after = state.midi_voice_mask;
+        }
         state.diagnostic_profile_pair_output_filtered =
             pruned_desired != unfiltered_desired;
 #endif

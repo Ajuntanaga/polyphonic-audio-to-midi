@@ -297,6 +297,28 @@ struct CalibratedOutputDiagnostics final {
   CalibratedOutputReason reason{CalibratedOutputReason::not_observed};
 };
 
+// Executed routing inputs before rendering, and ownership seen by the later
+// continuity stage. Separate observed flags prevent skipped stages looking like
+// a measured zero mask. This record never participates in detector policy.
+struct CandidateRoutingDiagnostics final {
+  std::uint32_t decision_tick{};
+  std::uint8_t assigned_mask{};
+  std::uint8_t primary_string{kMaxVoices};
+  std::uint8_t spectral_mask{};
+  std::uint8_t continuity_mask{};
+  std::uint8_t cached_group_mask{};
+  std::uint8_t desired_mask{};
+  std::uint8_t pruned_mask{};
+  std::uint8_t midi_before{};
+  std::uint8_t midi_after{};
+  std::uint8_t other_owned{};
+  std::uint8_t final_continuity_mask{};
+  std::uint8_t final_cached_group_mask{};
+  bool render_observed{};
+  bool continuity_observed{};
+  bool capacity_blocked{};
+};
+
 // Read-only timeline snapshot for bounded offline causal comparisons.
 struct CandidateTrackingDiagnostics final {
   std::uint32_t decision_tick{};
@@ -321,6 +343,7 @@ struct CandidateTrackingDiagnostics final {
   bool fine_update_scheduled{};
   FineHistoryResetDiagnostics fine_reset{};
   CalibratedOutputDiagnostics calibrated_output{};
+  CandidateRoutingDiagnostics routing{};
 };
 
 // Fixed two-template fit of one independently normalized observation window.
@@ -620,6 +643,10 @@ class PolyphonicPitchDetector final {
   void set_calibrated_output_diagnostics_enabled(bool enabled) noexcept {
     calibrated_output_diagnostics_enabled_ = enabled;
     if (!enabled) calibrated_output_diagnostics_ = {};
+  }
+  void set_routing_diagnostics_enabled(bool enabled) noexcept {
+    routing_diagnostics_enabled_ = enabled;
+    if (!enabled) routing_diagnostics_ = {};
   }
   void set_assignment_diagnostics_enabled(bool enabled) noexcept {
     assignment_diagnostics_enabled_ = enabled && assignment_diagnostics_ != nullptr;
@@ -1603,6 +1630,8 @@ class PolyphonicPitchDetector final {
   bool calibrated_output_diagnostics_enabled_{};
   std::array<CalibratedOutputDiagnostics, kMaxCandidates>
       calibrated_output_diagnostics_{};
+  bool routing_diagnostics_enabled_{};
+  std::array<CandidateRoutingDiagnostics, kMaxCandidates> routing_diagnostics_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   std::array<ObservedUnisonReacquisitionDisposition, kMaxCandidates>
       spectral_reacquisition_dispositions_{};

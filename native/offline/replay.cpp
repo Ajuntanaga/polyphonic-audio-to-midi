@@ -3036,7 +3036,13 @@ bool run_detector_replay(const WaveData& wave,
         "cal_midi_before\tcal_midi_after\tcal_target_before\tcal_target_after\t"
         "cal_ticks_before\tcal_ticks_after\tcal_projected_note\tcal_changed\t"
         "cal_trusted\tcal_projected_error_cents\tcal_collision_note\t"
-        "cal_collision_kind\tcal_transitions_added\n") < 0;
+        "cal_collision_kind\tcal_transitions_added\t"
+        "route_tick\troute_render_observed\troute_continuity_observed\t"
+        "route_assigned_mask\troute_primary_string\troute_spectral_mask\t"
+        "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
+        "route_pruned_mask\troute_midi_before\troute_midi_after\t"
+        "route_other_owned\troute_final_continuity_mask\t"
+        "route_final_cached_group_mask\troute_capacity_blocked\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3132,6 +3138,7 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_projection_preview_admission_for_diagnostics(
       diagnostic_projection_preview_admission);
   detector.set_calibrated_output_diagnostics_enabled(candidate_trace != nullptr);
+  detector.set_routing_diagnostics_enabled(candidate_trace != nullptr);
   detector.set_cue_free_lane_reassignment_for_diagnostics(
       diagnostic_cue_free_lane_reassignment);
   detector.set_provisional_open_retention_guard_for_diagnostics(
@@ -3605,7 +3612,7 @@ bool run_detector_replay(const WaveData& wave,
             const auto& calibrated = tracking.calibrated_output;
             trace.failed = std::fprintf(trace.stream,
                 "\t%u\t%u\t%s\t%u\t%.17g\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
-                "%u\t%u\t%u\t%u\t%u\t%u\t%u\t%.17g\t%u\t%u\t%u\n",
+                "%u\t%u\t%u\t%u\t%u\t%u\t%u\t%.17g\t%u\t%u\t%u",
                 calibrated.observed, calibrated.decision_tick,
                 calibrated_names[static_cast<std::size_t>(calibrated.reason)],
                 calibrated.eligibility_failures, calibrated.phase_cents,
@@ -3619,6 +3626,18 @@ bool run_detector_replay(const WaveData& wave,
                 calibrated.projection_trusted, calibrated.projected_error_cents,
                 calibrated.collision_note, calibrated.collision_kind,
                 calibrated.transitions_added) < 0 || trace.failed;
+            const auto& routing = tracking.routing;
+            trace.failed = std::fprintf(trace.stream,
+                "\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
+                "%u\t%u\t%u\t%u\n",
+                routing.decision_tick, routing.render_observed,
+                routing.continuity_observed, routing.assigned_mask,
+                routing.primary_string, routing.spectral_mask,
+                routing.continuity_mask, routing.cached_group_mask,
+                routing.desired_mask, routing.pruned_mask, routing.midi_before,
+                routing.midi_after, routing.other_owned,
+                routing.final_continuity_mask, routing.final_cached_group_mask,
+                routing.capacity_blocked) < 0 || trace.failed;
             ++trace.frames;
           }
         }
