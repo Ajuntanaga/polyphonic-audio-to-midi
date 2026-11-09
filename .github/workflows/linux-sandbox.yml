@@ -22,7 +22,7 @@ jobs:
         run: timeout --kill-after=10s 5m bash cloud/linux/check.sh build/linux-sandbox
       - name: Save results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-sandbox-${{ github.sha }}
           path: build/linux-sandbox/

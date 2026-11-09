@@ -1,0 +1,2173 @@
+{
+  "schema": "m3_profile_rejection_diagnosis_v1",
+  "created_at": "2026-11-09T02:08:42.489653+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "996596e4f03826f0243631e7e7bde52b43fd3e19",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42548007356",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "report": "build/github-results/profile-rejection-trace-42548007356/trace/report.json",
+  "report_sha256": "8908cfe875c19337c1987f3b0f13631888a4ff3e5c659bd3fbfafa2333ed5998",
+  "report_final": true,
+  "finished_at": "2026-11-09T02:06:32.310842+00:00",
+  "binary_sha256": "98b340cb506f430819a9aededd28b76d186cd7143929d46f609091a0c3b30a34",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "runs": {
+    "reference-off": {
+      "elapsed_seconds": 14.048948355999983,
+      "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+      "output": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "exact_matches_by_string_count": {
+        "2": {
+          "labeled": 20389,
+          "matched": 0
+        },
+        "3": {
+          "labeled": 3750,
+          "matched": 0
+        }
+      }
+    },
+    "traced-off": {
+      "elapsed_seconds": 15.149718365000012,
+      "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+      "output": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "exact_matches_by_string_count": {
+        "2": {
+          "labeled": 20389,
+          "matched": 0
+        },
+        "3": {
+          "labeled": 3750,
+          "matched": 0
+        }
+      }
+    }
+  },
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": true
+  },
+  "windows": [
+    {
+      "label": {
+        "label_index": 0,
+        "start_sample": 531840,
+        "end_sample": 752640,
+        "midi_note": 52,
+        "string_mask": 40,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 216,
+        "expected_mask": 40,
+        "distributions": {
+          "observed": {
+            "1": 216
+          },
+          "valid": {
+            "1": 216
+          },
+          "complete_calibration": {
+            "1": 216
+          },
+          "playable": {
+            "63": 216
+          },
+          "prior_primary": {
+            "5": 216
+          },
+          "dp_primary": {
+            "5": 216
+          },
+          "final_primary": {
+            "5": 216
+          },
+          "final_mask": {
+            "32": 106,
+            "34": 5,
+            "33": 105
+          },
+          "rendered_mask": {
+            "32": 106,
+            "34": 5,
+            "33": 105
+          },
+          "midi_mask": {
+            "32": 106,
+            "34": 5,
+            "33": 105
+          },
+          "group_after": {
+            "32": 106,
+            "34": 5,
+            "33": 105
+          },
+          "primary_only_render": {
+            "32": 106,
+            "34": 5,
+            "33": 105
+          },
+          "use_posterior": {
+            "0": 216
+          },
+          "posterior_observation_available": {
+            "1": 216
+          },
+          "posterior_updated": {
+            "1": 216
+          },
+          "profile_fit_observed": {
+            "0": 5,
+            "1": 211
+          },
+          "profile_uses_long_memory": {
+            "0": 52,
+            "1": 164
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 216,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "not_observed": {
+                "rows": 5
+              },
+              "added_component_too_small": {
+                "rows": 71,
+                "alpha_measured_rows": 71,
+                "alpha_min": 0.0,
+                "alpha_max": 0.14970344990881357
+              },
+              "insufficient_improvement": {
+                "rows": 117,
+                "alpha_measured_rows": 117,
+                "alpha_min": 0.1588159044544726,
+                "alpha_max": 0.6874179875712452,
+                "candidate_error_measured_rows": 117,
+                "candidate_error_min": 9.989101753528416e-06,
+                "candidate_error_max": 5.335215636271785e-05
+              },
+              "not_best": {
+                "rows": 5,
+                "alpha_measured_rows": 5,
+                "alpha_min": 0.3867286882519283,
+                "alpha_max": 0.41311160437235656,
+                "candidate_error_measured_rows": 5,
+                "candidate_error_min": 8.54219897929296e-06,
+                "candidate_error_max": 9.61539437747629e-06
+              },
+              "accepted": {
+                "rows": 18,
+                "alpha_measured_rows": 18,
+                "alpha_min": 0.4196584432706376,
+                "alpha_max": 0.5205013914728792,
+                "candidate_error_measured_rows": 18,
+                "candidate_error_min": 7.933101318128173e-06,
+                "candidate_error_max": 9.80015933219575e-06
+              }
+            },
+            "1": {
+              "not_observed": {
+                "rows": 5
+              },
+              "added_component_too_small": {
+                "rows": 71,
+                "alpha_measured_rows": 71,
+                "alpha_min": 0.0,
+                "alpha_max": 0.14993140603588484
+              },
+              "insufficient_improvement": {
+                "rows": 117,
+                "alpha_measured_rows": 117,
+                "alpha_min": 0.15905751381806202,
+                "alpha_max": 0.6884526482510096,
+                "candidate_error_measured_rows": 117,
+                "candidate_error_min": 9.961983031319384e-06,
+                "candidate_error_max": 5.3261753008282434e-05
+              },
+              "accepted": {
+                "rows": 5,
+                "alpha_measured_rows": 5,
+                "alpha_min": 0.38731220364975283,
+                "alpha_max": 0.41373473779164605,
+                "candidate_error_measured_rows": 5,
+                "candidate_error_min": 8.537913440992234e-06,
+                "candidate_error_max": 9.592717693613548e-06
+              },
+              "not_best": {
+                "rows": 18,
+                "alpha_measured_rows": 18,
+                "alpha_min": 0.42029140891411965,
+                "alpha_max": 0.5212857906730516,
+                "candidate_error_measured_rows": 18,
+                "candidate_error_min": 7.959627119328361e-06,
+                "candidate_error_max": 9.896521013954604e-06
+              }
+            },
+            "2": {
+              "not_observed": {
+                "rows": 5
+              },
+              "added_component_too_small": {
+                "rows": 70,
+                "alpha_measured_rows": 70,
+                "alpha_min": 0.0,
+                "alpha_max": 0.1418745912064638
+              },
+              "insufficient_improvement": {
+                "rows": 118,
+                "alpha_measured_rows": 118,
+                "alpha_min": 0.151158903065878,
+                "alpha_max": 0.6940747182093702,
+                "candidate_error_measured_rows": 118,
+                "candidate_error_min": 9.964450661317808e-06,
+                "candidate_error_max": 5.661374351132804e-05
+              },
+              "not_best": {
+                "rows": 23,
+                "alpha_measured_rows": 23,
+                "alpha_min": 0.3904767596404857,
+                "alpha_max": 0.5255438907915077,
+                "candidate_error_measured_rows": 23,
+                "candidate_error_min": 8.03669973166552e-06,
+                "candidate_error_max": 1.0067937571873844e-05
+              }
+            },
+            "3": {
+              "not_observed": {
+                "rows": 5
+              },
+              "added_component_too_small": {
+                "rows": 67,
+                "alpha_measured_rows": 67,
+                "alpha_min": 0.0,
+                "alpha_max": 0.1441300287849098
+              },
+              "insufficient_improvement": {
+                "rows": 87,
+                "alpha_measured_rows": 87,
+                "alpha_min": 0.15537158345744528,
+                "alpha_max": 0.8490210379298914,
+                "candidate_error_measured_rows": 87,
+                "candidate_error_min": 1.129255226615145e-05,
+                "candidate_error_max": 0.00011210462659403044
+              },
+              "not_best": {
+                "rows": 23,
+                "alpha_measured_rows": 23,
+                "alpha_min": 0.489488809931276,
+                "alpha_max": 0.6586062229142349,
+                "candidate_error_measured_rows": 23,
+                "candidate_error_min": 1.411768326952174e-05,
+                "candidate_error_max": 4.072537037169424e-05
+              },
+              "retained_component_too_small": {
+                "rows": 34,
+                "alpha_measured_rows": 34,
+                "alpha_min": 0.8504573938489727,
+                "alpha_max": 0.8695427174311977
+              }
+            },
+            "4": {
+              "not_observed": {
+                "rows": 5
+              },
+              "template_too_close": {
+                "rows": 211
+              }
+            },
+            "5": {
+              "not_observed": {
+                "rows": 5
+              },
+              "already_member": {
+                "rows": 211
+              }
+            },
+            "6": {
+              "not_observed": {
+                "rows": 5
+              },
+              "template_unavailable": {
+                "rows": 211
+              }
+            },
+            "7": {
+              "not_observed": {
+                "rows": 5
+              },
+              "template_unavailable": {
+                "rows": 211
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 216,
+          "5": 0
+        },
+        "extra_lane_rows": {
+          "0": 105,
+          "1": 5,
+          "2": 0,
+          "4": 0,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 1,
+        "start_sample": 845760,
+        "end_sample": 935040,
+        "midi_note": 52,
+        "string_mask": 40,
+        "calibration_pass": 0,
+        "labeled": 1395,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 88,
+        "expected_mask": 40,
+        "distributions": {
+          "observed": {
+            "1": 88
+          },
+          "valid": {
+            "1": 88
+          },
+          "complete_calibration": {
+            "1": 88
+          },
+          "playable": {
+            "63": 88
+          },
+          "prior_primary": {
+            "5": 88
+          },
+          "dp_primary": {
+            "5": 88
+          },
+          "final_primary": {
+            "5": 88
+          },
+          "final_mask": {
+            "32": 88
+          },
+          "rendered_mask": {
+            "8": 55,
+            "32": 33
+          },
+          "midi_mask": {
+            "8": 55,
+            "32": 33
+          },
+          "group_after": {
+            "32": 88
+          },
+          "primary_only_render": {
+            "8": 55,
+            "32": 33
+          },
+          "use_posterior": {
+            "0": 88
+          },
+          "posterior_observation_available": {
+            "1": 88
+          },
+          "posterior_updated": {
+            "1": 88
+          },
+          "profile_fit_observed": {
+            "1": 88
+          },
+          "profile_uses_long_memory": {
+            "0": 37,
+            "1": 51
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 88,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "retained_component_too_small": {
+                "rows": 88,
+                "alpha_measured_rows": 88,
+                "alpha_min": 0.9501708365671283,
+                "alpha_max": 0.9694691790999862
+              }
+            },
+            "1": {
+              "retained_component_too_small": {
+                "rows": 88,
+                "alpha_measured_rows": 88,
+                "alpha_min": 0.9515993724180752,
+                "alpha_max": 0.9709300070926247
+              }
+            },
+            "2": {
+              "retained_component_too_small": {
+                "rows": 88,
+                "alpha_measured_rows": 88,
+                "alpha_min": 0.9593683984571054,
+                "alpha_max": 0.9788612629924224
+              }
+            },
+            "3": {
+              "retained_component_too_small": {
+                "rows": 88,
+                "alpha_measured_rows": 88,
+                "alpha_min": 1.0,
+                "alpha_max": 1.0
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 88
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 88
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 88
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 88
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 33,
+          "5": 55
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "4": 0,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 2,
+        "start_sample": 1280640,
+        "end_sample": 1501440,
+        "midi_note": 52,
+        "string_mask": 40,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 216,
+        "expected_mask": 40,
+        "distributions": {
+          "observed": {
+            "1": 216
+          },
+          "valid": {
+            "1": 216
+          },
+          "complete_calibration": {
+            "1": 216
+          },
+          "playable": {
+            "63": 216
+          },
+          "prior_primary": {
+            "5": 12,
+            "4": 204
+          },
+          "dp_primary": {
+            "5": 12,
+            "4": 204
+          },
+          "final_primary": {
+            "5": 12,
+            "4": 204
+          },
+          "final_mask": {
+            "32": 12,
+            "16": 128,
+            "24": 76
+          },
+          "rendered_mask": {
+            "32": 12,
+            "16": 128,
+            "24": 76
+          },
+          "midi_mask": {
+            "32": 12,
+            "16": 128,
+            "24": 76
+          },
+          "group_after": {
+            "32": 12,
+            "16": 128,
+            "24": 76
+          },
+          "primary_only_render": {
+            "32": 12,
+            "16": 128,
+            "24": 76
+          },
+          "use_posterior": {
+            "0": 216
+          },
+          "posterior_observation_available": {
+            "1": 216
+          },
+          "posterior_updated": {
+            "1": 216
+          },
+          "profile_fit_observed": {
+            "1": 216
+          },
+          "profile_uses_long_memory": {
+            "0": 38,
+            "1": 178
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 216,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "insufficient_improvement": {
+                "rows": 146,
+                "alpha_measured_rows": 146,
+                "alpha_min": 0.15365240073365008,
+                "alpha_max": 0.5986052195051917,
+                "candidate_error_measured_rows": 146,
+                "candidate_error_min": 4.95671200315351e-05,
+                "candidate_error_max": 0.0005752856414334434
+              },
+              "added_component_too_small": {
+                "rows": 36,
+                "alpha_measured_rows": 36,
+                "alpha_min": 0.03093068425168876,
+                "alpha_max": 0.14729266362062027
+              },
+              "not_best": {
+                "rows": 34,
+                "alpha_measured_rows": 34,
+                "alpha_min": 0.3081312537965525,
+                "alpha_max": 0.4520198667875437,
+                "candidate_error_measured_rows": 34,
+                "candidate_error_min": 0.00017254030569287683,
+                "candidate_error_max": 0.00029674490242354636
+              }
+            },
+            "1": {
+              "insufficient_improvement": {
+                "rows": 146,
+                "alpha_measured_rows": 146,
+                "alpha_min": 0.1539304258830269,
+                "alpha_max": 0.5996323510956467,
+                "candidate_error_measured_rows": 146,
+                "candidate_error_min": 4.9384220568074764e-05,
+                "candidate_error_max": 0.00057470589447744
+              },
+              "added_component_too_small": {
+                "rows": 36,
+                "alpha_measured_rows": 36,
+                "alpha_min": 0.031003082281313765,
+                "alpha_max": 0.14756155559689532
+              },
+              "not_best": {
+                "rows": 34,
+                "alpha_measured_rows": 34,
+                "alpha_min": 0.30866879339140124,
+                "alpha_max": 0.4527998944554344,
+                "candidate_error_measured_rows": 34,
+                "candidate_error_min": 0.00017168371524580847,
+                "candidate_error_max": 0.000295965864529201
+              }
+            },
+            "2": {
+              "insufficient_improvement": {
+                "rows": 146,
+                "alpha_measured_rows": 146,
+                "alpha_min": 0.15540677319971488,
+                "alpha_max": 0.605216364258355,
+                "candidate_error_measured_rows": 146,
+                "candidate_error_min": 4.9157309839131874e-05,
+                "candidate_error_max": 0.0005729928127199503
+              },
+              "added_component_too_small": {
+                "rows": 36,
+                "alpha_measured_rows": 36,
+                "alpha_min": 0.03134946112380966,
+                "alpha_max": 0.14898393830757142
+              },
+              "not_best": {
+                "rows": 34,
+                "alpha_measured_rows": 34,
+                "alpha_min": 0.3115695582805587,
+                "alpha_max": 0.4570297175107869,
+                "candidate_error_measured_rows": 34,
+                "candidate_error_min": 0.00016916846327156575,
+                "candidate_error_max": 0.00029367089545475494
+              }
+            },
+            "3": {
+              "insufficient_improvement": {
+                "rows": 155,
+                "alpha_measured_rows": 155,
+                "alpha_min": 0.15274454563579767,
+                "alpha_max": 0.7853608619825693,
+                "candidate_error_measured_rows": 155,
+                "candidate_error_min": 1.0086165159038248e-05,
+                "candidate_error_max": 0.0006085106455803475
+              },
+              "added_component_too_small": {
+                "rows": 26,
+                "alpha_measured_rows": 26,
+                "alpha_min": 0.044938996708692835,
+                "alpha_max": 0.14727515436225905
+              },
+              "accepted": {
+                "rows": 35,
+                "alpha_measured_rows": 35,
+                "alpha_min": 0.406289991477004,
+                "alpha_max": 0.5967581534177273,
+                "candidate_error_measured_rows": 35,
+                "candidate_error_min": 5.774210482383314e-05,
+                "candidate_error_max": 0.00017663039611111181
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 12
+              },
+              "already_member": {
+                "rows": 204
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 12
+              },
+              "template_too_close": {
+                "rows": 204
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 216
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 216
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 140,
+          "5": 204
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "4": 204,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 3,
+        "start_sample": 2311680,
+        "end_sample": 2532480,
+        "midi_note": 52,
+        "string_mask": 48,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 216,
+        "expected_mask": 48,
+        "distributions": {
+          "observed": {
+            "1": 216
+          },
+          "valid": {
+            "1": 216
+          },
+          "complete_calibration": {
+            "1": 216
+          },
+          "playable": {
+            "63": 216
+          },
+          "prior_primary": {
+            "5": 216
+          },
+          "dp_primary": {
+            "5": 216
+          },
+          "final_primary": {
+            "5": 216
+          },
+          "final_mask": {
+            "32": 216
+          },
+          "rendered_mask": {
+            "16": 198,
+            "32": 18
+          },
+          "midi_mask": {
+            "16": 198,
+            "32": 18
+          },
+          "group_after": {
+            "32": 216
+          },
+          "primary_only_render": {
+            "16": 198,
+            "32": 18
+          },
+          "use_posterior": {
+            "0": 216
+          },
+          "posterior_observation_available": {
+            "1": 216
+          },
+          "posterior_updated": {
+            "1": 216
+          },
+          "profile_fit_observed": {
+            "1": 216
+          },
+          "profile_uses_long_memory": {
+            "0": 38,
+            "1": 178
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 216,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "insufficient_improvement": {
+                "rows": 132,
+                "alpha_measured_rows": 132,
+                "alpha_min": 0.6333775675534666,
+                "alpha_max": 0.8498567924266016,
+                "candidate_error_measured_rows": 132,
+                "candidate_error_min": 1.699410295895615e-07,
+                "candidate_error_max": 0.0001614744387793678
+              },
+              "retained_component_too_small": {
+                "rows": 84,
+                "alpha_measured_rows": 84,
+                "alpha_min": 0.8502430878081194,
+                "alpha_max": 0.8837690025125169
+              }
+            },
+            "1": {
+              "insufficient_improvement": {
+                "rows": 129,
+                "alpha_measured_rows": 129,
+                "alpha_min": 0.6343335399786859,
+                "alpha_max": 0.8497251041052224,
+                "candidate_error_measured_rows": 129,
+                "candidate_error_min": 1.5383104806834766e-07,
+                "candidate_error_max": 0.0001622765294235327
+              },
+              "retained_component_too_small": {
+                "rows": 87,
+                "alpha_measured_rows": 87,
+                "alpha_min": 0.8501746522453987,
+                "alpha_max": 0.8851021545607908
+              }
+            },
+            "2": {
+              "insufficient_improvement": {
+                "rows": 119,
+                "alpha_measured_rows": 119,
+                "alpha_min": 0.6395174047076373,
+                "alpha_max": 0.8497111928128657,
+                "candidate_error_measured_rows": 119,
+                "candidate_error_min": 1.3972931494534589e-07,
+                "candidate_error_max": 0.00016333660434345127
+              },
+              "retained_component_too_small": {
+                "rows": 97,
+                "alpha_measured_rows": 97,
+                "alpha_min": 0.8505829320489,
+                "alpha_max": 0.892334298674139
+              }
+            },
+            "3": {
+              "retained_component_too_small": {
+                "rows": 176,
+                "alpha_measured_rows": 176,
+                "alpha_min": 0.8501429747424867,
+                "alpha_max": 1.0
+              },
+              "insufficient_improvement": {
+                "rows": 40,
+                "alpha_measured_rows": 40,
+                "alpha_min": 0.8017329167732784,
+                "alpha_max": 0.848308540886189,
+                "candidate_error_measured_rows": 40,
+                "candidate_error_min": 7.372278979156978e-06,
+                "candidate_error_max": 7.668143489242615e-05
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 216
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 216
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 216
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 216
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "4": 18,
+          "5": 198
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 4,
+        "start_sample": 3072000,
+        "end_sample": 3292800,
+        "midi_note": 52,
+        "string_mask": 48,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 215,
+        "expected_mask": 48,
+        "distributions": {
+          "observed": {
+            "1": 215
+          },
+          "valid": {
+            "1": 215
+          },
+          "complete_calibration": {
+            "1": 215
+          },
+          "playable": {
+            "63": 215
+          },
+          "prior_primary": {
+            "5": 215
+          },
+          "dp_primary": {
+            "5": 215
+          },
+          "final_primary": {
+            "5": 215
+          },
+          "final_mask": {
+            "32": 215
+          },
+          "rendered_mask": {
+            "32": 208,
+            "16": 7
+          },
+          "midi_mask": {
+            "32": 208,
+            "16": 7
+          },
+          "group_after": {
+            "32": 215
+          },
+          "primary_only_render": {
+            "32": 208,
+            "16": 7
+          },
+          "use_posterior": {
+            "0": 215
+          },
+          "posterior_observation_available": {
+            "1": 215
+          },
+          "posterior_updated": {
+            "1": 215
+          },
+          "profile_fit_observed": {
+            "1": 215
+          },
+          "profile_uses_long_memory": {
+            "0": 39,
+            "1": 176
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 215,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "added_component_too_small": {
+                "rows": 215,
+                "alpha_measured_rows": 215,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "1": {
+              "added_component_too_small": {
+                "rows": 215,
+                "alpha_measured_rows": 215,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "2": {
+              "added_component_too_small": {
+                "rows": 215,
+                "alpha_measured_rows": 215,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "3": {
+              "added_component_too_small": {
+                "rows": 215,
+                "alpha_measured_rows": 215,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 210
+              },
+              "owned_by_other": {
+                "rows": 5
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 215
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 215
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 215
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "4": 208,
+          "5": 7
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 5,
+        "start_sample": 3400320,
+        "end_sample": 3457920,
+        "midi_note": 52,
+        "string_mask": 48,
+        "calibration_pass": 0,
+        "labeled": 900,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 56,
+        "expected_mask": 48,
+        "distributions": {
+          "observed": {
+            "1": 56
+          },
+          "valid": {
+            "1": 56
+          },
+          "complete_calibration": {
+            "1": 56
+          },
+          "playable": {
+            "63": 56
+          },
+          "prior_primary": {
+            "5": 56
+          },
+          "dp_primary": {
+            "5": 56
+          },
+          "final_primary": {
+            "5": 56
+          },
+          "final_mask": {
+            "32": 55,
+            "56": 1
+          },
+          "rendered_mask": {
+            "32": 55,
+            "56": 1
+          },
+          "midi_mask": {
+            "32": 55,
+            "56": 1
+          },
+          "group_after": {
+            "32": 55,
+            "56": 1
+          },
+          "primary_only_render": {
+            "32": 55,
+            "56": 1
+          },
+          "use_posterior": {
+            "0": 56
+          },
+          "posterior_observation_available": {
+            "1": 56
+          },
+          "posterior_updated": {
+            "1": 56
+          },
+          "profile_fit_observed": {
+            "1": 54,
+            "0": 2
+          },
+          "profile_uses_long_memory": {
+            "1": 54,
+            "0": 2
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 56,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "added_component_too_small": {
+                "rows": 54,
+                "alpha_measured_rows": 54,
+                "alpha_min": 0.0,
+                "alpha_max": 0.07778137507773085
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "1": {
+              "added_component_too_small": {
+                "rows": 54,
+                "alpha_measured_rows": 54,
+                "alpha_min": 0.0,
+                "alpha_max": 0.07786501279686987
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "2": {
+              "added_component_too_small": {
+                "rows": 54,
+                "alpha_measured_rows": 54,
+                "alpha_min": 0.0,
+                "alpha_max": 0.07845540527791392
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "3": {
+              "added_component_too_small": {
+                "rows": 54,
+                "alpha_measured_rows": 54,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0914618659934822
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 54
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 54
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 54
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 54
+              },
+              "not_observed": {
+                "rows": 2
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "4": 55,
+          "5": 0
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 6,
+        "start_sample": 3537120,
+        "end_sample": 3576720,
+        "midi_note": 52,
+        "string_mask": 24,
+        "calibration_pass": 0,
+        "labeled": 619,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 38,
+        "expected_mask": 24,
+        "distributions": {
+          "observed": {
+            "1": 38
+          },
+          "valid": {
+            "1": 38
+          },
+          "complete_calibration": {
+            "1": 38
+          },
+          "playable": {
+            "63": 38
+          },
+          "prior_primary": {
+            "5": 38
+          },
+          "dp_primary": {
+            "5": 38
+          },
+          "final_primary": {
+            "5": 38
+          },
+          "final_mask": {
+            "32": 38
+          },
+          "rendered_mask": {
+            "32": 38
+          },
+          "midi_mask": {
+            "32": 38
+          },
+          "group_after": {
+            "32": 38
+          },
+          "primary_only_render": {
+            "32": 38
+          },
+          "use_posterior": {
+            "0": 38
+          },
+          "posterior_observation_available": {
+            "1": 38
+          },
+          "posterior_updated": {
+            "1": 38
+          },
+          "profile_fit_observed": {
+            "1": 38
+          },
+          "profile_uses_long_memory": {
+            "0": 38
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 38,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "retained_component_too_small": {
+                "rows": 38,
+                "alpha_measured_rows": 38,
+                "alpha_min": 0.850677310397321,
+                "alpha_max": 0.918967320063135
+              }
+            },
+            "1": {
+              "retained_component_too_small": {
+                "rows": 38,
+                "alpha_measured_rows": 38,
+                "alpha_min": 0.8519593584574343,
+                "alpha_max": 0.920352463981789
+              }
+            },
+            "2": {
+              "retained_component_too_small": {
+                "rows": 38,
+                "alpha_measured_rows": 38,
+                "alpha_min": 0.858917841364329,
+                "alpha_max": 0.9278703498269355
+              }
+            },
+            "3": {
+              "retained_component_too_small": {
+                "rows": 38,
+                "alpha_measured_rows": 38,
+                "alpha_min": 1.0,
+                "alpha_max": 1.0
+              }
+            },
+            "4": {
+              "template_too_close": {
+                "rows": 38
+              }
+            },
+            "5": {
+              "already_member": {
+                "rows": 38
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 38
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 38
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 38,
+          "4": 38
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "5": 38,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 7,
+        "start_sample": 3786240,
+        "end_sample": 4007040,
+        "midi_note": 52,
+        "string_mask": 24,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 149,
+        "expected_mask": 24,
+        "distributions": {
+          "observed": {
+            "1": 149
+          },
+          "valid": {
+            "1": 149
+          },
+          "complete_calibration": {
+            "1": 149
+          },
+          "playable": {
+            "63": 149
+          },
+          "prior_primary": {
+            "4": 18,
+            "5": 130,
+            "2": 1
+          },
+          "dp_primary": {
+            "4": 18,
+            "5": 130,
+            "2": 1
+          },
+          "final_primary": {
+            "4": 18,
+            "5": 130,
+            "2": 1
+          },
+          "final_mask": {
+            "16": 18,
+            "32": 105,
+            "33": 25,
+            "4": 1
+          },
+          "rendered_mask": {
+            "16": 18,
+            "32": 105,
+            "33": 25,
+            "4": 1
+          },
+          "midi_mask": {
+            "16": 18,
+            "32": 86,
+            "33": 25,
+            "0": 19,
+            "4": 1
+          },
+          "group_after": {
+            "16": 18,
+            "32": 105,
+            "33": 25,
+            "4": 1
+          },
+          "primary_only_render": {
+            "16": 18,
+            "32": 86,
+            "33": 25,
+            "0": 19,
+            "4": 1
+          },
+          "use_posterior": {
+            "0": 149
+          },
+          "posterior_observation_available": {
+            "1": 149
+          },
+          "posterior_updated": {
+            "1": 149
+          },
+          "profile_fit_observed": {
+            "1": 106,
+            "0": 43
+          },
+          "profile_uses_long_memory": {
+            "0": 129,
+            "1": 20
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 149,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "insufficient_improvement": {
+                "rows": 26,
+                "alpha_measured_rows": 26,
+                "alpha_min": 0.19230718915189673,
+                "alpha_max": 0.7961382772057387,
+                "candidate_error_measured_rows": 26,
+                "candidate_error_min": 1.4672904314131151e-05,
+                "candidate_error_max": 0.0010338392739722344
+              },
+              "accepted": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.4082335944189124,
+                "alpha_max": 0.48466394618600817,
+                "candidate_error_measured_rows": 2,
+                "candidate_error_min": 0.0003841690431837811,
+                "candidate_error_max": 0.0005172637731981195
+              },
+              "added_component_too_small": {
+                "rows": 78,
+                "alpha_measured_rows": 78,
+                "alpha_min": 0.0,
+                "alpha_max": 0.1281882467467077
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "1": {
+              "insufficient_improvement": {
+                "rows": 26,
+                "alpha_measured_rows": 26,
+                "alpha_min": 0.19259640329813896,
+                "alpha_max": 0.7973369052126512,
+                "candidate_error_measured_rows": 26,
+                "candidate_error_min": 1.4679808526625305e-05,
+                "candidate_error_max": 0.001033883883884946
+              },
+              "not_best": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.40884776571827547,
+                "alpha_max": 0.48539315822460566,
+                "candidate_error_measured_rows": 2,
+                "candidate_error_min": 0.000384410032602117,
+                "candidate_error_max": 0.0005174398890891
+              },
+              "added_component_too_small": {
+                "rows": 78,
+                "alpha_measured_rows": 78,
+                "alpha_min": 0.0,
+                "alpha_max": 0.12838093535908687
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "2": {
+              "insufficient_improvement": {
+                "rows": 26,
+                "alpha_measured_rows": 26,
+                "alpha_min": 0.19416521701359055,
+                "alpha_max": 0.8038484121142176,
+                "candidate_error_measured_rows": 26,
+                "candidate_error_min": 1.466064160579459e-05,
+                "candidate_error_max": 0.001034138434606701
+              },
+              "not_best": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.41218365024412684,
+                "alpha_max": 0.4893545469996029,
+                "candidate_error_measured_rows": 2,
+                "candidate_error_min": 0.00038502506784272747,
+                "candidate_error_max": 0.0005179656807226615
+              },
+              "added_component_too_small": {
+                "rows": 78,
+                "alpha_measured_rows": 78,
+                "alpha_min": 0.0,
+                "alpha_max": 0.12942493982483774
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "3": {
+              "retained_component_too_small": {
+                "rows": 21,
+                "alpha_measured_rows": 21,
+                "alpha_min": 0.889167381411698,
+                "alpha_max": 1.0
+              },
+              "insufficient_improvement": {
+                "rows": 6,
+                "alpha_measured_rows": 6,
+                "alpha_min": 0.16214400446718216,
+                "alpha_max": 0.8048979387134665,
+                "candidate_error_measured_rows": 6,
+                "candidate_error_min": 0.0002679849134681723,
+                "candidate_error_max": 0.0012549210213060184
+              },
+              "not_best": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.5163613111317762,
+                "alpha_max": 0.6130368475740279,
+                "candidate_error_measured_rows": 2,
+                "candidate_error_min": 0.0004345284944628043,
+                "candidate_error_max": 0.0005530887238816116
+              },
+              "added_component_too_small": {
+                "rows": 77,
+                "alpha_measured_rows": 77,
+                "alpha_min": 0.0,
+                "alpha_max": 0.08718078461427244
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "4": {
+              "already_member": {
+                "rows": 18
+              },
+              "template_too_close": {
+                "rows": 62
+              },
+              "owned_by_other": {
+                "rows": 26
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "5": {
+              "template_too_close": {
+                "rows": 18
+              },
+              "already_member": {
+                "rows": 88
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "6": {
+              "template_unavailable": {
+                "rows": 106
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            },
+            "7": {
+              "template_unavailable": {
+                "rows": 106
+              },
+              "not_observed": {
+                "rows": 43
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 149,
+          "4": 131
+        },
+        "extra_lane_rows": {
+          "0": 25,
+          "1": 0,
+          "2": 1,
+          "5": 130,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 8,
+        "start_sample": 4204800,
+        "end_sample": 4219200,
+        "midi_note": 52,
+        "string_mask": 24,
+        "calibration_pass": 0,
+        "labeled": 225,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 14,
+        "expected_mask": 24,
+        "distributions": {
+          "observed": {
+            "1": 14
+          },
+          "valid": {
+            "1": 14
+          },
+          "complete_calibration": {
+            "1": 14
+          },
+          "playable": {
+            "63": 14
+          },
+          "prior_primary": {
+            "5": 14
+          },
+          "dp_primary": {
+            "5": 14
+          },
+          "final_primary": {
+            "5": 14
+          },
+          "final_mask": {
+            "54": 14
+          },
+          "rendered_mask": {
+            "54": 14
+          },
+          "midi_mask": {
+            "54": 14
+          },
+          "group_after": {
+            "54": 14
+          },
+          "primary_only_render": {
+            "54": 14
+          },
+          "use_posterior": {
+            "0": 14
+          },
+          "posterior_observation_available": {
+            "1": 14
+          },
+          "posterior_updated": {
+            "1": 14
+          },
+          "profile_fit_observed": {
+            "0": 14
+          },
+          "profile_uses_long_memory": {
+            "0": 14
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 14,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "1": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "2": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "3": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "4": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "5": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "6": {
+              "not_observed": {
+                "rows": 14
+              }
+            },
+            "7": {
+              "not_observed": {
+                "rows": 14
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 14,
+          "4": 0
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 14,
+          "2": 14,
+          "5": 14,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 9,
+        "start_sample": 4256640,
+        "end_sample": 4275840,
+        "midi_note": 52,
+        "string_mask": 56,
+        "calibration_pass": 0,
+        "labeled": 300,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 19,
+        "expected_mask": 56,
+        "distributions": {
+          "observed": {
+            "1": 19
+          },
+          "valid": {
+            "1": 19
+          },
+          "complete_calibration": {
+            "1": 19
+          },
+          "playable": {
+            "63": 19
+          },
+          "prior_primary": {
+            "5": 19
+          },
+          "dp_primary": {
+            "5": 19
+          },
+          "final_primary": {
+            "5": 19
+          },
+          "final_mask": {
+            "54": 19
+          },
+          "rendered_mask": {
+            "54": 19
+          },
+          "midi_mask": {
+            "54": 19
+          },
+          "group_after": {
+            "54": 19
+          },
+          "primary_only_render": {
+            "54": 19
+          },
+          "use_posterior": {
+            "0": 19
+          },
+          "posterior_observation_available": {
+            "1": 19
+          },
+          "posterior_updated": {
+            "1": 19
+          },
+          "profile_fit_observed": {
+            "0": 19
+          },
+          "profile_uses_long_memory": {
+            "0": 19
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 19,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "1": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "2": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "3": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "4": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "5": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "6": {
+              "not_observed": {
+                "rows": 19
+              }
+            },
+            "7": {
+              "not_observed": {
+                "rows": 19
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 19,
+          "4": 0,
+          "5": 0
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 19,
+          "2": 19,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    },
+    {
+      "label": {
+        "label_index": 10,
+        "start_sample": 4379520,
+        "end_sample": 4600320,
+        "midi_note": 52,
+        "string_mask": 56,
+        "calibration_pass": 0,
+        "labeled": 3450,
+        "matched": 0
+      },
+      "assignment": {
+        "sampled_rows": 216,
+        "expected_mask": 56,
+        "distributions": {
+          "observed": {
+            "1": 216
+          },
+          "valid": {
+            "1": 216
+          },
+          "complete_calibration": {
+            "1": 216
+          },
+          "playable": {
+            "63": 216
+          },
+          "prior_primary": {
+            "5": 216
+          },
+          "dp_primary": {
+            "5": 216
+          },
+          "final_primary": {
+            "5": 216
+          },
+          "final_mask": {
+            "54": 212,
+            "32": 4
+          },
+          "rendered_mask": {
+            "54": 212,
+            "32": 4
+          },
+          "midi_mask": {
+            "54": 213,
+            "32": 3
+          },
+          "group_after": {
+            "54": 212,
+            "32": 4
+          },
+          "primary_only_render": {
+            "54": 213,
+            "32": 3
+          },
+          "use_posterior": {
+            "0": 216
+          },
+          "posterior_observation_available": {
+            "1": 216
+          },
+          "posterior_updated": {
+            "1": 216
+          },
+          "profile_fit_observed": {
+            "0": 214,
+            "1": 2
+          },
+          "profile_uses_long_memory": {
+            "0": 214,
+            "1": 2
+          }
+        },
+        "profile_first_pass": {
+          "state": "measured",
+          "captured_rows": 216,
+          "missing_columns_rows": 0,
+          "by_string": {
+            "0": {
+              "not_observed": {
+                "rows": 214
+              },
+              "added_component_too_small": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "1": {
+              "not_observed": {
+                "rows": 214
+              },
+              "added_component_too_small": {
+                "rows": 2,
+                "alpha_measured_rows": 2,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              }
+            },
+            "2": {
+              "not_observed": {
+                "rows": 214
+              },
+              "owned_by_other": {
+                "rows": 2
+              }
+            },
+            "3": {
+              "not_observed": {
+                "rows": 214
+              },
+              "added_component_too_small": {
+                "rows": 1,
+                "alpha_measured_rows": 1,
+                "alpha_min": 0.0,
+                "alpha_max": 0.0
+              },
+              "owned_by_other": {
+                "rows": 1
+              }
+            },
+            "4": {
+              "not_observed": {
+                "rows": 214
+              },
+              "template_too_close": {
+                "rows": 2
+              }
+            },
+            "5": {
+              "not_observed": {
+                "rows": 214
+              },
+              "already_member": {
+                "rows": 2
+              }
+            },
+            "6": {
+              "not_observed": {
+                "rows": 214
+              },
+              "template_unavailable": {
+                "rows": 2
+              }
+            },
+            "7": {
+              "not_observed": {
+                "rows": 214
+              },
+              "template_unavailable": {
+                "rows": 2
+              }
+            }
+          },
+          "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+        },
+        "exact_rendered_rows": 0,
+        "missing_expected_lane_rows": {
+          "3": 216,
+          "4": 4,
+          "5": 0
+        },
+        "extra_lane_rows": {
+          "0": 0,
+          "1": 212,
+          "2": 212,
+          "6": 0,
+          "7": 0
+        },
+        "interpretation": "Sampled assignment rows only, not labeled-frame match scores. Missing rows are analyzed separately by candidate disposition."
+      }
+    }
+  ],
+  "findings": [
+    "Label 0: primary string 5 is correct in all 216 sampled rows, but expected string 3 is never chosen in the first addition.",
+    "Expected string 3: 5 unobserved, 67 added-component floor rejections, 87 insufficient-improvement rejections, 23 not-best rejections, 34 retained-component floor rejections.",
+    "Label 1: expected string 3 replaces all fitted weight (alpha 1) in all 88 sampled rows, failing the retained-component floor.",
+    "Labels 3-5: expected string 4 is template-too-close in 480/487 sampled rows; 5 ownership conflicts and 2 unobserved account for the remainder.",
+    "These are sampled assignment decisions, not labeled-frame gain. No acceptance threshold or installed output changed."
+  ],
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Use the saved observations to test whether independent string evidence can distinguish the blocked pair before proposing a default-off correction; lowering the profile-distance threshold alone is insufficient. Any native trial runs on GitHub Actions and must preserve labels and false-output safety.",
+  "calibrated_pair_geometry": {
+    "method": "Normalize each of the six Q15 harmonic components by their sum, as in the detector; compute squared Euclidean distance and its quarter-distance bound. No audio replay or threshold change.",
+    "calibration": "build/physical-capture/unison-spectral-shadow/factory-current-20261012/factory-calibration-v2.m3cb",
+    "calibration_sha256": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997",
+    "note": 52,
+    "first_addition_limits": {
+      "minimum_squared_profile_distance": 0.0025,
+      "minimum_gain_over_best_single": 0.01,
+      "minimum_component_fraction": 0.15
+    },
+    "pairs": [
+      {
+        "strings": [
+          3,
+          5
+        ],
+        "squared_profile_distance": 0.08603874458850044,
+        "maximum_gain_over_best_pair_member": 0.02150968614712511
+      },
+      {
+        "strings": [
+          4,
+          5
+        ],
+        "squared_profile_distance": 0.0023852874737265374,
+        "maximum_gain_over_best_pair_member": 0.0005963218684316344
+      },
+      {
+        "strings": [
+          3,
+          4
+        ],
+        "squared_profile_distance": 0.06200032646860268,
+        "maximum_gain_over_best_pair_member": 0.01550008161715067
+      }
+    ],
+    "bound": "For a convex two-template least-squares mixture, improvement over its best endpoint is at most squared template distance / 4. The best of all single templates cannot have greater error than that endpoint, so the same upper bound applies to the first-addition gain.",
+    "finding": "For note 52, a first addition combining strings 4 and 5 cannot reach the 0.010 gain floor: its upper bound is 0.0005963218684316344. Removing only the 0.0025 distance gate would not admit this pair.",
+    "scope": "A limitation of the current calibrated first-addition rule; not proof of physical unidentifiability, every assignment path, or measured labeled-note improvement."
+  },
+  "raw_trace_collection": {
+    "directory": "build/github-results/profile-rejection-trace-42548007356/github-results/trace",
+    "artifact_id": 13644467605,
+    "artifact_bytes": 15548760,
+    "downloaded_once": true,
+    "assignment_compressed_bytes": 2379742,
+    "assignment_compressed_sha256": "f313957581f684f9a60521f4fb2be1f43fa48db4b31711c33f01e4e4cd4802c0",
+    "assignment_uncompressed_sha256": "c8b9a451671a250f48260d614abc8d0350b43ac76375dcca9ac271b471950326"
+  }
+}

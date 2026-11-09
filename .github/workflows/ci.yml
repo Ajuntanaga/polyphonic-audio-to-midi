@@ -90,7 +90,7 @@ jobs:
           git rev-parse HEAD > build/cloud-artifacts/source-commit.txt
           git submodule status --recursive > build/cloud-artifacts/submodules.txt
       - name: Save production bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: m3-vst3-linux-x86_64-${{ github.sha }}
           path: build/cloud-artifacts/
@@ -98,7 +98,7 @@ jobs:
           retention-days: 7
       - name: Save build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: m3-build-diagnostics-${{ github.sha }}
           path: |

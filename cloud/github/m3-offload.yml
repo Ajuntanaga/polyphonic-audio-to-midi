@@ -126,7 +126,7 @@ jobs:
           python3 -B -m tools.portable_corpus_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/corpus --max-seconds 10800 2>&1 | tee build/github-results/runner.log
       - name: Keep small reports and failure logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: m3-report-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 14
@@ -137,7 +137,7 @@ jobs:
             source/build/github-results/**/*.stderr
       - name: Keep compressed trace and reference evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: m3-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 7
