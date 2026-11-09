@@ -95,11 +95,11 @@ class RejectFirstOff final : public Steinberg::Vst::IEventList {
   std::uint64_t attempts{};
 
   Steinberg::tresult PLUGIN_API queryInterface(
-      const Steinberg::TUID iid, void** object) override {
+      const Steinberg::TUID interface_id, void** object) override {
     if (object == nullptr) return Steinberg::kInvalidArgument;
     *object = nullptr;
-    if (Steinberg::FUnknownPrivate::iidEqual(iid, Steinberg::FUnknown::iid) ||
-        Steinberg::FUnknownPrivate::iidEqual(iid, Steinberg::Vst::IEventList::iid)) {
+    if (Steinberg::FUnknownPrivate::iidEqual(interface_id, Steinberg::FUnknown::iid) ||
+        Steinberg::FUnknownPrivate::iidEqual(interface_id, Steinberg::Vst::IEventList::iid)) {
       *object = static_cast<Steinberg::Vst::IEventList*>(this);
       addRef();
       return Steinberg::kResultOk;
