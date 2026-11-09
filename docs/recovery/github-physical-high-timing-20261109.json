@@ -1,0 +1,200 @@
+{
+  "schema": "m3_physical_high_timing_diagnosis_v1",
+  "state": "completed",
+  "final": true,
+  "run_id": 42553868181,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42553868181",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "43c04270019d362c67113017058e184dd1af38ff",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42553868181",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "worker_commit": "48b0aa16f23771f91a3334289ad21eb806752989",
+  "report_path": "build/github-results/physical-high-timing-42553868181/timing-diagnosis/report.json",
+  "report_sha256": "a04ced7ead044fb3cce838e0680a2d6c444fa4f76ec84266fc0a643b3b8e56e3",
+  "report_updated_at": "2026-11-09T03:01:12.703615+00:00",
+  "observed_at": "2026-11-09T03:05:46.812723+00:00",
+  "binary_sha256": "98b340cb506f430819a9aededd28b76d186cd7143929d46f609091a0c3b30a34",
+  "baseline_report_sha256": "5a0954dd3a637f75e222d6781ca338c7e150e365282a7fe4ea20b3cb28e5c543",
+  "dataset": "physical-high",
+  "block_samples": 32,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "diagnostic_only": true,
+  "collection_pass": true,
+  "cpu_block_statistics_usable": true,
+  "timing_limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "runs": {
+    "off": {
+      "output": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      },
+      "tsv_sha256": "09bb3c36e81b2f7b17ea6015d9fc9a168f1f592ee2215e6e53a7b8dcc9aee1ef",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 154176,
+        "p99_ns": 129513,
+        "maximum_ns": 494617,
+        "deadline_overruns": 1,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "p99_ns": 130424,
+        "maximum_ns": 259995,
+        "deadline_overruns": 0
+      },
+      "slowest_wall_block": {
+        "end_sample": 3870464,
+        "wall_ns": 494617,
+        "cpu_ns": 147566,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 60476,
+        "signal_samples": 180323,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 2,
+        "active_candidates": 2,
+        "assigned_candidates": 21,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 184,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 35,
+        "last_fine_reset_tick": 57265,
+        "signal_floor_reset_candidates": 4,
+        "last_signal_floor_reset_tick": 57265,
+        "selection_pool_candidates": 2,
+        "selection_state_transitions": 21,
+        "selection_assignment_edges": 21
+      }
+    },
+    "on": {
+      "output": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "8fdf6bd9993365a1"
+      },
+      "tsv_sha256": "f75e2e91fdbf9c6872f31886e6903a09f4c0d6912c2048be9d8970a8297efbfb",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 154176,
+        "p99_ns": 135484,
+        "maximum_ns": 256291,
+        "deadline_overruns": 0,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "p99_ns": 136374,
+        "maximum_ns": 257872,
+        "deadline_overruns": 0
+      },
+      "slowest_wall_block": {
+        "end_sample": 3288000,
+        "wall_ns": 256291,
+        "cpu_ns": 257872,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 51375,
+        "signal_samples": 177332,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 1,
+        "active_candidates": 1,
+        "assigned_candidates": 21,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 181,
+        "fine_update_scheduled": true,
+        "fine_reset_serial_sum": 27,
+        "last_fine_reset_tick": 47267,
+        "signal_floor_reset_candidates": 1,
+        "last_signal_floor_reset_tick": 47267,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 7,
+        "selection_assignment_edges": 7
+      }
+    }
+  },
+  "interpretation": "The only wall deadline miss in this diagnostic occurred with the trial OFF. Its 494617 ns wall duration included 147566 ns thread CPU time, a 347051 ns difference consistent with runner interruption. No thread-CPU deadline misses occurred in either mode. This does not identify the cause of, or invalidate, the earlier uninstrumented ON failure.",
+  "prior_uninstrumented_failure": {
+    "run_id": 42545080876,
+    "mode": "on",
+    "maximum_ns": 469120,
+    "deadline_overruns": 1,
+    "blocks": 154176,
+    "status": "unresolved; remains a failed acceptance gate"
+  },
+  "acceptance": "Diagnostic timing is not acceptance. Output identity and zero observed allocation counts do not override the unresolved native gate or establish a note-match gain.",
+  "artifacts": [
+    {
+      "id": 13646476728,
+      "name": "m3-report-42553868181-1",
+      "size_bytes": 14585,
+      "downloaded": true,
+      "sha256": "f2e8edfc0bd311413035c4219cfcc300a70390aa8eef14c4bcbe666002a08317"
+    },
+    {
+      "id": 13645669240,
+      "name": "m3-evidence-42553868181-1",
+      "size_bytes": 594326,
+      "downloaded": false,
+      "sha256": "266be4c528b221825a19e475cdf612679c7941c57fa150a2518ee129f538cda6"
+    }
+  ]
+}

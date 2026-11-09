@@ -65,6 +65,22 @@ final outputs are collected: fourteen OFF references, one ON dataset, and no
 passed native corpus gates. Do not poll or submit Kaggle work. Modal and Oracle
 are unavailable.
 
+`controlled-recovery` restores the ten held-out overlap controls from the
+private `controls-pass2-20261109` release. Its three audio crops and calibration
+match the retained historical hashes; the runner also checks every regenerated
+mixture's sample hash before replay. These are independent plucks from the same
+recording session, not new-session coverage. The original controls used
+calibration without spectral templates, and this task preserves that setup.
+The missing historical binary and feature sidecars are not reconstructed:
+OFF/ON outputs have new source and binary provenance.
+
+The first screen requires a positive target-note gain in the equal-level
+nearby-note mixture, with no lost labels or increased false outputs across all
+ten controls. Failure stops the task before buffer and timing work. A passing
+screen proceeds to buffers 32 and 1024, requiring parity with 512 and both modes
+to meet allocation and timing limits. Passing these controls alone does not
+clear the separate corpus, live-host or MIDI lifecycle gates.
+
 Runs are manual and serialized. The trace has a 60-minute job cap; full
 recovery has a 210-minute cap, including compilation. These are standard CPU
 runners using the account's GitHub Actions allowance, not a GPU service.

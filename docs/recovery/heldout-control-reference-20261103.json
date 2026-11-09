@@ -1,0 +1,121 @@
+{
+  "schema": "m3_heldout_control_reference_v1",
+  "corpus_id": "partial-holdout-pass2-20261103",
+  "historical_report": "independent-partials-heldout-20261103T2239Z.json",
+  "historical_report_sha256": "b5fa600c5663055c9568088f61ec92b9ddd04b3e45950d1ce0a2b7e53fdeba7a",
+  "historical_manifest_sha256": "e6c9806985a5a8760884df19e5652249b92d37a0f4ea29860d81e952b27d3926",
+  "selection": "First label in pass 2 for each note, fixed before spectral measurement.",
+  "calibration_pass": 2,
+  "limits": [
+    "Independent plucks within the same source recording session; no new-session generalization.",
+    "No pitch correction, resampling or crop-specific gain applied."
+  ],
+  "components": {
+    "target": {
+      "midi_note": 36,
+      "string_mask": 1,
+      "source_wave": "String_8.wav",
+      "source_labels": "build/physical-capture/string-08/string-08-pass-balanced.tsv",
+      "source_labels_sha256": "046c46c580f25c822622a47651a7c4491a2ecc90b1fc90a5af8d2b96f052c4da",
+      "source_start_sample": 27271680,
+      "source_end_sample": 27492480,
+      "training_source_start_sample": 2888640,
+      "training_source_end_sample": 3109440,
+      "training_crop_equals_raw_pass1": true,
+      "training_samples_sha256": "224ed8e64d1b8fe775dfde8ecd5ef6d2bdbc28785fce2149f33d263ecfd8a184",
+      "samples_sha256": "a3d2543a142ea82cb6fa5babb0b477bc7985c3468b4743fbbf212e549d86de8b",
+      "wave_sha256": "09c418727e1cc2a957b49d6d825de8b2b6a5da35fb905acddfd53a276c503bf3",
+      "sample_rate": 96000,
+      "sample_count": 220800
+    },
+    "octave": {
+      "midi_note": 48,
+      "string_mask": 8,
+      "source_wave": "string 5.wav",
+      "source_labels": "build/physical-capture/string-05/string-05-pass-balanced.tsv",
+      "source_labels_sha256": "329a2a36a04d0d32e2132d3e5f6f5e5b0ccb42d4ad422ef3b1c1137eee5b3a64",
+      "source_start_sample": 25578240,
+      "source_end_sample": 25799040,
+      "training_source_start_sample": 4741440,
+      "training_source_end_sample": 4962240,
+      "training_crop_equals_raw_pass1": true,
+      "training_samples_sha256": "f0ff174f1ebcefc9e48a37da16aba0e9d7cbcaf0f2ff6eed85131b3998e6a949",
+      "samples_sha256": "93bb8f64a223f31b574dbd05067059a54974b720f83cc0e75b58273539b3a86e",
+      "wave_sha256": "2b3775eb9919b8fe6a286652c2acccd1cae4b266cd08f7d71f9734221ae3ca71",
+      "sample_rate": 96000,
+      "sample_count": 220800
+    },
+    "nearby": {
+      "midi_note": 49,
+      "string_mask": 8,
+      "source_wave": "string 5.wav",
+      "source_labels": "build/physical-capture/string-05/string-05-pass-balanced.tsv",
+      "source_labels_sha256": "329a2a36a04d0d32e2132d3e5f6f5e5b0ccb42d4ad422ef3b1c1137eee5b3a64",
+      "source_start_sample": 24829440,
+      "source_end_sample": 25050240,
+      "training_source_start_sample": 5442240,
+      "training_source_end_sample": 5663040,
+      "training_crop_equals_raw_pass1": true,
+      "training_samples_sha256": "203496186875cdf3404317d388366d688fd4dd9a6602800ee320adccb47fe3c2",
+      "samples_sha256": "03508a2eda8d6038188d0104bd81e0ae331ad1bcb360c255eccb6f43e2041243",
+      "wave_sha256": "1e4de96f657eea43438ac2770dd35a4f4b938f90fc633a74820874d405b2281e",
+      "sample_rate": 96000,
+      "sample_count": 220800
+    }
+  },
+  "cases": {
+    "solo": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "e644868e68937d63cedd024f35f224cd6c641e8af0b0f4641e3259e5d62d946a"
+    },
+    "octave_-12dB": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "84fe3de20829facfea18cab94153e41cbb675338975fb53aac7bbee9581bb7aa"
+    },
+    "octave_-12dB_source_only": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "b225925d0f60c5198a6326993cd7634dc1e1cec4ec8b4327f60abf885517ed1c"
+    },
+    "octave_0dB": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "1d4c84523c76d499fca88d4bcf9abbeca987aa67850574596081bef34d5ef6b3"
+    },
+    "octave_0dB_source_only": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "bb8b09659aee82971a43c4d991fb65e6501625bfb8f0a215d80185b0d80e5398"
+    },
+    "nearby_-12dB": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "38e23b4e5c70f228415a7426b8943803ec31a8a038c7bb1db1b2fb998a87a317"
+    },
+    "nearby_-12dB_source_only": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "e4a7c248ece60dcc5a2978a7029d5589b10e6c72f3424cbc535f1234b4de2957"
+    },
+    "nearby_0dB": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "e78b2c248d9d2e7e7aec0e52228ce4503436c882ef76aefca4c97fae274e5b01"
+    },
+    "nearby_0dB_source_only": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "30dbc198bfbf01046803a8d62c5b45ba1b8f9b8d8acbef57e938634de9fb38a2"
+    },
+    "silence": {
+      "sample_rate": 96000,
+      "sample_count": 340800,
+      "audio_sha256": "efef1baba63738fa9612021a1c91bf14d20297350efc885731efe00ac5c2bd42"
+    }
+  },
+  "calibration_sha256": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997",
+  "prefix_samples": 24000,
+  "suffix_samples": 96000
+}
