@@ -81,10 +81,12 @@ screen proceeds to buffers 32 and 1024, requiring parity with 512 and both modes
 to meet allocation and timing limits. Passing these controls alone does not
 clear the separate corpus, live-host or MIDI lifecycle gates.
 
-`controlled-timing-diagnosis` measures only the equal-level octave control OFF
-and ON at block 32, with CPU timing enabled. It uses the same private input
+`controlled-timing-diagnosis` measures one retained octave control OFF
+and ON at block 32, with CPU timing enabled. Select `-f control=octave_-12dB`
+for the quiet-octave failure, or `octave_0dB` for the equal-level pair.
+It uses the same private input
 release and reconstruction checks, without spectral templates. Both complete
-replay hashes must match `docs/recovery/github-heldout-controls-20261109.json`.
+replay hashes must match `docs/recovery/github-activity-scan-controls-20261109.json`.
 The pair has a six-minute processing cap, with at most three minutes per mode.
 This diagnosis cannot replace the failed native timing result or pass acceptance;
 it investigates CPU work versus elapsed-time delays without repeating the full

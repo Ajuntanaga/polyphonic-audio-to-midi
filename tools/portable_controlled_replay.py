@@ -18,6 +18,7 @@ from tools.portable_recovery import digest
 
 STAGES = ('cue', 'signal_observe', 'signal_reset', 'selection', 'partial_frequency',
           'fine_frequency', 'string_assignment', 'voice_lifecycle', 'calibration_snapshot')
+TIMING_CONTROLS = ('octave_0dB', 'octave_-12dB')
 
 
 def validate_stage_timing(timing, mode):
@@ -140,11 +141,12 @@ def replay_command(binary, corpus, cases, name, mode, block, timing_path):
 
 
 def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline_path,
-                         output, max_seconds, require_stage_timing=False):
-    """Diagnose the failed octave pair, preserving its saved full replay hashes."""
+                         output, max_seconds, require_stage_timing=False,
+                         control='octave_0dB'):
+    """Diagnose one retained octave pair without changing acceptance limits."""
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus, output = binary.resolve(), corpus.resolve(), output.resolve()
-    name = 'octave_0dB'
+    name = control
     report = dict(schema='m3_controlled_timing_diagnosis_v1', started_at=now(),
         state='running', final=False, stage='verify held-out pair', control=name,
         block_samples=32, settings=SETTINGS, runs={}, diagnostic_only=True,
@@ -165,6 +167,8 @@ def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline
 
     save()
     try:
+        if name not in TIMING_CONTROLS:
+            raise ValueError('Unsupported timing control: ' + name)
         manifest = json.loads(manifest_path.read_text())
         baseline = json.loads(baseline_path.read_text())
         if (baseline.get('schema') != 'm3_github_heldout_control_result_v1'
@@ -173,7 +177,7 @@ def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline
                 or baseline.get('spectral_templates') != report['spectral_templates']
                 or baseline.get('reference_sha256') != digest(reference_path)):
             raise ValueError('Held-out timing reference settings or input identity differ')
-        reference = baseline['controls'][name]
+        reference = baseline.get('controls', {}).get(name, {})
         if (not all(reference.get('replay_sha256', {}).get(mode + '-32') for mode in ('off', 'on'))
                 or not all(key in reference for key in ('baseline_off', 'current_on'))):
             raise ValueError('Missing paired block-32 references: ' + name)
@@ -330,7 +334,9 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--timing-reference-report', type=Path,
-                        help='Diagnose only the saved octave OFF/ON pair; cannot pass native acceptance')
+                        help='Diagnose one saved OFF/ON pair; cannot pass native acceptance')
+    parser.add_argument('--timing-control', choices=TIMING_CONTROLS,
+                        help='Octave pair to diagnose (default: octave_0dB)')
     parser.add_argument('--require-stage-timing', action='store_true',
                         help='Require compiled stage probes, valid accounting and zero allocations')
     parser.add_argument('--max-seconds', type=int, default=2400)
@@ -339,10 +345,12 @@ def main():
         parser.error('--max-seconds must be positive')
     if args.require_stage_timing and not args.timing_reference_report:
         parser.error('--require-stage-timing needs --timing-reference-report')
+    if args.timing_control and not args.timing_reference_report:
+        parser.error('--timing-control needs --timing-reference-report')
     if args.timing_reference_report:
         passed = run_timing_diagnosis(args.binary, args.corpus, args.manifest, args.reference,
                                      args.timing_reference_report, args.output, args.max_seconds,
-                                     args.require_stage_timing)
+                                     args.require_stage_timing, args.timing_control or 'octave_0dB')
     else:
         passed = run(args.binary, args.corpus, args.manifest, args.reference, args.output, args.max_seconds)
     raise SystemExit(0 if passed else 1)

@@ -21,6 +21,11 @@ on:
         description: MIDI note for assignment trace
         type: number
         default: 52
+      control:
+        description: Retained pair for controlled timing diagnosis
+        type: choice
+        options: [octave_0dB, octave_-12dB]
+        default: octave_0dB
 permissions:
   contents: read
 defaults:
@@ -34,6 +39,7 @@ env:
   TASK: ${{ inputs.task }}
   DATASET: ${{ inputs.dataset }}
   NOTE: ${{ inputs.note }}
+  TIMING_CONTROL: ${{ inputs.control }}
   INPUT_TAG: corpus-20261108
   INPUT_SHA256: adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254
 jobs:
@@ -135,16 +141,16 @@ jobs:
         working-directory: source
         run: |
           python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --output build/github-results/controlled --max-seconds 2400 2>&1 | tee build/github-results/runner.log
-      - name: Diagnose the retained octave control timing failure
+      - name: Diagnose the selected octave control timing failure
         if: inputs.task == 'controlled-timing-diagnosis'
         working-directory: source
         run: |
-          python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --timing-reference-report docs/recovery/github-heldout-controls-20261109.json --output build/github-results/controlled-timing --max-seconds 360 2>&1 | tee build/github-results/runner.log
+          python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --timing-reference-report docs/recovery/github-activity-scan-controls-20261109.json --timing-control "$TIMING_CONTROL" --output build/github-results/controlled-timing --max-seconds 360 2>&1 | tee build/github-results/runner.log
       - name: Isolate processing stage costs in the retained octave pair
         if: inputs.task == 'controlled-stage-diagnosis'
         working-directory: source
         run: |
-          python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --timing-reference-report docs/recovery/github-heldout-controls-20261109.json --require-stage-timing --output build/github-results/controlled-stages --max-seconds 360 2>&1 | tee build/github-results/runner.log
+          python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --timing-reference-report docs/recovery/github-activity-scan-controls-20261109.json --timing-control "$TIMING_CONTROL" --require-stage-timing --output build/github-results/controlled-stages --max-seconds 360 2>&1 | tee build/github-results/runner.log
       - name: Keep small reports and failure logs
         if: always()
         uses: actions/upload-artifact@v7

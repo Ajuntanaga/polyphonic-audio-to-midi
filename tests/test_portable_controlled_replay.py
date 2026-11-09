@@ -141,7 +141,7 @@ class ControlledTimingTests(unittest.TestCase):
            'calibration_pass\tlabeled\tmatched\n'
            '0\t64\t256\t36\t1\t2\t3\t1\n')
 
-    def exercise(self, *, defect=None, resolution=True, stages=False):
+    def exercise(self, *, defect=None, resolution=True, stages=False, control='octave_0dB'):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest, reference, baseline = (
@@ -161,14 +161,16 @@ class ControlledTimingTests(unittest.TestCase):
                          collection_pass=True, settings=SETTINGS, source={'commit': 'earlier'},
                          spectral_templates='disabled, matching historical controls',
                          reference_sha256=hashlib.sha256(reference.read_bytes()).hexdigest(),
-                         controls={'octave_0dB': pair}, timing_limits={})
+                         controls={control: pair}, timing_limits={})
+            if defect == 'control':
+                saved['controls'] = {}
             if defect == 'input':
                 saved['reference_sha256'] = 'different'
             if defect == 'settings':
                 saved['settings'] = dict(SETTINGS, response=74)
             baseline.write_text(json.dumps(saved))
             label = dict(start_sample=64, end_sample=256, midi_note=36, string_mask=1, calibration_pass=2)
-            inputs = {'octave_0dB': dict(labels=[label]), 'solo': dict(labels=[label])}
+            inputs = {control: dict(labels=[label]), 'solo': dict(labels=[label])}
             calls = []
 
             def execute(command, **kwargs):
@@ -177,7 +179,7 @@ class ControlledTimingTests(unittest.TestCase):
                 self.assertIn('--diagnostic-thread-cpu', command)
                 self.assertNotIn('--spectral-shadow-templates', command)
                 self.assertEqual('--diagnostic-cue-free-lane-reassignment' in command, mode == 'on')
-                self.assertEqual(Path(command[command.index('--wav') + 1]).name, 'octave_0dB.wav')
+                self.assertEqual(Path(command[command.index('--wav') + 1]).name, control + '.wav')
                 self.assertEqual(command[command.index('--block') + 1], '32')
                 self.assertLessEqual(kwargs['timeout'], 180)
                 if defect == 'native':
@@ -222,7 +224,8 @@ class ControlledTimingTests(unittest.TestCase):
                  patch('tools.portable_controlled_replay.subprocess.run', side_effect=execute):
                 try:
                     passed = run_timing_diagnosis(binary, root, manifest, reference, baseline,
-                                                  output, 9999, require_stage_timing=stages)
+                                                  output, 9999, require_stage_timing=stages,
+                                                  control=control)
                 except (ValueError, subprocess.CalledProcessError) as caught:
                     error = caught
             report = json.loads((output / 'report.json').read_text())
@@ -233,7 +236,7 @@ class ControlledTimingTests(unittest.TestCase):
             self.assertFalse(report['native_gate_pass'])
             self.assertFalse(report['allocation_and_output_pass'])
             self.assertEqual(report['max_seconds'], 360)
-            stderr = output / 'octave_0dB-off-32.stderr'
+            stderr = output / (control + '-off-32.stderr')
             return passed, report, calls, error, stderr.read_text() if stderr.exists() else None
 
     def test_only_saved_octave_pair_is_collected_without_native_acceptance(self):
@@ -249,12 +252,25 @@ class ControlledTimingTests(unittest.TestCase):
                 self.assertEqual(report['acceptance'], 'not evaluated: diagnostic timing')
 
     def test_missing_pair_or_changed_reference_stops_before_native_calls(self):
-        for defect in ('off-32', 'on-32', 'input', 'settings'):
+        for defect in ('off-32', 'on-32', 'input', 'settings', 'control'):
             with self.subTest(defect=defect):
                 _, report, calls, error, _ = self.exercise(defect=defect)
                 self.assertIsInstance(error, ValueError)
                 self.assertEqual(calls, [])
                 self.assertEqual(report['state'], 'failed')
+
+    def test_quiet_octave_selects_only_its_saved_pair(self):
+        passed, report, calls, error, _ = self.exercise(control='octave_-12dB')
+        self.assertIsNone(error)
+        self.assertTrue(passed)
+        self.assertEqual(report['control'], 'octave_-12dB')
+        self.assertEqual(calls, ['off', 'on'])
+
+    def test_unsupported_control_stops_before_native_processing(self):
+        _, report, calls, error, _ = self.exercise(control='unrecorded')
+        self.assertIsInstance(error, ValueError)
+        self.assertEqual(calls, [])
+        self.assertEqual(report['state'], 'failed')
 
     def test_changed_full_output_or_incomplete_timing_stops_before_on(self):
         for defect in ('hash', 'cpu', 'scope', 'fingerprint'):
