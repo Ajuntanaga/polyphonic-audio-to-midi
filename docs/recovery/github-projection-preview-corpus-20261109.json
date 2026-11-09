@@ -1,0 +1,34 @@
+{
+  "schema": "m3_projection_preview_corpus_checkpoint_v1",
+  "task": "projection-preview-corpus",
+  "trial_revision": "full_physical_assignment_context",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42592853316,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42592853316",
+  "source_commit": "01cfb12d8b3b59a8635b26749059113d5768708e",
+  "worker_commit": "6ab8d23234ba1509f4674543977a4d5740f9553b",
+  "submitted_at": "2026-11-09T09:21:49.973882+00:00",
+  "status": "in_progress",
+  "result_final": false,
+  "outputs_downloaded_once": false,
+  "output_target": "build/github-results/assignment-context-corpus-42592853316",
+  "report_relative_path": "corpus/report.json",
+  "runtime_rule_changed": true,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "stage": "Building offline replay on GitHub",
+  "on_flags": [
+    "--diagnostic-projection-preview-admission"
+  ],
+  "expected_datasets": 14,
+  "blocks": [
+    512,
+    32,
+    1024
+  ],
+  "prior_off_reference": "docs/recovery/github-guard-cell-corpus-20261109.json",
+  "next": "Collect the small report once after completion. Require zero per-label losses or increased false outputs, OFF reference identity, buffer parity, zero processing allocations/frees, and both modes within fixed native timing limits. Keep failed trials disabled; live host/MIDI gates remain separate.",
+  "source_contract_run_id": 42592792294,
+  "validation": "Python/workflow shell syntax passed locally; runtime tests and replay run only on GitHub",
+  "observed_at": "2026-11-09T09:22:42.835520+00:00"
+}

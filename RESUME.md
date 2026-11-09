@@ -1,3 +1,10 @@
+## 2026-11-09 — preview correction enters the protected corpus
+
+- GitHub run `42592853316` was dispatched once at source `01cfb12d8b3b59a8635b26749059113d5768708e`, worker `6ab8d23234ba1509f4674543977a4d5740f9553b`. It screens the preview correction across fourteen datasets at buffer sizes 32, 512 and 1024. The ON run enables only `--diagnostic-projection-preview-admission`; frozen-cue and reset corrections remain off. The trial stays disabled in the installed plugin.
+- The corpus runner retains its label/error, allocation, buffer and native timing gates. Both timed modes must meet p99 <=166666 ns, maximum <=333333 ns and zero deadline overruns. The new contracts also check that a timing failure in either mode rejects the native gate. Python and workflow shell syntax pass locally; runtime tests and replay run on GitHub.
+- Results are pending. Collect the small report once into `build/github-results/assignment-context-corpus-42592853316` and compare OFF hashes with the saved references. Keep the larger evidence artifact in GitHub. Do not launch another run. Source portable tests are recorded as `42592792294`.
+- The ordinary screen already gained ten matched frames with no label loss and fewer false outputs. This wider job does not establish acceptance merely by completing: any label/error, allocation, buffer or timing failure keeps the candidate rejected, and live host/MIDI checks remain separate. Installed scores are unchanged. Checkpoint: `docs/recovery/github-projection-preview-corpus-20261109.json`.
+
 ## 2026-11-09 — preserve physical context in the preview trial
 
 - The default-off preview-admission trial now passes the original selection into physical string assignment. Preview filtering still applies to downstream unison and calibrated-note ownership. This changes one call site; onset thresholds and collision guards are unchanged.
