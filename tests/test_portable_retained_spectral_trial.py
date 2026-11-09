@@ -66,6 +66,7 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
     def execute(self, args, stub, **kwargs):
         with patch('tools.portable_retained_spectral_trial.WINDOW', (64, 192)), patch(
                 'tools.portable_retained_spectral_trial.COASTING_WINDOW', (64, 192)), patch(
+                'tools.portable_retained_spectral_trial.PENDING_WINDOW', (64, 192)), patch(
                 'tools.portable_retained_spectral_trial.TARGET_EVENTS', EVENTS[1:]), patch(
                 'tools.portable_retained_spectral_trial.subprocess.run', side_effect=stub) as replay:
             run(*args, **kwargs)
@@ -110,7 +111,8 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                 self.assertTrue(report['off_reference_bit_identical'])
                 self.assertTrue(report['recorded_lane_window_resolved'])
                 self.assertTrue(report['coasting_lane_window_resolved'])
-                self.assertEqual(report['trial_revision'], 'coasting_owner_hold')
+                self.assertTrue(report['pending_lane_window_resolved'])
+                self.assertEqual(report['trial_revision'], 'pending_assignment_defer')
                 self.assertEqual(report['emitted_midi_labeled_matches'], 'not measured')
                 self.assertEqual(report['full_recording_screen_pass'], not lost_match)
                 self.assertFalse(report['promotion_accepted'])
@@ -160,6 +162,39 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                 self.assertFalse(report['comparison']['gate_pass'])
                 self.assertFalse(report['full_recording_screen_pass'])
                 self.assertEqual(report['decision'], 'rejected')
+
+    def test_other_windows_cannot_hide_a_pending_attack_conflict(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, baseline = self.fixture(Path(directory))
+            original = raw_conflicts
+
+            def extra_off_conflict(events):
+                result = original(events)
+                if extra_off_conflict.first:
+                    result['counts']['cross_pitch_on_before_release'] += 1
+                    extra_off_conflict.first = False
+                return result
+
+            extra_off_conflict.first = True
+            # A same-sample pair on another lane clears both earlier windows
+            # but still fails the separately observed pending-attack window.
+            pending_events = [dict(event(127, 'on', note, sequence), voice_id=2)
+                              for sequence, note in enumerate((36, 37))]
+            pending_events.append(dict(event(191, 'off', 36, 2), voice_id=2))
+            with patch('tools.portable_retained_spectral_trial.PENDING_LANE', 2), patch(
+                    'tools.portable_retained_spectral_trial.raw_conflicts',
+                    side_effect=extra_off_conflict):
+                self.execute(args, self.stub(baseline, trial_events=pending_events,
+                                            flag=COLLISION_FLAG),
+                             policy='spectral-lane-collision')
+            report = json.loads((args[-1] / 'report.json').read_text())
+            self.assertTrue(report['raw_conflicts_reduced'])
+            self.assertTrue(report['recorded_lane_window_resolved'])
+            self.assertTrue(report['coasting_lane_window_resolved'])
+            self.assertFalse(report['pending_lane_window_resolved'])
+            self.assertEqual(report['runs']['trial-on']['pending_lane_window_conflicts'], 1)
+            self.assertFalse(report['full_recording_screen_pass'])
+            self.assertEqual(report['decision'], 'rejected')
 
     def test_other_improvements_cannot_hide_the_recorded_conflict(self):
         with tempfile.TemporaryDirectory() as directory:

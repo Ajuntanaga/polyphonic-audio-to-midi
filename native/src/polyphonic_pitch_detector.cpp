@@ -4181,6 +4181,14 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
   const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
   if (profile_mode_ == ProfileMode::m3 &&
       midi_routing_ == MidiRouting::per_voice) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_spectral_lane_collision_ &&
+        state.diagnostic_pending_assignment_failed) {
+      // An infeasible joint assignment leaves old preview masks in place.
+      // Neither pending attack owns such a mask, even if it emits first.
+      return false;
+    }
+#endif
     std::uint8_t desired = state.assigned_string_mask;
     if (desired == 0U && state.assigned_string < kM3OpenNotes.size()) {
       desired = static_cast<std::uint8_t>(1U << state.assigned_string);
@@ -6016,6 +6024,12 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_spectral_lane_collision_) {
+    for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate)
+      candidate_states_[candidate].diagnostic_pending_assignment_failed = false;
+  }
+#endif
   if (profile_mode_ != ProfileMode::m3) {
     for (std::size_t candidate = 0U;
          candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
@@ -7097,6 +7111,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
   }
 #endif
   if (!best.valid) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_spectral_lane_collision_) {
+      for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+        auto& state = candidate_states_[candidates[voice]];
+        state.diagnostic_pending_assignment_failed = !state.active;
+      }
+    }
+#endif
     return;
   }
   for (std::size_t voice = 0U; voice < selected_count; ++voice) {

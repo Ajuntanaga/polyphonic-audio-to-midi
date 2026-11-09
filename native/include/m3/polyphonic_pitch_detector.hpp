@@ -991,6 +991,9 @@ class PolyphonicPitchDetector final {
     // An existing singleton output retained while a coasting peer owns its
     // new physical lane. Pending attacks cannot claim this emitted lane.
     std::uint8_t diagnostic_coasting_retained_mask{};
+    // The current physical assignment could not place all selected voices.
+    // Retained preview masks cannot authorize a new MIDI attack in that frame.
+    bool diagnostic_pending_assignment_failed{};
 #endif
   };
 

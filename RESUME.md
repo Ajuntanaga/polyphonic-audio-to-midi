@@ -1,3 +1,11 @@
+## 2026-11-09 — simultaneous pending attacks share a physical lane
+
+GitHub trace `42632379048` completed at source `18da9c2e52877f6892ece4c72e7aec8521575222`. Both full outcome and MIDI streams are bit-identical to the saved coasting-owner ON trial. At sample 1149183, pending notes 36 and 37 both advance from nine attack ticks to an emitted note-on on lane 0. Neither was active on the preceding decision. Note 37 has direct fundamental support and matches the annotated pitch/string; note 36 does not have direct fundamental support. Active spectral reconciliation and calibrated-output retuning did not emit these attacks. Checkpoint: `docs/recovery/github-coasting-owner-trace-20261109.json`.
+
+Source inspection identifies an infeasible-assignment path that leaves earlier preview masks in place. The default-off trial now defers all selected pending attacks on that path, preserving their attack evidence until a feasible assignment exists. It does not grant the lane to the first candidate encountered. A native fixture covers the failed assignment, unchanged OFF behavior and later admission of the intended note; its execution is pending on GitHub.
+
+The ordinary screen also rejects any conflict in this pending-attack window, even when aggregate raw conflict counts improve and both earlier windows clear. Twenty focused Python checks pass locally. Next: run the native fixture and the ordinary OFF/ON screen on GitHub, requiring no passage match loss, no increased false outputs and all three recorded conflicts resolved. Installed output and scores remain unchanged; complete MIDI delivery, broader corpus timing and live-host gates remain open.
+
 ## 2026-11-09 — coasting-owner trial delays MIDI blocking but does not resolve it
 
 Saved-event ledger run `42630866103` completed at source `dd59808669a0eca547650c0398b8d7f3636a6467`. Both routing modes still block: OFF at sample 203519 (2.120 s), ON at 1149183 (11.971 s). The previous ON trial blocked at 288255 (3.003 s), so the correction delays the first fault by 8.968 s. ON delivers 2153 source callbacks and suppresses 9736 remaining events; OFF delivers 45 and suppresses 11858. Both remain blocked at EOF. This is an open-loop simulation with an accepting file sink, not a live-host or held-duration result.

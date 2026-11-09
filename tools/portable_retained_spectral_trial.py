@@ -24,6 +24,8 @@ FLAG = '--diagnostic-retained-spectral-assignment'
 COLLISION_FLAG = '--diagnostic-spectral-lane-collision'
 COASTING_WINDOW = (286720, 289280)
 COASTING_LANE = 1
+PENDING_WINDOW = (1147904, 1150464)
+PENDING_LANE = 0
 POLICIES = {
     'retained-assignment': dict(flag=FLAG,
         schema='m3_retained_spectral_assignment_trial_v1',
@@ -31,9 +33,10 @@ POLICIES = {
             'single-lane MIDI incumbents; complete-solution fallback; no output guard.'),
     'spectral-lane-collision': dict(flag=COLLISION_FLAG,
         schema='m3_spectral_lane_collision_trial_v1',
-        revision='coasting_owner_hold',
+        revision='pending_assignment_defer',
         description='Keep ordinary physical assignment. Move a conflicting singleton '
             'spectral output to its own free physical string; release before claim. '
+            'Defer pending attacks when the full physical assignment is infeasible. '
             'Retain a free previous singleton output while an unselected active peer '
             'still owns its new lane; defer new attacks against that retained lane. '
             'Groups and continuity expansions retain their existing output path.'),
@@ -62,6 +65,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         report.update(trial_revision=selected_policy['revision'],
             coasting_window=dict(start=COASTING_WINDOW[0], end=COASTING_WINDOW[1],
                                  lane=COASTING_LANE),
+            pending_window=dict(start=PENDING_WINDOW[0], end=PENDING_WINDOW[1],
+                                lane=PENDING_LANE),
             label_metric_scope='Tuner snapshot assignments, not emitted MIDI assignments',
             emitted_midi_labeled_matches='not measured',
             emitted_midi_held_note_quality='not measured')
@@ -117,8 +122,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             if rate != 96000 or not 0 <= start < end <= samples:
                 raise ValueError('Recorded conflict window or sample clock changed')
             if policy == 'spectral-lane-collision' and not (
-                    0 <= COASTING_WINDOW[0] < COASTING_WINDOW[1] <= samples):
-                raise ValueError('Recorded coasting conflict window changed')
+                    0 <= COASTING_WINDOW[0] < COASTING_WINDOW[1] <= samples
+                    and 0 <= PENDING_WINDOW[0] < PENDING_WINDOW[1] <= samples):
+                raise ValueError('Recorded coasting or pending conflict window changed')
             events = read_events(traces['midi-event'], sample_count=samples,
                                  transition_count=int(aggregate['transitions']))
             if not enabled and any(sum(all(event[key] == value for key, value in target.items())
@@ -136,6 +142,10 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     lane=COASTING_LANE, start=COASTING_WINDOW[0], end=COASTING_WINDOW[1])
                 result['coasting_lane_window_conflicts'] = window_conflicts(
                     result['coasting_lane_history'])
+                result['pending_lane_history'] = raw_lane_history(events,
+                    lane=PENDING_LANE, start=PENDING_WINDOW[0], end=PENDING_WINDOW[1])
+                result['pending_lane_window_conflicts'] = window_conflicts(
+                    result['pending_lane_history'])
             for kind, path in traces.items():
                 full_midi = kind == 'midi-event'
                 result['traces'][kind] = compress_trace_window(path,
@@ -153,10 +163,14 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             and report['runs']['trial-on']['recorded_lane_window_conflicts'] == 0)
         coasting_resolved = (policy != 'spectral-lane-collision' or
             report['runs']['trial-on']['coasting_lane_window_conflicts'] == 0)
+        pending_resolved = (policy != 'spectral-lane-collision' or
+            report['runs']['trial-on']['pending_lane_window_conflicts'] == 0)
         screen_pass = (comparison['gate_pass'] and midi_no_regression
-                       and conflict_improved and window_resolved and coasting_resolved)
+                       and conflict_improved and window_resolved and coasting_resolved
+                       and pending_resolved)
         if policy == 'spectral-lane-collision':
             report['coasting_lane_window_resolved'] = coasting_resolved
+            report['pending_lane_window_resolved'] = pending_resolved
         report.update(state='completed', final=True, stage='offline screen collected',
             comparison=comparison, raw_midi_delta=midi_delta,
             raw_midi_no_regression=midi_no_regression, raw_conflicts_reduced=conflict_improved,
@@ -166,7 +180,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             interpretation='A successful process is not acceptance. Every passage must '
                 'retain its labeled matches, false outputs must not increase, and raw '
                 'cross-pitch conflicts must decrease without another raw-event regression, '
-                'with no remaining conflict in either required recorded lane window. '
+                'with no remaining conflict in any required recorded lane window. '
                 'Tuner-label parity does not establish emitted MIDI label quality. '
                 'Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.')
     except Exception as error:

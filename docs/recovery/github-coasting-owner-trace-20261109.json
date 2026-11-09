@@ -1,0 +1,119 @@
+{
+  "schema": "m3_coasting_owner_trace_checkpoint_v1",
+  "state": "completed",
+  "final": true,
+  "run_id": 42632379048,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42632379048",
+  "source_commit": "18da9c2e52877f6892ece4c72e7aec8521575222",
+  "worker_commit": "c2a978833cd69c7eb60757886f18981a1976effa",
+  "requested_at": "2026-11-09T14:12:19.394349+00:00",
+  "observed_at": "2026-11-09T14:21:21.092034+00:00",
+  "task": "coasting-owner-trace",
+  "stage": "same-sample pending attacks identified",
+  "profile": "coasting-owner-on",
+  "window_samples": [
+    1147904,
+    1150464
+  ],
+  "target_sample": 1149183,
+  "reference_checkpoint": "docs/recovery/github-coasting-owner-trial-20261109.json",
+  "output_directory": "build/github-results/coasting-owner-trace-42632379048",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "acceptance": "Diagnostic is interpretable only if both full replay and MIDI outputs exactly match the saved coasting-owner ON trial. Native behavior is unchanged.",
+  "next": "Run the default-off pending-assignment deferral screen on GitHub; require no lost passage matches, no increased false outputs and all three recorded lane conflicts resolved before complete MIDI and broader gates.",
+  "conclusion": "success",
+  "report_relative_path": "coasting-owner-trace/report.json",
+  "report_sha256": "6eeb49b6788ec9b21fb3c74563cd4d4dd18f430879759ee12004615eea2cd3fe",
+  "binary_sha256": "90ae3d215cef3292d78aa7e248c543261a0647763fc65987f21eeece24d42637",
+  "report_observed_at": "2026-11-09T14:16:27.007868+00:00",
+  "outputs_downloaded_once": true,
+  "artifacts": [
+    {
+      "id": 13681282540,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY4MTI4MjU0MA==",
+      "name": "m3-report-42632379048-1",
+      "size_in_bytes": 20602,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13681282540",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13681282540/zip",
+      "expired": false,
+      "digest": "sha256:e36f20c0fc1c194e1e0a4f976ad71b2887a6c185973c83e65f8fb786d9e9eaa5",
+      "created_at": "2026-11-09T14:16:28Z",
+      "updated_at": "2026-11-09T14:16:28Z",
+      "expires_at": "2026-11-23T14:16:27Z",
+      "workflow_run": {
+        "id": 42632379048,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "c2a978833cd69c7eb60757886f18981a1976effa"
+      }
+    },
+    {
+      "id": 13681153092,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY4MTE1MzA5Mg==",
+      "name": "m3-evidence-42632379048-1",
+      "size_in_bytes": 4368073,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13681153092",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13681153092/zip",
+      "expired": false,
+      "digest": "sha256:160769bc9a6b2c8bccde968fb572f7db4eb9f04d0dbf7e568eae2fad53c0629a",
+      "created_at": "2026-11-09T14:16:30Z",
+      "updated_at": "2026-11-09T14:16:30Z",
+      "expires_at": "2026-11-16T14:16:28Z",
+      "workflow_run": {
+        "id": 42632379048,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "c2a978833cd69c7eb60757886f18981a1976effa"
+      }
+    }
+  ],
+  "retrieval": {
+    "run_id": 42632379048,
+    "retrieved_at": "2026-11-09T14:17:17.476201+00:00",
+    "artifact_id": 13681282540,
+    "sha256": "e36f20c0fc1c194e1e0a4f976ad71b2887a6c185973c83e65f8fb786d9e9eaa5",
+    "bytes": 20602,
+    "digest_verified": true
+  },
+  "complete_midi_and_outcome_identical": true,
+  "reference_complete_streams_bit_identical": true,
+  "decision": "unchanged; pending attacks reproduce the saved MIDI conflict",
+  "finding": {
+    "sample": 1149183,
+    "notes": [
+      36,
+      37
+    ],
+    "physical_mask": 1,
+    "emitted_mask": 1,
+    "before": {
+      "active": false,
+      "attack_ticks": 9,
+      "age_ticks": 9,
+      "evidence_ticks": 59
+    },
+    "after": {
+      "active": true,
+      "attack_ticks": 0,
+      "age_ticks": 10,
+      "evidence_ticks": 0
+    },
+    "raw_note_on_sequences": [
+      2152,
+      2153
+    ],
+    "annotated_note": 37,
+    "annotated_mask": 1,
+    "calibrated_output_eligible": false,
+    "active_reconciliation_observed": false,
+    "interpretation": "Both selected pending candidates emit new attacks on the same physical lane. Active spectral reconciliation and calibrated output do not emit at this tick. Candidate 37 has direct fundamental support; candidate 36 does not. The assignment stage that creates duplicate physical masks remains to be diagnosed."
+  },
+  "source_inference": {
+    "scope": "code inspection; not a measured assignment-stage trace",
+    "cause": "An infeasible full physical assignment returns without clearing retained preview masks. Those masks can authorize both pending attacks. A feasible full assignment cannot assign the same primary lane to two candidates.",
+    "trial": "Default-off pending_assignment_defer preserves attack evidence and postpones all selected pending attacks after infeasible physical assignment."
+  }
+}

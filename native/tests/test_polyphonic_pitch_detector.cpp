@@ -2367,6 +2367,68 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(detector.candidate_states_[4U].diagnostic_coasting_retained_mask, 0U);
   }
 
+  static void failed_assignment_defers_pending_attacks(
+      PolyphonicPitchDetector& detector, bool enabled) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 36U;
+    config.highest_note = 46U;
+    config.max_polyphony = 5U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(enabled);
+    // Both low pitches can use lanes 0/1, but a coasting note still owns 1.
+    // A third selected voice can use 2. The full assignment is infeasible,
+    // despite the selector having enough total lanes for three candidates.
+    detector.playable_string_masks_[0U] = 3U;
+    detector.playable_string_masks_[1U] = 3U;
+    detector.playable_string_masks_[10U] = 4U;
+    auto& first = detector.candidate_states_[0U];
+    auto& second = detector.candidate_states_[1U];
+    auto& coasting = detector.candidate_states_[4U];
+    auto& active = detector.candidate_states_[10U];
+    first.assigned_string = second.assigned_string = 0U;
+    first.assigned_string_mask = second.assigned_string_mask = 1U;
+    first.attack_ticks = second.attack_ticks = 9U;
+    first.evidence_ticks = second.evidence_ticks = 59U;
+    coasting.active = active.active = true;
+    coasting.assigned_string = 1U;
+    coasting.assigned_string_mask = coasting.midi_voice_mask = 2U;
+    active.assigned_string = 2U;
+    active.assigned_string_mask = active.midi_voice_mask = 4U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[1U] = selected[10U] = true;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    detector.infer_m3_unison_strings(selected);
+    M3_EXPECT_EQ(first.assigned_string_mask, 1U);
+    M3_EXPECT_EQ(second.assigned_string_mask, 1U);
+    M3_EXPECT_EQ(first.diagnostic_pending_assignment_failed, enabled);
+    M3_EXPECT_EQ(second.diagnostic_pending_assignment_failed, enabled);
+    M3_EXPECT_FALSE(active.diagnostic_pending_assignment_failed);
+    DetectorDecision decision;
+    M3_EXPECT_EQ(detector.append_candidate_note_on(decision, 0U, 90U), !enabled);
+    M3_EXPECT_EQ(detector.append_candidate_note_on(decision, 1U, 90U), !enabled);
+    M3_EXPECT_EQ(decision.transitions.size(), enabled ? 0U : 2U);
+    M3_EXPECT_EQ(first.attack_ticks, 9U);
+    M3_EXPECT_EQ(second.attack_ticks, 9U);
+    M3_EXPECT_EQ(first.evidence_ticks, 59U);
+    M3_EXPECT_EQ(second.evidence_ticks, 59U);
+    if (enabled) {
+      // A later feasible selection admits the intended second pitch, without
+      // giving the earlier array entry ownership merely because it came first.
+      selected[0U] = false;
+      detector.assign_m3_strings(selected);
+      detector.infer_m3_unison_strings(selected);
+      M3_EXPECT_FALSE(second.diagnostic_pending_assignment_failed);
+      M3_EXPECT_TRUE(detector.append_candidate_note_on(decision, 1U, 90U));
+      M3_EXPECT_EQ(decision.transitions.size(), 1U);
+      M3_EXPECT_EQ(decision.transitions[0U].note, 37U);
+      M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
+    }
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector,
                                               bool solver = true) {
     PersistentConfig config;
@@ -12661,6 +12723,16 @@ M3_TEST(native_detector_coasting_lane_collision_preserves_groups_and_capacity) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   m3::PolyphonicPitchDetector detector;
   m3::PolyphonicPitchDetectorTestAccess::coasting_lane_collision_constraints(detector);
+#endif
+}
+
+M3_TEST(native_detector_failed_assignment_defers_stale_pending_attacks) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_defers_pending_attacks(
+      detector, false);
+  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_defers_pending_attacks(
+      detector, true);
 #endif
 }
 
