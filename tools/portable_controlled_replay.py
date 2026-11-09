@@ -16,6 +16,38 @@ from tools.portable_corpus_replay import (
     BLOCKS, MEASUREMENT_SCOPE, SETTINGS, now, timing_gates, validate_timing_diagnosis)
 from tools.portable_recovery import digest
 
+STAGES = ('cue', 'signal_observe', 'signal_reset', 'selection', 'partial_frequency',
+          'fine_frequency', 'string_assignment', 'voice_lifecycle', 'calibration_snapshot')
+
+
+def validate_stage_timing(timing, mode):
+    """Reject incomplete, overlapping or allocating stage instrumentation."""
+    stages, cpu = timing.get('stage_cpu', {}), timing['thread_cpu']
+    totals, slow = stages.get('totals', {}), stages.get('slowest_cpu_blocks', [])
+
+    def valid_rows(rows):
+        return (set(rows) == set(STAGES)
+                and all(type(row.get(key)) is int and row[key] >= 0
+                        for row in rows.values() for key in ('ns', 'calls')))
+
+    if (stages.get('valid') is not True or stages.get('blocks') != timing['blocks']
+            or cpu['block_resolution_pass'] is not True
+            or timing.get('allocation_guard') is not True
+            or any(type(timing.get(key)) is not int or timing[key] != 0 for key in
+                   ('cpp_allocations', 'cpp_frees', 'c_allocations', 'c_frees'))
+            or not valid_rows(totals)
+            or not 0 < sum(row['ns'] for row in totals.values()) <= cpu['total_ns']
+            or not 0 < len(slow) <= 16
+            or slow[0]['cpu_ns'] != cpu['maximum_ns']):
+        raise ValueError('Incomplete or unsafe stage timing: ' + mode)
+    for block in slow:
+        rows = block.get('stages', {})
+        if (not valid_rows(rows) or type(block.get('unattributed_cpu_ns')) is not int
+                or block['unattributed_cpu_ns'] < 0
+                or sum(row['ns'] for row in rows.values()) + block['unattributed_cpu_ns']
+                   != block['cpu_ns']):
+            raise ValueError('Overlapping or incomplete stage intervals: ' + mode)
+
 
 def prepare_cases(corpus, manifest, reference_path, output):
     import numpy as np
@@ -108,7 +140,7 @@ def replay_command(binary, corpus, cases, name, mode, block, timing_path):
 
 
 def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline_path,
-                         output, max_seconds):
+                         output, max_seconds, require_stage_timing=False):
     """Diagnose the failed octave pair, preserving its saved full replay hashes."""
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus, output = binary.resolve(), corpus.resolve(), output.resolve()
@@ -116,6 +148,7 @@ def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline
     report = dict(schema='m3_controlled_timing_diagnosis_v1', started_at=now(),
         state='running', final=False, stage='verify held-out pair', control=name,
         block_samples=32, settings=SETTINGS, runs={}, diagnostic_only=True,
+        stage_timing_required=require_stage_timing,
         spectral_templates='disabled, matching historical controls',
         collection_pass=False, native_gate_pass=False, allocation_and_output_pass=False,
         installed_output_changed=False, promotion_accepted=False, live_readiness='not measured',
@@ -181,6 +214,8 @@ def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline
                     and row['gates']['timed_scored_identity']):
                 raise ValueError('Output identity or measurement scope failed: ' + mode)
             validate_timing_diagnosis(timing, mode)
+            if require_stage_timing:
+                validate_stage_timing(timing, mode)
         report['comparison'] = compare_replays(results['off'], results['on'])
         report.update(state='completed', final=True, stage='held-out timing diagnosis collected',
             collection_pass=report['comparison']['gate_pass'],
@@ -296,13 +331,18 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--timing-reference-report', type=Path,
                         help='Diagnose only the saved octave OFF/ON pair; cannot pass native acceptance')
+    parser.add_argument('--require-stage-timing', action='store_true',
+                        help='Require compiled stage probes, valid accounting and zero allocations')
     parser.add_argument('--max-seconds', type=int, default=2400)
     args = parser.parse_args()
     if args.max_seconds <= 0:
         parser.error('--max-seconds must be positive')
+    if args.require_stage_timing and not args.timing_reference_report:
+        parser.error('--require-stage-timing needs --timing-reference-report')
     if args.timing_reference_report:
         passed = run_timing_diagnosis(args.binary, args.corpus, args.manifest, args.reference,
-                                     args.timing_reference_report, args.output, args.max_seconds)
+                                     args.timing_reference_report, args.output, args.max_seconds,
+                                     args.require_stage_timing)
     else:
         passed = run(args.binary, args.corpus, args.manifest, args.reference, args.output, args.max_seconds)
     raise SystemExit(0 if passed else 1)

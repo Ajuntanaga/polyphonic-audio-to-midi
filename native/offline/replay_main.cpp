@@ -1166,7 +1166,12 @@ int main(int argc, char** argv) {
 #else
     constexpr bool allocation_trace_enabled = false;
 #endif
-    if (allocation_trace_enabled || diagnostic_thread_cpu) {
+#if defined(M3_OFFLINE_STAGE_TIMING)
+    constexpr bool stage_timing_enabled = true;
+#else
+    constexpr bool stage_timing_enabled = false;
+#endif
+    if (allocation_trace_enabled || diagnostic_thread_cpu || stage_timing_enabled) {
       failed = std::fprintf(stream, ",\"timing_diagnostic_only\":true") < 0 || failed;
     }
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)
@@ -1239,6 +1244,39 @@ int main(int argc, char** argv) {
       }
       failed = std::fprintf(stream, "]}") < 0 || failed;
     }
+#if defined(M3_OFFLINE_STAGE_TIMING)
+    failed = std::fprintf(stream,
+        ",\"stage_cpu\":{\"valid\":%s,\"blocks\":%llu,"
+        "\"scope\":\"Sequential non-overlapping thread CPU intervals; probes add overhead. "
+        "Unattributed CPU includes clock/bookkeeping and replay loop costs; diagnostic only\",\"totals\":{",
+        core_timing.stage_cpu_valid ? "true" : "false", number(core_timing.stage_cpu_blocks)) < 0 || failed;
+    for (std::size_t index = 0U; index < m3::offline::stage_timing::kCount; ++index) {
+      const auto& total = core_timing.stage_totals[index];
+      failed = std::fprintf(stream,
+          "%s\"%s\":{\"ns\":%llu,\"calls\":%llu,\"maximum_block_ns\":%llu,\"maximum_end_sample\":%llu}",
+          index == 0U ? "" : ",", m3::offline::stage_timing::kNames[index],
+          number(total.ns), number(total.calls), number(total.maximum_block_ns),
+          number(total.maximum_end_sample)) < 0 || failed;
+    }
+    failed = std::fprintf(stream, "},\"slowest_cpu_blocks\":[") < 0 || failed;
+    bool first_stage_block = true;
+    for (const auto& block : core_timing.slowest_cpu_blocks) {
+      if (block.cpu_ns == 0U) continue;
+      failed = std::fprintf(stream,
+          "%s{\"end_sample\":%llu,\"cpu_ns\":%llu,\"wall_ns\":%llu,\"unattributed_cpu_ns\":%llu,\"stages\":{",
+          first_stage_block ? "" : ",", number(block.end_sample), number(block.cpu_ns),
+          number(block.wall_ns), number(block.unattributed_cpu_ns)) < 0 || failed;
+      for (std::size_t index = 0U; index < m3::offline::stage_timing::kCount; ++index) {
+        failed = std::fprintf(stream, "%s\"%s\":{\"ns\":%llu,\"calls\":%llu}",
+            index == 0U ? "" : ",", m3::offline::stage_timing::kNames[index],
+            number(block.stages.ns[index]), number(block.stages.calls[index])) < 0 || failed;
+      }
+      failed = std::fprintf(stream, "}}") < 0 || failed;
+      first_stage_block = false;
+    }
+    failed = std::fprintf(stream, "]}") < 0 || failed;
+    failed = !core_timing.stage_cpu_valid || failed;
+#endif
     failed = std::fprintf(stream, "}\n") < 0 || failed;
     failed = std::fclose(stream) != 0 || failed;
     if (failed || !core_timing.fingerprint_identical ||

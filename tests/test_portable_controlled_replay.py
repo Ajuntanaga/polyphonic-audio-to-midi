@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
-from tools.portable_controlled_replay import run, run_timing_diagnosis, validate_labels
+from tools.portable_controlled_replay import STAGES, run, run_timing_diagnosis, validate_labels
 from tools.portable_corpus_replay import MEASUREMENT_SCOPE, SETTINGS
 from tools.recover_controlled_inputs import float_crop
 
@@ -141,7 +141,7 @@ class ControlledTimingTests(unittest.TestCase):
            'calibration_pass\tlabeled\tmatched\n'
            '0\t64\t256\t36\t1\t2\t3\t1\n')
 
-    def exercise(self, *, defect=None, resolution=True):
+    def exercise(self, *, defect=None, resolution=True, stages=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest, reference, baseline = (
@@ -192,6 +192,22 @@ class ControlledTimingTests(unittest.TestCase):
                     thread_cpu=dict(valid=True, block_resolution_pass=resolution,
                         phases=[dict(blocks=1, wall_deadline_overruns=int(i == 0)) for i in range(32)],
                         slowest_blocks=[dict(wall_ns=400000)]))
+                if stages:
+                    timing['thread_cpu'].update(total_ns=6400000, maximum_ns=400000)
+                    rows = {name: dict(ns=1000, calls=1) for name in STAGES}
+                    timing['stage_cpu'] = dict(valid=True, blocks=32, totals=copy.deepcopy(rows),
+                        slowest_cpu_blocks=[dict(cpu_ns=400000,
+                            unattributed_cpu_ns=400000 - len(STAGES) * 1000, stages=rows)])
+                    if defect == 'stage-missing':
+                        del timing['stage_cpu']
+                    elif defect == 'stage-invalid':
+                        timing['stage_cpu']['valid'] = False
+                    elif defect == 'stage-overlap':
+                        timing['stage_cpu']['slowest_cpu_blocks'][0]['unattributed_cpu_ns'] += 1
+                    elif defect == 'stage-alloc':
+                        timing['cpp_allocations'] = 1
+                    elif defect == 'stage-uncovered':
+                        del timing['stage_cpu']['totals']['fine_frequency']
                 if defect == 'cpu':
                     del timing['thread_cpu']
                 if defect == 'scope':
@@ -205,7 +221,8 @@ class ControlledTimingTests(unittest.TestCase):
             with patch('tools.portable_controlled_replay.prepare_cases', return_value=inputs), \
                  patch('tools.portable_controlled_replay.subprocess.run', side_effect=execute):
                 try:
-                    passed = run_timing_diagnosis(binary, root, manifest, reference, baseline, output, 9999)
+                    passed = run_timing_diagnosis(binary, root, manifest, reference, baseline,
+                                                  output, 9999, require_stage_timing=stages)
                 except (ValueError, subprocess.CalledProcessError) as caught:
                     error = caught
             report = json.loads((output / 'report.json').read_text())
@@ -253,6 +270,24 @@ class ControlledTimingTests(unittest.TestCase):
         self.assertEqual(calls, ['off'])
         self.assertEqual(report['state'], 'failed')
         self.assertEqual(stderr, 'fixture native failure\n')
+
+    def test_stage_probe_pair_preserves_references_without_acceptance(self):
+        passed, report, calls, error, _ = self.exercise(stages=True)
+        self.assertIsNone(error)
+        self.assertTrue(passed)
+        self.assertTrue(report['stage_timing_required'])
+        self.assertEqual(calls, ['off', 'on'])
+
+    def test_stage_accounting_and_allocation_failures_stop_before_on(self):
+        for defect in ('stage-missing', 'stage-invalid', 'stage-overlap', 'stage-alloc',
+                       'stage-uncovered', 'coarse-clock'):
+            with self.subTest(defect=defect):
+                _, report, calls, error, _ = self.exercise(
+                    stages=True, defect=defect, resolution=defect != 'coarse-clock')
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(calls, ['off'])
+                self.assertFalse(report['collection_pass'])
+                self.assertEqual(report['state'], 'failed')
 
 
 if __name__ == '__main__':

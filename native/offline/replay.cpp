@@ -205,6 +205,9 @@ DetectorDecision process_replay_sample(PolyphonicPitchDetector& detector,
     FrozenNoteCues* cues, std::size_t sample_index, double raw, double sample) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (cues != nullptr) {
+#if defined(M3_OFFLINE_STAGE_TIMING)
+    stage_timing::Scope stage(stage_timing::Stage::cue);
+#endif
     if (cues->advance(sample_index)) detector.set_odd_partial_cue_mask_for_diagnostics(cues->mask());
     cues->observe(static_cast<float>(raw));
   }
@@ -235,6 +238,9 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
   output.fingerprint = kFnvOffset;
   output.thread_cpu_enabled = thread_cpu;
   output.thread_cpu_valid = thread_cpu;
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  output.stage_cpu_valid = thread_cpu;
+#endif
   std::vector<DetectorDecision> decisions(block);
   std::vector<std::uint64_t> times((wave.mono_samples.size() + block - 1U) / block);
   std::vector<std::uint64_t> cpu_times(thread_cpu ? times.size() : 0U);
@@ -253,6 +259,10 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
 #endif
   for (std::size_t begin = 0U; begin < wave.mono_samples.size(); begin += block) {
     const auto count = std::min(block, wave.mono_samples.size() - begin);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+    stage_timing::Block stages;
+    stage_timing::active_block = thread_cpu ? &stages : nullptr;
+#endif
 #if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
     const auto cpp_before = m3::test::allocation_count(), cpp_free_before = m3::test::deallocation_count();
     const auto c_before = m3::test::c_allocation_count(), c_free_before = m3::test::c_deallocation_count();
@@ -271,6 +281,9 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
         std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
     const bool cpu_ended = !thread_cpu || read_thread_cpu_ns(cpu_end);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+    stage_timing::active_block = nullptr;
+#endif
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)
     m3::test::set_allocation_trace_active(false);
 #endif
@@ -290,6 +303,27 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
       const bool valid = cpu_started && cpu_ended && cpu_end >= cpu_start;
       output.thread_cpu_valid = output.thread_cpu_valid && valid;
       const auto cpu_ns = valid ? cpu_end - cpu_start : 0U;
+#if defined(M3_OFFLINE_STAGE_TIMING)
+      const auto stage_ns = std::accumulate(stages.ns.begin(), stages.ns.end(), std::uint64_t{});
+      output.stage_cpu_valid = output.stage_cpu_valid && valid && stages.valid && stage_ns <= cpu_ns;
+      ++output.stage_cpu_blocks;
+      for (std::size_t index = 0U; index < stage_timing::kCount; ++index) {
+        auto& total = output.stage_totals[index];
+        total.ns += stages.ns[index];
+        total.calls += stages.calls[index];
+        if (stages.ns[index] > total.maximum_block_ns) {
+          total.maximum_block_ns = stages.ns[index];
+          total.maximum_end_sample = begin + count;
+        }
+      }
+      if (cpu_ns > output.slowest_cpu_blocks.back().cpu_ns) {
+        ReplayCoreTiming::StageSlowBlock slow{begin + count, cpu_ns, elapsed,
+            cpu_ns >= stage_ns ? cpu_ns - stage_ns : 0U, stages};
+        for (auto& retained : output.slowest_cpu_blocks) {
+          if (slow.cpu_ns > retained.cpu_ns) std::swap(slow, retained);
+        }
+      }
+#endif
       cpu_times[output.blocks] = cpu_ns;
       output.cpu_total_ns += cpu_ns;
       output.cpu_zero_duration_blocks += cpu_ns == 0U ? 1U : 0U;

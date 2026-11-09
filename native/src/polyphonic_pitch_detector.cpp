@@ -7,6 +7,7 @@
 
 #include "m3/factory_calibration.hpp"
 #include "m3/harmonic_evidence.hpp"
+#include "m3/offline_stage_timing.hpp"
 #include "m3/pitch_math.hpp"
 #include "m3/unison_spectral_templates.hpp"
 
@@ -11176,6 +11177,9 @@ void PolyphonicPitchDetector::write_snapshot(
 }
 
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  offline::stage_timing::Scope stage(offline::stage_timing::Stage::selection);
+#endif
   DetectorDecision decision;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   // Also clear on quiet decisions and with trace collection disabled.
@@ -11470,10 +11474,19 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     }
   }
 #endif
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::partial_frequency);
+#endif
   update_phase_cents_estimates(selected);
   update_partial_detuning_evidence(selected);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::fine_frequency);
+#endif
   update_fine_frequency_evidence(selected, scores, fundamentals, threshold,
                                  quiet);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::string_assignment);
+#endif
   update_spectral_lane_states(selected, quiet);
   assign_m3_strings(selected);
   update_adjacent_spectral_duplicate_suppression();
@@ -11489,6 +11502,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   update_fine_beat_pruning_output_projection(
       selected, scores, fundamentals, threshold, quiet);
   update_calibration_tuning_offset(selected);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::voice_lifecycle);
+#endif
   update_calibrated_output_notes(decision, selected, selected_voice_count, quiet);
   update_calibrated_dp_output_projections(
       decision, selected, scores, fundamentals, threshold, quiet, count);
@@ -11828,6 +11844,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
   update_group_continuity_trackers(selected, scores, fundamentals, threshold,
                                    quiet);
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::calibration_snapshot);
+#endif
   const auto guard_score = [](const auto& cells) noexcept {
     double score = 0.0;
     for (std::size_t harmonic = 0U; harmonic < cells.size(); ++harmonic) {
@@ -11849,6 +11868,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 }
 
 DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept {
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  offline::stage_timing::Scope stage(offline::stage_timing::Stage::signal_observe);
+#endif
   if (!configured_ || !std::isfinite(sample)) {
     return {};
   }
@@ -11923,6 +11945,9 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
           narrow_mix * dc_blocked * fundamental.sine;
     }
   }
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::signal_reset);
+#endif
   bool has_active_voice = false;
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
@@ -12033,6 +12058,9 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
     return {};
   }
   decision_phase_ = 0U;
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  stage.stop();
+#endif
   return make_decision();
 }
 

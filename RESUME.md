@@ -1,3 +1,9 @@
+## 2026-11-09 — stage timing prepared for the retained octave pair
+
+- Added compile-time offline stage probes for cue processing, signal observation/reset, selection, frequency estimation, string assignment, voice lifecycle and calibration snapshots. Normal and production builds omit these probes. Stage totals and the slowest CPU blocks use fixed storage; instrumented timings cannot pass real-time acceptance.
+- Seventeen focused Python contracts pass. The new diagnostic requires both retained OFF/ON output hashes, usable CPU clocks, complete stage accounting and zero processing allocations/frees. Native compilation and collection are pending on GitHub Actions; no native processing ran locally.
+- Next: run `controlled-stage-diagnosis` once on the private worker at this source, using the existing held-out input release. Record the run in `build/modal/current-status.json`, collect the small report, and optimize only a measured cost. Installed scores and default-off behavior remain unchanged; paired uninstrumented timing, protected labels/errors, buffer parity and live host/MIDI gates remain required.
+
 ## 2026-11-09 — octave CPU spike measured; timing remains open
 
 - Private GitHub diagnostic `42557095189` completed at source `f16eea70cabfe50de9576750123fa4849112a44c` and worker `15ebda95b633a4cfaa3f7184cd3f8ecbf16ed1f8`. All 48 Python contracts and the replay build passed; public portable workflow `42557057874` passed at the same source. The small report was collected once into `build/github-results/octave-timing-42557095189`. Both jobs are final; do not poll, download or repeat them. Summary: `docs/recovery/github-octave-timing-20261109.json`.

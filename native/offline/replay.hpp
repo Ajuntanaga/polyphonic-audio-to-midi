@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "m3/harmonic_evidence.hpp"
+#include "m3/offline_stage_timing.hpp"
 #include "m3/partial_detuning_evidence.hpp"
 #include "m3/string_calibration.hpp"
 #include "m3/tuner_telemetry.hpp"
@@ -1761,6 +1762,19 @@ struct ReplayCoreTiming final {
   std::uint64_t cpu_observed_quantum_ns{}, cpu_resolution_limit_ns{}, cpu_zero_duration_blocks{};
   std::array<Phase, 32U> phases{};
   std::array<SlowBlock, 16U> slowest_blocks{};
+#if defined(M3_OFFLINE_STAGE_TIMING)
+  struct StageTotal final {
+    std::uint64_t ns{}, calls{}, maximum_block_ns{}, maximum_end_sample{};
+  };
+  struct StageSlowBlock final {
+    std::uint64_t end_sample{}, cpu_ns{}, wall_ns{}, unattributed_cpu_ns{};
+    stage_timing::Block stages{};
+  };
+  bool stage_cpu_valid{};
+  std::uint64_t stage_cpu_blocks{};
+  std::array<StageTotal, stage_timing::kCount> stage_totals{};
+  std::array<StageSlowBlock, 16U> slowest_cpu_blocks{};
+#endif
 };
 
 struct ReplayResult final {
