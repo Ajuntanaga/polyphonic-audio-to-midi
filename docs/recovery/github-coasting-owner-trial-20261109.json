@@ -1,0 +1,327 @@
+{
+  "schema": "m3_spectral_lane_collision_trial_v1",
+  "task": "spectral-lane-collision-trial",
+  "policy_revision": "coasting_owner_hold",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42629455593,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42629455593",
+  "source_commit": "3ed48315f1630c2a739a9217109486d082cba1ca",
+  "worker_commit": "0075d390ad80136b527e4110acad44766bdddb22",
+  "created_at": "2026-11-09T13:53:33Z",
+  "observed_at": "2026-11-09T14:02:10.232098+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "stage": "Final ordinary screen collected; saved-event ledger verification next",
+  "result_final": true,
+  "output_target": "build/github-results/coasting-owner-trial-42629455593",
+  "report_relative_path": "spectral-lane-collision/report.json",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-coasting-owner-trial-20261109.json",
+  "reference_report": "docs/recovery/github-ordinary-assignment-20261109.json",
+  "diagnostic_checkpoint": "docs/recovery/github-spectral-lane-collision-trace-20261109.json",
+  "dataset": "ordinary",
+  "note": 48,
+  "label_index": -1,
+  "diagnostic_flags": [
+    "--diagnostic-spectral-lane-collision"
+  ],
+  "coasting_window_samples": [
+    286720,
+    289280
+  ],
+  "purpose": "Retain an existing singleton emitted lane while a coasting note owns its new destination, and defer pending attacks against that retained lane.",
+  "acceptance": "Saved OFF replay identity; no passage match loss or false-output increase; no raw MIDI error counter increase; fewer aggregate cross-pitch conflicts; zero ON conflicts in both recorded windows. Later corpus, native timing and host gates remain separate.",
+  "local_checks": {
+    "python_contracts": 19,
+    "result": "passed",
+    "native_execution": false
+  },
+  "source_runs": {
+    "ci": 42629444292,
+    "portable_replay": 42629444291,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "label_metric_scope": "Tuner snapshot assignments, not emitted MIDI assignments",
+  "emitted_midi_labeled_matches": "not measured",
+  "emitted_midi_held_note_quality": "not measured",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "next_step": "Replay these complete saved OFF/ON MIDI events through the production ledger in both routing modes. Require no output blocking before wider corpus validation; preserve no lost labels, no increased false outputs, zero allocations, buffer parity, native timing and host gates.",
+  "state": "completed",
+  "final": true,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "candidate_note": 48,
+  "window_start": 202752,
+  "window_end": 204288,
+  "runtime_rule_changed": true,
+  "native_timing": "not measured",
+  "policy_name": "spectral-lane-collision",
+  "diagnostic_flag": "--diagnostic-spectral-lane-collision",
+  "policy": "Keep ordinary physical assignment. Move a conflicting singleton spectral output to its own free physical string; release before claim. Retain a free previous singleton output while an unselected active peer still owns its new lane; defer new attacks against that retained lane. Groups and continuity expansions retain their existing output path.",
+  "trial_revision": "coasting_owner_hold",
+  "coasting_window": {
+    "start": 286720,
+    "end": 289280,
+    "lane": 1
+  },
+  "updated_at": "2026-11-09T13:56:44.357539+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "3ed48315f1630c2a739a9217109486d082cba1ca",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42629455593",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "90ae3d215cef3292d78aa7e248c543261a0647763fc65987f21eeece24d42637",
+  "input_manifest_sha256": "30e89c10fb0aa6ad03fd869c5f60ad67aaa4235a5d72540b0454e4ad54a8ba83",
+  "reference_report_sha256": "e4cd3974fe6541895e762ce5dfa268d8b74f6f1b8ecedf02553750cba5c3ea9f",
+  "off_reference_bit_identical": true,
+  "coasting_lane_window_resolved": true,
+  "comparison": {
+    "delta": {
+      "matched": 15,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": -15,
+      "false_gap_voices": 0,
+      "false_positive_voices": -15
+    },
+    "changed_labels": [
+      {
+        "label_index": 239,
+        "midi_note": 48,
+        "string_mask": 16,
+        "labeled": 861,
+        "baseline_matched": 238,
+        "current_matched": 253,
+        "matched_delta": 15
+      }
+    ],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "raw_midi_delta": {
+    "cross_pitch_on_before_release": -286,
+    "repeated_pitch_on_before_release": 0,
+    "off_without_raw_on": 0,
+    "zero_velocity_on": 0,
+    "unassigned_on": 0
+  },
+  "raw_midi_no_regression": true,
+  "raw_conflicts_reduced": true,
+  "recorded_lane_window_resolved": true,
+  "full_recording_screen_pass": true,
+  "decision": "eligible for wider validation",
+  "interpretation": "A successful process is not acceptance. Every passage must retain its labeled matches, false outputs must not increase, and raw cross-pitch conflicts must decrease without another raw-event regression, with no remaining conflict in either required recorded lane window. Tuner-label parity does not establish emitted MIDI label quality. Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.",
+  "completed_at": "2026-11-09T13:56:50Z",
+  "report": "build/github-results/coasting-owner-trial-42629455593/spectral-lane-collision/report.json",
+  "report_sha256": "ef282f4314a1e324c81493f4399b91840cc09fc26c81fd090c15d49f5fd543d6",
+  "local_native_execution": false,
+  "runs": {
+    "reference-off": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 1,
+      "coasting_lane_window_conflicts": 4,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2246,
+          "sha256": "b20fd1512df7e9924d600766b363d557220faadd22539e9492171de6cee1ba5a",
+          "raw_bytes": 9985,
+          "raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124386118,
+          "captured_raw_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 91378,
+          "sha256": "7b0ad8249a92ebe07c3a405bcbfbf58acf4241e1a3ef862839733614cda25d08",
+          "raw_bytes": 284869,
+          "raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_raw_bytes": 284869,
+          "captured_raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_rows": 11903,
+          "retained_rows": 11903,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11901
+        }
+      ]
+    },
+    "trial-on": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "6dbfb50b27b3c17d"
+      },
+      "tsv_sha256": "2283fe5a7d4c0b88a56f9f98be0a4f0d2c7cecf54659f960236f56d86ac5e4b4",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 0,
+      "coasting_lane_window_conflicts": 0,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2248,
+          "sha256": "e0a5b8926fa899bf760fa583973c660ec11f140ced4bbf17b73e8c7dc2888f2a",
+          "raw_bytes": 9985,
+          "raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124385794,
+          "captured_raw_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 90828,
+          "sha256": "fbc05d114d0da8850e7c3bd50f0a9f2895d640955fdae8f0da7d1a8a66f914a8",
+          "raw_bytes": 284535,
+          "raw_sha256": "a4ed3a6e29c9896eb8090bacea9691b8c60b5b969bf946a07b8b62bb84d42f68",
+          "captured_raw_bytes": 284535,
+          "captured_raw_sha256": "a4ed3a6e29c9896eb8090bacea9691b8c60b5b969bf946a07b8b62bb84d42f68",
+          "captured_rows": 11889,
+          "retained_rows": 11889,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 366,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11887
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "name": "m3-report-42629455593-1",
+      "id": 13680401777,
+      "bytes": 18313,
+      "sha256": "0be18376d3ea27b664cb0fb8b9879056d90b4830361555d5f937440735730361",
+      "downloaded_once": true
+    },
+    {
+      "name": "m3-evidence-42629455593-1",
+      "id": 13679773601,
+      "bytes": 4511151,
+      "sha256": "6094754712bee07a80c14e3fff1438215aa51728fbe82434933d1f1b9afceb38",
+      "downloaded_once": false
+    }
+  ],
+  "source_checks": {
+    "commit": "3ed48315f1630c2a739a9217109486d082cba1ca",
+    "portable_run": 42629444291,
+    "ci_run": 42629444292,
+    "conclusion": "success",
+    "native_tests": "passed",
+    "python_contracts": "passed",
+    "synthetic_buffer_parity": "passed",
+    "production_vst3_build_package": "passed; package not installed"
+  },
+  "protected": {
+    "new_trial": "Ordinary OFF bit-identical to its saved reference; ON has no lost passage matches or increased false-output counters. Other recordings not rerun for this revision.",
+    "earlier_corpus_checkpoint": "docs/recovery/github-spectral-lane-collision-corpus-20261109.json",
+    "earlier_corpus": "All 42 label/error comparisons passed; 14 OFF references and 11 OFF/ON pairs bit-identical. Three paired native timing gates failed."
+  }
+}
