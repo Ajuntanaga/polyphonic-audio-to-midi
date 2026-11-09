@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-09T09:59:46.301731+00:00",
-  "state": "ordinary_screen_extension_cloud_validated",
+  "updated_at": "2026-11-09T10:07:20.641274+00:00",
+  "state": "ordinary_duration_screen_pending",
   "source_commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
   "worker_commit": "cd72acf856a61022d8f44d303533ca148e1546df",
   "worker_workflow_pushed": true,
@@ -14,7 +14,7 @@
   "installed_output_changed": false,
   "promotion_accepted": false,
   "note": "Complete OFF/ON detector lifetimes in the bounded ordinary preview screen; pair before cropping, retain full compressed event streams, suppress hold comparisons on pairing anomalies.",
-  "observed_at": "2026-11-09T09:54:16.397298+00:00",
+  "observed_at": "2026-11-09T10:07:20.641274+00:00",
   "source_contract_run": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "run_id": 42597330722,
@@ -37,7 +37,7 @@
     "workflow_shell_syntax": "passed",
     "runtime_tests": "GitHub only"
   },
-  "next": "Collect the existing corpus report first. After cloud contracts pass, measure complete OFF/ON MIDI lifetimes in one ordinary screen with separately pinned provenance; do not duplicate the corpus job.",
+  "next": "Collect the small report once after completion, verify both full replay hashes against the preceding ordinary trial, and inspect complete OFF/ON held durations and retriggers. Pairing anomalies invalidate duration comparisons; native timing and live-host gates remain separate. Do not dispatch another screen.",
   "initial_contract_run": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "run_id": 42596828308,
@@ -48,5 +48,41 @@
     "observed_at": "2026-11-09T09:58:32.896184+00:00",
     "failure": "One of 100 contracts failed: replay fixture emitted candidate rows outside the requested trace window.",
     "correction": "Fixture now honors candidate-trace start/end bounds; no native algorithm change."
+  },
+  "runtime_run": {
+    "repository": "Ajuntanaga/m3-offload",
+    "task": "projection-preview-trial",
+    "dataset": "ordinary",
+    "run_id": 42598238121,
+    "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42598238121",
+    "source_commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
+    "worker_commit": "cd72acf856a61022d8f44d303533ca148e1546df",
+    "submitted_at": "2026-11-09T10:04:58.047702+00:00",
+    "created_at": "2026-11-09T10:05:00Z",
+    "status": "pending",
+    "conclusion": null,
+    "observed_at": "2026-11-09T10:07:20.641274+00:00",
+    "parameters": {
+      "midi_lifecycle": true,
+      "note": 41,
+      "label_index": 55
+    },
+    "stage": "Queued behind the existing corpus run in the shared serialized processing group.",
+    "predecessor_run_id": 42592853316,
+    "concurrency_group": "m3-private-processing",
+    "output_target": "build/github-results/ordinary-midi-lifecycle-42598238121",
+    "report": "build/github-results/ordinary-midi-lifecycle-42598238121/projection-preview/report.json",
+    "report_artifact": "m3-report-42598238121-1",
+    "result_final": false,
+    "outputs_downloaded_once": false,
+    "measured": false,
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "reference_run_id": 42591352851,
+    "expected_off_tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+    "expected_on_tsv_sha256": "1822c2bd944e7f4fc1589ca2c079bcde6967f4a6b9bd300e94ec3504406f496f",
+    "host_delivery": "not measured",
+    "duration_acceptance_target": "not measured",
+    "next": "Collect the small report once after completion, verify both full replay hashes against the preceding ordinary trial, and inspect complete OFF/ON held durations and retriggers. Pairing anomalies invalidate duration comparisons; native timing and live-host gates remain separate. Do not dispatch another screen."
   }
 }
