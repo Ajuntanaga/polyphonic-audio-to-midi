@@ -41,8 +41,8 @@ defaults:
   run:
     shell: bash
 concurrency:
-  # Keep the existing group so work started before public visibility stays serialized.
-  group: m3-private-processing
+  # Keep audio replays serialized; saved-event diagnosis can run independently.
+  group: ${{ inputs.task == 'midi-ledger-replay' && 'm3-saved-midi-processing' || 'm3-private-processing' }}
   cancel-in-progress: false
 env:
   SOURCE_SHA: ${{ inputs.source_sha }}

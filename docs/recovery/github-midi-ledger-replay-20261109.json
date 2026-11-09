@@ -1,17 +1,17 @@
 {
   "task": "midi-ledger-replay",
   "repository": "Ajuntanaga/m3-offload",
-  "run_id": 42620637771,
-  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42620637771",
+  "run_id": 42622236455,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42622236455",
   "source_commit": "a522a01f4613f596289c035a4f68d0513a031cf4",
-  "worker_commit": "01235adb913958b8ad55c02fc79f82f4b867cc3e",
-  "created_at": "2026-11-09T12:52:38Z",
-  "observed_at": "2026-11-09T12:59:34.612906+00:00",
-  "status": "pending",
-  "conclusion": null,
-  "stage": "Queued behind corpus run 42616852315",
+  "worker_commit": "4ed095569e47011afc24a73e5ca927f97c6a482c",
+  "created_at": "2026-11-09T13:04:16Z",
+  "observed_at": "2026-11-09T13:06:02.663696+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "stage": "Native saved-MIDI diagnosis completed; small report retrieval failed at GitHub artifact storage",
   "result_final": false,
-  "output_target": "build/github-results/midi-ledger-42620637771",
+  "output_target": "build/github-results/midi-ledger-42622236455",
   "report_relative_path": "midi-ledger/report.json",
   "outputs_downloaded_once": false,
   "installed_output_changed": false,
@@ -64,7 +64,7 @@
   },
   "scope": "Full saved ordinary OFF/ON event streams through production GeneratedNoteLedger, both single-channel and per-voice routing, accepting file sink.",
   "limits": "Open-loop diagnostic only; no detector feedback after a fault, waveform recovery, VST3 host delivery or consumption, hardware or timing acceptance. EOF-open notes are not proof of stuck host MIDI.",
-  "next": "Collect small report once after completion; inspect first blocking event and source/cleanup callback counts. Retain the existing corpus run and all acceptance gates.",
+  "next": "Read the existing completed run small report when artifact storage is reachable; do not rerun it. Inspect the first blocking event and callback counts before changing runtime behavior. Retain existing corpus run 42616852315.",
   "cloud_verification": {
     "source_run_id": 42620590132,
     "native_ledger_cases_passed": 7,
@@ -94,5 +94,40 @@
         "expires_at": "2026-11-16T12:56:59Z"
       }
     ]
+  },
+  "superseded_unstarted_request": {
+    "run_id": 42620637771,
+    "worker_commit": "01235adb913958b8ad55c02fc79f82f4b867cc3e",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "jobs_started": 0,
+    "reason": "Move saved-event diagnosis into its own serialized queue while the existing audio corpus run continues."
+  },
+  "concurrency_group": "m3-saved-midi-processing",
+  "artifact_metadata": [
+    {
+      "id": 13676933077,
+      "name": "m3-evidence-42622236455-1",
+      "size_in_bytes": 22843,
+      "digest": "sha256:899aac985b278e7b1bbfc18469f818e8b1300689d56174599760229e2403c0d9",
+      "expired": false,
+      "expires_at": "2026-11-16T13:04:30Z"
+    },
+    {
+      "id": 13676118466,
+      "name": "m3-report-42622236455-1",
+      "size_in_bytes": 7314,
+      "digest": "sha256:cb650a4de0819be23cbed237e705a6b00758ca53451d268d46239a376cdde2c1",
+      "expired": false,
+      "expires_at": "2026-11-23T13:04:29Z"
+    }
+  ],
+  "report_retrieval": {
+    "state": "unavailable",
+    "attempts_this_turn": 2,
+    "observed_at": "2026-11-09T13:06:02.663696+00:00",
+    "error": "Connection to productionresultssa32.blob.core.windows.net failed for both gh run download and the direct artifact API read.",
+    "report_collected": false,
+    "workflow_final": true
   }
 }
