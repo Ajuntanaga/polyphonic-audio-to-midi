@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -55,7 +55,8 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity ]]
+          if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
       - uses: actions/checkout@v7
         with:
           repository: Ajuntanaga/polyphonic-audio-to-midi
@@ -74,6 +75,9 @@ jobs:
           if [[ "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis ]]; then
             export INPUT_TAG=controls-pass2-20261109
             export INPUT_SHA256=692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d
+          elif [[ "$TASK" = partial-identity ]]; then
+            export INPUT_TAG=partial-identity-note52-20261109
+            export INPUT_SHA256=4f7efa2ea0ba4d9025ff35c22d2bc48c9a5199a1ebb9b83c422c1bf10038829e
           fi
           mkdir -p "$RUNNER_TEMP/m3-inputs" build/github-results
           gh release download "$INPUT_TAG" --repo "$GITHUB_REPOSITORY" --pattern recovery-inputs.tar.gz --dir "$RUNNER_TEMP/m3-inputs"
@@ -94,6 +98,7 @@ jobs:
           Path('build/github-results/runtime-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
           PY
       - name: Build offline replay on GitHub
+        if: inputs.task != 'partial-identity'
         working-directory: source
         run: |
           trace=OFF
@@ -109,10 +114,21 @@ jobs:
           cmake --build build/portable --target m3_allocation_trace_tests --parallel 2 2>&1 | tee build/github-results/recorder-build.log
           ctest --test-dir build/portable -R '^m3_allocation_trace_tests$' --output-on-failure 2>&1 | tee build/github-results/recorder-test.log
       - name: Check diagnosis and comparison contracts
+        if: inputs.task != 'partial-identity'
         working-directory: source
         run: |
           python3 -m pip install 'numpy>=2,<3'
           python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay 2>&1 | tee build/github-results/contracts.log
+      - name: Screen isolated upper-partial string identity
+        if: inputs.task == 'partial-identity'
+        working-directory: source
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          python3 -m pip install 'numpy>=2,<3' 'scipy>=1.14,<2'
+          python3 -B -m unittest tests.test_portable_partial_identity tests.test_harmonic_balance_audit 2>&1 | tee build/github-results/contracts.log
+          python3 -B -m tools.portable_partial_identity --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/partial-identity 2>&1 | tee build/github-results/runner.log
       - name: Check paired core processing without offline observer bookkeeping
         if: inputs.task == 'core-check'
         working-directory: source

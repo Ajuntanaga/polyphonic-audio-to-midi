@@ -1,3 +1,11 @@
+## 2026-11-09 — isolated string identity screen prepared
+
+- `tools/portable_partial_identity.py` tests whether upper-harmonic offsets distinguish all six strings that can play MIDI note 52. It uses 28 recorded attacks: one ascending attack per string supplies six training prototypes; 22 descending and checkpoint attacks are held out. Measurements use the existing harmonic audit. Weak or search-edge partials remain unknown; every feasible competitor must have a measured prototype before any assignment is admitted.
+- The exploratory screen requires at least three valid windows and 75% valid coverage, upper-partial power ratios of at least 0.001, and offsets within 35 cents. Held-out assignment requires RMS distance at most 3 cents and a nearest-rival margin of at least 1 cent. It passes only if all 22 held-out attacks are admitted to the correct string. These are diagnostic limits, not plugin acceptance thresholds; same-session isolated attacks do not establish unison separation, labeled-frame gains or live readiness.
+- The five focused tests pass. YAML parsing, workflow shell syntax and the synchronized worker copy pass. The GitHub task `partial-identity` runs the audio measurement on the standard CPU runner and shares the existing serialized processing queue. Existing corpus run `42566960267` continues without restart.
+- Input release `partial-identity-note52-20261109` contains cropped recordings and provenance. Bundle size is 20,164,031 bytes; SHA-256 is `4f7efa2ea0ba4d9025ff35c22d2bc48c9a5199a1ebb9b83c422c1bf10038829e`. Original recordings and labels are retained. The source and worker repositories are public as authorized.
+- Collect the isolated screen report once its recorded GitHub job completes. A failed screen rejects these features under the fixed limits; a pass requires a later real-unison and absent-string control. Installed output, default-off behavior and the scoreboard remain unchanged. The protected corpus, native timing and live-host gates remain separate.
+
 ## 2026-11-09 — GitHub worker is public
 
 - `Ajuntanaga/m3-offload` is public and stays public between runs, as requested. An unauthenticated GitHub API read confirms public visibility. Recording bundles, calibration, release assets, Actions logs and published artifacts are now public. The source repository was already public.
