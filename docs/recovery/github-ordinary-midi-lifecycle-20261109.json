@@ -1,0 +1,52 @@
+{
+  "updated_at": "2026-11-09T09:59:46.301731+00:00",
+  "state": "ordinary_screen_extension_cloud_validated",
+  "source_commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
+  "worker_commit": "cd72acf856a61022d8f44d303533ca148e1546df",
+  "worker_workflow_pushed": true,
+  "capture_enabled_by_default": false,
+  "blocks": [
+    512
+  ],
+  "measured": false,
+  "host_delivery": "not measured",
+  "acceptance_target": "not measured",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "note": "Complete OFF/ON detector lifetimes in the bounded ordinary preview screen; pair before cropping, retain full compressed event streams, suppress hold comparisons on pairing anomalies.",
+  "observed_at": "2026-11-09T09:54:16.397298+00:00",
+  "source_contract_run": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "run_id": 42597330722,
+    "run_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42597330722",
+    "source_commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
+    "status": "completed",
+    "conclusion": "success",
+    "observed_at": "2026-11-09T09:59:46.301731+00:00",
+    "validation": "GitHub workflow passed; native tests, replay contracts and synthetic buffer smoke.",
+    "log_read": "Detailed log fetch failed with a results-receiver connection error; successful run status verified via GitHub API."
+  },
+  "active_corpus_run": {
+    "run_id": 42592853316,
+    "status": "in_progress",
+    "duplicate_launched": false
+  },
+  "local_verification": {
+    "python_syntax": "passed",
+    "workflow_yaml": "passed",
+    "workflow_shell_syntax": "passed",
+    "runtime_tests": "GitHub only"
+  },
+  "next": "Collect the existing corpus report first. After cloud contracts pass, measure complete OFF/ON MIDI lifetimes in one ordinary screen with separately pinned provenance; do not duplicate the corpus job.",
+  "initial_contract_run": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "run_id": 42596828308,
+    "run_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42596828308",
+    "source_commit": "b899921e511cee14ef878cce5ab8bcfe04389bdb",
+    "status": "completed",
+    "conclusion": "failure",
+    "observed_at": "2026-11-09T09:58:32.896184+00:00",
+    "failure": "One of 100 contracts failed: replay fixture emitted candidate rows outside the requested trace window.",
+    "correction": "Fixture now honors candidate-trace start/end bounds; no native algorithm change."
+  }
+}
