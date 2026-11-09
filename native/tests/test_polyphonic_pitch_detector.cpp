@@ -2012,7 +2012,8 @@ struct PolyphonicPitchDetectorTestAccess final {
       const double step = 2.0 * 3.14159265358979323846 *
                           midi_to_frequency(48U, 440.0) / 48000.0;
       for (std::size_t sample = 0U; sample < 30000U; ++sample) {
-        spectral.tracker.observe(0.1 * std::sin(step * sample));
+        spectral.tracker.observe(
+            0.1 * std::sin(step * static_cast<double>(sample)));
       }
       M3_EXPECT_TRUE(spectral.tracker.ready());
       spectral.templates = {};
