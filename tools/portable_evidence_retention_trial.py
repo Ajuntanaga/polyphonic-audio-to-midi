@@ -14,6 +14,7 @@ import time
 
 from tools.candidate_outcome_analysis import HEADER, _candidates, _frame
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
+from tools.midi_lifecycle_analysis import analyze_trace
 from tools.portable_assignment_trace import (compress_trace_window, digest, read_rows,
                                              select_labels, trace_sample_bounds, verify_inputs)
 from tools.portable_corpus_replay import SETTINGS, command_for
@@ -158,7 +159,8 @@ def summarize_calibrated_output(rows, outcomes, events, note):
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
-        calibrated_output_trace=False, projection_preview_trial=False):
+        calibrated_output_trace=False, projection_preview_trial=False,
+        capture_midi_lifecycle=False):
     if calibrated_output_trace and projection_preview_trial:
         raise ValueError('Choose either unchanged tracing or an OFF/ON trial')
     output.mkdir(parents=True, exist_ok=False)
@@ -202,8 +204,10 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
                       input_manifest_sha256=digest(manifest_path),
                       reference_report_sha256=digest(reference_path))
-        command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
-        reference_file, before = replay(command, 'reference-off')
+        reference_midi = output / 'reference-off-midi.tsv' if capture_midi_lifecycle else None
+        reference_command = command_for(binary, corpus, 'ordinary', 'off', 512, None,
+                                        midi_trace=reference_midi)
+        reference_file, before = replay(reference_command, 'reference-off')
         reference = json.loads(reference_path.read_text())['runs']['reference-off']
         identity = (digest(reference_file) == reference['tsv_sha256']
                     and before['output'] == reference['output'])
@@ -216,6 +220,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
         start, end = trace_sample_bounds([label], samples)
         traces = {kind: output / (kind + '.tsv') for kind in ('candidate', 'outcome', 'midi-event')}
+        command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
         if projection_preview_trial:
             command.append('--diagnostic-projection-preview-admission')
         elif not calibrated_output_trace:
@@ -225,7 +230,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         candidate_note = 41 if calibrated_output_trace or projection_preview_trial else 42
         command.extend(('--candidate-trace-note', str(candidate_note), '--candidate-trace-start', str(start / rate),
                         '--candidate-trace-end', str(end / rate)))
-        after_file, after = replay(command, 'traced-off' if calibrated_output_trace else 'trial-on')
+        trial_stem = 'traced-off' if calibrated_output_trace else 'trial-on'
+        after_file, after = replay(command, trial_stem)
         comparison = compare_replays(before, after)
         report.update(comparison=comparison, sample_rate=rate, sample_count=samples,
                       target_before=label, target_after=after['labels'][55],
@@ -236,6 +242,34 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             report['trace_semantic_identity'] = before == after
             if not report['trace_output_bit_identical'] or not report['trace_semantic_identity']:
                 raise ValueError('Traced OFF replay differs from untraced OFF replay')
+        if capture_midi_lifecycle:
+            # Pair full streams before retaining any diagnostic window. A note-on
+            # before that window can still be held inside the annotated interval.
+            for stem, events_path, replay_path in (
+                    ('reference-off', reference_midi, reference_file),
+                    (trial_stem, traces['midi-event'], after_file)):
+                report['runs'][stem]['midi_lifecycle'] = analyze_trace(events_path, replay_path)
+            off = report['runs']['reference-off']['midi_lifecycle']
+            on = report['runs'][trial_stem]['midi_lifecycle']
+            valid = off['coverage_valid'] and on['coverage_valid']
+            fields = ('exact_held_samples', 'longest_exact_hold_samples', 'note_ons_inside_label')
+            changes = None
+            if valid:
+                changes = []
+                for old, new in zip(off['labels'], on['labels'], strict=True):
+                    delta = {key: new[key] - old[key] for key in fields}
+                    if any(delta.values()):
+                        changes.append(dict(label_index=old['label_index'], delta=delta))
+            report['midi_lifecycle_comparison'] = dict(
+                baseline_run='reference-off', trial_run=trial_stem, coverage_valid=valid,
+                exact_held_samples_delta=(on['exact_held_samples'] - off['exact_held_samples']
+                                         if valid else None),
+                changed_labels=changes, acceptance_target='not measured',
+                interpretation='Complete detector event streams before host delivery. '
+                    'Duration changes are sample counts, not labeled-frame gains. '
+                    'Pairing anomalies suppress hold comparisons; open notes at EOF '
+                    'do not by themselves establish stuck MIDI. Screen eligibility '
+                    'still refers to labeled-frame/error checks, not live acceptance.')
         # Stream the full capture once; retain the small target window in memory.
         window = []
         with traces['outcome'].open(newline='') as stream:
@@ -257,8 +291,18 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 read_rows(traces['candidate']), window, events, candidate_note)
         report['traces'] = {}
         for kind, path in traces.items():
-            report['traces'][kind] = compress_trace_window(path, start=start, end=end)
+            full_midi = capture_midi_lifecycle and kind == 'midi-event'
+            report['traces'][kind] = compress_trace_window(
+                path, start=0 if full_midi else start, end=samples if full_midi else end)
+            if full_midi:
+                report['traces'][kind]['scope'] = 'Complete detector MIDI event stream, before host delivery.'
             path.unlink()
+        if capture_midi_lifecycle:
+            report['traces']['reference-off-midi'] = compress_trace_window(
+                reference_midi, start=0, end=samples)
+            report['traces']['reference-off-midi']['scope'] = (
+                'Complete detector MIDI event stream, before host delivery.')
+            reference_midi.unlink()
         report.update(state='completed', final=True, stage='offline screen collected',
                       decision='unchanged baseline; diagnostic collected' if calibrated_output_trace else
                                'eligible for wider validation' if comparison['gate_pass'] and
@@ -275,6 +319,8 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--capture-midi-lifecycle', action='store_true',
+                        help='Analyze and retain both complete detector MIDI streams before windowing')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--calibrated-output-trace', action='store_true',
                         help='Capture the unchanged OFF calibrated-output branch for logical note 41')
@@ -285,7 +331,8 @@ def main():
         parser.error('--replay-timeout-seconds must be positive')
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
         timeout=args.replay_timeout_seconds, calibrated_output_trace=args.calibrated_output_trace,
-        projection_preview_trial=args.projection_preview_trial)
+        projection_preview_trial=args.projection_preview_trial,
+        capture_midi_lifecycle=args.capture_midi_lifecycle)
 
 
 if __name__ == '__main__':

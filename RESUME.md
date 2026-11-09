@@ -1,3 +1,11 @@
+## 2026-11-09 — retain complete MIDI streams in the ordinary screen
+
+- The ordinary preview screen now accepts the same optional `--capture-midi-lifecycle` switch as the corpus runner. It pairs the full OFF and ON detector event streams before cropping the diagnostic traces, then retains both complete MIDI streams as compressed artifacts. A note that starts before the diagnostic window can therefore contribute its actual held duration inside a label.
+- The report compares raw held samples, longest holds and retriggers. Pairing anomalies suppress duration comparisons; incomplete event capture fails the run. These are detector events before host delivery. Labeled-frame screen eligibility remains separate from MIDI duration, and neither promotes the plugin for live use.
+- Added contracts for notes crossing the diagnostic window, incomplete streams and pairing anomalies. Python, workflow YAML and shell syntax pass locally. Runtime contracts must run on GitHub Actions; they have not passed for this extension yet. Capture remains off by default, with no native algorithm or installed setting change.
+- Existing corpus run `42592853316` retains its original source and remains the only corpus job. Do not duplicate it. Collect its small report first; a later ordinary lifecycle screen requires its own pinned source and worker revisions.
+- Storage cleanup is complete. The latest check found 89.11 GB free (83.0 GiB). The cleanup record reports about 5.75 GB net recovered, including 618 older session logs compressed. Source, recordings, installed plugins, recovery checkpoints and active conversations are preserved.
+
 ## 2026-11-09 — measure detector MIDI holds separately from tuner matches
 
 - Added optional `--capture-midi-lifecycle` to the corpus runner and `midi_lifecycle` to the worker dispatch. It captures the full detector event stream only on untimed 512-sample references. The timed 32-sample and buffer-comparison 1024-sample runs remain uninstrumented. Capture is off by default; no native algorithm or installed setting changes.

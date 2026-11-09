@@ -1,4 +1,5 @@
 import csv
+import gzip
 import io
 import json
 from pathlib import Path
@@ -11,16 +12,18 @@ from tools.portable_assignment_trace import digest
 from tools.portable_evidence_retention_trial import run, summarize_target, summarize_calibrated_output
 
 
-def replay_text(*, target=0, other=1, false_notes=0):
+def replay_text(*, target=0, other=1, false_notes=0, transitions=2, target_start=0):
     labels = [dict(label_index=i, start_sample=0, end_sample=192, midi_note=60,
                    string_mask=1, calibration_pass=0, labeled=3, matched=0)
               for i in range(56)]
     labels[0]['matched'] = other
-    labels[55].update(midi_note=42, matched=target)
+    labels[55].update(midi_note=42, matched=target, start_sample=target_start,
+                      labeled=(192 - target_start) // 64)
     output = {key: 0 for key in COUNTS}
-    output.update(labeled=168, matched=other + target,
+    output.update(labeled=sum(label['labeled'] for label in labels), matched=other + target,
                   false_wrong_note_voices=false_notes, false_positive_voices=false_notes,
-                  fingerprint='0123456789abcdef', samples=192, sample_rate=96000)
+                  fingerprint='0123456789abcdef', samples=192, sample_rate=96000,
+                  transitions=transitions)
     text = io.StringIO()
     aggregate = csv.DictWriter(text, fieldnames=output, delimiter='\t')
     aggregate.writeheader()
@@ -66,7 +69,7 @@ def calibrated_rows():
 
 
 class PortableEvidenceRetentionTrialTests(unittest.TestCase):
-    def fixture(self, root):
+    def fixture(self, root, *, baseline_text=None):
         corpus = root / 'corpus'
         corpus.mkdir()
         for name in ('ordinary.wav', 'ordinary.tsv', 'calibration.m3cb', 'templates.tsv'):
@@ -77,13 +80,14 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
         binary = root / 'replay'
         binary.write_text('fake binary; subprocess is mocked')
         baseline = root / 'baseline.tsv'
-        baseline.write_text(replay_text())
+        baseline.write_text(replay_text() if baseline_text is None else baseline_text)
         reference = root / 'reference.json'
         reference.write_text(json.dumps({'runs': {'reference-off': {
             'tsv_sha256': digest(baseline), 'output': read_replay(baseline)['output']}}}))
         return binary, corpus, manifest, reference, root / 'output'
 
-    def replay_stub(self, after, *, calibrated=False, projection=False):
+    def replay_stub(self, after, *, calibrated=False, projection=False, before=None,
+                    full_midi=False, invalid_pair=False):
         def replay(command, *, stdout, stderr, check, timeout):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
@@ -97,22 +101,33 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
                 self.assertFalse(enabled)
                 if traced:
                     self.assertEqual(command[command.index('--candidate-trace-note') + 1], '41')
-            stdout.write(after if traced else replay_text())
+            stdout.write(after if traced else (replay_text() if before is None else before))
             if traced:
-                for kind in ('candidate', 'outcome', 'midi-event'):
+                for kind in ('candidate', 'outcome'):
                     path = Path(command[command.index('--' + kind + '-trace') + 1])
                     if kind == 'outcome':
                         rows = outcome_rows()
                     elif kind == 'candidate':
                         rows = (calibrated_rows() if calibrated or projection else
                                 [dict(sample=row['sample'], note='42') for row in outcome_rows()])
-                    else:
-                        rows = [dict(sample='127', kind='on', note='42', voice_id='8'),
-                                dict(sample='191', kind='off', note='42', voice_id='8')]
                     with path.open('w') as stream:
                         writer = csv.DictWriter(stream, fieldnames=rows[0], delimiter='\t')
                         writer.writeheader()
                         writer.writerows(rows)
+            if '--midi-event-trace' in command:
+                self.assertEqual(command.count('--midi-event-trace'), 1)
+                path = Path(command[command.index('--midi-event-trace') + 1])
+                note = 42 if traced else 41
+                onset = 63 if full_midi else 127
+                rows = [dict(sample=onset if traced else 0, kind='on', note=note,
+                             velocity=100, voice_id=0, sequence=1),
+                        dict(sample=191, kind='off', note=43 if traced and invalid_pair else note,
+                             velocity=0, voice_id=0, sequence=2)]
+                with path.open('w') as stream:
+                    stream.write('# m3_midi_events_v1\n')
+                    writer = csv.DictWriter(stream, fieldnames=rows[0], delimiter='\t')
+                    writer.writeheader()
+                    writer.writerows(rows)
         return replay
 
     def test_target_requires_complete_trace_and_does_not_infer_midi_from_state(self):
@@ -219,6 +234,72 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             for trace in result['traces'].values():
                 self.assertEqual(digest(args[4] / trace['file']), trace['sha256'])
             self.assertFalse((args[4] / 'outcome.tsv').exists())
+            self.assertNotIn('midi_lifecycle_comparison', result)
+            self.assertNotIn('midi_lifecycle', result['runs']['reference-off'])
+            self.assertFalse((args[4] / 'reference-off-midi.tsv.gz').exists())
+
+    def test_optional_lifetimes_use_and_retain_events_before_the_diagnostic_window(self):
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = replay_text(target_start=128)
+            args = self.fixture(Path(directory), baseline_text=baseline)
+            with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                       side_effect=self.replay_stub(replay_text(target=1, target_start=128),
+                           projection=True, before=baseline, full_midi=True)) as replay:
+                run(*args, projection_preview_trial=True, capture_midi_lifecycle=True)
+            result = json.loads((args[4] / 'report.json').read_text())
+            self.assertEqual(replay.call_count, 2)
+            self.assertTrue(result['off_reference_bit_identical'])
+            self.assertFalse(result['promotion_accepted'])
+            off = result['runs']['reference-off']['midi_lifecycle']
+            on = result['runs']['trial-on']['midi_lifecycle']
+            self.assertTrue(off['coverage_valid'] and on['coverage_valid'])
+            self.assertEqual(off['labels'][55]['exact_held_samples'], 0)
+            self.assertEqual(on['labels'][55]['exact_held_samples'], 63)
+            self.assertEqual(on['labels'][55]['note_ons_inside_label'], 0)
+            self.assertEqual(result['midi_lifecycle_comparison']['exact_held_samples_delta'], 63)
+            self.assertEqual(result['midi_lifecycle_comparison']['changed_labels'], [
+                dict(label_index=55, delta=dict(exact_held_samples=63,
+                     longest_exact_hold_samples=63, note_ons_inside_label=0))])
+            for name, first_sample in (('reference-off-midi', 0), ('midi-event', 63)):
+                trace = result['traces'][name]
+                self.assertEqual(trace['discarded_rows'], 0)
+                self.assertEqual(trace['retained_rows'], 2)
+                self.assertEqual(trace['raw_sha256'], trace['captured_raw_sha256'])
+                self.assertEqual(digest(args[4] / trace['file']), trace['sha256'])
+                with gzip.open(args[4] / trace['file'], 'rt') as stream:
+                    self.assertEqual(stream.readline().strip(), '# m3_midi_events_v1')
+                    rows = list(csv.DictReader(stream, delimiter='\t'))
+                self.assertEqual(int(rows[0]['sample']), first_sample)
+            self.assertEqual(result['traces']['outcome']['start_sample_inclusive'], 64)
+
+    def test_incomplete_midi_stream_fails_before_trace_retention(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.fixture(Path(directory))
+            with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                       side_effect=self.replay_stub(replay_text(target=2, transitions=3),
+                                                   projection=True)):
+                with self.assertRaisesRegex(ValueError, 'differs from replay transition count'):
+                    run(*args, projection_preview_trial=True, capture_midi_lifecycle=True)
+            result = json.loads((args[4] / 'report.json').read_text())
+            self.assertEqual(result['state'], 'failed')
+            self.assertFalse(result['promotion_accepted'])
+            self.assertTrue((args[4] / 'midi-event.tsv').exists())
+            self.assertFalse((args[4] / 'midi-event.tsv.gz').exists())
+
+    def test_pairing_anomalies_do_not_produce_a_held_note_improvement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.fixture(Path(directory))
+            with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                       side_effect=self.replay_stub(replay_text(target=2), projection=True,
+                                                   invalid_pair=True)):
+                run(*args, projection_preview_trial=True, capture_midi_lifecycle=True)
+            result = json.loads((args[4] / 'report.json').read_text())
+            self.assertFalse(result['midi_lifecycle_comparison']['coverage_valid'])
+            self.assertIsNone(result['midi_lifecycle_comparison']['exact_held_samples_delta'])
+            self.assertIsNone(result['midi_lifecycle_comparison']['changed_labels'])
+            self.assertEqual(result['runs']['trial-on']['midi_lifecycle']['event_error_counts'],
+                             dict(note_off_without_matching_note_on=1))
+            self.assertFalse(result['promotion_accepted'])
 
     def test_baseline_trace_requires_identity_and_retains_actual_branch(self):
         with tempfile.TemporaryDirectory() as directory:

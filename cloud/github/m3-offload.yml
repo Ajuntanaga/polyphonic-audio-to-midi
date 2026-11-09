@@ -18,7 +18,7 @@ on:
         options: [physical-middle, physical-highmid, physical-high, physical-long, ordinary]
         default: physical-middle
       midi_lifecycle:
-        description: Capture full detector note lifetimes on untimed corpus references only
+        description: Capture full detector note lifetimes on untimed corpus or ordinary preview replays
         type: boolean
         default: false
       note:
@@ -70,7 +70,7 @@ jobs:
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
           if [[ "$TASK" = routing-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 52; test "$LABEL_INDEX" = 54; fi
-          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus ]]; fi
+          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
         with:
@@ -156,7 +156,9 @@ jobs:
           cmake --build build/portable --target m3_detector_tests m3_motion_tests --parallel 2 2>&1 | tee build/github-results/lifecycle-build.log
           M3_TEST_FILTER=native_detector_projection_preview_admission_preserves_onset_boundaries build/portable/m3_detector_tests 2>&1 | tee build/github-results/lifecycle-test.log
           M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
-          python3 -B -m tools.portable_evidence_retention_trial --projection-preview-trial --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-ordinary-assignment-20261109.json --output build/github-results/projection-preview 2>&1 | tee build/github-results/runner.log
+          midi_args=()
+          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then midi_args+=(--capture-midi-lifecycle); fi
+          python3 -B -m tools.portable_evidence_retention_trial --projection-preview-trial "${midi_args[@]}" --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-ordinary-assignment-20261109.json --output build/github-results/projection-preview 2>&1 | tee build/github-results/runner.log
       - name: Trace the rejected trial string transfer without changing output
         if: inputs.task == 'routing-trace'
         working-directory: source
