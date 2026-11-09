@@ -108,6 +108,9 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   [[nodiscard]] bool corpus_output_blocked() const noexcept {
     return generated_notes_.output_blocked();
   }
+  [[nodiscard]] bool corpus_panic_hold() const noexcept {
+    return generated_notes_.panic_hold();
+  }
 #endif
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {

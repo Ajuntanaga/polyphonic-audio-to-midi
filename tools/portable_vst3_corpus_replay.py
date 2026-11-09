@@ -61,7 +61,7 @@ def verify_inputs(corpus, manifest, reference, source_sha):
     return verified, clock
 
 
-def read_callbacks(path, *, sample_count, expected_count):
+def read_callbacks(path, *, sample_count, expected_count, include_events=False):
     events = []
     with Path(path).open(newline='') as stream:
         if stream.readline().rstrip('\r\n') != '# m3_vst3_corpus_events_v1':
@@ -90,9 +90,12 @@ def read_callbacks(path, *, sample_count, expected_count):
     if len(events) != expected_count:
         raise ValueError('Callback count differs from native report')
     conflicts = raw_conflicts(events)
-    return dict(counts=conflicts['counts'], examples=conflicts['examples'],
+    result = dict(counts=conflicts['counts'], examples=conflicts['examples'],
         note_ons_open_at_eof=conflicts['raw_note_ons_open_at_eof'],
         observed_events=len(events), scope='Accepted VST3 callbacks, by channel and noteId')
+    if include_events:
+        result['events'] = events
+    return result
 
 
 def assess(native, callbacks, *, clock, sample_bits, trial):
