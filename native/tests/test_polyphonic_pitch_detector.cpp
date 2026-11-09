@@ -17,6 +17,52 @@
 namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
+  static void guard_updates_match_enabled_scan(
+      PolyphonicPitchDetector& detector, std::size_t expected_enabled) noexcept {
+    auto lower = detector.lower_cents_guard_cells_;
+    auto upper = detector.upper_cents_guard_cells_;
+    std::size_t enabled = 0U;
+    for (const auto& cell : lower) {
+      enabled += cell.enabled ? 1U : 0U;
+    }
+    for (const auto& cell : upper) {
+      enabled += cell.enabled ? 1U : 0U;
+    }
+    M3_EXPECT_EQ(enabled, expected_enabled);
+    const auto expect_cells = [](const auto& actual,
+                                 const auto& expected) noexcept {
+      for (std::size_t index = 0U; index < actual.size(); ++index) {
+        M3_EXPECT_EQ(actual[index].cosine, expected[index].cosine);
+        M3_EXPECT_EQ(actual[index].sine, expected[index].sine);
+        M3_EXPECT_EQ(actual[index].fast_real, expected[index].fast_real);
+        M3_EXPECT_EQ(actual[index].fast_imaginary, expected[index].fast_imaginary);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        M3_EXPECT_EQ(actual[index].diagnostic_selection_real,
+                     expected[index].diagnostic_selection_real);
+        M3_EXPECT_EQ(actual[index].diagnostic_selection_imaginary,
+                     expected[index].diagnostic_selection_imaginary);
+#endif
+      }
+    };
+    constexpr std::array<double, 4U> samples{0.25, -0.5, 0.125, 0.0};
+    for (std::size_t index = 0U; index < 32U; ++index) {
+      const double sample = samples[index % samples.size()];
+      const double dc_blocked = sample - detector.previous_input_ +
+                               detector.dc_pole * detector.previous_dc_output_;
+      // Keep the former enabled-cell scan as the reference, including cells
+      // excluded by the harmonic limit or sample-rate cutoff.
+      for (auto& cell : lower) {
+        if (cell.enabled) detector.update_cell(cell, dc_blocked);
+      }
+      for (auto& cell : upper) {
+        if (cell.enabled) detector.update_cell(cell, dc_blocked);
+      }
+      (void)detector.process_sample(sample);
+      expect_cells(detector.lower_cents_guard_cells_, lower);
+      expect_cells(detector.upper_cents_guard_cells_, upper);
+    }
+  }
+
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   static void residual_recovery_guards(PolyphonicPitchDetector& detector) noexcept {
     enum class Case {
@@ -4863,6 +4909,24 @@ struct PolyphonicPitchDetectorTestAccess final {
 };
 
 }  // namespace m3
+
+M3_TEST(native_detector_guard_updates_survive_reset_and_reconfiguration) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::general;
+  config.lowest_note = 40U;
+  config.highest_note = 84U;
+  constexpr std::array<double, 4U> rates{96000.0, 4000.0, 100.0, 96000.0};
+  constexpr std::array<std::size_t, 4U> enabled{9U, 7U, 0U, 9U};
+  for (std::size_t index = 0U; index < rates.size(); ++index) {
+    M3_EXPECT_TRUE(detector.configure(rates[index], config));
+    m3::PolyphonicPitchDetectorTestAccess::guard_updates_match_enabled_scan(
+        detector, enabled[index]);
+    detector.reset();
+    m3::PolyphonicPitchDetectorTestAccess::guard_updates_match_enabled_scan(
+        detector, enabled[index]);
+  }
+}
 
 M3_TEST(native_detector_quiet_diagnostics_identify_the_first_causal_gate) {
   using m3::PolyphonicPitchDetectorTestAccess;

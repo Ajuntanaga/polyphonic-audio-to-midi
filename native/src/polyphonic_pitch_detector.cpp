@@ -1470,6 +1470,10 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   enabled_cell_count_ = 0U;
   lower_cents_guard_cells_ = {};
   upper_cents_guard_cells_ = {};
+  lower_cents_guard_indices_ = {};
+  upper_cents_guard_indices_ = {};
+  lower_cents_guard_count_ = 0U;
+  upper_cents_guard_count_ = 0U;
   if (!valid_config(sample_rate, config)) {
     reset();
     return false;
@@ -1558,6 +1562,8 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   }
   const auto configure_guard = [this, &config](
                                    std::array<Cell, kHarmonicCount>& cells,
+                                   std::array<std::uint8_t, kHarmonicCount>& indices,
+                                   std::uint8_t& count,
                                    std::uint8_t note) noexcept {
     const std::uint8_t partials = harmonic_limit(note);
     for (std::size_t harmonic = 0U; harmonic < partials; ++harmonic) {
@@ -1574,11 +1580,16 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
       cell.sine_step = std::sin(rotation);
       cell.enabled = std::isfinite(cell.cosine_step) &&
                      std::isfinite(cell.sine_step);
+      if (cell.enabled) {
+        indices[count++] = static_cast<std::uint8_t>(harmonic);
+      }
     }
   };
   configure_guard(lower_cents_guard_cells_,
+                  lower_cents_guard_indices_, lower_cents_guard_count_,
                   static_cast<std::uint8_t>(config.lowest_note - 1U));
   configure_guard(upper_cents_guard_cells_,
+                  upper_cents_guard_indices_, upper_cents_guard_count_,
                   static_cast<std::uint8_t>(config.highest_note + 1U));
   configured_ = true;
   reset();
@@ -11921,15 +11932,13 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
   for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
     update_cell(cells_[enabled_cell_indices_[index]], dc_blocked);
   }
-  for (Cell& cell : lower_cents_guard_cells_) {
-    if (cell.enabled) {
-      update_cell(cell, dc_blocked);
-    }
+  for (std::size_t index = 0U; index < lower_cents_guard_count_; ++index) {
+    update_cell(lower_cents_guard_cells_[lower_cents_guard_indices_[index]],
+                dc_blocked);
   }
-  for (Cell& cell : upper_cents_guard_cells_) {
-    if (cell.enabled) {
-      update_cell(cell, dc_blocked);
-    }
+  for (std::size_t index = 0U; index < upper_cents_guard_count_; ++index) {
+    update_cell(upper_cents_guard_cells_[upper_cents_guard_indices_[index]],
+                dc_blocked);
   }
   if (profile_mode_ == ProfileMode::m3 && max_fret_ <= 2U) {
     const double narrow_mix = 1.0 - narrow_correlation_decay;

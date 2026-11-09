@@ -1404,6 +1404,10 @@ class PolyphonicPitchDetector final {
   // tunable without adding selectable candidates to the pitch set.
   std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};
   std::array<Cell, kHarmonicCount> upper_cents_guard_cells_{};
+  std::array<std::uint8_t, kHarmonicCount> lower_cents_guard_indices_{};
+  std::array<std::uint8_t, kHarmonicCount> upper_cents_guard_indices_{};
+  std::uint8_t lower_cents_guard_count_{};
+  std::uint8_t upper_cents_guard_count_{};
   std::array<CandidateState, kMaxCandidates> candidate_states_{};
   std::array<std::uint8_t, kMaxCandidates> playable_string_masks_{};
   std::array<double, kMaxCandidates> narrow_fundamental_real_{};
