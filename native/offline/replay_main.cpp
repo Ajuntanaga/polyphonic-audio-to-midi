@@ -1149,6 +1149,7 @@ int main(int argc, char** argv) {
     const auto number = [](std::uint64_t value) { return static_cast<unsigned long long>(value); };
     bool failed = std::fprintf(stream,
         "{\"schema\":\"m3_replay_core_timing_v1\",\"sample_rate\":%u,\"block_samples\":%zu,"
+        "\"measurement_scope\":\"detector_and_optional_cues_without_offline_frequency_observer\","
         "\"fingerprint\":\"%016llx\",\"fingerprint_identical\":%s,"
         "\"blocks\":%llu,\"total_ns\":%llu,\"p99_ns\":%llu,\"maximum_ns\":%llu,"
         "\"half_budget_overruns\":%llu,\"deadline_overruns\":%llu,"

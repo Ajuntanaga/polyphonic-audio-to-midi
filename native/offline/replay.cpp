@@ -238,6 +238,13 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
   std::vector<DetectorDecision> decisions(block);
   std::vector<std::uint64_t> times((wave.mono_samples.size() + block - 1U) / block);
   std::vector<std::uint64_t> cpu_times(thread_cpu ? times.size() : 0U);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // The scored pass has already consumed this observer's tables. Its offline
+  // mask vectors allocate; they are not part of detector/cue processing.
+  // Keep the detector's decision settings unchanged and verify the timed
+  // output fingerprint against the scored pass after measurement.
+  detector.set_frequency_refinement_observer(nullptr, nullptr);
+#endif
   detector.reset();
   if (cues != nullptr) cues->reset();
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)

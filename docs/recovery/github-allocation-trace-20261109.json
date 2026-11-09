@@ -1,0 +1,126 @@
+{
+  "schema": "m3_allocation_trace_v1",
+  "state": "completed",
+  "final": true,
+  "stage": "allocation diagnosis collected",
+  "dataset": "physical-long",
+  "mode": "off",
+  "block_samples": 32,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "58b55840abd51de27f4a7f9dc5f031cee247f992",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42541481679",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "verified_inputs": 4,
+  "input_manifest_sha256": "33f75e45e217f07c993e47e7417278995133b1beef4038ab7c66888471d12efe",
+  "binary_sha256": "ee640332e80ec53d6383e9dc0d17eed165d133414ba8ae3c1a3ffb8f48315e16",
+  "baseline_report_sha256": "1c0cdf82da87abde82709a6c20de3558526e23b3f520f7f635b1cf05b8d2cc13",
+  "baseline_source": {
+    "base_commit": "6cb88d5011c6170371bd82c59091dbc5d162f192",
+    "archive_sha256": "82483d163b917f1ea4a2aba39872c6709031a5510df7cbf584af1c96029c9b2d",
+    "manifest_sha256": "202367fa290ea50d0b33f06ffb18423cc0e4e16388d0a038de49810de62bf000"
+  },
+  "output": {
+    "labeled": 68441,
+    "matched": 41452,
+    "false_wrong_note_voices": 67769,
+    "false_wrong_string_voices": 2709,
+    "false_gap_voices": 5403,
+    "false_positive_voices": 75881,
+    "fingerprint": "519bc0f9f4710566"
+  },
+  "exact_matches_by_string_count": {
+    "2": {
+      "labeled": 29063,
+      "matched": 16233
+    },
+    "3": {
+      "labeled": 39378,
+      "matched": 25219
+    }
+  },
+  "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+  "timing": {
+    "schema": "m3_replay_core_timing_v1",
+    "sample_rate": 96000,
+    "block_samples": 32,
+    "fingerprint": "519bc0f9f4710566",
+    "fingerprint_identical": true,
+    "blocks": 176464,
+    "total_ns": 12769334709,
+    "p99_ns": 142207,
+    "maximum_ns": 12672206,
+    "half_budget_overruns": 916,
+    "deadline_overruns": 698,
+    "allocation_guard": true,
+    "cpp_allocations": 3053,
+    "cpp_frees": 3050,
+    "c_allocations": 3053,
+    "c_frees": 3050,
+    "timing_diagnostic_only": true,
+    "allocation_trace": {
+      "scope": "C++ new calls on the replay thread inside measured blocks; includes clock reads; C and C++ counters may overlap",
+      "events": 3053,
+      "dropped": 0,
+      "capacity": 64,
+      "callsites": [
+        {
+          "return_address": "0x47cb6c",
+          "count": 3053,
+          "bytes": 13289192
+        }
+      ]
+    }
+  },
+  "recorded_reference_bit_identical": true,
+  "gates": {
+    "timed_scored_identity": true,
+    "zero_processing_allocations": false,
+    "timing_pass": false
+  },
+  "trace_checks": {
+    "counter_accounting": true,
+    "all_callsites_retained": true,
+    "allocation_reproduced": true
+  },
+  "callsites": [
+    {
+      "return_address": "0x47cb6c",
+      "count": 3053,
+      "bytes": 13289192,
+      "lookup_address": "0x47cb6b",
+      "symbols": [
+        "std::__new_allocator<m3::offline::FrequencyRefinementMask>::allocate(unsigned long, void const*)",
+        "/usr/include/c++/13/bits/new_allocator.h:151",
+        "std::allocator_traits<std::allocator<m3::offline::FrequencyRefinementMask> >::allocate(std::allocator<m3::offline::FrequencyRefinementMask>&, unsigned long)",
+        "/usr/include/c++/13/bits/alloc_traits.h:482",
+        "std::_Vector_base<m3::offline::FrequencyRefinementMask, std::allocator<m3::offline::FrequencyRefinementMask> >::_M_allocate(unsigned long)",
+        "/usr/include/c++/13/bits/stl_vector.h:381",
+        "std::_Vector_base<m3::offline::FrequencyRefinementMask, std::allocator<m3::offline::FrequencyRefinementMask> >::_M_allocate(unsigned long)",
+        "/usr/include/c++/13/bits/stl_vector.h:378",
+        "void std::vector<m3::offline::FrequencyRefinementMask, std::allocator<m3::offline::FrequencyRefinementMask> >::_M_realloc_insert<m3::offline::FrequencyRefinementMask const&>(__gnu_cxx::__normal_iterator<m3::offline::FrequencyRefinementMask*, std::vector<m3::offline::FrequencyRefinementMask, std::allocator<m3::offline::FrequencyRefinementMask> > >, m3::offline::FrequencyRefinementMask const&)",
+        "/usr/include/c++/13/bits/vector.tcc:459"
+      ],
+      "resolved": true
+    }
+  ],
+  "all_callsites_resolved": true,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42541481679",
+  "interpretation": "All 3053 C++ allocation events originate in offline FrequencyRefinementMask vector growth. The timed replay retained a scoring observer. C/C++ hooks overlap; instrumented timing is diagnostic-only. Detaching the observer is a measurement correction, not a production speed improvement."
+}

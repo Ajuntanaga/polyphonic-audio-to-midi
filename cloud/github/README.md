@@ -34,6 +34,15 @@ overflow. C and C++ hook counts overlap and must not be added together. The
 instrumented timings cannot satisfy real-time acceptance; the ordinary build
 keeps tracing off.
 
+`core-check` runs physical-long OFF and ON at block 32 using the ordinary
+build. The scored pass retains its diagnostic observer; the timed pass detaches
+that observer so its heap-backed report tables do not count as detector work.
+Both complete replay files must match their retained references, and timed
+output must match scored output. The report checks allocations and timing
+separately. This corrects the measurement scope; it does not imply a production
+speed improvement or change installed output. A failed timing gate remains a
+failed core check even when allocation and output checks pass.
+
 `corpus-recovery` recreates the full OFF/ON reference set. Start it only when
 no equivalent recovery is active. Legacy Kaggle version 2 is complete and its
 final outputs are collected: fourteen OFF references, one ON dataset, and no
