@@ -6,7 +6,9 @@ This passes the saved-event ledger gate in both routing modes. The replay is ope
 
 The preceding ordinary screen still supplies the note scores: 145385 to 145400/528632 matches (27.5021% to 27.5050%), no lost passage matches, wrong-string outputs 92653 to 92638, wrong-note outputs unchanged at 164263 and extra outputs during unlabeled gaps unchanged at 62856. Raw cross-pitch lane conflicts fall from 652 to zero. These tuner scores and raw-event counts are separate from live MIDI quality.
 
-Next: run this ownership revision across all fourteen protected recordings. Require no passage loss or false-output increase, no raw-event regression, bit-identical OFF references, buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. The corpus runner also captures complete raw MIDI for held-note measurements. Its report now names the current ownership revision instead of the superseded pending-attack trial. Other corpus results, new native timing and live-host acceptance remain open.
+Full corpus run `42643461303` is now replaying all fourteen recordings on GitHub at source `78395c30de96cdc34c31b5c6549660a728515f4a`. Follow this existing run; do not dispatch another. Its local checkpoint is `docs/recovery/github-independent-midi-corpus-20261109.json`.
+
+Next: collect this run and assess the ownership revision across all fourteen protected recordings. Require no passage loss or false-output increase, no raw-event regression, bit-identical OFF references, buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. The corpus runner also captures complete raw MIDI for held-note measurements. Its report now names the current ownership revision instead of the superseded pending-attack trial. Other corpus results, new native timing and live-host acceptance remain open.
 
 ## 2026-11-09 — independent MIDI ownership clears the ordinary raw conflicts
 
