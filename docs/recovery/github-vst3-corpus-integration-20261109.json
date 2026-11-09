@@ -1,0 +1,389 @@
+{
+  "schema": "m3_github_vst3_corpus_integration_checkpoint_v1",
+  "task": "recorded-vst3-integration",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42650747522,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42650747522",
+  "source_commit": "de0d6b487eef80e7edf1201e7dcef9ac8e14104a",
+  "worker_commit": "1371d89d2fdca1b2221acb85010c0fcbd63da909",
+  "created_at": "2026-11-09T16:02:49Z",
+  "completed_at": "2026-11-09T16:04:56Z",
+  "observed_at": "2026-11-09T16:06:57.181727+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "stage": "Ordinary recording passes the actual VST3 component integration gate in both sample formats",
+  "output_target": "build/github-results/vst3-corpus-integration-42650747522",
+  "report_relative_path": "vst3-corpus/report.json",
+  "report": "build/github-results/vst3-corpus-integration-42650747522/vst3-corpus/report.json",
+  "report_sha256": "2ef79c97e8e5e5f4ecd3d9267ae741ed1c5c5f9683f29256ec35d928abf8d67f",
+  "report_observed_at": "2026-11-09T16:04:51.501725+00:00",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-vst3-corpus-integration-20261109.json",
+  "previous_ledger_checkpoint": "docs/recovery/github-independent-midi-ledger-20261109.json",
+  "protected_corpus_checkpoint": "docs/recovery/github-independent-midi-corpus-20261109.json",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "de0d6b487eef80e7edf1201e7dcef9ac8e14104a",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42650747522",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "verified_input_sha256": {
+    "ordinary.wav": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+    "calibration.m3cb": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997"
+  },
+  "binary_sha256": "76bd5928d445fba66dacceae85d0a1864502c5983aeab56f2dabab66b309d3be",
+  "recording_clock": {
+    "sample_count": 10689600,
+    "sample_rate": 96000
+  },
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "routing": "per_voice",
+  "block_samples": 512,
+  "scope": "Offline instrumented M3 VST3 component with an accepting test event list, restored calibration, canonical M3 settings, per-voice routing and no control changes. Detection is gated by the actual production ledger. Accepted callbacks are not external DAW or device delivery. Label matches, allocation, timing and rejection recovery are not measured. EOF opens are retained before teardown; no forced release or extra silence is injected, and an EOF open alone is not a stuck MIDI note.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "decision": "offline integration gate passed",
+  "integration_gate_pass": true,
+  "on_format_gates_passed": 2,
+  "on_format_gates_total": 2,
+  "native_timing": "not measured",
+  "processing_allocations": "not measured",
+  "labeled_note_matches": "not measured",
+  "external_host_delivery": "not measured",
+  "control_and_rejection_recovery": "not measured",
+  "callbacks_bit_identical_between_sample_formats": true,
+  "artifacts": [
+    {
+      "id": 13690460711,
+      "name": "m3-vst3-report-42650747522-1",
+      "bytes": 12042,
+      "sha256": "8070a3dff4ee3701d5679303b831a55c2ebd1568950903ae0953ccefeb95c79f",
+      "expires_at": "2026-11-23T16:04:51Z",
+      "downloaded_once": true,
+      "archive_hash_verified": true
+    },
+    {
+      "id": 13690191210,
+      "name": "m3-vst3-evidence-42650747522-1",
+      "bytes": 13874546,
+      "sha256": "7009bf56998cc7142cc1b084ae80d53422e1a9f92cbde4de0a62ffefd3d13cad",
+      "expires_at": "2026-11-16T16:04:52Z",
+      "downloaded_once": false
+    }
+  ],
+  "runs": {
+    "off-32": {
+      "native": {
+        "schema": "m3_vst3_corpus_native_v1",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 32,
+        "block_samples": 512,
+        "trial": false,
+        "routing": "per_voice",
+        "processed_samples": 10689600,
+        "blocks": 20879,
+        "detector_samples": 203776,
+        "detector_transitions": 48,
+        "queue_rejections": 0,
+        "event_add_attempts": 46,
+        "accepted_events": 46,
+        "output_blocked_blocks": 20482,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "output_blocked_at_eof": true,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "first_blocked_sample": 203264
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [],
+        "observed_events": 46,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "full_audio_processed": true,
+        "full_detector_coverage": false,
+        "no_output_faults": false,
+        "all_transitions_delivered": false,
+        "accepting_event_list": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": false,
+      "samples_not_analyzed": 10485824,
+      "elapsed_seconds": 0.36517148199999383,
+      "trace": {
+        "file": "off-32/callbacks.tsv.gz",
+        "bytes": 473,
+        "sha256": "4f6093d103b78bb9a2946b309032930dcfcac020ebe4f31e7f99f37f7abc01b5",
+        "raw_bytes": 1349,
+        "raw_sha256": "7ceda9878dc19a0de23afb9b2859efd492e0fe39580c0aa922a6d63db7f624c2"
+      }
+    },
+    "on-32": {
+      "native": {
+        "schema": "m3_vst3_corpus_native_v1",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 32,
+        "block_samples": 512,
+        "trial": true,
+        "routing": "per_voice",
+        "processed_samples": 10689600,
+        "blocks": 20879,
+        "detector_samples": 10689600,
+        "detector_transitions": 11851,
+        "queue_rejections": 0,
+        "event_add_attempts": 11851,
+        "accepted_events": 11851,
+        "output_blocked_blocks": 0,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "output_blocked_at_eof": false,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "first_blocked_sample": null
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "velocity": 0.251968503,
+            "voice_id": 0,
+            "sequence": 11849,
+            "sample": 10627135,
+            "note": 44,
+            "note_id": -1044,
+            "channel": 0
+          }
+        ],
+        "observed_events": 11851,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "full_audio_processed": true,
+        "full_detector_coverage": true,
+        "no_output_faults": true,
+        "all_transitions_delivered": true,
+        "accepting_event_list": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": true,
+      "samples_not_analyzed": 0,
+      "elapsed_seconds": 8.941287708000004,
+      "trace": {
+        "file": "on-32/callbacks.tsv.gz",
+        "bytes": 61485,
+        "sha256": "4c146fbe21dd0c0bcd14d55ee129b6b13bf763422d0eb6ebbd8437b25f8abd1b",
+        "raw_bytes": 347855,
+        "raw_sha256": "5bd5b27233131beff78398f0d5dc671d372674015d62ab56ea85f5a0afbc952d"
+      }
+    },
+    "off-64": {
+      "native": {
+        "schema": "m3_vst3_corpus_native_v1",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 64,
+        "block_samples": 512,
+        "trial": false,
+        "routing": "per_voice",
+        "processed_samples": 10689600,
+        "blocks": 20879,
+        "detector_samples": 203776,
+        "detector_transitions": 48,
+        "queue_rejections": 0,
+        "event_add_attempts": 46,
+        "accepted_events": 46,
+        "output_blocked_blocks": 20482,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "output_blocked_at_eof": true,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "first_blocked_sample": 203264
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [],
+        "observed_events": 46,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "full_audio_processed": true,
+        "full_detector_coverage": false,
+        "no_output_faults": false,
+        "all_transitions_delivered": false,
+        "accepting_event_list": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": false,
+      "samples_not_analyzed": 10485824,
+      "elapsed_seconds": 0.3650652990000083,
+      "trace": {
+        "file": "off-64/callbacks.tsv.gz",
+        "bytes": 473,
+        "sha256": "4f6093d103b78bb9a2946b309032930dcfcac020ebe4f31e7f99f37f7abc01b5",
+        "raw_bytes": 1349,
+        "raw_sha256": "7ceda9878dc19a0de23afb9b2859efd492e0fe39580c0aa922a6d63db7f624c2"
+      }
+    },
+    "on-64": {
+      "native": {
+        "schema": "m3_vst3_corpus_native_v1",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 64,
+        "block_samples": 512,
+        "trial": true,
+        "routing": "per_voice",
+        "processed_samples": 10689600,
+        "blocks": 20879,
+        "detector_samples": 10689600,
+        "detector_transitions": 11851,
+        "queue_rejections": 0,
+        "event_add_attempts": 11851,
+        "accepted_events": 11851,
+        "output_blocked_blocks": 0,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "output_blocked_at_eof": false,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "first_blocked_sample": null
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "velocity": 0.251968503,
+            "voice_id": 0,
+            "sequence": 11849,
+            "sample": 10627135,
+            "note": 44,
+            "note_id": -1044,
+            "channel": 0
+          }
+        ],
+        "observed_events": 11851,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "full_audio_processed": true,
+        "full_detector_coverage": true,
+        "no_output_faults": true,
+        "all_transitions_delivered": true,
+        "accepting_event_list": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": true,
+      "samples_not_analyzed": 0,
+      "elapsed_seconds": 8.888864713999993,
+      "trace": {
+        "file": "on-64/callbacks.tsv.gz",
+        "bytes": 61485,
+        "sha256": "4c146fbe21dd0c0bcd14d55ee129b6b13bf763422d0eb6ebbd8437b25f8abd1b",
+        "raw_bytes": 347855,
+        "raw_sha256": "5bd5b27233131beff78398f0d5dc671d372674015d62ab56ea85f5a0afbc952d"
+      }
+    }
+  },
+  "delta_on_minus_off": {
+    "32": {
+      "detector_samples": 10485824,
+      "detector_transitions": 11803,
+      "accepted_events": 11805,
+      "queue_rejections": 0,
+      "output_blocked_blocks": -20482
+    },
+    "64": {
+      "detector_samples": 10485824,
+      "detector_transitions": 11803,
+      "accepted_events": 11805,
+      "queue_rejections": 0,
+      "output_blocked_blocks": -20482
+    }
+  },
+  "source_verification": [
+    {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "run_id": 42650708172,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "de0d6b487eef80e7edf1201e7dcef9ac8e14104a",
+      "completed_at": "2026-11-09T16:05:52Z",
+      "installed": false
+    },
+    {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "run_id": 42650708175,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "de0d6b487eef80e7edf1201e7dcef9ac8e14104a"
+    }
+  ],
+  "next_step": "Collect existing corpus run 42643461303. Require no passage loss or false-output increase, no raw MIDI regression, OFF and buffer identity, zero processing allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. Held-note quality, control/rejection recovery and external-host acceptance remain separate."
+}

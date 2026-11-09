@@ -1,3 +1,15 @@
+## 2026-11-09 — recorded audio passes the VST3 integration gate
+
+GitHub run `42650747522` completed at source `de0d6b487eef80e7edf1201e7dcef9ac8e14104a`. The actual M3 VST3 component processed the ordinary waveform with restored calibration, canonical M3 settings, per-voice routing and an accepting test event list. In both sample formats, ON analyzes all 10689600 samples and delivers all 11851 detector transitions, with no output blocking, queue rejection, callback pairing error or dry-audio change. OFF analyzes only 203776 samples (1.9063%) before output blocking prevents further detection; it accepts 46 callbacks, including cleanup, and blocks 20482 blocks. Both still pass through the complete audio recording.
+
+The two ON sample-format gates pass. Callback traces are bit-identical between the 32-bit and 64-bit cases for each condition. One ON note remains open at EOF; no silence or forced release was added, so this boundary observation is not a stuck-note finding. The harness measures the production detector/ledger feedback path, but not external DAW consumption, hardware, control or event-rejection recovery, labeled-note quality, allocations or deadlines. The trial remains off by default and the installed scoreboard is unchanged.
+
+Checkpoint: `docs/recovery/github-vst3-corpus-integration-20261109.json`. Its small report archive was collected once and the hash verified; larger evidence stays on GitHub. Source CI `42650708172` and portable run `42650708175` passed. The production package is uninstalled. Six small harness input/accounting tests also passed locally; native compilation and replay ran only on GitHub.
+
+Full corpus run `42643461303` is still processing at its separate source revision. Follow `docs/recovery/github-independent-midi-corpus-20261109.json`; do not dispatch a duplicate. Next: collect that report and require no passage loss or false-output increase, no raw MIDI regression, OFF and buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. Held-note quality, recovery controls and live-host verification remain separate gates.
+
+Cleanup is complete: the measured window recovered 5.75 GB net, including 618 inactive logs compressed losslessly to save 747 MB. About 102 GB is currently available; concurrent filesystem activity affects that total. Source, recordings, final plugins, installed tools, credentials, active sessions and current checkpoints are retained. Keep bulky test evidence on GitHub and collect only needed small reports locally.
+
 ## 2026-11-09 — independent MIDI ownership passes the saved-event ledger
 
 GitHub run `42642463894` replayed the complete ordinary OFF and ON MIDI streams through the production ledger. In both single-channel and per-voice routing, ON delivers 11851/11851 events to the accepting file sink, with zero suppressed events, blocked blocks, queue rejections or callback pairing errors. OFF delivers 45/11903 events, suppresses 11858 and blocks 20482 blocks. ON remains unblocked at EOF. Its one open note at the recording boundary is retained as evidence; no forced release was added.
