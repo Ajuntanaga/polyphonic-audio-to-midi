@@ -1,0 +1,36 @@
+{
+  "task": "projection-preview-trial",
+  "dataset": "ordinary",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_commit": "d0646b8c70f2e674c5b9f158222575c49bf2e2a9",
+  "worker_commit": "18cfddfbcdb80c7d93ba4cc74093fd07d1a51835",
+  "submitted_at": "2026-11-09T08:26:48.637552+00:00",
+  "returncode": 0,
+  "stdout": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42586000548\n",
+  "stderr": "",
+  "status": "in_progress",
+  "result_final": false,
+  "runtime_rule_changed": true,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "source_checks": [
+    {
+      "run_id": 42585948467,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 42585948562,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "next": "Read this single cloud run. Require exact OFF reference identity and positive full-recording gain with zero per-label losses and no increased wrong-note, wrong-string or extra gap outputs before wider validation.",
+  "run_id": 42586000548,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42586000548",
+  "output_target": "build/github-results/projection-preview-42586000548",
+  "stage": "Replay build and contracts passed; native checks and full ordinary OFF/ON screen in progress",
+  "observed_at": "2026-11-09T08:30:40.003919+00:00"
+}
