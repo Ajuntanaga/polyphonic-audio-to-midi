@@ -1,0 +1,60 @@
+{
+  "schema": "m3_direct_evidence_retention_diagnosis_v1",
+  "recorded_at": "2026-11-09T07:20:16.723736+00:00",
+  "source_run_id": 42573296579,
+  "window_recovery_run_id": 42576271299,
+  "window_report": "build/github-results/ordinary-window-42576271299/report.json",
+  "window_artifact_sha256": "6ceedf3bd2536825f5f0cdf37f0f750af3ec6d33a17465a9b6a51171ea24a5c1",
+  "outcome_window_sha256": "382838f7abc1976fc5ad3fe965851bb9894732da5f8af43e63d15ef6da660626",
+  "window_samples": [
+    864000,
+    969664
+  ],
+  "full_recording_reference_report": "docs/recovery/github-ordinary-assignment-20261109.json",
+  "label_index": 55,
+  "midi_note": 42,
+  "annotated_decisions": 1122,
+  "candidate_counts": {
+    "present": 897,
+    "selected": 893,
+    "direct": 895,
+    "active": 0,
+    "selected_direct_inactive_zero_evidence": 649
+  },
+  "maxima": {
+    "evidence_ticks": 44,
+    "attack_ticks": 0,
+    "age_samples": 0
+  },
+  "required_pre_attack_evidence_ticks": 51,
+  "separate_attack_ticks": 10,
+  "finding": "Whole-chord energy dips reset direct candidate evidence before attack. Pitch selection and direct fundamental support do not establish the physical string.",
+  "trial": {
+    "flag": "--diagnostic-direct-evidence-retention",
+    "default": false,
+    "production_enabled": false,
+    "runtime_rule": "Retain same-decision direct fundamental evidence through the energy dip; onset stays blocked during the dip and all other evidence, attack and assignment rules remain.",
+    "scope": "Full ordinary recording, diagnostic build only",
+    "off_gate": "Full replay TSV and aggregate must equal retained OFF reference",
+    "on_gate": "Positive labeled-match gain, no lost protected label and no increased false-note, wrong-string or gap-extra output",
+    "promotion_accepted": false,
+    "wider_gates": [
+      "protected corpus",
+      "allocation",
+      "buffer parity",
+      "native p99 and maximum timing",
+      "live host and MIDI lifecycle"
+    ]
+  },
+  "local_verification": {
+    "focused_python_tests": 17,
+    "result": "passed",
+    "python_syntax": "passed",
+    "workflow_yaml_and_shell_syntax": "passed",
+    "native_tests": "pending GitHub",
+    "audio_replay": "pending GitHub"
+  },
+  "installed_output_changed": false,
+  "live_readiness": "not measured",
+  "overall_completion": "not measured"
+}

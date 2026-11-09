@@ -167,6 +167,7 @@ void usage(const char* program) {
       "[--partial-motion-trace FILE --partial-motion-note 0..127 "
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
+      "[--diagnostic-direct-evidence-retention] "
       "[--diagnostic-joint-spectral-ownership] "
       "[--diagnostic-joint-ownership-ablation solver|midi-guard] "
       "[--fine-window-dump FILE --fine-window-note 0..127] "
@@ -290,6 +291,7 @@ int main(int argc, char** argv) {
   bool diagnostic_coasting_harmonic_handoff = false;
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
+  bool diagnostic_direct_evidence_retention = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
   bool diagnostic_cue_delay_explicit = false;
@@ -600,6 +602,8 @@ int main(int argc, char** argv) {
       diagnostic_calibrated_harmonic_admission_guard = true;
     } else if (std::strcmp(argv[index], "--diagnostic-fundamental-admission") == 0) {
       diagnostic_fundamental_admission = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-direct-evidence-retention") == 0) {
+      diagnostic_direct_evidence_retention = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
       diagnostic_odd_partial_cues_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-cue-delay-samples") == 0 && has_value) {
@@ -1135,7 +1139,8 @@ int main(int argc, char** argv) {
               &diagnostic_odd_partial_cues : nullptr,
           diagnostic_cue_free_lane_reassignment,
           diagnostic_core_timing_path != nullptr ? &core_timing : nullptr,
-          diagnostic_thread_cpu, diagnostic_skip_empty_fine_reset)) {
+          diagnostic_thread_cpu, diagnostic_skip_empty_fine_reset,
+          diagnostic_direct_evidence_retention)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

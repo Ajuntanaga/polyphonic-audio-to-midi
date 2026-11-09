@@ -11785,6 +11785,16 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         selector_atomic_handoff_targets_[candidate];
     if (!atomic_handoff && fast_energy_ < slow_energy_ * kAttackEnergyRatio) {
       state.attack_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      // A whole-chord energy dip still blocks onset. The offline trial keeps
+      // evidence only when this decision independently observes the fundamental;
+      // the normal pre-attack evidence and fresh attack delay still apply.
+      if (diagnostic_direct_evidence_retention_ &&
+          profile_mode_ == ProfileMode::m3 &&
+          has_direct_fundamental_peak(scores, fundamentals, candidate, count)) {
+        continue;
+      }
+#endif
       state.evidence_ticks = 0U;
       state.evidence_gap_ticks = 0U;
       continue;

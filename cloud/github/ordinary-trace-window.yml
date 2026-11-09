@@ -1,0 +1,76 @@
+name: Recover ordinary trace window
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: m3-private-processing
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: Ajuntanaga/polyphonic-audio-to-midi
+          ref: 07ca5809375534f03444e127c68e0b4e184d1b4e
+          persist-credentials: false
+      - name: Recover the existing trace without replaying audio
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
+          gh api repos/Ajuntanaga/m3-offload/actions/artifacts/13654481358/zip > "$RUNNER_TEMP/ordinary-evidence.zip"
+          python3 -B - <<'PY'
+          import gzip, hashlib, json, os, shutil, zipfile
+          from pathlib import Path
+          from tools.portable_assignment_trace import compress_trace_window, digest
+
+          original = Path(os.environ['RUNNER_TEMP']) / 'ordinary-evidence.zip'
+          expected_zip = '41ca9bf09cd3ab8a364b8935118ce7ca81b6a524a6f939f8231be42c8c47e82c'
+          if digest(original) != expected_zip:
+              raise ValueError('Original artifact digest mismatch')
+          expected = {
+              'candidate': ('1e1007ce8802c93f9ddf926848a17cd1d966ab071d6879dffa1a48fa79e6be72', 'b560c0b7d484394f4bb24712cff02a7311e643eb5ac6dd95fda7d5494275f83e'),
+              'outcome': ('5196f7877816c79dca2e10d4473fe08408795ff513f7888a51168ede667cd1ad', '607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e'),
+              'assignment': ('0353c83682172e4ea4a24154381ee72080a9dd7a3a087b3dec141175a116cf4b', '200b09b046e6384809efca5d8d0abf90ec825b5ffb7ea4d97620c8ab92371778'),
+          }
+          output = Path('build/ordinary-window')
+          output.mkdir(parents=True)
+          report = dict(source_run_id=42573296579, source_artifact_id=13654481358,
+                        source_artifact_sha256=expected_zip,
+                        source_report_sha256='88e17e19687d239141ae54fb3866407eb006eb3a1ffcd93566473029c1a34d10',
+                        recovery_run_id=os.environ['GITHUB_RUN_ID'],
+                        replay_performed=False, installed_output_changed=False,
+                        start_sample_inclusive=864000, end_sample_exclusive=969664,
+                        traces={})
+          with zipfile.ZipFile(original) as archive:
+              for name, (packed_hash, raw_hash) in expected.items():
+                  member = 'github-results/trace/' + name + '.tsv.gz'
+                  packed = archive.read(member)
+                  if hashlib.sha256(packed).hexdigest() != packed_hash:
+                      raise ValueError(name + ' compressed digest mismatch')
+                  packed_path = Path(os.environ['RUNNER_TEMP']) / (name + '.tsv.gz')
+                  packed_path.write_bytes(packed)
+                  raw = output / (name + '.tsv')
+                  with gzip.open(packed_path, 'rb') as source, raw.open('xb') as target:
+                      shutil.copyfileobj(source, target)
+                  if digest(raw) != raw_hash:
+                      raise ValueError(name + ' raw digest mismatch')
+                  report['traces'][name] = compress_trace_window(raw, start=864000, end=969664)
+                  raw.unlink()
+                  packed_path.unlink()
+          (output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+          original.unlink()
+          print(json.dumps(report, indent=2))
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ordinary-window-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: error
+          path: build/ordinary-window/

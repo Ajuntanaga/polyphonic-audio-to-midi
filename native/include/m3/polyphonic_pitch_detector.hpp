@@ -615,6 +615,9 @@ class PolyphonicPitchDetector final {
   void set_fundamental_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_fundamental_admission_ = enabled;
   }
+  void set_direct_evidence_retention_for_diagnostics(bool enabled) noexcept {
+    diagnostic_direct_evidence_retention_ = enabled;
+  }
   void set_odd_partial_cue_mask_for_diagnostics(
       const std::array<std::uint64_t, 2U>& mask) noexcept {
     diagnostic_odd_partial_cue_mask_ = mask;
@@ -1572,6 +1575,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_coasting_harmonic_handoff_{};
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_fundamental_admission_{};
+  bool diagnostic_direct_evidence_retention_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};

@@ -3494,6 +3494,76 @@ struct PolyphonicPitchDetectorTestAccess final {
     return detector.candidate_admission_diagnostics_[fretted];
   }
 
+  static void direct_evidence_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled, bool direct,
+      std::uint8_t initial_evidence) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 84U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    config.sensitivity = 60U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_direct_evidence_retention_for_diagnostics(enabled);
+    M3_EXPECT_EQ(detector.candidate_evidence_decisions(false), 60U);
+    M3_EXPECT_EQ(detector.attack_decisions(), 10U);
+    constexpr std::uint8_t kNote = 40U;
+    const std::size_t candidate = kNote - detector.lowest_note_;
+    detector.cells_ = {};
+    detector.signal_samples_ = 100000U;
+    detector.candidate_states_[0U].active = true;
+    auto& state = detector.candidate_states_[candidate];
+    state.evidence_ticks = initial_evidence;
+    auto& fundamental = detector.cells_[detector.cell_index(candidate, 0U)];
+    fundamental.enabled = true;
+    fundamental.fast_real = direct ? 1.0 : std::sqrt(0.10);
+    if (!direct) {
+      auto& harmonic = detector.cells_[detector.cell_index(candidate, 1U)];
+      harmonic.enabled = true;
+      harmonic.fast_real = std::sqrt(2.0);
+    }
+    const auto target_ons = [](const DetectorDecision& decision) noexcept {
+      unsigned count = 0U;
+      for (std::size_t index = 0U; index < decision.transitions.size(); ++index) {
+        const auto& event = decision.transitions[index];
+        if (event.note == kNote && event.kind == TransitionKind::note_on) ++count;
+      }
+      return count;
+    };
+    detector.fast_energy_ = 0.94;
+    detector.slow_energy_ = 1.0;
+    detector.previous_decision_energy_ = 0.94;
+    const auto dip = detector.make_decision();
+    M3_EXPECT_EQ(detector.selection_dispositions_[candidate],
+                 SelectionDisposition::selected);
+    M3_EXPECT_FALSE(state.active);
+    M3_EXPECT_EQ(state.attack_ticks, 0U);
+    M3_EXPECT_EQ(target_ons(dip), 0U);
+    if (!enabled || !direct) {
+      M3_EXPECT_EQ(state.evidence_ticks, 0U);
+      return;
+    }
+    M3_EXPECT_EQ(state.evidence_ticks, initial_evidence + 1U);
+    detector.fast_energy_ = detector.slow_energy_ = 1.0;
+    // Retention does not bypass the 51-decision pre-attack gate.
+    for (unsigned evidence = initial_evidence + 2U; evidence <= 50U; ++evidence) {
+      const auto settling = detector.make_decision();
+      M3_EXPECT_EQ(state.evidence_ticks, evidence);
+      M3_EXPECT_EQ(target_ons(settling), 0U);
+      M3_EXPECT_EQ(state.attack_ticks, 0U);
+      M3_EXPECT_FALSE(state.active);
+    }
+    // Even fully collected evidence requires ten fresh recovered decisions.
+    for (unsigned decision = 1U; decision <= 10U; ++decision) {
+      const auto recovered = detector.make_decision();
+      M3_EXPECT_EQ(target_ons(recovered), decision == 10U ? 1U : 0U);
+      M3_EXPECT_EQ(state.active, decision == 10U);
+      M3_EXPECT_EQ(state.attack_ticks, decision == 10U ? 0U : decision);
+    }
+  }
+
   static CandidateAdmissionDiagnostics floor_reentry_observation_probe(
       PolyphonicPitchDetector& detector, bool diagnostics,
       bool signal_present) noexcept {
@@ -8107,6 +8177,25 @@ M3_TEST(native_detector_state_local_open_prior_requires_direct_open_evidence) {
   M3_EXPECT_TRUE(result.selected[41U]);
   M3_EXPECT_EQ(result.open_pitches, 1U);
   M3_EXPECT_NEAR(result.score, 1.70, 1.0e-12);
+}
+
+M3_TEST(native_detector_direct_evidence_retention_keeps_onset_and_evidence_gates) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const std::uint8_t seed : {std::uint8_t{0U}, std::uint8_t{50U}}) {
+    m3::PolyphonicPitchDetector detector;
+    Access::direct_evidence_retention_probe(detector, true, true, seed);
+  }
+}
+
+M3_TEST(native_detector_direct_evidence_retention_preserves_disabled_and_partial_only_reset) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  for (const bool enabled : {false, true}) {
+    for (const bool direct : {false, true}) {
+      if (enabled && direct) continue;
+      m3::PolyphonicPitchDetector detector;
+      Access::direct_evidence_retention_probe(detector, enabled, direct, 50U);
+    }
+  }
 }
 
 M3_TEST(native_detector_floor_reentry_observation_does_not_admit_or_seed_notes) {
