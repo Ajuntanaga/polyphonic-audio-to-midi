@@ -1,3 +1,12 @@
+## 2026-11-09 — boundary guard controls passed; protected corpus running
+
+- Source `7bd8e8a42360b9bc1adc8c0c52d8c7ddfa2dc396` is pushed. It precomputes the enabled lower/upper boundary guard cells during configuration, retains their update order and arithmetic, and adds a native regression against the former enabled scan across reset and sample-rate reconfiguration, including no enabled guards.
+- Private acceptance run `42566485639` passed and its small report was collected once. All 60 replay hashes match the previous source, all 30 label/error comparisons and 40 buffer-parity checks pass, and all ten paired native gates pass with zero processing allocations/frees and zero deadline misses. Worst p99 is 115,130 ns against 166,666 ns; worst maximum is 315,587 ns against 333,333 ns. Summary: `docs/recovery/github-guard-cell-controls-20261109.json`. Do not poll, download or repeat this completed job.
+- Public CI `42566471834` passed native tests, production VST3 build and packaging. Portable run `42566471807` also passed. Shared-runner variation prevents attributing the timing change solely to this optimization; no new note gain is claimed.
+- Existing private full-corpus run `42566960267` is processing the same source. Collect its small report once to `build/github-results/guard-cell-corpus-42566960267`. Require prior OFF/ON output hashes, no lost labels or increased false outputs, buffers 32/512/1024 parity, zero C/C++ allocations/frees and both modes within p99 <=166,666 ns, maximum <=333,333 ns, zero misses on all fourteen datasets. Do not launch duplicates. The installed plugin and default-off remain unchanged; primary match gains and live host/MIDI gates remain open.
+
+- Notification attempt at `2026-11-09T05:24:15.375183Z` was unconfirmed: the helper reported publication success but could not confirm an inline receipt. The 3,398-byte preview and captured output are retained locally; no retry was made. Do not resend this message. Capture: `build/modal/notification-publisher-20261109T052415375183Z.json`.
+
 ## 2026-11-09 — quiet-octave spike did not recur in CPU diagnosis
 
 - Private GitHub run `42565379726` completed at source `c83242badc31305ff62b5b21a38db425473f0640`, worker `7a5a9da2e21ff07ee7fad6fb363b62966243677a`. All 52 contracts and the replay build passed. Public portable run `42565225081` passed. Small report collected once; do not poll, download or repeat these jobs. Summary: `docs/recovery/github-quiet-octave-timing-20261109.json`.
