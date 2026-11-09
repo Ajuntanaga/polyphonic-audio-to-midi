@@ -158,6 +158,94 @@ M3_TEST(generated_note_ledger_orders_ticks_and_equal_time_off_before_on) {
   M3_EXPECT_EQ(capture[3].sample_offset, 191U);
 }
 
+M3_TEST(generated_note_ledger_reorders_same_sample_assigned_lane_replacement) {
+  for (const auto routing :
+       {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
+    m3::GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(512));
+    ledger.begin_block();
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(0, m3::TransitionKind::note_on, 48, 100, 1, 2), 512));
+    NoteCapture initial;
+    M3_EXPECT_TRUE(
+        deliver(ledger, 512, initial, 0.5, true, true, routing)
+            .detection_allowed);
+
+    // Reduced ordinary-replay example: both events are at sample 184319.
+    // The old note is seeded; this does not reconstruct the whole recording.
+    ledger.begin_block();
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(511, m3::TransitionKind::note_on, 47, 30, 25, 2), 512));
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(511, m3::TransitionKind::note_off, 48, 0, 26, 2), 512));
+    NoteCapture replacement;
+    const auto result =
+        deliver(ledger, 512, replacement, 0.5, true, true, routing);
+    M3_EXPECT_TRUE(result.detection_allowed);
+    M3_EXPECT_FALSE(result.output_blocked);
+    M3_EXPECT_EQ(replacement.size(), 2U);
+    M3_EXPECT_EQ(replacement[0].kind, m3::TransitionKind::note_off);
+    M3_EXPECT_EQ(replacement[0].note, 48U);
+    M3_EXPECT_EQ(replacement[1].kind, m3::TransitionKind::note_on);
+    M3_EXPECT_EQ(replacement[1].note, 47U);
+    for (std::size_t index = 0; index < replacement.size(); ++index) {
+      M3_EXPECT_EQ(replacement[index].sample_offset, 511U);
+      M3_EXPECT_EQ(replacement[index].voice_id, 2U);
+      M3_EXPECT_EQ(replacement.channel(index), initial.channel(0));
+    }
+    M3_EXPECT_FALSE(ledger.is_active(48));
+    M3_EXPECT_TRUE(ledger.is_active(47));
+    M3_EXPECT_FALSE(ledger.release_pending());
+  }
+}
+
+M3_TEST(generated_note_ledger_blocks_cross_sample_assigned_lane_replacement) {
+  for (const auto routing :
+       {m3::MidiRouting::single, m3::MidiRouting::per_voice}) {
+    m3::GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(512));
+    ledger.begin_block();
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(0, m3::TransitionKind::note_on, 48, 100, 1, 0), 512));
+    NoteCapture initial;
+    M3_EXPECT_TRUE(
+        deliver(ledger, 512, initial, 0.5, true, true, routing)
+            .detection_allowed);
+
+    // Recorded ON at 203519 precedes OFF at 203583 (block base 203264).
+    // With note 48 seeded on that lane, same-sample sorting cannot repair it.
+    ledger.begin_block();
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(255, m3::TransitionKind::note_on, 47, 25, 45, 0), 512));
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(319, m3::TransitionKind::note_off, 48, 0, 46, 0), 512));
+    NoteCapture conflict;
+    const auto result =
+        deliver(ledger, 512, conflict, 0.5, true, true, routing);
+    M3_EXPECT_TRUE(result.output_blocked);
+    M3_EXPECT_FALSE(result.detection_allowed);
+    M3_EXPECT_EQ(conflict.size(), 0U);
+    M3_EXPECT_FALSE(ledger.is_active(47));
+    M3_EXPECT_TRUE(ledger.is_active(48));
+    M3_EXPECT_TRUE(ledger.is_pending_release(48));
+
+    ledger.begin_block();
+    NoteCapture cleanup;
+    const auto cleaned =
+        deliver(ledger, 512, cleanup, 0.5, true, true, routing);
+    M3_EXPECT_TRUE(cleaned.output_blocked);
+    M3_EXPECT_FALSE(cleaned.detection_allowed);
+    M3_EXPECT_EQ(cleanup.size(), 1U);
+    M3_EXPECT_EQ(cleanup[0].kind, m3::TransitionKind::note_off);
+    M3_EXPECT_EQ(cleanup[0].note, 48U);
+    M3_EXPECT_EQ(cleanup[0].voice_id, 0U);
+    M3_EXPECT_EQ(cleanup[0].sample_offset, 0U);
+    M3_EXPECT_EQ(cleanup.channel(0), initial.channel(0));
+    M3_EXPECT_FALSE(ledger.is_active(48));
+    M3_EXPECT_FALSE(ledger.release_pending());
+  }
+}
+
 M3_TEST(generated_note_ledger_per_voice_channels_are_unique_stable_and_wrap) {
   m3::GeneratedNoteLedger ledger;
   M3_EXPECT_TRUE(ledger.activate(64));
