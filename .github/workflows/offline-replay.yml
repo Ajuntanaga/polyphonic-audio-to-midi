@@ -29,7 +29,7 @@ jobs:
       - name: Replay comparison contracts
         run: |
           python3 -m pip install 'numpy>=2,<3' 'scipy>=1.14,<2'
-          python3 -B -m unittest tests.test_frozen_cue_corpus_gate tests.test_portable_recovery tests.test_portable_corpus_replay tests.test_midi_lifecycle_analysis tests.test_cloud_bootstrap tests.test_binary_triage tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_partial_identity tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace tests.test_portable_midi_lane_trace tests.test_portable_retained_spectral_trial tests.test_portable_retained_spectral_diagnosis
+          python3 -B -m unittest tests.test_frozen_cue_corpus_gate tests.test_portable_recovery tests.test_portable_corpus_replay tests.test_midi_lifecycle_analysis tests.test_cloud_bootstrap tests.test_binary_triage tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_partial_identity tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace tests.test_portable_midi_lane_trace tests.test_portable_retained_spectral_trial tests.test_portable_retained_spectral_diagnosis tests.test_portable_midi_ledger_replay
       - name: Synthetic buffer parity smoke check
         run: python3 -B -m tools.portable_replay_smoke --binary build/portable/m3_replay --output build/cloud-smoke
       - name: Keep bounded diagnostic artifacts
@@ -40,6 +40,7 @@ jobs:
           retention-days: 7
           path: |
             build/portable/m3_replay
+            build/portable/m3_midi_ledger_replay
             build/portable/Testing/Temporary/LastTest.log
             build/cloud-smoke/*.json
             build/cloud-smoke/*.tsv

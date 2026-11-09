@@ -1,3 +1,15 @@
+## 2026-11-09 — replay saved MIDI through the production note ledger
+
+The new `midi-ledger-replay` GitHub task reuses the complete ordinary OFF and ON MIDI captures from run `42614803871`. It verifies the archive and trace hashes, then sends each saved stream through `GeneratedNoteLedger` in single-channel and per-voice routing modes. The report identifies the first blocking event and counts source callbacks, cleanup releases and suppressed events. Separate assigned unison voices remain distinct.
+
+This is an offline simulation with an accepting file sink. It does not reproduce detector feedback after a fault, waveform recovery, host rejection or consumption, hardware behavior, or real-time timing. It leaves notes open at the end of the saved recording rather than inventing releases. The installed plugin and scoreboard are unchanged.
+
+Five local parser and provenance tests pass. Seven native cases are prepared for GitHub, covering unison identity, same-sample replacement order, cross-sample collisions, unassigned duplicate pitches, EOF-open notes, orphan releases, invalid note-ons and malformed inputs. Native compilation and execution are pending. The focused read-only review found no material blocker; Python syntax, workflow syntax and diff checks pass.
+
+Corpus run `42616852315` remains active at source `2cc36876f77834d890f68ef44b3fe468f9d9b4b5`. Keep that run; the ledger task uses saved evidence and does not repeat the audio replay. Collect the small corpus report when it completes and retain the original label/error, allocation, buffer and timing gates.
+
+Cleanup is complete. The receipt records about 5.75 GB net recovered, including 618 inactive session logs compressed. A fresh check found 103.7 GB available. Source, recordings, installed tools, active chats and checkpoints remain preserved.
+
 ## 2026-11-09 — spectral output collision screen passes; wider validation next
 
 - GitHub screen `42614803871` passed at source `cc507bbbc56b00016a55191c46ebf29963007331`. Ordinary raw cross-pitch MIDI lane conflicts fell from 652 to 384 (268 fewer, 41.1%). The recorded conflict fell from one to zero. Correct matches remain 145385/528632 (27.5021%), with no passage loss and unchanged wrong-note/wrong-string/gap-extra counts 164263/92653/62856. Other raw error counts remain zero. Checkpoint: `docs/recovery/github-spectral-lane-collision-20261109.json`.

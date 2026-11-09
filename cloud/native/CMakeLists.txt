@@ -51,6 +51,8 @@ add_library(core STATIC ${core_sources})
 target_link_libraries(core PUBLIC native_cue pthread m)
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp" "#include \"test_support.hpp\"\nint main(){return m3::test::run_all_tests();}\n")
 add_executable(m3_replay "${root}/native/offline/replay_main.cpp")
+add_executable(m3_midi_ledger_replay "${root}/native/offline/midi_ledger_replay_main.cpp"
+    "${root}/native/src/generated_note_ledger.cpp")
 add_executable(m3_motion_tests "${root}/native/tests/test_offline_replay.cpp"
     "${root}/native/tests/test_frozen_partial_cue.cpp" "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp")
 add_executable(m3_detector_tests "${root}/native/tests/test_polyphonic_pitch_detector.cpp"
