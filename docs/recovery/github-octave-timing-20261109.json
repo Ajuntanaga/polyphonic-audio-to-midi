@@ -1,0 +1,349 @@
+{
+  "schema": "m3_octave_timing_diagnosis_v1",
+  "state": "completed",
+  "final": true,
+  "run_id": 42557095189,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42557095189",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "f16eea70cabfe50de9576750123fa4849112a44c",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42557095189",
+    "run_attempt": "1",
+    "input_release": "controls-pass2-20261109",
+    "input_bundle_sha256": "692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d",
+    "original_input_manifest_sha256": "c4f8c6a3fc0a083661cae6c173c8898a29e465e19c9ef68d2ae5f215ce1dc3f3"
+  },
+  "worker_commit": "15ebda95b633a4cfaa3f7184cd3f8ecbf16ed1f8",
+  "report_path": "build/github-results/octave-timing-42557095189/controlled-timing/report.json",
+  "report_sha256": "ae08bcda06e0d636bb7c135109c8058562ea173b409db16ce3dbd63cc615048c",
+  "report_updated_at": "2026-11-09T03:34:56.330143+00:00",
+  "recorded_at": "2026-11-09T03:38:00.190845+00:00",
+  "binary_sha256": "98b340cb506f430819a9aededd28b76d186cd7143929d46f609091a0c3b30a34",
+  "input_manifest_sha256": "9f5079f88a04cbc49d991a6dece3bbe3767c53941dff9b0411f034f4e52f3b3d",
+  "reference_sha256": "fe1527266569e348fab4b3507678013ed859f883ab8b1a25618cba09aee436e2",
+  "baseline_report_sha256": "3a4589fef3560ecd8eed873209c0b856bd91f6c53c28cfa742878f6cc5b09416",
+  "baseline_source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "77fa7dcca2b79000fffe23c9b9afe77bfa8b0519",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42555591900",
+    "run_attempt": "1",
+    "input_release": "controls-pass2-20261109",
+    "input_bundle_sha256": "692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d",
+    "original_input_manifest_sha256": "c4f8c6a3fc0a083661cae6c173c8898a29e465e19c9ef68d2ae5f215ce1dc3f3"
+  },
+  "control": "octave_0dB",
+  "block_samples": 32,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "spectral_templates": "disabled, matching historical controls",
+  "verified_inputs": 4,
+  "diagnostic_only": true,
+  "collection_pass": true,
+  "cpu_block_statistics_usable": true,
+  "timing_limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": true
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "runs": {
+    "off": {
+      "output": {
+        "labeled": 6900,
+        "matched": 2439,
+        "false_wrong_note_voices": 1370,
+        "false_wrong_string_voices": 4311,
+        "false_gap_voices": 630,
+        "false_positive_voices": 6311,
+        "fingerprint": "a27e6c5669b03e4c"
+      },
+      "labels": [
+        {
+          "label_index": 0,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 36,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 0
+        },
+        {
+          "label_index": 1,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 48,
+          "string_mask": 8,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 2439
+        }
+      ],
+      "labeled_frame_match_percent": 35.34782608695652,
+      "tsv_sha256": "9fe77ac1b73e57dab1372d90d84e0481467f4ec583fa01226b6beb709d73e1cc",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 10650,
+        "p99_ns": 138785,
+        "maximum_ns": 212623,
+        "deadline_overruns": 0,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "valid": true,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "zero_duration_blocks": 0,
+        "p99_ns": 139289,
+        "maximum_ns": 213412,
+        "deadline_overruns": 0
+      },
+      "slowest_wall_block": {
+        "end_sample": 149760,
+        "wall_ns": 212623,
+        "cpu_ns": 213412,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 2340,
+        "signal_samples": 125759,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 2,
+        "active_candidates": 2,
+        "assigned_candidates": 5,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 126,
+        "fine_update_scheduled": true,
+        "fine_reset_serial_sum": 3,
+        "last_fine_reset_tick": 2325,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 2,
+        "selection_state_transitions": 15,
+        "selection_assignment_edges": 15
+      },
+      "slow_block_state_scope": "Read after timing; counts span all MIDI candidates. Selection work and fine-update scheduling describe the latest decision, which may precede this block. snapshot_voice_count is available only when decision_snapshots is nonzero. Reset ticks are latest recorded events, not proof that a reset occurred in this block",
+      "wall_maximum_excess_ns": 0,
+      "cpu_maximum_excess_ns": 0,
+      "baseline_uninstrumented_timing": {
+        "measurement": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "a27e6c5669b03e4c",
+          "fingerprint_identical": true,
+          "blocks": 10650,
+          "total_ns": 549203278,
+          "p99_ns": 123441,
+          "maximum_ns": 373987,
+          "half_budget_overruns": 8,
+          "deadline_overruns": 1,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": false
+        }
+      }
+    },
+    "on": {
+      "output": {
+        "labeled": 6900,
+        "matched": 2439,
+        "false_wrong_note_voices": 1370,
+        "false_wrong_string_voices": 4311,
+        "false_gap_voices": 630,
+        "false_positive_voices": 6311,
+        "fingerprint": "a27e6c5669b03e4c"
+      },
+      "labels": [
+        {
+          "label_index": 0,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 36,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 0
+        },
+        {
+          "label_index": 1,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 48,
+          "string_mask": 8,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 2439
+        }
+      ],
+      "labeled_frame_match_percent": 35.34782608695652,
+      "tsv_sha256": "9fe77ac1b73e57dab1372d90d84e0481467f4ec583fa01226b6beb709d73e1cc",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 10650,
+        "p99_ns": 128092,
+        "maximum_ns": 377130,
+        "deadline_overruns": 1,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "valid": true,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "zero_duration_blocks": 0,
+        "p99_ns": 128333,
+        "maximum_ns": 377591,
+        "deadline_overruns": 1
+      },
+      "slowest_wall_block": {
+        "end_sample": 225600,
+        "wall_ns": 377130,
+        "cpu_ns": 377591,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 3525,
+        "signal_samples": 201599,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 2,
+        "active_candidates": 2,
+        "assigned_candidates": 5,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 205,
+        "fine_update_scheduled": true,
+        "fine_reset_serial_sum": 3,
+        "last_fine_reset_tick": 2325,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 2,
+        "selection_state_transitions": 15,
+        "selection_assignment_edges": 15
+      },
+      "slow_block_state_scope": "Read after timing; counts span all MIDI candidates. Selection work and fine-update scheduling describe the latest decision, which may precede this block. snapshot_voice_count is available only when decision_snapshots is nonzero. Reset ticks are latest recorded events, not proof that a reset occurred in this block",
+      "wall_maximum_excess_ns": 43797,
+      "cpu_maximum_excess_ns": 44258,
+      "baseline_uninstrumented_timing": {
+        "measurement": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "a27e6c5669b03e4c",
+          "fingerprint_identical": true,
+          "blocks": 10650,
+          "total_ns": 632003046,
+          "p99_ns": 133319,
+          "maximum_ns": 255627,
+          "half_budget_overruns": 10,
+          "deadline_overruns": 0,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": true
+        }
+      }
+    }
+  },
+  "interpretation": "ON exceeded the block deadline in both wall time and thread CPU time. The CPU clock passed the resolution check; the CPU bracket includes wall-clock-read overhead. This miss cannot be attributed solely to time descheduled from the CPU. The recorded slow-block state includes a scheduled fine-frequency update, but it does not isolate the costly operation or prove that the update caused the spike.",
+  "prior_uninstrumented_failures": [
+    {
+      "run_id": 42555591900,
+      "control": "octave_0dB",
+      "mode": "off",
+      "maximum_ns": 373987,
+      "deadline_overruns": 1,
+      "blocks": 10650,
+      "status": "not reproduced by this diagnostic; remains failed acceptance evidence"
+    },
+    {
+      "run_id": 42545080876,
+      "dataset": "physical-high",
+      "mode": "on",
+      "maximum_ns": 469120,
+      "deadline_overruns": 1,
+      "blocks": 154176,
+      "status": "unresolved; remains failed acceptance evidence"
+    }
+  ],
+  "acceptance": "Collection succeeded; diagnostic timing is not native acceptance. Raw allocation/free counts are zero, but the report deliberately does not pass allocation/timing acceptance for instrumented runs. No installed score, note gain or live-host readiness follows from this run.",
+  "artifacts": [
+    {
+      "id": 13648305612,
+      "name": "m3-report-42557095189-1",
+      "size_bytes": 13913,
+      "downloaded": true,
+      "sha256": "df3cbfa830a039b46270fc464428b7e50f0e8ef85d5f230a887883e0ac621336"
+    },
+    {
+      "id": 13648141372,
+      "name": "m3-evidence-42557095189-1",
+      "size_bytes": 505203,
+      "downloaded": false,
+      "sha256": "01d49ec55d9550ab5758acf17562a4c3d723d920c46023445ffc929b8974f7f9"
+    }
+  ],
+  "source_verification": {
+    "run_id": 42557057874,
+    "workflow": "Portable offline replay",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42557057874",
+    "status": "completed",
+    "conclusion": "success",
+    "source_commit": "f16eea70cabfe50de9576750123fa4849112a44c"
+  },
+  "comparison_contracts": {
+    "passed": 48,
+    "failed": 0,
+    "provider": "github-actions"
+  },
+  "next": "Use the recorded octave ON slow block to isolate detector, scheduled fine-frequency and cue stage costs in one bounded GitHub Actions diagnostic of the same OFF/ON pair. Require both retained full replay hashes, unchanged labels/errors and zero observed processing allocations/frees. Scheduling state alone does not identify the cause. Optimize only an identified stage, then require uninstrumented paired p99 <=166666 ns, max <=333333 ns and zero deadline overruns; retain physical-high and live host/MIDI gates."
+}
