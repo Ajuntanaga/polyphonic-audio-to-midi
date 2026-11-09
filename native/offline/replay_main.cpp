@@ -164,6 +164,7 @@ void usage(const char* program) {
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "[--retained-assignment-trace FILE] "
       "[--partial-motion-trace FILE --partial-motion-note 0..127 "
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
@@ -678,7 +679,14 @@ int main(int argc, char** argv) {
       outcome_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--midi-event-trace") == 0 && has_value) {
       midi_event_trace_path = argv[++index];
-    } else if (std::strcmp(argv[index], "--assignment-trace") == 0 && has_value) {
+    } else if ((std::strcmp(argv[index], "--assignment-trace") == 0 ||
+                std::strcmp(argv[index], "--retained-assignment-trace") == 0) && has_value) {
+      if (assignment_trace_path != nullptr) {
+        std::fprintf(stderr, "m3_replay: choose only one assignment trace\n");
+        return 2;
+      }
+      assignment_trace.retained_decisions_only =
+          std::strcmp(argv[index], "--retained-assignment-trace") == 0;
       assignment_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--partial-motion-trace") == 0 && has_value) {
       partial_motion_path = argv[++index];
@@ -1342,7 +1350,8 @@ int main(int argc, char** argv) {
         "m3_replay: assignment_trace rows=%zu cap=%zu truncated=%u sampled_frames=%zu decimation=%u\n",
         assignment_trace.rows, m3::offline::StringAssignmentTrace::kMaximumRows,
         assignment_trace.truncated ? 1U : 0U, assignment_trace.sampled_frames,
-        m3::offline::StringAssignmentTrace::kTickDecimation);
+        assignment_trace.retained_decisions_only ? 1U :
+            m3::offline::StringAssignmentTrace::kTickDecimation);
     if (assignment_trace.truncated) {
       std::fprintf(stderr, "m3_replay: refusing incomplete assignment trace\n");
       return 1;

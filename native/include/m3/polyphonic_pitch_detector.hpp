@@ -398,6 +398,11 @@ struct StringAssignmentDiagnostics final {
   std::uint8_t reserved_extras{};
   std::uint8_t prior_primary{255U};
   std::uint8_t prior_mask{};
+  std::uint8_t prior_midi{};
+  std::uint8_t prior_spectral{};
+  std::uint8_t retained_pin_mask{};
+  std::uint8_t retained_ordinary_primary{255U};
+  std::uint8_t retained_primary{255U};
   std::uint8_t dp_primary{255U};
   std::uint8_t spectral_proposal{};
   std::uint8_t final_primary{255U};
@@ -413,6 +418,11 @@ struct StringAssignmentDiagnostics final {
   bool isolated{};
   bool reassignment_ready{};
   bool prior_committed{};
+  bool prior_active{};
+  // Complete ordinary and constrained solutions in the same ON history.
+  // These observations do not run a separate OFF counterfactual.
+  bool retained_decision_changed{};
+  bool retained_ordinary_valid{};
   bool use_posterior{};
   bool calibrated_replacement{};
   double phase_cents{};

@@ -76,6 +76,8 @@ struct StringAssignmentTrace final {
   std::size_t sampled_frames{};
   bool truncated{};
   bool failed{};
+  // Compact, undecimated complete solutions only when retained pins change DP.
+  bool retained_decisions_only{};
 };
 
 // One requested pitch on every decision tick in a bounded time range, including

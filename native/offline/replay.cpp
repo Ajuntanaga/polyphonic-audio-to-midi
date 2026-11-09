@@ -590,6 +590,35 @@ void write_string_assignment_frame(
     const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels) {
   const auto tick = detector.candidate_tracking_diagnostics(0U).decision_tick;
   if (trace.failed) return;
+  if (trace.retained_decisions_only) {
+    ++trace.sampled_frames;
+    for (std::uint16_t n = 0U; n < 128U; ++n) {
+      const auto a = detector.string_assignment_diagnostics(
+          static_cast<std::uint8_t>(n));
+      if (!a.retained_decision_changed) continue;
+      if (trace.rows >= trace.kMaximumRows) { trace.truncated = true; return; }
+      std::uint8_t rendered_mask = 0U;
+      for (std::size_t v = 0U; v < snapshot.voice_count; ++v) {
+        const auto& voice = snapshot.voices[v];
+        if (voice.midi_note == n && voice.string_index < kMaxVoices)
+          rendered_mask |= static_cast<std::uint8_t>(1U << voice.string_index);
+      }
+      std::fprintf(trace.stream, "%llu\t%u\t%u",
+          static_cast<unsigned long long>(sample_index), tick, unsigned(n));
+      for (const unsigned field : {
+               unsigned(a.selected_count), unsigned(a.ordinal),
+               unsigned(a.retained_ordinary_valid), unsigned(a.retained_ordinary_primary),
+               unsigned(a.retained_primary), unsigned(a.retained_pin_mask),
+               unsigned(a.playable), unsigned(a.prior_active), unsigned(a.prior_committed),
+               unsigned(a.prior_primary), unsigned(a.prior_mask), unsigned(a.prior_midi),
+               unsigned(a.prior_spectral), unsigned(a.final_primary), unsigned(a.final_mask),
+               unsigned(rendered_mask)}) std::fprintf(trace.stream, "\t%u", field);
+      std::fputc('\n', trace.stream);
+      trace.failed = trace.failed || std::ferror(trace.stream) != 0;
+      ++trace.rows;
+    }
+    return;
+  }
   const bool sampled = tick % trace.kTickDecimation == 0U;
   if (sampled) ++trace.sampled_frames;
   for (std::uint16_t n = 0U; n < 128U; ++n) {
@@ -2943,7 +2972,14 @@ bool run_detector_replay(const WaveData& wave,
     return false;
 #else
     if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3) return false;
-    trace.failed = std::fprintf(trace.stream,
+    if (trace.retained_decisions_only) {
+      if (!diagnostic_retained_spectral_assignment) return false;
+      trace.failed = std::fprintf(trace.stream,
+          "sample\ttick\tnote\tselected_count\tordinal\tordinary_valid\tordinary_primary\t"
+          "retained_primary\tpin_mask\tplayable\tprior_active\tprior_committed\t"
+          "prior_primary\tprior_mask\tprior_midi\tprior_spectral\tfinal_primary\t"
+          "final_mask\trendered_mask\n") < 0;
+    } else trace.failed = std::fprintf(trace.stream,
         "sample\ttick\tnote\tobserved\tvalid\tselected_count\tordinal\tisolated\t"
         "reassignment_ready\tprior_committed\tuse_posterior\tplayable\t"
         "reserved_coasting\treserved_extras\tprior_primary\tprior_mask\tdp_primary\t"

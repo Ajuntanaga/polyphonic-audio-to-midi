@@ -6040,6 +6040,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       observation.prior_primary = prior.assigned_string;
       observation.prior_mask = prior.assigned_string_mask;
       observation.prior_committed = prior.calibrated_lane_committed;
+      observation.prior_active = prior.active;
+      observation.prior_midi = prior.midi_voice_mask;
+      observation.prior_spectral = prior.spectral_lane_mask;
       observation.isolated = isolated_selected_voice;
       observation.reassignment_ready = calibrated_reassignment_ready;
       observation.spectral_proposal = spectral_lane;
@@ -6663,6 +6666,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (retained_enabled) {
       const auto pin = retained_spectral_assignment_lane(candidate, spectral_lane);
+      if (assignment_diagnostics_enabled_)
+        assignment_diagnostics_[candidate].retained_pin_mask = pin;
       retained_has_constraint |= pin != 0U;
       advance(retained, pin != 0U
           ? static_cast<std::uint8_t>(playable & pin) : playable);
@@ -6744,7 +6749,23 @@ void PolyphonicPitchDetector::assign_m3_strings(
     // A full allocation is required. Conflicting pins, coasting reservations,
     // or an otherwise infeasible chord fall back together; never drop a note
     // or accept only part of the proposed allocation.
-    if (constrained.valid) best = constrained;
+    if (constrained.valid) {
+      if (assignment_diagnostics_enabled_ &&
+          (!best.valid || best.strings != constrained.strings)) {
+        // Include every selected peer, even when that peer keeps its lane.
+        // Capturing before replacing best preserves the ordinary decision.
+        for (std::size_t voice = 0U; voice < selected_count; ++voice) {
+          auto& observation = assignment_diagnostics_[candidates[voice]];
+          observation.retained_decision_changed = true;
+          observation.retained_ordinary_valid = best.valid;
+          if (best.valid) observation.retained_ordinary_primary =
+              static_cast<std::uint8_t>((best.strings >> (voice * 3U)) & 0x07U);
+          observation.retained_primary = static_cast<std::uint8_t>(
+              (constrained.strings >> (voice * 3U)) & 0x07U);
+        }
+      }
+      best = constrained;
+    }
   }
   if (assignment_diagnostics_enabled_) {
     // Record the chosen DP solution and its cost before any replay policy.

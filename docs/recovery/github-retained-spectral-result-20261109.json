@@ -1,0 +1,667 @@
+{
+  "schema": "m3_retained_spectral_assignment_checkpoint_v1",
+  "state": "completed",
+  "final": true,
+  "updated_at": "2026-11-09T11:30:16.706122+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "b974b36ebe4d7be47b6ec54e9d0a0ab1a9f2adfe",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42609020430",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "2b0d93432a213975707807add4bf70b6e025526960233c2acfdfbf04c42af514",
+  "input_manifest_sha256": "a0e80dab40f6e3bb37c00df33481213a44f4cce2c4a76cfd328fe037e2261e48",
+  "reference_report_sha256": "e4cd3974fe6541895e762ce5dfa268d8b74f6f1b8ecedf02553750cba5c3ea9f",
+  "policy": "Parallel physical assignment constrained only by freshly revalidated single-lane MIDI incumbents; complete-solution fallback; no output guard.",
+  "decision": "rejected",
+  "off_reference_bit_identical": true,
+  "comparison": {
+    "delta": {
+      "matched": 5992,
+      "false_wrong_note_voices": 623,
+      "false_wrong_string_voices": -6120,
+      "false_gap_voices": -347,
+      "false_positive_voices": -5844
+    },
+    "changed_labels": [
+      {
+        "label_index": 11,
+        "midi_note": 47,
+        "string_mask": 2,
+        "labeled": 1124,
+        "baseline_matched": 185,
+        "current_matched": 195,
+        "matched_delta": 10
+      },
+      {
+        "label_index": 12,
+        "midi_note": 48,
+        "string_mask": 1,
+        "labeled": 1124,
+        "baseline_matched": 496,
+        "current_matched": 514,
+        "matched_delta": 18
+      },
+      {
+        "label_index": 34,
+        "midi_note": 57,
+        "string_mask": 16,
+        "labeled": 965,
+        "baseline_matched": 307,
+        "current_matched": 317,
+        "matched_delta": 10
+      },
+      {
+        "label_index": 35,
+        "midi_note": 48,
+        "string_mask": 8,
+        "labeled": 965,
+        "baseline_matched": 36,
+        "current_matched": 46,
+        "matched_delta": 10
+      },
+      {
+        "label_index": 36,
+        "midi_note": 49,
+        "string_mask": 4,
+        "labeled": 965,
+        "baseline_matched": 416,
+        "current_matched": 423,
+        "matched_delta": 7
+      },
+      {
+        "label_index": 54,
+        "midi_note": 52,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 467,
+        "current_matched": 509,
+        "matched_delta": 42
+      },
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 688,
+        "matched_delta": 421
+      },
+      {
+        "label_index": 127,
+        "midi_note": 48,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 698,
+        "current_matched": 703,
+        "matched_delta": 5
+      },
+      {
+        "label_index": 145,
+        "midi_note": 57,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 311,
+        "current_matched": 408,
+        "matched_delta": 97
+      },
+      {
+        "label_index": 153,
+        "midi_note": 45,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 532,
+        "current_matched": 499,
+        "matched_delta": -33
+      },
+      {
+        "label_index": 159,
+        "midi_note": 47,
+        "string_mask": 4,
+        "labeled": 598,
+        "baseline_matched": 142,
+        "current_matched": 177,
+        "matched_delta": 35
+      },
+      {
+        "label_index": 165,
+        "midi_note": 40,
+        "string_mask": 2,
+        "labeled": 1123,
+        "baseline_matched": 1075,
+        "current_matched": 1088,
+        "matched_delta": 13
+      },
+      {
+        "label_index": 168,
+        "midi_note": 44,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 815,
+        "current_matched": 809,
+        "matched_delta": -6
+      },
+      {
+        "label_index": 178,
+        "midi_note": 44,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 669,
+        "current_matched": 713,
+        "matched_delta": 44
+      },
+      {
+        "label_index": 197,
+        "midi_note": 42,
+        "string_mask": 2,
+        "labeled": 965,
+        "baseline_matched": 96,
+        "current_matched": 119,
+        "matched_delta": 23
+      },
+      {
+        "label_index": 202,
+        "midi_note": 54,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 302,
+        "current_matched": 369,
+        "matched_delta": 67
+      },
+      {
+        "label_index": 205,
+        "midi_note": 51,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 789,
+        "current_matched": 824,
+        "matched_delta": 35
+      },
+      {
+        "label_index": 206,
+        "midi_note": 46,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 813,
+        "current_matched": 824,
+        "matched_delta": 11
+      },
+      {
+        "label_index": 219,
+        "midi_note": 49,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 912,
+        "current_matched": 1001,
+        "matched_delta": 89
+      },
+      {
+        "label_index": 221,
+        "midi_note": 46,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 315,
+        "current_matched": 631,
+        "matched_delta": 316
+      },
+      {
+        "label_index": 222,
+        "midi_note": 44,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 457,
+        "current_matched": 653,
+        "matched_delta": 196
+      },
+      {
+        "label_index": 225,
+        "midi_note": 46,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 930,
+        "current_matched": 911,
+        "matched_delta": -19
+      },
+      {
+        "label_index": 233,
+        "midi_note": 38,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 963,
+        "current_matched": 849,
+        "matched_delta": -114
+      },
+      {
+        "label_index": 245,
+        "midi_note": 48,
+        "string_mask": 2,
+        "labeled": 1123,
+        "baseline_matched": 140,
+        "current_matched": 693,
+        "matched_delta": 553
+      },
+      {
+        "label_index": 247,
+        "midi_note": 49,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 753,
+        "current_matched": 770,
+        "matched_delta": 17
+      },
+      {
+        "label_index": 265,
+        "midi_note": 55,
+        "string_mask": 4,
+        "labeled": 1124,
+        "baseline_matched": 548,
+        "current_matched": 364,
+        "matched_delta": -184
+      },
+      {
+        "label_index": 267,
+        "midi_note": 36,
+        "string_mask": 1,
+        "labeled": 1124,
+        "baseline_matched": 194,
+        "current_matched": 420,
+        "matched_delta": 226
+      },
+      {
+        "label_index": 269,
+        "midi_note": 45,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 1053,
+        "current_matched": 946,
+        "matched_delta": -107
+      },
+      {
+        "label_index": 271,
+        "midi_note": 38,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 404,
+        "current_matched": 514,
+        "matched_delta": 110
+      },
+      {
+        "label_index": 290,
+        "midi_note": 50,
+        "string_mask": 2,
+        "labeled": 1123,
+        "baseline_matched": 404,
+        "current_matched": 385,
+        "matched_delta": -19
+      },
+      {
+        "label_index": 291,
+        "midi_note": 48,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 324,
+        "current_matched": 305,
+        "matched_delta": -19
+      },
+      {
+        "label_index": 297,
+        "midi_note": 50,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 484,
+        "current_matched": 590,
+        "matched_delta": 106
+      },
+      {
+        "label_index": 298,
+        "midi_note": 43,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 522,
+        "current_matched": 661,
+        "matched_delta": 139
+      },
+      {
+        "label_index": 299,
+        "midi_note": 41,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 416,
+        "current_matched": 698,
+        "matched_delta": 282
+      },
+      {
+        "label_index": 302,
+        "midi_note": 43,
+        "string_mask": 1,
+        "labeled": 825,
+        "baseline_matched": 664,
+        "current_matched": 645,
+        "matched_delta": -19
+      },
+      {
+        "label_index": 304,
+        "midi_note": 46,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 220,
+        "current_matched": 236,
+        "matched_delta": 16
+      },
+      {
+        "label_index": 306,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 729,
+        "current_matched": 737,
+        "matched_delta": 8
+      },
+      {
+        "label_index": 310,
+        "midi_note": 53,
+        "string_mask": 8,
+        "labeled": 990,
+        "baseline_matched": 660,
+        "current_matched": 666,
+        "matched_delta": 6
+      },
+      {
+        "label_index": 311,
+        "midi_note": 56,
+        "string_mask": 4,
+        "labeled": 990,
+        "baseline_matched": 634,
+        "current_matched": 641,
+        "matched_delta": 7
+      },
+      {
+        "label_index": 320,
+        "midi_note": 42,
+        "string_mask": 2,
+        "labeled": 786,
+        "baseline_matched": 760,
+        "current_matched": 624,
+        "matched_delta": -136
+      },
+      {
+        "label_index": 335,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1124,
+        "baseline_matched": 1068,
+        "current_matched": 1069,
+        "matched_delta": 1
+      },
+      {
+        "label_index": 355,
+        "midi_note": 39,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 9,
+        "current_matched": 824,
+        "matched_delta": 815
+      },
+      {
+        "label_index": 357,
+        "midi_note": 44,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 863,
+        "current_matched": 846,
+        "matched_delta": -17
+      },
+      {
+        "label_index": 364,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 91,
+        "current_matched": 795,
+        "matched_delta": 704
+      },
+      {
+        "label_index": 366,
+        "midi_note": 52,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 422,
+        "current_matched": 715,
+        "matched_delta": 293
+      },
+      {
+        "label_index": 367,
+        "midi_note": 49,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 658,
+        "current_matched": 744,
+        "matched_delta": 86
+      },
+      {
+        "label_index": 369,
+        "midi_note": 48,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 468,
+        "current_matched": 590,
+        "matched_delta": 122
+      },
+      {
+        "label_index": 370,
+        "midi_note": 46,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 428,
+        "current_matched": 501,
+        "matched_delta": 73
+      },
+      {
+        "label_index": 376,
+        "midi_note": 49,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 793,
+        "current_matched": 781,
+        "matched_delta": -12
+      },
+      {
+        "label_index": 454,
+        "midi_note": 55,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 0,
+        "current_matched": 236,
+        "matched_delta": 236
+      },
+      {
+        "label_index": 456,
+        "midi_note": 47,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 57,
+        "current_matched": 790,
+        "matched_delta": 733
+      },
+      {
+        "label_index": 457,
+        "midi_note": 45,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 483,
+        "current_matched": 793,
+        "matched_delta": 310
+      },
+      {
+        "label_index": 459,
+        "midi_note": 45,
+        "string_mask": 1,
+        "labeled": 1124,
+        "baseline_matched": 809,
+        "current_matched": 1081,
+        "matched_delta": 272
+      },
+      {
+        "label_index": 464,
+        "midi_note": 47,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 799,
+        "current_matched": 828,
+        "matched_delta": 29
+      },
+      {
+        "label_index": 470,
+        "midi_note": 44,
+        "string_mask": 1,
+        "labeled": 824,
+        "baseline_matched": 516,
+        "current_matched": 822,
+        "matched_delta": 306
+      },
+      {
+        "label_index": 479,
+        "midi_note": 55,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 426,
+        "current_matched": 330,
+        "matched_delta": -96
+      },
+      {
+        "label_index": 480,
+        "midi_note": 47,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 604,
+        "current_matched": 474,
+        "matched_delta": -130
+      },
+      {
+        "label_index": 484,
+        "midi_note": 39,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 1017,
+        "current_matched": 1021,
+        "matched_delta": 4
+      }
+    ],
+    "lost_labels": [
+      153,
+      168,
+      225,
+      233,
+      265,
+      269,
+      290,
+      291,
+      302,
+      320,
+      357,
+      376,
+      479,
+      480
+    ],
+    "increased_error_counts": [
+      "false_wrong_note_voices"
+    ],
+    "gate_pass": false,
+    "output_bit_identical": false
+  },
+  "raw_midi_delta": {
+    "cross_pitch_on_before_release": -174,
+    "repeated_pitch_on_before_release": 0,
+    "off_without_raw_on": 0,
+    "zero_velocity_on": 0,
+    "unassigned_on": 0
+  },
+  "raw_midi_no_regression": true,
+  "raw_conflicts_reduced": true,
+  "recorded_lane_window_resolved": true,
+  "full_recording_screen_pass": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "interpretation": "A successful process is not acceptance. Every passage must retain its labeled matches, false outputs must not increase, and raw cross-pitch conflicts must decrease without another raw-event regression, with no remaining conflict in the recorded lane window. Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.",
+  "report_path": "build/github-results/retained-spectral-42609020430/retained-spectral/report.json",
+  "report_sha256": "af07bf45a1561b99d45ed6b2d0aa4077c63f21abd330132e7a6fb33b99990daf",
+  "observed_at": "2026-11-09T11:33:24.045480+00:00",
+  "runs": {
+    "reference-off": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "recorded_lane_window_conflicts": 1
+    },
+    "trial-on": {
+      "output": {
+        "labeled": 528632,
+        "matched": 151377,
+        "false_wrong_note_voices": 164886,
+        "false_wrong_string_voices": 86533,
+        "false_gap_voices": 62509,
+        "false_positive_voices": 313928,
+        "fingerprint": "0f4a26521a00b321"
+      },
+      "tsv_sha256": "e913b4dc4aa1dc56c07f59a9ff693dfd8cf1339dd7a184633655ccd357bb8c44",
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 478,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "recorded_lane_window_conflicts": 0
+    }
+  },
+  "github_checks": {
+    "worker": {
+      "run_id": 42609020430,
+      "conclusion": "success"
+    },
+    "native_ci": {
+      "run_id": 42608996100,
+      "conclusion": "success"
+    },
+    "portable_source": {
+      "run_id": 42608996067,
+      "conclusion": "success"
+    }
+  },
+  "artifacts": [
+    {
+      "id": 13668574262,
+      "name": "m3-report-42609020430-1",
+      "size_in_bytes": 18050,
+      "digest": "sha256:bc5c65685e6191753bb17271cc46467116c6aa9ddbddfa20f22caba7c74be5be"
+    },
+    {
+      "id": 13670110832,
+      "name": "m3-evidence-42609020430-1",
+      "size_in_bytes": 4501332,
+      "digest": "sha256:da6b4a671cc228987d521601cf125d295d4ff2276135718be43f887e3cd17139"
+    }
+  ],
+  "next": "Diagnose the newly measured passage losses and wrong-note increase from the rejected ordinary trial, beginning with label 265 (note 55, expected string mask 4, 548 to 364 matches). Preserve the installed output and OFF reference; no unchanged repeat or wider acceptance run."
+}

@@ -1992,6 +1992,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     config.max_polyphony = 2U;
     M3_EXPECT_TRUE(detector.configure(48000.0, config));
     detector.set_retained_spectral_assignment_for_diagnostics(enabled);
+    detector.set_assignment_diagnostics_enabled(true);
     detector.playable_string_masks_[0U] = newcomer_playable;
     detector.playable_string_masks_[1U] = 5U;
     auto& incumbent = detector.candidate_states_[1U];
@@ -2034,6 +2035,30 @@ struct PolyphonicPitchDetectorTestAccess final {
     const auto allocations = test::allocation_count();
     detector.assign_m3_strings(selected);
     M3_EXPECT_EQ(test::allocation_count(), allocations);
+    const bool changed = enabled && fresh_spectrum && newcomer_playable == 5U;
+    const auto newcomer_trace = detector.string_assignment_diagnostics(47U);
+    const auto incumbent_trace = detector.string_assignment_diagnostics(48U);
+    M3_EXPECT_EQ(newcomer_trace.retained_decision_changed, changed);
+    M3_EXPECT_EQ(incumbent_trace.retained_decision_changed, changed);
+    M3_EXPECT_EQ(newcomer_trace.prior_active, false);
+    M3_EXPECT_EQ(incumbent_trace.prior_active, true);
+    M3_EXPECT_EQ(incumbent_trace.prior_mask, 1U);
+    M3_EXPECT_EQ(incumbent_trace.prior_midi, 1U);
+    M3_EXPECT_EQ(incumbent_trace.prior_spectral, 1U);
+    if (changed) {
+      M3_EXPECT_TRUE(newcomer_trace.retained_ordinary_valid);
+      M3_EXPECT_TRUE(incumbent_trace.retained_ordinary_valid);
+      M3_EXPECT_EQ(newcomer_trace.selected_count, 2U);
+      M3_EXPECT_EQ(incumbent_trace.selected_count, 2U);
+      M3_EXPECT_EQ(newcomer_trace.ordinal, 0U);
+      M3_EXPECT_EQ(incumbent_trace.ordinal, 1U);
+      M3_EXPECT_EQ(newcomer_trace.retained_pin_mask, 0U);
+      M3_EXPECT_EQ(incumbent_trace.retained_pin_mask, 1U);
+      M3_EXPECT_EQ(newcomer_trace.retained_ordinary_primary, 0U);
+      M3_EXPECT_EQ(incumbent_trace.retained_ordinary_primary, 2U);
+      M3_EXPECT_EQ(newcomer_trace.retained_primary, 2U);
+      M3_EXPECT_EQ(incumbent_trace.retained_primary, 0U);
+    }
     if (fresh_spectrum) {
       M3_EXPECT_TRUE(spectral.single_source_error_valid);
       M3_EXPECT_EQ(spectral.single_source_error_tick, 17U);
