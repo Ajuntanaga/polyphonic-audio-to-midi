@@ -1,4 +1,14 @@
-# Current checkpoint: recovery passed; corpus timing rejected
+# Current checkpoint: bass-hold fragmentation traced to string switches
+
+GitHub run `42658861439` completed at source `dbf2ce27c7a6eab0759e5163224735ef2f7bac70`, worker `ff37a204cb1f327bbce0d9f8fbe27e8dd1b8af72`. Complete ordinary snapshot/output, outcome and raw MIDI remain bit-identical to the saved ON reference. The bounded trace changes no runtime policy. Its small report archive was collected once and hash verified; bulk evidence stays on GitHub.
+
+Ordinary label 17, MIDI note 37, has one initial attack followed by 155 same-pitch moves between voice lanes 0 and 1. Every move releases one lane and attacks the other at the same sample. After the initial attack, the pitch candidate remains active and selected; the switches cause no attack/release reset or calibrated pitch change. Assignment changes on the same tick in 154 cases; one move follows a one-tick continuity delay. The calibration-preferred string changes at only 17 switches, so calibration ranking alone does not explain the sequence. The competing assignment costs still need diagnosis.
+
+The recorded hold remains 40000/71783 exact samples (55.7235%), with 78 correct segments, 156 note-ons, and a longest uninterrupted correct segment of 3968 samples (41.33 ms at 96 kHz). These are raw held-note measurements, not labeled-frame scores or delivered-host MIDI. Installed output and scoreboard remain unchanged; this result identifies a failure mechanism rather than improving it. Checkpoint: `docs/recovery/github-held-note-trace-20261109.json`. Eleven focused Python contracts and workflow input checks passed locally; source portable run `42658539309` passed on GitHub.
+
+Next: inspect the competing-candidate assignment costs at these recorded switches, including the continuity delay. A narrow stabilization trial must lengthen correct holds and reduce retriggers without losing passage matches or increasing false outputs. Require bit-identical OFF references and buffers, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. Native maximum-time failures and external DAW/device verification remain open. Do not rerun or recollect completed jobs.
+
+## Completed recovery and corpus results
 
 GitHub corpus run `42643461303` completed. All 42 label/error comparisons and 56 buffer comparisons passed; all fourteen OFF references retain identity. All 28 timed runs had zero processing allocations and matching scored output. The trial eliminates 781 cross-pitch and four repeated-pitch raw MIDI conflicts. Ordinary snapshot matches rise from 145385 to 145400, with fifteen fewer wrong-string outputs; the other thirteen datasets keep their counts.
 

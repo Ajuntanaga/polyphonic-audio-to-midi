@@ -1,0 +1,205 @@
+{
+  "schema": "m3_github_held_note_trace_checkpoint_v1",
+  "task": "held-note-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42658861439,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42658861439",
+  "source_commit": "dbf2ce27c7a6eab0759e5163224735ef2f7bac70",
+  "worker_commit": "ff37a204cb1f327bbce0d9f8fbe27e8dd1b8af72",
+  "created_at": "2026-11-09T16:50:54Z",
+  "observed_at": "2026-11-09T16:57:00.503770+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "stage": "Saved ON identity verified; held-note lane switches diagnosed",
+  "output_target": "build/github-results/held-note-trace-42658861439",
+  "report_relative_path": "held-note-trace/report.json",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-held-note-trace-20261109.json",
+  "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
+  "profile": "held-note-on",
+  "dataset": "ordinary",
+  "note": 37,
+  "label_index": 17,
+  "window_samples": [
+    244736,
+    317440
+  ],
+  "scope": "Trace candidate selection, calibrated output routing and raw MIDI around the fragmented bass hold. Full ordinary replay verifies saved ON identity; only the bounded diagnostic is retained.",
+  "held_label": {
+    "label_index": 17,
+    "midi_note": 37,
+    "string_mask": 1,
+    "start_sample": 245017,
+    "end_sample": 316800,
+    "annotated_hold_samples": 71783,
+    "exact_held_samples": 40000,
+    "unmatched_hold_samples": 31783,
+    "longest_exact_hold_samples": 3968,
+    "exact_hold_segments": 78,
+    "first_exact_hold_delay_samples": 5926,
+    "note_ons_inside_label": 156
+  },
+  "acceptance": "Saved full snapshot/output, outcome and raw MIDI identity; expected label metadata; valid raw MIDI pairing; complete bounded decision clock. Diagnostic success is not note-quality, native timing or host acceptance.",
+  "local_checks": {
+    "python_contracts": 11,
+    "result": "passed",
+    "workflow_validation": "passed",
+    "native_execution": false
+  },
+  "source_runs": {
+    "portable_replay": 42658539309,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "next_step": "Inspect competing-candidate assignment costs at the recorded lane-switch ticks, including the one-tick continuity delay, before a narrowly scoped stabilization trial. Require a longer correct held note with fewer retriggers, no passage loss or false-output increase, zero allocations, identical OFF references and buffers, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device verification remains open.",
+  "completed_at": "2026-11-09T16:52:39Z",
+  "report": "build/github-results/held-note-trace-42658861439/held-note-trace/report.json",
+  "report_sha256": "653a42f7fba5a0e9e52ca668393ce16c999bc318e2203376d10c63e259faf487",
+  "binary_sha256": "b2f76c466e50f5dc83ee0965d21860f774bf5a488528b2969ba1979dc1294e33",
+  "input_manifest_sha256": "69cdfd256ad9f761b7e9d37448260fd9681e5ab76922e87edb5a28fc17a71ed4",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "dbf2ce27c7a6eab0759e5163224735ef2f7bac70",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42658861439",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "decision": "unchanged; diagnostic accepted, production promotion not accepted",
+  "complete_midi_and_outcome_identical": true,
+  "full_snapshot_outcome_midi_bit_identical_to_saved_on": true,
+  "output": {
+    "labeled": 528632,
+    "matched": 145400,
+    "false_wrong_note_voices": 164263,
+    "false_wrong_string_voices": 92638,
+    "false_gap_voices": 62856,
+    "false_positive_voices": 319757,
+    "fingerprint": "002540bbc3759cd6"
+  },
+  "diagnosis": {
+    "schema": "m3_held_note_lane_switch_diagnosis_v1",
+    "created_at": "2026-11-09T16:57:00.503770+00:00",
+    "run_id": 42658861439,
+    "source_commit": "dbf2ce27c7a6eab0759e5163224735ef2f7bac70",
+    "report": "build/github-results/held-note-trace-42658861439/held-note-trace/report.json",
+    "report_sha256": "653a42f7fba5a0e9e52ca668393ce16c999bc318e2203376d10c63e259faf487",
+    "method": "Reduce the existing report only. Select note37 raw events within label17 [245017,316800), order by sample and raw sequence, group by sample, then join to the complete 64-sample decision clock. No new replay or native execution.",
+    "held_label": {
+      "label_index": 17,
+      "midi_note": 37,
+      "string_mask": 1,
+      "start_sample": 245017,
+      "end_sample": 316800,
+      "annotated_hold_samples": 71783,
+      "exact_held_samples": 40000,
+      "unmatched_hold_samples": 31783,
+      "longest_exact_hold_samples": 3968,
+      "exact_hold_segments": 78,
+      "first_exact_hold_delay_samples": 5926,
+      "note_ons_inside_label": 156
+    },
+    "exact_held_sample_percent": 55.723499993034565,
+    "sample_rate": 96000,
+    "first_on_sample": 250943,
+    "on_events": 156,
+    "off_events": 155,
+    "same_sample_off_then_on_pairs": 155,
+    "different_lane_pairs": 155,
+    "lane_switches": [
+      {
+        "from_voice_id": 0,
+        "to_voice_id": 1,
+        "count": 78
+      },
+      {
+        "from_voice_id": 1,
+        "to_voice_id": 0,
+        "count": 77
+      }
+    ],
+    "candidate_active_and_selected_at_all_switches": true,
+    "candidate_age_increments_without_reset_at_all_switches": true,
+    "attack_and_release_zero_at_all_switches": true,
+    "routing_mask_equals_raw_switch_at_all_pairs": true,
+    "same_tick_assignment_switch_pairs": 154,
+    "continuity_delayed_pairs": [
+      {
+        "sample": 290175,
+        "previous_sample": 290111,
+        "assigned_masks": [
+          2,
+          2
+        ],
+        "previous_desired_mask": 1,
+        "current_desired_mask": 2,
+        "previous_continuity_mask": 1,
+        "current_continuity_mask": 2,
+        "raw_events": [
+          {
+            "kind": "off",
+            "sample": 290175,
+            "note": 37,
+            "velocity": 0,
+            "voice_id": 0,
+            "sequence": 437
+          },
+          {
+            "kind": "on",
+            "sample": 290175,
+            "note": 37,
+            "velocity": 38,
+            "voice_id": 1,
+            "sequence": 439
+          }
+        ]
+      }
+    ],
+    "pitch_stage_output_changes": 0,
+    "spectral_mask_zero_at_all_switches": true,
+    "capacity_blocked_zero_at_all_switches": true,
+    "direct_evidence_at_switch_counts": {
+      "1": 114,
+      "0": 41
+    },
+    "best_calibration_string_changes_at_switch": 17,
+    "assigned_string_differs_from_best_calibration_string_at_switch": 69,
+    "full_snapshot_outcome_midi_bit_identical_to_saved_on": true,
+    "finding": "All 155 repeat attacks in this label are same-pitch moves between voice lanes 0 and 1. The pitch candidate stays active and selected. At 154 switches the assignment changes on the same tick; one follows a previous-tick assignment change after continuity stopped retaining lane0. No calibrated pitch-output change occurs.",
+    "limits": "Immediate routing cause is established for this bounded label. Calibration preference changes at only 17 switches, so calibration rank changes alone do not explain the sequence. Competing assignment costs and a safe correction remain unresolved. Diagnostic success is not a note-quality gain or native timing, delivered-host MIDI or live acceptance.",
+    "runtime_rule_changed": false,
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "next_step": "Inspect competing-candidate assignment costs at the recorded lane-switch ticks, including the one-tick continuity delay, before a narrowly scoped stabilization trial. Require a longer correct held note with fewer retriggers, no passage loss or false-output increase, zero allocations, identical OFF references and buffers, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device verification remains open."
+  },
+  "artifact_receipt": {
+    "archive_sha256": "cfdfbaca790489d6a6cf36ed57b3a02d6f227667479c4aface37717486abd0f5",
+    "archive_hash_verified": true,
+    "downloaded_at": "2026-11-09T16:53:20.317253+00:00",
+    "small_report_bytes": 177271,
+    "bulk_downloaded": false
+  },
+  "artifacts": [
+    {
+      "id": 13693761878,
+      "name": "m3-evidence-42658861439-1",
+      "size_in_bytes": 2878364,
+      "digest": "sha256:2a3da87ec3ce8eb446008a7286859f8e1232d2f93cfeb20d50536a178124d59d",
+      "downloaded": false
+    },
+    {
+      "id": 13693671633,
+      "name": "m3-report-42658861439-1",
+      "size_in_bytes": 177271,
+      "digest": "sha256:cfdfbaca790489d6a6cf36ed57b3a02d6f227667479c4aface37717486abd0f5",
+      "downloaded": true
+    }
+  ]
+}
