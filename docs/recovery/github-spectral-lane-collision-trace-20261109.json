@@ -1,0 +1,60 @@
+{
+  "schema": "m3_github_spectral_lane_collision_trace_checkpoint_v1",
+  "task": "spectral-lane-collision-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42625491693,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42625491693",
+  "source_commit": "0105dd2ca87972e7493556b8f97c4b493480874c",
+  "worker_commit": "0075d390ad80136b527e4110acad44766bdddb22",
+  "created_at": "2026-11-09T13:26:25Z",
+  "observed_at": "2026-11-09T13:27:23.314455+00:00",
+  "status": "in_progress",
+  "conclusion": null,
+  "stage": "Build offline replay on GitHub",
+  "result_final": false,
+  "output_target": "build/github-results/spectral-lane-collision-trace-42625491693",
+  "report_relative_path": "spectral-lane-collision-trace/report.json",
+  "outputs_downloaded_once": false,
+  "checkpoint": "docs/recovery/github-spectral-lane-collision-trace-20261109.json",
+  "reference_report": "docs/recovery/github-spectral-lane-collision-20261109.json",
+  "profile": "spectral-collision-on",
+  "reference_key": "trial-on",
+  "dataset": "ordinary",
+  "note": 37,
+  "label_index": -1,
+  "candidate_notes": [
+    37,
+    54,
+    57
+  ],
+  "block_size": 512,
+  "trace_window_samples": [
+    286720,
+    289280
+  ],
+  "target_event": {
+    "sample": 288255,
+    "kind": "on",
+    "note": 37,
+    "voice": 1,
+    "sequence": 434
+  },
+  "diagnostic_flags": [
+    "--diagnostic-spectral-lane-collision"
+  ],
+  "purpose": "Locate the route that moves active note 37 into MIDI slot 1 while note 54 still occupies that slot.",
+  "acceptance": "Each full outcome and MIDI stream must match the saved ON reference, and target events must occur exactly once before the trace is interpreted. This diagnostic is not a runtime acceptance or promotion.",
+  "local_checks": {
+    "parser_and_provenance_tests": 16,
+    "result": "passed",
+    "native_execution": false
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "live_readiness": "not measured",
+  "corpus_trial_decision": "rejected",
+  "corpus_checkpoint": "docs/recovery/github-spectral-lane-collision-corpus-20261109.json",
+  "ledger_checkpoint": "docs/recovery/github-midi-ledger-replay-20261109.json",
+  "next_step": "Collect the small report from GitHub run 42625491693 once. Interpret the occupied-slot routing trace only if complete outcome and MIDI streams match the saved ON trial and all target events are reproduced. Then correct the remaining slot conflict without label/error regressions; MIDI blocking, native timing and live-host gates remain unmet."
+}
