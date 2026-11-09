@@ -30,7 +30,7 @@ def timing_gates(timing, replay, block):
                 and timing.get('block_samples') == block
                 and timing.get('sample_rate') == 96000)
     uninstrumented = (timing.get('timing_diagnostic_only', False) is False
-                      and 'allocation_trace' not in timing)
+                      and 'allocation_trace' not in timing and 'thread_cpu' not in timing)
     allocations = (identity and uninstrumented and timing.get('allocation_guard') is True
                    and all(type(timing.get(key)) is int and timing[key] == 0 for key in
                            ('cpp_allocations', 'cpp_frees', 'c_allocations', 'c_frees')))

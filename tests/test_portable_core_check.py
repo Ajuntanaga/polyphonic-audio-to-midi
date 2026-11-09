@@ -20,7 +20,7 @@ class CoreCheckTests(unittest.TestCase):
         'calibration_pass\tlabeled\tmatched\n'
         '0\t0\t960\t52\t7\t1\t10\t8\n')
 
-    def exercise(self, change=None):
+    def exercise(self, change=None, *, diagnostic=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest = root / 'binary', root / 'manifest.json'
@@ -40,12 +40,18 @@ class CoreCheckTests(unittest.TestCase):
                 self.assertEqual('--diagnostic-cue-free-lane-reassignment' in command,
                                  mode == 'on')
                 self.assertEqual(command[command.index('--block') + 1], '32')
+                self.assertEqual('--diagnostic-thread-cpu' in command, diagnostic)
                 timing = dict(schema='m3_replay_core_timing_v1', sample_rate=96000,
                               block_samples=32, measurement_scope=MEASUREMENT_SCOPE,
                               fingerprint='0123456789abcdef', fingerprint_identical=True,
                               allocation_guard=True, cpp_allocations=0, cpp_frees=0,
                               c_allocations=0, c_frees=0, p99_ns=100000,
                               maximum_ns=200000, deadline_overruns=0)
+                if diagnostic:
+                    timing.update(blocks=32, timing_diagnostic_only=True, thread_cpu=dict(
+                        valid=True, block_resolution_pass=True,
+                        phases=[dict(blocks=1, wall_deadline_overruns=0) for _ in range(32)],
+                        slowest_blocks=[dict(wall_ns=200000)]))
                 kwargs['stdout'].write(self.TSV)
                 if change:
                     change(mode, command, timing, kwargs)
@@ -57,7 +63,8 @@ class CoreCheckTests(unittest.TestCase):
             with patch('tools.portable_core_check.verify_inputs'), \
                  patch('tools.portable_core_check.subprocess.run', side_effect=execute):
                 try:
-                    passed = run(binary, root, manifest, reference, output, 10)
+                    passed = run(binary, root, manifest, reference, output, 10,
+                                 diagnostic_thread_cpu=diagnostic)
                 except (ValueError, subprocess.CalledProcessError) as caught:
                     error = caught
             report = json.loads((output / 'report.json').read_text())
@@ -115,6 +122,40 @@ class CoreCheckTests(unittest.TestCase):
         self.assertEqual(report['state'], 'failed')
         self.assertEqual(modes, ['off'])
         self.assertEqual(stderr, 'replay failed\n')
+
+    def test_diagnosis_collects_without_passing_acceptance(self):
+        for resolution in (True, False):
+            with self.subTest(resolution=resolution):
+                def clock(mode, command, timing, kwargs):
+                    timing['thread_cpu']['block_resolution_pass'] = resolution
+                passed, report, error, modes, _ = self.exercise(clock, diagnostic=True)
+                self.assertIsNone(error)
+                self.assertTrue(passed)
+                self.assertTrue(report['collection_pass'])
+                self.assertEqual(modes, ['off', 'on'])
+                self.assertTrue(report['diagnostic_only'])
+                self.assertFalse(report['native_gate_pass'])
+                self.assertFalse(report['allocation_and_output_pass'])
+                self.assertEqual(report['cpu_block_statistics_usable'], resolution)
+                self.assertEqual(report['acceptance'], 'not evaluated: diagnostic timing')
+
+    def test_missing_or_incomplete_diagnosis_stops_before_on(self):
+        for defect in ('missing', 'phase_count', 'wall_count', 'slowest'):
+            with self.subTest(defect=defect):
+                def incomplete(mode, command, timing, kwargs):
+                    cpu = timing['thread_cpu']
+                    if defect == 'missing':
+                        del timing['thread_cpu']
+                    elif defect == 'phase_count':
+                        cpu['phases'][0]['blocks'] = 2
+                    elif defect == 'wall_count':
+                        cpu['phases'][0]['wall_deadline_overruns'] = 1
+                    else:
+                        cpu['slowest_blocks'][0]['wall_ns'] = 1
+                passed, report, error, modes, _ = self.exercise(incomplete, diagnostic=True)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(report['state'], 'failed')
+                self.assertEqual(modes, ['off'])
 
 
 if __name__ == '__main__':

@@ -37,7 +37,8 @@ class PortableCorpusTests(unittest.TestCase):
         self.assertFalse(timing_gates(dict(timing, fingerprint='bad'), replay, 32)['timing_pass'])
         self.assertFalse(timing_gates({}, replay, 32)['zero_processing_allocations'])
         self.assertIsNone(timing_gates(dict(timing, block_samples=512), replay, 512)['timing_pass'])
-        for marker in ({'timing_diagnostic_only': True}, {'allocation_trace': {}}):
+        for marker in ({'timing_diagnostic_only': True}, {'allocation_trace': {}},
+                       {'thread_cpu': {}}):
             gates = timing_gates(dict(timing, **marker), replay, 32)
             self.assertTrue(gates['timed_scored_identity'])
             self.assertFalse(gates['zero_processing_allocations'])

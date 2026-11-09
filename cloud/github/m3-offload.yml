@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, corpus-recovery]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace
@@ -47,7 +47,7 @@ jobs:
         run: |
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = true
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = corpus-recovery ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery ]]
       - uses: actions/checkout@v7
         with:
           repository: Ajuntanaga/polyphonic-audio-to-midi
@@ -109,6 +109,11 @@ jobs:
         working-directory: source
         run: |
           python3 -B -m tools.portable_allocation_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/recovered-corpus-v2-20261109.json --output build/github-results/allocation-trace 2>&1 | tee build/github-results/runner.log
+      - name: Diagnose slow blocks without changing acceptance limits
+        if: inputs.task == 'timing-diagnosis'
+        working-directory: source
+        run: |
+          python3 -B -m tools.portable_core_check --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/recovered-corpus-v2-20261109.json --output build/github-results/timing-diagnosis --diagnostic-thread-cpu 2>&1 | tee build/github-results/runner.log
       - name: Diagnose string assignment
         if: inputs.task == 'assignment-trace'
         working-directory: source

@@ -43,6 +43,14 @@ separately. This corrects the measurement scope; it does not imply a production
 speed improvement or change installed output. A failed timing gate remains a
 failed core check even when allocation and output checks pass.
 
+`timing-diagnosis` runs that same bounded pair with the existing thread CPU
+clock and slow-block state recorder enabled. It retains complete reference
+identity checks, but its instrumented timing cannot pass native acceptance.
+Phase counts locate periodic expensive work. CPU block statistics are usable
+only when the measured clock resolution passes; coarse clocks cannot establish
+whether a slow wall-clock block was processor work or a runner interruption.
+The report distinguishes successful evidence collection from timing acceptance.
+
 `corpus-recovery` recreates the full OFF/ON reference set. Start it only when
 no equivalent recovery is active. Legacy Kaggle version 2 is complete and its
 final outputs are collected: fourteen OFF references, one ON dataset, and no

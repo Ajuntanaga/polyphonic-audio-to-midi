@@ -1162,9 +1162,17 @@ int main(int argc, char** argv) {
         core_timing.allocation_guard ? "true" : "false", number(core_timing.cpp_allocations),
         number(core_timing.cpp_frees), number(core_timing.c_allocations), number(core_timing.c_frees)) < 0;
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)
+    constexpr bool allocation_trace_enabled = true;
+#else
+    constexpr bool allocation_trace_enabled = false;
+#endif
+    if (allocation_trace_enabled || diagnostic_thread_cpu) {
+      failed = std::fprintf(stream, ",\"timing_diagnostic_only\":true") < 0 || failed;
+    }
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
     const auto& trace = m3::test::allocation_trace();
     failed = std::fprintf(stream,
-        ",\"timing_diagnostic_only\":true,\"allocation_trace\":{"
+        ",\"allocation_trace\":{"
         "\"scope\":\"C++ new calls on the replay thread inside measured blocks; "
         "includes clock reads; C and C++ counters may overlap\","
         "\"events\":%zu,\"dropped\":%zu,\"capacity\":%zu,\"callsites\":[",

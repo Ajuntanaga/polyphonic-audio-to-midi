@@ -1,3 +1,9 @@
+## 2026-11-09 — GitHub timing diagnosis prepared
+
+- The private worker now has a bounded `timing-diagnosis` task. It replays physical-long OFF and ON at block 32 using the existing thread CPU clock, phase counters and slow-block state capture. Full retained TSV identity and timed/scored fingerprint identity remain required.
+- Instrumented timing cannot pass native acceptance. The report distinguishes successful diagnostic collection from a timing pass and checks whether CPU clock resolution is sufficient before using per-block CPU statistics. Allocation tracing and thread CPU diagnostics both carry the diagnostic-only marker; ordinary timing limits remain unchanged.
+- Ten focused Python contracts pass, including rejection of incomplete diagnostic evidence and acceptance of a completed collection with an unusable CPU clock. No native build or replay ran locally. Next: push this source and the private workflow, dispatch this task once, and use its phase/slow-block evidence to choose the smallest processing change. All new offloaded processing uses GitHub Actions; report progress through ntfy.
+
 ## 2026-11-09 — corrected core measurement passes allocation and output gates
 
 - Private GitHub core check `42542306099` is final at source `ade8175cf8362001691774f866da701508cbf1b8` and worker `e509ea1e34f2456132e847a1cab4887872e89627`. Native compilation and all 32 comparison contracts passed. The paired check deliberately failed the workflow because worst-block and deadline gates remain unmet. Summary: `docs/recovery/github-core-check-20261109.json`; detailed report: `build/github-results/core-check-42542306099/core-check/report.json`. Collected once; do not rerun or download again.
