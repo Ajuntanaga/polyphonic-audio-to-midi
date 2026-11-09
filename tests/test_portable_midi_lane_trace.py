@@ -14,12 +14,20 @@ from tools.portable_assignment_trace import digest
 from tools.portable_midi_lane_trace import candidate_frames, raw_lane_history, run
 
 
-def event(sample, kind, note, sequence):
+def event(sample, kind, note, sequence, voice_id=0):
     return dict(sample=sample, kind=kind, note=note, velocity=25 if kind == 'on' else 0,
-                voice_id=0, sequence=sequence)
+                voice_id=voice_id, sequence=sequence)
 
 
 EVENTS = [event(63, 'on', 48, 0), event(127, 'on', 47, 1), event(191, 'off', 48, 2)]
+
+
+def write_events(path, events):
+    with path.open('w', newline='') as stream:
+        stream.write('# m3_midi_events_v1\n')
+        writer = csv.DictWriter(stream, fieldnames=EVENT_FIELDS, delimiter='\t')
+        writer.writeheader()
+        writer.writerows(events)
 
 
 def candidates(note):
@@ -72,31 +80,29 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
         args = fixtures.PortableEvidenceRetentionTrialTests().fixture(root, baseline_text=text)
         return args, text
 
-    def replay_stub(self, text, *, drift_note=None, missing_target=False, stream_drift=False):
+    def replay_stub(self, text, *, drift_note=None, missing_target=False, stream_drift=False,
+                    expected_notes=(47, 48), collision=False, source_events=EVENTS):
         def replay(command, *, stdout, stderr, check, timeout):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
-            self.assertFalse(any(arg.startswith('--diagnostic-') for arg in command))
+            flags = [arg for arg in command if arg.startswith('--diagnostic-')]
+            self.assertEqual(flags, ['--diagnostic-spectral-lane-collision'] if collision else [])
             note = int(command[command.index('--candidate-trace-note') + 1])
-            self.assertIn(note, (47, 48))
+            self.assertIn(note, expected_notes)
             stdout.write(text + ('\n' if note == drift_note else ''))
             start = float(command[command.index('--candidate-trace-start') + 1]) * 96000
             rows = [row for row in candidates(note) if int(row['sample']) >= start]
             write_rows(Path(command[command.index('--candidate-trace') + 1]), rows)
             outcomes = snapshots()
-            if stream_drift and note == 48:
+            if stream_drift and note == expected_notes[-1]:
                 # Outside the retained window: complete-stream equality must still catch it.
                 outcomes[0]['quiet'] = '1'
             write_rows(Path(command[command.index('--outcome-trace') + 1]), outcomes)
-            events = [dict(item) for item in EVENTS]
+            events = [dict(item) for item in source_events]
             if missing_target:
                 events[1]['note'] = 49
             path = Path(command[command.index('--midi-event-trace') + 1])
-            with path.open('w', newline='') as stream:
-                stream.write('# m3_midi_events_v1\n')
-                writer = csv.DictWriter(stream, fieldnames=EVENT_FIELDS, delimiter='\t')
-                writer.writeheader()
-                writer.writerows(events)
+            write_events(path, events)
         return replay
 
     def execute(self, args, stub):
@@ -148,6 +154,66 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
                 args, text = self.fixture(Path(directory))
                 with self.assertRaisesRegex(ValueError, message):
                     self.execute(args, self.replay_stub(text, **kwargs))
+                report = json.loads((args[-1] / 'report.json').read_text())
+                self.assertEqual(report['state'], 'failed')
+                self.assertFalse(report['promotion_accepted'])
+
+    def collision_fixture(self, root):
+        args, text = self.fixture(root)
+        events = [event(63, 'on', 54, 0, 1), event(127, 'on', 37, 1, 1),
+                  event(191, 'off', 54, 2, 1)]
+        paths = {'outcome': root / 'known-outcome.tsv',
+                 'midi-event': root / 'known-midi.tsv'}
+        write_rows(paths['outcome'], snapshots())
+        write_events(paths['midi-event'], events)
+        reference = json.loads(args[3].read_text())
+        reference['policy_name'] = 'spectral-lane-collision'
+        reference['runs']['trial-on'] = dict(reference['runs']['reference-off'],
+            traces={kind: {'captured_raw_sha256': digest(path)} for kind, path in paths.items()})
+        # The ON profile must not silently select this wrong OFF reference.
+        reference['runs']['reference-off']['tsv_sha256'] = '0' * 64
+        args[3].write_text(json.dumps(reference))
+        return args, text, events
+
+    def execute_collision(self, args, text, events, **stub_options):
+        stub = self.replay_stub(text, expected_notes=(37, 54, 57), collision=True,
+                                source_events=events, **stub_options)
+        with patch('tools.portable_midi_lane_trace.COLLISION_WINDOW', (64, 192)), patch(
+                'tools.portable_midi_lane_trace.COLLISION_TARGET_EVENTS', events[1:]), patch(
+                'tools.portable_midi_lane_trace.subprocess.run', side_effect=stub) as replay:
+            run(*args, profile='spectral-collision-on')
+        return replay
+
+    def test_collision_profile_preserves_historical_on_streams_for_all_three_notes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, text, events = self.collision_fixture(Path(directory))
+            replay = self.execute_collision(args, text, events)
+            self.assertEqual(replay.call_count, 3)
+            report = json.loads((args[-1] / 'report.json').read_text())
+            self.assertTrue(report['reference_complete_streams_bit_identical'])
+            self.assertEqual(report['candidate_notes'], [37, 54, 57])
+            self.assertEqual(report['voice_id'], 1)
+            self.assertEqual(report['reference_key'], 'trial-on')
+            for result in report['runs'].values():
+                self.assertTrue(result['reference_bit_identical'])
+                self.assertTrue(result['reference_complete_streams_bit_identical'])
+                self.assertEqual(result['raw_lane_history']['unreleased_raw_note_ons_at_window_start'],
+                                 [events[0]])
+
+    def test_collision_profile_rejects_wrong_policy_or_historical_streams(self):
+        for wrong in ('policy', 'outcome', 'midi-event'):
+            with self.subTest(wrong=wrong), tempfile.TemporaryDirectory() as directory:
+                args, text, events = self.collision_fixture(Path(directory))
+                reference = json.loads(args[3].read_text())
+                if wrong == 'policy':
+                    reference['policy_name'] = 'retained-assignment'
+                    message = 'requires the saved collision trial'
+                else:
+                    reference['runs']['trial-on']['traces'][wrong]['captured_raw_sha256'] = '0' * 64
+                    message = 'differs from the historical ON trial'
+                args[3].write_text(json.dumps(reference))
+                with self.assertRaisesRegex(ValueError, message):
+                    self.execute_collision(args, text, events)
                 report = json.loads((args[-1] / 'report.json').read_text())
                 self.assertEqual(report['state'], 'failed')
                 self.assertFalse(report['promotion_accepted'])

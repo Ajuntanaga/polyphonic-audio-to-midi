@@ -1,7 +1,8 @@
-"""Trace the recorded cross-sample lane replacement without changing runtime policy.
+"""Trace a recorded lane replacement without changing the selected runtime policy.
 
-Two complete OFF replays observe candidates 47 and 48 with the existing recorder.
-Both must preserve the historical output and identical MIDI/outcome captures.
+Complete replays observe each candidate with the existing recorder. They must
+preserve historical output and identical MIDI/outcome captures. The collision
+ON profile also requires complete-stream identity with the original ON trial.
 Only the short conflict window and its preceding raw note-ons are retained.
 """
 import argparse
@@ -27,6 +28,23 @@ LANE = 0
 TARGET_EVENTS = (
     dict(sample=203519, kind='on', note=47, voice_id=0, sequence=45),
     dict(sample=203583, kind='off', note=48, voice_id=0, sequence=46))
+COLLISION_WINDOW = (286720, 289280)
+COLLISION_TARGET_EVENTS = (
+    dict(sample=287743, kind='on', note=37, voice_id=0, sequence=430),
+    dict(sample=287807, kind='on', note=54, voice_id=1, sequence=432),
+    dict(sample=288255, kind='off', note=37, voice_id=0, sequence=433),
+    dict(sample=288255, kind='on', note=37, voice_id=1, sequence=434))
+
+
+def trace_profile(profile):
+    if profile == 'reference-off':
+        return dict(window=WINDOW, notes=NOTES, lane=LANE, targets=TARGET_EVENTS,
+                    reference_key='reference-off', flags=())
+    if profile == 'spectral-collision-on':
+        return dict(window=COLLISION_WINDOW, notes=(37, 54, 57), lane=1,
+                    targets=COLLISION_TARGET_EVENTS, reference_key='trial-on',
+                    flags=('--diagnostic-spectral-lane-collision',))
+    raise ValueError('Unknown MIDI lane trace profile')
 
 
 def raw_lane_history(events, *, lane, start, end):
@@ -93,14 +111,19 @@ def candidate_frames(rows, outcomes, *, note, start, end):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
+        profile='reference-off'):
+    selected = trace_profile(profile)
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
-    start, end = WINDOW
+    start, end = selected['window']
+    mode = 'on' if selected['flags'] else 'off'
     report = dict(schema='m3_midi_lane_trace_v1', state='running', final=False,
         stage='verify inputs', dataset='ordinary', settings=SETTINGS,
-        candidate_notes=NOTES, window_start=start, window_end=end,
-        target_events=TARGET_EVENTS, runtime_rule_changed=False,
+        profile=profile, diagnostic_flags=selected['flags'],
+        reference_key=selected['reference_key'], voice_id=selected['lane'],
+        candidate_notes=selected['notes'], window_start=start, window_end=end,
+        target_events=selected['targets'], runtime_rule_changed=False,
         installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', live_readiness='not measured', runs={})
 
@@ -113,19 +136,30 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
     save()
     try:
         manifest = json.loads(manifest_path.read_text())
-        reference = json.loads(reference_path.read_text())['runs']['reference-off']
+        reference_report = json.loads(reference_path.read_text())
+        reference = reference_report['runs'][selected['reference_key']]
+        expected_captures = None
+        if selected['flags']:
+            if reference_report.get('policy_name') != 'spectral-lane-collision':
+                raise ValueError('Collision ON profile requires the saved collision trial')
+            expected_captures = {kind: reference['traces'][kind]['captured_raw_sha256']
+                                 for kind in ('outcome', 'midi-event')}
+            if any(len(value) != 64 or any(c not in '0123456789abcdef' for c in value)
+                   for value in expected_captures.values()):
+                raise ValueError('Invalid historical complete-stream digest')
         verify_inputs(corpus, manifest, 'ordinary')
         report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
                       input_manifest_sha256=digest(manifest_path),
                       reference_report_sha256=digest(reference_path))
         captures = None
-        for note in NOTES:
-            stem = f'candidate-{note}-off'
+        for note in selected['notes']:
+            stem = f'candidate-{note}-{mode}'
             destination = output / stem
             destination.mkdir()
             traces = {kind: destination / (kind + '.tsv')
                       for kind in ('candidate', 'outcome', 'midi-event')}
             command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
+            command.extend(selected['flags'])
             for kind, path in traces.items():
                 command.extend(('--' + kind + '-trace', str(path)))
             command.extend(('--candidate-trace-note', str(note),
@@ -144,7 +178,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                                                 and result['output'] == reference['output'])
             report['runs'][stem] = result
             if not result['reference_bit_identical']:
-                raise ValueError(stem + ' differs from the historical OFF replay')
+                raise ValueError(stem + f' differs from the historical {mode.upper()} replay')
             with replay_path.open() as stream:
                 aggregate = next(csv.DictReader(stream, delimiter='\t'))
             samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
@@ -152,7 +186,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                 raise ValueError('Recorded conflict window or sample clock changed')
             events = read_events(traces['midi-event'], sample_count=samples,
                                  transition_count=int(aggregate['transitions']))
-            for target in TARGET_EVENTS:
+            for target in selected['targets']:
                 if sum(all(event[key] == value for key, value in target.items())
                        for event in events) != 1:
                     raise ValueError('Recorded conflict event changed or disappeared')
@@ -161,24 +195,30 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
             result.update(sample_rate=rate, sample_count=samples,
                 frames=candidate_frames(candidates, outcomes, note=note, start=start, end=end),
                 calibrated_output=summarize_calibrated_output(candidates, outcomes, events, note),
-                raw_lane_history=raw_lane_history(events, lane=LANE, start=start, end=end))
+                raw_lane_history=raw_lane_history(events, lane=selected['lane'], start=start, end=end))
             result['traces'] = {}
             for kind, path in traces.items():
                 result['traces'][kind] = compress_trace_window(path, start=start, end=end)
                 path.unlink()
             current = {kind: result['traces'][kind]['captured_raw_sha256']
                        for kind in ('outcome', 'midi-event')}
+            if expected_captures is not None:
+                result['reference_complete_streams_bit_identical'] = current == expected_captures
+                if not result['reference_complete_streams_bit_identical']:
+                    raise ValueError('Complete MIDI or outcome stream differs from the historical ON trial')
             if captures is not None and current != captures:
                 raise ValueError('Candidate captures changed the complete MIDI or outcome stream')
             captures = current
             save()
         report.update(state='completed', final=True, stage='conflict window collected',
             complete_midi_and_outcome_identical=True,
-            decision='unchanged; recorded OFF lane conflict reproduced',
+            reference_complete_streams_bit_identical=True if expected_captures else None,
+            decision=f'unchanged; recorded {mode.upper()} lane conflict reproduced',
             interpretation='Routing and calibrated-output fields identify observed stages, '
             'not an unconditional emission call-site. Unobserved stages are not measured '
-            'zeros. Full replay identity is required for both candidate observations; '
-            'no runtime rule, installed score or live acceptance changes.')
+            'zeros. Full replay identity is required for every candidate observation; '
+            'the selected OFF or ON policy is unchanged. No installed score or live '
+            'acceptance changes.')
     except Exception as error:
         report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
         raise
@@ -191,11 +231,13 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--profile', choices=('reference-off', 'spectral-collision-on'),
+                        default='reference-off')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+        timeout=args.replay_timeout_seconds, profile=args.profile)
 
 
 if __name__ == '__main__':
