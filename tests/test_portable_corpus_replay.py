@@ -37,6 +37,15 @@ class PortableCorpusTests(unittest.TestCase):
             if mode == 'off':
                 self.assertEqual(command, command_for(*arguments, mode, 32, Path('/timing.json')))
 
+    def test_midi_capture_cannot_instrument_timing_or_buffer_comparison_runs(self):
+        arguments = (Path('/replay'), Path('/corpus'), 'physical-long', 'off')
+        command = command_for(*arguments, 512, Path('/unused.json'), midi_trace=Path('/midi.tsv'))
+        self.assertIn('--midi-event-trace', command)
+        self.assertNotIn('--diagnostic-core-timing', command)
+        for block in (32, 1024):
+            with self.subTest(block=block), self.assertRaisesRegex(ValueError, 'untimed'):
+                command_for(*arguments, block, Path('/timing.json'), midi_trace=Path('/midi.tsv'))
+
     def test_fail_closed_timing_allocation_and_scored_identity(self):
         replay = {'output': {'fingerprint': '0123456789abcdef'}}
         timing = dict(schema='m3_replay_core_timing_v1', fingerprint_identical=True,
@@ -64,8 +73,8 @@ class PortableCorpusTests(unittest.TestCase):
             self.assertFalse(gates['timing_pass'])
 
     def test_corpus_requires_both_modes_to_meet_timing_limits(self):
-        for slow_mode, preview in product((None, 'off', 'on'), (False, True)):
-            with self.subTest(slow_mode=slow_mode, preview=preview), tempfile.TemporaryDirectory() as directory:
+        for slow_mode, preview, capture in product((None, 'off', 'on'), (False, True), (False, True)):
+            with self.subTest(slow_mode=slow_mode, preview=preview, capture=capture), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 output, manifest = root / 'results', root / 'manifest.json'
                 names = ('physical-long.wav', 'physical-long.tsv',
@@ -93,6 +102,8 @@ class PortableCorpusTests(unittest.TestCase):
                         '--manifest', str(manifest), '--output', str(output)]
                 if preview:
                     argv.append('--projection-preview-admission')
+                if capture:
+                    argv.append('--capture-midi-lifecycle')
                 parsed = {'output': {'fingerprint': 'unchanged'},
                           'exact_matches_by_string_count': {}}
                 comparison = dict(gate_pass=True, output_bit_identical=True, changed_labels=[])
@@ -102,6 +113,8 @@ class PortableCorpusTests(unittest.TestCase):
                      patch('tools.portable_corpus_replay.subprocess.run', side_effect=execute), \
                      patch('tools.portable_corpus_replay.read_replay', return_value=parsed), \
                      patch('tools.portable_corpus_replay.compare_replays', return_value=comparison), \
+                     patch('tools.portable_corpus_replay.analyze_trace',
+                           return_value={'coverage_valid': False}) as lifecycle, \
                      patch('builtins.print'):
                     main()
                 report = json.loads((output / 'report.json').read_text())
@@ -113,6 +126,14 @@ class PortableCorpusTests(unittest.TestCase):
                 self.assertEqual(report['native_gates_passed'], int(slow_mode is None))
                 self.assertFalse(report['promotion_accepted'])
                 self.assertFalse(report['installed_output_changed'])
+                self.assertEqual(lifecycle.call_count, 2 if capture else 0)
+                self.assertFalse(report['midi_lifecycle_capture']['alters_acceptance_gates'])
+                for key, run in dataset['runs'].items():
+                    expected = capture and key.endswith('-512')
+                    self.assertEqual('--midi-event-trace' in run['command'], expected)
+                    self.assertEqual('midi_lifecycle' in run, expected)
+                    if expected:
+                        self.assertFalse(run['midi_lifecycle']['coverage_valid'])
                 if preview:
                     self.assertEqual(report['schema'], 'm3_portable_projection_preview_corpus_v1')
                     self.assertEqual(report['trial_revision'], 'full_physical_assignment_context')

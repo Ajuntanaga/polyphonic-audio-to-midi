@@ -17,6 +17,10 @@ on:
         type: choice
         options: [physical-middle, physical-highmid, physical-high, physical-long, ordinary]
         default: physical-middle
+      midi_lifecycle:
+        description: Capture full detector note lifetimes on untimed corpus references only
+        type: boolean
+        default: false
       note:
         description: MIDI note for assignment trace
         type: number
@@ -46,6 +50,7 @@ env:
   NOTE: ${{ inputs.note }}
   LABEL_INDEX: ${{ inputs.label_index }}
   TIMING_CONTROL: ${{ inputs.control }}
+  CAPTURE_MIDI_LIFECYCLE: ${{ inputs.midi_lifecycle }}
   INPUT_TAG: corpus-20261108
   INPUT_SHA256: adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254
 jobs:
@@ -65,6 +70,7 @@ jobs:
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
           if [[ "$TASK" = routing-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 52; test "$LABEL_INDEX" = 54; fi
+          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
         with:
@@ -127,7 +133,7 @@ jobs:
         working-directory: source
         run: |
           python3 -m pip install 'numpy>=2,<3'
-          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace 2>&1 | tee build/github-results/contracts.log
+          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_midi_lifecycle_analysis tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace 2>&1 | tee build/github-results/contracts.log
       - name: Screen direct evidence retention through energy dips
         if: inputs.task == 'evidence-retention-trial'
         working-directory: source
@@ -196,6 +202,7 @@ jobs:
         run: |
           trial_args=()
           if [[ "$TASK" = projection-preview-corpus ]]; then trial_args=(--projection-preview-admission); fi
+          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then trial_args+=(--capture-midi-lifecycle); fi
           python3 -B -m tools.portable_corpus_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/corpus --max-seconds 10800 "${trial_args[@]}" 2>&1 | tee build/github-results/runner.log
       - name: Recover and screen held-out overlap controls
         if: inputs.task == 'controlled-recovery'

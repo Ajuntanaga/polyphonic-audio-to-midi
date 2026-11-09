@@ -11,6 +11,7 @@ import subprocess
 import time
 
 from tools.frozen_cue_corpus_gate import read_replay, compare_replays
+from tools.midi_lifecycle_analysis import analyze_trace
 from tools.portable_recovery import digest
 from tools.replay_corpus import DATASETS
 
@@ -65,7 +66,7 @@ def validate_timing_diagnosis(timing, mode):
 
 
 def command_for(binary, corpus, name, mode, block, timing, *,
-                projection_preview_admission=False):
+                projection_preview_admission=False, midi_trace=None):
     if name not in DATASETS or mode not in ('off', 'on') or block not in BLOCKS:
         raise ValueError('Unknown replay selection')
     command = [str(binary), '--wav', str(corpus / (name + '.wav')),
@@ -75,6 +76,10 @@ def command_for(binary, corpus, name, mode, block, timing, *,
                '--block', str(block), '--label-details']
     if block == 32:
         command.extend(('--diagnostic-core-timing', str(timing)))
+    if midi_trace is not None:
+        if block != 512:
+            raise ValueError('MIDI lifecycle capture requires the untimed 512-sample replay')
+        command.extend(('--midi-event-trace', str(midi_trace)))
     for key, value in SETTINGS.items():
         command.extend(('--' + key, str(value)))
     if mode == 'on':
@@ -91,6 +96,8 @@ def main():
     parser.add_argument('--max-seconds', type=int, default=10800)
     parser.add_argument('--projection-preview-admission', action='store_true',
                         help='Screen preview ownership alone instead of the frozen-cue correction')
+    parser.add_argument('--capture-midi-lifecycle', action='store_true',
+                        help='Measure full detector note lifetimes on untimed 512-sample replays')
     args = parser.parse_args()
     if args.max_seconds <= 0:
         parser.error('--max-seconds must be positive')
@@ -115,6 +122,9 @@ def main():
                                      p99_ns=166666, maximum_ns=333333, deadline_overruns=0),
                   datasets={}, promotion_accepted=False, live_readiness='not measured')
     report['on_flags'] = list(PREVIEW_ON_FLAGS if args.projection_preview_admission else CUE_ON_FLAGS)
+    report['midi_lifecycle_capture'] = dict(enabled=args.capture_midi_lifecycle,
+        block_samples=512, scope='detector transitions before host delivery',
+        acceptance_target='not measured', alters_acceptance_gates=False)
     if args.projection_preview_admission:
         report.update(schema='m3_portable_projection_preview_corpus_v1',
                       trial_revision='full_physical_assignment_context',
@@ -140,8 +150,11 @@ def main():
         stem = f'{name}-{mode}-{block}'
         tsv = args.output / (stem + '.tsv')
         timing_path = args.output / (stem + '-timing.json')
+        midi_path = (args.output / (stem + '-midi.tsv')
+                     if args.capture_midi_lifecycle and block == 512 else None)
         command = command_for(args.binary, args.corpus, name, mode, block, timing_path,
-                              projection_preview_admission=args.projection_preview_admission)
+                              projection_preview_admission=args.projection_preview_admission,
+                              midi_trace=midi_path)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Recovery wall-time budget exhausted')
@@ -156,6 +169,9 @@ def main():
         row = dict(command=command, elapsed_seconds=time.monotonic() - started,
                    output=parsed['output'], exact_matches_by_string_count=parsed['exact_matches_by_string_count'],
                    tsv_sha256=digest(tsv), timing=timing, gates=gates)
+        if midi_path is not None:
+            row['midi_lifecycle'] = analyze_trace(midi_path, tsv)
+            row['midi_lifecycle_trace'] = dict(file=midi_path.name, sha256=digest(midi_path))
         report['datasets'].setdefault(name, {'runs': {}})['runs'][f'{mode}-{block}'] = row
         results[key] = parsed
         save()

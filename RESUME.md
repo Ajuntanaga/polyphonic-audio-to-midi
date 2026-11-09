@@ -1,3 +1,10 @@
+## 2026-11-09 — measure detector MIDI holds separately from tuner matches
+
+- Added optional `--capture-midi-lifecycle` to the corpus runner and `midi_lifecycle` to the worker dispatch. It captures the full detector event stream only on untimed 512-sample references. The timed 32-sample and buffer-comparison 1024-sample runs remain uninstrumented. Capture is off by default; no native algorithm or installed setting changes.
+- The reducer uses the recording's sample clock and half-open label intervals. It reports simultaneous expected routing lanes, raw hold duration, retriggers, event-pairing anomalies and notes open at the recording boundary. It validates native event order and completeness. Unassigned voices remain pitch-keyed and cannot establish a nonzero string mask. These are detector events before host delivery, not tuner frame scores or proof of stuck notes.
+- Python and workflow syntax checks pass locally. New contracts await GitHub Actions. No MIDI lifecycle measurement has been collected yet; onset/release tolerances and live acceptance remain unmeasured. Existing label/error, allocation, buffer and timing gates are unchanged.
+- Protected corpus run `42592853316` remains the sole active corpus job at its original source. Do not replace or duplicate it. Collect its small report first; any later lifecycle capture must have its own pinned provenance.
+
 ## 2026-11-09 — preview correction enters the protected corpus
 
 - GitHub run `42592853316` was dispatched once at source `01cfb12d8b3b59a8635b26749059113d5768708e`, worker `6ab8d23234ba1509f4674543977a4d5740f9553b`. It screens the preview correction across fourteen datasets at buffer sizes 32, 512 and 1024. The ON run enables only `--diagnostic-projection-preview-admission`; frozen-cue and reset corrections remain off. The trial stays disabled in the installed plugin.
