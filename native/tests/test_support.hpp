@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+#include <array>
+#include <cstdint>
+#endif
 
 namespace m3::test {
 
@@ -17,6 +21,23 @@ class Registration final {
 
 std::size_t allocation_count() noexcept;
 std::size_t deallocation_count() noexcept;
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+struct AllocationCallsite final {
+  std::uintptr_t return_address{};
+  std::size_t count{};
+  std::size_t bytes{};
+};
+struct AllocationTrace final {
+  std::array<AllocationCallsite, 64> sites{};
+  std::size_t used{};
+  std::size_t events{};
+  std::size_t dropped{};
+};
+// Fixed storage on the replay thread; no stack unwinding or I/O while enabled.
+void reset_allocation_trace() noexcept;
+void set_allocation_trace_active(bool active) noexcept;
+const AllocationTrace& allocation_trace() noexcept;
+#endif
 void expect_true(bool condition, const char* expression, const char* file,
                  int line) noexcept;
 void expect_near(double actual, double expected, double tolerance,

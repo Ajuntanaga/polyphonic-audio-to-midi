@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(m3_portable_replay LANGUAGES C CXX)
+option(M3_OFFLINE_ALLOCATION_TRACE "Diagnostic-only C++ allocation caller capture" OFF)
+if(M3_OFFLINE_ALLOCATION_TRACE)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" OR NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        message(FATAL_ERROR "Allocation caller capture requires GNU/Clang on Linux")
+    endif()
+    add_compile_definitions(M3_OFFLINE_ALLOCATION_TRACE=1)
+    # Fixed executable addresses let addr2line resolve callers after replay.
+    # Instrumented timings cannot satisfy the real-time acceptance gate.
+    add_compile_options(-g -fno-pie)
+    add_link_options(-no-pie)
+endif()
 # Linux x86-64 offline research build, matching the former Modal diagnostic build.
 # No SDK, GUI, installed plugin, or Modal dependency.
 get_filename_component(root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
@@ -48,3 +59,8 @@ foreach(target m3_replay m3_motion_tests m3_detector_tests)
 endforeach()
 add_test(NAME m3_motion_tests COMMAND m3_motion_tests)
 add_test(NAME m3_detector_tests COMMAND m3_detector_tests)
+if(M3_OFFLINE_ALLOCATION_TRACE)
+    add_executable(m3_allocation_trace_tests "${root}/native/tests/test_allocation_trace.cpp"
+        "${root}/native/tests/test_support.cpp" "${CMAKE_CURRENT_BINARY_DIR}/test_main.cpp")
+    add_test(NAME m3_allocation_trace_tests COMMAND m3_allocation_trace_tests)
+endif()

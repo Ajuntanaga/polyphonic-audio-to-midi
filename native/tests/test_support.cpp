@@ -13,6 +13,37 @@ std::atomic<std::size_t> deallocations{0};
 std::size_t failures = 0;
 m3::test::TestCase* tests = nullptr;
 
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+thread_local m3::test::AllocationTrace allocation_sites{};
+thread_local bool trace_active = false;
+
+void record_allocation(std::size_t size, void* caller) noexcept {
+  if (!trace_active) return;
+  ++allocation_sites.events;
+  const auto address = reinterpret_cast<std::uintptr_t>(caller);
+  for (std::size_t index = 0; index < allocation_sites.used; ++index) {
+    auto& site = allocation_sites.sites[index];
+    if (site.return_address == address) {
+      ++site.count;
+      site.bytes += size;
+      return;
+    }
+  }
+  if (allocation_sites.used == allocation_sites.sites.size()) {
+    ++allocation_sites.dropped;
+    return;
+  }
+  allocation_sites.sites[allocation_sites.used++] = {address, 1U, size};
+}
+#define M3_NEW_NOINLINE __attribute__((noinline))
+// Expand at each operator entry: a helper's return address would name the hook.
+#define M3_RECORD_NEW(size) \
+  record_allocation(size, __builtin_extract_return_addr(__builtin_return_address(0)))
+#else
+#define M3_NEW_NOINLINE
+#define M3_RECORD_NEW(size) ((void)0)
+#endif
+
 void* allocate(std::size_t size) noexcept {
   allocations.fetch_add(1, std::memory_order_relaxed);
   if (void* memory = std::malloc(size == 0 ? 1 : size)) {
@@ -39,12 +70,20 @@ void release(void* memory) noexcept {
 
 }  // namespace
 
-void* operator new(std::size_t size) { return allocate(size); }
-void* operator new[](std::size_t size) { return allocate(size); }
-void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+M3_NEW_NOINLINE void* operator new(std::size_t size) {
+  M3_RECORD_NEW(size);
   return allocate(size);
 }
-void* operator new[](std::size_t size, const std::nothrow_t&) noexcept {
+M3_NEW_NOINLINE void* operator new[](std::size_t size) {
+  M3_RECORD_NEW(size);
+  return allocate(size);
+}
+M3_NEW_NOINLINE void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+  M3_RECORD_NEW(size);
+  return allocate(size);
+}
+M3_NEW_NOINLINE void* operator new[](std::size_t size, const std::nothrow_t&) noexcept {
+  M3_RECORD_NEW(size);
   return allocate(size);
 }
 void operator delete(void* memory) noexcept { release(memory); }
@@ -57,18 +96,22 @@ void operator delete(void* memory, const std::nothrow_t&) noexcept {
 void operator delete[](void* memory, const std::nothrow_t&) noexcept {
   release(memory);
 }
-void* operator new(std::size_t size, std::align_val_t alignment) {
+M3_NEW_NOINLINE void* operator new(std::size_t size, std::align_val_t alignment) {
+  M3_RECORD_NEW(size);
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
-void* operator new[](std::size_t size, std::align_val_t alignment) {
+M3_NEW_NOINLINE void* operator new[](std::size_t size, std::align_val_t alignment) {
+  M3_RECORD_NEW(size);
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
-void* operator new(std::size_t size, std::align_val_t alignment,
+M3_NEW_NOINLINE void* operator new(std::size_t size, std::align_val_t alignment,
                    const std::nothrow_t&) noexcept {
+  M3_RECORD_NEW(size);
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
-void* operator new[](std::size_t size, std::align_val_t alignment,
+M3_NEW_NOINLINE void* operator new[](std::size_t size, std::align_val_t alignment,
                      const std::nothrow_t&) noexcept {
+  M3_RECORD_NEW(size);
   return allocate_aligned(size, static_cast<std::size_t>(alignment));
 }
 void operator delete(void* memory, std::align_val_t) noexcept { release(memory); }
@@ -89,6 +132,15 @@ void operator delete[](void* memory, std::align_val_t,
 }
 
 namespace m3::test {
+
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+void reset_allocation_trace() noexcept {
+  trace_active = false;
+  allocation_sites = {};
+}
+void set_allocation_trace_active(bool active) noexcept { trace_active = active; }
+const AllocationTrace& allocation_trace() noexcept { return allocation_sites; }
+#endif
 
 Registration::Registration(const char* name, void (*function)() noexcept) noexcept {
   constexpr std::size_t capacity = 1024;

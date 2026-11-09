@@ -18,6 +18,9 @@
 #include "frequency_refinement_shadow.hpp"
 #include "frozen_note_cues.hpp"
 #include "unison_spectral_shadow.hpp"
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+#include "test_support.hpp"
+#endif
 
 namespace {
 
@@ -1157,6 +1160,22 @@ int main(int argc, char** argv) {
         number(core_timing.half_budget_overruns), number(core_timing.deadline_overruns),
         core_timing.allocation_guard ? "true" : "false", number(core_timing.cpp_allocations),
         number(core_timing.cpp_frees), number(core_timing.c_allocations), number(core_timing.c_frees)) < 0;
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+    const auto& trace = m3::test::allocation_trace();
+    failed = std::fprintf(stream,
+        ",\"timing_diagnostic_only\":true,\"allocation_trace\":{"
+        "\"scope\":\"C++ new calls on the replay thread inside measured blocks; "
+        "includes clock reads; C and C++ counters may overlap\","
+        "\"events\":%zu,\"dropped\":%zu,\"capacity\":%zu,\"callsites\":[",
+        trace.events, trace.dropped, trace.sites.size()) < 0 || failed;
+    for (std::size_t index = 0; index < trace.used; ++index) {
+      const auto& site = trace.sites[index];
+      failed = std::fprintf(stream,
+          "%s{\"return_address\":\"0x%llx\",\"count\":%zu,\"bytes\":%zu}",
+          index == 0U ? "" : ",", number(site.return_address), site.count, site.bytes) < 0 || failed;
+    }
+    failed = std::fprintf(stream, "]}") < 0 || failed;
+#endif
     if (diagnostic_thread_cpu) {
       failed = std::fprintf(stream,
           ",\"thread_cpu\":{\"valid\":%s,\"total_ns\":%llu,\"p99_ns\":%llu,"

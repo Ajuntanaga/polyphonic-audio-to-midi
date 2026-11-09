@@ -26,10 +26,19 @@ traced OFF replay using the same binary and inputs. It requires identical
 outputs and unchanged labeled passages. Its report separates pitch selection
 from string assignment; absent sampled rows are not missing MIDI counts.
 
+`allocation-trace` runs physical-long OFF at block 32 once. Its diagnostic
+build records C++ allocation caller addresses in fixed storage, then resolves
+them after processing. It checks the complete replay hash against the retained
+reference. Caller counts must account for every measured C++ allocation without
+overflow. C and C++ hook counts overlap and must not be added together. The
+instrumented timings cannot satisfy real-time acceptance; the ordinary build
+keeps tracing off.
+
 `corpus-recovery` recreates the full OFF/ON reference set. Start it only when
-no equivalent recovery is active. The already-submitted Kaggle version 2 may
-finish and its final outputs should be collected; do not submit another
-Kaggle version. Modal and Oracle are unavailable.
+no equivalent recovery is active. Legacy Kaggle version 2 is complete and its
+final outputs are collected: fourteen OFF references, one ON dataset, and no
+passed native corpus gates. Do not poll or submit Kaggle work. Modal and Oracle
+are unavailable.
 
 Runs are manual and serialized. The trace has a 60-minute job cap; full
 recovery has a 210-minute cap, including compilation. These are standard CPU

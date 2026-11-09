@@ -29,12 +29,14 @@ def timing_gates(timing, replay, block):
                 and timing.get('fingerprint') == replay['output']['fingerprint']
                 and timing.get('block_samples') == block
                 and timing.get('sample_rate') == 96000)
-    allocations = (identity and timing.get('allocation_guard') is True
+    uninstrumented = (timing.get('timing_diagnostic_only', False) is False
+                      and 'allocation_trace' not in timing)
+    allocations = (identity and uninstrumented and timing.get('allocation_guard') is True
                    and all(type(timing.get(key)) is int and timing[key] == 0 for key in
                            ('cpp_allocations', 'cpp_frees', 'c_allocations', 'c_frees')))
     realtime = None
     if block == 32:
-        realtime = (identity and all(type(timing.get(key)) is int
+        realtime = (identity and uninstrumented and all(type(timing.get(key)) is int
                                     and 0 <= timing[key] <= limit for key, limit in
                                     (('p99_ns', 166666), ('maximum_ns', 333333),
                                      ('deadline_overruns', 0))))

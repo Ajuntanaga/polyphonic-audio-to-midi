@@ -240,11 +240,17 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
   std::vector<std::uint64_t> cpu_times(thread_cpu ? times.size() : 0U);
   detector.reset();
   if (cues != nullptr) cues->reset();
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+  m3::test::reset_allocation_trace();
+#endif
   for (std::size_t begin = 0U; begin < wave.mono_samples.size(); begin += block) {
     const auto count = std::min(block, wave.mono_samples.size() - begin);
 #if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
     const auto cpp_before = m3::test::allocation_count(), cpp_free_before = m3::test::deallocation_count();
     const auto c_before = m3::test::c_allocation_count(), c_free_before = m3::test::c_deallocation_count();
+#endif
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+    m3::test::set_allocation_trace_active(true);
 #endif
     std::uint64_t cpu_start{}, cpu_end{};
     const bool cpu_started = !thread_cpu || read_thread_cpu_ns(cpu_start);
@@ -257,6 +263,9 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
         std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
     const bool cpu_ended = !thread_cpu || read_thread_cpu_ns(cpu_end);
+#if defined(M3_OFFLINE_ALLOCATION_TRACE)
+    m3::test::set_allocation_trace_active(false);
+#endif
 #if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
     output.allocation_guard = true;
     output.cpp_allocations += m3::test::allocation_count() - cpp_before;

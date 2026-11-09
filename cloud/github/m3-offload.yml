@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, corpus-recovery]
+        options: [assignment-trace, allocation-trace, corpus-recovery]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace
@@ -47,7 +47,7 @@ jobs:
         run: |
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = true
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = corpus-recovery ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = corpus-recovery ]]
       - uses: actions/checkout@v7
         with:
           repository: Ajuntanaga/polyphonic-audio-to-midi
@@ -84,13 +84,26 @@ jobs:
       - name: Build offline replay on GitHub
         working-directory: source
         run: |
-          cmake -S cloud/native -B build/portable -DCMAKE_BUILD_TYPE=Release 2>&1 | tee build/github-results/configure.log
+          trace=OFF
+          if [[ "$TASK" = allocation-trace ]]; then trace=ON; fi
+          cmake -S cloud/native -B build/portable -DCMAKE_BUILD_TYPE=Release -DM3_OFFLINE_ALLOCATION_TRACE="$trace" 2>&1 | tee build/github-results/configure.log
           cmake --build build/portable --target m3_replay --parallel 2 2>&1 | tee build/github-results/build.log
+      - name: Check bounded allocation recorder
+        if: inputs.task == 'allocation-trace'
+        working-directory: source
+        run: |
+          cmake --build build/portable --target m3_allocation_trace_tests --parallel 2 2>&1 | tee build/github-results/recorder-build.log
+          ctest --test-dir build/portable -R '^m3_allocation_trace_tests$' --output-on-failure 2>&1 | tee build/github-results/recorder-test.log
       - name: Check diagnosis and comparison contracts
         working-directory: source
         run: |
           python3 -m pip install 'numpy>=2,<3'
-          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay 2>&1 | tee build/github-results/contracts.log
+          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_portable_allocation_trace 2>&1 | tee build/github-results/contracts.log
+      - name: Locate processing allocations
+        if: inputs.task == 'allocation-trace'
+        working-directory: source
+        run: |
+          python3 -B -m tools.portable_allocation_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/recovered-corpus-v2-20261109.json --output build/github-results/allocation-trace 2>&1 | tee build/github-results/runner.log
       - name: Diagnose string assignment
         if: inputs.task == 'assignment-trace'
         working-directory: source

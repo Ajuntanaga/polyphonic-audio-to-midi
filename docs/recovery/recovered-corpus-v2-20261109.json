@@ -1,0 +1,653 @@
+{
+  "schema": "m3_portable_corpus_recovery_v1",
+  "started_at": "2026-11-08T23:51:19.618747+00:00",
+  "state": "completed",
+  "final": true,
+  "stage": "reference recovery finished",
+  "provenance": "New references; historical Modal identity is not verified",
+  "installed_output_changed": false,
+  "source": {
+    "base_commit": "6cb88d5011c6170371bd82c59091dbc5d162f192",
+    "archive_sha256": "82483d163b917f1ea4a2aba39872c6709031a5510df7cbf584af1c96029c9b2d",
+    "manifest_sha256": "202367fa290ea50d0b33f06ffb18423cc0e4e16388d0a038de49810de62bf000"
+  },
+  "input_manifest_sha256": "082bd630ec172869b012ff557f9704e02a3b5f10d17742e38e206b6cf166da31",
+  "verified_inputs": 30,
+  "binary_sha256": "c46a0d228aa5fbf5d7bcf24f99a2d981348cce13f948b522b29328a6b5de8123",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "timing_limits": {
+    "block_samples": 32,
+    "sample_rate": 96000,
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "updated_at": "2026-11-09T00:09:51.000539+00:00",
+  "stopped_on_regression": "physical-long",
+  "off_references": 14,
+  "on_references": 1,
+  "native_gates_passed": 0,
+  "declared_datasets": 14,
+  "collected_at": "2026-11-09T00:27:49.091252+00:00",
+  "origin": {
+    "provider": "Kaggle",
+    "kernel": "anthovargas/m3-recovered-corpus",
+    "version": 2,
+    "policy": "Final legacy output collection only. All new offloaded processing uses GitHub Actions."
+  },
+  "datasets": {
+    "ordinary": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 150.50116789999998,
+          "output": {
+            "labeled": 528632,
+            "matched": 145385,
+            "false_wrong_note_voices": 164263,
+            "false_wrong_string_voices": 92653,
+            "false_gap_voices": 62856,
+            "false_positive_voices": 319772,
+            "fingerprint": "bbed96f3be505756"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 528632,
+              "matched": 145385
+            }
+          },
+          "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "constructed": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 301.37571797300006,
+          "output": {
+            "labeled": 1614601,
+            "matched": 259074,
+            "false_wrong_note_voices": 167722,
+            "false_wrong_string_voices": 103754,
+            "false_gap_voices": 23176,
+            "false_positive_voices": 294652,
+            "fingerprint": "199db8fd25ada73e"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 1614601,
+              "matched": 259074
+            }
+          },
+          "tsv_sha256": "686b4fc7d16aabb8e7478734cd0f1e5cee7a5c8d397d35ca34a355eb2ce47b02",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "isolated-08": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 17.881469509,
+          "output": {
+            "labeled": 31050,
+            "matched": 29816,
+            "false_wrong_note_voices": 2462,
+            "false_wrong_string_voices": 579,
+            "false_gap_voices": 2928,
+            "false_positive_voices": 5969,
+            "fingerprint": "06c4e7fdb2a739e4"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 31050,
+              "matched": 29816
+            }
+          },
+          "tsv_sha256": "8fc8d5c34c2e285f86371ca9b9d96324ef0209a354dee01bc4b19c3e725b2d52",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "isolated-05": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 20.39324444400006,
+          "output": {
+            "labeled": 31050,
+            "matched": 25681,
+            "false_wrong_note_voices": 12028,
+            "false_wrong_string_voices": 4037,
+            "false_gap_voices": 3860,
+            "false_positive_voices": 19925,
+            "fingerprint": "87edbea93db1fb35"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 31050,
+              "matched": 25681
+            }
+          },
+          "tsv_sha256": "7aecb002039d562af504b12fd008b8bc303a25938100c7626dbcc65826cc14c5",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "isolated-02": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 23.553785466000022,
+          "output": {
+            "labeled": 35550,
+            "matched": 29240,
+            "false_wrong_note_voices": 2491,
+            "false_wrong_string_voices": 1400,
+            "false_gap_voices": 1840,
+            "false_positive_voices": 5731,
+            "fingerprint": "e1436099f9cfb492"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 35550,
+              "matched": 29240
+            }
+          },
+          "tsv_sha256": "1f66a5082a0983d6ba57549099faf0cae34059d483f2ff9a9936921008b1e095",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "physical-long": {
+      "comparisons": {
+        "512": {
+          "delta": {
+            "matched": 0,
+            "false_wrong_note_voices": 0,
+            "false_wrong_string_voices": 0,
+            "false_gap_voices": 0,
+            "false_positive_voices": 0
+          },
+          "changed_labels": [],
+          "lost_labels": [],
+          "increased_error_counts": [],
+          "gate_pass": true,
+          "output_bit_identical": true
+        },
+        "32": {
+          "delta": {
+            "matched": 0,
+            "false_wrong_note_voices": 0,
+            "false_wrong_string_voices": 0,
+            "false_gap_voices": 0,
+            "false_positive_voices": 0
+          },
+          "changed_labels": [],
+          "lost_labels": [],
+          "increased_error_counts": [],
+          "gate_pass": true,
+          "output_bit_identical": true
+        }
+      },
+      "buffer_parity": {
+        "off-32": true,
+        "on-32": true
+      },
+      "recovery_safety_pass": false,
+      "native_gate_pass": false,
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 54.571507912000015,
+          "output": {
+            "labeled": 68441,
+            "matched": 41452,
+            "false_wrong_note_voices": 67769,
+            "false_wrong_string_voices": 2709,
+            "false_gap_voices": 5403,
+            "false_positive_voices": 75881,
+            "fingerprint": "519bc0f9f4710566"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 29063,
+              "matched": 16233
+            },
+            "3": {
+              "labeled": 39378,
+              "matched": 25219
+            }
+          },
+          "tsv_sha256": "5d41ad94928861ec11a1c6f0494b9968dbb52a8b6c6c7f9f76fe1f4c493b0c15",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        },
+        "on-512": {
+          "elapsed_seconds": 56.876405878000014,
+          "output": {
+            "labeled": 68441,
+            "matched": 41452,
+            "false_wrong_note_voices": 67769,
+            "false_wrong_string_voices": 2709,
+            "false_gap_voices": 5403,
+            "false_positive_voices": 75881,
+            "fingerprint": "519bc0f9f4710566"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 29063,
+              "matched": 16233
+            },
+            "3": {
+              "labeled": 39378,
+              "matched": 25219
+            }
+          },
+          "tsv_sha256": "5d41ad94928861ec11a1c6f0494b9968dbb52a8b6c6c7f9f76fe1f4c493b0c15",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        },
+        "off-32": {
+          "elapsed_seconds": 73.323995943,
+          "output": {
+            "labeled": 68441,
+            "matched": 41452,
+            "false_wrong_note_voices": 67769,
+            "false_wrong_string_voices": 2709,
+            "false_gap_voices": 5403,
+            "false_positive_voices": 75881,
+            "fingerprint": "519bc0f9f4710566"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 29063,
+              "matched": 16233
+            },
+            "3": {
+              "labeled": 39378,
+              "matched": 25219
+            }
+          },
+          "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+          "timing": {
+            "schema": "m3_replay_core_timing_v1",
+            "sample_rate": 96000,
+            "block_samples": 32,
+            "fingerprint": "519bc0f9f4710566",
+            "fingerprint_identical": true,
+            "blocks": 176464,
+            "total_ns": 19632227071,
+            "p99_ns": 286367,
+            "maximum_ns": 22452618,
+            "half_budget_overruns": 8442,
+            "deadline_overruns": 918,
+            "allocation_guard": true,
+            "cpp_allocations": 3053,
+            "cpp_frees": 3050,
+            "c_allocations": 3053,
+            "c_frees": 3050
+          },
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": false,
+            "timing_pass": false
+          }
+        },
+        "on-32": {
+          "elapsed_seconds": 80.01130869999997,
+          "output": {
+            "labeled": 68441,
+            "matched": 41452,
+            "false_wrong_note_voices": 67769,
+            "false_wrong_string_voices": 2709,
+            "false_gap_voices": 5403,
+            "false_positive_voices": 75881,
+            "fingerprint": "519bc0f9f4710566"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 29063,
+              "matched": 16233
+            },
+            "3": {
+              "labeled": 39378,
+              "matched": 25219
+            }
+          },
+          "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+          "timing": {
+            "schema": "m3_replay_core_timing_v1",
+            "sample_rate": 96000,
+            "block_samples": 32,
+            "fingerprint": "519bc0f9f4710566",
+            "fingerprint_identical": true,
+            "blocks": 176464,
+            "total_ns": 22674153022,
+            "p99_ns": 309024,
+            "maximum_ns": 21107564,
+            "half_budget_overruns": 17292,
+            "deadline_overruns": 1227,
+            "allocation_guard": true,
+            "cpp_allocations": 3053,
+            "cpp_frees": 3050,
+            "c_allocations": 3053,
+            "c_frees": 3050
+          },
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": false,
+            "timing_pass": false
+          }
+        }
+      }
+    },
+    "physical-middle": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 40.82186239000009,
+          "output": {
+            "labeled": 24139,
+            "matched": 0,
+            "false_wrong_note_voices": 4516,
+            "false_wrong_string_voices": 17921,
+            "false_gap_voices": 94413,
+            "false_positive_voices": 116850,
+            "fingerprint": "b40da4a6fcfd543a"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 20389,
+              "matched": 0
+            },
+            "3": {
+              "labeled": 3750,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "physical-highmid": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 32.43466377100003,
+          "output": {
+            "labeled": 23452,
+            "matched": 0,
+            "false_wrong_note_voices": 3729,
+            "false_wrong_string_voices": 15251,
+            "false_gap_voices": 46672,
+            "false_positive_voices": 65652,
+            "fingerprint": "fcabcff914676ab2"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 19740,
+              "matched": 0
+            },
+            "3": {
+              "labeled": 3712,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "09b49ce2fca08ad0a494458f1605a11af8561acccb9cda4480c564e3ed7ffc10",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "physical-high": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 30.628155332999995,
+          "output": {
+            "labeled": 28043,
+            "matched": 0,
+            "false_wrong_note_voices": 8685,
+            "false_wrong_string_voices": 15403,
+            "false_gap_voices": 33638,
+            "false_positive_voices": 57726,
+            "fingerprint": "0b868703201511e1"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 21143,
+              "matched": 0
+            },
+            "3": {
+              "labeled": 6900,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "cda242ca3e27eb72bc820de2208bec13ee637bae5c3d4261b3627843c20221e2",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "extended-middle": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 37.85884493399999,
+          "output": {
+            "labeled": 32400,
+            "matched": 4511,
+            "false_wrong_note_voices": 9393,
+            "false_wrong_string_voices": 24725,
+            "false_gap_voices": 7052,
+            "false_positive_voices": 41170,
+            "fingerprint": "73d712146be4b1d2"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 27000,
+              "matched": 4511
+            },
+            "3": {
+              "labeled": 5400,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "826fac40de309ff0838e68a7f301e146291b6197eab2493847ddee853bdf66c3",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "extended-highmid": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 25.108999037999865,
+          "output": {
+            "labeled": 32400,
+            "matched": 0,
+            "false_wrong_note_voices": 7164,
+            "false_wrong_string_voices": 13629,
+            "false_gap_voices": 2027,
+            "false_positive_voices": 22820,
+            "fingerprint": "db4f4b6e6d078738"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 27000,
+              "matched": 0
+            },
+            "3": {
+              "labeled": 5400,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "0ce0f5bdebb771b14fec8d2aa6877a1e9f05b35e64b9fae4e70ef500fe793628",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "extended-high": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 49.70326441899988,
+          "output": {
+            "labeled": 37800,
+            "matched": 3893,
+            "false_wrong_note_voices": 9082,
+            "false_wrong_string_voices": 27878,
+            "false_gap_voices": 7028,
+            "false_positive_voices": 43988,
+            "fingerprint": "182dc6c63e32ab7c"
+          },
+          "exact_matches_by_string_count": {
+            "2": {
+              "labeled": 27000,
+              "matched": 3893
+            },
+            "3": {
+              "labeled": 10800,
+              "matched": 0
+            }
+          },
+          "tsv_sha256": "013bfa87aed7844bbb7b596a1752b92167d92dd85650cc65408a3e6c5608fb8b",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "physical-four": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 65.40454443299996,
+          "output": {
+            "labeled": 55380,
+            "matched": 53051,
+            "false_wrong_note_voices": 18154,
+            "false_wrong_string_voices": 0,
+            "false_gap_voices": 73510,
+            "false_positive_voices": 91664,
+            "fingerprint": "0ac19cd2c6a694e5"
+          },
+          "exact_matches_by_string_count": {
+            "0": {
+              "labeled": 55380,
+              "matched": 53051
+            }
+          },
+          "tsv_sha256": "00cf9dd96f6aca7f7b9ead4516cfd079a66c3edd6923743f84c83857f2c96e6f",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    },
+    "synthetic-four": {
+      "runs": {
+        "off-512": {
+          "elapsed_seconds": 50.8269182250001,
+          "output": {
+            "labeled": 310640,
+            "matched": 51027,
+            "false_wrong_note_voices": 39044,
+            "false_wrong_string_voices": 12339,
+            "false_gap_voices": 6721,
+            "false_positive_voices": 58104,
+            "fingerprint": "c66176b514c4f1d3"
+          },
+          "exact_matches_by_string_count": {
+            "1": {
+              "labeled": 310640,
+              "matched": 51027
+            }
+          },
+          "tsv_sha256": "9215fe22b0cdc8f4bc7db16b5408811b37c1c909df999a5257c7595feb2fdb22",
+          "timing": null,
+          "gates": {
+            "timed_scored_identity": null,
+            "zero_processing_allocations": null,
+            "timing_pass": null
+          }
+        }
+      }
+    }
+  },
+  "collection": {
+    "reference_files_hash_verified": 17,
+    "reference_bytes": 22357948,
+    "reports_and_stage_logs_saved": true
+  },
+  "interpretation": {
+    "result": "Reference recovery completed; promotion rejected. All 14 OFF references recovered. Physical-long OFF/ON are bit-identical at 512 and 32 samples; no label or false-output regression occurred in those comparisons.",
+    "stop_reason": "The zero-processing-allocation gate failed in both physical-long OFF and ON. The report field stopped_on_regression names the stop dataset; it does not establish a label regression.",
+    "allocation_counts": "Each run reported 3053 allocations and 3050 frees in both C++ and C hooks. These hooks may overlap; do not add their counts.",
+    "timing": "Both OFF and ON failed p99, maximum and deadline-overrun limits on the remote shared runner. This is not a measurement of live host latency.",
+    "unmeasured": "The 1024-sample physical-long checks, remaining 13 ON dataset comparisons, and live host/MIDI lifecycle gates were not completed.",
+    "installed_scoreboard": "Unchanged. Recovered offline outputs have new provenance and do not replace installed acceptance evidence."
+  }
+}
