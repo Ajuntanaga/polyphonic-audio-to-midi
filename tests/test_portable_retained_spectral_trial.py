@@ -112,7 +112,7 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                 self.assertTrue(report['recorded_lane_window_resolved'])
                 self.assertTrue(report['coasting_lane_window_resolved'])
                 self.assertTrue(report['pending_lane_window_resolved'])
-                self.assertEqual(report['trial_revision'], 'pending_assignment_defer')
+                self.assertEqual(report['trial_revision'], 'independent_output_ownership')
                 self.assertEqual(report['emitted_midi_labeled_matches'], 'not measured')
                 self.assertEqual(report['full_recording_screen_pass'], not lost_match)
                 self.assertFalse(report['promotion_accepted'])

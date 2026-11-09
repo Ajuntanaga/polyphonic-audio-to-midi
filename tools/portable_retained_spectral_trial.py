@@ -33,13 +33,14 @@ POLICIES = {
             'single-lane MIDI incumbents; complete-solution fallback; no output guard.'),
     'spectral-lane-collision': dict(flag=COLLISION_FLAG,
         schema='m3_spectral_lane_collision_trial_v1',
-        revision='pending_assignment_defer',
+        revision='independent_output_ownership',
         description='Keep ordinary physical assignment. Move a conflicting singleton '
             'spectral output to its own free physical string; release before claim. '
-            'Defer pending attacks when the full physical assignment is infeasible. '
             'Retain a free previous singleton output while an unselected active peer '
             'still owns its new lane; defer new attacks against that retained lane. '
-            'Groups and continuity expansions retain their existing output path.'),
+            'Preserve candidate tracking, then reconcile independent MIDI owners: '
+            'retain incumbents, rank new claims by direct fundamental support, '
+            'abstain on tied claims and admit only complete groups.'),
 }
 
 def window_conflicts(history):

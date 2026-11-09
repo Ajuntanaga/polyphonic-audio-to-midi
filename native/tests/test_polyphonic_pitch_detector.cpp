@@ -2367,7 +2367,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(detector.candidate_states_[4U].diagnostic_coasting_retained_mask, 0U);
   }
 
-  static void failed_assignment_defers_pending_attacks(
+  static void failed_assignment_preserves_pending_tracking(
       PolyphonicPitchDetector& detector, bool enabled) {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
@@ -2403,29 +2403,257 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.infer_m3_unison_strings(selected);
     M3_EXPECT_EQ(first.assigned_string_mask, 1U);
     M3_EXPECT_EQ(second.assigned_string_mask, 1U);
-    M3_EXPECT_EQ(first.diagnostic_pending_assignment_failed, enabled);
-    M3_EXPECT_EQ(second.diagnostic_pending_assignment_failed, enabled);
-    M3_EXPECT_FALSE(active.diagnostic_pending_assignment_failed);
     DetectorDecision decision;
-    M3_EXPECT_EQ(detector.append_candidate_note_on(decision, 0U, 90U), !enabled);
-    M3_EXPECT_EQ(detector.append_candidate_note_on(decision, 1U, 90U), !enabled);
-    M3_EXPECT_EQ(decision.transitions.size(), enabled ? 0U : 2U);
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(decision, 0U, 90U));
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(decision, 1U, 90U));
+    M3_EXPECT_EQ(decision.transitions.size(), 2U);
+    M3_EXPECT_EQ(first.midi_voice_mask, 1U);
+    M3_EXPECT_EQ(second.midi_voice_mask, 1U);
     M3_EXPECT_EQ(first.attack_ticks, 9U);
     M3_EXPECT_EQ(second.attack_ticks, 9U);
     M3_EXPECT_EQ(first.evidence_ticks, 59U);
     M3_EXPECT_EQ(second.evidence_ticks, 59U);
-    if (enabled) {
-      // A later feasible selection admits the intended second pitch, without
-      // giving the earlier array entry ownership merely because it came first.
-      selected[0U] = false;
-      detector.assign_m3_strings(selected);
-      detector.infer_m3_unison_strings(selected);
-      M3_EXPECT_FALSE(second.diagnostic_pending_assignment_failed);
-      M3_EXPECT_TRUE(detector.append_candidate_note_on(decision, 1U, 90U));
-      M3_EXPECT_EQ(decision.transitions.size(), 1U);
-      M3_EXPECT_EQ(decision.transitions[0U].note, 37U);
-      M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void independent_midi_owner_lifecycle(
+      PolyphonicPitchDetector& detector, MidiRouting delivery_routing) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 36U;
+    config.highest_note = 37U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    auto& first = detector.candidate_states_[0U];
+    auto& second = detector.candidate_states_[1U];
+    first.active = second.active = true;
+    first.midi_voice_mask = second.midi_voice_mask = 1U;
+    first.evidence_ticks = second.evidence_ticks = 59U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[1U] = true;
+    std::array<double, kMaxCandidates> scores{}, fundamentals{};
+    scores[0U] = 4.8; scores[1U] = 4.4;
+    fundamentals[0U] = 0.736; fundamentals[1U] = 0.929;
+    struct Capture final {
+      std::array<std::array<bool, 128U>, 16U> active{};
+      bool reject_on{};
+      static bool push(void* context, const VoiceTransition& event,
+                       std::uint8_t channel) noexcept {
+        auto& self = *static_cast<Capture*>(context);
+        if (self.reject_on && event.kind == TransitionKind::note_on) return false;
+        if (channel == 0U || channel > 16U || event.note >= 128U) return false;
+        bool& active = self.active[channel - 1U][event.note];
+        M3_EXPECT_EQ(active, event.kind == TransitionKind::note_off);
+        active = event.kind == TransitionKind::note_on;
+        return true;
+      }
+    } capture;
+    GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64U));
+    const auto deliver = [&](const DetectorDecision& decision) {
+      ledger.begin_block();
+      for (const auto& event : decision.transitions)
+        M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+      return ledger.deliver(64U, NoteEventSink{&capture, &Capture::push},
+                           0.0, true, true, delivery_routing, 1U);
+    };
+    const auto reconcile = [&](DetectorDecision& decision) {
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+    };
+    const auto allocations = test::allocation_count();
+    DetectorDecision start;
+    M3_EXPECT_TRUE(detector.append_transition(start, TransitionKind::note_on, 36U, 90U, 0U));
+    M3_EXPECT_TRUE(detector.append_transition(start, TransitionKind::note_on, 37U, 91U, 0U));
+    const auto virtual_sequence = detector.transition_sequence_;
+    reconcile(start);
+    M3_EXPECT_EQ(start.transitions.size(), 1U);
+    M3_EXPECT_EQ(start.transitions[0U].note, 37U);
+    M3_EXPECT_EQ(start.transitions[0U].velocity, 91U);
+    M3_EXPECT_EQ(detector.transition_sequence_, virtual_sequence);
+    M3_EXPECT_FALSE(deliver(start).output_blocked);
+    // The stronger later challenger cannot steal an existing emitted owner.
+    scores[0U] = fundamentals[0U] = 100.0;
+    DetectorDecision hold;
+    reconcile(hold);
+    M3_EXPECT_EQ(hold.transitions.size(), 0U);
+    M3_EXPECT_EQ(first.midi_voice_mask, 1U);
+    M3_EXPECT_EQ(second.midi_voice_mask, 1U);
+    M3_EXPECT_EQ(first.evidence_ticks, 59U);
+    M3_EXPECT_EQ(second.evidence_ticks, 59U);
+    // A suppressed virtual onset must not produce an unmatched real release.
+    first.active = false;
+    DetectorDecision stale_release;
+    M3_EXPECT_TRUE(detector.append_transition(stale_release, TransitionKind::note_off, 36U, 0U, 0U));
+    reconcile(stale_release);
+    M3_EXPECT_EQ(stale_release.transitions.size(), 0U);
+    M3_EXPECT_FALSE(deliver(stale_release).output_blocked);
+    // A previously suppressed coasting candidate cannot become a late onset.
+    first.active = true;
+    selected[0U] = false;
+    second.active = false;
+    DetectorDecision release;
+    reconcile(release);
+    M3_EXPECT_EQ(release.transitions.size(), 1U);
+    M3_EXPECT_EQ(release.transitions[0U].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(release.transitions[0U].note, 37U);
+    M3_EXPECT_FALSE(deliver(release).output_blocked);
+    selected[0U] = true;
+    DetectorDecision admit;
+    reconcile(admit);
+    M3_EXPECT_EQ(admit.transitions.size(), 1U);
+    M3_EXPECT_EQ(admit.transitions[0U].note, 36U);
+    M3_EXPECT_TRUE(admit.transitions[0U].velocity > 0U);
+    M3_EXPECT_FALSE(deliver(admit).output_blocked);
+    first.midi_voice_mask = 2U;
+    DetectorDecision move;
+    reconcile(move);
+    M3_EXPECT_EQ(move.transitions.size(), 2U);
+    M3_EXPECT_EQ(move.transitions[0U].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(move.transitions[0U].voice_id, 0U);
+    M3_EXPECT_EQ(move.transitions[1U].kind, TransitionKind::note_on);
+    M3_EXPECT_EQ(move.transitions[1U].voice_id, 1U);
+    M3_EXPECT_FALSE(deliver(move).output_blocked);
+    first.active = false;
+    DetectorDecision end;
+    reconcile(end);
+    M3_EXPECT_FALSE(deliver(end).output_blocked);
+    M3_EXPECT_FALSE(ledger.is_active(36U));
+    // Intent is not sink delivery: rejection blocks the ledger. Coordinated
+    // recovery clears both the ledger and this diagnostic owner map.
+    first.active = true;
+    DetectorDecision rejected;
+    reconcile(rejected);
+    capture.reject_on = true;
+    M3_EXPECT_TRUE(deliver(rejected).output_blocked);
+    M3_EXPECT_FALSE(ledger.is_active(36U));
+    detector.reset();
+    M3_EXPECT_EQ(detector.diagnostic_midi_sequence_, 0U);
+    for (const auto& owner : detector.diagnostic_midi_owners_)
+      M3_EXPECT_EQ(owner.candidate, kUnassignedVoiceId);
+    capture.reject_on = false;
+    ledger.request_recovery();
+    DetectorDecision empty;
+    static_cast<void>(deliver(empty));
+    M3_EXPECT_FALSE(deliver(empty).output_blocked);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void independent_midi_owner_groups_and_ties(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 48U;
+    config.highest_note = 52U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    std::array<bool, kMaxCandidates> selected{};
+    std::array<double, kMaxCandidates> scores{}, fundamentals{};
+    const auto set_candidate = [&](std::size_t candidate, std::uint8_t mask, double power) {
+      auto& state = detector.candidate_states_[candidate];
+      state.active = true;
+      state.midi_voice_mask = mask;
+      selected[candidate] = true;
+      scores[candidate] = fundamentals[candidate] = power;
+    };
+    const auto reconcile = [&](DetectorDecision& decision) {
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+    };
+    const auto allocations = test::allocation_count();
+    set_candidate(0U, 3U, 1.0);
+    DetectorDecision unison;
+    reconcile(unison);
+    M3_EXPECT_EQ(unison.transitions.size(), 2U);
+    for (std::size_t index = 0U; index < 2U; ++index) {
+      M3_EXPECT_EQ(unison.transitions[index].note, 48U);
+      M3_EXPECT_EQ(unison.transitions[index].voice_id, index);
     }
+    set_candidate(2U, 1U, 10.0);
+    selected[0U] = false;  // A complete incumbent group may coast.
+    DetectorDecision hold;
+    reconcile(hold);
+    M3_EXPECT_EQ(hold.transitions.size(), 0U);
+    detector.candidate_states_[0U].active = false;
+    DetectorDecision replacement;
+    reconcile(replacement);
+    M3_EXPECT_EQ(replacement.transitions.size(), 3U);
+    M3_EXPECT_EQ(replacement.transitions[0U].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(replacement.transitions[1U].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(replacement.transitions[2U].note, 50U);
+    detector.reset();
+    selected = {}; scores = {}; fundamentals = {};
+    set_candidate(0U, 3U, 1.0);
+    set_candidate(2U, 1U, 2.0);
+    DetectorDecision whole_group;
+    reconcile(whole_group);
+    M3_EXPECT_EQ(whole_group.transitions.size(), 1U);
+    M3_EXPECT_EQ(whole_group.transitions[0U].note, 50U);
+    M3_EXPECT_EQ(detector.diagnostic_midi_owners_[1U].candidate, kUnassignedVoiceId);
+    M3_EXPECT_EQ(detector.candidate_states_[0U].midi_voice_mask, 3U);
+    detector.reset();
+    selected = {}; scores = {}; fundamentals = {};
+    set_candidate(0U, 1U, 1.0);
+    set_candidate(2U, 1U, 1.0);
+    set_candidate(4U, 4U, 0.5);
+    DetectorDecision tied;
+    reconcile(tied);
+    M3_EXPECT_EQ(tied.transitions.size(), 1U);
+    M3_EXPECT_EQ(tied.transitions[0U].note, 52U);
+    M3_EXPECT_EQ(detector.diagnostic_midi_owners_[0U].candidate, kUnassignedVoiceId);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void independent_midi_owner_capacity_and_off(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 48U;
+    config.highest_note = 63U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    std::array<bool, kMaxCandidates> selected{};
+    std::array<double, kMaxCandidates> scores{}, fundamentals{};
+    for (std::size_t candidate = 0U; candidate < 16U; ++candidate) {
+      auto& state = detector.candidate_states_[candidate];
+      state.active = candidate % 2U == 0U;
+      state.midi_voice_mask = static_cast<std::uint8_t>(1U << (candidate / 2U));
+      selected[candidate] = true;
+      scores[candidate] = fundamentals[candidate] = 1.0;
+    }
+    const auto reconcile = [&](DetectorDecision& decision) {
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+    };
+    const auto allocations = test::allocation_count();
+    detector.set_spectral_lane_collision_for_diagnostics(false);
+    DetectorDecision disabled;
+    M3_EXPECT_TRUE(detector.append_transition(disabled, TransitionKind::note_on, 50U, 99U, 3U));
+    reconcile(disabled);
+    M3_EXPECT_EQ(disabled.transitions.size(), 1U);
+    M3_EXPECT_EQ(disabled.transitions[0U].note, 50U);
+    M3_EXPECT_EQ(disabled.transitions[0U].velocity, 99U);
+    M3_EXPECT_EQ(disabled.transitions[0U].voice_id, 3U);
+    M3_EXPECT_EQ(detector.diagnostic_midi_sequence_, 0U);
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    DetectorDecision initial;
+    reconcile(initial);
+    M3_EXPECT_EQ(initial.transitions.size(), kMaxVoices);
+    for (std::size_t candidate = 0U; candidate < 16U; ++candidate)
+      detector.candidate_states_[candidate].active = candidate % 2U != 0U;
+    DetectorDecision full;
+    while (full.transitions.size() < full.transitions.capacity())
+      M3_EXPECT_TRUE(detector.append_transition(full, TransitionKind::note_off, 40U, 0U));
+    const auto virtual_sequence = detector.transition_sequence_;
+    reconcile(full);
+    M3_EXPECT_EQ(full.transitions.size(), 2U * kMaxVoices);
+    for (std::size_t index = 0U; index < full.transitions.size(); ++index) {
+      const auto lane = index % kMaxVoices;
+      const bool onset = index >= kMaxVoices;
+      M3_EXPECT_EQ(full.transitions[index].kind,
+                   onset ? TransitionKind::note_on : TransitionKind::note_off);
+      M3_EXPECT_EQ(full.transitions[index].note, 48U + 2U * lane + (onset ? 1U : 0U));
+      M3_EXPECT_EQ(full.transitions[index].voice_id, lane);
+      M3_EXPECT_EQ(full.transitions[index].sequence, kMaxVoices + index);
+    }
+    M3_EXPECT_EQ(detector.transition_sequence_, virtual_sequence);
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
@@ -12726,13 +12954,37 @@ M3_TEST(native_detector_coasting_lane_collision_preserves_groups_and_capacity) {
 #endif
 }
 
-M3_TEST(native_detector_failed_assignment_defers_stale_pending_attacks) {
+M3_TEST(native_detector_spectral_lane_collision_preserves_pending_tracking) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   m3::PolyphonicPitchDetector detector;
-  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_defers_pending_attacks(
+  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_preserves_pending_tracking(
       detector, false);
-  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_defers_pending_attacks(
+  m3::PolyphonicPitchDetectorTestAccess::failed_assignment_preserves_pending_tracking(
       detector, true);
+#endif
+}
+
+M3_TEST(native_detector_spectral_lane_collision_independent_owner_lifecycle) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::independent_midi_owner_lifecycle(
+      detector, m3::MidiRouting::per_voice);
+  m3::PolyphonicPitchDetectorTestAccess::independent_midi_owner_lifecycle(
+      detector, m3::MidiRouting::single);
+#endif
+}
+
+M3_TEST(native_detector_spectral_lane_collision_independent_groups_and_ties) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::independent_midi_owner_groups_and_ties(detector);
+#endif
+}
+
+M3_TEST(native_detector_spectral_lane_collision_independent_capacity_and_off) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::independent_midi_owner_capacity_and_off(detector);
 #endif
 }
 

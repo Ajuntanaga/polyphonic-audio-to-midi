@@ -1630,6 +1630,8 @@ void PolyphonicPitchDetector::set_runtime_config(
 void PolyphonicPitchDetector::reset() noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   diagnostic_odd_partial_cue_mask_ = {};
+  diagnostic_midi_owners_ = {};
+  diagnostic_midi_sequence_ = 0U;
 #endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   if (joint_residual_shadow_ != nullptr) {
@@ -4181,14 +4183,6 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
   const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
   if (profile_mode_ == ProfileMode::m3 &&
       midi_routing_ == MidiRouting::per_voice) {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_spectral_lane_collision_ &&
-        state.diagnostic_pending_assignment_failed) {
-      // An infeasible joint assignment leaves old preview masks in place.
-      // Neither pending attack owns such a mask, even if it emits first.
-      return false;
-    }
-#endif
     std::uint8_t desired = state.assigned_string_mask;
     if (desired == 0U && state.assigned_string < kM3OpenNotes.size()) {
       desired = static_cast<std::uint8_t>(1U << state.assigned_string);
@@ -5995,6 +5989,127 @@ void PolyphonicPitchDetector::order_collision_releases(
     events[index].sequence = first_sequence + static_cast<std::uint32_t>(index);
 }
 
+void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
+    DetectorDecision& decision,
+    const std::array<bool, kMaxCandidates>& selected,
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals) noexcept {
+  if (!diagnostic_spectral_lane_collision_ || profile_mode_ != ProfileMode::m3 ||
+      midi_routing_ != MidiRouting::per_voice)
+    return;
+
+  struct Choice final {
+    std::uint8_t retained_lanes{};
+    double direct_power{};
+    double fundamental_power{};
+    double score{};
+    std::array<std::uint64_t, (kMaxCandidates + 63U) / 64U> members{};
+    bool valid{};
+  };
+  const auto better = [](const Choice& left, const Choice& right) noexcept {
+    if (!right.valid) return true;
+    if (left.retained_lanes != right.retained_lanes)
+      return left.retained_lanes > right.retained_lanes;
+    if (left.direct_power != right.direct_power)
+      return left.direct_power > right.direct_power;
+    if (left.fundamental_power != right.fundamental_power)
+      return left.fundamental_power > right.fundamental_power;
+    return left.score > right.score;
+  };
+  const auto merge = [&](Choice& target, const Choice& next) noexcept {
+    if (better(next, target)) {
+      target = next;
+    } else if (!better(target, next)) {
+      // Admit only candidates shared by equally supported solutions. A tie
+      // must not grant a contested lane to the first array entry.
+      for (std::size_t word = 0U; word < target.members.size(); ++word)
+        target.members[word] &= next.members[word];
+    }
+  };
+  std::array<Choice, 1U << kMaxVoices> choices{};
+  std::array<std::uint8_t, kMaxCandidates> requests{};
+  choices[0U].valid = true;
+  const auto count = static_cast<std::size_t>(candidate_count_);
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const auto& state = candidate_states_[candidate];
+    const auto note = candidate_midi_output_note(candidate);
+    const auto desired = state.midi_voice_mask;
+    if (!state.active || output_suppressed(state) || desired == 0U || note >= 128U ||
+        !std::isfinite(scores[candidate]) || scores[candidate] < 0.0 ||
+        !std::isfinite(fundamentals[candidate]) || fundamentals[candidate] < 0.0)
+      continue;
+    std::uint8_t retained = 0U;
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      const auto& owner = diagnostic_midi_owners_[lane];
+      if (owner.candidate == candidate && owner.note == note)
+        retained = static_cast<std::uint8_t>(retained | (1U << lane));
+    }
+    // A previously suppressed candidate cannot appear as a new coasting
+    // onset, and a coasting group cannot grow or retune without selection.
+    if (!selected[candidate] && (desired & retained) != desired) continue;
+    requests[candidate] = desired;
+    const auto retained_count = string_count(static_cast<std::uint8_t>(desired & retained));
+    const double direct = has_direct_fundamental_peak(scores, fundamentals, candidate, count)
+        ? fundamentals[candidate] : 0.0;
+    // Complete masks only: a same-pitch group is never clipped to fit. The
+    // descending traversal uses each candidate once, with bounded storage.
+    for (std::size_t used = choices.size(); used-- > 0U;) {
+      if (!choices[used].valid || (used & desired) != 0U) continue;
+      auto next = choices[used];
+      next.retained_lanes = static_cast<std::uint8_t>(next.retained_lanes + retained_count);
+      next.direct_power += direct;
+      next.fundamental_power += fundamentals[candidate];
+      next.score += scores[candidate];
+      next.members[candidate / 64U] |= std::uint64_t{1U} << (candidate % 64U);
+      merge(choices[used | desired], next);
+    }
+  }
+  Choice best = choices[0U];
+  for (const auto& choice : choices)
+    if (choice.valid) merge(best, choice);
+  std::array<DiagnosticMidiOwner, kMaxVoices> next_owners{};
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    if ((best.members[candidate / 64U] &
+         (std::uint64_t{1U} << (candidate % 64U))) == 0U)
+      continue;
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      if ((requests[candidate] & (1U << lane)) != 0U)
+        next_owners[lane] = {static_cast<std::uint8_t>(candidate),
+                             candidate_midi_output_note(candidate)};
+    }
+  }
+  // Replace the whole virtual event batch atomically. Every lane can need at
+  // most one release and one claim; no allocation or partial group is possible.
+  static_assert(kMaxTickTransitions >= 2U * kMaxVoices);
+  TickTransitions output;
+  auto sequence = diagnostic_midi_sequence_;
+  const auto changed = [&](std::size_t lane) noexcept {
+    return next_owners[lane].candidate != diagnostic_midi_owners_[lane].candidate ||
+           next_owners[lane].note != diagnostic_midi_owners_[lane].note;
+  };
+  for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+    const auto& old = diagnostic_midi_owners_[lane];
+    if (changed(lane) && old.candidate != kUnassignedVoiceId)
+      static_cast<void>(output.push_back({0U, TransitionKind::note_off, old.note, 0U,
+                                         sequence++, static_cast<std::uint8_t>(lane)}));
+  }
+  for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+    const auto& next = next_owners[lane];
+    if (!changed(lane) || next.candidate == kUnassignedVoiceId) continue;
+    auto velocity = dynamic_velocity();
+    for (const auto& requested : decision.transitions) {
+      if (requested.kind == TransitionKind::note_on && requested.note == next.note &&
+          requested.voice_id == lane && requested.velocity != 0U)
+        velocity = requested.velocity;
+    }
+    static_cast<void>(output.push_back({0U, TransitionKind::note_on, next.note, velocity,
+                                       sequence++, static_cast<std::uint8_t>(lane)}));
+  }
+  decision.transitions = output;
+  diagnostic_midi_owners_ = next_owners;
+  diagnostic_midi_sequence_ = sequence;
+}
+
 std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
     std::size_t candidate, std::uint8_t fresh_proposal) const noexcept {
   if (candidate >= candidate_count_ || string_count(fresh_proposal) != 1U)
@@ -6024,12 +6139,6 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_spectral_lane_collision_) {
-    for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate)
-      candidate_states_[candidate].diagnostic_pending_assignment_failed = false;
-  }
-#endif
   if (profile_mode_ != ProfileMode::m3) {
     for (std::size_t candidate = 0U;
          candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
@@ -7111,14 +7220,6 @@ void PolyphonicPitchDetector::assign_m3_strings(
   }
 #endif
   if (!best.valid) {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_spectral_lane_collision_) {
-      for (std::size_t voice = 0U; voice < selected_count; ++voice) {
-        auto& state = candidate_states_[candidates[voice]];
-        state.diagnostic_pending_assignment_failed = !state.active;
-      }
-    }
-#endif
     return;
   }
   for (std::size_t voice = 0U; voice < selected_count; ++voice) {
@@ -12323,6 +12424,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   write_snapshot(decision, scores, selected, quiet);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (collision_reassigned) order_collision_releases(decision);
+  reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
 #endif
   return decision;
 }

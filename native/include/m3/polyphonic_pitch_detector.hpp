@@ -991,9 +991,6 @@ class PolyphonicPitchDetector final {
     // An existing singleton output retained while a coasting peer owns its
     // new physical lane. Pending attacks cannot claim this emitted lane.
     std::uint8_t diagnostic_coasting_retained_mask{};
-    // The current physical assignment could not place all selected voices.
-    // Retained preview masks cannot authorize a new MIDI attack in that frame.
-    bool diagnostic_pending_assignment_failed{};
 #endif
   };
 
@@ -1428,6 +1425,11 @@ class PolyphonicPitchDetector final {
       std::size_t candidate, std::uint8_t desired,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
   void order_collision_releases(DetectorDecision& decision) noexcept;
+  void reconcile_diagnostic_midi_owners(
+      DetectorDecision& decision,
+      const std::array<bool, kMaxCandidates>& selected,
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals) noexcept;
   [[nodiscard]] std::uint8_t retained_spectral_assignment_lane(
       std::size_t candidate, std::uint8_t fresh_proposal) const noexcept;
 #endif
@@ -1705,6 +1707,14 @@ class PolyphonicPitchDetector final {
   bool diagnostic_projection_preview_admission_{};
   bool diagnostic_retained_spectral_assignment_{};
   bool diagnostic_spectral_lane_collision_{};
+  struct DiagnosticMidiOwner final {
+    std::uint8_t candidate{kUnassignedVoiceId};
+    std::uint8_t note{128U};
+  };
+  // Output intent only; CandidateState continues to describe the unmodified
+  // detector trajectory. These entries do not establish host delivery.
+  std::array<DiagnosticMidiOwner, kMaxVoices> diagnostic_midi_owners_{};
+  std::uint32_t diagnostic_midi_sequence_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
