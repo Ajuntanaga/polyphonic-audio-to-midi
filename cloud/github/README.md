@@ -138,3 +138,13 @@ and its preceding unreleased raw onsets are retained. Overlapping pitches
 remain separate in the report; raw detector events do not establish delivered
 host ownership. No runtime rule or installed output changes. This diagnosis
 does not replace corpus, allocation, buffer, timing or live-host acceptance.
+
+`held-note-trace` follows the fragmented bass note in ordinary label 17. Use
+`-f dataset=ordinary -f note=37 -f label_index=17` and
+`-f saved_midi_checkpoint=docs/recovery/github-independent-midi-ownership-20261109.json`.
+One complete ON replay must reproduce that trial's output and full MIDI/outcome
+hashes. The report retains samples 244736 through 317440, candidate and routing
+state, and raw events on every observed lane, including notes held before the
+window. It checks the annotation and raw pairing before reporting held duration.
+This trace investigates why the note retriggers; it changes no runtime policy
+and measures neither native timing nor delivered-host MIDI.

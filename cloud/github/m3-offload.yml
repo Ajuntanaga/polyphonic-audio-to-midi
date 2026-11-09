@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial, spectral-lane-collision-corpus, midi-ledger-replay, spectral-lane-collision-trace, coasting-owner-trace]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial, spectral-lane-collision-corpus, midi-ledger-replay, spectral-lane-collision-trace, coasting-owner-trace, held-note-trace]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -22,7 +22,7 @@ on:
         type: boolean
         default: false
       saved_midi_checkpoint:
-        description: Completed trial checkpoint for saved MIDI ledger replay or coasting owner trace
+        description: Completed trial checkpoint for saved MIDI replay or owner/hold traces
         type: string
         default: docs/recovery/github-spectral-lane-collision-20261109.json
       note:
@@ -71,7 +71,7 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial || "$TASK" = spectral-lane-collision-corpus || "$TASK" = midi-ledger-replay || "$TASK" = spectral-lane-collision-trace || "$TASK" = coasting-owner-trace ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial || "$TASK" = spectral-lane-collision-corpus || "$TASK" = midi-ledger-replay || "$TASK" = spectral-lane-collision-trace || "$TASK" = coasting-owner-trace || "$TASK" = held-note-trace ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
@@ -79,8 +79,9 @@ jobs:
           if [[ "$TASK" = midi-lane-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 47; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = spectral-lane-collision-trace || "$TASK" = coasting-owner-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 37; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = retained-spectral-trial || "$TASK" = spectral-lane-collision-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 48; test "$LABEL_INDEX" = -1; fi
+          if [[ "$TASK" = held-note-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 37; test "$LABEL_INDEX" = 17; fi
           if [[ "$TASK" = retained-spectral-diagnosis ]]; then test "$DATASET" = ordinary; test "$NOTE" = 55; test "$LABEL_INDEX" = 265; fi
-          if [[ "$TASK" = midi-ledger-replay || "$TASK" = coasting-owner-trace ]]; then [[ "$SAVED_MIDI_CHECKPOINT" =~ ^docs/recovery/[A-Za-z0-9_-]+[.]json$ ]]; fi
+          if [[ "$TASK" = midi-ledger-replay || "$TASK" = coasting-owner-trace || "$TASK" = held-note-trace ]]; then [[ "$SAVED_MIDI_CHECKPOINT" =~ ^docs/recovery/[A-Za-z0-9_-]+[.]json$ ]]; fi
           if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial || "$TASK" = spectral-lane-collision-corpus ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
@@ -222,6 +223,13 @@ jobs:
         run: |
           export M3_SOURCE_COMMIT="$SOURCE_SHA"
           python3 -B -m tools.portable_midi_lane_trace --profile coasting-owner-on --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report "$SAVED_MIDI_CHECKPOINT" --output build/github-results/coasting-owner-trace 2>&1 | tee build/github-results/runner.log
+      - name: Trace the fragmented bass note without changing output
+        if: inputs.task == 'held-note-trace'
+        working-directory: source
+        run: |
+          cmake --build build/portable --target m3_motion_tests --parallel 2 2>&1 | tee build/github-results/trace-build.log
+          M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
+          python3 -B -m tools.portable_midi_lane_trace --profile held-note-on --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report "$SAVED_MIDI_CHECKPOINT" --output build/github-results/held-note-trace 2>&1 | tee build/github-results/runner.log
       - name: Screen fresh spectral incumbents in physical assignment
         if: inputs.task == 'retained-spectral-trial'
         working-directory: source

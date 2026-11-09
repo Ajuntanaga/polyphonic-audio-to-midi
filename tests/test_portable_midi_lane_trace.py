@@ -252,6 +252,70 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
                     self.assertEqual([entry['event'] for entry in history], events[1:])
                     self.assertEqual(history[-1]['unreleased_raw_note_ons_after'], events[1:])
 
+    def held_note_fixture(self, root, *, invalid_pair=False):
+        lines = replay_text(transitions=3).splitlines()
+        columns = lines[2].split('\t')
+        target = lines[3 + 17].split('\t')
+        target[columns.index('midi_note')] = '37'
+        lines[3 + 17] = '\t'.join(target)
+        text = '\n'.join(lines) + '\n'
+        args = fixtures.PortableEvidenceRetentionTrialTests().fixture(root, baseline_text=text)
+        events = [event(63, 'on', 37, 0), event(127, 'off', 38 if invalid_pair else 37, 1),
+                  event(191, 'on', 37, 2, 1)]
+        write_rows(root / 'known-outcome.tsv', snapshots())
+        write_events(root / 'known-midi.tsv', events)
+        reference = json.loads(args[3].read_text())
+        reference.update(policy_name='spectral-lane-collision',
+                         trial_revision='independent_output_ownership')
+        reference['runs']['trial-on'] = dict(reference['runs']['reference-off'], traces={
+            'outcome': {'captured_raw_sha256': digest(root / 'known-outcome.tsv')},
+            'midi-event': {'captured_raw_sha256': digest(root / 'known-midi.tsv')}})
+        reference['runs']['reference-off']['tsv_sha256'] = '0' * 64
+        args[3].write_text(json.dumps(reference))
+        return args, text, events
+
+    def execute_held_note(self, args, text, events):
+        stub = self.replay_stub(text, expected_notes=(37,), collision=True, source_events=events)
+        label = dict(label_index=17, midi_note=37, string_mask=1, start_sample=0, end_sample=192)
+        with patch('tools.portable_midi_lane_trace.HELD_NOTE_WINDOW', (64, 192)), patch(
+                'tools.portable_midi_lane_trace.HELD_LABEL', label), patch(
+                'tools.portable_midi_lane_trace.subprocess.run', side_effect=stub) as replay:
+            run(*args, profile='held-note-on')
+        return replay
+
+    def test_held_note_profile_uses_full_identity_and_keeps_other_lane_moves(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, text, events = self.held_note_fixture(Path(directory))
+            replay = self.execute_held_note(args, text, events)
+            self.assertEqual(replay.call_count, 1)
+            report = json.loads((args[-1] / 'report.json').read_text())
+            self.assertTrue(report['reference_complete_streams_bit_identical'])
+            self.assertFalse(report['runtime_rule_changed'])
+            result = report['runs']['candidate-37-on']
+            self.assertTrue(result['reference_bit_identical'])
+            self.assertEqual(result['held_label']['exact_held_samples'], 64)
+            self.assertEqual(result['held_label']['unmatched_hold_samples'], 128)
+            self.assertEqual(result['held_label']['note_ons_inside_label'], 2)
+            self.assertEqual(result['raw_lane_history']['unreleased_raw_note_ons_at_window_start'],
+                             [events[0]])
+            self.assertEqual(result['other_raw_lane_histories'][0]['events'][0]['event'], events[2])
+
+    def test_held_note_profile_rejects_wrong_revision_and_invalid_pairing(self):
+        for wrong in ('revision', 'pairing'):
+            with self.subTest(wrong=wrong), tempfile.TemporaryDirectory() as directory:
+                args, text, events = self.held_note_fixture(Path(directory), invalid_pair=wrong == 'pairing')
+                if wrong == 'revision':
+                    reference = json.loads(args[3].read_text())
+                    reference['trial_revision'] = 'coasting_owner_hold'
+                    args[3].write_text(json.dumps(reference))
+                message = 'saved independent output trial' if wrong == 'revision' else 'Raw MIDI pairing'
+                with self.assertRaisesRegex(ValueError, message):
+                    self.execute_held_note(args, text, events)
+                report = json.loads((args[-1] / 'report.json').read_text())
+                self.assertEqual(report['state'], 'failed')
+                if wrong == 'revision':
+                    self.assertEqual(report['stage'], 'verify inputs')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,9 +1,9 @@
-"""Trace a recorded lane replacement without changing the selected runtime policy.
+"""Trace a recorded lane replacement or fragmented hold without changing policy.
 
 Complete replays observe each candidate with the existing recorder. They must
 preserve historical output and identical MIDI/outcome captures. The collision
 ON profile also requires complete-stream identity with the original ON trial.
-Only the short conflict window and its preceding raw note-ons are retained.
+Only the selected window and its preceding raw note-ons are retained.
 """
 import argparse
 import csv
@@ -15,7 +15,7 @@ import time
 
 from tools.candidate_outcome_analysis import HEADER, _candidates, _frame
 from tools.frozen_cue_corpus_gate import read_replay
-from tools.midi_lifecycle_analysis import read_events
+from tools.midi_lifecycle_analysis import read_events, summarize
 from tools.portable_assignment_trace import compress_trace_window, digest, read_rows, verify_inputs
 from tools.portable_corpus_replay import SETTINGS, command_for
 from tools.portable_evidence_retention_trial import summarize_calibrated_output
@@ -38,6 +38,9 @@ COASTING_OWNER_WINDOW = (1147904, 1150464)
 COASTING_OWNER_TARGET_EVENTS = (
     dict(sample=1149183, kind='on', note=36, voice_id=0, sequence=2152),
     dict(sample=1149183, kind='on', note=37, voice_id=0, sequence=2153))
+HELD_NOTE_WINDOW = (244736, 317440)
+HELD_LABEL = dict(label_index=17, midi_note=37, string_mask=1,
+                  start_sample=245017, end_sample=316800)
 
 
 def trace_profile(profile):
@@ -51,6 +54,10 @@ def trace_profile(profile):
     if profile == 'coasting-owner-on':
         return dict(window=COASTING_OWNER_WINDOW, notes=(36, 37), lane=0,
                     targets=COASTING_OWNER_TARGET_EVENTS, reference_key='trial-on',
+                    flags=('--diagnostic-spectral-lane-collision',))
+    if profile == 'held-note-on':
+        return dict(window=HELD_NOTE_WINDOW, notes=(37,), lane=0, targets=(),
+                    reference_key='trial-on',
                     flags=('--diagnostic-spectral-lane-collision',))
     raise ValueError('Unknown MIDI lane trace profile')
 
@@ -153,6 +160,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             if (profile == 'coasting-owner-on'
                     and reference_report.get('trial_revision') != 'coasting_owner_hold'):
                 raise ValueError('Coasting owner profile requires the saved coasting owner trial')
+            if (profile == 'held-note-on'
+                    and reference_report.get('trial_revision') != 'independent_output_ownership'):
+                raise ValueError('Held note profile requires the saved independent output trial')
             expected_captures = {kind: reference['traces'][kind]['captured_raw_sha256']
                                  for kind in ('outcome', 'midi-event')}
             if any(len(value) != 64 or any(c not in '0123456789abcdef' for c in value)
@@ -207,6 +217,19 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 frames=candidate_frames(candidates, outcomes, note=note, start=start, end=end),
                 calibrated_output=summarize_calibrated_output(candidates, outcomes, events, note),
                 raw_lane_history=raw_lane_history(events, lane=selected['lane'], start=start, end=end))
+            if profile == 'held-note-on':
+                label = parsed['labels'][HELD_LABEL['label_index']]
+                if any(label[key] != value for key, value in HELD_LABEL.items()):
+                    raise ValueError('Recorded held-note annotation changed')
+                lifecycle = summarize(events, parsed['labels'], sample_count=samples, sample_rate=rate)
+                if not lifecycle['coverage_valid']:
+                    raise ValueError('Raw MIDI pairing cannot establish held-note duration')
+                result['held_label'] = lifecycle['labels'][HELD_LABEL['label_index']]
+                result['held_label_interpretation'] = lifecycle['interpretation']
+                result['other_raw_lane_histories'] = [
+                    raw_lane_history(events, lane=lane, start=start, end=end)
+                    for lane in sorted({event['voice_id'] for event in events})
+                    if lane != selected['lane']]
             result['traces'] = {}
             for kind, path in traces.items():
                 result['traces'][kind] = compress_trace_window(path, start=start, end=end)
@@ -221,10 +244,11 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 raise ValueError('Candidate captures changed the complete MIDI or outcome stream')
             captures = current
             save()
-        report.update(state='completed', final=True, stage='conflict window collected',
+        observation = 'held-note window' if profile == 'held-note-on' else 'lane conflict'
+        report.update(state='completed', final=True, stage=observation + ' collected',
             complete_midi_and_outcome_identical=True,
             reference_complete_streams_bit_identical=True if expected_captures else None,
-            decision=f'unchanged; recorded {mode.upper()} lane conflict reproduced',
+            decision=f'unchanged; recorded {mode.upper()} {observation} reproduced',
             interpretation='Routing and calibrated-output fields identify observed stages, '
             'not an unconditional emission call-site. Unobserved stages are not measured '
             'zeros. Full replay identity is required for every candidate observation; '
@@ -243,7 +267,7 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     parser.add_argument('--profile', choices=('reference-off', 'spectral-collision-on',
-                                              'coasting-owner-on'),
+                                              'coasting-owner-on', 'held-note-on'),
                         default='reference-off')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
