@@ -18,6 +18,9 @@ BLOCKS = (512, 32, 1024)
 MEASUREMENT_SCOPE = 'detector_and_optional_cues_without_offline_frequency_reporting'
 SETTINGS = {'a4': 440, 'input-trim': -9, 'sensitivity': 60,
             'response': 75, 'max-polyphony': 5, 'max-fret': 24}
+CUE_ON_FLAGS = ('--diagnostic-native-partial-cues',
+                '--diagnostic-cue-free-lane-reassignment')
+PREVIEW_ON_FLAGS = ('--diagnostic-projection-preview-admission',)
 
 
 def now():
@@ -61,7 +64,8 @@ def validate_timing_diagnosis(timing, mode):
         raise ValueError('Incomplete timing diagnosis: ' + mode)
 
 
-def command_for(binary, corpus, name, mode, block, timing):
+def command_for(binary, corpus, name, mode, block, timing, *,
+                projection_preview_admission=False):
     if name not in DATASETS or mode not in ('off', 'on') or block not in BLOCKS:
         raise ValueError('Unknown replay selection')
     command = [str(binary), '--wav', str(corpus / (name + '.wav')),
@@ -74,8 +78,7 @@ def command_for(binary, corpus, name, mode, block, timing):
     for key, value in SETTINGS.items():
         command.extend(('--' + key, str(value)))
     if mode == 'on':
-        command.extend(('--diagnostic-native-partial-cues',
-                        '--diagnostic-cue-free-lane-reassignment'))
+        command.extend(PREVIEW_ON_FLAGS if projection_preview_admission else CUE_ON_FLAGS)
     return command
 
 
@@ -86,6 +89,8 @@ def main():
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--max-seconds', type=int, default=10800)
+    parser.add_argument('--projection-preview-admission', action='store_true',
+                        help='Screen preview ownership alone instead of the frozen-cue correction')
     args = parser.parse_args()
     if args.max_seconds <= 0:
         parser.error('--max-seconds must be positive')
@@ -109,6 +114,11 @@ def main():
                   timing_limits=dict(block_samples=32, sample_rate=96000,
                                      p99_ns=166666, maximum_ns=333333, deadline_overruns=0),
                   datasets={}, promotion_accepted=False, live_readiness='not measured')
+    report['on_flags'] = list(PREVIEW_ON_FLAGS if args.projection_preview_admission else CUE_ON_FLAGS)
+    if args.projection_preview_admission:
+        report.update(schema='m3_portable_projection_preview_corpus_v1',
+                      trial_revision='full_physical_assignment_context',
+                      assignment_context='original selected candidates; preview filtering remains downstream')
     deadline = time.monotonic() + args.max_seconds
     results = {}
 
@@ -130,7 +140,8 @@ def main():
         stem = f'{name}-{mode}-{block}'
         tsv = args.output / (stem + '.tsv')
         timing_path = args.output / (stem + '-timing.json')
-        command = command_for(args.binary, args.corpus, name, mode, block, timing_path)
+        command = command_for(args.binary, args.corpus, name, mode, block, timing_path,
+                              projection_preview_admission=args.projection_preview_admission)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Recovery wall-time budget exhausted')

@@ -1,4 +1,5 @@
 from pathlib import Path
+from itertools import product
 import json
 import subprocess
 import tempfile
@@ -19,6 +20,22 @@ class PortableCorpusTests(unittest.TestCase):
             self.assertIn(flag, on)
         self.assertNotIn('--diagnostic-skip-empty-fine-reset', on)
         self.assertIn('--label-details', on)
+
+    def test_preview_trial_is_isolated_from_cue_and_reset_corrections(self):
+        arguments = (Path('/replay'), Path('/corpus'), 'physical-long')
+        for mode in ('off', 'on'):
+            command = command_for(*arguments, mode, 32, Path('/timing.json'),
+                                  projection_preview_admission=True)
+            self.assertEqual('--diagnostic-projection-preview-admission' in command,
+                             mode == 'on')
+            for flag in ('--diagnostic-native-partial-cues',
+                         '--diagnostic-cue-free-lane-reassignment',
+                         '--diagnostic-skip-empty-fine-reset'):
+                self.assertNotIn(flag, command)
+            self.assertIn('--diagnostic-core-timing', command)
+            self.assertIn('--label-details', command)
+            if mode == 'off':
+                self.assertEqual(command, command_for(*arguments, mode, 32, Path('/timing.json')))
 
     def test_fail_closed_timing_allocation_and_scored_identity(self):
         replay = {'output': {'fingerprint': '0123456789abcdef'}}
@@ -47,8 +64,8 @@ class PortableCorpusTests(unittest.TestCase):
             self.assertFalse(gates['timing_pass'])
 
     def test_corpus_requires_both_modes_to_meet_timing_limits(self):
-        for slow_mode in (None, 'off', 'on'):
-            with self.subTest(slow_mode=slow_mode), tempfile.TemporaryDirectory() as directory:
+        for slow_mode, preview in product((None, 'off', 'on'), (False, True)):
+            with self.subTest(slow_mode=slow_mode, preview=preview), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 output, manifest = root / 'results', root / 'manifest.json'
                 names = ('physical-long.wav', 'physical-long.tsv',
@@ -58,8 +75,9 @@ class PortableCorpusTests(unittest.TestCase):
 
                 def execute(command, **kwargs):
                     if '--diagnostic-core-timing' in command:
-                        mode = ('on' if '--diagnostic-native-partial-cues' in command
-                                else 'off')
+                        enabled = ('--diagnostic-projection-preview-admission' if preview
+                                   else '--diagnostic-native-partial-cues')
+                        mode = 'on' if enabled in command else 'off'
                         timing = dict(schema='m3_replay_core_timing_v1',
                                       measurement_scope=MEASUREMENT_SCOPE,
                                       fingerprint_identical=True, fingerprint='unchanged',
@@ -73,6 +91,8 @@ class PortableCorpusTests(unittest.TestCase):
 
                 argv = ['recovery', '--binary', str(root / 'replay'), '--corpus', str(root),
                         '--manifest', str(manifest), '--output', str(output)]
+                if preview:
+                    argv.append('--projection-preview-admission')
                 parsed = {'output': {'fingerprint': 'unchanged'},
                           'exact_matches_by_string_count': {}}
                 comparison = dict(gate_pass=True, output_bit_identical=True, changed_labels=[])
@@ -93,6 +113,13 @@ class PortableCorpusTests(unittest.TestCase):
                 self.assertEqual(report['native_gates_passed'], int(slow_mode is None))
                 self.assertFalse(report['promotion_accepted'])
                 self.assertFalse(report['installed_output_changed'])
+                if preview:
+                    self.assertEqual(report['schema'], 'm3_portable_projection_preview_corpus_v1')
+                    self.assertEqual(report['trial_revision'], 'full_physical_assignment_context')
+                    self.assertEqual(report['on_flags'], ['--diagnostic-projection-preview-admission'])
+                else:
+                    self.assertEqual(report['schema'], 'm3_portable_corpus_recovery_v1')
+                    self.assertNotIn('trial_revision', report)
 
     def test_failed_eleventh_input_preserves_ten_references_and_stderr(self):
         self.check_failed_recovery(subprocess.CalledProcessError(1, ['replay']))
