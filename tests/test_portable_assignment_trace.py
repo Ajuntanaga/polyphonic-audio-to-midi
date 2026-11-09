@@ -1,8 +1,11 @@
+import gzip
+import hashlib
 import tempfile
 from pathlib import Path
 import unittest
 
-from tools.portable_assignment_trace import (assignment_summary, digest, profile_addition_summary,
+from tools.portable_assignment_trace import (assignment_summary, compress_trace_window,
+                                             digest, profile_addition_summary,
                                              read_rows, select_labels, trace_bounds, verify_inputs)
 
 
@@ -97,6 +100,52 @@ class PortableAssignmentTraceTests(unittest.TestCase):
             path = Path(directory) / 'outcome.tsv'
             path.write_text('# m3_candidate_outcome_v2\nsample\tcandidates\n63\t52:4\n')
             self.assertEqual(read_rows(path), [{'sample': '63', 'candidates': '52:4'}])
+
+    def test_retention_keeps_boundary_and_competing_notes_with_exact_bytes(self):
+        captured = (b'# assignment schema\r\nnote\tsample\tcost\r\n'
+                    b'52\t1023\t0.10000000000000001\r\n'
+                    b'41\t2047\t-0\r\n52\t2047\t3.0000000000000004\r\n'
+                    b'42\t3071\t2\r\n52\t4095\t1\r\n')
+        expected = (b'# assignment schema\r\nnote\tsample\tcost\r\n'
+                    b'41\t2047\t-0\r\n52\t2047\t3.0000000000000004\r\n'
+                    b'42\t3071\t2\r\n')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'assignment.tsv'
+            path.write_bytes(captured)
+            record = compress_trace_window(path, start=2047, end=4095)
+            compressed = path.with_suffix('.tsv.gz')
+            self.assertEqual(gzip.decompress(compressed.read_bytes()), expected)
+            self.assertEqual(path.read_bytes(), captured)
+            self.assertEqual(record['captured_rows'], 5)
+            self.assertEqual(record['retained_rows'], 3)
+            self.assertEqual(record['discarded_rows'], 2)
+            self.assertEqual(record['captured_raw_bytes'], len(captured))
+            self.assertEqual(record['raw_bytes'], len(expected))
+            self.assertEqual(record['captured_raw_sha256'], hashlib.sha256(captured).hexdigest())
+            self.assertEqual(record['raw_sha256'], hashlib.sha256(expected).hexdigest())
+            self.assertEqual(record['sha256'], digest(compressed))
+
+    def test_retention_can_report_no_sampled_assignments(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'assignment.tsv'
+            path.write_bytes(b'sample\tnote\n1023\t52\n')
+            record = compress_trace_window(path, start=1024, end=2047)
+            self.assertEqual(record['retained_rows'], 0)
+            self.assertEqual(record['discarded_rows'], 1)
+            self.assertEqual(gzip.decompress(path.with_suffix('.tsv.gz').read_bytes()),
+                             b'sample\tnote\n')
+
+    def test_bad_retention_input_preserves_capture_without_partial_archive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'outcome.tsv'
+            for data in (b'# missing header\n', b'tick\n63\n',
+                         b'sample\tnote\n63\t52\nbad\t52\n'):
+                with self.subTest(data=data):
+                    path.write_bytes(data)
+                    with self.assertRaises(ValueError):
+                        compress_trace_window(path, start=0, end=128)
+                    self.assertEqual(path.read_bytes(), data)
+                    self.assertFalse(path.with_suffix('.tsv.gz').exists())
 
 
 if __name__ == '__main__':

@@ -11,7 +11,6 @@ import hashlib
 import json
 import math
 from pathlib import Path
-import shutil
 import subprocess
 import time
 
@@ -79,6 +78,58 @@ def read_rows(path):
                                    delimiter='\t'))
 
 
+def compress_trace_window(path, *, start, end):
+    """Retain exact TSV rows for all notes in a half-open diagnostic window.
+
+    Call only after full replay comparison and selection coverage validation.
+    Hash both the complete capture and the retained bytes to distinguish them.
+    """
+    if not 0 <= start < end:
+        raise ValueError('Invalid diagnostic retention window')
+    compressed = path.with_suffix('.tsv.gz')
+    captured_hash, retained_hash = hashlib.sha256(), hashlib.sha256()
+    captured_bytes = retained_bytes = captured_rows = retained_rows = 0
+    sample_column = None
+    with path.open('rb') as source, compressed.open('xb') as destination:
+        try:
+            with gzip.GzipFile(filename='', fileobj=destination, mode='wb',
+                               compresslevel=1, mtime=0) as archive:
+                for line in source:
+                    captured_hash.update(line)
+                    captured_bytes += len(line)
+                    retain = True
+                    if not line.startswith(b'#'):
+                        fields = line.rstrip(b'\r\n').split(b'\t')
+                        if sample_column is None:
+                            if fields.count(b'sample') != 1:
+                                raise ValueError('Trace must have one sample column')
+                            sample_column = fields.index(b'sample')
+                        else:
+                            if len(fields) <= sample_column:
+                                raise ValueError('Trace row is missing its sample')
+                            sample = int(fields[sample_column])
+                            captured_rows += 1
+                            retain = start <= sample < end
+                    if retain:
+                        archive.write(line)
+                        retained_hash.update(line)
+                        retained_bytes += len(line)
+                        retained_rows += int(not line.startswith(b'#')
+                                             and captured_rows > 0)
+                if sample_column is None:
+                    raise ValueError('Trace has no header')
+        except Exception:
+            compressed.unlink()
+            raise
+    return dict(file=compressed.name, bytes=compressed.stat().st_size,
+                sha256=digest(compressed), raw_bytes=retained_bytes,
+                raw_sha256=retained_hash.hexdigest(), captured_raw_bytes=captured_bytes,
+                captured_raw_sha256=captured_hash.hexdigest(), captured_rows=captured_rows,
+                retained_rows=retained_rows, discarded_rows=captured_rows - retained_rows,
+                scope='All notes in the diagnostic window; full-recording checks precede retention.',
+                start_sample_inclusive=start, end_sample_exclusive=end)
+
+
 def assignment_summary(rows, *, note, start, end, expected_mask):
     selected = [row for row in rows if int(row['note']) == note
                 and start <= int(row['sample']) < end]
@@ -125,13 +176,18 @@ def select_labels(labels, *, note, label_index=None):
     return selected
 
 
-def trace_bounds(labels, sample_count, sample_rate):
+def trace_sample_bounds(labels, sample_count):
     # The native candidate trace defaults to twenty seconds and caps at 90,000
     # ticks. Cover every requested label explicitly, including boundary ticks.
     start = max(0, min(label['start_sample'] for label in labels) - 64)
     end = min(sample_count, max(label['end_sample'] for label in labels) + 64)
     if (end - start + 63) // 64 + 1 > 90000:
         raise ValueError('Requested labels exceed the candidate trace frame limit')
+    return start, end
+
+
+def trace_bounds(labels, sample_count, sample_rate):
+    start, end = trace_sample_bounds(labels, sample_count)
     return start / sample_rate, end / sample_rate
 
 
@@ -141,7 +197,7 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_
     from tools.selection_trace_diagnosis import summarize_selection
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
-    report = dict(schema='m3_assignment_trace_v3', state='running', final=False,
+    report = dict(schema='m3_assignment_trace_v4', state='running', final=False,
                   stage='verify inputs', dataset=dataset, note=note, windows=[],
                   requested_label_index=label_index,
                   settings=SETTINGS, installed_output_changed=False,
@@ -184,6 +240,7 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_
         with reference_path.open() as stream:
             aggregate = next(csv.DictReader(stream, delimiter='\t'))
         sample_count, sample_rate = int(aggregate['samples']), int(aggregate['sample_rate'])
+        retained_start, retained_end = trace_sample_bounds(labels, sample_count)
         start, end = trace_bounds(labels, sample_count, sample_rate)
         traces = {kind: output / (kind + '.tsv') for kind in ('candidate', 'outcome', 'assignment')}
         command = base_command.copy()
@@ -210,17 +267,13 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_
                                               start=start, end=end, sample_count=sample_count),
                 assignment=assignment_summary(assignments, note=note, start=start, end=end,
                                               expected_mask=label['string_mask'])))
-        report['stage'] = 'compress diagnostic traces'
+        del candidates, outcomes, assignments
+        report['stage'] = 'retain and compress diagnostic windows'
         save()
         report['traces'] = {}
         for kind, path in traces.items():
-            compressed = path.with_suffix('.tsv.gz')
-            record = dict(raw_bytes=path.stat().st_size, raw_sha256=digest(path))
-            with path.open('rb') as src, gzip.open(compressed, 'wb', compresslevel=1) as dest:
-                shutil.copyfileobj(src, dest)
-            record.update(file=compressed.name, bytes=compressed.stat().st_size,
-                          sha256=digest(compressed))
-            report['traces'][kind] = record
+            report['traces'][kind] = compress_trace_window(
+                path, start=retained_start, end=retained_end)
             path.unlink()
         report.update(state='completed', final=True, stage='diagnosis collected')
     except Exception as error:
