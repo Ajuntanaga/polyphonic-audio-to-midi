@@ -1,0 +1,1083 @@
+{
+  "schema": "m3_calibrated_output_diagnosis_v1",
+  "recorded_at": "2026-11-09T08:09:16.625412+00:00",
+  "state": "completed",
+  "final": true,
+  "decision": "unchanged baseline; diagnostic collected",
+  "runtime_rule_changed": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "4064cf15c1841f725512b4e408e2337670b50464",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42583044596",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "worker_commit": "d72570b88c93367366058b5cd3a3c8af91dbecdb",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42583044596",
+  "run_conclusion": "success",
+  "report": "build/github-results/calibrated-output-42583044596/report-artifact/calibrated-output/report.json",
+  "report_sha256": "7468d8de75f40a3f0e5515ed6fd42c7a184fe3d5251ff0f66b03549a81e64909",
+  "artifacts": [
+    {
+      "id": 13658182148,
+      "name": "m3-evidence-42583044596-1",
+      "size_in_bytes": 4699353,
+      "digest": "sha256:3f128c67e5d2a56eecb6b08ada487ebb32d92bc819511cf5420f060ad30c5eda",
+      "expires_at": "2026-11-16T08:05:42Z"
+    },
+    {
+      "id": 13657579091,
+      "name": "m3-report-42583044596-1",
+      "size_in_bytes": 17159,
+      "digest": "sha256:0b3f909cf1e9aa57a2587256e4c95ecc4418d925b7283e9315d76387eb95207b",
+      "expires_at": "2026-11-23T08:05:41Z"
+    }
+  ],
+  "collected": "Small report and stage logs downloaded once; full evidence archive remains on GitHub.",
+  "verification": {
+    "off_reference_bit_identical": true,
+    "trace_output_bit_identical": true,
+    "trace_semantic_identity": true,
+    "full_recording_screen_pass": true,
+    "labeled_match_gain": false
+  },
+  "tests": {
+    "worker_python_contracts_passed": 66,
+    "native_branch_test": "passed",
+    "native_trace_buffer_identity_test": "passed",
+    "source_ci": "success",
+    "portable_ci": "success",
+    "portable_python_tests_passed": 69,
+    "portable_ctest_suites_passed": 2,
+    "production_vst3": "built and packaged; not installed"
+  },
+  "ci_runs": [
+    {
+      "id": 42583014795,
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42583014795",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "4064cf15c1841f725512b4e408e2337670b50464"
+    },
+    {
+      "id": 42583014584,
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42583014584",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "4064cf15c1841f725512b4e408e2337670b50464"
+    }
+  ],
+  "runs": {
+    "reference-off": {
+      "elapsed_seconds": 78.55918499,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      }
+    },
+    "traced-off": {
+      "elapsed_seconds": 81.520564812,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      }
+    }
+  },
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": true
+  },
+  "target_before": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 267
+  },
+  "target_after": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 267
+  },
+  "calibrated_output": {
+    "candidate_note": 41,
+    "frames": 1124,
+    "reasons": {
+      "ineligible": 298,
+      "untrusted_original": 539,
+      "projection_start": 11,
+      "projection_apply": 12,
+      "untrusted_start": 7,
+      "untrusted_revert": 7,
+      "collision_reset": 250
+    },
+    "output_change_reasons": {
+      "projection_apply": 7,
+      "untrusted_revert": 7
+    },
+    "interpretation": "Stage fields record the executed calibrated-output branch before later assignment/lifecycle work. Same-tick MIDI events are actual global events, not automatically attributable to this stage. An ineligible tick clears pending consensus but does not itself revert an emitted projection. This is baseline diagnosis, not a runtime improvement or host/MIDI acceptance."
+  },
+  "output_changes": [
+    {
+      "sample": 921471,
+      "stage": {
+        "tick": 14398,
+        "eligibility_failures": 0,
+        "age": 312,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "53.929088444683146",
+        "projected_error_cents": "2.3404428053172524"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:313:1:-11794:1,43:43:1:1:1038:1:-5444:2,52:52:2:2:298:1:-3959:4"
+    },
+    {
+      "sample": 921663,
+      "stage": {
+        "tick": 14401,
+        "eligibility_failures": 0,
+        "age": 315,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "53.696479741777765",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:316:1:13762:4,42:42:0:0:0:0:0:1,43:43:1:1:1038:1:-5444:2,52:52:3:2:301:1:-3950:8"
+    },
+    {
+      "sample": 944959,
+      "stage": {
+        "tick": 14765,
+        "eligibility_failures": 0,
+        "age": 679,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "54.387725655432931",
+        "projected_error_cents": "1.8818055945666856"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:680:1:-11677:1,52:52:1:0:665:1:-4671:2"
+    },
+    {
+      "sample": 945151,
+      "stage": {
+        "tick": 14768,
+        "eligibility_failures": 0,
+        "age": 682,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "54.075407604781439",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:683:1:13866:4,42:42:1:2:0:0:0:2,52:52:1:0:668:1:-4603:2"
+    },
+    {
+      "sample": 950271,
+      "stage": {
+        "tick": 14848,
+        "eligibility_failures": 0,
+        "age": 762,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "55.649283117564558",
+        "projected_error_cents": "0.62024813243533572"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:763:1:-11354:1,52:52:1:0:748:1:-4686:2"
+    },
+    {
+      "sample": 950399,
+      "stage": {
+        "tick": 14850,
+        "eligibility_failures": 0,
+        "age": 764,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "55.500676770223528",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:765:1:14227:4,42:42:1:2:0:0:0:2,52:52:1:0:750:1:-4639:2"
+    },
+    {
+      "sample": 955519,
+      "stage": {
+        "tick": 14930,
+        "eligibility_failures": 0,
+        "age": 844,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "54.875343342876079",
+        "projected_error_cents": "1.3941879071235235"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:845:1:-11552:1,52:52:1:0:830:1:-4697:2"
+    },
+    {
+      "sample": 955775,
+      "stage": {
+        "tick": 14934,
+        "eligibility_failures": 0,
+        "age": 848,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "54.460053750278256",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:849:1:13965:4,42:42:1:2:0:0:0:2,52:52:1:0:834:1:-4609:2"
+    },
+    {
+      "sample": 960895,
+      "stage": {
+        "tick": 15014,
+        "eligibility_failures": 0,
+        "age": 928,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "55.354411746392884",
+        "projected_error_cents": "0.91511950360745686"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:929:1:-11429:1,52:52:1:0:914:1:-4746:2"
+    },
+    {
+      "sample": 961023,
+      "stage": {
+        "tick": 15016,
+        "eligibility_failures": 0,
+        "age": 930,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "55.277850025238394",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:931:1:14161:4,42:42:1:2:0:0:0:2,52:52:1:0:916:1:-4700:2"
+    },
+    {
+      "sample": 966207,
+      "stage": {
+        "tick": 15097,
+        "eligibility_failures": 0,
+        "age": 1011,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "55.366783752065807",
+        "projected_error_cents": "0.90274749793388764"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:1012:1:-11426:1,52:52:1:0:997:1:-4768:2"
+    },
+    {
+      "sample": 966399,
+      "stage": {
+        "tick": 15100,
+        "eligibility_failures": 0,
+        "age": 1014,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "55.098354382774772",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:1015:1:14122:4,42:42:0:0:0:0:0:1,52:52:1:0:1000:1:-4716:2"
+    },
+    {
+      "sample": 967295,
+      "stage": {
+        "tick": 15114,
+        "eligibility_failures": 0,
+        "age": 1028,
+        "min_age": 75,
+        "selected_count": 2,
+        "member_mask": 1,
+        "output_before": 41,
+        "output_after": 42,
+        "midi_before": 41,
+        "midi_after": 42,
+        "target_before": 42,
+        "target_after": 42,
+        "ticks_before": 1,
+        "ticks_after": 2,
+        "projected_note": 42,
+        "changed": 1,
+        "trusted": 1,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "projection_apply",
+        "phase_cents": "55.05214922759599",
+        "projected_error_cents": "1.2173820224043084"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 41,
+          "voice_id": 0
+        },
+        {
+          "kind": "on",
+          "note": 42,
+          "voice_id": 0
+        }
+      ],
+      "later_snapshot_voices": "41:42:0:0:1029:1:-11507:1,52:52:1:0:1014:1:-4670:2"
+    },
+    {
+      "sample": 967423,
+      "stage": {
+        "tick": 15116,
+        "eligibility_failures": 0,
+        "age": 1030,
+        "min_age": 75,
+        "selected_count": 3,
+        "member_mask": 4,
+        "output_before": 42,
+        "output_after": 41,
+        "midi_before": 42,
+        "midi_after": 41,
+        "target_before": 41,
+        "target_after": 128,
+        "ticks_before": 1,
+        "ticks_after": 0,
+        "projected_note": 41,
+        "changed": 0,
+        "trusted": 0,
+        "collision_note": 128,
+        "collision_kind": 0,
+        "transitions_added": 2,
+        "observed": true,
+        "reason": "untrusted_revert",
+        "phase_cents": "54.837200904353423",
+        "projected_error_cents": "nan"
+      },
+      "midi_events_at_same_tick": [
+        {
+          "kind": "off",
+          "note": 42,
+          "voice_id": 2
+        },
+        {
+          "kind": "on",
+          "note": 41,
+          "voice_id": 2
+        }
+      ],
+      "later_snapshot_voices": "41:41:2:1:1031:1:14068:4,42:42:1:2:0:0:0:2,52:52:1:0:1016:1:-4597:2"
+    }
+  ],
+  "retune_cycles": [
+    {
+      "apply_sample": 921471,
+      "revert_sample": 921663,
+      "duration_samples": 192,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 53.929088444683146,
+      "revert_phase_cents": 53.696479741777765,
+      "phase_change_cents": -0.23260870290538094,
+      "apply_projected_error_cents": 2.3404428053172524
+    },
+    {
+      "apply_sample": 944959,
+      "revert_sample": 945151,
+      "duration_samples": 192,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 54.38772565543293,
+      "revert_phase_cents": 54.07540760478144,
+      "phase_change_cents": -0.3123180506514913,
+      "apply_projected_error_cents": 1.8818055945666856
+    },
+    {
+      "apply_sample": 950271,
+      "revert_sample": 950399,
+      "duration_samples": 128,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 55.64928311756456,
+      "revert_phase_cents": 55.50067677022353,
+      "phase_change_cents": -0.14860634734102973,
+      "apply_projected_error_cents": 0.6202481324353357
+    },
+    {
+      "apply_sample": 955519,
+      "revert_sample": 955775,
+      "duration_samples": 256,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 54.87534334287608,
+      "revert_phase_cents": 54.460053750278256,
+      "phase_change_cents": -0.41528959259782283,
+      "apply_projected_error_cents": 1.3941879071235235
+    },
+    {
+      "apply_sample": 960895,
+      "revert_sample": 961023,
+      "duration_samples": 128,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 55.354411746392884,
+      "revert_phase_cents": 55.27785002523839,
+      "phase_change_cents": -0.07656172115449067,
+      "apply_projected_error_cents": 0.9151195036074569
+    },
+    {
+      "apply_sample": 966207,
+      "revert_sample": 966399,
+      "duration_samples": 192,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 55.36678375206581,
+      "revert_phase_cents": 55.09835438277477,
+      "phase_change_cents": -0.26842936929103445,
+      "apply_projected_error_cents": 0.9027474979338876
+    },
+    {
+      "apply_sample": 967295,
+      "revert_sample": 967423,
+      "duration_samples": 128,
+      "apply_member_mask": 1,
+      "revert_member_mask": 4,
+      "apply_phase_cents": 55.05214922759599,
+      "revert_phase_cents": 54.83720090435342,
+      "phase_change_cents": -0.21494832324256663,
+      "apply_projected_error_cents": 1.2173820224043084
+    }
+  ],
+  "target_lifecycle": {
+    "label": {
+      "label_index": 55,
+      "start_sample": 897799,
+      "end_sample": 969600,
+      "midi_note": 42,
+      "string_mask": 1,
+      "calibration_pass": 2,
+      "labeled": 1122,
+      "matched": 267
+    },
+    "frames": 1122,
+    "counts": {
+      "present": 897,
+      "selected": 893,
+      "active": 0,
+      "direct": 895,
+      "selected_direct_inactive_zero_evidence": 649
+    },
+    "maxima": {
+      "evidence_ticks": 44,
+      "attack_ticks": 0
+    },
+    "snapshot_counts": {
+      "matched": 267,
+      "matched_with_active_source": 12,
+      "matched_inactive_preview_only": 255,
+      "matched_source_unknown": 0,
+      "rendered_note_with_active_source_any_string": 19
+    },
+    "midi_event_capture": "provided",
+    "midi_events_during_label": [
+      {
+        "sample": 921471,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 921599,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 921599,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 921663,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 944959,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 945087,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 945087,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 945151,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 950271,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 950335,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 950335,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 950399,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 955519,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 955711,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 955711,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 955775,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 960895,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 960959,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 960959,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 961023,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 966207,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 966335,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 966335,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 966399,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 967295,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 967359,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 967359,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 967423,
+        "kind": "off",
+        "voice_id": 2
+      }
+    ],
+    "interpretation": "Candidate state is after lifecycle processing. MIDI events are actual transitions. The voice cents_valid field is pitch-bend validity, not MIDI activity. Matches can include inactive tuner previews. Active-source snapshots do not prove held MIDI; note-on source associations require a unique active logical source at the same sample, emitted note and lane. Neither establishes physical string identity or freedom from stuck notes."
+  },
+  "previous_trial_midi_comparison": {
+    "source": "docs/recovery/github-evidence-retention-lifecycle-20261109.json",
+    "scope": "Target note 42 during label 55; ordered sample, event kind and lane",
+    "baseline_event_count": 28,
+    "previous_trial_on_event_count": 28,
+    "identical": true,
+    "meaning": "The earlier evidence-retention trial did not change these captured note-42 events; it still regressed preview matches and extra outputs during gaps."
+  },
+  "finding": "All seven returns from output 42 to 41 execute untrusted_revert after two eligible untrusted ticks. All seven applications use member mask 1; all seven reversions use mask 4. Phase changes by less than 0.42 cents between each apply/revert pair. The 250 collision-reset observations do not change output in this window.",
+  "inference": "The changing assigned string and its calibration are the next suspect; these stage observations alone do not establish why assignment moved or justify retaining a note on an unsupported string.",
+  "protected": "Full ordinary OFF reference and traced replay are bit-identical. Other corpora were not rerun for this diagnostic.",
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "overall_completion": "not measured",
+  "next": "Reconcile string assignment and calibrated projection at the captured lane transfers before choosing a runtime change. A default-off trial must add labeled matches with zero per-label losses and no increase in wrong-note, wrong-string or gap-extra output, then pass protected corpus, allocation, buffer, native timing and live-host gates. Do not rerun the completed diagnostic or repeat the rejected evidence-retention rule."
+}
