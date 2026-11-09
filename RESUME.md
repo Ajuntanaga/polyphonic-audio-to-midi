@@ -2,7 +2,9 @@
 
 - Added the bounded `midi-lane-trace` worker task. It observes candidates 47 and 48 separately around samples 202752–204288 of the ordinary recording, using the existing routing and calibrated-output recorder. Both complete OFF replays must match the saved reference, and their complete MIDI and outcome streams must match each other.
 - The report retains each raw note-on still outstanding at the window start and each subsequent lane transition without overwriting an earlier pitch. This preserves the prior note 48 when note 47 arrives at sample 203519, before the recorded note-48 release at 203583. Raw transitions do not establish host-delivered ownership; stage observations do not always identify an emission call site.
-- Six lightweight Python contracts pass, including out-of-window stream drift and missing-conflict rejection. Native compilation and the real recording trace will run only on GitHub Actions. No runtime policy, installed output or acceptance limit changes. Next: collect the pinned cloud result, identify the responsible stage, and choose a bounded correction only from the observed cause.
+- The sole diagnostic run is `42604663479`, pinned to source `fc60011805791cac98530cf2e594c4da6e1a563f` and worker `0a0de1990cafca29cf33569bcebb8f3f35c6e5e6`. It is running on GitHub; do not dispatch another. Source run `42604608951` passed native tests, Python contracts and synthetic buffer parity. Collect the small report into `build/github-results/midi-lane-trace-42604663479`; checkpoint: `docs/recovery/github-midi-lane-trace-20261109.json`.
+
+- Six lightweight Python contracts pass, including out-of-window stream drift and missing-conflict rejection. Native compilation and the real recording trace run only on GitHub Actions. No runtime policy, installed output or acceptance limit changes. Next: collect the pinned cloud result, identify the responsible stage, and choose a bounded correction only from the observed cause.
 
 ## 2026-11-09 — reduced MIDI ledger cases pass on GitHub
 
