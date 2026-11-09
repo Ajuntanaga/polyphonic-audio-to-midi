@@ -12,7 +12,8 @@ import time
 
 from tools.controlled_descriptor_overlap import controlled_mixtures, read_float_wave, write_float_wave
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
-from tools.portable_corpus_replay import BLOCKS, SETTINGS, now, timing_gates
+from tools.portable_corpus_replay import (
+    BLOCKS, MEASUREMENT_SCOPE, SETTINGS, now, timing_gates, validate_timing_diagnosis)
 from tools.portable_recovery import digest
 
 
@@ -93,6 +94,106 @@ def accuracy_screen(datasets):
                 target_before=before, target_after=after, pass_screen=safe and gain > 0)
 
 
+def replay_command(binary, corpus, cases, name, mode, block, timing_path):
+    command = [str(binary), '--wav', str(cases / (name + '.wav')),
+        '--labels', str(cases / (name + '.tsv')),
+        '--calibration', str(corpus / 'calibration.m3cb'), '--block', str(block), '--label-details']
+    for key, value in SETTINGS.items():
+        command.extend(('--' + key, str(value)))
+    if mode == 'on':
+        command.extend(('--diagnostic-native-partial-cues', '--diagnostic-cue-free-lane-reassignment'))
+    if block == 32:
+        command.extend(('--diagnostic-core-timing', str(timing_path)))
+    return command
+
+
+def run_timing_diagnosis(binary, corpus, manifest_path, reference_path, baseline_path,
+                         output, max_seconds):
+    """Diagnose the failed octave pair, preserving its saved full replay hashes."""
+    output.mkdir(parents=True, exist_ok=False)
+    binary, corpus, output = binary.resolve(), corpus.resolve(), output.resolve()
+    name = 'octave_0dB'
+    report = dict(schema='m3_controlled_timing_diagnosis_v1', started_at=now(),
+        state='running', final=False, stage='verify held-out pair', control=name,
+        block_samples=32, settings=SETTINGS, runs={}, diagnostic_only=True,
+        spectral_templates='disabled, matching historical controls',
+        collection_pass=False, native_gate_pass=False, allocation_and_output_pass=False,
+        installed_output_changed=False, promotion_accepted=False, live_readiness='not measured',
+        acceptance='not evaluated: diagnostic timing', max_seconds=min(max_seconds, 360),
+        limits=['CPU instrumentation cannot replace the earlier failed native timing gate.',
+                'Only this held-out OFF/ON pair is measured; no corpus or live-host acceptance.'])
+    deadline = time.monotonic() + report['max_seconds']
+
+    def save():
+        report['updated_at'] = now()
+        temp = output / 'report.json.tmp'
+        temp.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        temp.replace(output / 'report.json')
+
+    save()
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        baseline = json.loads(baseline_path.read_text())
+        if (baseline.get('schema') != 'm3_github_heldout_control_result_v1'
+                or baseline.get('final') is not True or baseline.get('collection_pass') is not True
+                or baseline.get('settings') != SETTINGS
+                or baseline.get('spectral_templates') != report['spectral_templates']
+                or baseline.get('reference_sha256') != digest(reference_path)):
+            raise ValueError('Held-out timing reference settings or input identity differ')
+        reference = baseline['controls'][name]
+        if (not all(reference.get('replay_sha256', {}).get(mode + '-32') for mode in ('off', 'on'))
+                or not all(key in reference for key in ('baseline_off', 'current_on'))):
+            raise ValueError('Missing paired block-32 references: ' + name)
+        report.update(source=manifest.get('source', {}), input_manifest_sha256=digest(manifest_path),
+            reference_sha256=digest(reference_path), binary_sha256=digest(binary),
+            baseline_report_sha256=digest(baseline_path), baseline_source=baseline['source'],
+            baseline_timing=reference['timing'], timing_limits=baseline['timing_limits'])
+        report['inputs'] = prepare_cases(corpus, manifest, reference_path, output / 'cases')
+        report['verified_inputs'] = len(manifest['files'])
+        results = {}
+        for mode, output_key in (('off', 'baseline_off'), ('on', 'current_on')):
+            stem = f'{name}-{mode}-32'
+            report.update(stage=stem, current_stderr_file=stem + '.stderr')
+            save()
+            print(stem, flush=True)
+            tsv, timing_path = output / (stem + '.tsv'), output / (stem + '-timing.json')
+            command = replay_command(binary, corpus, output / 'cases', name, mode, 32, timing_path)
+            command.append('--diagnostic-thread-cpu')
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Controlled timing diagnosis budget exhausted')
+            started = time.monotonic()
+            with tsv.open('x') as stdout, (output / (stem + '.stderr')).open('x') as stderr:
+                subprocess.run(command, stdout=stdout, stderr=stderr, check=True, timeout=min(180, remaining))
+            parsed = read_replay(tsv)
+            validate_labels(parsed, report['inputs'][name]['labels'])
+            timing, tsv_hash = json.loads(timing_path.read_text()), digest(tsv)
+            row = dict(command=command, output=parsed['output'], labels=parsed['labels'],
+                tsv_sha256=tsv_hash, elapsed_seconds=time.monotonic() - started, timing=timing,
+                recorded_reference_bit_identical=(tsv_hash == reference['replay_sha256'][mode + '-32']
+                                                  and parsed['output'] == reference[output_key]),
+                measurement_scope_verified=timing.get('measurement_scope') == MEASUREMENT_SCOPE,
+                gates=timing_gates(timing, parsed, 32))
+            report['runs'][mode] = row
+            results[mode] = parsed
+            save()
+            if not (row['recorded_reference_bit_identical'] and row['measurement_scope_verified']
+                    and row['gates']['timed_scored_identity']):
+                raise ValueError('Output identity or measurement scope failed: ' + mode)
+            validate_timing_diagnosis(timing, mode)
+        report['comparison'] = compare_replays(results['off'], results['on'])
+        report.update(state='completed', final=True, stage='held-out timing diagnosis collected',
+            collection_pass=report['comparison']['gate_pass'],
+            cpu_block_statistics_usable=all(row['timing']['thread_cpu']['block_resolution_pass']
+                                            for row in report['runs'].values()))
+        return report['collection_pass']
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        raise
+    finally:
+        save()
+
+
 def run(binary, corpus, manifest_path, reference_path, output, max_seconds):
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus, output = binary.resolve(), corpus.resolve(), output.resolve()
@@ -121,15 +222,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds):
         save()
         print(stem, flush=True)
         tsv, timing_path = output / (stem + '.tsv'), output / (stem + '-timing.json')
-        command = [str(binary), '--wav', str(output / 'cases' / (name + '.wav')),
-            '--labels', str(output / 'cases' / (name + '.tsv')),
-            '--calibration', str(corpus / 'calibration.m3cb'), '--block', str(block), '--label-details']
-        for key, value in SETTINGS.items():
-            command.extend(('--' + key, str(value)))
-        if mode == 'on':
-            command.extend(('--diagnostic-native-partial-cues', '--diagnostic-cue-free-lane-reassignment'))
-        if block == 32:
-            command.extend(('--diagnostic-core-timing', str(timing_path)))
+        command = replay_command(binary, corpus, output / 'cases', name, mode, block, timing_path)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Controlled replay budget exhausted')
@@ -201,11 +294,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('binary', 'corpus', 'manifest', 'reference', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--timing-reference-report', type=Path,
+                        help='Diagnose only the saved octave OFF/ON pair; cannot pass native acceptance')
     parser.add_argument('--max-seconds', type=int, default=2400)
     args = parser.parse_args()
     if args.max_seconds <= 0:
         parser.error('--max-seconds must be positive')
-    passed = run(args.binary, args.corpus, args.manifest, args.reference, args.output, args.max_seconds)
+    if args.timing_reference_report:
+        passed = run_timing_diagnosis(args.binary, args.corpus, args.manifest, args.reference,
+                                     args.timing_reference_report, args.output, args.max_seconds)
+    else:
+        passed = run(args.binary, args.corpus, args.manifest, args.reference, args.output, args.max_seconds)
     raise SystemExit(0 if passed else 1)
 
 

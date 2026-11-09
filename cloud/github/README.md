@@ -81,6 +81,15 @@ screen proceeds to buffers 32 and 1024, requiring parity with 512 and both modes
 to meet allocation and timing limits. Passing these controls alone does not
 clear the separate corpus, live-host or MIDI lifecycle gates.
 
+`controlled-timing-diagnosis` measures only the equal-level octave control OFF
+and ON at block 32, with CPU timing enabled. It uses the same private input
+release and reconstruction checks, without spectral templates. Both complete
+replay hashes must match `docs/recovery/github-heldout-controls-20261109.json`.
+The pair has a six-minute processing cap, with at most three minutes per mode.
+This diagnosis cannot replace the failed native timing result or pass acceptance;
+it investigates CPU work versus elapsed-time delays without repeating the full
+control sweep. The dataset and note dispatch inputs are unused for this task.
+
 Runs are manual and serialized. The trace has a 60-minute job cap; full
 recovery has a 210-minute cap, including compilation. These are standard CPU
 runners using the account's GitHub Actions allowance, not a GPU service.

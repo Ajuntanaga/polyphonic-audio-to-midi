@@ -1,3 +1,9 @@
+## 2026-11-09 — bounded octave timing diagnosis prepared
+
+- The private worker has a new `controlled-timing-diagnosis` task. It reconstructs the same held-out inputs, then measures only equal-level octave OFF and ON at block 32 with CPU timing enabled. Both full replay hashes must match `docs/recovery/github-heldout-controls-20261109.json`; missing paired references or changed settings stop before native processing. The pair has a 360-second processing cap and a 180-second cap per mode.
+- Twenty-three focused Python contract tests passed locally. They cover exact output identity, missing references, incomplete timing data, coarse clocks, retained native failure logs and diagnostic results never passing native acceptance. No native build or replay ran locally. The existing core check now shares its timing-diagnosis consistency check with this runner.
+- Next: push source and the canonical private workflow, then dispatch this task once at the exact pushed source commit. Record its run ID and output directory under `portable_compute.github_worker` before monitoring it. Collection is diagnostic only: preserve the failed octave OFF maximum of 373,987 ns and earlier physical-high ON maximum of 469,120 ns against the unchanged 333,333 ns limit. Installed output remains unchanged, and reliable live readiness is not measured.
+
 ## 2026-11-09 — held-out control gains reproduced; timing still rejects promotion
 
 - Private GitHub run `42555591900` is final at source `77fa7dcca2b79000fffe23c9b9afe77bfa8b0519` and worker `072c764eccdf9976006df04b2fe235e4d05810d7`. Compilation and all 44 Python contracts passed. Public portable run `42555532390` passed at the same source. The small result artifact was collected once into `build/github-results/heldout-controls-42555591900`; do not poll, download or rerun these completed jobs. Summary: `docs/recovery/github-heldout-controls-20261109.json`.

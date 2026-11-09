@@ -13,7 +13,8 @@ import time
 from tools.frozen_cue_corpus_gate import read_replay, compare_replays
 from tools.portable_allocation_trace import reference_identity
 from tools.portable_assignment_trace import digest, verify_inputs
-from tools.portable_corpus_replay import MEASUREMENT_SCOPE, SETTINGS, command_for, timing_gates
+from tools.portable_corpus_replay import (
+    MEASUREMENT_SCOPE, SETTINGS, command_for, timing_gates, validate_timing_diagnosis)
 from tools.replay_corpus import DATASETS
 
 
@@ -86,16 +87,7 @@ def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
                     and row['gates']['timed_scored_identity']):
                 raise ValueError('Output identity or measurement scope failed: ' + mode)
             if diagnostic_thread_cpu:
-                cpu = timing.get('thread_cpu', {})
-                if (cpu.get('valid') is not True
-                        or type(cpu.get('block_resolution_pass')) is not bool
-                        or len(cpu.get('phases', [])) != 32
-                        or sum(phase['blocks'] for phase in cpu['phases']) != timing['blocks']
-                        or sum(phase['wall_deadline_overruns'] for phase in cpu['phases'])
-                           != timing['deadline_overruns']
-                        or not 0 < len(cpu.get('slowest_blocks', [])) <= 16
-                        or cpu['slowest_blocks'][0]['wall_ns'] != timing['maximum_ns']):
-                    raise ValueError('Incomplete timing diagnosis: ' + mode)
+                validate_timing_diagnosis(timing, mode)
         report['comparison'] = compare_replays(results['off'], results['on'])
         report['allocation_and_output_pass'] = (report['comparison']['gate_pass'] and all(
             row['gates']['zero_processing_allocations'] for row in report['runs'].values()))

@@ -46,6 +46,20 @@ def timing_gates(timing, replay, block):
                 timing_pass=realtime)
 
 
+def validate_timing_diagnosis(timing, mode):
+    cpu = timing.get('thread_cpu', {})
+    if (timing.get('timing_diagnostic_only') is not True
+            or cpu.get('valid') is not True
+            or type(cpu.get('block_resolution_pass')) is not bool
+            or len(cpu.get('phases', [])) != 32
+            or sum(phase['blocks'] for phase in cpu['phases']) != timing['blocks']
+            or sum(phase['wall_deadline_overruns'] for phase in cpu['phases'])
+               != timing['deadline_overruns']
+            or not 0 < len(cpu.get('slowest_blocks', [])) <= 16
+            or cpu['slowest_blocks'][0]['wall_ns'] != timing['maximum_ns']):
+        raise ValueError('Incomplete timing diagnosis: ' + mode)
+
+
 def command_for(binary, corpus, name, mode, block, timing):
     if name not in DATASETS or mode not in ('off', 'on') or block not in BLOCKS:
         raise ValueError('Unknown replay selection')

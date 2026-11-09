@@ -8,9 +8,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tools.frozen_cue_corpus_gate import compare_replays
-from tools.portable_controlled_replay import run, validate_labels
-from tools.portable_corpus_replay import MEASUREMENT_SCOPE
+from tools.frozen_cue_corpus_gate import compare_replays, read_replay
+from tools.portable_controlled_replay import run, run_timing_diagnosis, validate_labels
+from tools.portable_corpus_replay import MEASUREMENT_SCOPE, SETTINGS
 from tools.recover_controlled_inputs import float_crop
 
 
@@ -131,6 +131,128 @@ class ControlledRecoveryTests(unittest.TestCase):
         self.assertFalse(compare_replays(before, after)['gate_pass'])
         with self.assertRaises(ValueError):
             validate_labels(before, [])
+
+
+class ControlledTimingTests(unittest.TestCase):
+    TSV = ('labeled\tmatched\tfalse_wrong_note_voices\tfalse_wrong_string_voices\t'
+           'false_gap_voices\tfalse_positive_voices\tfingerprint\n'
+           '3\t1\t0\t1\t2\t3\t0123456789abcdef\n'
+           'label_index\tstart_sample\tend_sample\tmidi_note\tstring_mask\t'
+           'calibration_pass\tlabeled\tmatched\n'
+           '0\t64\t256\t36\t1\t2\t3\t1\n')
+
+    def exercise(self, *, defect=None, resolution=True):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary, manifest, reference, baseline = (
+                root / name for name in ('binary', 'manifest', 'reference', 'baseline'))
+            binary.write_bytes(b'fixture')
+            manifest.write_text(json.dumps(dict(source={'commit': 'fixture'}, files={'a': {}})))
+            reference.write_text('{}')
+            retained = root / 'retained.tsv'
+            retained.write_text(self.TSV)
+            retained_hash = hashlib.sha256(retained.read_bytes()).hexdigest()
+            output_counts = read_replay(retained)['output']
+            pair = dict(replay_sha256={'off-32': retained_hash, 'on-32': retained_hash},
+                        baseline_off=output_counts, current_on=output_counts, timing={})
+            if defect in ('off-32', 'on-32'):
+                del pair['replay_sha256'][defect]
+            saved = dict(schema='m3_github_heldout_control_result_v1', final=True,
+                         collection_pass=True, settings=SETTINGS, source={'commit': 'earlier'},
+                         spectral_templates='disabled, matching historical controls',
+                         reference_sha256=hashlib.sha256(reference.read_bytes()).hexdigest(),
+                         controls={'octave_0dB': pair}, timing_limits={})
+            if defect == 'input':
+                saved['reference_sha256'] = 'different'
+            if defect == 'settings':
+                saved['settings'] = dict(SETTINGS, response=74)
+            baseline.write_text(json.dumps(saved))
+            label = dict(start_sample=64, end_sample=256, midi_note=36, string_mask=1, calibration_pass=2)
+            inputs = {'octave_0dB': dict(labels=[label]), 'solo': dict(labels=[label])}
+            calls = []
+
+            def execute(command, **kwargs):
+                mode = 'on' if '--diagnostic-native-partial-cues' in command else 'off'
+                calls.append(mode)
+                self.assertIn('--diagnostic-thread-cpu', command)
+                self.assertNotIn('--spectral-shadow-templates', command)
+                self.assertEqual('--diagnostic-cue-free-lane-reassignment' in command, mode == 'on')
+                self.assertEqual(Path(command[command.index('--wav') + 1]).name, 'octave_0dB.wav')
+                self.assertEqual(command[command.index('--block') + 1], '32')
+                self.assertLessEqual(kwargs['timeout'], 180)
+                if defect == 'native':
+                    kwargs['stderr'].write('fixture native failure\n')
+                    raise subprocess.CalledProcessError(1, command)
+                kwargs['stdout'].write(self.TSV + ('\n' if defect == 'hash' else ''))
+                timing = dict(schema='m3_replay_core_timing_v1', measurement_scope=MEASUREMENT_SCOPE,
+                    fingerprint_identical=True, fingerprint='0123456789abcdef',
+                    block_samples=32, sample_rate=96000, blocks=32, timing_diagnostic_only=True,
+                    allocation_guard=True, cpp_allocations=0, cpp_frees=0, c_allocations=0, c_frees=0,
+                    p99_ns=100000, maximum_ns=400000, deadline_overruns=1,
+                    thread_cpu=dict(valid=True, block_resolution_pass=resolution,
+                        phases=[dict(blocks=1, wall_deadline_overruns=int(i == 0)) for i in range(32)],
+                        slowest_blocks=[dict(wall_ns=400000)]))
+                if defect == 'cpu':
+                    del timing['thread_cpu']
+                if defect == 'scope':
+                    timing['measurement_scope'] = 'old'
+                if defect == 'fingerprint':
+                    timing['fingerprint_identical'] = False
+                Path(command[command.index('--diagnostic-core-timing') + 1]).write_text(json.dumps(timing))
+
+            passed, error = None, None
+            output = root / 'output'
+            with patch('tools.portable_controlled_replay.prepare_cases', return_value=inputs), \
+                 patch('tools.portable_controlled_replay.subprocess.run', side_effect=execute):
+                try:
+                    passed = run_timing_diagnosis(binary, root, manifest, reference, baseline, output, 9999)
+                except (ValueError, subprocess.CalledProcessError) as caught:
+                    error = caught
+            report = json.loads((output / 'report.json').read_text())
+            self.assertTrue(report['final'])
+            self.assertTrue(report['diagnostic_only'])
+            self.assertFalse(report['promotion_accepted'])
+            self.assertFalse(report['installed_output_changed'])
+            self.assertFalse(report['native_gate_pass'])
+            self.assertFalse(report['allocation_and_output_pass'])
+            self.assertEqual(report['max_seconds'], 360)
+            stderr = output / 'octave_0dB-off-32.stderr'
+            return passed, report, calls, error, stderr.read_text() if stderr.exists() else None
+
+    def test_only_saved_octave_pair_is_collected_without_native_acceptance(self):
+        for resolution in (True, False):
+            with self.subTest(resolution=resolution):
+                passed, report, calls, error, _ = self.exercise(resolution=resolution)
+                self.assertIsNone(error)
+                self.assertTrue(passed)
+                self.assertTrue(report['collection_pass'])
+                self.assertEqual(calls, ['off', 'on'])
+                self.assertTrue(all(row['recorded_reference_bit_identical'] for row in report['runs'].values()))
+                self.assertEqual(report['cpu_block_statistics_usable'], resolution)
+                self.assertEqual(report['acceptance'], 'not evaluated: diagnostic timing')
+
+    def test_missing_pair_or_changed_reference_stops_before_native_calls(self):
+        for defect in ('off-32', 'on-32', 'input', 'settings'):
+            with self.subTest(defect=defect):
+                _, report, calls, error, _ = self.exercise(defect=defect)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(calls, [])
+                self.assertEqual(report['state'], 'failed')
+
+    def test_changed_full_output_or_incomplete_timing_stops_before_on(self):
+        for defect in ('hash', 'cpu', 'scope', 'fingerprint'):
+            with self.subTest(defect=defect):
+                _, report, calls, error, _ = self.exercise(defect=defect)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(calls, ['off'])
+                self.assertEqual(report['state'], 'failed')
+
+    def test_native_failure_is_retained_with_final_report(self):
+        _, report, calls, error, stderr = self.exercise(defect='native')
+        self.assertIsInstance(error, subprocess.CalledProcessError)
+        self.assertEqual(calls, ['off'])
+        self.assertEqual(report['state'], 'failed')
+        self.assertEqual(stderr, 'fixture native failure\n')
 
 
 if __name__ == '__main__':

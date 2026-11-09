@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -47,7 +47,7 @@ jobs:
         run: |
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = true
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis ]]
       - uses: actions/checkout@v7
         with:
           repository: Ajuntanaga/polyphonic-audio-to-midi
@@ -63,7 +63,7 @@ jobs:
         working-directory: source
         run: |
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
-          if [[ "$TASK" = controlled-recovery ]]; then
+          if [[ "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis ]]; then
             export INPUT_TAG=controls-pass2-20261109
             export INPUT_SHA256=692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d
           fi
@@ -133,6 +133,11 @@ jobs:
         working-directory: source
         run: |
           python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --output build/github-results/controlled --max-seconds 2400 2>&1 | tee build/github-results/runner.log
+      - name: Diagnose the retained octave control timing failure
+        if: inputs.task == 'controlled-timing-diagnosis'
+        working-directory: source
+        run: |
+          python3 -B -m tools.portable_controlled_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference docs/recovery/heldout-control-reference-20261103.json --timing-reference-report docs/recovery/github-heldout-controls-20261109.json --output build/github-results/controlled-timing --max-seconds 360 2>&1 | tee build/github-results/runner.log
       - name: Keep small reports and failure logs
         if: always()
         uses: actions/upload-artifact@v7
