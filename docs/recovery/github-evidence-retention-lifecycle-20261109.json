@@ -1,0 +1,447 @@
+{
+  "schema": "m3_evidence_retention_lifecycle_diagnosis_v1",
+  "recorded_at": "2026-11-09T07:46:57.678186+00:00",
+  "state": "completed",
+  "final": true,
+  "decision": "rejected",
+  "installed_output_changed": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "c5268d309e729aad7611d6d33172a10a18a13080",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42578776712",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "worker_commit": "c6e46816fa646b7a24d5504a5c4325234ffea92f",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42578776712",
+  "inputs": {
+    "control_outcome": "build/github-results/ordinary-window-42576271299/outcome.tsv.gz",
+    "trial_outcome": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/outcome.tsv.gz",
+    "trial_midi_events": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/midi-event.tsv.gz",
+    "verified_evidence_archive_sha256": "e819c721ac39b16db129ce7a8c9f2a4ecec58bab2f032e37a4512c480c6b9a28",
+    "note": "Reanalysis of saved traces only; no new native replay. The full OFF recording was bit-identical to the retained reference.",
+    "retained_trial_traces": [
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/candidate.tsv.gz",
+        "bytes": 39958,
+        "sha256": "232873c8fc3b68c49e5ce7675f8c05101c51efecca4dd85bf550829a972b063c"
+      },
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/outcome.tsv.gz",
+        "bytes": 322185,
+        "sha256": "45862cbd95afdc0ded5957e69a8b9fe698b76bc5d3c0a02aa2e9f6e055119a18"
+      },
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/midi-event.tsv.gz",
+        "bytes": 2912,
+        "sha256": "364911e1ffdff543a86d3a446355efed6f13866d4fdc32ed07da58601aab98ee"
+      }
+    ],
+    "control_outcome_sha256": "4a9e0124c7a50156ad3652c737c5b32a5665b5cfe5db4cc5dddd937e1b21b19d"
+  },
+  "before": {
+    "label": {
+      "label_index": 55,
+      "start_sample": 897799,
+      "end_sample": 969600,
+      "midi_note": 42,
+      "string_mask": 1,
+      "calibration_pass": 2,
+      "labeled": 1122,
+      "matched": 267
+    },
+    "frames": 1122,
+    "counts": {
+      "present": 897,
+      "selected": 893,
+      "active": 0,
+      "direct": 895,
+      "selected_direct_inactive_zero_evidence": 649
+    },
+    "maxima": {
+      "evidence_ticks": 44,
+      "attack_ticks": 0
+    },
+    "snapshot_counts": {
+      "matched": 267,
+      "matched_with_active_source": 12,
+      "matched_inactive_preview_only": 255,
+      "matched_source_unknown": 0,
+      "rendered_note_with_active_source_any_string": 19
+    },
+    "midi_event_capture": "not measured",
+    "midi_events_during_label": [],
+    "interpretation": "Candidate state is after lifecycle processing. MIDI events are actual transitions. The voice cents_valid field is pitch-bend validity, not MIDI activity. Matches can include inactive tuner previews. Active-source snapshots do not prove held MIDI; note-on source associations require a unique active logical source at the same sample, emitted note and lane. Neither establishes physical string identity or freedom from stuck notes."
+  },
+  "after": {
+    "label": {
+      "label_index": 55,
+      "start_sample": 897799,
+      "end_sample": 969600,
+      "midi_note": 42,
+      "string_mask": 1,
+      "calibration_pass": 2,
+      "labeled": 1122,
+      "matched": 218
+    },
+    "frames": 1122,
+    "counts": {
+      "present": 897,
+      "selected": 893,
+      "active": 0,
+      "direct": 895,
+      "selected_direct_inactive_zero_evidence": 0
+    },
+    "maxima": {
+      "evidence_ticks": 112,
+      "attack_ticks": 1
+    },
+    "snapshot_counts": {
+      "matched": 218,
+      "matched_with_active_source": 12,
+      "matched_inactive_preview_only": 206,
+      "matched_source_unknown": 0,
+      "rendered_note_with_active_source_any_string": 19
+    },
+    "midi_event_capture": "provided",
+    "midi_events_during_label": [
+      {
+        "sample": 921471,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 921599,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 921599,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 921663,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 944959,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 945087,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 945087,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 945151,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 950271,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 950335,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 950335,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 950399,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 955519,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 955711,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 955711,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 955775,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 960895,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 960959,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 960959,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 961023,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 966207,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 966335,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 966335,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 966399,
+        "kind": "off",
+        "voice_id": 2
+      },
+      {
+        "sample": 967295,
+        "kind": "on",
+        "voice_id": 0,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 967359,
+        "kind": "off",
+        "voice_id": 0
+      },
+      {
+        "sample": 967359,
+        "kind": "on",
+        "voice_id": 2,
+        "matching_snapshot_active_source_notes": [
+          41
+        ],
+        "snapshot_source_status": "unique"
+      },
+      {
+        "sample": 967423,
+        "kind": "off",
+        "voice_id": 2
+      }
+    ],
+    "interpretation": "Candidate state is after lifecycle processing. MIDI events are actual transitions. The voice cents_valid field is pitch-bend validity, not MIDI activity. Matches can include inactive tuner previews. Active-source snapshots do not prove held MIDI; note-on source associations require a unique active logical source at the same sample, emitted note and lane. Neither establishes physical string identity or freedom from stuck notes."
+  },
+  "change": {
+    "target_matches": -49,
+    "inactive_preview_matches": -49,
+    "matched_active_source_snapshots": 0,
+    "logical_target_active_frames": 0
+  },
+  "midi_note_42": {
+    "on_events": 14,
+    "off_events": 14,
+    "unique_on_snapshot_sources": {
+      "41": 14
+    },
+    "pairs": [
+      {
+        "voice_id": 0,
+        "on_sample": 921471,
+        "off_sample": 921599,
+        "duration_samples": 128,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 921599,
+        "off_sample": 921663,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 944959,
+        "off_sample": 945087,
+        "duration_samples": 128,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 945087,
+        "off_sample": 945151,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 950271,
+        "off_sample": 950335,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 950335,
+        "off_sample": 950399,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 955519,
+        "off_sample": 955711,
+        "duration_samples": 192,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 955711,
+        "off_sample": 955775,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 960895,
+        "off_sample": 960959,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 960959,
+        "off_sample": 961023,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 966207,
+        "off_sample": 966335,
+        "duration_samples": 128,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 966335,
+        "off_sample": 966399,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 0,
+        "on_sample": 967295,
+        "off_sample": 967359,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      },
+      {
+        "voice_id": 2,
+        "on_sample": 967359,
+        "off_sample": 967423,
+        "duration_samples": 64,
+        "on_snapshot_logical_note": 41
+      }
+    ],
+    "duration_samples_min": 64,
+    "duration_samples_max": 192,
+    "sample_rate": 96000,
+    "control_midi_event_trace": "not measured",
+    "interpretation": "Each captured note-on matches one active logical note-41 source. Seven short cycles retune 41 to 42 on lane 0, move 42 to lane 2, then return to 41. Logical note 42 never activates. These associations and within-window pairs do not establish held MIDI or global stuck-note safety."
+  },
+  "native_mechanism": {
+    "calibrated_output": "The ordinary calibrated-note path can change the emitted note while retaining an active logical candidate.",
+    "lane_reconciliation": "The later active-voice lane reconciliation emits offs and ons when the assigned lane changes.",
+    "eligibility_loss": "Clears pending consensus and leaves the current emitted note unchanged.",
+    "untrusted_projection": "Can propose a return to the detected note after two eligible consensus ticks.",
+    "projected_note_collision": "Can return to the detected note immediately.",
+    "reset_branch": "not measured: the post-lifecycle trace does not identify which pre-update reset branch executed.",
+    "evidence": "native/src/polyphonic_pitch_detector.cpp: update_calibrated_output_notes, change_candidate_output_note and active MIDI lane reconciliation; native/offline/replay.cpp: outcome voice schema and event capture"
+  },
+  "conclusions": [
+    "The 49-frame target regression is entirely in inactive tuner-preview matches; active-source matched snapshots remain 12. This is not a count of 49 lost MIDI notes.",
+    "Voice tuple field cents_valid indicates pitch-bend validity, not MIDI activity.",
+    "Both traces contain 19 snapshots of rendered note 42 with an active logical source on any lane; only the trial has an actual MIDI-event capture.",
+    "Retaining evidence raises the target evidence maximum from 44 to 112 but attack ticks peak at one and the target never activates.",
+    "The trial remains rejected: 26 labels lose matches and extra outputs during unlabeled gaps rise by 659.",
+    "A longer return-to-note consensus is not justified by this trace: the collision branch bypasses that consensus and the exact reset branch is unresolved."
+  ],
+  "next": "Keep evidence retention rejected. Before changing calibrated-note stability, expose the actual projection/reset reason at the failing transitions with default-off diagnostics and verify full OFF identity on GitHub Actions. Do not repeat the rejected collision-revalidation rule or change onset thresholds from preview matches alone. Any later runtime screen needs positive labeled gain, no per-label loss and no increased wrong-note, wrong-string or gap-extra output, followed by protected corpus, allocation, buffer, native timing and live-host gates."
+}

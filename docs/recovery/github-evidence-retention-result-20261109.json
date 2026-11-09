@@ -27,8 +27,28 @@
     "id": 13655909691,
     "bytes": 4683530,
     "sha256": "e819c721ac39b16db129ce7a8c9f2a4ecec58bab2f032e37a4512c480c6b9a28",
-    "collected": false,
-    "note": "Compressed trace evidence remains on GitHub; no duplicate local archive."
+    "collected": true,
+    "note": "Full archive digest verified; only the compressed target traces were extracted. The redundant download ZIP is removed after collection.",
+    "archive_digest_verified": true,
+    "retained_files": [
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/candidate.tsv.gz",
+        "bytes": 39958,
+        "sha256": "232873c8fc3b68c49e5ce7675f8c05101c51efecca4dd85bf550829a972b063c"
+      },
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/outcome.tsv.gz",
+        "bytes": 322185,
+        "sha256": "45862cbd95afdc0ded5957e69a8b9fe698b76bc5d3c0a02aa2e9f6e055119a18"
+      },
+      {
+        "file": "build/github-results/evidence-retention-42578776712/trace-artifact/github-results/evidence-retention/midi-event.tsv.gz",
+        "bytes": 2912,
+        "sha256": "364911e1ffdff543a86d3a446355efed6f13866d4fdc32ed07da58601aab98ee"
+      }
+    ],
+    "local_archive_removed": true,
+    "local_archive_bytes_removed": 4683530
   },
   "settings": {
     "a4": 440,
@@ -802,5 +822,6 @@
     "other_protected_corpora_for_this_trial": "not measured"
   },
   "interpretation": "Retaining direct evidence removes the traced evidence resets but does not establish correct string identity or stable MIDI. Overall gains do not compensate for per-label losses or increased extra outputs in unlabeled gaps.",
-  "next": "Use the retained event/reset window to explain transient MIDI and label losses before another implementation. Any next screen needs an identical OFF reference, positive labeled gain, no per-label loss and no increased wrong-note, wrong-string or gap-extra output; timing and live-host acceptance remain separate."
+  "next": "Keep evidence retention rejected. Before changing calibrated-note stability, expose the actual projection/reset reason at the failing transitions with default-off diagnostics and verify full OFF identity on GitHub Actions. Do not repeat the rejected collision-revalidation rule or change onset thresholds from preview matches alone. Any later runtime screen needs positive labeled gain, no per-label loss and no increased wrong-note, wrong-string or gap-extra output, followed by protected corpus, allocation, buffer, native timing and live-host gates.",
+  "lifecycle_diagnosis": "docs/recovery/github-evidence-retention-lifecycle-20261109.json"
 }

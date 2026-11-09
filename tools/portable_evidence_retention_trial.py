@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import time
 
+from tools.candidate_outcome_analysis import HEADER, _candidates, _frame
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
 from tools.portable_assignment_trace import (compress_trace_window, digest, read_rows,
                                              select_labels, trace_sample_bounds, verify_inputs)
@@ -18,13 +19,22 @@ from tools.portable_corpus_replay import SETTINGS, command_for
 
 
 def summarize_target(rows, events, label):
-    """Post-lifecycle state and actual MIDI events, distinct from tuner previews."""
+    """Separate preview matches, logical activity and captured MIDI transitions.
+
+    ``events=None`` means MIDI was not captured. Snapshot associations describe
+    note-ons only: a note-off's old output may be absent from its new snapshot.
+    """
     start, end, note = (label[key] for key in ('start_sample', 'end_sample', 'midi_note'))
     expected = set(range(((start + 1 + 63) // 64) * 64 - 1, end, 64))
     seen = set()
     counts = dict(present=0, selected=0, active=0, direct=0,
                   selected_direct_inactive_zero_evidence=0)
     maxima = dict(evidence_ticks=0, attack_ticks=0)
+    snapshots = dict(matched=0, matched_with_active_source=0,
+                     matched_inactive_preview_only=0, matched_source_unknown=0,
+                     rendered_note_with_active_source_any_string=0)
+    on_sources = {}
+    columns = HEADER.rstrip('\n').split('\t')
     for row in rows:
         sample = int(row['sample'])
         if not start <= sample < end:
@@ -32,17 +42,30 @@ def summarize_target(rows, events, label):
         if sample not in expected or sample in seen or int(row['tick']) * 64 - 1 != sample:
             raise ValueError('Outcome trace clock or duplicate mismatch')
         seen.add(sample)
-        entries = {}
-        for item in filter(None, row['candidates'].split(',')):
-            fields = item.split(':')
-            if len(fields) != 42 or int(fields[0]) in entries:
-                raise ValueError('Incompatible outcome candidate schema')
-            entries[int(fields[0])] = fields
+        frame = _frame('\t'.join(row[column] for column in columns))
+        if (label['label_index'], note, label['string_mask']) not in frame['labels']:
+            raise ValueError('Target label differs from outcome trace')
+        entries = _candidates(frame)
+        rendered = [voice for voice in frame['voices'] if voice[1] == note]
+        active_sources = [voice for voice in rendered
+                          if voice[0] in entries and entries[voice[0]]['active']]
+        on_sources[sample] = {}
+        for voice in active_sources:
+            on_sources[sample].setdefault(voice[2], set()).add(voice[0])
+        snapshots['rendered_note_with_active_source_any_string'] += bool(active_sources)
+        if label['label_index'] in frame['matched']:
+            snapshots['matched'] += 1
+            if active_sources:
+                snapshots['matched_with_active_source'] += 1
+            elif not rendered or any(voice[0] not in entries for voice in rendered):
+                snapshots['matched_source_unknown'] += 1
+            else:
+                snapshots['matched_inactive_preview_only'] += 1
         fields = entries.get(note)
         if fields is None:
             continue
-        selected, active, direct = int(fields[1]) == 4, bool(int(fields[2])), bool(int(fields[10]))
-        evidence, attack = int(fields[26]), int(fields[24])
+        selected, active, direct = fields['selection'] == 4, bool(fields['active']), bool(fields['direct'])
+        evidence, attack = fields['evidence_ticks'], fields['attack']
         counts['present'] += 1
         counts['selected'] += selected
         counts['active'] += active
@@ -53,17 +76,29 @@ def summarize_target(rows, events, label):
     if seen != expected:
         raise ValueError('Incomplete outcome trace for target label')
     transitions = []
-    for row in events:
+    for row in events if events is not None else ():
         if row['kind'] not in ('on', 'off'):
             raise ValueError('Unknown MIDI event kind')
         if int(row['note']) == note and start <= int(row['sample']) < end:
-            transitions.append(dict(sample=int(row['sample']), kind=row['kind'],
-                                    voice_id=int(row['voice_id'])))
+            transition = dict(sample=int(row['sample']), kind=row['kind'],
+                              voice_id=int(row['voice_id']))
+            if row['kind'] == 'on':
+                sources = sorted(on_sources.get(transition['sample'], {}).get(transition['voice_id'], ()))
+                transition['matching_snapshot_active_source_notes'] = sources
+                transition['snapshot_source_status'] = ('unique' if len(sources) == 1 else
+                                                        'ambiguous' if sources else 'unknown')
+            transitions.append(transition)
     return dict(label=label, frames=len(seen), counts=counts, maxima=maxima,
+                snapshot_counts=snapshots,
+                midi_event_capture='not measured' if events is None else 'provided',
                 midi_events_during_label=transitions,
                 interpretation='Candidate state is after lifecycle processing. MIDI events are '
-                               'actual transitions; neither proves the correct physical string '
-                               'or freedom from stuck notes. Labeled matches are scored separately.')
+                               'actual transitions. The voice cents_valid field is pitch-bend '
+                               'validity, not MIDI activity. Matches can include inactive tuner '
+                               'previews. Active-source snapshots do not prove held MIDI; note-on '
+                               'source associations require a unique active logical source at the '
+                               'same sample, emitted note and lane. Neither establishes physical '
+                               'string identity or freedom from stuck notes.')
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):

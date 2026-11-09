@@ -39,6 +39,8 @@ def outcome_rows():
         fields[2] = '1' if tick == 2 else '0'
         fields[26] = '51' if tick == 1 else '0'
         result.append(dict(sample=str(tick * 64 - 1), tick=str(tick),
+                           quiet='0', signal_samples='0', labels='55:42:1',
+                           matched_labels='', voices='',
                            candidates=':'.join(fields)))
     return result
 
@@ -86,7 +88,8 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
         return replay
 
     def test_target_requires_complete_trace_and_does_not_infer_midi_from_state(self):
-        label = dict(start_sample=0, end_sample=192, midi_note=42)
+        label = dict(label_index=55, start_sample=0, end_sample=192, midi_note=42,
+                     string_mask=1)
         rows = outcome_rows()
         result = summarize_target(rows, [], label)
         self.assertEqual(result['counts']['active'], 1)
@@ -94,6 +97,53 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
         for invalid in (rows[:-1], rows + [rows[0]]):
             with self.subTest(rows=len(invalid)), self.assertRaises(ValueError):
                 summarize_target(invalid, [], label)
+
+    def test_preview_matches_and_retuned_neighbor_are_not_target_midi_activity(self):
+        label = dict(label_index=55, start_sample=0, end_sample=192, midi_note=42,
+                     string_mask=1)
+        rows = outcome_rows()
+        for row in rows:
+            fields = row['candidates'].split(':')
+            fields[2] = '0'
+            row['candidates'] = ':'.join(fields)
+            row['matched_labels'] = '55'
+        # Pitch-bend validity must not turn an inactive preview into an active source.
+        rows[0]['voices'] = '42:42:0:0:0:1:0:1'
+        neighbor = rows[1]['candidates'].split(':')
+        neighbor[0], neighbor[2] = '41', '1'
+        rows[1]['candidates'] += ',' + ':'.join(neighbor)
+        # An active source may have no valid pitch bend and a different logical note.
+        rows[1]['voices'] = '41:42:0:0:10:0:0:1'
+        rows[2]['voices'] = '41:41:2:1:11:1:0:4,42:42:0:0:0:0:0:1'
+        events = [dict(sample='127', kind='on', note='42', voice_id='0'),
+                  dict(sample='191', kind='off', note='42', voice_id='0')]
+        result = summarize_target(rows, events, label)
+        self.assertEqual(result['counts']['active'], 0)
+        self.assertEqual(result['snapshot_counts'], dict(matched=3,
+            matched_with_active_source=1, matched_inactive_preview_only=2,
+            matched_source_unknown=0, rendered_note_with_active_source_any_string=1))
+        self.assertEqual(result['midi_events_during_label'][0][
+            'matching_snapshot_active_source_notes'], [41])
+        self.assertEqual(result['midi_events_during_label'][0]['snapshot_source_status'], 'unique')
+        self.assertNotIn('matching_snapshot_active_source_notes', result['midi_events_during_label'][1])
+        missing = summarize_target(rows, None, label)
+        self.assertEqual(missing['midi_event_capture'], 'not measured')
+
+    def test_unknown_or_multiple_sources_do_not_get_unique_midi_attribution(self):
+        label = dict(label_index=55, start_sample=0, end_sample=192, midi_note=42,
+                     string_mask=1)
+        rows = outcome_rows()
+        rows[0].update(matched_labels='55', voices='41:42:0:0:10:1:0:1')
+        neighbor = rows[1]['candidates'].split(':')
+        neighbor[0] = '41'
+        rows[1]['candidates'] += ',' + ':'.join(neighbor)
+        rows[1]['voices'] = '41:42:0:0:10:1:0:1,42:42:0:0:10:1:0:1'
+        events = [dict(sample=str(sample), kind='on', note='42', voice_id='0')
+                  for sample in (63, 127)]
+        result = summarize_target(rows, events, label)
+        self.assertEqual(result['snapshot_counts']['matched_source_unknown'], 1)
+        self.assertEqual([row['snapshot_source_status'] for row in result['midi_events_during_label']],
+                         ['unknown', 'ambiguous'])
 
     def test_changed_off_reference_stops_before_trial(self):
         with tempfile.TemporaryDirectory() as directory:
