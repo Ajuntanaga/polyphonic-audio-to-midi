@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-09T10:07:20.641274+00:00",
-  "state": "ordinary_duration_screen_pending",
+  "updated_at": "2026-11-09T10:30:22.771178+00:00",
+  "state": "completed_duration_comparison_invalid",
   "source_commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
   "worker_commit": "cd72acf856a61022d8f44d303533ca148e1546df",
   "worker_workflow_pushed": true,
@@ -8,13 +8,13 @@
   "blocks": [
     512
   ],
-  "measured": false,
+  "measured": true,
   "host_delivery": "not measured",
   "acceptance_target": "not measured",
   "installed_output_changed": false,
   "promotion_accepted": false,
   "note": "Complete OFF/ON detector lifetimes in the bounded ordinary preview screen; pair before cropping, retain full compressed event streams, suppress hold comparisons on pairing anomalies.",
-  "observed_at": "2026-11-09T10:07:20.641274+00:00",
+  "observed_at": "2026-11-09T10:30:22.771178+00:00",
   "source_contract_run": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "run_id": 42597330722,
@@ -28,7 +28,9 @@
   },
   "active_corpus_run": {
     "run_id": 42592853316,
-    "status": "in_progress",
+    "status": "completed",
+    "native_gate_passed": false,
+    "checkpoint": "docs/recovery/github-projection-preview-corpus-20261109.json",
     "duplicate_launched": false
   },
   "local_verification": {
@@ -37,7 +39,7 @@
     "workflow_shell_syntax": "passed",
     "runtime_tests": "GitHub only"
   },
-  "next": "Collect the small report once after completion, verify both full replay hashes against the preceding ordinary trial, and inspect complete OFF/ON held durations and retriggers. Pairing anomalies invalidate duration comparisons; native timing and live-host gates remain separate. Do not dispatch another screen.",
+  "next": "Resolve the raw MIDI lane conflicts against the production ledger before claiming held-note improvement. Keep the preview disabled; its protected label/error and buffer checks pass but three native timing gates fail. Any later correction needs identical OFF references, zero lost labels or increased false outputs, zero allocations/frees, fixed timing limits, and separate host checks.",
   "initial_contract_run": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "run_id": 42596828308,
@@ -59,23 +61,23 @@
     "worker_commit": "cd72acf856a61022d8f44d303533ca148e1546df",
     "submitted_at": "2026-11-09T10:04:58.047702+00:00",
     "created_at": "2026-11-09T10:05:00Z",
-    "status": "pending",
-    "conclusion": null,
-    "observed_at": "2026-11-09T10:07:20.641274+00:00",
+    "status": "completed",
+    "conclusion": "success",
+    "observed_at": "2026-11-09T10:30:22.771178+00:00",
     "parameters": {
       "midi_lifecycle": true,
       "note": 41,
       "label_index": 55
     },
-    "stage": "Queued behind the existing corpus run in the shared serialized processing group.",
+    "stage": "Full raw MIDI streams measured; pairing anomalies suppress duration comparisons",
     "predecessor_run_id": 42592853316,
     "concurrency_group": "m3-private-processing",
     "output_target": "build/github-results/ordinary-midi-lifecycle-42598238121",
     "report": "build/github-results/ordinary-midi-lifecycle-42598238121/projection-preview/report.json",
     "report_artifact": "m3-report-42598238121-1",
-    "result_final": false,
-    "outputs_downloaded_once": false,
-    "measured": false,
+    "result_final": true,
+    "outputs_downloaded_once": true,
+    "measured": true,
     "installed_output_changed": false,
     "promotion_accepted": false,
     "reference_run_id": 42591352851,
@@ -83,6 +85,446 @@
     "expected_on_tsv_sha256": "1822c2bd944e7f4fc1589ca2c079bcde6967f4a6b9bd300e94ec3504406f496f",
     "host_delivery": "not measured",
     "duration_acceptance_target": "not measured",
-    "next": "Collect the small report once after completion, verify both full replay hashes against the preceding ordinary trial, and inspect complete OFF/ON held durations and retriggers. Pairing anomalies invalidate duration comparisons; native timing and live-host gates remain separate. Do not dispatch another screen."
+    "next": "Resolve the raw MIDI lane conflicts against the production ledger before claiming held-note improvement. Keep the preview disabled; its protected label/error and buffer checks pass but three native timing gates fail. Any later correction needs identical OFF references, zero lost labels or increased false outputs, zero allocations/frees, fixed timing limits, and separate host checks.",
+    "completed_at": "2026-11-09T10:23:34Z",
+    "artifact_metadata": {
+      "report": {
+        "id": 13665517662,
+        "bytes": 18842,
+        "sha256": "99d0cf3354cc1fdd97b0b9d2816286df97385c58e6228b10f0a1b87b82060ef2",
+        "collected": true
+      },
+      "evidence": {
+        "id": 13666240089,
+        "bytes": 4875692,
+        "sha256": "a7ffc4c9ebcf69a0fd8dd27f93b4cb0cdfefb86f6d5e61775b7a453975fa8ba5",
+        "collected": false,
+        "read_attempt": "Timed out after 90 seconds; no local archive retained. Report and anomaly examples are available."
+      }
+    }
+  },
+  "result_final": true,
+  "report_sha256": "43daa34f3751e35f1b7086996bea9530219a4d3dd69f25dcab80cfb1c4514149",
+  "binary_sha256": "018e5dd800d6a8c31cb6b7a8225ba2f39474dd57fdbf3c30d6974c794ddecbc8",
+  "input_manifest_sha256": "6595f3935d1d15f6a025cadd5a9d48dbbf3f42d998bd60b419e0ac481ee1c7ea",
+  "source_provenance": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "d51b71afaaeb38d4eb5b7020b7dbb8e254ae20f5",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42598238121",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "sample_rate": 96000,
+  "sample_count": 10689600,
+  "full_recording_off_on_hash_identity": true,
+  "lifecycle": {
+    "reference-off": {
+      "transitions": 11903,
+      "note_ons": 5952,
+      "note_offs": 5951,
+      "event_error_counts": {
+        "note_on_before_lane_release": 617,
+        "note_off_without_matching_note_on": 617
+      },
+      "event_error_examples": [
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 184319,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 2,
+          "sequence": 25
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 184319,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 26
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 189567,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 2,
+          "sequence": 35
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 189567,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 36
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 203519,
+          "note": 47,
+          "velocity": 25,
+          "voice_id": 0,
+          "sequence": 45
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 203583,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 46
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 207167,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 0,
+          "sequence": 59
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 207231,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 60
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 207615,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 1,
+          "sequence": 63
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 207615,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 1,
+          "sequence": 64
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 217151,
+          "note": 47,
+          "velocity": 19,
+          "voice_id": 2,
+          "sequence": 75
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 217151,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 76
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 217855,
+          "note": 47,
+          "velocity": 20,
+          "voice_id": 0,
+          "sequence": 83
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 217919,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 84
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 219519,
+          "note": 47,
+          "velocity": 24,
+          "voice_id": 2,
+          "sequence": 91
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 219519,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 92
+        }
+      ],
+      "coverage_valid": false,
+      "balanced_at_recording_end": false,
+      "open_at_recording_end": [
+        {
+          "voice_id": 0,
+          "note": 44,
+          "start_sample": 10627135,
+          "observed_hold_samples": 62465
+        }
+      ],
+      "samples_after_last_label": 9600,
+      "exact_held_samples": null,
+      "closed_note_duration_samples": null,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      }
+    },
+    "trial-on": {
+      "transitions": 11895,
+      "note_ons": 5948,
+      "note_offs": 5947,
+      "event_error_counts": {
+        "note_on_before_lane_release": 617,
+        "note_off_without_matching_note_on": 617
+      },
+      "event_error_examples": [
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 184319,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 2,
+          "sequence": 25
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 184319,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 26
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 189567,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 2,
+          "sequence": 35
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 189567,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 36
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 203519,
+          "note": 47,
+          "velocity": 25,
+          "voice_id": 0,
+          "sequence": 45
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 203583,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 46
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 207167,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 0,
+          "sequence": 59
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 207231,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 60
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 207615,
+          "note": 47,
+          "velocity": 30,
+          "voice_id": 1,
+          "sequence": 63
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 207615,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 1,
+          "sequence": 64
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 217151,
+          "note": 47,
+          "velocity": 19,
+          "voice_id": 2,
+          "sequence": 75
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 217151,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 76
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 217855,
+          "note": 47,
+          "velocity": 20,
+          "voice_id": 0,
+          "sequence": 83
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 217919,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 84
+        },
+        {
+          "error": "note_on_before_lane_release",
+          "kind": "on",
+          "sample": 219519,
+          "note": 47,
+          "velocity": 24,
+          "voice_id": 2,
+          "sequence": 91
+        },
+        {
+          "error": "note_off_without_matching_note_on",
+          "kind": "off",
+          "sample": 219519,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 92
+        }
+      ],
+      "coverage_valid": false,
+      "balanced_at_recording_end": false,
+      "open_at_recording_end": [
+        {
+          "voice_id": 0,
+          "note": 44,
+          "start_sample": 10627135,
+          "observed_hold_samples": 62465
+        }
+      ],
+      "samples_after_last_label": 9600,
+      "exact_held_samples": null,
+      "closed_note_duration_samples": null,
+      "tsv_sha256": "1822c2bd944e7f4fc1589ca2c079bcde6967f4a6b9bd300e94ec3504406f496f",
+      "output": {
+        "labeled": 528632,
+        "matched": 145395,
+        "false_wrong_note_voices": 164189,
+        "false_wrong_string_voices": 92651,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319696,
+        "fingerprint": "bdaabf94f19a4940"
+      }
+    }
+  },
+  "comparison": {
+    "delta": {
+      "matched": 10,
+      "false_wrong_note_voices": -74,
+      "false_wrong_string_voices": -2,
+      "false_gap_voices": 0,
+      "false_positive_voices": -76
+    },
+    "changed_labels": [
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 269,
+        "matched_delta": 2
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 273,
+        "matched_delta": 8
+      }
+    ],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "midi_lifecycle_comparison": {
+    "baseline_run": "reference-off",
+    "trial_run": "trial-on",
+    "coverage_valid": false,
+    "exact_held_samples_delta": null,
+    "changed_labels": null,
+    "acceptance_target": "not measured",
+    "interpretation": "Complete detector event streams before host delivery. Duration changes are sample counts, not labeled-frame gains. Pairing anomalies suppress hold comparisons; open notes at EOF do not by themselves establish stuck MIDI. Screen eligibility still refers to labeled-frame/error checks, not live acceptance."
+  },
+  "interpretation": "The frame/error screen gains ten matches and reduces false outputs, but both modes have 617 raw note-ons before lane release and 617 unmatched note-offs. Same-sample OFF/ON sorting in the host ledger can resolve some ordering cases; recorded cross-sample conflicts still require diagnosis. These raw detector anomalies are not a measured host failure. Open EOF notes are not proof of stuck MIDI. Held-duration gains and live readiness remain unmeasured.",
+  "source_observation": {
+    "ledger": "native/src/generated_note_ledger.cpp",
+    "same_sample_sort": "OFF precedes ON at the same sample offset",
+    "cross_sample_lane_reuse": "An ON for an already occupied assigned lane blocks delivery and requests cleanup. Reproduce the saved conflict against the native ledger before attributing host behavior."
   }
 }

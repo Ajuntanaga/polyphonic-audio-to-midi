@@ -8,15 +8,15 @@
   "source_commit": "01cfb12d8b3b59a8635b26749059113d5768708e",
   "worker_commit": "6ab8d23234ba1509f4674543977a4d5740f9553b",
   "submitted_at": "2026-11-09T09:21:49.973882+00:00",
-  "status": "in_progress",
-  "result_final": false,
-  "outputs_downloaded_once": false,
+  "status": "completed",
+  "result_final": true,
+  "outputs_downloaded_once": true,
   "output_target": "build/github-results/assignment-context-corpus-42592853316",
   "report_relative_path": "corpus/report.json",
   "runtime_rule_changed": true,
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "stage": "Building offline replay on GitHub",
+  "stage": "Final report collected; candidate rejected by native timing gates",
   "on_flags": [
     "--diagnostic-projection-preview-admission"
   ],
@@ -27,8 +27,911 @@
     1024
   ],
   "prior_off_reference": "docs/recovery/github-guard-cell-corpus-20261109.json",
-  "next": "Collect the small report once after completion. Require zero per-label losses or increased false outputs, OFF reference identity, buffer parity, zero processing allocations/frees, and both modes within fixed native timing limits. Keep failed trials disabled; live host/MIDI gates remain separate.",
+  "next": "Resolve the raw MIDI lane conflicts against the production ledger before claiming held-note improvement. Keep the preview disabled; its protected label/error and buffer checks pass but three native timing gates fail. Any later correction needs identical OFF references, zero lost labels or increased false outputs, zero allocations/frees, fixed timing limits, and separate host checks.",
   "source_contract_run_id": 42592792294,
   "validation": "Python/workflow shell syntax passed locally; runtime tests and replay run only on GitHub",
-  "observed_at": "2026-11-09T09:22:42.835520+00:00"
+  "observed_at": "2026-11-09T10:30:22.771178+00:00",
+  "conclusion": "success",
+  "completed_at": "2026-11-09T10:19:20Z",
+  "report_updated_at": "2026-11-09T10:19:14.733611+00:00",
+  "report_sha256": "50024e16971810af71e18492ffe3a2e35356c06f86ebb80a8e8c75f4b5bf4123",
+  "binary_sha256": "018e5dd800d6a8c31cb6b7a8225ba2f39474dd57fdbf3c30d6974c794ddecbc8",
+  "source_provenance": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "01cfb12d8b3b59a8635b26749059113d5768708e",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42592853316",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "input_manifest_sha256": "6c950f0fa6996c0b10f252f8519ed45d817f11d278713ef6ac9f2cbdb8722bb5",
+  "verified_inputs": 30,
+  "timing_limits": {
+    "block_samples": 32,
+    "sample_rate": 96000,
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "dataset_results": {
+    "ordinary": {
+      "baseline": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "current_offline": {
+        "labeled": 528632,
+        "matched": 145395,
+        "false_wrong_note_voices": 164189,
+        "false_wrong_string_voices": 92651,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319696,
+        "fingerprint": "bdaabf94f19a4940"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": false,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 113348,
+          "maximum_ns": 225429,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 110699,
+          "maximum_ns": 248049,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "constructed": {
+      "baseline": {
+        "labeled": 1614601,
+        "matched": 259074,
+        "false_wrong_note_voices": 167722,
+        "false_wrong_string_voices": 103754,
+        "false_gap_voices": 23176,
+        "false_positive_voices": 294652,
+        "fingerprint": "199db8fd25ada73e"
+      },
+      "current_offline": {
+        "labeled": 1614601,
+        "matched": 259074,
+        "false_wrong_note_voices": 167722,
+        "false_wrong_string_voices": 103754,
+        "false_gap_voices": 23176,
+        "false_positive_voices": 294652,
+        "fingerprint": "199db8fd25ada73e"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": false,
+      "timing": {
+        "off": {
+          "p99_ns": 102958,
+          "maximum_ns": 375700,
+          "deadline_overruns": 1,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        },
+        "on": {
+          "p99_ns": 102407,
+          "maximum_ns": 254042,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "isolated-08": {
+      "baseline": {
+        "labeled": 31050,
+        "matched": 29816,
+        "false_wrong_note_voices": 2462,
+        "false_wrong_string_voices": 579,
+        "false_gap_voices": 2928,
+        "false_positive_voices": 5969,
+        "fingerprint": "06c4e7fdb2a739e4"
+      },
+      "current_offline": {
+        "labeled": 31050,
+        "matched": 29816,
+        "false_wrong_note_voices": 2462,
+        "false_wrong_string_voices": 579,
+        "false_gap_voices": 2928,
+        "false_positive_voices": 5969,
+        "fingerprint": "06c4e7fdb2a739e4"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 92341,
+          "maximum_ns": 198410,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 91417,
+          "maximum_ns": 195511,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "isolated-05": {
+      "baseline": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "current_offline": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 105708,
+          "maximum_ns": 183807,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 106998,
+          "maximum_ns": 192295,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "isolated-02": {
+      "baseline": {
+        "labeled": 35550,
+        "matched": 29240,
+        "false_wrong_note_voices": 2491,
+        "false_wrong_string_voices": 1400,
+        "false_gap_voices": 1840,
+        "false_positive_voices": 5731,
+        "fingerprint": "e1436099f9cfb492"
+      },
+      "current_offline": {
+        "labeled": 35550,
+        "matched": 29240,
+        "false_wrong_note_voices": 2491,
+        "false_wrong_string_voices": 1400,
+        "false_gap_voices": 1840,
+        "false_positive_voices": 5731,
+        "fingerprint": "e1436099f9cfb492"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 103907,
+          "maximum_ns": 306476,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 106969,
+          "maximum_ns": 170072,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "physical-long": {
+      "baseline": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "519bc0f9f4710566"
+      },
+      "current_offline": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "519bc0f9f4710566"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 116292,
+          "maximum_ns": 268838,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 113004,
+          "maximum_ns": 223665,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "physical-middle": {
+      "baseline": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "current_offline": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 108973,
+          "maximum_ns": 277264,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 109965,
+          "maximum_ns": 303550,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "physical-highmid": {
+      "baseline": {
+        "labeled": 23452,
+        "matched": 0,
+        "false_wrong_note_voices": 3729,
+        "false_wrong_string_voices": 15251,
+        "false_gap_voices": 46672,
+        "false_positive_voices": 65652,
+        "fingerprint": "fcabcff914676ab2"
+      },
+      "current_offline": {
+        "labeled": 23452,
+        "matched": 0,
+        "false_wrong_note_voices": 3729,
+        "false_wrong_string_voices": 15251,
+        "false_gap_voices": 46672,
+        "false_positive_voices": 65652,
+        "fingerprint": "fcabcff914676ab2"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": false,
+      "timing": {
+        "off": {
+          "p99_ns": 104896,
+          "maximum_ns": 352144,
+          "deadline_overruns": 1,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        },
+        "on": {
+          "p99_ns": 103106,
+          "maximum_ns": 259776,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "physical-high": {
+      "baseline": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      },
+      "current_offline": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 112372,
+          "maximum_ns": 251870,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 108811,
+          "maximum_ns": 200926,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "extended-middle": {
+      "baseline": {
+        "labeled": 32400,
+        "matched": 4511,
+        "false_wrong_note_voices": 9393,
+        "false_wrong_string_voices": 24725,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41170,
+        "fingerprint": "73d712146be4b1d2"
+      },
+      "current_offline": {
+        "labeled": 32400,
+        "matched": 4511,
+        "false_wrong_note_voices": 9393,
+        "false_wrong_string_voices": 24725,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41170,
+        "fingerprint": "73d712146be4b1d2"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 114582,
+          "maximum_ns": 263410,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 116912,
+          "maximum_ns": 272985,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "extended-highmid": {
+      "baseline": {
+        "labeled": 32400,
+        "matched": 0,
+        "false_wrong_note_voices": 7164,
+        "false_wrong_string_voices": 13629,
+        "false_gap_voices": 2027,
+        "false_positive_voices": 22820,
+        "fingerprint": "db4f4b6e6d078738"
+      },
+      "current_offline": {
+        "labeled": 32400,
+        "matched": 0,
+        "false_wrong_note_voices": 7164,
+        "false_wrong_string_voices": 13629,
+        "false_gap_voices": 2027,
+        "false_positive_voices": 22820,
+        "fingerprint": "db4f4b6e6d078738"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 107479,
+          "maximum_ns": 235034,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 106828,
+          "maximum_ns": 202095,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "extended-high": {
+      "baseline": {
+        "labeled": 37800,
+        "matched": 3893,
+        "false_wrong_note_voices": 9082,
+        "false_wrong_string_voices": 27878,
+        "false_gap_voices": 7028,
+        "false_positive_voices": 43988,
+        "fingerprint": "182dc6c63e32ab7c"
+      },
+      "current_offline": {
+        "labeled": 37800,
+        "matched": 3893,
+        "false_wrong_note_voices": 9082,
+        "false_wrong_string_voices": 27878,
+        "false_gap_voices": 7028,
+        "false_positive_voices": 43988,
+        "fingerprint": "182dc6c63e32ab7c"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": false,
+      "timing": {
+        "off": {
+          "p99_ns": 118593,
+          "maximum_ns": 254390,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 123117,
+          "maximum_ns": 333649,
+          "deadline_overruns": 1,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        }
+      }
+    },
+    "physical-four": {
+      "baseline": {
+        "labeled": 55380,
+        "matched": 53051,
+        "false_wrong_note_voices": 18154,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 73510,
+        "false_positive_voices": 91664,
+        "fingerprint": "0ac19cd2c6a694e5"
+      },
+      "current_offline": {
+        "labeled": 55380,
+        "matched": 53051,
+        "false_wrong_note_voices": 18154,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 73510,
+        "false_positive_voices": 91664,
+        "fingerprint": "0ac19cd2c6a694e5"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 105560,
+          "maximum_ns": 308620,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 109819,
+          "maximum_ns": 288615,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    },
+    "synthetic-four": {
+      "baseline": {
+        "labeled": 310640,
+        "matched": 51027,
+        "false_wrong_note_voices": 39044,
+        "false_wrong_string_voices": 12339,
+        "false_gap_voices": 6721,
+        "false_positive_voices": 58104,
+        "fingerprint": "c66176b514c4f1d3"
+      },
+      "current_offline": {
+        "labeled": 310640,
+        "matched": 51027,
+        "false_wrong_note_voices": 39044,
+        "false_wrong_string_voices": 12339,
+        "false_gap_voices": 6721,
+        "false_positive_voices": 58104,
+        "fingerprint": "c66176b514c4f1d3"
+      },
+      "label_error_gate": true,
+      "on_off_bit_identical": true,
+      "native_gate_pass": true,
+      "timing": {
+        "off": {
+          "p99_ns": 105705,
+          "maximum_ns": 307106,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        },
+        "on": {
+          "p99_ns": 102376,
+          "maximum_ns": 291392,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0,
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          }
+        }
+      }
+    }
+  },
+  "timing_failures": [
+    {
+      "dataset": "constructed",
+      "mode": "off",
+      "p99_ns": 102958,
+      "maximum_ns": 375700,
+      "deadline_overruns": 1,
+      "cpp_allocations": 0,
+      "cpp_frees": 0,
+      "c_allocations": 0,
+      "c_frees": 0,
+      "gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      }
+    },
+    {
+      "dataset": "physical-highmid",
+      "mode": "off",
+      "p99_ns": 104896,
+      "maximum_ns": 352144,
+      "deadline_overruns": 1,
+      "cpp_allocations": 0,
+      "cpp_frees": 0,
+      "c_allocations": 0,
+      "c_frees": 0,
+      "gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      }
+    },
+    {
+      "dataset": "extended-high",
+      "mode": "on",
+      "p99_ns": 123117,
+      "maximum_ns": 333649,
+      "deadline_overruns": 1,
+      "cpp_allocations": 0,
+      "cpp_frees": 0,
+      "c_allocations": 0,
+      "c_frees": 0,
+      "gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      }
+    }
+  ],
+  "gates": {
+    "label_error_comparisons": {
+      "passed": 42,
+      "total": 42
+    },
+    "off_reference_identity": {
+      "passed": 42,
+      "total": 42,
+      "reference_run_id": 42566960267
+    },
+    "buffer_identity": {
+      "passed": 56,
+      "total": 56
+    },
+    "zero_allocations_and_frees": {
+      "passed": 28,
+      "total": 28
+    },
+    "timed_scored_identity": {
+      "passed": 28,
+      "total": 28
+    },
+    "paired_native_timing": {
+      "passed": 11,
+      "total": 14,
+      "percent": 78.57142857142857
+    },
+    "unchanged_datasets": {
+      "count": 13,
+      "total": 14
+    }
+  },
+  "ordinary_comparison": {
+    "delta": {
+      "matched": 10,
+      "false_wrong_note_voices": -74,
+      "false_wrong_string_voices": -2,
+      "false_gap_voices": 0,
+      "false_positive_voices": -76
+    },
+    "changed_labels": [
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 269,
+        "matched_delta": 2
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 273,
+        "matched_delta": 8
+      }
+    ],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "artifacts": {
+    "report": {
+      "id": 13666045344,
+      "name": "m3-report-42592853316-1",
+      "bytes": 39238,
+      "sha256": "3efbf5313256c06be2f5e90ae53ab7b789c7c562167241aa1157b368eff81424",
+      "collected": true
+    },
+    "evidence": {
+      "id": 13666040307,
+      "name": "m3-evidence-42592853316-1",
+      "bytes": 29335153,
+      "sha256": "f617e976eed9699bca1ee5d16a2016a704d759d52ddbb241a07fd7667599fec9",
+      "collected": false,
+      "location": "GitHub Actions"
+    }
+  },
+  "acceptance": "rejected: three native timing gates fail despite label/error, reference, buffer and allocation checks passing",
+  "host_delivery": "not measured"
 }
