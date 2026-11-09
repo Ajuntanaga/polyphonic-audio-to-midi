@@ -12,26 +12,38 @@
     "task": "assignment-trace",
     "dataset": "physical-middle",
     "note": 52,
-    "status": "in_progress",
+    "status": "completed",
     "input_release": "corpus-20261108",
     "input_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
     "input_bytes": 176719420,
     "run_id": 42538530330,
-    "report_state": "not collected",
+    "report_state": "collected",
     "installed_output_changed": false,
     "promotion_accepted": false,
     "run_attempt": 1,
     "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42538530330",
     "created_at": "2026-11-09T00:08:10Z",
-    "observed_at": "2026-11-09T00:08:49.886162+00:00",
-    "stage": "private input verification and native build",
-    "report_final": false,
-    "outputs_downloaded_once": false,
+    "observed_at": "2026-11-09T00:09:10.578465+00:00",
+    "stage": "comparison contracts failed before replay: missing numpy",
+    "report_final": true,
+    "outputs_downloaded_once": true,
     "report_artifact": "m3-report-42538530330-1",
     "evidence_artifact": "m3-evidence-42538530330-1",
     "output_target": "build/github-results/assignment-middle-42538530330",
     "input_release_verified": true,
-    "input_release_receipt": "build/github-offload/input-release-receipt.json"
+    "input_release_receipt": "build/github-offload/input-release-receipt.json",
+    "conclusion": "failure",
+    "staging_cleanup": {
+      "removed_at": "2026-11-09T00:09:19.782214+00:00",
+      "path": "build/github-offload/recovery-inputs.tar.gz",
+      "bytes": 176719420,
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+      "reason": "Created upload staging copy; private GitHub release server confirms identical digest and byte count. Original 30 inputs retained.",
+      "release_receipt": "build/github-offload/input-release-receipt.json",
+      "pushed_checkpoint_commit": "51fde8b"
+    },
+    "trace_ran": false,
+    "failure": "Two of 24 contract tests failed because NumPy was absent. Native build and input verification succeeded. No replay result exists."
   },
   "source_contract_run": {
     "run_id": 42538239082,
@@ -52,5 +64,6 @@
   "legacy_compute": "Only collect already-submitted Kaggle corpus version 2; no new Kaggle or Modal submissions.",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "acceptance": "Traced OFF and untraced OFF must be output-identical with unchanged labeled passages. Further detector acceptance still requires label/error, allocation, buffer, timing, host and MIDI lifecycle gates."
+  "acceptance": "Traced OFF and untraced OFF must be output-identical with unchanged labeled passages. Further detector acceptance still requires label/error, allocation, buffer, timing, host and MIDI lifecycle gates.",
+  "outcome": "Native build and input verification succeeded. Two comparison tests failed because NumPy was absent; replay was skipped. The worker now installs the same NumPy range used by passing source CI."
 }

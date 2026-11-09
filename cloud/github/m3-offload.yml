@@ -89,6 +89,7 @@ jobs:
       - name: Check diagnosis and comparison contracts
         working-directory: source
         run: |
+          python3 -m pip install 'numpy>=2,<3'
           python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay 2>&1 | tee build/github-results/contracts.log
       - name: Diagnose string assignment
         if: inputs.task == 'assignment-trace'
