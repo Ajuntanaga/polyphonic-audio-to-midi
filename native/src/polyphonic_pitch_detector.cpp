@@ -11948,17 +11948,20 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
 #if defined(M3_OFFLINE_STAGE_TIMING)
   stage.switch_to(offline::stage_timing::Stage::signal_reset);
 #endif
-  bool has_active_voice = false;
-  for (std::size_t candidate = 0U;
-       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
-    has_active_voice =
-        has_active_voice || candidate_states_[candidate].active;
-  }
   const bool above_signal_floor = fast_energy_ >= signal_floor();
-  const bool signal_present =
-      above_signal_floor &&
-      (has_active_voice ||
-       fast_energy_ >= slow_energy_ * kSilenceEnergyRatio);
+  bool signal_present = above_signal_floor &&
+                        fast_energy_ >= slow_energy_ * kSilenceEnergyRatio;
+  // Active voices only change the result while energy is above the absolute
+  // floor but below the decay ratio. Avoid scanning candidates on every sample.
+  if (above_signal_floor && !signal_present) {
+    for (std::size_t candidate = 0U;
+         candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+      if (candidate_states_[candidate].active) {
+        signal_present = true;
+        break;
+      }
+    }
+  }
   if (!signal_present) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (signal_present_) {

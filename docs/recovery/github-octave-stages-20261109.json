@@ -1,0 +1,574 @@
+{
+  "state": "completed",
+  "final": true,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "2351dd721a1cffb14a535a0fca7b6d7d29f85655",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42558357302",
+    "run_attempt": "1",
+    "input_release": "controls-pass2-20261109",
+    "input_bundle_sha256": "692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d",
+    "original_input_manifest_sha256": "c4f8c6a3fc0a083661cae6c173c8898a29e465e19c9ef68d2ae5f215ce1dc3f3"
+  },
+  "binary_sha256": "589a119b543a9f9908597adcfb0e06cf542c490976c8d4efafda85fee7636e51",
+  "input_manifest_sha256": "141662fb06be8a14499c4a89c9cbcb134df2381c2baae9fd57dedb214a67cbf0",
+  "reference_sha256": "fe1527266569e348fab4b3507678013ed859f883ab8b1a25618cba09aee436e2",
+  "baseline_report_sha256": "3a4589fef3560ecd8eed873209c0b856bd91f6c53c28cfa742878f6cc5b09416",
+  "baseline_source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "77fa7dcca2b79000fffe23c9b9afe77bfa8b0519",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42555591900",
+    "run_attempt": "1",
+    "input_release": "controls-pass2-20261109",
+    "input_bundle_sha256": "692b6bdd8b78fb2193489c6597ca413630c11ab9f3f835569e7f55eacbbf1b3d",
+    "original_input_manifest_sha256": "c4f8c6a3fc0a083661cae6c173c8898a29e465e19c9ef68d2ae5f215ce1dc3f3"
+  },
+  "control": "octave_0dB",
+  "block_samples": 32,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "verified_inputs": 4,
+  "diagnostic_only": true,
+  "collection_pass": true,
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": true
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "timing_limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "schema": "m3_octave_stage_diagnosis_v1",
+  "run_id": 42558357302,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42558357302",
+  "worker_commit": "0c80fa8230e73b9248b65bc32deb4ce1883145df",
+  "report_path": "build/github-results/octave-stages-42558357302/controlled-stages/report.json",
+  "report_sha256": "92c626bc289108dda839921cf6f324d2ebcf937300b61c18e8b5b362af82b3c0",
+  "recorded_at": "2026-11-09T03:52:54.051985+00:00",
+  "contracts_passed": 50,
+  "runs": {
+    "off": {
+      "output": {
+        "labeled": 6900,
+        "matched": 2439,
+        "false_wrong_note_voices": 1370,
+        "false_wrong_string_voices": 4311,
+        "false_gap_voices": 630,
+        "false_positive_voices": 6311,
+        "fingerprint": "a27e6c5669b03e4c"
+      },
+      "labels": [
+        {
+          "label_index": 0,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 36,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 0
+        },
+        {
+          "label_index": 1,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 48,
+          "string_mask": 8,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 2439
+        }
+      ],
+      "tsv_sha256": "9fe77ac1b73e57dab1372d90d84e0481467f4ec583fa01226b6beb709d73e1cc",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 10650,
+        "p99_ns": 193867,
+        "maximum_ns": 261137,
+        "deadline_overruns": 0,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "valid": true,
+        "p99_ns": 194510,
+        "maximum_ns": 261809,
+        "deadline_overruns": 0,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333
+      },
+      "stage_cpu": {
+        "valid": true,
+        "blocks": 10650,
+        "totals": {
+          "cue": {
+            "ns": 0,
+            "calls": 0,
+            "maximum_block_ns": 0,
+            "maximum_end_sample": 0
+          },
+          "signal_observe": {
+            "ns": 460390911,
+            "calls": 340800,
+            "maximum_block_ns": 77238,
+            "maximum_end_sample": 74272
+          },
+          "signal_reset": {
+            "ns": 245588500,
+            "calls": 340800,
+            "maximum_block_ns": 94590,
+            "maximum_end_sample": 334816
+          },
+          "selection": {
+            "ns": 69401588,
+            "calls": 5325,
+            "maximum_block_ns": 34010,
+            "maximum_end_sample": 85120
+          },
+          "partial_frequency": {
+            "ns": 14345982,
+            "calls": 5325,
+            "maximum_block_ns": 52248,
+            "maximum_end_sample": 128896
+          },
+          "fine_frequency": {
+            "ns": 12046987,
+            "calls": 5325,
+            "maximum_block_ns": 72789,
+            "maximum_end_sample": 58560
+          },
+          "string_assignment": {
+            "ns": 35036805,
+            "calls": 5325,
+            "maximum_block_ns": 45368,
+            "maximum_end_sample": 300352
+          },
+          "voice_lifecycle": {
+            "ns": 59778091,
+            "calls": 5325,
+            "maximum_block_ns": 36455,
+            "maximum_end_sample": 171264
+          },
+          "calibration_snapshot": {
+            "ns": 7271768,
+            "calls": 5325,
+            "maximum_block_ns": 10566,
+            "maximum_end_sample": 131520
+          }
+        },
+        "slowest_cpu_blocks": [
+          {
+            "end_sample": 115200,
+            "cpu_ns": 261809,
+            "wall_ns": 261137,
+            "unattributed_cpu_ns": 51938,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 65055,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 25088,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 25949,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 3355,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 38457,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 15583,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 33630,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 2754,
+                "calls": 1
+              }
+            }
+          },
+          {
+            "end_sample": 172800,
+            "cpu_ns": 258796,
+            "wall_ns": 258032,
+            "unattributed_cpu_ns": 56054,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 60212,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 29080,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 24106,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 3556,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 35032,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 15243,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 32929,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 2584,
+                "calls": 1
+              }
+            }
+          },
+          {
+            "end_sample": 245760,
+            "cpu_ns": 254940,
+            "wall_ns": 254056,
+            "unattributed_cpu_ns": 57133,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 61865,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 27941,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 23034,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 3676,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 37556,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 12719,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 28102,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 2914,
+                "calls": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    "on": {
+      "output": {
+        "labeled": 6900,
+        "matched": 2439,
+        "false_wrong_note_voices": 1370,
+        "false_wrong_string_voices": 4311,
+        "false_gap_voices": 630,
+        "false_positive_voices": 6311,
+        "fingerprint": "a27e6c5669b03e4c"
+      },
+      "labels": [
+        {
+          "label_index": 0,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 36,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 0
+        },
+        {
+          "label_index": 1,
+          "start_sample": 24000,
+          "end_sample": 244800,
+          "midi_note": 48,
+          "string_mask": 8,
+          "calibration_pass": 2,
+          "labeled": 3450,
+          "matched": 2439
+        }
+      ],
+      "tsv_sha256": "9fe77ac1b73e57dab1372d90d84e0481467f4ec583fa01226b6beb709d73e1cc",
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "timing": {
+        "blocks": 10650,
+        "p99_ns": 243660,
+        "maximum_ns": 358681,
+        "deadline_overruns": 1,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "thread_cpu": {
+        "valid": true,
+        "p99_ns": 243943,
+        "maximum_ns": 359545,
+        "deadline_overruns": 1,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333
+      },
+      "stage_cpu": {
+        "valid": true,
+        "blocks": 10650,
+        "totals": {
+          "cue": {
+            "ns": 276352108,
+            "calls": 340800,
+            "maximum_block_ns": 98587,
+            "maximum_end_sample": 40160
+          },
+          "signal_observe": {
+            "ns": 457304076,
+            "calls": 340800,
+            "maximum_block_ns": 79155,
+            "maximum_end_sample": 134624
+          },
+          "signal_reset": {
+            "ns": 245920391,
+            "calls": 340800,
+            "maximum_block_ns": 53390,
+            "maximum_end_sample": 256352
+          },
+          "selection": {
+            "ns": 70973753,
+            "calls": 5325,
+            "maximum_block_ns": 43134,
+            "maximum_end_sample": 88384
+          },
+          "partial_frequency": {
+            "ns": 14848296,
+            "calls": 5325,
+            "maximum_block_ns": 24556,
+            "maximum_end_sample": 79488
+          },
+          "fine_frequency": {
+            "ns": 12836082,
+            "calls": 5325,
+            "maximum_block_ns": 74471,
+            "maximum_end_sample": 58560
+          },
+          "string_assignment": {
+            "ns": 40202763,
+            "calls": 5325,
+            "maximum_block_ns": 27862,
+            "maximum_end_sample": 56512
+          },
+          "voice_lifecycle": {
+            "ns": 61234991,
+            "calls": 5325,
+            "maximum_block_ns": 42393,
+            "maximum_end_sample": 123264
+          },
+          "calibration_snapshot": {
+            "ns": 7393990,
+            "calls": 5325,
+            "maximum_block_ns": 14992,
+            "maximum_end_sample": 100224
+          }
+        },
+        "slowest_cpu_blocks": [
+          {
+            "end_sample": 194880,
+            "cpu_ns": 359545,
+            "wall_ns": 358681,
+            "unattributed_cpu_ns": 83070,
+            "stages": {
+              "cue": {
+                "ns": 25649,
+                "calls": 32
+              },
+              "signal_observe": {
+                "ns": 64729,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 29124,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 27981,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 4066,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 57726,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 23575,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 40560,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 3065,
+                "calls": 1
+              }
+            }
+          },
+          {
+            "end_sample": 194816,
+            "cpu_ns": 331924,
+            "wall_ns": 330990,
+            "unattributed_cpu_ns": 90249,
+            "stages": {
+              "cue": {
+                "ns": 55302,
+                "calls": 32
+              },
+              "signal_observe": {
+                "ns": 65347,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 31592,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 28031,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 4066,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 1122,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 23415,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 29735,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 3065,
+                "calls": 1
+              }
+            }
+          },
+          {
+            "end_sample": 134592,
+            "cpu_ns": 331874,
+            "wall_ns": 331170,
+            "unattributed_cpu_ns": 166438,
+            "stages": {
+              "cue": {
+                "ns": 23025,
+                "calls": 32
+              },
+              "signal_observe": {
+                "ns": 60749,
+                "calls": 32
+              },
+              "signal_reset": {
+                "ns": 25458,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 20120,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 2924,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 651,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 10265,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 20571,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 1673,
+                "calls": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "conclusion": "Stage collection passed with retained OFF/ON output hashes and zero allocations/frees. Instrumented ON wall/CPU maxima are 358681/359545 ns with one miss. Multiple stages contribute; this does not identify the earlier spike as a single operation. Clock probes add per-sample cost and cannot establish acceptance or an optimization speedup.",
+  "next": "Skip candidate activity scans when energy alone determines signal presence; stop at the first active voice otherwise. Verify unchanged full output hashes and all native gates using uninstrumented GitHub replay; do not relax limits."
+}
