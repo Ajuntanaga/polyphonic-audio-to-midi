@@ -1,18 +1,18 @@
 {
   "schema": "m3_midi_lane_trace_checkpoint_v1",
-  "observed_at": "2026-11-09T10:56:13.684756+00:00",
+  "observed_at": "2026-11-09T11:00:54.898076+00:00",
   "task": "midi-lane-trace",
   "repository": "Ajuntanaga/m3-offload",
   "run_id": 42604663479,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42604663479",
   "source_commit": "fc60011805791cac98530cf2e594c4da6e1a563f",
   "worker_commit": "0a0de1990cafca29cf33569bcebb8f3f35c6e5e6",
-  "status": "in_progress",
-  "result_final": false,
-  "outputs_downloaded_once": false,
+  "status": "completed",
+  "result_final": true,
+  "outputs_downloaded_once": true,
   "output_target": "build/github-results/midi-lane-trace-42604663479",
   "report_relative_path": "midi-lane/report.json",
-  "stage": "bounded cloud diagnostic",
+  "stage": "conflict window collected",
   "dataset": "ordinary",
   "candidate_notes": [
     47,
@@ -28,9 +28,9 @@
   "runtime_rule_changed": false,
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "validation": "Six new and 35 related lightweight Python contracts passed locally; native trace identity and recording execution run on GitHub.",
+  "validation": "GitHub native/Python tests and synthetic buffer parity passed. Both complete ordinary OFF replays match the saved reference; their complete MIDI and outcome captures also match. The recorded conflict is reproduced.",
   "acceptance": "Both complete OFF replays must match the historical reference, each full MIDI/outcome capture must match, and the recorded cross-sample conflict must remain present.",
-  "next": "Collect the existing cloud result once, identify the producer and prior raw lane ownership, and choose a bounded correction only from the observed cause. Preserve fixed corpus, allocation, buffer, timing and host gates.",
+  "next": "Reconcile selected string assignment with retained spectral-lane ownership before committing cross-candidate MIDI moves. Use an offline, default-off trial; do not repeat the rejected blanket ownership guard. Require removal of the recorded cross-sample conflict with no lost labels or increased false/safety outputs, then pass unchanged corpus, allocation, buffer, native timing and host gates.",
   "source_contract_run": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "run_id": 42604608951,
@@ -40,5 +40,409 @@
     "source_commit": "fc60011805791cac98530cf2e594c4da6e1a563f",
     "completed_at": "2026-11-09T10:55:34Z",
     "validation": "Native tests, Python contracts and synthetic buffer parity passed on GitHub."
-  }
+  },
+  "conclusion": "success",
+  "report_updated_at": "2026-11-09T10:57:04.510415+00:00",
+  "report_path": "build/github-results/midi-lane-trace-42604663479/midi-lane/report.json",
+  "report_sha256": "cb650350e554c39bb5a8dbb176ce6c6239ff5a741c3a5d4fe60efb8992113c4e",
+  "report_artifact": {
+    "id": 13666943330,
+    "name": "m3-report-42604663479-1",
+    "size_bytes": 17949,
+    "sha256": "afa824d61f1f6a1444f386d708f8fc27ecb6135868a237fdb7e1d14fabcab2e1",
+    "downloaded": true
+  },
+  "evidence_artifact": {
+    "id": 13666474630,
+    "name": "m3-evidence-42604663479-1",
+    "size_bytes": 4338198,
+    "sha256": "e3314c84e944ce4a1c4fdf9287d221f166054e9a941ef3d91aa6fbff160ba8cb",
+    "downloaded": false
+  },
+  "decision": "unchanged; recorded OFF lane conflict reproduced",
+  "complete_midi_and_outcome_identical": true,
+  "observations": {
+    "candidate-47-off": {
+      "reference_bit_identical": true,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "routing_frames": [
+        {
+          "sample": 203455,
+          "routing": {
+            "tick": 3179,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 0,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 5,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 2,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": [
+            11,
+            12
+          ]
+        },
+        {
+          "sample": 203519,
+          "routing": {
+            "tick": 3180,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 0,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 2,
+            "midi_after": 1,
+            "other_owned": 5,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 1,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": [
+            12
+          ]
+        },
+        {
+          "sample": 203583,
+          "routing": {
+            "tick": 3181,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 0,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 1,
+            "midi_after": 1,
+            "other_owned": 4,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 1,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": []
+        }
+      ],
+      "calibrated_output_reasons": {
+        "ineligible": 8,
+        "untrusted_original": 16
+      },
+      "calibrated_output_change_reasons": {},
+      "complete_midi_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+      "complete_outcome_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e"
+    },
+    "candidate-48-off": {
+      "reference_bit_identical": true,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "routing_frames": [
+        {
+          "sample": 203455,
+          "routing": {
+            "tick": 3179,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 4,
+            "primary_string": 2,
+            "spectral_mask": 1,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 1,
+            "midi_after": 1,
+            "other_owned": 2,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 4,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": [
+            11,
+            12
+          ]
+        },
+        {
+          "sample": 203519,
+          "routing": {
+            "tick": 3180,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 4,
+            "primary_string": 2,
+            "spectral_mask": 1,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 1,
+            "midi_after": 1,
+            "other_owned": 1,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 4,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": [
+            12
+          ]
+        },
+        {
+          "sample": 203583,
+          "routing": {
+            "tick": 3181,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 4,
+            "primary_string": 2,
+            "spectral_mask": 0,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 4,
+            "pruned_mask": 4,
+            "midi_before": 1,
+            "midi_after": 4,
+            "other_owned": 1,
+            "final_continuity_mask": 4,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "tracking": {
+            "selection": 4,
+            "active": 1,
+            "assigned_mask": 4,
+            "rescue_mask": 0,
+            "selector_mask": 0
+          },
+          "matched_labels": []
+        }
+      ],
+      "calibrated_output_reasons": {
+        "untrusted_original": 24
+      },
+      "calibrated_output_change_reasons": {},
+      "complete_midi_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+      "complete_outcome_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e"
+    }
+  },
+  "raw_lane_history": {
+    "voice_id": 0,
+    "unreleased_raw_note_ons_at_window_start": [
+      {
+        "kind": "on",
+        "sample": 190335,
+        "note": 48,
+        "velocity": 32,
+        "voice_id": 0,
+        "sequence": 39
+      }
+    ],
+    "events": [
+      {
+        "event": {
+          "kind": "on",
+          "sample": 203519,
+          "note": 47,
+          "velocity": 25,
+          "voice_id": 0,
+          "sequence": 45
+        },
+        "unreleased_raw_note_ons_before": [
+          {
+            "kind": "on",
+            "sample": 190335,
+            "note": 48,
+            "velocity": 32,
+            "voice_id": 0,
+            "sequence": 39
+          }
+        ],
+        "unreleased_raw_note_ons_after": [
+          {
+            "kind": "on",
+            "sample": 190335,
+            "note": 48,
+            "velocity": 32,
+            "voice_id": 0,
+            "sequence": 39
+          },
+          {
+            "kind": "on",
+            "sample": 203519,
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          }
+        ],
+        "same_pitch_pairing_ambiguous": false
+      },
+      {
+        "event": {
+          "kind": "off",
+          "sample": 203583,
+          "note": 48,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 46
+        },
+        "unreleased_raw_note_ons_before": [
+          {
+            "kind": "on",
+            "sample": 190335,
+            "note": 48,
+            "velocity": 32,
+            "voice_id": 0,
+            "sequence": 39
+          },
+          {
+            "kind": "on",
+            "sample": 203519,
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          }
+        ],
+        "unreleased_raw_note_ons_after": [
+          {
+            "kind": "on",
+            "sample": 203519,
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          }
+        ],
+        "same_pitch_pairing_ambiguous": false
+      },
+      {
+        "event": {
+          "kind": "off",
+          "sample": 204159,
+          "note": 47,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 48
+        },
+        "unreleased_raw_note_ons_before": [
+          {
+            "kind": "on",
+            "sample": 203519,
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          }
+        ],
+        "unreleased_raw_note_ons_after": [],
+        "same_pitch_pairing_ambiguous": false
+      },
+      {
+        "event": {
+          "kind": "on",
+          "sample": 204223,
+          "note": 48,
+          "velocity": 26,
+          "voice_id": 0,
+          "sequence": 51
+        },
+        "unreleased_raw_note_ons_before": [],
+        "unreleased_raw_note_ons_after": [
+          {
+            "kind": "on",
+            "sample": 204223,
+            "note": 48,
+            "velocity": 26,
+            "voice_id": 0,
+            "sequence": 51
+          }
+        ],
+        "same_pitch_pairing_ambiguous": false
+      }
+    ],
+    "interpretation": "Raw detector order before the host ledger. Overlapping pitches remain distinct; repeated same-pitch pairing is flagged. This is not delivered MIDI ownership or a held-duration acceptance gate."
+  },
+  "finding": {
+    "sample_rate": 96000,
+    "voice_id": 0,
+    "previous_note": 48,
+    "previous_on_sample": 190335,
+    "incoming_note": 47,
+    "incoming_on_sample": 203519,
+    "previous_off_sample": 203583,
+    "overlap_samples": 64,
+    "overlap_ms": 0.6666666666666666,
+    "cause": "The selected per-voice render path moves note 47 from mask 2 to mask 1 while note 48 retains mask 1 through spectral-lane projection. On the following decision tick, note 48 spectral_mask clears and its output moves to assigned mask 4. Both render observations report no capacity block; calibrated output adds no transitions.",
+    "scope": "Actual raw recording events and executed routing observations. The prior reduced ledger fixture shows this cross-sample event order blocks delivery; full-recording host delivery and prevalence remain unmeasured.",
+    "runtime_source": "native/src/polyphonic_pitch_detector.cpp:11818"
+  },
+  "protected": "Only ordinary was replayed for this diagnostic. Both full OFF references are bit-identical; other protected corpora were not rerun.",
+  "native_timing": "not measured in this diagnostic",
+  "live_readiness": "not measured"
 }
