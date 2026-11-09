@@ -15,6 +15,7 @@ from tools.portable_recovery import digest
 from tools.replay_corpus import DATASETS
 
 BLOCKS = (512, 32, 1024)
+MEASUREMENT_SCOPE = 'detector_and_optional_cues_without_offline_frequency_reporting'
 SETTINGS = {'a4': 440, 'input-trim': -9, 'sensitivity': 60,
             'response': 75, 'max-polyphony': 5, 'max-fret': 24}
 
@@ -29,7 +30,8 @@ def timing_gates(timing, replay, block):
                 and timing.get('fingerprint') == replay['output']['fingerprint']
                 and timing.get('block_samples') == block
                 and timing.get('sample_rate') == 96000)
-    uninstrumented = (timing.get('timing_diagnostic_only', False) is False
+    uninstrumented = (timing.get('measurement_scope') == MEASUREMENT_SCOPE
+                      and timing.get('timing_diagnostic_only', False) is False
                       and 'allocation_trace' not in timing and 'thread_cpu' not in timing)
     allocations = (identity and uninstrumented and timing.get('allocation_guard') is True
                    and all(type(timing.get(key)) is int and timing[key] == 0 for key in
@@ -162,8 +164,9 @@ def main():
                                                and not comparison['changed_labels'])
         entry['buffer_parity'] = parity
         entry['recovery_safety_pass'] = safe and len(parity) == 4 and all(parity.values())
-        entry['native_gate_pass'] = (entry['recovery_safety_pass'] and
-                                    entry['runs']['on-32']['gates']['timing_pass'] is True)
+        entry['native_gate_pass'] = (entry['recovery_safety_pass'] and all(
+            entry['runs'][f'{mode}-32']['gates']['timing_pass'] is True
+            for mode in ('off', 'on')))
         save()
         return entry['recovery_safety_pass']
 

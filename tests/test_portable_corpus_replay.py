@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tools.portable_corpus_replay import command_for, timing_gates, main
+from tools.portable_corpus_replay import MEASUREMENT_SCOPE, command_for, timing_gates, main
 from tools.replay_corpus import DATASETS
 
 
@@ -26,7 +26,7 @@ class PortableCorpusTests(unittest.TestCase):
                       fingerprint='0123456789abcdef', block_samples=32, sample_rate=96000,
                       allocation_guard=True, cpp_allocations=0, cpp_frees=0,
                       c_allocations=0, c_frees=0, p99_ns=166666, maximum_ns=333333,
-                      deadline_overruns=0)
+                      deadline_overruns=0, measurement_scope=MEASUREMENT_SCOPE)
         self.assertTrue(all(timing_gates(timing, replay, 32).values()))
         for key in ('p99_ns', 'maximum_ns', 'deadline_overruns'):
             changed = dict(timing, **{key: timing[key] + 1})
@@ -38,11 +38,61 @@ class PortableCorpusTests(unittest.TestCase):
         self.assertFalse(timing_gates({}, replay, 32)['zero_processing_allocations'])
         self.assertIsNone(timing_gates(dict(timing, block_samples=512), replay, 512)['timing_pass'])
         for marker in ({'timing_diagnostic_only': True}, {'allocation_trace': {}},
-                       {'thread_cpu': {}}):
+                       {'thread_cpu': {}}, {'measurement_scope': None},
+                       {'measurement_scope':
+                        'detector_and_optional_cues_without_offline_frequency_observer'}):
             gates = timing_gates(dict(timing, **marker), replay, 32)
             self.assertTrue(gates['timed_scored_identity'])
             self.assertFalse(gates['zero_processing_allocations'])
             self.assertFalse(gates['timing_pass'])
+
+    def test_corpus_requires_both_modes_to_meet_timing_limits(self):
+        for slow_mode in (None, 'off', 'on'):
+            with self.subTest(slow_mode=slow_mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                output, manifest = root / 'results', root / 'manifest.json'
+                names = ('physical-long.wav', 'physical-long.tsv',
+                         'calibration.m3cb', 'templates.tsv')
+                manifest.write_text(json.dumps({'files': {
+                    name: {'sha256': 'hash'} for name in names}}))
+
+                def execute(command, **kwargs):
+                    if '--diagnostic-core-timing' in command:
+                        mode = ('on' if '--diagnostic-native-partial-cues' in command
+                                else 'off')
+                        timing = dict(schema='m3_replay_core_timing_v1',
+                                      measurement_scope=MEASUREMENT_SCOPE,
+                                      fingerprint_identical=True, fingerprint='unchanged',
+                                      block_samples=32, sample_rate=96000,
+                                      allocation_guard=True, cpp_allocations=0, cpp_frees=0,
+                                      c_allocations=0, c_frees=0, p99_ns=100000,
+                                      maximum_ns=333334 if mode == slow_mode else 200000,
+                                      deadline_overruns=1 if mode == slow_mode else 0)
+                        Path(command[command.index('--diagnostic-core-timing') + 1]).write_text(
+                            json.dumps(timing))
+
+                argv = ['recovery', '--binary', str(root / 'replay'), '--corpus', str(root),
+                        '--manifest', str(manifest), '--output', str(output)]
+                parsed = {'output': {'fingerprint': 'unchanged'},
+                          'exact_matches_by_string_count': {}}
+                comparison = dict(gate_pass=True, output_bit_identical=True, changed_labels=[])
+                with patch('sys.argv', argv), \
+                     patch('tools.portable_corpus_replay.DATASETS', ('physical-long',)), \
+                     patch('tools.portable_corpus_replay.digest', return_value='hash'), \
+                     patch('tools.portable_corpus_replay.subprocess.run', side_effect=execute), \
+                     patch('tools.portable_corpus_replay.read_replay', return_value=parsed), \
+                     patch('tools.portable_corpus_replay.compare_replays', return_value=comparison), \
+                     patch('builtins.print'):
+                    main()
+                report = json.loads((output / 'report.json').read_text())
+                self.assertEqual(report['state'], 'completed')
+                dataset = report['datasets']['physical-long']
+                self.assertEqual(len(dataset['runs']), 6)
+                self.assertTrue(dataset['recovery_safety_pass'])
+                self.assertEqual(dataset['native_gate_pass'], slow_mode is None)
+                self.assertEqual(report['native_gates_passed'], int(slow_mode is None))
+                self.assertFalse(report['promotion_accepted'])
+                self.assertFalse(report['installed_output_changed'])
 
     def test_failed_eleventh_input_preserves_ten_references_and_stderr(self):
         self.check_failed_recovery(subprocess.CalledProcessError(1, ['replay']))

@@ -1,3 +1,10 @@
+## 2026-11-09 — paired corpus timing acceptance corrected
+
+- Corpus acceptance now requires both OFF and ON block-32 timing to pass. The previous summary checked ON only and could overlook an OFF deadline failure. Allocation and timing acceptance also require the current measurement scope, which excludes offline frequency reporting. Detector output and installed settings are unchanged.
+- Fifteen focused Python contract tests passed locally. The new corpus test completes all six mocked replays and rejects either mode exceeding the timing limits; absent or old measurement scope is rejected. No native processing ran locally.
+- The existing full-corpus GitHub run `42545080876` remains active at measured source `96509a4c8c212f2587865f5cd9d78164da0f0167`. It already passed compilation and comparison contracts. Do not duplicate it. Once its report arrives, apply the corrected acceptance calculation to its saved OFF and ON measurements, preserving the original report; no native rerun is needed for this reporting correction.
+- The earlier physical-long core check passed output identity, allocation and timing gates. This is limited to that recorded dataset and runner. The full corpus, actual match-improvement targets and live host/MIDI lifecycle checks remain open. Installed scores and overall readiness are unchanged.
+
 ## 2026-11-09 — GitHub core check passes; full corpus check running
 
 - All new heavy/offloaded processing uses GitHub Actions, with inline ntfy progress updates. Private worker run `42545080876` is running the full `corpus-recovery` task at measured source `96509a4c8c212f2587865f5cd9d78164da0f0167`, worker `0f5adddcfeb418833294b11500b84e4ad7adb9d3`. Collect its small reports once terminal into `build/github-results/corpus-recovery-42545080876`. Do not launch a duplicate, compile or replay locally, or poll legacy Modal/Kaggle jobs.

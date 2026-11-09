@@ -13,10 +13,7 @@ import time
 from tools.frozen_cue_corpus_gate import read_replay, compare_replays
 from tools.portable_allocation_trace import reference_identity
 from tools.portable_assignment_trace import digest, verify_inputs
-from tools.portable_corpus_replay import SETTINGS, command_for, timing_gates
-
-
-MEASUREMENT_SCOPE = 'detector_and_optional_cues_without_offline_frequency_reporting'
+from tools.portable_corpus_replay import MEASUREMENT_SCOPE, SETTINGS, command_for, timing_gates
 
 
 def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
