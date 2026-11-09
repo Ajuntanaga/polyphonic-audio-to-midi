@@ -1,8 +1,13 @@
-## 2026-11-09 — GitHub timing diagnosis prepared
+## 2026-11-09 — exclude optional frequency reports from core timing
 
-- The private worker now has a bounded `timing-diagnosis` task. It replays physical-long OFF and ON at block 32 using the existing thread CPU clock, phase counters and slow-block state capture. Full retained TSV identity and timed/scored fingerprint identity remain required.
-- Instrumented timing cannot pass native acceptance. The report distinguishes successful diagnostic collection from a timing pass and checks whether CPU clock resolution is sufficient before using per-block CPU statistics. Allocation tracing and thread CPU diagnostics both carry the diagnostic-only marker; ordinary timing limits remain unchanged.
-- Ten focused Python contracts pass, including rejection of incomplete diagnostic evidence and acceptance of a completed collection with an unusable CPU clock. No native build or replay ran locally. Next: push this source and the private workflow, dispatch this task once, and use its phase/slow-block evidence to choose the smallest processing change. All new offloaded processing uses GitHub Actions; report progress through ntfy.
+- The timed replay now skips optional frequency subset/coherence report calculations as well as their observer. Scoring keeps the complete reports. Admission and unison state stay active; explicit diagnostic pruning still computes the tables it consumes. The measurement scope distinguishes this correction from earlier observer-only timing. This is not a production speed gain.
+- The six focused Python contract tests pass, including rejection of the older measurement scope. Native compilation, output identity and timing still require the next GitHub run. Dispatch the existing private `core-check` task once at this pushed source; do not build or replay locally.
+
+- Private GitHub timing diagnosis `42543367917` is final and collected at source `5023abe6309503d9c37eb1a9d6ec0180de065897`, worker `0f5adddcfeb418833294b11500b84e4ad7adb9d3`. Diagnostic collection passed; native acceptance was not evaluated. Summary: `docs/recovery/github-timing-diagnosis-20261109.json`. Report: `build/github-results/timing-diagnosis-42543367917/timing-diagnosis/report.json`. Do not duplicate or collect again.
+- Both physical-long modes retain the full reference TSV and timed/scored fingerprint, with zero C/C++ processing allocations and frees. Recurring CPU-heavy captured blocks coincide with fine-frequency updates. The largest wall-clock spikes also include runner delays. These end-of-block observations do not isolate per-function costs.
+- Instrumented OFF wall p99/max are 145652/705550 ns; ON 139171/784550 ns, each with 118 deadline overruns. CPU p99/max are 146614/512387 ns and 140091/422339 ns, each with 117 overruns. CPU resolution is usable, but clock overhead makes these diagnostic measurements unsuitable for acceptance or claims of production speedup.
+- Source CI `42543323357` and portable contracts `42543323329` both passed. Installed scores and readiness are unchanged.
+- Next: require complete retained TSV identity, timed/scored fingerprint identity, zero allocations, p99 <=166666 ns, maximum <=333333 ns and zero deadline overruns in the paired GitHub core check. Wider corpus, buffer and host gates remain open. All new offloaded work stays on GitHub Actions, with inline ntfy updates.
 
 ## 2026-11-09 — corrected core measurement passes allocation and output gates
 

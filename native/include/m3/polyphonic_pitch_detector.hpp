@@ -473,6 +473,11 @@ class PolyphonicPitchDetector final {
   void set_fine_mask_complexity_diagnostics_enabled(bool enabled) noexcept {
     fine_mask_complexity_diagnostics_enabled_ = enabled;
   }
+  // Timed replay can omit report tables without changing decision policy.
+  // Explicit diagnostic pruning still computes the tables it consumes.
+  void set_fine_frequency_reporting_enabled(bool enabled) noexcept {
+    fine_frequency_reporting_enabled_ = enabled;
+  }
   void set_frequency_refinement_observer(
       diagnostics::FrequencyRefinementObserver observer, void* context) noexcept {
     frequency_refinement_observer_ = observer;
@@ -1577,6 +1582,7 @@ class PolyphonicPitchDetector final {
   double diagnostic_selector_minimum_margin_{};
   bool diagnostic_selector_rescue_enabled_{};
   bool offline_replay_diagnostics_enabled_{true};
+  bool fine_frequency_reporting_enabled_{true};
   bool fine_mask_complexity_diagnostics_enabled_{};
   bool diagnostic_fine_mask_pruning_enabled_{};
   bool diagnostic_fine_beat_pruning_enabled_{};

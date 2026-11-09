@@ -8204,6 +8204,8 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     state.mask_residuals = {};
+    const bool collect_fine_reports = fine_frequency_reporting_enabled_ ||
+        diagnostic_fine_mask_pruning_enabled_ || diagnostic_fine_beat_pruning_enabled_;
     const auto fitted_error_without_component =
         [&](std::size_t omitted_component) noexcept {
           std::array<std::size_t, kMaxVoices> retained{};
@@ -8216,7 +8218,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
           }
           return fitted_error_for_components(retained, retained_count);
         };
-    for (std::size_t component = 0U; component < component_count;
+    for (std::size_t component = 0U; collect_fine_reports && component < component_count;
          ++component) {
       const std::uint8_t bit =
           static_cast<std::uint8_t>(1U << strings[component]);
@@ -8230,7 +8232,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
               std::max(without_error, kScoreEpsilon),
           0.0, 1.0);
     }
-    if (fine_mask_complexity_diagnostics_enabled_) {
+    if (collect_fine_reports && fine_mask_complexity_diagnostics_enabled_) {
       for (std::size_t physical_mask = 1U;
            physical_mask < state.mask_residuals.valid.size();
            ++physical_mask) {
@@ -8627,7 +8629,7 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
       }
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (offline_replay_diagnostics_enabled_) {
+    if (collect_fine_reports && offline_replay_diagnostics_enabled_) {
       state.pairwise_beat_coherence_by_mask.fill(0.0);
       state.added_member_beat_coherence_by_completion_mask.fill(0.0);
       if (fine_mask_complexity_diagnostics_enabled_ &&

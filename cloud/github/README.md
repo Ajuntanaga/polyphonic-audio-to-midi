@@ -35,8 +35,11 @@ instrumented timings cannot satisfy real-time acceptance; the ordinary build
 keeps tracing off.
 
 `core-check` runs physical-long OFF and ON at block 32 using the ordinary
-build. The scored pass retains its diagnostic observer; the timed pass detaches
-that observer so its heap-backed report tables do not count as detector work.
+build. The scored pass retains its frequency reports; the timed pass detaches
+their observer and skips optional subset/coherence report calculations.
+Admission and unison state remain active, and explicitly enabled diagnostic
+pruning retains the calculations it needs. The measurement scope identifies
+this correction separately from older results that only detached the observer.
 Both complete replay files must match their retained references, and timed
 output must match scored output. The report checks allocations and timing
 separately. This corrects the measurement scope; it does not imply a production

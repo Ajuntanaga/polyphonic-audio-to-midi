@@ -98,7 +98,7 @@ class CoreCheckTests(unittest.TestCase):
                 self.assertEqual(report['acceptance'], 'rejected by core processing gates')
 
     def test_changed_file_or_unverified_measurement_stops_before_on(self):
-        for defect in ('hash', 'scope', 'fingerprint'):
+        for defect in ('hash', 'scope', 'old_scope', 'fingerprint'):
             with self.subTest(defect=defect):
                 def fail(mode, command, timing, kwargs):
                     if defect == 'hash':
@@ -106,6 +106,9 @@ class CoreCheckTests(unittest.TestCase):
                         kwargs['stdout'].write('\n')
                     elif defect == 'scope':
                         del timing['measurement_scope']
+                    elif defect == 'old_scope':
+                        timing['measurement_scope'] = (
+                            'detector_and_optional_cues_without_offline_frequency_observer')
                     else:
                         timing['fingerprint_identical'] = False
                 passed, report, error, modes, _ = self.exercise(fail)

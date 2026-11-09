@@ -1,4 +1,4 @@
-"""Check physical-long OFF/ON core processing after removing observer bookkeeping.
+"""Check physical-long OFF/ON core processing without offline frequency reports.
 
 Runs only on the private GitHub worker. Full recorded output must be unchanged.
 Completion is separate from timing acceptance and does not establish live readiness.
@@ -16,7 +16,7 @@ from tools.portable_assignment_trace import digest, verify_inputs
 from tools.portable_corpus_replay import SETTINGS, command_for, timing_gates
 
 
-MEASUREMENT_SCOPE = 'detector_and_optional_cues_without_offline_frequency_observer'
+MEASUREMENT_SCOPE = 'detector_and_optional_cues_without_offline_frequency_reporting'
 
 
 def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
@@ -28,8 +28,10 @@ def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
                   stage='verify inputs', dataset='physical-long', block_samples=32,
                   installed_output_changed=False, promotion_accepted=False,
                   live_readiness='not measured', settings=SETTINGS, runs={},
-                  measurement_change='Offline frequency observer detached after scoring. '
-                  'Earlier allocation/timing results included its bookkeeping; '
+                  measurement_change='Offline frequency observer and optional frequency report '
+                  'calculations disabled after scoring. Admission and unison state remain enabled; '
+                  'explicit diagnostic pruning retains its required calculations. '
+                  'Earlier timing included frequency report calculations; '
                   'this is a measurement correction, not a production speed gain.')
 
     def save():
