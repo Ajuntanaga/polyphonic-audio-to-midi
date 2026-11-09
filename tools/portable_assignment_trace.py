@@ -9,10 +9,59 @@ from datetime import datetime, timezone
 import gzip
 import hashlib
 import json
+import math
 from pathlib import Path
 import shutil
 import subprocess
 import time
+
+
+# Stable offline TSV codes from ProfileAdditionReason. This describes the first
+# greedy addition only; it does not classify later additions or complement fits.
+PROFILE_ADDITION_REASONS = (
+    'not_observed', 'already_member', 'template_unavailable', 'owned_by_other',
+    'extra_allocated', 'independently_unresolved', 'template_too_close',
+    'added_component_too_small', 'retained_component_too_small',
+    'insufficient_improvement', 'error_ratio', 'not_best', 'accepted')
+
+
+def profile_addition_summary(rows):
+    fields = ('profile_first_pass_reasons', 'profile_first_pass_alpha',
+              'profile_first_pass_errors')
+    by_string = {str(lane): {} for lane in range(8)}
+    captured = 0
+    for row in rows:
+        if not any(field in row for field in fields):
+            continue  # Earlier trace versions did not measure rejection reasons.
+        if not all(row.get(field) for field in fields):
+            raise ValueError('Incomplete profile first-pass trace')
+        reasons, alphas, errors = (row[field].split(',') for field in fields)
+        if any(len(values) != 8 for values in (reasons, alphas, errors)):
+            raise ValueError('Profile first-pass trace must contain eight strings')
+        captured += 1
+        for lane, (code, alpha, error) in enumerate(zip(reasons, alphas, errors)):
+            code, alpha, error = int(code), float(alpha), float(error)
+            if not 0 <= code < len(PROFILE_ADDITION_REASONS):
+                raise ValueError('Unknown profile first-pass reason')
+            if (not math.isfinite(alpha) or not math.isfinite(error)
+                    or not (alpha == -1 or 0 <= alpha <= 1)
+                    or not (error == -1 or error >= 0)):
+                raise ValueError('Invalid profile first-pass measurement')
+            bucket = by_string[str(lane)].setdefault(PROFILE_ADDITION_REASONS[code],
+                                                    {'rows': 0})
+            bucket['rows'] += 1
+            for name, value in (('alpha', alpha), ('candidate_error', error)):
+                if value == -1:
+                    continue
+                bucket[name + '_measured_rows'] = bucket.get(name + '_measured_rows', 0) + 1
+                bucket[name + '_min'] = min(bucket.get(name + '_min', value), value)
+                bucket[name + '_max'] = max(bucket.get(name + '_max', value), value)
+    return dict(state='measured' if captured else 'not measured',
+                captured_rows=captured, missing_columns_rows=len(rows) - captured,
+                by_string=by_string,
+                interpretation='First greedy addition to the primary only; accepted means '
+                               'chosen in that pass, not final rendered or correct assignment. '
+                               'Absent numeric ranges were not reached by the rejecting branch.')
 
 
 def digest(path):
@@ -45,6 +94,7 @@ def assignment_summary(rows, *, note, start, end, expected_mask):
     masks = [int(row['rendered_mask']) for row in selected]
     return dict(sampled_rows=len(selected), expected_mask=expected_mask,
                 distributions=counts,
+                profile_first_pass=profile_addition_summary(selected),
                 exact_rendered_rows=sum(mask == expected_mask for mask in masks),
                 missing_expected_lane_rows={str(lane): sum(not mask & (1 << lane) for mask in masks)
                                             for lane in range(8) if expected_mask & (1 << lane)},
@@ -76,7 +126,7 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout):
     from tools.selection_trace_diagnosis import summarize_selection
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
-    report = dict(schema='m3_assignment_trace_v2', state='running', final=False,
+    report = dict(schema='m3_assignment_trace_v3', state='running', final=False,
                   stage='verify inputs', dataset=dataset, note=note, windows=[],
                   settings=SETTINGS, installed_output_changed=False,
                   promotion_accepted=False, live_readiness='not measured',

@@ -2,7 +2,8 @@ import tempfile
 from pathlib import Path
 import unittest
 
-from tools.portable_assignment_trace import assignment_summary, digest, read_rows, trace_bounds, verify_inputs
+from tools.portable_assignment_trace import (assignment_summary, digest, profile_addition_summary,
+                                             read_rows, trace_bounds, verify_inputs)
 
 
 class PortableAssignmentTraceTests(unittest.TestCase):
@@ -17,9 +18,32 @@ class PortableAssignmentTraceTests(unittest.TestCase):
         self.assertEqual(result['exact_rendered_rows'], 0)
         self.assertEqual(result['missing_expected_lane_rows'], {'3': 0, '5': 1})
         self.assertEqual(result['extra_lane_rows']['4'], 1)
+        self.assertEqual(result['profile_first_pass']['state'], 'not measured')
         row['expected_mask'] = '24'
         with self.assertRaisesRegex(ValueError, 'label identity'):
             assignment_summary([row], note=52, start=1000, end=1100, expected_mask=40)
+
+    def test_profile_rejections_keep_uncomputed_errors_distinct_from_zero(self):
+        rows = [dict(profile_first_pass_reasons='2,2,2,8,2,1,2,2',
+                     profile_first_pass_alpha='-1,-1,-1,0.99,-1,-1,-1,-1',
+                     profile_first_pass_errors='-1,-1,-1,-1,-1,-1,-1,-1'),
+                dict(profile_first_pass_reasons='2,2,2,12,2,1,2,2',
+                     profile_first_pass_alpha='-1,-1,-1,0.5,-1,-1,-1,-1',
+                     profile_first_pass_errors='-1,-1,-1,0,-1,-1,-1,-1')]
+        result = profile_addition_summary(rows)
+        self.assertEqual(result['captured_rows'], 2)
+        rejected = result['by_string']['3']['retained_component_too_small']
+        self.assertEqual(rejected['alpha_min'], 0.99)
+        self.assertNotIn('candidate_error_min', rejected)
+        accepted = result['by_string']['3']['accepted']
+        self.assertEqual(accepted['candidate_error_min'], 0)
+        self.assertEqual(accepted['candidate_error_measured_rows'], 1)
+        rows[0]['profile_first_pass_reasons'] = '2,2,2,99,2,1,2,2'
+        with self.assertRaisesRegex(ValueError, 'Unknown profile'):
+            profile_addition_summary(rows)
+        del rows[0]['profile_first_pass_errors']
+        with self.assertRaisesRegex(ValueError, 'Incomplete profile'):
+            profile_addition_summary(rows)
 
     def test_changed_recording_is_rejected_before_replay(self):
         with tempfile.TemporaryDirectory() as directory:

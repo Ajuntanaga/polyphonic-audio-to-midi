@@ -10088,6 +10088,16 @@ M3_TEST(native_detector_profile_fit_trace_is_normalized_and_observational) {
   M3_EXPECT_NEAR(measured.profile_mixture_error, 0.0, 1.0e-8);
   M3_EXPECT_NEAR(measured.profile_weights[kSharedUnisonPrimary], 0.5, 1.0e-4);
   M3_EXPECT_NEAR(measured.profile_weights[kSharedUnisonSecond], 0.5, 1.0e-4);
+  using Reason = m3::ProfileAdditionReason;
+  M3_EXPECT_TRUE(measured.profile_first_pass[kSharedUnisonPrimary].reason ==
+                 Reason::already_member);
+  M3_EXPECT_TRUE(measured.profile_first_pass[kSharedUnisonSecond].reason ==
+                 Reason::accepted);
+  M3_EXPECT_NEAR(measured.profile_first_pass[kSharedUnisonSecond].alpha, 0.5, 1.0e-4);
+  M3_EXPECT_NEAR(measured.profile_first_pass[kSharedUnisonSecond].candidate_error,
+                 0.0, 1.0e-8);
+  M3_EXPECT_TRUE(measured.profile_first_pass[7U].reason == Reason::template_unavailable);
+  M3_EXPECT_EQ(measured.profile_first_pass[7U].alpha, -1.0);
   for (std::size_t h = 0U; h < observed.size(); ++h) {
     M3_EXPECT_NEAR(measured.profile_observed[h], observed[h] / total, 1.0e-12);
     observed[h] *= 0.003;
@@ -10100,10 +10110,28 @@ M3_TEST(native_detector_profile_fit_trace_is_normalized_and_observational) {
   for (std::size_t lane = 0U; lane < m3::kMaxVoices; ++lane) {
     M3_EXPECT_NEAR(quieter.profile_weights[lane], measured.profile_weights[lane], 1.0e-12);
     M3_EXPECT_NEAR(quieter.profile_single_errors[lane], measured.profile_single_errors[lane], 1.0e-12);
+    M3_EXPECT_TRUE(quieter.profile_first_pass[lane].reason == measured.profile_first_pass[lane].reason);
+    M3_EXPECT_NEAR(quieter.profile_first_pass[lane].alpha,
+                   measured.profile_first_pass[lane].alpha, 1.0e-12);
+    M3_EXPECT_NEAR(quieter.profile_first_pass[lane].candidate_error,
+                   measured.profile_first_pass[lane].candidate_error, 1.0e-12);
   }
+  // A pure secondary template cannot retain a real primary component. Beat
+  // evidence bypasses the earlier independent-resolution check for this case.
+  for (std::size_t h = 0U; h < observed.size(); ++h)
+    observed[h] = second->harmonic_profile_q15[h];
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, kCandidate,
+      kSharedUnisonPrimary, observed, 2U, 1000U, true), 1U << kSharedUnisonPrimary);
+  const auto rejected = detector.string_assignment_diagnostics(kSharedUnisonNote);
+  M3_EXPECT_TRUE(rejected.profile_first_pass[kSharedUnisonSecond].reason ==
+                 Reason::retained_component_too_small);
+  M3_EXPECT_NEAR(rejected.profile_first_pass[kSharedUnisonSecond].alpha, 1.0, 1.0e-12);
+  M3_EXPECT_EQ(rejected.profile_first_pass[kSharedUnisonSecond].candidate_error, -1.0);
   detector.reset();
   M3_EXPECT_FALSE(detector.string_assignment_diagnostics(kSharedUnisonNote)
                       .profile_fit_observed);
+  M3_EXPECT_TRUE(detector.string_assignment_diagnostics(kSharedUnisonNote)
+      .profile_first_pass[kSharedUnisonSecond].reason == Reason::not_observed);
   for (std::size_t sample = 0U; sample < 512U; ++sample) {
     (void)detector.process_sample(0.0);
   }

@@ -286,6 +286,32 @@ struct ProfilePairWindowDiagnostics final {
   std::array<double, kCalibrationHarmonicCount> observed{};
 };
 
+// First greedy addition to the primary template only. Later additions and the
+// joint complement search cannot overwrite this observation. Values are part
+// of the offline assignment TSV format, not detector policy.
+enum class ProfileAdditionReason : std::uint8_t {
+  not_observed = 0U,
+  already_member = 1U,
+  template_unavailable = 2U,
+  owned_by_other = 3U,
+  extra_allocated = 4U,
+  independently_unresolved = 5U,
+  template_too_close = 6U,
+  added_component_too_small = 7U,
+  retained_component_too_small = 8U,
+  insufficient_improvement = 9U,
+  error_ratio = 10U,
+  not_best = 11U,
+  accepted = 12U,
+};
+
+struct ProfileAdditionDiagnostics final {
+  ProfileAdditionReason reason{};
+  // -1 means the rejecting branch was reached before this value was computed.
+  double alpha{-1.0};
+  double candidate_error{-1.0};
+};
+
 // One assignment decision, with costs before any later output projection.
 // This is observational state and is absent from production builds.
 struct StringAssignmentDiagnostics final {
@@ -351,6 +377,7 @@ struct StringAssignmentDiagnostics final {
   std::array<double, kCalibrationHarmonicCount> profile_observed{};
   // -1 means that a string has no playable calibrated template.
   std::array<double, kMaxVoices> profile_single_errors{};
+  std::array<ProfileAdditionDiagnostics, kMaxVoices> profile_first_pass{};
   std::uint8_t profile_pair_primary{0xffU};
   std::uint8_t profile_pair_mask{};
   // Current correlation energy, 350ms memory, then 1.5s memory. These fits

@@ -9753,6 +9753,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
             observation.profile_uses_long_memory = use_long_profile;
             observation.profile_observed = observed;
             observation.profile_single_errors.fill(-1.0);
+            observation.profile_first_pass = {};
           }
 #endif
           double best_single_error =
@@ -9915,9 +9916,25 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
                  ++string) {
               const std::uint8_t bit =
                   static_cast<std::uint8_t>(1U << string);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+              auto* first_pass = assignment_diagnostics_enabled_ && extra_count == 0U
+                  ? &assignment_diagnostics_[candidate].profile_first_pass[string]
+                  : nullptr;
+#endif
               if ((proposed_group & bit) != 0U || !template_valid[string] ||
                   (other_owned_strings & bit) != 0U ||
                   (allocated_extra_strings & bit) != 0U) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                if (first_pass != nullptr) {
+                  first_pass->reason = (proposed_group & bit) != 0U
+                      ? ProfileAdditionReason::already_member
+                      : !template_valid[string]
+                          ? ProfileAdditionReason::template_unavailable
+                          : (other_owned_strings & bit) != 0U
+                              ? ProfileAdditionReason::owned_by_other
+                              : ProfileAdditionReason::extra_allocated;
+                }
+#endif
                 continue;
               }
               if (!beat_evidence_states_[candidate].valid &&
@@ -9960,6 +9977,10 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
                   }
                 }
                 if (!independently_resolved) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                  if (first_pass != nullptr)
+                    first_pass->reason = ProfileAdditionReason::independently_unresolved;
+#endif
                   continue;
                 }
               }
@@ -9974,11 +9995,22 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
                     (observed[harmonic] - fitted[harmonic]) * delta;
               }
               if (delta_norm < kM3UnisonMinimumTemplateDistance) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                if (first_pass != nullptr)
+                  first_pass->reason = ProfileAdditionReason::template_too_close;
+#endif
                 continue;
               }
               const double alpha =
                   std::clamp(projection / delta_norm, 0.0, 1.0);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+              if (first_pass != nullptr) first_pass->alpha = alpha;
+#endif
               if (alpha < kM3UnisonMinimumComponent) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                if (first_pass != nullptr)
+                  first_pass->reason = ProfileAdditionReason::added_component_too_small;
+#endif
                 continue;
               }
               bool retained_components_are_real = true;
@@ -9991,6 +10023,10 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
                 }
               }
               if (!retained_components_are_real) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                if (first_pass != nullptr)
+                  first_pass->reason = ProfileAdditionReason::retained_component_too_small;
+#endif
                 continue;
               }
               std::array<double, kHarmonicCount> candidate_fitted{};
@@ -10007,18 +10043,41 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
               const double comparison_error =
                   proposed_group == primary_bit ? best_single_error
                                                 : current_error;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+              if (first_pass != nullptr) first_pass->candidate_error = candidate_error;
+#endif
               if (comparison_error - candidate_error <
                       kM3UnisonMinimumErrorImprovement ||
                   candidate_error >
                       best_single_error * kM3UnisonMaximumErrorRatio ||
                   candidate_error >= best_error) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+                if (first_pass != nullptr) {
+                  first_pass->reason = comparison_error - candidate_error <
+                          kM3UnisonMinimumErrorImprovement
+                      ? ProfileAdditionReason::insufficient_improvement
+                      : candidate_error > best_single_error * kM3UnisonMaximumErrorRatio
+                          ? ProfileAdditionReason::error_ratio
+                          : ProfileAdditionReason::not_best;
+                }
+#endif
                 continue;
               }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+              // An eligible candidate may be superseded later in this pass.
+              if (first_pass != nullptr) first_pass->reason = ProfileAdditionReason::not_best;
+#endif
               best_string = static_cast<std::uint8_t>(string);
               best_alpha = alpha;
               best_error = candidate_error;
               best_fitted = candidate_fitted;
             }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+            if (assignment_diagnostics_enabled_ && extra_count == 0U &&
+                best_string < kM3OpenNotes.size())
+              assignment_diagnostics_[candidate].profile_first_pass[best_string].reason =
+                  ProfileAdditionReason::accepted;
+#endif
             if (best_string >= kM3OpenNotes.size()) {
               // Forward selection can stall when multiple missing strings
               // have complementary spectra: no one residual clears the

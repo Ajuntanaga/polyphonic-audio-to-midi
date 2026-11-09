@@ -671,6 +671,18 @@ void write_string_assignment_frame(
         std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
                      (*values)[string]);
     }
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%u", string == 0U ? "" : ",",
+                   unsigned(a.profile_first_pass[string].reason));
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
+                   a.profile_first_pass[string].alpha);
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string)
+      std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
+                   a.profile_first_pass[string].candidate_error);
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -2915,7 +2927,9 @@ bool run_detector_replay(const WaveData& wave,
         "posterior_detuning_valid_mask\tposterior_detuning_log_likelihood\t"
         "cue_evaluated\tcue_protected_group\tcue_occupied_mask\tcue_calibrated_mask\t"
         "cue_primary_mask\tcue_proposal_mask\tcue_applied\tcue_tuning_valid\t"
-        "cue_assignment_cents\tcue_similarities\tcue_cents_errors\n") < 0;
+        "cue_assignment_cents\tcue_similarities\tcue_cents_errors\t"
+        "profile_first_pass_reasons\tprofile_first_pass_alpha\t"
+        "profile_first_pass_errors\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
