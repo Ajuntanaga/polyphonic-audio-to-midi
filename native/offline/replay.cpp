@@ -2889,11 +2889,13 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_skip_empty_fine_reset,
                          bool diagnostic_direct_evidence_retention,
                          bool diagnostic_projection_preview_admission,
-                         bool diagnostic_retained_spectral_assignment) {
+                         bool diagnostic_retained_spectral_assignment,
+                         bool diagnostic_spectral_lane_collision) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment)
+  if (diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
+      diagnostic_spectral_lane_collision)
     return false;
 #endif
   if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
@@ -3175,6 +3177,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_direct_evidence_retention);
   detector.set_projection_preview_admission_for_diagnostics(
       diagnostic_projection_preview_admission);
+  detector.set_spectral_lane_collision_for_diagnostics(
+      diagnostic_spectral_lane_collision);
   detector.set_retained_spectral_assignment_for_diagnostics(
       diagnostic_retained_spectral_assignment);
   detector.set_calibrated_output_diagnostics_enabled(candidate_trace != nullptr);

@@ -297,6 +297,7 @@ int main(int argc, char** argv) {
   bool diagnostic_direct_evidence_retention = false;
   bool diagnostic_projection_preview_admission = false;
   bool diagnostic_retained_spectral_assignment = false;
+  bool diagnostic_spectral_lane_collision = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
   bool diagnostic_cue_delay_explicit = false;
@@ -611,6 +612,8 @@ int main(int argc, char** argv) {
       diagnostic_direct_evidence_retention = true;
     } else if (std::strcmp(argv[index], "--diagnostic-projection-preview-admission") == 0) {
       diagnostic_projection_preview_admission = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-spectral-lane-collision") == 0) {
+      diagnostic_spectral_lane_collision = true;
     } else if (std::strcmp(argv[index], "--diagnostic-retained-spectral-assignment") == 0) {
       diagnostic_retained_spectral_assignment = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
@@ -1157,7 +1160,7 @@ int main(int argc, char** argv) {
           diagnostic_core_timing_path != nullptr ? &core_timing : nullptr,
           diagnostic_thread_cpu, diagnostic_skip_empty_fine_reset,
           diagnostic_direct_evidence_retention, diagnostic_projection_preview_admission,
-          diagnostic_retained_spectral_assignment)) {
+          diagnostic_retained_spectral_assignment, diagnostic_spectral_lane_collision)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

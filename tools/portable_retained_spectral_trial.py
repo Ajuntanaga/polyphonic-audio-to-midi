@@ -1,4 +1,4 @@
-"""Screen fresh spectral incumbents in the physical assignment, offline only.
+"""Screen a bounded spectral assignment or output policy, offline only.
 
 Two complete ordinary-recording replays compare every label and false-output
 count. Full raw MIDI captures retain overlapping pitches; only candidate and
@@ -22,6 +22,18 @@ from tools.portable_routing_trace import outcome_window
 
 
 FLAG = '--diagnostic-retained-spectral-assignment'
+COLLISION_FLAG = '--diagnostic-spectral-lane-collision'
+POLICIES = {
+    'retained-assignment': dict(flag=FLAG,
+        schema='m3_retained_spectral_assignment_trial_v1',
+        description='Parallel physical assignment constrained only by freshly revalidated '
+            'single-lane MIDI incumbents; complete-solution fallback; no output guard.'),
+    'spectral-lane-collision': dict(flag=COLLISION_FLAG,
+        schema='m3_spectral_lane_collision_trial_v1',
+        description='Keep ordinary physical assignment. Move a conflicting singleton '
+            'spectral output to its own free physical string; release before claim. '
+            'Groups and continuity expansions retain their existing output path.'),
+}
 CONFLICT_FIELDS = ('cross_pitch_on_before_release', 'repeated_pitch_on_before_release',
                    'off_without_raw_on', 'zero_velocity_on', 'unassigned_on')
 
@@ -66,17 +78,19 @@ def window_conflicts(history):
         for old in row['unreleased_raw_note_ons_before']) for row in history['events'])
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
+        policy='retained-assignment'):
+    selected_policy = POLICIES[policy]
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     start, end = WINDOW
-    report = dict(schema='m3_retained_spectral_assignment_trial_v1', state='running', final=False,
+    report = dict(schema=selected_policy['schema'], state='running', final=False,
         stage='verify inputs', dataset='ordinary', settings=SETTINGS,
         candidate_note=48, window_start=start, window_end=end, runs={},
         runtime_rule_changed=True, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', live_readiness='not measured',
-        policy='Parallel physical assignment constrained only by freshly revalidated '
-            'single-lane MIDI incumbents; complete-solution fallback; no output guard.')
+        policy_name=policy, diagnostic_flag=selected_policy['flag'],
+        policy=selected_policy['description'])
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -99,7 +113,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                       for kind in ('candidate', 'outcome', 'midi-event')}
             command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
             if enabled:
-                command.append(FLAG)
+                command.append(selected_policy['flag'])
             for kind, path in traces.items():
                 command.extend(('--' + kind + '-trace', str(path)))
             command.extend(('--candidate-trace-note', '48',
@@ -180,11 +194,12 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--policy', choices=POLICIES, default='retained-assignment')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+        timeout=args.replay_timeout_seconds, policy=args.policy)
 
 
 if __name__ == '__main__':

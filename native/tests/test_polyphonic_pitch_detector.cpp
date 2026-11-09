@@ -2071,6 +2071,149 @@ struct PolyphonicPitchDetectorTestAccess final {
             detector.candidate_states_[1U].assigned_string};
   }
 
+  static DetectorDecision prepare_spectral_lane_collision(
+      PolyphonicPitchDetector& detector, bool enabled) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 47U;
+    config.highest_note = 48U;
+    config.max_polyphony = 2U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(enabled);
+    detector.playable_string_masks_[0U] = 7U;
+    detector.playable_string_masks_[1U] = 7U;
+    auto& earlier = detector.candidate_states_[0U];
+    auto& overlay = detector.candidate_states_[1U];
+    earlier.assigned_string = 1U;
+    earlier.assigned_string_mask = 2U;
+    overlay.assigned_string = 0U;
+    overlay.assigned_string_mask = 1U;
+    DetectorDecision initial;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(initial, 0U, 90U));
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(initial, 1U, 90U));
+    earlier.active = overlay.active = true;
+    // The next ordinary assignment gives note 47 lane 0 and note 48 lane 2,
+    // while note 48's provisional spectral output still occupies lane 0.
+    earlier.assigned_string = 0U;
+    earlier.assigned_string_mask = 1U;
+    overlay.assigned_string = 2U;
+    overlay.assigned_string_mask = 4U;
+    overlay.spectral_lane_mask = 1U;
+    return initial;
+  }
+
+  static void spectral_lane_collision_output_probe(
+      PolyphonicPitchDetector& detector, bool enabled) {
+    struct Capture final {
+      std::array<std::array<bool, 128U>, 16U> active{};
+      static bool push(void* context, const VoiceTransition& event,
+                       std::uint8_t channel) noexcept {
+        auto& self = *static_cast<Capture*>(context);
+        if (channel == 0U || channel > 16U || event.note >= 128U) return false;
+        bool& active = self.active[channel - 1U][event.note];
+        M3_EXPECT_EQ(active, event.kind == TransitionKind::note_off);
+        active = event.kind == TransitionKind::note_on;
+        return true;
+      }
+    } capture;
+    GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64U));
+    const auto deliver = [&](const DetectorDecision& decision) {
+      ledger.begin_block();
+      for (const auto& event : decision.transitions)
+        M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+      return ledger.deliver(64U, NoteEventSink{&capture, &Capture::push},
+                           0.5, true, true, MidiRouting::per_voice, 1U);
+    };
+    M3_EXPECT_FALSE(deliver(prepare_spectral_lane_collision(detector, enabled)).output_blocked);
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[1U] = true;
+    DetectorDecision decision;
+    const auto allocations = test::allocation_count();
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(decision, 0U, selected));
+    const bool corrected = detector.reconcile_selected_midi_output(decision, 1U, selected);
+    M3_EXPECT_EQ(corrected, enabled);
+    if (corrected) detector.order_collision_releases(decision);
+    M3_EXPECT_EQ(decision.transitions.size(), enabled ? 4U : 2U);
+    M3_EXPECT_EQ(detector.candidate_states_[0U].assigned_string_mask, 1U);
+    M3_EXPECT_EQ(detector.candidate_states_[1U].assigned_string_mask, 4U);
+    M3_EXPECT_EQ(detector.candidate_states_[1U].spectral_lane_mask, 1U);
+    M3_EXPECT_EQ(detector.candidate_states_[0U].midi_voice_mask, 1U);
+    M3_EXPECT_EQ(detector.candidate_states_[1U].midi_voice_mask, enabled ? 4U : 1U);
+    for (std::size_t index = 1U; index < decision.transitions.size(); ++index)
+      M3_EXPECT_EQ(decision.transitions[index].sequence,
+                   decision.transitions[index - 1U].sequence + 1U);
+    if (enabled) {
+      M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
+      M3_EXPECT_EQ(decision.transitions[0U].note, 47U);
+      M3_EXPECT_EQ(decision.transitions[1U].kind, TransitionKind::note_off);
+      M3_EXPECT_EQ(decision.transitions[1U].note, 48U);
+      M3_EXPECT_EQ(decision.transitions[2U].kind, TransitionKind::note_on);
+      M3_EXPECT_EQ(decision.transitions[2U].voice_id, 0U);
+      M3_EXPECT_EQ(decision.transitions[3U].kind, TransitionKind::note_on);
+      M3_EXPECT_EQ(decision.transitions[3U].voice_id, 2U);
+    }
+    M3_EXPECT_EQ(deliver(decision).output_blocked, !enabled);
+    if (enabled) {
+      M3_EXPECT_TRUE(capture.active[0U][47U]);
+      M3_EXPECT_TRUE(capture.active[2U][48U]);
+      M3_EXPECT_FALSE(capture.active[0U][48U]);
+      M3_EXPECT_FALSE(capture.active[1U][47U]);
+      DetectorDecision release;
+      M3_EXPECT_TRUE(detector.append_candidate_note_off(release, 0U));
+      M3_EXPECT_TRUE(detector.append_candidate_note_off(release, 1U));
+      M3_EXPECT_FALSE(deliver(release).output_blocked);
+      M3_EXPECT_FALSE(capture.active[0U][47U]);
+      M3_EXPECT_FALSE(capture.active[2U][48U]);
+    }
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void spectral_lane_collision_constraints(PolyphonicPitchDetector& detector) {
+    // Each guard is exercised through the selected-voice renderer. Groups,
+    // absent peers and an occupied fallback retain the existing output path.
+    for (unsigned guard = 0U; guard < 9U; ++guard) {
+      static_cast<void>(prepare_spectral_lane_collision(detector, true));
+      std::array<bool, kMaxCandidates> selected{};
+      selected[0U] = selected[1U] = true;
+      auto& overlay = detector.candidate_states_[1U];
+      switch (guard) {
+        case 0U: selected[0U] = false; break;
+        case 1U: detector.candidate_states_[0U].active = false; break;
+        case 2U: overlay.pending_unison_mask = 5U; break;
+        case 3U: detector.selector_group_masks_[1U] = 5U; break;
+        case 4U: detector.fine_frequency_evidence_states_[1U].multi_source_observed = true; break;
+        case 5U: detector.beat_evidence_states_[1U].valid = true; break;
+        case 6U: overlay.continuity_lane_mask = 5U; break;
+        case 7U: detector.candidate_states_[0U].spectral_lane_mask = 4U; break;
+        case 8U: detector.playable_string_masks_[1U] = 1U; break;
+      }
+      DetectorDecision decision;
+      const auto allocations = test::allocation_count();
+      M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(decision, 1U, selected));
+      M3_EXPECT_EQ(overlay.midi_voice_mask, guard == 6U ? 5U : 1U);
+      M3_EXPECT_EQ(overlay.assigned_string_mask, 4U);
+      M3_EXPECT_EQ(test::allocation_count(), allocations);
+    }
+    static_cast<void>(prepare_spectral_lane_collision(detector, true));
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[1U] = true;
+    DetectorDecision full;
+    while (full.transitions.size() + 1U < full.transitions.capacity())
+      M3_EXPECT_TRUE(detector.append_transition(full, TransitionKind::note_off, 60U, 0U));
+    const auto before = full.transitions.size();
+    const auto sequence = detector.transition_sequence_;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(full, 1U, selected));
+    M3_EXPECT_EQ(full.transitions.size(), before);
+    M3_EXPECT_EQ(detector.transition_sequence_, sequence);
+    M3_EXPECT_EQ(detector.candidate_states_[1U].midi_voice_mask, 1U);
+    DetectorDecision retry;
+    M3_EXPECT_TRUE(detector.reconcile_selected_midi_output(retry, 1U, selected));
+    M3_EXPECT_EQ(retry.transitions.size(), 2U);
+    M3_EXPECT_EQ(detector.candidate_states_[1U].midi_voice_mask, 4U);
+  }
+
   static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector,
                                               bool solver = true) {
     PersistentConfig config;
@@ -12333,6 +12476,21 @@ M3_TEST(native_detector_retained_spectral_assignment_revalidates_and_falls_back)
   const auto fallback = probe(false, true, 1U);
   M3_EXPECT_TRUE(fallback == (Lanes{0U, 2U}));
   M3_EXPECT_TRUE(probe(true, true, 1U) == fallback);
+#endif
+}
+
+M3_TEST(native_detector_spectral_lane_collision_releases_before_claiming) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::spectral_lane_collision_output_probe(detector, false);
+  m3::PolyphonicPitchDetectorTestAccess::spectral_lane_collision_output_probe(detector, true);
+#endif
+}
+
+M3_TEST(native_detector_spectral_lane_collision_preserves_groups_and_capacity) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::spectral_lane_collision_constraints(detector);
 #endif
 }
 

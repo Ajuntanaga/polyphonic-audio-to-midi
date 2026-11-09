@@ -711,6 +711,9 @@ class PolyphonicPitchDetector final {
   void set_projection_preview_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_projection_preview_admission_ = enabled;
   }
+  void set_spectral_lane_collision_for_diagnostics(bool enabled) noexcept {
+    diagnostic_spectral_lane_collision_ = enabled;
+  }
   void set_retained_spectral_assignment_for_diagnostics(bool enabled) noexcept {
     diagnostic_retained_spectral_assignment_ = enabled;
   }
@@ -1187,6 +1190,9 @@ class PolyphonicPitchDetector final {
       DetectorDecision& decision, TransitionKind kind, std::uint8_t note,
       std::uint8_t velocity,
       std::uint8_t voice_id = kUnassignedVoiceId) noexcept;
+  [[nodiscard]] bool reconcile_selected_midi_output(
+      DetectorDecision& decision, std::size_t candidate,
+      const std::array<bool, kMaxCandidates>& selected) noexcept;
   [[nodiscard]] static bool output_suppressed(const CandidateState& state) noexcept;
   [[nodiscard]] bool append_candidate_note_on(
       DetectorDecision& decision, std::size_t candidate,
@@ -1409,6 +1415,10 @@ class PolyphonicPitchDetector final {
       std::uint8_t spectral_lane_mask,
       std::uint8_t continuity_lane_mask) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] std::uint8_t collision_free_spectral_output_mask(
+      std::size_t candidate, std::uint8_t desired,
+      const std::array<bool, kMaxCandidates>& selected) const noexcept;
+  void order_collision_releases(DetectorDecision& decision) noexcept;
   [[nodiscard]] std::uint8_t retained_spectral_assignment_lane(
       std::size_t candidate, std::uint8_t fresh_proposal) const noexcept;
 #endif
@@ -1685,6 +1695,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_direct_evidence_retention_{};
   bool diagnostic_projection_preview_admission_{};
   bool diagnostic_retained_spectral_assignment_{};
+  bool diagnostic_spectral_lane_collision_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};

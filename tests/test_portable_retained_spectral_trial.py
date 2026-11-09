@@ -11,7 +11,7 @@ from tests.test_portable_evidence_retention_trial import replay_text
 from tests.test_portable_midi_lane_trace import EVENTS, candidates, event
 from tests.test_portable_routing_trace import snapshots, write_rows
 from tools.midi_lifecycle_analysis import EVENT_FIELDS
-from tools.portable_retained_spectral_trial import FLAG, raw_conflicts, run
+from tools.portable_retained_spectral_trial import COLLISION_FLAG, FLAG, raw_conflicts, run
 
 
 CLEAN_EVENTS = [event(63, 'on', 48, 0), event(127, 'off', 48, 1),
@@ -42,13 +42,14 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
         args = fixtures.PortableEvidenceRetentionTrialTests().fixture(root, baseline_text=baseline)
         return args, baseline
 
-    def stub(self, baseline, *, trial=None, trial_events=CLEAN_EVENTS, drift=False):
+    def stub(self, baseline, *, trial=None, trial_events=CLEAN_EVENTS, drift=False,
+             flag=FLAG):
         def replay(command, *, stdout, stderr, check, timeout):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
             flags = [arg for arg in command if arg.startswith('--diagnostic-')]
-            enabled = FLAG in command
-            self.assertEqual(flags, [FLAG] if enabled else [])
+            enabled = flag in command
+            self.assertEqual(flags, [flag] if enabled else [])
             text = trial if enabled and trial is not None else baseline
             stdout.write(text + ('\n' if drift and not enabled else ''))
             rows = [row for row in candidates(48) if int(row['sample']) >= 64]
@@ -62,11 +63,11 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                 writer.writerows(trial_events if enabled else EVENTS)
         return replay
 
-    def execute(self, args, stub):
+    def execute(self, args, stub, **kwargs):
         with patch('tools.portable_retained_spectral_trial.WINDOW', (64, 192)), patch(
                 'tools.portable_retained_spectral_trial.TARGET_EVENTS', EVENTS[1:]), patch(
                 'tools.portable_retained_spectral_trial.subprocess.run', side_effect=stub) as replay:
-            run(*args)
+            run(*args, **kwargs)
         return replay
 
     def test_only_on_changes_policy_and_full_midi_survives_window_reduction(self):
@@ -92,6 +93,24 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                             if not line.startswith('#')), delimiter='\t'))
                     self.assertEqual([int(row['sample']) for row in rows],
                         [63, 127, 191] if kind == 'midi-event' else [127, 191])
+
+    def test_collision_policy_uses_only_its_flag_and_keeps_passage_gate(self):
+        for lost_match in (False, True):
+            with self.subTest(lost_match=lost_match), tempfile.TemporaryDirectory() as directory:
+                args, baseline = self.fixture(Path(directory))
+                trial = replay_text(target=0, other=3, transitions=3) if lost_match else baseline
+                replay = self.execute(args, self.stub(baseline, trial=trial, flag=COLLISION_FLAG),
+                                      policy='spectral-lane-collision')
+                self.assertEqual(replay.call_count, 2)
+                report = json.loads((args[-1] / 'report.json').read_text())
+                self.assertEqual(report['schema'], 'm3_spectral_lane_collision_trial_v1')
+                self.assertEqual(report['diagnostic_flag'], COLLISION_FLAG)
+                self.assertEqual(report['policy_name'], 'spectral-lane-collision')
+                self.assertTrue(report['off_reference_bit_identical'])
+                self.assertTrue(report['recorded_lane_window_resolved'])
+                self.assertEqual(report['full_recording_screen_pass'], not lost_match)
+                self.assertFalse(report['promotion_accepted'])
+                self.assertFalse(report['installed_output_changed'])
 
     def test_off_drift_stops_before_on(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -3408,6 +3408,111 @@ bool PolyphonicPitchDetector::append_transition(
   return true;
 }
 
+bool PolyphonicPitchDetector::reconcile_selected_midi_output(
+    DetectorDecision& decision, std::size_t candidate,
+    const std::array<bool, kMaxCandidates>& selected) noexcept {
+  auto& state = candidate_states_[candidate];
+#if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static_cast<void>(selected);
+#endif
+  std::uint8_t desired =
+      state.spectral_duplicate_output_suppressed
+          ? 0U
+          : projected_output_string_mask(
+                state.assigned_string_mask, state.assigned_string,
+                state.spectral_lane_mask,
+                state.continuity_lane_mask);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const auto projected = desired;
+  desired = collision_free_spectral_output_mask(candidate, desired, selected);
+  if (assignment_diagnostics_enabled_) {
+    auto& observation = assignment_diagnostics_[candidate];
+    observation.render_observed = true;
+    observation.continuity_at_render = state.continuity_lane_mask;
+    observation.primary_only_render = state.spectral_duplicate_output_suppressed
+        ? 0U : projected_output_string_mask(
+            state.assigned_string < kMaxVoices ? static_cast<std::uint8_t>(1U << state.assigned_string) : 0U,
+            state.assigned_string, state.spectral_lane_mask, state.continuity_lane_mask);
+  }
+#endif
+  std::uint8_t pruned_desired = desired;
+  if (state.fine_beat_pruning_mask != 0U) {
+    pruned_desired = static_cast<std::uint8_t>(
+        pruned_desired & state.fine_beat_pruning_mask);
+  }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_fine_mask_pruning_enabled_ &&
+      state.diagnostic_fine_mask_pruning_mask != 0U) {
+    pruned_desired = static_cast<std::uint8_t>(
+        pruned_desired & state.diagnostic_fine_mask_pruning_mask);
+  }
+  if (diagnostic_fine_beat_pruning_enabled_ &&
+      state.diagnostic_fine_beat_pruning_mask != 0U) {
+    pruned_desired = static_cast<std::uint8_t>(
+        pruned_desired & state.diagnostic_fine_beat_pruning_mask);
+  }
+  const auto unfiltered_desired = pruned_desired;
+  pruned_desired = diagnostic_profile_pair_output_mask(
+      candidate, pruned_desired);
+#endif
+  const std::uint8_t removed = static_cast<std::uint8_t>(
+      state.midi_voice_mask & ~pruned_desired);
+  const std::uint8_t added = static_cast<std::uint8_t>(
+      pruned_desired & ~state.midi_voice_mask);
+  const std::uint8_t note = candidate_midi_output_note(candidate);
+  const std::size_t required =
+      string_count(removed) + string_count(added);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (routing_diagnostics_enabled_) {
+    auto& observation = routing_diagnostics_[candidate];
+    observation = {};
+    observation.decision_tick = decision_counter_;
+    observation.render_observed = true;
+    observation.assigned_mask = state.assigned_string_mask;
+    observation.primary_string = state.assigned_string;
+    observation.spectral_mask = state.spectral_lane_mask;
+    observation.continuity_mask = state.continuity_lane_mask;
+    observation.cached_group_mask = state.continuity_cached_group_mask;
+    observation.desired_mask = desired;
+    observation.pruned_mask = pruned_desired;
+    observation.midi_before = state.midi_voice_mask;
+    observation.midi_after = state.midi_voice_mask;
+    observation.capacity_blocked = required > decision.transitions.capacity() -
+                                                decision.transitions.size();
+  }
+#endif
+  if (required > decision.transitions.capacity() -
+                     decision.transitions.size()) {
+    return false;
+  }
+  for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+    if ((removed & bit) != 0U) {
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_off, note, 0U, string));
+    }
+  }
+  const std::uint8_t velocity = dynamic_velocity();
+  for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+    if ((added & bit) != 0U) {
+      static_cast<void>(append_transition(
+          decision, TransitionKind::note_on, note, velocity, string));
+    }
+  }
+  state.midi_voice_mask = pruned_desired;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (routing_diagnostics_enabled_) {
+    routing_diagnostics_[candidate].midi_after = state.midi_voice_mask;
+  }
+  state.diagnostic_profile_pair_output_filtered =
+      pruned_desired != unfiltered_desired;
+  return desired != projected && required != 0U;
+#else
+  return false;
+#endif
+}
+
 std::uint8_t PolyphonicPitchDetector::candidate_output_note(
     std::size_t candidate) const noexcept {
   if (candidate >= static_cast<std::size_t>(candidate_count_)) {
@@ -5772,6 +5877,70 @@ void PolyphonicPitchDetector::update_calibration_tuning_offset(
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+std::uint8_t PolyphonicPitchDetector::collision_free_spectral_output_mask(
+    std::size_t candidate, std::uint8_t desired,
+    const std::array<bool, kMaxCandidates>& selected) const noexcept {
+  if (!diagnostic_spectral_lane_collision_ || !selected[candidate]) return desired;
+  const auto& state = candidate_states_[candidate];
+  const auto& fine = fine_frequency_evidence_states_[candidate];
+  const auto physical = state.assigned_string_mask;
+  // The ordinary physical solution stays authoritative. Only a singleton
+  // spectral overlay competing with a selected peer can fall back to it.
+  // Pending/resolved groups and continuity expansions keep their existing path.
+  if (!state.active || state.spectral_duplicate_output_suppressed ||
+      state.assigned_string >= kMaxVoices ||
+      physical != static_cast<std::uint8_t>(1U << state.assigned_string) ||
+      string_count(desired) != 1U || desired != state.spectral_lane_mask ||
+      desired == physical || state.pending_unison_mask != 0U ||
+      string_count(selector_group_masks_[candidate]) > 1U ||
+      beat_evidence_states_[candidate].valid || fine.multi_source_observed ||
+      string_count(fine.member_mask) > 1U ||
+      string_count(fine.pending_member_mask) > 1U ||
+      (playable_string_mask(candidate) & physical) == 0U)
+    return desired;
+  bool peer_claims_overlay = false;
+  for (std::size_t peer = 0U; peer < candidate_count_; ++peer) {
+    if (peer == candidate) continue;
+    const auto& other = candidate_states_[peer];
+    if (!other.active) continue;
+    // Do not move into another live output, including a coasting voice.
+    // Selected peers that are leaving it are evaluated by their desired mask.
+    const auto peer_output = selected[peer]
+        ? (other.spectral_duplicate_output_suppressed ? 0U :
+           projected_output_string_mask(other.assigned_string_mask,
+               other.assigned_string, other.spectral_lane_mask,
+               other.continuity_lane_mask))
+        : other.midi_voice_mask;
+    if ((peer_output & physical) != 0U) return desired;
+    peer_claims_overlay |= selected[peer] &&
+        !other.spectral_duplicate_output_suppressed &&
+        other.assigned_string < kMaxVoices &&
+        other.assigned_string_mask == desired &&
+        desired == static_cast<std::uint8_t>(1U << other.assigned_string);
+  }
+  return peer_claims_overlay ? physical : desired;
+}
+
+void PolyphonicPitchDetector::order_collision_releases(
+    DetectorDecision& decision) noexcept {
+  // Match the host ledger's same-sample release-before-claim order, with
+  // bounded in-place storage. This runs only after an actual collision remap.
+  auto& events = decision.transitions;
+  for (std::size_t index = 1U; index < events.size(); ++index) {
+    if (events[index].kind != TransitionKind::note_off) continue;
+    const auto release = events[index];
+    std::size_t destination = index;
+    while (destination > 0U && events[destination - 1U].kind == TransitionKind::note_on) {
+      events[destination] = events[destination - 1U];
+      --destination;
+    }
+    events[destination] = release;
+  }
+  const auto first_sequence = transition_sequence_ - static_cast<std::uint32_t>(events.size());
+  for (std::size_t index = 0U; index < events.size(); ++index)
+    events[index].sequence = first_sequence + static_cast<std::uint32_t>(index);
+}
+
 std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
     std::size_t candidate, std::uint8_t fresh_proposal) const noexcept {
   if (candidate >= candidate_count_ || string_count(fresh_proposal) != 1U)
@@ -11854,6 +12023,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   }
 #endif
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  bool collision_reassigned = false;
+#endif
   std::size_t active_count = 0U;
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     CandidateState& state = candidate_states_[candidate];
@@ -11896,97 +12068,11 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       state.release_ticks = 0U;
       if (!joint_output_path && profile_mode_ == ProfileMode::m3 &&
           midi_routing_ == MidiRouting::per_voice) {
-        const std::uint8_t desired =
-            state.spectral_duplicate_output_suppressed
-                ? 0U
-                : projected_output_string_mask(
-                      state.assigned_string_mask, state.assigned_string,
-                      state.spectral_lane_mask,
-                      state.continuity_lane_mask);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (assignment_diagnostics_enabled_) {
-          auto& observation = assignment_diagnostics_[candidate];
-          observation.render_observed = true;
-          observation.continuity_at_render = state.continuity_lane_mask;
-          observation.primary_only_render = state.spectral_duplicate_output_suppressed
-              ? 0U : projected_output_string_mask(
-                  state.assigned_string < kMaxVoices ? static_cast<std::uint8_t>(1U << state.assigned_string) : 0U,
-                  state.assigned_string, state.spectral_lane_mask, state.continuity_lane_mask);
-        }
-#endif
-        std::uint8_t pruned_desired = desired;
-        if (state.fine_beat_pruning_mask != 0U) {
-          pruned_desired = static_cast<std::uint8_t>(
-              pruned_desired & state.fine_beat_pruning_mask);
-        }
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (diagnostic_fine_mask_pruning_enabled_ &&
-            state.diagnostic_fine_mask_pruning_mask != 0U) {
-          pruned_desired = static_cast<std::uint8_t>(
-              pruned_desired & state.diagnostic_fine_mask_pruning_mask);
-        }
-        if (diagnostic_fine_beat_pruning_enabled_ &&
-            state.diagnostic_fine_beat_pruning_mask != 0U) {
-          pruned_desired = static_cast<std::uint8_t>(
-              pruned_desired & state.diagnostic_fine_beat_pruning_mask);
-        }
-        const auto unfiltered_desired = pruned_desired;
-        pruned_desired = diagnostic_profile_pair_output_mask(
-            candidate, pruned_desired);
-#endif
-        const std::uint8_t removed = static_cast<std::uint8_t>(
-            state.midi_voice_mask & ~pruned_desired);
-        const std::uint8_t added = static_cast<std::uint8_t>(
-            pruned_desired & ~state.midi_voice_mask);
-        const std::uint8_t note = candidate_midi_output_note(candidate);
-        const std::size_t required =
-            string_count(removed) + string_count(added);
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (routing_diagnostics_enabled_) {
-          auto& observation = routing_diagnostics_[candidate];
-          observation = {};
-          observation.decision_tick = decision_counter_;
-          observation.render_observed = true;
-          observation.assigned_mask = state.assigned_string_mask;
-          observation.primary_string = state.assigned_string;
-          observation.spectral_mask = state.spectral_lane_mask;
-          observation.continuity_mask = state.continuity_lane_mask;
-          observation.cached_group_mask = state.continuity_cached_group_mask;
-          observation.desired_mask = desired;
-          observation.pruned_mask = pruned_desired;
-          observation.midi_before = state.midi_voice_mask;
-          observation.midi_after = state.midi_voice_mask;
-          observation.capacity_blocked = required > decision.transitions.capacity() -
-                                                      decision.transitions.size();
-        }
-#endif
-        if (required > decision.transitions.capacity() -
-                           decision.transitions.size()) {
-          ++active_count;
-          continue;
-        }
-        for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
-          const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
-          if ((removed & bit) != 0U) {
-            static_cast<void>(append_transition(
-                decision, TransitionKind::note_off, note, 0U, string));
-          }
-        }
-        const std::uint8_t velocity = dynamic_velocity();
-        for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
-          const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
-          if ((added & bit) != 0U) {
-            static_cast<void>(append_transition(
-                decision, TransitionKind::note_on, note, velocity, string));
-          }
-        }
-        state.midi_voice_mask = pruned_desired;
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (routing_diagnostics_enabled_) {
-          routing_diagnostics_[candidate].midi_after = state.midi_voice_mask;
-        }
-        state.diagnostic_profile_pair_output_filtered =
-            pruned_desired != unfiltered_desired;
+        collision_reassigned |=
+            reconcile_selected_midi_output(decision, candidate, selected);
+#else
+        static_cast<void>(reconcile_selected_midi_output(decision, candidate, selected));
 #endif
       }
       ++active_count;
@@ -12167,6 +12253,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   const double upper_guard_score = guard_score(upper_cents_guard_cells_);
   observe_calibration(scores, lower_guard_score, upper_guard_score, quiet);
   write_snapshot(decision, scores, selected, quiet);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (collision_reassigned) order_collision_releases(decision);
+#endif
   return decision;
 }
 
