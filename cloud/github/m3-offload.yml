@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial, spectral-lane-collision-corpus]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -56,7 +56,7 @@ env:
 jobs:
   process:
     runs-on: ubuntu-24.04
-    timeout-minutes: ${{ (inputs.task == 'corpus-recovery' || inputs.task == 'projection-preview-corpus') && 210 || 60 }}
+    timeout-minutes: ${{ (inputs.task == 'corpus-recovery' || inputs.task == 'projection-preview-corpus' || inputs.task == 'spectral-lane-collision-corpus') && 210 || 60 }}
     steps:
       - name: Verify public destination and source selection
         env:
@@ -65,7 +65,7 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial || "$TASK" = spectral-lane-collision-corpus ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
@@ -73,7 +73,7 @@ jobs:
           if [[ "$TASK" = midi-lane-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 47; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = retained-spectral-trial || "$TASK" = spectral-lane-collision-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 48; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = retained-spectral-diagnosis ]]; then test "$DATASET" = ordinary; test "$NOTE" = 55; test "$LABEL_INDEX" = 265; fi
-          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial ]]; fi
+          if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial || "$TASK" = spectral-lane-collision-corpus ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
         with:
@@ -229,12 +229,13 @@ jobs:
           label_args=()
           if [[ "$LABEL_INDEX" != -1 ]]; then label_args=(--label-index "$LABEL_INDEX"); fi
           python3 -B -m tools.portable_assignment_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/trace --dataset "$DATASET" --note "$NOTE" "${label_args[@]}" 2>&1 | tee build/github-results/runner.log
-      - name: Recover OFF and ON corpus references
-        if: inputs.task == 'corpus-recovery' || inputs.task == 'projection-preview-corpus'
+      - name: Compare OFF and ON across the recorded corpus
+        if: inputs.task == 'corpus-recovery' || inputs.task == 'projection-preview-corpus' || inputs.task == 'spectral-lane-collision-corpus'
         working-directory: source
         run: |
           trial_args=()
           if [[ "$TASK" = projection-preview-corpus ]]; then trial_args=(--projection-preview-admission); fi
+          if [[ "$TASK" = spectral-lane-collision-corpus ]]; then trial_args=(--spectral-lane-collision --off-reference-report docs/recovery/github-core-references-20261109.json); fi
           if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then trial_args+=(--capture-midi-lifecycle); fi
           python3 -B -m tools.portable_corpus_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/corpus --max-seconds 10800 "${trial_args[@]}" 2>&1 | tee build/github-results/runner.log
       - name: Recover and screen held-out overlap controls

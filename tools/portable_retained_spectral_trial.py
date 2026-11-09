@@ -5,7 +5,6 @@ count. Full raw MIDI captures retain overlapping pitches; only candidate and
 outcome observations are reduced to the previously recorded conflict window.
 """
 import argparse
-from collections import defaultdict
 import csv
 from datetime import datetime, timezone
 import json
@@ -14,7 +13,7 @@ import subprocess
 import time
 
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
-from tools.midi_lifecycle_analysis import read_events, UNASSIGNED_VOICE
+from tools.midi_lifecycle_analysis import CONFLICT_FIELDS, raw_conflicts, read_events
 from tools.portable_assignment_trace import compress_trace_window, digest, read_rows, verify_inputs
 from tools.portable_corpus_replay import SETTINGS, command_for
 from tools.portable_midi_lane_trace import LANE, TARGET_EVENTS, WINDOW, candidate_frames, raw_lane_history
@@ -34,43 +33,6 @@ POLICIES = {
             'spectral output to its own free physical string; release before claim. '
             'Groups and continuity expansions retain their existing output path.'),
 }
-CONFLICT_FIELDS = ('cross_pitch_on_before_release', 'repeated_pitch_on_before_release',
-                   'off_without_raw_on', 'zero_velocity_on', 'unassigned_on')
-
-
-def raw_conflicts(events):
-    """Keep all raw outstanding pitches, including a displaced previous owner.
-
-    Same-pitch repeats are counted, with an off paired to the oldest onset.
-    EOF opens are reported separately and are not proof of stuck host MIDI.
-    """
-    active = defaultdict(list)
-    counts = dict.fromkeys(CONFLICT_FIELDS, 0)
-    examples = []
-    for event in events:
-        lane, note = event['voice_id'], event['note']
-        key = (lane, note if lane == UNASSIGNED_VOICE else -1)
-        held = active[key]
-        matches = [i for i, previous in enumerate(held) if previous['note'] == note]
-        if event['kind'] == 'on':
-            conflict = any(previous['note'] != note for previous in held)
-            counts['cross_pitch_on_before_release'] += conflict
-            counts['repeated_pitch_on_before_release'] += bool(matches)
-            counts['zero_velocity_on'] += event['velocity'] == 0
-            counts['unassigned_on'] += lane == UNASSIGNED_VOICE
-            if conflict and len(examples) < 12:
-                examples.append(dict(event=event, unreleased_raw_note_ons=list(held)))
-            held.append(event)
-        elif matches:
-            held.pop(matches[0])
-        else:
-            counts['off_without_raw_on'] += 1
-    return dict(counts=counts, examples=examples,
-        raw_note_ons_open_at_eof=[event for held in active.values() for event in held],
-        interpretation='Complete raw detector event order, before the host ledger. '
-            'Old pitches are never overwritten by conflicting onsets. EOF opens '
-            'are not proof of stuck MIDI; host delivery and durations are not measured.')
-
 
 def window_conflicts(history):
     return sum(row['event']['kind'] == 'on' and any(

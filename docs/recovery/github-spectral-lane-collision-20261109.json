@@ -1,0 +1,250 @@
+{
+  "schema": "m3_spectral_lane_collision_trial_v1",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "cc507bbbc56b00016a55191c46ebf29963007331",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42614803871",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "state": "completed",
+  "final": true,
+  "stage": "offline screen collected",
+  "policy_name": "spectral-lane-collision",
+  "policy": "Keep ordinary physical assignment. Move a conflicting singleton spectral output to its own free physical string; release before claim. Groups and continuity expansions retain their existing output path.",
+  "diagnostic_flag": "--diagnostic-spectral-lane-collision",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "binary_sha256": "8ee8afeb394247238c4aee5e20694fff0f7d47c2de3a5d4f1a401ef75eeccb4b",
+  "input_manifest_sha256": "8c400694b5ab259e767a3fb37be50d406bda0c7f5dbce24a818510634f384bb0",
+  "reference_report_sha256": "e4cd3974fe6541895e762ce5dfa268d8b74f6f1b8ecedf02553750cba5c3ea9f",
+  "off_reference_bit_identical": true,
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "raw_midi_delta": {
+    "cross_pitch_on_before_release": -268,
+    "repeated_pitch_on_before_release": 0,
+    "off_without_raw_on": 0,
+    "zero_velocity_on": 0,
+    "unassigned_on": 0
+  },
+  "raw_midi_no_regression": true,
+  "raw_conflicts_reduced": true,
+  "recorded_lane_window_resolved": true,
+  "full_recording_screen_pass": true,
+  "decision": "eligible for wider validation",
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "interpretation": "A successful process is not acceptance. Every passage must retain its labeled matches, false outputs must not increase, and raw cross-pitch conflicts must decrease without another raw-event regression, with no remaining conflict in the recorded lane window. Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.",
+  "worker_commit": "90490b18a3d4a012eb2cb6bc65e86f1d672304b6",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42614803871",
+  "conclusion": "success",
+  "report": "build/github-results/spectral-lane-collision-42614803871/spectral-lane-collision/report.json",
+  "report_sha256": "5d3bb0cd4f0511ff5ed3178bed986eeb9db7d496661e75186afb5e5d8063a254",
+  "local_native_execution": false,
+  "completed_at": "2026-11-09T12:13:50.833918+00:00",
+  "runs": {
+    "reference-off": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 1,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2246,
+          "sha256": "b20fd1512df7e9924d600766b363d557220faadd22539e9492171de6cee1ba5a",
+          "raw_bytes": 9985,
+          "raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124386118,
+          "captured_raw_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 91378,
+          "sha256": "7b0ad8249a92ebe07c3a405bcbfbf58acf4241e1a3ef862839733614cda25d08",
+          "raw_bytes": 284869,
+          "raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_raw_bytes": 284869,
+          "captured_raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_rows": 11903,
+          "retained_rows": 11903,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11901
+        }
+      ]
+    },
+    "trial-on": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "47d899f5f0776481"
+      },
+      "tsv_sha256": "a8e8e2509d95b38055c6c975b8b7c15ad70aebad6eb10ca4bba7b8153677b47e",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 0,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2248,
+          "sha256": "e0a5b8926fa899bf760fa583973c660ec11f140ced4bbf17b73e8c7dc2888f2a",
+          "raw_bytes": 9985,
+          "raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124386118,
+          "captured_raw_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 91279,
+          "sha256": "1f1a2a2b9670980f4c5a4bcbff42f589262882d20ab4ea5f7aeb75040a429760",
+          "raw_bytes": 286041,
+          "raw_sha256": "1df308ff8130dc2e89d8d510b7817d695a98f5c28a1969dd3603e4ba4b5ad67a",
+          "captured_raw_bytes": 286041,
+          "captured_raw_sha256": "1df308ff8130dc2e89d8d510b7817d695a98f5c28a1969dd3603e4ba4b5ad67a",
+          "captured_rows": 11951,
+          "retained_rows": 11951,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 384,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11949
+        }
+      ]
+    }
+  },
+  "source_checks": {
+    "commit": "cc507bbbc56b00016a55191c46ebf29963007331",
+    "portable_run": 42614730065,
+    "ci_run": 42614730056,
+    "conclusion": "success",
+    "native_tests": "passed",
+    "python_contracts": "passed",
+    "synthetic_buffer_parity": "passed",
+    "production_vst3_build_package": "passed; package not installed"
+  },
+  "artifacts": [
+    {
+      "name": "m3-report-42614803871-1",
+      "id": 13671733271,
+      "bytes": 17057,
+      "sha256": "bfdb5667959252ea63abe2e3c523b7d359eab06e923e1e4771773830f8f9053a",
+      "downloaded_once": true
+    },
+    {
+      "name": "m3-evidence-42614803871-1",
+      "id": 13672780703,
+      "bytes": 4511519,
+      "sha256": "0f8621a5d102dacd922a1040316eff08970661509bfef5ddf42eee5ab553686e",
+      "downloaded_once": false
+    }
+  ],
+  "protected": "Ordinary OFF is bit-identical to its saved reference. ON has identical labeled outcomes and error counts, with changed raw MIDI. Other recordings have not yet been rerun with this policy.",
+  "next": "Screen this collision policy alone across the protected corpus, requiring no passage loss, no increased false or raw MIDI error counts, zero allocations, buffer parity and the unchanged native timing limits. Host delivery remains separate."
+}

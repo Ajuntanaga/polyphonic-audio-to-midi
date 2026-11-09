@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from tools.portable_corpus_replay import MEASUREMENT_SCOPE, command_for, timing_gates, main
+from tools.midi_lifecycle_analysis import CONFLICT_FIELDS
 from tools.replay_corpus import DATASETS
 
 
@@ -46,6 +47,18 @@ class PortableCorpusTests(unittest.TestCase):
             with self.subTest(block=block), self.assertRaisesRegex(ValueError, 'untimed'):
                 command_for(*arguments, block, Path('/timing.json'), midi_trace=Path('/midi.tsv'))
 
+    def test_collision_policy_is_isolated_and_cannot_mix_with_preview(self):
+        arguments = (Path('/replay'), Path('/corpus'), 'physical-long')
+        for mode in ('off', 'on'):
+            command = command_for(*arguments, mode, 32, Path('/timing.json'),
+                                  spectral_lane_collision=True)
+            diagnostic = [flag for flag in command if flag.startswith('--diagnostic-')]
+            self.assertEqual(diagnostic, ['--diagnostic-core-timing'] +
+                (['--diagnostic-spectral-lane-collision'] if mode == 'on' else []))
+        with self.assertRaisesRegex(ValueError, 'one isolated policy'):
+            command_for(*arguments, 'on', 32, Path('/timing.json'),
+                        spectral_lane_collision=True, projection_preview_admission=True)
+
     def test_fail_closed_timing_allocation_and_scored_identity(self):
         replay = {'output': {'fingerprint': '0123456789abcdef'}}
         timing = dict(schema='m3_replay_core_timing_v1', fingerprint_identical=True,
@@ -72,52 +85,88 @@ class PortableCorpusTests(unittest.TestCase):
             self.assertFalse(gates['zero_processing_allocations'])
             self.assertFalse(gates['timing_pass'])
 
-    def test_corpus_requires_both_modes_to_meet_timing_limits(self):
-        for slow_mode, preview, capture in product((None, 'off', 'on'), (False, True), (False, True)):
-            with self.subTest(slow_mode=slow_mode, preview=preview, capture=capture), tempfile.TemporaryDirectory() as directory:
-                root = Path(directory)
-                output, manifest = root / 'results', root / 'manifest.json'
-                names = ('physical-long.wav', 'physical-long.tsv',
-                         'calibration.m3cb', 'templates.tsv')
-                manifest.write_text(json.dumps({'files': {
-                    name: {'sha256': 'hash'} for name in names}}))
+    def mocked_corpus(self, *, slow_mode=None, policy='cues', capture=False,
+                      raw_delta=-4, raw_regression=None, reference_drift=None,
+                      trace_failure=False):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, manifest = root / 'results', root / 'manifest.json'
+            names = ('physical-long.wav', 'physical-long.tsv',
+                     'calibration.m3cb', 'templates.tsv')
+            manifest.write_text(json.dumps({'files': {
+                name: {'sha256': 'hash'} for name in names}}))
+            parsed = {'output': {'fingerprint': 'unchanged'},
+                      'exact_matches_by_string_count': {}}
+            reference = root / 'reference.json'
+            row = dict(parsed, tsv_sha256='hash')
+            if reference_drift == 'hash':
+                row['tsv_sha256'] = 'different'
+            elif reference_drift == 'output':
+                row['output'] = {'fingerprint': 'different'}
+            reference.write_text(json.dumps({'datasets': {
+                'physical-long': {'runs': {'off-32': row}}}}))
+            flag = {'cues': '--diagnostic-native-partial-cues',
+                    'preview': '--diagnostic-projection-preview-admission',
+                    'collision': '--diagnostic-spectral-lane-collision'}[policy]
 
-                def execute(command, **kwargs):
-                    if '--diagnostic-core-timing' in command:
-                        enabled = ('--diagnostic-projection-preview-admission' if preview
-                                   else '--diagnostic-native-partial-cues')
-                        mode = 'on' if enabled in command else 'off'
-                        timing = dict(schema='m3_replay_core_timing_v1',
-                                      measurement_scope=MEASUREMENT_SCOPE,
-                                      fingerprint_identical=True, fingerprint='unchanged',
-                                      block_samples=32, sample_rate=96000,
-                                      allocation_guard=True, cpp_allocations=0, cpp_frees=0,
-                                      c_allocations=0, c_frees=0, p99_ns=100000,
-                                      maximum_ns=333334 if mode == slow_mode else 200000,
-                                      deadline_overruns=1 if mode == slow_mode else 0)
-                        Path(command[command.index('--diagnostic-core-timing') + 1]).write_text(
-                            json.dumps(timing))
+            def execute(command, **kwargs):
+                if '--diagnostic-core-timing' in command:
+                    mode = 'on' if flag in command else 'off'
+                    timing = dict(schema='m3_replay_core_timing_v1',
+                                  measurement_scope=MEASUREMENT_SCOPE,
+                                  fingerprint_identical=True, fingerprint='unchanged',
+                                  block_samples=32, sample_rate=96000,
+                                  allocation_guard=True, cpp_allocations=0, cpp_frees=0,
+                                  c_allocations=0, c_frees=0, p99_ns=100000,
+                                  maximum_ns=333334 if mode == slow_mode else 200000,
+                                  deadline_overruns=1 if mode == slow_mode else 0)
+                    Path(command[command.index('--diagnostic-core-timing') + 1]).write_text(
+                        json.dumps(timing))
 
-                argv = ['recovery', '--binary', str(root / 'replay'), '--corpus', str(root),
-                        '--manifest', str(manifest), '--output', str(output)]
-                if preview:
-                    argv.append('--projection-preview-admission')
-                if capture:
-                    argv.append('--capture-midi-lifecycle')
-                parsed = {'output': {'fingerprint': 'unchanged'},
-                          'exact_matches_by_string_count': {}}
-                comparison = dict(gate_pass=True, output_bit_identical=True, changed_labels=[])
-                with patch('sys.argv', argv), \
-                     patch('tools.portable_corpus_replay.DATASETS', ('physical-long',)), \
-                     patch('tools.portable_corpus_replay.digest', return_value='hash'), \
-                     patch('tools.portable_corpus_replay.subprocess.run', side_effect=execute), \
-                     patch('tools.portable_corpus_replay.read_replay', return_value=parsed), \
-                     patch('tools.portable_corpus_replay.compare_replays', return_value=comparison), \
-                     patch('tools.portable_corpus_replay.analyze_trace',
-                           return_value={'coverage_valid': False}) as lifecycle, \
-                     patch('builtins.print'):
+            def analyze(midi, replay, *, include_raw_conflicts=False):
+                if trace_failure:
+                    raise ValueError('MIDI event capture differs from replay transition count')
+                result = {'coverage_valid': False}
+                if include_raw_conflicts:
+                    counts = dict.fromkeys(CONFLICT_FIELDS, 0)
+                    counts['cross_pitch_on_before_release'] = 7
+                    if '-on-' in midi.name:
+                        counts['cross_pitch_on_before_release'] += raw_delta
+                        if raw_regression is not None:
+                            counts[raw_regression] += 1
+                    result['raw_midi'] = dict(counts=counts, raw_note_ons_open_at_eof=[{}])
+                return result
+
+            argv = ['recovery', '--binary', str(root / 'replay'), '--corpus', str(root),
+                    '--manifest', str(manifest), '--output', str(output)]
+            if policy == 'preview':
+                argv.append('--projection-preview-admission')
+            elif policy == 'collision':
+                argv.extend(('--spectral-lane-collision', '--off-reference-report', str(reference)))
+            if capture:
+                argv.append('--capture-midi-lifecycle')
+            comparison = dict(gate_pass=True, output_bit_identical=True, changed_labels=[])
+            with patch('sys.argv', argv), \
+                 patch('tools.portable_corpus_replay.DATASETS', ('physical-long',)), \
+                 patch('tools.portable_corpus_replay.digest', return_value='hash'), \
+                 patch('tools.portable_corpus_replay.subprocess.run', side_effect=execute), \
+                 patch('tools.portable_corpus_replay.read_replay', return_value=parsed), \
+                 patch('tools.portable_corpus_replay.compare_replays', return_value=comparison), \
+                 patch('tools.portable_corpus_replay.analyze_trace', side_effect=analyze) as lifecycle, \
+                 patch('builtins.print'):
+                if reference_drift or trace_failure:
+                    with self.assertRaises(ValueError):
+                        main()
+                else:
                     main()
-                report = json.loads((output / 'report.json').read_text())
+            return json.loads((output / 'report.json').read_text()), lifecycle.call_count
+
+    def test_corpus_requires_both_modes_to_meet_timing_limits(self):
+        for slow_mode, policy, capture in product((None, 'off', 'on'),
+                                                 ('cues', 'preview', 'collision'), (False, True)):
+            with self.subTest(slow_mode=slow_mode, policy=policy, capture=capture):
+                report, lifecycle_calls = self.mocked_corpus(slow_mode=slow_mode,
+                                                            policy=policy, capture=capture)
                 self.assertEqual(report['state'], 'completed')
                 dataset = report['datasets']['physical-long']
                 self.assertEqual(len(dataset['runs']), 6)
@@ -126,21 +175,57 @@ class PortableCorpusTests(unittest.TestCase):
                 self.assertEqual(report['native_gates_passed'], int(slow_mode is None))
                 self.assertFalse(report['promotion_accepted'])
                 self.assertFalse(report['installed_output_changed'])
-                self.assertEqual(lifecycle.call_count, 2 if capture else 0)
-                self.assertFalse(report['midi_lifecycle_capture']['alters_acceptance_gates'])
+                capture_enabled = capture or policy == 'collision'
+                self.assertEqual(lifecycle_calls, 2 if capture_enabled else 0)
+                self.assertEqual(report['midi_lifecycle_capture']['alters_acceptance_gates'],
+                                 policy == 'collision')
                 for key, run in dataset['runs'].items():
-                    expected = capture and key.endswith('-512')
+                    expected = capture_enabled and key.endswith('-512')
                     self.assertEqual('--midi-event-trace' in run['command'], expected)
                     self.assertEqual('midi_lifecycle' in run, expected)
                     if expected:
                         self.assertFalse(run['midi_lifecycle']['coverage_valid'])
-                if preview:
+                if policy == 'preview':
                     self.assertEqual(report['schema'], 'm3_portable_projection_preview_corpus_v1')
                     self.assertEqual(report['trial_revision'], 'full_physical_assignment_context')
                     self.assertEqual(report['on_flags'], ['--diagnostic-projection-preview-admission'])
+                elif policy == 'collision':
+                    self.assertEqual(report['schema'], 'm3_portable_spectral_lane_collision_corpus_v1')
+                    self.assertEqual(report['on_flags'], ['--diagnostic-spectral-lane-collision'])
+                    self.assertTrue(report['off_references_bit_identical'])
+                    self.assertTrue(dataset['raw_midi_no_regression'])
+                    self.assertTrue(report['raw_midi_comparison']['conflicts_reduced'])
+                    self.assertEqual(report['full_corpus_screen_pass'], slow_mode is None)
                 else:
                     self.assertEqual(report['schema'], 'm3_portable_corpus_recovery_v1')
                     self.assertNotIn('trial_revision', report)
+
+    def test_collision_corpus_rejects_each_raw_error_regression_and_parity_alone(self):
+        for field in CONFLICT_FIELDS:
+            with self.subTest(field=field):
+                report, _ = self.mocked_corpus(policy='collision', raw_regression=field,
+                                              raw_delta=0 if field == CONFLICT_FIELDS[0] else -4)
+                self.assertFalse(report['full_corpus_screen_pass'])
+                self.assertFalse(report['raw_midi_comparison']['no_regression'])
+                self.assertEqual(report['stopped_on_regression'], 'physical-long')
+                self.assertFalse(report['datasets']['physical-long']['recovery_safety_pass'])
+                self.assertEqual(report['decision'], 'rejected')
+        report, _ = self.mocked_corpus(policy='collision', raw_delta=0)
+        self.assertTrue(report['raw_midi_comparison']['no_regression'])
+        self.assertFalse(report['raw_midi_comparison']['conflicts_reduced'])
+        self.assertFalse(report['full_corpus_screen_pass'])
+
+    def test_collision_corpus_rejects_off_drift_and_incomplete_midi(self):
+        for drift in ('output', 'hash'):
+            with self.subTest(drift=drift):
+                report, _ = self.mocked_corpus(policy='collision', reference_drift=drift)
+                self.assertEqual(report['state'], 'failed')
+                self.assertIn('OFF reference differs', report['error'])
+                self.assertFalse(report['full_corpus_screen_pass'])
+        report, _ = self.mocked_corpus(policy='collision', trace_failure=True)
+        self.assertEqual(report['state'], 'failed')
+        self.assertIn('transition count', report['error'])
+        self.assertFalse(report['full_corpus_screen_pass'])
 
     def test_failed_eleventh_input_preserves_ten_references_and_stderr(self):
         self.check_failed_recovery(subprocess.CalledProcessError(1, ['replay']))

@@ -19,6 +19,44 @@ MAX_VOICES = 8
 UNASSIGNED_VOICE = 255
 
 
+CONFLICT_FIELDS = ('cross_pitch_on_before_release', 'repeated_pitch_on_before_release',
+                   'off_without_raw_on', 'zero_velocity_on', 'unassigned_on')
+
+
+def raw_conflicts(events):
+    """Keep all raw outstanding pitches, including a displaced previous owner.
+
+    Same-pitch repeats are counted, with an off paired to the oldest onset.
+    EOF opens are reported separately and are not proof of stuck host MIDI.
+    """
+    active = defaultdict(list)
+    counts = dict.fromkeys(CONFLICT_FIELDS, 0)
+    examples = []
+    for event in events:
+        lane, note = event['voice_id'], event['note']
+        key = (lane, note if lane == UNASSIGNED_VOICE else -1)
+        held = active[key]
+        matches = [i for i, previous in enumerate(held) if previous['note'] == note]
+        if event['kind'] == 'on':
+            conflict = any(previous['note'] != note for previous in held)
+            counts['cross_pitch_on_before_release'] += conflict
+            counts['repeated_pitch_on_before_release'] += bool(matches)
+            counts['zero_velocity_on'] += event['velocity'] == 0
+            counts['unassigned_on'] += lane == UNASSIGNED_VOICE
+            if conflict and len(examples) < 12:
+                examples.append(dict(event=event, unreleased_raw_note_ons=list(held)))
+            held.append(event)
+        elif matches:
+            held.pop(matches[0])
+        else:
+            counts['off_without_raw_on'] += 1
+    return dict(counts=counts, examples=examples,
+        raw_note_ons_open_at_eof=[event for held in active.values() for event in held],
+        interpretation='Complete raw detector event order, before the host ledger. '
+            'Old pitches are never overwritten by conflicting onsets. EOF opens '
+            'are not proof of stuck MIDI; host delivery and durations are not measured.')
+
+
 def read_events(path, *, sample_count, transition_count):
     """Require the complete native event capture, including events outside labels."""
     events = []
@@ -171,7 +209,7 @@ def summarize(events, labels, *, sample_count, sample_rate):
             'No silence, forced EOF release, onset grace or release tolerance is invented.')
 
 
-def analyze_trace(event_path, replay_path):
+def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False):
     replay = read_replay(replay_path)
     with Path(replay_path).open(newline='') as stream:
         aggregate = next(csv.DictReader(stream, delimiter='\t'))
@@ -182,5 +220,8 @@ def analyze_trace(event_path, replay_path):
         values[key] = int(aggregate[key])
     events = read_events(event_path, sample_count=values['samples'],
                          transition_count=values['transitions'])
-    return summarize(events, replay['labels'], sample_count=values['samples'],
-                     sample_rate=values['sample_rate'])
+    result = summarize(events, replay['labels'], sample_count=values['samples'],
+                       sample_rate=values['sample_rate'])
+    if include_raw_conflicts:
+        result['raw_midi'] = raw_conflicts(events)
+    return result

@@ -157,9 +157,13 @@ class MidiLifecycleTests(unittest.TestCase):
             self.assertEqual(result['sample_rate'], 96000)
             self.assertEqual(result['sample_count'], 200)
             self.assertEqual(result['exact_held_samples'], 100)
+            self.assertNotIn('raw_midi', result)
+            raw = analyze_trace(midi, replay, include_raw_conflicts=True)
+            self.assertEqual(sum(raw['raw_midi']['counts'].values()), 0)
+            self.assertEqual(raw['exact_held_samples'], result['exact_held_samples'])
             trace(midi, [event(10, 'on')])
             with self.assertRaisesRegex(ValueError, 'transition count'):
-                analyze_trace(midi, replay)
+                analyze_trace(midi, replay, include_raw_conflicts=True)
 
     def test_annotations_cannot_extend_past_the_observed_recording(self):
         with self.assertRaisesRegex(ValueError, 'annotation interval'):

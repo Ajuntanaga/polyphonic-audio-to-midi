@@ -11,7 +11,7 @@ import subprocess
 import time
 
 from tools.frozen_cue_corpus_gate import read_replay, compare_replays
-from tools.midi_lifecycle_analysis import analyze_trace
+from tools.midi_lifecycle_analysis import CONFLICT_FIELDS, analyze_trace
 from tools.portable_recovery import digest
 from tools.replay_corpus import DATASETS
 
@@ -22,6 +22,7 @@ SETTINGS = {'a4': 440, 'input-trim': -9, 'sensitivity': 60,
 CUE_ON_FLAGS = ('--diagnostic-native-partial-cues',
                 '--diagnostic-cue-free-lane-reassignment')
 PREVIEW_ON_FLAGS = ('--diagnostic-projection-preview-admission',)
+COLLISION_ON_FLAGS = ('--diagnostic-spectral-lane-collision',)
 
 
 def now():
@@ -66,9 +67,12 @@ def validate_timing_diagnosis(timing, mode):
 
 
 def command_for(binary, corpus, name, mode, block, timing, *,
-                projection_preview_admission=False, midi_trace=None):
+                projection_preview_admission=False, spectral_lane_collision=False,
+                midi_trace=None):
     if name not in DATASETS or mode not in ('off', 'on') or block not in BLOCKS:
         raise ValueError('Unknown replay selection')
+    if projection_preview_admission and spectral_lane_collision:
+        raise ValueError('Select only one isolated policy')
     command = [str(binary), '--wav', str(corpus / (name + '.wav')),
                '--labels', str(corpus / (name + '.tsv')),
                '--calibration', str(corpus / 'calibration.m3cb'),
@@ -83,7 +87,8 @@ def command_for(binary, corpus, name, mode, block, timing, *,
     for key, value in SETTINGS.items():
         command.extend(('--' + key, str(value)))
     if mode == 'on':
-        command.extend(PREVIEW_ON_FLAGS if projection_preview_admission else CUE_ON_FLAGS)
+        command.extend(COLLISION_ON_FLAGS if spectral_lane_collision else
+                       PREVIEW_ON_FLAGS if projection_preview_admission else CUE_ON_FLAGS)
     return command
 
 
@@ -94,13 +99,25 @@ def main():
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--max-seconds', type=int, default=10800)
-    parser.add_argument('--projection-preview-admission', action='store_true',
+    policy = parser.add_mutually_exclusive_group()
+    policy.add_argument('--projection-preview-admission', action='store_true',
                         help='Screen preview ownership alone instead of the frozen-cue correction')
+    policy.add_argument('--spectral-lane-collision', action='store_true',
+                        help='Screen collision output alone, with complete raw MIDI safety gates')
+    parser.add_argument('--off-reference-report', type=Path,
+                        help='Saved corpus OFF-32 references; required for the collision policy')
     parser.add_argument('--capture-midi-lifecycle', action='store_true',
                         help='Measure full detector note lifetimes on untimed 512-sample replays')
     args = parser.parse_args()
     if args.max_seconds <= 0:
         parser.error('--max-seconds must be positive')
+    if args.spectral_lane_collision and args.off_reference_report is None:
+        parser.error('--spectral-lane-collision requires --off-reference-report')
+    capture_midi = args.capture_midi_lifecycle or args.spectral_lane_collision
+    reference_rows = None
+    if args.off_reference_report is not None:
+        reference = json.loads(args.off_reference_report.read_text())
+        reference_rows = {name: reference['datasets'][name]['runs']['off-32'] for name in DATASETS}
     # Exclusive directory: never overwrite a prior measurement.
     args.output.mkdir(parents=True, exist_ok=False)
     args.binary, args.corpus = args.binary.resolve(), args.corpus.resolve()
@@ -121,14 +138,23 @@ def main():
                   timing_limits=dict(block_samples=32, sample_rate=96000,
                                      p99_ns=166666, maximum_ns=333333, deadline_overruns=0),
                   datasets={}, promotion_accepted=False, live_readiness='not measured')
-    report['on_flags'] = list(PREVIEW_ON_FLAGS if args.projection_preview_admission else CUE_ON_FLAGS)
-    report['midi_lifecycle_capture'] = dict(enabled=args.capture_midi_lifecycle,
+    report['on_flags'] = list(COLLISION_ON_FLAGS if args.spectral_lane_collision else
+                             PREVIEW_ON_FLAGS if args.projection_preview_admission else CUE_ON_FLAGS)
+    report['midi_lifecycle_capture'] = dict(enabled=capture_midi,
         block_samples=512, scope='detector transitions before host delivery',
-        acceptance_target='not measured', alters_acceptance_gates=False)
+        acceptance_target=('no increase in any raw conflict count per dataset'
+                           if args.spectral_lane_collision else 'not measured'),
+        alters_acceptance_gates=args.spectral_lane_collision)
+    if reference_rows is not None:
+        report['off_reference_report_sha256'] = digest(args.off_reference_report)
     if args.projection_preview_admission:
         report.update(schema='m3_portable_projection_preview_corpus_v1',
                       trial_revision='full_physical_assignment_context',
                       assignment_context='original selected candidates; preview filtering remains downstream')
+    if args.spectral_lane_collision:
+        report.update(schema='m3_portable_spectral_lane_collision_corpus_v1',
+                      trial_revision='singleton_output_fallback',
+                      assignment_context='ordinary physical assignment; conflicting singleton output fallback')
     deadline = time.monotonic() + args.max_seconds
     results = {}
 
@@ -151,9 +177,10 @@ def main():
         tsv = args.output / (stem + '.tsv')
         timing_path = args.output / (stem + '-timing.json')
         midi_path = (args.output / (stem + '-midi.tsv')
-                     if args.capture_midi_lifecycle and block == 512 else None)
+                     if capture_midi and block == 512 else None)
         command = command_for(args.binary, args.corpus, name, mode, block, timing_path,
                               projection_preview_admission=args.projection_preview_admission,
+                              spectral_lane_collision=args.spectral_lane_collision,
                               midi_trace=midi_path)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -169,12 +196,24 @@ def main():
         row = dict(command=command, elapsed_seconds=time.monotonic() - started,
                    output=parsed['output'], exact_matches_by_string_count=parsed['exact_matches_by_string_count'],
                    tsv_sha256=digest(tsv), timing=timing, gates=gates)
+        if mode == 'off' and reference_rows is not None:
+            reference = reference_rows[name]
+            identity = all(row[key] == reference[key]
+                           for key in ('output', 'exact_matches_by_string_count'))
+            row['off_baseline_output_identical'] = identity
+            row['off_reference_bit_identical'] = (
+                identity and row['tsv_sha256'] == reference['tsv_sha256'] if block == 32 else None)
         if midi_path is not None:
-            row['midi_lifecycle'] = analyze_trace(midi_path, tsv)
+            row['midi_lifecycle'] = analyze_trace(midi_path, tsv,
+                include_raw_conflicts=args.spectral_lane_collision)
             row['midi_lifecycle_trace'] = dict(file=midi_path.name, sha256=digest(midi_path))
         report['datasets'].setdefault(name, {'runs': {}})['runs'][f'{mode}-{block}'] = row
         results[key] = parsed
         save()
+        if mode == 'off' and reference_rows is not None and (
+                not row['off_baseline_output_identical']
+                or row['off_reference_bit_identical'] is False):
+            raise ValueError('OFF reference differs from the saved corpus baseline: ' + stem)
         if block == 32 and not gates['timed_scored_identity']:
             raise ValueError('Timed/scored replay identity failed: ' + stem)
         return parsed
@@ -187,6 +226,13 @@ def main():
         safe = comparison['gate_pass'] and (block != 32 or all(
             entry['runs'][f'{mode}-{block}']['gates']['zero_processing_allocations']
             for mode in ('off', 'on')))
+        if args.spectral_lane_collision and block == 512:
+            counts = [entry['runs'][f'{mode}-512']['midi_lifecycle']['raw_midi']['counts']
+                      for mode in ('off', 'on')]
+            delta = {key: counts[1][key] - counts[0][key] for key in CONFLICT_FIELDS}
+            entry['raw_midi_delta'] = delta
+            entry['raw_midi_no_regression'] = all(value <= 0 for value in delta.values())
+            safe = safe and entry['raw_midi_no_regression']
         save()
         return safe
 
@@ -243,6 +289,26 @@ def main():
         report['native_gates_passed'] = sum(row.get('native_gate_pass', False)
                                             for row in report['datasets'].values())
         report['declared_datasets'] = len(DATASETS)
+        if args.spectral_lane_collision:
+            rows = list(report['datasets'].values())
+            compared = [row for row in rows if 'raw_midi_delta' in row]
+            delta = {key: sum(row['raw_midi_delta'][key] for row in compared)
+                     for key in CONFLICT_FIELDS}
+            report['raw_midi_comparison'] = dict(datasets_compared=len(compared), delta=delta,
+                no_regression=(len(compared) == len(DATASETS)
+                               and all(row['raw_midi_no_regression'] for row in compared)),
+                conflicts_reduced=(len(compared) == len(DATASETS)
+                                   and delta['cross_pitch_on_before_release'] < 0))
+            report['off_references_bit_identical'] = (
+                len(rows) == len(DATASETS) and all(row['runs'].get('off-32', {}).get(
+                    'off_reference_bit_identical') is True for row in rows))
+            report['full_corpus_screen_pass'] = (
+                report['native_gates_passed'] == len(DATASETS)
+                and report['off_references_bit_identical']
+                and report['raw_midi_comparison']['no_regression']
+                and report['raw_midi_comparison']['conflicts_reduced'])
+            report['decision'] = ('eligible for host validation' if report['full_corpus_screen_pass']
+                                  else 'rejected')
         # A corpus replay cannot certify host/MIDI lifecycle or restore missing control crops.
         save()
 
