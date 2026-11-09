@@ -173,6 +173,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
     elif projection_preview_trial:
         report['schema'] = 'm3_projection_preview_admission_trial_v1'
         report['runtime_rule_changed'] = True
+        report['trial_revision'] = 'full_physical_assignment_context'
+        report['assignment_context'] = 'original selected candidates; preview filtering remains downstream'
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()

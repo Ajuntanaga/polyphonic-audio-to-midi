@@ -1,3 +1,11 @@
+## 2026-11-09 — preserve physical context in the preview trial
+
+- The default-off preview-admission trial now passes the original selection into physical string assignment. Preview filtering still applies to downstream unison and calibrated-note ownership. This changes one call site; onset thresholds and collision guards are unchanged.
+- The completed routing trace showed spectral support disappearing before the first wrong-string output. Filtering the physical assignment can relocate an active peer and change spectral ownership, but the saved report does not identify the exact proposal rejection. This trial tests that interaction; it does not claim a verified cause or improvement.
+- Verification is pending on GitHub Actions: require complete ordinary OFF identity, positive whole-recording match gain, zero per-label loss, and no increased wrong-note, wrong-string or extra gap outputs. Run the existing onset-boundary and trace-identity tests. Keep the installed scoreboard unchanged; protected corpus, allocation, buffer, native timing and host acceptance follow only after this screen passes.
+- The runner records the trial revision as `full_physical_assignment_context`. Earlier preview and routing reports remain historical results from their pinned source commits. Do not dispatch the historical routing task against this changed trial and expect its rejected ON hash to match.
+- Cleanup is complete: about 5.75 GB net recovered, including 618 old session logs compressed. The fresh check found 87.53 GB available. Source, recordings, installed tools, checkpoints and active conversations remain preserved.
+
 ## 2026-11-09 — routing trace identifies lost spectral support
 
 - GitHub diagnostic `42589153942` completed at source `2073028474c48fb7af39ea52486184ce4dcd4d40` and worker `64e2bcb4a9e0f0ce1afcb6089cb575a4975f10ae`. Both complete ordinary OFF and rejected ON replay outputs are bit-identical to their recorded references. The 72 worker Python contracts, focused native trace test, source CI `42589112388` and portable CI `42589112295` passed. Checkpoint: `docs/recovery/github-routing-trace-20261109.json`. This completed job needs no rerun or repeat download.

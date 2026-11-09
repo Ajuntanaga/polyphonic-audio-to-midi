@@ -11662,7 +11662,10 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #else
   const auto& ownership_selected = selected;
 #endif
-  assign_m3_strings(ownership_selected);
+  // Keep the physical assignment's full candidate context. Filtering a
+  // preview here can relocate an active peer and remove its spectral support.
+  // The trial still filters downstream unison and calibrated-note ownership.
+  assign_m3_strings(selected);
   update_adjacent_spectral_duplicate_suppression();
   apply_calibrated_dp_replacements(selected, scores, fundamentals, threshold,
                                    quiet, count);
