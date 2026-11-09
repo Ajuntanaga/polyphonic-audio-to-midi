@@ -2214,6 +2214,159 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(detector.candidate_states_[1U].midi_voice_mask, 4U);
   }
 
+  static DetectorDecision prepare_coasting_lane_collision(
+      PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 33U;
+    config.highest_note = 54U;
+    config.max_polyphony = 5U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    detector.playable_string_masks_[4U] = 3U;
+    auto& moving = detector.candidate_states_[4U];  // note 37
+    auto& coasting = detector.candidate_states_[21U];  // note 54
+    moving.assigned_string = 0U;
+    moving.assigned_string_mask = 1U;
+    coasting.assigned_string = 1U;
+    coasting.assigned_string_mask = 2U;
+    DetectorDecision initial;
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(initial, 4U, 90U));
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(initial, 21U, 90U));
+    moving.active = coasting.active = true;
+    moving.assigned_string = 1U;
+    moving.assigned_string_mask = 2U;
+    coasting.assigned_string = 2U;
+    coasting.assigned_string_mask = 4U;
+    coasting.spectral_lane_mask = 2U;
+    coasting.release_ticks = 4U;
+    auto& pending = detector.candidate_states_[0U];  // tentative note 33
+    pending.assigned_string = 0U;
+    pending.assigned_string_mask = 1U;
+    pending.attack_ticks = 9U;
+    pending.evidence_ticks = 7U;
+    return initial;
+  }
+
+  static void coasting_lane_collision_lifecycle(
+      PolyphonicPitchDetector& detector, MidiRouting routing) {
+    struct Capture final {
+      std::array<std::array<bool, 128U>, 16U> active{};
+      static bool push(void* context, const VoiceTransition& event,
+                       std::uint8_t channel) noexcept {
+        auto& self = *static_cast<Capture*>(context);
+        M3_EXPECT_TRUE(channel >= 1U && channel <= 16U);
+        bool& active = self.active[channel - 1U][event.note];
+        M3_EXPECT_EQ(active, event.kind == TransitionKind::note_off);
+        active = event.kind == TransitionKind::note_on;
+        return true;
+      }
+    } capture;
+    GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64U));
+    const auto deliver = [&](const DetectorDecision& decision) {
+      ledger.begin_block();
+      for (const auto& event : decision.transitions)
+        M3_EXPECT_TRUE(ledger.queue_transition(event, 64U));
+      M3_EXPECT_FALSE(ledger.deliver(64U, NoteEventSink{&capture, &Capture::push},
+          0.5, true, true, routing, 1U).output_blocked);
+    };
+    deliver(prepare_coasting_lane_collision(detector));
+    std::array<bool, kMaxCandidates> selected{};
+    selected[4U] = true;
+    const auto allocations = test::allocation_count();
+    DetectorDecision hold;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(hold, 4U, selected));
+    auto& moving = detector.candidate_states_[4U];
+    auto& pending = detector.candidate_states_[0U];
+    M3_EXPECT_EQ(hold.transitions.size(), 0U);
+    M3_EXPECT_EQ(moving.assigned_string_mask, 2U);
+    M3_EXPECT_EQ(moving.midi_voice_mask, 1U);
+    M3_EXPECT_EQ(moving.diagnostic_coasting_retained_mask, 1U);
+    M3_EXPECT_FALSE(detector.append_candidate_note_on(hold, 0U, 90U));
+    M3_EXPECT_EQ(pending.attack_ticks, 9U);
+    M3_EXPECT_EQ(pending.evidence_ticks, 7U);
+    M3_EXPECT_FALSE(pending.active);
+    M3_EXPECT_EQ(hold.transitions.size(), 0U);
+    // The hold remains protected if this candidate also starts coasting.
+    selected[4U] = false;
+    moving.release_ticks = 1U;
+    M3_EXPECT_FALSE(detector.append_candidate_note_on(hold, 0U, 90U));
+    M3_EXPECT_FALSE(detector.diagnostic_midi_owner_conflict(0U, 1U, 4U));
+    deliver(hold);
+
+    DetectorDecision resume;
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(resume, 21U));
+    detector.candidate_states_[21U] = {};
+    selected[4U] = true;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(resume, 4U, selected));
+    M3_EXPECT_EQ(moving.midi_voice_mask, 2U);
+    M3_EXPECT_EQ(moving.diagnostic_coasting_retained_mask, 0U);
+    M3_EXPECT_TRUE(detector.append_candidate_note_on(resume, 0U, 90U));
+    pending.active = true;
+    deliver(resume);
+    DetectorDecision release;
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(release, 0U));
+    M3_EXPECT_TRUE(detector.append_candidate_note_off(release, 4U));
+    deliver(release);
+    for (const auto& channel : capture.active)
+      for (const auto active : channel) M3_EXPECT_FALSE(active);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void coasting_lane_collision_constraints(PolyphonicPitchDetector& detector) {
+    for (unsigned guard = 0U; guard < 12U; ++guard) {
+      static_cast<void>(prepare_coasting_lane_collision(detector));
+      std::array<bool, kMaxCandidates> selected{};
+      selected[4U] = true;
+      auto& moving = detector.candidate_states_[4U];
+      switch (guard) {
+        case 0U: detector.set_spectral_lane_collision_for_diagnostics(false); break;
+        case 1U: selected[21U] = true; break;
+        case 2U: detector.candidate_states_[21U].active = false; break;
+        case 3U:
+          detector.candidate_states_[0U].active = true;
+          detector.candidate_states_[0U].midi_voice_mask = 1U;
+          break;
+        case 4U: moving.spectral_lane_mask = 2U; break;
+        case 5U: moving.pending_unison_mask = 3U; break;
+        case 6U: detector.selector_group_masks_[4U] = 3U; break;
+        case 7U: detector.fine_frequency_evidence_states_[4U].multi_source_observed = true; break;
+        case 8U: detector.beat_evidence_states_[4U].valid = true; break;
+        case 9U: detector.playable_string_masks_[4U] = 2U; break;
+        case 10U: moving.midi_voice_mask = 5U; break;
+        case 11U:
+          detector.candidate_states_[0U].active = true;
+          detector.candidate_states_[0U].midi_voice_mask = 4U;
+          selected[0U] = true;  // A selected peer will claim the old lane.
+          break;
+      }
+      M3_EXPECT_EQ(detector.retained_output_for_coasting_conflict(4U, 2U, selected), 0U);
+    }
+    static_cast<void>(prepare_coasting_lane_collision(detector));
+    std::array<bool, kMaxCandidates> selected{};
+    selected[4U] = true;
+    DetectorDecision hold;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(hold, 4U, selected));
+    detector.candidate_states_[21U] = {};
+    DetectorDecision full;
+    while (full.transitions.size() + 1U < full.transitions.capacity())
+      M3_EXPECT_TRUE(detector.append_transition(full, TransitionKind::note_off, 60U, 0U));
+    const auto before = full.transitions.size();
+    const auto sequence = detector.transition_sequence_;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(full, 4U, selected));
+    M3_EXPECT_EQ(full.transitions.size(), before);
+    M3_EXPECT_EQ(detector.transition_sequence_, sequence);
+    M3_EXPECT_EQ(detector.candidate_states_[4U].midi_voice_mask, 1U);
+    M3_EXPECT_EQ(detector.candidate_states_[4U].diagnostic_coasting_retained_mask, 1U);
+    DetectorDecision retry;
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(retry, 4U, selected));
+    M3_EXPECT_EQ(retry.transitions.size(), 2U);
+    M3_EXPECT_EQ(detector.candidate_states_[4U].midi_voice_mask, 2U);
+    M3_EXPECT_EQ(detector.candidate_states_[4U].diagnostic_coasting_retained_mask, 0U);
+  }
+
   static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector,
                                               bool solver = true) {
     PersistentConfig config;
@@ -12491,6 +12644,23 @@ M3_TEST(native_detector_spectral_lane_collision_preserves_groups_and_capacity) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   m3::PolyphonicPitchDetector detector;
   m3::PolyphonicPitchDetectorTestAccess::spectral_lane_collision_constraints(detector);
+#endif
+}
+
+M3_TEST(native_detector_coasting_lane_collision_retains_then_releases) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::coasting_lane_collision_lifecycle(
+      detector, m3::MidiRouting::per_voice);
+  m3::PolyphonicPitchDetectorTestAccess::coasting_lane_collision_lifecycle(
+      detector, m3::MidiRouting::single);
+#endif
+}
+
+M3_TEST(native_detector_coasting_lane_collision_preserves_groups_and_capacity) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::coasting_lane_collision_constraints(detector);
 #endif
 }
 

@@ -65,6 +65,7 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
 
     def execute(self, args, stub, **kwargs):
         with patch('tools.portable_retained_spectral_trial.WINDOW', (64, 192)), patch(
+                'tools.portable_retained_spectral_trial.COASTING_WINDOW', (64, 192)), patch(
                 'tools.portable_retained_spectral_trial.TARGET_EVENTS', EVENTS[1:]), patch(
                 'tools.portable_retained_spectral_trial.subprocess.run', side_effect=stub) as replay:
             run(*args, **kwargs)
@@ -108,6 +109,9 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
                 self.assertEqual(report['policy_name'], 'spectral-lane-collision')
                 self.assertTrue(report['off_reference_bit_identical'])
                 self.assertTrue(report['recorded_lane_window_resolved'])
+                self.assertTrue(report['coasting_lane_window_resolved'])
+                self.assertEqual(report['trial_revision'], 'coasting_owner_hold')
+                self.assertEqual(report['emitted_midi_labeled_matches'], 'not measured')
                 self.assertEqual(report['full_recording_screen_pass'], not lost_match)
                 self.assertFalse(report['promotion_accepted'])
                 self.assertFalse(report['installed_output_changed'])
@@ -124,6 +128,26 @@ class PortableRetainedSpectralTrialTests(unittest.TestCase):
             report = json.loads((args[-1] / 'report.json').read_text())
             self.assertEqual(report['state'], 'failed')
             self.assertTrue(report['final'])
+
+    def test_aggregate_improvement_cannot_hide_coasting_lane_conflict(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, baseline = self.fixture(Path(directory))
+            # Baseline has two conflicts on lane zero; trial clears that lane,
+            # but one remaining lane-one collision must still reject the trial.
+            baseline_events = [event(63, 'on', 48, 0), event(127, 'on', 47, 1),
+                               event(191, 'on', 46, 2)]
+            trial_events = [dict(row, voice_id=1) for row in EVENTS]
+            with patch('tests.test_portable_retained_spectral_trial.EVENTS', baseline_events):
+                self.execute(args, self.stub(baseline, trial_events=trial_events,
+                                            flag=COLLISION_FLAG),
+                             policy='spectral-lane-collision')
+            report = json.loads((args[-1] / 'report.json').read_text())
+            self.assertTrue(report['raw_conflicts_reduced'])
+            self.assertTrue(report['recorded_lane_window_resolved'])
+            self.assertFalse(report['coasting_lane_window_resolved'])
+            self.assertFalse(report['full_recording_screen_pass'])
+            self.assertEqual(report['runs']['trial-on']['coasting_lane_window_conflicts'], 1)
+            self.assertEqual(report['decision'], 'rejected')
 
     def test_smoother_raw_midi_cannot_offset_lost_label_or_extra_false_notes(self):
         for trial in (replay_text(target=0, other=3, transitions=3),

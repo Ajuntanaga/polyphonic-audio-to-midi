@@ -988,6 +988,9 @@ class PolyphonicPitchDetector final {
     std::uint8_t diagnostic_fine_mask_pruning_mask{};
     std::uint8_t diagnostic_fine_beat_pruning_mask{};
     bool diagnostic_profile_pair_output_filtered{};
+    // An existing singleton output retained while a coasting peer owns its
+    // new physical lane. Pending attacks cannot claim this emitted lane.
+    std::uint8_t diagnostic_coasting_retained_mask{};
 #endif
   };
 
@@ -1416,6 +1419,9 @@ class PolyphonicPitchDetector final {
       std::uint8_t continuity_lane_mask) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   [[nodiscard]] std::uint8_t collision_free_spectral_output_mask(
+      std::size_t candidate, std::uint8_t desired,
+      const std::array<bool, kMaxCandidates>& selected) const noexcept;
+  [[nodiscard]] std::uint8_t retained_output_for_coasting_conflict(
       std::size_t candidate, std::uint8_t desired,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
   void order_collision_releases(DetectorDecision& decision) noexcept;

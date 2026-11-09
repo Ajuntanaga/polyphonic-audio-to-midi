@@ -3425,6 +3425,9 @@ bool PolyphonicPitchDetector::reconcile_selected_midi_output(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   const auto projected = desired;
   desired = collision_free_spectral_output_mask(candidate, desired, selected);
+  const auto coasting_retained =
+      retained_output_for_coasting_conflict(candidate, desired, selected);
+  if (coasting_retained != 0U) desired = coasting_retained;
   if (assignment_diagnostics_enabled_) {
     auto& observation = assignment_diagnostics_[candidate];
     observation.render_observed = true;
@@ -3507,6 +3510,8 @@ bool PolyphonicPitchDetector::reconcile_selected_midi_output(
   }
   state.diagnostic_profile_pair_output_filtered =
       pruned_desired != unfiltered_desired;
+  state.diagnostic_coasting_retained_mask = static_cast<std::uint8_t>(
+      coasting_retained & pruned_desired);
   return desired != projected && required != 0U;
 #else
   return false;
@@ -4144,14 +4149,16 @@ std::uint8_t PolyphonicPitchDetector::diagnostic_profile_pair_output_mask(
 bool PolyphonicPitchDetector::diagnostic_midi_owner_conflict(
     std::size_t candidate, std::uint8_t desired,
     std::size_t releasing_candidate) const noexcept {
-  if (!diagnostic_joint_midi_owner_guard_) {
+  if (!diagnostic_joint_midi_owner_guard_ && !diagnostic_spectral_lane_collision_) {
     return false;
   }
   for (std::size_t other = 0U;
        other < static_cast<std::size_t>(candidate_count_); ++other) {
     if (other != candidate && other != releasing_candidate &&
         candidate_states_[other].active &&
-        (candidate_states_[other].midi_voice_mask & desired) != 0U) {
+        (candidate_states_[other].midi_voice_mask & desired &
+         (diagnostic_joint_midi_owner_guard_ ? 0xffU :
+          candidate_states_[other].diagnostic_coasting_retained_mask)) != 0U) {
       return true;
     }
   }
@@ -4214,6 +4221,7 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
     state.midi_voice_mask = desired;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     state.diagnostic_profile_pair_output_filtered = desired != unfiltered_desired;
+    state.diagnostic_coasting_retained_mask = 0U;
 #endif
     harmonic_energy_memory_[candidate] = {};
     long_harmonic_energy_memory_[candidate] = {};
@@ -5919,6 +5927,44 @@ std::uint8_t PolyphonicPitchDetector::collision_free_spectral_output_mask(
         desired == static_cast<std::uint8_t>(1U << other.assigned_string);
   }
   return peer_claims_overlay ? physical : desired;
+}
+
+std::uint8_t PolyphonicPitchDetector::retained_output_for_coasting_conflict(
+    std::size_t candidate, std::uint8_t desired,
+    const std::array<bool, kMaxCandidates>& selected) const noexcept {
+  if (!diagnostic_spectral_lane_collision_ || !selected[candidate]) return 0U;
+  const auto& state = candidate_states_[candidate];
+  const auto& fine = fine_frequency_evidence_states_[candidate];
+  const auto previous = state.midi_voice_mask;
+  // A fading peer still owns its emitted MIDI slot even after selection drops
+  // it. Keep this already-active singleton on its free previous lane until
+  // that peer releases. Physical assignment and evidence remain untouched.
+  if (!state.active || state.spectral_duplicate_output_suppressed ||
+      state.assigned_string >= kMaxVoices || state.spectral_lane_mask != 0U ||
+      desired != state.assigned_string_mask ||
+      desired != static_cast<std::uint8_t>(1U << state.assigned_string) ||
+      string_count(previous) != 1U || previous == desired ||
+      (playable_string_mask(candidate) & previous) == 0U ||
+      state.pending_unison_mask != 0U ||
+      string_count(selector_group_masks_[candidate]) > 1U ||
+      beat_evidence_states_[candidate].valid || fine.multi_source_observed ||
+      string_count(fine.member_mask) > 1U ||
+      string_count(fine.pending_member_mask) > 1U)
+    return 0U;
+  bool coasting_owner = false;
+  for (std::size_t peer = 0U; peer < candidate_count_; ++peer) {
+    if (peer == candidate) continue;
+    const auto& other = candidate_states_[peer];
+    if (!other.active) continue;
+    if ((other.midi_voice_mask & previous) != 0U) return 0U;
+    if (selected[peer] && !other.spectral_duplicate_output_suppressed &&
+        (projected_output_string_mask(other.assigned_string_mask,
+             other.assigned_string, other.spectral_lane_mask,
+             other.continuity_lane_mask) & previous) != 0U)
+      return 0U;
+    coasting_owner |= !selected[peer] && (other.midi_voice_mask & desired) != 0U;
+  }
+  return coasting_owner ? previous : 0U;
 }
 
 void PolyphonicPitchDetector::order_collision_releases(
