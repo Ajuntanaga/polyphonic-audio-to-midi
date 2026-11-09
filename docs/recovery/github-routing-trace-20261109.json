@@ -1,0 +1,789 @@
+{
+  "schema": "m3_routing_trace_checkpoint_v1",
+  "run_id": 42589153942,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42589153942",
+  "source_commit": "2073028474c48fb7af39ea52486184ce4dcd4d40",
+  "worker_commit": "64e2bcb4a9e0f0ce1afcb6089cb575a4975f10ae",
+  "collected_at": "2026-11-09T08:59:41.809379+00:00",
+  "report_updated_at": "2026-11-09T08:57:08.779559+00:00",
+  "state": "completed",
+  "final": true,
+  "report": "build/github-results/routing-42589153942/routing/report.json",
+  "report_sha256": "f77f70804204fbee4c78d3e7a18bb7eaf84a5f053ab0539df1100b8a13947515",
+  "report_artifact": {
+    "id": 13660104063,
+    "bytes": 13984,
+    "sha256": "8e39df8f64d25f9231fceb1868e78930438b3c0939f6fe5e32a8698aedec038a",
+    "downloaded_once": true
+  },
+  "evidence_artifact": {
+    "id": 13661260519,
+    "bytes": 4329684,
+    "sha256": "e59be249fcea45167bd6f4ace60044a1ff0810e5e240e5c54f0e36ac1706a2d5",
+    "downloaded": false
+  },
+  "runtime_rule_changed": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "checks": {
+    "worker_python_contracts_passed": 72,
+    "focused_native_trace_test_passed": true,
+    "source_ci": {
+      "run_id": 42589112388,
+      "conclusion": "success"
+    },
+    "portable_ci": {
+      "run_id": 42589112295,
+      "conclusion": "success"
+    }
+  },
+  "comparison": {
+    "delta": {
+      "matched": 44,
+      "false_wrong_note_voices": -112,
+      "false_wrong_string_voices": -34,
+      "false_gap_voices": 0,
+      "false_positive_voices": -146
+    },
+    "changed_labels": [
+      {
+        "label_index": 54,
+        "midi_note": 52,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 467,
+        "current_matched": 458,
+        "matched_delta": -9
+      },
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 290,
+        "matched_delta": 23
+      },
+      {
+        "label_index": 66,
+        "midi_note": 46,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 88,
+        "current_matched": 110,
+        "matched_delta": 22
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 273,
+        "matched_delta": 8
+      }
+    ],
+    "lost_labels": [
+      54
+    ],
+    "increased_error_counts": [],
+    "gate_pass": false,
+    "output_bit_identical": false
+  },
+  "observations": [
+    "At sample 945151, ON reports other-owned mask 2 instead of OFF mask 4, but final continuity remains mask 2 in both.",
+    "At the first lost frame, sample 945215, assigned mask 1 and pre-render continuity mask 2 are identical. OFF spectral mask is 2; ON spectral mask is 0. Desired and pruned masks become 1 only in ON, and actual MIDI moves from lane 1 to lane 0.",
+    "ON post-render continuity changes to mask 1 after the wrong output is rendered. This disproves prior continuity-mask loss as the immediate cause of the first transfer.",
+    "At sample 945343, spectral mask 2 returns and actual MIDI returns to lane 1 even though pre-render continuity is still mask 1.",
+    "Capacity is sufficient and pruning does not change the desired mask in either run throughout this window."
+  ],
+  "supported_conclusion": "Loss of spectral string support precedes the first wrong-string output. The continuity-mask change follows rendering. The precise upstream reason the spectral mask clears is not established by this recorder.",
+  "limits": [
+    "The trace covers the first episode, not every lost frame.",
+    "The prior ON trial remains rejected for label 54 losing 9 matches.",
+    "No new runtime fix, allocation, timing or host acceptance is claimed."
+  ],
+  "next": "Inspect spectral proposal admission at the first transfer: note 52 loses its spectral mask before rendering while continuity still has mask 2. Correct that interaction in a default-off offline trial only if the full ordinary replay gains matches with zero per-label losses and no increased wrong-note, wrong-string or extra gap outputs; then check the protected corpus and realtime gates.",
+  "runs": {
+    "reference-off": {
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "reference_bit_identical": true,
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "label": {
+        "label_index": 54,
+        "start_sample": 897799,
+        "end_sample": 969600,
+        "midi_note": 52,
+        "string_mask": 2,
+        "calibration_pass": 1,
+        "labeled": 1122,
+        "matched": 467
+      },
+      "routing_frames": [
+        {
+          "sample": 944895,
+          "routing": {
+            "tick": 14764,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 41,
+              "voice_id": 2
+            },
+            {
+              "kind": "on",
+              "note": 41,
+              "voice_id": 0
+            }
+          ]
+        },
+        {
+          "sample": 944959,
+          "routing": {
+            "tick": 14765,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 41,
+              "voice_id": 0
+            },
+            {
+              "kind": "on",
+              "note": 42,
+              "voice_id": 0
+            }
+          ]
+        },
+        {
+          "sample": 945023,
+          "routing": {
+            "tick": 14766,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945087,
+          "routing": {
+            "tick": 14767,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 42,
+              "voice_id": 0
+            },
+            {
+              "kind": "on",
+              "note": 42,
+              "voice_id": 2
+            }
+          ]
+        },
+        {
+          "sample": 945151,
+          "routing": {
+            "tick": 14768,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 42,
+              "voice_id": 2
+            },
+            {
+              "kind": "on",
+              "note": 41,
+              "voice_id": 2
+            }
+          ]
+        },
+        {
+          "sample": 945215,
+          "routing": {
+            "tick": 14769,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945279,
+          "routing": {
+            "tick": 14770,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945343,
+          "routing": {
+            "tick": 14771,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945407,
+          "routing": {
+            "tick": 14772,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945471,
+          "routing": {
+            "tick": 14773,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945535,
+          "routing": {
+            "tick": 14774,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        }
+      ]
+    },
+    "trial-on": {
+      "tsv_sha256": "6ac14f0658806f19e3bdab4bbb0ff6551689ac27552cb7560842725441ccd02c",
+      "output": {
+        "labeled": 528632,
+        "matched": 145429,
+        "false_wrong_note_voices": 164151,
+        "false_wrong_string_voices": 92619,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319626,
+        "fingerprint": "12e5242b703d2f3d"
+      },
+      "reference_bit_identical": true,
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "label": {
+        "label_index": 54,
+        "start_sample": 897799,
+        "end_sample": 969600,
+        "midi_note": 52,
+        "string_mask": 2,
+        "calibration_pass": 1,
+        "labeled": 1122,
+        "matched": 458
+      },
+      "routing_frames": [
+        {
+          "sample": 944895,
+          "routing": {
+            "tick": 14764,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 41,
+              "voice_id": 2
+            },
+            {
+              "kind": "on",
+              "note": 41,
+              "voice_id": 0
+            }
+          ]
+        },
+        {
+          "sample": 944959,
+          "routing": {
+            "tick": 14765,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 41,
+              "voice_id": 0
+            },
+            {
+              "kind": "on",
+              "note": 42,
+              "voice_id": 0
+            }
+          ]
+        },
+        {
+          "sample": 945023,
+          "routing": {
+            "tick": 14766,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945087,
+          "routing": {
+            "tick": 14767,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 2,
+            "primary_string": 1,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 1,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945151,
+          "routing": {
+            "tick": 14768,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 2,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 42,
+              "voice_id": 0
+            },
+            {
+              "kind": "on",
+              "note": 42,
+              "voice_id": 1
+            }
+          ]
+        },
+        {
+          "sample": 945215,
+          "routing": {
+            "tick": 14769,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 0,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 2,
+            "midi_after": 1,
+            "other_owned": 2,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": false,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 42,
+              "voice_id": 1
+            },
+            {
+              "kind": "on",
+              "note": 41,
+              "voice_id": 1
+            },
+            {
+              "kind": "off",
+              "note": 52,
+              "voice_id": 1
+            },
+            {
+              "kind": "on",
+              "note": 52,
+              "voice_id": 0
+            }
+          ]
+        },
+        {
+          "sample": 945279,
+          "routing": {
+            "tick": 14770,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 0,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 1,
+            "pruned_mask": 1,
+            "midi_before": 1,
+            "midi_after": 1,
+            "other_owned": 4,
+            "final_continuity_mask": 1,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": false,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 41,
+              "voice_id": 1
+            },
+            {
+              "kind": "on",
+              "note": 41,
+              "voice_id": 2
+            }
+          ]
+        },
+        {
+          "sample": 945343,
+          "routing": {
+            "tick": 14771,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 1,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 1,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": [
+            {
+              "kind": "off",
+              "note": 52,
+              "voice_id": 0
+            },
+            {
+              "kind": "on",
+              "note": 52,
+              "voice_id": 1
+            }
+          ]
+        },
+        {
+          "sample": 945407,
+          "routing": {
+            "tick": 14772,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945471,
+          "routing": {
+            "tick": 14773,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        },
+        {
+          "sample": 945535,
+          "routing": {
+            "tick": 14774,
+            "render_observed": 1,
+            "continuity_observed": 1,
+            "assigned_mask": 1,
+            "primary_string": 0,
+            "spectral_mask": 2,
+            "continuity_mask": 2,
+            "cached_group_mask": 0,
+            "desired_mask": 2,
+            "pruned_mask": 2,
+            "midi_before": 2,
+            "midi_after": 2,
+            "other_owned": 4,
+            "final_continuity_mask": 2,
+            "final_cached_group_mask": 0,
+            "capacity_blocked": 0
+          },
+          "label_matched": true,
+          "midi_events": []
+        }
+      ]
+    }
+  }
+}
