@@ -1,0 +1,171 @@
+{
+  "schema": "m3_projection_preview_assignment_context_summary_v1",
+  "recorded_at": "2026-11-09T09:16:01.433632+00:00",
+  "decision": "ordinary screen passed; wider validation pending",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "a0737ff41ac9ace594c4dc2741752bb4382c068f",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42591352851",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "worker_commit": "64e2bcb4a9e0f0ce1afcb6089cb575a4975f10ae",
+  "run_id": 42591352851,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42591352851",
+  "conclusion": "success",
+  "result_final": true,
+  "trial_revision": "full_physical_assignment_context",
+  "assignment_context": "original selected candidates; preview filtering remains downstream",
+  "runtime_rule_changed": true,
+  "enabled_by_default": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "report": "build/github-results/assignment-context-42591352851/projection-preview/report.json",
+  "report_sha256": "1d7a2a04839e70afbfff13224787d26784ba038b5b5be7d85582299ee4a706b6",
+  "small_artifact": {
+    "id": 13660949919,
+    "name": "m3-report-42591352851-1",
+    "bytes": 17413,
+    "sha256": "8fb0f4d0d704aec529ac9e94397acebc632646952194b979649a68d36c4cf0c5"
+  },
+  "evidence_artifact": {
+    "id": 13662520611,
+    "name": "m3-evidence-42591352851-1",
+    "bytes": 4708502,
+    "sha256": "ce2f6e4b2c6bd9b22e26b3103d167fdb46377751269f5dd059d65d63d36de63f",
+    "downloaded": false
+  },
+  "binary_sha256": "018e5dd800d6a8c31cb6b7a8225ba2f39474dd57fdbf3c30d6974c794ddecbc8",
+  "input_manifest_sha256": "00a79274d931812d0a1413eabd42e0ea152064eb3cf80adc9553d7b8a408e1ed",
+  "runs": {
+    "reference-off": {
+      "elapsed_seconds": 93.564302415,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756",
+        "labeled_frame_match_percent": 27.502118676130088
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      }
+    },
+    "trial-on": {
+      "elapsed_seconds": 98.45914459000002,
+      "tsv_sha256": "1822c2bd944e7f4fc1589ca2c079bcde6967f4a6b9bd300e94ec3504406f496f",
+      "output": {
+        "labeled": 528632,
+        "matched": 145395,
+        "false_wrong_note_voices": 164189,
+        "false_wrong_string_voices": 92651,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319696,
+        "fingerprint": "bdaabf94f19a4940",
+        "labeled_frame_match_percent": 27.504010351246233
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145395
+        }
+      }
+    }
+  },
+  "comparison": {
+    "delta": {
+      "matched": 10,
+      "false_wrong_note_voices": -74,
+      "false_wrong_string_voices": -2,
+      "false_gap_voices": 0,
+      "false_positive_voices": -76
+    },
+    "changed_labels": [
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 269,
+        "matched_delta": 2
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 273,
+        "matched_delta": 8
+      }
+    ],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "off_reference_bit_identical": true,
+  "full_recording_screen_pass": true,
+  "labeled_match_gain": true,
+  "target_before": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 267
+  },
+  "target_after": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 269
+  },
+  "verification": {
+    "worker_python_contracts": {
+      "passed": 72,
+      "total": 72
+    },
+    "native_onset_boundaries": "passed",
+    "offline_trace_identity_and_partitioning": "passed",
+    "source_portable_run": {
+      "id": 42591312155,
+      "conclusion": "success"
+    },
+    "source_ci_run": {
+      "id": 42591311929,
+      "conclusion": "success",
+      "scope": "native tests and VST3 package build"
+    }
+  },
+  "new_trial_remaining_gates": [
+    "protected corpus labels and errors",
+    "allocation",
+    "buffer independence",
+    "native p99 and maximum timing",
+    "live host"
+  ],
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "next": "Replay the default-off candidate on protected recordings with zero per-label loss or increased false outputs, then require allocation, buffer, native timing and live-host gates before promotion.",
+  "matched_change_percent_of_baseline": 0.006878288681775974,
+  "matched_change_percentage_points": 0.0018916751161488523
+}
