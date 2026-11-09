@@ -4,7 +4,9 @@ The new `midi-ledger-replay` GitHub task reuses the complete ordinary OFF and ON
 
 This is an offline simulation with an accepting file sink. It does not reproduce detector feedback after a fault, waveform recovery, host rejection or consumption, hardware behavior, or real-time timing. It leaves notes open at the end of the saved recording rather than inventing releases. The installed plugin and scoreboard are unchanged.
 
-Five local parser and provenance tests pass. Seven native cases are prepared for GitHub, covering unison identity, same-sample replacement order, cross-sample collisions, unassigned duplicate pitches, EOF-open notes, orphan releases, invalid note-ons and malformed inputs. Native compilation and execution are pending. The focused read-only review found no material blocker; Python syntax, workflow syntax and diff checks pass.
+Five local parser and provenance tests pass. GitHub source run `42620590132` passed native compilation, native tests, Python contracts (including the seven ledger cases) and synthetic buffer parity. Those cases cover unison identity, same-sample replacement order, cross-sample collisions, unassigned duplicate pitches, EOF-open notes, orphan releases, invalid note-ons and malformed inputs. Production VST3 build/package run `42620590207` remains in progress. The focused read-only review found no material blocker; Python syntax, workflow syntax and diff checks pass.
+
+Saved-MIDI run `42620637771` is queued behind the corpus run, pinned to source `a522a01f4613f596289c035a4f68d0513a031cf4` and worker `01235adb913958b8ad55c02fc79f82f4b867cc3e`. It was dispatched once. Checkpoint: `docs/recovery/github-midi-ledger-replay-20261109.json`. Collect its small report once terminal; no full saved-stream ledger result is available yet.
 
 Corpus run `42616852315` remains active at source `2cc36876f77834d890f68ef44b3fe468f9d9b4b5`. Keep that run; the ledger task uses saved evidence and does not repeat the audio replay. Collect the small corpus report when it completes and retain the original label/error, allocation, buffer and timing gates.
 

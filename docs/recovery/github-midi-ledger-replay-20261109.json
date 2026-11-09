@@ -1,0 +1,60 @@
+{
+  "task": "midi-ledger-replay",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42620637771,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42620637771",
+  "source_commit": "a522a01f4613f596289c035a4f68d0513a031cf4",
+  "worker_commit": "01235adb913958b8ad55c02fc79f82f4b867cc3e",
+  "created_at": "2026-11-09T12:52:38Z",
+  "observed_at": "2026-11-09T12:55:24.129036+00:00",
+  "status": "pending",
+  "conclusion": null,
+  "stage": "Queued behind corpus run 42616852315",
+  "result_final": false,
+  "output_target": "build/github-results/midi-ledger-42620637771",
+  "report_relative_path": "midi-ledger/report.json",
+  "outputs_downloaded_once": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "source_trace_checkpoint": "docs/recovery/github-spectral-lane-collision-20261109.json",
+  "saved_trace_run_id": 42614803871,
+  "saved_trace_artifact_id": 13672780703,
+  "saved_trace_archive_sha256": "0f8621a5d102dacd922a1040316eff08970661509bfef5ddf42eee5ab553686e",
+  "source_checks": [
+    {
+      "run_id": 42620590132,
+      "workflow": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-11-09T12:53:34Z"
+    },
+    {
+      "run_id": 42620590207,
+      "workflow": "CI",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "local_verification": {
+    "pure_contract_tests_passed": 5,
+    "python_syntax": "passed",
+    "workflow_syntax": "passed",
+    "diff_check": "passed",
+    "focused_read_only_review": "no material blocker"
+  },
+  "scope": "Full saved ordinary OFF/ON event streams through production GeneratedNoteLedger, both single-channel and per-voice routing, accepting file sink.",
+  "limits": "Open-loop diagnostic only; no detector feedback after a fault, waveform recovery, VST3 host delivery or consumption, hardware or timing acceptance. EOF-open notes are not proof of stuck host MIDI.",
+  "next": "Collect small report once after completion; inspect first blocking event and source/cleanup callback counts. Retain the existing corpus run and all acceptance gates.",
+  "cloud_verification": {
+    "source_run_id": 42620590132,
+    "native_ledger_cases_passed": 7,
+    "native_build": "passed",
+    "native_tests": "passed",
+    "python_contracts": "passed",
+    "synthetic_buffer_parity": "passed",
+    "production_package_run_id": 42620590207,
+    "production_package_status": "in_progress",
+    "installed": false
+  }
+}
