@@ -4,6 +4,7 @@ Both replays cover the full ordinary recording. Labels select retained diagnosis
 windows only; they never change audio, detector settings or the runtime rule.
 """
 import argparse
+from collections import Counter
 import csv
 from datetime import datetime, timezone
 import json
@@ -101,13 +102,72 @@ def summarize_target(rows, events, label):
                                'string identity or freedom from stuck notes.')
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def summarize_calibrated_output(rows, outcomes, events, note):
+    """Join the executed stage to later snapshots without attributing later MIDI.
+
+    Stage transition counts identify this candidate's calibrated-output work.
+    Events at the same tick can also include later assignment/lifecycle work.
+    """
+    outcomes = {int(row['sample']): row for row in outcomes}
+    events_at = {}
+    for row in events:
+        events_at.setdefault(int(row['sample']), []).append(dict(
+            kind=row['kind'], note=int(row['note']), voice_id=int(row['voice_id'])))
+    seen, reasons, changes, transitions = set(), Counter(), Counter(), []
+    int_fields = ('tick', 'eligibility_failures', 'age', 'min_age', 'selected_count',
+                  'member_mask', 'output_before', 'output_after', 'midi_before',
+                  'midi_after', 'target_before', 'target_after', 'ticks_before',
+                  'ticks_after', 'projected_note', 'changed', 'trusted',
+                  'collision_note', 'collision_kind', 'transitions_added')
+    for row in rows:
+        sample, tick = int(row['sample']), int(row['tick'])
+        if (sample not in outcomes or sample in seen or tick * 64 - 1 != sample
+                or int(row['note']) != note):
+            raise ValueError('Calibrated-output trace clock, candidate or coverage mismatch')
+        seen.add(sample)
+        observed, reason = int(row['cal_observed']), row['cal_reason']
+        if observed and (int(row['cal_tick']) != tick or reason == 'not_observed'):
+            raise ValueError('Stale calibrated-output stage observation')
+        if not observed and reason != 'not_observed':
+            raise ValueError('Unobserved calibrated-output stage has a reason')
+        reasons[reason] += 1
+        stage = {key: int(row['cal_' + key]) for key in int_fields}
+        stage.update(observed=bool(observed), reason=reason,
+                     phase_cents=row['cal_phase_cents'],
+                     projected_error_cents=row['cal_projected_error_cents'])
+        changed = observed and (stage['output_before'] != stage['output_after']
+                                or stage['midi_before'] != stage['midi_after'])
+        if changed:
+            changes[reason] += 1
+        actual = events_at.get(sample, [])
+        if changed or stage['transitions_added'] or any(
+                event['note'] in (note, note + 1) for event in actual):
+            transitions.append(dict(sample=sample, stage=stage,
+                midi_events_at_same_tick=actual,
+                later_snapshot_voices=outcomes[sample]['voices']))
+    if seen != set(outcomes):
+        raise ValueError('Incomplete calibrated-output candidate capture')
+    return dict(candidate_note=note, frames=len(seen), reasons=dict(reasons),
+                output_change_reasons=dict(changes), transitions=transitions,
+                interpretation='Stage fields record the executed calibrated-output branch '
+                    'before later assignment/lifecycle work. Same-tick MIDI events are '
+                    'actual global events, not automatically attributable to this stage. '
+                    'An ineligible tick clears pending consensus but does not itself '
+                    'revert an emitted projection. This is baseline diagnosis, not a '
+                    'runtime improvement or host/MIDI acceptance.')
+
+
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
+        calibrated_output_trace=False):
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     report = dict(schema='m3_direct_evidence_retention_trial_v1', state='running', final=False,
                   stage='verify inputs', dataset='ordinary', settings=SETTINGS,
                   installed_output_changed=False, promotion_accepted=False,
                   native_timing='not measured', live_readiness='not measured')
+    if calibrated_output_trace:
+        report['schema'] = 'm3_calibrated_output_trace_v1'
+        report['runtime_rule_changed'] = False
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -149,17 +209,24 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
         samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
         start, end = trace_sample_bounds([label], samples)
         traces = {kind: output / (kind + '.tsv') for kind in ('candidate', 'outcome', 'midi-event')}
-        command.append('--diagnostic-direct-evidence-retention')
+        if not calibrated_output_trace:
+            command.append('--diagnostic-direct-evidence-retention')
         for kind, path in traces.items():
             command.extend(('--' + kind + '-trace', str(path)))
-        command.extend(('--candidate-trace-note', '42', '--candidate-trace-start', str(start / rate),
+        candidate_note = 41 if calibrated_output_trace else 42
+        command.extend(('--candidate-trace-note', str(candidate_note), '--candidate-trace-start', str(start / rate),
                         '--candidate-trace-end', str(end / rate)))
-        _, after = replay(command, 'trial-on')
+        after_file, after = replay(command, 'traced-off' if calibrated_output_trace else 'trial-on')
         comparison = compare_replays(before, after)
         report.update(comparison=comparison, sample_rate=rate, sample_count=samples,
                       target_before=label, target_after=after['labels'][55],
                       full_recording_screen_pass=comparison['gate_pass'],
                       labeled_match_gain=comparison['delta']['matched'] > 0)
+        if calibrated_output_trace:
+            report['trace_output_bit_identical'] = digest(reference_file) == digest(after_file)
+            report['trace_semantic_identity'] = before == after
+            if not report['trace_output_bit_identical'] or not report['trace_semantic_identity']:
+                raise ValueError('Traced OFF replay differs from untraced OFF replay')
         # Stream the full capture once; retain the small target window in memory.
         window = []
         with traces['outcome'].open(newline='') as stream:
@@ -174,13 +241,18 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                     window.append(row)
             if expected_sample != 63 + (samples // 64) * 64:
                 raise ValueError('Incomplete full outcome capture')
-        report['target_lifecycle'] = summarize_target(window, read_rows(traces['midi-event']), after['labels'][55])
+        events = read_rows(traces['midi-event'])
+        report['target_lifecycle'] = summarize_target(window, events, after['labels'][55])
+        if calibrated_output_trace:
+            report['calibrated_output'] = summarize_calibrated_output(
+                read_rows(traces['candidate']), window, events, candidate_note)
         report['traces'] = {}
         for kind, path in traces.items():
             report['traces'][kind] = compress_trace_window(path, start=start, end=end)
             path.unlink()
         report.update(state='completed', final=True, stage='offline screen collected',
-                      decision='eligible for wider validation' if comparison['gate_pass'] and
+                      decision='unchanged baseline; diagnostic collected' if calibrated_output_trace else
+                               'eligible for wider validation' if comparison['gate_pass'] and
                                comparison['delta']['matched'] > 0 else 'rejected')
     except Exception as error:
         report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
@@ -194,11 +266,13 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--calibrated-output-trace', action='store_true',
+                        help='Capture the unchanged OFF calibrated-output branch for logical note 41')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+        timeout=args.replay_timeout_seconds, calibrated_output_trace=args.calibrated_output_trace)
 
 
 if __name__ == '__main__':

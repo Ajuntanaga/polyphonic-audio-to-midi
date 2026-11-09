@@ -3029,7 +3029,13 @@ bool run_detector_replay(const WaveData& wave,
         "fine_group_disposition\townership_observed\tfine_group_evaluated\t"
         "fine_group_mask\tfine_group_other_owned\tfine_group_overlap\t"
         "fine_group_allocated\tfine_group_extra_capacity\tfine_group_owners\t"
-        "fine_group_owner_counts\n") < 0;
+        "fine_group_owner_counts\tcal_observed\tcal_tick\tcal_reason\t"
+        "cal_eligibility_failures\tcal_phase_cents\tcal_age\tcal_min_age\t"
+        "cal_selected_count\tcal_member_mask\tcal_output_before\tcal_output_after\t"
+        "cal_midi_before\tcal_midi_after\tcal_target_before\tcal_target_after\t"
+        "cal_ticks_before\tcal_ticks_after\tcal_projected_note\tcal_changed\t"
+        "cal_trusted\tcal_projected_error_cents\tcal_collision_note\t"
+        "cal_collision_kind\tcal_transitions_added\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3122,6 +3128,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_fundamental_admission);
   detector.set_direct_evidence_retention_for_diagnostics(
       diagnostic_direct_evidence_retention);
+  detector.set_calibrated_output_diagnostics_enabled(candidate_trace != nullptr);
   detector.set_cue_free_lane_reassignment_for_diagnostics(
       diagnostic_cue_free_lane_reassignment);
   detector.set_provisional_open_retention_guard_for_diagnostics(
@@ -3585,7 +3592,29 @@ bool run_detector_replay(const WaveData& wave,
             for (std::size_t string = 0U; string < owner_counts.size(); ++string)
               trace.failed = std::fprintf(trace.stream, "%s%u",
                   string == 0U ? "" : ",", owner_counts[string]) < 0 || trace.failed;
-            trace.failed = std::fputc('\n', trace.stream) == EOF || trace.failed;
+            constexpr std::array<const char*,
+                static_cast<std::size_t>(CalibratedOutputReason::count)> calibrated_names{
+                "not_observed", "ineligible", "nonfinite_cents", "untrusted_original",
+                "untrusted_start", "untrusted_wait", "untrusted_revert", "collision_reset",
+                "projection_start", "projection_wait", "projection_apply",
+                "diagnostic_collision_reset"};
+            const auto& calibrated = tracking.calibrated_output;
+            trace.failed = std::fprintf(trace.stream,
+                "\t%u\t%u\t%s\t%u\t%.17g\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
+                "%u\t%u\t%u\t%u\t%u\t%u\t%u\t%.17g\t%u\t%u\t%u\n",
+                calibrated.observed, calibrated.decision_tick,
+                calibrated_names[static_cast<std::size_t>(calibrated.reason)],
+                calibrated.eligibility_failures, calibrated.phase_cents,
+                calibrated.age_ticks, calibrated.minimum_age_ticks,
+                calibrated.selected_count, calibrated.member_mask,
+                calibrated.output_before, calibrated.output_after,
+                calibrated.midi_before, calibrated.midi_after,
+                calibrated.target_before, calibrated.target_after,
+                calibrated.ticks_before, calibrated.ticks_after,
+                calibrated.projected_note, calibrated.projection_changed,
+                calibrated.projection_trusted, calibrated.projected_error_cents,
+                calibrated.collision_note, calibrated.collision_kind,
+                calibrated.transitions_added) < 0 || trace.failed;
             ++trace.frames;
           }
         }

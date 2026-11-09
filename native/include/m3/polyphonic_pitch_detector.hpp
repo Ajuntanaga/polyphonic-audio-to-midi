@@ -249,6 +249,54 @@ struct FineHistoryResetDiagnostics final {
   FineHistoryResetReason reason{FineHistoryResetReason::none};
 };
 
+enum class CalibratedOutputReason : std::uint8_t {
+  not_observed,
+  ineligible,
+  nonfinite_cents,
+  untrusted_original,
+  untrusted_start,
+  untrusted_wait,
+  untrusted_revert,
+  collision_reset,
+  projection_start,
+  projection_wait,
+  projection_apply,
+  diagnostic_collision_reset,
+  count,
+};
+
+// The executed branch and state at the calibrated-output stage, before later
+// DP projection and voice/lane lifecycle work. Capture never changes a decision.
+struct CalibratedOutputDiagnostics final {
+  std::uint32_t decision_tick{};
+  double phase_cents{};
+  double projected_error_cents{std::numeric_limits<double>::quiet_NaN()};
+  std::uint16_t age_ticks{};
+  std::uint16_t minimum_age_ticks{};
+  std::uint16_t transitions_added{};
+  std::uint8_t selected_count{};
+  std::uint8_t member_mask{};
+  // Bits: unselected, inactive, fewer than two notes, young, nonsingle member,
+  // invalid phase projection (1, 2, 4, 8, 16, 32 respectively).
+  std::uint8_t eligibility_failures{};
+  std::uint8_t output_before{kTunerNoSignalNote};
+  std::uint8_t output_after{kTunerNoSignalNote};
+  std::uint8_t midi_before{kTunerNoSignalNote};
+  std::uint8_t midi_after{kTunerNoSignalNote};
+  std::uint8_t target_before{kTunerNoSignalNote};
+  std::uint8_t target_after{kTunerNoSignalNote};
+  std::uint8_t ticks_before{};
+  std::uint8_t ticks_after{};
+  std::uint8_t projected_note{kTunerNoSignalNote};
+  std::uint8_t collision_note{kTunerNoSignalNote};
+  // First colliding candidate: selected logical pitch (1), active output (2).
+  std::uint8_t collision_kind{};
+  bool observed{};
+  bool projection_changed{};
+  bool projection_trusted{};
+  CalibratedOutputReason reason{CalibratedOutputReason::not_observed};
+};
+
 // Read-only timeline snapshot for bounded offline causal comparisons.
 struct CandidateTrackingDiagnostics final {
   std::uint32_t decision_tick{};
@@ -272,6 +320,7 @@ struct CandidateTrackingDiagnostics final {
   bool multi_source{};
   bool fine_update_scheduled{};
   FineHistoryResetDiagnostics fine_reset{};
+  CalibratedOutputDiagnostics calibrated_output{};
 };
 
 // Fixed two-template fit of one independently normalized observation window.
@@ -568,6 +617,10 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateTrackingDiagnostics candidate_tracking_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  void set_calibrated_output_diagnostics_enabled(bool enabled) noexcept {
+    calibrated_output_diagnostics_enabled_ = enabled;
+    if (!enabled) calibrated_output_diagnostics_ = {};
+  }
   void set_assignment_diagnostics_enabled(bool enabled) noexcept {
     assignment_diagnostics_enabled_ = enabled && assignment_diagnostics_ != nullptr;
     if (!assignment_diagnostics_enabled_) diagnostic_discarded_phase_states_ = {};
@@ -1542,6 +1595,9 @@ class PolyphonicPitchDetector final {
       tier_completion_dispositions_{};
   std::array<CandidateAdmissionDiagnostics, kMaxCandidates>
       candidate_admission_diagnostics_{};
+  bool calibrated_output_diagnostics_enabled_{};
+  std::array<CalibratedOutputDiagnostics, kMaxCandidates>
+      calibrated_output_diagnostics_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)
   std::array<ObservedUnisonReacquisitionDisposition, kMaxCandidates>
       spectral_reacquisition_dispositions_{};

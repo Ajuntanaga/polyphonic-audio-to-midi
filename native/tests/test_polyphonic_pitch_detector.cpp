@@ -4808,6 +4808,23 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static DetectorDecision calibrated_output_trace_step(
+      PolyphonicPitchDetector& detector, bool selected_candidate,
+      bool phase_valid, double cents, bool observe = true) noexcept {
+    ++detector.decision_counter_;
+    detector.phase_cents_states_[8U].cents = cents;
+    detector.phase_cents_states_[8U].output_projection_valid = phase_valid;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[8U] = selected_candidate;
+    selected[12U] = true;
+    DetectorDecision decision;
+    if (observe) {
+      detector.update_calibrated_output_notes(
+          decision, selected, selected_candidate ? 2U : 1U);
+    }
+    return decision;
+  }
+
   static DetectorDecision coasting_calibrated_collision_probe(
       PolyphonicPitchDetector& detector, bool collision_present,
       bool original_selected, bool capacity_retry = false,
@@ -5327,6 +5344,87 @@ M3_TEST(native_detector_retracts_a_rebin_when_the_real_adjacent_note_arrives) {
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_calibrated_output_trace_identifies_executed_reset) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(48000.0, config));
+  m3::StringCalibrationBank bank;
+  bank.calibrated_string_mask = 1U;
+  for (const std::size_t fret : {8U, 9U}) {
+    bank.points[0U][fret].quality = m3::CalibrationPointQuality::measured;
+    bank.points[0U][fret].cents_offset_q8 = -40 * 256;
+  }
+  detector.set_calibration_bank(bank);
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Reason = m3::CalibratedOutputReason;
+  const auto trace = [&] {
+    return detector.candidate_tracking_diagnostics(40U).calibrated_output;
+  };
+  const auto disabled = Access::calibrated_output_note_probe(
+      detector, 8U, 0U, 0x01U, 48.0, false, false);
+  M3_EXPECT_EQ(disabled.transitions.size(), 2U);
+  M3_EXPECT_FALSE(trace().observed);
+
+  detector.set_calibrated_output_diagnostics_enabled(true);
+  const auto projected = Access::calibrated_output_note_probe(
+      detector, 8U, 0U, 0x01U, 48.0, false, false);
+  M3_EXPECT_EQ(projected.transitions.size(), disabled.transitions.size());
+  M3_EXPECT_TRUE(trace().observed);
+  M3_EXPECT_EQ(trace().reason, Reason::projection_apply);
+  M3_EXPECT_EQ(trace().eligibility_failures, 0U);
+  M3_EXPECT_EQ(trace().output_before, 40U);
+  M3_EXPECT_EQ(trace().output_after, 41U);
+  M3_EXPECT_EQ(trace().transitions_added, 2U);
+  M3_EXPECT_TRUE(trace().projection_trusted);
+
+  // Losing eligibility clears consensus; it does not revert a held note.
+  const auto coast = Access::calibrated_output_trace_step(
+      detector, false, false, 0.0);
+  M3_EXPECT_EQ(coast.transitions.size(), 0U);
+  M3_EXPECT_EQ(trace().reason, Reason::ineligible);
+  M3_EXPECT_EQ(trace().eligibility_failures, 1U | 4U | 32U);
+  M3_EXPECT_EQ(trace().output_before, 41U);
+  M3_EXPECT_EQ(trace().output_after, 41U);
+  M3_EXPECT_EQ(trace().ticks_after, 0U);
+
+  const auto pending = Access::calibrated_output_trace_step(
+      detector, true, true, 0.0);
+  M3_EXPECT_EQ(pending.transitions.size(), 0U);
+  M3_EXPECT_EQ(trace().reason, Reason::untrusted_start);
+  M3_EXPECT_EQ(trace().target_after, 40U);
+  M3_EXPECT_EQ(trace().ticks_after, 1U);
+  const auto reverted = Access::calibrated_output_trace_step(
+      detector, true, true, 0.0);
+  M3_EXPECT_EQ(reverted.transitions.size(), 2U);
+  M3_EXPECT_EQ(trace().reason, Reason::untrusted_revert);
+  M3_EXPECT_EQ(trace().midi_before, 41U);
+  M3_EXPECT_EQ(trace().midi_after, 40U);
+  M3_EXPECT_EQ(trace().transitions_added, 2U);
+
+  const auto collision = Access::calibrated_output_late_collision_probe(
+      detector, 8U, 0U, 48.0);
+  M3_EXPECT_EQ(collision.transitions.size(), 4U);
+  M3_EXPECT_EQ(trace().reason, Reason::collision_reset);
+  M3_EXPECT_EQ(trace().collision_note, 41U);
+  M3_EXPECT_EQ(trace().collision_kind, 3U);
+  M3_EXPECT_EQ(trace().output_after, 40U);
+  M3_EXPECT_EQ(trace().transitions_added, 2U);
+
+  // A later decision that skips this stage must not repeat an old reason.
+  static_cast<void>(Access::calibrated_output_trace_step(
+      detector, true, true, 48.0, false));
+  M3_EXPECT_FALSE(trace().observed);
+  M3_EXPECT_EQ(trace().reason, Reason::not_observed);
+  detector.set_calibrated_output_diagnostics_enabled(false);
+  M3_EXPECT_FALSE(trace().observed);
+}
+
 M3_TEST(native_detector_rebin_collision_revalidation_preserves_group_and_release) {
   for (const bool dp_projection : {false, true}) {
     for (const bool original_selected : {false, true}) {

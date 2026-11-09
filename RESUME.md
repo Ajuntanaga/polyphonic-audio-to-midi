@@ -1,3 +1,10 @@
+## 2026-11-09 — calibrated-output branch trace prepared
+
+- The next bounded GitHub task is `calibrated-output-trace`, ordinary recording, logical note 41, label 55. It uses the existing verified input bundle and runs the full OFF replay both without and with tracing. Both the saved replay bytes and parsed results must match before the diagnostic is interpreted.
+- Offline-only candidate columns record the executed projection/reset branch, eligibility failures, pending target, output/MIDI notes before and after, collision source and transition count. The trace captures the state at the calibrated-output stage; later snapshots and global MIDI events remain separate evidence. No runtime rule is changed, and tracing is disabled by default and excluded from production builds.
+- Nine focused Python tests pass, including stale-stage rejection, complete window coverage, byte-identity enforcement and separation of stage transitions from later MIDI events. Workflow YAML and shell syntax pass. Native branch and buffer-identity tests are prepared for GitHub execution; they have not yet run for this change.
+- Keep the earlier evidence-retention trial rejected and installed scores unchanged. After collecting this diagnostic, identify the actual cause of the brief retunes before choosing a runtime change. A future change still needs a positive labeled gain, no lost labels or increased false outputs, then protected corpus, allocation, buffer, native timing and live-host acceptance.
+
 ## 2026-11-09 — transient MIDI attributed; preview regression separated
 
 - The retained traces from final GitHub trial `42578776712` are collected. The complete evidence ZIP matched its published digest; the three small compressed traces are retained and the redundant 4,683,530-byte ZIP is removed. Provenance: `docs/recovery/github-evidence-retention-result-20261109.json`.

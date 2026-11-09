@@ -1668,6 +1668,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_residual_recovery_stats_ = {};
   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
   fine_history_reset_diagnostics_ = {};
+  calibrated_output_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -2659,6 +2660,11 @@ PolyphonicPitchDetector::candidate_tracking_diagnostics(
       fine_frequency_decimation_decisions_ != 0U &&
       decision_counter_ % fine_frequency_decimation_decisions_ == 0U;
   result.fine_reset = fine_history_reset_diagnostics_[candidate];
+  const auto& calibrated = calibrated_output_diagnostics_[candidate];
+  if (calibrated_output_diagnostics_enabled_ && calibrated.observed &&
+      calibrated.decision_tick == decision_counter_) {
+    result.calibrated_output = calibrated;
+  }
   return result;
 }
 
@@ -2989,6 +2995,7 @@ void PolyphonicPitchDetector::set_calibration_bank(
   fine_frequency_evidence_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   fine_history_reset_diagnostics_ = {};
+  calibrated_output_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -3591,6 +3598,39 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
     }
     const bool single_member = string_count(member_mask) == 1U;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    auto* trace = calibrated_output_diagnostics_enabled_
+        ? &calibrated_output_diagnostics_[candidate] : nullptr;
+    const auto transitions_before = decision.transitions.size();
+    if (trace != nullptr) {
+      *trace = {};
+      trace->observed = true;
+      trace->decision_tick = decision_counter_;
+      trace->phase_cents = phase_cents_states_[candidate].cents;
+      trace->age_ticks = state.age_ticks;
+      trace->minimum_age_ticks = minimum_age;
+      trace->selected_count = static_cast<std::uint8_t>(selected_note_count);
+      trace->member_mask = member_mask;
+      trace->eligibility_failures = static_cast<std::uint8_t>(
+          (!selected[candidate] ? 1U : 0U) | (!state.active ? 2U : 0U) |
+          (selected_note_count < 2U ? 4U : 0U) |
+          (state.age_ticks < minimum_age ? 8U : 0U) |
+          (!single_member ? 16U : 0U) |
+          (!phase_cents_states_[candidate].output_projection_valid ? 32U : 0U));
+      trace->output_before = candidate_output_note(candidate);
+      trace->midi_before = candidate_midi_output_note(candidate);
+      trace->target_before = state.calibrated_output_target;
+      trace->ticks_before = state.calibrated_output_ticks;
+    }
+    const auto finish_trace = [&](CalibratedOutputReason reason) {
+      if (trace == nullptr) return;
+      trace->reason = reason;
+      trace->output_after = candidate_output_note(candidate);
+      trace->midi_after = candidate_midi_output_note(candidate);
+      trace->target_after = state.calibrated_output_target;
+      trace->ticks_after = state.calibrated_output_ticks;
+      trace->transitions_added = static_cast<std::uint16_t>(
+          decision.transitions.size() - transitions_before);
+    };
     // A previously accepted projection can outlive the evidence needed to
     // create it. Recheck ownership before the eligibility gate so coasting
     // notes cannot retain a pitch that a different candidate now owns.
@@ -3607,6 +3647,13 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
              (candidate_states_[other].active &&
               candidate_midi_output_note(other) == emitted_note))) {
           collision = true;
+          if (trace != nullptr) {
+            trace->collision_note = static_cast<std::uint8_t>(lowest_note_ + other);
+            trace->collision_kind = static_cast<std::uint8_t>(
+                ((selected[other] && lowest_note_ + other == emitted_note) ? 1U : 0U) |
+                ((candidate_states_[other].active &&
+                  candidate_midi_output_note(other) == emitted_note) ? 2U : 0U));
+          }
           break;
         }
       }
@@ -3614,6 +3661,7 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
         // A failed reset leaves both projections and their pending consensus
         // intact, so the next decision can retry without a partial rebin.
         static_cast<void>(reset_candidate_output_projections(decision, candidate));
+        finish_trace(CalibratedOutputReason::diagnostic_collision_reset);
         continue;
       }
     }
@@ -3623,6 +3671,9 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
         !phase_cents_states_[candidate].output_projection_valid) {
       state.calibrated_output_target = kTunerNoSignalNote;
       state.calibrated_output_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      finish_trace(CalibratedOutputReason::ineligible);
+#endif
       continue;
     }
     std::uint8_t string = 0U;
@@ -3633,6 +3684,9 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
     if (!std::isfinite(cents)) {
       state.calibrated_output_target = kTunerNoSignalNote;
       state.calibrated_output_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      finish_trace(CalibratedOutputReason::nonfinite_cents);
+#endif
       continue;
     }
     const auto cents_q8 = static_cast<std::int16_t>(std::clamp<long>(
@@ -3661,16 +3715,33 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
           projected_point->quality != CalibrationPointQuality::missing &&
           std::abs(observed_pitch - projected_center) <=
               kM3CalibratedOutputMaximumProjectedErrorCents;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (trace != nullptr)
+        trace->projected_error_cents = std::abs(observed_pitch - projected_center);
+#endif
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (trace != nullptr) {
+      trace->projected_note = projection.note;
+      trace->projection_changed = projection.changed;
+      trace->projection_trusted = trusted_projection;
+    }
+#endif
     if (!trusted_projection) {
       if (candidate_output_note(candidate) == detected_note) {
         state.calibrated_output_target = kTunerNoSignalNote;
         state.calibrated_output_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        finish_trace(CalibratedOutputReason::untrusted_original);
+#endif
         continue;
       }
       if (state.calibrated_output_target != detected_note) {
         state.calibrated_output_target = detected_note;
         state.calibrated_output_ticks = 1U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        finish_trace(CalibratedOutputReason::untrusted_start);
+#endif
         continue;
       }
       if (state.calibrated_output_ticks <
@@ -3682,6 +3753,11 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
         change_candidate_output_note(decision, candidate, detected_note);
         state.calibrated_output_target = kTunerNoSignalNote;
         state.calibrated_output_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        finish_trace(CalibratedOutputReason::untrusted_revert);
+      } else {
+        finish_trace(CalibratedOutputReason::untrusted_wait);
+#endif
       }
       continue;
     }
@@ -3693,6 +3769,18 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
       }
       const std::uint8_t other_detected =
           static_cast<std::uint8_t>(lowest_note_ + other);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (trace != nullptr && !collision) {
+        const auto kind = static_cast<std::uint8_t>(
+            ((selected[other] && other_detected == projection.note) ? 1U : 0U) |
+            ((candidate_states_[other].active &&
+              candidate_output_note(other) == projection.note) ? 2U : 0U));
+        if (kind != 0U) {
+          trace->collision_note = other_detected;
+          trace->collision_kind = kind;
+        }
+      }
+#endif
       collision = collision ||
                   (selected[other] && other_detected == projection.note) ||
                   (candidate_states_[other].active &&
@@ -3702,11 +3790,17 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
       change_candidate_output_note(decision, candidate, detected_note);
       state.calibrated_output_target = kTunerNoSignalNote;
       state.calibrated_output_ticks = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      finish_trace(CalibratedOutputReason::collision_reset);
+#endif
       continue;
     }
     if (state.calibrated_output_target != projection.note) {
       state.calibrated_output_target = projection.note;
       state.calibrated_output_ticks = 1U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      finish_trace(CalibratedOutputReason::projection_start);
+#endif
       continue;
     }
     if (state.calibrated_output_ticks <
@@ -3715,9 +3809,15 @@ void PolyphonicPitchDetector::update_calibrated_output_notes(
     }
     if (state.calibrated_output_ticks <
         kM3CalibratedOutputConsensusDecisions) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      finish_trace(CalibratedOutputReason::projection_wait);
+#endif
       continue;
     }
     change_candidate_output_note(decision, candidate, projection.note);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    finish_trace(CalibratedOutputReason::projection_apply);
+#endif
   }
 }
 

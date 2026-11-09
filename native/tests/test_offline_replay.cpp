@@ -574,7 +574,12 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     std::size_t rows = 0U;
     std::size_t observed_column = 0U;
     std::size_t evaluated_column = 0U;
+    std::size_t calibrated_column = 0U;
+    std::size_t calibrated_tick_column = 0U;
+    std::size_t calibrated_reason_column = 0U;
+    std::size_t calibrated_failures_column = 0U;
     bool saw_ownership = false;
+    bool saw_calibrated = false;
     bool saw_quiet = false;
     bool saw_released_quiet = false;
     while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
@@ -587,13 +592,29 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
         for (std::size_t column = 0U; column < fields.size(); ++column) {
           if (fields[column] == "ownership_observed") observed_column = column;
           if (fields[column] == "fine_group_evaluated") evaluated_column = column;
+          if (fields[column] == "cal_observed") calibrated_column = column;
+          if (fields[column] == "cal_tick") calibrated_tick_column = column;
+          if (fields[column] == "cal_reason") calibrated_reason_column = column;
+          if (fields[column] == "cal_eligibility_failures")
+            calibrated_failures_column = column;
         }
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
+        M3_EXPECT_TRUE(calibrated_column > evaluated_column);
+        M3_EXPECT_TRUE(calibrated_failures_column > calibrated_column);
         continue;
       }
-      M3_EXPECT_TRUE(fields.size() > evaluated_column);
-      if (fields.size() <= evaluated_column) return;
+      M3_EXPECT_TRUE(fields.size() > calibrated_failures_column);
+      if (fields.size() <= calibrated_failures_column) return;
+      if (fields[calibrated_column] == "1") {
+        saw_calibrated = true;
+        M3_EXPECT_EQ(fields[calibrated_tick_column], fields[1U]);
+        M3_EXPECT_EQ(fields[calibrated_reason_column], std::string("ineligible"));
+        // This one-note fixture always fails the polyphonic-context gate.
+        M3_EXPECT_TRUE((std::stoul(fields[calibrated_failures_column]) & 4U) != 0U);
+      } else {
+        M3_EXPECT_EQ(fields[calibrated_reason_column], std::string("not_observed"));
+      }
       saw_ownership = saw_ownership || fields[observed_column] == "1";
       if (fields[3U] != "0") {
         saw_quiet = true;
@@ -614,6 +635,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     }
     M3_EXPECT_EQ(rows, trace.frames + 1U);
     M3_EXPECT_TRUE(saw_ownership);
+    M3_EXPECT_TRUE(saw_calibrated);
     M3_EXPECT_TRUE(saw_quiet);
     M3_EXPECT_TRUE(saw_released_quiet);
     M3_EXPECT_TRUE(captured.find("fine_update_scheduled\treset_serial\treset_tick\t"
@@ -623,7 +645,8 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
         "fine_group_disposition\townership_observed\tfine_group_evaluated\t"
         "fine_group_mask\tfine_group_other_owned\tfine_group_overlap\t"
         "fine_group_allocated\tfine_group_extra_capacity\tfine_group_owners\t"
-        "fine_group_owner_counts\n") !=
+        "fine_group_owner_counts\tcal_observed\tcal_tick\tcal_reason\t"
+        "cal_eligibility_failures\tcal_phase_cents\t") !=
         std::string::npos);
     if (reference.empty()) reference = captured;
     M3_EXPECT_EQ(captured, reference);

@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from tools.frozen_cue_corpus_gate import COUNTS, ERRORS, LABEL_FIELDS, read_replay
 from tools.portable_assignment_trace import digest
-from tools.portable_evidence_retention_trial import run, summarize_target
+from tools.portable_evidence_retention_trial import run, summarize_target, summarize_calibrated_output
 
 
 def replay_text(*, target=0, other=1, false_notes=0):
@@ -45,6 +45,26 @@ def outcome_rows():
     return result
 
 
+def calibrated_rows():
+    rows = []
+    for tick, reason in enumerate(('projection_apply', 'ineligible', 'untrusted_revert'), 1):
+        fields = dict(tick=tick, eligibility_failures=0, age=200, min_age=75,
+                      selected_count=2, member_mask=1, output_before=41, output_after=42,
+                      midi_before=41, midi_after=42, target_before=42, target_after=42,
+                      ticks_before=1, ticks_after=2, projected_note=42, changed=1, trusted=1,
+                      collision_note=255, collision_kind=0, transitions_added=2,
+                      observed=1, reason=reason, phase_cents='60', projected_error_cents='0')
+        if tick == 2:
+            fields.update(eligibility_failures=1, output_before=42, midi_before=42,
+                          target_after=255, ticks_after=0, transitions_added=0)
+        elif tick == 3:
+            fields.update(output_before=42, midi_before=42, output_after=41, midi_after=41,
+                          trusted=0, changed=0, target_before=41, target_after=255, ticks_after=0)
+        rows.append(dict(sample=str(tick * 64 - 1), tick=str(tick), note='41',
+                         **{'cal_' + key: str(value) for key, value in fields.items()}))
+    return rows
+
+
 class PortableEvidenceRetentionTrialTests(unittest.TestCase):
     def fixture(self, root):
         corpus = root / 'corpus'
@@ -63,21 +83,27 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             'tsv_sha256': digest(baseline), 'output': read_replay(baseline)['output']}}}))
         return binary, corpus, manifest, reference, root / 'output'
 
-    def replay_stub(self, after):
+    def replay_stub(self, after, *, calibrated=False):
         def replay(command, *, stdout, stderr, check, timeout):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
             self.assertNotIn('--diagnostic-native-partial-cues', command)
             self.assertNotIn('--diagnostic-cue-free-lane-reassignment', command)
             enabled = '--diagnostic-direct-evidence-retention' in command
-            stdout.write(after if enabled else replay_text())
-            if enabled:
+            traced = '--candidate-trace' in command
+            if calibrated:
+                self.assertFalse(enabled)
+                if traced:
+                    self.assertEqual(command[command.index('--candidate-trace-note') + 1], '41')
+            stdout.write(after if traced else replay_text())
+            if traced:
                 for kind in ('candidate', 'outcome', 'midi-event'):
                     path = Path(command[command.index('--' + kind + '-trace') + 1])
                     if kind == 'outcome':
                         rows = outcome_rows()
                     elif kind == 'candidate':
-                        rows = [dict(sample=row['sample'], note='42') for row in outcome_rows()]
+                        rows = (calibrated_rows() if calibrated else
+                                [dict(sample=row['sample'], note='42') for row in outcome_rows()])
                     else:
                         rows = [dict(sample='127', kind='on', note='42', voice_id='8'),
                                 dict(sample='191', kind='off', note='42', voice_id='8')]
@@ -191,6 +217,48 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             for trace in result['traces'].values():
                 self.assertEqual(digest(args[4] / trace['file']), trace['sha256'])
             self.assertFalse((args[4] / 'outcome.tsv').exists())
+
+    def test_baseline_trace_requires_identity_and_retains_actual_branch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.fixture(Path(directory))
+            with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                       side_effect=self.replay_stub(replay_text(), calibrated=True)) as replay:
+                run(*args, calibrated_output_trace=True)
+            result = json.loads((args[4] / 'report.json').read_text())
+            self.assertEqual(replay.call_count, 2)
+            self.assertTrue(result['trace_output_bit_identical'])
+            self.assertTrue(result['trace_semantic_identity'])
+            self.assertFalse(result['runtime_rule_changed'])
+            self.assertFalse(result['promotion_accepted'])
+            self.assertEqual(result['decision'], 'unchanged baseline; diagnostic collected')
+            self.assertEqual(result['calibrated_output']['output_change_reasons'],
+                             dict(projection_apply=1, untrusted_revert=1))
+            # The ineligible stage did not emit the separately captured note-on.
+            coast = result['calibrated_output']['transitions'][1]
+            self.assertEqual(coast['stage']['reason'], 'ineligible')
+            self.assertEqual(coast['stage']['transitions_added'], 0)
+            self.assertEqual(coast['midi_events_at_same_tick'][0]['kind'], 'on')
+
+    def test_semantically_equal_trace_with_changed_bytes_stops_before_diagnosis(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.fixture(Path(directory))
+            with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                       side_effect=self.replay_stub(replay_text() + '\n', calibrated=True)):
+                with self.assertRaisesRegex(ValueError, 'Traced OFF replay differs'):
+                    run(*args, calibrated_output_trace=True)
+            result = json.loads((args[4] / 'report.json').read_text())
+            self.assertFalse(result['trace_output_bit_identical'])
+            self.assertTrue(result['trace_semantic_identity'])
+            self.assertNotIn('calibrated_output', result)
+            self.assertEqual(result['state'], 'failed')
+
+    def test_stage_capture_rejects_stale_tick_and_missing_candidate_rows(self):
+        rows = calibrated_rows()
+        rows[0]['cal_tick'] = '0'
+        with self.assertRaisesRegex(ValueError, 'Stale'):
+            summarize_calibrated_output(rows, outcome_rows(), [], 41)
+        with self.assertRaisesRegex(ValueError, 'Incomplete'):
+            summarize_calibrated_output(calibrated_rows()[:-1], outcome_rows(), [], 41)
 
 
 if __name__ == '__main__':
