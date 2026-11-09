@@ -1,0 +1,346 @@
+{
+  "schema": "m3_spectral_lane_collision_trial_v1",
+  "state": "completed",
+  "status": "completed",
+  "final": true,
+  "run_id": 42640261536,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42640261536",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_commit": "0276534102a92846e85622727e34cd553cc2e931",
+  "worker_commit": "c2a978833cd69c7eb60757886f18981a1976effa",
+  "trial_revision": "independent_output_ownership",
+  "task": "spectral-lane-collision-trial",
+  "dataset": "ordinary",
+  "stage": "offline screen collected",
+  "observed_at": "2026-11-09T15:07:18.150187+00:00",
+  "output_target": "build/github-results/independent-midi-ownership-42640261536",
+  "report_relative_path": "spectral-lane-collision/report.json",
+  "checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
+  "local_python_tests": {
+    "passed": 19,
+    "native_execution": false
+  },
+  "acceptance": "No passage match loss or increased false outputs; no raw-event regression, fewer cross-pitch conflicts and all three recorded collision windows clear. Emitted MIDI quality, corpus, allocation, buffer, timing and host gates remain separate.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next_step": "Replay this saved complete OFF/ON MIDI stream through the production ledger in both routing modes. Require no ON output blocking or suppressed source events before held-note measures, protected corpus, allocation, buffer, timing and live-host gates.",
+  "source_runs": {
+    "ci": {
+      "run_id": 42640206918,
+      "status": "completed",
+      "conclusion": "success",
+      "source_contracts": "passed",
+      "native_tests": "passed",
+      "production_vst3_build_package": "passed; package not installed"
+    },
+    "portable_replay": {
+      "run_id": 42640206967,
+      "status": "completed",
+      "conclusion": "success",
+      "verified_steps": [
+        "native tests",
+        "Python comparison contracts",
+        "synthetic buffer parity"
+      ]
+    }
+  },
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "candidate_note": 48,
+  "window_start": 202752,
+  "window_end": 204288,
+  "runtime_rule_changed": true,
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "policy_name": "spectral-lane-collision",
+  "diagnostic_flag": "--diagnostic-spectral-lane-collision",
+  "policy": "Keep ordinary physical assignment. Move a conflicting singleton spectral output to its own free physical string; release before claim. Retain a free previous singleton output while an unselected active peer still owns its new lane; defer new attacks against that retained lane. Preserve candidate tracking, then reconcile independent MIDI owners: retain incumbents, rank new claims by direct fundamental support, abstain on tied claims and admit only complete groups.",
+  "coasting_window": {
+    "start": 286720,
+    "end": 289280,
+    "lane": 1
+  },
+  "pending_window": {
+    "start": 1147904,
+    "end": 1150464,
+    "lane": 0
+  },
+  "label_metric_scope": "Tuner snapshot assignments, not emitted MIDI assignments",
+  "emitted_midi_labeled_matches": "not measured",
+  "emitted_midi_held_note_quality": "not measured",
+  "updated_at": "2026-11-09T15:04:26.019747+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "0276534102a92846e85622727e34cd553cc2e931",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42640261536",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "b2f76c466e50f5dc83ee0965d21860f774bf5a488528b2969ba1979dc1294e33",
+  "input_manifest_sha256": "5dc703de508db6e5dc84bbfe621b0584fcff78fd1a5f5ea337fa32bb5cebac5d",
+  "reference_report_sha256": "e4cd3974fe6541895e762ce5dfa268d8b74f6f1b8ecedf02553750cba5c3ea9f",
+  "off_reference_bit_identical": true,
+  "coasting_lane_window_resolved": true,
+  "pending_lane_window_resolved": true,
+  "comparison": {
+    "delta": {
+      "matched": 15,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": -15,
+      "false_gap_voices": 0,
+      "false_positive_voices": -15
+    },
+    "changed_labels": [
+      {
+        "label_index": 239,
+        "midi_note": 48,
+        "string_mask": 16,
+        "labeled": 861,
+        "baseline_matched": 238,
+        "current_matched": 253,
+        "matched_delta": 15
+      }
+    ],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": false
+  },
+  "raw_midi_delta": {
+    "cross_pitch_on_before_release": -652,
+    "repeated_pitch_on_before_release": 0,
+    "off_without_raw_on": 0,
+    "zero_velocity_on": 0,
+    "unassigned_on": 0
+  },
+  "raw_midi_no_regression": true,
+  "raw_conflicts_reduced": true,
+  "recorded_lane_window_resolved": true,
+  "full_recording_screen_pass": true,
+  "decision": "eligible for wider validation",
+  "interpretation": "A successful process is not acceptance. Every passage must retain its labeled matches, false outputs must not increase, and raw cross-pitch conflicts must decrease without another raw-event regression, with no remaining conflict in any required recorded lane window. Tuner-label parity does not establish emitted MIDI label quality. Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.",
+  "runs": {
+    "reference-off": {
+      "elapsed_seconds": 90.073711902,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      },
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "raw_midi": {
+        "counts": {
+          "cross_pitch_on_before_release": 652,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "raw_note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "sample": 10627135,
+            "note": 44,
+            "velocity": 32,
+            "voice_id": 0,
+            "sequence": 11901
+          }
+        ],
+        "interpretation": "Complete raw detector event order, before the host ledger. Old pitches are never overwritten by conflicting onsets. EOF opens are not proof of stuck MIDI; host delivery and durations are not measured."
+      },
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2246,
+          "sha256": "b20fd1512df7e9924d600766b363d557220faadd22539e9492171de6cee1ba5a",
+          "raw_bytes": 9985,
+          "raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124386118,
+          "captured_raw_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 91378,
+          "sha256": "7b0ad8249a92ebe07c3a405bcbfbf58acf4241e1a3ef862839733614cda25d08",
+          "raw_bytes": 284869,
+          "raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_raw_bytes": 284869,
+          "captured_raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_rows": 11903,
+          "retained_rows": 11903,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "recorded_lane_window_conflicts": 1,
+      "coasting_lane_window_conflicts": 4,
+      "pending_lane_window_conflicts": 1
+    },
+    "trial-on": {
+      "elapsed_seconds": 89.86401873100002,
+      "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145400
+        }
+      },
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "raw_midi": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "raw_note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "sample": 10627135,
+            "note": 44,
+            "velocity": 32,
+            "voice_id": 0,
+            "sequence": 11849
+          }
+        ],
+        "interpretation": "Complete raw detector event order, before the host ledger. Old pitches are never overwritten by conflicting onsets. EOF opens are not proof of stuck MIDI; host delivery and durations are not measured."
+      },
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2248,
+          "sha256": "e0a5b8926fa899bf760fa583973c660ec11f140ced4bbf17b73e8c7dc2888f2a",
+          "raw_bytes": 9985,
+          "raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124385794,
+          "captured_raw_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 90423,
+          "sha256": "c5b9e04a63bfb60798d67ec48d349f7bec8f0ee188acb449f1bd05f6fe9879a5",
+          "raw_bytes": 283585,
+          "raw_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+          "captured_raw_bytes": 283585,
+          "captured_raw_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+          "captured_rows": 11851,
+          "retained_rows": 11851,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "recorded_lane_window_conflicts": 0,
+      "coasting_lane_window_conflicts": 0,
+      "pending_lane_window_conflicts": 0
+    }
+  },
+  "artifacts": [
+    {
+      "name": "m3-report-42640261536-1",
+      "id": 13685885621,
+      "bytes": 18210,
+      "sha256": "7a7973b6f488dfd747ba5d48c2d285c8413214985ba961aebe68ffd626d80174",
+      "expires_at": "2026-11-23T15:04:26Z",
+      "downloaded_once": true
+    },
+    {
+      "name": "m3-evidence-42640261536-1",
+      "id": 13684234955,
+      "bytes": 4512616,
+      "sha256": "82722d6bfc4145606fa9cf748e2a4cab928fab1a9381246a371c0cc34939a6e0",
+      "expires_at": "2026-11-16T15:04:27Z",
+      "downloaded_once": false
+    }
+  ],
+  "conclusion": "success",
+  "result_final": true,
+  "completed_at": "2026-11-09T15:04:30Z",
+  "outputs_downloaded_once": true,
+  "report": "build/github-results/independent-midi-ownership-42640261536/spectral-lane-collision/report.json",
+  "report_sha256": "553317e232be73d41bbde8e37fee52dc13e627bdbbce10e2a811b62f47f83fc0",
+  "local_native_execution": false,
+  "protected": {
+    "new_trial": "Ordinary OFF is bit-identical to its saved reference. ON loses no passage matches and increases no false-output counter. Other recordings have not been rerun for this revision.",
+    "earlier_corpus_checkpoint": "docs/recovery/github-spectral-lane-collision-corpus-20261109.json",
+    "earlier_corpus": "All 42 label/error comparisons passed; 14 OFF references and 11 OFF/ON pairs were bit-identical. Three paired native timing gates failed."
+  }
+}
