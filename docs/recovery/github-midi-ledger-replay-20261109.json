@@ -6,7 +6,7 @@
   "source_commit": "a522a01f4613f596289c035a4f68d0513a031cf4",
   "worker_commit": "01235adb913958b8ad55c02fc79f82f4b867cc3e",
   "created_at": "2026-11-09T12:52:38Z",
-  "observed_at": "2026-11-09T12:55:24.129036+00:00",
+  "observed_at": "2026-11-09T12:59:34.612906+00:00",
   "status": "pending",
   "conclusion": null,
   "stage": "Queued behind corpus run 42616852315",
@@ -32,8 +32,27 @@
     {
       "run_id": 42620590207,
       "workflow": "CI",
-      "status": "in_progress",
-      "conclusion": null
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-11-09T12:57:06Z",
+      "artifacts": [
+        {
+          "id": 13675448350,
+          "name": "m3-build-diagnostics-a522a01f4613f596289c035a4f68d0513a031cf4",
+          "size_in_bytes": 20377,
+          "digest": "sha256:ebc1b0c46004e4465bbe329c492a75a3a2b91b08b85ce88d726692fd8801d720",
+          "expired": false,
+          "expires_at": "2026-11-16T12:57:01Z"
+        },
+        {
+          "id": 13675118592,
+          "name": "m3-vst3-linux-x86_64-a522a01f4613f596289c035a4f68d0513a031cf4",
+          "size_in_bytes": 1296683,
+          "digest": "sha256:1d3f6ffe26e2ab803858a6c57d384e6f501faeb329d462b32d959c13bae7e9d7",
+          "expired": false,
+          "expires_at": "2026-11-16T12:56:59Z"
+        }
+      ]
     }
   ],
   "local_verification": {
@@ -54,7 +73,26 @@
     "python_contracts": "passed",
     "synthetic_buffer_parity": "passed",
     "production_package_run_id": 42620590207,
-    "production_package_status": "in_progress",
-    "installed": false
+    "production_package_status": "completed",
+    "installed": false,
+    "production_package_conclusion": "success",
+    "production_package_artifacts": [
+      {
+        "id": 13675448350,
+        "name": "m3-build-diagnostics-a522a01f4613f596289c035a4f68d0513a031cf4",
+        "size_in_bytes": 20377,
+        "digest": "sha256:ebc1b0c46004e4465bbe329c492a75a3a2b91b08b85ce88d726692fd8801d720",
+        "expired": false,
+        "expires_at": "2026-11-16T12:57:01Z"
+      },
+      {
+        "id": 13675118592,
+        "name": "m3-vst3-linux-x86_64-a522a01f4613f596289c035a4f68d0513a031cf4",
+        "size_in_bytes": 1296683,
+        "digest": "sha256:1d3f6ffe26e2ab803858a6c57d384e6f501faeb329d462b32d959c13bae7e9d7",
+        "expired": false,
+        "expires_at": "2026-11-16T12:56:59Z"
+      }
+    ]
   }
 }
