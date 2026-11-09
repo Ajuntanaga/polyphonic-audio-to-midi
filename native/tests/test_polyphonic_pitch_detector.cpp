@@ -2018,7 +2018,11 @@ struct PolyphonicPitchDetectorTestAccess final {
       M3_EXPECT_TRUE(spectral.tracker.ready());
       spectral.templates = {};
       spectral.templates.fingerprint[0U] = spectral.tracker.fingerprint();
-      spectral.templates.valid_mask = 1U;
+      // A single template has an infinite runner-up margin, which the live
+      // spectral assignment correctly rejects. Supply a distinct, positively
+      // correlated competitor so this fixture exercises an admissible lane.
+      spectral.templates.fingerprint[2U].fill(1.0);
+      spectral.templates.valid_mask = 5U;
       M3_EXPECT_TRUE(prepare_unison_spectral_templates(spectral.templates));
       spectral.templates_valid = true;
       spectral.template_phase = spectral.tracker.phase();
@@ -2034,6 +2038,9 @@ struct PolyphonicPitchDetectorTestAccess final {
       M3_EXPECT_TRUE(spectral.single_source_error_valid);
       M3_EXPECT_EQ(spectral.single_source_error_tick, 17U);
       M3_EXPECT_EQ(spectral.single_source_error_mask, 1U);
+      M3_EXPECT_TRUE(std::isfinite(spectral.single_source_posterior_margin));
+      M3_EXPECT_TRUE(spectral.single_source_posterior_margin >= 0.02);
+      M3_EXPECT_EQ(incumbent.spectral_lane_mask, 1U);
     }
     return {detector.candidate_states_[0U].assigned_string,
             detector.candidate_states_[1U].assigned_string};
