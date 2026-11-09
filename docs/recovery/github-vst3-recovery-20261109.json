@@ -1,0 +1,409 @@
+{
+  "schema": "m3_github_vst3_corpus_recovery_checkpoint_v1",
+  "task": "recorded-vst3-recovery",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42655768776,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42655768776",
+  "source_commit": "31aa0a9e9afded6e93f89713763bde0de1c2b22d",
+  "worker_commit": "80a2ee0f49346acf21987e559825e5dcd0c01926",
+  "created_at": "2026-11-09T16:32:14Z",
+  "observed_at": "2026-11-09T16:36:28.772245+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "stage": "recorded VST3 rejection/Panic recovery collected",
+  "output_target": "build/github-results/vst3-recovery-42655768776",
+  "report_relative_path": "vst3-recovery/report.json",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-vst3-recovery-20261109.json",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "scenario": "reject-off-panic",
+  "scope": "Instrumented VST3 component; refuse the first natural NoteOff once, clean up held owners, apply Panic, and resume the remaining recorded waveform. Per-voice routing and both float sample formats. No external DAW/device, allocation, timing or labeled-note acceptance.",
+  "previous_attempt": {
+    "run_id": 42654433367,
+    "source_commit": "4a5c87a6122e90b8ffbf6d0d4a1c7a6b4c2f6b9b",
+    "status": "completed",
+    "conclusion": "failure",
+    "completed_at": "2026-11-09T16:26:51Z",
+    "result_final": true,
+    "stage": "Native compile failed before recovery execution",
+    "failure": "RejectFirstOff queryInterface parameter iid shadowed IEventList::iid under -Werror=shadow",
+    "fix": "Renamed parameter to interface_id without changing behavior",
+    "python_contracts": "passed",
+    "behavioral_result": "not measured",
+    "output_target": "build/github-results/vst3-recovery-42654433367",
+    "outputs_downloaded_once": true,
+    "artifact_receipt": "build/github-results/vst3-recovery-42654433367/artifact-receipt.json"
+  },
+  "next_step": "Resolve the three native maximum-time failures and poor held-note coverage from the completed full-corpus trial. Preserve no label/error regression, OFF/buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device behavior remains unverified; no production promotion.",
+  "completed_at": "2026-11-09T16:35:00Z",
+  "report": "build/github-results/vst3-recovery-42655768776/vst3-recovery/report.json",
+  "report_sha256": "0eb5e24dd77a645ed2768fcff7e44186dd95e4132ded060b2e6c0d59093b7f15",
+  "artifact_receipt": "build/github-results/vst3-recovery-42655768776/artifact-receipt.json",
+  "decision": "offline recovery gate passed",
+  "recovery_gate_pass": true,
+  "on_format_gates_passed": 2,
+  "on_format_gates_total": 2,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "31aa0a9e9afded6e93f89713763bde0de1c2b22d",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42655768776",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "72828002c1d8d84f9510bffcfb04a3d1f2a2c16a2ca9a9b37f12fd5b80ec58fc",
+  "recording_clock": {
+    "sample_count": 10689600,
+    "sample_rate": 96000
+  },
+  "interpretation": "Offline instrumented M3 VST3 component, ownership trial ON, per-voice routing and restored calibration. Refuse the first real detector note-off once. Insert three silent blocks: accepting cleanup without Panic, Panic control, then quiet hold completion. Resume every remaining recorded sample. This measures one rejection/Panic scenario, not external DAW/device delivery, label matches, processing allocation or deadlines. EOF opens are retained before teardown without forced release; they are not proof of stuck MIDI.",
+  "artifacts": [
+    {
+      "id": 13692520900,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY5MjUyMDkwMA==",
+      "name": "m3-vst3-report-42655768776-1",
+      "size_in_bytes": 11343,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13692520900",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13692520900/zip",
+      "expired": false,
+      "digest": "sha256:404842017d801e0dbb3bf3910ae725bd44adb9c53b9a7d73d6d80dd418568632",
+      "created_at": "2026-11-09T16:34:56Z",
+      "updated_at": "2026-11-09T16:34:56Z",
+      "expires_at": "2026-11-23T16:34:55Z",
+      "workflow_run": {
+        "id": 42655768776,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "80a2ee0f49346acf21987e559825e5dcd0c01926"
+      },
+      "downloaded_once": true
+    },
+    {
+      "id": 13692166159,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY5MjE2NjE1OQ==",
+      "name": "m3-vst3-evidence-42655768776-1",
+      "size_in_bytes": 13880542,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13692166159",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13692166159/zip",
+      "expired": false,
+      "digest": "sha256:a46f5e9455b0d9660c1a81e3c6120c8c50c542f6d98eb4824ec32c5eeb204ca0",
+      "created_at": "2026-11-09T16:34:57Z",
+      "updated_at": "2026-11-09T16:34:57Z",
+      "expires_at": "2026-11-16T16:34:56Z",
+      "workflow_run": {
+        "id": 42655768776,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "80a2ee0f49346acf21987e559825e5dcd0c01926"
+      },
+      "downloaded_once": false
+    }
+  ],
+  "runs": {
+    "on-32": {
+      "native": {
+        "schema": "m3_vst3_recovery_native_v1",
+        "scenario": "reject-off-panic",
+        "trial": true,
+        "routing": "per_voice",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 32,
+        "block_samples": 512,
+        "queue_rejections": 0,
+        "output_blocked_blocks": 3,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "rejection_injected": true,
+        "unexpected_early_block": false,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "rejected_event": {
+          "sample": 8767,
+          "note": 42,
+          "note_id": -1170,
+          "channel": 1
+        },
+        "boundaries": [
+          {
+            "name": "fault",
+            "timeline_samples": 9216,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 2,
+            "event_add_attempts": 3,
+            "output_blocked": true,
+            "panic_hold": false
+          },
+          {
+            "name": "cleanup",
+            "timeline_samples": 9728,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": true,
+            "panic_hold": false
+          },
+          {
+            "name": "panic",
+            "timeline_samples": 10240,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": true,
+            "panic_hold": true
+          },
+          {
+            "name": "ready",
+            "timeline_samples": 10752,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": false,
+            "panic_hold": false
+          },
+          {
+            "name": "end",
+            "timeline_samples": 10691136,
+            "recording_samples": 10689600,
+            "detector_samples": 10689600,
+            "detector_transitions": 11857,
+            "accepted_events": 11855,
+            "event_add_attempts": 11856,
+            "output_blocked": false,
+            "panic_hold": false
+          }
+        ]
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "velocity": 0.251968503,
+            "voice_id": 0,
+            "sequence": 11853,
+            "sample": 10628671,
+            "note": 44,
+            "note_id": -1044,
+            "channel": 0
+          }
+        ],
+        "observed_events": 11855,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "rejection_is_real_owned_off": true,
+        "exactly_one_callback_refused": true,
+        "explicit_inserted_silence": true,
+        "expected_recovery_states": true,
+        "prior_owners_released_once": true,
+        "panic_and_hold_emit_no_notes": true,
+        "detector_waits_for_recovery": true,
+        "full_recording_resumed": true,
+        "resumed_transitions_delivered": true,
+        "no_extra_output_faults": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": true,
+      "accepted_cleanup_note_offs": 2,
+      "owners_before_cleanup": 2,
+      "post_recovery_detector_transitions": 11851,
+      "post_recovery_accepted_events": 11851,
+      "post_recovery_note_ons": 5926,
+      "expected_resumed_recording_samples": 10680384,
+      "inserted_silence_samples": 1536,
+      "expected_timeline_samples": 10691136,
+      "trace": {
+        "file": "on-32/callbacks.tsv.gz",
+        "bytes": 61565,
+        "sha256": "af7043efe3905bf4c6405d04a4aa3a8d5cd386ad486ec7486d638bd3ffdf2c28",
+        "raw_bytes": 347970,
+        "raw_sha256": "2ac2219e4f0f39352474a4de072d6ffeeefaf5b8e270eb1039caab51eae34dcd"
+      }
+    },
+    "on-64": {
+      "native": {
+        "schema": "m3_vst3_recovery_native_v1",
+        "scenario": "reject-off-panic",
+        "trial": true,
+        "routing": "per_voice",
+        "sample_count": 10689600,
+        "sample_rate": 96000,
+        "sample_bits": 64,
+        "block_samples": 512,
+        "queue_rejections": 0,
+        "output_blocked_blocks": 3,
+        "dry_audio_mismatches": 0,
+        "process_failures": 0,
+        "rejection_injected": true,
+        "unexpected_early_block": false,
+        "calibration_merge_matches": true,
+        "invalid_event": false,
+        "trace_write_failed": false,
+        "rejected_event": {
+          "sample": 8767,
+          "note": 42,
+          "note_id": -1170,
+          "channel": 1
+        },
+        "boundaries": [
+          {
+            "name": "fault",
+            "timeline_samples": 9216,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 2,
+            "event_add_attempts": 3,
+            "output_blocked": true,
+            "panic_hold": false
+          },
+          {
+            "name": "cleanup",
+            "timeline_samples": 9728,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": true,
+            "panic_hold": false
+          },
+          {
+            "name": "panic",
+            "timeline_samples": 10240,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": true,
+            "panic_hold": true
+          },
+          {
+            "name": "ready",
+            "timeline_samples": 10752,
+            "recording_samples": 9216,
+            "detector_samples": 9216,
+            "detector_transitions": 6,
+            "accepted_events": 4,
+            "event_add_attempts": 5,
+            "output_blocked": false,
+            "panic_hold": false
+          },
+          {
+            "name": "end",
+            "timeline_samples": 10691136,
+            "recording_samples": 10689600,
+            "detector_samples": 10689600,
+            "detector_transitions": 11857,
+            "accepted_events": 11855,
+            "event_add_attempts": 11856,
+            "output_blocked": false,
+            "panic_hold": false
+          }
+        ]
+      },
+      "callbacks": {
+        "counts": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "examples": [],
+        "note_ons_open_at_eof": [
+          {
+            "kind": "on",
+            "velocity": 0.251968503,
+            "voice_id": 0,
+            "sequence": 11853,
+            "sample": 10628671,
+            "note": 44,
+            "note_id": -1044,
+            "channel": 0
+          }
+        ],
+        "observed_events": 11855,
+        "scope": "Accepted VST3 callbacks, by channel and noteId"
+      },
+      "gates": {
+        "rejection_is_real_owned_off": true,
+        "exactly_one_callback_refused": true,
+        "explicit_inserted_silence": true,
+        "expected_recovery_states": true,
+        "prior_owners_released_once": true,
+        "panic_and_hold_emit_no_notes": true,
+        "detector_waits_for_recovery": true,
+        "full_recording_resumed": true,
+        "resumed_transitions_delivered": true,
+        "no_extra_output_faults": true,
+        "calibration_restored": true,
+        "dry_audio_preserved": true,
+        "valid_capture": true,
+        "legal_callback_ownership": true
+      },
+      "gate_pass": true,
+      "accepted_cleanup_note_offs": 2,
+      "owners_before_cleanup": 2,
+      "post_recovery_detector_transitions": 11851,
+      "post_recovery_accepted_events": 11851,
+      "post_recovery_note_ons": 5926,
+      "expected_resumed_recording_samples": 10680384,
+      "inserted_silence_samples": 1536,
+      "expected_timeline_samples": 10691136,
+      "trace": {
+        "file": "on-64/callbacks.tsv.gz",
+        "bytes": 61565,
+        "sha256": "af7043efe3905bf4c6405d04a4aa3a8d5cd386ad486ec7486d638bd3ffdf2c28",
+        "raw_bytes": 347970,
+        "raw_sha256": "2ac2219e4f0f39352474a4de072d6ffeeefaf5b8e270eb1039caab51eae34dcd"
+      }
+    }
+  },
+  "sample_format_callback_traces_bit_identical": true,
+  "source_checks": [
+    {
+      "run_id": 42655667647,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "31aa0a9e9afded6e93f89713763bde0de1c2b22d"
+    },
+    {
+      "run_id": 42655667550,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "31aa0a9e9afded6e93f89713763bde0de1c2b22d"
+    }
+  ]
+}

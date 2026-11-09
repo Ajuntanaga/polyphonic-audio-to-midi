@@ -7,14 +7,14 @@
   "source_commit": "78395c30de96cdc34c31b5c6549660a728515f4a",
   "worker_commit": "c2a978833cd69c7eb60757886f18981a1976effa",
   "created_at": "2026-11-09T15:19:15Z",
-  "observed_at": "2026-11-09T15:21:01.169883+00:00",
-  "status": "in_progress",
-  "conclusion": null,
-  "stage": "Comparing OFF and ON across the fourteen-recording corpus",
-  "result_final": false,
+  "observed_at": "2026-11-09T16:33:18.247632+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "stage": "Corpus complete; promotion rejected for native timing",
+  "result_final": true,
   "output_target": "build/github-results/independent-midi-corpus-42643461303",
   "report_relative_path": "corpus/report.json",
-  "outputs_downloaded_once": false,
+  "outputs_downloaded_once": true,
   "checkpoint": "docs/recovery/github-independent-midi-corpus-20261109.json",
   "previous_ledger_checkpoint": "docs/recovery/github-independent-midi-ledger-20261109.json",
   "installed_output_changed": false,
@@ -32,6 +32,1207 @@
     "maximum_ns_max": 333333,
     "deadline_overruns_max": 0
   },
-  "next_step": "Collect this existing run once it completes; inspect per-passage safety, raw MIDI, held-note measures and native timing before any promotion. Live host verification remains separate.",
-  "corpus_started_at": "2026-11-09T15:20:00Z"
+  "next_step": "Resolve the three native maximum-time failures and poor held-note coverage from the completed full-corpus trial. Preserve no label/error regression, OFF/buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device behavior remains unverified; no production promotion.",
+  "corpus_started_at": "2026-11-09T15:20:00Z",
+  "completed_at": "2026-11-09T16:22:05Z",
+  "report": "build/github-results/independent-midi-corpus-42643461303/corpus/report.json",
+  "report_sha256": "2a229fea4601db54217eb5b75c5f9c8636f3380e90bb83e63f4d913bbb0a915d",
+  "report_observed_at": "2026-11-09T16:21:56.318408+00:00",
+  "decision": "rejected",
+  "full_corpus_screen_pass": false,
+  "verified_inputs": 30,
+  "off_references": 14,
+  "on_references": 14,
+  "trial_revision": "independent_output_ownership",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "78395c30de96cdc34c31b5c6549660a728515f4a",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42643461303",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "b2f76c466e50f5dc83ee0965d21860f774bf5a488528b2969ba1979dc1294e33",
+  "checks": {
+    "datasets": 14,
+    "label_error_comparisons_passed": 42,
+    "label_error_comparisons_total": 42,
+    "buffer_comparisons_passed": 56,
+    "buffer_comparisons_total": 56,
+    "zero_allocation_runs_passed": 28,
+    "timed_scored_identity_runs_passed": 28,
+    "timed_runs_total": 28,
+    "off_reference_identity_datasets": 14,
+    "raw_midi_no_regression_datasets": 14,
+    "on_p99_passed": 14,
+    "on_native_gates_passed": 11,
+    "on_deadline_overruns": 5
+  },
+  "native_failures": [
+    {
+      "dataset": "isolated-05",
+      "p99_ns": 125994,
+      "maximum_ns": 339112,
+      "deadline_overruns": 1
+    },
+    {
+      "dataset": "physical-high",
+      "p99_ns": 130864,
+      "maximum_ns": 400617,
+      "deadline_overruns": 3
+    },
+    {
+      "dataset": "physical-four",
+      "p99_ns": 122919,
+      "maximum_ns": 391700,
+      "deadline_overruns": 1
+    }
+  ],
+  "raw_midi_comparison": {
+    "datasets_compared": 14,
+    "delta": {
+      "cross_pitch_on_before_release": -781,
+      "repeated_pitch_on_before_release": -4,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "no_regression": true,
+    "conflicts_reduced": true
+  },
+  "on_off_snapshot_output_identical_datasets": [
+    "isolated-08",
+    "isolated-05",
+    "physical-middle",
+    "physical-highmid",
+    "physical-high",
+    "extended-middle",
+    "extended-highmid",
+    "physical-four"
+  ],
+  "datasets": {
+    "ordinary": {
+      "baseline_snapshot": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "trial_snapshot": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "snapshot_delta": {
+        "matched": 15,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": -15,
+        "false_gap_voices": 0,
+        "false_positive_voices": -15
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "002540bbc3759cd6",
+        "fingerprint_identical": true,
+        "blocks": 334050,
+        "total_ns": 20128844571,
+        "p99_ns": 134741,
+        "maximum_ns": 308825,
+        "half_budget_overruns": 313,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": false,
+        "baseline_exact_samples": null,
+        "current_coverage_valid": true,
+        "current_exact_samples": 8580917,
+        "annotated_samples": 33819101,
+        "current_percent": 25.372989660488017,
+        "labels": 499,
+        "labels_with_zero_exact_hold": 281,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 512,
+          "maximum": 204096
+        },
+        "open_at_recording_end": [
+          {
+            "voice_id": 0,
+            "note": 44,
+            "start_sample": 10627135,
+            "observed_hold_samples": 62465
+          }
+        ],
+        "target": "not measured"
+      }
+    },
+    "constructed": {
+      "baseline_snapshot": {
+        "labeled": 1614601,
+        "matched": 259074,
+        "false_wrong_note_voices": 167722,
+        "false_wrong_string_voices": 103754,
+        "false_gap_voices": 23176,
+        "false_positive_voices": 294652,
+        "fingerprint": "199db8fd25ada73e"
+      },
+      "trial_snapshot": {
+        "labeled": 1614601,
+        "matched": 259074,
+        "false_wrong_note_voices": 167722,
+        "false_wrong_string_voices": 103754,
+        "false_gap_voices": 23176,
+        "false_positive_voices": 294652,
+        "fingerprint": "6c233e125bcd97ea"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 19,
+        "repeated_pitch_on_before_release": 4,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "6c233e125bcd97ea",
+        "fingerprint_identical": true,
+        "blocks": 921600,
+        "total_ns": 48740576479,
+        "p99_ns": 116517,
+        "maximum_ns": 274472,
+        "half_budget_overruns": 574,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": false,
+        "baseline_exact_samples": null,
+        "current_coverage_valid": true,
+        "current_exact_samples": 16422503,
+        "annotated_samples": 103321117,
+        "current_percent": 15.894623942170504,
+        "labels": 488,
+        "labels_with_zero_exact_hold": 203,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 256,
+          "maximum": 1862144
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "isolated-08": {
+      "baseline_snapshot": {
+        "labeled": 31050,
+        "matched": 29816,
+        "false_wrong_note_voices": 2462,
+        "false_wrong_string_voices": 579,
+        "false_gap_voices": 2928,
+        "false_positive_voices": 5969,
+        "fingerprint": "06c4e7fdb2a739e4"
+      },
+      "trial_snapshot": {
+        "labeled": 31050,
+        "matched": 29816,
+        "false_wrong_note_voices": 2462,
+        "false_wrong_string_voices": 579,
+        "false_gap_voices": 2928,
+        "false_positive_voices": 5969,
+        "fingerprint": "06c4e7fdb2a739e4"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "06c4e7fdb2a739e4",
+        "fingerprint_identical": true,
+        "blocks": 69600,
+        "total_ns": 3450228399,
+        "p99_ns": 105196,
+        "maximum_ns": 191818,
+        "half_budget_overruns": 7,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 1901001,
+        "current_coverage_valid": true,
+        "current_exact_samples": 1901001,
+        "annotated_samples": 1987200,
+        "current_percent": 95.66228864734299,
+        "labels": 9,
+        "labels_with_zero_exact_hold": 0,
+        "closed_note_duration_samples": {
+          "minimum": 128,
+          "median": 768,
+          "maximum": 236736
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "isolated-05": {
+      "baseline_snapshot": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "trial_snapshot": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "87edbea93db1fb35",
+        "fingerprint_identical": true,
+        "blocks": 69600,
+        "total_ns": 3868452925,
+        "p99_ns": 125994,
+        "maximum_ns": 339112,
+        "half_budget_overruns": 28,
+        "deadline_overruns": 1,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": false,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 1639173,
+        "current_coverage_valid": true,
+        "current_exact_samples": 1639173,
+        "annotated_samples": 1987200,
+        "current_percent": 82.48656400966183,
+        "labels": 9,
+        "labels_with_zero_exact_hold": 0,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 10240,
+          "maximum": 237568
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "isolated-02": {
+      "baseline_snapshot": {
+        "labeled": 35550,
+        "matched": 29240,
+        "false_wrong_note_voices": 2491,
+        "false_wrong_string_voices": 1400,
+        "false_gap_voices": 1840,
+        "false_positive_voices": 5731,
+        "fingerprint": "e1436099f9cfb492"
+      },
+      "trial_snapshot": {
+        "labeled": 35550,
+        "matched": 29240,
+        "false_wrong_note_voices": 2491,
+        "false_wrong_string_voices": 1400,
+        "false_gap_voices": 1840,
+        "false_positive_voices": 5731,
+        "fingerprint": "6ea741f3e8464742"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 1,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "6ea741f3e8464742",
+        "fingerprint_identical": true,
+        "blocks": 78600,
+        "total_ns": 4165431139,
+        "p99_ns": 117248,
+        "maximum_ns": 244135,
+        "half_budget_overruns": 19,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": false,
+        "baseline_exact_samples": null,
+        "current_coverage_valid": true,
+        "current_exact_samples": 1868358,
+        "annotated_samples": 2275200,
+        "current_percent": 82.11840717299577,
+        "labels": 9,
+        "labels_with_zero_exact_hold": 0,
+        "closed_note_duration_samples": {
+          "minimum": 128,
+          "median": 18848.0,
+          "maximum": 398784
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "physical-long": {
+      "baseline_snapshot": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "519bc0f9f4710566"
+      },
+      "trial_snapshot": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "6ecf88865ddc34e4"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 104,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "6ecf88865ddc34e4",
+        "fingerprint_identical": true,
+        "blocks": 176464,
+        "total_ns": 10010502969,
+        "p99_ns": 147155,
+        "maximum_ns": 316921,
+        "half_budget_overruns": 587,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": false,
+        "baseline_exact_samples": null,
+        "current_coverage_valid": true,
+        "current_exact_samples": 2652736,
+        "annotated_samples": 4380192,
+        "current_percent": 60.562094081720616,
+        "labels": 4,
+        "labels_with_zero_exact_hold": 0,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 576,
+          "maximum": 711104
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "physical-middle": {
+      "baseline_snapshot": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "trial_snapshot": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "b40da4a6fcfd543a",
+        "fingerprint_identical": true,
+        "blocks": 193688,
+        "total_ns": 10287730911,
+        "p99_ns": 125073,
+        "maximum_ns": 296713,
+        "half_budget_overruns": 108,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 0,
+        "current_coverage_valid": true,
+        "current_exact_samples": 0,
+        "annotated_samples": 1544880,
+        "current_percent": 0.0,
+        "labels": 11,
+        "labels_with_zero_exact_hold": 11,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 256,
+          "maximum": 998976
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "physical-highmid": {
+      "baseline_snapshot": {
+        "labeled": 23452,
+        "matched": 0,
+        "false_wrong_note_voices": 3729,
+        "false_wrong_string_voices": 15251,
+        "false_gap_voices": 46672,
+        "false_positive_voices": 65652,
+        "fingerprint": "fcabcff914676ab2"
+      },
+      "trial_snapshot": {
+        "labeled": 23452,
+        "matched": 0,
+        "false_wrong_note_voices": 3729,
+        "false_wrong_string_voices": 15251,
+        "false_gap_voices": 46672,
+        "false_positive_voices": 65652,
+        "fingerprint": "fcabcff914676ab2"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "fcabcff914676ab2",
+        "fingerprint_identical": true,
+        "blocks": 181848,
+        "total_ns": 9320130605,
+        "p99_ns": 118461,
+        "maximum_ns": 262239,
+        "half_budget_overruns": 111,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 0,
+        "current_coverage_valid": true,
+        "current_exact_samples": 0,
+        "annotated_samples": 1500960,
+        "current_percent": 0.0,
+        "labels": 11,
+        "labels_with_zero_exact_hold": 11,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 768.0,
+          "maximum": 496832
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "physical-high": {
+      "baseline_snapshot": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      },
+      "trial_snapshot": {
+        "labeled": 28043,
+        "matched": 0,
+        "false_wrong_note_voices": 8685,
+        "false_wrong_string_voices": 15403,
+        "false_gap_voices": 33638,
+        "false_positive_voices": 57726,
+        "fingerprint": "0b868703201511e1"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "0b868703201511e1",
+        "fingerprint_identical": true,
+        "blocks": 154176,
+        "total_ns": 8202395044,
+        "p99_ns": 130864,
+        "maximum_ns": 400617,
+        "half_budget_overruns": 144,
+        "deadline_overruns": 3,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": false,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 0,
+        "current_coverage_valid": true,
+        "current_exact_samples": 0,
+        "annotated_samples": 1794720,
+        "current_percent": 0.0,
+        "labels": 11,
+        "labels_with_zero_exact_hold": 11,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 640,
+          "maximum": 391360
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "extended-middle": {
+      "baseline_snapshot": {
+        "labeled": 32400,
+        "matched": 4511,
+        "false_wrong_note_voices": 9393,
+        "false_wrong_string_voices": 24725,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41170,
+        "fingerprint": "73d712146be4b1d2"
+      },
+      "trial_snapshot": {
+        "labeled": 32400,
+        "matched": 4511,
+        "false_wrong_note_voices": 9393,
+        "false_wrong_string_voices": 24725,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41170,
+        "fingerprint": "73d712146be4b1d2"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "73d712146be4b1d2",
+        "fingerprint_identical": true,
+        "blocks": 70050,
+        "total_ns": 4102529464,
+        "p99_ns": 132046,
+        "maximum_ns": 299939,
+        "half_budget_overruns": 273,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 284866,
+        "current_coverage_valid": true,
+        "current_exact_samples": 284866,
+        "annotated_samples": 2073600,
+        "current_percent": 13.737750771604938,
+        "labels": 6,
+        "labels_with_zero_exact_hold": 4,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 128,
+          "maximum": 363072
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "extended-highmid": {
+      "baseline_snapshot": {
+        "labeled": 32400,
+        "matched": 0,
+        "false_wrong_note_voices": 7164,
+        "false_wrong_string_voices": 13629,
+        "false_gap_voices": 2027,
+        "false_positive_voices": 22820,
+        "fingerprint": "db4f4b6e6d078738"
+      },
+      "trial_snapshot": {
+        "labeled": 32400,
+        "matched": 0,
+        "false_wrong_note_voices": 7164,
+        "false_wrong_string_voices": 13629,
+        "false_gap_voices": 2027,
+        "false_positive_voices": 22820,
+        "fingerprint": "db4f4b6e6d078738"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "db4f4b6e6d078738",
+        "fingerprint_identical": true,
+        "blocks": 70050,
+        "total_ns": 3942232535,
+        "p99_ns": 125654,
+        "maximum_ns": 238665,
+        "half_budget_overruns": 56,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 0,
+        "current_coverage_valid": true,
+        "current_exact_samples": 0,
+        "annotated_samples": 2073600,
+        "current_percent": 0.0,
+        "labels": 6,
+        "labels_with_zero_exact_hold": 6,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 14784,
+          "maximum": 360256
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "extended-high": {
+      "baseline_snapshot": {
+        "labeled": 37800,
+        "matched": 3893,
+        "false_wrong_note_voices": 9082,
+        "false_wrong_string_voices": 27878,
+        "false_gap_voices": 7028,
+        "false_positive_voices": 43988,
+        "fingerprint": "182dc6c63e32ab7c"
+      },
+      "trial_snapshot": {
+        "labeled": 37800,
+        "matched": 3893,
+        "false_wrong_note_voices": 9082,
+        "false_wrong_string_voices": 27878,
+        "false_gap_voices": 7028,
+        "false_positive_voices": 43988,
+        "fingerprint": "8efaacef9ab10b2c"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "8efaacef9ab10b2c",
+        "fingerprint_identical": true,
+        "blocks": 81600,
+        "total_ns": 4875411361,
+        "p99_ns": 138618,
+        "maximum_ns": 282296,
+        "half_budget_overruns": 253,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 250176,
+        "current_coverage_valid": true,
+        "current_exact_samples": 250176,
+        "annotated_samples": 2419200,
+        "current_percent": 10.341269841269842,
+        "labels": 7,
+        "labels_with_zero_exact_hold": 5,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 2048.0,
+          "maximum": 345280
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "physical-four": {
+      "baseline_snapshot": {
+        "labeled": 55380,
+        "matched": 53051,
+        "false_wrong_note_voices": 18154,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 73510,
+        "false_positive_voices": 91664,
+        "fingerprint": "0ac19cd2c6a694e5"
+      },
+      "trial_snapshot": {
+        "labeled": 55380,
+        "matched": 53051,
+        "false_wrong_note_voices": 18154,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 73510,
+        "false_positive_voices": 91664,
+        "fingerprint": "0ac19cd2c6a694e5"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "0ac19cd2c6a694e5",
+        "fingerprint_identical": true,
+        "blocks": 377088,
+        "total_ns": 18802388399,
+        "p99_ns": 122919,
+        "maximum_ns": 391700,
+        "half_budget_overruns": 197,
+        "deadline_overruns": 1,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": false,
+      "held_note": {
+        "baseline_coverage_valid": true,
+        "baseline_exact_samples": 3384655,
+        "current_coverage_valid": true,
+        "current_exact_samples": 3384655,
+        "annotated_samples": 3544320,
+        "current_percent": 95.49518666486097,
+        "labels": 18,
+        "labels_with_zero_exact_hold": 0,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 384.0,
+          "maximum": 699584
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    },
+    "synthetic-four": {
+      "baseline_snapshot": {
+        "labeled": 310640,
+        "matched": 51027,
+        "false_wrong_note_voices": 39044,
+        "false_wrong_string_voices": 12339,
+        "false_gap_voices": 6721,
+        "false_positive_voices": 58104,
+        "fingerprint": "c66176b514c4f1d3"
+      },
+      "trial_snapshot": {
+        "labeled": 310640,
+        "matched": 51027,
+        "false_wrong_note_voices": 39044,
+        "false_wrong_string_voices": 12339,
+        "false_gap_voices": 6721,
+        "false_positive_voices": 58104,
+        "fingerprint": "c12f010c225a00a9"
+      },
+      "snapshot_delta": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": 0,
+        "false_positive_voices": 0
+      },
+      "raw_midi_baseline": {
+        "cross_pitch_on_before_release": 5,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_midi_current": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "on_native_timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "c12f010c225a00a9",
+        "fingerprint_identical": true,
+        "blocks": 172800,
+        "total_ns": 9176610164,
+        "p99_ns": 118842,
+        "maximum_ns": 330676,
+        "half_budget_overruns": 71,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "native_gate_pass": true,
+      "held_note": {
+        "baseline_coverage_valid": false,
+        "baseline_exact_samples": null,
+        "current_coverage_valid": true,
+        "current_exact_samples": 3234746,
+        "annotated_samples": 19879820,
+        "current_percent": 16.271505476407736,
+        "labels": 96,
+        "labels_with_zero_exact_hold": 31,
+        "closed_note_duration_samples": {
+          "minimum": 64,
+          "median": 2208.0,
+          "maximum": 471488
+        },
+        "open_at_recording_end": [],
+        "target": "not measured"
+      }
+    }
+  },
+  "held_note_scope": "Pre-host detector MIDI, not delivered output or tuner labeled-frame matches. Overlapping annotated labels count separately. Invalid OFF event pairing makes baseline held coverage not measured for affected datasets. No accepted held-note target exists; an EOF-open note alone does not prove stuck MIDI.",
+  "artifacts": [
+    {
+      "id": 13691317903,
+      "name": "m3-report-42643461303-1",
+      "bytes": 92508,
+      "sha256": "46cde4cea11d8bd02dbc0865ae0204647dbc81e90dd497211009635d706361ad",
+      "archive_hash_verified": true,
+      "downloaded_once": true,
+      "downloaded_at": "2026-11-09T16:25:44.520694+00:00",
+      "expires_at": "2026-11-23T16:21:56Z"
+    },
+    {
+      "id": 13691651210,
+      "name": "m3-evidence-42643461303-1",
+      "bytes": 29689728,
+      "sha256": "f53fa0cd4aba6155917ca3f8e659b9da1852e1a6c22ead3034c66bcc6784e0e3",
+      "expires_at": "2026-11-16T16:21:58Z",
+      "downloaded_once": false
+    }
+  ]
 }
