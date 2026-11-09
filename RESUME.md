@@ -1,3 +1,9 @@
+## 2026-11-09 — trace the cross-sample MIDI lane replacement
+
+- Added the bounded `midi-lane-trace` worker task. It observes candidates 47 and 48 separately around samples 202752–204288 of the ordinary recording, using the existing routing and calibrated-output recorder. Both complete OFF replays must match the saved reference, and their complete MIDI and outcome streams must match each other.
+- The report retains each raw note-on still outstanding at the window start and each subsequent lane transition without overwriting an earlier pitch. This preserves the prior note 48 when note 47 arrives at sample 203519, before the recorded note-48 release at 203583. Raw transitions do not establish host-delivered ownership; stage observations do not always identify an emission call site.
+- Six lightweight Python contracts pass, including out-of-window stream drift and missing-conflict rejection. Native compilation and the real recording trace will run only on GitHub Actions. No runtime policy, installed output or acceptance limit changes. Next: collect the pinned cloud result, identify the responsible stage, and choose a bounded correction only from the observed cause.
+
 ## 2026-11-09 — reduced MIDI ledger cases pass on GitHub
 
 - Source `eca0d03a3e69546f71514205d4d2b4e87b201119` adds two native ledger cases from the saved ordinary MIDI report. CI `42602154059` passed the native tests and production VST3 build/package; portable run `42602154464` passed its replay tests, Python contracts and synthetic buffer parity. No local native execution or installed setting change occurred. Checkpoint: `docs/recovery/github-midi-ledger-reproduction-20261109.json`.

@@ -129,3 +129,12 @@ window of pre-render routing inputs, actual MIDI events and the later continuity
 ownership state. Separate stage flags distinguish an unobserved stage from a
 measured zero mask. The trace is compiled out of the production plugin and does
 not introduce a routing rule, new acceptance result or timing measurement.
+
+`midi-lane-trace` observes candidates 47 and 48 around the recorded cross-sample
+lane conflict. Use `-f dataset=ordinary -f note=47 -f label_index=-1`. Both
+complete OFF replays must match the ordinary reference, and complete MIDI and
+outcome captures must agree between observations. Only a short trace window
+and its preceding unreleased raw onsets are retained. Overlapping pitches
+remain separate in the report; raw detector events do not establish delivered
+host ownership. No runtime rule or installed output changes. This diagnosis
+does not replace corpus, allocation, buffer, timing or live-host acceptance.

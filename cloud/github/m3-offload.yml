@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -65,11 +65,12 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
           if [[ "$TASK" = routing-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 52; test "$LABEL_INDEX" = 54; fi
+          if [[ "$TASK" = midi-lane-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 47; test "$LABEL_INDEX" = -1; fi
           if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
@@ -133,7 +134,7 @@ jobs:
         working-directory: source
         run: |
           python3 -m pip install 'numpy>=2,<3'
-          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_midi_lifecycle_analysis tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace 2>&1 | tee build/github-results/contracts.log
+          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay tests.test_midi_lifecycle_analysis tests.test_portable_allocation_trace tests.test_portable_core_check tests.test_portable_controlled_replay tests.test_portable_evidence_retention_trial tests.test_portable_routing_trace tests.test_portable_midi_lane_trace 2>&1 | tee build/github-results/contracts.log
       - name: Screen direct evidence retention through energy dips
         if: inputs.task == 'evidence-retention-trial'
         working-directory: source
@@ -166,6 +167,13 @@ jobs:
           cmake --build build/portable --target m3_motion_tests --parallel 2 2>&1 | tee build/github-results/trace-build.log
           M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
           python3 -B -m tools.portable_routing_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-projection-preview-20261109.json --output build/github-results/routing 2>&1 | tee build/github-results/runner.log
+      - name: Trace the recorded cross-sample MIDI lane replacement
+        if: inputs.task == 'midi-lane-trace'
+        working-directory: source
+        run: |
+          cmake --build build/portable --target m3_motion_tests --parallel 2 2>&1 | tee build/github-results/trace-build.log
+          M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
+          python3 -B -m tools.portable_midi_lane_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-ordinary-assignment-20261109.json --output build/github-results/midi-lane 2>&1 | tee build/github-results/runner.log
       - name: Screen isolated upper-partial string identity
         if: inputs.task == 'partial-identity'
         working-directory: source
