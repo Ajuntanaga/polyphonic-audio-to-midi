@@ -7,6 +7,351 @@
     "repository": "Ajuntanaga/m3-offload",
     "private": true,
     "workflow": "m3-offload.yml",
+    "worker_commit": "dd5b80f91d41815794bfa504c1a0de7ac845435e",
+    "source_commit": "42c42d0d0ed99c46a89e23eb43f026e7c6be56f3",
+    "task": "assignment-trace",
+    "dataset": "physical-middle",
+    "note": 52,
+    "status": "completed",
+    "input_release": "corpus-20261108",
+    "input_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "input_bytes": 176719420,
+    "run_id": 42538733620,
+    "report_state": "collected",
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "run_attempt": 1,
+    "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42538733620",
+    "created_at": "2026-11-09T00:10:25Z",
+    "observed_at": "2026-11-09T00:11:52.462661+00:00",
+    "stage": "diagnosis collected",
+    "report_final": true,
+    "outputs_downloaded_once": true,
+    "report_artifact": "m3-report-42538733620-1",
+    "evidence_artifact": "m3-evidence-42538733620-1",
+    "output_target": "build/github-results/assignment-middle-42538733620",
+    "input_release_verified": true,
+    "input_release_receipt": "build/github-offload/input-release-receipt.json",
+    "conclusion": "success",
+    "staging_cleanup": {
+      "removed_at": "2026-11-09T00:09:19.782214+00:00",
+      "path": "build/github-offload/recovery-inputs.tar.gz",
+      "bytes": 176719420,
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+      "reason": "Created upload staging copy; private GitHub release server confirms identical digest and byte count. Original 30 inputs retained.",
+      "release_receipt": "build/github-offload/input-release-receipt.json",
+      "pushed_checkpoint_commit": "51fde8b"
+    },
+    "replaces_failed_run": 42538530330,
+    "outputs_downloaded_at": "2026-11-09T00:16:07.167208+00:00",
+    "report": "build/github-results/assignment-middle-42538733620/trace/report.json",
+    "report_updated_at": "2026-11-09T00:12:26.329567+00:00",
+    "trace_ran": true,
+    "result": {
+      "reference_off": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "traced_off": {
+        "labeled": 24139,
+        "matched": 0,
+        "false_wrong_note_voices": 4516,
+        "false_wrong_string_voices": 17921,
+        "false_gap_voices": 94413,
+        "false_positive_voices": 116850,
+        "fingerprint": "b40da4a6fcfd543a"
+      },
+      "comparison": {
+        "delta": {
+          "matched": 0,
+          "false_wrong_note_voices": 0,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 0,
+          "false_positive_voices": 0
+        },
+        "changed_labels": [],
+        "lost_labels": [],
+        "increased_error_counts": [],
+        "gate_pass": true,
+        "output_bit_identical": true
+      },
+      "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+      "binary_sha256": "f897b3a80f6db8b192a7b01e161ed72f69beae51d8a4d1783053aaccdf7048ae",
+      "input_manifest_sha256": "af6a72f7209ad5593bb0245be7611947f2f597d7cf7d665c5be94f33698df5e1",
+      "diagnosis": {
+        "note": 52,
+        "labeled_frames": 24139,
+        "pitch_selection": {
+          "selected": 23084,
+          "coasting": 1004,
+          "spectral_rejected": 51
+        },
+        "pitch_selected_percent": 95.62947926591822,
+        "sampled_assignment_rows": 1443,
+        "sampled_exact_assignment_rows": 0,
+        "labeled_frame_matches": 0,
+        "windows": [
+          {
+            "label_index": 0,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 3450
+            },
+            "expected_string_mask": 40,
+            "sampled_assignment_rows": 216,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "32": 106,
+              "34": 5,
+              "33": 105
+            },
+            "missing_expected_lane_rows": {
+              "3": 216,
+              "5": 0
+            }
+          },
+          {
+            "label_index": 1,
+            "labeled_frames": 1395,
+            "selection": {
+              "selected": 1395
+            },
+            "expected_string_mask": 40,
+            "sampled_assignment_rows": 88,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "8": 55,
+              "32": 33
+            },
+            "missing_expected_lane_rows": {
+              "3": 33,
+              "5": 55
+            }
+          },
+          {
+            "label_index": 2,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 3450
+            },
+            "expected_string_mask": 40,
+            "sampled_assignment_rows": 216,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "32": 12,
+              "16": 128,
+              "24": 76
+            },
+            "missing_expected_lane_rows": {
+              "3": 140,
+              "5": 204
+            }
+          },
+          {
+            "label_index": 3,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 3450
+            },
+            "expected_string_mask": 48,
+            "sampled_assignment_rows": 216,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "16": 198,
+              "32": 18
+            },
+            "missing_expected_lane_rows": {
+              "4": 18,
+              "5": 198
+            }
+          },
+          {
+            "label_index": 4,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 3450
+            },
+            "expected_string_mask": 48,
+            "sampled_assignment_rows": 215,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "32": 208,
+              "16": 7
+            },
+            "missing_expected_lane_rows": {
+              "4": 208,
+              "5": 7
+            }
+          },
+          {
+            "label_index": 5,
+            "labeled_frames": 900,
+            "selection": {
+              "selected": 900
+            },
+            "expected_string_mask": 48,
+            "sampled_assignment_rows": 56,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "32": 55,
+              "56": 1
+            },
+            "missing_expected_lane_rows": {
+              "4": 55,
+              "5": 0
+            }
+          },
+          {
+            "label_index": 6,
+            "labeled_frames": 619,
+            "selection": {
+              "selected": 619
+            },
+            "expected_string_mask": 24,
+            "sampled_assignment_rows": 38,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "32": 38
+            },
+            "missing_expected_lane_rows": {
+              "3": 38,
+              "4": 38
+            }
+          },
+          {
+            "label_index": 7,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 2395,
+              "coasting": 1004,
+              "spectral_rejected": 51
+            },
+            "expected_string_mask": 24,
+            "sampled_assignment_rows": 149,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "16": 18,
+              "32": 105,
+              "33": 25,
+              "4": 1
+            },
+            "missing_expected_lane_rows": {
+              "3": 149,
+              "4": 131
+            }
+          },
+          {
+            "label_index": 8,
+            "labeled_frames": 225,
+            "selection": {
+              "selected": 225
+            },
+            "expected_string_mask": 24,
+            "sampled_assignment_rows": 14,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "54": 14
+            },
+            "missing_expected_lane_rows": {
+              "3": 14,
+              "4": 0
+            }
+          },
+          {
+            "label_index": 9,
+            "labeled_frames": 300,
+            "selection": {
+              "selected": 300
+            },
+            "expected_string_mask": 56,
+            "sampled_assignment_rows": 19,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "54": 19
+            },
+            "missing_expected_lane_rows": {
+              "3": 19,
+              "4": 0,
+              "5": 0
+            }
+          },
+          {
+            "label_index": 10,
+            "labeled_frames": 3450,
+            "selection": {
+              "selected": 3450
+            },
+            "expected_string_mask": 56,
+            "sampled_assignment_rows": 216,
+            "exact_rendered_rows": 0,
+            "rendered_masks": {
+              "54": 212,
+              "32": 4
+            },
+            "missing_expected_lane_rows": {
+              "3": 216,
+              "4": 4,
+              "5": 0
+            }
+          }
+        ],
+        "interpretation": "Pitch selection succeeds in 23084 of 24139 labeled frames, but none match the intended note/string assignment. None of 1443 sampled assignment rows has the expected string mask. This establishes an assignment failure after pitch selection in the sampled rows; the specific support, fit or admission rule responsible is not yet established. The remaining frames include 1004 coasting and 51 spectral rejections, so pitch selection is not perfect either.",
+        "metric_warning": "Pitch-selected percentage and sampled assignment-row counts are not labeled-frame match percentage or overall accuracy."
+      },
+      "live_readiness": "not measured",
+      "native_timing_acceptance": "not measured"
+    },
+    "artifacts": [
+      {
+        "id": 13640870524,
+        "name": "m3-report-42538733620-1",
+        "size_in_bytes": 10637,
+        "digest": "sha256:ddd70461a55ab66ea48b1b3448f95385ee7aea8f1224bf2c7a4f826b15989877",
+        "expires_at": "2026-11-23T00:12:26Z"
+      },
+      {
+        "id": 13640089234,
+        "name": "m3-evidence-42538733620-1",
+        "size_in_bytes": 15447265,
+        "digest": "sha256:f87b61abc3f0ed4d79213c2312fa7c76e5fd80868836f0383aadfa31d56267e8",
+        "expires_at": "2026-11-16T00:12:28Z"
+      }
+    ],
+    "evidence_downloaded_once": true,
+    "evidence_downloaded_at": "2026-11-09T00:15:22.754051+00:00",
+    "evidence_directory": "build/github-results/assignment-middle-42538733620/evidence",
+    "evidence_download_record": "build/github-results/assignment-middle-42538733620/evidence-download.json",
+    "downloaded_evidence_hashes_verified": true
+  },
+  "source_contract_run": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "run_id": 42538709808,
+    "source_commit": "42c42d0d0ed99c46a89e23eb43f026e7c6be56f3",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42538709808"
+  },
+  "input_checklist": {
+    "present": 30,
+    "total": 30,
+    "bytes": 307122490,
+    "coverage_percent": 100,
+    "meaning": "input-checklist coverage only"
+  },
+  "legacy_compute": "Only collect already-submitted Kaggle corpus version 2; no new Kaggle or Modal submissions.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "acceptance": "Traced OFF and untraced OFF must be output-identical with unchanged labeled passages. Further detector acceptance still requires label/error, allocation, buffer, timing, host and MIDI lifecycle gates.",
+  "outcome": "The GitHub build, 24 contract tests and assignment diagnostic passed. Traced and untraced OFF outputs are bit-identical: both match 0 of 24139 labeled frames with identical false-output counts. Pitch selection succeeds in 23084 frames; no sampled assignment row renders the expected strings. This is a successful diagnostic, not an accepted detector improvement.",
+  "first_attempt": {
+    "repository": "Ajuntanaga/m3-offload",
+    "private": true,
+    "workflow": "m3-offload.yml",
     "worker_commit": "d26a4dbdd4aa858cc6ab50bd3d40c17c92849214",
     "source_commit": "681e94d6b6965e4b3a08470fc4171083682e3732",
     "task": "assignment-trace",
@@ -45,25 +390,6 @@
     "trace_ran": false,
     "failure": "Two of 24 contract tests failed because NumPy was absent. Native build and input verification succeeded. No replay result exists."
   },
-  "source_contract_run": {
-    "run_id": 42538239082,
-    "source_commit": "681e94d6b6965e4b3a08470fc4171083682e3732",
-    "status": "completed",
-    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
-    "workflow": "Portable offline replay",
-    "conclusion": "success",
-    "observed_at": "2026-11-09T00:08:49.886162+00:00"
-  },
-  "input_checklist": {
-    "present": 30,
-    "total": 30,
-    "bytes": 307122490,
-    "coverage_percent": 100,
-    "meaning": "input-checklist coverage only"
-  },
-  "legacy_compute": "Only collect already-submitted Kaggle corpus version 2; no new Kaggle or Modal submissions.",
-  "installed_output_changed": false,
-  "promotion_accepted": false,
-  "acceptance": "Traced OFF and untraced OFF must be output-identical with unchanged labeled passages. Further detector acceptance still requires label/error, allocation, buffer, timing, host and MIDI lifecycle gates.",
-  "outcome": "Native build and input verification succeeded. Two comparison tests failed because NumPy was absent; replay was skipped. The worker now installs the same NumPy range used by passing source CI."
+  "updated_at": "2026-11-09T00:16:07.167208+00:00",
+  "next": "Use the saved physical-middle assignment trace to identify why expected strings lose calibrated support, fit or admission. Process any follow-up on GitHub Actions only; do not duplicate the legacy Kaggle v2 recovery. Require no lost labels or added false outputs, zero processing allocations, buffer parity, native p99/max/deadline gates, and host/MIDI checks before promotion."
 }
