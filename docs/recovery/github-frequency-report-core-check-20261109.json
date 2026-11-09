@@ -1,0 +1,183 @@
+{
+  "schema": "m3_core_check_v1",
+  "state": "completed",
+  "final": true,
+  "diagnostic_only": false,
+  "stage": "paired core check collected",
+  "dataset": "physical-long",
+  "block_samples": 32,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "measurement_change": "Offline frequency observer and optional frequency report calculations disabled after scoring. Admission and unison state remain enabled; explicit diagnostic pruning retains its required calculations. Earlier timing included frequency report calculations; this is a measurement correction, not a production speed gain.",
+  "updated_at": "2026-11-09T01:18:10.008471+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "96509a4c8c212f2587865f5cd9d78164da0f0167",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42544649533",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "verified_inputs": 4,
+  "input_manifest_sha256": "082e5a048dc68c59e52ce1d9bfe01de15ce9a6ba72e31153aeeb773b979f3e0f",
+  "binary_sha256": "5c7a7e7f1e5e8d82936d68b963c56ab483cc64fa4dd8abcec154cea5979d9b22",
+  "baseline_report_sha256": "1c0cdf82da87abde82709a6c20de3558526e23b3f520f7f635b1cf05b8d2cc13",
+  "baseline_source": {
+    "base_commit": "6cb88d5011c6170371bd82c59091dbc5d162f192",
+    "archive_sha256": "82483d163b917f1ea4a2aba39872c6709031a5510df7cbf584af1c96029c9b2d",
+    "manifest_sha256": "202367fa290ea50d0b33f06ffb18423cc0e4e16388d0a038de49810de62bf000"
+  },
+  "timing_limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "comparison": {
+    "delta": {
+      "matched": 0,
+      "false_wrong_note_voices": 0,
+      "false_wrong_string_voices": 0,
+      "false_gap_voices": 0,
+      "false_positive_voices": 0
+    },
+    "changed_labels": [],
+    "lost_labels": [],
+    "increased_error_counts": [],
+    "gate_pass": true,
+    "output_bit_identical": true
+  },
+  "allocation_and_output_pass": true,
+  "native_gate_pass": true,
+  "acceptance": "accepted for this core check",
+  "report_path": "build/github-results/frequency-report-core-check-42544649533/core-check/report.json",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42544649533",
+  "worker_commit": "0f5adddcfeb418833294b11500b84e4ad7adb9d3",
+  "runs": {
+    "off": {
+      "elapsed_seconds": 40.720510022,
+      "output": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "519bc0f9f4710566"
+      },
+      "exact_matches_by_string_count": {
+        "2": {
+          "labeled": 29063,
+          "matched": 16233
+        },
+        "3": {
+          "labeled": 39378,
+          "matched": 25219
+        }
+      },
+      "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+      "timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "519bc0f9f4710566",
+        "fingerprint_identical": true,
+        "blocks": 176464,
+        "total_ns": 8662759146,
+        "p99_ns": 112340,
+        "maximum_ns": 282348,
+        "half_budget_overruns": 166,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": true,
+        "timing_pass": true
+      }
+    },
+    "on": {
+      "elapsed_seconds": 44.54016302400001,
+      "output": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "519bc0f9f4710566"
+      },
+      "exact_matches_by_string_count": {
+        "2": {
+          "labeled": 29063,
+          "matched": 16233
+        },
+        "3": {
+          "labeled": 39378,
+          "matched": 25219
+        }
+      },
+      "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+      "timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "519bc0f9f4710566",
+        "fingerprint_identical": true,
+        "blocks": 176464,
+        "total_ns": 10576046843,
+        "p99_ns": 128685,
+        "maximum_ns": 284609,
+        "half_budget_overruns": 305,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "recorded_reference_bit_identical": true,
+      "measurement_scope_verified": true,
+      "gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": true,
+        "timing_pass": true
+      }
+    }
+  },
+  "cloud_contract_tests": {
+    "passed": 34,
+    "failed": 0
+  },
+  "source_ci": {
+    "run_id": 42544621467,
+    "conclusion": "success",
+    "native_tests": "passed",
+    "production_vst3_build_and_package": "passed",
+    "installed": false
+  },
+  "portable_workflow": {
+    "run_id": 42544621385,
+    "conclusion": "success"
+  },
+  "remaining": "Wider corpus, buffer, lifecycle and live-host gates; primary match improvement targets remain unmet. This measurement correction is not a production speed or accuracy gain."
+}
