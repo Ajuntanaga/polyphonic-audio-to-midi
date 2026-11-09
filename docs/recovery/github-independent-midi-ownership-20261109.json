@@ -219,7 +219,24 @@
       },
       "recorded_lane_window_conflicts": 1,
       "coasting_lane_window_conflicts": 4,
-      "pending_lane_window_conflicts": 1
+      "pending_lane_window_conflicts": 1,
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11901
+        }
+      ]
     },
     "trial-on": {
       "elapsed_seconds": 89.86401873100002,
@@ -310,7 +327,24 @@
       },
       "recorded_lane_window_conflicts": 0,
       "coasting_lane_window_conflicts": 0,
-      "pending_lane_window_conflicts": 0
+      "pending_lane_window_conflicts": 0,
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11849
+        }
+      ]
     }
   },
   "artifacts": [
@@ -342,5 +376,11 @@
     "new_trial": "Ordinary OFF is bit-identical to its saved reference. ON loses no passage matches and increases no false-output counter. Other recordings have not been rerun for this revision.",
     "earlier_corpus_checkpoint": "docs/recovery/github-spectral-lane-collision-corpus-20261109.json",
     "earlier_corpus": "All 42 label/error comparisons passed; 14 OFF references and 11 OFF/ON pairs were bit-identical. Three paired native timing gates failed."
+  },
+  "checkpoint_format_correction": {
+    "reason": "Expose the complete raw MIDI counts and EOF opens at the fields required by the saved-ledger reader; values are unchanged.",
+    "failed_run_id": 42641962474,
+    "failure": "KeyError: raw_midi_counts before native event replay",
+    "detector_changed": false
   }
 }
