@@ -3575,6 +3575,43 @@ bool PolyphonicPitchDetector::reset_candidate_output_projections(
 }
 #endif
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+std::array<bool, kMaxCandidates>
+PolyphonicPitchDetector::projection_ownership_selection(
+    const std::array<bool, kMaxCandidates>& selected) const noexcept {
+  auto ownership = selected;
+  if (!diagnostic_projection_preview_admission_ ||
+      profile_mode_ != ProfileMode::m3 || midi_routing_ != MidiRouting::per_voice ||
+      !(fast_energy_ < slow_energy_ * kAttackEnergyRatio)) {
+    return ownership;
+  }
+  const auto count = static_cast<std::size_t>(candidate_count_);
+  for (std::size_t preview = 0U; preview < count; ++preview) {
+    if (!selected[preview] || candidate_states_[preview].active ||
+        selector_atomic_handoff_targets_[preview]) {
+      continue;
+    }
+    const auto note = static_cast<std::uint8_t>(lowest_note_ + preview);
+    for (std::size_t owner = 0U; owner < count; ++owner) {
+      const auto& state = candidate_states_[owner];
+      if (selected[owner] && state.active && !output_suppressed(state) &&
+          string_count(state.assigned_string_mask) == 1U &&
+          string_count(state.midi_voice_mask) == 1U &&
+          candidate_output_note(owner) != lowest_note_ + owner &&
+          candidate_output_note(owner) == note &&
+          candidate_midi_output_note(owner) == note) {
+        // This preview fails the unchanged onset energy gate later in this
+        // decision. Do not let it displace the calibrated owner first.
+        // Keep the original selection for evidence, attack and release work.
+        ownership[preview] = false;
+        break;
+      }
+    }
+  }
+  return ownership;
+}
+#endif
+
 void PolyphonicPitchDetector::update_calibrated_output_notes(
     DetectorDecision& decision,
     const std::array<bool, kMaxCandidates>& selected,
@@ -11599,13 +11636,26 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   stage.switch_to(offline::stage_timing::Stage::string_assignment);
 #endif
   update_spectral_lane_states(selected, quiet);
-  assign_m3_strings(selected);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  auto projection_ownership = projection_ownership_selection(selected);
+  // OFF aliases the original selection, including later DP replacements.
+  const auto& ownership_selected = diagnostic_projection_preview_admission_
+      ? projection_ownership : selected;
+#else
+  const auto& ownership_selected = selected;
+#endif
+  assign_m3_strings(ownership_selected);
   update_adjacent_spectral_duplicate_suppression();
   apply_calibrated_dp_replacements(selected, scores, fundamentals, threshold,
                                    quiet, count);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_projection_preview_admission_) {
+    projection_ownership = projection_ownership_selection(selected);
+  }
+#endif
   update_harmonic_profile_memory(selected);
   update_beat_evidence(selected);
-  infer_m3_unison_strings(selected);
+  infer_m3_unison_strings(ownership_selected);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   update_fine_mask_pruning_output_projection(
       selected, scores, fundamentals, threshold, quiet);
@@ -11616,7 +11666,15 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #if defined(M3_OFFLINE_STAGE_TIMING)
   stage.switch_to(offline::stage_timing::Stage::voice_lifecycle);
 #endif
-  update_calibrated_output_notes(decision, selected, selected_voice_count, quiet);
+  auto ownership_voice_count = selected_voice_count;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_projection_preview_admission_) {
+    ownership_voice_count = static_cast<std::size_t>(
+        std::count(ownership_selected.begin(), ownership_selected.end(), true));
+  }
+#endif
+  update_calibrated_output_notes(
+      decision, ownership_selected, ownership_voice_count, quiet);
   update_calibrated_dp_output_projections(
       decision, selected, scores, fundamentals, threshold, quiet, count);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)

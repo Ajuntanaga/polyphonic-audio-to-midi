@@ -1,4 +1,4 @@
-"""Cloud-only OFF/ON screen of direct evidence retention through energy dips.
+"""Cloud-only OFF/ON screens of onset and calibrated string ownership.
 
 Both replays cover the full ordinary recording. Labels select retained diagnosis
 windows only; they never change audio, detector settings or the runtime rule.
@@ -153,12 +153,14 @@ def summarize_calibrated_output(rows, outcomes, events, note):
                     'before later assignment/lifecycle work. Same-tick MIDI events are '
                     'actual global events, not automatically attributable to this stage. '
                     'An ineligible tick clears pending consensus but does not itself '
-                    'revert an emitted projection. This is baseline diagnosis, not a '
-                    'runtime improvement or host/MIDI acceptance.')
+                    'revert an emitted projection. Branch counts alone do not establish '
+                    'a runtime improvement or host/MIDI acceptance.')
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
-        calibrated_output_trace=False):
+        calibrated_output_trace=False, projection_preview_trial=False):
+    if calibrated_output_trace and projection_preview_trial:
+        raise ValueError('Choose either unchanged tracing or an OFF/ON trial')
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     report = dict(schema='m3_direct_evidence_retention_trial_v1', state='running', final=False,
@@ -168,6 +170,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
     if calibrated_output_trace:
         report['schema'] = 'm3_calibrated_output_trace_v1'
         report['runtime_rule_changed'] = False
+    elif projection_preview_trial:
+        report['schema'] = 'm3_projection_preview_admission_trial_v1'
+        report['runtime_rule_changed'] = True
 
     def save():
         report['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -209,11 +214,13 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
         start, end = trace_sample_bounds([label], samples)
         traces = {kind: output / (kind + '.tsv') for kind in ('candidate', 'outcome', 'midi-event')}
-        if not calibrated_output_trace:
+        if projection_preview_trial:
+            command.append('--diagnostic-projection-preview-admission')
+        elif not calibrated_output_trace:
             command.append('--diagnostic-direct-evidence-retention')
         for kind, path in traces.items():
             command.extend(('--' + kind + '-trace', str(path)))
-        candidate_note = 41 if calibrated_output_trace else 42
+        candidate_note = 41 if calibrated_output_trace or projection_preview_trial else 42
         command.extend(('--candidate-trace-note', str(candidate_note), '--candidate-trace-start', str(start / rate),
                         '--candidate-trace-end', str(end / rate)))
         after_file, after = replay(command, 'traced-off' if calibrated_output_trace else 'trial-on')
@@ -243,7 +250,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 raise ValueError('Incomplete full outcome capture')
         events = read_rows(traces['midi-event'])
         report['target_lifecycle'] = summarize_target(window, events, after['labels'][55])
-        if calibrated_output_trace:
+        if calibrated_output_trace or projection_preview_trial:
             report['calibrated_output'] = summarize_calibrated_output(
                 read_rows(traces['candidate']), window, events, candidate_note)
         report['traces'] = {}
@@ -266,13 +273,17 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
-    parser.add_argument('--calibrated-output-trace', action='store_true',
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--calibrated-output-trace', action='store_true',
                         help='Capture the unchanged OFF calibrated-output branch for logical note 41')
+    mode.add_argument('--projection-preview-trial', action='store_true',
+                      help='Screen energy-blocked preview ownership against the unchanged OFF reference')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds, calibrated_output_trace=args.calibrated_output_trace)
+        timeout=args.replay_timeout_seconds, calibrated_output_trace=args.calibrated_output_trace,
+        projection_preview_trial=args.projection_preview_trial)
 
 
 if __name__ == '__main__':

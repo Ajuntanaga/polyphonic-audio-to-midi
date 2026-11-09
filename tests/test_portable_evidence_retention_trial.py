@@ -83,7 +83,7 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             'tsv_sha256': digest(baseline), 'output': read_replay(baseline)['output']}}}))
         return binary, corpus, manifest, reference, root / 'output'
 
-    def replay_stub(self, after, *, calibrated=False):
+    def replay_stub(self, after, *, calibrated=False, projection=False):
         def replay(command, *, stdout, stderr, check, timeout):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
@@ -91,7 +91,9 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             self.assertNotIn('--diagnostic-cue-free-lane-reassignment', command)
             enabled = '--diagnostic-direct-evidence-retention' in command
             traced = '--candidate-trace' in command
-            if calibrated:
+            self.assertEqual('--diagnostic-projection-preview-admission' in command,
+                             projection and traced)
+            if calibrated or projection:
                 self.assertFalse(enabled)
                 if traced:
                     self.assertEqual(command[command.index('--candidate-trace-note') + 1], '41')
@@ -102,7 +104,7 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
                     if kind == 'outcome':
                         rows = outcome_rows()
                     elif kind == 'candidate':
-                        rows = (calibrated_rows() if calibrated else
+                        rows = (calibrated_rows() if calibrated or projection else
                                 [dict(sample=row['sample'], note='42') for row in outcome_rows()])
                     else:
                         rows = [dict(sample='127', kind='on', note='42', voice_id='8'),
@@ -251,6 +253,31 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
             self.assertTrue(result['trace_semantic_identity'])
             self.assertNotIn('calibrated_output', result)
             self.assertEqual(result['state'], 'failed')
+
+    def test_projection_trial_traces_owner_and_keeps_full_recording_gates(self):
+        for change, decision in ((dict(target=2), 'eligible for wider validation'),
+                                 (dict(target=2, other=0), 'rejected'),
+                                 (dict(target=2, false_notes=1), 'rejected')):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                args = self.fixture(Path(directory))
+                with patch('tools.portable_evidence_retention_trial.subprocess.run',
+                           side_effect=self.replay_stub(replay_text(**change), projection=True)):
+                    run(*args, projection_preview_trial=True)
+                result = json.loads((args[4] / 'report.json').read_text())
+                self.assertTrue(result['off_reference_bit_identical'])
+                self.assertTrue(result['runtime_rule_changed'])
+                self.assertEqual(result['calibrated_output']['candidate_note'], 41)
+                self.assertEqual(result['decision'], decision)
+                self.assertFalse(result['promotion_accepted'])
+                self.assertFalse(result['installed_output_changed'])
+                self.assertNotIn('trace_output_bit_identical', result)
+
+    def test_trace_and_trial_are_mutually_exclusive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.fixture(Path(directory))
+            with self.assertRaisesRegex(ValueError, 'either unchanged tracing'):
+                run(*args, calibrated_output_trace=True, projection_preview_trial=True)
+            self.assertFalse(args[4].exists())
 
     def test_stage_capture_rejects_stale_tick_and_missing_candidate_rows(self):
         rows = calibrated_rows()

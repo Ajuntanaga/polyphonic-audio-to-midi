@@ -4808,6 +4808,82 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void projection_preview_admission_guards() noexcept {
+    enum class Case { off, blocked, ready, atomic, active, unprojected,
+                      coasting_owner, grouped_owner, dp_owner, lost_trust, end };
+    for (unsigned scenario = 0U; scenario < 2U * static_cast<unsigned>(Case::end);
+         ++scenario) {
+      const auto test_case = static_cast<Case>(scenario / 2U);
+      const bool revalidate_collision = scenario % 2U != 0U;
+      PersistentConfig config;
+      config.profile_mode = ProfileMode::m3;
+      config.midi_routing = MidiRouting::per_voice;
+      config.lowest_note = 32U;
+      config.highest_note = 84U;
+      config.max_polyphony = 5U;
+      config.max_fret = 24U;
+      PolyphonicPitchDetector detector;
+      M3_EXPECT_TRUE(detector.configure(48000.0, config));
+      StringCalibrationBank bank;
+      bank.calibrated_string_mask = 1U;
+      for (const std::size_t fret : {8U, 9U}) {
+        bank.points[0U][fret].quality = CalibrationPointQuality::measured;
+        bank.points[0U][fret].cents_offset_q8 = -40 * 256;
+      }
+      detector.set_calibration_bank(bank);
+      static_cast<void>(calibrated_output_note_probe(
+          detector, 8U, 0U, 1U, 48.0, false, false));
+      M3_EXPECT_EQ(detector.candidate_output_note(8U), 41U);
+      if (test_case != Case::off)
+        detector.set_projection_preview_admission_for_diagnostics(true);
+      detector.fast_energy_ = test_case == Case::ready ? 100.0 : 0.0;
+      detector.slow_energy_ = 1.0;
+      std::array<bool, kMaxCandidates> selected{};
+      selected[8U] = test_case != Case::coasting_owner;
+      selected[9U] = selected[20U] = true;
+      auto& owner = detector.candidate_states_[8U];
+      auto& preview = detector.candidate_states_[9U];
+      auto& other = detector.candidate_states_[20U];
+      other.active = true;
+      other.assigned_string = 3U;
+      other.assigned_string_mask = other.midi_voice_mask = 8U;
+      other.emitted_note = 52U;
+      preview.assigned_string = 0U;
+      preview.assigned_string_mask = 1U;
+      preview.active = test_case == Case::active;
+      detector.selector_atomic_handoff_targets_[9U] = test_case == Case::atomic;
+      if (test_case == Case::unprojected) owner.emitted_note = 40U;
+      if (test_case == Case::grouped_owner) owner.assigned_string_mask = 3U;
+      if (test_case == Case::dp_owner) owner.dp_output_projection_note = 42U;
+      const auto ownership = detector.projection_ownership_selection(selected);
+      const bool withheld = test_case == Case::blocked || test_case == Case::lost_trust;
+      M3_EXPECT_EQ(ownership[9U], !withheld);
+      M3_EXPECT_TRUE(selected[9U]);  // The unchanged lifecycle still sees the preview.
+      M3_EXPECT_TRUE(ownership[20U]);
+      if (!withheld && test_case != Case::off && test_case != Case::ready &&
+          test_case != Case::atomic && test_case != Case::active) continue;
+
+      // Both collision paths see the same ownership selection. Withheld
+      // previews cannot reset the held projection or reserve a unison lane.
+      detector.set_calibrated_collision_revalidation_for_diagnostics(revalidate_collision);
+      if (withheld) detector.infer_m3_unison_strings(ownership);
+      if (test_case == Case::lost_trust)
+        detector.phase_cents_states_[8U].cents = 0.0;
+      DetectorDecision decision;
+      const auto count = static_cast<std::size_t>(
+          std::count(ownership.begin(), ownership.end(), true));
+      detector.update_calibrated_output_notes(decision, ownership, count);
+      detector.update_calibrated_output_notes(decision, ownership, count);
+      const bool retained = test_case == Case::blocked;
+      M3_EXPECT_EQ(detector.candidate_output_note(8U), retained ? 41U : 40U);
+      M3_EXPECT_EQ(decision.transitions.size(), retained ? 0U : 2U);
+      M3_EXPECT_EQ(owner.assigned_string_mask, 1U);
+      M3_EXPECT_EQ(other.emitted_note, 52U);
+      if (test_case == Case::lost_trust)
+        M3_EXPECT_TRUE(detector.projection_ownership_selection(selected)[9U]);
+    }
+  }
+
   static DetectorDecision calibrated_output_trace_step(
       PolyphonicPitchDetector& detector, bool selected_candidate,
       bool phase_valid, double cents, bool observe = true) noexcept {
@@ -5344,6 +5420,10 @@ M3_TEST(native_detector_retracts_a_rebin_when_the_real_adjacent_note_arrives) {
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_projection_preview_admission_preserves_onset_boundaries) {
+  m3::PolyphonicPitchDetectorTestAccess::projection_preview_admission_guards();
+}
+
 M3_TEST(native_detector_calibrated_output_trace_identifies_executed_reset) {
   m3::PersistentConfig config;
   config.profile_mode = m3::ProfileMode::m3;

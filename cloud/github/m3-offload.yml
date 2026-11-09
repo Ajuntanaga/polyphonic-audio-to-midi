@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -60,10 +60,10 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
-          if [[ "$TASK" = calibrated-output-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
+          if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
         with:
@@ -142,6 +142,14 @@ jobs:
           M3_TEST_FILTER=native_detector_calibrated_output_trace_identifies_executed_reset build/portable/m3_detector_tests 2>&1 | tee build/github-results/lifecycle-test.log
           M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
           python3 -B -m tools.portable_evidence_retention_trial --calibrated-output-trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-ordinary-assignment-20261109.json --output build/github-results/calibrated-output 2>&1 | tee build/github-results/runner.log
+      - name: Screen energy-blocked preview string ownership
+        if: inputs.task == 'projection-preview-trial'
+        working-directory: source
+        run: |
+          cmake --build build/portable --target m3_detector_tests m3_motion_tests --parallel 2 2>&1 | tee build/github-results/lifecycle-build.log
+          M3_TEST_FILTER=native_detector_projection_preview_admission_preserves_onset_boundaries build/portable/m3_detector_tests 2>&1 | tee build/github-results/lifecycle-test.log
+          M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
+          python3 -B -m tools.portable_evidence_retention_trial --projection-preview-trial --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-ordinary-assignment-20261109.json --output build/github-results/projection-preview 2>&1 | tee build/github-results/runner.log
       - name: Screen isolated upper-partial string identity
         if: inputs.task == 'partial-identity'
         working-directory: source

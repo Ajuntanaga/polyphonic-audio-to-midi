@@ -671,6 +671,9 @@ class PolyphonicPitchDetector final {
   void set_direct_evidence_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_direct_evidence_retention_ = enabled;
   }
+  void set_projection_preview_admission_for_diagnostics(bool enabled) noexcept {
+    diagnostic_projection_preview_admission_ = enabled;
+  }
   void set_odd_partial_cue_mask_for_diagnostics(
       const std::array<std::uint64_t, 2U>& mask) noexcept {
     diagnostic_odd_partial_cue_mask_ = mask;
@@ -1162,6 +1165,8 @@ class PolyphonicPitchDetector final {
       const std::array<bool, kMaxCandidates>& selected,
       std::size_t selected_note_count, bool quiet = false) noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] std::array<bool, kMaxCandidates> projection_ownership_selection(
+      const std::array<bool, kMaxCandidates>& selected) const noexcept;
   [[nodiscard]] bool reset_candidate_output_projections(
       DetectorDecision& decision, std::size_t candidate) noexcept;
 #endif
@@ -1632,6 +1637,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_fundamental_admission_{};
   bool diagnostic_direct_evidence_retention_{};
+  bool diagnostic_projection_preview_admission_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};

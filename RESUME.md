@@ -1,3 +1,10 @@
+## 2026-11-09 — energy-blocked preview ownership trial prepared
+
+- The captured string transfers show an inactive preview entering assignment before the onset energy check rejects it. It can displace an active calibrated owner and cause that owner's output to revert. The diagnostic trial withholds ownership only when that same onset check is already blocking a preview of the owner's emitted note; real onsets, atomic handoffs, active competitors and unsupported projections remain governed by the existing rules.
+- `--diagnostic-projection-preview-admission` is available only in diagnostic replay builds and defaults off. The original selection remains in attack, release and evidence processing. The filtered selection is shared by string assignment, unison inference and calibrated-output collision checks. Production and installed output remain unchanged.
+- All 11 focused Python contracts pass. GitHub task `projection-preview-trial` will run the focused native onset/ownership guards, trace-parity test and a full ordinary-recording OFF/ON comparison. OFF must be bit-identical to the saved reference. ON needs positive labeled gain, zero per-label losses and no increase in wrong-note, wrong-string or extra gap outputs before any wider corpus, allocation, buffer, timing or host validation. Native validation and the trial result are pending; do not promote on a successful job alone.
+- Storage cleanup remains complete: about 5.75 GB recovered, including 618 older session logs compressed. Keep reports and bounded compressed traces; do not download redundant build bundles. The installed scoreboard is unchanged. Reliable live use and overall completion remain unmeasured.
+
 ## 2026-11-09 — calibrated retunes traced; baseline preserved
 
 - GitHub diagnostic `42583044596` completed successfully at source `4064cf15c1841f725512b4e408e2337670b50464` and worker `d72570b88c93367366058b5cd3a3c8af91dbecdb`. The report is collected once and final. Summary: `docs/recovery/github-calibrated-output-trace-20261109.json`. Do not rerun it.
