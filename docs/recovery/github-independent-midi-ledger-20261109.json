@@ -1,0 +1,317 @@
+{
+  "schema": "m3_github_independent_output_ownership_ledger_checkpoint_v1",
+  "task": "midi-ledger-replay",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42642463894,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42642463894",
+  "source_commit": "bc8afe8e98de282b7679f11f53a081f3b9ffd5c1",
+  "worker_commit": "c2a978833cd69c7eb60757886f18981a1976effa",
+  "created_at": "2026-11-09T15:13:25Z",
+  "completed_at": "2026-11-09T15:13:46Z",
+  "observed_at": "2026-11-09T15:17:17.711682+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "stage": "Saved ordinary MIDI passes the production ledger in both routing modes",
+  "result_final": true,
+  "output_target": "build/github-results/independent-midi-ledger-42642463894",
+  "report_relative_path": "midi-ledger/report.json",
+  "report": "build/github-results/independent-midi-ledger-42642463894/midi-ledger/report.json",
+  "report_sha256": "a6e27dbad7d5f96fdb17dd90e119cb7e3bb6e06494534b753e2c5fdc81395a40",
+  "report_observed_at": "2026-11-09T15:13:40.350464+00:00",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-independent-midi-ledger-20261109.json",
+  "source_trace_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
+  "saved_trace_run_id": 42640261536,
+  "saved_trace_artifact_id": 13684234955,
+  "saved_trace_archive_sha256": "82722d6bfc4145606fa9cf748e2a4cab928fab1a9381246a371c0cc34939a6e0",
+  "trace_source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "0276534102a92846e85622727e34cd553cc2e931",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42640261536",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "original_detector_binary_sha256": "b2f76c466e50f5dc83ee0965d21860f774bf5a488528b2969ba1979dc1294e33",
+  "binary_sha256": "bfd326066096ded17268f8ebcb3557c23d02049c92337347685137c64518e946",
+  "saved_checkpoint_sha256": "9f38a27e5c31dd32e00fc9d33d8dbfe5e467cf7c8317dc8656bb6b9854c6e995",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "scope": "Complete saved ordinary OFF/ON detector events through the production ledger, single-channel and per-voice routing, accepting file sink.",
+  "limits": "Offline open-loop production-ledger simulation with an accepting file sink. Saved detector events continue after a fault; the live plugin would gate detection. No waveform-dependent recovery, control changes, VST3 event-list rejection, host consumption, device output or timing is measured. Assigned voices sharing a pitch/channel remain separate identities. EOF opens are retained, not repaired or claimed to be stuck host notes.",
+  "native_timing": "not measured",
+  "host_delivery": "not measured",
+  "decision": "saved-event ledger gate passed; eligible for wider corpus validation",
+  "saved_event_ledger_gate_pass": true,
+  "routing_gates_passed": 2,
+  "routing_gates_total": 2,
+  "artifacts": [
+    {
+      "id": 13686466370,
+      "name": "m3-report-42642463894-1",
+      "bytes": 7021,
+      "sha256": "0c7aefbe67eb64914728bdfb9ee0ef8dc35fd7264c5dca89f5dc3719f9f0ac15",
+      "expires_at": "2026-11-23T15:13:40Z",
+      "downloaded_once": true,
+      "archive_hash_verified": true
+    },
+    {
+      "id": 13686546264,
+      "name": "m3-evidence-42642463894-1",
+      "bytes": 165984,
+      "sha256": "7c942fa3457298411f1e23f2d3b4295f9ecb2c3b456755642463cc13095ea13a",
+      "expires_at": "2026-11-16T15:13:42Z",
+      "downloaded_once": false
+    }
+  ],
+  "runs": {
+    "reference-off": {
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "raw_error_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11901
+        }
+      ],
+      "trace": {
+        "file": "midi-event.tsv.gz",
+        "bytes": 91378,
+        "sha256": "7b0ad8249a92ebe07c3a405bcbfbf58acf4241e1a3ef862839733614cda25d08",
+        "raw_bytes": 284869,
+        "raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+        "captured_raw_bytes": 284869,
+        "captured_raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+        "captured_rows": 11903,
+        "retained_rows": 11903,
+        "discarded_rows": 0,
+        "scope": "complete recording",
+        "start_sample_inclusive": 0,
+        "end_sample_exclusive": 10689600
+      },
+      "routings": {
+        "single": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "single",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11903,
+          "queued_events": 11903,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 45,
+          "suppressed_source_events": 11858,
+          "cleanup_callbacks": 1,
+          "blocked_blocks": 20482,
+          "detection_disabled_blocks": 20482,
+          "first_blocked_block_start": 203264,
+          "first_blocking_event": {
+            "sample": 203519,
+            "kind": "on",
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "reference-off-single.tsv.gz",
+            "bytes": 466,
+            "sha256": "986223c04124f3252a65192b4ffa856585c7868e5c5ca24e860359a8c820cef9",
+            "raw_sha256": "43297b1d4ec8085e88e269698a8785f7acfadba53f34969445d4c1aac586d6ca",
+            "raw_bytes": 1432
+          }
+        },
+        "per_voice": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "per_voice",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11903,
+          "queued_events": 11903,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 45,
+          "suppressed_source_events": 11858,
+          "cleanup_callbacks": 1,
+          "blocked_blocks": 20482,
+          "detection_disabled_blocks": 20482,
+          "first_blocked_block_start": 203264,
+          "first_blocking_event": {
+            "sample": 203519,
+            "kind": "on",
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "reference-off-per_voice.tsv.gz",
+            "bytes": 466,
+            "sha256": "771e9400d4cd0c1e3981b46e4ab32a7e502ffa9bef463f9b7e55650a47e508bc",
+            "raw_sha256": "2023b24d989e24e8c4e40f0ee8890c54a40e42927b81405dda80cf195f9cedd8",
+            "raw_bytes": 1432
+          }
+        }
+      }
+    },
+    "trial-on": {
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "raw_error_counts": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11849
+        }
+      ],
+      "trace": {
+        "file": "midi-event.tsv.gz",
+        "bytes": 90423,
+        "sha256": "c5b9e04a63bfb60798d67ec48d349f7bec8f0ee188acb449f1bd05f6fe9879a5",
+        "raw_bytes": 283585,
+        "raw_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "captured_raw_bytes": 283585,
+        "captured_raw_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "captured_rows": 11851,
+        "retained_rows": 11851,
+        "discarded_rows": 0,
+        "scope": "complete recording",
+        "start_sample_inclusive": 0,
+        "end_sample_exclusive": 10689600
+      },
+      "routings": {
+        "single": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "single",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11851,
+          "queued_events": 11851,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 11851,
+          "suppressed_source_events": 0,
+          "cleanup_callbacks": 0,
+          "blocked_blocks": 0,
+          "detection_disabled_blocks": 0,
+          "first_blocked_block_start": null,
+          "first_blocking_event": null,
+          "output_blocked_at_eof": false,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [
+            {
+              "voice_id": 0,
+              "note": 44,
+              "channel": 1
+            }
+          ],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "trial-on-single.tsv.gz",
+            "bytes": 79037,
+            "sha256": "ff78a61329fc4b27f5b8919e8cfdabd1ece661dbfe0d9f7bea3382f504485c93",
+            "raw_sha256": "c7e6ba2fdb55ef5abedeeaf4391caccea5de801eee9cbd4d7b10ecebdb7f2870",
+            "raw_bytes": 390270
+          }
+        },
+        "per_voice": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "per_voice",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11851,
+          "queued_events": 11851,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 11851,
+          "suppressed_source_events": 0,
+          "cleanup_callbacks": 0,
+          "blocked_blocks": 0,
+          "detection_disabled_blocks": 0,
+          "first_blocked_block_start": null,
+          "first_blocking_event": null,
+          "output_blocked_at_eof": false,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [
+            {
+              "voice_id": 0,
+              "note": 44,
+              "channel": 1
+            }
+          ],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "trial-on-per_voice.tsv.gz",
+            "bytes": 79287,
+            "sha256": "7d88065c5d8763a858d31a44d9e7301c839e4a5776e5783413157d16a2d1216a",
+            "raw_sha256": "125066d91dba980b7176852ee1e8a1d169e318fcdbafe05bea52b3a83967085e",
+            "raw_bytes": 390270
+          }
+        }
+      }
+    }
+  },
+  "delta_on_minus_off": {
+    "single": {
+      "source_callbacks": 11806,
+      "suppressed_source_events": -11858,
+      "cleanup_callbacks": -1,
+      "blocked_blocks": -20482,
+      "queue_rejected_events": 0
+    },
+    "per_voice": {
+      "source_callbacks": 11806,
+      "suppressed_source_events": -11858,
+      "cleanup_callbacks": -1,
+      "blocked_blocks": -20482,
+      "queue_rejected_events": 0
+    }
+  },
+  "eof_observation": "One raw note remains open at the recording boundary in both OFF and ON; ON retains note 44 on voice 0 at EOF. No forced releases. This does not establish stuck live MIDI.",
+  "next_step": "Run the independent output ownership revision across the fourteen-recording protected corpus with complete raw MIDI capture. Require no passage loss, no false-output or raw-event regression, OFF reference identity, buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. Held-note measures and live-host gates remain separate."
+}

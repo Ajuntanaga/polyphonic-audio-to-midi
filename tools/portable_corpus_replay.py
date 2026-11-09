@@ -153,8 +153,8 @@ def main():
                       assignment_context='original selected candidates; preview filtering remains downstream')
     if args.spectral_lane_collision:
         report.update(schema='m3_portable_spectral_lane_collision_corpus_v1',
-                      trial_revision='pending_assignment_defer',
-                      assignment_context='ordinary physical assignment; singleton output fallback, coasting owner hold and infeasible pending-attack deferral',
+                      trial_revision='independent_output_ownership',
+                      assignment_context='ordinary physical assignment with candidate tracking preserved; independent MIDI owners retain incumbents and admit complete, disjoint groups',
                       label_metric_scope='Tuner snapshot assignments, not emitted MIDI assignments',
                       emitted_midi_labeled_matches='not measured')
     deadline = time.monotonic() + args.max_seconds

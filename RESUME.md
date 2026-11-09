@@ -1,3 +1,13 @@
+## 2026-11-09 — independent MIDI ownership passes the saved-event ledger
+
+GitHub run `42642463894` replayed the complete ordinary OFF and ON MIDI streams through the production ledger. In both single-channel and per-voice routing, ON delivers 11851/11851 events to the accepting file sink, with zero suppressed events, blocked blocks, queue rejections or callback pairing errors. OFF delivers 45/11903 events, suppresses 11858 and blocks 20482 blocks. ON remains unblocked at EOF. Its one open note at the recording boundary is retained as evidence; no forced release was added.
+
+This passes the saved-event ledger gate in both routing modes. The replay is open-loop: waveform recovery, control changes, VST3 event-list rejection, host consumption, device output and native timing remain unmeasured. The default-off trial and installed scoreboard are unchanged. Checkpoint: `docs/recovery/github-independent-midi-ledger-20261109.json`. The small report was collected once and its archive hash verified; callback evidence stays on GitHub.
+
+The preceding ordinary screen still supplies the note scores: 145385 to 145400/528632 matches (27.5021% to 27.5050%), no lost passage matches, wrong-string outputs 92653 to 92638, wrong-note outputs unchanged at 164263 and extra outputs during unlabeled gaps unchanged at 62856. Raw cross-pitch lane conflicts fall from 652 to zero. These tuner scores and raw-event counts are separate from live MIDI quality.
+
+Next: run this ownership revision across all fourteen protected recordings. Require no passage loss or false-output increase, no raw-event regression, bit-identical OFF references, buffer identity, zero allocations, p99 <=166666 ns, max <=333333 ns and zero deadline overruns. The corpus runner also captures complete raw MIDI for held-note measurements. Its report now names the current ownership revision instead of the superseded pending-attack trial. Other corpus results, new native timing and live-host acceptance remain open.
+
 ## 2026-11-09 — independent MIDI ownership clears the ordinary raw conflicts
 
 GitHub trial `42640261536` completed at source `0276534102a92846e85622727e34cd553cc2e931`. Ordinary raw cross-pitch lane conflicts fell from 652 to zero, and all three recorded collision windows are clear. OFF is bit-identical to its saved reference. ON adds 15 matches, from 145385 to 145400/528632 (27.5021% to 27.5050%), with no passage loss. Wrong-string outputs fall from 92653 to 92638; wrong-note outputs remain 164263 and extra outputs during unlabeled gaps remain 62856. These are tuner snapshot matches and raw detector events, not delivered MIDI or held-note quality.
