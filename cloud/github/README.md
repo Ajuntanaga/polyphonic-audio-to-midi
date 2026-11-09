@@ -5,14 +5,18 @@ collects small reports and sends ntfy updates. No native build or corpus replay
 is needed locally.
 
 The public source repository already runs native tests, VST3 packaging,
-portable replay smoke checks and Linux configuration checks. Real recordings,
-calibration and their detailed results stay in the private repository
-`Ajuntanaga/m3-offload`. Its `corpus-20261108` release holds the compressed,
-hashed recovery inputs. The workflow uses its own read-only `GITHUB_TOKEN`;
+portable replay smoke checks and Linux configuration checks. The worker repository
+`Ajuntanaga/m3-offload` also stays public, as requested. Its recordings,
+calibration, release assets and Actions logs are publicly accessible;
+published artifacts can be downloaded by signed-in GitHub users. Its
+`corpus-20261108` release holds the compressed, hashed recovery inputs.
+The workflow uses its own read-only `GITHUB_TOKEN`;
 no Kaggle or ntfy credential is copied to GitHub.
 
 `m3-offload.yml` is the canonical worker workflow. Copy it to
-`.github/workflows/m3-offload.yml` in the private worker when changing it.
+`.github/workflows/m3-offload.yml` in the public worker when changing it.
+The first step requires the exact worker repository and public visibility.
+The existing concurrency group is retained so jobs already running remain serialized.
 Dispatch it with a full pushed source commit and a specific task:
 
 ```bash
@@ -66,7 +70,7 @@ passed native corpus gates. Do not poll or submit Kaggle work. Modal and Oracle
 are unavailable.
 
 `controlled-recovery` restores the ten held-out overlap controls from the
-private `controls-pass2-20261109` release. Its three audio crops and calibration
+`controls-pass2-20261109` release. Its three audio crops and calibration
 match the retained historical hashes; the runner also checks every regenerated
 mixture's sample hash before replay. These are independent plucks from the same
 recording session, not new-session coverage. The original controls used
@@ -84,7 +88,7 @@ clear the separate corpus, live-host or MIDI lifecycle gates.
 `controlled-timing-diagnosis` measures one retained octave control OFF
 and ON at block 32, with CPU timing enabled. Select `-f control=octave_-12dB`
 for the quiet-octave failure, or `octave_0dB` for the equal-level pair.
-It uses the same private input
+It uses the same input
 release and reconstruction checks, without spectral templates. Both complete
 replay hashes must match `docs/recovery/github-activity-scan-controls-20261109.json`.
 The pair has a six-minute processing cap, with at most three minutes per mode.
@@ -94,7 +98,12 @@ control sweep. The dataset and note dispatch inputs are unused for this task.
 
 Runs are manual and serialized. The trace has a 60-minute job cap; full
 recovery has a 210-minute cap, including compilation. These are standard CPU
-runners using the account's GitHub Actions allowance, not a GPU service.
+runners. GitHub provides standard hosted runners free for public repositories;
+larger runners remain billable. See [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+This visibility change does not establish how GitHub bills a job that started
+while the worker was private. Leave the worker public between runs. Making it
+private later cannot recall copies already downloaded or public forks; see
+[repository visibility](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
 Reports and failure logs last 14 days; compressed traces, references and the
 replay binary last 7 days. Collect useful evidence before expiry. Input release
 assets persist separately. This setup does not change account billing settings.

@@ -1,3 +1,9 @@
+## 2026-11-09 — GitHub worker is public
+
+- `Ajuntanaga/m3-offload` is public and stays public between runs, as requested. An unauthenticated GitHub API read confirms public visibility. Recording bundles, calibration, release assets, Actions logs and published artifacts are now public. The source repository was already public.
+- Worker `2b102bf853cdc8f7aa157a38a7e0dca01c2c5278` updates the public-repository guard and keeps the existing concurrency group, standard Ubuntu CPU runner, read-only token permissions and acceptance limits. The canonical workflow is synchronized, YAML and shell syntax checks pass, and the guard passes against the live repository. Documentation commands and acceptance requirements are preserved.
+- Existing corpus run `42566960267` remains in progress at source `7bd8e8a42360b9bc1adc8c0c52d8c7ddfa2dc396`, using its original worker commit. It was not restarted. Its billing treatment after a mid-run visibility change is unverified. Collect the small report once when complete; keep the installed scoreboard and default-off unchanged.
+
 ## 2026-11-09 — boundary guard controls passed; protected corpus running
 
 - Source `7bd8e8a42360b9bc1adc8c0c52d8c7ddfa2dc396` is pushed. It precomputes the enabled lower/upper boundary guard cells during configuration, retains their update order and arithmetic, and adds a native regression against the former enabled scan across reset and sample-rate reconfiguration, including no enabled guards.

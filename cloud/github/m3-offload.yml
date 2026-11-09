@@ -1,4 +1,4 @@
-name: M3 private processing
+name: M3 processing
 run-name: '${{ inputs.task }} / ${{ inputs.dataset }} / ${{ inputs.source_sha }}'
 on:
   workflow_dispatch:
@@ -32,6 +32,7 @@ defaults:
   run:
     shell: bash
 concurrency:
+  # Keep the existing group so work started before public visibility stays serialized.
   group: m3-private-processing
   cancel-in-progress: false
 env:
@@ -47,11 +48,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.task == 'corpus-recovery' && 210 || 60 }}
     steps:
-      - name: Verify private destination and source selection
+      - name: Verify public destination and source selection
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = true
+          test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis ]]
       - uses: actions/checkout@v7
@@ -63,7 +65,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Download and verify private inputs
+      - name: Download and verify inputs
         env:
           GH_TOKEN: ${{ github.token }}
         working-directory: source
