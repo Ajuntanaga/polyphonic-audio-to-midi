@@ -99,7 +99,7 @@
         "bytes": 4875692,
         "sha256": "a7ffc4c9ebcf69a0fd8dd27f93b4cb0cdfefb86f6d5e61775b7a453975fa8ba5",
         "collected": false,
-        "read_attempt": "Timed out after 90 seconds; no local archive retained. Report and anomaly examples are available."
+        "read_attempt": "Two bounded retrievals timed out after 90 and 45 seconds; no local archive or MIDI stream was retained. Do not repeat the same download. The small report and anomaly examples remain available."
       }
     }
   },

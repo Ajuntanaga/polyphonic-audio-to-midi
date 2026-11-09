@@ -1,0 +1,62 @@
+{
+  "observed_at": "2026-11-09T10:43:21.785958+00:00",
+  "source_commit": "eca0d03a3e69546f71514205d4d2b4e87b201119",
+  "source_pushed": true,
+  "state": "reduced_ledger_reproductions_passed",
+  "result_final": true,
+  "test_file": "native/tests/test_generated_note_ledger.cpp",
+  "fixtures": "Reduced recorded event examples with a seeded old note; not a full recording or live host reproduction.",
+  "cases": [
+    {
+      "test": "generated_note_ledger_reorders_same_sample_assigned_lane_replacement",
+      "recorded_sample": 184319,
+      "voice_id": 2,
+      "old_note": 48,
+      "replacement_note": 47,
+      "result": "Both single and per-voice routing deliver the old note-off before the replacement note-on at the same offset, with delivery allowed."
+    },
+    {
+      "test": "generated_note_ledger_blocks_cross_sample_assigned_lane_replacement",
+      "recorded_note_on_sample": 203519,
+      "recorded_note_off_sample": 203583,
+      "voice_id": 0,
+      "old_note": 48,
+      "replacement_note": 47,
+      "result": "Both routing modes block delivery, suppress the replacement and retain the old note for cleanup. The next callback releases the old note on the correct channel; delivery remains blocked."
+    }
+  ],
+  "runs": [
+    {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "run_id": 42602154059,
+      "workflow": "CI",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42602154059",
+      "source_commit": "eca0d03a3e69546f71514205d4d2b4e87b201119",
+      "status": "completed",
+      "conclusion": "success",
+      "updated_at": "2026-11-09T10:41:25Z"
+    },
+    {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "run_id": 42602154464,
+      "workflow": "Portable offline replay",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/42602154464",
+      "source_commit": "eca0d03a3e69546f71514205d4d2b4e87b201119",
+      "status": "completed",
+      "conclusion": "success",
+      "updated_at": "2026-11-09T10:38:19Z"
+    }
+  ],
+  "validation": "GitHub native tests and production VST3 build/package passed. Portable replay tests, Python contracts and synthetic buffer parity also passed.",
+  "runtime_policy_changed": false,
+  "installed_output_changed": false,
+  "local_native_execution": false,
+  "full_recording_ledger_replay": "not measured",
+  "live_host_delivery": "not measured",
+  "held_duration_gain": "not measured",
+  "promotion_accepted": false,
+  "protected_corpus_checkpoint": "docs/recovery/github-projection-preview-corpus-20261109.json",
+  "raw_midi_checkpoint": "docs/recovery/github-ordinary-midi-lifecycle-20261109.json",
+  "interpretation": "The reduced cases distinguish harmless same-sample ordering from cross-sample lane overlap that can block MIDI delivery. They do not establish how often the real host reaches the seeded state. The earlier preview candidate remains rejected by three native timing gates; installed scores are unchanged.",
+  "next": "Trace the producer and prior lane ownership at the recorded cross-sample replacement before choosing a runtime correction. Retain the installed scoreboard and fixed label/error, allocation, buffer, native timing and host gates."
+}
