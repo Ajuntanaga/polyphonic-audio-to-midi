@@ -29,7 +29,7 @@ jobs:
       - name: Replay comparison contracts
         run: |
           python3 -m pip install 'numpy>=2,<3'
-          python3 -B -m unittest tests.test_frozen_cue_corpus_gate tests.test_portable_recovery tests.test_portable_corpus_replay tests.test_cloud_bootstrap tests.test_binary_triage
+          python3 -B -m unittest tests.test_frozen_cue_corpus_gate tests.test_portable_recovery tests.test_portable_corpus_replay tests.test_cloud_bootstrap tests.test_binary_triage tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis
       - name: Synthetic buffer parity smoke check
         run: python3 -B -m tools.portable_replay_smoke --binary build/portable/m3_replay --output build/cloud-smoke
       - name: Keep bounded diagnostic artifacts

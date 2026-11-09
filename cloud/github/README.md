@@ -1,0 +1,52 @@
+# GitHub execution
+
+GitHub Actions runs all new offloaded M3 processing. The laptop edits code,
+collects small reports and sends ntfy updates. No native build or corpus replay
+is needed locally.
+
+The public source repository already runs native tests, VST3 packaging,
+portable replay smoke checks and Linux configuration checks. Real recordings,
+calibration and their detailed results stay in the private repository
+`Ajuntanaga/m3-offload`. Its `corpus-20261108` release holds the compressed,
+hashed recovery inputs. The workflow uses its own read-only `GITHUB_TOKEN`;
+no Kaggle or ntfy credential is copied to GitHub.
+
+`m3-offload.yml` is the canonical worker workflow. Copy it to
+`.github/workflows/m3-offload.yml` in the private worker when changing it.
+Dispatch it with a full pushed source commit and a specific task:
+
+```bash
+gh workflow run m3-offload.yml --repo Ajuntanaga/m3-offload \
+  -f source_sha=FULL_COMMIT -f task=assignment-trace \
+  -f dataset=physical-middle -f note=52
+```
+
+The assignment trace first records a fresh untraced OFF reference and then a
+traced OFF replay using the same binary and inputs. It requires identical
+outputs and unchanged labeled passages. Its report separates pitch selection
+from string assignment; absent sampled rows are not missing MIDI counts.
+
+`corpus-recovery` recreates the full OFF/ON reference set. Start it only when
+no equivalent recovery is active. The already-submitted Kaggle version 2 may
+finish and its final outputs should be collected; do not submit another
+Kaggle version. Modal and Oracle are unavailable.
+
+Runs are manual and serialized. The trace has a 60-minute job cap; full
+recovery has a 210-minute cap, including compilation. These are standard CPU
+runners using the account's GitHub Actions allowance, not a GPU service.
+Reports and failure logs last 14 days; compressed traces, references and the
+replay binary last 7 days. Collect useful evidence before expiry. Input release
+assets persist separately. This setup does not change account billing settings.
+
+Record the exact worker repository, run ID, source commit, artifact names and
+local output path under `portable_compute.github_worker` in
+`build/modal/current-status.json`. The existing ten-minute heartbeat follows
+those runs, collects small completed reports and sends one inline ntfy summary
+under 4,000 UTF-8 bytes. It does not dispatch work. Only explicit confirmed
+receipts replace the latest successful notification receipt; ambiguous sends
+are not retried.
+
+New measurements remain offline evidence. Preserve installed scores and
+default-off behavior until label/error, allocation, buffer, timing, host and
+MIDI lifecycle gates pass. Successful compilation or a completed cloud job
+alone does not establish reliable live use.

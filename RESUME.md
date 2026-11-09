@@ -1,3 +1,13 @@
+## 2026-11-09 — GitHub-only execution route
+
+- User instruction: all new offloaded processing goes through GitHub Actions; continue ntfy updates. The public source repository retains ordinary CI, VST3 packaging and Linux configuration workflows. Real recordings and detailed results use the private `Ajuntanaga/m3-offload` worker repository. Canonical workflow and dispatch instructions: `cloud/github/`.
+- The private input release contains the same 30 recovered inputs, compressed to 176,719,420 bytes. The archive SHA-256 is `adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254`; the private worker verifies it and each selected input before replay. No secret is copied to the worker.
+- First GitHub task: physical-middle note 52 OFF reference plus assignment trace, using one pinned source commit and unchanged labels/settings. Require traced/untraced output identity. This isolates pitch-selection and string-assignment failures; it is not an accepted detector change. The candidate trace explicitly covers later labels and rejects an overlong capture.
+- GitHub run IDs, artifact names, output locations and collection state belong in `build/modal/current-status.json` under `portable_compute.github_worker`. The existing ten-minute heartbeat now follows this route. It must never dispatch work itself.
+- Legacy Kaggle corpus version 2 was already running when this instruction arrived. Collect its terminal report once; do not submit a new version or duplicate the full recovery while it runs. Modal endpoints must not be probed.
+- Both older Kaggle upload staging directories have had their 30 duplicate inputs removed after hash verification. Original inputs, evidence and launch manifests remain. The new private GitHub upload archive can be removed after the server digest and checkpoint are verified.
+- Installed scores, default-off settings and live-readiness status remain unchanged. All previous label/error, allocation, buffer, p99/max/deadline, host and MIDI lifecycle gates still apply. No local native build or replay is permitted for this migration.
+
 ## 2026-11-08 23:49 UTC — corrected corpus recovery running
 
 - Private Kaggle corpus recovery `anthovargas/m3-recovered-corpus/2` is RUNNING, observed at 23:49 UTC. Dataset version 2 is ready and contains the same 30 recovered inputs plus source from `6cb88d5011c6170371bd82c59091dbc5d162f192`. The float64 WAV-reader fix passed GitHub native tests before submission. No installed output changed.

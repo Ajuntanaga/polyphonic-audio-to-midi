@@ -1,0 +1,125 @@
+name: M3 private processing
+run-name: '${{ inputs.task }} / ${{ inputs.dataset }} / ${{ inputs.source_sha }}'
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full commit in Ajuntanaga/polyphonic-audio-to-midi
+        required: true
+        type: string
+      task:
+        description: Bounded research task
+        type: choice
+        options: [assignment-trace, corpus-recovery]
+        default: assignment-trace
+      dataset:
+        description: Recording for assignment trace
+        type: choice
+        options: [physical-middle, physical-highmid, physical-high, physical-long]
+        default: physical-middle
+      note:
+        description: MIDI note for assignment trace
+        type: number
+        default: 52
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: m3-private-processing
+  cancel-in-progress: false
+env:
+  SOURCE_SHA: ${{ inputs.source_sha }}
+  TASK: ${{ inputs.task }}
+  DATASET: ${{ inputs.dataset }}
+  NOTE: ${{ inputs.note }}
+  INPUT_TAG: corpus-20261108
+  INPUT_SHA256: adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254
+jobs:
+  process:
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.task == 'corpus-recovery' && 210 || 60 }}
+    steps:
+      - name: Verify private destination and source selection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = true
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = corpus-recovery ]]
+      - uses: actions/checkout@v7
+        with:
+          repository: Ajuntanaga/polyphonic-audio-to-midi
+          ref: ${{ inputs.source_sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Download and verify private inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: source
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          mkdir -p "$RUNNER_TEMP/m3-inputs" build/github-results
+          gh release download "$INPUT_TAG" --repo "$GITHUB_REPOSITORY" --pattern recovery-inputs.tar.gz --dir "$RUNNER_TEMP/m3-inputs"
+          printf '%s  %s\n' "$INPUT_SHA256" "$RUNNER_TEMP/m3-inputs/recovery-inputs.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/m3-inputs/recovery-inputs.tar.gz" -C "$RUNNER_TEMP/m3-inputs"
+          rm "$RUNNER_TEMP/m3-inputs/recovery-inputs.tar.gz"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          original = Path(os.environ['RUNNER_TEMP']) / 'm3-inputs/recovery-inputs.json'
+          manifest = json.loads(original.read_text())
+          manifest['source'] = dict(repository='Ajuntanaga/polyphonic-audio-to-midi',
+              commit=os.environ['SOURCE_SHA'], provider='github-actions',
+              worker_repository=os.environ['GITHUB_REPOSITORY'],
+              run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
+              input_release=os.environ['INPUT_TAG'], input_bundle_sha256=os.environ['INPUT_SHA256'],
+              original_input_manifest_sha256=hashlib.sha256(original.read_bytes()).hexdigest())
+          Path('build/github-results/runtime-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          PY
+      - name: Build offline replay on GitHub
+        working-directory: source
+        run: |
+          cmake -S cloud/native -B build/portable -DCMAKE_BUILD_TYPE=Release 2>&1 | tee build/github-results/configure.log
+          cmake --build build/portable --target m3_replay --parallel 2 2>&1 | tee build/github-results/build.log
+      - name: Check diagnosis and comparison contracts
+        working-directory: source
+        run: |
+          python3 -B -m unittest tests.test_portable_assignment_trace tests.test_selection_trace_diagnosis tests.test_frozen_cue_corpus_gate tests.test_portable_corpus_replay 2>&1 | tee build/github-results/contracts.log
+      - name: Diagnose string assignment
+        if: inputs.task == 'assignment-trace'
+        working-directory: source
+        run: |
+          python3 -B -m tools.portable_assignment_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/trace --dataset "$DATASET" --note "$NOTE" 2>&1 | tee build/github-results/runner.log
+      - name: Recover OFF and ON corpus references
+        if: inputs.task == 'corpus-recovery'
+        working-directory: source
+        run: |
+          python3 -B -m tools.portable_corpus_replay --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/corpus --max-seconds 10800 2>&1 | tee build/github-results/runner.log
+      - name: Keep small reports and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-report-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            source/build/github-results/**/*.json
+            source/build/github-results/**/*.log
+            source/build/github-results/**/*.stderr
+      - name: Keep compressed trace and reference evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          compression-level: 1
+          if-no-files-found: warn
+          path: |
+            source/build/github-results/**/*.tsv
+            source/build/github-results/**/*.gz
+            source/build/portable/m3_replay
