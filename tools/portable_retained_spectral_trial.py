@@ -1,0 +1,191 @@
+"""Screen fresh spectral incumbents in the physical assignment, offline only.
+
+Two complete ordinary-recording replays compare every label and false-output
+count. Full raw MIDI captures retain overlapping pitches; only candidate and
+outcome observations are reduced to the previously recorded conflict window.
+"""
+import argparse
+from collections import defaultdict
+import csv
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+import subprocess
+import time
+
+from tools.frozen_cue_corpus_gate import compare_replays, read_replay
+from tools.midi_lifecycle_analysis import read_events, UNASSIGNED_VOICE
+from tools.portable_assignment_trace import compress_trace_window, digest, read_rows, verify_inputs
+from tools.portable_corpus_replay import SETTINGS, command_for
+from tools.portable_midi_lane_trace import LANE, TARGET_EVENTS, WINDOW, candidate_frames, raw_lane_history
+from tools.portable_routing_trace import outcome_window
+
+
+FLAG = '--diagnostic-retained-spectral-assignment'
+CONFLICT_FIELDS = ('cross_pitch_on_before_release', 'repeated_pitch_on_before_release',
+                   'off_without_raw_on', 'zero_velocity_on', 'unassigned_on')
+
+
+def raw_conflicts(events):
+    """Keep all raw outstanding pitches, including a displaced previous owner.
+
+    Same-pitch repeats are counted, with an off paired to the oldest onset.
+    EOF opens are reported separately and are not proof of stuck host MIDI.
+    """
+    active = defaultdict(list)
+    counts = dict.fromkeys(CONFLICT_FIELDS, 0)
+    examples = []
+    for event in events:
+        lane, note = event['voice_id'], event['note']
+        key = (lane, note if lane == UNASSIGNED_VOICE else -1)
+        held = active[key]
+        matches = [i for i, previous in enumerate(held) if previous['note'] == note]
+        if event['kind'] == 'on':
+            conflict = any(previous['note'] != note for previous in held)
+            counts['cross_pitch_on_before_release'] += conflict
+            counts['repeated_pitch_on_before_release'] += bool(matches)
+            counts['zero_velocity_on'] += event['velocity'] == 0
+            counts['unassigned_on'] += lane == UNASSIGNED_VOICE
+            if conflict and len(examples) < 12:
+                examples.append(dict(event=event, unreleased_raw_note_ons=list(held)))
+            held.append(event)
+        elif matches:
+            held.pop(matches[0])
+        else:
+            counts['off_without_raw_on'] += 1
+    return dict(counts=counts, examples=examples,
+        raw_note_ons_open_at_eof=[event for held in active.values() for event in held],
+        interpretation='Complete raw detector event order, before the host ledger. '
+            'Old pitches are never overwritten by conflicting onsets. EOF opens '
+            'are not proof of stuck MIDI; host delivery and durations are not measured.')
+
+
+def window_conflicts(history):
+    return sum(row['event']['kind'] == 'on' and any(
+        old['note'] != row['event']['note']
+        for old in row['unreleased_raw_note_ons_before']) for row in history['events'])
+
+
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+    output.mkdir(parents=True, exist_ok=False)
+    binary, corpus = binary.resolve(), corpus.resolve()
+    start, end = WINDOW
+    report = dict(schema='m3_retained_spectral_assignment_trial_v1', state='running', final=False,
+        stage='verify inputs', dataset='ordinary', settings=SETTINGS,
+        candidate_note=48, window_start=start, window_end=end, runs={},
+        runtime_rule_changed=True, installed_output_changed=False, promotion_accepted=False,
+        native_timing='not measured', live_readiness='not measured',
+        policy='Parallel physical assignment constrained only by freshly revalidated '
+            'single-lane MIDI incumbents; complete-solution fallback; no output guard.')
+
+    def save():
+        report['updated_at'] = datetime.now(timezone.utc).isoformat()
+        temporary = output / 'report.json.tmp'
+        temporary.write_text(json.dumps(report, indent=2) + '\n')
+        temporary.replace(output / 'report.json')
+
+    save()
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        reference = json.loads(reference_path.read_text())['runs']['reference-off']
+        verify_inputs(corpus, manifest, 'ordinary')
+        report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
+            input_manifest_sha256=digest(manifest_path), reference_report_sha256=digest(reference_path))
+        parsed_runs = []
+        for stem, enabled in (('reference-off', False), ('trial-on', True)):
+            destination = output / stem
+            destination.mkdir()
+            traces = {kind: destination / (kind + '.tsv')
+                      for kind in ('candidate', 'outcome', 'midi-event')}
+            command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
+            if enabled:
+                command.append(FLAG)
+            for kind, path in traces.items():
+                command.extend(('--' + kind + '-trace', str(path)))
+            command.extend(('--candidate-trace-note', '48',
+                '--candidate-trace-start', str(start / 96000),
+                '--candidate-trace-end', str(end / 96000)))
+            report.update(stage=stem, command=command)
+            save()
+            replay_path = destination / 'replay.tsv'
+            started = time.monotonic()
+            with replay_path.open('x') as stdout, (destination / 'replay.stderr').open('x') as stderr:
+                subprocess.run(command, stdout=stdout, stderr=stderr, check=True, timeout=timeout)
+            parsed = read_replay(replay_path)
+            parsed_runs.append(parsed)
+            result = dict(elapsed_seconds=time.monotonic() - started,
+                tsv_sha256=digest(replay_path), output=parsed['output'],
+                exact_matches_by_string_count=parsed['exact_matches_by_string_count'])
+            report['runs'][stem] = result
+            if not enabled:
+                identity = (result['tsv_sha256'] == reference['tsv_sha256']
+                            and result['output'] == reference['output'])
+                report['off_reference_bit_identical'] = identity
+                if not identity:
+                    raise ValueError('OFF reference differs from the retained ordinary baseline')
+            with replay_path.open() as stream:
+                aggregate = next(csv.DictReader(stream, delimiter='\t'))
+            samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
+            if rate != 96000 or not 0 <= start < end <= samples:
+                raise ValueError('Recorded conflict window or sample clock changed')
+            events = read_events(traces['midi-event'], sample_count=samples,
+                                 transition_count=int(aggregate['transitions']))
+            if not enabled and any(sum(all(event[key] == value for key, value in target.items())
+                    for event in events) != 1 for target in TARGET_EVENTS):
+                raise ValueError('Recorded OFF conflict changed or disappeared')
+            outcomes = outcome_window(traces['outcome'], samples, start, end)
+            result.update(sample_rate=rate, sample_count=samples,
+                frames=candidate_frames(read_rows(traces['candidate']), outcomes,
+                                        note=48, start=start, end=end),
+                raw_midi=raw_conflicts(events),
+                raw_lane_history=raw_lane_history(events, lane=LANE, start=start, end=end), traces={})
+            result['recorded_lane_window_conflicts'] = window_conflicts(result['raw_lane_history'])
+            for kind, path in traces.items():
+                full_midi = kind == 'midi-event'
+                result['traces'][kind] = compress_trace_window(path,
+                    start=0 if full_midi else start, end=samples if full_midi else end)
+                result['traces'][kind]['scope'] = 'complete recording' if full_midi else 'conflict window'
+                path.unlink()
+            save()
+        comparison = compare_replays(*parsed_runs)
+        off, on = (report['runs'][stem]['raw_midi']['counts']
+                   for stem in ('reference-off', 'trial-on'))
+        midi_delta = {key: on[key] - off[key] for key in CONFLICT_FIELDS}
+        midi_no_regression = all(delta <= 0 for delta in midi_delta.values())
+        conflict_improved = midi_delta['cross_pitch_on_before_release'] < 0
+        window_resolved = (report['runs']['reference-off']['recorded_lane_window_conflicts'] > 0
+            and report['runs']['trial-on']['recorded_lane_window_conflicts'] == 0)
+        screen_pass = (comparison['gate_pass'] and midi_no_regression
+                       and conflict_improved and window_resolved)
+        report.update(state='completed', final=True, stage='offline screen collected',
+            comparison=comparison, raw_midi_delta=midi_delta,
+            raw_midi_no_regression=midi_no_regression, raw_conflicts_reduced=conflict_improved,
+            recorded_lane_window_resolved=window_resolved,
+            full_recording_screen_pass=screen_pass,
+            decision='eligible for wider validation' if screen_pass else 'rejected',
+            interpretation='A successful process is not acceptance. Every passage must '
+                'retain its labeled matches, false outputs must not increase, and raw '
+                'cross-pitch conflicts must decrease without another raw-event regression, '
+                'with no remaining conflict in the recorded lane window. '
+                'Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.')
+    except Exception as error:
+        report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
+        raise
+    finally:
+        save()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
+        parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    args = parser.parse_args()
+    if args.replay_timeout_seconds <= 0:
+        parser.error('--replay-timeout-seconds must be positive')
+    run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
+        timeout=args.replay_timeout_seconds)
+
+
+if __name__ == '__main__':
+    main()

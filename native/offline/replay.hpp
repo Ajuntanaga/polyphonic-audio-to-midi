@@ -2365,7 +2365,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_thread_cpu = false,
                          bool diagnostic_skip_empty_fine_reset = false,
                          bool diagnostic_direct_evidence_retention = false,
-                         bool diagnostic_projection_preview_admission = false);
+                         bool diagnostic_projection_preview_admission = false,
+                         bool diagnostic_retained_spectral_assignment = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

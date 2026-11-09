@@ -11,6 +11,7 @@
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "m3/pitch_math.hpp"
 #include "m3/types.hpp"
+#include "m3/unison_spectral_classifier.hpp"
 #include "m3_signal_fixture.hpp"
 #include "test_support.hpp"
 
@@ -1978,6 +1979,63 @@ struct PolyphonicPitchDetectorTestAccess final {
     return PolyphonicPitchDetector::bounded_joint_spectral_lanes(
         proposals, primary_masks, playable_masks, posterior_margins,
         incumbent_masks, reserved_mask, count, active_owner_mask);
+  }
+
+  static std::array<std::uint8_t, 2U> retained_spectral_assignment_probe(
+      PolyphonicPitchDetector& detector, bool enabled, bool fresh_spectrum,
+      std::uint8_t newcomer_playable = 5U) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 47U;
+    config.highest_note = 48U;
+    config.max_polyphony = 2U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_retained_spectral_assignment_for_diagnostics(enabled);
+    detector.playable_string_masks_[0U] = newcomer_playable;
+    detector.playable_string_masks_[1U] = 5U;
+    auto& incumbent = detector.candidate_states_[1U];
+    incumbent.active = true;
+    incumbent.emitted_note = 48U;
+    // Keep the ordinary DP retention bonus out of this test. The emitted
+    // spectral lane alone must constrain the later candidate's assignment.
+    incumbent.assigned_string = kUnassignedTunerString;
+    incumbent.assigned_string_mask = 1U;
+    incumbent.midi_voice_mask = 1U;
+    incumbent.spectral_lane_mask = 1U;
+    detector.decision_counter_ = 17U;
+    auto& spectral = detector.spectral_lane_states_[0U];
+    if (fresh_spectrum) {
+      spectral.candidate_index = 1U;
+      spectral.tracking = true;
+      M3_EXPECT_TRUE(spectral.tracker.configure(48000.0, 48U));
+      const double step = 2.0 * 3.14159265358979323846 *
+                          midi_to_frequency(48U, 440.0) / 48000.0;
+      for (std::size_t sample = 0U; sample < 30000U; ++sample) {
+        spectral.tracker.observe(0.1 * std::sin(step * sample));
+      }
+      M3_EXPECT_TRUE(spectral.tracker.ready());
+      spectral.templates = {};
+      spectral.templates.fingerprint[0U] = spectral.tracker.fingerprint();
+      spectral.templates.valid_mask = 1U;
+      M3_EXPECT_TRUE(prepare_unison_spectral_templates(spectral.templates));
+      spectral.templates_valid = true;
+      spectral.template_phase = spectral.tracker.phase();
+      spectral.midi_note = 48U;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = true;
+    selected[1U] = true;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+    if (fresh_spectrum) {
+      M3_EXPECT_TRUE(spectral.single_source_error_valid);
+      M3_EXPECT_EQ(spectral.single_source_error_tick, 17U);
+      M3_EXPECT_EQ(spectral.single_source_error_mask, 1U);
+    }
+    return {detector.candidate_states_[0U].assigned_string,
+            detector.candidate_states_[1U].assigned_string};
   }
 
   static void joint_spectral_attack_ownership(PolyphonicPitchDetector& detector,
@@ -12220,6 +12278,28 @@ M3_TEST(native_detector_joint_spectral_lanes_preserve_exclusive_physical_ownersh
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
   M3_EXPECT_TRUE(cycle_result == cycle);
   M3_EXPECT_TRUE(excessive_count == Masks{});
+#endif
+}
+
+M3_TEST(native_detector_retained_spectral_assignment_revalidates_and_falls_back) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  using Lanes = std::array<std::uint8_t, 2U>;
+  const auto probe = [](bool enabled, bool fresh, std::uint8_t playable = 5U) {
+    m3::PolyphonicPitchDetector detector;
+    return m3::PolyphonicPitchDetectorTestAccess::retained_spectral_assignment_probe(
+        detector, enabled, fresh, playable);
+  };
+  // The later candidate retains its freshly confirmed emitted lane; the
+  // earlier newcomer moves in the same complete physical assignment.
+  M3_EXPECT_TRUE(probe(false, true) == (Lanes{0U, 2U}));
+  M3_EXPECT_TRUE(probe(true, true) == (Lanes{2U, 0U}));
+  // An old output mask is insufficient without current spectral evidence.
+  M3_EXPECT_TRUE(probe(true, false) == (Lanes{0U, 2U}));
+  // If retaining the lane would leave the newcomer unassigned, use the whole
+  // ordinary solution rather than partially applying the retained constraint.
+  const auto fallback = probe(false, true, 1U);
+  M3_EXPECT_TRUE(fallback == (Lanes{0U, 2U}));
+  M3_EXPECT_TRUE(probe(true, true, 1U) == fallback);
 #endif
 }
 

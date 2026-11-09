@@ -5771,6 +5771,34 @@ void PolyphonicPitchDetector::update_calibration_tuning_offset(
   }
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
+    std::size_t candidate, std::uint8_t fresh_proposal) const noexcept {
+  if (candidate >= candidate_count_ || string_count(fresh_proposal) != 1U)
+    return 0U;
+  const auto& state = candidate_states_[candidate];
+  const auto& fine = fine_frequency_evidence_states_[candidate];
+  // Conserve only an already emitted single lane that this decision's
+  // classifier revalidated. Neither an old mask alone nor a new spectral
+  // proposal can pin a physical assignment. Groups keep their existing path.
+  if (!state.active || state.spectral_duplicate_output_suppressed ||
+      state.emitted_note != lowest_note_ + candidate ||
+      state.midi_voice_mask != fresh_proposal ||
+      state.spectral_lane_mask != fresh_proposal ||
+      string_count(state.assigned_string_mask) != 1U ||
+      state.pending_unison_mask != 0U ||
+      (state.continuity_lane_mask != 0U &&
+       state.continuity_lane_mask != fresh_proposal) ||
+      string_count(selector_group_masks_[candidate]) > 1U ||
+      beat_evidence_states_[candidate].valid || fine.multi_source_observed ||
+      string_count(fine.member_mask) > 1U ||
+      string_count(fine.pending_member_mask) > 1U ||
+      (playable_string_mask(candidate) & fresh_proposal) == 0U)
+    return 0U;
+  return fresh_proposal;
+}
+#endif
+
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
   if (profile_mode_ != ProfileMode::m3) {
@@ -5881,6 +5909,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
   std::array<Assignment, kM3StringMaskCount> current{};
   std::array<std::uint8_t, kMaxVoices> spectral_lane_proposals{};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  std::array<Assignment, kM3StringMaskCount> retained{};
+  const bool retained_enabled = diagnostic_retained_spectral_assignment_ &&
+                                midi_routing_ == MidiRouting::per_voice &&
+                                selected_count >= 2U && selected_count <= 4U;
+  bool retained_has_constraint = false;
   // Keep the experiment separate from the production cost accumulation.
   // Every member must qualify before any lane can change.
   std::array<std::array<double, kMaxVoices>, kMaxVoices>
@@ -5942,6 +5975,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #endif
   current[reserved_strings].valid = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (retained_enabled) retained[reserved_strings].valid = true;
   // Reuse the native costs without running the posterior, spectral cache, or
   // assignment updates for these misses. Restrict this to non-isolated context:
   // the isolated reassignment path has different costs and state transitions.
@@ -6576,53 +6610,64 @@ void PolyphonicPitchDetector::assign_m3_strings(
     }
     if (fixed_context) continue;
 #endif
-    std::array<Assignment, kM3StringMaskCount> next{};
-    for (std::size_t used = 0U; used < current.size(); ++used) {
-      if (!current[used].valid) {
-        continue;
-      }
-      const std::uint8_t available = static_cast<std::uint8_t>(
-          playable & ~static_cast<std::uint8_t>(used));
-      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
-        const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
-        if ((available & bit) == 0U) {
+    const auto advance = [&](auto& assignments, std::uint8_t allowed) noexcept {
+      std::array<Assignment, kM3StringMaskCount> next{};
+      for (std::size_t used = 0U; used < assignments.size(); ++used) {
+        if (!assignments[used].valid) {
           continue;
         }
-        const LaneCost& cost = lane_costs[string];
-        const std::size_t mask = used | bit;
-        Assignment proposal = current[used];
-        proposal.valid = true;
-        proposal.cost += cost.fret_prior;
-        if (use_posterior) {
-          proposal.cost += cost.posterior_penalty;
-        }
-        if (cost.use_profile) {
-          proposal.cost -= cost.profile_bonus;
-        }
-        if (cost.use_open_bonus) {
-          proposal.cost -= kM3OpenStringAssignmentBonus;
-        }
-        if (cost.use_cents) {
-          proposal.cost += cost.cents_penalty;
-        }
-        if (cost.use_fine_bonus) {
-          proposal.cost -= 512.0;
-        }
-        if (cost.use_retention) {
-          proposal.cost -= cost.retention_bonus;
-        }
-        const std::uint32_t shift = static_cast<std::uint32_t>(voice * 3U);
-        proposal.strings =
-            (proposal.strings & ~(0x07U << shift)) |
-            (static_cast<std::uint32_t>(string) << shift);
-        if (!next[mask].valid || proposal.cost < next[mask].cost ||
-            (proposal.cost == next[mask].cost &&
-             proposal.strings < next[mask].strings)) {
-          next[mask] = proposal;
+        const std::uint8_t available = static_cast<std::uint8_t>(
+            allowed & ~static_cast<std::uint8_t>(used));
+        for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+          const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
+          if ((available & bit) == 0U) {
+            continue;
+          }
+          const LaneCost& cost = lane_costs[string];
+          const std::size_t mask = used | bit;
+          Assignment proposal = assignments[used];
+          proposal.valid = true;
+          proposal.cost += cost.fret_prior;
+          if (use_posterior) {
+            proposal.cost += cost.posterior_penalty;
+          }
+          if (cost.use_profile) {
+            proposal.cost -= cost.profile_bonus;
+          }
+          if (cost.use_open_bonus) {
+            proposal.cost -= kM3OpenStringAssignmentBonus;
+          }
+          if (cost.use_cents) {
+            proposal.cost += cost.cents_penalty;
+          }
+          if (cost.use_fine_bonus) {
+            proposal.cost -= 512.0;
+          }
+          if (cost.use_retention) {
+            proposal.cost -= cost.retention_bonus;
+          }
+          const std::uint32_t shift = static_cast<std::uint32_t>(voice * 3U);
+          proposal.strings =
+              (proposal.strings & ~(0x07U << shift)) |
+              (static_cast<std::uint32_t>(string) << shift);
+          if (!next[mask].valid || proposal.cost < next[mask].cost ||
+              (proposal.cost == next[mask].cost &&
+               proposal.strings < next[mask].strings)) {
+            next[mask] = proposal;
+          }
         }
       }
+      assignments = next;
+    };
+    advance(current, playable);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (retained_enabled) {
+      const auto pin = retained_spectral_assignment_lane(candidate, spectral_lane);
+      retained_has_constraint |= pin != 0U;
+      advance(retained, pin != 0U
+          ? static_cast<std::uint8_t>(playable & pin) : playable);
     }
-    current = next;
+#endif
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -6686,8 +6731,23 @@ void PolyphonicPitchDetector::assign_m3_strings(
     }
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (retained_enabled && retained_has_constraint) {
+    Assignment constrained{};
+    for (const auto& assignment : retained) {
+      if (assignment.valid &&
+          (!constrained.valid || assignment.cost < constrained.cost ||
+           (assignment.cost == constrained.cost &&
+            assignment.strings < constrained.strings))) {
+        constrained = assignment;
+      }
+    }
+    // A full allocation is required. Conflicting pins, coasting reservations,
+    // or an otherwise infeasible chord fall back together; never drop a note
+    // or accept only part of the proposed allocation.
+    if (constrained.valid) best = constrained;
+  }
   if (assignment_diagnostics_enabled_) {
-    // Record the original DP solution and its cost before any replay policy.
+    // Record the chosen DP solution and its cost before any replay policy.
     for (std::size_t voice = 0U; voice < selected_count; ++voice) {
       auto& observation = assignment_diagnostics_[candidates[voice]];
       observation.valid = best.valid;

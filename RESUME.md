@@ -1,3 +1,10 @@
+## 2026-11-09 — fresh spectral ownership assignment trial prepared
+
+- Added a default-off diagnostic trial that solves physical string assignment around already-emitted single-lane notes only when the current spectral classifier confirms the same lane. It keeps the full ordinary assignment as an all-or-nothing fallback, so conflicting constraints cannot drop a selected note. It adds no MIDI output guard and changes no production setting.
+- The bounded GitHub screen compares two complete ordinary-recording replays, all labeled passages and false-output counters, plus the complete raw MIDI streams. The OFF run must match its saved reference exactly. Eligibility also requires fewer raw lane conflicts, no other raw-event regression, and no conflict left in the recorded lane window. Host delivery, corpus, allocation, buffer and timing acceptance remain separate.
+- Local mocked runner and trace contracts pass. Native validation and the ordinary trial will run only on GitHub Actions. Results are pending; the installed scoreboard is unchanged. Do not promote based on workflow completion.
+- Storage cleanup is complete: about 5.75 GB net recovered, including 618 old logs compressed losslessly to save 747 MB. The latest check found about 94.9 GB available; unrelated disk activity also affects that total. Source, recordings, final plugins, credentials, checkpoints and active conversations are preserved.
+
 ## 2026-11-09 — recorded MIDI lane conflict traced on GitHub
 
 - Added the bounded `midi-lane-trace` worker task. It observes candidates 47 and 48 separately around samples 202752–204288 of the ordinary recording, using the existing routing and calibrated-output recorder. Both complete OFF replays must match the saved reference, and their complete MIDI and outcome streams must match each other.

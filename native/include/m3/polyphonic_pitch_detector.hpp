@@ -701,6 +701,9 @@ class PolyphonicPitchDetector final {
   void set_projection_preview_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_projection_preview_admission_ = enabled;
   }
+  void set_retained_spectral_assignment_for_diagnostics(bool enabled) noexcept {
+    diagnostic_retained_spectral_assignment_ = enabled;
+  }
   void set_odd_partial_cue_mask_for_diagnostics(
       const std::array<std::uint64_t, 2U>& mask) noexcept {
     diagnostic_odd_partial_cue_mask_ = mask;
@@ -1395,6 +1398,10 @@ class PolyphonicPitchDetector final {
       std::uint8_t assigned_string_mask, std::uint8_t assigned_string,
       std::uint8_t spectral_lane_mask,
       std::uint8_t continuity_lane_mask) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] std::uint8_t retained_spectral_assignment_lane(
+      std::size_t candidate, std::uint8_t fresh_proposal) const noexcept;
+#endif
   [[nodiscard]] static std::uint8_t bounded_group_continuity_projection(
       std::uint8_t current_assignment_mask,
       std::uint8_t cached_group_mask,
@@ -1667,6 +1674,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_fundamental_admission_{};
   bool diagnostic_direct_evidence_retention_{};
   bool diagnostic_projection_preview_admission_{};
+  bool diagnostic_retained_spectral_assignment_{};
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
