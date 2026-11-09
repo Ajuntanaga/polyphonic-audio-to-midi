@@ -8,8 +8,8 @@
   "returncode": 0,
   "stdout": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42586000548\n",
   "stderr": "",
-  "status": "in_progress",
-  "result_final": false,
+  "status": "completed",
+  "result_final": true,
   "runtime_rule_changed": true,
   "installed_output_changed": false,
   "promotion_accepted": false,
@@ -27,10 +27,188 @@
       "conclusion": "success"
     }
   ],
-  "next": "Read this single cloud run. Require exact OFF reference identity and positive full-recording gain with zero per-label losses and no increased wrong-note, wrong-string or extra gap outputs before wider validation.",
+  "next": "Capture only those routing fields around the first transfer in a default-off GitHub diagnostic. Require exact baseline replay identity. If identical masks produce differing desired lanes, this path is falsified. Any later runtime fix must gain whole-recording matches with zero per-label losses and no increase in wrong-note, wrong-string or extra gap outputs.",
   "run_id": 42586000548,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42586000548",
   "output_target": "build/github-results/projection-preview-42586000548",
-  "stage": "Replay build and contracts passed; native checks and full ordinary OFF/ON screen in progress",
-  "observed_at": "2026-11-09T08:30:40.003919+00:00"
+  "stage": "Final report and bounded traces collected; rejected for per-label match loss.",
+  "observed_at": "2026-11-09T08:39:45.111767+00:00",
+  "conclusion": "success",
+  "decision": "rejected",
+  "report_updated_at": "2026-11-09T08:30:37.912466+00:00",
+  "report_sha256": "e60aa41e2944041f42c201b898af64ed02dcb73a8c78c2654545d4852edf14b2",
+  "source_provenance": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "d0646b8c70f2e674c5b9f158222575c49bf2e2a9",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42586000548",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "comparison": {
+    "delta": {
+      "matched": 44,
+      "false_wrong_note_voices": -112,
+      "false_wrong_string_voices": -34,
+      "false_gap_voices": 0,
+      "false_positive_voices": -146
+    },
+    "changed_labels": [
+      {
+        "label_index": 54,
+        "midi_note": 52,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 467,
+        "current_matched": 458,
+        "matched_delta": -9
+      },
+      {
+        "label_index": 55,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 267,
+        "current_matched": 290,
+        "matched_delta": 23
+      },
+      {
+        "label_index": 66,
+        "midi_note": 46,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 88,
+        "current_matched": 110,
+        "matched_delta": 22
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 273,
+        "matched_delta": 8
+      }
+    ],
+    "lost_labels": [
+      54
+    ],
+    "increased_error_counts": [],
+    "gate_pass": false,
+    "output_bit_identical": false
+  },
+  "off_reference_bit_identical": true,
+  "full_recording_screen_pass": false,
+  "labeled_match_gain": true,
+  "runs": {
+    "reference-off": {
+      "elapsed_seconds": 77.74180622099999,
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      }
+    },
+    "trial-on": {
+      "elapsed_seconds": 81.5247678,
+      "tsv_sha256": "6ac14f0658806f19e3bdab4bbb0ff6551689ac27552cb7560842725441ccd02c",
+      "output": {
+        "labeled": 528632,
+        "matched": 145429,
+        "false_wrong_note_voices": 164151,
+        "false_wrong_string_voices": 92619,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319626,
+        "fingerprint": "12e5242b703d2f3d"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145429
+        }
+      }
+    }
+  },
+  "target_before": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 267
+  },
+  "target_after": {
+    "label_index": 55,
+    "start_sample": 897799,
+    "end_sample": 969600,
+    "midi_note": 42,
+    "string_mask": 1,
+    "calibration_pass": 2,
+    "labeled": 1122,
+    "matched": 290
+  },
+  "target_snapshot_counts": {
+    "matched": 290,
+    "matched_with_active_source": 46,
+    "matched_inactive_preview_only": 244,
+    "matched_source_unknown": 0,
+    "rendered_note_with_active_source_any_string": 57
+  },
+  "target_candidate_counts": {
+    "present": 897,
+    "selected": 893,
+    "active": 0,
+    "direct": 895,
+    "selected_direct_inactive_zero_evidence": 649
+  },
+  "calibrated_output_reasons": {
+    "ineligible": 298,
+    "untrusted_original": 503,
+    "projection_start": 10,
+    "projection_apply": 51,
+    "untrusted_start": 6,
+    "untrusted_revert": 6,
+    "collision_reset": 250
+  },
+  "diagnosis": "docs/recovery/github-projection-preview-diagnosis-20261109.json",
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "protected_scope": "Ordinary OFF remains bit-identical. Other protected datasets, buffer, allocation and timing gates were not rerun for this trial.",
+  "checks": {
+    "worker_python_contracts_passed": 68,
+    "focused_native_suites_passed": 2
+  },
+  "artifacts": {
+    "report": {
+      "id": 13658888341,
+      "name": "m3-report-42586000548-1",
+      "bytes": 17380,
+      "sha256": "b10dfe06b87b62f71ec5cbd06861c651be0d8a5fdc277a33db9931942e29dbcd"
+    },
+    "evidence": {
+      "id": 13659263356,
+      "name": "m3-evidence-42586000548-1",
+      "bytes": 4700911,
+      "sha256": "8b3e8708f57c3e9c7f27eacdcf109162df2c8b2d638c087ffaaf685cf82836d4",
+      "digest_verified": true,
+      "retained": "Three compressed traces only; redundant ZIP removed."
+    }
+  }
 }

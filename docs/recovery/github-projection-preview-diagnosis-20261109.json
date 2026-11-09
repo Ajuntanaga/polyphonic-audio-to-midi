@@ -1,0 +1,2430 @@
+{
+  "schema": "m3_projection_preview_saved_trace_diagnosis_v1",
+  "state": "completed",
+  "final": true,
+  "observed_at": "2026-11-09T08:39:45.111767+00:00",
+  "run_id": 42586000548,
+  "source_commit": "d0646b8c70f2e674c5b9f158222575c49bf2e2a9",
+  "baseline_run_id": 42583044596,
+  "scope": "Read-only comparison of already captured ordinary-recording traces; no replay or native build ran locally.",
+  "report_sha256": "e60aa41e2944041f42c201b898af64ed02dcb73a8c78c2654545d4852edf14b2",
+  "trace_hashes": {
+    "baseline": {
+      "candidate.tsv.gz": "a5610b69914a812fa0803a41fdd77379d49fcf1239e6d6287003031fb7a7f80c",
+      "outcome.tsv.gz": "22cb701860da0fd3984c8cf3d24ba8d2a6b73a7e7a6f5910614de99d179195ef",
+      "midi-event.tsv.gz": "20db2c73e71b3b9f01dd6054bf6ce004bc7e912751b3f531786326e2bc041977"
+    },
+    "trial": {
+      "candidate.tsv.gz": "10eddf146c5610675679635d71ce406926aae1bda6962dd8fc8c5263d94b02df",
+      "outcome.tsv.gz": "a87454c8bc6ea265381c7ee92e48fcc0ddd0a9e54b4dc7cebf359673860a98cc",
+      "midi-event.tsv.gz": "56bcf3a3499196b1cd1aaca81b75b58d94ffd16e210aa7c3eb6a225fe0964fc2"
+    }
+  },
+  "label_54": {
+    "note": 52,
+    "expected_string_mask": 2,
+    "labeled": 1122,
+    "baseline_matched": 467,
+    "trial_matched": 458,
+    "net_change": -9,
+    "lost_samples": [
+      945215,
+      945279,
+      950527,
+      950591,
+      955903,
+      955967,
+      962175,
+      962239,
+      967487,
+      967551
+    ],
+    "gained_samples": [
+      962047
+    ],
+    "lost_frame_states": [
+      {
+        "sample": 945215,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 684,
+              "phase_cents": 54.023081,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -25.09108,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 669,
+              "phase_cents": -17.873831,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              684,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              669,
+              1,
+              -4576,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 684,
+              "phase_cents": 54.023081,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -25.09108,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 669,
+              "phase_cents": -17.873831,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              684,
+              1,
+              13843,
+              2
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              669,
+              1,
+              -4576,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945279,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 685,
+              "phase_cents": 54.004796,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -26.051852,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 670,
+              "phase_cents": -17.77955,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              685,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              670,
+              1,
+              -4552,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 685,
+              "phase_cents": 54.004796,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -26.051852,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 670,
+              "phase_cents": -17.77955,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              685,
+              1,
+              13843,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              670,
+              1,
+              -4552,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 950527,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 767,
+              "phase_cents": 55.43781,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 11.449174,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 752,
+              "phase_cents": -17.901742,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              767,
+              1,
+              14227,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              752,
+              1,
+              -4583,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 767,
+              "phase_cents": 55.43781,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 11.449174,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 752,
+              "phase_cents": -17.901742,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              767,
+              1,
+              14195,
+              2
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              752,
+              1,
+              -4583,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 950591,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 768,
+              "phase_cents": 55.462573,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 9.0032282,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 753,
+              "phase_cents": -17.815203,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              768,
+              1,
+              14227,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              753,
+              1,
+              -4561,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 768,
+              "phase_cents": 55.462573,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 9.0032282,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 753,
+              "phase_cents": -17.815203,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              768,
+              1,
+              14195,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              753,
+              1,
+              -4561,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 955903,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 851,
+              "phase_cents": 54.40528,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -13.068261,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 836,
+              "phase_cents": -17.863855,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              851,
+              1,
+              13965,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              836,
+              1,
+              -4573,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 851,
+              "phase_cents": 54.40528,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -13.068261,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 836,
+              "phase_cents": -17.863855,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              851,
+              1,
+              13929,
+              2
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              836,
+              1,
+              -4573,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 955967,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 852,
+              "phase_cents": 54.427998,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -14.276842,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 837,
+              "phase_cents": -17.827175,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              852,
+              1,
+              13965,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              837,
+              1,
+              -4564,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 852,
+              "phase_cents": 54.427998,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -14.276842,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 837,
+              "phase_cents": -17.827175,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              852,
+              1,
+              13929,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              837,
+              1,
+              -4564,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 962175,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 949,
+              "phase_cents": 55.90148,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 7.860634,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 934,
+              "phase_cents": -17.616413,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              949,
+              1,
+              14161,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              934,
+              1,
+              -4510,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 949,
+              "phase_cents": 55.90148,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 1,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 7.860634,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 934,
+              "phase_cents": -17.616413,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              949,
+              1,
+              14330,
+              2
+            ],
+            [
+              42,
+              42,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              934,
+              1,
+              -4510,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 962239,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 950,
+              "phase_cents": 55.851301,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 6.0678376,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 935,
+              "phase_cents": -17.441625,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              950,
+              1,
+              14161,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              935,
+              1,
+              -4465,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 950,
+              "phase_cents": 55.851301,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 6.0678376,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 935,
+              "phase_cents": -17.441625,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              950,
+              1,
+              14330,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              935,
+              1,
+              -4465,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 967487,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 1032,
+              "phase_cents": 54.724045,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 9.9047732,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 1017,
+              "phase_cents": -17.779378,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              1032,
+              1,
+              14068,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              1017,
+              1,
+              -4552,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 1032,
+              "phase_cents": 54.724045,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 1,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 9.9047732,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 1017,
+              "phase_cents": -17.779378,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              1032,
+              1,
+              14038,
+              2
+            ],
+            [
+              42,
+              42,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              1017,
+              1,
+              -4552,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 967551,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 1033,
+              "phase_cents": 54.640876,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 8.2398352,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 1018,
+              "phase_cents": -17.606066,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              1033,
+              1,
+              14068,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              1018,
+              1,
+              -4507,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 1033,
+              "phase_cents": 54.640876,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 8.2398352,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 1018,
+              "phase_cents": -17.606066,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              1033,
+              1,
+              14038,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              1018,
+              1,
+              -4507,
+              1
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "voice_columns": [
+    "detected_note",
+    "rendered_note",
+    "zero_based_lane",
+    "outcome",
+    "age",
+    "cents_valid",
+    "cents",
+    "string_mask"
+  ],
+  "outcomes": {
+    "0": "correct_voice",
+    "1": "wrong_note",
+    "2": "wrong_string",
+    "3": "extra_output_during_unlabeled_gap"
+  },
+  "first_transfer": {
+    "frames": [
+      {
+        "sample": 944959,
+        "baseline": {
+          "matched_labels": [
+            54,
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 680,
+              "phase_cents": 54.387726,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 665,
+              "phase_cents": -18.246619,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              0,
+              0,
+              680,
+              1,
+              -11677,
+              1
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              665,
+              1,
+              -4671,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            54,
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 680,
+              "phase_cents": 54.387726,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 665,
+              "phase_cents": -18.246619,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              0,
+              0,
+              680,
+              1,
+              -11677,
+              1
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              665,
+              1,
+              -4671,
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945023,
+        "baseline": {
+          "matched_labels": [
+            54,
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 681,
+              "phase_cents": 54.27499,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 666,
+              "phase_cents": -18.17992,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              0,
+              0,
+              681,
+              1,
+              -11706,
+              1
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              666,
+              1,
+              -4654,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            54,
+            55
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 681,
+              "phase_cents": 54.27499,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 666,
+              "phase_cents": -18.17992,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              0,
+              0,
+              681,
+              1,
+              -11706,
+              1
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              666,
+              1,
+              -4654,
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945087,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 682,
+              "phase_cents": 54.162351,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 0.0,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 667,
+              "phase_cents": -18.087689,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              2,
+              2,
+              682,
+              1,
+              -11734,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              667,
+              1,
+              -4630,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 682,
+              "phase_cents": 54.162351,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": 0.0,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 667,
+              "phase_cents": -18.087689,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              0,
+              0,
+              682,
+              1,
+              -11734,
+              1
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              667,
+              1,
+              -4630,
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945151,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 683,
+              "phase_cents": 54.075408,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -24.571103,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 668,
+              "phase_cents": -17.980741,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              683,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              668,
+              1,
+              -4603,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 683,
+              "phase_cents": 54.075408,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -24.571103,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 668,
+              "phase_cents": -17.980741,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              42,
+              1,
+              2,
+              683,
+              1,
+              -11757,
+              2
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              668,
+              1,
+              -4603,
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945215,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 684,
+              "phase_cents": 54.023081,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -25.09108,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 669,
+              "phase_cents": -17.873831,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              684,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              669,
+              1,
+              -4576,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 2,
+              "committed_mask": 2,
+              "age": 684,
+              "phase_cents": 54.023081,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -25.09108,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 669,
+              "phase_cents": -17.873831,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              1,
+              1,
+              684,
+              1,
+              13843,
+              2
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              669,
+              1,
+              -4576,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945279,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 685,
+              "phase_cents": 54.004796,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -26.051852,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 670,
+              "phase_cents": -17.77955,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              685,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              670,
+              1,
+              -4552,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 685,
+              "phase_cents": 54.004796,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -26.051852,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 670,
+              "phase_cents": -17.77955,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              685,
+              1,
+              13843,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              0,
+              2,
+              670,
+              1,
+              -4552,
+              1
+            ]
+          ]
+        }
+      },
+      {
+        "sample": 945343,
+        "baseline": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 686,
+              "phase_cents": 54.009678,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -27.111202,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 671,
+              "phase_cents": -17.700217,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              686,
+              1,
+              13866,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              671,
+              1,
+              -4531,
+              2
+            ]
+          ]
+        },
+        "trial": {
+          "matched_labels": [
+            54
+          ],
+          "candidates": {
+            "41": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 4,
+              "committed_mask": 4,
+              "age": 686,
+              "phase_cents": 54.009678,
+              "evidence_ticks": 0
+            },
+            "42": {
+              "selection": 4,
+              "active": 0,
+              "assigned_mask": 2,
+              "committed_mask": 0,
+              "age": 0,
+              "phase_cents": -27.111202,
+              "evidence_ticks": 0
+            },
+            "52": {
+              "selection": 4,
+              "active": 1,
+              "assigned_mask": 1,
+              "committed_mask": 1,
+              "age": 671,
+              "phase_cents": -17.700217,
+              "evidence_ticks": 0
+            }
+          },
+          "voices": [
+            [
+              41,
+              41,
+              2,
+              1,
+              686,
+              1,
+              13843,
+              4
+            ],
+            [
+              42,
+              42,
+              1,
+              2,
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              52,
+              52,
+              1,
+              0,
+              671,
+              1,
+              -4531,
+              2
+            ]
+          ]
+        }
+      }
+    ],
+    "midi_events": {
+      "baseline": [
+        {
+          "sample": 945087,
+          "kind": "off",
+          "note": 42,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 1822
+        },
+        {
+          "sample": 945087,
+          "kind": "on",
+          "note": 42,
+          "velocity": 30,
+          "voice_id": 2,
+          "sequence": 1823
+        },
+        {
+          "sample": 945151,
+          "kind": "off",
+          "note": 42,
+          "velocity": 0,
+          "voice_id": 2,
+          "sequence": 1824
+        },
+        {
+          "sample": 945151,
+          "kind": "on",
+          "note": 41,
+          "velocity": 31,
+          "voice_id": 2,
+          "sequence": 1825
+        }
+      ],
+      "trial": [
+        {
+          "sample": 945151,
+          "kind": "off",
+          "note": 42,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 1822
+        },
+        {
+          "sample": 945151,
+          "kind": "on",
+          "note": 42,
+          "velocity": 31,
+          "voice_id": 1,
+          "sequence": 1823
+        },
+        {
+          "sample": 945215,
+          "kind": "off",
+          "note": 42,
+          "velocity": 0,
+          "voice_id": 1,
+          "sequence": 1824
+        },
+        {
+          "sample": 945215,
+          "kind": "on",
+          "note": 41,
+          "velocity": 31,
+          "voice_id": 1,
+          "sequence": 1825
+        },
+        {
+          "sample": 945215,
+          "kind": "off",
+          "note": 52,
+          "velocity": 0,
+          "voice_id": 1,
+          "sequence": 1826
+        },
+        {
+          "sample": 945215,
+          "kind": "on",
+          "note": 52,
+          "velocity": 31,
+          "voice_id": 0,
+          "sequence": 1827
+        },
+        {
+          "sample": 945279,
+          "kind": "off",
+          "note": 41,
+          "velocity": 0,
+          "voice_id": 1,
+          "sequence": 1828
+        },
+        {
+          "sample": 945279,
+          "kind": "on",
+          "note": 41,
+          "velocity": 31,
+          "voice_id": 2,
+          "sequence": 1829
+        },
+        {
+          "sample": 945343,
+          "kind": "off",
+          "note": 52,
+          "velocity": 0,
+          "voice_id": 0,
+          "sequence": 1830
+        },
+        {
+          "sample": 945343,
+          "kind": "on",
+          "note": 52,
+          "velocity": 31,
+          "voice_id": 1,
+          "sequence": 1831
+        }
+      ]
+    }
+  },
+  "measured_findings": [
+    "All ten lost frames retain selected and active logical note 52 with assigned_mask=1 and committed_mask=1 in both modes. Age, phase and evidence state agree.",
+    "OFF renders note 52 on lane 1 (mask 2); ON renders it on lane 0 (mask 1) in all ten lost frames.",
+    "At sample 945151, logical note 41 has assigned mask 2 ON versus 4 OFF. At 945215 ON emits note-52 off on lane 1 and on on lane 0. At 945279 note 41 moves back to lane 2; at 945343 note 52 returns to lane 1.",
+    "OFF emits no note-52 MIDI events during this first transfer. The regression is an actual output-lane transfer, not disappearance of the logical note or only a preview-score change."
+  ],
+  "supported_inference": "The one-decision delay is consistent with changed note-41 occupancy affecting note-52 continuity state after lifecycle rendering, then changing the next desired output lane. Assignment receives the filtered ownership selection while continuity receives the original selection. This identifies a routing seam, not proof of which unrecorded mask changed.",
+  "source_pointers": [
+    {
+      "file": "native/src/polyphonic_pitch_detector.cpp",
+      "line": 543,
+      "role": "Desired output mask can override singleton assignment using spectral and compatible continuity masks."
+    },
+    {
+      "file": "native/src/polyphonic_pitch_detector.cpp",
+      "line": 1100,
+      "role": "Continuity classification uses other active candidates assigned and MIDI masks."
+    },
+    {
+      "file": "native/src/polyphonic_pitch_detector.cpp",
+      "line": 11640,
+      "role": "Filtered selection enters joint string assignment."
+    },
+    {
+      "file": "native/src/polyphonic_pitch_detector.cpp",
+      "line": 11793,
+      "role": "Lifecycle renders desired lanes and emits MIDI transfers."
+    },
+    {
+      "file": "native/src/polyphonic_pitch_detector.cpp",
+      "line": 12024,
+      "role": "Continuity tracker updates after lifecycle using original selection."
+    }
+  ],
+  "not_measured": [
+    "Candidate 52 spectral_lane_mask, continuity_lane_mask, continuity_cached_group_mask and desired output mask at the deciding stages.",
+    "Stable held-MIDI improvement or live-host readiness."
+  ],
+  "next": "Capture only those routing fields around the first transfer in a default-off GitHub diagnostic. Require exact baseline replay identity. If identical masks produce differing desired lanes, this path is falsified. Any later runtime fix must gain whole-recording matches with zero per-label losses and no increase in wrong-note, wrong-string or extra gap outputs.",
+  "installed_output_changed": false,
+  "promotion_accepted": false
+}
