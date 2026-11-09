@@ -34,6 +34,10 @@ COLLISION_TARGET_EVENTS = (
     dict(sample=287807, kind='on', note=54, voice_id=1, sequence=432),
     dict(sample=288255, kind='off', note=37, voice_id=0, sequence=433),
     dict(sample=288255, kind='on', note=37, voice_id=1, sequence=434))
+COASTING_OWNER_WINDOW = (1147904, 1150464)
+COASTING_OWNER_TARGET_EVENTS = (
+    dict(sample=1149183, kind='on', note=36, voice_id=0, sequence=2152),
+    dict(sample=1149183, kind='on', note=37, voice_id=0, sequence=2153))
 
 
 def trace_profile(profile):
@@ -43,6 +47,10 @@ def trace_profile(profile):
     if profile == 'spectral-collision-on':
         return dict(window=COLLISION_WINDOW, notes=(37, 54, 57), lane=1,
                     targets=COLLISION_TARGET_EVENTS, reference_key='trial-on',
+                    flags=('--diagnostic-spectral-lane-collision',))
+    if profile == 'coasting-owner-on':
+        return dict(window=COASTING_OWNER_WINDOW, notes=(36, 37), lane=0,
+                    targets=COASTING_OWNER_TARGET_EVENTS, reference_key='trial-on',
                     flags=('--diagnostic-spectral-lane-collision',))
     raise ValueError('Unknown MIDI lane trace profile')
 
@@ -142,6 +150,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         if selected['flags']:
             if reference_report.get('policy_name') != 'spectral-lane-collision':
                 raise ValueError('Collision ON profile requires the saved collision trial')
+            if (profile == 'coasting-owner-on'
+                    and reference_report.get('trial_revision') != 'coasting_owner_hold'):
+                raise ValueError('Coasting owner profile requires the saved coasting owner trial')
             expected_captures = {kind: reference['traces'][kind]['captured_raw_sha256']
                                  for kind in ('outcome', 'midi-event')}
             if any(len(value) != 64 or any(c not in '0123456789abcdef' for c in value)
@@ -231,7 +242,8 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
-    parser.add_argument('--profile', choices=('reference-off', 'spectral-collision-on'),
+    parser.add_argument('--profile', choices=('reference-off', 'spectral-collision-on',
+                                              'coasting-owner-on'),
                         default='reference-off')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:

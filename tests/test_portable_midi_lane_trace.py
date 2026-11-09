@@ -218,6 +218,40 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
                 self.assertEqual(report['state'], 'failed')
                 self.assertFalse(report['promotion_accepted'])
 
+    def test_coasting_owner_profile_observes_both_same_sample_onsets(self):
+        for wrong_revision in (False, True):
+            with self.subTest(wrong_revision=wrong_revision), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                args, text, _ = self.collision_fixture(root)
+                events = [event(63, 'on', 48, 0, 4), event(127, 'on', 36, 1),
+                          event(127, 'on', 37, 2)]
+                write_events(root / 'known-midi.tsv', events)
+                reference = json.loads(args[3].read_text())
+                reference['trial_revision'] = 'old' if wrong_revision else 'coasting_owner_hold'
+                reference['runs']['trial-on']['traces']['midi-event']['captured_raw_sha256'] = digest(
+                    root / 'known-midi.tsv')
+                args[3].write_text(json.dumps(reference))
+                stub = self.replay_stub(text, expected_notes=(36, 37), collision=True,
+                                        source_events=events)
+                with patch('tools.portable_midi_lane_trace.COASTING_OWNER_WINDOW', (64, 192)), patch(
+                        'tools.portable_midi_lane_trace.COASTING_OWNER_TARGET_EVENTS', events[1:]), patch(
+                        'tools.portable_midi_lane_trace.subprocess.run', side_effect=stub) as replay:
+                    if wrong_revision:
+                        with self.assertRaisesRegex(ValueError, 'requires the saved coasting owner trial'):
+                            run(*args, profile='coasting-owner-on')
+                        replay.assert_not_called()
+                        continue
+                    run(*args, profile='coasting-owner-on')
+                report = json.loads((args[-1] / 'report.json').read_text())
+                self.assertEqual(replay.call_count, 2)
+                self.assertTrue(report['reference_complete_streams_bit_identical'])
+                self.assertEqual(report['candidate_notes'], [36, 37])
+                self.assertEqual(report['voice_id'], 0)
+                for result in report['runs'].values():
+                    history = result['raw_lane_history']['events']
+                    self.assertEqual([entry['event'] for entry in history], events[1:])
+                    self.assertEqual(history[-1]['unreleased_raw_note_ons_after'], events[1:])
+
 
 if __name__ == '__main__':
     unittest.main()

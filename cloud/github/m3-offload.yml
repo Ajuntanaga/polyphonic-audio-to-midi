@@ -10,7 +10,7 @@ on:
       task:
         description: Bounded research task
         type: choice
-        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial, spectral-lane-collision-corpus, midi-ledger-replay, spectral-lane-collision-trace]
+        options: [assignment-trace, allocation-trace, core-check, timing-diagnosis, corpus-recovery, controlled-recovery, controlled-timing-diagnosis, controlled-stage-diagnosis, partial-identity, evidence-retention-trial, calibrated-output-trace, projection-preview-trial, projection-preview-corpus, routing-trace, midi-lane-trace, retained-spectral-trial, retained-spectral-diagnosis, spectral-lane-collision-trial, spectral-lane-collision-corpus, midi-ledger-replay, spectral-lane-collision-trace, coasting-owner-trace]
         default: assignment-trace
       dataset:
         description: Recording for assignment trace or paired core/timing check
@@ -21,6 +21,10 @@ on:
         description: Capture full detector note lifetimes on untimed corpus or ordinary preview replays
         type: boolean
         default: false
+      saved_midi_checkpoint:
+        description: Completed trial checkpoint for saved MIDI ledger replay or coasting owner trace
+        type: string
+        default: docs/recovery/github-spectral-lane-collision-20261109.json
       note:
         description: MIDI note for assignment trace
         type: number
@@ -52,6 +56,7 @@ env:
   LABEL_INDEX: ${{ inputs.label_index }}
   TIMING_CONTROL: ${{ inputs.control }}
   CAPTURE_MIDI_LIFECYCLE: ${{ inputs.midi_lifecycle }}
+  SAVED_MIDI_CHECKPOINT: ${{ inputs.saved_midi_checkpoint }}
   INPUT_TAG: corpus-20261108
   INPUT_SHA256: adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254
 jobs:
@@ -66,15 +71,16 @@ jobs:
           test "$GITHUB_REPOSITORY" = Ajuntanaga/m3-offload
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = false
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial || "$TASK" = spectral-lane-collision-corpus || "$TASK" = midi-ledger-replay || "$TASK" = spectral-lane-collision-trace ]]
+          [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity || "$TASK" = evidence-retention-trial || "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial || "$TASK" = projection-preview-corpus || "$TASK" = routing-trace || "$TASK" = midi-lane-trace || "$TASK" = retained-spectral-trial || "$TASK" = retained-spectral-diagnosis || "$TASK" = spectral-lane-collision-trial || "$TASK" = spectral-lane-collision-corpus || "$TASK" = midi-ledger-replay || "$TASK" = spectral-lane-collision-trace || "$TASK" = coasting-owner-trace ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
           if [[ "$TASK" = evidence-retention-trial ]]; then test "$DATASET" = ordinary; fi
           if [[ "$TASK" = calibrated-output-trace || "$TASK" = projection-preview-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 41; test "$LABEL_INDEX" = 55; fi
           if [[ "$TASK" = routing-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 52; test "$LABEL_INDEX" = 54; fi
           if [[ "$TASK" = midi-lane-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 47; test "$LABEL_INDEX" = -1; fi
-          if [[ "$TASK" = spectral-lane-collision-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 37; test "$LABEL_INDEX" = -1; fi
+          if [[ "$TASK" = spectral-lane-collision-trace || "$TASK" = coasting-owner-trace ]]; then test "$DATASET" = ordinary; test "$NOTE" = 37; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = retained-spectral-trial || "$TASK" = spectral-lane-collision-trial ]]; then test "$DATASET" = ordinary; test "$NOTE" = 48; test "$LABEL_INDEX" = -1; fi
           if [[ "$TASK" = retained-spectral-diagnosis ]]; then test "$DATASET" = ordinary; test "$NOTE" = 55; test "$LABEL_INDEX" = 265; fi
+          if [[ "$TASK" = midi-ledger-replay || "$TASK" = coasting-owner-trace ]]; then [[ "$SAVED_MIDI_CHECKPOINT" =~ ^docs/recovery/[A-Za-z0-9_-]+[.]json$ ]]; fi
           if [[ "$CAPTURE_MIDI_LIFECYCLE" = true ]]; then [[ "$TASK" = corpus-recovery || "$TASK" = projection-preview-corpus || "$TASK" = projection-preview-trial || "$TASK" = spectral-lane-collision-corpus ]]; fi
           [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
@@ -151,8 +157,19 @@ jobs:
           cmake -S cloud/native -B build/portable -DCMAKE_BUILD_TYPE=Release 2>&1 | tee build/github-results/configure.log
           cmake --build build/portable --target m3_midi_ledger_replay --parallel 2 2>&1 | tee build/github-results/build.log
           python3 -B -m unittest tests.test_portable_midi_ledger_replay 2>&1 | tee build/github-results/contracts.log
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/13672780703/zip" > "$RUNNER_TEMP/m3-saved-midi.zip"
-          python3 -B -m tools.portable_midi_ledger_replay --binary build/portable/m3_midi_ledger_replay --checkpoint docs/recovery/github-spectral-lane-collision-20261109.json --archive "$RUNNER_TEMP/m3-saved-midi.zip" --source-sha "$SOURCE_SHA" --output build/github-results/midi-ledger 2>&1 | tee build/github-results/runner.log
+          artifact_id="$(python3 - "$SAVED_MIDI_CHECKPOINT" <<'PY'
+          import json, sys
+          from pathlib import Path
+          checkpoint = json.loads(Path(sys.argv[1]).read_text())
+          name = f"m3-evidence-{checkpoint['source']['run_id']}-{checkpoint['source']['run_attempt']}"
+          matches = [a for a in checkpoint['artifacts'] if a['name'] == name]
+          if len(matches) != 1 or type(matches[0]['id']) is not int or matches[0]['id'] <= 0:
+              raise SystemExit('Expected one recorded evidence artifact')
+          print(matches[0]['id'])
+          PY
+          )"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/m3-saved-midi.zip"
+          python3 -B -m tools.portable_midi_ledger_replay --binary build/portable/m3_midi_ledger_replay --checkpoint "$SAVED_MIDI_CHECKPOINT" --archive "$RUNNER_TEMP/m3-saved-midi.zip" --source-sha "$SOURCE_SHA" --output build/github-results/midi-ledger 2>&1 | tee build/github-results/runner.log
       - name: Screen direct evidence retention through energy dips
         if: inputs.task == 'evidence-retention-trial'
         working-directory: source
@@ -199,6 +216,12 @@ jobs:
           cmake --build build/portable --target m3_motion_tests --parallel 2 2>&1 | tee build/github-results/trace-build.log
           M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
           python3 -B -m tools.portable_midi_lane_trace --profile spectral-collision-on --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report docs/recovery/github-spectral-lane-collision-20261109.json --output build/github-results/spectral-lane-collision-trace 2>&1 | tee build/github-results/runner.log
+      - name: Trace the remaining coasting owner trial conflict
+        if: inputs.task == 'coasting-owner-trace'
+        working-directory: source
+        run: |
+          export M3_SOURCE_COMMIT="$SOURCE_SHA"
+          python3 -B -m tools.portable_midi_lane_trace --profile coasting-owner-on --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report "$SAVED_MIDI_CHECKPOINT" --output build/github-results/coasting-owner-trace 2>&1 | tee build/github-results/runner.log
       - name: Screen fresh spectral incumbents in physical assignment
         if: inputs.task == 'retained-spectral-trial'
         working-directory: source

@@ -1,3 +1,11 @@
+## 2026-11-09 — coasting-owner trial delays MIDI blocking but does not resolve it
+
+Saved-event ledger run `42630866103` completed at source `dd59808669a0eca547650c0398b8d7f3636a6467`. Both routing modes still block: OFF at sample 203519 (2.120 s), ON at 1149183 (11.971 s). The previous ON trial blocked at 288255 (3.003 s), so the correction delays the first fault by 8.968 s. ON delivers 2153 source callbacks and suppresses 9736 remaining events; OFF delivers 45 and suppresses 11858. Both remain blocked at EOF. This is an open-loop simulation with an accepting file sink, not a live-host or held-duration result.
+
+The collected callback trace shows note 36 on lane 0 immediately before note 37 is rejected on that same lane and sample. The detector branch responsible is still unmeasured. The final report and callback evidence have verified archive hashes in `docs/recovery/github-coasting-owner-ledger-20261109.json`.
+
+Added the bounded `coasting-owner-trace` task for notes 36 and 37 around sample 1149183. It requires the saved coasting-owner trial revision, complete outcome and MIDI identity, and both recorded note-ons before interpreting candidate observations. Nine local mocked/parser tests pass; native replay stays on GitHub Actions. Next: collect that diagnostic, correct the responsible assignment or emission path, and require no output blocking before broader corpus checks. Installed output and scores are unchanged; the previous corpus still fails three timing gates.
+
 ## 2026-11-09 — retain the emitted lane during a coasting-note collision
 
 Diagnostic run `42625491693` completed. Its three full replays match the saved ON outcome and MIDI streams. At sample 288255, selected note 37 moves from emitted mask 1 to physical mask 2, while coasting note 54 still owns emitted mask 2. Note 54 is no longer selected and has four release ticks; its physical mask is 4. Capacity did not block either route. The previous fallback handles a spectral/physical disagreement and misses this physical assignment move. The completed checkpoint is `docs/recovery/github-spectral-lane-collision-trace-20261109.json`.

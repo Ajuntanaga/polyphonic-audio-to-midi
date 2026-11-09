@@ -1,0 +1,313 @@
+{
+  "schema": "m3_github_coasting_owner_ledger_checkpoint_v1",
+  "task": "midi-ledger-replay",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42630866103,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42630866103",
+  "source_commit": "dd59808669a0eca547650c0398b8d7f3636a6467",
+  "worker_commit": "9ec310c82157c3805a40d71f49cf6451b7bea6fa",
+  "created_at": "2026-11-09T14:02:54Z",
+  "observed_at": "2026-11-09T14:10:53.133950+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "stage": "Final saved-event ledger diagnosis collected; output still blocks",
+  "result_final": true,
+  "output_target": "build/github-results/coasting-owner-ledger-42630866103",
+  "report_relative_path": "midi-ledger/report.json",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-coasting-owner-ledger-20261109.json",
+  "source_trace_checkpoint": "docs/recovery/github-coasting-owner-trial-20261109.json",
+  "saved_trace_run_id": 42629455593,
+  "saved_trace_artifact_id": 13679773601,
+  "saved_trace_archive_sha256": "6094754712bee07a80c14e3fff1438215aa51728fbe82434933d1f1b9afceb38",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "scope": "Complete saved ordinary OFF/ON detector events through the production ledger, single-channel and per-voice routing, accepting file sink.",
+  "limits": "Open-loop diagnosis only; detector feedback, waveform recovery, VST3 host delivery, hardware and native timing are not measured.",
+  "next_step": "Trace candidates 36 and 37 around sample 1149183 against the saved complete coasting-owner ON trial; require full output identity before interpreting the trace. Resolve output blocking before wider corpus validation.",
+  "completed_at": "2026-11-09T14:03:11Z",
+  "report_sha256": "77df25ea53e4fffb9db20ad81298e1ea5dad73066d30cffb847cb510e60c5b0a",
+  "report_observed_at": "2026-11-09T14:03:07.073987+00:00",
+  "artifacts": [
+    {
+      "id": 13680279145,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY4MDI3OTE0NQ==",
+      "name": "m3-report-42630866103-1",
+      "size_in_bytes": 7326,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13680279145",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13680279145/zip",
+      "expired": false,
+      "digest": "sha256:705f8014f8a3672e9f2e7322aff973f06c110b089c533b9f815d54157c03cc21",
+      "created_at": "2026-11-09T14:03:07Z",
+      "updated_at": "2026-11-09T14:03:07Z",
+      "expires_at": "2026-11-23T14:03:07Z",
+      "workflow_run": {
+        "id": 42630866103,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "9ec310c82157c3805a40d71f49cf6451b7bea6fa"
+      }
+    },
+    {
+      "id": 13680219377,
+      "node_id": "MDg6QXJ0aWZhY3QxMzY4MDIxOTM3Nw==",
+      "name": "m3-evidence-42630866103-1",
+      "size_in_bytes": 44325,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13680219377",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/13680219377/zip",
+      "expired": false,
+      "digest": "sha256:863fd3a1aa90f1f0cebb81e78cfc6881293d6311f77d81cd9f9a66b7ac86c483",
+      "created_at": "2026-11-09T14:03:08Z",
+      "updated_at": "2026-11-09T14:03:08Z",
+      "expires_at": "2026-11-16T14:03:08Z",
+      "workflow_run": {
+        "id": 42630866103,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "9ec310c82157c3805a40d71f49cf6451b7bea6fa"
+      }
+    }
+  ],
+  "binary_sha256": "bfd326066096ded17268f8ebcb3557c23d02049c92337347685137c64518e946",
+  "saved_checkpoint_sha256": "23e3d73a7ec6d07fded8ced6a0945cf6923ad6275c941209f2d0bbb63b46d6e8",
+  "decision": "rejected for promotion; saved-event output blocking remains",
+  "runs": {
+    "reference-off": {
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "raw_error_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "routings": {
+        "single": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "single",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11903,
+          "queued_events": 11903,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 45,
+          "suppressed_source_events": 11858,
+          "cleanup_callbacks": 1,
+          "blocked_blocks": 20482,
+          "detection_disabled_blocks": 20482,
+          "first_blocked_block_start": 203264,
+          "first_blocking_event": {
+            "sample": 203519,
+            "kind": "on",
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "reference-off-single.tsv.gz",
+            "bytes": 466,
+            "sha256": "986223c04124f3252a65192b4ffa856585c7868e5c5ca24e860359a8c820cef9",
+            "raw_sha256": "43297b1d4ec8085e88e269698a8785f7acfadba53f34969445d4c1aac586d6ca",
+            "raw_bytes": 1432
+          }
+        },
+        "per_voice": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "per_voice",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11903,
+          "queued_events": 11903,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 45,
+          "suppressed_source_events": 11858,
+          "cleanup_callbacks": 1,
+          "blocked_blocks": 20482,
+          "detection_disabled_blocks": 20482,
+          "first_blocked_block_start": 203264,
+          "first_blocking_event": {
+            "sample": 203519,
+            "kind": "on",
+            "note": 47,
+            "velocity": 25,
+            "voice_id": 0,
+            "sequence": 45
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "reference-off-per_voice.tsv.gz",
+            "bytes": 466,
+            "sha256": "771e9400d4cd0c1e3981b46e4ab32a7e502ffa9bef463f9b7e55650a47e508bc",
+            "raw_sha256": "2023b24d989e24e8c4e40f0ee8890c54a40e42927b81405dda80cf195f9cedd8",
+            "raw_bytes": 1432
+          }
+        }
+      }
+    },
+    "trial-on": {
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "raw_error_counts": {
+        "cross_pitch_on_before_release": 366,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "routings": {
+        "single": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "single",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11889,
+          "queued_events": 11889,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 2153,
+          "suppressed_source_events": 9736,
+          "cleanup_callbacks": 3,
+          "blocked_blocks": 18635,
+          "detection_disabled_blocks": 18635,
+          "first_blocked_block_start": 1148928,
+          "first_blocking_event": {
+            "sample": 1149183,
+            "kind": "on",
+            "note": 37,
+            "velocity": 40,
+            "voice_id": 0,
+            "sequence": 2153
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "trial-on-single.tsv.gz",
+            "bytes": 14144,
+            "sha256": "74a2d9a076315170582b5dfb82b4a073c704814c96dc76b19f597ea7b56910ed",
+            "raw_sha256": "e51b94beab8b4b0395cd8905512c9fa28c32858fdc2051db5ffbbbe52667ca58",
+            "raw_bytes": 68069
+          }
+        },
+        "per_voice": {
+          "schema": "m3_ledger_replay_v1",
+          "routing": "per_voice",
+          "sample_count": 10689600,
+          "block_size": 512,
+          "last_block_frames": 64,
+          "input_events": 11889,
+          "queued_events": 11889,
+          "queue_rejected_events": 0,
+          "unqueued_after_failure": 0,
+          "source_callbacks": 2153,
+          "suppressed_source_events": 9736,
+          "cleanup_callbacks": 3,
+          "blocked_blocks": 18635,
+          "detection_disabled_blocks": 18635,
+          "first_blocked_block_start": 1148928,
+          "first_blocking_event": {
+            "sample": 1149183,
+            "kind": "on",
+            "note": 37,
+            "velocity": 40,
+            "voice_id": 0,
+            "sequence": 2153
+          },
+          "output_blocked_at_eof": true,
+          "cleanup_pending_at_eof": false,
+          "active_identities_at_eof": [],
+          "callback_pairing_errors": 0,
+          "forced_eof_releases": false,
+          "host_delivery_verified": false,
+          "callbacks": {
+            "file": "trial-on-per_voice.tsv.gz",
+            "bytes": 14187,
+            "sha256": "9cd6900448ae7d2b220fcebf0a0673c575b42ff31379ca60f002f83f9571c0af",
+            "raw_sha256": "9b25403b651fed63cf1a91e34a305d476a6260f0af69e654f7743c40f359467c",
+            "raw_bytes": 68069
+          }
+        }
+      }
+    }
+  },
+  "delta_on_minus_off": {
+    "single": {
+      "source_callbacks": 2108,
+      "suppressed_source_events": -2122,
+      "cleanup_callbacks": 2,
+      "blocked_blocks": -1847,
+      "queue_rejected_events": 0
+    },
+    "per_voice": {
+      "source_callbacks": 2108,
+      "suppressed_source_events": -2122,
+      "cleanup_callbacks": 2,
+      "blocked_blocks": -1847,
+      "queue_rejected_events": 0
+    }
+  },
+  "first_blocking_event_seconds": {
+    "reference-off": 2.1199895833333335,
+    "trial-on": 11.97065625
+  },
+  "previous_trial_comparison": {
+    "checkpoint": "docs/recovery/github-midi-ledger-replay-20261109.json",
+    "baseline_first_block_sample": 288255,
+    "current_first_block_sample": 1149183,
+    "sample_rate": 96000,
+    "delay_seconds": 8.968,
+    "interpretation": "Later first blocking is not resolved blocking or live readiness."
+  },
+  "callback_observation": {
+    "last_source_callback": {
+      "sample": "1149183",
+      "phase": "source",
+      "kind": "on",
+      "note": "36",
+      "velocity": "40",
+      "voice_id": "0",
+      "channel": "1",
+      "source_sequence": "2152"
+    },
+    "first_rejected_event": {
+      "sample": 1149183,
+      "kind": "on",
+      "note": 37,
+      "velocity": 40,
+      "voice_id": 0,
+      "sequence": 2153
+    },
+    "finding": "Note 36 is delivered immediately before note 37 is rejected on the same sample and lane. The detector branch producing these note-ons is not yet measured.",
+    "callbacks": {
+      "file": "trial-on-per_voice.tsv.gz",
+      "bytes": 14187,
+      "sha256": "9cd6900448ae7d2b220fcebf0a0673c575b42ff31379ca60f002f83f9571c0af",
+      "raw_sha256": "9b25403b651fed63cf1a91e34a305d476a6260f0af69e654f7743c40f359467c",
+      "raw_bytes": 68069
+    }
+  }
+}
