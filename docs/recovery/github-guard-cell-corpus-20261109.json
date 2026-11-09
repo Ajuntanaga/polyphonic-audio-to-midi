@@ -1,0 +1,701 @@
+{
+  "schema": "m3_guard_cell_corpus_summary_v1",
+  "observed_at": "2026-11-09T06:27:48.594745+00:00",
+  "run_id": 42566960267,
+  "github_conclusion": "success",
+  "report": "build/github-results/guard-cell-corpus-42566960267/corpus/report.json",
+  "report_sha256": "3be095b00b2ee12190c1a080a02019c4e10da60facd3272c53b7657188c1bd15",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "7bd8e8a42360b9bc1adc8c0c52d8c7ddfa2dc396",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42566960267",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "final": true,
+  "declared_datasets": 14,
+  "off_references": 14,
+  "on_references": 14,
+  "historical_hashes_preserved": 84,
+  "historical_hashes_compared": 84,
+  "label_error_comparisons_passed": 42,
+  "label_error_comparisons_total": 42,
+  "buffer_parity_passed": 56,
+  "buffer_parity_total": 56,
+  "native_gates_passed": 9,
+  "timing_limits": {
+    "block_samples": 32,
+    "sample_rate": 96000,
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "datasets": {
+    "ordinary": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": false,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 334050,
+          "p99_ns": 107998,
+          "maximum_ns": 451280,
+          "deadline_overruns": 2,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 334050,
+          "p99_ns": 129776,
+          "maximum_ns": 691478,
+          "deadline_overruns": 6,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "constructed": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": false,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 921600,
+          "p99_ns": 98155,
+          "maximum_ns": 669937,
+          "deadline_overruns": 3,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 921600,
+          "p99_ns": 123134,
+          "maximum_ns": 576562,
+          "deadline_overruns": 3,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "isolated-08": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 69600,
+          "p99_ns": 87255,
+          "maximum_ns": 169145,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 69600,
+          "p99_ns": 109813,
+          "maximum_ns": 219595,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "isolated-05": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 69600,
+          "p99_ns": 104558,
+          "maximum_ns": 186912,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 69600,
+          "p99_ns": 122509,
+          "maximum_ns": 236623,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "isolated-02": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 78600,
+          "p99_ns": 97429,
+          "maximum_ns": 192639,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 78600,
+          "p99_ns": 120111,
+          "maximum_ns": 266045,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-long": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": false,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 176464,
+          "p99_ns": 110858,
+          "maximum_ns": 592727,
+          "deadline_overruns": 1,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 176464,
+          "p99_ns": 142143,
+          "maximum_ns": 323498,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-middle": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 193688,
+          "p99_ns": 103276,
+          "maximum_ns": 246828,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 193688,
+          "p99_ns": 129168,
+          "maximum_ns": 284101,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-highmid": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 181848,
+          "p99_ns": 99511,
+          "maximum_ns": 226317,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 181848,
+          "p99_ns": 124465,
+          "maximum_ns": 267706,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-high": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": false,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 154176,
+          "p99_ns": 103158,
+          "maximum_ns": 178658,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 154176,
+          "p99_ns": 126507,
+          "maximum_ns": 234282,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "extended-middle": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 70050,
+          "p99_ns": 111422,
+          "maximum_ns": 252251,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 70050,
+          "p99_ns": 134841,
+          "maximum_ns": 296568,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "extended-highmid": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 70050,
+          "p99_ns": 105848,
+          "maximum_ns": 296955,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 70050,
+          "p99_ns": 123656,
+          "maximum_ns": 258309,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "extended-high": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": false,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 81600,
+          "p99_ns": 113750,
+          "maximum_ns": 238893,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 81600,
+          "p99_ns": 139818,
+          "maximum_ns": 375662,
+          "deadline_overruns": 1,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-four": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": false,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 377088,
+          "p99_ns": 100342,
+          "maximum_ns": 241575,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "blocks": 377088,
+          "p99_ns": 129813,
+          "maximum_ns": 437678,
+          "deadline_overruns": 3,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "synthetic-four": {
+      "recovery_safety_pass": true,
+      "native_gate_pass": true,
+      "prior_output_hashes_preserved": {
+        "off-512": true,
+        "on-512": true,
+        "off-32": true,
+        "on-32": true,
+        "off-1024": true,
+        "on-1024": true
+      },
+      "off_on_output_bit_identical": true,
+      "label_error_comparisons_passed": 3,
+      "buffer_parity_passed": 4,
+      "timing": {
+        "off-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 172800,
+          "p99_ns": 98858,
+          "maximum_ns": 203821,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "on-32": {
+          "gates": {
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "blocks": 172800,
+          "p99_ns": 122353,
+          "maximum_ns": 279114,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    }
+  },
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "live_readiness": "not measured",
+  "interpretation": "Reference recovery completed. Every saved output is bit-identical to the prior corpus run. Five paired native timing gates fail; no new note gain or promotion is accepted. Physical-high remains zero-match despite passing this timing observation."
+}

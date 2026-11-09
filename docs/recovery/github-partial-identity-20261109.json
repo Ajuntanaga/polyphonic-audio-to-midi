@@ -1,0 +1,573 @@
+{
+  "schema": "m3_partial_identity_summary_v1",
+  "observed_at": "2026-11-09T06:27:48.594745+00:00",
+  "run_id": 42571625288,
+  "github_conclusion": "success",
+  "report": "build/github-results/partial-identity-42571625288/partial-identity/report.json",
+  "report_sha256": "b30dd5d6c534642402349ba606985469b6134360ba6d9bc6162a21e966dcddb2",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "642eaaacbc45fac19b59f4a20937862685d68695",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42571625288",
+    "run_attempt": "1",
+    "input_release": "partial-identity-note52-20261109",
+    "input_bundle_sha256": "4f7efa2ea0ba4d9025ff35c22d2bc48c9a5199a1ebb9b83c422c1bf10038829e",
+    "original_input_manifest_sha256": "94fc7eabfc5be2a7fc064c9659961680bb713f14c65f4bfb4274d8f8ca03515f"
+  },
+  "final": true,
+  "note": 52,
+  "summary": {
+    "settings": {
+      "minimum_upper_power_ratio": 0.001,
+      "maximum_abs_partial_cents": 35.0,
+      "minimum_valid_fraction": 0.75,
+      "minimum_valid_frames": 3,
+      "maximum_distance_cents": 3.0,
+      "minimum_margin_cents": 1.0
+    },
+    "training": {
+      "0": {
+        "clip": "s0-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 0,
+        "valid_fraction": 0.0,
+        "eligible": false,
+        "partial_cents": null,
+        "mad_cents": null
+      },
+      "1": {
+        "clip": "s1-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 0,
+        "valid_fraction": 0.0,
+        "eligible": false,
+        "partial_cents": null,
+        "mad_cents": null
+      },
+      "2": {
+        "clip": "s2-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 0,
+        "valid_fraction": 0.0,
+        "eligible": false,
+        "partial_cents": null,
+        "mad_cents": null
+      },
+      "3": {
+        "clip": "s3-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 0,
+        "valid_fraction": 0.0,
+        "eligible": false,
+        "partial_cents": null,
+        "mad_cents": null
+      },
+      "4": {
+        "clip": "s4-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 7,
+        "valid_fraction": 1.0,
+        "eligible": true,
+        "partial_cents": [
+          2.6399866690675733,
+          2.31177380495829
+        ],
+        "mad_cents": [
+          0.14916451561817334,
+          0.13920193293224692
+        ]
+      },
+      "5": {
+        "clip": "s5-n52-attack0.wav",
+        "frames": 7,
+        "valid_frames": 7,
+        "valid_fraction": 1.0,
+        "eligible": true,
+        "partial_cents": [
+          -5.7057064402084015,
+          -1.3312279114954009
+        ],
+        "mad_cents": [
+          0.7931937060115111,
+          1.207628225637781
+        ]
+      }
+    },
+    "prototypes": {
+      "4": [
+        2.6399866690675733,
+        2.31177380495829
+      ],
+      "5": [
+        -5.7057064402084015,
+        -1.3312279114954009
+      ]
+    },
+    "all_feasible_prototypes_measured": false,
+    "heldout": [
+      {
+        "clip": "s0-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 0,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s0-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 0,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s0-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 0,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s1-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 1,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s1-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 1,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s1-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 1,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 4,
+          "valid_fraction": 0.5714285714285714,
+          "eligible": false,
+          "partial_cents": [
+            5.3555172539772045,
+            16.636731221695655
+          ],
+          "mad_cents": [
+            23.28277477972327,
+            4.523210356654816
+          ]
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s2-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 2,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s2-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 2,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s2-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 2,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s2-n52-attack4.wav",
+        "recording_pass": 3,
+        "expected_string": 2,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s2-n52-attack5.wav",
+        "recording_pass": 3,
+        "expected_string": 2,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 3,
+          "valid_fraction": 0.42857142857142855,
+          "eligible": false,
+          "partial_cents": [
+            -31.577789529682136,
+            9.69575697914787
+          ],
+          "mad_cents": [
+            2.9267112167258986,
+            14.745992361825046
+          ]
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s3-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 3,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s3-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 3,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s3-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 3,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s4-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 4,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 7,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            2.2847825989449206,
+            1.7470477558959767
+          ],
+          "mad_cents": [
+            0.36531496735027225,
+            0.3237468925102287
+          ]
+        },
+        "distances_cents": {
+          "4": 0.47174433855703474,
+          "5": 6.054902813806478
+        },
+        "margin_cents": 5.583158475249443,
+        "nearest_string": 4,
+        "admitted_string": null
+      },
+      {
+        "clip": "s4-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 4,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 0,
+          "valid_fraction": 0.0,
+          "eligible": false,
+          "partial_cents": null,
+          "mad_cents": null
+        },
+        "distances_cents": {},
+        "margin_cents": null,
+        "nearest_string": null,
+        "admitted_string": null
+      },
+      {
+        "clip": "s4-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 4,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 7,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            1.705485804611684,
+            1.4339327090616016
+          ],
+          "mad_cents": [
+            0.7046379604955053,
+            0.5324925759740595
+          ]
+        },
+        "distances_cents": {
+          "4": 0.9066137146861123,
+          "5": 5.593383758833314
+        },
+        "margin_cents": 4.6867700441472016,
+        "nearest_string": 4,
+        "admitted_string": null
+      },
+      {
+        "clip": "s5-n52-attack1.wav",
+        "recording_pass": 2,
+        "expected_string": 5,
+        "measurement": {
+          "frames": 7,
+          "valid_frames": 7,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            -3.9774733755914284,
+            0.14390548007307544
+          ],
+          "mad_cents": [
+            0.13423614840399045,
+            0.49182027274802353
+          ]
+        },
+        "distances_cents": {
+          "4": 4.923943060023081,
+          "5": 1.6066748346438506
+        },
+        "margin_cents": 3.3172682253792303,
+        "nearest_string": 5,
+        "admitted_string": null
+      },
+      {
+        "clip": "s5-n52-attack2.wav",
+        "recording_pass": 3,
+        "expected_string": 5,
+        "measurement": {
+          "frames": 8,
+          "valid_frames": 8,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            -3.3787938959558916,
+            1.144867869308896
+          ],
+          "mad_cents": [
+            0.5589744952083326,
+            1.1378247600998468
+          ]
+        },
+        "distances_cents": {
+          "4": 4.335169486453671,
+          "5": 2.4026623050604226
+        },
+        "margin_cents": 1.9325071813932482,
+        "nearest_string": 5,
+        "admitted_string": null
+      },
+      {
+        "clip": "s5-n52-attack3.wav",
+        "recording_pass": 3,
+        "expected_string": 5,
+        "measurement": {
+          "frames": 14,
+          "valid_frames": 14,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            -3.4886150083693996,
+            0.6117622672848462
+          ],
+          "mad_cents": [
+            0.4159819745228315,
+            0.6668171143433506
+          ]
+        },
+        "distances_cents": {
+          "4": 4.497210121225497,
+          "5": 2.084550941086642
+        },
+        "margin_cents": 2.412659180138855,
+        "nearest_string": 5,
+        "admitted_string": null
+      },
+      {
+        "clip": "s5-n52-attack4.wav",
+        "recording_pass": 3,
+        "expected_string": 5,
+        "measurement": {
+          "frames": 12,
+          "valid_frames": 10,
+          "valid_fraction": 0.8333333333333334,
+          "eligible": true,
+          "partial_cents": [
+            -5.280937925261197,
+            -1.4367369712052205
+          ],
+          "mad_cents": [
+            0.4903727672710336,
+            0.42784223176119285
+          ]
+        },
+        "distances_cents": {
+          "4": 6.196465906791401,
+          "5": 0.3094838064998745
+        },
+        "margin_cents": 5.886982100291527,
+        "nearest_string": 5,
+        "admitted_string": null
+      },
+      {
+        "clip": "s5-n52-attack5.wav",
+        "recording_pass": 3,
+        "expected_string": 5,
+        "measurement": {
+          "frames": 5,
+          "valid_frames": 5,
+          "valid_fraction": 1.0,
+          "eligible": true,
+          "partial_cents": [
+            -2.708449406538836,
+            1.025665224708731
+          ],
+          "mad_cents": [
+            0.029001400740152228,
+            0.013037229260496996
+          ]
+        },
+        "distances_cents": {
+          "4": 3.889720024310209,
+          "5": 2.6961542038028754
+        },
+        "margin_cents": 1.1935658205073336,
+        "nearest_string": 5,
+        "admitted_string": null
+      }
+    ],
+    "heldout_attacks": 22,
+    "correctly_admitted_attacks": 0,
+    "wrongly_admitted_attacks": 0,
+    "abstained_attacks": 22,
+    "isolated_screen_pass": false,
+    "metric": "isolated held-out attacks, not labeled-frame matches"
+  },
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "labeled_frame_gain": "not measured",
+  "unison_assignment": "not measured",
+  "live_readiness": "not measured",
+  "interpretation": "Rejected under the fixed exploratory limits. Only strings 4 and 5 supply usable training prototypes; four feasible competitors remain unknown. All 22 held-out attacks abstain. Do not remove the all-competitor guard or integrate this feature."
+}

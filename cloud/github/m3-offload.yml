@@ -15,12 +15,16 @@ on:
       dataset:
         description: Recording for assignment trace or paired core/timing check
         type: choice
-        options: [physical-middle, physical-highmid, physical-high, physical-long]
+        options: [physical-middle, physical-highmid, physical-high, physical-long, ordinary]
         default: physical-middle
       note:
         description: MIDI note for assignment trace
         type: number
         default: 52
+      label_index:
+        description: Original replay label index for assignment trace (-1 traces all labels for the note)
+        type: number
+        default: -1
       control:
         description: Retained pair for controlled timing diagnosis
         type: choice
@@ -40,6 +44,7 @@ env:
   TASK: ${{ inputs.task }}
   DATASET: ${{ inputs.dataset }}
   NOTE: ${{ inputs.note }}
+  LABEL_INDEX: ${{ inputs.label_index }}
   TIMING_CONTROL: ${{ inputs.control }}
   INPUT_TAG: corpus-20261108
   INPUT_SHA256: adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254
@@ -57,6 +62,7 @@ jobs:
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           [[ "$TASK" = assignment-trace || "$TASK" = allocation-trace || "$TASK" = core-check || "$TASK" = timing-diagnosis || "$TASK" = corpus-recovery || "$TASK" = controlled-recovery || "$TASK" = controlled-timing-diagnosis || "$TASK" = controlled-stage-diagnosis || "$TASK" = partial-identity ]]
           if [[ "$TASK" = partial-identity ]]; then test "$NOTE" = 52; fi
+          [[ "$LABEL_INDEX" = -1 || "$LABEL_INDEX" =~ ^[0-9]+$ ]]
       - uses: actions/checkout@v7
         with:
           repository: Ajuntanaga/polyphonic-audio-to-midi
@@ -148,7 +154,9 @@ jobs:
         if: inputs.task == 'assignment-trace'
         working-directory: source
         run: |
-          python3 -B -m tools.portable_assignment_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/trace --dataset "$DATASET" --note "$NOTE" 2>&1 | tee build/github-results/runner.log
+          label_args=()
+          if [[ "$LABEL_INDEX" != -1 ]]; then label_args=(--label-index "$LABEL_INDEX"); fi
+          python3 -B -m tools.portable_assignment_trace --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --output build/github-results/trace --dataset "$DATASET" --note "$NOTE" "${label_args[@]}" 2>&1 | tee build/github-results/runner.log
       - name: Recover OFF and ON corpus references
         if: inputs.task == 'corpus-recovery'
         working-directory: source

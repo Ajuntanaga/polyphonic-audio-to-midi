@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 from tools.portable_assignment_trace import (assignment_summary, digest, profile_addition_summary,
-                                             read_rows, trace_bounds, verify_inputs)
+                                             read_rows, select_labels, trace_bounds, verify_inputs)
 
 
 class PortableAssignmentTraceTests(unittest.TestCase):
@@ -66,6 +66,31 @@ class PortableAssignmentTraceTests(unittest.TestCase):
         labels[1]['end_sample'] = 7478400
         with self.assertRaisesRegex(ValueError, 'frame limit'):
             trace_bounds(labels, 7478400, 96000)
+
+    def test_one_original_label_can_be_traced_in_a_long_recording(self):
+        labels = [dict(label_index=0, midi_note=52, start_sample=96000, end_sample=168000),
+                  dict(label_index=1, midi_note=60, start_sample=192000, end_sample=264000),
+                  dict(label_index=2, midi_note=52, start_sample=9600000, end_sample=9672000)]
+        all_note_labels = select_labels(labels, note=52)
+        self.assertEqual([row['label_index'] for row in all_note_labels], [0, 2])
+        with self.assertRaisesRegex(ValueError, 'frame limit'):
+            trace_bounds(all_note_labels, 10680000, 96000)
+        selected = select_labels(labels, note=52, label_index=2)
+        self.assertEqual(selected, [labels[2]])
+        start, end = trace_bounds(selected, 10680000, 96000)
+        self.assertLess(start, 100)
+        self.assertGreater(end, 100.75)
+        self.assertEqual(len(labels), 3)
+
+    def test_original_index_cannot_select_another_note_or_missing_label(self):
+        labels = [dict(label_index=0, midi_note=60), dict(label_index=1, midi_note=52)]
+        with self.assertRaisesRegex(ValueError, 'note identity'):
+            select_labels(labels, note=52, label_index=0)
+        for index in (-1, 2, True):
+            with self.subTest(index=index), self.assertRaisesRegex(ValueError, 'outside'):
+                select_labels(labels, note=52, label_index=index)
+        with self.assertRaisesRegex(ValueError, 'no labels'):
+            select_labels(labels, note=61)
 
     def test_outcome_schema_comment_does_not_become_the_header(self):
         with tempfile.TemporaryDirectory() as directory:

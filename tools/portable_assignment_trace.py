@@ -110,6 +110,21 @@ def verify_inputs(corpus, manifest, name):
             raise ValueError('Input identity failed: ' + filename)
 
 
+def select_labels(labels, *, note, label_index=None):
+    """Select diagnostics by original replay label index, without cropping audio."""
+    if label_index is not None:
+        if type(label_index) is not int or not 0 <= label_index < len(labels):
+            raise ValueError('Requested label index is outside the replay labels')
+        label = labels[label_index]
+        if label['label_index'] != label_index or label['midi_note'] != note:
+            raise ValueError('Requested label index disagrees with note identity')
+        return [label]
+    selected = [label for label in labels if label['midi_note'] == note]
+    if not selected:
+        raise ValueError('Requested note has no labels')
+    return selected
+
+
 def trace_bounds(labels, sample_count, sample_rate):
     # The native candidate trace defaults to twenty seconds and caps at 90,000
     # ticks. Cover every requested label explicitly, including boundary ticks.
@@ -120,7 +135,7 @@ def trace_bounds(labels, sample_count, sample_rate):
     return start / sample_rate, end / sample_rate
 
 
-def run(binary, corpus, manifest_path, output, *, dataset, note, timeout):
+def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_index=None):
     from tools.frozen_cue_corpus_gate import compare_replays, read_replay
     from tools.portable_corpus_replay import SETTINGS, command_for
     from tools.selection_trace_diagnosis import summarize_selection
@@ -128,6 +143,7 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout):
     binary, corpus = binary.resolve(), corpus.resolve()
     report = dict(schema='m3_assignment_trace_v3', state='running', final=False,
                   stage='verify inputs', dataset=dataset, note=note, windows=[],
+                  requested_label_index=label_index,
                   settings=SETTINGS, installed_output_changed=False,
                   promotion_accepted=False, live_readiness='not measured',
                   provenance='Fresh OFF reference and traced OFF replay on the same runner')
@@ -159,9 +175,12 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout):
                       input_manifest_sha256=digest(manifest_path))
         base_command = command_for(binary, corpus, dataset, 'off', 512, None)
         reference_path, before = replay(base_command, 'reference-off')
-        labels = [label for label in before['labels'] if label['midi_note'] == note]
-        if not labels:
-            raise ValueError('Requested note has no labels')
+        labels = select_labels(before['labels'], note=note, label_index=label_index)
+        report['label_selection'] = dict(
+            indices=[label['label_index'] for label in labels],
+            available_note_labels=sum(label['midi_note'] == note for label in before['labels']),
+            total_replay_labels=len(before['labels']),
+            scope='Diagnostic windows only; both replays and their comparison cover the full recording.')
         with reference_path.open() as stream:
             aggregate = next(csv.DictReader(stream, delimiter='\t'))
         sample_count, sample_rate = int(aggregate['samples']), int(aggregate['sample_rate'])
@@ -220,12 +239,16 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--dataset', choices=sorted(DATASETS), default='physical-middle')
     parser.add_argument('--note', type=int, choices=range(128), default=52)
+    parser.add_argument('--label-index', type=int,
+                        help='One original replay label index; default traces every label for the note')
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
+    if args.label_index is not None and args.label_index < 0:
+        parser.error('--label-index must be nonnegative')
     run(args.binary, args.corpus, args.manifest, args.output, dataset=args.dataset,
-        note=args.note, timeout=args.replay_timeout_seconds)
+        note=args.note, timeout=args.replay_timeout_seconds, label_index=args.label_index)
 
 
 if __name__ == '__main__':
