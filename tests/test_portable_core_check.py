@@ -20,7 +20,8 @@ class CoreCheckTests(unittest.TestCase):
         'calibration_pass\tlabeled\tmatched\n'
         '0\t0\t960\t52\t7\t1\t10\t8\n')
 
-    def exercise(self, change=None, *, diagnostic=False):
+    def exercise(self, change=None, *, diagnostic=False, dataset='physical-long',
+                 missing_reference=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest = root / 'binary', root / 'manifest.json'
@@ -30,8 +31,11 @@ class CoreCheckTests(unittest.TestCase):
             retained = root / 'retained.tsv'
             retained.write_text(self.TSV)
             baseline = dict(read_replay(retained), tsv_sha256=digest(retained))
+            references = {'off-32': baseline, 'on-32': baseline}
+            if missing_reference:
+                del references[missing_reference]
             reference.write_text(json.dumps(dict(settings=SETTINGS, source={}, datasets={
-                'physical-long': {'runs': {'off-32': baseline, 'on-32': baseline}}})))
+                dataset: {'runs': references}})))
             modes = []
 
             def execute(command, **kwargs):
@@ -40,6 +44,10 @@ class CoreCheckTests(unittest.TestCase):
                 self.assertEqual('--diagnostic-cue-free-lane-reassignment' in command,
                                  mode == 'on')
                 self.assertEqual(command[command.index('--block') + 1], '32')
+                self.assertEqual(Path(command[command.index('--wav') + 1]),
+                                 root / (dataset + '.wav'))
+                self.assertEqual(Path(command[command.index('--labels') + 1]),
+                                 root / (dataset + '.tsv'))
                 self.assertEqual('--diagnostic-thread-cpu' in command, diagnostic)
                 timing = dict(schema='m3_replay_core_timing_v1', sample_rate=96000,
                               block_samples=32, measurement_scope=MEASUREMENT_SCOPE,
@@ -60,19 +68,41 @@ class CoreCheckTests(unittest.TestCase):
 
             error = None
             passed = None
-            with patch('tools.portable_core_check.verify_inputs'), \
+            with patch('tools.portable_core_check.verify_inputs') as verify, \
                  patch('tools.portable_core_check.subprocess.run', side_effect=execute):
                 try:
                     passed = run(binary, root, manifest, reference, output, 10,
-                                 diagnostic_thread_cpu=diagnostic)
+                                 diagnostic_thread_cpu=diagnostic, dataset=dataset)
                 except (ValueError, subprocess.CalledProcessError) as caught:
                     error = caught
+                verify.assert_called_once_with(root, json.loads(manifest.read_text()), dataset)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
             self.assertFalse(report['installed_output_changed'])
-            stderr = (output / 'physical-long-off-32.stderr').read_text()
+            stderr_path = output / (dataset + '-off-32.stderr')
+            stderr = stderr_path.read_text() if stderr_path.exists() else None
             return passed, report, error, modes, stderr
+
+    def test_selected_recording_uses_its_own_paired_references(self):
+        passed, report, error, modes, _ = self.exercise(
+            diagnostic=True, dataset='physical-high')
+        self.assertIsNone(error)
+        self.assertTrue(passed)
+        self.assertEqual(report['dataset'], 'physical-high')
+        self.assertEqual(modes, ['off', 'on'])
+        self.assertTrue(all(row['recorded_reference_bit_identical']
+                            for row in report['runs'].values()))
+
+    def test_incomplete_reference_pair_stops_before_native_processing(self):
+        for missing in ('off-32', 'on-32'):
+            with self.subTest(missing=missing):
+                _, report, error, modes, _ = self.exercise(
+                    dataset='physical-high', missing_reference=missing)
+                self.assertIsInstance(error, ValueError)
+                self.assertIn('Missing paired block-32 references', str(error))
+                self.assertEqual(report['state'], 'failed')
+                self.assertEqual(modes, [])
 
     def test_pair_preserves_reference_and_keeps_live_acceptance_separate(self):
         passed, report, error, modes, _ = self.exercise()

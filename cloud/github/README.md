@@ -34,8 +34,13 @@ overflow. C and C++ hook counts overlap and must not be added together. The
 instrumented timings cannot satisfy real-time acceptance; the ordinary build
 keeps tracing off.
 
-`core-check` runs physical-long OFF and ON at block 32 using the ordinary
-build. The scored pass retains its frequency reports; the timed pass detaches
+`core-check` runs the selected dataset OFF and ON at block 32 using the ordinary
+build. Set `-f dataset=physical-high` to inspect the remaining failed timing gate,
+or select another recording explicitly. The Python runner defaults to physical-long
+when used without `--dataset`. Paired references come from the completed GitHub
+corpus recovery, recorded in `docs/recovery/github-core-references-20261109.json`;
+a missing pair stops the runner before native processing.
+The scored pass retains its frequency reports; the timed pass detaches
 their observer and skips optional subset/coherence report calculations.
 Admission and unison state remain active, and explicitly enabled diagnostic
 pruning retains the calculations it needs. The measurement scope identifies

@@ -1,4 +1,4 @@
-"""Check physical-long OFF/ON core processing without offline frequency reports.
+"""Check one recording's OFF/ON core processing without offline frequency reports.
 
 Runs only on the private GitHub worker. Full recorded output must be unchanged.
 Completion is separate from timing acceptance and does not establish live readiness.
@@ -14,15 +14,16 @@ from tools.frozen_cue_corpus_gate import read_replay, compare_replays
 from tools.portable_allocation_trace import reference_identity
 from tools.portable_assignment_trace import digest, verify_inputs
 from tools.portable_corpus_replay import MEASUREMENT_SCOPE, SETTINGS, command_for, timing_gates
+from tools.replay_corpus import DATASETS
 
 
 def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
-        diagnostic_thread_cpu=False):
+        diagnostic_thread_cpu=False, dataset='physical-long'):
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     report = dict(schema='m3_core_check_v1', state='running', final=False,
                   diagnostic_only=diagnostic_thread_cpu,
-                  stage='verify inputs', dataset='physical-long', block_samples=32,
+                  stage='verify inputs', dataset=dataset, block_samples=32,
                   installed_output_changed=False, promotion_accepted=False,
                   live_readiness='not measured', settings=SETTINGS, runs={},
                   measurement_change='Offline frequency observer and optional frequency report '
@@ -39,12 +40,16 @@ def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
 
     save()
     try:
+        if dataset not in DATASETS:
+            raise ValueError('Unknown dataset: ' + dataset)
         manifest = json.loads(manifest_path.read_text())
-        verify_inputs(corpus, manifest, 'physical-long')
+        verify_inputs(corpus, manifest, dataset)
         reference_report = json.loads(reference_path.read_text())
         if reference_report['settings'] != SETTINGS:
             raise ValueError('Reference settings differ')
-        references = reference_report['datasets']['physical-long']['runs']
+        references = reference_report['datasets'].get(dataset, {}).get('runs', {})
+        if not all(key in references for key in ('off-32', 'on-32')):
+            raise ValueError('Missing paired block-32 references: ' + dataset)
         report.update(source=manifest.get('source', {}), verified_inputs=4,
                       input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
                       baseline_report_sha256=digest(reference_path),
@@ -54,10 +59,10 @@ def run(binary, corpus, manifest_path, reference_path, output, timeout, *,
         for mode in ('off', 'on'):
             report['stage'] = f'{mode.upper()} core check'
             save()
-            stem = f'physical-long-{mode}-32'
+            stem = f'{dataset}-{mode}-32'
             tsv = output / (stem + '.tsv')
             timing_path = output / (stem + '-timing.json')
-            command = command_for(binary, corpus, 'physical-long', mode, 32, timing_path.resolve())
+            command = command_for(binary, corpus, dataset, mode, 32, timing_path.resolve())
             if diagnostic_thread_cpu:
                 command.append('--diagnostic-thread-cpu')
             started = time.monotonic()
@@ -121,13 +126,15 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--dataset', choices=sorted(DATASETS), default='physical-long')
     parser.add_argument('--diagnostic-thread-cpu', action='store_true',
                         help='Collect slow-block state and CPU time; cannot pass acceptance gates')
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
         parser.error('--replay-timeout-seconds must be positive')
     passed = run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-                 args.replay_timeout_seconds, diagnostic_thread_cpu=args.diagnostic_thread_cpu)
+                 args.replay_timeout_seconds, diagnostic_thread_cpu=args.diagnostic_thread_cpu,
+                 dataset=args.dataset)
     raise SystemExit(0 if passed else 1)
 
 
