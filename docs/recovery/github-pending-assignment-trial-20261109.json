@@ -1,0 +1,991 @@
+{
+  "state": "completed",
+  "final": true,
+  "trial_revision": "pending_assignment_defer",
+  "task": "spectral-lane-collision-trial",
+  "dataset": "ordinary",
+  "stage": "offline screen collected",
+  "observed_at": "2026-11-09T14:43:06.951727+00:00",
+  "local_python_tests": {
+    "passed": 20,
+    "native_execution": false
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "schema": "m3_pending_assignment_trial_checkpoint_v1",
+  "status": "completed",
+  "run_id": 42635429821,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42635429821",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_commit": "a29b2405eec84e9ffb92f964ff3da8337078ca18",
+  "worker_commit": "c2a978833cd69c7eb60757886f18981a1976effa",
+  "requested_at": "2026-11-09T14:30:57.397236+00:00",
+  "output_target": "build/github-results/pending-assignment-trial-42635429821",
+  "report_relative_path": "spectral-lane-collision/report.json",
+  "checkpoint": "docs/recovery/github-pending-assignment-trial-20261109.json",
+  "acceptance": "No passage match loss or increased false outputs; raw MIDI counters do not regress and cross-pitch conflicts fall; all three recorded collision windows resolve. This screen does not establish complete MIDI, timing or host acceptance.",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "candidate_note": 48,
+  "window_start": 202752,
+  "window_end": 204288,
+  "runtime_rule_changed": true,
+  "native_timing": "not measured",
+  "live_readiness": "not measured",
+  "policy_name": "spectral-lane-collision",
+  "diagnostic_flag": "--diagnostic-spectral-lane-collision",
+  "policy": "Keep ordinary physical assignment. Move a conflicting singleton spectral output to its own free physical string; release before claim. Defer pending attacks when the full physical assignment is infeasible. Retain a free previous singleton output while an unselected active peer still owns its new lane; defer new attacks against that retained lane. Groups and continuity expansions retain their existing output path.",
+  "coasting_window": {
+    "start": 286720,
+    "end": 289280,
+    "lane": 1
+  },
+  "pending_window": {
+    "start": 1147904,
+    "end": 1150464,
+    "lane": 0
+  },
+  "label_metric_scope": "Tuner snapshot assignments, not emitted MIDI assignments",
+  "emitted_midi_labeled_matches": "not measured",
+  "emitted_midi_held_note_quality": "not measured",
+  "updated_at": "2026-11-09T14:35:03.115648+00:00",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "a29b2405eec84e9ffb92f964ff3da8337078ca18",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "42635429821",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "binary_sha256": "57621e71a05a05dc04e4f9765d0d43604d9526555888f817582b440c6b406dbf",
+  "input_manifest_sha256": "543c797da5b9e46a2d3271f73e974e9f6478ff305c25aef819a869ec64c179a4",
+  "reference_report_sha256": "e4cd3974fe6541895e762ce5dfa268d8b74f6f1b8ecedf02553750cba5c3ea9f",
+  "off_reference_bit_identical": true,
+  "coasting_lane_window_resolved": true,
+  "pending_lane_window_resolved": true,
+  "comparison": {
+    "delta": {
+      "matched": 1437,
+      "false_wrong_note_voices": -485,
+      "false_wrong_string_voices": -440,
+      "false_gap_voices": 108,
+      "false_positive_voices": -817
+    },
+    "changed_labels": [
+      {
+        "label_index": 66,
+        "midi_note": 46,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 88,
+        "current_matched": 87,
+        "matched_delta": -1
+      },
+      {
+        "label_index": 67,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 265,
+        "current_matched": 351,
+        "matched_delta": 86
+      },
+      {
+        "label_index": 91,
+        "midi_note": 44,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 282,
+        "current_matched": 281,
+        "matched_delta": -1
+      },
+      {
+        "label_index": 153,
+        "midi_note": 45,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 532,
+        "current_matched": 577,
+        "matched_delta": 45
+      },
+      {
+        "label_index": 156,
+        "midi_note": 47,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 735,
+        "current_matched": 581,
+        "matched_delta": -154
+      },
+      {
+        "label_index": 159,
+        "midi_note": 47,
+        "string_mask": 4,
+        "labeled": 598,
+        "baseline_matched": 142,
+        "current_matched": 261,
+        "matched_delta": 119
+      },
+      {
+        "label_index": 181,
+        "midi_note": 58,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 0,
+        "current_matched": 594,
+        "matched_delta": 594
+      },
+      {
+        "label_index": 182,
+        "midi_note": 47,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 477,
+        "current_matched": 798,
+        "matched_delta": 321
+      },
+      {
+        "label_index": 183,
+        "midi_note": 38,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 469,
+        "current_matched": 765,
+        "matched_delta": 296
+      },
+      {
+        "label_index": 184,
+        "midi_note": 43,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 0,
+        "current_matched": 215,
+        "matched_delta": 215
+      },
+      {
+        "label_index": 187,
+        "midi_note": 54,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 902,
+        "current_matched": 850,
+        "matched_delta": -52
+      },
+      {
+        "label_index": 188,
+        "midi_note": 49,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 822,
+        "current_matched": 815,
+        "matched_delta": -7
+      },
+      {
+        "label_index": 190,
+        "midi_note": 58,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 40,
+        "current_matched": 119,
+        "matched_delta": 79
+      },
+      {
+        "label_index": 191,
+        "midi_note": 56,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 556,
+        "current_matched": 449,
+        "matched_delta": -107
+      },
+      {
+        "label_index": 192,
+        "midi_note": 36,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 244,
+        "current_matched": 259,
+        "matched_delta": 15
+      },
+      {
+        "label_index": 193,
+        "midi_note": 41,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 73,
+        "current_matched": 817,
+        "matched_delta": 744
+      },
+      {
+        "label_index": 195,
+        "midi_note": 57,
+        "string_mask": 8,
+        "labeled": 965,
+        "baseline_matched": 151,
+        "current_matched": 363,
+        "matched_delta": 212
+      },
+      {
+        "label_index": 196,
+        "midi_note": 50,
+        "string_mask": 4,
+        "labeled": 965,
+        "baseline_matched": 134,
+        "current_matched": 380,
+        "matched_delta": 246
+      },
+      {
+        "label_index": 197,
+        "midi_note": 42,
+        "string_mask": 2,
+        "labeled": 965,
+        "baseline_matched": 96,
+        "current_matched": 259,
+        "matched_delta": 163
+      },
+      {
+        "label_index": 198,
+        "midi_note": 37,
+        "string_mask": 1,
+        "labeled": 965,
+        "baseline_matched": 42,
+        "current_matched": 123,
+        "matched_delta": 81
+      },
+      {
+        "label_index": 200,
+        "midi_note": 50,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 402,
+        "current_matched": 77,
+        "matched_delta": -325
+      },
+      {
+        "label_index": 215,
+        "midi_note": 48,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 758,
+        "current_matched": 640,
+        "matched_delta": -118
+      },
+      {
+        "label_index": 216,
+        "midi_note": 43,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 14,
+        "current_matched": 26,
+        "matched_delta": 12
+      },
+      {
+        "label_index": 217,
+        "midi_note": 35,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 665,
+        "current_matched": 519,
+        "matched_delta": -146
+      },
+      {
+        "label_index": 219,
+        "midi_note": 49,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 912,
+        "current_matched": 811,
+        "matched_delta": -101
+      },
+      {
+        "label_index": 221,
+        "midi_note": 46,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 315,
+        "current_matched": 2,
+        "matched_delta": -313
+      },
+      {
+        "label_index": 222,
+        "midi_note": 44,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 457,
+        "current_matched": 608,
+        "matched_delta": 151
+      },
+      {
+        "label_index": 225,
+        "midi_note": 46,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 930,
+        "current_matched": 1085,
+        "matched_delta": 155
+      },
+      {
+        "label_index": 233,
+        "midi_note": 38,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 963,
+        "current_matched": 942,
+        "matched_delta": -21
+      },
+      {
+        "label_index": 239,
+        "midi_note": 48,
+        "string_mask": 16,
+        "labeled": 861,
+        "baseline_matched": 238,
+        "current_matched": 253,
+        "matched_delta": 15
+      },
+      {
+        "label_index": 249,
+        "midi_note": 33,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 978,
+        "current_matched": 977,
+        "matched_delta": -1
+      },
+      {
+        "label_index": 256,
+        "midi_note": 51,
+        "string_mask": 4,
+        "labeled": 803,
+        "baseline_matched": 85,
+        "current_matched": 504,
+        "matched_delta": 419
+      },
+      {
+        "label_index": 257,
+        "midi_note": 49,
+        "string_mask": 2,
+        "labeled": 803,
+        "baseline_matched": 0,
+        "current_matched": 179,
+        "matched_delta": 179
+      },
+      {
+        "label_index": 258,
+        "midi_note": 45,
+        "string_mask": 1,
+        "labeled": 803,
+        "baseline_matched": 0,
+        "current_matched": 387,
+        "matched_delta": 387
+      },
+      {
+        "label_index": 263,
+        "midi_note": 33,
+        "string_mask": 1,
+        "labeled": 522,
+        "baseline_matched": 513,
+        "current_matched": 476,
+        "matched_delta": -37
+      },
+      {
+        "label_index": 265,
+        "midi_note": 55,
+        "string_mask": 4,
+        "labeled": 1124,
+        "baseline_matched": 548,
+        "current_matched": 729,
+        "matched_delta": 181
+      },
+      {
+        "label_index": 266,
+        "midi_note": 38,
+        "string_mask": 2,
+        "labeled": 1124,
+        "baseline_matched": 9,
+        "current_matched": 0,
+        "matched_delta": -9
+      },
+      {
+        "label_index": 267,
+        "midi_note": 36,
+        "string_mask": 1,
+        "labeled": 1124,
+        "baseline_matched": 194,
+        "current_matched": 0,
+        "matched_delta": -194
+      },
+      {
+        "label_index": 269,
+        "midi_note": 45,
+        "string_mask": 4,
+        "labeled": 1122,
+        "baseline_matched": 1053,
+        "current_matched": 810,
+        "matched_delta": -243
+      },
+      {
+        "label_index": 270,
+        "midi_note": 51,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 258,
+        "current_matched": 135,
+        "matched_delta": -123
+      },
+      {
+        "label_index": 271,
+        "midi_note": 38,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 404,
+        "current_matched": 652,
+        "matched_delta": 248
+      },
+      {
+        "label_index": 274,
+        "midi_note": 42,
+        "string_mask": 2,
+        "labeled": 504,
+        "baseline_matched": 172,
+        "current_matched": 450,
+        "matched_delta": 278
+      },
+      {
+        "label_index": 275,
+        "midi_note": 49,
+        "string_mask": 1,
+        "labeled": 504,
+        "baseline_matched": 221,
+        "current_matched": 227,
+        "matched_delta": 6
+      },
+      {
+        "label_index": 277,
+        "midi_note": 54,
+        "string_mask": 8,
+        "labeled": 1122,
+        "baseline_matched": 795,
+        "current_matched": 680,
+        "matched_delta": -115
+      },
+      {
+        "label_index": 279,
+        "midi_note": 47,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 313,
+        "current_matched": 235,
+        "matched_delta": -78
+      },
+      {
+        "label_index": 280,
+        "midi_note": 33,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 858,
+        "current_matched": 821,
+        "matched_delta": -37
+      },
+      {
+        "label_index": 291,
+        "midi_note": 48,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 324,
+        "current_matched": 330,
+        "matched_delta": 6
+      },
+      {
+        "label_index": 305,
+        "midi_note": 50,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 0,
+        "current_matched": 413,
+        "matched_delta": 413
+      },
+      {
+        "label_index": 306,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 729,
+        "current_matched": 720,
+        "matched_delta": -9
+      },
+      {
+        "label_index": 310,
+        "midi_note": 53,
+        "string_mask": 8,
+        "labeled": 990,
+        "baseline_matched": 660,
+        "current_matched": 665,
+        "matched_delta": 5
+      },
+      {
+        "label_index": 311,
+        "midi_note": 56,
+        "string_mask": 4,
+        "labeled": 990,
+        "baseline_matched": 634,
+        "current_matched": 561,
+        "matched_delta": -73
+      },
+      {
+        "label_index": 357,
+        "midi_note": 44,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 863,
+        "current_matched": 885,
+        "matched_delta": 22
+      },
+      {
+        "label_index": 360,
+        "midi_note": 43,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 1010,
+        "current_matched": 1028,
+        "matched_delta": 18
+      },
+      {
+        "label_index": 361,
+        "midi_note": 33,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 1002,
+        "current_matched": 588,
+        "matched_delta": -414
+      },
+      {
+        "label_index": 364,
+        "midi_note": 42,
+        "string_mask": 1,
+        "labeled": 1123,
+        "baseline_matched": 91,
+        "current_matched": 0,
+        "matched_delta": -91
+      },
+      {
+        "label_index": 366,
+        "midi_note": 52,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 422,
+        "current_matched": 0,
+        "matched_delta": -422
+      },
+      {
+        "label_index": 367,
+        "midi_note": 49,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 658,
+        "current_matched": 0,
+        "matched_delta": -658
+      },
+      {
+        "label_index": 369,
+        "midi_note": 48,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 468,
+        "current_matched": 405,
+        "matched_delta": -63
+      },
+      {
+        "label_index": 370,
+        "midi_note": 46,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 428,
+        "current_matched": 341,
+        "matched_delta": -87
+      },
+      {
+        "label_index": 375,
+        "midi_note": 41,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 1078,
+        "current_matched": 1089,
+        "matched_delta": 11
+      },
+      {
+        "label_index": 376,
+        "midi_note": 49,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 793,
+        "current_matched": 791,
+        "matched_delta": -2
+      },
+      {
+        "label_index": 378,
+        "midi_note": 53,
+        "string_mask": 2,
+        "labeled": 1122,
+        "baseline_matched": 1045,
+        "current_matched": 860,
+        "matched_delta": -185
+      },
+      {
+        "label_index": 388,
+        "midi_note": 50,
+        "string_mask": 2,
+        "labeled": 767,
+        "baseline_matched": 247,
+        "current_matched": 403,
+        "matched_delta": 156
+      },
+      {
+        "label_index": 389,
+        "midi_note": 33,
+        "string_mask": 1,
+        "labeled": 767,
+        "baseline_matched": 679,
+        "current_matched": 673,
+        "matched_delta": -6
+      },
+      {
+        "label_index": 392,
+        "midi_note": 44,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 828,
+        "current_matched": 801,
+        "matched_delta": -27
+      },
+      {
+        "label_index": 403,
+        "midi_note": 35,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 1079,
+        "current_matched": 1080,
+        "matched_delta": 1
+      },
+      {
+        "label_index": 462,
+        "midi_note": 38,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 550,
+        "current_matched": 188,
+        "matched_delta": -362
+      },
+      {
+        "label_index": 464,
+        "midi_note": 47,
+        "string_mask": 1,
+        "labeled": 1122,
+        "baseline_matched": 799,
+        "current_matched": 939,
+        "matched_delta": 140
+      }
+    ],
+    "lost_labels": [
+      66,
+      91,
+      156,
+      187,
+      188,
+      191,
+      200,
+      215,
+      217,
+      219,
+      221,
+      233,
+      249,
+      263,
+      266,
+      267,
+      269,
+      270,
+      277,
+      279,
+      280,
+      306,
+      311,
+      361,
+      364,
+      366,
+      367,
+      369,
+      370,
+      376,
+      378,
+      389,
+      392,
+      462
+    ],
+    "increased_error_counts": [
+      "false_gap_voices"
+    ],
+    "gate_pass": false,
+    "output_bit_identical": false
+  },
+  "raw_midi_delta": {
+    "cross_pitch_on_before_release": -254,
+    "repeated_pitch_on_before_release": 0,
+    "off_without_raw_on": 0,
+    "zero_velocity_on": 0,
+    "unassigned_on": 0
+  },
+  "raw_midi_no_regression": true,
+  "raw_conflicts_reduced": true,
+  "recorded_lane_window_resolved": true,
+  "full_recording_screen_pass": false,
+  "decision": "rejected",
+  "interpretation": "A successful process is not acceptance. Every passage must retain its labeled matches, false outputs must not increase, and raw cross-pitch conflicts must decrease without another raw-event regression, with no remaining conflict in any required recorded lane window. Tuner-label parity does not establish emitted MIDI label quality. Buffer, allocation, timing, cross-corpus and live host gates remain unmeasured.",
+  "conclusion": "success",
+  "result_final": true,
+  "completed_at": "2026-11-09T14:35:07Z",
+  "report": "build/github-results/pending-assignment-trial-42635429821/spectral-lane-collision/report.json",
+  "report_sha256": "c4a5b3722108e4cfdcdce09c9806637a393bd0b8cd7977dd4ad1e648c0c96d8c",
+  "outputs_downloaded_once": true,
+  "local_native_execution": false,
+  "loss_summary": {
+    "passages": 34,
+    "lost_matched_frames": 4582
+  },
+  "next_step": "Do not repeat or broaden the rejected pending-attack deferral. Separate pending-candidate tracking from per-lane MIDI admission. Require no passage match loss, no increased false-output counter and all recorded collisions resolved before complete MIDI delivery, protected corpus, allocation, buffer, timing and live-host gates.",
+  "source_checks": {
+    "source_commit": "a29b2405eec84e9ffb92f964ff3da8337078ca18",
+    "ci": {
+      "run_id": 42635404261,
+      "status": "completed",
+      "conclusion": "success",
+      "native_tests": "passed",
+      "production_vst3_build_package": "passed",
+      "installed": false
+    },
+    "portable_replay": {
+      "run_id": 42635404262,
+      "status": "completed",
+      "conclusion": "success",
+      "native_detector_suite": "passed with M3_OFFLINE_REPLAY_DIAGNOSTICS=1",
+      "pending_attack_fixture": "covered by full diagnostic native suite"
+    },
+    "worker_contracts": {
+      "passed": 114
+    }
+  },
+  "protected": {
+    "newest_trial": {
+      "ordinary_off": "bit-identical to saved reference",
+      "ordinary_on": "rejected: passage match losses and increased gap extras",
+      "other_recordings": "not rerun",
+      "native_timing": "not measured",
+      "live_host": "not measured"
+    },
+    "earlier_corpus": {
+      "run_id": 42616852315,
+      "label_error_checks_passed": 42,
+      "label_error_checks_total": 42,
+      "off_reference_bit_identical": 14,
+      "off_on_bit_identical": 11,
+      "native_dataset_gates_passed": 11,
+      "native_dataset_gates_total": 14,
+      "decision": "rejected for timing",
+      "applies_to_newest_trial": false
+    }
+  },
+  "artifacts": [
+    {
+      "id": 13682429885,
+      "name": "m3-report-42635429821-1",
+      "size_bytes": 20023,
+      "sha256": "5cd0c488d64fed3ffea19f851a3e03c5a28709c9b8614aebe352466992753dd9",
+      "downloaded": true,
+      "sha256_verified": true,
+      "local_archive": "build/github-results/pending-assignment-trial-42635429821/report-artifact.zip"
+    },
+    {
+      "id": 13683386032,
+      "name": "m3-evidence-42635429821-1",
+      "size_bytes": 4511740,
+      "sha256": "07503071b22e99065a82d81c84b9b5957e74029f81e2dccb10f43c3a71254b3c",
+      "downloaded": false,
+      "expires_at": "2026-11-16T14:35:04Z",
+      "retention": "remote only"
+    }
+  ],
+  "runs": {
+    "reference-off": {
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 1,
+      "coasting_lane_window_conflicts": 4,
+      "pending_lane_window_conflicts": 1,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2246,
+          "sha256": "b20fd1512df7e9924d600766b363d557220faadd22539e9492171de6cee1ba5a",
+          "raw_bytes": 9985,
+          "raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "5dfc0a1e4329ef1fd4689fd6d354ee250b794e705661780f0fda6fdaacd12cbd",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 124386118,
+          "captured_raw_sha256": "607837a679843df582a923b523eb45b613cfd47c7f09f27335e3af9a1bf8e52e",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 91378,
+          "sha256": "7b0ad8249a92ebe07c3a405bcbfbf58acf4241e1a3ef862839733614cda25d08",
+          "raw_bytes": 284869,
+          "raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_raw_bytes": 284869,
+          "captured_raw_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+          "captured_rows": 11903,
+          "retained_rows": 11903,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 11901
+        }
+      ],
+      "labeled_frame_match_percent": 27.502118676130088
+    },
+    "trial-on": {
+      "output": {
+        "labeled": 528632,
+        "matched": 146822,
+        "false_wrong_note_voices": 163778,
+        "false_wrong_string_voices": 92213,
+        "false_gap_voices": 62964,
+        "false_positive_voices": 318955,
+        "fingerprint": "afb248ad99efb512"
+      },
+      "tsv_sha256": "7c17fa89e68e7fd25ca54b5dd2440e344da4c122316232e4695bcf72f01306ce",
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "recorded_lane_window_conflicts": 0,
+      "coasting_lane_window_conflicts": 0,
+      "pending_lane_window_conflicts": 0,
+      "traces": {
+        "candidate": {
+          "file": "candidate.tsv.gz",
+          "bytes": 2248,
+          "sha256": "e0a5b8926fa899bf760fa583973c660ec11f140ced4bbf17b73e8c7dc2888f2a",
+          "raw_bytes": 9985,
+          "raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_raw_bytes": 9985,
+          "captured_raw_sha256": "772f1c8653220cfd7d69415670b40a3c9ff4cd811c28ec7b70d48f769c4f7c88",
+          "captured_rows": 24,
+          "retained_rows": 24,
+          "discarded_rows": 0,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "outcome": {
+          "file": "outcome.tsv.gz",
+          "bytes": 6039,
+          "sha256": "1776c97cf02285e4fceb2052acd8daf5a582dbdbf6d8fd644f805d5989f49c37",
+          "raw_bytes": 17844,
+          "raw_sha256": "6cf2ad6b564a3fe8b6bb6f3415ae63a5c980d6a5d755427bd1d65fa7e66e11b6",
+          "captured_raw_bytes": 123889258,
+          "captured_raw_sha256": "621a7deebe289823954c5cbdac5c45d5697f2d517209ef6a65ca3d5db1a87f04",
+          "captured_rows": 167025,
+          "retained_rows": 24,
+          "discarded_rows": 167001,
+          "scope": "conflict window",
+          "start_sample_inclusive": 202752,
+          "end_sample_exclusive": 204288
+        },
+        "midi-event": {
+          "file": "midi-event.tsv.gz",
+          "bytes": 92810,
+          "sha256": "e34043b5b193035159256f75876af1b7012d609a82d7accbb2b514cec3ecb962",
+          "raw_bytes": 292133,
+          "raw_sha256": "bbbd578f2f92eeb80dc55edfca68ba6717a9c5e25a09ed5fb338873c456add75",
+          "captured_raw_bytes": 292133,
+          "captured_raw_sha256": "bbbd578f2f92eeb80dc55edfca68ba6717a9c5e25a09ed5fb338873c456add75",
+          "captured_rows": 12193,
+          "retained_rows": 12193,
+          "discarded_rows": 0,
+          "scope": "complete recording",
+          "start_sample_inclusive": 0,
+          "end_sample_exclusive": 10689600
+        }
+      },
+      "raw_midi_counts": {
+        "cross_pitch_on_before_release": 398,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "raw_note_ons_open_at_eof": [
+        {
+          "kind": "on",
+          "sample": 10627135,
+          "note": 44,
+          "velocity": 32,
+          "voice_id": 0,
+          "sequence": 12191
+        }
+      ],
+      "labeled_frame_match_percent": 27.773952390320677
+    }
+  }
+}
