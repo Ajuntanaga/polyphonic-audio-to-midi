@@ -110,6 +110,9 @@ class PortableEvidenceRetentionTrialTests(unittest.TestCase):
                     elif kind == 'candidate':
                         rows = (calibrated_rows() if calibrated or projection else
                                 [dict(sample=row['sample'], note='42') for row in outcome_rows()])
+                        start = float(command[command.index('--candidate-trace-start') + 1]) * 96000
+                        end = float(command[command.index('--candidate-trace-end') + 1]) * 96000
+                        rows = [row for row in rows if start <= int(row['sample']) < end]
                     with path.open('w') as stream:
                         writer = csv.DictWriter(stream, fieldnames=rows[0], delimiter='\t')
                         writer.writeheader()
