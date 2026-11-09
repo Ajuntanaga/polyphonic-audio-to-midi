@@ -195,6 +195,34 @@ target_link_libraries(
 m3_apply_project_options(m3_native_tests)
 add_test(NAME m3_native_tests COMMAND m3_native_tests)
 
+# Recorded waveform -> real VST3 component -> accepting event-list diagnosis.
+# This is offline instrumentation, not a production package or timing target.
+add_executable(m3_vst3_corpus_replay EXCLUDE_FROM_ALL
+    ${M3_NATIVE_CORE_SOURCES}
+    ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
+    ${M3_VST3_ADAPTER_SOURCES}
+    native/offline/frequency_refinement_shadow.cpp
+    native/offline/joint_pitch_residual.cpp
+    native/offline/replay.cpp
+    native/offline/unison_spectral_shadow.cpp
+    native/offline/vst3_corpus_replay_main.cpp
+    native/tests/fake_vst3_host.cpp
+    third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
+)
+target_compile_definitions(m3_vst3_corpus_replay PRIVATE
+    M3_TESTING M3_VST3_CORPUS_DIAGNOSTICS=1
+    M3_OFFLINE_REPLAY_DIAGNOSTICS=1 M3_SPECTRAL_TIER_DIAGNOSTICS=1
+    M3_UNISON_SPECTRAL_SHADOW=1
+)
+target_include_directories(m3_vst3_corpus_replay PRIVATE
+    native/include native/offline native/plugin native/vst3 native/tests
+)
+target_include_directories(m3_vst3_corpus_replay SYSTEM BEFORE PRIVATE
+    third_party/vst3sdk third_party/vst3sdk/vstgui4
+)
+target_link_libraries(m3_vst3_corpus_replay PRIVATE Threads::Threads vstgui_support sdk m)
+m3_apply_project_options(m3_vst3_corpus_replay)
+
 # The aggregate native suite deliberately compiles the detector with large
 # replay-only diagnostic collectors.  Keep the hard callback deadline in a
 # production-shaped executable so diagnostic object layout and shadow work

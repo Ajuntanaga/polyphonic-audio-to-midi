@@ -91,6 +91,24 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   [[nodiscard]] StringCalibrationUiState string_calibration_ui_state()
       const noexcept;
 
+#if defined(M3_TESTING) && defined(M3_VST3_CORPUS_DIAGNOSTICS)
+  void enable_corpus_ownership_trial(bool enabled) noexcept {
+    detector_.set_spectral_lane_collision_for_diagnostics(enabled);
+    detector_.set_offline_replay_diagnostics_enabled_for_test(false);
+  }
+  [[nodiscard]] std::uint64_t corpus_detector_samples() const noexcept {
+    return corpus_detector_samples_;
+  }
+  [[nodiscard]] std::uint64_t corpus_detector_transitions() const noexcept {
+    return corpus_detector_transitions_;
+  }
+  [[nodiscard]] std::uint64_t corpus_queue_rejections() const noexcept {
+    return corpus_queue_rejections_;
+  }
+  [[nodiscard]] bool corpus_output_blocked() const noexcept {
+    return generated_notes_.output_blocked();
+  }
+#endif
 #if defined(M3_TESTING)
   void set_dry_passthrough_for_test(bool enabled) noexcept {
     audio_requested_config_.dry_passthrough = enabled;
@@ -214,6 +232,12 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void publish_calibration_bank_from_audio() noexcept;
   void publish_string_calibration_status() noexcept;
 
+#if defined(M3_TESTING) && defined(M3_VST3_CORPUS_DIAGNOSTICS)
+  // Offline integration counters; absent from production and timing builds.
+  std::uint64_t corpus_detector_samples_{};
+  std::uint64_t corpus_detector_transitions_{};
+  std::uint64_t corpus_queue_rejections_{};
+#endif
   bool initialized_{};
   bool setup_complete_{};
   bool active_{};

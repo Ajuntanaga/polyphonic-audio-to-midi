@@ -1109,6 +1109,10 @@ Steinberg::tresult M3Component::process_samples(
           right * input_analysis.detector_right_gain;
       const DetectorDecision decision =
           detector_.process_sample(selected * input_gain);
+#if defined(M3_TESTING) && defined(M3_VST3_CORPUS_DIAGNOSTICS)
+      ++corpus_detector_samples_;
+      corpus_detector_transitions_ += decision.transitions.size();
+#endif
       if (decision.tuner_snapshot_ready) {
         tuner_telemetry_.publish(decision.tuner_snapshot);
       }
@@ -1117,6 +1121,9 @@ Steinberg::tresult M3Component::process_samples(
         VoiceTransition transition = decision.transitions[index];
         transition.sample_offset = frame;
         if (!queue_generated_transition(transition, frames)) {
+#if defined(M3_TESTING) && defined(M3_VST3_CORPUS_DIAGNOSTICS)
+          ++corpus_queue_rejections_;
+#endif
           generated_notes_.report_output_failure();
           break;
         }
