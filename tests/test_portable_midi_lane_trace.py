@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from tests import test_portable_evidence_retention_trial as fixtures
+from tests.test_assignment_cost_analysis import cost_row, outcome_row
 from tests.test_portable_evidence_retention_trial import calibrated_rows, replay_text
 from tests.test_portable_routing_trace import routing_rows, snapshots, write_rows
 from tools.midi_lifecycle_analysis import EVENT_FIELDS
@@ -38,6 +39,13 @@ def candidates(note):
                    rescue_mask='0', selector_mask='1', selected_or_coasting='47,48')
         result.append(row)
     return result
+
+
+def held_snapshots():
+    rows = snapshots()
+    for row in rows:
+        row['candidates'] = outcome_row(sample=int(row['sample']))['candidates']
+    return rows
 
 
 class PortableMidiLaneTraceTests(unittest.TestCase):
@@ -93,7 +101,12 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
             start = float(command[command.index('--candidate-trace-start') + 1]) * 96000
             rows = [row for row in candidates(note) if int(row['sample']) >= start]
             write_rows(Path(command[command.index('--candidate-trace') + 1]), rows)
-            outcomes = snapshots()
+            outcomes = held_snapshots() if '--assignment-trace' in command else snapshots()
+            if '--assignment-trace' in command:
+                self.assertEqual(float(command[command.index('--assignment-trace-start') + 1]) * 96000, start)
+                write_rows(Path(command[command.index('--assignment-trace') + 1]),
+                           [cost_row(sample=int(row['sample'])) for row in outcomes
+                            if int(row['sample']) >= start])
             if stream_drift and note == expected_notes[-1]:
                 # Outside the retained window: complete-stream equality must still catch it.
                 outcomes[0]['quiet'] = '1'
@@ -262,7 +275,7 @@ class PortableMidiLaneTraceTests(unittest.TestCase):
         args = fixtures.PortableEvidenceRetentionTrialTests().fixture(root, baseline_text=text)
         events = [event(63, 'on', 37, 0), event(127, 'off', 38 if invalid_pair else 37, 1),
                   event(191, 'on', 37, 2, 1)]
-        write_rows(root / 'known-outcome.tsv', snapshots())
+        write_rows(root / 'known-outcome.tsv', held_snapshots())
         write_events(root / 'known-midi.tsv', events)
         reference = json.loads(args[3].read_text())
         reference.update(policy_name='spectral-lane-collision',

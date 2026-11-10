@@ -229,6 +229,8 @@ jobs:
         run: |
           cmake --build build/portable --target m3_motion_tests --parallel 2 2>&1 | tee build/github-results/trace-build.log
           M3_TEST_FILTER=offline_candidate_trace_preserves_output_and_partitioning build/portable/m3_motion_tests 2>&1 | tee build/github-results/trace-test.log
+          M3_TEST_FILTER=offline_assignment_trace_preserves_output_and_records_winner_costs build/portable/m3_motion_tests 2>&1 | tee build/github-results/assignment-test.log
+          python3 -B -m unittest tests.test_assignment_cost_analysis 2>&1 | tee build/github-results/assignment-contracts.log
           python3 -B -m tools.portable_midi_lane_trace --profile held-note-on --binary build/portable/m3_replay --corpus "$RUNNER_TEMP/m3-inputs/corpus" --manifest build/github-results/runtime-manifest.json --reference-report "$SAVED_MIDI_CHECKPOINT" --output build/github-results/held-note-trace 2>&1 | tee build/github-results/runner.log
       - name: Screen fresh spectral incumbents in physical assignment
         if: inputs.task == 'retained-spectral-trial'

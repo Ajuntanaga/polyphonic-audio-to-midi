@@ -14,6 +14,7 @@ import subprocess
 import time
 
 from tools.candidate_outcome_analysis import HEADER, _candidates, _frame
+from tools.assignment_cost_analysis import summarize_costs
 from tools.frozen_cue_corpus_gate import read_replay
 from tools.midi_lifecycle_analysis import read_events, summarize
 from tools.portable_assignment_trace import compress_trace_window, digest, read_rows, verify_inputs
@@ -179,6 +180,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             destination.mkdir()
             traces = {kind: destination / (kind + '.tsv')
                       for kind in ('candidate', 'outcome', 'midi-event')}
+            if profile == 'held-note-on':
+                traces['assignment'] = destination / 'assignment.tsv'
             command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
             command.extend(selected['flags'])
             for kind, path in traces.items():
@@ -186,6 +189,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             command.extend(('--candidate-trace-note', str(note),
                 '--candidate-trace-start', str(start / 96000),
                 '--candidate-trace-end', str(end / 96000)))
+            if profile == 'held-note-on':
+                command.extend(('--assignment-trace-start', str(start / 96000),
+                                '--assignment-trace-end', str(end / 96000)))
             report.update(stage=stem, command=command)
             save()
             replay_path = destination / 'replay.tsv'
@@ -226,6 +232,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     raise ValueError('Raw MIDI pairing cannot establish held-note duration')
                 result['held_label'] = lifecycle['labels'][HELD_LABEL['label_index']]
                 result['held_label_interpretation'] = lifecycle['interpretation']
+                result['assignment_costs'] = summarize_costs(read_rows(traces['assignment']),
+                    outcomes, note=note, start=start, end=end)
                 result['other_raw_lane_histories'] = [
                     raw_lane_history(events, lane=lane, start=start, end=end)
                     for lane in sorted({event['voice_id'] for event in events})

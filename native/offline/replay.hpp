@@ -78,6 +78,10 @@ struct StringAssignmentTrace final {
   bool failed{};
   // Compact, undecimated complete solutions only when retained pins change DP.
   bool retained_decisions_only{};
+  // Complete joint decisions on every tick in [start_seconds, end_seconds).
+  bool bounded_all_ticks{};
+  double start_seconds{};
+  double end_seconds{};
 };
 
 // One requested pitch on every decision tick in a bounded time range, including

@@ -165,6 +165,7 @@ void usage(const char* program) {
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
       "[--retained-assignment-trace FILE] "
+      "[--assignment-trace-start SECONDS --assignment-trace-end SECONDS] "
       "[--partial-motion-trace FILE --partial-motion-note 0..127 "
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
@@ -246,6 +247,7 @@ int main(int argc, char** argv) {
   m3::offline::ResidualAdmissionTrace residual_admission_trace;
   const char* assignment_trace_path = nullptr;
   m3::offline::StringAssignmentTrace assignment_trace;
+  bool assignment_start_set = false, assignment_end_set = false;
   const char* partial_motion_path = nullptr;
   m3::offline::PartialMotionTrace partial_motion_trace;
   bool partial_motion_options_set = false;
@@ -691,6 +693,20 @@ int main(int argc, char** argv) {
       assignment_trace.retained_decisions_only =
           std::strcmp(argv[index], "--retained-assignment-trace") == 0;
       assignment_trace_path = argv[++index];
+    } else if ((std::strcmp(argv[index], "--assignment-trace-start") == 0 ||
+                std::strcmp(argv[index], "--assignment-trace-end") == 0) && has_value) {
+      const bool start = std::strcmp(argv[index], "--assignment-trace-start") == 0;
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' ||
+          !std::isfinite(parsed) || parsed < 0.0) {
+        usage(argv[0]);
+        return 2;
+      }
+      (start ? assignment_trace.start_seconds : assignment_trace.end_seconds) = parsed;
+      (start ? assignment_start_set : assignment_end_set) = true;
+      assignment_trace.bounded_all_ticks = true;
     } else if (std::strcmp(argv[index], "--partial-motion-trace") == 0 && has_value) {
       partial_motion_path = argv[++index];
     } else if (std::strcmp(argv[index], "--partial-motion-note") == 0 && has_value) {
@@ -781,6 +797,13 @@ int main(int argc, char** argv) {
     }
   }
   if (wave_path == nullptr) {
+    usage(argv[0]);
+    return 2;
+  }
+  if (assignment_trace.bounded_all_ticks &&
+      (!assignment_start_set || !assignment_end_set || assignment_trace_path == nullptr ||
+       assignment_trace.retained_decisions_only ||
+       assignment_trace.end_seconds <= assignment_trace.start_seconds)) {
     usage(argv[0]);
     return 2;
   }
@@ -1353,7 +1376,7 @@ int main(int argc, char** argv) {
         "m3_replay: assignment_trace rows=%zu cap=%zu truncated=%u sampled_frames=%zu decimation=%u\n",
         assignment_trace.rows, m3::offline::StringAssignmentTrace::kMaximumRows,
         assignment_trace.truncated ? 1U : 0U, assignment_trace.sampled_frames,
-        assignment_trace.retained_decisions_only ? 1U :
+        (assignment_trace.retained_decisions_only || assignment_trace.bounded_all_ticks) ? 1U :
             m3::offline::StringAssignmentTrace::kTickDecimation);
     if (assignment_trace.truncated) {
       std::fprintf(stderr, "m3_replay: refusing incomplete assignment trace\n");

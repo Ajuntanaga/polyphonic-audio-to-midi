@@ -1088,8 +1088,8 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 93U);
-      if (columns.size() != 93U) return;
+      M3_EXPECT_EQ(columns.size(), 96U);
+      if (columns.size() != 96U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
@@ -1495,8 +1495,8 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 93U);
-      if (columns.size() != 93U) return;
+      M3_EXPECT_EQ(columns.size(), 96U);
+      if (columns.size() != 96U) return;
       for (std::size_t column = 90U; column < 93U; ++column)
         M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
       for (std::size_t column = 79U; column < 88U; ++column)
@@ -1638,6 +1638,45 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       labels[0].midi_note = 56U;
       labels[0].end_sample = 96000U;
       labels[0].string_mask = 64U;
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> bounded(std::tmpfile(), &std::fclose);
+      M3_EXPECT_TRUE(bounded != nullptr);
+      if (!bounded) return;
+      trace.stream = bounded.get();
+      trace.bounded_all_ticks = true;
+      trace.start_seconds = 48000.0 / wave.sample_rate;
+      trace.end_seconds = 50048.0 / wave.sample_rate;
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+      M3_EXPECT_FALSE(trace.failed);
+      M3_EXPECT_FALSE(trace.truncated);
+      M3_EXPECT_EQ(trace.sampled_frames, 32U);
+      std::rewind(bounded.get());
+      M3_EXPECT_TRUE(std::fgets(line.data(), line.size(), bounded.get()) != nullptr);
+      std::map<std::size_t, std::pair<unsigned, unsigned>> peers;
+      bool has_undecimated_tick = false;
+      while (std::fgets(line.data(), line.size(), bounded.get()) != nullptr) {
+        const auto columns = fields(line.data(), '\t');
+        M3_EXPECT_EQ(columns.size(), 96U);
+        if (columns.size() != 96U) return;
+        const auto sample = std::stoul(columns[0]);
+        M3_EXPECT_TRUE(sample >= 48000U && sample < 50048U);
+        has_undecimated_tick |= std::stoul(columns[1]) % trace.kTickDecimation != 0U;
+        if (columns[3] != "1") continue;
+        auto& group = peers[sample];
+        group.first |= 1U << std::stoul(columns[6]);
+        group.second = static_cast<unsigned>(std::stoul(columns[5]));
+        M3_EXPECT_TRUE(std::stoul(columns[93]) <= 1U);
+        M3_EXPECT_TRUE(std::stoul(columns[94]) <= 255U);
+        M3_EXPECT_TRUE(std::stoul(columns[95]) <= 255U);
+      }
+      M3_EXPECT_TRUE(has_undecimated_tick);
+      M3_EXPECT_EQ(peers.size(), trace.sampled_frames);
+      for (const auto& entry : peers)
+        M3_EXPECT_EQ(entry.second.first, (1U << entry.second.second) - 1U);
+      trace.end_seconds = trace.start_seconds;
+      M3_EXPECT_FALSE(run());
+      M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+      trace.bounded_all_ticks = false;
       trace.stream = stream.get();
     }
     trace.stream = nullptr;

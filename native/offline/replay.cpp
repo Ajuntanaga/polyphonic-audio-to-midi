@@ -585,11 +585,15 @@ void write_partial_motion_frame(
 }
 
 void write_string_assignment_frame(
-    StringAssignmentTrace& trace, std::size_t sample_index,
+    StringAssignmentTrace& trace, std::size_t sample_index, double sample_rate,
     const PolyphonicPitchDetector& detector, const TunerSnapshot& snapshot,
     const std::vector<ReplayLabel>& labels, const std::vector<bool>& active_labels) {
   const auto tick = detector.candidate_tracking_diagnostics(0U).decision_tick;
   if (trace.failed) return;
+  if (trace.bounded_all_ticks) {
+    const double seconds = static_cast<double>(sample_index) / sample_rate;
+    if (seconds < trace.start_seconds || seconds >= trace.end_seconds) return;
+  }
   if (trace.retained_decisions_only) {
     ++trace.sampled_frames;
     for (std::uint16_t n = 0U; n < 128U; ++n) {
@@ -619,7 +623,7 @@ void write_string_assignment_frame(
     }
     return;
   }
-  const bool sampled = tick % trace.kTickDecimation == 0U;
+  const bool sampled = trace.bounded_all_ticks || tick % trace.kTickDecimation == 0U;
   if (sampled) ++trace.sampled_frames;
   for (std::uint16_t n = 0U; n < 128U; ++n) {
     const auto note = static_cast<std::uint8_t>(n);
@@ -746,6 +750,8 @@ void write_string_assignment_frame(
     for (std::size_t string = 0U; string < kMaxVoices; ++string)
       std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
                    a.profile_first_pass[string].candidate_error);
+    std::fprintf(trace.stream, "\t%u\t%u\t%u", unsigned(a.prior_active),
+                 unsigned(a.prior_midi), unsigned(a.prior_spectral));
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -2974,6 +2980,9 @@ bool run_detector_replay(const WaveData& wave,
     return false;
 #else
     if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3) return false;
+    if (trace.bounded_all_ticks && (trace.retained_decisions_only ||
+        !std::isfinite(trace.start_seconds) || !std::isfinite(trace.end_seconds) ||
+        trace.start_seconds < 0.0 || trace.end_seconds <= trace.start_seconds)) return false;
     if (trace.retained_decisions_only) {
       if (!diagnostic_retained_spectral_assignment) return false;
       trace.failed = std::fprintf(trace.stream,
@@ -3005,7 +3014,7 @@ bool run_detector_replay(const WaveData& wave,
         "cue_primary_mask\tcue_proposal_mask\tcue_applied\tcue_tuning_valid\t"
         "cue_assignment_cents\tcue_similarities\tcue_cents_errors\t"
         "profile_first_pass_reasons\tprofile_first_pass_alpha\t"
-        "profile_first_pass_errors\n") < 0;
+        "profile_first_pass_errors\tprior_active\tprior_midi\tprior_spectral\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
@@ -3523,8 +3532,9 @@ bool run_detector_replay(const WaveData& wave,
             static_cast<double>(wave.sample_rate), detector, snapshot);
       }
       if (assignment_trace != nullptr) {
-        write_string_assignment_frame(*assignment_trace, sample_index, detector,
-                                      snapshot, labels, spectral_active_labels);
+        write_string_assignment_frame(*assignment_trace, sample_index,
+            static_cast<double>(wave.sample_rate), detector,
+            snapshot, labels, spectral_active_labels);
       }
       if (needs_residual_evidence) {
         evaluate_residual_admission_frame(residual_admission_trace,
