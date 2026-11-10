@@ -1,4 +1,4 @@
-# Current checkpoint: correcting the pending-reservation fixture
+# Current checkpoint: corrected pending-reservation screen running
 
 The default-off `--diagnostic-pending-string-reservation` trial previews immature singleton candidates without consuming a physical string or committed polyphony capacity. Ready attacks, MIDI owners, atomic handoffs and group evidence keep their existing assignment path. Installed output is unchanged.
 
@@ -6,7 +6,7 @@ Worker run `42750144491` at source `72db9e1df340641b55c98c0e71419155d7bbfcf9` co
 
 Initial run `42749856302` failed earlier during compilation; its bounded integer conversion is already fixed. Source portable run `42750124602` and CI run `42750124605` failed on the fixture; source contracts passed. These failures are terminal and must not be polled or rerun unchanged. Checkpoint: `docs/recovery/github-pending-string-reservation-20261110.json`.
 
-Next: dispatch the same bounded screen once at the corrected fixture commit with worker `216fa9b99c36cdecf577397bc6bb40d4f0e53b4a`. It compares original OFF, independent-owner ON and the pending-reservation trial on ordinary label17, note37. Both saved snapshot and complete raw MIDI baselines must reproduce exactly. Require more than 40000/71783 correct held samples, fewer than 156 note-ons, no per-passage frame or held-sample loss, no increased false output and valid MIDI pairing. Passing only permits wider corpus, allocation, buffer, timing and host validation. All native compilation and execution stays on GitHub Actions.
+Worker run `42750737485` is the single replacement screen at corrected source `ecc920e9476455b392a972f3d517d4324a12fd9f` and worker `216fa9b99c36cdecf577397bc6bb40d4f0e53b4a`. Source CI `42750719620` and portable run `42750719928` are running. Collect only the small report when terminal; keep bulk traces remote. It compares original OFF, independent-owner ON and the pending-reservation trial on ordinary label17, note37. Both saved snapshot and complete raw MIDI baselines must reproduce exactly. Require more than 40000/71783 correct held samples, fewer than 156 note-ons, no per-passage frame or held-sample loss, no increased false output and valid MIDI pairing. Passing only permits wider corpus, allocation, buffer, timing and host validation. All native compilation and execution stays on GitHub Actions.
 
 ## Completed cause measurement
 

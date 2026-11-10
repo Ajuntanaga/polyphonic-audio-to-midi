@@ -2,20 +2,20 @@
   "schema": "m3_github_pending_string_reservation_checkpoint_v1",
   "task": "pending-string-reservation-trial",
   "repository": "Ajuntanaga/m3-offload",
-  "run_id": 42750144491,
-  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42750144491",
-  "source_commit": "72db9e1df340641b55c98c0e71419155d7bbfcf9",
+  "run_id": 42750737485,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42750737485",
+  "source_commit": "ecc920e9476455b392a972f3d517d4324a12fd9f",
   "worker_commit": "216fa9b99c36cdecf577397bc6bb40d4f0e53b4a",
-  "created_at": "2026-11-10T03:32:52Z",
-  "observed_at": "2026-11-10T03:38:00.075161+00:00",
-  "status": "completed",
-  "conclusion": "failure",
-  "result_final": true,
-  "stage": "Focused native fixture failed after compilation and 123 Python contracts; no corpus replay ran",
-  "output_target": "build/github-results/pending-string-reservation-42750144491",
+  "created_at": "2026-11-10T03:38:18Z",
+  "observed_at": "2026-11-10T03:38:39.549135+00:00",
+  "status": "queued",
+  "conclusion": null,
+  "result_final": false,
+  "stage": "GitHub build and corrected settled/provisional fixture checks before ordinary replay",
+  "output_target": "build/github-results/pending-string-reservation-42750737485",
   "report_relative_path": "pending-string-reservation/report.json",
   "report_available": false,
-  "outputs_downloaded_once": true,
+  "outputs_downloaded_once": false,
   "checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
   "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
   "cause_checkpoint": "docs/recovery/github-held-note-costs-20261110.json",
@@ -35,7 +35,17 @@
   "installed_output_changed": false,
   "promotion_accepted": false,
   "local_native_execution": false,
-  "next_step": "Run the same bounded GitHub screen once at the corrected fixture commit, then require unchanged references and no passage or false-output regressions before wider validation.",
+  "next_step": "Collect the existing bounded screen once terminal; require both saved references bit-identical, improved held label, no passage loss and no false-output growth. A pass permits wider verification only.",
+  "source_portable_run": {
+    "id": 42750719928,
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "source_ci_run": {
+    "id": 42750719620,
+    "status": "in_progress",
+    "conclusion": null
+  },
   "attempt_history": [
     {
       "schema": "m3_github_pending_string_reservation_checkpoint_v1",
@@ -91,43 +101,82 @@
       "local_native_execution": false,
       "failure": "-Werror=conversion in scenario1 fixture: uint8_t attack_ticks assignment after unsigned subtraction. attack_decisions is clamped to [1,255], so explicit uint8_t conversion preserves the bounded [0,254] result.",
       "next_step": "Run the same bounded GitHub screen at the corrected source commit; no installed change."
+    },
+    {
+      "schema": "m3_github_pending_string_reservation_checkpoint_v1",
+      "task": "pending-string-reservation-trial",
+      "repository": "Ajuntanaga/m3-offload",
+      "run_id": 42750144491,
+      "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42750144491",
+      "source_commit": "72db9e1df340641b55c98c0e71419155d7bbfcf9",
+      "worker_commit": "216fa9b99c36cdecf577397bc6bb40d4f0e53b4a",
+      "created_at": "2026-11-10T03:32:52Z",
+      "observed_at": "2026-11-10T03:38:00.075161+00:00",
+      "status": "completed",
+      "conclusion": "failure",
+      "result_final": true,
+      "stage": "Focused native fixture failed after compilation and 123 Python contracts; no corpus replay ran",
+      "output_target": "build/github-results/pending-string-reservation-42750144491",
+      "report_relative_path": "pending-string-reservation/report.json",
+      "report_available": false,
+      "outputs_downloaded_once": true,
+      "checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
+      "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
+      "cause_checkpoint": "docs/recovery/github-held-note-costs-20261110.json",
+      "dataset": "ordinary",
+      "note": 37,
+      "label_index": 17,
+      "baseline_held_samples": 40000,
+      "annotated_hold_samples": 71783,
+      "baseline_note_ons": 156,
+      "acceptance": "Both saved snapshot and raw MIDI baselines bit-identical; target hold >40000/71783 samples with <156 note-ons; no passage match or held-sample losses, no extra false outputs, no raw MIDI conflict increase. Passing is eligibility for wider corpus, buffer, allocation, timing and host gates, not promotion.",
+      "local_checks": {
+        "python_mock_tests": 7,
+        "source_path_contract": 1,
+        "result": "passed",
+        "native_execution": false
+      },
+      "installed_output_changed": false,
+      "promotion_accepted": false,
+      "local_native_execution": false,
+      "next_step": "Run the same bounded GitHub screen once at the corrected fixture commit, then require unchanged references and no passage or false-output regressions before wider validation.",
+      "source_portable_run": {
+        "id": 42750124602,
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "source_ci_run": {
+        "id": 42750124605,
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "artifact_receipt": {
+        "run_id": 42750144491,
+        "artifact_id": 13732973191,
+        "archive_sha256": "65a957af28d232b7e5000ecb59819ae75d36361bf205ba1328a35827739aee51",
+        "archive_bytes": 4384,
+        "digest_verified": true,
+        "downloaded_at": "2026-11-10T03:35:19.051432+00:00",
+        "files": [
+          "build.log",
+          "contracts.log",
+          "configure.log",
+          "reservation-build.log",
+          "reservation-test.log",
+          "runtime-manifest.json"
+        ],
+        "bulk_downloaded": false
+      },
+      "failure": "The settled-note fixture used age_ticks=1000, below the 1125-tick settling threshold at 96 kHz. Its provisional retention cost legitimately preferred the other lane. Two focused tests ran; one passed and one had four failed assertions.",
+      "correction": "Seed the settled fixture at 2000 ticks and retain a separate 1000-tick case that must still follow provisional assignment costs. No runtime rule changes in this correction.",
+      "cloud_checks": {
+        "python_contracts": 123,
+        "python_result": "passed",
+        "focused_native_tests": 2,
+        "focused_native_passed": 1,
+        "focused_native_assertion_failures": 4,
+        "corpus_replay_started": false
+      }
     }
-  ],
-  "source_portable_run": {
-    "id": 42750124602,
-    "status": "completed",
-    "conclusion": "failure"
-  },
-  "source_ci_run": {
-    "id": 42750124605,
-    "status": "completed",
-    "conclusion": "failure"
-  },
-  "artifact_receipt": {
-    "run_id": 42750144491,
-    "artifact_id": 13732973191,
-    "archive_sha256": "65a957af28d232b7e5000ecb59819ae75d36361bf205ba1328a35827739aee51",
-    "archive_bytes": 4384,
-    "digest_verified": true,
-    "downloaded_at": "2026-11-10T03:35:19.051432+00:00",
-    "files": [
-      "build.log",
-      "contracts.log",
-      "configure.log",
-      "reservation-build.log",
-      "reservation-test.log",
-      "runtime-manifest.json"
-    ],
-    "bulk_downloaded": false
-  },
-  "failure": "The settled-note fixture used age_ticks=1000, below the 1125-tick settling threshold at 96 kHz. Its provisional retention cost legitimately preferred the other lane. Two focused tests ran; one passed and one had four failed assertions.",
-  "correction": "Seed the settled fixture at 2000 ticks and retain a separate 1000-tick case that must still follow provisional assignment costs. No runtime rule changes in this correction.",
-  "cloud_checks": {
-    "python_contracts": 123,
-    "python_result": "passed",
-    "focused_native_tests": 2,
-    "focused_native_passed": 1,
-    "focused_native_assertion_failures": 4,
-    "corpus_replay_started": false
-  }
+  ]
 }
