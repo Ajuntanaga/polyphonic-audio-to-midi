@@ -2440,7 +2440,9 @@ struct PolyphonicPitchDetectorTestAccess final {
     held.active = true;
     held.midi_voice_mask = 1U;
     held.age_ticks = 1000U;
-    if (scenario == 1U) pending.attack_ticks = detector.attack_decisions() - 1U;
+    if (scenario == 1U) {
+      pending.attack_ticks = static_cast<std::uint8_t>(detector.attack_decisions() - 1U);
+    }
     if (scenario == 2U) detector.selector_atomic_handoff_targets_[0U] = true;
     if (scenario == 3U) detector.fine_frequency_evidence_states_[0U].multi_source_observed = true;
     if (scenario == 4U) detector.diagnostic_midi_owners_[0U].candidate = 0U;
