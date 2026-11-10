@@ -2439,7 +2439,9 @@ struct PolyphonicPitchDetectorTestAccess final {
     pending.unison_evidence_ticks = 7U;
     held.active = true;
     held.midi_voice_mask = 1U;
-    held.age_ticks = 1000U;
+    // At 96 kHz, settled retention starts after 1125 decision ticks.
+    // An immature retained lane may still move on ordinary fret costs.
+    held.age_ticks = 2000U;
     if (scenario == 1U) {
       pending.attack_ticks = static_cast<std::uint8_t>(detector.attack_decisions() - 1U);
     }
@@ -2448,6 +2450,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     if (scenario == 4U) detector.diagnostic_midi_owners_[0U].candidate = 0U;
     if (scenario == 5U) { held.active = false; held.midi_voice_mask = 0U; }
     if (scenario == 6U) detector.playable_string_masks_[0U] = 3U;
+    if (scenario == 8U) held.age_ticks = 1000U;
     std::array<bool, kMaxCandidates> selected{};
     selected[0U] = selected[4U] = true;
     const auto attacks = pending.attack_ticks;
@@ -2475,7 +2478,8 @@ struct PolyphonicPitchDetectorTestAccess final {
       M3_EXPECT_EQ(held.midi_voice_mask, 1U);
       // A pending preview must leave all three extra lanes available to a
       // supported four-string group. Inference does not emit MIDI here.
-      M3_EXPECT_EQ(held.assigned_string_mask, scenario == 7U ? 15U : 1U);
+      M3_EXPECT_EQ(held.assigned_string_mask,
+                   scenario == 7U ? 15U : scenario == 8U ? 2U : 1U);
     }
     M3_EXPECT_EQ(test::allocation_count(), allocations);
     return held.assigned_string;
@@ -13043,6 +13047,11 @@ M3_TEST(native_detector_pending_string_reservation_preserves_sounding_lane_and_e
     M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
         detector, true, scenario), 0U);
   }
+  // Removing a pending reservation must not pin a provisional held note
+  // whose own costs still prefer the other lane.
+  m3::PolyphonicPitchDetector provisional;
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+      provisional, true, 8U), 1U);
 #endif
 }
 
