@@ -2416,6 +2416,69 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
+  static std::uint8_t pending_string_reservation_probe(
+      PolyphonicPitchDetector& detector, bool enabled, unsigned scenario) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 33U;
+    config.highest_note = 37U;
+    config.response = 100U;
+    config.max_polyphony = 4U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    detector.set_pending_string_reservation_for_diagnostics(enabled);
+    auto& pending = detector.candidate_states_[0U];
+    auto& held = detector.candidate_states_[4U];
+    detector.playable_string_masks_[0U] = 1U;
+    detector.playable_string_masks_[4U] = 3U;
+    pending.assigned_string = held.assigned_string = 0U;
+    pending.assigned_string_mask = held.assigned_string_mask = 1U;
+    pending.attack_ticks = 1U;
+    pending.evidence_ticks = 59U;
+    pending.unison_evidence_ticks = 7U;
+    held.active = true;
+    held.midi_voice_mask = 1U;
+    held.age_ticks = 1000U;
+    if (scenario == 1U) pending.attack_ticks = detector.attack_decisions() - 1U;
+    if (scenario == 2U) detector.selector_atomic_handoff_targets_[0U] = true;
+    if (scenario == 3U) detector.fine_frequency_evidence_states_[0U].multi_source_observed = true;
+    if (scenario == 4U) detector.diagnostic_midi_owners_[0U].candidate = 0U;
+    if (scenario == 5U) { held.active = false; held.midi_voice_mask = 0U; }
+    if (scenario == 6U) detector.playable_string_masks_[0U] = 3U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[4U] = true;
+    const auto attacks = pending.attack_ticks;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    const bool preview = enabled && (scenario == 0U || scenario >= 6U);
+    M3_EXPECT_EQ(detector.diagnostic_assignment_previews_[0U], preview);
+    if (preview) {
+      if (scenario == 7U) {
+        // Isolate inference capacity after the pending preview is recorded.
+        held.assigned_string = 0U;
+        held.assigned_string_mask = held.midi_voice_mask = 1U;
+        held.pending_unison_mask = 15U;
+        held.unison_evidence_ticks = std::numeric_limits<std::uint8_t>::max();
+        detector.playable_string_masks_[4U] = 15U;
+        auto& fine = detector.fine_frequency_evidence_states_[4U];
+        fine.valid = true;
+        fine.member_mask = 15U;
+      }
+      detector.infer_m3_unison_strings(selected);
+      M3_EXPECT_EQ(pending.attack_ticks, attacks);
+      M3_EXPECT_EQ(pending.evidence_ticks, 59U);
+      M3_EXPECT_EQ(pending.unison_evidence_ticks, 7U);
+      M3_EXPECT_EQ(pending.midi_voice_mask, 0U);
+      M3_EXPECT_EQ(held.midi_voice_mask, 1U);
+      // A pending preview must leave all three extra lanes available to a
+      // supported four-string group. Inference does not emit MIDI here.
+      M3_EXPECT_EQ(held.assigned_string_mask, scenario == 7U ? 15U : 1U);
+    }
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+    return held.assigned_string;
+  }
+
   static void independent_midi_owner_lifecycle(
       PolyphonicPitchDetector& detector, MidiRouting delivery_routing) {
     PersistentConfig config;
@@ -12961,6 +13024,37 @@ M3_TEST(native_detector_spectral_lane_collision_preserves_pending_tracking) {
       detector, false);
   m3::PolyphonicPitchDetectorTestAccess::failed_assignment_preserves_pending_tracking(
       detector, true);
+#endif
+}
+
+M3_TEST(native_detector_pending_string_reservation_preserves_sounding_lane_and_evidence) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // A pending low note has only string 0. It must not displace a sounding
+  // note until it can actually attack; retaining evidence is independent.
+  m3::PolyphonicPitchDetector off, on;
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+      off, false, 0U), 1U);
+  M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+      on, true, 0U), 0U);
+  for (unsigned scenario : {6U, 7U}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+        detector, true, scenario), 0U);
+  }
+#endif
+}
+
+M3_TEST(native_detector_pending_string_reservation_preserves_ready_atomic_group_owner_startup) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (unsigned scenario : {1U, 2U, 3U, 4U, 5U}) {
+    m3::PolyphonicPitchDetector off, on;
+    const auto baseline =
+        m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+            off, false, scenario);
+    M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+        on, true, scenario), baseline);
+    M3_EXPECT_EQ(baseline, 1U);
+  }
 #endif
 }
 

@@ -1,4 +1,12 @@
-# Current checkpoint: held-note assignment cause measured
+# Current checkpoint: pending string reservation ready for an offline screen
+
+The new `--diagnostic-pending-string-reservation` trial keeps immature selected singleton candidates in the evidence path, but previews their assignment without consuming a physical string or committed polyphony capacity. Ready attacks, existing MIDI owners, atomic handoffs and group evidence retain the existing assignment path. The flag is off by default; installed output is unchanged.
+
+Run the bounded `pending-string-reservation-trial` task on the public GitHub worker with dataset `ordinary`, note `37` and label index `17`. It compares the original OFF output, the current independent-owner ON output and the new trial. Both baselines must reproduce their saved snapshot and complete raw MIDI hashes before the trial is scored. Require more than 40000/71783 correct held samples and fewer than 156 note-ons, no per-passage frame or held-sample loss, no increased false-output count, and valid raw MIDI pairing. Passing this screen only permits wider corpus, allocation, buffer, timing and host validation.
+
+Seven parser/mock tests and the contributor-path contract pass locally. The focused native tests are queued in the workflow before the replay; they have not run yet. They cover retained evidence, active lane preservation, four-string group capacity, ready attacks, atomic handoffs, existing owners and startup. All native compilation and execution stays on GitHub Actions. No run has been dispatched for this trial yet.
+
+## Completed cause measurement
 
 GitHub run `42746880222` completed successfully at source `7a4f914307b4c83f245bcaf116982b30c8b2c1e8`, worker `2c8303179dfd9f6a4e27b29ed763484527bf371e`. Checkpoint: `docs/recovery/github-held-note-costs-20261110.json`. Its small report was collected once and its archive hash verified; compressed traces remain on GitHub. Do not rerun or recollect this completed capture.
 

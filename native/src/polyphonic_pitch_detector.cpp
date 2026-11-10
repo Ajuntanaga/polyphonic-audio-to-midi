@@ -6139,6 +6139,10 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_pending_string_reservation_)
+    diagnostic_assignment_previews_.fill(false);
+#endif
   if (profile_mode_ != ProfileMode::m3) {
     for (std::size_t candidate = 0U;
          candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
@@ -6313,6 +6317,13 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #endif
   current[reserved_strings].valid = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  bool pending_preview_enabled = false;
+  if (diagnostic_pending_string_reservation_ &&
+      midi_routing_ == MidiRouting::per_voice) {
+    for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate)
+      pending_preview_enabled |= candidate_states_[candidate].active;
+  }
+  const auto pending_attack_decisions = pending_preview_enabled ? attack_decisions() : 0U;
   if (retained_enabled) retained[reserved_strings].valid = true;
   // Reuse the native costs without running the posterior, spectral cache, or
   // assignment updates for these misses. Restrict this to non-isolated context:
@@ -7000,6 +7011,49 @@ void PolyphonicPitchDetector::assign_m3_strings(
       }
       assignments = next;
     };
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const auto& pending = candidate_states_[candidate];
+    bool preview = pending_preview_enabled && !pending.active &&
+        pending.midi_voice_mask == 0U &&
+        !selector_atomic_handoff_targets_[candidate] &&
+        pending.attack_ticks + 1U < pending_attack_decisions &&
+        string_count(pending.assigned_string_mask) <= 1U &&
+        string_count(pending.pending_unison_mask) <= 1U &&
+        string_count(pending.continuity_cached_group_mask) <= 1U &&
+        !fine.multi_source_observed && string_count(fine.member_mask) <= 1U &&
+        string_count(fine.pending_member_mask) <= 1U &&
+        !beat_evidence_states_[candidate].valid &&
+        string_count(selector_group_masks_[candidate]) <= 1U;
+    if (preview) {
+      for (const auto& owner : diagnostic_midi_owners_)
+        if (owner.candidate == candidate) preview = false;
+    }
+    if (preview) {
+      // Preserve all candidate costs, posteriors and attack evidence. An
+      // immature, non-emitting singleton gets a physical preview without
+      // consuming a string or changing the sounding candidates' joint cost.
+      // On its attack-ready decision it rejoins the normal allocation.
+      std::array<Assignment, kM3StringMaskCount> independent{};
+      independent[0U].valid = true;
+      advance(independent, playable);
+      Assignment cheapest{};
+      for (const auto& option : independent) {
+        if (option.valid && (!cheapest.valid || option.cost < cheapest.cost ||
+            (option.cost == cheapest.cost && option.strings < cheapest.strings)))
+          cheapest = option;
+      }
+      if (cheapest.valid) {
+        const auto shift = static_cast<std::uint32_t>(voice * 3U);
+        for (auto& option : current) {
+          if (option.valid)
+            option.strings = (option.strings & ~(0x07U << shift)) |
+                (cheapest.strings & (0x07U << shift));
+        }
+        diagnostic_assignment_previews_[candidate] = true;
+        continue;
+      }
+    }
+#endif
     advance(current, playable);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (retained_enabled) {
@@ -7220,6 +7274,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
   }
 #endif
   if (!best.valid) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_pending_string_reservation_)
+      diagnostic_assignment_previews_.fill(false);
+#endif
     return;
   }
   for (std::size_t voice = 0U; voice < selected_count; ++voice) {
@@ -7228,6 +7286,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
         fine_frequency_evidence_states_[candidates[voice]];
     state.assigned_string =
         static_cast<std::uint8_t>((best.strings >> (voice * 3U)) & 0x07U);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_pending_string_reservation_ &&
+        diagnostic_assignment_previews_[candidates[voice]])
+      state.assigned_string_mask = static_cast<std::uint8_t>(1U << state.assigned_string);
+#endif
     const bool physical_group_emerging =
         beat_evidence_states_[candidates[voice]].valid ||
         string_count(fine.member_mask) > 1U ||
@@ -10045,6 +10108,11 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       }
       continue;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // A preview owns no physical lane or committed polyphony capacity.
+    if (diagnostic_pending_string_reservation_ &&
+        diagnostic_assignment_previews_[candidate]) continue;
+#endif
     ++selected_count;
     const std::uint8_t primary = candidate_state.assigned_string;
     if (primary < kM3OpenNotes.size()) {
@@ -10135,6 +10203,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       continue;
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_pending_string_reservation_ &&
+        diagnostic_assignment_previews_[candidate]) continue;
     if (assignment_diagnostics_enabled_)
       assignment_diagnostics_[candidate].group_before = state.assigned_string_mask;
     std::uint8_t diagnostic_group_origin = 0U;
