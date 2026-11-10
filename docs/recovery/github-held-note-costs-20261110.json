@@ -1,0 +1,147 @@
+{
+  "schema": "m3_github_held_note_costs_checkpoint_v1",
+  "task": "held-note-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 42746880222,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/42746880222",
+  "source_commit": "7a4f914307b4c83f245bcaf116982b30c8b2c1e8",
+  "worker_commit": "2c8303179dfd9f6a4e27b29ed763484527bf371e",
+  "created_at": "2026-11-10T03:03:22Z",
+  "observed_at": "2026-11-10T03:09:51.922652+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "stage": "Bounded cost capture and saved-report diagnosis complete; runtime unchanged",
+  "output_target": "build/github-results/held-note-costs-42746880222",
+  "report_relative_path": "held-note-trace/report.json",
+  "outputs_downloaded_once": true,
+  "checkpoint": "docs/recovery/github-held-note-costs-20261110.json",
+  "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
+  "previous_diagnosis_checkpoint": "docs/recovery/github-held-note-trace-20261109.json",
+  "profile": "held-note-on",
+  "dataset": "ordinary",
+  "note": 37,
+  "label_index": 17,
+  "scope": "Capture every selected peer and seven signed joint-assignment cost terms over the existing held-note window. Reconstruct the native subset assignment and compare frozen prior-lane alternatives without changing runtime policy.",
+  "acceptance": "Complete decision clock and selected peers; native winning assignment and cost reproduced exactly; full snapshot, outcome and raw MIDI bit-identical to saved ON. Diagnostic success is not a note-quality gain, timing or host acceptance.",
+  "local_checks": {
+    "python_contracts": 18,
+    "result": "passed",
+    "native_execution": false
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "local_native_execution": false,
+  "next_step": "Test whether pending candidates can preserve their detection evidence without reserving a sounding note's string. The saved trace attributes 73 of 155 retriggers to pending note33 making the prior string infeasible; 82 come from lower joint cost. Do not repeat the already-rejected blanket pending-attack deferral. Require more than 40000/71783 correct held samples and fewer than 156 attacks in label17, no passage loss or false-output increase, identical OFF references and buffers, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device gates remain open.",
+  "report_sha256": "99bc9f58cb0b9e963d74bcf607832e8a979ae69830b429749e6d289a2593f2be",
+  "artifact_receipt": {
+    "artifact_id": 13731871241,
+    "archive_sha256": "f3e928c0abd87ef89c8c096fe25fed06eb6670dc7dcbe8e3afd9b8fbfcd0e6b8",
+    "archive_hash_verified": true,
+    "downloaded_at": "2026-11-10T03:06:47.497762+00:00",
+    "small_report_bytes": 251355,
+    "bulk_downloaded": false
+  },
+  "report_updated_at": "2026-11-10T03:06:11.013444+00:00",
+  "complete_saved_on_snapshot_outcome_midi_identical": true,
+  "runtime_rule_changed": false,
+  "diagnosis": {
+    "schema": "m3_held_note_cost_join_v1",
+    "created_at": "2026-11-10T03:07:21.235361+00:00",
+    "run_id": 42746880222,
+    "source_commit": "7a4f914307b4c83f245bcaf116982b30c8b2c1e8",
+    "report": "build/github-results/held-note-costs-42746880222/held-note-trace/report.json",
+    "report_sha256": "99bc9f58cb0b9e963d74bcf607832e8a979ae69830b429749e6d289a2593f2be",
+    "method": "Join same-sample raw note37 OFF/ON lane changes within label17 to the saved joint-cost decision on that tick or the immediately preceding 64-sample tick; require matching old and new strings. This reduces the saved report only; no replay or changed DSP policy.",
+    "cost_summary": {
+      "schema": "m3_assignment_cost_diagnosis_v1",
+      "term_order": [
+        "fret_prior",
+        "posterior_penalty",
+        "profile_bonus",
+        "open_bonus",
+        "cents_penalty",
+        "fine_bonus",
+        "retention_bonus"
+      ],
+      "expected_frames": 1136,
+      "valid_joint_frames": 1018,
+      "invalid_joint_frames": 113,
+      "empty_selected_frames": 5,
+      "target_selected_valid_frames": 997,
+      "complete_peers_verified": true,
+      "native_joint_decisions_reproduced": true,
+      "active_target_string_changes": 177,
+      "reasons": {
+        "lower_total_joint_cost": 93,
+        "prior_string_infeasible_for_complete_joint_assignment": 84
+      },
+      "interpretation": "Costs reproduce complete joint decisions before output policy. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+    },
+    "held_label": {
+      "label_index": 17,
+      "midi_note": 37,
+      "string_mask": 1,
+      "start_sample": 245017,
+      "end_sample": 316800,
+      "annotated_hold_samples": 71783,
+      "exact_held_samples": 40000,
+      "unmatched_hold_samples": 31783,
+      "longest_exact_hold_samples": 3968,
+      "exact_hold_segments": 78,
+      "first_exact_hold_delay_samples": 5926,
+      "note_ons_inside_label": 156
+    },
+    "held_sample_percent": 55.723499993034565,
+    "raw_lane_switches": 155,
+    "joined_raw_switches": 155,
+    "unjoined_raw_switches": [],
+    "reasons_for_joined_raw_switches": {
+      "lower_total_joint_cost": 82,
+      "prior_string_infeasible_for_complete_joint_assignment": 73
+    },
+    "directions": {
+      "0->1": 78,
+      "1->0": 77
+    },
+    "old_lane_new_owners": {
+      "note33:active0:midi0:playable1": 73,
+      "note36:active0:midi0:playable3": 30,
+      "note57:active1:midi64:playable126": 1,
+      "note54:active1:midi1:playable63": 1,
+      "note54:active1:midi4:playable63": 13,
+      "note54:active1:midi8:playable63": 1
+    },
+    "full_saved_on_snapshot_outcome_midi_identical": true,
+    "installed_output_changed": false,
+    "runtime_rule_changed": false,
+    "promotion_accepted": false
+  },
+  "cloud_checks": {
+    "portable_contracts": 116,
+    "assignment_cost_contracts": 7,
+    "native_trace_tests": 2,
+    "result": "passed"
+  },
+  "source_portable_run": {
+    "id": 42746864507,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "source_ci_run": {
+    "id": 42746864579,
+    "status": "completed",
+    "conclusion": "failure",
+    "native_cpp_tests_and_vst3_package": "passed",
+    "source_contract_failure": "RESUME.md contained a contributor-specific home path. Replaced with a portable home-relative path; the exact failing Python contract passes locally. The original cloud run remains failed; no native rerun was needed for this documentation-only fix.",
+    "local_fixed_contract": "tests.test_source_contract.SourceContractTests.test_tracked_public_files_do_not_embed_a_contributor_home_path",
+    "local_fixed_contract_result": "passed"
+  },
+  "bulk_evidence": {
+    "artifact_id": 13732175787,
+    "name": "m3-evidence-42746880222-1",
+    "bytes": 3943453,
+    "sha256": "6c811248ca07208311ded7f1966cfd43909a41a84eaad4879d659a687ec029cf",
+    "downloaded": false
+  }
+}

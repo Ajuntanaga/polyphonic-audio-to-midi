@@ -1,12 +1,14 @@
-# Current checkpoint: bass-hold fragmentation traced to string switches
+# Current checkpoint: held-note assignment cause measured
 
-GitHub run `42658861439` completed at source `dbf2ce27c7a6eab0759e5163224735ef2f7bac70`, worker `ff37a204cb1f327bbce0d9f8fbe27e8dd1b8af72`. Complete ordinary snapshot/output, outcome and raw MIDI remain bit-identical to the saved ON reference. The bounded trace changes no runtime policy. Its small report archive was collected once and hash verified; bulk evidence stays on GitHub.
+GitHub run `42746880222` completed successfully at source `7a4f914307b4c83f245bcaf116982b30c8b2c1e8`, worker `2c8303179dfd9f6a4e27b29ed763484527bf371e`. Checkpoint: `docs/recovery/github-held-note-costs-20261110.json`. Its small report was collected once and its archive hash verified; compressed traces remain on GitHub. Do not rerun or recollect this completed capture.
 
-Ordinary label 17, MIDI note 37, has one initial attack followed by 155 same-pitch moves between voice lanes 0 and 1. Every move releases one lane and attacks the other at the same sample. After the initial attack, the pitch candidate remains active and selected; the switches cause no attack/release reset or calibrated pitch change. Assignment changes on the same tick in 154 cases; one move follows a one-tick continuity delay. The calibration-preferred string changes at only 17 switches, so calibration ranking alone does not explain the sequence. The competing assignment costs still need diagnosis.
+The bounded trace accounts for every decision tick and reproduces the native joint assignment exactly. All 155 raw same-pitch lane-switch retriggers inside ordinary label17 map to captured decisions. In 73 cases, pending note33 was not yet active or emitting MIDI and could use only string0, making the held note37's previous string infeasible. The other 82 switches lower the joint assignment cost. This is a frozen-evidence diagnosis, not a tested correction.
 
-The recorded hold remains 40000/71783 exact samples (55.7235%), with 78 correct segments, 156 note-ons, and a longest uninterrupted correct segment of 3968 samples (41.33 ms at 96 kHz). These are raw held-note measurements, not labeled-frame scores or delivered-host MIDI. Installed output and scoreboard remain unchanged; this result identifies a failure mechanism rather than improving it. Checkpoint: `docs/recovery/github-held-note-trace-20261109.json`. Eleven focused Python contracts and workflow input checks passed locally; source portable run `42658539309` passed on GitHub.
+Full ordinary snapshot, outcome and raw MIDI remain bit-identical to the saved ON trial. The held note is still 40000/71783 exact samples (55.7235%), with 78 correct segments and 156 note-ons. These held-sample counts differ from the installed labeled-frame scoreboard, which remains unchanged. No runtime rule changed and promotion remains rejected.
 
-Next: inspect the competing-candidate assignment costs at these recorded switches, including the continuity delay. A narrow stabilization trial must lengthen correct holds and reduce retriggers without losing passage matches or increasing false outputs. Require bit-identical OFF references and buffers, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. Native maximum-time failures and external DAW/device verification remain open. Do not rerun or recollect completed jobs.
+Cloud verification passed 116 portable contracts, seven assignment-cost contracts and both native trace tests. Source portable run `42746864507` passed. Source CI `42746864579` passed native tests and production VST3 build/package, but its source-contract job rejected a contributor-specific home path in this document. That path is now home-relative and the exact failing Python contract passes locally. The original cloud run remains failed; the documentation fix does not require another native build. Eighteen focused parser/mock tests also passed locally; all native execution remained on GitHub.
+
+Next: test pending-candidate string reservation while retaining candidate evidence; do not repeat the rejected blanket pending-attack deferral. Require more than 40000/71783 correct held samples and fewer than 156 attacks in this label, no passage loss or extra false outputs, identical OFF references and buffers, zero allocations, p99 <=166666 ns, max <=333333 ns and zero overruns. External DAW/device delivery remains unverified.
 
 ## Completed recovery and corpus results
 
@@ -20,7 +22,7 @@ The recorded VST3 rejection/Panic gate passed in both sample formats in GitHub r
 
 Next: resolve the native maximum-time failures and poor held-note coverage using the completed corpus evidence. The accepting and recovery component tests do not establish external DAW/device delivery, labeled-note quality, allocations or deadlines. Default-off behavior, the installed plugin and scoreboard remain unchanged; promotion is rejected.
 
-Drive cleanup is complete: net measured available space increased by 5749399552 bytes, including 746783825 bytes saved by compressing 618 inactive logs. The receipt is `/home/ajuntanaga/.local/state/researchos/space-cleanup-20261109/summary.json`. Preserve source, recordings, current sessions, final plugins and unique archives; keep large new evidence remote.
+Drive cleanup is complete: net measured available space increased by 5749399552 bytes, including 746783825 bytes saved by compressing 618 inactive logs. The receipt is `~/.local/state/researchos/space-cleanup-20261109/summary.json`. Preserve source, recordings, current sessions, final plugins and unique archives; keep large new evidence remote.
 
 ## 2026-11-09 — recorded audio passes the VST3 integration gate
 
