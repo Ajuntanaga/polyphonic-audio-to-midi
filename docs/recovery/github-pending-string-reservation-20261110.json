@@ -7,15 +7,15 @@
   "source_commit": "ecc920e9476455b392a972f3d517d4324a12fd9f",
   "worker_commit": "216fa9b99c36cdecf577397bc6bb40d4f0e53b4a",
   "created_at": "2026-11-10T03:38:18Z",
-  "observed_at": "2026-11-10T03:38:39.549135+00:00",
-  "status": "queued",
-  "conclusion": null,
-  "result_final": false,
-  "stage": "GitHub build and corrected settled/provisional fixture checks before ordinary replay",
+  "observed_at": "2026-11-10T03:47:49.882372+00:00",
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "stage": "Offline screen completed and rejected: target hold improves but passage losses and false outputs increase",
   "output_target": "build/github-results/pending-string-reservation-42750737485",
   "report_relative_path": "pending-string-reservation/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
   "checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
   "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
   "cause_checkpoint": "docs/recovery/github-held-note-costs-20261110.json",
@@ -35,16 +35,16 @@
   "installed_output_changed": false,
   "promotion_accepted": false,
   "local_native_execution": false,
-  "next_step": "Collect the existing bounded screen once terminal; require both saved references bit-identical, improved held label, no passage loss and no false-output growth. A pass permits wider verification only.",
+  "next_step": "Keep the pending-reservation trial rejected. Compare target label17 with the largest lost-note passages (ordinary label306 and held label335) to isolate changes in candidate maturation and assignment feasibility before another bounded GitHub-only trial. Require no per-passage match or held-sample loss and no increased false outputs; do not broaden or install this rejected result.",
   "source_portable_run": {
     "id": 42750719928,
-    "status": "in_progress",
-    "conclusion": null
+    "status": "completed",
+    "conclusion": "success"
   },
   "source_ci_run": {
     "id": 42750719620,
-    "status": "in_progress",
-    "conclusion": null
+    "status": "completed",
+    "conclusion": "success"
   },
   "attempt_history": [
     {
@@ -178,5 +178,404 @@
         "corpus_replay_started": false
       }
     }
-  ]
+  ],
+  "completed_at": "2026-11-10T03:43:15Z",
+  "artifact_receipt": {
+    "run_id": 42750737485,
+    "artifact_id": 13732574950,
+    "archive_sha256": "3a25ada1b3d4c20c04de6bce8d4ba20fd23675909a0f98c4f63b26ac98002687",
+    "archive_bytes": 44894,
+    "digest_verified": true,
+    "downloaded_at": "2026-11-10T03:45:03.512217+00:00",
+    "files": [
+      "build.log",
+      "configure.log",
+      "contracts.log",
+      "pending-string-reservation/current-on/replay.stderr",
+      "pending-string-reservation/reference-off/replay.stderr",
+      "pending-string-reservation/report.json",
+      "pending-string-reservation/trial-on/replay.stderr",
+      "reservation-build.log",
+      "reservation-test.log",
+      "runner.log",
+      "runtime-manifest.json"
+    ],
+    "bulk_downloaded": false
+  },
+  "bulk_artifact": {
+    "id": 13732899103,
+    "name": "m3-evidence-42750737485-1",
+    "size_in_bytes": 6459204,
+    "sha256": "416dcb4a9764bf264d0bda52edf8245a4f3b2e85c487d6fd4b75f9aca6d6cb47",
+    "downloaded": false
+  },
+  "cloud_checks": {
+    "python_contracts": 123,
+    "python_result": "passed",
+    "focused_native_tests": 2,
+    "focused_native_passed": 2,
+    "focused_native_assertion_failures": 0,
+    "corpus_replay_started": true
+  },
+  "result": {
+    "decision": "rejected",
+    "full_recording_screen_pass": false,
+    "report_updated_at": "2026-11-10T03:43:07.943590+00:00",
+    "saved_reference_off_bit_identical": true,
+    "saved_current_on_bit_identical": true,
+    "snapshot_output": {
+      "reference-off": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756",
+        "labeled_frame_match_percent": 27.502118676130088
+      },
+      "current-on": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6",
+        "labeled_frame_match_percent": 27.50495618880431
+      },
+      "trial-on": {
+        "labeled": 528632,
+        "matched": 152902,
+        "false_wrong_note_voices": 168107,
+        "false_wrong_string_voices": 85649,
+        "false_gap_voices": 64124,
+        "false_positive_voices": 317880,
+        "fingerprint": "296c40e6f9e86ae9",
+        "labeled_frame_match_percent": 28.924090860939177
+      }
+    },
+    "comparisons": {
+      "reference-off": {
+        "delta": {
+          "matched": 7517,
+          "false_wrong_note_voices": 3844,
+          "false_wrong_string_voices": -7004,
+          "false_gap_voices": 1268,
+          "false_positive_voices": -1892
+        },
+        "lost_labels": [
+          4,
+          11,
+          19,
+          31,
+          41,
+          54,
+          55,
+          63,
+          82,
+          86,
+          87,
+          91,
+          105,
+          115,
+          132,
+          149,
+          150,
+          151,
+          153,
+          156,
+          159,
+          160,
+          165,
+          187,
+          198,
+          200,
+          202,
+          206,
+          211,
+          212,
+          215,
+          222,
+          225,
+          233,
+          240,
+          247,
+          265,
+          271,
+          274,
+          275,
+          279,
+          281,
+          283,
+          290,
+          291,
+          302,
+          306,
+          328,
+          329,
+          332,
+          335,
+          360,
+          364,
+          367,
+          375,
+          378,
+          389,
+          410,
+          441,
+          442,
+          445,
+          446,
+          452,
+          456,
+          457,
+          481,
+          482,
+          484,
+          494,
+          498
+        ],
+        "increased_error_counts": [
+          "false_wrong_note_voices",
+          "false_gap_voices"
+        ],
+        "gate_pass": false,
+        "output_bit_identical": false,
+        "lost_label_count": 70,
+        "lost_matches_on_regressed_labels": 7600,
+        "largest_losses": [
+          {
+            "label_index": 306,
+            "midi_note": 42,
+            "string_mask": 1,
+            "labeled": 1122,
+            "baseline_matched": 729,
+            "current_matched": 0,
+            "matched_delta": -729
+          },
+          {
+            "label_index": 302,
+            "midi_note": 43,
+            "string_mask": 1,
+            "labeled": 825,
+            "baseline_matched": 664,
+            "current_matched": 14,
+            "matched_delta": -650
+          },
+          {
+            "label_index": 332,
+            "midi_note": 36,
+            "string_mask": 1,
+            "labeled": 1122,
+            "baseline_matched": 666,
+            "current_matched": 188,
+            "matched_delta": -478
+          }
+        ]
+      },
+      "current-on": {
+        "delta": {
+          "matched": 7502,
+          "false_wrong_note_voices": 3844,
+          "false_wrong_string_voices": -6989,
+          "false_gap_voices": 1268,
+          "false_positive_voices": -1877
+        },
+        "lost_labels": [
+          4,
+          11,
+          19,
+          31,
+          41,
+          54,
+          55,
+          63,
+          82,
+          86,
+          87,
+          91,
+          105,
+          115,
+          132,
+          149,
+          150,
+          151,
+          153,
+          156,
+          159,
+          160,
+          165,
+          187,
+          198,
+          200,
+          202,
+          206,
+          211,
+          212,
+          215,
+          222,
+          225,
+          233,
+          239,
+          240,
+          247,
+          265,
+          271,
+          274,
+          275,
+          279,
+          281,
+          283,
+          290,
+          291,
+          302,
+          306,
+          328,
+          329,
+          332,
+          335,
+          360,
+          364,
+          367,
+          375,
+          378,
+          389,
+          410,
+          441,
+          442,
+          445,
+          446,
+          452,
+          456,
+          457,
+          481,
+          482,
+          484,
+          494,
+          498
+        ],
+        "increased_error_counts": [
+          "false_wrong_note_voices",
+          "false_gap_voices"
+        ],
+        "gate_pass": false,
+        "output_bit_identical": false,
+        "lost_label_count": 71,
+        "lost_matches_on_regressed_labels": 7610,
+        "largest_losses": [
+          {
+            "label_index": 306,
+            "midi_note": 42,
+            "string_mask": 1,
+            "labeled": 1122,
+            "baseline_matched": 729,
+            "current_matched": 0,
+            "matched_delta": -729
+          },
+          {
+            "label_index": 302,
+            "midi_note": 43,
+            "string_mask": 1,
+            "labeled": 825,
+            "baseline_matched": 664,
+            "current_matched": 14,
+            "matched_delta": -650
+          },
+          {
+            "label_index": 332,
+            "midi_note": 36,
+            "string_mask": 1,
+            "labeled": 1122,
+            "baseline_matched": 666,
+            "current_matched": 188,
+            "matched_delta": -478
+          }
+        ]
+      }
+    },
+    "target_held_label": {
+      "baseline": {
+        "label_index": 17,
+        "midi_note": 37,
+        "string_mask": 1,
+        "start_sample": 245017,
+        "end_sample": 316800,
+        "annotated_hold_samples": 71783,
+        "exact_held_samples": 40000,
+        "unmatched_hold_samples": 31783,
+        "longest_exact_hold_samples": 3968,
+        "exact_hold_segments": 78,
+        "first_exact_hold_delay_samples": 5926,
+        "note_ons_inside_label": 156
+      },
+      "trial": {
+        "label_index": 17,
+        "midi_note": 37,
+        "string_mask": 1,
+        "start_sample": 245017,
+        "end_sample": 316800,
+        "annotated_hold_samples": 71783,
+        "exact_held_samples": 57409,
+        "unmatched_hold_samples": 14374,
+        "longest_exact_hold_samples": 52737,
+        "exact_hold_segments": 6,
+        "first_exact_hold_delay_samples": 5926,
+        "note_ons_inside_label": 11
+      },
+      "baseline_held_sample_percent": 55.723499993034565,
+      "trial_held_sample_percent": 79.97576027750303,
+      "held_samples_delta": 17409,
+      "note_ons_delta": -145
+    },
+    "held_label_improved": true,
+    "held_sample_loss_label_count": 57,
+    "lost_held_samples_on_regressed_labels": 504095,
+    "largest_held_losses": [
+      {
+        "label_index": 335,
+        "before": 64001,
+        "after": 0
+      },
+      {
+        "label_index": 306,
+        "before": 46529,
+        "after": 0
+      },
+      {
+        "label_index": 302,
+        "before": 42496,
+        "after": 950
+      }
+    ],
+    "raw_midi_no_regression": true,
+    "raw_midi_delta": {
+      "reference-off": {
+        "cross_pitch_on_before_release": -652,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "current-on": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      }
+    },
+    "trial_raw_midi_counts": {
+      "cross_pitch_on_before_release": 0,
+      "repeated_pitch_on_before_release": 0,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "trial_lifecycle_coverage_valid": true,
+    "trial_event_error_counts": {},
+    "native_timing": "not measured",
+    "live_readiness": "not measured",
+    "interpretation": "Workflow success means the screen finished, not that the trial passed. Net frame and held-note gains fail acceptance because individual passages lose matches and held samples, and wrong-note outputs and extra outputs during unlabeled gaps increase. Held samples measure raw MIDI duration, not labeled-frame matches or delivered-host MIDI."
+  }
 }
