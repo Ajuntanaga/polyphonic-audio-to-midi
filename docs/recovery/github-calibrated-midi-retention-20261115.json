@@ -3,15 +3,15 @@
   "task": "calibrated-midi-retention-trial",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
+  "source_commit": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
+  "worker_commit": "5dba06ebc8116b493afd1cc96fe746365ec46e7c",
+  "run_id": 43712855256,
+  "status": "in_progress",
+  "conclusion": "",
   "result_final": false,
   "created_at": "2026-11-15T12:12:44.554476+00:00",
-  "updated_at": "2026-11-15T12:14:20.769434+00:00",
-  "stage": "local contracts and single native implementation review passed; source and worker publication pending",
+  "updated_at": "2026-11-15T12:15:35.807377+00:00",
+  "stage": "Build offline replay on GitHub",
   "checkpoint": "docs/recovery/github-calibrated-midi-retention-20261115.json",
   "reference_report": "docs/recovery/github-independent-midi-ownership-20261109.json",
   "mechanism_checkpoint": "docs/recovery/github-pending-midi-retention-trace-20261115.json",
@@ -44,10 +44,35 @@
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
   "remaining_acceptance": "Full corpus identity/label/false-output gates, zero processing allocations, p99<=166666ns, max<=333333ns, zero overruns, external DAW/device MIDI delivery.",
-  "next_step": "Run one bounded ordinary GitHub screen after review and source/worker pushes. Collect its small report once; inspect measured no-regression gates before wider validation.",
+  "next_step": "Collect the small final report from recorded run43712855256 once; inspect measured no-regression gates before wider validation. Do not redispatch.",
   "routing": {
     "github_actions": "All native builds/tests/replays use the existing authorized m3-offload corpus release; no recording or calibration added to source.",
     "kaggle": "No distinct useful GPU task for this native policy; completed legacy work is not repeated."
   },
-  "review_limit": "Uses validated recorded calibration banks and spectral lane collision prerequisite; arbitrary direct calibration-bank injection is outside this experiment."
+  "review_limit": "Uses validated recorded calibration banks and spectral lane collision prerequisite; arbitrary direct calibration-bank injection is outside this experiment.",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43712855256",
+  "local_output_dir": "build/github-results/calibrated-midi-retention-43712855256",
+  "dispatch_receipt": "build/github-results/calibrated-midi-retention-dispatch-20261115/dispatch-result.json",
+  "source_runs": [
+    {
+      "conclusion": "",
+      "createdAt": "2026-11-15T12:14:32Z",
+      "databaseId": 43712826012,
+      "headSha": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
+      "name": "Portable offline replay",
+      "status": "in_progress",
+      "updatedAt": "2026-11-15T12:14:36Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43712826012"
+    },
+    {
+      "conclusion": "",
+      "createdAt": "2026-11-15T12:14:32Z",
+      "databaseId": 43712826030,
+      "headSha": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
+      "name": "CI",
+      "status": "in_progress",
+      "updatedAt": "2026-11-15T12:14:36Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43712826030"
+    }
+  ]
 }
