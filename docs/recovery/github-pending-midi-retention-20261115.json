@@ -6,11 +6,11 @@
   "source_commit": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
   "worker_commit": "d3f50ca8b68085bc83f580f553a29c257eba142f",
   "run_id": 43707756793,
-  "status": "in_progress",
-  "conclusion": "",
-  "result_final": false,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-15T11:07:57.331566+00:00",
-  "stage": "Screen actual MIDI retention with unchanged detector inference",
+  "stage": "offline screen rejected; bounded loss diagnosis complete",
   "checkpoint": "docs/recovery/github-pending-midi-retention-20261115.json",
   "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
   "mechanism_checkpoint": "docs/recovery/github-forced-pending-string-trace-20261115.json",
@@ -24,9 +24,9 @@
   ],
   "flag": "--diagnostic-pending-midi-retention",
   "report_relative_path": "pending-midi-retention/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "local_checks": {
     "python_mock_contracts": 43,
@@ -35,7 +35,7 @@
     "workflow_yaml": "parsed",
     "diff_check": "passed",
     "native_execution": false,
-    "single_read_only_review": "No actionable findings; native execution remains pending on GitHub."
+    "single_read_only_review": "Pre-dispatch review found no actionable issues. Focused native tests subsequently passed on GitHub; no native execution occurred locally."
   },
   "policy": "Retain an actual sounding singleton lane only while an inactive unready selected single-playable-string peer competes for it. Yield to active claims, attack readiness, spectral evidence, retunes, groups and atomic handoffs. Preserve detector inference and virtual MIDI state.",
   "acceptance": "Both saved scored/raw references must reproduce exactly. Current-ON and trial must retain identical complete detector outcomes, per-label scores and exact groups. Require longer target holds and fewer attacks, no label held-sample loss, no increase in raw wrong-note/wrong-string/unlabeled-gap voice-samples, valid MIDI pairing and no new conflicts. Passing allows wider checks only.",
@@ -46,7 +46,7 @@
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
   "remaining_acceptance": "Full corpus no-regression, identical OFF/buffers, zero allocations, p99 <=166666 ns, max <=333333 ns, zero overruns and external DAW/device delivery.",
-  "next_step": "Read recorded run 43707756793 to completion, collect its small m3-report-43707756793-1 artifact once, and evaluate inference identity, per-label held samples and raw false-output duration gates. Do not dispatch a duplicate; broader replay requires this screen to pass.",
+  "next_step": "Capture only the missing current-ON assignment-cost windows for labels200 and279 on GitHub, preserving the saved scored/raw references and complete outcome identity. Compare the frozen optimum with only the inactive singleton competitor omitted, keeping ordinals and other costs/history unchanged. Test whether this distinguishes all observed wrong-string corrections from the73 label17 forced displacements before choosing a default-off replacement. Do not hardcode notes/labels or broaden the rejected trial. Any subsequent screen must retain identical inference, improve target holds/retriggers, lose zero held samples on every label, and grow no raw false-output count before corpus allocation, buffer, p99/max and live gates.",
   "routing": {
     "github_actions": "All native compilation, tests and recorded replays. Use existing authorized m3-offload corpus inputs; keep bulk evidence remote.",
     "kaggle": "No distinct useful GPU work for this native routing experiment; legacy recovery remains terminal and is not relaunched."
@@ -54,7 +54,7 @@
   "dispatch_receipt": "build/github-results/pending-midi-retention-dispatch-20261115/dispatch-result.json",
   "dispatched_at": "2026-11-15T11:11:52.950709+00:00",
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43707756793",
-  "last_observed_at": "2026-11-15T11:17:24.289341+00:00",
+  "last_observed_at": "2026-11-15T11:18:33.408782+00:00",
   "local_output_dir": "build/github-results/pending-midi-retention-43707756793",
   "source_runs": [
     {
@@ -79,8 +79,517 @@
     }
   ],
   "artifact_metadata": {
-    "total_count": 0,
-    "artifacts": []
+    "total_count": 2,
+    "artifacts": [
+      {
+        "id": 14159277730,
+        "node_id": "MDg6QXJ0aWZhY3QxNDE1OTI3NzczMA==",
+        "name": "m3-evidence-43707756793-1",
+        "size_in_bytes": 122661147,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14159277730",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14159277730/zip",
+        "expired": false,
+        "digest": "sha256:e800dd9349a6fd79cf327f9e104b719dbe3a7fd60074bb32fca13a9f04bf2abf",
+        "created_at": "2026-11-15T11:18:20Z",
+        "updated_at": "2026-11-15T11:18:20Z",
+        "expires_at": "2026-11-22T11:18:15Z",
+        "workflow_run": {
+          "id": 43707756793,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "d3f50ca8b68085bc83f580f553a29c257eba142f"
+        }
+      },
+      {
+        "id": 14158699895,
+        "node_id": "MDg6QXJ0aWZhY3QxNDE1ODY5OTg5NQ==",
+        "name": "m3-report-43707756793-1",
+        "size_in_bytes": 38970,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14158699895",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14158699895/zip",
+        "expired": false,
+        "digest": "sha256:79791266ecc5fa5e2cfb1f95f808e5d132ba229e637d51849925f58fb7014ffa",
+        "created_at": "2026-11-15T11:18:15Z",
+        "updated_at": "2026-11-15T11:18:15Z",
+        "expires_at": "2026-11-29T11:18:13Z",
+        "workflow_run": {
+          "id": 43707756793,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "d3f50ca8b68085bc83f580f553a29c257eba142f"
+        }
+      }
+    ]
   },
-  "source_validation": "Portable native tests, replay comparison contracts and synthetic buffer parity passed; CI source/native checks and production package build passed. Package is uninstalled; no recorded-screen or live acceptance is implied."
+  "source_validation": "Portable native tests, replay comparison contracts and synthetic buffer parity passed; CI source/native checks and production package build passed. Package is uninstalled; no recorded-screen or live acceptance is implied.",
+  "report_path": "build/github-results/pending-midi-retention-43707756793/pending-midi-retention/report.json",
+  "report_sha256": "fba03015f4b0664b995481fedec82f0172e5d43d7dd5228be432c196740b16cf",
+  "small_collection_receipt": "build/github-results/pending-midi-retention-43707756793/small-collection-receipt.json",
+  "small_artifact": {
+    "artifact_id": 14158699895,
+    "artifact_name": "m3-report-43707756793-1",
+    "archive_path": "build/github-results/pending-midi-retention-43707756793/m3-report-43707756793-1.zip",
+    "archive_bytes": 38970,
+    "sha256": "79791266ecc5fa5e2cfb1f95f808e5d132ba229e637d51849925f58fb7014ffa",
+    "github_digest_verified": true,
+    "started_at": "2026-11-15T11:18:52.471085+00:00",
+    "collected_at": "2026-11-15T11:18:58.311589+00:00",
+    "files": [
+      "build.log",
+      "configure.log",
+      "contracts.log",
+      "midi-retention-build.log",
+      "midi-retention-test.log",
+      "pending-midi-retention/current-on/replay.stderr",
+      "pending-midi-retention/midi-retention-on/replay.stderr",
+      "pending-midi-retention/reference-off/replay.stderr",
+      "pending-midi-retention/report.json",
+      "runner.log",
+      "runtime-manifest.json"
+    ]
+  },
+  "decision": "rejected",
+  "result": {
+    "state": "completed",
+    "final": true,
+    "stage": "offline screen rejected; bounded loss diagnosis complete",
+    "decision": "rejected",
+    "inference_identity": {
+      "scored_output_identical": true,
+      "labels_identical": true,
+      "exact_groups_identical": true,
+      "full_outcome_bit_identical": true
+    },
+    "inference_preserved": true,
+    "raw_output_safety_delta": {
+      "false_wrong_note_voice_samples": -38218,
+      "false_wrong_string_voice_samples": -24608,
+      "false_gap_voice_samples": -12342
+    },
+    "raw_output_no_regression": true,
+    "raw_midi_no_regression": true,
+    "held_label_improved": true,
+    "held_sample_losses": [
+      {
+        "label_index": 200,
+        "before": 26841,
+        "after": 25433
+      },
+      {
+        "label_index": 279,
+        "before": 20032,
+        "after": 18240
+      },
+      {
+        "label_index": 388,
+        "before": 15808,
+        "after": 8384
+      }
+    ],
+    "full_recording_screen_pass": false,
+    "target": {
+      "current-on": {
+        "label_index": 17,
+        "midi_note": 37,
+        "string_mask": 1,
+        "start_sample": 245017,
+        "end_sample": 316800,
+        "annotated_hold_samples": 71783,
+        "exact_held_samples": 40000,
+        "unmatched_hold_samples": 31783,
+        "longest_exact_hold_samples": 3968,
+        "exact_hold_segments": 78,
+        "first_exact_hold_delay_samples": 5926,
+        "note_ons_inside_label": 156
+      },
+      "midi-retention-on": {
+        "label_index": 17,
+        "midi_note": 37,
+        "string_mask": 1,
+        "start_sample": 245017,
+        "end_sample": 316800,
+        "annotated_hold_samples": 71783,
+        "exact_held_samples": 55041,
+        "unmatched_hold_samples": 16742,
+        "longest_exact_hold_samples": 52545,
+        "exact_hold_segments": 8,
+        "first_exact_hold_delay_samples": 5926,
+        "note_ons_inside_label": 15
+      }
+    },
+    "ordinary_snapshot": {
+      "current-on": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "midi-retention-on": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "a6fb6a311ef9162f"
+      }
+    },
+    "saved_reference_bit_identical": {
+      "reference-off": true,
+      "current-on": true
+    },
+    "total_lost_held_samples": 10624
+  },
+  "result_interpretation": "Rejected despite target improvement and lower false voice-samples: three labels lose 10624 exact held samples. Detector inference and all snapshot scores are unchanged; no production or installed output change.",
+  "updated_at": "2026-11-15T11:38:07.048527+00:00",
+  "raw_owner_diagnosis": {
+    "evidence": "build/github-results/pending-midi-retention-43707756793/raw-held-loss-comparison.json",
+    "sample_rate": 96000,
+    "finding": "All three held losses retain the target pitch on lane0 while current-ON emits it on the annotated lane. These are wrong-string holds, not missing pitches or suppression by a different note.",
+    "labels": [
+      {
+        "label_index": 200,
+        "midi_note": 50,
+        "expected_mask": 8,
+        "current_held_samples": 26841,
+        "trial_held_samples": 25433,
+        "lost_samples": 1408,
+        "gained_samples": 0,
+        "first_loss_sample": 3594751,
+        "loss_spans": [
+          {
+            "start": 3594751,
+            "end": 3596159,
+            "samples": 1408,
+            "masks": [
+              8,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "label_index": 279,
+        "midi_note": 47,
+        "expected_mask": 2,
+        "current_held_samples": 20032,
+        "trial_held_samples": 18240,
+        "lost_samples": 1792,
+        "gained_samples": 0,
+        "first_loss_sample": 5107455,
+        "loss_spans": [
+          {
+            "start": 5107455,
+            "end": 5107775,
+            "samples": 320,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 5107839,
+            "end": 5108159,
+            "samples": 320,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 5118463,
+            "end": 5118527,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 5121279,
+            "end": 5121983,
+            "samples": 704,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 5124415,
+            "end": 5124479,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 5128831,
+            "end": 5129151,
+            "samples": 320,
+            "masks": [
+              2,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "label_index": 388,
+        "midi_note": 50,
+        "expected_mask": 2,
+        "current_held_samples": 15808,
+        "trial_held_samples": 8384,
+        "lost_samples": 7424,
+        "gained_samples": 0,
+        "first_loss_sample": 7700287,
+        "loss_spans": [
+          {
+            "start": 7700287,
+            "end": 7700543,
+            "samples": 256,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7700863,
+            "end": 7701311,
+            "samples": 448,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7703295,
+            "end": 7703487,
+            "samples": 192,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7703679,
+            "end": 7703743,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7704319,
+            "end": 7704447,
+            "samples": 128,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7706367,
+            "end": 7706431,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7706495,
+            "end": 7707135,
+            "samples": 640,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7707327,
+            "end": 7707391,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7707519,
+            "end": 7707775,
+            "samples": 256,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7708607,
+            "end": 7708735,
+            "samples": 128,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7709631,
+            "end": 7709695,
+            "samples": 64,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7711871,
+            "end": 7712127,
+            "samples": 256,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7713855,
+            "end": 7714111,
+            "samples": 256,
+            "masks": [
+              2,
+              1
+            ]
+          },
+          {
+            "start": 7714879,
+            "end": 7719487,
+            "samples": 4608,
+            "masks": [
+              2,
+              1
+            ]
+          }
+        ]
+      }
+    ],
+    "target_label17": {
+      "current_held_samples": 40000,
+      "trial_held_samples": 55041,
+      "gained_samples": 15041,
+      "lost_samples": 0
+    },
+    "limitation": "Actual raw ownership establishes wrong-string holds. The bounded outcome comparison identifies selected active target candidates and inactive singleton competitors, but post-decision frames do not supply joint lane costs. No replacement policy is validated."
+  },
+  "selected_evidence_receipt": "build/github-results/pending-midi-retention-43707756793/selected-evidence-receipt.json",
+  "selected_evidence_collection": "Two raw MIDI members and the shared current-ON outcome member are retained compressed with report SHA-256 and ZIP CRC verified. The interrupted outcome transfer was range-resumed; the whole evidence archive remains remote and its full digest was not locally verified.",
+  "selected_evidence_compressed_bytes": 38886560,
+  "candidate_outcome_diagnosis": {
+    "evidence": "build/github-results/pending-midi-retention-43707756793/candidate-held-loss-comparison.json",
+    "frames": 30,
+    "findings": [
+      "At the first target gain and all inspected loss anchors, detected and rendered pitch agree. The target candidate is selected and active.",
+      "At label200 first loss sample3594751, candidate50 is physically assigned to correct mask8 while selected inactive candidate32 has playable mask1 and attack counter0. At difference end3596159, candidate32 attack counter is9 and trial raw output again agrees with current-ON mask8.",
+      "At label279 first/longest losses5107455/5121279, candidate47 is physically assigned to correct mask2 while selected inactive candidate33 has playable mask1 and attack counter0. At5107775/5121983 the current snapshot also emits incorrect lane0, ending the raw difference without restoring a correct hold.",
+      "At label388 first/longest losses7700287/7714879, candidate50 is physically assigned to correct mask2 with inactive selected candidate33, playable mask1, attack counter0. The separate frozen costs still choose lane1 after omitting candidate33.",
+      "At label17 first gain256447, candidate37 has physical mask2 and selected inactive candidate33 has playable mask1 and attack counter0. Separate frozen costs at all73 gain starts restore correct lane0 when candidate33 is omitted."
+    ],
+    "limitation": "These are post-decision candidate outcomes and virtual snapshot voices. They do not supply joint lane costs or independently prove pre-decision raw owner identity. Raw actual ownership is separately recorded in raw-held-loss-comparison.json."
+  },
+  "frozen_peer_removal_diagnosis": {
+    "evidence": "build/github-results/pending-midi-retention-43707756793/frozen-peer-removal-comparison.json",
+    "method": "tools/assignment_cost_analysis.py solve with recorded lane_terms, playable/reservation masks and original ordinals; omit only peer33.",
+    "positive_case": {
+      "label_index": 17,
+      "note": 37,
+      "retained_lane": 0,
+      "source_run_id": 43698368720,
+      "archive": "build/github-results/pending-string-reservation-trace-43698368720/m3-evidence-43698368720-1.zip",
+      "window": "current-on-label17",
+      "span_source": "build/github-results/pending-midi-retention-43707756793/raw-held-loss-comparison.json",
+      "positive_span_starts_checked": 73,
+      "missing_frames": 0,
+      "exception_samples": [],
+      "lane_pair_counts": [
+        {
+          "complete_lane": 1,
+          "peer_removed_lane": 0,
+          "count": 73
+        }
+      ],
+      "first_improvement": {
+        "sample": 256447,
+        "captured_joint_cost": -17.039892830786357,
+        "captured_joint_strings": 93118,
+        "reconstructed_original_matches": true,
+        "peer_removed_cost": -44.47190046530346,
+        "peer_removed_joint_strings": 93112,
+        "note37_original_ordinal": 1,
+        "note37_prior_active": true,
+        "note37_prior_midi_mask": 1
+      },
+      "removed_peer_at_first_improvement": {
+        "note": 33,
+        "ordinal": 0,
+        "playable_mask": 1,
+        "prior_active": false,
+        "midi_mask": 0,
+        "prior_attack_ticks": 0,
+        "attack_required": 10
+      },
+      "finding": "At every positive-span start, removing only inactive/unready singleton33 restores note37 to retained lane0. Original candidate ordinals are preserved.",
+      "source_commit": "ff63283ce4f0b021f64be76b813348947658fa75"
+    },
+    "negative_case": {
+      "label_index": 388,
+      "note": 50,
+      "retained_lane": 0,
+      "source_run_id": 43703176585,
+      "archive": "build/github-results/forced-pending-string-reservation-trace-43703176585/m3-evidence-43703176585-1.zip",
+      "window": "current-on-label389",
+      "removed_peer": {
+        "note": 33,
+        "ordinal": 0,
+        "playable_mask": 1,
+        "prior_active": false,
+        "midi_mask": 0,
+        "prior_attack_ticks": 0,
+        "attack_required": 10
+      },
+      "rows": [
+        {
+          "sample": 7700287,
+          "captured_joint_cost": 14.037037836397644,
+          "captured_joint_strings": 8,
+          "reconstructed_original_matches": true,
+          "peer_removed_cost": 13.037037836397644,
+          "peer_removed_joint_strings": 8,
+          "note50_lane_after_removal": 1,
+          "note50_lane0_cost": 32.35147291853019,
+          "note50_lane1_cost": 13.037037836397644
+        },
+        {
+          "sample": 7714879,
+          "captured_joint_cost": 71.42238618902525,
+          "captured_joint_strings": 8,
+          "reconstructed_original_matches": true,
+          "peer_removed_cost": 70.42238618902525,
+          "peer_removed_joint_strings": 8,
+          "note50_lane_after_removal": 1,
+          "note50_lane0_cost": 115.36848545442524,
+          "note50_lane1_cost": 70.42238618902525,
+          "note50_lane2_cost": 77.79319717586122
+        }
+      ],
+      "finding": "Removing the sole immature singleton peer leaves lane1 optimal at the first and longest wrong-string hold. The peer claim is not necessary for the lane1 choice.",
+      "source_commit": "21a8c562487784ecca9b5d1756fb20f2f16a7141"
+    },
+    "finding": "The frozen joint optimum after omitting the immature singleton supports the retained correct lane for all 73 label17 gain starts, but still selects the corrected lane1 at both checked label388 loss starts. Mere presence of a pending singleton does not distinguish a forced displacement from a valid string correction.",
+    "limitation": "Frozen arithmetic retains recorded costs and histories. The two traces and raw-retention comparison have separate run/source provenance. This is not a dynamic replay, policy validation, projection/source-owner identity proof or live-delivery test. Equivalent assignment-cost coverage for labels200 and279 is not collected."
+  }
 }
