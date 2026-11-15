@@ -6392,6 +6392,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
       observation.prior_active = prior.active;
       observation.prior_midi = prior.midi_voice_mask;
       observation.prior_spectral = prior.spectral_lane_mask;
+      observation.prior_attack_ticks = prior.attack_ticks;
+      observation.attack_required = attack_decisions();
       observation.isolated = isolated_selected_voice;
       observation.reassignment_ready = calibrated_reassignment_ready;
       observation.spectral_proposal = spectral_lane;
@@ -7050,6 +7052,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
                 (cheapest.strings & (0x07U << shift));
         }
         diagnostic_assignment_previews_[candidate] = true;
+        if (assignment_diagnostics_enabled_)
+          assignment_diagnostics_[candidate].allocation_preview = true;
         continue;
       }
     }

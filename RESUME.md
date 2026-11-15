@@ -1,4 +1,12 @@
-# Current checkpoint: pending string reservation rejected
+# Current checkpoint: pending string diagnostic prepared for GitHub
+
+The interactive request on 2026-11-15 authorizes offloading useful work to GitHub Actions and Kaggle. The next bounded task is `pending-string-reservation-trace`: six captures, comparing current-ON and rejected trial-ON for ordinary labels17,306,335. Checkpoint: `docs/recovery/github-pending-string-trace-20261115.json`. Follow the run recorded there; never dispatch a duplicate from a heartbeat.
+
+This adds diagnostic observations only. Full scored output, raw MIDI and held measurements must reproduce both saved policy references; complete joint decisions must reproduce from captured costs. Preview masks are assignment hints, not committed MIDI lanes. Installed output and the rejected trial verdict remain unchanged. Native builds and replays stay on GitHub; collect the small report once and leave bulk evidence remote. Legacy Kaggle runs remain terminal and collected; there is no distinct useful GPU task to launch for this native assignment question.
+
+The ntfy ping was confirmed inline (HTTP 200, 3525 bytes, message `iXSdLX7gl1a6`). Lossless compression of 680 inactive generated evidence files reclaimed 1,339,887,616 allocated bytes, with full decompression/hash verification before removing originals. Source, recordings, current evidence and plugins remain intact. Receipt and restoration instructions: `build/recovery/evidence-compression-20261115.json` and `build/recovery/evidence-compression-20261115.md`. Do not repeat the cleanup.
+
+## Previous checkpoint: pending string reservation rejected
 
 GitHub screen `42750737485` completed at source `ecc920e9476455b392a972f3d517d4324a12fd9f`, worker `216fa9b99c36cdecf577397bc6bb40d4f0e53b4a`. The workflow succeeded, but the measured trial is rejected. Both saved OFF and current-ON references reproduce bit-identically. The small report was collected once and its archive hash verified; bulk traces stay remote. Checkpoint: `docs/recovery/github-pending-string-reservation-20261110.json`.
 

@@ -28,6 +28,22 @@ def solve(rows, *, pin=None):
         allowed = row['playable']
         if pin is not None and row['note'] == pin[0]:
             allowed &= 1 << pin[1]
+        if row.get('allocation_preview', 0):
+            choices = []
+            for lane in range(8):
+                if allowed & (1 << lane):
+                    total = 0.0
+                    for term in row['terms'][lane]:
+                        total += term
+                    choices.append((total, lane << (row['ordinal'] * 3)))
+            if choices:
+                # Native preview writes only the packed choice: it consumes no
+                # lane and contributes no cost to the joint assignment.
+                choice = min(choices)[1]
+                mask = 7 << (row['ordinal'] * 3)
+                current = {used: (cost, (packed & ~mask) | choice)
+                           for used, (cost, packed) in current.items()}
+                continue
         following = {}
         for used, (cost, packed) in sorted(current.items()):
             for lane in range(8):
@@ -59,6 +75,9 @@ def summarize_costs(raw_rows, outcomes, *, note, start, end):
     seen = set()
     for raw in raw_rows:
         row = {key: int(raw[key]) for key in INTEGER_FIELDS}
+        row['allocation_preview'] = int(raw.get('allocation_preview', 0))
+        if row['allocation_preview'] not in (0, 1):
+            raise ValueError('Invalid allocation preview flag')
         key = row['sample'], row['note']
         if (key in seen or row['sample'] not in expected or
                 row['tick'] * 64 - 1 != row['sample'] or not 0 <= row['note'] <= 127):
@@ -68,6 +87,18 @@ def summarize_costs(raw_rows, outcomes, *, note, start, end):
             continue  # Fixed context/replacement rows are not selected DP peers.
         if row['fixed_context'] or not 0 <= row['ordinal'] < row['selected_count'] <= 8:
             raise ValueError('Invalid selected assignment peer')
+        maturity = ('prior_attack_ticks', 'attack_required')
+        present = [key in raw for key in maturity]
+        if any(present) and not all(present):
+            raise ValueError('Incomplete assignment attack maturity')
+        for field in maturity:
+            row[field] = int(raw[field]) if all(present) else None
+        if all(present) and (not 0 <= row['prior_attack_ticks'] <= 255 or
+                             not 1 <= row['attack_required'] <= 255):
+            raise ValueError('Invalid assignment attack maturity')
+        if row['allocation_preview'] and (not all(present) or row['prior_active'] or
+                row['prior_midi'] or row['prior_attack_ticks'] + 1 >= row['attack_required']):
+            raise ValueError('Allocation preview contradicts attack maturity or MIDI ownership')
         row['terms'] = [[float(value) for value in lane.split(':')]
                         for lane in raw['lane_terms'].split(',')]
         row['totals'] = [float(value) for value in raw['lane_totals'].split(',')]
@@ -139,6 +170,8 @@ def summarize_costs(raw_rows, outcomes, *, note, start, end):
             reserved_coasting=first['reserved_coasting'], reserved_extras=first['reserved_extras'],
             peers=[dict(note=row['note'], ordinal=row['ordinal'],
                 prior_active=row['prior_active'], prior_committed=row['prior_committed'],
+                allocation_preview=row['allocation_preview'],
+                prior_attack_ticks=row['prior_attack_ticks'], attack_required=row['attack_required'],
                 prior_midi=row['prior_midi'], prior_spectral=row['prior_spectral'],
                 prior_primary=row['prior_primary'], chosen_string=row['dp_primary'],
                 final_mask=row['final_mask'], playable=row['playable'],
@@ -152,5 +185,6 @@ def summarize_costs(raw_rows, outcomes, *, note, start, end):
         native_joint_decisions_reproduced=True, active_target_string_changes=len(switches),
         reasons=dict(reasons), switches=switches,
         interpretation='Costs reproduce complete joint decisions before output policy. '
+        'Allocation preview masks are hints, not committed MIDI lanes. '
         'Prior-string constraints use frozen evidence only; they do not measure a runtime '
         'change, labeled-note gain, held-duration gain, timing, or live readiness.')

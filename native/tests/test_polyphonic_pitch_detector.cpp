@@ -2428,6 +2428,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_TRUE(detector.configure(96000.0, config));
     detector.set_spectral_lane_collision_for_diagnostics(true);
     detector.set_pending_string_reservation_for_diagnostics(enabled);
+    detector.assignment_diagnostics_enabled_ = true;
     auto& pending = detector.candidate_states_[0U];
     auto& held = detector.candidate_states_[4U];
     detector.playable_string_masks_[0U] = 1U;
@@ -2458,6 +2459,10 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.assign_m3_strings(selected);
     const bool preview = enabled && (scenario == 0U || scenario >= 6U);
     M3_EXPECT_EQ(detector.diagnostic_assignment_previews_[0U], preview);
+    M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].allocation_preview, preview);
+    M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].prior_attack_ticks, attacks);
+    M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].attack_required,
+                 detector.attack_decisions());
     if (preview) {
       if (scenario == 7U) {
         // Isolate inference capacity after the pending preview is recorded.

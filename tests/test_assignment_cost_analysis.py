@@ -60,6 +60,32 @@ class AssignmentCostAnalysisTests(unittest.TestCase):
         self.assertEqual(switch['reason'], 'equal_cost_packed_string_tie_break')
         self.assertEqual(switch['prior_constraint_extra_cost'], 0)
 
+    def test_preview_neither_consumes_a_lane_nor_adds_its_cost(self):
+        rows = [cost_row(33, ordinal=0, count=2, costs=(99,), joint=3,
+                         prior=255, active=0),
+                cost_row(37, ordinal=1, count=2, costs=(3,), joint=3)]
+        rows[0].update(allocation_preview='1', prior_attack_ticks='0', attack_required='2')
+        result = self.summarize(rows)
+        self.assertEqual(result['valid_joint_frames'], 1)
+        self.assertEqual(result['active_target_string_changes'], 0)
+
+    def test_preview_uses_its_independent_optimum_and_packed_tie_break(self):
+        rows = [cost_row(33, ordinal=0, count=2, costs=(9, 4, 4), primary=1,
+                         packed=1, joint=3, prior=255, active=0),
+                cost_row(37, ordinal=1, count=2, costs=(3,), packed=1, joint=3)]
+        rows[0].update(allocation_preview='1', prior_attack_ticks='0', attack_required='2')
+        self.assertTrue(self.summarize(rows)['native_joint_decisions_reproduced'])
+
+    def test_applied_preview_can_be_followed_by_an_infeasible_joint_assignment(self):
+        rows = [cost_row(33, ordinal=0, count=3, costs=(1,), prior=255, active=0),
+                cost_row(37, ordinal=1, count=3, costs=(2,)),
+                cost_row(42, ordinal=2, count=3, costs=(3,))]
+        rows[0].update(allocation_preview='1', prior_attack_ticks='0', attack_required='2')
+        for row in rows:
+            row['valid'] = '0'
+        result = self.summarize(rows)
+        self.assertEqual(result['invalid_joint_frames'], 1)
+
     def test_signed_retention_is_added_in_order(self):
         row = cost_row(costs=(3, 1), primary=1, packed=1, joint=1)
         terms = row['lane_terms'].split(',')
@@ -67,6 +93,28 @@ class AssignmentCostAnalysisTests(unittest.TestCase):
         row['lane_terms'] = ','.join(terms)
         switch = self.summarize([row])['switches'][0]
         self.assertEqual(switch['prior_constraint_extra_cost'], 2)
+
+    def test_maturity_is_reported_and_legacy_absence_is_explicit(self):
+        rows = self.joint()
+        rows[0].update(prior_attack_ticks='3', attack_required='4')
+        peers = self.summarize(rows)['switches'][0]['peers']
+        self.assertEqual((peers[0]['prior_attack_ticks'], peers[0]['attack_required']), (3, 4))
+        self.assertIsNone(peers[1]['attack_required'])
+
+    def test_preview_requires_pending_pre_attack_state(self):
+        for changes in ({'prior_attack_ticks': '1'}, {'prior_active': '1'},
+                        {'prior_midi': '1'}, {'attack_required': '0'},
+                        {'prior_attack_ticks': '256'}):
+            row = cost_row(active=0)
+            row.update(allocation_preview='1', prior_attack_ticks='0', attack_required='2')
+            row.update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.summarize([row])
+        for fields in ({'allocation_preview': '1'}, {'prior_attack_ticks': '0'}):
+            row = cost_row(active=0)
+            row.update(fields)
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                self.summarize([row])
 
     def test_missing_peer_and_missing_tick_are_rejected(self):
         rows = self.joint()
@@ -77,6 +125,7 @@ class AssignmentCostAnalysisTests(unittest.TestCase):
 
     def test_corrupted_costs_masks_clocks_and_duplicates_are_rejected(self):
         for field, value in [('joint_cost', '7'), ('joint_strings', '1'),
+                             ('allocation_preview', '2'),
                              ('tick', '99'), ('ordinal', '1'), ('playable', '256'),
                              ('lane_terms', 'nan'), ('lane_totals', '1,2,0,0,0,0,0,0')]:
             rows = self.joint()

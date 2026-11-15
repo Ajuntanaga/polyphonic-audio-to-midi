@@ -400,6 +400,11 @@ struct StringAssignmentDiagnostics final {
   std::uint8_t prior_mask{};
   std::uint8_t prior_midi{};
   std::uint8_t prior_spectral{};
+  std::uint8_t prior_attack_ticks{};
+  std::uint8_t attack_required{};
+  // The independent pending preview was applied, even if a later peer made
+  // the complete joint assignment infeasible. Observation only.
+  bool allocation_preview{};
   std::uint8_t retained_pin_mask{};
   std::uint8_t retained_ordinary_primary{255U};
   std::uint8_t retained_primary{255U};

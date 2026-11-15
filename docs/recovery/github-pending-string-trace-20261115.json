@@ -1,0 +1,57 @@
+{
+  "schema": "m3_github_pending_string_trace_checkpoint_v1",
+  "task": "pending-string-reservation-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "url": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T09:10:21.615173+00:00",
+  "observed_at": "2026-11-15T09:10:21.615173+00:00",
+  "stage": "Python contracts passed; native checks and six captures prepared for GitHub Actions",
+  "checkpoint": "docs/recovery/github-pending-string-trace-20261115.json",
+  "reference_checkpoint": "docs/recovery/pending-string-trace-references-20261115.json",
+  "prior_trial_checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
+  "dataset": "ordinary",
+  "note": 37,
+  "label_index": 17,
+  "labels": [
+    17,
+    306,
+    335
+  ],
+  "policies": [
+    "current-on",
+    "trial-on"
+  ],
+  "capture_count": 6,
+  "output_target": null,
+  "report_relative_path": "pending-string-reservation-trace/report.json",
+  "report_available": false,
+  "outputs_downloaded_once": false,
+  "artifact_names": {
+    "small": "m3-report-{run_id}-1",
+    "bulk": "m3-evidence-{run_id}-1"
+  },
+  "local_checks": {
+    "python_tests": 48,
+    "result": "passed",
+    "native_execution": false
+  },
+  "acceptance": "All six full snapshot and raw MIDI streams retain their respective saved references; held measurements unchanged; complete observed joint assignments reproduce exactly; repeated complete outcome/MIDI streams match per policy. Diagnostic only: the reservation policy remains rejected.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "runtime_rule_changed": false,
+  "local_native_execution": false,
+  "native_timing": "not measured",
+  "external_host_and_hardware": "not measured",
+  "next_step": "Read assignment maturity and feasibility for labels17,306,335 before choosing a replacement policy. No lost passage/held samples or increased false outputs; OFF/buffer identity, zero allocations, p99<=166666ns, max<=333333ns and zero overruns remain required.",
+  "routing": {
+    "github_actions": "Native compilation, tests and all six recorded replays; retain large evidence remotely.",
+    "kaggle": "Legacy recovery runs are terminal and collected. Existing GPU checks are synthetic only. No duplicate native replay or useful independent GPU task is currently queued; use Kaggle only for a distinct suitable task."
+  }
+}
