@@ -169,6 +169,48 @@ class MidiLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'annotation interval'):
             self.summary([], [label(end=201)])
 
+    def test_output_safety_counts_disjoint_voice_durations(self):
+        events = [event(0, 'on'), event(0, 'on', note=61, voice=1),
+                  event(30, 'on', voice=2), event(50, 'off', voice=2),
+                  event(90, 'off'), event(90, 'off', note=61, voice=1)]
+        result = summarize(events, [label(start=20, end=80)], sample_count=100,
+                           sample_rate=96000, include_output_safety=True)
+        self.assertEqual(result['output_safety']['counts'], dict(
+            false_wrong_note_voice_samples=60, false_wrong_string_voice_samples=20,
+            false_gap_voice_samples=60, matched_voice_samples=60, emitted_voice_samples=200))
+
+    def test_output_safety_uses_label_union_without_counting_duplicates(self):
+        events = [event(0, 'on'), event(0, 'on', voice=1)]
+        labels = [label(0, 0, 80, mask=1), label(1, 40, 100, mask=2),
+                  label(2, 40, 60, mask=1)]
+        counts = summarize(events, labels, sample_count=100, sample_rate=96000,
+                           include_output_safety=True)['output_safety']['counts']
+        self.assertEqual(counts['emitted_voice_samples'], 200)
+        self.assertEqual(counts['matched_voice_samples'], 140)
+        self.assertEqual(counts['false_wrong_string_voice_samples'], 60)
+        self.assertEqual(counts['false_wrong_note_voice_samples'], 0)
+        self.assertEqual(counts['false_gap_voice_samples'], 0)
+
+    def test_unassigned_output_and_zero_mask_have_explicit_safety_semantics(self):
+        labels = [label(0, 0, 50, mask=1), label(1, 50, 100, mask=0)]
+        counts = summarize([event(0, 'on', voice=255)], labels, sample_count=100,
+                           sample_rate=96000, include_output_safety=True)['output_safety']['counts']
+        self.assertEqual(counts['false_wrong_string_voice_samples'], 50)
+        self.assertEqual(counts['matched_voice_samples'], 50)
+        self.assertEqual(counts['emitted_voice_samples'], 100)
+
+    def test_silent_missing_notes_do_not_become_false_gap_outputs(self):
+        result = summarize([], [label(start=20, end=80)], sample_count=100,
+                           sample_rate=96000, include_output_safety=True)
+        self.assertEqual(result['exact_held_samples'], 0)
+        self.assertEqual(sum(result['output_safety']['counts'].values()), 0)
+
+    def test_invalid_pairing_suppresses_output_safety(self):
+        result = summarize([event(10, 'off')], [label()], sample_count=200,
+                           sample_rate=96000, include_output_safety=True)
+        self.assertFalse(result['output_safety']['valid'])
+        self.assertIsNone(result['output_safety']['counts'])
+
 
 if __name__ == '__main__':
     unittest.main()

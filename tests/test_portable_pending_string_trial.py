@@ -32,6 +32,7 @@ def midi_text(events):
 class PortablePendingStringTrialTests(unittest.TestCase):
     runner = trial
     trial_stem = 'trial-on'
+    preserve_inference = False
 
     def execute(self, root, *, after=None, events=BETTER_EVENTS, drift=None,
                 baseline_events=BASE_EVENTS):
@@ -55,12 +56,14 @@ class PortablePendingStringTrialTests(unittest.TestCase):
             self.assertEqual(trial.COLLISION_FLAG in command, index > 0)
             self.assertEqual(trial.FLAG in command, index == 2)
             for flag in ('--diagnostic-pending-string-reservation',
-                         '--diagnostic-forced-pending-string-reservation'):
+                         '--diagnostic-forced-pending-string-reservation',
+                         '--diagnostic-pending-midi-retention'):
                 if flag != trial.FLAG:
                     self.assertNotIn(flag, command)
             self.assertNotIn('--diagnostic-direct-evidence-retention', command)
             self.assertNotIn('--candidate-trace', command)
-            text = before if index < 2 else (after or replay_text(target=2, transitions=len(events)))
+            text = before if index < 2 else (after or replay_text(
+                target=1 if self.preserve_inference else 2, transitions=len(events)))
             if drift == ('snapshot', index):
                 text += '\n'
             stdout.write(text)
@@ -68,11 +71,23 @@ class PortablePendingStringTrialTests(unittest.TestCase):
             if drift == ('midi', index):
                 raw_text = raw_text.replace('100', '99')
             Path(command[command.index('--midi-event-trace') + 1]).write_text(raw_text)
+            self.assertEqual('--outcome-trace' in command, self.preserve_inference)
+            if self.preserve_inference:
+                rows = fixtures.outcome_rows()
+                if drift == ('outcome', index):
+                    rows[1]['quiet'] = '1'
+                if drift == ('incomplete-outcome', index):
+                    rows.pop()
+                path = Path(command[command.index('--outcome-trace') + 1])
+                with path.open('w', newline='') as stream:
+                    writer = csv.DictWriter(stream, fieldnames=rows[0], delimiter='\t')
+                    writer.writeheader()
+                    writer.writerows(rows)
             calls.append(command)
 
         with patch.object(trial, 'HELD_LABEL', LABEL), patch.object(trial, 'HELD_BASELINE',
                 dict(exact_held_samples=80, note_ons_inside_label=2)), \
-                patch.object(trial.subprocess, 'run', side_effect=replay):
+                patch('subprocess.run', side_effect=replay):
             trial.run(*args)
         return json.loads((args[-1] / 'report.json').read_text()), calls
 

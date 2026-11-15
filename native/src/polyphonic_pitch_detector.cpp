@@ -5989,6 +5989,54 @@ void PolyphonicPitchDetector::order_collision_releases(
     events[index].sequence = first_sequence + static_cast<std::uint32_t>(index);
 }
 
+std::uint8_t PolyphonicPitchDetector::pending_midi_retention_request(
+    std::size_t candidate, std::uint8_t retained,
+    const std::array<bool, kMaxCandidates>& selected) const noexcept {
+  const auto& state = candidate_states_[candidate];
+  const auto& fine = fine_frequency_evidence_states_[candidate];
+  const auto desired = state.midi_voice_mask;
+  // Preserve only an actual sounding singleton through an immature forced
+  // claim. This changes the output request, never physical assignment,
+  // candidate maturation, spectral inference or the virtual MIDI trajectory.
+  if (!diagnostic_pending_midi_retention_ || !selected[candidate] ||
+      !state.active || output_suppressed(state) ||
+      candidate_midi_output_note(candidate) != lowest_note_ + candidate ||
+      string_count(retained) != 1U || string_count(desired) != 1U ||
+      desired == retained || state.assigned_string_mask != desired ||
+      (playable_string_mask(candidate) & retained) == 0U ||
+      state.spectral_lane_mask != 0U || state.pending_unison_mask != 0U ||
+      string_count(state.continuity_lane_mask) > 1U ||
+      string_count(state.continuity_cached_group_mask) > 1U ||
+      string_count(selector_group_masks_[candidate]) > 1U ||
+      selector_atomic_handoff_targets_[candidate] ||
+      beat_evidence_states_[candidate].valid || fine.multi_source_observed ||
+      string_count(fine.member_mask) > 1U ||
+      string_count(fine.pending_member_mask) > 1U)
+    return desired;
+  bool immature_claim = false;
+  const auto required = attack_decisions();
+  for (std::size_t peer = 0U; peer < candidate_count_; ++peer) {
+    if (peer == candidate) continue;
+    const auto& other = candidate_states_[peer];
+    // New active claims always win over this temporary retention, including
+    // coasting peers. The existing atomic owner solver resolves other claims.
+    if (other.active && (other.midi_voice_mask & retained) != 0U) return desired;
+    if (!selected[peer] || playable_string_mask(peer) != retained) continue;
+    const auto& other_fine = fine_frequency_evidence_states_[peer];
+    if (other.active || other.midi_voice_mask != 0U ||
+        static_cast<unsigned>(other.attack_ticks) + 1U >= required ||
+        selector_atomic_handoff_targets_[peer] ||
+        other.spectral_lane_mask != 0U || other.pending_unison_mask != 0U ||
+        string_count(selector_group_masks_[peer]) > 1U ||
+        beat_evidence_states_[peer].valid || other_fine.multi_source_observed ||
+        string_count(other_fine.member_mask) > 1U ||
+        string_count(other_fine.pending_member_mask) > 1U)
+      return desired;
+    immature_claim = true;
+  }
+  return immature_claim ? retained : desired;
+}
+
 void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
     DetectorDecision& decision,
     const std::array<bool, kMaxCandidates>& selected,
@@ -6033,7 +6081,7 @@ void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     const auto& state = candidate_states_[candidate];
     const auto note = candidate_midi_output_note(candidate);
-    const auto desired = state.midi_voice_mask;
+    auto desired = state.midi_voice_mask;
     if (!state.active || output_suppressed(state) || desired == 0U || note >= 128U ||
         !std::isfinite(scores[candidate]) || scores[candidate] < 0.0 ||
         !std::isfinite(fundamentals[candidate]) || fundamentals[candidate] < 0.0)
@@ -6044,6 +6092,7 @@ void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
       if (owner.candidate == candidate && owner.note == note)
         retained = static_cast<std::uint8_t>(retained | (1U << lane));
     }
+    desired = pending_midi_retention_request(candidate, retained, selected);
     // A previously suppressed candidate cannot appear as a new coasting
     // onset, and a coasting group cannot grow or retune without selection.
     if (!selected[candidate] && (desired & retained) != desired) continue;

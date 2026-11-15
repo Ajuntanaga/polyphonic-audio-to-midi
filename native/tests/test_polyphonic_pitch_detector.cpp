@@ -2509,6 +2509,88 @@ struct PolyphonicPitchDetectorTestAccess final {
     return held.assigned_string;
   }
 
+  static void pending_midi_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled, unsigned scenario) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 33U;
+    config.highest_note = 37U;
+    config.response = 100U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    detector.set_pending_midi_retention_for_diagnostics(enabled);
+    auto& pending = detector.candidate_states_[0U];
+    auto& held = detector.candidate_states_[4U];
+    detector.playable_string_masks_[0U] = 1U;
+    detector.playable_string_masks_[4U] = 3U;
+    held.active = true;
+    held.emitted_note = 37U;
+    held.assigned_string = 1U;
+    held.assigned_string_mask = held.midi_voice_mask = 2U;
+    held.evidence_ticks = 59U;
+    detector.diagnostic_midi_owners_[0U] = {4U, 37U};
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = selected[4U] = true;
+    switch (scenario) {
+      case 1U: pending.attack_ticks = static_cast<std::uint8_t>(detector.attack_decisions() - 1U); break;
+      case 2U: pending.active = true; pending.midi_voice_mask = 1U; break;
+      case 3U: // Even an unselected active claimant ends retention.
+        detector.candidate_states_[1U].active = true;
+        detector.candidate_states_[1U].midi_voice_mask = 1U;
+        break;
+      case 4U: held.spectral_lane_mask = 2U; break;
+      case 5U: selected[0U] = false; break;
+      case 6U: selected[4U] = false; break;
+      case 7U: detector.fine_frequency_evidence_states_[4U].multi_source_observed = true; break;
+      case 8U: held.emitted_note = 36U; break;
+      case 9U: held.assigned_string_mask = 1U; break;
+      case 10U: held.spectral_duplicate_output_suppressed = true; break;
+      case 11U: held.active = false; break;
+      case 12U: held.assigned_string_mask = held.midi_voice_mask = 3U; break;
+      case 13U: detector.selector_atomic_handoff_targets_[4U] = true; break;
+      case 14U: detector.selector_atomic_handoff_targets_[0U] = true; break;
+      case 15U: detector.fine_frequency_evidence_states_[0U].multi_source_observed = true; break;
+      case 16U: detector.playable_string_masks_[0U] = 3U; break;
+      case 17U: pending.midi_voice_mask = 1U; break;
+      default: break;
+    }
+    const auto physical = held.assigned_string_mask;
+    const auto virtual_mask = held.midi_voice_mask;
+    const auto attacks = pending.attack_ticks;
+    const auto allocations = test::allocation_count();
+    M3_EXPECT_EQ(detector.pending_midi_retention_request(4U, 1U, selected),
+                 enabled && scenario == 0U ? 1U : virtual_mask);
+    // No incumbent means no invented retention or delayed new onset.
+    M3_EXPECT_EQ(detector.pending_midi_retention_request(4U, 0U, selected), virtual_mask);
+    if (scenario == 0U || scenario == 11U) {
+      std::array<double, kMaxCandidates> scores{}, fundamentals{};
+      scores[4U] = fundamentals[4U] = 1.0;
+      DetectorDecision decision;
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+      if (scenario == 11U) {
+        M3_EXPECT_EQ(decision.transitions.size(), 1U);
+        M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
+        M3_EXPECT_EQ(decision.transitions[0U].note, 37U);
+        M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
+      } else if (enabled) {
+        M3_EXPECT_EQ(decision.transitions.size(), 0U);
+        M3_EXPECT_EQ(detector.diagnostic_midi_owners_[0U].candidate, 4U);
+      } else {
+        M3_EXPECT_EQ(decision.transitions.size(), 2U);
+        M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
+        M3_EXPECT_EQ(decision.transitions[1U].kind, TransitionKind::note_on);
+        M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
+        M3_EXPECT_EQ(decision.transitions[1U].voice_id, 1U);
+      }
+    }
+    M3_EXPECT_EQ(held.assigned_string_mask, physical);
+    M3_EXPECT_EQ(held.midi_voice_mask, virtual_mask);
+    M3_EXPECT_EQ(held.evidence_ticks, 59U);
+    M3_EXPECT_EQ(pending.attack_ticks, attacks);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static void independent_midi_owner_lifecycle(
       PolyphonicPitchDetector& detector, MidiRouting delivery_routing) {
     PersistentConfig config;
@@ -13122,6 +13204,28 @@ M3_TEST(native_detector_pending_string_reservation_forced_preserves_other_assign
             off, false, scenario, true);
     M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
         on, true, scenario, true), baseline);
+  }
+#endif
+}
+
+M3_TEST(native_detector_pending_midi_retention_preserves_inference_and_releases) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (bool enabled : {false, true}) {
+    for (unsigned scenario : {0U, 11U}) {
+      m3::PolyphonicPitchDetector detector;
+      m3::PolyphonicPitchDetectorTestAccess::pending_midi_retention_probe(
+          detector, enabled, scenario);
+    }
+  }
+#endif
+}
+
+M3_TEST(native_detector_pending_midi_retention_yields_to_new_claims_and_evidence) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (unsigned scenario = 1U; scenario <= 17U; ++scenario) {
+    m3::PolyphonicPitchDetector detector;
+    m3::PolyphonicPitchDetectorTestAccess::pending_midi_retention_probe(
+        detector, true, scenario);
   }
 #endif
 }

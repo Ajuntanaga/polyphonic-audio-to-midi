@@ -11,7 +11,7 @@
   "result_final": true,
   "created_at": "2026-11-15T10:15:18Z",
   "observed_at": "2026-11-15T10:29:26.734101+00:00",
-  "stage": "Paired evidence collected; immediate loss mechanisms recorded; upstream evidence-reset and group-history questions remain open",
+  "stage": "Paired loss mechanisms resolved from retained evidence; forced preview rejected; evaluate output-only stabilization without changing physical inference",
   "checkpoint": "docs/recovery/github-forced-pending-string-trace-20261115.json",
   "reference_checkpoint": "docs/recovery/forced-pending-string-trace-references-20261115.json",
   "prior_trial_checkpoint": "docs/recovery/github-forced-pending-string-reservation-20261115.json",
@@ -76,7 +76,7 @@
   "local_native_execution": false,
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
-  "next_step": "Resolve only the label304 whole-state reset branch (pre/post global active count, target pre-reset fields and exact branch reason) and the earliest label332 physical-group/owner divergence before choosing another default-off rule. Use bounded GitHub paired diagnostics with complete saved scored/raw MIDI and repeated outcome identity. Any replacement must preserve every passage frame/held count and false-output gate before full corpus, identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and separate external DAW/device validation. Do not rerun or recollect completed jobs.",
+  "next_step": "Evaluate a narrow default-off actual MIDI ownership rule for the measured inactive single-string competition, leaving physical assignment, selection, maturation and group inference unchanged. Distinguish fresh spectral corrections, new active claims, pitch changes, coasting and real groups. Require complete current-ON snapshot/outcome identity plus improved target holds with no passage held loss or false-output growth in an ordinary GitHub screen before wider corpus/timing/host checks. Do not rerun or recollect completed diagnostics.",
   "routing": {
     "github_actions": "All native builds, tests and six full recorded replays; trace windows include one second of preceding history. Collect only needed evidence.",
     "kaggle": "Legacy jobs terminal and collected; no distinct useful GPU task for this native assignment question. Do not duplicate completed jobs."
@@ -351,7 +351,7 @@
     "method": "Read the completed paired GitHub trace archive without extraction or native execution; compare captured assignment, candidate, outcome and raw MIDI decisions against the source at the recorded commit.",
     "archive_member_root": "github-results/forced-pending-string-reservation-trace/",
     "diagnostic_run_final": true,
-    "causal_diagnosis_complete": false,
+    "causal_diagnosis_complete": true,
     "label304": {
       "midi_note": 46,
       "intended_mask": 4,
@@ -362,13 +362,9 @@
       "forced_active_frames": 0,
       "current_note_ons_inside_label": 82,
       "forced_note_ons_inside_label": 0,
-      "finding": "The forced target is still selected but never activates; this is a maturation failure, not merely an emitted-pitch or lane mismatch.",
-      "causal_limit": "The first retained simultaneous assigned-mask/evidence clear is consistent with a whole CandidateState clear, including the inactive-capacity branch, and inconsistent with the energy-only reset at the inspected lifecycle branch. It does not establish which clearing branch executed or attribute that branch to forced preview. Target playable masks are not singleton there; selection/admission flags remain equal while masks differ upstream.",
-      "missing_observations": [
-        "pre-/post-update global active candidate count or exact reset-branch reason",
-        "target assigned mask and evidence immediately before reset",
-        "fast/slow evidence energy and atomic_handoff flag"
-      ],
+      "finding": "The forced replay activates note50 as a fifth candidate. When selected inactive note46 returns, the full-capacity branch clears its whole CandidateState, erasing accumulated evidence and preventing the measured target hold.",
+      "causal_limit": "The retained complete active cohort and source branch order identify the capacity reset at5637311. The upstream reason note50 activates earlier is not isolated; no replacement policy is validated by this diagnosis.",
+      "missing_observations": [],
       "counter_semantics": "evidence_ticks is captured after processing, and successful activation resets it to zero; a zero post-state counter alone does not establish lack of evidence.",
       "first_retained_evidence_state_divergence": {
         "sample": 5637311,
@@ -403,11 +399,89 @@
         "current": 59,
         "forced": 42
       },
-      "global_active_count_checked": false,
+      "global_active_count_checked": true,
       "source_locations": [
-        "native/offline/replay.cpp:3541",
-        "native/src/polyphonic_pitch_detector.cpp:12409"
-      ]
+        "native/offline/replay.cpp:1017",
+        "native/src/polyphonic_pitch_detector.cpp:12300",
+        "native/src/polyphonic_pitch_detector.cpp:12398",
+        "native/src/polyphonic_pitch_detector.cpp:12413"
+      ],
+      "capacity_limit": 5,
+      "active_cohort_history": [
+        {
+          "sample": 5637119,
+          "current_active_notes": [
+            41,
+            42,
+            43,
+            54
+          ],
+          "forced_active_notes": [
+            41,
+            42,
+            43,
+            54
+          ],
+          "target_selected_both": true,
+          "target_evidence_both": 34
+        },
+        {
+          "sample": 5637183,
+          "current_active_notes": [
+            41,
+            42,
+            43,
+            54
+          ],
+          "forced_active_notes": [
+            41,
+            42,
+            43,
+            50,
+            54
+          ],
+          "target_present_in_outcome_both": false
+        },
+        {
+          "sample": 5637247,
+          "current_active_notes": [
+            41,
+            42,
+            43,
+            54
+          ],
+          "forced_active_notes": [
+            41,
+            42,
+            43,
+            50,
+            54
+          ],
+          "target_present_in_outcome_both": false
+        },
+        {
+          "sample": 5637311,
+          "current_active_notes": [
+            41,
+            42,
+            43,
+            54
+          ],
+          "forced_active_notes": [
+            41,
+            42,
+            43,
+            50,
+            54
+          ],
+          "target_selected_both": true,
+          "current_target_evidence": 35,
+          "forced_target_evidence": 0,
+          "current_target_assigned_mask": 4,
+          "forced_target_assigned_mask": 0
+        }
+      ],
+      "branch_identification": "The first lifecycle pass counts surviving active candidates. The inactive loop skips unselected candidates before checking active_count>=max_polyphony. Outcome captures all active/selected/coasting candidates; absent note46 at5637183/5637247 is unselected, so its state survives. At5637311 it is selected and capacity is5, taking state={} before energy handling. The energy-only branch cannot clear the assigned mask."
     },
     "label332": {
       "midi_note": 36,
@@ -450,8 +524,42 @@
         "native/src/polyphonic_pitch_detector.cpp:10991",
         "native/src/polyphonic_pitch_detector.cpp:12332"
       ],
-      "causal_limit": "allocation_preview is zero on this onset row. The immediate extra-lane producer is established, but the earlier cause of current group_before2 versus forced group_before1 remains unresolved.",
-      "next_observation": "The earliest preceding divergence of candidate36 physical group/actual owner state, including competing reservation owners."
+      "causal_limit": "The first target-relevant group divergence is inside the retained window. The trace does not directly name the qualifying actual owner for the forced-preview guard; note36 is the supported matching active lane0 singleton. That missing identity field does not change the immediate allocation mechanism.",
+      "preceding_group_divergence": {
+        "first_target_relevant_peer_preview_sample": 6224447,
+        "peer_note": 33,
+        "peer_current_group_before_after": [
+          0,
+          1
+        ],
+        "peer_forced_group_before_after": [
+          0,
+          0
+        ],
+        "target_equal_through_sample": 6226367,
+        "first_target_divergence_sample": 6226431,
+        "current_target": {
+          "group_before": 1,
+          "group_proposal": 2,
+          "group_after": 2,
+          "midi_mask": 2
+        },
+        "forced_target": {
+          "group_before": 1,
+          "group_proposal": 1,
+          "group_after": 1,
+          "midi_mask": 1
+        },
+        "peer_inactive_without_midi_both": true,
+        "current_peer_allocation_preview": false,
+        "forced_peer_allocation_preview": true,
+        "different_target_group_before_from_sample": 6226495,
+        "mechanism": "Forced preview writes only the pending33 encoded choice and skips advance(current,playable), so pending33 does not consume lane0 in the joint solver. Active36 can remain on lane0 instead of moving to lane1. This physical-group history feeds the later6237183 profile-mixture expansion to mask3.",
+        "source_locations": [
+          "native/src/polyphonic_pitch_detector.cpp:7055",
+          "native/src/polyphonic_pitch_detector.cpp:7083"
+        ]
+      }
     },
     "label389": {
       "midi_note": 33,
@@ -521,7 +629,9 @@
         "native/src/polyphonic_pitch_detector.cpp:11645"
       ]
     },
-    "decision": "Keep the forced preview trial rejected. Aggregate target gains do not offset passage losses; no policy, default, installed output or scoreboard changes.",
-    "evidence_limit": "Snapshot output is written before final MIDI-owner reconciliation and is limited to five visible voices. Detected candidate identity, rendered pitch, virtual MIDI intent and actual raw ownership must be kept separate."
+    "decision": "Keep forced preview rejected. Changing pending physical occupancy perturbs other candidates maturation, group inference and projection. Evaluate a narrower output-only rule against the measured inactive competition while preserving inference streams; it remains an untested hypothesis.",
+    "evidence_limit": "Snapshot output is written before final MIDI-owner reconciliation and is limited to five visible voices. Detected candidate identity, rendered pitch, virtual MIDI intent and actual raw ownership must be kept separate.",
+    "causal_diagnosis_scope": "Immediate loss mechanisms and the preceding target-relevant assignment/group divergence are resolved for labels304,332,389. This is not a complete causal account of every changed peer activation or a validated replacement policy.",
+    "recorded_at": "2026-11-15T10:53:51.783513+00:00"
   }
 }

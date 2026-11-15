@@ -89,7 +89,59 @@ def read_events(path, *, sample_count, transition_count):
     return events
 
 
-def summarize(events, labels, *, sample_count, sample_rate):
+OUTPUT_SAFETY_FIELDS = ('false_wrong_note_voice_samples', 'false_wrong_string_voice_samples',
+                        'false_gap_voice_samples')
+
+
+def _output_safety(spans, labels, sample_count):
+    """Classify each emitted voice once against the union of active annotations."""
+    boundaries = defaultdict(list)
+    boundaries[0] = []
+    boundaries[sample_count] = []
+    for label in labels:
+        for edge, delta in (('start_sample', 1), ('end_sample', -1)):
+            boundaries[label[edge]].append(('label', label['midi_note'], label['string_mask'], delta))
+    for note, intervals in spans.items():
+        for left, right, mask, unassigned in intervals:
+            boundaries[left].append(('start', note, mask, unassigned))
+            boundaries[right].append(('end', note, 0, False))
+    active, expected = {}, defaultdict(Counter)
+    counts = dict.fromkeys((*OUTPUT_SAFETY_FIELDS, 'matched_voice_samples', 'emitted_voice_samples'), 0)
+    previous = active_labels = 0
+    for sample in sorted(boundaries):
+        duration = sample - previous
+        for note, (mask, unassigned) in active.items():
+            voices = mask.bit_count() + int(unassigned)
+            counts['emitted_voice_samples'] += voices * duration
+            if not active_labels:
+                counts['false_gap_voice_samples'] += voices * duration
+            elif not expected[note]:
+                counts['false_wrong_note_voice_samples'] += voices * duration
+            elif expected[note][0]:
+                counts['matched_voice_samples'] += voices * duration
+            else:
+                allowed = 0
+                for annotated_mask in expected[note]:
+                    allowed |= annotated_mask
+                matched = (mask & allowed).bit_count()
+                counts['matched_voice_samples'] += matched * duration
+                counts['false_wrong_string_voice_samples'] += (voices - matched) * duration
+        # End the old mask before starting its replacement at the same sample.
+        for kind, note, mask, delta in sorted(boundaries[sample], key=lambda action: action[0] != 'end'):
+            if kind == 'label':
+                expected[note][mask] += delta
+                active_labels += delta
+                if not expected[note][mask]:
+                    del expected[note][mask]
+            elif kind == 'end':
+                active.pop(note, None)
+            else:
+                active[note] = mask, delta
+        previous = sample
+    return counts
+
+
+def summarize(events, labels, *, sample_count, sample_rate, include_output_safety=False):
     """Reduce complete detector transitions, retaining EOF uncertainty explicitly."""
     if (type(sample_count) is not int or sample_count <= 0
             or type(sample_rate) is not int or sample_rate <= 0):
@@ -183,7 +235,7 @@ def summarize(events, labels, *, sample_count, sample_rate):
                 first_exact_hold_delay_samples=None if first is None else first - start,
                 note_ons_inside_label=bisect_left(ons, end) - bisect_left(ons, start)))
 
-    return dict(schema='m3_detector_midi_lifecycle_v1', sample_rate=sample_rate,
+    result = dict(schema='m3_detector_midi_lifecycle_v1', sample_rate=sample_rate,
         sample_count=sample_count, transitions=len(events), note_ons=counts['on'],
         note_offs=counts['off'], event_error_counts=dict(errors), event_error_examples=examples,
         coverage_valid=not errors, balanced_at_recording_end=not errors and not active,
@@ -207,6 +259,15 @@ def summarize(events, labels, *, sample_count, sample_rate):
             'Pairing anomalies describe detector trace order, before host ledger sorting or repair. '
             'Open notes at EOF need recording-tail or host-release checks before calling them stuck. '
             'No silence, forced EOF release, onset grace or release tolerance is invented.')
+    if include_output_safety:
+        result['output_safety'] = dict(valid=not errors,
+            counts=None if errors else _output_safety(spans, labels, sample_count),
+            interpretation='Raw emitted voice-samples, counted once per voice against the '
+                'union of simultaneous labels. Wrong-note, wrong-string and unlabeled-gap '
+                'outputs are disjoint. Gap outputs are extra notes, not missing notes. '
+                'A zero label mask accepts any lane; unassigned output fails a nonzero mask. '
+                'No onset/release grace. These are not snapshot frames or host MIDI.')
+    return result
 
 
 def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False):

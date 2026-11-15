@@ -302,6 +302,7 @@ int main(int argc, char** argv) {
   bool diagnostic_spectral_lane_collision = false;
   bool diagnostic_pending_string_reservation = false;
   bool diagnostic_forced_pending_string_reservation = false;
+  bool diagnostic_pending_midi_retention = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
   bool diagnostic_cue_delay_explicit = false;
@@ -622,6 +623,8 @@ int main(int argc, char** argv) {
       diagnostic_pending_string_reservation = true;
     } else if (std::strcmp(argv[index], "--diagnostic-forced-pending-string-reservation") == 0) {
       diagnostic_forced_pending_string_reservation = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-pending-midi-retention") == 0) {
+      diagnostic_pending_midi_retention = true;
     } else if (std::strcmp(argv[index], "--diagnostic-retained-spectral-assignment") == 0) {
       diagnostic_retained_spectral_assignment = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
@@ -1190,7 +1193,8 @@ int main(int argc, char** argv) {
           diagnostic_thread_cpu, diagnostic_skip_empty_fine_reset,
           diagnostic_direct_evidence_retention, diagnostic_projection_preview_admission,
           diagnostic_retained_spectral_assignment, diagnostic_spectral_lane_collision,
-          diagnostic_pending_string_reservation, diagnostic_forced_pending_string_reservation)) {
+          diagnostic_pending_string_reservation, diagnostic_forced_pending_string_reservation,
+          diagnostic_pending_midi_retention)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
