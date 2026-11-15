@@ -1,0 +1,82 @@
+{
+  "schema": "m3_github_forced_pending_string_trace_checkpoint_v1",
+  "task": "forced-pending-string-reservation-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T10:14:47.024968+00:00",
+  "observed_at": "2026-11-15T10:14:47.024968+00:00",
+  "stage": "Six paired captures prepared; pending source checkpoint and a single GitHub dispatch",
+  "checkpoint": "docs/recovery/github-forced-pending-string-trace-20261115.json",
+  "reference_checkpoint": "docs/recovery/forced-pending-string-trace-references-20261115.json",
+  "prior_trial_checkpoint": "docs/recovery/github-forced-pending-string-reservation-20261115.json",
+  "dataset": "ordinary",
+  "note": 37,
+  "label_index": 17,
+  "labels": [
+    304,
+    332,
+    389
+  ],
+  "cases": [
+    {
+      "label_index": 304,
+      "midi_note": 46,
+      "string_mask": 4,
+      "start_sample": 5630617,
+      "end_sample": 5702400,
+      "window_start": 5534592,
+      "window_end": 5703040
+    },
+    {
+      "label_index": 332,
+      "midi_note": 36,
+      "string_mask": 1,
+      "start_sample": 6201839,
+      "end_sample": 6273600,
+      "window_start": 6105792,
+      "window_end": 6274240
+    },
+    {
+      "label_index": 389,
+      "midi_note": 33,
+      "string_mask": 1,
+      "start_sample": 7670639,
+      "end_sample": 7719715,
+      "window_start": 7574592,
+      "window_end": 7720320
+    }
+  ],
+  "policies": [
+    "current-on",
+    "forced-trial-on"
+  ],
+  "capture_count": 6,
+  "report_relative_path": "forced-pending-string-reservation-trace/report.json",
+  "report_available": false,
+  "outputs_downloaded_once": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "local_checks": {
+    "python_mock_contracts": 41,
+    "result": "passed",
+    "native_execution": false
+  },
+  "acceptance": "All six complete scored and raw MIDI streams must retain their respective saved references, held measurements remain unchanged, observed joint assignments reproduce exactly, and repeated complete outcome/MIDI streams match within each policy. This diagnostic does not change acceptance of the rejected trial.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "runtime_rule_changed": false,
+  "local_native_execution": false,
+  "native_timing": "not measured",
+  "external_host_and_hardware": "not measured",
+  "next_step": "Collect the six paired captures once, require saved full TSV/MIDI and repeated outcome identity, then identify the first changed pending/owner decision for labels304,332,389. Keep the forced trial rejected; no replacement without zero passage frame/held losses or false-output growth, identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and separate external host/device validation.",
+  "routing": {
+    "github_actions": "All native builds, tests and six full recorded replays; trace windows include one second of preceding history. Collect only needed evidence.",
+    "kaggle": "Legacy jobs terminal and collected; no distinct useful GPU task for this native assignment question. Do not duplicate completed jobs."
+  }
+}

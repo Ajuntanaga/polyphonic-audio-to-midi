@@ -76,11 +76,16 @@ def explain_frames(frames, assignments, label):
                 state_transition_count=len(transitions), first_state_transitions=transitions[:16]), transitions
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
+        cases=None, conditions=None, window=None,
+        schema='m3_pending_string_reservation_trace_v1'):
+    cases = CASES if cases is None else cases
+    conditions = CONDITIONS[1:] if conditions is None else conditions
+    window = window_for if window is None else window
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
-    report = dict(schema='m3_pending_string_reservation_trace_v1', state='running', final=False,
-        stage='verify inputs', dataset='ordinary', settings=SETTINGS, cases=CASES, runs={},
+    report = dict(schema=schema, state='running', final=False,
+        stage='verify inputs', dataset='ordinary', settings=SETTINGS, cases=cases, runs={},
         runtime_rule_changed=False, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', live_readiness='not measured')
 
@@ -97,12 +102,12 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
         verify_inputs(corpus, manifest, 'ordinary')
         report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
             input_manifest_sha256=digest(manifest_path), reference_checkpoint_sha256=digest(reference_path))
-        for policy, flags in CONDITIONS[1:]:
+        for policy, flags in conditions:
             reference = references[policy]
             captures = None
-            for label in CASES:
+            for label in cases:
                 index, note = label['label_index'], label['midi_note']
-                start, end = window_for(label)
+                start, end = window(label)
                 stem = f'{policy}-label{index}'
                 destination = output / stem
                 destination.mkdir()

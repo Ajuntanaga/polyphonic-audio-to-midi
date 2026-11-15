@@ -1,0 +1,130 @@
+{
+  "schema": "m3_forced_pending_string_trace_references_v1",
+  "source_report": {
+    "repository": "Ajuntanaga/m3-offload",
+    "run_id": 43701541606,
+    "source_commit": "4c266865910f819df8428041ddbc5622b5520ed6",
+    "sha256": "9779e004206e645cdbfaba8f7d54660bd650f5fbab567337ddfa5d13f0ebcdff"
+  },
+  "trial_accepted": false,
+  "replay_references": {
+    "current-on": {
+      "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+      "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "held_labels": {
+        "304": {
+          "label_index": 304,
+          "midi_note": 46,
+          "string_mask": 4,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 768,
+          "unmatched_hold_samples": 71015,
+          "longest_exact_hold_samples": 768,
+          "exact_hold_segments": 1,
+          "first_exact_hold_delay_samples": 25830,
+          "note_ons_inside_label": 82
+        },
+        "332": {
+          "label_index": 332,
+          "midi_note": 36,
+          "string_mask": 1,
+          "start_sample": 6201839,
+          "end_sample": 6273600,
+          "annotated_hold_samples": 71761,
+          "exact_held_samples": 42561,
+          "unmatched_hold_samples": 29200,
+          "longest_exact_hold_samples": 14464,
+          "exact_hold_segments": 13,
+          "first_exact_hold_delay_samples": 8016,
+          "note_ons_inside_label": 25
+        },
+        "389": {
+          "label_index": 389,
+          "midi_note": 33,
+          "string_mask": 1,
+          "start_sample": 7670639,
+          "end_sample": 7719715,
+          "annotated_hold_samples": 49076,
+          "exact_held_samples": 13504,
+          "unmatched_hold_samples": 35572,
+          "longest_exact_hold_samples": 11712,
+          "exact_hold_segments": 3,
+          "first_exact_hold_delay_samples": 1104,
+          "note_ons_inside_label": 3
+        }
+      }
+    },
+    "forced-trial-on": {
+      "tsv_sha256": "eafe295cb2eb401cf571c03de0fe9a6816e2d7e1362bad3f584c53db4914a323",
+      "midi_sha256": "0f56590d91c4817605061454076439447cf14645a1ed8ab30a99783fd79718c7",
+      "output": {
+        "labeled": 528632,
+        "matched": 147002,
+        "false_wrong_note_voices": 163865,
+        "false_wrong_string_voices": 90934,
+        "false_gap_voices": 62829,
+        "false_positive_voices": 317628,
+        "fingerprint": "b7b72be10bfa13a6"
+      },
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "held_labels": {
+        "304": {
+          "label_index": 304,
+          "midi_note": 46,
+          "string_mask": 4,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 0,
+          "unmatched_hold_samples": 71783,
+          "longest_exact_hold_samples": 0,
+          "exact_hold_segments": 0,
+          "first_exact_hold_delay_samples": null,
+          "note_ons_inside_label": 0
+        },
+        "332": {
+          "label_index": 332,
+          "midi_note": 36,
+          "string_mask": 1,
+          "start_sample": 6201839,
+          "end_sample": 6273600,
+          "annotated_hold_samples": 71761,
+          "exact_held_samples": 21824,
+          "unmatched_hold_samples": 49937,
+          "longest_exact_hold_samples": 10880,
+          "exact_hold_segments": 6,
+          "first_exact_hold_delay_samples": 8016,
+          "note_ons_inside_label": 8
+        },
+        "389": {
+          "label_index": 389,
+          "midi_note": 33,
+          "string_mask": 1,
+          "start_sample": 7670639,
+          "end_sample": 7719715,
+          "annotated_hold_samples": 49076,
+          "exact_held_samples": 1536,
+          "unmatched_hold_samples": 47540,
+          "longest_exact_hold_samples": 1536,
+          "exact_hold_segments": 1,
+          "first_exact_hold_delay_samples": 21776,
+          "note_ons_inside_label": 1
+        }
+      }
+    }
+  }
+}

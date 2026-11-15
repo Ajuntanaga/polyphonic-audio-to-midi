@@ -48,7 +48,8 @@ class PortablePendingStringTraceTests(unittest.TestCase):
         args[3].write_text(json.dumps(dict(replay_references=refs)))
         return args, text
 
-    def execute(self, args, text, *, drift=None):
+    def execute(self, args, text, *, drift=None, runner=run,
+                trial_flag='--diagnostic-pending-string-reservation'):
         calls = 0
 
         def replay(command, *, stdout, stderr, check, timeout):
@@ -57,7 +58,7 @@ class PortablePendingStringTraceTests(unittest.TestCase):
             self.assertTrue(check)
             self.assertGreater(timeout, 0)
             self.assertIn('--diagnostic-spectral-lane-collision', command)
-            trial = '--diagnostic-pending-string-reservation' in command
+            trial = trial_flag in command
             self.assertEqual(int(command[command.index('--candidate-trace-note') + 1]), 42)
             stdout.write(text + ('\n' if drift == 'output' else ''))
             write_rows(Path(command[command.index('--candidate-trace') + 1]), candidates(42))
@@ -71,12 +72,13 @@ class PortablePendingStringTraceTests(unittest.TestCase):
                 assignments.pop(1)
             write_rows(Path(command[command.index('--assignment-trace') + 1]), assignments)
             write_events(Path(command[command.index('--midi-event-trace') + 1]),
-                         [event(32 if trial else 64, 'on', 42, 0), event(191, 'off', 42, 1)])
+                         [event(1 if drift == 'midi' else (32 if trial else 64), 'on', 42, 0),
+                          event(191, 'off', 42, 1)])
 
         with patch('tools.portable_pending_string_trace.CASES', CASES), patch(
                 'tools.portable_pending_string_trace.window_for', return_value=(0, 192)), patch(
                 'tools.portable_pending_string_trace.subprocess.run', side_effect=replay) as mocked:
-            run(*args)
+            runner(*args)
         return mocked
 
     def test_six_captures_preserve_both_references_and_retain_compressed_evidence(self):

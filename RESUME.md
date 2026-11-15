@@ -1,4 +1,24 @@
-# Current checkpoint: paired pending-string diagnostic complete
+# Current checkpoint: paired forced-preview diagnostic prepared
+
+Six bounded captures are prepared for ordinary labels304,332,389 under current-ON and rejected forced-trial-ON. Each window includes one second of preceding history. Checkpoint: `docs/recovery/github-forced-pending-string-trace-20261115.json`; status key `portable_compute.forced_pending_string_trace`. Full saved TSV/raw MIDI and repeated outcome identity are required before interpreting the decisions. Forty-one Python mock/parser checks passed; native compilation and all recorded replays stay on GitHub Actions. Dispatch once after the checked source and worker checkpoints are pushed.
+
+# Previous checkpoint: forced pending-string screen rejected
+
+GitHub run `43701541606` completed successfully, but its ordinary recording screen is rejected. Source `4c266865910f819df8428041ddbc5622b5520ed6`, worker `5e46b3ef92cdabea77cb189fc8fefc69faa7184f`. Checkpoint: `docs/recovery/github-forced-pending-string-reservation-20261115.json`; status key `portable_compute.forced_pending_string_reservation`. The small artifact is collected once and hash-verified at `build/github-results/forced-pending-string-reservation-43701541606`. The 6,497,700-byte compressed evidence archive is also collected once and hash-verified; its receipt is `build/github-results/forced-pending-string-reservation-43701541606/bulk-collection-receipt.json`. Do not poll, rerun or redownload these completed jobs.
+
+The narrower default-off rule previews an immature candidate only when it has one playable string and competes with a selected, sounding physical singleton that actually owns that string. Both saved OFF/current-ON scored and raw MIDI references reproduce bit-identically. Label17 exact held samples improve from 40000/71783 (55.72%) to 55041/71783 (76.68%); attacks fall from 156 to 15 and the longest correct hold grows from 3968 to 52545 samples. These are raw MIDI durations, not labeled-frame scores or delivered-host MIDI.
+
+Ordinary matched frames rise from 145400 to 147002/528632 (27.5050% to 27.8080%). Wrong-note outputs fall by 398, wrong-string outputs by 1704, and extra outputs during unlabeled gaps by 27. However, 17 passages lose 835 matches and 10 labels lose 45889 held samples. Label304 loses its 768 exact held samples and has no target-pitch attacks; label332 falls 42561 to 21824 held samples; label389 falls 13504 to 1536. Aggregate gains do not meet the no-regression gate. Gap outputs are extra notes, not missing notes.
+
+The earlier failure at label306 is avoided: exact holds rise 46529 to 68929. Label335 retains all 64001 held samples but loses one snapshot match. Raw pairing remains valid with no new conflicts. Installed output, defaults and scoreboard remain unchanged; the trial is not promoted.
+
+GitHub passed 161 Python contracts and both focused native tests. Source portable `43701501979` passed native tests, comparison contracts and synthetic buffer parity; source CI `43701501997` passed source contracts, native tests and the production VST3 package build. The package is uninstalled. No native execution occurred locally. This screen does not establish corpus allocation, buffer, native timing or external host/device acceptance.
+
+Raw MIDI separates the losses: label304 has no target-pitch attacks, label332 adds a second lane carrying the target pitch and fails exact mask1, and label389 misses its first two target-pitch attacks. Raw lane agreement does not establish internal detector agreement. The compact timeline is `build/github-results/forced-pending-string-reservation-43701541606/raw-passage-comparison.json`.
+
+Next: capture current-ON and rejected forced-trial-ON assignment/candidate decisions for labels304,332,389 with one second of preceding history. Require full saved TSV/raw MIDI identity and identical repeated outcome streams. Identify the first changed pending/owner decision before another default-off correction. Do not broaden this rejected trial. Any replacement must preserve every passage and false-output gate before wider corpus checks, identical OFF/buffers, zero allocations, p99 <=166666 ns, max <=333333 ns, zero overruns and external DAW/device validation. All native execution stays on GitHub; no separate useful Kaggle GPU task is identified.
+
+# Previous checkpoint: paired pending-string diagnostic complete
 
 GitHub run `43698368720` completed successfully: six captures comparing current-ON and rejected trial-ON for ordinary labels17,306,335. Source `ff63283ce4f0b021f64be76b813348947658fa75`, worker `343ab18aba24931bd9318572a6ed2377b0fd3dcf`. Checkpoint: `docs/recovery/github-pending-string-trace-20261115.json`. The small report is collected once and hash-verified at `build/github-results/pending-string-reservation-trace-43698368720`. Do not poll, rerun or redownload completed jobs. Source portable `43698351370` and CI `43698351242` passed.
 

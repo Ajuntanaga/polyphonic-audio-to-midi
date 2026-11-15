@@ -12,7 +12,7 @@
   "result_final": true,
   "created_at": "2026-11-15T09:10:21.615173+00:00",
   "observed_at": "2026-11-15T09:27:20.676713+00:00",
-  "stage": "Six paired captures complete; saved streams preserved; lost-label mechanism analysis in progress",
+  "stage": "Six paired captures complete; saved streams preserved; lost-label ownership mechanisms recorded",
   "checkpoint": "docs/recovery/github-pending-string-trace-20261115.json",
   "reference_checkpoint": "docs/recovery/pending-string-trace-references-20261115.json",
   "prior_trial_checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
