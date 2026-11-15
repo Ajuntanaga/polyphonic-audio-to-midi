@@ -1,15 +1,15 @@
 {
   "schema": "m3_suppressed_adjacent_admission_checkpoint_v1",
-  "updated_at": "2026-11-15T14:44:36.080398+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T14:58:59.973166+00:00",
+  "state": "rejected",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
-    "commit": null,
+    "commit": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
     "base_commit": "0d07358f0abdfc59db7cb996d4f30c71cc6b3a43",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "91425781cdf67f540719e01085d529abea82a463",
+    "run_id": "43726121150",
     "run_attempt": "1",
     "task": "suppressed-adjacent-admission-trial",
     "dataset": "physical-long",
@@ -65,7 +65,7 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report and bulk evidence collected once and hash verified",
   "unmeasured_gates": [
     "full corpus",
     "buffer identity",
@@ -75,5 +75,209 @@
     "zero deadline overruns",
     "external DAW/device delivery"
   ],
-  "next": "Run the single bounded GitHub screen. Stop on parity or any regression; do not widen the exact spectral-suppression predicate. A safe target gain on all four datasets qualifies for wider safety checks only."
+  "next": "Keep the rule rejected. A bounded paired current/trial observer capture must preserve saved full TSV and raw MIDI while recording exact suppression, eligibility and joint assignment at the six note52 switches. No policy broadening or repeated safety screen.",
+  "local_output": "build/github-results/suppressed-adjacent-admission-43726121150",
+  "small_artifact": "m3-report-43726121150-1",
+  "bulk_artifact": "m3-evidence-43726121150-1",
+  "dispatch_receipt": "build/github-results/suppressed-adjacent-admission-dispatch-20261115/dispatch-result.json",
+  "last_remote_observation_at": "2026-11-15T14:47:22.458919+00:00",
+  "workflow_conclusion": "success",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T14:45:11Z",
+      "databaseId": 43726058623,
+      "headSha": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
+      "status": "completed",
+      "updatedAt": "2026-11-15T14:48:38Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43726058623",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T14:45:11Z",
+      "databaseId": 43726058637,
+      "headSha": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
+      "status": "completed",
+      "updatedAt": "2026-11-15T14:46:12Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43726058637",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "active_step": null,
+  "report_path": "build/github-results/suppressed-adjacent-admission-43726121150/suppressed-adjacent-admission/report.json",
+  "report_sha256": "20738b442cb3453188b173a3c8538d8dc87cefeedb3d24a46bbcf96bf458eef5",
+  "collection_receipt": "build/github-results/suppressed-adjacent-admission-43726121150/collection-receipt.json",
+  "small_artifact_bytes": 10852,
+  "bulk_artifact_metadata": {
+    "id": 14166955821,
+    "node_id": "MDg6QXJ0aWZhY3QxNDE2Njk1NTgyMQ==",
+    "name": "m3-evidence-43726121150-1",
+    "size_in_bytes": 688769,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14166955821",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14166955821/zip",
+    "expired": false,
+    "digest": "sha256:ff230cacbea69bc370ff366d9d7ac0cbb12518b1d664a17d493b2294152f1bbd",
+    "created_at": "2026-11-15T14:48:06Z",
+    "updated_at": "2026-11-15T14:48:06Z",
+    "expires_at": "2026-11-22T14:48:06Z",
+    "workflow_run": {
+      "id": 43726121150,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "91425781cdf67f540719e01085d529abea82a463"
+    }
+  },
+  "remote_validation": {
+    "focused_native_tests_passed": 3,
+    "parser_comparison_contracts_passed": 225,
+    "completed_replays": 3,
+    "completed_datasets": 1,
+    "remaining_datasets_not_run": [
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "verified_input_count": 30,
+    "reference_identity_pass": true
+  },
+  "result": {
+    "bounded_screen_pass": false,
+    "stage": "stopped at note safety regression",
+    "target_hold": {
+      "before": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "improved": false
+    },
+    "snapshot_before": {
+      "labeled": 68441,
+      "matched": 41452,
+      "false_wrong_note_voices": 67769,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75881,
+      "fingerprint": "6ecf88865ddc34e4"
+    },
+    "snapshot_after": {
+      "labeled": 68441,
+      "matched": 41452,
+      "false_wrong_note_voices": 67340,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75452,
+      "fingerprint": "18b1c5a2a144b7f9"
+    },
+    "comparison": {
+      "snapshot": {
+        "delta": {
+          "matched": 0,
+          "false_wrong_note_voices": -429,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 0,
+          "false_positive_voices": -429
+        },
+        "changed_labels": [],
+        "lost_labels": [],
+        "increased_error_counts": [],
+        "gate_pass": true,
+        "output_bit_identical": false
+      },
+      "inference_bit_identical": null,
+      "inference_identity_required": false,
+      "sample_clock_identical": true,
+      "held_pairing_valid": true,
+      "changed_held_labels": [],
+      "held_losses": [],
+      "improved_hold_and_attack_labels": [],
+      "exact_held_samples_delta": 0,
+      "output_safety_delta": {
+        "false_wrong_note_voice_samples": -27456,
+        "false_wrong_string_voice_samples": 0,
+        "false_gap_voice_samples": 0,
+        "false_wrong_note_onsets": 4,
+        "false_wrong_string_onsets": 0,
+        "false_gap_onsets": 0
+      },
+      "raw_conflict_delta": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "note_safety_pass": false
+    },
+    "raw_output_safety_before": {
+      "false_wrong_note_voice_samples": 3770334,
+      "false_wrong_string_voice_samples": 174751,
+      "false_gap_voice_samples": 281028,
+      "matched_voice_samples": 7935231,
+      "emitted_voice_samples": 12161344,
+      "false_wrong_note_onsets": 411,
+      "false_wrong_string_onsets": 44,
+      "false_gap_onsets": 141,
+      "matched_onsets": 159,
+      "emitted_onsets": 755
+    },
+    "raw_output_safety_after": {
+      "false_wrong_note_voice_samples": 3742878,
+      "false_wrong_string_voice_samples": 174751,
+      "false_gap_voice_samples": 281028,
+      "matched_voice_samples": 7935231,
+      "emitted_voice_samples": 12133888,
+      "false_wrong_note_onsets": 415,
+      "false_wrong_string_onsets": 44,
+      "false_gap_onsets": 141,
+      "matched_onsets": 159,
+      "emitted_onsets": 759
+    },
+    "candidate_raw_conflicts": {
+      "cross_pitch_on_before_release": 0,
+      "repeated_pitch_on_before_release": 0,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "candidate_balanced_at_recording_end": true,
+    "target_percent_before": 64.03321651683682,
+    "target_percent_after": 64.03321651683682
+  },
+  "source_ci_last_observation_at": "2026-11-15T14:49:30.226399+00:00",
+  "bulk_collection_state": "collected_once_hash_verified",
+  "bulk_collection_receipt": "build/github-results/suppressed-adjacent-admission-43726121150/bulk-successful-collection-receipt.json",
+  "saved_midi_diagnosis": {
+    "path": "build/github-results/suppressed-adjacent-admission-43726121150/saved-midi-difference.json",
+    "sha256": "194eedb8b751a7ab3729b73aa12e0437cd5ba713b91118d63c923ffcc590f168",
+    "added_note52_lane_switches": 6,
+    "removed_note39_attacks": 2,
+    "net_false_onset_delta": 4,
+    "target_improved": false
+  }
 }

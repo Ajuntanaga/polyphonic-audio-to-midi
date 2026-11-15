@@ -4480,6 +4480,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_TRUE(detector.configure(96000.0, config));
     M3_EXPECT_FALSE(detector.diagnostic_suppressed_adjacent_admission_);
     detector.set_suppressed_adjacent_admission_for_diagnostics(enabled);
+    detector.offline_replay_diagnostics_enabled_ = true;
     const std::uint8_t note = lower_peer ? 41U : 39U;
     const std::size_t candidate = note - detector.lowest_note_;
     const std::size_t peer = 40U - detector.lowest_note_;
@@ -4540,6 +4541,24 @@ struct PolyphonicPitchDetectorTestAccess final {
       M3_EXPECT_EQ(state.midi_voice_mask, initial_midi);
       M3_EXPECT_EQ(state.assigned_string_mask, 2U);
       M3_EXPECT_EQ(state.release_ticks, 2U);
+      const auto observed = detector.candidate_admission_diagnostics(note).adjacent;
+      M3_EXPECT_EQ(observed.observed, guard != 19U);
+      if (observed.observed) {
+        M3_EXPECT_EQ(observed.tick, detector.decision_counter_);
+        M3_EXPECT_EQ(observed.enabled, enabled);
+        M3_EXPECT_TRUE(observed.raw_before);
+        M3_EXPECT_EQ(observed.raw_after, eligible[candidate]);
+        M3_EXPECT_EQ(observed.prior_active, initial_active);
+        M3_EXPECT_EQ(observed.post_active, initial_active);
+        M3_EXPECT_EQ(observed.prior_midi, initial_midi);
+        M3_EXPECT_EQ(observed.post_midi, initial_midi);
+        M3_EXPECT_EQ(observed.prior_assigned, 2U);
+        M3_EXPECT_EQ(observed.post_assigned, 2U);
+        if (!enabled) {
+          M3_EXPECT_EQ(observed.ticks_before, 0U);
+          M3_EXPECT_EQ(observed.ticks_after, 0U);
+        }
+      }
       return eligible[candidate];
     };
     constexpr unsigned kRequired = 240U;  // 160 ms at 96 kHz / 64 samples.

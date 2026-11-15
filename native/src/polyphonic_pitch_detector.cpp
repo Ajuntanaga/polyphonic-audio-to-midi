@@ -2519,9 +2519,18 @@ PolyphonicPitchDetector::candidate_admission_diagnostics(
     return {};
   }
   const std::size_t candidate = midi_note - lowest_note_;
-  return candidate < static_cast<std::size_t>(candidate_count_)
-             ? candidate_admission_diagnostics_[candidate]
-             : CandidateAdmissionDiagnostics{};
+  if (candidate >= static_cast<std::size_t>(candidate_count_)) return {};
+  auto result = candidate_admission_diagnostics_[candidate];
+  if (result.adjacent.observed) {
+    const auto& state = candidate_states_[candidate];
+    result.adjacent.post_active = state.active;
+    result.adjacent.post_suppressed = state.spectral_duplicate_output_suppressed;
+    result.adjacent.post_assigned = state.assigned_string_mask;
+    result.adjacent.post_midi = state.midi_voice_mask;
+    result.adjacent.post_attack = state.attack_ticks;
+    result.adjacent.post_release = state.release_ticks;
+  }
+  return result;
 }
 
 StringAssignmentDiagnostics
@@ -3247,14 +3256,17 @@ void PolyphonicPitchDetector::filter_suppressed_adjacent_admission_for_diagnosti
     const std::array<double, kMaxCandidates>& fundamentals,
     std::size_t count,
     std::array<bool, kMaxCandidates>& raw_eligible) noexcept {
-  if (!diagnostic_suppressed_adjacent_admission_) return;
+  const bool enabled = diagnostic_suppressed_adjacent_admission_;
+  if (!enabled && !offline_replay_diagnostics_enabled_) return;
   // Skipped decisions (including quiet input) cannot count as consecutive
   // evidence. This opt-in filter changes admission only, never MIDI owners.
-  if (decision_counter_ - diagnostic_suppressed_adjacent_last_tick_ != 1U)
-    diagnostic_suppressed_adjacent_ticks_ = {};
-  diagnostic_suppressed_adjacent_last_tick_ = decision_counter_;
+  if (enabled) {
+    if (decision_counter_ - diagnostic_suppressed_adjacent_last_tick_ != 1U)
+      diagnostic_suppressed_adjacent_ticks_ = {};
+    diagnostic_suppressed_adjacent_last_tick_ = decision_counter_;
+  }
   if (profile_mode_ != ProfileMode::m3 || max_fret_ <= 2U) {
-    diagnostic_suppressed_adjacent_ticks_ = {};
+    if (enabled) diagnostic_suppressed_adjacent_ticks_ = {};
     return;
   }
   const auto required = static_cast<std::uint16_t>(std::clamp(
@@ -3284,9 +3296,10 @@ void PolyphonicPitchDetector::filter_suppressed_adjacent_admission_for_diagnosti
         !has_m3_candidate_evidence(scores, fundamentals, candidate, count) &&
         phase.settled && std::isfinite(phase.cents) &&
         std::abs(phase.cents) > 50.0 && std::abs(phase.cents) <= 150.0;
+    const bool self_qualifies = qualifies;
+    const std::size_t peer = phase.cents > 0.0 ? candidate + 1U :
+        (candidate > 0U ? candidate - 1U : count);
     if (qualifies) {
-      const std::size_t peer = phase.cents > 0.0 ? candidate + 1U :
-          (candidate > 0U ? candidate - 1U : count);
       qualifies = peer < count && ordinary_eligible[peer] &&
           candidate_states_[peer].active &&
           !output_suppressed(candidate_states_[peer]) &&
@@ -3296,11 +3309,42 @@ void PolyphonicPitchDetector::filter_suppressed_adjacent_admission_for_diagnosti
           has_direct_fundamental_peak(scores, fundamentals, peer, count);
     }
     auto& ticks = diagnostic_suppressed_adjacent_ticks_[candidate];
-    if (!qualifies) {
-      ticks = 0U;
-    } else {
-      if (ticks < required) ++ticks;
-      if (ticks >= required) raw_eligible[candidate] = false;
+    const auto ticks_before = ticks;
+    if (enabled) {
+      if (!qualifies) {
+        ticks = 0U;
+      } else {
+        if (ticks < required) ++ticks;
+        if (ticks >= required) raw_eligible[candidate] = false;
+      }
+    }
+    if (offline_replay_diagnostics_enabled_) {
+      auto& observation = candidate_admission_diagnostics_[candidate].adjacent;
+      observation.observed = true;
+      observation.tick = decision_counter_;
+      observation.enabled = enabled;
+      observation.raw_before = ordinary_eligible[candidate];
+      observation.raw_after = raw_eligible[candidate];
+      observation.self_qualifies = self_qualifies;
+      observation.qualifies = qualifies;
+      observation.ticks_before = ticks_before;
+      observation.ticks_after = ticks;
+      observation.required = required;
+      observation.peer = peer < count ? static_cast<std::uint8_t>(lowest_note_ + peer)
+                                     : kTunerNoSignalNote;
+      observation.prior_active = state.active;
+      observation.prior_suppressed = state.spectral_duplicate_output_suppressed;
+      observation.prior_assigned = state.assigned_string_mask;
+      observation.prior_midi = state.midi_voice_mask;
+      observation.group = group;
+      observation.prior_attack = state.attack_ticks;
+      observation.prior_release = state.release_ticks;
+      observation.phase_cents = phase.cents;
+      observation.phase_valid = phase.valid;
+      observation.phase_settled = phase.settled;
+      observation.direct = has_direct_fundamental_peak(scores, fundamentals, candidate, count);
+      observation.local = is_local_peak(scores, candidate, count);
+      observation.evidence = has_m3_candidate_evidence(scores, fundamentals, candidate, count);
     }
   }
 }
@@ -5119,7 +5163,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
 #endif
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_suppressed_adjacent_admission_)
+  if (diagnostic_suppressed_adjacent_admission_ || offline_replay_diagnostics_enabled_)
     filter_suppressed_adjacent_admission_for_diagnostics(
         scores, fundamentals, count, raw_eligible);
 #endif

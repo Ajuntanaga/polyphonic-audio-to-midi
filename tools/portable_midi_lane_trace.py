@@ -21,6 +21,7 @@ from tools.portable_assignment_trace import compress_trace_window, digest, read_
 from tools.portable_corpus_replay import SETTINGS, command_for
 from tools.portable_evidence_retention_trial import summarize_calibrated_output
 from tools.portable_routing_trace import ROUTING_FIELDS, outcome_window
+from tools.suppressed_admission_observation import admission_peers
 
 
 WINDOW = (202752, 204288)
@@ -121,7 +122,8 @@ def candidate_frames(rows, outcomes, *, note, start, end):
                       ('selection', 'active', 'assigned_mask', 'rescue_mask', 'selector_mask')},
             selected_or_coasting=row['selected_or_coasting'],
             labels=frame['labels'], matched_labels=sorted(frame['matched']),
-            voices=frame['voices'], candidate_state=states.get(note)))
+            voices=frame['voices'], candidate_state=states.get(note),
+            admission_peers=admission_peers(row.get('admission_peers'), tick=tick)))
     if seen != expected:
         raise ValueError('Incomplete lane candidate window')
     return result

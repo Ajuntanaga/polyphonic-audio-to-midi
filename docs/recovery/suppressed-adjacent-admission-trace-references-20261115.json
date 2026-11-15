@@ -1,0 +1,133 @@
+{
+  "schema": "m3_suppressed_adjacent_admission_trace_references_v1",
+  "dataset": "physical-long",
+  "case": {
+    "label_index": 3,
+    "midi_note": 40,
+    "string_mask": 7,
+    "start_sample": 2932608,
+    "end_sample": 5452800
+  },
+  "window": [
+    3409856,
+    3453312
+  ],
+  "block_samples": 512,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "conditions": {
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "suppressed-adjacent-admission-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-suppressed-adjacent-admission"
+    ]
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43726121150",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "anchor_report_sha256": "20738b442cb3453188b173a3c8538d8dc87cefeedb3d24a46bbcf96bf458eef5",
+  "inputs": {
+    "physical-long.wav": {
+      "bytes": 22590936,
+      "sha256": "0c2a755f39f464f8e8bda4e41a6191c3c53612ed35ddbb9c04694525328f4a0c"
+    },
+    "physical-long.tsv": {
+      "bytes": 129,
+      "sha256": "26da7e8bdf464b6eb312f5c1a63b7dbb5d85edfe703271fa67ab2e7bcd71948b"
+    },
+    "calibration.m3cb": {
+      "bytes": 6425,
+      "sha256": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997"
+    },
+    "templates.tsv": {
+      "bytes": 1311987,
+      "sha256": "5bb98dfe3a295da1b9db857b083c650059de8dc3ab2b1984ceb2be1d1255ac87"
+    }
+  },
+  "replay_references": {
+    "current-on": {
+      "tsv_sha256": "bce5ab56f14da796e8c3f8eeef9e921a96ef444a95c398f7221ef01953861d09",
+      "midi_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+      "output": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "6ecf88865ddc34e4"
+      },
+      "sample_count": 5646848,
+      "sample_rate": 96000,
+      "held_labels": {
+        "3": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1613760,
+          "unmatched_hold_samples": 906432,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 30,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 104
+        }
+      },
+      "outcome_sha256": "64acc724e0bc6b7f7ba0fdb83713ef461047f6ae654e9bfc5e15352345ac6408"
+    },
+    "suppressed-adjacent-admission-on": {
+      "tsv_sha256": "fcbd59f142756c21402252ced3d4f6eafaa09a08af031a06e35baa7fc7f12b10",
+      "midi_sha256": "5018bd3779c1838187a7bd76bb3f3c8e2cbcdc60a557aff22c6c24c468cdddcb",
+      "output": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67340,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75452,
+        "fingerprint": "18b1c5a2a144b7f9"
+      },
+      "sample_count": 5646848,
+      "sample_rate": 96000,
+      "held_labels": {
+        "3": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1613760,
+          "unmatched_hold_samples": 906432,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 30,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 104
+        }
+      }
+    }
+  },
+  "outcome_reference_source": {
+    "checkpoint": "docs/recovery/three-string-lock-references-20261115.json",
+    "run_id": "43721866310",
+    "note": "The current-ON complete outcome identity was preserved by that diagnostic. No saved trial outcome digest exists."
+  }
+}

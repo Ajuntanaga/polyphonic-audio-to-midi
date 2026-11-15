@@ -1,0 +1,87 @@
+{
+  "schema": "m3_suppressed_adjacent_admission_trace_checkpoint_v1",
+  "updated_at": "2026-11-15T15:07:45.274427+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "run_attempt": "1",
+    "task": "suppressed-adjacent-admission-trace",
+    "dataset": "physical-long",
+    "note": 40,
+    "label_index": 3,
+    "input_release": "corpus-20261108"
+  },
+  "reference": "docs/recovery/suppressed-adjacent-admission-trace-references-20261115.json",
+  "reference_report": "build/github-results/suppressed-adjacent-admission-43726121150/suppressed-adjacent-admission/report.json",
+  "scope": {
+    "dataset": "physical-long",
+    "case": {
+      "label_index": 3,
+      "midi_note": 40,
+      "string_mask": 7,
+      "start_sample": 2932608,
+      "end_sample": 5452800
+    },
+    "conditions": {
+      "current-on": [
+        "--diagnostic-spectral-lane-collision"
+      ],
+      "suppressed-adjacent-admission-on": [
+        "--diagnostic-spectral-lane-collision",
+        "--diagnostic-suppressed-adjacent-admission"
+      ]
+    },
+    "window_samples": [
+      3409856,
+      3453312
+    ],
+    "anchors": [
+      3409919,
+      3424639,
+      3424703,
+      3425791,
+      3430079,
+      3430399,
+      3431295,
+      3431551,
+      3439551,
+      3439679,
+      3453183,
+      3453247
+    ],
+    "block_samples": 512,
+    "full_recording_samples": 5646848
+  },
+  "purpose": "Resolve exact admission and complete joint assignment at the six added note52 lane switches and unchanged first exact three-string hold. No new policy or repeated safety screen.",
+  "required": [
+    "full scored TSV and raw MIDI bit-identical for each saved policy",
+    "current-ON complete detector outcome bit-identical",
+    "complete candidate decision ticks and reproduced joint assignments",
+    "saved target held-label measurements unchanged"
+  ],
+  "local_validation": {
+    "parser_mock_tests_passed": 50,
+    "workflow_yaml_and_shell_syntax": true,
+    "diff_check": true,
+    "native_processing_run_locally": false,
+    "implementation_review": "One read-only native review found the new public type needed the offline macro; fixed. No observation mutation or stale-lifetime issue found."
+  },
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "runtime_rule_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "limitations": [
+    "Rejected-trial complete prior outcome was not measured; its full scored/raw references are available.",
+    "Observer computation runs in offline diagnostic selections; recorded trace output is bounded.",
+    "No timing, allocation or external DAW/device acceptance is measured by this trace."
+  ],
+  "next": "Dispatch this bounded capture once on GitHub; collect its small report once, then inspect paired anchor observations. Keep admission trial rejected and all installed scores unchanged."
+}

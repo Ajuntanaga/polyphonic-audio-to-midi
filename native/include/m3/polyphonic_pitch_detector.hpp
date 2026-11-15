@@ -180,7 +180,27 @@ enum class UnisonCacheRefreshDisposition : std::uint8_t {
 // deliberately replay-only: it lets offline audits distinguish a weak but
 // direct fundamental from a harmonic or an unplayable candidate without
 // adding state or branches to production plugin builds.
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+// Inputs at the adjacent-owner filter, before selection/lifecycle updates.
+// This observer also runs with the policy off; it never advances off-policy
+// persistence or changes eligibility. Post-state is filled by the getter.
+struct AdjacentAdmissionDiagnostics final {
+  std::uint32_t tick{};
+  double phase_cents{};
+  std::uint16_t ticks_before{}, ticks_after{}, required{}, prior_release{}, post_release{};
+  std::uint8_t peer{kTunerNoSignalNote};
+  std::uint8_t prior_assigned{}, prior_midi{}, group{}, prior_attack{};
+  std::uint8_t post_assigned{}, post_midi{}, post_attack{};
+  bool observed{}, enabled{}, raw_before{}, raw_after{}, self_qualifies{}, qualifies{};
+  bool prior_active{}, prior_suppressed{}, phase_valid{}, phase_settled{};
+  bool direct{}, local{}, evidence{}, post_active{}, post_suppressed{};
+};
+#endif
+
 struct CandidateAdmissionDiagnostics final {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  AdjacentAdmissionDiagnostics adjacent{};
+#endif
   double score_threshold_ratio{};
   double fundamental_score_ratio{};
   // Existing causal string/fret-posterior onset evidence. Replay exposes it

@@ -3101,7 +3101,7 @@ bool run_detector_replay(const WaveData& wave,
         "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
         "route_pruned_mask\troute_midi_before\troute_midi_after\t"
         "route_other_owned\troute_final_continuity_mask\t"
-        "route_final_cached_group_mask\troute_capacity_blocked\n") < 0;
+        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3700,7 +3700,7 @@ bool run_detector_replay(const WaveData& wave,
             const auto& routing = tracking.routing;
             trace.failed = std::fprintf(trace.stream,
                 "\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t%u\t"
-                "%u\t%u\t%u\t%u\n",
+                "%u\t%u\t%u\t%u\t",
                 routing.decision_tick, routing.render_observed,
                 routing.continuity_observed, routing.assigned_mask,
                 routing.primary_string, routing.spectral_mask,
@@ -3709,6 +3709,42 @@ bool run_detector_replay(const WaveData& wave,
                 routing.midi_after, routing.other_owned,
                 routing.final_continuity_mask, routing.final_cached_group_mask,
                 routing.capacity_blocked) < 0 || trace.failed;
+            // All filter-stage candidates, including evicted/inactive peers.
+            // Field order is defined by ADMISSION_FIELDS in the paired trace
+            // parser. A blank cell means the stage was not observed.
+            first = true;
+            for (std::size_t other = 0U; other < 128U; ++other) {
+              const auto other_note = static_cast<std::uint8_t>(other);
+              const auto peer = detector.candidate_admission_diagnostics(other_note);
+              const auto& a = peer.adjacent;
+              if (!a.observed) continue;
+              trace.failed = std::fprintf(trace.stream, "%s%zu", first ? "" : ",", other) < 0 || trace.failed;
+              first = false;
+              const auto integer = [&](unsigned value) {
+                trace.failed = std::fprintf(trace.stream, ":%u", value) < 0 || trace.failed;
+              };
+              const auto real = [&](double value) {
+                trace.failed = std::fprintf(trace.stream, ":%.17g", value) < 0 || trace.failed;
+              };
+              const unsigned before[]{a.tick, a.enabled, a.raw_before, a.raw_after,
+                  a.self_qualifies, a.qualifies, a.ticks_before, a.ticks_after,
+                  a.required, a.peer, a.prior_active, a.prior_suppressed,
+                  a.prior_assigned, a.prior_midi, a.group, a.prior_attack, a.prior_release};
+              for (const auto value : before) integer(value);
+              real(a.phase_cents);
+              const unsigned evidence[]{a.phase_valid, a.phase_settled, a.direct,
+                  a.local, a.evidence, peer.selector_pool_member};
+              for (const auto value : evidence) integer(value);
+              real(peer.selector_raw_score);
+              real(peer.selector_best_adjusted_score);
+              const unsigned after[]{peer.selector_option_mask, peer.selector_positive_mask,
+                  peer.selector_used_mask, peer.selector_voice_count, peer.selector_open_count,
+                  static_cast<unsigned>(detector.selection_disposition(other_note)),
+                  a.post_active, a.post_suppressed, a.post_assigned, a.post_midi,
+                  a.post_attack, a.post_release};
+              for (const auto value : after) integer(value);
+            }
+            trace.failed = std::fputc('\n', trace.stream) == EOF || trace.failed;
             ++trace.frames;
           }
         }
