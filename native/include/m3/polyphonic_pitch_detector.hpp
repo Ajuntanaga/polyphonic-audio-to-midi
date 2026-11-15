@@ -754,6 +754,9 @@ class PolyphonicPitchDetector final {
   void set_fine_subset_consensus_for_diagnostics(bool enabled) noexcept {
     diagnostic_fine_subset_consensus_ = enabled;
   }
+  void set_qualified_tier_retention_for_diagnostics(bool enabled) noexcept {
+    diagnostic_qualified_tier_retention_ = enabled;
+  }
   void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_suppressed_adjacent_admission_ = enabled;
     diagnostic_suppressed_adjacent_ticks_ = {};
@@ -1778,6 +1781,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_pending_midi_retention_{};
   bool diagnostic_calibrated_midi_retention_{};
   bool diagnostic_fine_subset_consensus_{};
+  bool diagnostic_qualified_tier_retention_{};
   bool diagnostic_suppressed_adjacent_admission_{};
   std::array<std::uint16_t, kMaxCandidates> diagnostic_suppressed_adjacent_ticks_{};
   std::uint32_t diagnostic_suppressed_adjacent_last_tick_{};

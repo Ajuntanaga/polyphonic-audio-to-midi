@@ -10579,6 +10579,9 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::uint8_t fine_group = static_cast<std::uint8_t>(
         fine.member_mask & playable_string_mask(candidate));
     std::uint8_t tier_completion = state.assigned_string_mask;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    bool tier_completion_qualified = false;
+#endif
     const std::uint8_t fine_members = string_count(fine_group);
     if (fine.valid && fine_members >= 2U && fine_members < 4U) {
       const SpectralHeadEvidence tier_spectral =
@@ -10597,11 +10600,22 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
               fine.added_member_beat_coherence, fine.component_energy);
       if (completed_fine_group != fine_group) {
         tier_completion = completed_fine_group;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        tier_completion_qualified = true;
+#endif
       }
     }
     const std::uint8_t tier_members = string_count(tier_completion);
+    bool apply_tier_completion =
+        tier_completion != state.assigned_string_mask;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (tier_completion != state.assigned_string_mask) {
+    // A freshly qualified completion may equal the committed group. Do not
+    // discard that evidence in favor of its smaller fine-frequency subset:
+    // doing so repeatedly removes a lane and restores it on the next tick.
+    // Equality alone is insufficient; all existing physical guards still apply.
+    apply_tier_completion = apply_tier_completion ||
+        (diagnostic_qualified_tier_retention_ && tier_completion_qualified);
+    if (apply_tier_completion) {
       TierCompletionDisposition disposition =
           TierCompletionDisposition::accepted;
       if ((tier_completion & primary_bit) == 0U || tier_members < 2U ||
@@ -10617,7 +10631,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       tier_completion_dispositions_[candidate] = disposition;
     }
 #endif
-    if (tier_completion != state.assigned_string_mask &&
+    if (apply_tier_completion &&
         (tier_completion & primary_bit) != 0U && tier_members >= 2U &&
         tier_members <= 4U &&
         (tier_completion & other_owned_strings) == 0U &&

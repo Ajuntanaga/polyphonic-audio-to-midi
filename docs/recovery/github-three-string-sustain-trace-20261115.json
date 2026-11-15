@@ -1,21 +1,22 @@
 {
   "schema": "m3_three_string_sustain_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T15:51:00.682649+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T16:07:05.912721+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "5f4fe2fa7321d72d83b77c910936f8fee87532bc",
-    "commit": null,
+    "commit": "1a1452682929aaa3d3a475ff664a082b89737208",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "f2c1cfb3ade8ea844a10c8230539ef03ed214548",
+    "run_id": "43732232462",
     "task": "three-string-sustain-trace",
     "dataset": "physical-long",
     "note": 40,
     "label_index": 3,
     "input_release": "corpus-20261108",
-    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "run_attempt": "1"
   },
   "reference": "docs/recovery/three-string-sustain-references-20261115.json",
   "saved_evidence": {
@@ -59,7 +60,7 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once and hash-verified; bulk evidence remains remote",
   "unmeasured_gates": [
     "new policy acceptance",
     "full-corpus no-regression",
@@ -69,6 +70,122 @@
     "zero deadline overruns",
     "external DAW/device delivery"
   ],
-  "next": "Dispatch one bounded GitHub current-ON capture, collect the small report once, and identify the stage at the saved sustain losses before selecting any replacement. Do not rerun rejected policies or broaden the capture. Keep installed scores unchanged.",
-  "dispatch_directory": "build/github-results/three-string-sustain-dispatch-20261115"
+  "next": "Test a default-off explicit fresh-qualification flag at the inference caller; preserve all primary, spectral, beat, energy, ownership, allocation and capacity guards. Do not repeat the completed sustain trace.",
+  "dispatch_directory": "build/github-results/three-string-sustain-dispatch-20261115",
+  "dispatch_receipt": "build/github-results/three-string-sustain-dispatch-20261115/dispatch-result.json",
+  "local_output": "build/github-results/three-string-sustain-trace-43732232462",
+  "small_artifact": "m3-report-43732232462-1",
+  "bulk_artifact": "m3-evidence-43732232462-1",
+  "last_remote_observation_at": "2026-11-15T15:53:05.536324+00:00",
+  "workflow_conclusion": "success",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T15:51:18Z",
+      "databaseId": 43732186359,
+      "headSha": "1a1452682929aaa3d3a475ff664a082b89737208",
+      "status": "completed",
+      "updatedAt": "2026-11-15T15:52:55Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43732186359"
+    }
+  ],
+  "artifact_metadata": [
+    {
+      "id": 14169221662,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2OTIyMTY2Mg==",
+      "name": "m3-evidence-43732232462-1",
+      "size_in_bytes": 1425590,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14169221662",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14169221662/zip",
+      "expired": false,
+      "digest": "sha256:cba58680af73547fb1e905e73ee85d636ff096c93d1e43de2cbc8c9d3224495a",
+      "created_at": "2026-11-15T15:52:42Z",
+      "updated_at": "2026-11-15T15:52:42Z",
+      "expires_at": "2026-11-22T15:52:41Z",
+      "workflow_run": {
+        "id": 43732232462,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "f2c1cfb3ade8ea844a10c8230539ef03ed214548"
+      }
+    },
+    {
+      "id": 14169102046,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2OTEwMjA0Ng==",
+      "name": "m3-report-43732232462-1",
+      "size_in_bytes": 71893,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14169102046",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14169102046/zip",
+      "expired": false,
+      "digest": "sha256:d283125963fb1afae173683e70cb74cb80133d7791177f05c6706d516e706002",
+      "created_at": "2026-11-15T15:52:41Z",
+      "updated_at": "2026-11-15T15:52:41Z",
+      "expires_at": "2026-11-29T15:52:40Z",
+      "workflow_run": {
+        "id": 43732232462,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "f2c1cfb3ade8ea844a10c8230539ef03ed214548"
+      }
+    }
+  ],
+  "stage": "completed; source-rule conflict isolated",
+  "collection_receipt": "build/github-results/three-string-sustain-trace-43732232462/collection-receipt.json",
+  "report": "build/github-results/three-string-sustain-trace-43732232462/three-string-sustain-trace/report.json",
+  "report_sha256": "0d0e53f79247d44730aff424d0a880ba02ff40c25dfbdb81bbf0fc4f94f62a4b",
+  "diagnosis": {
+    "path": "build/github-results/three-string-sustain-trace-43732232462/sustain-diagnosis.json",
+    "sha256": "8205a1ca8649d38dd5ed4ddd89eef86df209c2d83e386b1a2488afb7dd63e161",
+    "periodic_gaps": 17,
+    "gap_samples": 64,
+    "start_spacing_samples": 1088,
+    "observed_cause": "committed fine-group7->6, then next-tick origin2 restoration6->7; active/selected/primary unchanged",
+    "source_rule_analysis": "The bounded spectral helper freshly qualifies group7 while current is7 and fine is6, but the inference caller discarded the successful completion because it equaled current. Fine6 then reaches the existing16-tick gate; on the following tick qualified7 differs from current6 and is restored. Fresh qualification, not equality alone, must select the completed proposal while preserving all physical guards."
+  },
+  "saved_references_bit_identical": true,
+  "result": {
+    "held_label": {
+      "label_index": 3,
+      "midi_note": 40,
+      "string_mask": 7,
+      "start_sample": 2932608,
+      "end_sample": 5452800,
+      "annotated_hold_samples": 2520192,
+      "exact_held_samples": 1613760,
+      "unmatched_hold_samples": 906432,
+      "longest_exact_hold_samples": 711104,
+      "exact_hold_segments": 30,
+      "first_exact_hold_delay_samples": 520639,
+      "note_ons_inside_label": 104
+    },
+    "snapshot_label": {
+      "label_index": 3,
+      "start_sample": 2932608,
+      "end_sample": 5452800,
+      "midi_note": 40,
+      "string_mask": 7,
+      "calibration_pass": 0,
+      "labeled": 39378,
+      "matched": 25219
+    },
+    "output": {
+      "labeled": 68441,
+      "matched": 41452,
+      "false_wrong_note_voices": 67769,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75881,
+      "fingerprint": "6ecf88865ddc34e4"
+    },
+    "complete_joint_assignment_decisions_reproduced": true,
+    "window_decisions": 829
+  },
+  "github_validation": {
+    "replay_build": "passed",
+    "parser_comparison_contracts_passed": 240,
+    "source_portable_run": "43732186359",
+    "source_portable_conclusion": "success"
+  }
 }

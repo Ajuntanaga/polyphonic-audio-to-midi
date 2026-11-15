@@ -5238,6 +5238,43 @@ struct PolyphonicPitchDetectorTestAccess final {
     return state.assigned_string_mask;
   }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static std::array<std::uint8_t, 34U> qualified_tier_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled,
+      std::size_t invalidate_at = 34U, bool coasting_owner = false) noexcept {
+    constexpr std::size_t kCandidate = 40U - 32U;
+    (void)retained_unison_completion_selector_probe(detector);
+    detector.set_qualified_tier_retention_for_diagnostics(enabled);
+    auto& state = detector.candidate_states_[kCandidate];
+    state.assigned_string_mask = 0x07U;
+    state.midi_voice_mask = 0x07U;
+    state.pending_unison_mask = 0U;
+    state.unison_evidence_ticks = 0U;
+    if (coasting_owner) {
+      auto& peer = detector.candidate_states_[44U - 32U];
+      peer.active = true;
+      peer.assigned_string = 0U;
+      peer.assigned_string_mask = 0x01U;
+      peer.midi_voice_mask = 0x01U;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kCandidate] = true;
+    std::array<std::uint8_t, 34U> groups{};
+    for (std::size_t tick = 0U; tick < groups.size(); ++tick) {
+      if (tick >= invalidate_at) {
+        detector.fine_frequency_evidence_states_[kCandidate]
+            .added_member_beat_coherence[0U] = 0.0;
+      }
+      // The selector clears this reservation every decision. Exercise the
+      // inference caller itself, including its generic 16-decision gate.
+      detector.selector_group_masks_ = {};
+      detector.infer_m3_unison_strings(selected);
+      groups[tick] = state.assigned_string_mask;
+    }
+    return groups;
+  }
+#endif
+
   static CompletionPriorityProbe stronger_completion_priority_probe(
       PolyphonicPitchDetector& detector) noexcept {
     constexpr std::uint8_t kWeakerNote = 40U;
@@ -8739,6 +8776,74 @@ M3_TEST(native_detector_completes_a_fresh_resolved_pair_before_activation) {
           fresh_fine_pair_completion_inference_probe(detector),
       0x07U);
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_qualified_tier_retention_removes_periodic_subset_gap) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  const auto current = m3::PolyphonicPitchDetectorTestAccess::
+      qualified_tier_retention_probe(detector, false);
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      qualified_tier_retention_probe(detector, true);
+  for (std::size_t tick = 0U; tick < current.size(); ++tick) {
+    M3_EXPECT_EQ(current[tick], (tick == 15U || tick == 32U) ? 0x06U : 0x07U);
+    M3_EXPECT_EQ(trial[tick], 0x07U);
+  }
+}
+
+M3_TEST(native_detector_qualified_tier_retention_yields_to_lost_evidence) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  // An equal current mask alone must never qualify. Also withdraw evidence
+  // after eight valid decisions: the existing 16-decision subset gate applies.
+  for (const std::size_t invalidate_at : {0U, 8U}) {
+    const auto groups = m3::PolyphonicPitchDetectorTestAccess::
+        qualified_tier_retention_probe(detector, true, invalidate_at);
+    for (std::size_t tick = 0U; tick < groups.size(); ++tick) {
+      M3_EXPECT_EQ(groups[tick], tick < invalidate_at + 15U ? 0x07U : 0x06U);
+    }
+  }
+}
+
+M3_TEST(native_detector_qualified_tier_retention_respects_coasting_owner) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  const auto current = m3::PolyphonicPitchDetectorTestAccess::
+      qualified_tier_retention_probe(detector, false, 34U, true);
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      qualified_tier_retention_probe(detector, true, 34U, true);
+  for (std::size_t tick = 0U; tick < trial.size(); ++tick) {
+    M3_EXPECT_EQ(trial[tick], current[tick]);
+    M3_EXPECT_EQ(trial[tick] & 0x01U, 0U);
+  }
+}
+
+M3_TEST(native_detector_qualified_tier_retention_preserves_fresh_completion) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  detector.set_qualified_tier_retention_for_diagnostics(true);
+  M3_EXPECT_EQ(
+      m3::PolyphonicPitchDetectorTestAccess::
+          fresh_fine_pair_completion_inference_probe(detector),
+      0x07U);
+}
+#endif
 
 M3_TEST(native_detector_joint_selector_selects_stronger_bounded_tier_completion) {
   m3::PersistentConfig config;

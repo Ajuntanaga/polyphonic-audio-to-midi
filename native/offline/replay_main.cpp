@@ -305,6 +305,7 @@ int main(int argc, char** argv) {
   bool diagnostic_pending_midi_retention = false;
   bool diagnostic_calibrated_midi_retention = false;
   bool diagnostic_fine_subset_consensus = false;
+  bool diagnostic_qualified_tier_retention = false;
   bool diagnostic_suppressed_adjacent_admission = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
@@ -634,6 +635,8 @@ int main(int argc, char** argv) {
       diagnostic_suppressed_adjacent_admission = true;
     } else if (std::strcmp(argv[index], "--diagnostic-fine-subset-consensus") == 0) {
       diagnostic_fine_subset_consensus = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-qualified-tier-retention") == 0) {
+      diagnostic_qualified_tier_retention = true;
     } else if (std::strcmp(argv[index], "--diagnostic-retained-spectral-assignment") == 0) {
       diagnostic_retained_spectral_assignment = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
@@ -1205,7 +1208,7 @@ int main(int argc, char** argv) {
           diagnostic_pending_string_reservation, diagnostic_forced_pending_string_reservation,
           diagnostic_pending_midi_retention,
           diagnostic_calibrated_midi_retention, diagnostic_suppressed_adjacent_admission,
-          diagnostic_fine_subset_consensus)) {
+          diagnostic_fine_subset_consensus, diagnostic_qualified_tier_retention)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

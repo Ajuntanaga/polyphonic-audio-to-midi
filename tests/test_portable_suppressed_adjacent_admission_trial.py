@@ -202,5 +202,9 @@ class FineSubsetConsensusTests(SuppressedAdjacentAdmissionTests):
     policy = 'fine-subset-consensus'
 
 
+class QualifiedTierRetentionTests(SuppressedAdjacentAdmissionTests):
+    policy = 'qualified-tier-retention'
+
+
 if __name__ == '__main__':
     unittest.main()

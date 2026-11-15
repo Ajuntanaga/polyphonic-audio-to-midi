@@ -36,7 +36,13 @@ POLICIES = {
             'count when a qualified group strictly shrinks, retains the established '
             'singleton, and has current connected beat support no weaker than the old '
             'full-mask minimum. Keep the existing beat EMA, consensus duration and '
-            'ownership guards. Historical subset-fit coherence is not measured.')}
+            'ownership guards. Historical subset-fit coherence is not measured.'),
+    'qualified-tier-retention': dict(mode='qualified-tier-retention-on',
+        flag='--diagnostic-qualified-tier-retention', schema='m3_qualified_tier_retention_trial_v1',
+        description='Default-off inference correction: apply a freshly qualified '
+            'bounded spectral-tier completion even when it equals the current group. '
+            'Equality alone cannot preserve a lane. Keep the existing spectral, beat, '
+            'energy, primary, ownership and capacity guards; no new delay or threshold.')}
 
 
 def target_hold(current, trial):
