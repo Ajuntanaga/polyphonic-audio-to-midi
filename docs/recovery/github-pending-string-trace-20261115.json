@@ -7,12 +7,12 @@
   "worker_commit": "343ab18aba24931bd9318572a6ed2377b0fd3dcf",
   "run_id": 43698368720,
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43698368720",
-  "status": "in_progress",
-  "conclusion": null,
-  "result_final": false,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-15T09:10:21.615173+00:00",
-  "observed_at": "2026-11-15T09:19:35.255966+00:00",
-  "stage": "Running six bounded current/trial assignment maturity captures on GitHub",
+  "observed_at": "2026-11-15T09:27:20.676713+00:00",
+  "stage": "Six paired captures complete; saved streams preserved; lost-label mechanism analysis in progress",
   "checkpoint": "docs/recovery/github-pending-string-trace-20261115.json",
   "reference_checkpoint": "docs/recovery/pending-string-trace-references-20261115.json",
   "prior_trial_checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
@@ -31,8 +31,8 @@
   "capture_count": 6,
   "output_target": "build/github-results/pending-string-reservation-trace-43698368720",
   "report_relative_path": "pending-string-reservation-trace/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
   "artifact_names": {
     "small": "m3-report-43698368720-1",
     "bulk": "m3-evidence-43698368720-1"
@@ -49,9 +49,9 @@
   "local_native_execution": false,
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
-  "next_step": "Read assignment maturity and feasibility for labels17,306,335 before choosing a replacement policy. No lost passage/held samples or increased false outputs; OFF/buffer identity, zero allocations, p99<=166666ns, max<=333333ns and zero overruns remain required.",
+  "next_step": "Design a narrow default-off replacement around the measured forced single-string pending competition, without suppressing later spectral corrections or new held-note claims. First screen the complete ordinary corpus: no passage frame or held-sample loss and no false-output growth, with saved reference identity. Only a passing screen proceeds to OFF/buffer identity, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and external host gates. Do not rerun the completed paired diagnostic.",
   "routing": {
-    "github_actions": "Native compilation, tests and all six recorded replays; retain large evidence remotely.",
+    "github_actions": "Native compilation, tests and all six recorded replays completed on GitHub Actions. Small and 21.3 MB compressed diagnostic archives are collected and hash-verified; no local native execution.",
     "kaggle": "Legacy recovery runs are terminal and collected. Existing GPU checks are synthetic only. No duplicate native replay or useful independent GPU task is currently queued; use Kaggle only for a distinct suitable task."
   },
   "source_runs": [
@@ -75,8 +75,8 @@
     }
   ],
   "dispatch_receipt": "build/github-results/pending-string-trace-dispatch-20261115-corrected/attempt.json",
-  "small_artifact_collected": false,
-  "captures_completed": null,
+  "small_artifact_collected": true,
+  "captures_completed": 6,
   "previous_attempts": [
     {
       "schema": "m3_github_pending_string_trace_checkpoint_v1",
@@ -208,11 +208,409 @@
     }
   ],
   "remote_observation": {
-    "path": "build/github-results/pending-string-trace-dispatch-20261115-corrected/run-43698368720.json",
+    "path": "build/github-results/pending-string-trace-dispatch-20261115-corrected/continuation-run.stdout.txt",
     "build": "passed",
     "python_contracts": "passed",
     "source_portable": "passed",
     "transient_read_failure": "Recovered; no duplicate dispatch",
     "source_ci": "passed"
+  },
+  "collection_receipt": "build/github-results/pending-string-reservation-trace-43698368720/collection-receipt.json",
+  "report_sha256": "e3b1a61a506199de8c62caa4f680ab4b2ecd8a2a4cc06d7e8524ab2dd2077867",
+  "saved_references_bit_identical": true,
+  "repeated_policy_streams_bit_identical": true,
+  "artifact_metadata": [
+    {
+      "id": 14155946476,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1NTk0NjQ3Ng==",
+      "name": "m3-evidence-43698368720-1",
+      "size_in_bytes": 21328537,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155946476",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155946476/zip",
+      "expired": false,
+      "digest": "sha256:78d22edfa47f05331743619785c2b32f417203872ff2008d9842bc61df4cdecc",
+      "created_at": "2026-11-15T09:26:54Z",
+      "updated_at": "2026-11-15T09:26:54Z",
+      "expires_at": "2026-11-22T09:26:52Z",
+      "workflow_run": {
+        "id": 43698368720,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
+      }
+    },
+    {
+      "id": 14155637337,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1NTYzNzMzNw==",
+      "name": "m3-report-43698368720-1",
+      "size_in_bytes": 23350,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155637337",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155637337/zip",
+      "expired": false,
+      "digest": "sha256:db16b63afd9ac0590e15b1161058218d16c9c0512b31fa455c76f12eb0ffa176",
+      "created_at": "2026-11-15T09:26:52Z",
+      "updated_at": "2026-11-15T09:26:52Z",
+      "expires_at": "2026-11-29T09:26:52Z",
+      "workflow_run": {
+        "id": 43698368720,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
+      }
+    }
+  ],
+  "measured_cases": {
+    "17": {
+      "current-on": {
+        "held": {
+          "label_index": 17,
+          "midi_note": 37,
+          "string_mask": 1,
+          "start_sample": 245017,
+          "end_sample": 316800,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 40000,
+          "unmatched_hold_samples": 31783,
+          "longest_exact_hold_samples": 3968,
+          "exact_hold_segments": 78,
+          "first_exact_hold_delay_samples": 5926,
+          "note_ons_inside_label": 156
+        },
+        "snapshot": {
+          "label_index": 17,
+          "start_sample": 245017,
+          "end_sample": 316800,
+          "midi_note": 37,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1122,
+          "matched": 595
+        },
+        "candidate_counts": {
+          "frames": 1122,
+          "selected": 1097,
+          "active": 1030,
+          "selected_inactive": 67,
+          "preview": 0,
+          "ready": 1,
+          "ready_infeasible": 0,
+          "ready_feasible": 1,
+          "routed": 1029,
+          "capacity_blocked": 0
+        }
+      },
+      "trial-on": {
+        "held": {
+          "label_index": 17,
+          "midi_note": 37,
+          "string_mask": 1,
+          "start_sample": 245017,
+          "end_sample": 316800,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 57409,
+          "unmatched_hold_samples": 14374,
+          "longest_exact_hold_samples": 52737,
+          "exact_hold_segments": 6,
+          "first_exact_hold_delay_samples": 5926,
+          "note_ons_inside_label": 11
+        },
+        "snapshot": {
+          "label_index": 17,
+          "start_sample": 245017,
+          "end_sample": 316800,
+          "midi_note": 37,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1122,
+          "matched": 901
+        },
+        "candidate_counts": {
+          "frames": 1122,
+          "selected": 1097,
+          "active": 1030,
+          "selected_inactive": 67,
+          "preview": 67,
+          "ready": 1,
+          "ready_infeasible": 0,
+          "ready_feasible": 1,
+          "routed": 1029,
+          "capacity_blocked": 0
+        }
+      }
+    },
+    "306": {
+      "current-on": {
+        "held": {
+          "label_index": 306,
+          "midi_note": 42,
+          "string_mask": 1,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 46529,
+          "unmatched_hold_samples": 25254,
+          "longest_exact_hold_samples": 45953,
+          "exact_hold_segments": 2,
+          "first_exact_hold_delay_samples": 24678,
+          "note_ons_inside_label": 3
+        },
+        "snapshot": {
+          "label_index": 306,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "midi_note": 42,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1122,
+          "matched": 729
+        },
+        "candidate_counts": {
+          "frames": 1122,
+          "selected": 762,
+          "active": 1122,
+          "selected_inactive": 0,
+          "preview": 0,
+          "ready": 0,
+          "ready_infeasible": 0,
+          "ready_feasible": 0,
+          "routed": 762,
+          "capacity_blocked": 0
+        }
+      },
+      "trial-on": {
+        "held": {
+          "label_index": 306,
+          "midi_note": 42,
+          "string_mask": 1,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 0,
+          "unmatched_hold_samples": 71783,
+          "longest_exact_hold_samples": 0,
+          "exact_hold_segments": 0,
+          "first_exact_hold_delay_samples": null,
+          "note_ons_inside_label": 0
+        },
+        "snapshot": {
+          "label_index": 306,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "midi_note": 42,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1122,
+          "matched": 0
+        },
+        "candidate_counts": {
+          "frames": 1122,
+          "selected": 762,
+          "active": 1122,
+          "selected_inactive": 0,
+          "preview": 0,
+          "ready": 0,
+          "ready_infeasible": 0,
+          "ready_feasible": 0,
+          "routed": 762,
+          "capacity_blocked": 0
+        }
+      }
+    },
+    "335": {
+      "current-on": {
+        "held": {
+          "label_index": 335,
+          "midi_note": 37,
+          "string_mask": 1,
+          "start_sample": 6283306,
+          "end_sample": 6355200,
+          "annotated_hold_samples": 71894,
+          "exact_held_samples": 64001,
+          "unmatched_hold_samples": 7893,
+          "longest_exact_hold_samples": 64001,
+          "exact_hold_segments": 1,
+          "first_exact_hold_delay_samples": 7893,
+          "note_ons_inside_label": 1
+        },
+        "snapshot": {
+          "label_index": 335,
+          "start_sample": 6283306,
+          "end_sample": 6355200,
+          "midi_note": 37,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1124,
+          "matched": 1068
+        },
+        "candidate_counts": {
+          "frames": 1124,
+          "selected": 1073,
+          "active": 1001,
+          "selected_inactive": 72,
+          "preview": 0,
+          "ready": 1,
+          "ready_infeasible": 0,
+          "ready_feasible": 1,
+          "routed": 1000,
+          "capacity_blocked": 0
+        }
+      },
+      "trial-on": {
+        "held": {
+          "label_index": 335,
+          "midi_note": 37,
+          "string_mask": 1,
+          "start_sample": 6283306,
+          "end_sample": 6355200,
+          "annotated_hold_samples": 71894,
+          "exact_held_samples": 0,
+          "unmatched_hold_samples": 71894,
+          "longest_exact_hold_samples": 0,
+          "exact_hold_segments": 0,
+          "first_exact_hold_delay_samples": null,
+          "note_ons_inside_label": 0
+        },
+        "snapshot": {
+          "label_index": 335,
+          "start_sample": 6283306,
+          "end_sample": 6355200,
+          "midi_note": 37,
+          "string_mask": 1,
+          "calibration_pass": 2,
+          "labeled": 1124,
+          "matched": 1025
+        },
+        "candidate_counts": {
+          "frames": 1124,
+          "selected": 1073,
+          "active": 1001,
+          "selected_inactive": 72,
+          "preview": 72,
+          "ready": 1,
+          "ready_infeasible": 1,
+          "ready_feasible": 0,
+          "routed": 1000,
+          "capacity_blocked": 0
+        }
+      }
+    }
+  },
+  "bounded_findings": [
+    "Selection and activation frame counts are identical between policies in all three target windows. Failure to mature the target candidate within these windows does not explain the lost held samples; earlier peer histories already differ.",
+    "Label306: note42 is already emitted on trial lane2 before the label and remains there throughout it, while note41 occupies lane0. At sample5655295, physical assignment mask4 is the same in both policies; current-ON gains spectral mask1 and emits note42 on lane0, whereas trial-ON retains spectral mask0 and raw lane2. This is wrong-string held output, not a missing pitch or a failed target attack.",
+    "Label335: both target candidates activate at sample6291199. Trial note36 retains raw lanes0 and1 while note37 requests overlapping mask1; the joint assignment is invalid. The final independent-owner reconciler retains the existing note36 group and emits no note37. Current-ON has note36 on lane1 and emits note37 on lane0 at readiness.",
+    "Snapshot writing precedes the diagnostic independent-owner reconciliation that replaces the raw event batch. Thus trial label335 can match1025/1124 snapshot frames yet have zero exact held MIDI. Snapshot matches do not prove raw or host delivery."
+  ],
+  "bulk_collection": {
+    "state": "collected_digest_verified",
+    "artifact_id": 14155946476,
+    "artifact_name": "m3-evidence-43698368720-1",
+    "bytes": 21328537,
+    "sha256": "78d22edfa47f05331743619785c2b32f417203872ff2008d9842bc61df4cdecc",
+    "digest_verified": true,
+    "downloaded_once": true,
+    "transfer_recovery": "range-resumed",
+    "collected_at": "2026-11-15T09:37:34.584858+00:00",
+    "archive": "build/github-results/pending-string-reservation-trace-43698368720/m3-evidence-43698368720-1.zip",
+    "receipt": "build/github-results/pending-string-reservation-trace-43698368720/bulk-collection-receipt.json",
+    "extraction": "None; selected compressed members read directly from the archive.",
+    "reason": "Inspect selected frozen traces for lost-label assignment and emitted pitch; no new processing."
+  },
+  "raw_owner_diagnosis": {
+    "reviewed_at": "2026-11-15T09:40:22.913338+00:00",
+    "provenance": {
+      "archive": "build/github-results/pending-string-reservation-trace-43698368720/m3-evidence-43698368720-1.zip",
+      "archive_sha256": "78d22edfa47f05331743619785c2b32f417203872ff2008d9842bc61df4cdecc",
+      "member_prefix": "github-results/pending-string-reservation-trace/",
+      "members": "current-on-label306 and trial-on-label306, current-on-label335 and trial-on-label335 observations.json.gz and assignment.tsv.gz"
+    },
+    "lane_numbering": "Zero-based; mask1 is lane0, mask2 is lane1, mask4 is lane2.",
+    "label306": {
+      "first_current_correct_sample": 5655295,
+      "current_physical_mask": 4,
+      "trial_physical_mask": 4,
+      "current_spectral_mask": 1,
+      "trial_spectral_mask": 0,
+      "current_routing_midi_before": 4,
+      "current_routing_midi_after": 1,
+      "trial_routing_midi_before": 4,
+      "trial_routing_midi_after": 4,
+      "current_reserved_coasting_mask": 2,
+      "trial_reserved_coasting_mask": 1,
+      "trial_raw_initial_owners": [
+        {
+          "lane": 0,
+          "note": 41,
+          "on_sample": 5567103
+        },
+        {
+          "lane": 2,
+          "note": 42,
+          "on_sample": 5567103
+        }
+      ],
+      "trial_raw_events_on_these_lanes_in_window": 0,
+      "current_raw_change": {
+        "off_note": 42,
+        "off_lane": 2,
+        "on_note": 42,
+        "on_lane": 0,
+        "sample": 5655295
+      },
+      "peer_state_at_sample": {
+        "current_note46": "active mask8",
+        "trial_note46": "pending preview mask4",
+        "current_note50": "pending assigned mask1",
+        "trial_note50": "active assigned mask2"
+      },
+      "limit": "The coasting and peer histories already differ at the window start. These captures locate the lost spectral correction and occupied destination but do not isolate the earliest policy-induced divergence."
+    },
+    "label335": {
+      "ready_sample": 6291199,
+      "current_joint_valid": true,
+      "trial_joint_valid": false,
+      "trial_retained_raw_owners": [
+        {
+          "lane": 0,
+          "note": 36,
+          "on_sample": 6224639
+        },
+        {
+          "lane": 1,
+          "note": 36,
+          "on_sample": 6234239
+        }
+      ],
+      "trial_raw_events_on_these_lanes_in_window": 0,
+      "trial_note36_midi_mask": 3,
+      "trial_note37_requested_mask": 1,
+      "current_note36_mask_at_readiness": 2,
+      "current_note37_raw_on": {
+        "sample": 6291199,
+        "note": 37,
+        "lane": 0
+      },
+      "mechanism": "The reconciler chooses disjoint complete masks, prioritizing retained lanes. The retained note36 mask3 excludes the new note37 mask1. It replaces the raw transition batch after the snapshot has been written."
+    },
+    "source_evidence": [
+      {
+        "path": "native/src/polyphonic_pitch_detector.cpp",
+        "symbol": "reconcile_diagnostic_midi_owners",
+        "line": 5992,
+        "finding": "Complete-mask selection prioritizes retained lane count and replaces decision.transitions."
+      },
+      {
+        "path": "native/src/polyphonic_pitch_detector.cpp",
+        "line": 12498,
+        "finding": "write_snapshot precedes reconcile_diagnostic_midi_owners at line12501."
+      }
+    ],
+    "limits": [
+      "Diagnostic raw MIDI is not external DAW/device delivery.",
+      "No production rule, installed output, acceptance verdict or timing measurement changed.",
+      "The earlier label17 trace identifies pending single-playable-string competition; a narrower policy remains untested."
+    ]
   }
 }
