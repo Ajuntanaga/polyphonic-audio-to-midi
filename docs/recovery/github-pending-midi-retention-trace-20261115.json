@@ -3,14 +3,14 @@
   "task": "pending-midi-retention-trace",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
+  "source_commit": "69a0f8d7bed70bb9312dc0d46fd517de0b20c3a5",
+  "worker_commit": "580587230046452ffdd441eed85861defa4bc6e9",
+  "run_id": 43711063454,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-15T11:51:50.999207+00:00",
-  "stage": "bounded diagnostic prepared; not dispatched",
+  "stage": "final diagnostic complete; frozen omission insufficient for no-loss retention",
   "checkpoint": "docs/recovery/github-pending-midi-retention-trace-20261115.json",
   "reference_report": "docs/recovery/pending-midi-retention-trace-references-20261115.json",
   "mechanism_checkpoint": "docs/recovery/github-pending-midi-retention-20261115.json",
@@ -48,9 +48,9 @@
     "current-on"
   ],
   "report_relative_path": "pending-midi-retention-trace/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "local_checks": {
     "python_mock_contracts": 38,
@@ -62,7 +62,7 @@
     "single_review": "One implementation/diff review; no actionable issues."
   },
   "acceptance": "Both diagnostic captures must reproduce saved full scored/raw MIDI/complete outcome hashes and expected held labels; validate complete assignment peers and exact native joint optima before reporting all seven anchors. This is diagnostic acceptance only, not a runtime policy or labeled-note gain.",
-  "known_counterexamples": "At3/14 label388 loss starts the frozen singleton-omitted optimum also selects the wrongly retained lane0; frozen omission alone is not a safe classifier. Best-string alignment discards48/73 label17 gain anchors.",
+  "known_counterexamples": "Frozen singleton omission selects the wrongly retained lane0 at 5/21 known loss starts: label200 sample3594751, label279 sample5128831, and earlier label388 samples7700863,7706367,7706495. It selects correct retained lane0 at all73 label17 gain starts; requiring best_string0 discards48/73 positive anchors. This is diagnostic evidence, not a safe classifier.",
   "installed_output_changed": false,
   "promotion_accepted": false,
   "runtime_rule_changed": false,
@@ -70,10 +70,522 @@
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
   "remaining_acceptance": "No label held loss or increased false output; identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and external DAW/device delivery.",
-  "next_step": "Collect this small diagnostic report once, retaining bulk evidence remotely. Interpret missing label200/279 costs with all known positive and negative anchors before choosing a narrow replacement. Do not rerun rejected trials.",
+  "next_step": "Use the collected positive and negative anchors to design a narrower rule that preserves valid string corrections. Do not implement blanket prior-owner or peer-omission retention, repeat these captures, or broaden rejected trials. Before wider work, any new GitHub ordinary screen must preserve inference and every label hold while improving target holds/retriggers and growing no false-output count. No replacement policy is validated.",
   "routing": {
     "github_actions": "All native compilation, tests and recorded replays use the authorized m3-offload inputs.",
     "kaggle": "No distinct useful GPU task for this native assignment diagnostic; terminal legacy jobs stay terminal."
   },
-  "updated_at": "2026-11-15T11:52:12.199358+00:00"
+  "updated_at": "2026-11-15T12:01:42.870312+00:00",
+  "source_pushed": true,
+  "worker_pushed": true,
+  "dispatch_receipt": "build/github-results/pending-midi-retention-trace-dispatch-20261115/dispatch-result.json",
+  "dispatched_at": "2026-11-15T11:53:02.063922+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43711063454",
+  "last_observed_at": "2026-11-15T11:57:49.914900+00:00",
+  "local_output_dir": "build/github-results/pending-midi-retention-trace-43711063454",
+  "artifact_metadata": {
+    "total_count": 2,
+    "artifacts": [
+      {
+        "id": 14160910781,
+        "node_id": "MDg6QXJ0aWZhY3QxNDE2MDkxMDc4MQ==",
+        "name": "m3-evidence-43711063454-1",
+        "size_in_bytes": 10939959,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14160910781",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14160910781/zip",
+        "expired": false,
+        "digest": "sha256:f4d1c332a77a8a59761a204fa9c5e74653c2444fa3a8e2868207cd7b6df013b5",
+        "created_at": "2026-11-15T11:57:37Z",
+        "updated_at": "2026-11-15T11:57:37Z",
+        "expires_at": "2026-11-22T11:57:36Z",
+        "workflow_run": {
+          "id": 43711063454,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "580587230046452ffdd441eed85861defa4bc6e9"
+        }
+      },
+      {
+        "id": 14160049768,
+        "node_id": "MDg6QXJ0aWZhY3QxNDE2MDA0OTc2OA==",
+        "name": "m3-report-43711063454-1",
+        "size_in_bytes": 13442,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14160049768",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14160049768/zip",
+        "expired": false,
+        "digest": "sha256:a18f9626a94581ac8bc4a9b10b73c5d7e8e7383a2ef261ca825e37c52551a6c7",
+        "created_at": "2026-11-15T11:57:35Z",
+        "updated_at": "2026-11-15T11:57:35Z",
+        "expires_at": "2026-11-29T11:57:34Z",
+        "workflow_run": {
+          "id": 43711063454,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "580587230046452ffdd441eed85861defa4bc6e9"
+        }
+      }
+    ]
+  },
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T11:52:26Z",
+      "databaseId": 43711013639,
+      "headSha": "69a0f8d7bed70bb9312dc0d46fd517de0b20c3a5",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43711013639",
+      "workflowName": "Portable offline replay",
+      "failed_steps": []
+    }
+  ],
+  "report_path": "build/github-results/pending-midi-retention-trace-43711063454/pending-midi-retention-trace/report.json",
+  "report_sha256": "cc89bf81cc3b13d5990d52abf9f85c561d6d0794632cf22370e581f09c2ca0c6",
+  "collection_receipt": "build/github-results/pending-midi-retention-trace-43711063454/collection-receipt.json",
+  "collected_at": "2026-11-15T11:59:33.389412+00:00",
+  "diagnostic_acceptance_passed": true,
+  "cloud_checks": {
+    "python_contracts": 186,
+    "python_contracts_result": "passed",
+    "native_candidate_trace_test": "passed",
+    "native_assignment_trace_test": "passed",
+    "source_portable_run": 43711013639,
+    "source_portable_result": "success"
+  },
+  "diagnosis": {
+    "saved_scored_raw_midi_and_complete_outcomes_bit_identical": true,
+    "all_complete_peer_sets_verified": true,
+    "all_native_joint_decisions_reproduced": true,
+    "loss_anchors_observed": 7,
+    "new_frozen_omission_counterexamples": [
+      {
+        "label_index": 200,
+        "sample": 3594751,
+        "correct_lane": 3,
+        "omitted_optimum_lane": 0
+      },
+      {
+        "label_index": 279,
+        "sample": 5128831,
+        "correct_lane": 1,
+        "omitted_optimum_lane": 0
+      }
+    ],
+    "remaining_label279_anchors": "At the other five label279 anchors, singleton33 omission retains the correct lane1 optimum; constraining the target to retained lane0 raises the cost.",
+    "cases": {
+      "current-on-label200": {
+        "label_index": 200,
+        "policy": "current-on",
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+        "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "outcome_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "saved_reference_bit_identical": true,
+        "saved_outcome_bit_identical": true,
+        "held_label": {
+          "label_index": 200,
+          "midi_note": 50,
+          "string_mask": 8,
+          "start_sample": 3590630,
+          "end_sample": 3662400,
+          "annotated_hold_samples": 71770,
+          "exact_held_samples": 26841,
+          "unmatched_hold_samples": 44929,
+          "longest_exact_hold_samples": 23680,
+          "exact_hold_segments": 3,
+          "first_exact_hold_delay_samples": 0,
+          "note_ons_inside_label": 4
+        },
+        "snapshot_label": {
+          "label_index": 200,
+          "start_sample": 3590630,
+          "end_sample": 3662400,
+          "midi_note": 50,
+          "string_mask": 8,
+          "calibration_pass": 1,
+          "labeled": 1122,
+          "matched": 402
+        },
+        "window_start": 3494592,
+        "window_end": 3663040,
+        "assignment_costs": {
+          "schema": "m3_assignment_cost_diagnosis_v1",
+          "term_order": [
+            "fret_prior",
+            "posterior_penalty",
+            "profile_bonus",
+            "open_bonus",
+            "cents_penalty",
+            "fine_bonus",
+            "retention_bonus"
+          ],
+          "expected_frames": 2632,
+          "valid_joint_frames": 1823,
+          "invalid_joint_frames": 634,
+          "empty_selected_frames": 175,
+          "target_selected_valid_frames": 1049,
+          "complete_peers_verified": true,
+          "native_joint_decisions_reproduced": true,
+          "active_target_string_changes": 74,
+          "reasons": {
+            "lower_total_joint_cost": 38,
+            "prior_string_infeasible_for_complete_joint_assignment": 36
+          },
+          "interpretation": "Costs reproduce complete joint decisions before output policy. Allocation preview masks are hints, not committed MIDI lanes. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+        },
+        "bounded_diagnosis": {
+          "expected_anchors": 1,
+          "observed_anchors": 1,
+          "observations": [
+            {
+              "sample": 3594751,
+              "target_note": 50,
+              "target_ordinal": 2,
+              "prior_physical_mask": 1,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 8,
+              "best_string": 2,
+              "calibration_mask": 31,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 32,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 564.0454403528802,
+                "packed": 208,
+                "target_lane": 3
+              },
+              "omitted": {
+                "cost": 464.67241292519157,
+                "packed": 16,
+                "target_lane": 0
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 464.67241292519157,
+                "packed": 16,
+                "target_lane": 0
+              }
+            }
+          ],
+          "interpretation": "All other recorded terms, reservations and original ordinals remain fixed. This arithmetic does not simulate later history, validate a runtime rule, or measure new note gains."
+        }
+      },
+      "current-on-label279": {
+        "label_index": 279,
+        "policy": "current-on",
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+        "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "outcome_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "saved_reference_bit_identical": true,
+        "saved_outcome_bit_identical": true,
+        "held_label": {
+          "label_index": 279,
+          "midi_note": 47,
+          "string_mask": 2,
+          "start_sample": 5059430,
+          "end_sample": 5131200,
+          "annotated_hold_samples": 71770,
+          "exact_held_samples": 20032,
+          "unmatched_hold_samples": 51738,
+          "longest_exact_hold_samples": 5760,
+          "exact_hold_segments": 19,
+          "first_exact_hold_delay_samples": 28313,
+          "note_ons_inside_label": 44
+        },
+        "snapshot_label": {
+          "label_index": 279,
+          "start_sample": 5059430,
+          "end_sample": 5131200,
+          "midi_note": 47,
+          "string_mask": 2,
+          "calibration_pass": 1,
+          "labeled": 1122,
+          "matched": 313
+        },
+        "window_start": 4963392,
+        "window_end": 5131840,
+        "assignment_costs": {
+          "schema": "m3_assignment_cost_diagnosis_v1",
+          "term_order": [
+            "fret_prior",
+            "posterior_penalty",
+            "profile_bonus",
+            "open_bonus",
+            "cents_penalty",
+            "fine_bonus",
+            "retention_bonus"
+          ],
+          "expected_frames": 2632,
+          "valid_joint_frames": 2029,
+          "invalid_joint_frames": 415,
+          "empty_selected_frames": 188,
+          "target_selected_valid_frames": 365,
+          "complete_peers_verified": true,
+          "native_joint_decisions_reproduced": true,
+          "active_target_string_changes": 18,
+          "reasons": {
+            "lower_total_joint_cost": 18
+          },
+          "interpretation": "Costs reproduce complete joint decisions before output policy. Allocation preview masks are hints, not committed MIDI lanes. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+        },
+        "bounded_diagnosis": {
+          "expected_anchors": 6,
+          "observed_anchors": 6,
+          "observations": [
+            {
+              "sample": 5107455,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 31.44473657509012,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 30.44473657509012,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 198.16114092422043,
+                "packed": 192,
+                "target_lane": 0
+              }
+            },
+            {
+              "sample": 5107839,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 9.696186321521623,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 8.696186321521623,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 135.76346213241902,
+                "packed": 192,
+                "target_lane": 0
+              }
+            },
+            {
+              "sample": 5118463,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 101.6669716305209,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 100.6669716305209,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 268.4242694448896,
+                "packed": 192,
+                "target_lane": 0
+              }
+            },
+            {
+              "sample": 5121279,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 23.417654578013302,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 22.417654578013302,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 99.11672627489446,
+                "packed": 192,
+                "target_lane": 0
+              }
+            },
+            {
+              "sample": 5124415,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 10.106338339899036,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 9.106338339899036,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 136.67440585376147,
+                "packed": 192,
+                "target_lane": 0
+              }
+            },
+            {
+              "sample": 5128831,
+              "target_note": 47,
+              "target_ordinal": 1,
+              "prior_physical_mask": 2,
+              "prior_midi_mask": 1,
+              "final_physical_mask": 2,
+              "best_string": 2,
+              "calibration_mask": 15,
+              "retained_lane": 0,
+              "omitted_peer": {
+                "note": 33,
+                "ordinal": 0,
+                "prior_active": 0,
+                "prior_midi": 0,
+                "playable": 1,
+                "prior_attack_ticks": 0,
+                "attack_required": 10
+              },
+              "original": {
+                "cost": 134.8895747748597,
+                "packed": 200,
+                "target_lane": 1
+              },
+              "omitted": {
+                "cost": 12.726483893247838,
+                "packed": 192,
+                "target_lane": 0
+              },
+              "omitted_pinned_to_retained": {
+                "cost": 12.726483893247838,
+                "packed": 192,
+                "target_lane": 0
+              }
+            }
+          ],
+          "interpretation": "All other recorded terms, reservations and original ordinals remain fixed. This arithmetic does not simulate later history, validate a runtime rule, or measure new note gains."
+        }
+      }
+    },
+    "combined_evidence": {
+      "previous_checkpoint": "docs/recovery/github-pending-midi-retention-20261115.json",
+      "previous_comparison": "build/github-results/pending-midi-retention-43707756793/frozen-peer-removal-comparison.json",
+      "previous_label388_wrong_retained_lane_anchors": [
+        7700863,
+        7706367,
+        7706495
+      ],
+      "known_loss_starts": 21,
+      "omission_selects_wrong_retained_lane_starts": 5,
+      "label17_positive_starts": 73,
+      "omission_selects_correct_retained_lane_positive_starts": 73,
+      "interpretation": "The 5/21 counterexamples combine this current-ON capture with the separately sourced earlier label388 capture. This is a fixed diagnostic anchor set, not a classifier accuracy or project completion measure."
+    },
+    "conclusion": "Removing an inactive single-playable-string competitor does not reliably distinguish harmful lane displacement from a correct string reassignment. Neither blanket previous-owner retention nor frozen peer omission is a validated no-loss runtime policy.",
+    "limits": "All other recorded terms, reservations and ordinals are fixed. The arithmetic does not replay changed history, measure a new runtime policy, or establish timing or external DAW/device delivery."
+  }
 }
