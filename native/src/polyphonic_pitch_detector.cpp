@@ -10612,9 +10612,14 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     // A freshly qualified completion may equal the committed group. Do not
     // discard that evidence in favor of its smaller fine-frequency subset:
     // doing so repeatedly removes a lane and restores it on the next tick.
+    // The continuous variant preserves an already pending fine-subset
+    // correction: intermittent completion evidence must not reset its counter.
     // Equality alone is insufficient; all existing physical guards still apply.
     apply_tier_completion = apply_tier_completion ||
-        (diagnostic_qualified_tier_retention_ && tier_completion_qualified);
+        (tier_completion_qualified &&
+         (diagnostic_qualified_tier_retention_ ||
+          (diagnostic_continuous_tier_retention_ &&
+           state.pending_unison_mask == state.assigned_string_mask)));
     if (apply_tier_completion) {
       TierCompletionDisposition disposition =
           TierCompletionDisposition::accepted;

@@ -2905,7 +2905,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_calibrated_midi_retention,
                          bool diagnostic_suppressed_adjacent_admission,
                          bool diagnostic_fine_subset_consensus,
-                         bool diagnostic_qualified_tier_retention) {
+                         bool diagnostic_qualified_tier_retention,
+                         bool diagnostic_continuous_tier_retention) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -2913,7 +2914,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
       diagnostic_calibrated_midi_retention || diagnostic_suppressed_adjacent_admission ||
-      diagnostic_fine_subset_consensus || diagnostic_qualified_tier_retention)
+      diagnostic_fine_subset_consensus || diagnostic_qualified_tier_retention ||
+      diagnostic_continuous_tier_retention)
     return false;
 #endif
   if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
@@ -3209,6 +3211,7 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_calibrated_midi_retention_for_diagnostics(diagnostic_calibrated_midi_retention);
   detector.set_fine_subset_consensus_for_diagnostics(diagnostic_fine_subset_consensus);
   detector.set_qualified_tier_retention_for_diagnostics(diagnostic_qualified_tier_retention);
+  detector.set_continuous_tier_retention_for_diagnostics(diagnostic_continuous_tier_retention);
   detector.set_suppressed_adjacent_admission_for_diagnostics(diagnostic_suppressed_adjacent_admission);
   detector.set_retained_spectral_assignment_for_diagnostics(
       diagnostic_retained_spectral_assignment);

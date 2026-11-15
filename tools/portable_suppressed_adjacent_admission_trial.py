@@ -42,7 +42,14 @@ POLICIES = {
         description='Default-off inference correction: apply a freshly qualified '
             'bounded spectral-tier completion even when it equals the current group. '
             'Equality alone cannot preserve a lane. Keep the existing spectral, beat, '
-            'energy, primary, ownership and capacity guards; no new delay or threshold.')}
+            'energy, primary, ownership and capacity guards; no new delay or threshold.'),
+    'continuous-tier-retention': dict(mode='continuous-tier-retention-on',
+        flag='--diagnostic-continuous-tier-retention', schema='m3_continuous_tier_retention_trial_v1',
+        datasets=('physical-long', 'extended-middle', 'ordinary', 'constructed', 'synthetic-four'),
+        description='Default-off fresh equality completion only when the pending '
+            'group still equals the committed group. Preserve an already pending '
+            'fine-subset correction and all existing qualification, ownership and '
+            'capacity guards; no new state, threshold or hold delay.')}
 
 
 def target_hold(current, trial):
@@ -64,6 +71,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     selection = POLICIES[policy]
+    screen_datasets = selection.get('datasets', SCREEN_DATASETS)
     trial_mode = selection['mode']
     conditions = ((OFF, ()), (CURRENT, (COLLISION,)),
                   (trial_mode, (COLLISION, selection['flag'])))
@@ -77,7 +85,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         reference_report_sha256=references['anchor_report_sha256'],
         reference_source=references['source'], input_manifest_sha256=digest(manifest_path),
-        binary_sha256=digest(binary), declared_datasets=list(SCREEN_DATASETS), datasets={},
+        binary_sha256=digest(binary), declared_datasets=list(screen_datasets), datasets={},
         conditions={mode: list(flags) for mode, flags in conditions}, target=TARGET,
         policy=selection['description'], policy_name=policy,
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
@@ -96,7 +104,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
     save()
     try:
         report['verified_inputs'] = verify_references(references, manifest, corpus)
-        for name in SCREEN_DATASETS:
+        for name in screen_datasets:
             dataset = report['datasets'][name] = dict(runs={})
             cached = {}
             for mode, flags in conditions:
@@ -157,14 +165,14 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         raise
     finally:
         rows = list(report['datasets'].values())
-        complete = report['state'] == 'completed' and len(rows) == len(SCREEN_DATASETS)
+        complete = report['state'] == 'completed' and len(rows) == len(screen_datasets)
         report['note_safety_datasets_passed'] = sum(row.get('note_safety_pass', False) for row in rows)
         report['completed_datasets'] = sum('comparison' in row for row in rows)
         report['reference_identity_pass'] = bool(rows) and all(
             row['runs'].get(mode, {}).get('saved_reference_bit_identical', False)
             for row in rows for mode in (OFF, CURRENT))
         report['bounded_screen_pass'] = bool(complete and report['reference_identity_pass']
-            and report['note_safety_datasets_passed'] == len(SCREEN_DATASETS)
+            and report['note_safety_datasets_passed'] == len(screen_datasets)
             and report.get('target_hold', {}).get('improved', False))
         report['decision'] = ('eligible for full corpus and native safety checks; not promotion'
             if report['bounded_screen_pass'] else 'rejected or incomplete; inspect separate gates')

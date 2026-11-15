@@ -1,21 +1,23 @@
 {
   "schema": "m3_github_qualified_tier_retention_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T18:11:21.469526+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T18:19:56.249122+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
-    "commit": null,
+    "commit": "ca3d9691fc99cda7ee7ba045efbbc97addf85655",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "e08d87fbed8389d97463cd695e53fa042679f783",
+    "run_id": "43745386911",
     "task": "qualified-tier-retention-trace",
     "dataset": "extended-middle",
     "note": 52,
     "label_index": 1,
     "input_release": "corpus-20261108",
-    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "run_attempt": 1,
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43745386911"
   },
   "reference": {
     "path": "docs/recovery/qualified-tier-retention-trace-references-20261115.json",
@@ -57,20 +59,159 @@
     "mock_contract_tests": 38,
     "workflow_yaml_and_shell_syntax": "passed",
     "native_execution": false,
-    "focused_review": "passed: no blocker; native offloaded execution remains unverified"
+    "focused_review": "passed: no blocker; completed GitHub replay now separately verified"
   },
   "runtime_policy_changed": false,
   "native_instrumentation_changed": false,
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once and SHA-256 verified; bulk remains remote",
   "unmeasured_gates": [
     "new policy safety",
     "native allocations and deadlines",
     "external DAW/device delivery"
   ],
-  "next": "Interpret primary/fine route at first divergence against saved physical-long fine6-to7 repair; select one minimal replacement only if evidence distinguishes it.",
+  "next": "Trial a separate default-off equality guard requiring pending_unison_mask to equal assigned_string_mask before applying a fresh qualification. This must preserve an already pending fine-subset correction; test physical-long and extended-middle first, then ordinary/constructed/synthetic-four only if safe. Existing rejected policy and installed output remain unchanged.",
   "dispatch_directory": "build/github-results/qualified-tier-retention-trace-dispatch-20261115",
-  "local_output": null
+  "local_output": "build/github-results/qualified-tier-retention-trace-43745386911",
+  "source_checks": [
+    {
+      "databaseId": 43745344710,
+      "headSha": "ca3d9691fc99cda7ee7ba045efbbc97addf85655",
+      "status": "completed",
+      "conclusion": "success",
+      "updatedAt": "2026-11-15T18:13:16Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43745344710"
+    }
+  ],
+  "expected_artifacts": {
+    "report": "m3-report-43745386911-1",
+    "bulk": "m3-evidence-43745386911-1"
+  },
+  "last_remote_observation_at": "2026-11-15T18:13:46Z",
+  "report": "build/github-results/qualified-tier-retention-trace-43745386911/qualified-tier-retention-trace/report.json",
+  "report_sha256": "e706904782abf8470491261ff9502d4a00d40d9522338d141d1cd07639184702",
+  "small_collection_receipt": "build/github-results/qualified-tier-retention-trace-43745386911/collection-receipt.json",
+  "artifacts": [
+    {
+      "id": 14174131737,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE3NDEzMTczNw==",
+      "name": "m3-report-43745386911-1",
+      "size_in_bytes": 108453,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14174131737",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14174131737/zip",
+      "expired": false,
+      "digest": "sha256:a08b44d128fa1eaa41c9ce2c583684e5876b5d99b8f5f709a2799fd833dd2571",
+      "created_at": "2026-11-15T18:13:42Z",
+      "updated_at": "2026-11-15T18:13:42Z",
+      "expires_at": "2026-11-29T18:13:42Z",
+      "workflow_run": {
+        "id": 43745386911,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "e08d87fbed8389d97463cd695e53fa042679f783"
+      }
+    },
+    {
+      "id": 14174016233,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE3NDAxNjIzMw==",
+      "name": "m3-evidence-43745386911-1",
+      "size_in_bytes": 831399,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14174016233",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14174016233/zip",
+      "expired": false,
+      "digest": "sha256:a3e2cedf31ebdf87a8c8a8352ebfc5818f0f4ce1cec33f8566c7950c89c7876e",
+      "created_at": "2026-11-15T18:13:43Z",
+      "updated_at": "2026-11-15T18:13:43Z",
+      "expires_at": "2026-11-22T18:13:43Z",
+      "workflow_run": {
+        "id": 43745386911,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "e08d87fbed8389d97463cd695e53fa042679f783"
+      }
+    }
+  ],
+  "worker_result": {
+    "databaseId": 43745386911,
+    "headSha": "e08d87fbed8389d97463cd695e53fa042679f783",
+    "status": "completed",
+    "conclusion": "success",
+    "updatedAt": "2026-11-15T18:13:46Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43745386911"
+  },
+  "result": {
+    "saved_references_bit_identical": true,
+    "repeated_policy_streams_bit_identical": true,
+    "fine_group_dispositions": {
+      "current-on-label1": {
+        "accepted": 12
+      },
+      "qualified-tier-retention-on-label1": {
+        "accepted": 12
+      }
+    },
+    "dp_primary_counts": {
+      "current-on-label1": {
+        "5": 12
+      },
+      "qualified-tier-retention-on-label1": {
+        "5": 12
+      }
+    },
+    "assignment_costs": {
+      "current-on-label1": {
+        "schema": "m3_assignment_cost_diagnosis_v1",
+        "term_order": [
+          "fret_prior",
+          "posterior_penalty",
+          "profile_bonus",
+          "open_bonus",
+          "cents_penalty",
+          "fine_bonus",
+          "retention_bonus"
+        ],
+        "expected_frames": 12,
+        "valid_joint_frames": 12,
+        "invalid_joint_frames": 0,
+        "empty_selected_frames": 0,
+        "target_selected_valid_frames": 12,
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true,
+        "active_target_string_changes": 0,
+        "reasons": {},
+        "interpretation": "Costs reproduce complete joint decisions before output policy. Allocation preview masks are hints, not committed MIDI lanes. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+      },
+      "qualified-tier-retention-on-label1": {
+        "schema": "m3_assignment_cost_diagnosis_v1",
+        "term_order": [
+          "fret_prior",
+          "posterior_penalty",
+          "profile_bonus",
+          "open_bonus",
+          "cents_penalty",
+          "fine_bonus",
+          "retention_bonus"
+        ],
+        "expected_frames": 12,
+        "valid_joint_frames": 12,
+        "invalid_joint_frames": 0,
+        "empty_selected_frames": 0,
+        "target_selected_valid_frames": 12,
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true,
+        "active_target_string_changes": 0,
+        "reasons": {},
+        "interpretation": "Costs reproduce complete joint decisions before output policy. Allocation preview masks are hints, not committed MIDI lanes. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+      }
+    },
+    "worker_python_contracts": 269,
+    "source_native_tests": "passed on GitHub",
+    "source_synthetic_buffer_smoke": "passed on GitHub",
+    "diagnosis": "Both policies accept fine mask40 and DP primary5 on all12 ticks with complete costs reproduced. At461823 current commits41 to40 while rejected trial waits on proposal40. At462079 both accept fresh completion41; at462207 trial repeats equality completion41 while current keeps fine40 pending. Repeated equality qualification resets pending_unison_mask and the generic16-tick evidence counter, delaying removal of wrong extra string0. Accepted fine alone cannot distinguish this regression. Counter values before the saved window are not recorded."
+  },
+  "collection_completed_at": "2026-11-15T18:14:57.258628+00:00"
 }

@@ -18,6 +18,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
         selected = trial.POLICIES[self.policy]
         self.trial_mode = selected['mode']
         self.flag = selected['flag']
+        self.screen_datasets = selected.get('datasets', trial.SCREEN_DATASETS)
         self.conditions = ((trial.OFF, ()), (trial.CURRENT, (trial.COLLISION,)),
                            (self.trial_mode, (trial.COLLISION, self.flag)))
 
@@ -30,7 +31,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
             binary.write_text('fixture only; never executed')
             files = {}
             names = ['calibration.m3cb', 'templates.tsv'] + [
-                name + suffix for name in trial.SCREEN_DATASETS for suffix in ('.wav', '.tsv')]
+                name + suffix for name in self.screen_datasets for suffix in ('.wav', '.tsv')]
             for name in names:
                 (inputs / name).write_text(name)
                 files[name] = dict(sha256=trial.digest(inputs / name))
@@ -49,7 +50,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                                               '1': dict(labeled=10, matched=6)})
 
             def selection(path):
-                name = next(name for name in trial.SCREEN_DATASETS if path.name.startswith(name + '-'))
+                name = next(name for name in self.screen_datasets if path.name.startswith(name + '-'))
                 mode = next(mode for mode, _ in self.conditions if mode in path.name)
                 return name, mode
 
@@ -81,7 +82,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
             references = dict(schema=shared.REFERENCE_SCHEMA, settings=shared.SETTINGS,
                 block_samples=512, source=source, anchor_report_sha256='saved-report',
                 reference_flags={m: list(f) for m, f in self.conditions[:2]}, datasets={})
-            for name in trial.SCREEN_DATASETS:
+            for name in self.screen_datasets:
                 references['datasets'][name] = {}
                 for mode, _ in self.conditions[:2]:
                     references['datasets'][name][mode] = dict(output=base['output'],
@@ -112,7 +113,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                 Path(command[command.index('--midi-event-trace') + 1]).write_text('fixture')
 
             output = root / 'output'
-            with (patch.object(shared, 'DATASETS', trial.SCREEN_DATASETS),
+            with (patch.object(shared, 'DATASETS', self.screen_datasets),
                   patch.object(trial.subprocess, 'run', side_effect=native),
                   patch.object(trial, 'read_replay', side_effect=parsed),
                   patch.object(trial, 'analyze_midi', side_effect=lifecycle),
@@ -132,11 +133,13 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
             self.assertEqual(report['native_timing'], 'not measured')
             return report, commands
 
-    def test_target_gain_checks_all_four_datasets_without_claiming_timing_or_promotion(self):
+    def test_target_gain_checks_declared_datasets_without_claiming_timing_or_promotion(self):
         report, commands = self.exercise()
         self.assertTrue(report['bounded_screen_pass'])
-        self.assertEqual(len(commands), 12)
-        self.assertEqual(report['note_safety_datasets_passed'], 4)
+        self.assertEqual(report['declared_datasets'], list(self.screen_datasets))
+        self.assertEqual(list(report['datasets']), list(self.screen_datasets))
+        self.assertEqual(len(commands), 3 * len(self.screen_datasets))
+        self.assertEqual(report['note_safety_datasets_passed'], len(self.screen_datasets))
         comparison = report['datasets']['physical-long']['comparison']
         self.assertFalse(comparison['inference_identity_required'])
         self.assertIsNone(comparison['inference_bit_identical'])
@@ -165,8 +168,9 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                 row['labels'][1]['matched'] -= 1
         report, commands = self.exercise(change=change)
         self.assertFalse(report['bounded_screen_pass'])
-        self.assertEqual(len(commands), 6)
-        self.assertEqual(report['completed_datasets'], 2)
+        completed = self.screen_datasets.index('ordinary') + 1
+        self.assertEqual(len(commands), 3 * completed)
+        self.assertEqual(report['completed_datasets'], completed)
 
     def test_false_output_conflict_and_clock_regressions_reject(self):
         for group, fields in (('output_safety', shared.OUTPUT_SAFETY_FIELDS),
@@ -204,6 +208,24 @@ class FineSubsetConsensusTests(SuppressedAdjacentAdmissionTests):
 
 class QualifiedTierRetentionTests(SuppressedAdjacentAdmissionTests):
     policy = 'qualified-tier-retention'
+
+
+class ContinuousTierRetentionTests(SuppressedAdjacentAdmissionTests):
+    policy = 'continuous-tier-retention'
+
+    def test_known_extended_middle_loss_stops_before_ordinary(self):
+        def change(kind, name, mode, row):
+            if kind == 'held' and name == 'extended-middle' and mode == self.trial_mode:
+                row['labels'][1]['exact_held_samples'] -= 1
+        report, commands = self.exercise(change=change)
+        self.assertEqual(report['declared_datasets'], [
+            'physical-long', 'extended-middle', 'ordinary', 'constructed', 'synthetic-four'])
+        self.assertTrue(report['target_hold']['improved'])
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(report['state'], 'rejected')
+        self.assertEqual(len(commands), 6)
+        self.assertEqual(report['completed_datasets'], 2)
+        self.assertNotIn('ordinary', report['datasets'])
 
 
 if __name__ == '__main__':

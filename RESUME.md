@@ -1,8 +1,22 @@
-# Current checkpoint: paired retention divergence trace prepared
+# Current checkpoint: continuous tier retention screen prepared
 
-Checkpoint: `docs/recovery/github-qualified-tier-retention-trace-20261115.json`; status key `portable_compute.qualified_tier_retention_trace`. The paired trace is prepared for extended-middle label1/note52/mask40, twelve ticks in [461568,462336). It preserves complete current-ON and rejected qualified-retention scored TSV, raw MIDI and outcome references. All38 focused Python contracts and workflow YAML/shell checks passed; one focused review found no blocker. No new native execution or DSP policy change yet.
+Checkpoint: `docs/recovery/github-continuous-tier-retention-20261115.json`; status key `portable_compute.continuous_tier_retention`. Separate default-off `--diagnostic-continuous-tier-retention` is implemented but not yet dispatched. Fresh equality completion requires pending_unison_mask==assigned_string_mask so intermittent evidence cannot reset an existing fine-subset correction. Prior rejected flags remain off. No production default, installed output or scoreboard changes.
 
-Next: commit and offload this exact pair on GitHub Actions, record the single worker run, then inspect DP primary, named fine-group disposition and full competing assignment costs. Requiring accepted fine alone is not a qualified fix. Do not repeat the rejected corpus sweep, completed jobs, ntfy ping or storage cleanup. Full evidence and earlier results follow below; installed output and scoreboard remain unchanged.
+The five-dataset fail-fast screen is physical-long, extended-middle, ordinary, constructed, synthetic-four (at most15 replays, existing30 authorized inputs). Physical label3/note40 must gain exact held samples and lose attacks; every label must retain frames and held samples, with no false duration/onset or raw-conflict growth and saved OFF/current full scored/raw identity. Extended-middle is second because the prior policy lost label1/note52 there. A pass permits full-corpus checks only.
+
+All29 local Python mock tests pass; workflow copies match, YAML parses and44 shell steps pass syntax. Native tests/replays remain on GitHub. Single implementation review complete with no blocker. Next: pin source/worker, dispatch once, track exact runs and collect only the small report once. Full corpus, allocation, buffers, p99/max/zero-overrun and external DAW/device gates remain open.
+
+The ntfy ping and680-file compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU task is identified for this native CPU question.
+
+# Previous checkpoint: paired retention divergence trace final
+
+Checkpoint: `docs/recovery/github-qualified-tier-retention-trace-20261115.json`; status key `portable_compute.qualified_tier_retention_trace`. Worker `43745386911` and source portable `43745344710` are final and successful at source `ca3d9691fc99cda7ee7ba045efbbc97addf85655`, worker `e08d87fbed8389d97463cd695e53fa042679f783`. The 108453-byte small artifact was collected once and SHA-256 verified at `build/github-results/qualified-tier-retention-trace-43745386911`; report SHA-256 `e706904782abf8470491261ff9502d4a00d40d9522338d141d1cd07639184702`. Bulk remains remote. Do not poll, rerun or recollect completed jobs.
+
+Both complete scored TSV/raw MIDI/outcome references are bit-identical. Both policies accept fine mask40 with DP primary5 on all12 ticks; all12 complete joint decisions reproduce. The target is the only selected pitch; physical ownership/capacity do not reject fine40. At461823 current commits41 to40 while trial waits; at462207 the trial's fresh equality completion41 resets pending fine40, while current retains that pending correction. Source confirms that each reserved completion resets the generic16-tick evidence counter. Accepted fine alone cannot distinguish this regression. Prior counter history is not recorded, and no additional trace is needed to establish the reset mechanism.
+
+GitHub passed269 Python contracts, source native tests and synthetic buffer parity. No DSP policy, installed output, defaults or scoreboard changed. Next: implement a separate default-off equality guard requiring pending_unison_mask==assigned_string_mask before applying a fresh completion. Preserve already pending fine-subset corrections. Screen physical-long and extended-middle first; continue ordinary/constructed/synthetic-four only on safe target improvement. This is a hypothesis requiring measurements, not an accepted fix. Keep the rejected corpus result below.
+
+The ntfy ping and680-file compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU task is identified for this native CPU question. All native execution stays on GitHub.
 
 # Previous checkpoint: qualified tier retention corpus rejected
 

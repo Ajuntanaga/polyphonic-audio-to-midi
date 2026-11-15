@@ -1,0 +1,107 @@
+{
+  "schema": "m3_continuous_tier_retention_checkpoint_v1",
+  "updated_at": "2026-11-15T18:26:12.841238+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "ca3d9691fc99cda7ee7ba045efbbc97addf85655",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_base_commit": "e08d87fbed8389d97463cd695e53fa042679f783",
+    "worker_commit": "894ec3325becd1f79b301f9aefe59c5aa90213b9",
+    "run_id": null,
+    "task": "continuous-tier-retention-trial",
+    "dataset": "physical-long",
+    "note": 40,
+    "label_index": 3,
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "reference": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
+  "source_diagnosis": {
+    "checkpoint": "docs/recovery/github-qualified-tier-retention-trace-20261115.json",
+    "run_id": "43745386911",
+    "report_sha256": "e706904782abf8470491261ff9502d4a00d40d9522338d141d1cd07639184702",
+    "finding": "Fresh equality completion resets a pending fine-subset correction in extended-middle. Preserve that correction while allowing continuously qualified committed groups to remain stable."
+  },
+  "scope": {
+    "datasets": [
+      "physical-long",
+      "extended-middle",
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "block_samples": 512,
+    "conditions": [
+      "reference-off",
+      "current-on",
+      "continuous-tier-retention-on"
+    ],
+    "maximum_replays": 15,
+    "max_seconds": 2400
+  },
+  "policy": "Separate default-off --diagnostic-continuous-tier-retention. Fresh equality completion applies only when pending_unison_mask equals assigned_string_mask. Fresh additions and existing spectral, beat, energy, primary, ownership and capacity guards remain. No new counter, history or threshold. Prior qualified-tier-retention and other rejected policies remain off.",
+  "target": {
+    "dataset": "physical-long",
+    "label_index": 3,
+    "midi_note": 40,
+    "string_mask": 7,
+    "baseline_exact_held_samples": 1613760,
+    "labeled_samples": 2520192,
+    "baseline_note_ons": 104
+  },
+  "regression_sentinel": {
+    "dataset": "extended-middle",
+    "label_index": 1,
+    "midi_note": 52,
+    "string_mask": 40,
+    "baseline_matches": 4225,
+    "labeled_frames": 5400,
+    "baseline_exact_held_samples": 266625,
+    "labeled_samples": 345600
+  },
+  "required": [
+    "saved OFF/current-ON full scored and raw references bit-identical",
+    "physical-long target exact held samples increase and note-ons decrease",
+    "zero per-label snapshot or exact-held loss",
+    "no false duration/onset or raw-conflict growth",
+    "stop at first regression or missing target gain"
+  ],
+  "local_validation": {
+    "python_mock_tests_passed": 29,
+    "workflow_yaml_and_44_shell_steps_syntax": true,
+    "diff_check": true,
+    "native_execution_run_locally": false,
+    "implementation_review": "complete; no unresolved blocker"
+  },
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "stage": "ready for pinned GitHub screen",
+  "unmeasured_gates": [
+    "full corpus",
+    "buffer identity",
+    "processing allocations",
+    "p99<=166666ns",
+    "max<=333333ns",
+    "zero deadline overruns",
+    "external DAW/device delivery"
+  ],
+  "limitations": [
+    "Continuous wrong-lane evidence could still retain an incorrect group; the strict note-safety screen must reject it.",
+    "Does not address separate initial acquisition or candidate dropout.",
+    "Bounded pass permits full corpus checks only; does not establish live readiness."
+  ],
+  "dispatch_directory": "build/github-results/continuous-tier-retention-dispatch-20261115",
+  "expected_artifacts": {
+    "report": "m3-report-{run_id}-1",
+    "bulk": "m3-evidence-{run_id}-1",
+    "local_output": "build/github-results/continuous-tier-retention-{run_id}",
+    "report_member": "continuous-tier-retention/report.json"
+  },
+  "next": "Complete the single implementation review; push pinned source and worker, dispatch one bounded GitHub screen, and collect its small report once. All native execution remains on GitHub."
+}
