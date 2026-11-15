@@ -2510,7 +2510,8 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
   static void pending_midi_retention_probe(
-      PolyphonicPitchDetector& detector, bool enabled, unsigned scenario) {
+      PolyphonicPitchDetector& detector, bool enabled, unsigned scenario,
+      bool calibrated = false, unsigned calibration_scenario = 0U) {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.midi_routing = MidiRouting::per_voice;
@@ -2519,11 +2520,45 @@ struct PolyphonicPitchDetectorTestAccess final {
     config.response = 100U;
     M3_EXPECT_TRUE(detector.configure(96000.0, config));
     detector.set_spectral_lane_collision_for_diagnostics(true);
-    detector.set_pending_midi_retention_for_diagnostics(enabled);
+    detector.set_pending_midi_retention_for_diagnostics(enabled && !calibrated);
+    detector.set_calibrated_midi_retention_for_diagnostics(enabled && calibrated);
+    if (calibrated) {
+      StringCalibrationBank bank;
+      for (std::size_t string = 0U; string < 2U; ++string) {
+        auto& point = bank.points[string][37U - kM3OpenNotes[string]];
+        point.harmonic_profile_q15[string] = 32767U;
+        point.confidence_q15 = 32767U;
+        point.observation_count = 128U;
+        point.quality = CalibrationPointQuality::measured;
+        bank.calibrated_string_mask |= static_cast<std::uint8_t>(1U << string);
+      }
+      auto& other = bank.points[1U][37U - kM3OpenNotes[1U]];
+      if (calibration_scenario == 2U) {
+        other.harmonic_profile_q15[1U] = 0U;
+        other.harmonic_profile_q15[0U] = 32767U;
+      } else if (calibration_scenario == 3U) {
+        other.quality = CalibrationPointQuality::missing;
+      } else if (calibration_scenario == 7U) {
+        other.harmonic_profile_q15.fill(0U);
+      }
+      detector.set_calibration_bank(bank);
+      for (std::size_t harmonic = 0U; harmonic < kCalibrationHarmonicCount; ++harmonic) {
+        auto& cell = detector.cells_[detector.cell_index(4U, harmonic)];
+        cell.enabled = true;
+        cell.fast_real = cell.fast_imaginary = 0.0;
+      }
+      const auto harmonic = calibration_scenario == 1U ? 1U : 0U;
+      detector.cells_[detector.cell_index(4U, harmonic)].fast_real =
+          calibration_scenario == 4U ? 0.0 : calibration_scenario == 5U
+              ? std::numeric_limits<double>::quiet_NaN() : 1.0;
+      // Optional capture fields are deliberately contradictory and cannot
+      // supply the independent runtime evidence used for retention.
+      detector.candidate_admission_diagnostics_[4U].best_calibrated_string = 1U;
+    }
     auto& pending = detector.candidate_states_[0U];
     auto& held = detector.candidate_states_[4U];
     detector.playable_string_masks_[0U] = 1U;
-    detector.playable_string_masks_[4U] = 3U;
+    detector.playable_string_masks_[4U] = calibrated && calibration_scenario == 6U ? 7U : 3U;
     held.active = true;
     held.emitted_note = 37U;
     held.assigned_string = 1U;
@@ -2559,8 +2594,10 @@ struct PolyphonicPitchDetectorTestAccess final {
     const auto virtual_mask = held.midi_voice_mask;
     const auto attacks = pending.attack_ticks;
     const auto allocations = test::allocation_count();
+    const bool retain = enabled && scenario == 0U &&
+        (!calibrated || calibration_scenario == 0U);
     M3_EXPECT_EQ(detector.pending_midi_retention_request(4U, 1U, selected),
-                 enabled && scenario == 0U ? 1U : virtual_mask);
+                 retain ? 1U : virtual_mask);
     // No incumbent means no invented retention or delayed new onset.
     M3_EXPECT_EQ(detector.pending_midi_retention_request(4U, 0U, selected), virtual_mask);
     if (scenario == 0U || scenario == 11U) {
@@ -2573,9 +2610,22 @@ struct PolyphonicPitchDetectorTestAccess final {
         M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
         M3_EXPECT_EQ(decision.transitions[0U].note, 37U);
         M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
-      } else if (enabled) {
+      } else if (retain) {
         M3_EXPECT_EQ(decision.transitions.size(), 0U);
         M3_EXPECT_EQ(detector.diagnostic_midi_owners_[0U].candidate, 4U);
+        if (calibrated) {
+          // A new spectrum favoring the virtual lane must immediately allow
+          // correction of the actual owner, without any inference mutation.
+          detector.cells_[detector.cell_index(4U, 0U)].fast_real = 0.0;
+          detector.cells_[detector.cell_index(4U, 1U)].fast_real = 1.0;
+          detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+          M3_EXPECT_EQ(decision.transitions.size(), 2U);
+          M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
+          M3_EXPECT_EQ(decision.transitions[0U].voice_id, 0U);
+          M3_EXPECT_EQ(decision.transitions[1U].kind, TransitionKind::note_on);
+          M3_EXPECT_EQ(decision.transitions[1U].voice_id, 1U);
+          M3_EXPECT_EQ(detector.diagnostic_midi_owners_[1U].candidate, 4U);
+        }
       } else {
         M3_EXPECT_EQ(decision.transitions.size(), 2U);
         M3_EXPECT_EQ(decision.transitions[0U].kind, TransitionKind::note_off);
@@ -13226,6 +13276,28 @@ M3_TEST(native_detector_pending_midi_retention_yields_to_new_claims_and_evidence
     m3::PolyphonicPitchDetector detector;
     m3::PolyphonicPitchDetectorTestAccess::pending_midi_retention_probe(
         detector, true, scenario);
+  }
+#endif
+}
+
+M3_TEST(native_detector_calibrated_midi_retention_requires_unique_complete_evidence) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (bool enabled : {false, true}) {
+    for (unsigned calibration = 0U; calibration <= 7U; ++calibration) {
+      m3::PolyphonicPitchDetector detector;
+      m3::PolyphonicPitchDetectorTestAccess::pending_midi_retention_probe(
+          detector, enabled, 0U, true, calibration);
+    }
+  }
+#endif
+}
+
+M3_TEST(native_detector_calibrated_midi_retention_preserves_claims_groups_and_release) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (unsigned scenario = 1U; scenario <= 17U; ++scenario) {
+    m3::PolyphonicPitchDetector detector;
+    m3::PolyphonicPitchDetectorTestAccess::pending_midi_retention_probe(
+        detector, true, scenario, true);
   }
 #endif
 }

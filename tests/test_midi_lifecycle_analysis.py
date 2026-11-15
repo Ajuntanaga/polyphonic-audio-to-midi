@@ -177,7 +177,26 @@ class MidiLifecycleTests(unittest.TestCase):
                            sample_rate=96000, include_output_safety=True)
         self.assertEqual(result['output_safety']['counts'], dict(
             false_wrong_note_voice_samples=60, false_wrong_string_voice_samples=20,
-            false_gap_voice_samples=60, matched_voice_samples=60, emitted_voice_samples=200))
+            false_gap_voice_samples=60, matched_voice_samples=60, emitted_voice_samples=200,
+            false_wrong_note_onsets=0, false_wrong_string_onsets=1,
+            false_gap_onsets=2, matched_onsets=0, emitted_onsets=3))
+
+    def test_output_onsets_use_half_open_labels_and_the_expected_lane_union(self):
+        events = [event(0, 'on'), event(10, 'off'),
+                  event(20, 'on', voice=1), event(30, 'off', voice=1),
+                  event(40, 'on', note=61), event(50, 'off', note=61),
+                  event(60, 'on', voice=2), event(70, 'off', voice=2),
+                  event(80, 'on', voice=255), event(90, 'off', voice=255)]
+        labels = [label(0, 20, 60, mask=1), label(1, 20, 40, mask=2),
+                  label(2, 40, 60, mask=2), label(3, 60, 80, mask=1),
+                  label(4, 80, 100, mask=0)]
+        counts = summarize(events, labels, sample_count=100, sample_rate=96000,
+                           include_output_safety=True)['output_safety']['counts']
+        self.assertEqual(counts['false_gap_onsets'], 1)
+        self.assertEqual(counts['false_wrong_note_onsets'], 1)
+        self.assertEqual(counts['false_wrong_string_onsets'], 1)
+        self.assertEqual(counts['matched_onsets'], 2)
+        self.assertEqual(counts['emitted_onsets'], 5)
 
     def test_output_safety_uses_label_union_without_counting_duplicates(self):
         events = [event(0, 'on'), event(0, 'on', voice=1)]

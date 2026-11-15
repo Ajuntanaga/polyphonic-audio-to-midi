@@ -5989,6 +5989,46 @@ void PolyphonicPitchDetector::order_collision_releases(
     events[index].sequence = first_sequence + static_cast<std::uint32_t>(index);
 }
 
+bool PolyphonicPitchDetector::calibration_uniquely_supports_lane(
+    std::size_t candidate, std::uint8_t lane) const noexcept {
+  // Recompute independent spectral identity from this decision's spectrum.
+  // Never depend on optional outcome capture or the joint assignment winner.
+  std::array<double, kCalibrationHarmonicCount> profile{};
+  double total = 0.0;
+  for (std::size_t harmonic = 0U; harmonic < profile.size(); ++harmonic) {
+    profile[harmonic] = corrected_harmonic_energy(candidate, harmonic);
+    if (!std::isfinite(profile[harmonic]) || profile[harmonic] < 0.0) return false;
+    total += profile[harmonic];
+  }
+  if (!std::isfinite(total) || total <= kScoreEpsilon) return false;
+  const auto note = static_cast<std::uint8_t>(lowest_note_ + candidate);
+  const auto playable = playable_string_mask(candidate);
+  double best = 0.0, second = 0.0;
+  std::uint8_t best_lane = 0U;
+  for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+    const auto bit = static_cast<std::uint8_t>(1U << string);
+    if ((playable & bit) == 0U) continue;
+    if (note < kM3OpenNotes[string]) return false;
+    const auto* point = calibrator_.bank().point(string, note - kM3OpenNotes[string]);
+    if (point == nullptr || point->quality == CalibrationPointQuality::missing ||
+        std::none_of(point->harmonic_profile_q15.begin(), point->harmonic_profile_q15.end(),
+                     [](auto value) { return value != 0U; }))
+      return false;
+    const auto similarity = calibration_similarity_from_energy_profile(
+        candidate, string, profile, total);
+    if (!std::isfinite(similarity)) return false;
+    if (similarity > best) {
+      second = best;
+      best = similarity;
+      best_lane = bit;
+    } else if (similarity > second) {
+      second = similarity;
+    }
+  }
+  // Missing coverage, zero signal and ties yield to the normal correction.
+  return best_lane == lane && best > second;
+}
+
 std::uint8_t PolyphonicPitchDetector::pending_midi_retention_request(
     std::size_t candidate, std::uint8_t retained,
     const std::array<bool, kMaxCandidates>& selected) const noexcept {
@@ -5998,7 +6038,8 @@ std::uint8_t PolyphonicPitchDetector::pending_midi_retention_request(
   // Preserve only an actual sounding singleton through an immature forced
   // claim. This changes the output request, never physical assignment,
   // candidate maturation, spectral inference or the virtual MIDI trajectory.
-  if (!diagnostic_pending_midi_retention_ || !selected[candidate] ||
+  if ((!diagnostic_pending_midi_retention_ && !diagnostic_calibrated_midi_retention_) ||
+      !selected[candidate] ||
       !state.active || output_suppressed(state) ||
       candidate_midi_output_note(candidate) != lowest_note_ + candidate ||
       string_count(retained) != 1U || string_count(desired) != 1U ||
@@ -6034,7 +6075,11 @@ std::uint8_t PolyphonicPitchDetector::pending_midi_retention_request(
       return desired;
     immature_claim = true;
   }
-  return immature_claim ? retained : desired;
+  if (!immature_claim) return desired;
+  if (diagnostic_calibrated_midi_retention_ &&
+      !calibration_uniquely_supports_lane(candidate, retained))
+    return desired;
+  return retained;
 }
 
 void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(

@@ -89,8 +89,41 @@ def read_events(path, *, sample_count, transition_count):
     return events
 
 
-OUTPUT_SAFETY_FIELDS = ('false_wrong_note_voice_samples', 'false_wrong_string_voice_samples',
-                        'false_gap_voice_samples')
+OUTPUT_DURATION_FIELDS = ('false_wrong_note_voice_samples', 'false_wrong_string_voice_samples',
+                          'false_gap_voice_samples')
+OUTPUT_ONSET_FIELDS = ('false_wrong_note_onsets', 'false_wrong_string_onsets', 'false_gap_onsets')
+OUTPUT_SAFETY_FIELDS = OUTPUT_DURATION_FIELDS + OUTPUT_ONSET_FIELDS
+
+
+def _onset_safety(events, labels):
+    """Classify each raw NoteOn at its sample, with no invented onset grace."""
+    edges = sorted((label[edge], label['midi_note'], label['string_mask'], delta)
+        for label in labels for edge, delta in (('start_sample', 1), ('end_sample', -1)))
+    expected = defaultdict(Counter)
+    active_labels = index = 0
+    counts = dict.fromkeys((*OUTPUT_ONSET_FIELDS, 'matched_onsets', 'emitted_onsets'), 0)
+    for event in events:
+        if event['kind'] != 'on':
+            continue
+        while index < len(edges) and edges[index][0] <= event['sample']:
+            _, note, mask, delta = edges[index]
+            expected[note][mask] += delta
+            active_labels += delta
+            if not expected[note][mask]:
+                del expected[note][mask]
+            index += 1
+        counts['emitted_onsets'] += 1
+        masks = expected[event['note']]
+        if not active_labels:
+            counts['false_gap_onsets'] += 1
+        elif not masks:
+            counts['false_wrong_note_onsets'] += 1
+        elif masks[0] or (event['voice_id'] != UNASSIGNED_VOICE and
+                         any(mask & (1 << event['voice_id']) for mask in masks)):
+            counts['matched_onsets'] += 1
+        else:
+            counts['false_wrong_string_onsets'] += 1
+    return counts
 
 
 def _output_safety(spans, labels, sample_count):
@@ -106,7 +139,7 @@ def _output_safety(spans, labels, sample_count):
             boundaries[left].append(('start', note, mask, unassigned))
             boundaries[right].append(('end', note, 0, False))
     active, expected = {}, defaultdict(Counter)
-    counts = dict.fromkeys((*OUTPUT_SAFETY_FIELDS, 'matched_voice_samples', 'emitted_voice_samples'), 0)
+    counts = dict.fromkeys((*OUTPUT_DURATION_FIELDS, 'matched_voice_samples', 'emitted_voice_samples'), 0)
     previous = active_labels = 0
     for sample in sorted(boundaries):
         duration = sample - previous
@@ -261,8 +294,9 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
             'No silence, forced EOF release, onset grace or release tolerance is invented.')
     if include_output_safety:
         result['output_safety'] = dict(valid=not errors,
-            counts=None if errors else _output_safety(spans, labels, sample_count),
-            interpretation='Raw emitted voice-samples, counted once per voice against the '
+            counts=None if errors else dict(_output_safety(spans, labels, sample_count),
+                                           **_onset_safety(events, labels)),
+            interpretation='Raw emitted voice-samples and NoteOn counts, classified against the '
                 'union of simultaneous labels. Wrong-note, wrong-string and unlabeled-gap '
                 'outputs are disjoint. Gap outputs are extra notes, not missing notes. '
                 'A zero label mask accepts any lane; unassigned output fails a nonzero mask. '

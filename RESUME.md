@@ -1,4 +1,14 @@
-# Current checkpoint: MIDI retention diagnostic complete; omission rule insufficient
+# Current checkpoint: calibrated MIDI retention trial prepared
+
+Checkpoint: `docs/recovery/github-calibrated-midi-retention-20261115.json`; status key `portable_compute.calibrated_midi_retention`. The default-off output-only trial requires the retained MIDI lane to be the unique winner of current calibrated harmonic similarity, with complete nonempty profiles for every playable string. Ties and missing/invalid evidence yield. Existing attack, active-owner, group, retune and handoff guards remain. The optional trace fields do not control the policy.
+
+Local validation: 65 lightweight parser/mock contracts, source path and native source contracts passed; workflow YAML parsed and worker copy matches. The single read-only native implementation review passed with no consequential blocker. No local native build/test/replay or remote processing has run for this trial yet. Installed output and scoreboard remain unchanged.
+
+Next: push the source and worker checkpoints, then dispatch exactly one `calibrated-midi-retention-trial` on ordinary/note37/label17. Record exact commits/run ID here and in the JSON checkpoint. Require saved OFF/current reference identity, unchanged full inference, improved target holds with fewer attacks, zero per-label held loss, and no false-output duration or onset-count growth. Timing, corpus and external DAW/device acceptance remain separate and open. Some target improvement is enough; do not hardcode labels or preserve all prior gain anchors at the cost of losses.
+
+All native execution stays on GitHub Actions using the existing authorized input route. No distinct useful Kaggle GPU task is identified for this native policy. The requested ntfy ping and lossless 680-file compression are complete (about 1.34 GB reclaimed); do not repeat them.
+
+# Previous checkpoint: MIDI retention diagnostic complete; omission rule insufficient
 
 GitHub diagnostic `43711063454` completed successfully at source `69a0f8d7bed70bb9312dc0d46fd517de0b20c3a5`, worker `580587230046452ffdd441eed85861defa4bc6e9`. Checkpoint: `docs/recovery/github-pending-midi-retention-trace-20261115.json`; status key `portable_compute.pending_midi_retention_trace`. Source portable run `43711013639` also passed. The small `m3-report-43711063454-1` artifact is collected once and hash-verified at `build/github-results/pending-midi-retention-trace-43711063454`. The 10,939,959-byte bulk evidence archive remains remote. Do not poll, rerun or recollect these completed jobs.
 

@@ -1,4 +1,4 @@
-"""Output-only retention must preserve inference and cannot hide false durations."""
+"""Output-only retention must preserve inference, false durations and onsets."""
 from pathlib import Path
 import tempfile
 
@@ -49,5 +49,18 @@ class PortablePendingMidiRetentionTrialTests(contracts.PortablePendingStringTria
             self.assertTrue(report['held_label_improved'])
             self.assertTrue(report['inference_preserved'])
             self.assertEqual(report['raw_output_safety_delta']['false_wrong_note_voice_samples'], 16)
+            self.assertFalse(report['raw_output_no_regression'])
+            self.assertFalse(report['full_recording_screen_pass'])
+
+    def test_extra_false_onset_rejects_equal_false_duration(self):
+        baseline = ((0, 'on', 43), (16, 'off', 43), *contracts.BASE_EVENTS)
+        events = ((0, 'on', 43), (8, 'off', 43), (8, 'on', 43),
+                  (16, 'off', 43), *contracts.BETTER_EVENTS)
+        with tempfile.TemporaryDirectory() as temp:
+            report, _ = self.execute(Path(temp), events=events, baseline_events=baseline)
+            self.assertTrue(report['held_label_improved'])
+            self.assertTrue(report['inference_preserved'])
+            self.assertEqual(report['raw_output_safety_delta']['false_wrong_note_voice_samples'], 0)
+            self.assertEqual(report['raw_output_safety_delta']['false_wrong_note_onsets'], 1)
             self.assertFalse(report['raw_output_no_regression'])
             self.assertFalse(report['full_recording_screen_pass'])

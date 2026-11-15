@@ -728,6 +728,9 @@ class PolyphonicPitchDetector final {
   void set_pending_midi_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_pending_midi_retention_ = enabled;
   }
+  void set_calibrated_midi_retention_for_diagnostics(bool enabled) noexcept {
+    diagnostic_calibrated_midi_retention_ = enabled;
+  }
   void set_retained_spectral_assignment_for_diagnostics(bool enabled) noexcept {
     diagnostic_retained_spectral_assignment_ = enabled;
   }
@@ -1439,6 +1442,8 @@ class PolyphonicPitchDetector final {
       std::size_t candidate, std::uint8_t desired,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
   void order_collision_releases(DetectorDecision& decision) noexcept;
+  [[nodiscard]] bool calibration_uniquely_supports_lane(
+      std::size_t candidate, std::uint8_t lane) const noexcept;
   [[nodiscard]] std::uint8_t pending_midi_retention_request(
       std::size_t candidate, std::uint8_t retained,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
@@ -1727,6 +1732,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_pending_string_reservation_{};
   bool diagnostic_forced_pending_string_reservation_{};
   bool diagnostic_pending_midi_retention_{};
+  bool diagnostic_calibrated_midi_retention_{};
   std::array<bool, kMaxCandidates> diagnostic_assignment_previews_{};
   struct DiagnosticMidiOwner final {
     std::uint8_t candidate{kUnassignedVoiceId};

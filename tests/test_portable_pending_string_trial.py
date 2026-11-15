@@ -57,7 +57,8 @@ class PortablePendingStringTrialTests(unittest.TestCase):
             self.assertEqual(trial.FLAG in command, index == 2)
             for flag in ('--diagnostic-pending-string-reservation',
                          '--diagnostic-forced-pending-string-reservation',
-                         '--diagnostic-pending-midi-retention'):
+                         '--diagnostic-pending-midi-retention',
+                         '--diagnostic-calibrated-midi-retention'):
                 if flag != trial.FLAG:
                     self.assertNotIn(flag, command)
             self.assertNotIn('--diagnostic-direct-evidence-retention', command)
