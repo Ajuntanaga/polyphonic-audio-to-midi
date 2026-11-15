@@ -1,0 +1,69 @@
+{
+  "schema": "m3_vst3_completion_midi_references_v1",
+  "state": "completed",
+  "final": true,
+  "dataset": "physical-long",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43753713533",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "bounded_report_sha256": "465278aebdb20a93482bf8a63a5fcad10009a99bf0bd23dc8fe92ab0c674f7b5",
+  "recording_clock": {
+    "sample_count": 5646848,
+    "sample_rate": 96000
+  },
+  "artifact": {
+    "id": 14177008851,
+    "name": "m3-evidence-43753713533-1",
+    "size_in_bytes": 233815305,
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14177008851/zip",
+    "sha256": "83d6f9b5f2c23f78608f159dda12dbbfb6e00efd0137b4697bfd03c7349116c3"
+  },
+  "runs": {
+    "current-on": {
+      "file": "physical-long-current-on-512-midi.tsv.gz",
+      "bytes": 10743,
+      "sha256": "01846a134c3c6a65f39cf2d022f54109edd154f30e867b88e3109cadabcf2cd9",
+      "raw_bytes": 34927,
+      "raw_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+      "captured_raw_bytes": 34927,
+      "captured_raw_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+      "captured_rows": 1510,
+      "retained_rows": 1510,
+      "discarded_rows": 0,
+      "scope": "All notes in the diagnostic window; full-recording checks precede retention.",
+      "start_sample_inclusive": 0,
+      "end_sample_exclusive": 5646848
+    },
+    "completion-midi-retention-on": {
+      "file": "physical-long-completion-midi-retention-on-512-midi.tsv.gz",
+      "bytes": 10490,
+      "sha256": "5acaf2ac1c07869301623b27118ecb3901c92cd2e1fec4ad86a394c6f49a90bf",
+      "raw_bytes": 34175,
+      "raw_sha256": "7a5d0981ba645e9dcc3424e16fcc105872136df52c736d7939ce0d33b08d3763",
+      "captured_raw_bytes": 34175,
+      "captured_raw_sha256": "7a5d0981ba645e9dcc3424e16fcc105872136df52c736d7939ce0d33b08d3763",
+      "captured_rows": 1478,
+      "retained_rows": 1478,
+      "discarded_rows": 0,
+      "scope": "All notes in the diagnostic window; full-recording checks precede retention.",
+      "start_sample_inclusive": 0,
+      "end_sample_exclusive": 5646848
+    }
+  }
+}

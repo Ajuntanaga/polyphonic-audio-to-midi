@@ -1,0 +1,66 @@
+{
+  "schema": "m3_vst3_completion_midi_retention_checkpoint_v1",
+  "task": "completion-midi-retention",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "workflow": "m3-vst3-replay.yml",
+  "scenario": "completion-midi-retention",
+  "source_base_commit": "b5526d3b8cf498e37fd916eae09f61304f1bfd78",
+  "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+  "source_commit": null,
+  "worker_commit": "20e2cba11b0f640225068952eb844647ea77b576",
+  "run_id": null,
+  "status": "awaiting_corpus_verdict",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T21:10:13.853689+00:00",
+  "updated_at": "2026-11-15T21:10:13.853689+00:00",
+  "checkpoint": "docs/recovery/github-vst3-completion-midi-retention-20261115.json",
+  "blocked_on_corpus_run": 43756240245,
+  "dispatch_directory": "build/github-results/vst3-completion-midi-retention-dispatch-20261115",
+  "reference_manifest": "docs/recovery/completion-midi-retention-vst3-references-20261115.json",
+  "reference_run_id": 43753713533,
+  "report_relative_path": "vst3-completion-midi-retention/report.json",
+  "report_available": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "dataset": "physical-long",
+  "recording_clock": {
+    "sample_count": 5646848,
+    "sample_rate": 96000
+  },
+  "modes": [
+    "current-on",
+    "completion-midi-retention-on"
+  ],
+  "sample_bits": [
+    32,
+    64
+  ],
+  "block_samples": 512,
+  "planned_replays": 4,
+  "replay_timeout_seconds": 900,
+  "input_release": "corpus-20261108",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "local_checks": {
+    "python_mock_tests_passed": 20,
+    "new_comparison_tests": 9,
+    "shared_component_and_recovery_tests": 11,
+    "workflow_shell_sections_syntax_passed": 10,
+    "diff_check": "passed",
+    "native_execution": false,
+    "review": "Reviewed test-only component opt-in, CLI and JSON formatting, saved-reference comparison and workflow routing. No production policy or defaults changed."
+  },
+  "acceptance": [
+    "Every accepted callback matches the saved full current-ON or trial detector MIDI in sample, kind, pitch, lane and VST3 float32 velocity after ledger ordering.",
+    "All recorded samples analyzed, all detector transitions accepted, no process errors, output faults, capture overflow, dry-audio change or raw ownership conflicts.",
+    "32-bit and 64-bit callback traces are bit-identical for each mode; complete reference input and artifact hashes verified."
+  ],
+  "scope": "Instrumented actual VST3 component with an accepting test event list, not an external DAW. OFF identity remains a separate full-corpus gate. Timing and allocations are not measured by this integration.",
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "promotion_accepted": false,
+  "external_host_and_hardware": "unverified",
+  "next_step": "Commit and push this prepared route; dispatch exactly once only after full-corpus acceptance passes. Otherwise retain the preparation without starting this component run.",
+  "worker_pushed": true
+}

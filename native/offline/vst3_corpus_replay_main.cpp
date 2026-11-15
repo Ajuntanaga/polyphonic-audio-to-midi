@@ -279,9 +279,10 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
 template <typename Sample>
 int replay(Instance& instance, const m3::offline::WaveData& wave,
            const m3::StringCalibrationBank& calibration, std::uint32_t block_size,
-           bool trial, const char* events_path) {
+           bool trial, bool completion_midi_retention, const char* events_path) {
   auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
   component->enable_corpus_ownership_trial(trial);
+  component->enable_corpus_completion_midi_retention(completion_midi_retention);
   const auto restored = component->detector_calibration_bank_for_test();
   m3::CalibrationStateImage restored_image{}, expected_image{};
   const bool calibration_matches = m3::encode_calibration_state(restored, restored_image) &&
@@ -347,6 +348,7 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
   std::printf("{\"schema\":\"m3_vst3_corpus_native_v1\","
       "\"sample_count\":%llu,\"sample_rate\":%u,\"sample_bits\":%zu,"
       "\"block_samples\":%u,\"trial\":%s,\"routing\":\"per_voice\","
+      "\"completion_midi_retention\":%s,"
       "\"processed_samples\":%llu,\"blocks\":%llu,"
       "\"detector_samples\":%llu,\"detector_transitions\":%llu,"
       "\"queue_rejections\":%llu,\"event_add_attempts\":%llu,"
@@ -356,6 +358,7 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
       "\"invalid_event\":%s,\"trace_write_failed\":%s,\"first_blocked_sample\":",
       static_cast<unsigned long long>(wave.mono_samples.size()), wave.sample_rate,
       sizeof(Sample) * 8U, block_size, trial ? "true" : "false",
+      completion_midi_retention ? "true" : "false",
       static_cast<unsigned long long>(processed), static_cast<unsigned long long>(blocks),
       static_cast<unsigned long long>(component->corpus_detector_samples()),
       static_cast<unsigned long long>(component->corpus_detector_transitions()),
@@ -381,6 +384,7 @@ int main(int argc, char** argv) {
   const char* events_path = nullptr;
   int sample_bits = 0;
   bool trial = false, trial_given = false;
+  bool completion_midi_retention = false;
   bool recovery = false;
   constexpr std::uint32_t block_size = 512U;
   for (int index = 1; index < argc; index += 2) {
@@ -394,6 +398,9 @@ int main(int argc, char** argv) {
     else if (std::strcmp(argv[index], "--trial") == 0 && (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
       trial = std::strcmp(value, "1") == 0;
       trial_given = true;
+    } else if (std::strcmp(argv[index], "--completion-midi-retention") == 0 &&
+               (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
+      completion_midi_retention = std::strcmp(value, "1") == 0;
     } else if (std::strcmp(argv[index], "--scenario") == 0 && std::strcmp(value, "reject-off-panic") == 0) {
       recovery = true;
     } else return 2;
@@ -401,6 +408,7 @@ int main(int argc, char** argv) {
   if (wav_path == nullptr || calibration_path == nullptr || events_path == nullptr ||
       sample_bits == 0 || !trial_given) return 2;
   if (recovery && !trial) return 2;
+  if (completion_midi_retention && (!trial || recovery)) return 2;
   std::vector<std::uint8_t> bytes;
   m3::offline::WaveData wave;
   m3::offline::ReplayError wave_error{};
@@ -439,6 +447,8 @@ int main(int argc, char** argv) {
     return sample_bits == 32 ? replay_recovery<float>(instance, wave, calibration, block_size, events_path)
                             : replay_recovery<double>(instance, wave, calibration, block_size, events_path);
   }
-  return sample_bits == 32 ? replay<float>(instance, wave, calibration, block_size, trial, events_path)
-                           : replay<double>(instance, wave, calibration, block_size, trial, events_path);
+  return sample_bits == 32 ? replay<float>(instance, wave, calibration, block_size,
+                                         trial, completion_midi_retention, events_path)
+                           : replay<double>(instance, wave, calibration, block_size,
+                                          trial, completion_midi_retention, events_path);
 }

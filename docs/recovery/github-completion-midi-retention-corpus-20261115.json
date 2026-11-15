@@ -9,10 +9,10 @@
   "worker_commit": "698f07785d6d687fa037396df2ed46d18197111e",
   "run_id": 43756240245,
   "status": "in_progress",
-  "conclusion": null,
+  "conclusion": "",
   "result_final": false,
   "created_at": "2026-11-15T20:02:13.745675+00:00",
-  "updated_at": "2026-11-15T20:36:32.518234+00:00",
+  "updated_at": "2026-11-15T21:05:49.803917+00:00",
   "stage": "Validate completion MIDI retention across all fourteen datasets",
   "checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json",
   "bounded_checkpoint": "docs/recovery/github-completion-midi-retention-20261115.json",
@@ -99,8 +99,8 @@
   "dispatch_response": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
   "run_created_at": "2026-11-15T20:07:17Z",
-  "observed_at": "2026-11-15T20:35:56.448904+00:00",
-  "last_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T203555Z-run.stdout",
+  "observed_at": "2026-11-15T21:05:49.803917+00:00",
+  "last_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T210549Z-run.stdout",
   "artifact_count": 0,
   "last_artifact_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T203555Z-artifacts.stdout",
   "short_note_acquisition_follow_up": {
@@ -155,5 +155,45 @@
     },
     "prepared_checkpoint": "docs/recovery/github-short-four-profile-trace-20261115.json",
     "next_step": "Package and validate the prepared source while the existing full-corpus run continues; dispatch the single unchanged-output trace only after its verdict is collected."
+  },
+  "external_host_route_preparation": {
+    "reviewed_at": "2026-11-15T20:50:04.131382+00:00",
+    "scope": "Read-only examination of the existing REAPER capability route and candidate component interface; no native execution or launch.",
+    "existing_route": "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua uses the synthetic capability source and M3 Polyphonic Audio to MIDI Probe, with a 256-event capture limit. It is not current recorded-guitar candidate acceptance.",
+    "candidate_interface": "Default-off test-only component opt-in, exact saved-MIDI comparison runner, reference manifest and worker scenario are prepared. Twenty focused Python checks and ten shell syntax checks pass; not yet committed, pushed or dispatched.",
+    "next_if_corpus_passes": "Validate exact saved current-ON/trial MIDI through the bounded actual-component route, then prepare an isolated actual REAPER recorded-input capture with sufficient event capacity. OFF identity remains part of the preceding full-corpus gate.",
+    "live_verification": "unverified",
+    "native_execution": false,
+    "host_launched": false,
+    "installed_output_changed": false,
+    "draft_files": [
+      "native/vst3/vst3_component.hpp",
+      "native/offline/vst3_corpus_replay_main.cpp",
+      "tools/portable_vst3_completion_midi_replay.py",
+      "docs/recovery/completion-midi-retention-vst3-references-20261115.json",
+      "build/github-offload/worker/.github/workflows/m3-vst3-replay.yml",
+      "tests/test_portable_vst3_completion_midi_replay.py"
+    ],
+    "draft_validation": {
+      "python_mock_tests_passed": 20,
+      "new_comparison_tests": 9,
+      "shared_component_and_recovery_tests": 11,
+      "workflow_shell_sections_syntax_passed": 10,
+      "diff_check": "passed",
+      "native_execution": false,
+      "review": "Reviewed test-only component opt-in, CLI and JSON formatting, saved-reference comparison and workflow routing. No production policy or defaults changed."
+    },
+    "component_checkpoint": "docs/recovery/github-vst3-completion-midi-retention-20261115.json",
+    "prepared_at": "2026-11-15T21:10:13.853689+00:00"
+  },
+  "overall_assessment": {
+    "as_of": "2026-11-15T21:05:49.803917+00:00",
+    "stage": "Working research prototype; reliable live use unverified",
+    "completion_percent": null,
+    "reason": "No fixed deliverable checklist; recognition and live timing remain critical unresolved work. Benchmark target ratios are not overall project completion.",
+    "installed_ordinary_matched_frame_percent": 27.502119,
+    "installed_constructed_matched_frame_percent": 16.045698,
+    "latest_candidate": "Bounded hold improvement only; full corpus run 43756240245 still in progress.",
+    "next": "Collect the existing corpus result. Keep component integration draft unpromoted until its prerequisite gates pass."
   }
 }

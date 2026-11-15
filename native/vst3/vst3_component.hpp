@@ -96,6 +96,9 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
     detector_.set_spectral_lane_collision_for_diagnostics(enabled);
     detector_.set_offline_replay_diagnostics_enabled_for_test(false);
   }
+  void enable_corpus_completion_midi_retention(bool enabled) noexcept {
+    detector_.set_completion_midi_retention_for_diagnostics(enabled);
+  }
   [[nodiscard]] std::uint64_t corpus_detector_samples() const noexcept {
     return corpus_detector_samples_;
   }
