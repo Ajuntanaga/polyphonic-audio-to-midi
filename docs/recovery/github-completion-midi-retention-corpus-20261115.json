@@ -8,18 +8,18 @@
   "source_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
   "worker_commit": "698f07785d6d687fa037396df2ed46d18197111e",
   "run_id": 43756240245,
-  "status": "in_progress",
-  "conclusion": "",
-  "result_final": false,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-15T20:02:13.745675+00:00",
-  "updated_at": "2026-11-15T21:05:49.803917+00:00",
-  "stage": "Validate completion MIDI retention across all fourteen datasets",
+  "updated_at": "2026-11-15T21:50:56.546332+00:00",
+  "stage": "final corpus screen: note safety passed; timing failed",
   "checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json",
   "bounded_checkpoint": "docs/recovery/github-completion-midi-retention-20261115.json",
   "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "report_relative_path": "completion-midi-retention-corpus/report.json",
-  "report_available": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "local_output_dir": "build/github-results/completion-midi-retention-corpus-43756240245",
   "local_checks": {
@@ -75,7 +75,7 @@
   "external_host_and_hardware": "unverified",
   "routing": "Native processing on GitHub Actions only. Existing authorized inputs; no media upload to source. No separate useful Kaggle GPU workload identified.",
   "dispatch_directory": "build/github-results/completion-midi-retention-corpus-dispatch-20261115",
-  "next_step": "Read this existing run only; collect its small report once when final. Do not dispatch another corpus run.",
+  "next_step": "Locate the maximum-time events in a bounded GitHub timing diagnostic before reconsidering promotion; no full-corpus rerun without a causal change. Independently use the saved ordinary admission comparison to choose a narrow pitch-recovery experiment with false-output controls.",
   "source_checks": {
     "portable": {
       "run_id": 43755927642,
@@ -99,10 +99,10 @@
   "dispatch_response": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
   "run_created_at": "2026-11-15T20:07:17Z",
-  "observed_at": "2026-11-15T21:05:49.803917+00:00",
-  "last_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T210549Z-run.stdout",
-  "artifact_count": 0,
-  "last_artifact_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T203555Z-artifacts.stdout",
+  "observed_at": "2026-11-15T21:47:00.399480+00:00",
+  "last_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T214700Z-corpus.stdout",
+  "artifact_count": 2,
+  "last_artifact_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T214745Z-artifacts.stdout",
   "short_note_acquisition_follow_up": {
     "reviewed_at": "2026-11-15T20:32:14.046269+00:00",
     "source_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
@@ -154,13 +154,13 @@
       "new_download": false
     },
     "prepared_checkpoint": "docs/recovery/github-short-four-profile-trace-20261115.json",
-    "next_step": "Package and validate the prepared source while the existing full-corpus run continues; dispatch the single unchanged-output trace only after its verdict is collected."
+    "next_step": "Corpus verdict is final. Short-four profile observation remains prepared and undispatched; prioritize the measured timing failure and ordinary pitch-admission question before additional native work."
   },
   "external_host_route_preparation": {
     "reviewed_at": "2026-11-15T20:50:04.131382+00:00",
     "scope": "Read-only examination of the existing REAPER capability route and candidate component interface; no native execution or launch.",
     "existing_route": "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua uses the synthetic capability source and M3 Polyphonic Audio to MIDI Probe, with a 256-event capture limit. It is not current recorded-guitar candidate acceptance.",
-    "candidate_interface": "Default-off test-only component opt-in, exact saved-MIDI comparison runner, reference manifest and worker scenario are prepared. Twenty focused Python checks and ten shell syntax checks pass; not yet committed, pushed or dispatched.",
+    "candidate_interface": "Default-off test-only component opt-in and saved-MIDI comparison route are committed and pushed; focused local mock/syntax checks pass. No component run dispatched.",
     "next_if_corpus_passes": "Validate exact saved current-ON/trial MIDI through the bounded actual-component route, then prepare an isolated actual REAPER recorded-input capture with sufficient event capacity. OFF identity remains part of the preceding full-corpus gate.",
     "live_verification": "unverified",
     "native_execution": false,
@@ -184,16 +184,539 @@
       "review": "Reviewed test-only component opt-in, CLI and JSON formatting, saved-reference comparison and workflow routing. No production policy or defaults changed."
     },
     "component_checkpoint": "docs/recovery/github-vst3-completion-midi-retention-20261115.json",
-    "prepared_at": "2026-11-15T21:10:13.853689+00:00"
+    "prepared_at": "2026-11-15T21:10:13.853689+00:00",
+    "prepared_source_commit": "7b52e2792e865c858ee88277ad393b4dd177a6fb",
+    "prepared_worker_commit": "20e2cba11b0f640225068952eb844647ea77b576",
+    "actual_reaper_requirements": {
+      "reviewed_at": "2026-11-15T21:21:51.417968+00:00",
+      "status": "requirements_identified_no_host_execution",
+      "candidate_loading": {
+        "current_limitation": "The diagnostic policy setter is a private C++ test interface, inaccessible to REAPER. The current probe bundle uses a synthetic processor.",
+        "minimal_route": "Two uninstalled test-only M3Component bundles with build-fixed current-ON or completion-retention selection, isolated from production identity and scanned serially in a disposable resource directory.",
+        "state_requirement": "Restore the same verified calibration and fixed configuration as the saved physical-long reference. The external-host state-loading mechanism remains to be implemented; recording/calibration inputs must remain outside source.",
+        "source": [
+          "native/vst3/vst3_component.hpp:94",
+          "native/vst3/vst3_factory.cpp:11",
+          "native/offline/vst3_corpus_replay_main.cpp:279",
+          "CMakeLists.txt:391",
+          "tools/stage_reaper_test_env.py:114"
+        ]
+      },
+      "capture": {
+        "reusable": "The existing JSFX records sample, block offset, MIDI status, note and velocity; the Lua suite exports events.tsv and exits a disposable REAPER instance.",
+        "missing": [
+          "Recorded physical-long WAV at sample zero in a 96 kHz/512 project with the actual candidate.",
+          "Explicit full-event capacity above the 1510-event saved reference and independently reported MIDI/audio overflow; existing capacity is 256.",
+          "Media-relative sample clock over all 5646848 recorded samples; existing synthetic validation ceiling is 1048576.",
+          "Capture through the complete recording, report any defined post-recording drain separately, and distinguish natural media end from transport-stop cleanup."
+        ],
+        "source": [
+          "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - MIDI Capture.jsfx:10",
+          "Effects/tests/ajuntanaga_M3 Polyphonic MIDI - MIDI Capture.jsfx:47",
+          "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua:524",
+          "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua:605",
+          "Scripts/tests/ajuntanaga_M3 Native VST3 Capability.lua:769"
+        ]
+      },
+      "gha_host_provisioning": "No pinned REAPER installer/provisioning route is recorded in the current worker. Establish the actual host artifact before dispatch; absence of a route does not imply a licensing conclusion.",
+      "prerequisites": [
+        "Collected acceptance of full corpus run43756240245",
+        "Exact saved-MIDI accepting-component comparison through the prepared route"
+      ],
+      "next_step": "Implement only the bounded recorded-input host route after prerequisite acceptance. No host run, native execution, media upload or production change occurred during this review."
+    },
+    "prerequisite_result": "Corpus timing gates failed; component and actual-host routes remain undispatched."
   },
   "overall_assessment": {
-    "as_of": "2026-11-15T21:05:49.803917+00:00",
+    "as_of": "2026-11-15T21:50:56.546332+00:00",
     "stage": "Working research prototype; reliable live use unverified",
     "completion_percent": null,
     "reason": "No fixed deliverable checklist; recognition and live timing remain critical unresolved work. Benchmark target ratios are not overall project completion.",
     "installed_ordinary_matched_frame_percent": 27.502119,
     "installed_constructed_matched_frame_percent": 16.045698,
-    "latest_candidate": "Bounded hold improvement only; full corpus run 43756240245 still in progress.",
-    "next": "Collect the existing corpus result. Keep component integration draft unpromoted until its prerequisite gates pass."
+    "latest_candidate": "All fourteen note-safety and buffer checks pass, with one 1024-sample hold gain and 16 fewer attacks. Full corpus rejected for timing: candidate11/14, seven overruns; all42 p99/allocation checks pass. Installed output unchanged.",
+    "next": "Locate the maximum-time events in a bounded GitHub timing diagnostic before reconsidering promotion; no full-corpus rerun without a causal change. Independently use the saved ordinary admission comparison to choose a narrow pitch-recovery experiment with false-output controls.",
+    "chord_metric_clarification": {
+      "as_of": "2026-11-15T21:32:14.318824+00:00",
+      "reason": "User challenged the apparent conflict between earlier stable four-note playing and the reported chord percentages.",
+      "scorer": "Legacy labeled-frame matches require the expected MIDI pitch and exact annotated string mask per active label per snapshot. Correct pitch assigned to another string fails; extra false outputs are counted separately. This is not the fraction of chords playable.",
+      "ordinary": "131 generated mixtures of real labeled single-note excerpts:17 dyads,36 triads,33 four-note and45 five-note groups, all with distinct pitches. Common annotated overlap0.3355625-0.749125s. Installed145385/528632=27.502119% is exact pitch/string label-frame matching, not a live four-note chord success rate.",
+      "constructed": "The retained tuning corpus contains128 same-pitch unison groups:8 two-string,8 three-string and112 four-string groups. All have one distinct pitch. Calling its259074/1614601=16.045698% score ordinary constructed-chord performance was misleading.",
+      "synthetic_four": "24 four-string groups, each with one distinct pitch. Common overlap1.239354-2.299031s. Legacy51027/310640=16.426410% scores individual labels, not simultaneous four-string success.",
+      "physical_four": "Labels intentionally use string_mask0 because membership is uncertain;53051/55380=95.794511% establishes pitch presence, not all four strings tracked simultaneously.",
+      "original_playing": "The bounded search did not locate the original live-playing preset or a matching captured score. The user-reported stable four-note experience is not contradicted by these differently scored corpora. The retained Task13 REAPER test used a synthetic source and dummy audio, so it cannot substitute for the personal playing test.",
+      "future_reporting": "Report ordinary audible pitch/MIDI note tracking separately from exact string assignment, same-pitch unison separation, and per-string tuner accuracy. Preserve existing safety gates and numeric scores.",
+      "evidence": [
+        "native/offline/replay.cpp:439",
+        "native/offline/replay.cpp:446",
+        "native/offline/replay.cpp:5197",
+        "tools/generate_note_combination_corpus.py:350",
+        "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv",
+        "build/physical-capture/note-combination-corpus-tuning/combinations.tsv",
+        "build/physical-capture/stability-evaluation-3plus3-4unison/four-unison.tsv",
+        "build/physical-capture/unison-08-07-06-05-04/README.md"
+      ],
+      "native_execution": false,
+      "numeric_score_changes": false,
+      "installed_output_changed": false,
+      "earlier_reaper_fixture": {
+        "evidence": [
+          "docs/PERFORMANCE.md:151",
+          "docs/PERFORMANCE.md:167",
+          "docs/PERFORMANCE.md:559",
+          "docs/TESTING.md:184"
+        ],
+        "scope": "REAPER 7.79 synthetic Signal Source through production M3, dummy audio, 48 kHz and 128-sample buffer; not live guitar.",
+        "observed": "45 cases / 124 expected notes, including twelve four-note cases; precision/recall/F1 1.0 with no duplicate or hanging notes. Three/four-note median/p95 latency 78.667/99.600 ms failed the 40/65 ms limits.",
+        "comparison_limit": "Confirms earlier multi-note fixture capability, not the original personal playing settings or parity with current corpora."
+      }
+    },
+    "reference_assessment": {
+      "as_of": "2026-11-15T21:34:51.361332+00:00",
+      "trigger": "User supplied MiGiC Poly, DirektDSP Polygraph and sgm-audio/guitar-mpe-transducer as possible accelerators.",
+      "migic_poly": {
+        "source": "https://migic.com/poly",
+        "published": "Vendor advertises six independent voices, per-note pitch tracking, standard guitar input and ultra-low latency. Tracking engine is proprietary. Poly page gives no measured numerical chord-latency benchmark.",
+        "use": "Behavioral reference for playable ordinary chords. Neural amp modelling does not establish how the pitch tracker is implemented. No reusable detector source identified."
+      },
+      "polygraph": {
+        "source": "https://direktdsp.com/products/polygraph/",
+        "published": "Vendor documents approximately 70 ms fixed lookahead, chord MIDI without pitch bend, and monophonic Lead mode with MPE. DAW compensation aligns recording but does not remove live monitoring delay. Re-plucks use note-off then note-on.",
+        "use": "Concrete comparison of ordinary chord tracking, re-pluck behavior and the quality/latency tradeoff; no published tracker implementation identified."
+      },
+      "guitar_mpe_transducer": {
+        "repository": "https://github.com/sgm-audio/guitar-mpe-transducer",
+        "license": "MIT source; C++20 with CLAP SDK and Catch2. No trained model or weights found.",
+        "implemented_scope": "Mono audio YIN tracker with one active key/note ID. Fixed 2048-sample ring, pitch update every 64 samples; no demonstrated polyphonic pitch separation or physical-string inference.",
+        "use": "Fixed-stack, sample-offset CLAP note/expression emitter is a possible future output-adapter reference. It is not a replacement for the current polyphonic detector or the immediate M3 bottleneck.",
+        "limits": "Synthetic tone tests do not establish recorded-guitar behavior or M3 timing/allocation gates. Source review found onset/repluck synchronization and UMP note-off limitations; no code imported.",
+        "sources": [
+          "https://github.com/sgm-audio/guitar-mpe-transducer/blob/main/LICENSE",
+          "https://github.com/sgm-audio/guitar-mpe-transducer/blob/main/src/plugin.cpp",
+          "https://github.com/sgm-audio/guitar-mpe-transducer/blob/main/include/transducer/plugin_state.h",
+          "https://github.com/sgm-audio/guitar-mpe-transducer/blob/main/include/transducer/dsp/yin_pitch_tracker.h",
+          "https://github.com/sgm-audio/guitar-mpe-transducer/blob/main/include/transducer/clap/event_emitter.h"
+        ]
+      },
+      "prioritized_follow_up": [
+        "Report ordinary pitch/MIDI chord behavior separately from exact physical-string attribution and same-pitch unison/tuner gates; preserve all existing safety gates.",
+        "Add pitch-only note/held-chord, onset/release/re-pluck, false-output and latency measurements from the same recorded inputs and retained outputs where available. Do not derive pitch-only matches by adding wrong-string counts to exact matches.",
+        "Use the same DI and recorded configuration for any later competitor comparison. Keep latency visible; do not relax M3 targets merely because a vendor chooses 70 ms.",
+        "Collect the already running corpus job once. No duplicate sweep, new native execution or speculative GPU workload is justified by these references."
+      ],
+      "ordinary_pitch_only_chord_success_percent": null,
+      "original_live_preset_recovered": false,
+      "native_execution_started": false,
+      "third_party_plugin_installed": false,
+      "source_code_imported": false,
+      "production_change": false
+    },
+    "ordinary_pitch_set_report": {
+      "as_of": "2026-11-15T21:41:15.811257+00:00",
+      "report": "build/github-results/completion-midi-retention-43753713533/ordinary-pitch-set-coverage.json",
+      "report_sha256": "9f3f16649ef0619904f76f61fdea43dd558f11639d06fbcff6e373bf8b75efe1",
+      "source_report": "build/github-results/completion-midi-retention-43753713533/completion-midi-retention/report.json",
+      "source_run_id": 43753713533,
+      "source_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+      "condition": "current-on; same raw MIDI as saved trial on ordinary",
+      "input": "131 short generated mixtures of recorded single-note excerpts, with 2-5 distinct pitches; not the user original live playing setup",
+      "metric": "Expected distinct-pitch duration found in raw detector MIDI, independent of string/lane. Simultaneous all-expected pitch coverage is a separate unique-time measure. No onset grace or release tolerance.",
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 13525345,
+      "expected_pitch_duration_found_percent": 39.993212711360954,
+      "unique_annotated_samples": 8914836,
+      "all_expected_pitches_samples": 53249,
+      "all_expected_pitches_time_percent": 0.597307679019558,
+      "by_distinct_pitch_count": {
+        "5": {
+          "annotated_samples": 2994849,
+          "expected_pitch_samples": 14974245,
+          "present_pitch_samples": 5765059,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 3077514,
+          "duplicate_expected_pitch_voice_samples": 99853
+        },
+        "3": {
+          "annotated_samples": 2431120,
+          "expected_pitch_samples": 7293360,
+          "present_pitch_samples": 3004064,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 2110921,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "4": {
+          "annotated_samples": 2286881,
+          "expected_pitch_samples": 9147524,
+          "present_pitch_samples": 3671374,
+          "all_expected_pitches_samples": 53249,
+          "exact_pitch_set_samples": 53249,
+          "one_voice_per_pitch_samples": 53249,
+          "extra_pitch_voice_samples": 2285052,
+          "duplicate_expected_pitch_voice_samples": 49735
+        },
+        "2": {
+          "annotated_samples": 1201986,
+          "expected_pitch_samples": 2403972,
+          "present_pitch_samples": 1084848,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 748552,
+          "duplicate_expected_pitch_voice_samples": 0
+        }
+      },
+      "four_note_example": {
+        "interval_index": 123,
+        "start_sample": 10037017,
+        "end_sample": 10108800,
+        "source_label_indices": [
+          478,
+          479,
+          480,
+          481
+        ],
+        "expected_midi_notes": [
+          42,
+          47,
+          51,
+          55
+        ],
+        "distinct_pitch_count": 4,
+        "annotated_samples": 71783,
+        "expected_pitch_samples": 287132,
+        "present_pitch_samples": 252356,
+        "all_expected_pitches_samples": 53249,
+        "exact_pitch_set_samples": 53249,
+        "one_voice_per_pitch_samples": 53249,
+        "extra_pitch_voice_samples": 0,
+        "duplicate_expected_pitch_voice_samples": 0,
+        "all_expected_hold_segments": 1,
+        "longest_all_expected_hold_samples": 53249,
+        "first_all_expected_hold_delay_samples": 18534,
+        "sample_rate": 96000,
+        "longest_all_expected_hold_ms": 554.6770833333334,
+        "all_expected_pitches_time_percent": 74.18051627822743
+      },
+      "extra_pitch_voice_samples": 8222039,
+      "duplicate_expected_pitch_voice_samples": 149588,
+      "unlabeled_gap_voice_samples": 3761781,
+      "interpretation": "String attribution is only part of the low ordinary score: pitch-only emitted-MIDI coverage is also poor under this saved corpus/configuration. A four-note passage does retain all four pitches continuously for 53249 samples (554.677 ms), consistent with capability in some conditions. Neither aggregate establishes regression from the original live preset, which is not recovered, or a playable-chord success rate.",
+      "not_measured": [
+        "live latency",
+        "re-pluck correctness",
+        "original live preset parity",
+        "external host or device delivery",
+        "overall completion percentage"
+      ],
+      "implementation": [
+        "tools/midi_lifecycle_analysis.py",
+        "tools/portable_calibrated_midi_retention_corpus.py",
+        "tests/test_midi_lifecycle_analysis.py"
+      ],
+      "checks": {
+        "focused_python_tests_passed": 61,
+        "compressed_and_raw_sha256_match_saved_report": true,
+        "legacy_midi_measurements_identical": true,
+        "review": "One source review of half-open event/annotation partitioning, same-pitch deduplication, extras, gaps and invalid-pair handling; no concrete blocker."
+      },
+      "new_native_execution": false,
+      "new_download": false,
+      "installed_output_changed": false,
+      "numeric_score_changes": false,
+      "next": "Collect the existing full-corpus run once. Preserve separate ordinary pitch, exact-string and same-pitch-unison reporting. Use matched input/settings for any later live or competitor comparison."
+    },
+    "ordinary_admission_comparison": {
+      "report": "build/github-results/completion-midi-retention-43753713533/ordinary-chord-causal-comparison.json",
+      "report_sha256": "0c2db1046c969ede3098bdb295403d7abb2910abf6a9e1a54fa1ae887885b382",
+      "new_native_execution": false,
+      "new_download": false,
+      "frame_population": {
+        "label_count": 499,
+        "labeled_frames": 528632,
+        "exact_string_matches": 145400,
+        "pitch_present_any_lane_frames": 237906,
+        "pitch_present_any_lane_percent": 45.00408601825088,
+        "pitch_absent_frames": 290726,
+        "pitch_present_but_not_exact_string_frames": 92506
+      },
+      "decisive_finding": {
+        "label_index": 10,
+        "midi_note": 75,
+        "window": [
+          163306,
+          235200
+        ],
+        "quiet_frames": 62,
+        "below_threshold_frames": 1062,
+        "selected_or_coasting_frames": 0,
+        "snapshot_pitch_present_frames": 0,
+        "quiet_causes": {
+          "minimum_evidence_after_signal_floor": 61,
+          "multi_voice_evidence": 1
+        },
+        "below_threshold_evidence": "All1062: inactive, direct fundamental peak, local peak, candidate evidence; no calibrated-direct rescue (flags14).",
+        "score_threshold_ratio_range": "Below-threshold bins3..12 mean [0.15,0.65); below scalar admission threshold1.0.",
+        "band_peak_ratios": "Score and fundamental ratios1.0 for all1062.",
+        "calibration": "Best string7 matches expected mask128 for all1062; similarity in[.95,1); margin<.02 for all1062 (885 below.01,177 in[.01,.02)).",
+        "current_admission_gate": "The scalar threshold blocks this pitch; calibrated-direct rescue is false and calibrated band rescue requires margin>=.02, which fails throughout. Similarity histogram cannot settle its separate>=.97 gate.",
+        "stage": "Admission before pitch selection. This passage loss cannot be fixed by retaining or rerouting a MIDI note that was never selected."
+      },
+      "successful_four_note_hold_samples": 53249,
+      "sample_rate": 96000,
+      "admission_history_review": {
+        "completed_at": "2026-11-15T21:50:56.546332+00:00",
+        "exact_target_previously_tested": "not found in the bounded retained checkpoint and admission-report search",
+        "global_admission_rescue": {
+          "report": "build/modal/candidate-admission-rescue-analysis.json",
+          "decision": "rejected",
+          "ordinary_match_delta": 14193,
+          "ordinary_false_positive_delta": 44660,
+          "ordinary_wrong_note_delta": 17391,
+          "ordinary_wrong_string_delta": 18278,
+          "constructed_match_delta": -11538
+        },
+        "scope_limit": "Earlier logged octave-shadow margins were 0.02,0.1,0.25,0.5. They do not establish that relaxing this current calibrated-band margin below0.02 was tested. The routes are not identical.",
+        "calibrated_harmonic_admission": {
+          "report": "build/modal/calibrated-harmonic-admission-v1-analysis.json",
+          "decision": "rejected",
+          "isolated_02_match_delta": -390,
+          "isolated_02_wrong_string_delta": 420
+        },
+        "conclusion": "Global threshold relaxation is not justified; this exact low-margin target remains a distinct diagnostic question."
+      },
+      "next": "If pursuing ordinary pitch recovery, test one fixed target-local counterfactual against frozen nearby false-output controls on GitHub Actions; first preserve exact current-reference output. No global admission grid and no installed policy change."
+    }
+  },
+  "last_read_attempt": {
+    "at": "2026-11-15T21:47:00.399480+00:00",
+    "returncode": 0,
+    "raw_output": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T214700Z-corpus.stdout",
+    "stderr": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T214700Z-corpus.stderr"
+  },
+  "artifacts": [
+    {
+      "id": 14181912762,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE4MTkxMjc2Mg==",
+      "name": "m3-evidence-43756240245-1",
+      "size_in_bytes": 397723826,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14181912762",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14181912762/zip",
+      "expired": false,
+      "digest": "sha256:6e7bd90add920b5701d51b924503ef61815f118ba01101def011653f1e98e991",
+      "created_at": "2026-11-15T21:44:36Z",
+      "updated_at": "2026-11-15T21:44:36Z",
+      "expires_at": "2026-11-22T21:44:23Z",
+      "workflow_run": {
+        "id": 43756240245,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "698f07785d6d687fa037396df2ed46d18197111e"
+      }
+    },
+    {
+      "id": 14181573677,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE4MTU3MzY3Nw==",
+      "name": "m3-report-43756240245-1",
+      "size_in_bytes": 264685,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14181573677",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14181573677/zip",
+      "expired": false,
+      "digest": "sha256:975f13772e3065a839ff2b0d83116e6ce3cb906e55ab4746777ac0ca6d21a3d1",
+      "created_at": "2026-11-15T21:44:22Z",
+      "updated_at": "2026-11-15T21:44:22Z",
+      "expires_at": "2026-11-29T21:44:21Z",
+      "workflow_run": {
+        "id": 43756240245,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "698f07785d6d687fa037396df2ed46d18197111e"
+      }
+    }
+  ],
+  "collection": {
+    "at": "2026-11-15T21:48:11.835526+00:00",
+    "archive": "build/github-results/completion-midi-retention-corpus-43756240245/m3-report-43756240245-1.zip",
+    "archive_bytes": 264685,
+    "archive_sha256": "975f13772e3065a839ff2b0d83116e6ce3cb906e55ab4746777ac0ca6d21a3d1",
+    "report": "build/github-results/completion-midi-retention-corpus-43756240245/completion-midi-retention-corpus/report.json",
+    "report_sha256": "78c405a8e8845171b49b8240ff6ec91efbc0e62ef18005ad4d920b12d6bea45d"
+  },
+  "decision": "rejected_for_promotion_timing_gate_failed",
+  "result_summary": {
+    "full_corpus_screen_pass": false,
+    "note_safety_datasets_passed": 14,
+    "buffer_datasets_passed": 14,
+    "all_conditions_native_datasets_passed": 8,
+    "declared_datasets": 14,
+    "saved_reference_datasets_passed_by_mode": {
+      "reference-off": 14,
+      "current-on": 14
+    },
+    "inference_identity_datasets_passed": 14,
+    "snapshot_count_parity_datasets_passed": 14,
+    "zero_processing_allocation_runs": 42,
+    "timed_runs": 42,
+    "timing_summary": {
+      "reference-off": {
+        "datasets_passed": 10,
+        "datasets_total": 14,
+        "p99_gates_passed": 14,
+        "deadline_overruns": 24,
+        "failed_datasets": [
+          "constructed",
+          "physical-middle",
+          "extended-high",
+          "synthetic-four"
+        ]
+      },
+      "current-on": {
+        "datasets_passed": 11,
+        "datasets_total": 14,
+        "p99_gates_passed": 14,
+        "deadline_overruns": 6,
+        "failed_datasets": [
+          "ordinary",
+          "constructed",
+          "physical-middle"
+        ]
+      },
+      "completion-midi-retention-on": {
+        "datasets_passed": 11,
+        "datasets_total": 14,
+        "p99_gates_passed": 14,
+        "deadline_overruns": 7,
+        "failed_datasets": [
+          "ordinary",
+          "physical-long",
+          "extended-high"
+        ]
+      }
+    },
+    "timing_failures": [
+      {
+        "dataset": "ordinary",
+        "condition": "current-on",
+        "blocks": 334050,
+        "p99_ns": 132709,
+        "maximum_ns": 359925,
+        "deadline_overruns": 3,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "ordinary",
+        "condition": "completion-midi-retention-on",
+        "blocks": 334050,
+        "p99_ns": 131026,
+        "maximum_ns": 584577,
+        "deadline_overruns": 4,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "constructed",
+        "condition": "reference-off",
+        "blocks": 921600,
+        "p99_ns": 114526,
+        "maximum_ns": 460264,
+        "deadline_overruns": 7,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "constructed",
+        "condition": "current-on",
+        "blocks": 921600,
+        "p99_ns": 114775,
+        "maximum_ns": 341551,
+        "deadline_overruns": 2,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "physical-long",
+        "condition": "completion-midi-retention-on",
+        "blocks": 176464,
+        "p99_ns": 129253,
+        "maximum_ns": 338986,
+        "deadline_overruns": 1,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "physical-middle",
+        "condition": "reference-off",
+        "blocks": 193688,
+        "p99_ns": 120136,
+        "maximum_ns": 605989,
+        "deadline_overruns": 10,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "physical-middle",
+        "condition": "current-on",
+        "blocks": 193688,
+        "p99_ns": 135113,
+        "maximum_ns": 349055,
+        "deadline_overruns": 1,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "extended-high",
+        "condition": "reference-off",
+        "blocks": 81600,
+        "p99_ns": 134412,
+        "maximum_ns": 361739,
+        "deadline_overruns": 2,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "extended-high",
+        "condition": "completion-midi-retention-on",
+        "blocks": 81600,
+        "p99_ns": 134462,
+        "maximum_ns": 368352,
+        "deadline_overruns": 2,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      },
+      {
+        "dataset": "synthetic-four",
+        "condition": "reference-off",
+        "blocks": 172800,
+        "p99_ns": 115257,
+        "maximum_ns": 549371,
+        "deadline_overruns": 5,
+        "zero_processing_allocations": true,
+        "timing_pass": false
+      }
+    ],
+    "changed_held_labels": {
+      "physical-long": [
+        {
+          "label_index": 3,
+          "midi_note": 40,
+          "exact_held_samples_before": 1613760,
+          "exact_held_samples_after": 1614784,
+          "held_delta": 1024,
+          "note_ons_before": 104,
+          "note_ons_after": 88,
+          "note_on_delta": -16
+        }
+      ]
+    },
+    "held_loss_labels": 0,
+    "false_output_growth": false,
+    "raw_conflict_growth": false,
+    "collected_verdict": "build/github-results/completion-midi-retention-corpus-43756240245/collected-verdict.json"
   }
 }

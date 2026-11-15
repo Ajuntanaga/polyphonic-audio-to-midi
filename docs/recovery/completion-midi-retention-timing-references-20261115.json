@@ -1,0 +1,400 @@
+{
+  "schema": "m3_completion_midi_retention_timing_references_v1",
+  "block_samples": 32,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "conditions": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "completion-midi-retention-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-completion-midi-retention"
+    ]
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43756240245",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "anchor_report_sha256": "78c405a8e8845171b49b8240ff6ec91efbc0e62ef18005ad4d920b12d6bea45d",
+  "anchor_report_path": "build/github-results/completion-midi-retention-corpus-43756240245/completion-midi-retention-corpus/report.json",
+  "datasets": {
+    "ordinary": {
+      "reference-off": {
+        "output": {
+          "labeled": 528632,
+          "matched": 145385,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92653,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319772,
+          "fingerprint": "bbed96f3be505756"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145385
+          }
+        },
+        "tsv_sha256": "ed4388c868974c2594eaffe8ba08cc20a48315216561621523e1af65168016bd",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "bbed96f3be505756",
+          "fingerprint_identical": true,
+          "blocks": 334050,
+          "total_ns": 19075927678,
+          "p99_ns": 126237,
+          "maximum_ns": 311064,
+          "half_budget_overruns": 238,
+          "deadline_overruns": 0,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "current-on": {
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "tsv_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "002540bbc3759cd6",
+          "fingerprint_identical": true,
+          "blocks": 334050,
+          "total_ns": 19465345319,
+          "p99_ns": 132709,
+          "maximum_ns": 359925,
+          "half_budget_overruns": 519,
+          "deadline_overruns": 3,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "completion-midi-retention-on": {
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "tsv_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "002540bbc3759cd6",
+          "fingerprint_identical": true,
+          "blocks": 334050,
+          "total_ns": 19350778309,
+          "p99_ns": 131026,
+          "maximum_ns": 584577,
+          "half_budget_overruns": 177,
+          "deadline_overruns": 4,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "physical-long": {
+      "reference-off": {
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "519bc0f9f4710566"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "519bc0f9f4710566",
+          "fingerprint_identical": true,
+          "blocks": 176464,
+          "total_ns": 9444595628,
+          "p99_ns": 126998,
+          "maximum_ns": 319139,
+          "half_budget_overruns": 418,
+          "deadline_overruns": 0,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "current-on": {
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "6ecf88865ddc34e4"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "tsv_sha256": "e38241d4b21228dbe202d62ec517b02012a188de575bf325da37893c09fa1f1f",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "6ecf88865ddc34e4",
+          "fingerprint_identical": true,
+          "blocks": 176464,
+          "total_ns": 9562442089,
+          "p99_ns": 128702,
+          "maximum_ns": 322976,
+          "half_budget_overruns": 354,
+          "deadline_overruns": 0,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "completion-midi-retention-on": {
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "238b4fedc0263a94"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "tsv_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "238b4fedc0263a94",
+          "fingerprint_identical": true,
+          "blocks": 176464,
+          "total_ns": 9631489636,
+          "p99_ns": 129253,
+          "maximum_ns": 338986,
+          "half_budget_overruns": 443,
+          "deadline_overruns": 1,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    },
+    "extended-high": {
+      "reference-off": {
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "182dc6c63e32ab7c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "tsv_sha256": "34d3ed6ad81207029eddb336c77f4281a7c6b2cacaa69afe2b34bb0dcf1ae816",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "182dc6c63e32ab7c",
+          "fingerprint_identical": true,
+          "blocks": 81600,
+          "total_ns": 4691555928,
+          "p99_ns": 134412,
+          "maximum_ns": 361739,
+          "half_budget_overruns": 243,
+          "deadline_overruns": 2,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "current-on": {
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "tsv_sha256": "48ac93c4f4b31d66c0f41dd2c169bead9762d41768896a313f25b68e6c954d44",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "8efaacef9ab10b2c",
+          "fingerprint_identical": true,
+          "blocks": 81600,
+          "total_ns": 4848907655,
+          "p99_ns": 135605,
+          "maximum_ns": 328437,
+          "half_budget_overruns": 262,
+          "deadline_overruns": 0,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      "completion-midi-retention-on": {
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "tsv_sha256": "48ac93c4f4b31d66c0f41dd2c169bead9762d41768896a313f25b68e6c954d44",
+        "timing": {
+          "schema": "m3_replay_core_timing_v1",
+          "sample_rate": 96000,
+          "block_samples": 32,
+          "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+          "fingerprint": "8efaacef9ab10b2c",
+          "fingerprint_identical": true,
+          "blocks": 81600,
+          "total_ns": 4722794474,
+          "p99_ns": 134462,
+          "maximum_ns": 368352,
+          "half_budget_overruns": 258,
+          "deadline_overruns": 2,
+          "allocation_guard": true,
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    }
+  }
+}

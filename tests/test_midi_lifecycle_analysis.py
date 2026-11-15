@@ -43,6 +43,105 @@ class MidiLifecycleTests(unittest.TestCase):
         self.assertEqual(result['samples_after_last_label'], 80)
         self.assertEqual(result['host_delivery'], 'not measured')
 
+    def pitch_summary(self, events, labels=None, samples=200):
+        return summarize(events, [label()] if labels is None else labels,
+                         sample_count=samples, sample_rate=96000,
+                         include_output_safety=True, include_group_coverage=True,
+                         include_pitch_set_coverage=True)
+
+    def test_pitch_coverage_is_independent_of_string_assignment_and_additive(self):
+        labels = [label(i, note=60 + i, mask=1 << i) for i in range(3)]
+        events = [event(0, 'on', note=60 + i, voice=3 + i) for i in range(3)]
+        result = self.pitch_summary(events, labels)
+        coverage = result.pop('pitch_set_coverage')
+        self.assertEqual(result, summarize(events, labels, sample_count=200, sample_rate=96000,
+                                          include_output_safety=True, include_group_coverage=True))
+        self.assertEqual(result['exact_held_samples'], 0)
+        self.assertEqual(result['output_safety']['counts']['false_wrong_string_voice_samples'], 300)
+        self.assertEqual(coverage['totals']['expected_pitch_samples'], 300)
+        self.assertEqual(coverage['totals']['present_pitch_samples'], 300)
+        self.assertEqual(coverage['totals']['all_expected_pitches_samples'], 100)
+        self.assertEqual(coverage['totals']['exact_pitch_set_samples'], 100)
+        self.assertEqual(coverage['totals']['one_voice_per_pitch_samples'], 100)
+
+    def test_pitch_coverage_separates_extra_pitch_and_duplicate_voice(self):
+        events = [event(0, 'on'), event(30, 'on', note=65, voice=1),
+                  event(50, 'off', note=65, voice=1), event(60, 'on', voice=2),
+                  event(80, 'off', voice=2), event(150, 'off')]
+        coverage = self.pitch_summary(events)['pitch_set_coverage']
+        totals = coverage['totals']
+        self.assertEqual(totals['all_expected_pitches_samples'], 100)
+        self.assertEqual(totals['exact_pitch_set_samples'], 80)
+        self.assertEqual(totals['one_voice_per_pitch_samples'], 60)
+        self.assertEqual(totals['extra_pitch_voice_samples'], 20)
+        self.assertEqual(totals['duplicate_expected_pitch_voice_samples'], 20)
+        self.assertEqual(coverage['unlabeled_gap_voice_samples'], 50)
+        self.assertEqual(coverage['intervals'][0]['longest_all_expected_hold_samples'], 100)
+
+    def test_pitch_coverage_partitions_overlap_without_double_counting_same_pitch_labels(self):
+        labels = [label(0, 0, 100), label(1, 30, 70, note=64, mask=2),
+                  label(2, 20, 80, mask=4)]
+        events = [event(0, 'on'), event(40, 'on', note=64, voice=1),
+                  event(60, 'off', note=64, voice=1), event(100, 'off')]
+        coverage = self.pitch_summary(events, labels)['pitch_set_coverage']
+        totals = coverage['totals']
+        self.assertEqual(totals['annotated_samples'], 100)
+        self.assertEqual(totals['expected_pitch_samples'], 140)
+        self.assertEqual(totals['present_pitch_samples'], 120)
+        self.assertEqual(totals['all_expected_pitches_samples'], 80)
+        chord = coverage['by_distinct_pitch_count']['2']
+        self.assertEqual(chord['annotated_samples'], 40)
+        self.assertEqual(chord['all_expected_pitches_samples'], 20)
+        self.assertEqual(len(coverage['intervals']), 5)
+        row = coverage['intervals'][2]
+        self.assertEqual(row['first_all_expected_hold_delay_samples'], 10)
+        self.assertEqual(row['longest_all_expected_hold_samples'], 20)
+
+    def test_pitch_coverage_does_not_rename_four_string_unison_as_four_pitch_chord(self):
+        labels = [label(i, mask=1 << i) for i in range(4)]
+        events = [event(0, 'on', voice=i) for i in range(4)]
+        result = self.pitch_summary(events, labels)
+        coverage = result['pitch_set_coverage']
+        self.assertEqual(set(coverage['by_distinct_pitch_count']), {'1'})
+        self.assertEqual(coverage['totals']['expected_pitch_samples'], 100)
+        self.assertEqual(coverage['totals']['exact_pitch_set_samples'], 100)
+        self.assertEqual(coverage['totals']['one_voice_per_pitch_samples'], 0)
+        self.assertEqual(coverage['totals']['duplicate_expected_pitch_voice_samples'], 300)
+        self.assertEqual(result['simultaneous_group_coverage']['exact_group_held_samples'], 100)
+
+    def test_pitch_coverage_unassigned_and_same_sample_retrigger_preserve_presence(self):
+        events = [event(20, 'on', voice=255), event(50, 'off', voice=255),
+                  event(50, 'on', voice=255), event(120, 'off', voice=255)]
+        result = self.pitch_summary(events)
+        row = result['pitch_set_coverage']['intervals'][0]
+        self.assertEqual(result['exact_held_samples'], 0)
+        self.assertEqual(result['labels'][0]['note_ons_inside_label'], 2)
+        self.assertEqual(row['all_expected_pitches_samples'], 100)
+        self.assertEqual(row['all_expected_hold_segments'], 1)
+        self.assertEqual(row['longest_all_expected_hold_samples'], 100)
+        self.assertEqual(result['pitch_set_coverage']['unlabeled_gap_voice_samples'], 0)
+
+    def test_pitch_coverage_missing_output_is_not_extra_gap_output(self):
+        coverage = self.pitch_summary([])['pitch_set_coverage']
+        self.assertEqual(coverage['totals']['expected_pitch_samples'], 100)
+        self.assertEqual(coverage['totals']['present_pitch_samples'], 0)
+        self.assertEqual(coverage['unlabeled_gap_voice_samples'], 0)
+        self.assertIsNone(coverage['intervals'][0]['first_all_expected_hold_delay_samples'])
+        empty = self.pitch_summary([event(10, 'on')], [])['pitch_set_coverage']
+        self.assertEqual(empty['intervals'], [])
+        self.assertEqual(empty['totals']['annotated_samples'], 0)
+        self.assertEqual(empty['unlabeled_gap_voice_samples'], 190)
+
+    def test_pitch_coverage_preserves_eof_uncertainty_and_suppresses_invalid_pairing(self):
+        result = self.pitch_summary([event(80, 'on')], [label(end=200)])
+        self.assertFalse(result['balanced_at_recording_end'])
+        self.assertEqual(result['pitch_set_coverage']['totals']['present_pitch_samples'], 120)
+        invalid = self.pitch_summary([event(80, 'off')])['pitch_set_coverage']
+        self.assertFalse(invalid['valid'])
+        self.assertIsNone(invalid['totals'])
+        self.assertIsNone(invalid['intervals'])
+        self.assertIsNone(invalid['by_distinct_pitch_count'])
+
     def test_matched_tuner_preview_without_note_on_has_no_midi_hold(self):
         result = self.summary([])
         self.assertEqual(result['exact_held_samples'], 0)

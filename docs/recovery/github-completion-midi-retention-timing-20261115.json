@@ -1,0 +1,63 @@
+{
+  "schema": "m3_completion_midi_retention_timing_checkpoint_v1",
+  "updated_at": "2026-11-15T23:15:58.144890+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "7b52e2792e865c858ee88277ad393b4dd177a6fb",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "run_attempt": null,
+    "task": "completion-midi-retention-timing",
+    "dataset": "ordinary",
+    "input_release": "corpus-20261108"
+  },
+  "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+  "reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "reference_corpus_run": "43756240245",
+  "reference_report_sha256": "78c405a8e8845171b49b8240ff6ec91efbc0e62ef18005ad4d920b12d6bea45d",
+  "datasets": [
+    "ordinary",
+    "physical-long",
+    "extended-high"
+  ],
+  "conditions": [
+    "reference-off",
+    "current-on",
+    "completion-midi-retention-on"
+  ],
+  "block_samples": 32,
+  "maximum_replays": 9,
+  "local_output": null,
+  "worker_output": "build/github-results/completion-midi-retention-timing",
+  "small_artifact": null,
+  "bulk_artifact": null,
+  "collection_state": "not dispatched",
+  "local_validation": {
+    "parser_mock_tests_passed": 27,
+    "workflow_shell_sections_passed": 50,
+    "workflow_yaml_valid": true,
+    "native_processing_run_locally": false
+  },
+  "scope": "Nine fixed OFF/current/trial diagnostic replays on the three trial deadline-failure datasets. Existing thread CPU instrumentation; no detector or timing threshold change.",
+  "purpose": "Record slow-block sample positions and wall/thread CPU times to distinguish algorithmic work from elapsed-time spikes.",
+  "required": [
+    "all nine scored TSV references bit-identical",
+    "complete wall/thread CPU timing and slow-block sample positions",
+    "same input provenance, settings and block counts as final corpus",
+    "preserve original uninstrumented failure and strict acceptance limits"
+  ],
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "caveat": "Instrumented timing cannot establish native acceptance. Nonrecurrence cannot clear the saved failure; wall-minus-CPU is not proof of scheduler cause.",
+  "next": "Dispatch this existing bounded route once on GitHub Actions; collect the small report once. Diagnose recorded slow blocks before any policy change or further corpus replay; keep component/host routes blocked by the final timing rejection."
+}

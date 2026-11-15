@@ -252,8 +252,109 @@ def _group_coverage(events, labels, *, sample_count, sample_rate):
             'False outputs remain separate. Legacy per-label scores are unchanged.')
 
 
+PITCH_SET_FIELDS = ('annotated_samples', 'expected_pitch_samples', 'present_pitch_samples',
+                    'all_expected_pitches_samples', 'exact_pitch_set_samples',
+                    'one_voice_per_pitch_samples', 'extra_pitch_voice_samples',
+                    'duplicate_expected_pitch_voice_samples')
+
+
+def _pitch_set_coverage(spans, labels, *, sample_count, valid):
+    """Measure distinct-pitch occupancy on one clock, independent of string assignment."""
+    interpretation = ('Intervals partition time at annotation changes; each expected pitch '
+        'counts once, even for multiple same-pitch string labels. Present-pitch samples '
+        'count expected pitches found, regardless of routing lane. All-expected coverage '
+        'allows extra pitches; exact pitch-set coverage excludes them but allows duplicate '
+        'voices of an expected pitch. One-voice-per-pitch coverage also excludes duplicates. '
+        'Duplicates are reported, not presumed errors for same-pitch unisons. Unassigned '
+        'voices establish pitch presence only. Annotated samples are unique recording time; '
+        'expected/present pitch-samples are pitch-weighted time. No onset grace or release '
+        'tolerance. These are raw detector MIDI durations, not snapshot matches, physical '
+        'string identity, host delivery, re-pluck correctness or playable-chord success rates. '
+        'An initial annotation-relative hold delay is not measured live latency. '
+        'Legacy exact-string and false-output gates remain separate and unchanged.')
+    result = dict(schema='m3_distinct_pitch_set_coverage_v1', valid=valid,
+                  intervals=None, totals=None, by_distinct_pitch_count=None,
+                  unlabeled_gap_voice_samples=None, interpretation=interpretation)
+    if not valid:
+        return result
+    boundaries = defaultdict(list)
+    boundaries[0] = []
+    boundaries[sample_count] = []
+    for label in labels:
+        for edge, opening in (('start_sample', True), ('end_sample', False)):
+            boundaries[label[edge]].append(('label', label['label_index'], opening))
+    for note, intervals in spans.items():
+        for left, right, mask, unassigned in intervals:
+            boundaries[left].append(('start', note, mask.bit_count() + int(unassigned)))
+            boundaries[right].append(('end', note, 0))
+    active, expected, rows = {}, {}, []
+    previous = gap_samples = hold_run = 0
+    row = None
+    for sample, actions in sorted(boundaries.items()):
+        duration = sample - previous
+        if duration and expected:
+            indices = sorted(expected)
+            notes = set(expected.values())
+            if row is None or row['source_label_indices'] != indices:
+                row = dict(interval_index=len(rows), start_sample=previous, end_sample=sample,
+                    source_label_indices=indices, expected_midi_notes=sorted(notes),
+                    distinct_pitch_count=len(notes), **dict.fromkeys(PITCH_SET_FIELDS, 0),
+                    all_expected_hold_segments=0, longest_all_expected_hold_samples=0,
+                    first_all_expected_hold_delay_samples=None)
+                rows.append(row)
+                hold_run = 0
+            row['end_sample'] = sample
+            actual = set(active)
+            all_expected, exact = notes <= actual, notes == actual
+            counts = dict(annotated_samples=duration,
+                expected_pitch_samples=len(notes) * duration,
+                present_pitch_samples=len(notes & actual) * duration,
+                all_expected_pitches_samples=duration * all_expected,
+                exact_pitch_set_samples=duration * exact,
+                one_voice_per_pitch_samples=duration * (exact and all(v == 1 for v in active.values())),
+                extra_pitch_voice_samples=duration * sum(v for n, v in active.items() if n not in notes),
+                duplicate_expected_pitch_voice_samples=duration * sum(
+                    max(0, v - 1) for n, v in active.items() if n in notes))
+            for key, value in counts.items():
+                row[key] += value
+            if all_expected:
+                row['all_expected_hold_segments'] += hold_run == 0
+                hold_run += duration
+                row['longest_all_expected_hold_samples'] = max(
+                    row['longest_all_expected_hold_samples'], hold_run)
+                if row['first_all_expected_hold_delay_samples'] is None:
+                    row['first_all_expected_hold_delay_samples'] = previous - row['start_sample']
+            else:
+                hold_run = 0
+        elif duration:
+            gap_samples += duration * sum(active.values())
+            row = None
+            hold_run = 0
+        # Apply the previous span's end before the replacement span's start.
+        for kind, identity, value in sorted(actions, key=lambda action: action[0] != 'end'):
+            if kind == 'label':
+                if value:
+                    expected[identity] = labels[identity]['midi_note']
+                else:
+                    del expected[identity]
+            elif kind == 'end':
+                active.pop(identity, None)
+            else:
+                active[identity] = value
+        previous = sample
+    totals, by_count = dict.fromkeys(PITCH_SET_FIELDS, 0), {}
+    for row in rows:
+        count = by_count.setdefault(str(row['distinct_pitch_count']), dict.fromkeys(PITCH_SET_FIELDS, 0))
+        for key in PITCH_SET_FIELDS:
+            totals[key] += row[key]
+            count[key] += row[key]
+    result.update(intervals=rows, totals=totals, by_distinct_pitch_count=by_count,
+                  unlabeled_gap_voice_samples=gap_samples)
+    return result
+
+
 def summarize(events, labels, *, sample_count, sample_rate, include_output_safety=False,
-              include_group_coverage=False):
+              include_group_coverage=False, include_pitch_set_coverage=False):
     """Reduce complete detector transitions, retaining EOF uncertainty explicitly."""
     if (type(sample_count) is not int or sample_count <= 0
             or type(sample_rate) is not int or sample_rate <= 0):
@@ -383,11 +484,14 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
     if include_group_coverage:
         result['simultaneous_group_coverage'] = _group_coverage(
             events, labels, sample_count=sample_count, sample_rate=sample_rate)
+    if include_pitch_set_coverage:
+        result['pitch_set_coverage'] = _pitch_set_coverage(
+            spans, labels, sample_count=sample_count, valid=not errors)
     return result
 
 
 def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False,
-                  include_group_coverage=False):
+                  include_group_coverage=False, include_pitch_set_coverage=False):
     replay = read_replay(replay_path)
     with Path(replay_path).open(newline='') as stream:
         aggregate = next(csv.DictReader(stream, delimiter='\t'))
@@ -400,7 +504,8 @@ def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False,
                          transition_count=values['transitions'])
     result = summarize(events, replay['labels'], sample_count=values['samples'],
                        sample_rate=values['sample_rate'],
-                       include_group_coverage=include_group_coverage)
+                       include_group_coverage=include_group_coverage,
+                       include_pitch_set_coverage=include_pitch_set_coverage)
     if include_raw_conflicts:
         result['raw_midi'] = raw_conflicts(events)
     return result
