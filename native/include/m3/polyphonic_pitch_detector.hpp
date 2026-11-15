@@ -766,6 +766,12 @@ class PolyphonicPitchDetector final {
       state.diagnostic_completion_window = {};
     }
   }
+  void set_completion_midi_retention_for_diagnostics(bool enabled) noexcept {
+    diagnostic_completion_midi_retention_ = enabled;
+    for (auto& state : candidate_states_) {
+      state.diagnostic_completion_window = {};
+    }
+  }
   void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_suppressed_adjacent_admission_ = enabled;
     diagnostic_suppressed_adjacent_ticks_ = {};
@@ -1800,6 +1806,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_qualified_tier_retention_{};
   bool diagnostic_continuous_tier_retention_{};
   bool diagnostic_completion_window_retention_{};
+  bool diagnostic_completion_midi_retention_{};
   bool diagnostic_suppressed_adjacent_admission_{};
   std::array<std::uint16_t, kMaxCandidates> diagnostic_suppressed_adjacent_ticks_{};
   std::uint32_t diagnostic_suppressed_adjacent_last_tick_{};

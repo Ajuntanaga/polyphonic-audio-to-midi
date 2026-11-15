@@ -5396,6 +5396,60 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
     return result;
   }
+
+  struct CompletionMidiProbe final {
+    std::array<std::uint8_t, 34U> physical{}, pending{}, evidence{}, actual{},
+        releases{}, attacks{};
+  };
+
+  static CompletionMidiProbe completion_midi_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled,
+      std::uint64_t qualified_ticks) noexcept {
+    constexpr std::size_t kCandidate = 40U - 32U;
+    (void)retained_unison_completion_selector_probe(detector);
+    detector.set_qualified_tier_retention_for_diagnostics(false);
+    detector.set_continuous_tier_retention_for_diagnostics(false);
+    detector.set_completion_window_retention_for_diagnostics(false);
+    detector.set_completion_midi_retention_for_diagnostics(enabled);
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    detector.set_pending_string_reservation_for_diagnostics(false);
+    detector.diagnostic_assignment_previews_ = {};
+    detector.diagnostic_midi_owners_ = {};
+    auto& state = detector.candidate_states_[kCandidate];
+    state.emitted_note = 40U;
+    state.assigned_string_mask = state.midi_voice_mask = 0x07U;
+    state.pending_unison_mask = state.unison_evidence_ticks = 0U;
+    for (std::size_t lane = 0U; lane < 3U; ++lane)
+      detector.diagnostic_midi_owners_[lane] = {kCandidate, 40U};
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kCandidate] = true;
+    std::array<double, kMaxCandidates> scores{}, fundamentals{};
+    scores[kCandidate] = fundamentals[kCandidate] = 1.0;
+    CompletionMidiProbe result;
+    for (std::size_t tick = 0U; tick < result.physical.size(); ++tick) {
+      ++detector.decision_counter_;
+      detector.selector_group_masks_ = {};
+      detector.fine_frequency_evidence_states_[kCandidate].added_member_beat_coherence[0U] =
+          (qualified_ticks & (std::uint64_t{1U} << tick)) != 0U ? 0.25 : 0.0;
+      detector.infer_m3_unison_strings(selected);
+      // The normal virtual output follows inference; actual delivery must not
+      // feed its retained group back into this trajectory on the next tick.
+      state.midi_voice_mask = state.assigned_string_mask;
+      DetectorDecision decision;
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+      result.physical[tick] = state.assigned_string_mask;
+      result.pending[tick] = state.pending_unison_mask;
+      result.evidence[tick] = state.unison_evidence_ticks;
+      for (std::size_t lane = 0U; lane < kMaxVoices; ++lane)
+        if (detector.diagnostic_midi_owners_[lane].candidate == kCandidate)
+          result.actual[tick] |= static_cast<std::uint8_t>(1U << lane);
+      for (const auto& event : decision.transitions) {
+        if (event.kind == TransitionKind::note_off) ++result.releases[tick];
+        else if (event.kind == TransitionKind::note_on) ++result.attacks[tick];
+      }
+    }
+    return result;
+  }
 #endif
 
   static CompletionPriorityProbe stronger_completion_priority_probe(
@@ -9178,6 +9232,31 @@ M3_TEST(native_detector_completion_window_retention_preserves_fresh_completion) 
     detector.set_completion_window_retention_for_diagnostics(enabled);
     M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
         fresh_fine_pair_completion_inference_probe(detector), 0x07U);
+  }
+}
+
+M3_TEST(native_detector_completion_midi_retention_holds_without_inference_feedback) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  constexpr std::uint64_t kAllTicks = (std::uint64_t{1U} << 34U) - 1U;
+  const auto current = m3::PolyphonicPitchDetectorTestAccess::
+      completion_midi_retention_probe(detector, false, kAllTicks);
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      completion_midi_retention_probe(detector, true, kAllTicks);
+  for (std::size_t tick = 0U; tick < trial.physical.size(); ++tick) {
+    M3_EXPECT_EQ(current.physical[tick], (tick == 15U || tick == 32U) ? 0x06U : 0x07U);
+    M3_EXPECT_EQ(current.actual[tick], current.physical[tick]);
+    M3_EXPECT_EQ(trial.physical[tick], current.physical[tick]);
+    M3_EXPECT_EQ(trial.pending[tick], current.pending[tick]);
+    M3_EXPECT_EQ(trial.evidence[tick], current.evidence[tick]);
+    M3_EXPECT_EQ(trial.actual[tick], 0x07U);
+    M3_EXPECT_EQ(trial.releases[tick], 0U);
+    M3_EXPECT_EQ(trial.attacks[tick], 0U);
   }
 }
 #endif
