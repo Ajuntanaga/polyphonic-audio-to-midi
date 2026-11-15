@@ -77,7 +77,7 @@ def explain_frames(frames, assignments, label):
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
-        cases=None, conditions=None, window=None,
+        cases=None, conditions=None, window=None, diagnose=None,
         schema='m3_pending_string_reservation_trace_v1'):
     cases = CASES if cases is None else cases
     conditions = CONDITIONS[1:] if conditions is None else conditions
@@ -134,6 +134,12 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     result[key] == reference[key] for key in ('tsv_sha256', 'midi_sha256', 'output'))
                 if not result['saved_reference_bit_identical']:
                     raise ValueError(stem + ' differs from the saved output or raw MIDI')
+                if 'outcome_sha256' in reference:
+                    result['outcome_sha256'] = digest(traces['outcome'])
+                    result['saved_outcome_bit_identical'] = (
+                        result['outcome_sha256'] == reference['outcome_sha256'])
+                    if not result['saved_outcome_bit_identical']:
+                        raise ValueError(stem + ' differs from the saved complete outcome')
                 with replay_path.open() as stream:
                     aggregate = next(csv.DictReader(stream, delimiter='\t'))
                 samples, rate = int(aggregate['samples']), int(aggregate['sample_rate'])
@@ -159,6 +165,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     snapshot_label=annotation, window_start=start, window_end=end,
                     diagnosis=diagnosis, assignment_costs={key: value for key, value in costs.items()
                                                          if key != 'switches'})
+                if diagnose is not None:
+                    result['bounded_diagnosis'] = diagnose(assignments, frames, label)
                 bulk = destination / 'observations.json.gz'
                 with gzip.open(bulk, 'wt', encoding='utf-8') as stream:
                     json.dump(dict(frames=frames, assignment_costs=costs, transitions=transitions,
@@ -175,9 +183,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     raise ValueError('Repeated policy captures changed complete MIDI or outcome')
                 captures = current
                 save()
-        report.update(state='completed', final=True, stage='paired observations collected',
+        report.update(state='completed', final=True, stage='observations collected',
             saved_references_bit_identical=True, repeated_policy_streams_bit_identical=True,
-            interpretation='Observations preserve both existing policies. Preview masks are '
+            interpretation='Observations preserve the selected saved policies. Preview masks are '
                 'assignment hints, not committed MIDI lanes. Held samples measure raw detector '
                 'events, not tuner frame matches or delivered-host MIDI. The trial remains rejected.')
     except Exception as error:

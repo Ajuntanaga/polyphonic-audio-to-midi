@@ -1,0 +1,79 @@
+{
+  "schema": "m3_github_pending_midi_retention_trace_checkpoint_v1",
+  "task": "pending-midi-retention-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T11:51:50.999207+00:00",
+  "stage": "bounded diagnostic prepared; not dispatched",
+  "checkpoint": "docs/recovery/github-pending-midi-retention-trace-20261115.json",
+  "reference_report": "docs/recovery/pending-midi-retention-trace-references-20261115.json",
+  "mechanism_checkpoint": "docs/recovery/github-pending-midi-retention-20261115.json",
+  "dataset": "ordinary",
+  "note": 50,
+  "label_index": 200,
+  "cases": [
+    {
+      "label_index": 200,
+      "midi_note": 50,
+      "string_mask": 8,
+      "start_sample": 3590630,
+      "end_sample": 3662400,
+      "loss_starts": [
+        3594751
+      ]
+    },
+    {
+      "label_index": 279,
+      "midi_note": 47,
+      "string_mask": 2,
+      "start_sample": 5059430,
+      "end_sample": 5131200,
+      "loss_starts": [
+        5107455,
+        5107839,
+        5118463,
+        5121279,
+        5124415,
+        5128831
+      ]
+    }
+  ],
+  "policies": [
+    "current-on"
+  ],
+  "report_relative_path": "pending-midi-retention-trace/report.json",
+  "report_available": false,
+  "outputs_downloaded_once": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "local_checks": {
+    "python_mock_contracts": 38,
+    "result": "passed",
+    "source_path_contract": "passed",
+    "workflow_yaml": "parsed and worker copy identical",
+    "diff_check": "passed",
+    "native_execution": false,
+    "single_review": "One implementation/diff review; no actionable issues."
+  },
+  "acceptance": "Both diagnostic captures must reproduce saved full scored/raw MIDI/complete outcome hashes and expected held labels; validate complete assignment peers and exact native joint optima before reporting all seven anchors. This is diagnostic acceptance only, not a runtime policy or labeled-note gain.",
+  "known_counterexamples": "At3/14 label388 loss starts the frozen singleton-omitted optimum also selects the wrongly retained lane0; frozen omission alone is not a safe classifier. Best-string alignment discards48/73 label17 gain anchors.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "runtime_rule_changed": false,
+  "local_native_execution": false,
+  "native_timing": "not measured",
+  "external_host_and_hardware": "not measured",
+  "remaining_acceptance": "No label held loss or increased false output; identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and external DAW/device delivery.",
+  "next_step": "Collect this small diagnostic report once, retaining bulk evidence remotely. Interpret missing label200/279 costs with all known positive and negative anchors before choosing a narrow replacement. Do not rerun rejected trials.",
+  "routing": {
+    "github_actions": "All native compilation, tests and recorded replays use the authorized m3-offload inputs.",
+    "kaggle": "No distinct useful GPU task for this native assignment diagnostic; terminal legacy jobs stay terminal."
+  },
+  "updated_at": "2026-11-15T11:52:12.199358+00:00"
+}

@@ -46,7 +46,7 @@
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
   "remaining_acceptance": "Full corpus no-regression, identical OFF/buffers, zero allocations, p99 <=166666 ns, max <=333333 ns, zero overruns and external DAW/device delivery.",
-  "next_step": "Capture only the missing current-ON assignment-cost windows for labels200 and279 on GitHub, preserving the saved scored/raw references and complete outcome identity. Compare the frozen optimum with only the inactive singleton competitor omitted, keeping ordinals and other costs/history unchanged. Test whether this distinguishes all observed wrong-string corrections from the73 label17 forced displacements before choosing a default-off replacement. Do not hardcode notes/labels or broaden the rejected trial. Any subsequent screen must retain identical inference, improve target holds/retriggers, lose zero held samples on every label, and grow no raw false-output count before corpus allocation, buffer, p99/max and live gates.",
+  "next_step": "Capture only the missing current-ON assignment-cost windows for labels200 and279 on GitHub, preserving saved scored/raw references and complete outcome identity. Record the original and singleton-omitted optimum plus calibration state at all seven loss starts. The three label388 counterexamples already rule out using frozen omission alone as a no-loss discriminator; do not implement it as a validated rule. Choose a replacement only after explaining the observed corrections, without hardcoded notes/labels. Any subsequent screen must retain identical inference, improve target holds/retriggers, lose zero held samples on every label, and grow no raw false-output count before corpus allocation, buffer, p99/max and live gates.",
   "routing": {
     "github_actions": "All native compilation, tests and recorded replays. Use existing authorized m3-offload corpus inputs; keep bulk evidence remote.",
     "kaggle": "No distinct useful GPU work for this native routing experiment; legacy recovery remains terminal and is not relaunched."
@@ -246,7 +246,7 @@
     "total_lost_held_samples": 10624
   },
   "result_interpretation": "Rejected despite target improvement and lower false voice-samples: three labels lose 10624 exact held samples. Detector inference and all snapshot scores are unchanged; no production or installed output change.",
-  "updated_at": "2026-11-15T11:38:07.048527+00:00",
+  "updated_at": "2026-11-15T11:51:50.999207+00:00",
   "raw_owner_diagnosis": {
     "evidence": "build/github-results/pending-midi-retention-43707756793/raw-held-loss-comparison.json",
     "sample_rate": 96000,
@@ -502,49 +502,6 @@
     "limitation": "These are post-decision candidate outcomes and virtual snapshot voices. They do not supply joint lane costs or independently prove pre-decision raw owner identity. Raw actual ownership is separately recorded in raw-held-loss-comparison.json."
   },
   "frozen_peer_removal_diagnosis": {
-    "evidence": "build/github-results/pending-midi-retention-43707756793/frozen-peer-removal-comparison.json",
-    "method": "tools/assignment_cost_analysis.py solve with recorded lane_terms, playable/reservation masks and original ordinals; omit only peer33.",
-    "positive_case": {
-      "label_index": 17,
-      "note": 37,
-      "retained_lane": 0,
-      "source_run_id": 43698368720,
-      "archive": "build/github-results/pending-string-reservation-trace-43698368720/m3-evidence-43698368720-1.zip",
-      "window": "current-on-label17",
-      "span_source": "build/github-results/pending-midi-retention-43707756793/raw-held-loss-comparison.json",
-      "positive_span_starts_checked": 73,
-      "missing_frames": 0,
-      "exception_samples": [],
-      "lane_pair_counts": [
-        {
-          "complete_lane": 1,
-          "peer_removed_lane": 0,
-          "count": 73
-        }
-      ],
-      "first_improvement": {
-        "sample": 256447,
-        "captured_joint_cost": -17.039892830786357,
-        "captured_joint_strings": 93118,
-        "reconstructed_original_matches": true,
-        "peer_removed_cost": -44.47190046530346,
-        "peer_removed_joint_strings": 93112,
-        "note37_original_ordinal": 1,
-        "note37_prior_active": true,
-        "note37_prior_midi_mask": 1
-      },
-      "removed_peer_at_first_improvement": {
-        "note": 33,
-        "ordinal": 0,
-        "playable_mask": 1,
-        "prior_active": false,
-        "midi_mask": 0,
-        "prior_attack_ticks": 0,
-        "attack_required": 10
-      },
-      "finding": "At every positive-span start, removing only inactive/unready singleton33 restores note37 to retained lane0. Original candidate ordinals are preserved.",
-      "source_commit": "ff63283ce4f0b021f64be76b813348947658fa75"
-    },
     "negative_case": {
       "label_index": 388,
       "note": 50,
@@ -587,9 +544,124 @@
         }
       ],
       "finding": "Removing the sole immature singleton peer leaves lane1 optimal at the first and longest wrong-string hold. The peer claim is not necessary for the lane1 choice.",
-      "source_commit": "21a8c562487784ecca9b5d1756fb20f2f16a7141"
+      "source_commit": "21a8c562487784ecca9b5d1756fb20f2f16a7141",
+      "all_loss_starts": {
+        "anchors": [
+          7700287,
+          7700863,
+          7703295,
+          7703679,
+          7704319,
+          7706367,
+          7706495,
+          7707327,
+          7707519,
+          7708607,
+          7709631,
+          7711871,
+          7713855,
+          7714879
+        ],
+        "checked": 14,
+        "missing_frames": 0,
+        "target_original_lane": 1,
+        "peer_removed_lane_counts": {
+          "1": 11,
+          "0": 3
+        },
+        "peer_removed_retained_lane_counterexamples": [
+          7700863,
+          7706367,
+          7706495
+        ],
+        "removed_peer_condition": "At all fourteen starts, note33 ordinal0 is inactive, has no MIDI owner, is playable only on lane0 and has attack0/10.",
+        "finding": "At three known loss starts, the omitted-peer optimum selects the incorrectly retained lane0. Frozen omission alone does not separate gains from losses."
+      }
     },
-    "finding": "The frozen joint optimum after omitting the immature singleton supports the retained correct lane for all 73 label17 gain starts, but still selects the corrected lane1 at both checked label388 loss starts. Mere presence of a pending singleton does not distinguish a forced displacement from a valid string correction.",
-    "limitation": "Frozen arithmetic retains recorded costs and histories. The two traces and raw-retention comparison have separate run/source provenance. This is not a dynamic replay, policy validation, projection/source-owner identity proof or live-delivery test. Equivalent assignment-cost coverage for labels200 and279 is not collected."
+    "method": "tools/assignment_cost_analysis.py solve with recorded lane_terms, playable/reservation masks and original ordinals; omit only peer33.",
+    "limitation": "Frozen arithmetic retains recorded costs and histories. The two traces and raw-retention comparison have separate run/source provenance. This is not a dynamic replay, policy validation, projection/source-owner identity proof or live-delivery test. Equivalent assignment-cost coverage for labels200 and279 is not collected.",
+    "positive_case": {
+      "label_index": 17,
+      "note": 37,
+      "retained_lane": 0,
+      "source_run_id": 43698368720,
+      "archive": "build/github-results/pending-string-reservation-trace-43698368720/m3-evidence-43698368720-1.zip",
+      "window": "current-on-label17",
+      "span_source": "build/github-results/pending-midi-retention-43707756793/raw-held-loss-comparison.json",
+      "positive_span_starts_checked": 73,
+      "missing_frames": 0,
+      "exception_samples": [],
+      "lane_pair_counts": [
+        {
+          "complete_lane": 1,
+          "peer_removed_lane": 0,
+          "count": 73
+        }
+      ],
+      "first_improvement": {
+        "sample": 256447,
+        "captured_joint_cost": -17.039892830786357,
+        "captured_joint_strings": 93118,
+        "reconstructed_original_matches": true,
+        "peer_removed_cost": -44.47190046530346,
+        "peer_removed_joint_strings": 93112,
+        "note37_original_ordinal": 1,
+        "note37_prior_active": true,
+        "note37_prior_midi_mask": 1
+      },
+      "removed_peer_at_first_improvement": {
+        "note": 33,
+        "ordinal": 0,
+        "playable_mask": 1,
+        "prior_active": false,
+        "midi_mask": 0,
+        "prior_attack_ticks": 0,
+        "attack_required": 10
+      },
+      "finding": "At every positive-span start, removing only inactive/unready singleton33 restores note37 to retained lane0. Original candidate ordinals are preserved.",
+      "source_commit": "ff63283ce4f0b021f64be76b813348947658fa75"
+    },
+    "finding": "All73 label17 gain starts select retained lane0 after omitting only the inactive singleton. However3/14 label388 loss starts also select retained lane0 after that omission. Frozen omission alone cannot distinguish all gains from harmful retention. Equivalent costs for labels200/279 remain missing.",
+    "calibration_association": {
+      "positive_label17": {
+        "anchors": 73,
+        "best_string_counts": {
+          "0": 25,
+          "1": 48
+        },
+        "assigned_mask_counts": {
+          "2": 73
+        },
+        "prior_midi_and_physical_mask1": 72,
+        "exception": {
+          "sample": 290175,
+          "prior_midi_mask": 2,
+          "prior_physical_mask": 2
+        }
+      },
+      "negative_label388": {
+        "anchors": 14,
+        "best_string_counts": {
+          "2": 14
+        },
+        "assigned_mask_counts": {
+          "2": 14
+        },
+        "prior_midi1_physical2": 13,
+        "exception": {
+          "sample": 7714879,
+          "prior_midi_mask": 4,
+          "prior_physical_mask": 4
+        }
+      },
+      "three_omission_counterexamples": {
+        "best_string": 2,
+        "assigned_mask": 2,
+        "prior_midi_mask": 1,
+        "prior_physical_mask": 2
+      },
+      "interpretation": "Requiring best_string to equal retained lane0 would discard48/73 observed positive anchors. This association is not a validated runtime predicate."
+    },
+    "evidence": "build/github-results/pending-midi-retention-43707756793/frozen-peer-removal-comparison.json"
   }
 }

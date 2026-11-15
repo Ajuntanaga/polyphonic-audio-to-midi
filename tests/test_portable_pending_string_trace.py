@@ -63,7 +63,7 @@ class PortablePendingStringTraceTests(unittest.TestCase):
             stdout.write(text + ('\n' if drift == 'output' else ''))
             write_rows(Path(command[command.index('--candidate-trace') + 1]), candidates(42))
             outcomes = [outcome_row((42,), sample=s) for s in (63, 127, 191)]
-            if drift == 'outcome' and calls == 2:
+            if drift == 'outcome-always' or (drift == 'outcome' and calls == 2):
                 outcomes[0]['quiet'] = '1'
             write_rows(Path(command[command.index('--outcome-trace') + 1]), outcomes)
             assignments = [dict(cost_row(42, sample=s), prior_attack_ticks='2',
