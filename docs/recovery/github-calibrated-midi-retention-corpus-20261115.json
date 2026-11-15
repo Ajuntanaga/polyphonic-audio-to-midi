@@ -1,0 +1,76 @@
+{
+  "schema": "m3_github_calibrated_midi_retention_corpus_checkpoint_v1",
+  "task": "calibrated-midi-retention-corpus",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": "53167b32d22e1644cb7b7855861a0ca7e907607b",
+  "worker_commit": "3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d",
+  "native_candidate_commit": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
+  "run_id": 43714618511,
+  "status": "in_progress",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T12:33:39.112396+00:00",
+  "updated_at": "2026-11-15T12:35:44.337821+00:00",
+  "stage": "GitHub native build in progress; corpus replay pending",
+  "checkpoint": "docs/recovery/github-calibrated-midi-retention-corpus-20261115.json",
+  "ordinary_checkpoint": "docs/recovery/github-calibrated-midi-retention-20261115.json",
+  "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
+  "report_relative_path": "calibrated-midi-retention-corpus/report.json",
+  "report_available": false,
+  "outputs_downloaded_once": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "local_output_dir": "build/github-results/calibrated-midi-retention-corpus-43714618511",
+  "local_checks": {
+    "python_contract_tests": 81,
+    "workflow_yaml": "parsed; source and worker copies identical",
+    "diff_check": "passed",
+    "native_execution": false
+  },
+  "declared_datasets": 14,
+  "planned_replays": 126,
+  "conditions": [
+    "reference-off",
+    "current-on",
+    "calibrated-midi-retention-on"
+  ],
+  "buffer_sizes": [
+    512,
+    32,
+    1024
+  ],
+  "input_release": "corpus-20261108",
+  "input_checklist_count": 30,
+  "acceptance": "Saved OFF and current-ON output/raw identity on all14 datasets; current/trial complete inference identity; zero per-label frame or held loss; no raw conflict, false voice-sample or false onset growth; at least one longer hold with fewer attacks; exact buffer identity; zero allocations; p99<=166666ns, max<=333333ns, zero overruns for all modes. Keep note and timing verdicts separate.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "default_enabled": false,
+  "local_native_execution": false,
+  "external_host_and_hardware": "not measured",
+  "next_step": "Follow this existing run read-only; collect its small final artifact once. Do not dispatch a duplicate. Keep bulk evidence remote unless diagnosis needs named members.",
+  "routing": {
+    "github_actions": "All native work through existing authorized m3-offload release inputs; no source dataset upload.",
+    "kaggle": "No distinct useful GPU task for this native MIDI policy. Terminal legacy recovery remains terminal."
+  },
+  "dispatch_receipt": "build/github-results/calibrated-midi-retention-corpus-dispatch-20261115/dispatch-result.json",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43714618511",
+  "run_observation": "build/github-results/calibrated-midi-retention-corpus-43714618511/run-observation.json",
+  "artifact_observation": "build/github-results/calibrated-midi-retention-corpus-43714618511/artifact-observation.json",
+  "artifact_count": 0,
+  "small_artifact_name": "m3-report-43714618511-1",
+  "bulk_artifact_name": "m3-evidence-43714618511-1",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T12:33:08Z",
+      "databaseId": 43714425808,
+      "displayTitle": "Validate calibrated MIDI retention across the protected corpus",
+      "headSha": "53167b32d22e1644cb7b7855861a0ca7e907607b",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43714425808",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "source_checks_observed_at": "2026-11-15T12:35:04.360704+00:00"
+}

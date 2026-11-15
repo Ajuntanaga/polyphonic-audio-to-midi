@@ -1,4 +1,12 @@
-# Current checkpoint: calibrated MIDI retention ordinary screen passed
+# Current checkpoint: calibrated MIDI retention corpus running
+
+GitHub run `43714618511` is in progress at the native-build stage. Source `53167b32d22e1644cb7b7855861a0ca7e907607b`, worker `3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d`. Checkpoint: `docs/recovery/github-calibrated-midi-retention-corpus-20261115.json`; status key `portable_compute.calibrated_midi_retention_corpus`. Source portable run `43714425808` passed. All 81 lightweight Python contracts pass and both workflow YAML files parse. No native processing ran locally. The single wider GitHub job compares OFF, saved current ON and the default-off calibrated-retention candidate over 14 datasets and 32/512/1024-sample buffers. Native candidate policy remains at `4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4`.
+
+Follow this existing run read-only; do not dispatch another. Artifact metadata currently contains zero artifacts. When final, collect `m3-report-43714618511-1` once into `build/github-results/calibrated-midi-retention-corpus-43714618511`; bulk `m3-evidence-43714618511-1` stays remote unless diagnosis needs named members. Existing 30 inputs stay in the authorized `corpus-20261108` release. Require complete saved OFF/current-ON identity, unchanged inference, zero passage/held loss or false-output growth, an actual held-note/retrigger improvement, buffer identity, zero allocations, p99<=166666ns, max<=333333ns and zero overruns. Timing and note-safety verdicts are separate. Ordinary success is not corpus acceptance or live readiness; installed output and scoreboard remain unchanged.
+
+The ntfy ping and verified 680-file compression (~1.34 GB reclaimed) are complete. Do not repeat them. Kaggle has no distinct useful GPU task for this native policy; legacy terminal jobs remain terminal.
+
+# Previous checkpoint: calibrated MIDI retention ordinary screen passed
 
 GitHub run `43712855256` completed successfully at source `4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4`, worker `5dba06ebc8116b493afd1cc96fe746365ec46e7c`. Checkpoint: `docs/recovery/github-calibrated-midi-retention-20261115.json`; status key `portable_compute.calibrated_midi_retention`. Source portable `43712826012` and CI `43712826030` passed. The small `m3-report-43712855256-1` artifact is collected once and hash-verified at `build/github-results/calibrated-midi-retention-43712855256`; 122665023 bytes of bulk evidence remain remote. Do not poll, rerun or recollect these completed jobs.
 
