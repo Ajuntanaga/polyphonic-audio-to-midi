@@ -3,15 +3,15 @@
   "task": "forced-pending-string-reservation-trace",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
-  "created_at": "2026-11-15T10:14:47.024968+00:00",
-  "observed_at": "2026-11-15T10:14:47.024968+00:00",
-  "stage": "Six paired captures prepared; pending source checkpoint and a single GitHub dispatch",
+  "source_commit": "21a8c562487784ecca9b5d1756fb20f2f16a7141",
+  "worker_commit": "5b3705f9138cf25728321e3e922d4781a308e933",
+  "run_id": 43703176585,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "created_at": "2026-11-15T10:15:18Z",
+  "observed_at": "2026-11-15T10:29:26.734101+00:00",
+  "stage": "Paired evidence collected; immediate loss mechanisms recorded; upstream evidence-reset and group-history questions remain open",
   "checkpoint": "docs/recovery/github-forced-pending-string-trace-20261115.json",
   "reference_checkpoint": "docs/recovery/forced-pending-string-trace-references-20261115.json",
   "prior_trial_checkpoint": "docs/recovery/github-forced-pending-string-reservation-20261115.json",
@@ -58,14 +58,16 @@
   ],
   "capture_count": 6,
   "report_relative_path": "forced-pending-string-reservation-trace/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
-  "small_artifact_collected": false,
-  "bulk_downloaded": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
+  "small_artifact_collected": true,
+  "bulk_downloaded": true,
   "local_checks": {
     "python_mock_contracts": 41,
     "result": "passed",
-    "native_execution": false
+    "native_execution": false,
+    "source_path_contract": "passed",
+    "diff_check": "passed"
   },
   "acceptance": "All six complete scored and raw MIDI streams must retain their respective saved references, held measurements remain unchanged, observed joint assignments reproduce exactly, and repeated complete outcome/MIDI streams match within each policy. This diagnostic does not change acceptance of the rejected trial.",
   "installed_output_changed": false,
@@ -74,9 +76,452 @@
   "local_native_execution": false,
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
-  "next_step": "Collect the six paired captures once, require saved full TSV/MIDI and repeated outcome identity, then identify the first changed pending/owner decision for labels304,332,389. Keep the forced trial rejected; no replacement without zero passage frame/held losses or false-output growth, identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and separate external host/device validation.",
+  "next_step": "Resolve only the label304 whole-state reset branch (pre/post global active count, target pre-reset fields and exact branch reason) and the earliest label332 physical-group/owner divergence before choosing another default-off rule. Use bounded GitHub paired diagnostics with complete saved scored/raw MIDI and repeated outcome identity. Any replacement must preserve every passage frame/held count and false-output gate before full corpus, identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns, zero overruns and separate external DAW/device validation. Do not rerun or recollect completed jobs.",
   "routing": {
     "github_actions": "All native builds, tests and six full recorded replays; trace windows include one second of preceding history. Collect only needed evidence.",
     "kaggle": "Legacy jobs terminal and collected; no distinct useful GPU task for this native assignment question. Do not duplicate completed jobs."
+  },
+  "dispatch_receipt": "build/github-results/forced-pending-trace-dispatch-20261115/dispatch-result.json",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43703176585",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T10:15:00Z",
+      "databaseId": 43703150976,
+      "headSha": "21a8c562487784ecca9b5d1756fb20f2f16a7141",
+      "status": "completed",
+      "updatedAt": "2026-11-15T10:16:44Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43703150976",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "output_target": "build/github-results/forced-pending-string-reservation-trace-43703176585",
+  "artifact_names": {
+    "small": "m3-report-43703176585-1",
+    "bulk": "m3-evidence-43703176585-1"
+  },
+  "last_remote_read": {
+    "observed_at": "2026-11-15T10:29:26.734101+00:00",
+    "status": "success",
+    "worker_status": "completed",
+    "worker_conclusion": "success",
+    "completed_at": "2026-11-15T10:26:59Z"
+  },
+  "report_path": "build/github-results/forced-pending-string-reservation-trace-43703176585/forced-pending-string-reservation-trace/report.json",
+  "report_sha256": "634aae31892a643ce852e18d47487b0963b5dab13ec99ace917a5aeedb67c47a",
+  "small_collection_receipt": "build/github-results/forced-pending-string-reservation-trace-43703176585/collection-receipt.json",
+  "small_artifact": {
+    "run_id": 43703176585,
+    "artifact_id": 14158365045,
+    "artifact_name": "m3-report-43703176585-1",
+    "archive": "build/github-results/forced-pending-string-reservation-trace-43703176585/m3-report-43703176585-1.zip",
+    "archive_bytes": 24793,
+    "sha256": "371fc9e902863c95283736653fe88e8cadd4a11910a38ae4b6ead8845a08a1c8",
+    "digest_verified": true,
+    "send_started_at": "2026-11-15T10:28:20.451848+00:00",
+    "collected_at": "2026-11-15T10:28:43.433063+00:00",
+    "files": [
+      "assignment-test.log",
+      "build.log",
+      "configure.log",
+      "contracts.log",
+      "forced-pending-string-reservation-trace/current-on-label304/replay.stderr",
+      "forced-pending-string-reservation-trace/current-on-label332/replay.stderr",
+      "forced-pending-string-reservation-trace/current-on-label389/replay.stderr",
+      "forced-pending-string-reservation-trace/forced-trial-on-label304/replay.stderr",
+      "forced-pending-string-reservation-trace/forced-trial-on-label332/replay.stderr",
+      "forced-pending-string-reservation-trace/forced-trial-on-label389/replay.stderr",
+      "forced-pending-string-reservation-trace/report.json",
+      "forced-reservation-test.log",
+      "runner.log",
+      "runtime-manifest.json",
+      "trace-build.log",
+      "trace-test.log"
+    ]
+  },
+  "result": {
+    "saved_references_bit_identical": true,
+    "repeated_policy_streams_bit_identical": true,
+    "captures": 6,
+    "python_contracts_passed": 164,
+    "focused_native_tests_passed": 4,
+    "cases": {
+      "current-on-label304": {
+        "held_label": {
+          "label_index": 304,
+          "midi_note": 46,
+          "string_mask": 4,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 768,
+          "unmatched_hold_samples": 71015,
+          "longest_exact_hold_samples": 768,
+          "exact_hold_segments": 1,
+          "first_exact_hold_delay_samples": 25830,
+          "note_ons_inside_label": 82
+        },
+        "counts": {
+          "frames": 1122,
+          "selected": 1052,
+          "active": 948,
+          "selected_inactive": 104,
+          "preview": 0,
+          "ready": 1,
+          "ready_infeasible": 1,
+          "ready_feasible": 0,
+          "routed": 947,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      },
+      "current-on-label332": {
+        "held_label": {
+          "label_index": 332,
+          "midi_note": 36,
+          "string_mask": 1,
+          "start_sample": 6201839,
+          "end_sample": 6273600,
+          "annotated_hold_samples": 71761,
+          "exact_held_samples": 42561,
+          "unmatched_hold_samples": 29200,
+          "longest_exact_hold_samples": 14464,
+          "exact_hold_segments": 13,
+          "first_exact_hold_delay_samples": 8016,
+          "note_ons_inside_label": 25
+        },
+        "counts": {
+          "frames": 1122,
+          "selected": 1055,
+          "active": 997,
+          "selected_inactive": 58,
+          "preview": 0,
+          "ready": 1,
+          "ready_infeasible": 0,
+          "ready_feasible": 1,
+          "routed": 996,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      },
+      "current-on-label389": {
+        "held_label": {
+          "label_index": 389,
+          "midi_note": 33,
+          "string_mask": 1,
+          "start_sample": 7670639,
+          "end_sample": 7719715,
+          "annotated_hold_samples": 49076,
+          "exact_held_samples": 13504,
+          "unmatched_hold_samples": 35572,
+          "longest_exact_hold_samples": 11712,
+          "exact_hold_segments": 3,
+          "first_exact_hold_delay_samples": 1104,
+          "note_ons_inside_label": 3
+        },
+        "counts": {
+          "frames": 767,
+          "selected": 670,
+          "active": 208,
+          "selected_inactive": 468,
+          "preview": 0,
+          "ready": 2,
+          "ready_infeasible": 1,
+          "ready_feasible": 1,
+          "routed": 200,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      },
+      "forced-trial-on-label304": {
+        "held_label": {
+          "label_index": 304,
+          "midi_note": 46,
+          "string_mask": 4,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_hold_samples": 71783,
+          "exact_held_samples": 0,
+          "unmatched_hold_samples": 71783,
+          "longest_exact_hold_samples": 0,
+          "exact_hold_segments": 0,
+          "first_exact_hold_delay_samples": null,
+          "note_ons_inside_label": 0
+        },
+        "counts": {
+          "frames": 1122,
+          "selected": 1052,
+          "active": 0,
+          "selected_inactive": 1052,
+          "preview": 0,
+          "ready": 0,
+          "ready_infeasible": 0,
+          "ready_feasible": 0,
+          "routed": 0,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      },
+      "forced-trial-on-label332": {
+        "held_label": {
+          "label_index": 332,
+          "midi_note": 36,
+          "string_mask": 1,
+          "start_sample": 6201839,
+          "end_sample": 6273600,
+          "annotated_hold_samples": 71761,
+          "exact_held_samples": 21824,
+          "unmatched_hold_samples": 49937,
+          "longest_exact_hold_samples": 10880,
+          "exact_hold_segments": 6,
+          "first_exact_hold_delay_samples": 8016,
+          "note_ons_inside_label": 8
+        },
+        "counts": {
+          "frames": 1122,
+          "selected": 1055,
+          "active": 997,
+          "selected_inactive": 58,
+          "preview": 0,
+          "ready": 1,
+          "ready_infeasible": 0,
+          "ready_feasible": 1,
+          "routed": 996,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      },
+      "forced-trial-on-label389": {
+        "held_label": {
+          "label_index": 389,
+          "midi_note": 33,
+          "string_mask": 1,
+          "start_sample": 7670639,
+          "end_sample": 7719715,
+          "annotated_hold_samples": 49076,
+          "exact_held_samples": 1536,
+          "unmatched_hold_samples": 47540,
+          "longest_exact_hold_samples": 1536,
+          "exact_hold_segments": 1,
+          "first_exact_hold_delay_samples": 21776,
+          "note_ons_inside_label": 1
+        },
+        "counts": {
+          "frames": 767,
+          "selected": 670,
+          "active": 208,
+          "selected_inactive": 468,
+          "preview": 1,
+          "ready": 2,
+          "ready_infeasible": 1,
+          "ready_feasible": 1,
+          "routed": 200,
+          "capacity_blocked": 0
+        },
+        "complete_peers_verified": true,
+        "native_joint_decisions_reproduced": true
+      }
+    }
+  },
+  "bulk_collection_receipt": "build/github-results/forced-pending-string-reservation-trace-43703176585/bulk-collection-receipt.json",
+  "bulk_artifact": {
+    "run_id": 43703176585,
+    "artifact_id": 14158245462,
+    "artifact_name": "m3-evidence-43703176585-1",
+    "archive": "build/github-results/forced-pending-string-reservation-trace-43703176585/m3-evidence-43703176585-1.zip",
+    "archive_bytes": 31452518,
+    "archive_sha256": "0bcf1925cabb596e6b9782c350983d5d6143bf0c0a890361cef18288590bedd1",
+    "digest_verified": true,
+    "downloaded_once": true,
+    "transfer_recovery": "range-resumed",
+    "resume_offset": 9961472,
+    "resumed_at": "2026-11-15T10:34:26.599660+00:00",
+    "downloaded_at": "2026-11-15T10:40:43.866206+00:00",
+    "extracted": false,
+    "native_execution": false,
+    "purpose": "Diagnose saved paired label304,332,389 assignment and output differences; no new processing."
+  },
+  "diagnosis_recorded_at": "2026-11-15T10:47:07.103351+00:00",
+  "paired_loss_diagnosis": {
+    "method": "Read the completed paired GitHub trace archive without extraction or native execution; compare captured assignment, candidate, outcome and raw MIDI decisions against the source at the recorded commit.",
+    "archive_member_root": "github-results/forced-pending-string-reservation-trace/",
+    "diagnostic_run_final": true,
+    "causal_diagnosis_complete": false,
+    "label304": {
+      "midi_note": 46,
+      "intended_mask": 4,
+      "current_exact_held_samples": 768,
+      "forced_exact_held_samples": 0,
+      "selected_frames_each": 1052,
+      "current_active_frames": 948,
+      "forced_active_frames": 0,
+      "current_note_ons_inside_label": 82,
+      "forced_note_ons_inside_label": 0,
+      "finding": "The forced target is still selected but never activates; this is a maturation failure, not merely an emitted-pitch or lane mismatch.",
+      "causal_limit": "The first retained simultaneous assigned-mask/evidence clear is consistent with a whole CandidateState clear, including the inactive-capacity branch, and inconsistent with the energy-only reset at the inspected lifecycle branch. It does not establish which clearing branch executed or attribute that branch to forced preview. Target playable masks are not singleton there; selection/admission flags remain equal while masks differ upstream.",
+      "missing_observations": [
+        "pre-/post-update global active candidate count or exact reset-branch reason",
+        "target assigned mask and evidence immediately before reset",
+        "fast/slow evidence energy and atomic_handoff flag"
+      ],
+      "counter_semantics": "evidence_ticks is captured after processing, and successful activation resets it to zero; a zero post-state counter alone does not establish lack of evidence.",
+      "first_retained_evidence_state_divergence": {
+        "sample": 5637311,
+        "tick": 88083,
+        "current": {
+          "selection": 4,
+          "assigned_mask": 4,
+          "active": false,
+          "evidence_ticks": 35
+        },
+        "forced": {
+          "selection": 4,
+          "assigned_mask": 0,
+          "active": false,
+          "evidence_ticks": 0
+        },
+        "preceding_retained_samples": [
+          5637055,
+          5637119
+        ],
+        "preceding_evidence_ticks_both": [
+          33,
+          34
+        ],
+        "preceding_assigned_masks": {
+          "current": 4,
+          "forced": 8
+        },
+        "preceding_admission_features_equal": true
+      },
+      "retained_full_passage_max_evidence_ticks": {
+        "current": 59,
+        "forced": 42
+      },
+      "global_active_count_checked": false,
+      "source_locations": [
+        "native/offline/replay.cpp:3541",
+        "native/src/polyphonic_pitch_detector.cpp:12409"
+      ]
+    },
+    "label332": {
+      "midi_note": 36,
+      "intended_mask": 1,
+      "current_exact_held_samples": 42561,
+      "forced_exact_held_samples": 21824,
+      "first_extra_lane_sample": 6237183,
+      "finding": "Profile-mixture expansion gives the forced candidate a two-string physical group; MIDI reconciliation adds note36 on lane1 while retaining note36 on lane0, violating exact mask1.",
+      "current": {
+        "group_before": 2,
+        "group_proposal": 2,
+        "group_after": 2,
+        "group_origin": 0,
+        "spectral_mask": 1,
+        "continuity_mask": 1,
+        "desired_mask": 1,
+        "pruned_mask": 1,
+        "midi_after": 1
+      },
+      "forced": {
+        "group_before": 1,
+        "group_proposal": 3,
+        "group_after": 3,
+        "group_origin": 3,
+        "spectral_mask": 1,
+        "continuity_mask": 1,
+        "desired_mask": 3,
+        "pruned_mask": 3,
+        "midi_before": 1,
+        "midi_after": 3,
+        "added_lane_mask": 2
+      },
+      "rendered_pitch_check": "Candidate36 cal_output_before/after and cal_midi_before/after are all36. No DP projection is present; the output is note36, not another candidate projecting to36.",
+      "capacity_blocked": false,
+      "source_locations": [
+        "native/src/polyphonic_pitch_detector.cpp:543",
+        "native/src/polyphonic_pitch_detector.cpp:3413",
+        "native/src/polyphonic_pitch_detector.cpp:3534",
+        "native/src/polyphonic_pitch_detector.cpp:10856",
+        "native/src/polyphonic_pitch_detector.cpp:10991",
+        "native/src/polyphonic_pitch_detector.cpp:12332"
+      ],
+      "causal_limit": "allocation_preview is zero on this onset row. The immediate extra-lane producer is established, but the earlier cause of current group_before2 versus forced group_before1 remains unresolved.",
+      "next_observation": "The earliest preceding divergence of candidate36 physical group/actual owner state, including competing reservation owners."
+    },
+    "label389": {
+      "midi_note": 33,
+      "intended_mask": 1,
+      "current_exact_held_samples": 13504,
+      "forced_exact_held_samples": 1536,
+      "lost_exact_held_samples": 11968,
+      "finding": "Two distinct losses: a 256-sample projected-pitch hold disappears after peer reassignment, and an 11712-sample genuine target hold is suppressed by retained MIDI ownership despite identical target activation/routing.",
+      "first_lost_hold": {
+        "start_sample": 7671743,
+        "end_sample": 7671999,
+        "samples": 256,
+        "current_producer_detected_note": 51,
+        "current_producer_rendered_note": 33,
+        "target33_active": false,
+        "current_joint_assignment_valid": false,
+        "forced_joint_assignment_valid": true,
+        "forced_pending_preview_note": 32,
+        "forced_pending_preview_playable_mask": 1,
+        "forced_note51_lane_change": [
+          0,
+          4
+        ],
+        "forced_note46_lane_change": [
+          1,
+          0
+        ],
+        "mechanism": "A feasible forced joint solve with pending32 relocates incumbent51 away from physical/MIDI mask1, removing the incumbent eligibility used by the current output projection to33. Candidate33 has not activated in either policy, so this is not a lost33 activation.",
+        "limit": "Projection-consensus internals were not captured; the paired trace establishes the changed incumbent eligibility and the actual rendered-pitch difference."
+      },
+      "second_lost_hold": {
+        "start_sample": 7676863,
+        "end_sample": 7688575,
+        "samples": 11712,
+        "target_activation_sample_both": 7676799,
+        "target_route_sample": 7676863,
+        "target_route_equal": {
+          "assigned_mask": 1,
+          "primary_string": 0,
+          "spectral_mask": 0,
+          "continuity_mask": 0,
+          "cached_mask": 0,
+          "desired_mask": 1,
+          "pruned_mask": 1,
+          "midi_before": 1,
+          "midi_after": 1,
+          "other_owned_mask": 0,
+          "capacity_blocked": 0
+        },
+        "current_coasting_note46_actual_owner_mask": 2,
+        "forced_coasting_note46_actual_owner_mask": 1,
+        "mechanism": "Forced note46 retains lane0 from its earlier move at7671743. The final MIDI-owner reconciler gives the retained owner priority over the new note33 claim. Current note46 owns lane1, so current note33 can attack on lane0. Virtual target MIDI intent is identical and does not establish actual raw ownership.",
+        "source_location": "native/src/polyphonic_pitch_detector.cpp:5992"
+      },
+      "remaining_hold_both": {
+        "start_sample": 7692415,
+        "end_sample": 7693951,
+        "samples": 1536
+      },
+      "selected_evidence_path": "build/github-results/forced-pending-string-reservation-trace-43703176585/label389-selected-evidence.json",
+      "selected_evidence_sha256": "4628df522c1f57b86a2ad6a7d1fb090ab8e6a632208962eaaa59732a6e9ae1ac",
+      "selected_evidence_bytes": 60647,
+      "source_locations": [
+        "native/src/polyphonic_pitch_detector.cpp:3534",
+        "native/src/polyphonic_pitch_detector.cpp:5992",
+        "native/src/polyphonic_pitch_detector.cpp:7585",
+        "native/src/polyphonic_pitch_detector.cpp:11645"
+      ]
+    },
+    "decision": "Keep the forced preview trial rejected. Aggregate target gains do not offset passage losses; no policy, default, installed output or scoreboard changes.",
+    "evidence_limit": "Snapshot output is written before final MIDI-owner reconciliation and is limited to five visible voices. Detected candidate identity, rendered pitch, virtual MIDI intent and actual raw ownership must be kept separate."
   }
 }
