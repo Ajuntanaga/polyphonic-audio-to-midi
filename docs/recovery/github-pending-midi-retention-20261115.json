@@ -3,14 +3,14 @@
   "task": "pending-midi-retention-trial",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": null,
+  "source_commit": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
   "worker_commit": "d3f50ca8b68085bc83f580f553a29c257eba142f",
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
+  "run_id": 43707756793,
+  "status": "in_progress",
+  "conclusion": "",
   "result_final": false,
   "created_at": "2026-11-15T11:07:57.331566+00:00",
-  "stage": "Default-off actual MIDI retention screen prepared; native execution pending on GitHub",
+  "stage": "Screen actual MIDI retention with unchanged detector inference",
   "checkpoint": "docs/recovery/github-pending-midi-retention-20261115.json",
   "reference_checkpoint": "docs/recovery/github-independent-midi-ownership-20261109.json",
   "mechanism_checkpoint": "docs/recovery/github-forced-pending-string-trace-20261115.json",
@@ -46,10 +46,41 @@
   "native_timing": "not measured",
   "external_host_and_hardware": "not measured",
   "remaining_acceptance": "Full corpus no-regression, identical OFF/buffers, zero allocations, p99 <=166666 ns, max <=333333 ns, zero overruns and external DAW/device delivery.",
-  "next_step": "Build and test on GitHub, run this one ordinary OFF/current-ON/trial screen, then collect the small report once. Reject regressions before any broader replay.",
+  "next_step": "Read recorded run 43707756793 to completion, collect its small m3-report-43707756793-1 artifact once, and evaluate inference identity, per-label held samples and raw false-output duration gates. Do not dispatch a duplicate; broader replay requires this screen to pass.",
   "routing": {
     "github_actions": "All native compilation, tests and recorded replays. Use existing authorized m3-offload corpus inputs; keep bulk evidence remote.",
     "kaggle": "No distinct useful GPU work for this native routing experiment; legacy recovery remains terminal and is not relaunched."
   },
-  "dispatch_receipt": "build/github-results/pending-midi-retention-dispatch-20261115/dispatch-result.json"
+  "dispatch_receipt": "build/github-results/pending-midi-retention-dispatch-20261115/dispatch-result.json",
+  "dispatched_at": "2026-11-15T11:11:52.950709+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43707756793",
+  "last_observed_at": "2026-11-15T11:17:24.289341+00:00",
+  "local_output_dir": "build/github-results/pending-midi-retention-43707756793",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T11:11:41Z",
+      "databaseId": 43707731084,
+      "headSha": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43707731084",
+      "workflowName": "CI",
+      "failed_steps": []
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T11:11:41Z",
+      "databaseId": 43707731094,
+      "headSha": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43707731094",
+      "workflowName": "Portable offline replay",
+      "failed_steps": []
+    }
+  ],
+  "artifact_metadata": {
+    "total_count": 0,
+    "artifacts": []
+  },
+  "source_validation": "Portable native tests, replay comparison contracts and synthetic buffer parity passed; CI source/native checks and production package build passed. Package is uninstalled; no recorded-screen or live acceptance is implied."
 }
