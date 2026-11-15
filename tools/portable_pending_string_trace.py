@@ -78,14 +78,15 @@ def explain_frames(frames, assignments, label):
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
         cases=None, conditions=None, window=None, diagnose=None,
-        schema='m3_pending_string_reservation_trace_v1'):
+        schema='m3_pending_string_reservation_trace_v1', dataset='ordinary',
+        interpretation=None):
     cases = CASES if cases is None else cases
     conditions = CONDITIONS[1:] if conditions is None else conditions
     window = window_for if window is None else window
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     report = dict(schema=schema, state='running', final=False,
-        stage='verify inputs', dataset='ordinary', settings=SETTINGS, cases=cases, runs={},
+        stage='verify inputs', dataset=dataset, settings=SETTINGS, cases=cases, runs={},
         runtime_rule_changed=False, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', live_readiness='not measured')
 
@@ -99,7 +100,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
     try:
         manifest = json.loads(manifest_path.read_text())
         references = json.loads(reference_path.read_text())['replay_references']
-        verify_inputs(corpus, manifest, 'ordinary')
+        verify_inputs(corpus, manifest, dataset)
         report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
             input_manifest_sha256=digest(manifest_path), reference_checkpoint_sha256=digest(reference_path))
         for policy, flags in conditions:
@@ -113,7 +114,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 destination.mkdir()
                 traces = {kind: destination / (kind + '.tsv')
                           for kind in ('candidate', 'assignment', 'outcome', 'midi-event')}
-                command = command_for(binary, corpus, 'ordinary', 'off', 512, None)
+                command = command_for(binary, corpus, dataset, 'off', 512, None)
                 command.extend(flags)
                 for kind, path in traces.items():
                     command.extend(('--' + kind + '-trace', str(path)))
@@ -185,9 +186,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 save()
         report.update(state='completed', final=True, stage='observations collected',
             saved_references_bit_identical=True, repeated_policy_streams_bit_identical=True,
-            interpretation='Observations preserve the selected saved policies. Preview masks are '
+            interpretation=interpretation or ('Observations preserve the selected saved policies. Preview masks are '
                 'assignment hints, not committed MIDI lanes. Held samples measure raw detector '
-                'events, not tuner frame matches or delivered-host MIDI. The trial remains rejected.')
+                'events, not tuner frame matches or delivered-host MIDI. The trial remains rejected.'))
     except Exception as error:
         report.update(state='failed', final=True, error=f'{type(error).__name__}: {error}')
         raise

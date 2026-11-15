@@ -1,0 +1,238 @@
+{
+  "schema": "m3_calibrated_midi_retention_timing_checkpoint_v1",
+  "updated_at": "2026-11-15T13:46:53.522858+00:00",
+  "state": "completed",
+  "final": true,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "b1d431577d54202255502af6d38959de2fb12862",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": "6f16e9ea0450dbe403cafc044d8b60e824305b0c",
+    "run_id": "43720523825",
+    "run_attempt": "1",
+    "task": "calibrated-midi-retention-timing",
+    "dataset": "isolated-05",
+    "input_release": "corpus-20261108"
+  },
+  "source_portable": {
+    "run_id": 43720489779,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "native_candidate_commit": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
+  "reference": "docs/recovery/calibrated-midi-retention-timing-references-20261115.json",
+  "reference_report_sha256": "506e7226a72ef02273c86c510bc8304b28066434ac6df2761801de8500ca2c8b",
+  "local_output": "build/github-results/calibrated-midi-retention-timing-43720523825",
+  "small_artifact": "m3-report-43720523825-1",
+  "bulk_artifact": "m3-evidence-43720523825-1",
+  "collection_state": "small report collected once and hash verified; bulk remote",
+  "dispatch_receipt": "build/github-results/calibrated-midi-retention-timing-dispatch-20261115/dispatch-result.json",
+  "local_validation": {
+    "parser_mock_tests_passed": 31,
+    "workflow_yaml_and_shell_syntax": true,
+    "native_processing_run_locally": false
+  },
+  "scope": "Three fixed modes, isolated-05, block 32 with existing thread CPU diagnostic; no native source change.",
+  "purpose": "Separate observed elapsed wall-time spikes from thread CPU cost with slow-block sample provenance.",
+  "required": [
+    "all three scored TSV references bit-identical",
+    "complete wall/thread CPU report with sample positions",
+    "preserve original uninstrumented failure and strict acceptance limits"
+  ],
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "caveat": "Instrumented timing cannot establish native acceptance. Nonrecurrence cannot clear the saved failure; wall-minus-CPU is not proof of scheduler cause.",
+  "next": "No repeat timing or corpus sweep without a named cause/change. Diagnose the saved physical-long label3 initial exact-hold delay using a bounded unchanged current-ON candidate/assignment/outcome trace; keep timing rejection and all promotion gates open.",
+  "workflow_conclusion": "success",
+  "collection_receipt": "build/github-results/calibrated-midi-retention-timing-43720523825/collection-receipt.json",
+  "report": "build/github-results/calibrated-midi-retention-timing-43720523825/calibrated-midi-retention-timing/report.json",
+  "report_sha256": "cd5638f2e57919d1628cd9d1b696843c5ea92318e19675297faf19db5dae34e2",
+  "artifact_metadata": [
+    {
+      "id": 14163883081,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2Mzg4MzA4MQ==",
+      "name": "m3-report-43720523825-1",
+      "size_in_bytes": 18708,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163883081",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163883081/zip",
+      "expired": false,
+      "digest": "sha256:3290f8978c0a3e1ec16c6a50d34c24e0e6e709c5591573368b1ed8ef144aa131",
+      "created_at": "2026-11-15T13:45:34Z",
+      "updated_at": "2026-11-15T13:45:34Z",
+      "expires_at": "2026-11-29T13:45:33Z",
+      "workflow_run": {
+        "id": 43720523825,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "6f16e9ea0450dbe403cafc044d8b60e824305b0c"
+      }
+    },
+    {
+      "id": 14163698601,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2MzY5ODYwMQ==",
+      "name": "m3-evidence-43720523825-1",
+      "size_in_bytes": 642084,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163698601",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163698601/zip",
+      "expired": false,
+      "digest": "sha256:95838f66d7ea8ca0333d8be605c25e446e97213fcbf7dec33c97e3787e345432",
+      "created_at": "2026-11-15T13:45:35Z",
+      "updated_at": "2026-11-15T13:45:35Z",
+      "expires_at": "2026-11-22T13:45:34Z",
+      "workflow_run": {
+        "id": 43720523825,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "6f16e9ea0450dbe403cafc044d8b60e824305b0c"
+      }
+    }
+  ],
+  "collection_pass": true,
+  "native_gate_pass": false,
+  "cpu_block_statistics_usable": true,
+  "cloud_contracts_passed": 214,
+  "binary_sha256": "95ff51eb4d91ca4978b68dae8b5cddfeca5316ce51c5c41c7d92c7436aaacc12",
+  "observations": {
+    "reference-off": {
+      "recorded_reference_bit_identical": true,
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "wall": {
+        "blocks": 69600,
+        "p99_ns": 77419,
+        "maximum_ns": 199438,
+        "deadline_overruns": 0
+      },
+      "thread_cpu": {
+        "p99_ns": 77661,
+        "maximum_ns": 177845,
+        "deadline_overruns": 0,
+        "block_resolution_pass": true
+      },
+      "saved_uninstrumented": {
+        "p99_ns": 64667,
+        "maximum_ns": 402828,
+        "deadline_overruns": 1
+      },
+      "slowest_block": {
+        "end_sample": 147456,
+        "wall_ns": 199438,
+        "cpu_ns": 157564,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 2304,
+        "signal_samples": 123448,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 1,
+        "active_candidates": 1,
+        "assigned_candidates": 1,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 124,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 0,
+        "last_fine_reset_tick": 0,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 4,
+        "selection_assignment_edges": 4
+      }
+    },
+    "current-on": {
+      "recorded_reference_bit_identical": true,
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "wall": {
+        "blocks": 69600,
+        "p99_ns": 77542,
+        "maximum_ns": 136046,
+        "deadline_overruns": 0
+      },
+      "thread_cpu": {
+        "p99_ns": 77795,
+        "maximum_ns": 130259,
+        "deadline_overruns": 0,
+        "block_resolution_pass": true
+      },
+      "saved_uninstrumented": {
+        "p99_ns": 65028,
+        "maximum_ns": 216477,
+        "deadline_overruns": 0
+      },
+      "slowest_block": {
+        "end_sample": 136064,
+        "wall_ns": 136046,
+        "cpu_ns": 130259,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 2126,
+        "signal_samples": 112056,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 1,
+        "active_candidates": 1,
+        "assigned_candidates": 1,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 112,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 0,
+        "last_fine_reset_tick": 0,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 4,
+        "selection_assignment_edges": 4
+      }
+    },
+    "calibrated-midi-retention-on": {
+      "recorded_reference_bit_identical": true,
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "wall": {
+        "blocks": 69600,
+        "p99_ns": 79450,
+        "maximum_ns": 194395,
+        "deadline_overruns": 0
+      },
+      "thread_cpu": {
+        "p99_ns": 79715,
+        "maximum_ns": 194679,
+        "deadline_overruns": 0,
+        "block_resolution_pass": true
+      },
+      "saved_uninstrumented": {
+        "p99_ns": 66590,
+        "maximum_ns": 737423,
+        "deadline_overruns": 7
+      },
+      "slowest_block": {
+        "end_sample": 58560,
+        "wall_ns": 194395,
+        "cpu_ns": 194679,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 915,
+        "signal_samples": 34552,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 1,
+        "active_candidates": 1,
+        "assigned_candidates": 1,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 32,
+        "fine_update_scheduled": true,
+        "fine_reset_serial_sum": 0,
+        "last_fine_reset_tick": 0,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 4,
+        "selection_assignment_edges": 4
+      }
+    }
+  },
+  "finding": "No deadline spike recurred in any of the three diagnostic modes. This does not distinguish the cause of the earlier uninstrumented overruns. Candidate diagnostic max 194395 ns at end_sample 58560; paired CPU 194679 ns includes clock overhead. Saved strict timing failures remain open."
+}

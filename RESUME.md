@@ -1,4 +1,28 @@
-# Current checkpoint: corpus note safety passes; native timing rejected
+# Current checkpoint: bounded physical three-string lock trace prepared
+
+Checkpoint: `docs/recovery/github-three-string-lock-trace-20261115.json`; status key `portable_compute.three_string_lock_trace`. Source/worker commits and run ID will be recorded after the single authorized dispatch. The existing completed timing diagnostic is retained below.
+
+The unchanged current-ON capture selects physical-long label3, MIDI40, expected string mask7, block512. Its fixed window [2932544,3453312) covers the annotation start through the saved first exact raw hold at sample3453247 (delay520639 samples). It records all assignment peers and target candidate stages, while requiring the full recording scored TSV, raw MIDI, complete outcome and held-label result to remain identical to the saved corpus replay. The reference is `docs/recovery/three-string-lock-references-20261115.json`.
+
+Implementation review, 30 lightweight parser/mock tests, workflow YAML/shell syntax and diff checks pass. No local native execution or DSP policy change. Stage chronology is annotation-relative, not physical string onset latency or proof of cause. Earlier state may predate the window; missing observers remain unobserved. Native timing rejection, poor three/four-string coverage and external DAW/device gates stay open.
+
+Next: push the prepared source and worker workflow, dispatch exactly one `three-string-lock-trace` on GitHub, collect the small report once and inspect the first stage discrepancy. Keep large evidence remote. Do not repeat completed timing/corpus runs or start duplicate captures. The ntfy ping and 680-file lossless compression (~1.34 GB reclaimed) are complete; no separate useful Kaggle GPU workload has been identified.
+
+# Previous checkpoint: focused retention timing diagnostic complete; cause unresolved
+
+GitHub run `43720523825` is final and successful. Source `b1d431577d54202255502af6d38959de2fb12862`, worker `6f16e9ea0450dbe403cafc044d8b60e824305b0c`, native candidate unchanged at `4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4`. Checkpoint: `docs/recovery/github-calibrated-midi-retention-timing-20261115.json`; status key `portable_compute.calibrated_midi_retention_timing`. Source portable `43720489779` passed. The worker passed 214 Python contracts. All native work ran on GitHub.
+
+The 18708-byte small artifact is collected once and hash-verified at `build/github-results/calibrated-midi-retention-timing-43720523825`; report SHA-256 `cd5638f2e57919d1628cd9d1b696843c5ea92318e19675297faf19db5dae34e2`. Bulk evidence (642084 bytes) remains remote. Do not poll, rerun or recollect completed jobs.
+
+The isolated-05 block-32 diagnostic preserves all three full saved TSVs bit-identically. Each mode measured 69600 blocks with usable thread CPU clocks. OFF/current-ON/retention-ON wall p99 values are 77419/77542/79450 ns; wall maxima 199438/136046/194395 ns; CPU maxima 177845/130259/194679 ns. No mode had a wall or CPU deadline overrun. The candidate slowest block ends at sample 58560 with paired CPU 194679 ns; CPU brackets include clock overhead. These are instrumented observations, not native acceptance.
+
+The earlier deadline spikes did not recur, so this run does not resolve their cause or prove a scheduler explanation. Retain the uninstrumented corpus rejection: candidate max 737423 ns and 54 overruns, strict p99<=166666 ns/max<=333333 ns/zero-overrun gates. Installed output, defaults and scoreboard remain unchanged.
+
+Next: no repeated timing/corpus sweep without a named cause/change. Diagnose the measured initial exact-hold delay in physical-long label3 using a bounded current-ON candidate/assignment/outcome capture that preserves its saved full output. Poor three/four-string held coverage and external DAW/device gates remain open. Physical-four exact membership still needs reliable time-aligned labels.
+
+The requested ntfy ping and 680-file lossless compression are complete (~1.34 GB reclaimed); do not repeat them. New native work stays on GitHub through the existing authorized input release. No distinct useful Kaggle GPU workload is identified for this native policy.
+
+# Previous checkpoint: corpus note safety passes; native timing rejected
 
 GitHub run `43714618511` is final and successful as a workflow, but promotion is rejected by native maximum-time/deadline failures. Source `53167b32d22e1644cb7b7855861a0ca7e907607b`, worker `3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d`, native candidate `4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4`. Checkpoint: `docs/recovery/github-calibrated-midi-retention-corpus-20261115.json`; status key `portable_compute.calibrated_midi_retention_corpus`. Source portable `43714425808` passed. All 126 planned replays completed on GitHub; no native processing ran locally.
 
