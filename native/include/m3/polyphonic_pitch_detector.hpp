@@ -731,6 +731,11 @@ class PolyphonicPitchDetector final {
   void set_calibrated_midi_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_midi_retention_ = enabled;
   }
+  void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
+    diagnostic_suppressed_adjacent_admission_ = enabled;
+    diagnostic_suppressed_adjacent_ticks_ = {};
+    diagnostic_suppressed_adjacent_last_tick_ = 0U;
+  }
   void set_retained_spectral_assignment_for_diagnostics(bool enabled) noexcept {
     diagnostic_retained_spectral_assignment_ = enabled;
   }
@@ -1024,6 +1029,11 @@ class PolyphonicPitchDetector final {
     bool has_previous{};
     bool valid{};
     bool output_projection_valid{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // Fresh accepted phase evidence, including estimates outside this cell.
+    // This does not widen the production output-projection validity range.
+    bool settled{};
+#endif
   };
 
   struct BeatEvidenceState final {
@@ -1179,6 +1189,11 @@ class PolyphonicPitchDetector final {
       std::size_t candidate,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  void filter_suppressed_adjacent_admission_for_diagnostics(
+      const std::array<double, kMaxCandidates>& scores,
+      const std::array<double, kMaxCandidates>& fundamentals,
+      std::size_t count,
+      std::array<bool, kMaxCandidates>& raw_eligible) noexcept;
   [[nodiscard]] bool reject_calibrated_harmonic_admission_for_diagnostics(
       std::size_t candidate, std::size_t stronger,
       const std::array<double, kMaxCandidates>& scores,
@@ -1733,6 +1748,9 @@ class PolyphonicPitchDetector final {
   bool diagnostic_forced_pending_string_reservation_{};
   bool diagnostic_pending_midi_retention_{};
   bool diagnostic_calibrated_midi_retention_{};
+  bool diagnostic_suppressed_adjacent_admission_{};
+  std::array<std::uint16_t, kMaxCandidates> diagnostic_suppressed_adjacent_ticks_{};
+  std::uint32_t diagnostic_suppressed_adjacent_last_tick_{};
   std::array<bool, kMaxCandidates> diagnostic_assignment_previews_{};
   struct DiagnosticMidiOwner final {
     std::uint8_t candidate{kUnassignedVoiceId};

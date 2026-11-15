@@ -1,0 +1,188 @@
+from copy import deepcopy
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from tools import portable_calibrated_midi_retention_corpus as shared
+from tools import portable_suppressed_adjacent_admission_trial as trial
+
+
+class SuppressedAdjacentAdmissionTests(unittest.TestCase):
+    def exercise(self, *, change=None, drift=False, failure=False):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inputs = root / 'inputs'
+            inputs.mkdir()
+            binary = root / 'replay'
+            binary.write_text('fixture only; never executed')
+            files = {}
+            names = ['calibration.m3cb', 'templates.tsv'] + [
+                name + suffix for name in trial.SCREEN_DATASETS for suffix in ('.wav', '.tsv')]
+            for name in names:
+                (inputs / name).write_text(name)
+                files[name] = dict(sha256=trial.digest(inputs / name))
+            source = dict(input_release='release', input_bundle_sha256='bundle',
+                          original_input_manifest_sha256='manifest')
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps(dict(source=source, files=files)))
+            labels = [dict(trial.TARGET, calibration_pass=0, labeled=10, matched=6),
+                      dict(label_index=4, midi_note=52, string_mask=8,
+                           start_sample=2932608, end_sample=5452800,
+                           calibration_pass=0, labeled=10, matched=6)]
+            base = dict(output=dict(labeled=20, matched=12, false_wrong_note_voices=1,
+                false_wrong_string_voices=2, false_gap_voices=3, false_positive_voices=6,
+                fingerprint='0123456789abcdef'), labels=labels,
+                exact_matches_by_string_count={'3': dict(labeled=10, matched=6),
+                                              '1': dict(labeled=10, matched=6)})
+
+            def selection(path):
+                name = next(name for name in trial.SCREEN_DATASETS if path.name.startswith(name + '-'))
+                mode = next(mode for mode, _ in trial.CONDITIONS if mode in path.name)
+                return name, mode
+
+            def parsed(path):
+                name, mode = selection(path)
+                row = deepcopy(base)
+                if mode == trial.TRIAL:
+                    row['output']['fingerprint'] = 'fedcba9876543210'
+                if change:
+                    change('snapshot', name, mode, row)
+                return row
+
+            def lifecycle(path, tsv, replay):
+                name, mode = selection(path)
+                rows = [dict({key: label[key] for key in shared.LABEL_IDENTITY},
+                             exact_held_samples=5, note_ons_inside_label=10)
+                        for label in labels]
+                if name == 'physical-long' and mode == trial.TRIAL:
+                    rows[0].update(exact_held_samples=8, note_ons_inside_label=9)
+                row = dict(coverage_valid=True, labels=rows, sample_count=5646848,
+                    sample_rate=96000,
+                    output_safety=dict(valid=True, counts=dict.fromkeys(shared.OUTPUT_SAFETY_FIELDS, 5)),
+                    raw_midi=dict(counts=dict.fromkeys(shared.CONFLICT_FIELDS, 0)))
+                if change:
+                    change('held', name, mode, row)
+                row['exact_held_samples'] = sum(label['exact_held_samples'] for label in rows)
+                return row
+
+            references = dict(schema=shared.REFERENCE_SCHEMA, settings=shared.SETTINGS,
+                block_samples=512, source=source, anchor_report_sha256='saved-report',
+                reference_flags={m: list(f) for m, f in trial.CONDITIONS[:2]}, datasets={})
+            for name in trial.SCREEN_DATASETS:
+                references['datasets'][name] = {}
+                for mode, _ in trial.CONDITIONS[:2]:
+                    references['datasets'][name][mode] = dict(output=base['output'],
+                        exact_matches_by_string_count=base['exact_matches_by_string_count'],
+                        tsv_sha256=hashlib.sha256(mode.encode()).hexdigest(),
+                        midi_trace_sha256=mode, sample_count=5646848, sample_rate=96000)
+            if drift:
+                references['datasets']['physical-long'][trial.CURRENT]['midi_trace_sha256'] = 'changed'
+            reference_path = root / 'references.json'
+            reference_path.write_text(json.dumps(references))
+            commands = []
+
+            def native(command, stdout, stderr, **kwargs):
+                commands.append(command)
+                _, mode = selection(Path(stdout.name))
+                self.assertEqual(command[command.index('--block') + 1], '512')
+                self.assertNotIn('--outcome-trace', command)
+                self.assertNotIn('--diagnostic-core-timing', command)
+                self.assertEqual(trial.FLAG in command, mode == trial.TRIAL)
+                self.assertEqual(trial.COLLISION in command, mode != trial.OFF)
+                if failure:
+                    stderr.write('named replay fixture failure')
+                    raise subprocess.CalledProcessError(1, command)
+                stdout.write(mode)
+                Path(command[command.index('--midi-event-trace') + 1]).write_text('fixture')
+
+            output = root / 'output'
+            with (patch.object(shared, 'DATASETS', trial.SCREEN_DATASETS),
+                  patch.object(trial.subprocess, 'run', side_effect=native),
+                  patch.object(trial, 'read_replay', side_effect=parsed),
+                  patch.object(trial, 'analyze_midi', side_effect=lifecycle),
+                  patch.object(trial, 'compress_trace_window',
+                               side_effect=lambda path, **kw: dict(raw_sha256=selection(path)[1]))):
+                if drift or failure:
+                    with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                        trial.run(binary, inputs, manifest, reference_path, output)
+                else:
+                    trial.run(binary, inputs, manifest, reference_path, output)
+            report = json.loads((output / 'report.json').read_text())
+            self.assertTrue(report['final'])
+            self.assertFalse(report['promotion_accepted'])
+            self.assertFalse(report['installed_output_changed'])
+            self.assertEqual(report['native_timing'], 'not measured')
+            return report, commands
+
+    def test_target_gain_checks_all_four_datasets_without_claiming_timing_or_promotion(self):
+        report, commands = self.exercise()
+        self.assertTrue(report['bounded_screen_pass'])
+        self.assertEqual(len(commands), 12)
+        self.assertEqual(report['note_safety_datasets_passed'], 4)
+        comparison = report['datasets']['physical-long']['comparison']
+        self.assertFalse(comparison['inference_identity_required'])
+        self.assertIsNone(comparison['inference_bit_identical'])
+
+    def test_target_parity_stops_after_first_dataset(self):
+        def change(kind, name, mode, row):
+            if kind == 'held' and mode == trial.TRIAL:
+                row['labels'][0].update(exact_held_samples=5, note_ons_inside_label=10)
+        report, commands = self.exercise(change=change)
+        self.assertEqual(len(commands), 3)
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(report['state'], 'rejected')
+
+    def test_one_held_loss_rejects_despite_target_gain(self):
+        def change(kind, name, mode, row):
+            if kind == 'held' and mode == trial.TRIAL:
+                row['labels'][1]['exact_held_samples'] -= 1
+        report, commands = self.exercise(change=change)
+        self.assertTrue(report['target_hold']['improved'])
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(len(commands), 3)
+
+    def test_later_passage_loss_stops_before_remaining_datasets(self):
+        def change(kind, name, mode, row):
+            if kind == 'snapshot' and name == 'ordinary' and mode == trial.TRIAL:
+                row['labels'][1]['matched'] -= 1
+        report, commands = self.exercise(change=change)
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(len(commands), 6)
+        self.assertEqual(report['completed_datasets'], 2)
+
+    def test_false_output_conflict_and_clock_regressions_reject(self):
+        for group, fields in (('output_safety', shared.OUTPUT_SAFETY_FIELDS),
+                              ('raw_midi', shared.CONFLICT_FIELDS),
+                              ('clock', ('sample_count', 'sample_rate'))):
+            for field in fields:
+                def change(kind, name, mode, row):
+                    if kind == 'held' and mode == trial.TRIAL:
+                        if group == 'clock':
+                            row[field] += 1
+                        else:
+                            row[group]['counts'][field] += 1
+                with self.subTest(field=field):
+                    report, commands = self.exercise(change=change)
+                    self.assertFalse(report['bounded_screen_pass'])
+                    self.assertEqual(len(commands), 3)
+
+    def test_saved_reference_drift_stops_before_trial(self):
+        report, commands = self.exercise(drift=True)
+        self.assertEqual(len(commands), 2)
+        self.assertFalse(report['reference_identity_pass'])
+        self.assertFalse(report['bounded_screen_pass'])
+
+    def test_failure_retains_named_stderr_and_final_report(self):
+        report, commands = self.exercise(failure=True)
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(report['state'], 'failed')
+        self.assertEqual(report['failure_stderr_tail'], 'named replay fixture failure')
+        self.assertFalse(report['bounded_screen_pass'])
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,0 +1,79 @@
+{
+  "schema": "m3_suppressed_adjacent_admission_checkpoint_v1",
+  "updated_at": "2026-11-15T14:44:36.080398+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": null,
+    "base_commit": "0d07358f0abdfc59db7cb996d4f30c71cc6b3a43",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "run_attempt": "1",
+    "task": "suppressed-adjacent-admission-trial",
+    "dataset": "physical-long",
+    "note": 40,
+    "label_index": 3,
+    "input_release": "corpus-20261108"
+  },
+  "reference": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
+  "reference_report": "build/github-results/calibrated-midi-retention-corpus-43714618511/calibrated-midi-retention-corpus/report.json",
+  "local_validation": {
+    "parser_mock_tests_passed": 33,
+    "native_source_contract": true,
+    "workflow_yaml_and_shell_syntax": true,
+    "diff_check": true,
+    "native_processing_run_locally": false,
+    "implementation_review": "One read-only native review: no concrete blocker. Compilation and actual replay remain GitHub checks."
+  },
+  "scope": {
+    "datasets": [
+      "physical-long",
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "block_samples": 512,
+    "conditions": [
+      "reference-off",
+      "current-on",
+      "suppressed-adjacent-admission-on"
+    ],
+    "max_seconds": 2400
+  },
+  "policy": "Default-off raw admission veto after 160 ms consecutive evidence: active exact spectral-suppressed singleton, MIDI mask zero, no direct/local/M3 support, settled phase 50-150 cents toward a direct-supported active adjacent MIDI peer; nominal pitches; exclude group/fine multi-source/beat evidence. Existing coasting, release and MIDI ownership paths unchanged.",
+  "target": {
+    "dataset": "physical-long",
+    "label_index": 3,
+    "midi_note": 40,
+    "string_mask": 7,
+    "start_sample": 2932608,
+    "end_sample": 5452800,
+    "baseline_exact_held_samples": 1613760,
+    "labeled_samples": 2520192,
+    "baseline_note_ons": 104
+  },
+  "required": [
+    "saved OFF and current-ON scored/raw references bit-identical",
+    "physical-long target exact held samples increase and note-ons decrease",
+    "zero per-label snapshot or exact-held loss",
+    "no false duration/onset or raw-conflict growth",
+    "stop at first regression or no target gain"
+  ],
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "unmeasured_gates": [
+    "full corpus",
+    "buffer identity",
+    "processing allocations",
+    "p99 <= 166666 ns",
+    "max <= 333333 ns",
+    "zero deadline overruns",
+    "external DAW/device delivery"
+  ],
+  "next": "Run the single bounded GitHub screen. Stop on parity or any regression; do not widen the exact spectral-suppression predicate. A safe target gain on all four datasets qualifies for wider safety checks only."
+}

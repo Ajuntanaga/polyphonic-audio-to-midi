@@ -1,14 +1,14 @@
 {
   "schema": "m3_three_string_lock_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T13:58:30.359490+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T14:25:45.895512+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
-    "commit": null,
+    "commit": "0d07358f0abdfc59db7cb996d4f30c71cc6b3a43",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "0da816b07cc15f992e74bb3eae0119f4a3205393",
+    "run_id": "43721866310",
     "run_attempt": "1",
     "task": "three-string-lock-trace",
     "dataset": "physical-long",
@@ -47,7 +47,516 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "runtime_rule_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report and bulk evidence each successfully collected once and hash verified; only five compressed trace files extracted",
   "caveat": "Annotation-relative stage chronology is not physical onset latency or proof of cause. Native timing rejection and external host/device gates remain open.",
-  "next": "Dispatch this one bounded unchanged-policy trace, collect its small report once, and inspect stage chronology before choosing a change."
+  "next": "The next implementation seam is eligibility of an active, MIDI-suppressed adjacent owner that has no current independent pitch evidence and remains outside its phase cell. Use the already collected positive and semitone/unison negative cases to choose a bounded default-off rule before a GitHub screen; phase invalidity or MIDI silence alone is insufficient. Do not repeat the rejected broad evidence-retention, ownership-relaxation or state-local open-prior policies, shorten the deliberate fine window, or collect another copy of this trace. A candidate must improve correct held coverage/retriggers with zero per-label frame or held loss, no false-output growth, identical OFF/buffers, zero allocations, p99<=166666ns, max<=333333ns and zero overruns. External DAW/device acceptance and physical-four membership labels remain open.",
+  "local_output": "build/github-results/three-string-lock-trace-43721866310",
+  "small_artifact": "m3-report-43721866310-1",
+  "bulk_artifact": "m3-evidence-43721866310-1",
+  "dispatch_receipt": "build/github-results/three-string-lock-trace-dispatch-20261115/dispatch-result.json",
+  "source_portable": {
+    "run_id": 43721799678,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "remote_observation": {
+    "conclusion": "success",
+    "headSha": "0da816b07cc15f992e74bb3eae0119f4a3205393",
+    "status": "completed",
+    "updatedAt": "2026-11-15T14:00:57Z",
+    "raw_capture": "build/github-results/three-string-lock-trace-43721866310/run-observation.txt"
+  },
+  "workflow_conclusion": "success",
+  "collection_receipt": "build/github-results/three-string-lock-trace-43721866310/collection-receipt.json",
+  "report": "build/github-results/three-string-lock-trace-43721866310/three-string-lock-trace/report.json",
+  "report_sha256": "2adbabd8dcb5907bed65beacf8dce6656ea429c32f25263c6a1dbdc9feb6f6da",
+  "artifact_metadata": [
+    {
+      "id": 14164927504,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2NDkyNzUwNA==",
+      "name": "m3-report-43721866310-1",
+      "size_in_bytes": 12157,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14164927504",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14164927504/zip",
+      "expired": false,
+      "digest": "sha256:c0f7225edfea95e949554d5e6543f965f3b86eb62b90365cab3aff2e2ac48843",
+      "created_at": "2026-11-15T14:00:52Z",
+      "updated_at": "2026-11-15T14:00:52Z",
+      "expires_at": "2026-11-29T14:00:51Z",
+      "workflow_run": {
+        "id": 43721866310,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "0da816b07cc15f992e74bb3eae0119f4a3205393"
+      }
+    },
+    {
+      "id": 14164444303,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2NDQ0NDMwMw==",
+      "name": "m3-evidence-43721866310-1",
+      "size_in_bytes": 7574472,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14164444303",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14164444303/zip",
+      "expired": false,
+      "digest": "sha256:8508af02143e4320293fc95ef6799f605d9bf24657c8d1104455ebcf83f9a807",
+      "created_at": "2026-11-15T14:00:54Z",
+      "updated_at": "2026-11-15T14:00:54Z",
+      "expires_at": "2026-11-22T14:00:52Z",
+      "workflow_run": {
+        "id": 43721866310,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "0da816b07cc15f992e74bb3eae0119f4a3205393"
+      }
+    }
+  ],
+  "collection_pass": true,
+  "cloud_contracts_passed": 218,
+  "saved_reference_bit_identical": true,
+  "saved_outcome_bit_identical": true,
+  "saved_tsv_sha256": "bce5ab56f14da796e8c3f8eeef9e921a96ef444a95c398f7221ef01953861d09",
+  "saved_midi_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+  "saved_outcome_sha256": "64acc724e0bc6b7f7ba0fdb83713ef461047f6ae654e9bfc5e15352345ac6408",
+  "held_label": {
+    "label_index": 3,
+    "midi_note": 40,
+    "string_mask": 7,
+    "start_sample": 2932608,
+    "end_sample": 5452800,
+    "annotated_hold_samples": 2520192,
+    "exact_held_samples": 1613760,
+    "unmatched_hold_samples": 906432,
+    "longest_exact_hold_samples": 711104,
+    "exact_hold_segments": 30,
+    "first_exact_hold_delay_samples": 520639,
+    "note_ons_inside_label": 104
+  },
+  "snapshot_label": {
+    "label_index": 3,
+    "start_sample": 2932608,
+    "end_sample": 5452800,
+    "midi_note": 40,
+    "string_mask": 7,
+    "calibration_pass": 0,
+    "labeled": 39378,
+    "matched": 25219
+  },
+  "output": {
+    "labeled": 68441,
+    "matched": 41452,
+    "false_wrong_note_voices": 67769,
+    "false_wrong_string_voices": 2709,
+    "false_gap_voices": 5403,
+    "false_positive_voices": 75881,
+    "fingerprint": "6ecf88865ddc34e4"
+  },
+  "assignment_costs": {
+    "schema": "m3_assignment_cost_diagnosis_v1",
+    "term_order": [
+      "fret_prior",
+      "posterior_penalty",
+      "profile_bonus",
+      "open_bonus",
+      "cents_penalty",
+      "fine_bonus",
+      "retention_bonus"
+    ],
+    "expected_frames": 8137,
+    "valid_joint_frames": 5871,
+    "invalid_joint_frames": 55,
+    "empty_selected_frames": 2211,
+    "target_selected_valid_frames": 5674,
+    "complete_peers_verified": true,
+    "native_joint_decisions_reproduced": true,
+    "active_target_string_changes": 55,
+    "reasons": {
+      "prior_string_infeasible_for_complete_joint_assignment": 23,
+      "lower_total_joint_cost": 32
+    },
+    "interpretation": "Costs reproduce complete joint decisions before output policy. Allocation preview masks are hints, not committed MIDI lanes. Prior-string constraints use frozen evidence only; they do not measure a runtime change, labeled-note gain, held-duration gain, timing, or live readiness."
+  },
+  "bounded_observations": {
+    "window_frames": 8137,
+    "label_frames": 8136,
+    "stages": {
+      "candidate_selected": {
+        "true": 5729,
+        "false": 2408,
+        "unobserved": 0,
+        "label_true": 5728,
+        "label_false": 2408,
+        "label_unobserved": 0,
+        "first_in_window": {
+          "sample": 2932607,
+          "offset_from_label_start": -1
+        },
+        "first_in_label": {
+          "sample": 2932671,
+          "offset_from_label_start": 63
+        }
+      },
+      "candidate_active": {
+        "true": 5348,
+        "false": 2789,
+        "unobserved": 0,
+        "label_true": 5348,
+        "label_false": 2788,
+        "label_unobserved": 0,
+        "first_in_window": {
+          "sample": 3111103,
+          "offset_from_label_start": 178495
+        },
+        "first_in_label": {
+          "sample": 3111103,
+          "offset_from_label_start": 178495
+        }
+      },
+      "fine_valid": {
+        "true": 679,
+        "false": 5381,
+        "unobserved": 2077,
+        "label_true": 679,
+        "label_false": 5380,
+        "label_unobserved": 2077,
+        "first_in_window": {
+          "sample": 3409919,
+          "offset_from_label_start": 477311
+        },
+        "first_in_label": {
+          "sample": 3409919,
+          "offset_from_label_start": 477311
+        }
+      },
+      "fine_exact_mask": {
+        "true": 0,
+        "false": 6060,
+        "unobserved": 2077,
+        "label_true": 0,
+        "label_false": 6059,
+        "label_unobserved": 2077,
+        "first_in_window": null,
+        "first_in_label": null
+      },
+      "committed_exact_mask": {
+        "true": 2,
+        "false": 6058,
+        "unobserved": 2077,
+        "label_true": 2,
+        "label_false": 6057,
+        "label_unobserved": 2077,
+        "first_in_window": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        },
+        "first_in_label": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        }
+      },
+      "assignment_final_exact_mask": {
+        "true": 2,
+        "false": 5727,
+        "unobserved": 2408,
+        "label_true": 2,
+        "label_false": 5726,
+        "label_unobserved": 2408,
+        "first_in_window": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        },
+        "first_in_label": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        }
+      },
+      "assignment_rendered_exact_mask": {
+        "true": 2,
+        "false": 5345,
+        "unobserved": 2790,
+        "label_true": 2,
+        "label_false": 5345,
+        "label_unobserved": 2789,
+        "first_in_window": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        },
+        "first_in_label": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        }
+      },
+      "route_midi_exact_mask": {
+        "true": 2,
+        "false": 5651,
+        "unobserved": 2484,
+        "label_true": 2,
+        "label_false": 5650,
+        "label_unobserved": 2484,
+        "first_in_window": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        },
+        "first_in_label": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        }
+      },
+      "snapshot_exact_label_match": {
+        "true": 2,
+        "false": 8134,
+        "unobserved": 1,
+        "label_true": 2,
+        "label_false": 8134,
+        "label_unobserved": 0,
+        "first_in_window": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        },
+        "first_in_label": {
+          "sample": 3453247,
+          "offset_from_label_start": 520639
+        }
+      }
+    },
+    "mask_histograms": {
+      "fine_mask": {
+        "0": 5381,
+        "unobserved": 2077,
+        "4": 675,
+        "6": 4
+      },
+      "committed_mask": {
+        "0": 712,
+        "unobserved": 2077,
+        "2": 959,
+        "4": 4387,
+        "7": 2
+      },
+      "assigned_mask": {
+        "1": 637,
+        "unobserved": 2077,
+        "2": 1032,
+        "4": 4389,
+        "7": 2
+      },
+      "assignment_final_mask": {
+        "1": 306,
+        "unobserved": 2408,
+        "2": 1032,
+        "4": 4389,
+        "7": 2
+      },
+      "assignment_rendered_mask": {
+        "unobserved": 2790,
+        "2": 976,
+        "4": 4369,
+        "7": 2
+      },
+      "assignment_group_proposal": {
+        "unobserved": 2790,
+        "2": 944,
+        "4": 4387,
+        "3": 14,
+        "7": 1,
+        "6": 1
+      },
+      "assignment_group_after": {
+        "unobserved": 2790,
+        "2": 958,
+        "4": 4387,
+        "7": 2
+      },
+      "route_midi_mask": {
+        "0": 306,
+        "unobserved": 2484,
+        "2": 958,
+        "4": 4387,
+        "7": 2
+      }
+    },
+    "transition_count": 80,
+    "profile_first_addition": {
+      "state": "measured",
+      "captured_rows": 5729,
+      "missing_columns_rows": 0,
+      "by_string": {
+        "0": {
+          "not_observed": {
+            "rows": 758
+          },
+          "owned_by_other": {
+            "rows": 2565
+          },
+          "accepted": {
+            "rows": 14,
+            "alpha_measured_rows": 14,
+            "alpha_min": 0.4297179680225783,
+            "alpha_max": 0.534222987966937,
+            "candidate_error_measured_rows": 14,
+            "candidate_error_min": 8.299504196612825e-05,
+            "candidate_error_max": 0.00010438129071077756
+          },
+          "insufficient_improvement": {
+            "rows": 2392,
+            "alpha_measured_rows": 2392,
+            "alpha_min": 0.5727506305443193,
+            "alpha_max": 0.6303666591044677,
+            "candidate_error_measured_rows": 2392,
+            "candidate_error_min": 0.00019506540201644307,
+            "candidate_error_max": 0.0011702961557954784
+          }
+        },
+        "1": {
+          "not_observed": {
+            "rows": 758
+          },
+          "already_member": {
+            "rows": 646
+          },
+          "owned_by_other": {
+            "rows": 4193
+          },
+          "retained_component_too_small": {
+            "rows": 132,
+            "alpha_measured_rows": 132,
+            "alpha_min": 0.8879530506292929,
+            "alpha_max": 0.9633319947518679
+          }
+        },
+        "2": {
+          "not_observed": {
+            "rows": 758
+          },
+          "added_component_too_small": {
+            "rows": 628,
+            "alpha_measured_rows": 628,
+            "alpha_min": 0.0,
+            "alpha_max": 0.09937960936984244
+          },
+          "already_member": {
+            "rows": 4325
+          },
+          "owned_by_other": {
+            "rows": 18
+          }
+        },
+        "3": {
+          "not_observed": {
+            "rows": 758
+          },
+          "template_unavailable": {
+            "rows": 4971
+          }
+        },
+        "4": {
+          "not_observed": {
+            "rows": 758
+          },
+          "template_unavailable": {
+            "rows": 4971
+          }
+        },
+        "5": {
+          "not_observed": {
+            "rows": 758
+          },
+          "template_unavailable": {
+            "rows": 4971
+          }
+        },
+        "6": {
+          "not_observed": {
+            "rows": 758
+          },
+          "template_unavailable": {
+            "rows": 4971
+          }
+        },
+        "7": {
+          "not_observed": {
+            "rows": 758
+          },
+          "template_unavailable": {
+            "rows": 4971
+          }
+        }
+      },
+      "interpretation": "First greedy addition to the primary only; accepted means chosen in that pass, not final rendered or correct assignment. Absent numeric ranges were not reached by the rejecting branch."
+    },
+    "interpretation": "Unchanged current-ON diagnostic. Exact masks mean all intended strings and no extra strings for this pitch. Missing observer values are unobserved, not zero. Times are relative to an annotation, not measured physical string onsets. Earlier state may predate the window. Stage order alone does not establish cause. Raw detector MIDI is not external host delivery; no native timing or live acceptance is established."
+  },
+  "finding": "Existing evidence separates activation, fine history and string ownership. Of2788 pre-activation in-label ticks,2408 are unselected; the380 selected ticks comprise305 phase-valid/evidence-zero and75 phase-invalid/evidence-positive ticks. Phase validity is not the native attack gate; the global energy predicate is not recorded. Fine evidence follows the deliberate3-second history and0.20-second initial consensus. At first fine validity, note39 and note52 occupy the other two intended strings. At sample3420735, note40 crossing0.50 fundamental share raises qualifying open pitches from52 alone to40/52, enabling a0.215 fretted penalty that removes all positive options for note39. Active state can retain pool admission despite no current direct/local/evidence flags, and MIDI suppression does not release physical ownership. Correct assignment and raw MIDI first appear together at3453247. This resolves the observed selector transition, not the safety of earlier release or the full onset delay.",
+  "native_timing": "not measured by this trace; prior corpus rejection remains open",
+  "live_readiness": "not measured; external DAW/device gates remain open",
+  "bulk_collection": {
+    "receipt": "build/github-results/three-string-lock-trace-43721866310/bulk-successful-collection-receipt.json",
+    "artifact": "m3-evidence-43721866310-1",
+    "bytes": 7574472,
+    "sha256": "8508af02143e4320293fc95ef6799f605d9bf24657c8d1104455ebcf83f9a807",
+    "digest_verified": true,
+    "collected_successfully_once": true,
+    "archive": "build/github-results/three-string-lock-trace-43721866310/bulk-download-retry1.zip",
+    "extracted_compressed_files": 5,
+    "native_binary_extracted": false
+  },
+  "saved_evidence_diagnosis": {
+    "report": "build/github-results/three-string-lock-trace-43721866310/saved-evidence-diagnosis.json",
+    "state": "completed existing-evidence analysis; no runtime policy change",
+    "counts": {
+      "preactive_inlabel_ticks": 2788,
+      "preactive_selected": 380,
+      "preactive_selected_phase_valid": 305,
+      "preactive_selected_evidence_zero": 305,
+      "preactive_not_selected": 2408,
+      "preactive_selected_phase_invalid": 75,
+      "preactive_selected_evidence_positive": 75,
+      "both_39_40_selected_active": 4536,
+      "both_active_39_no_direct_local_evidence": 4536,
+      "both_active_39_no_evidence_phase_outside_cell": 4506,
+      "selected_39_assignment_rows_active_reserved_but_midi_zero": 812
+    },
+    "runtime_change": false,
+    "report_sha256": "2b6325da2960562d7c628d5733ec4a99dd709eed9144b042dcf857331ba61701",
+    "selector_penalty_transition": {
+      "sample_before": 3420671,
+      "sample_after": 3420735,
+      "qualified_open_notes": {
+        "3420671": [
+          52
+        ],
+        "3420735": [
+          40,
+          52
+        ]
+      },
+      "fundamental_share_threshold": 0.5,
+      "target_fundamental_share_before": 0.49416972,
+      "target_fundamental_share_after": 0.50296,
+      "other_open_note": 52,
+      "other_fundamental_share_before": 0.98352817,
+      "other_fundamental_share_after": 0.98395856,
+      "competing_note": 39,
+      "best_playable_lane": 1,
+      "lane_open_note": 36,
+      "fret": 3,
+      "fixed_penalty": 0.2,
+      "per_fret_penalty": 0.005,
+      "total_penalty": 0.215,
+      "raw_score_after": 0.15656182,
+      "recorded_adjusted_score_after": -0.058438176,
+      "positive_option_mask_before": 3,
+      "positive_option_mask_after": 0,
+      "state_local_open_prior_enabled": false,
+      "source": [
+        "native/include/m3/constants.hpp:19",
+        "native/src/polyphonic_pitch_detector.cpp:151",
+        "native/src/polyphonic_pitch_detector.cpp:156",
+        "native/src/polyphonic_pitch_detector.cpp:5342",
+        "native/src/polyphonic_pitch_detector.cpp:5464"
+      ],
+      "interpretation": "The source predicate and recorded counters explain this selector transition. The open-candidate qualification uses fundamental share, not the separate direct/local/evidence flags. Rounded trace values account for last-digit arithmetic differences. This is not a changed-policy replay or proof that earlier removal is safe."
+    }
+  }
 }

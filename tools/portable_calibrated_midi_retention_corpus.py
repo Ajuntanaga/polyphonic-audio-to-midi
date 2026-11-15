@@ -68,16 +68,19 @@ def analyze_midi(trace, tsv, replay):
     return result
 
 
-def compare_notes(current, trial, current_replay, trial_replay):
+def compare_notes(current, trial, current_replay, trial_replay, *, require_inference=True):
     snapshot = compare_replays(current_replay, trial_replay)
-    inference = (
-        {k: v for k, v in current['output'].items() if k != 'fingerprint'}
-        == {k: v for k, v in trial['output'].items() if k != 'fingerprint'}
-        and current_replay['labels'] == trial_replay['labels']
-        and current['exact_matches_by_string_count'] == trial['exact_matches_by_string_count']
-        and current['outcome_trace']['raw_sha256'] == trial['outcome_trace']['raw_sha256']
-        and current['sample_count'] == trial['sample_count']
-        and current['sample_rate'] == trial['sample_rate'])
+    same_clock = (current['sample_count'] == trial['sample_count']
+                  and current['sample_rate'] == trial['sample_rate'])
+    inference = None
+    if 'outcome_trace' in current and 'outcome_trace' in trial:
+        inference = (
+            {k: v for k, v in current['output'].items() if k != 'fingerprint'}
+            == {k: v for k, v in trial['output'].items() if k != 'fingerprint'}
+            and current_replay['labels'] == trial_replay['labels']
+            and current['exact_matches_by_string_count'] == trial['exact_matches_by_string_count']
+            and current['outcome_trace']['raw_sha256'] == trial['outcome_trace']['raw_sha256']
+            and same_clock)
     before, after = current['midi_lifecycle'], trial['midi_lifecycle']
     valid = before['coverage_valid'] and after['coverage_valid']
     changed, held_delta, safety_delta = [], None, None
@@ -108,10 +111,12 @@ def compare_notes(current, trial, current_replay, trial_replay):
             and all(value <= 0 for value in safety_delta.values())
             and all(value <= 0 for value in conflicts.values()))
     return dict(snapshot=snapshot, inference_bit_identical=inference,
+        inference_identity_required=require_inference, sample_clock_identical=same_clock,
         held_pairing_valid=valid, changed_held_labels=changed, held_losses=losses,
         improved_hold_and_attack_labels=improved, exact_held_samples_delta=held_delta,
         output_safety_delta=safety_delta, raw_conflict_delta=conflicts,
-        note_safety_pass=bool(snapshot['gate_pass'] and inference and safe))
+        note_safety_pass=bool(snapshot['gate_pass'] and same_clock and safe
+                             and (inference is True or not require_inference)))
 
 
 def buffer_identity(reference, replay):

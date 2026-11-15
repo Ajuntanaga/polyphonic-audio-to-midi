@@ -4466,6 +4466,102 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
   }
 
+  static void suppressed_adjacent_admission_probe(
+      PolyphonicPitchDetector& detector, unsigned guard, bool enabled,
+      bool lower_peer = false) noexcept {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 84U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    config.sensitivity = 60U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    M3_EXPECT_FALSE(detector.diagnostic_suppressed_adjacent_admission_);
+    detector.set_suppressed_adjacent_admission_for_diagnostics(enabled);
+    const std::uint8_t note = lower_peer ? 41U : 39U;
+    const std::size_t candidate = note - detector.lowest_note_;
+    const std::size_t peer = 40U - detector.lowest_note_;
+    auto& state = detector.candidate_states_[candidate];
+    state.active = true;
+    state.assigned_string = 1U;
+    state.assigned_string_mask = 2U;
+    state.emitted_note = note;
+    state.spectral_duplicate_output_suppressed = true;
+    state.release_ticks = 2U;
+    auto& phase = detector.phase_cents_states_[candidate];
+    phase.cents = lower_peer ? -90.0 : 90.0;
+    phase.settled = true;
+    auto& other = detector.candidate_states_[peer];
+    other.active = true;
+    other.assigned_string = 2U;
+    other.assigned_string_mask = other.midi_voice_mask = 4U;
+    other.emitted_note = 40U;
+    detector.phase_cents_states_[peer].valid = true;
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    scores[candidate] = 0.4;
+    fundamentals[candidate] = 0.01;
+    scores[peer] = fundamentals[peer] = 1.0;
+    switch (guard) {
+      case 1U: state.spectral_duplicate_output_suppressed = false; break;
+      case 2U: state.midi_voice_mask = 2U; break;
+      case 3U: state.active = false; break;
+      case 4U: phase.settled = false; break;
+      case 5U: phase.cents = 49.9; break;
+      case 6U: phase.cents = 150.1; break;
+      case 7U: detector.phase_cents_states_[peer].valid = false; break;
+      case 8U: other.active = false; break;
+      case 9U: other.midi_voice_mask = 0U; break;
+      case 10U: other.spectral_duplicate_output_suppressed = true; break;
+      case 11U: state.pending_unison_mask = 6U; break;
+      case 12U: detector.fine_frequency_evidence_states_[candidate].multi_source_observed = true; break;
+      case 13U: detector.beat_evidence_states_[candidate].valid = true; break;
+      case 14U: fundamentals[candidate] = scores[candidate] = 2.0; break;
+      case 15U: phase.cents = -90.0; break;
+      case 16U: state.emitted_note = static_cast<std::uint8_t>(note + 1U); break;
+      case 17U: other.emitted_note = 41U; break;
+      case 18U: fundamentals[peer] = 0.0; break;
+      case 19U: detector.max_fret_ = 2U; break;
+      default: break;
+    }
+    const bool initial_active = state.active;
+    const auto initial_midi = state.midi_voice_mask;
+    const auto tick = [&]() noexcept {
+      std::array<bool, kMaxCandidates> eligible{};
+      eligible[candidate] = eligible[peer] = true;
+      ++detector.decision_counter_;
+      detector.filter_suppressed_adjacent_admission_for_diagnostics(
+          scores, fundamentals, static_cast<std::size_t>(detector.candidate_count_), eligible);
+      M3_EXPECT_TRUE(eligible[peer]);
+      // The filter never releases or rewrites a physical/MIDI owner itself.
+      M3_EXPECT_EQ(state.active, initial_active);
+      M3_EXPECT_EQ(state.midi_voice_mask, initial_midi);
+      M3_EXPECT_EQ(state.assigned_string_mask, 2U);
+      M3_EXPECT_EQ(state.release_ticks, 2U);
+      return eligible[candidate];
+    };
+    constexpr unsigned kRequired = 240U;  // 160 ms at 96 kHz / 64 samples.
+    for (unsigned i = 1U; i <= kRequired; ++i)
+      M3_EXPECT_EQ(tick(), !enabled || guard != 0U || i < kRequired);
+    if (!enabled || guard != 0U) return;
+    // Any evidence interruption or skipped decision restarts the full window.
+    phase.settled = false;
+    M3_EXPECT_TRUE(tick());
+    phase.settled = true;
+    for (unsigned i = 1U; i <= kRequired; ++i)
+      M3_EXPECT_EQ(tick(), i < kRequired);
+    ++detector.decision_counter_;
+    for (unsigned i = 1U; i <= kRequired; ++i)
+      M3_EXPECT_EQ(tick(), i < kRequired);
+    detector.set_suppressed_adjacent_admission_for_diagnostics(true);
+    M3_EXPECT_TRUE(tick());
+    detector.reset();
+    M3_EXPECT_EQ(detector.diagnostic_suppressed_adjacent_ticks_[candidate], 0U);
+    M3_EXPECT_EQ(detector.diagnostic_suppressed_adjacent_last_tick_, 0U);
+  }
+
   static CandidateAdmissionDiagnostics floor_reentry_observation_probe(
       PolyphonicPitchDetector& detector, bool diagnostics,
       bool signal_present) noexcept {
@@ -9276,6 +9372,28 @@ M3_TEST(native_detector_direct_evidence_retention_preserves_disabled_and_partial
       Access::direct_evidence_retention_probe(detector, enabled, direct, 50U);
     }
   }
+}
+
+M3_TEST(native_detector_suppressed_adjacent_admission_requires_persistence_in_both_directions) {
+  for (const bool lower_peer : {false, true}) {
+    m3::PolyphonicPitchDetector detector;
+    m3::PolyphonicPitchDetectorTestAccess::suppressed_adjacent_admission_probe(
+        detector, 0U, true, lower_peer);
+  }
+}
+
+M3_TEST(native_detector_suppressed_adjacent_admission_preserves_independent_and_group_evidence) {
+  for (unsigned guard = 1U; guard <= 19U; ++guard) {
+    m3::PolyphonicPitchDetector detector;
+    m3::PolyphonicPitchDetectorTestAccess::suppressed_adjacent_admission_probe(
+        detector, guard, true);
+  }
+}
+
+M3_TEST(native_detector_suppressed_adjacent_admission_is_default_off) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::suppressed_adjacent_admission_probe(
+      detector, 0U, false);
 }
 
 M3_TEST(native_detector_floor_reentry_observation_does_not_admit_or_seed_notes) {

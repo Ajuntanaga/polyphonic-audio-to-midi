@@ -1632,6 +1632,8 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_odd_partial_cue_mask_ = {};
   diagnostic_midi_owners_ = {};
   diagnostic_midi_sequence_ = 0U;
+  diagnostic_suppressed_adjacent_ticks_ = {};
+  diagnostic_suppressed_adjacent_last_tick_ = 0U;
 #endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   if (joint_residual_shadow_ != nullptr) {
@@ -3240,6 +3242,69 @@ bool PolyphonicPitchDetector::
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void PolyphonicPitchDetector::filter_suppressed_adjacent_admission_for_diagnostics(
+    const std::array<double, kMaxCandidates>& scores,
+    const std::array<double, kMaxCandidates>& fundamentals,
+    std::size_t count,
+    std::array<bool, kMaxCandidates>& raw_eligible) noexcept {
+  if (!diagnostic_suppressed_adjacent_admission_) return;
+  // Skipped decisions (including quiet input) cannot count as consecutive
+  // evidence. This opt-in filter changes admission only, never MIDI owners.
+  if (decision_counter_ - diagnostic_suppressed_adjacent_last_tick_ != 1U)
+    diagnostic_suppressed_adjacent_ticks_ = {};
+  diagnostic_suppressed_adjacent_last_tick_ = decision_counter_;
+  if (profile_mode_ != ProfileMode::m3 || max_fret_ <= 2U) {
+    diagnostic_suppressed_adjacent_ticks_ = {};
+    return;
+  }
+  const auto required = static_cast<std::uint16_t>(std::clamp(
+      std::ceil(kPhaseCentsEvidenceSeconds * sample_rate_ /
+                static_cast<double>(kDecisionQuantum)), 1.0,
+      static_cast<double>(std::numeric_limits<std::uint16_t>::max())));
+  const auto ordinary_eligible = raw_eligible;
+  for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+    const auto& state = candidate_states_[candidate];
+    const auto& phase = phase_cents_states_[candidate];
+    const auto& fine = fine_frequency_evidence_states_[candidate];
+    const auto group = static_cast<std::uint8_t>(
+        state.assigned_string_mask | state.midi_voice_mask |
+        selector_group_masks_[candidate] | state.spectral_lane_mask |
+        state.continuity_lane_mask | state.continuity_cached_group_mask |
+        state.pending_unison_mask | state.latest_unison_proposal_mask |
+        fine.member_mask | fine.pending_member_mask);
+    bool qualifies = ordinary_eligible[candidate] && state.active &&
+        state.spectral_duplicate_output_suppressed && state.midi_voice_mask == 0U &&
+        state.assigned_string < kM3OpenNotes.size() &&
+        state.assigned_string_mask == static_cast<std::uint8_t>(1U << state.assigned_string) &&
+        string_count(group) == 1U && !fine.multi_source_observed &&
+        !beat_evidence_states_[candidate].valid &&
+        candidate_output_note(candidate) == lowest_note_ + candidate &&
+        !has_direct_fundamental_peak(scores, fundamentals, candidate, count) &&
+        !is_local_peak(scores, candidate, count) &&
+        !has_m3_candidate_evidence(scores, fundamentals, candidate, count) &&
+        phase.settled && std::isfinite(phase.cents) &&
+        std::abs(phase.cents) > 50.0 && std::abs(phase.cents) <= 150.0;
+    if (qualifies) {
+      const std::size_t peer = phase.cents > 0.0 ? candidate + 1U :
+          (candidate > 0U ? candidate - 1U : count);
+      qualifies = peer < count && ordinary_eligible[peer] &&
+          candidate_states_[peer].active &&
+          !output_suppressed(candidate_states_[peer]) &&
+          candidate_states_[peer].midi_voice_mask != 0U &&
+          candidate_output_note(peer) == lowest_note_ + peer &&
+          phase_cents_states_[peer].valid &&
+          has_direct_fundamental_peak(scores, fundamentals, peer, count);
+    }
+    auto& ticks = diagnostic_suppressed_adjacent_ticks_[candidate];
+    if (!qualifies) {
+      ticks = 0U;
+    } else {
+      if (ticks < required) ++ticks;
+      if (ticks >= required) raw_eligible[candidate] = false;
+    }
+  }
+}
+
 bool PolyphonicPitchDetector::reject_calibrated_harmonic_admission_for_diagnostics(
     std::size_t candidate, std::size_t stronger,
     const std::array<double, kMaxCandidates>& scores,
@@ -5051,6 +5116,12 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       }
     }
   }
+#endif
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_suppressed_adjacent_admission_)
+    filter_suppressed_adjacent_admission_for_diagnostics(
+        scores, fundamentals, count, raw_eligible);
 #endif
 
   // Classify harmonic shadows in descending spectral rank before considering
@@ -9853,6 +9924,9 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
     }
     const bool settled =
         accepted && state.accepted_updates >= required_updates;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    state.settled = settled;
+#endif
     state.output_projection_valid =
         settled &&
         state.cents >= -kM3OutputProjectionMaximumAbsoluteCents &&
