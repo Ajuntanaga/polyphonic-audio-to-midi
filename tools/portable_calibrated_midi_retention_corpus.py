@@ -28,6 +28,10 @@ POLICIES = {
         conditions=CONDITIONS[:2] + (('qualified-tier-retention-on', (
             '--diagnostic-spectral-lane-collision', '--diagnostic-qualified-tier-retention')),),
         require_inference=False),
+    'completion-midi-retention': dict(
+        conditions=CONDITIONS[:2] + (('completion-midi-retention-on', (
+            '--diagnostic-spectral-lane-collision', '--diagnostic-completion-midi-retention')),),
+        require_inference=True),
 }
 LABEL_IDENTITY = ('label_index', 'midi_note', 'string_mask', 'start_sample', 'end_sample')
 
@@ -270,7 +274,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
             d['runs'][mode + '-512'].get('saved_reference_bit_identical', False)
             for d in datasets for mode in (OFF, CURRENT))
         target_improved = None
-        if policy == 'qualified-tier-retention':
+        if policy in ('qualified-tier-retention', 'completion-midi-retention'):
             target_improved = any(row['label_index'] == 3 and row['midi_note'] == 40
                 for row in report['datasets'].get('physical-long', {}).get('comparison', {}).get(
                     'improved_hold_and_attack_labels', []))

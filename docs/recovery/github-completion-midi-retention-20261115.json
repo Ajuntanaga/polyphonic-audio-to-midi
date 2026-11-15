@@ -1,17 +1,17 @@
 {
   "schema": "m3_completion_midi_retention_checkpoint_v1",
-  "updated_at": "2026-11-15T19:35:35.348786+00:00",
-  "state": "source_validation_pending",
-  "final": false,
+  "updated_at": "2026-11-15T20:00:55.684158+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "8b092713ab1bbd3e8b1c91f910f0c1e2908e581e",
     "red_commit": "f80d520c4193b682e533d0a76190edf796dcea13",
-    "commit": null,
+    "commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
     "worker_repository": "Ajuntanaga/m3-offload",
     "worker_base_commit": "578df56eec12a16b5c063f907f3117f885f7174b",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "4d0bc5263d564dd5b66c8b83871aaf208be3dd9f",
+    "run_id": 43753713533,
     "task": "completion-midi-retention-trial",
     "dataset": "physical-long",
     "note": 40,
@@ -92,19 +92,20 @@
   },
   "local_validation": {
     "python_mock_tests_passed": 47,
-    "native_tests_pending_on_github": 3,
+    "native_tests_pending_on_github": 0,
     "native_execution_run_locally": false,
     "design_review": "One scoped native review complete; no material blocker. Compilation and real replay remain GitHub checks.",
     "workflow_yaml_and_shell_steps": 47,
     "workflow_shell_syntax_passed": true,
-    "diff_check": true
+    "diff_check": true,
+    "source_native_tests_passed": true
   },
   "diagnostic_only": true,
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not_dispatched",
-  "stage": "Review fix and run source native checks on GitHub before bounded worker dispatch",
+  "collection_state": "small_report_collected",
+  "stage": "bounded_screen_passed_full_corpus_pending",
   "unmeasured_gates": [
     "full corpus",
     "buffer identity",
@@ -120,5 +121,152 @@
     "A bounded pass permits further corpus validation only, not production promotion or live readiness."
   ],
   "dispatch_directory": "build/github-results/completion-midi-retention-dispatch-20261115",
-  "next": "Complete one native review, push fix and worker task, require source checks to pass, then dispatch the bounded screen once. Native execution only on GitHub."
+  "next": "Full corpus checkpoint: docs/recovery/github-completion-midi-retention-corpus-20261115.json. Completed bounded jobs must not be polled or recollected.",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T19:35:43Z",
+      "databaseId": 43753304140,
+      "headSha": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-15T19:37:16Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43753304140"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43753304120,
+      "headSha": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-15T19:39:14Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43753304120"
+    }
+  ],
+  "source_checks_terminal_do_not_repoll": true,
+  "dispatch_attempt_at": "2026-11-15T19:40:15.001944+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_response_captured_at": "2026-11-15T19:40:16.599036+00:00",
+  "output_directory": "build/github-results/completion-midi-retention-43753713533",
+  "artifacts": {
+    "small_name": "m3-report-43753713533-1",
+    "bulk_name": "m3-evidence-43753713533-1",
+    "bulk_collection_state": "leave_remote",
+    "small": {
+      "id": 14177562417,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE3NzU2MjQxNw==",
+      "name": "m3-report-43753713533-1",
+      "size_in_bytes": 171092,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14177562417",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14177562417/zip",
+      "expired": false,
+      "digest": "sha256:5b3a6134da3207f91fd606b88e5b073dc5e20cd615d871bc51b55430030516fb",
+      "created_at": "2026-11-15T19:54:32Z",
+      "updated_at": "2026-11-15T19:54:32Z",
+      "expires_at": "2026-11-29T19:54:30Z",
+      "workflow_run": {
+        "id": 43753713533,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "4d0bc5263d564dd5b66c8b83871aaf208be3dd9f"
+      }
+    },
+    "bulk": {
+      "id": 14177008851,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE3NzAwODg1MQ==",
+      "name": "m3-evidence-43753713533-1",
+      "size_in_bytes": 233815305,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14177008851",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14177008851/zip",
+      "expired": false,
+      "digest": "sha256:83d6f9b5f2c23f78608f159dda12dbbfb6e00efd0137b4697bfd03c7349116c3",
+      "created_at": "2026-11-15T19:54:39Z",
+      "updated_at": "2026-11-15T19:54:39Z",
+      "expires_at": "2026-11-22T19:54:32Z",
+      "workflow_run": {
+        "id": 43753713533,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "4d0bc5263d564dd5b66c8b83871aaf208be3dd9f"
+      }
+    },
+    "archive_sha256": "5b3a6134da3207f91fd606b88e5b073dc5e20cd615d871bc51b55430030516fb"
+  },
+  "worker_observation": {
+    "conclusion": "success",
+    "databaseId": 43753713533,
+    "headSha": "4d0bc5263d564dd5b66c8b83871aaf208be3dd9f",
+    "status": "completed",
+    "updatedAt": "2026-11-15T19:54:43Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43753713533"
+  },
+  "collected_at": "2026-11-15T19:55:51.924712+00:00",
+  "terminal_do_not_repoll": true,
+  "report_paths": [
+    "build/github-results/completion-midi-retention-43753713533/completion-midi-retention/report.json"
+  ],
+  "bounded_screen_pass": true,
+  "decision": "eligible for full corpus and native safety checks; not promotion",
+  "result": {
+    "report": "build/github-results/completion-midi-retention-43753713533/completion-midi-retention/report.json",
+    "report_sha256": "465278aebdb20a93482bf8a63a5fcad10009a99bf0bd23dc8fe92ab0c674f7b5",
+    "finished_at": "2026-11-15T19:54:30.176353+00:00",
+    "datasets_completed": 5,
+    "saved_reference_identity_pass": true,
+    "note_safety_datasets_passed": 5,
+    "current_trial_full_inference_bit_identical": true,
+    "snapshot_match_and_false_output_changes": 0,
+    "per_label_exact_hold_loss": false,
+    "false_duration_onset_or_raw_conflict_growth": false,
+    "target_hold": {
+      "before": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1614784,
+        "unmatched_hold_samples": 905408,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 14,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 88
+      },
+      "improved": true
+    },
+    "target_exact_held_samples_gain": 1024,
+    "target_note_ons_reduction": 16,
+    "installed_output_changed": false,
+    "promotion_accepted": false
+  },
+  "follow_up_preparation": {
+    "task": "completion-midi-retention-corpus",
+    "state": "local_changes_prepared_not_committed_or_dispatched",
+    "runner": "tools/portable_calibrated_midi_retention_corpus.py",
+    "tests": "tests/test_portable_calibrated_midi_retention_corpus.py",
+    "worker_workflow": "build/github-offload/worker/.github/workflows/m3-offload.yml",
+    "local_mock_tests_passed": 78,
+    "workflow_shell_sections_syntax_passed": 48,
+    "native_execution_run_locally": false,
+    "scope": "Fourteen datasets; saved OFF/current identity; full inference identity; per-label and false-output safety; buffer, allocation and p99/max/zero-overrun gates. Existing acceptance limits unchanged.",
+    "run_id": null,
+    "checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json"
+  }
 }

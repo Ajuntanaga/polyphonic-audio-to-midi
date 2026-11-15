@@ -153,7 +153,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                          {mode: 1 for mode, _ in self.conditions})
         self.assertEqual(report['policy_name'], self.POLICY)
         self.assertEqual(report['inference_identity_required'],
-                         self.POLICY == 'calibrated-midi-retention')
+                         self.POLICY != 'qualified-tier-retention')
 
     def test_saved_reference_drift_stops_before_trial(self):
         for mode in (corpus.OFF, corpus.CURRENT):
@@ -304,6 +304,23 @@ class QualifiedTierRetentionCorpusTests(CalibratedRetentionCorpusTests):
         self.assertEqual(report['improved_hold_and_attack_labels'], 1)
         self.assertFalse(report['required_target_hold_and_attack_improved'])
         self.assertFalse(report['corpus_note_safety_pass'])
+
+class CompletionMidiRetentionCorpusTests(CalibratedRetentionCorpusTests):
+    POLICY = 'completion-midi-retention'
+    DATASET = 'physical-long'
+    LABEL_OFFSET = 3
+    TRIAL = 'completion-midi-retention-on'
+
+    def test_unrelated_hold_gain_cannot_replace_required_physical_target(self):
+        def change(kind, mode, block, row):
+            if kind == 'lifecycle' and mode == self.TRIAL:
+                row['labels'][0].update(exact_held_samples=5, note_ons_inside_label=10)
+                row['labels'][1].update(exact_held_samples=8, note_ons_inside_label=9)
+        report, _ = self.exercise(change=change)
+        self.assertEqual(report['improved_hold_and_attack_labels'], 1)
+        self.assertFalse(report['required_target_hold_and_attack_improved'])
+        self.assertFalse(report['corpus_note_safety_pass'])
+
 
 if __name__ == '__main__':
     unittest.main()
