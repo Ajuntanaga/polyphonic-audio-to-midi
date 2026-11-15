@@ -5307,6 +5307,95 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
     return groups;
   }
+
+  enum class CompletionWindowBreak {
+    none, unselected, skipped_decision, primary, committed_group,
+    fine_group, coasting_owner, setter, preview, selector
+  };
+
+  struct CompletionWindowProbe final {
+    std::array<std::uint8_t, 34U> groups{}, pending{}, evidence{}, window{},
+        proposals{}, reservations{};
+  };
+
+  static CompletionWindowProbe completion_window_retention_probe(
+      PolyphonicPitchDetector& detector, bool enabled,
+      std::uint64_t qualified_ticks,
+      CompletionWindowBreak interruption = CompletionWindowBreak::none) noexcept {
+    constexpr std::size_t kCandidate = 40U - 32U;
+    (void)retained_unison_completion_selector_probe(detector);
+    detector.set_qualified_tier_retention_for_diagnostics(false);
+    detector.set_continuous_tier_retention_for_diagnostics(false);
+    detector.set_completion_window_retention_for_diagnostics(enabled);
+    detector.set_pending_string_reservation_for_diagnostics(false);
+    detector.diagnostic_assignment_previews_ = {};
+    auto& state = detector.candidate_states_[kCandidate];
+    state.assigned_string_mask = 0x07U;
+    state.midi_voice_mask = 0x07U;
+    state.pending_unison_mask = 0U;
+    state.unison_evidence_ticks = 0U;
+    CompletionWindowProbe result;
+    for (std::size_t tick = 0U; tick < result.groups.size(); ++tick) {
+      // infer_m3_unison_strings normally runs once per decision, after this
+      // counter advances. An extra increment models a skipped inference tick.
+      ++detector.decision_counter_;
+      const bool interrupt = tick == 15U;
+      std::array<bool, kMaxCandidates> selected{};
+      selected[kCandidate] = !(interrupt && interruption == CompletionWindowBreak::unselected);
+      detector.selector_group_masks_ = {};
+      detector.diagnostic_assignment_previews_ = {};
+      detector.set_pending_string_reservation_for_diagnostics(false);
+      auto& fine = detector.fine_frequency_evidence_states_[kCandidate];
+      fine.added_member_beat_coherence[0U] =
+          (qualified_ticks & (std::uint64_t{1U} << tick)) != 0U ? 0.25 : 0.0;
+      if (interrupt) {
+        switch (interruption) {
+          case CompletionWindowBreak::skipped_decision:
+            ++detector.decision_counter_;
+            break;
+          case CompletionWindowBreak::primary:
+            state.assigned_string = 2U;
+            break;
+          case CompletionWindowBreak::committed_group:
+            state.assigned_string_mask = 0x06U;
+            state.midi_voice_mask = 0x06U;
+            break;
+          case CompletionWindowBreak::fine_group:
+            fine.member_mask = 0x02U;
+            break;
+          case CompletionWindowBreak::coasting_owner: {
+            auto& peer = detector.candidate_states_[44U - 32U];
+            peer.active = true;
+            peer.assigned_string = 0U;
+            peer.assigned_string_mask = 0x01U;
+            peer.midi_voice_mask = 0x01U;
+            break;
+          }
+          case CompletionWindowBreak::setter:
+            detector.set_completion_window_retention_for_diagnostics(enabled);
+            break;
+          case CompletionWindowBreak::preview:
+            detector.set_pending_string_reservation_for_diagnostics(true);
+            detector.diagnostic_assignment_previews_[kCandidate] = true;
+            break;
+          case CompletionWindowBreak::selector:
+            detector.selector_group_masks_[kCandidate] = 0x06U;
+            break;
+          case CompletionWindowBreak::none:
+          case CompletionWindowBreak::unselected:
+            break;
+        }
+      }
+      detector.infer_m3_unison_strings(selected);
+      result.groups[tick] = state.assigned_string_mask;
+      result.pending[tick] = state.pending_unison_mask;
+      result.evidence[tick] = state.unison_evidence_ticks;
+      result.window[tick] = state.diagnostic_completion_window.ticks;
+      result.proposals[tick] = state.diagnostic_unison_proposal_mask;
+      result.reservations[tick] = detector.selector_group_masks_[kCandidate];
+    }
+    return result;
+  }
 #endif
 
   static CompletionPriorityProbe stronger_completion_priority_probe(
@@ -8967,6 +9056,129 @@ M3_TEST(native_detector_continuous_tier_retention_preserves_fresh_completion) {
       m3::PolyphonicPitchDetectorTestAccess::
           fresh_fine_pair_completion_inference_probe(detector),
       0x07U);
+}
+
+M3_TEST(native_detector_completion_window_retention_preserves_pending_correction) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  constexpr std::uint64_t kAllTicks = (std::uint64_t{1U} << 34U) - 1U;
+  const auto current = m3::PolyphonicPitchDetectorTestAccess::
+      completion_window_retention_probe(detector, false, kAllTicks);
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      completion_window_retention_probe(detector, true, kAllTicks);
+  for (std::size_t tick = 0U; tick < trial.groups.size(); ++tick) {
+    M3_EXPECT_EQ(current.groups[tick], (tick == 15U || tick == 32U) ? 0x06U : 0x07U);
+    M3_EXPECT_EQ(current.window[tick], 0U);
+    M3_EXPECT_EQ(trial.groups[tick], 0x07U);
+    M3_EXPECT_EQ(trial.pending[tick], 0x06U);
+    M3_EXPECT_EQ(trial.proposals[tick], 0x06U);
+    M3_EXPECT_EQ(trial.reservations[tick], 0U);
+    M3_EXPECT_EQ(trial.evidence[tick], tick + 1U);
+    M3_EXPECT_EQ(trial.window[tick], tick + 1U);
+  }
+}
+
+M3_TEST(native_detector_completion_window_retention_yields_immediately_to_lost_qualification) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      completion_window_retention_probe(detector, true,
+          (std::uint64_t{1U} << 20U) - 1U);
+  for (std::size_t tick = 0U; tick < trial.groups.size(); ++tick) {
+    M3_EXPECT_EQ(trial.groups[tick], tick < 20U ? 0x07U : 0x06U);
+    M3_EXPECT_EQ(trial.pending[tick], 0x06U);
+    M3_EXPECT_EQ(trial.evidence[tick], tick + 1U);
+    M3_EXPECT_EQ(trial.window[tick], tick < 20U ? tick + 1U : 0U);
+  }
+}
+
+M3_TEST(native_detector_completion_window_retention_rejects_intermittent_support) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  // Include a qualification on the first tick: it must not postpone the start
+  // of the generic correction, which caused the saved middle-string loss.
+  const auto current = m3::PolyphonicPitchDetectorTestAccess::
+      completion_window_retention_probe(detector, false, 0x155555555ULL);
+  const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+      completion_window_retention_probe(detector, true, 0x155555555ULL);
+  for (std::size_t tick = 0U; tick < trial.groups.size(); ++tick) {
+    M3_EXPECT_EQ(trial.groups[tick], current.groups[tick]);
+    M3_EXPECT_EQ(trial.pending[tick], current.pending[tick]);
+    M3_EXPECT_EQ(trial.evidence[tick], current.evidence[tick]);
+    M3_EXPECT_TRUE(trial.window[tick] <= 1U);
+  }
+  M3_EXPECT_EQ(trial.groups[15U], 0x06U);
+}
+
+M3_TEST(native_detector_completion_window_retention_restarts_after_interruption) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  using Break = Access::CompletionWindowBreak;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  constexpr std::uint64_t kAllTicks = (std::uint64_t{1U} << 34U) - 1U;
+  for (const Break interruption : {Break::unselected, Break::skipped_decision,
+           Break::primary, Break::committed_group, Break::fine_group,
+           Break::coasting_owner, Break::setter, Break::preview}) {
+    const auto current = Access::completion_window_retention_probe(
+        detector, false, kAllTicks, interruption);
+    const auto trial = Access::completion_window_retention_probe(
+        detector, true, kAllTicks, interruption);
+    M3_EXPECT_EQ(trial.window[14U], 15U);
+    M3_EXPECT_TRUE(trial.window[15U] <= 1U);
+    M3_EXPECT_TRUE(trial.window[16U] <= 2U);
+    for (const std::size_t tick : {15U, 16U}) {
+      M3_EXPECT_EQ(trial.groups[tick], current.groups[tick]);
+      M3_EXPECT_EQ(trial.pending[tick], current.pending[tick]);
+      M3_EXPECT_EQ(trial.evidence[tick], current.evidence[tick]);
+    }
+  }
+}
+
+M3_TEST(native_detector_completion_window_retention_respects_joint_correction) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  constexpr std::uint64_t kAllTicks = (std::uint64_t{1U} << 34U) - 1U;
+  const auto trial = Access::completion_window_retention_probe(
+      detector, true, kAllTicks, Access::CompletionWindowBreak::selector);
+  M3_EXPECT_EQ(trial.window[15U], 16U);
+  M3_EXPECT_EQ(trial.reservations[15U], 0x06U);
+  M3_EXPECT_EQ(trial.pending[15U], 0x06U);
+  M3_EXPECT_EQ(trial.groups[15U], 0x06U);
+}
+
+M3_TEST(native_detector_completion_window_retention_preserves_fresh_completion) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  for (const bool enabled : {false, true}) {
+    detector.set_completion_window_retention_for_diagnostics(enabled);
+    M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::
+        fresh_fine_pair_completion_inference_probe(detector), 0x07U);
+  }
 }
 #endif
 

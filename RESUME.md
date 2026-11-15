@@ -1,12 +1,30 @@
-# Current checkpoint: continuous tier retention screen prepared
+# Current checkpoint: completion-window retention prepared for GitHub
 
-Checkpoint: `docs/recovery/github-continuous-tier-retention-20261115.json`; status key `portable_compute.continuous_tier_retention`. Separate default-off `--diagnostic-continuous-tier-retention` is implemented but not yet dispatched. Fresh equality completion requires pending_unison_mask==assigned_string_mask so intermittent evidence cannot reset an existing fine-subset correction. Prior rejected flags remain off. No production default, installed output or scoreboard changes.
+Checkpoint: `docs/recovery/github-completion-window-retention-20261115.json`; status key `portable_compute.completion_window_retention`. Source base `89757a8f222488e1ff24d1c50b3cdd544c5d3ad7`, worker base `894ec3325becd1f79b301f9aefe59c5aa90213b9`. Not dispatched yet. All native execution remains on GitHub.
 
-The five-dataset fail-fast screen is physical-long, extended-middle, ordinary, constructed, synthetic-four (at most15 replays, existing30 authorized inputs). Physical label3/note40 must gain exact held samples and lose attacks; every label must retain frames and held samples, with no false duration/onset or raw-conflict growth and saved OFF/current full scored/raw identity. Extended-middle is second because the prior policy lost label1/note52 there. A pass permits full-corpus checks only.
+The separate default-off diagnostic retains a committed extra string only after uninterrupted fresh qualification through the existing correction dwell. It leaves the accepted fine proposal, pending correction, selector reservation and evidence counter intact. Lost qualification can therefore commit the correction immediately; interrupted/changed/preview evidence clears the window. Prior rejected retention flags stay off. This is a measured hypothesis, not an accepted change.
 
-All29 local Python mock tests pass; workflow copies match, YAML parses and44 shell steps pass syntax. Native tests/replays remain on GitHub. Single implementation review complete with no blocker. Next: pin source/worker, dispatch once, track exact runs and collect only the small report once. Full corpus, allocation, buffers, p99/max/zero-overrun and external DAW/device gates remain open.
+Local checks:37 Python mock contracts pass; workflow YAML and all45 shell steps parse; source/worker diffs pass whitespace checks. One independent design review is complete. Six focused native reset/correction fixtures await GitHub. No local native build, replay, install or promotion.
 
-The ntfy ping and680-file compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU task is identified for this native CPU question.
+Next: commit/push the prepared source and worker, pin both revisions, dispatch exactly one `completion-window-retention-trial` for physical-long/note40/label3 using the existing authorized corpus release. Bound:15 replays across physical-long, extended-middle, ordinary, constructed and synthetic-four,2400 seconds; stop at first failed gate. Require target held samples above1613760/2520192 with fewer than104 attacks, all saved OFF/current references identical, no per-label frame/held loss, no false-duration/onset or raw-conflict growth. Full-corpus, buffers, allocations, deadline and external DAW/device gates remain separate.
+
+The ntfy ping and680-file lossless compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU workload is identified for this native CPU policy. Installed output, production defaults and scoreboard remain unchanged.
+
+# Previous checkpoint: continuous tier retention screen rejected
+
+Checkpoint: `docs/recovery/github-continuous-tier-retention-20261115.json`; status key `portable_compute.continuous_tier_retention`. Worker `43746794015` is final and successful as a workflow, but the offline screen is REJECTED. Source `89757a8f222488e1ff24d1c50b3cdd544c5d3ad7`, worker `894ec3325becd1f79b301f9aefe59c5aa90213b9`. Source portable `43746772762` and CI `43746772767` passed, including native tests and production build. Do not poll, rerun or recollect completed jobs.
+
+The 15105-byte small artifact was collected once and SHA-256 verified at `build/github-results/continuous-tier-retention-43746794015`; report SHA-256 `4e21a01323ccf3fea940f6a36faa257effd474a41e8fea077629ab53ec3cc5fb`. Compact result: `collected-verdict.json`. Bulk (1145521 bytes) was collected once for saved-output diagnosis; archive SHA-256 `8b8adbda4dabe8ff924fd0421ca0544d120a392b03595c939c6bb66c9d40d071`. No native binary was extracted or executed. All five focused native tests and 277 Python contracts passed on GitHub. No native execution ran locally.
+
+The fail-fast screen stopped after physical-long and extended-middle (6/15 maximum replays, 2/5 declared datasets). Both datasets' saved OFF/current full scored/raw references are bit-identical (4 observed conditions). Ordinary, constructed and synthetic-four were not reached. Full-corpus, allocation, buffers, p99/max/zero-overrun and external DAW/device gates are unmeasured by this screen.
+
+Physical-long retains the target gain: matches41452 to41470/68441 and simultaneous exact-three25219 to25237/39378 (+18); label3/note40/mask7 exact held1613760 to1614912/2520192 (+1152), attacks104 to88. Longest hold711104 and first delay520639 remain unchanged. No false/safety growth there.
+
+Extended-middle still regresses: matches4511 to4497/32400; label1/note52/mask40 matched4225 to4211/5400 (-14), exact held266625 to265793/345600 (-832), attacks63 to57. Wrong-string outputs24725 to24740 (+15), raw wrong-string duration +896 voice-samples. Wrong-note9393 and gap7052 counts are unchanged; gap outputs are extra notes, not missing notes. Pairing remains valid and raw conflicts do not increase. A smaller regression is still rejection.
+
+The separate default-off equality guard preserves an already pending fine-subset correction; fresh additions and existing qualification guards remain unchanged. Installed output, production defaults and scoreboard remain unchanged. Saved MIDI diagnosis is complete: 12 wrong-lane intervals lose832 exact samples (704 add lane0,128 add lane4), with no gained exact samples. Current-ON removes the extra lane one or two ticks sooner. The older paired trace does not overlap these intervals; aggregate TSV cannot localize the14 snapshot changes. Reports: `extended-middle-saved-midi-diagnosis.json` and `extended-middle-reference-context.json` under the run directory. Next: separate completion-window guard above; no duplicate continuous-tier screen.
+
+The ntfy ping and680-file compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU task is identified for this native CPU question. All native processing remains on GitHub.
 
 # Previous checkpoint: paired retention divergence trace final
 

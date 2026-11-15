@@ -461,7 +461,7 @@ struct StringAssignmentDiagnostics final {
   // 0 primary, 1 fine, 2 tier, 3 profile, 4 profile complement.
   std::uint8_t group_origin{};
   // 0 unchanged, 1 evidence commit, 2 joint commit, 3 dropout hold,
-  // 4 primary reset, 5 capacity reset, 6 pending evidence.
+  // 4 primary reset, 5 capacity reset, 6 pending evidence, 7 completion window.
   std::uint8_t group_transition{};
   std::uint8_t group_after{};
   std::uint8_t fine_mask{};
@@ -760,6 +760,12 @@ class PolyphonicPitchDetector final {
   void set_continuous_tier_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_continuous_tier_retention_ = enabled;
   }
+  void set_completion_window_retention_for_diagnostics(bool enabled) noexcept {
+    diagnostic_completion_window_retention_ = enabled;
+    for (auto& state : candidate_states_) {
+      state.diagnostic_completion_window = {};
+    }
+  }
   void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_suppressed_adjacent_admission_ = enabled;
     diagnostic_suppressed_adjacent_ticks_ = {};
@@ -1033,6 +1039,13 @@ class PolyphonicPitchDetector final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     std::uint8_t diagnostic_unison_proposal_mask{};
     bool diagnostic_unison_temporal{};
+    struct CompletionWindow final {
+      std::uint8_t group{};
+      std::uint8_t fine_group{};
+      std::uint8_t primary{};
+      std::uint8_t ticks{};
+      std::uint32_t last_tick{};
+    } diagnostic_completion_window{};
     std::uint8_t group_continuity_diagnostic_flags{};
     // Output-only production-shaped candidate. It can only remove lanes from
     // the currently emitted same-pitch group and never mutates ownership.
@@ -1786,6 +1799,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_fine_subset_consensus_{};
   bool diagnostic_qualified_tier_retention_{};
   bool diagnostic_continuous_tier_retention_{};
+  bool diagnostic_completion_window_retention_{};
   bool diagnostic_suppressed_adjacent_admission_{};
   std::array<std::uint16_t, kMaxCandidates> diagnostic_suppressed_adjacent_ticks_{};
   std::uint32_t diagnostic_suppressed_adjacent_last_tick_{};

@@ -1,22 +1,24 @@
 {
   "schema": "m3_continuous_tier_retention_checkpoint_v1",
-  "updated_at": "2026-11-15T18:26:12.841238+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T18:49:16.180282+00:00",
+  "state": "rejected",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "ca3d9691fc99cda7ee7ba045efbbc97addf85655",
-    "commit": null,
+    "commit": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
     "worker_repository": "Ajuntanaga/m3-offload",
     "worker_base_commit": "e08d87fbed8389d97463cd695e53fa042679f783",
     "worker_commit": "894ec3325becd1f79b301f9aefe59c5aa90213b9",
-    "run_id": null,
+    "run_id": "43746794015",
     "task": "continuous-tier-retention-trial",
     "dataset": "physical-long",
     "note": 40,
     "label_index": 3,
     "input_release": "corpus-20261108",
-    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "run_attempt": 1,
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43746794015"
   },
   "reference": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "source_diagnosis": {
@@ -80,8 +82,8 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
-  "stage": "ready for pinned GitHub screen",
+  "collection_state": "small report and named bulk evidence collected once; SHA-256 verified; no native binary extracted or run",
+  "stage": "stopped at note safety regression",
   "unmeasured_gates": [
     "full corpus",
     "buffer identity",
@@ -98,10 +100,1353 @@
   ],
   "dispatch_directory": "build/github-results/continuous-tier-retention-dispatch-20261115",
   "expected_artifacts": {
-    "report": "m3-report-{run_id}-1",
-    "bulk": "m3-evidence-{run_id}-1",
-    "local_output": "build/github-results/continuous-tier-retention-{run_id}",
+    "report": "m3-report-43746794015-1",
+    "bulk": "m3-evidence-43746794015-1",
+    "local_output": "build/github-results/continuous-tier-retention-43746794015",
     "report_member": "continuous-tier-retention/report.json"
   },
-  "next": "Complete the single implementation review; push pinned source and worker, dispatch one bounded GitHub screen, and collect its small report once. All native execution remains on GitHub."
+  "next": "Separate default-off completion-window screen: preserve fine proposal and correction counter; retain only at final commit after uninterrupted qualification through the existing dwell. No broadened continuous-tier rerun.",
+  "local_output": "build/github-results/continuous-tier-retention-43746794015",
+  "dispatch_receipt": "build/github-results/continuous-tier-retention-dispatch-20261115/dispatch-receipt.json",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 43746772762,
+      "headSha": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
+      "jobs": [
+        {
+          "completedAt": "2026-11-15T18:27:24Z",
+          "conclusion": "success",
+          "databaseId": 132911694519,
+          "name": "offline",
+          "startedAt": "2026-11-15T18:26:29Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-15T18:26:31Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-15T18:26:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:32Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-15T18:26:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:32Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-python@v7",
+              "number": 3,
+              "startedAt": "2026-11-15T18:26:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:49Z",
+              "conclusion": "success",
+              "name": "Configure and build diagnostic replay",
+              "number": 4,
+              "startedAt": "2026-11-15T18:26:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:10Z",
+              "conclusion": "success",
+              "name": "Native tests",
+              "number": 5,
+              "startedAt": "2026-11-15T18:26:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:19Z",
+              "conclusion": "success",
+              "name": "Replay comparison contracts",
+              "number": 6,
+              "startedAt": "2026-11-15T18:27:10Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:21Z",
+              "conclusion": "success",
+              "name": "Synthetic buffer parity smoke check",
+              "number": 7,
+              "startedAt": "2026-11-15T18:27:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:22Z",
+              "conclusion": "success",
+              "name": "Keep bounded diagnostic artifacts",
+              "number": 8,
+              "startedAt": "2026-11-15T18:27:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:22Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@v7",
+              "number": 15,
+              "startedAt": "2026-11-15T18:27:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:22Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 16,
+              "startedAt": "2026-11-15T18:27:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:27:23Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-11-15T18:27:22Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772762/job/132911694519"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772762"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43746772767,
+      "headSha": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
+      "jobs": [
+        {
+          "completedAt": "2026-11-15T18:29:53Z",
+          "conclusion": "success",
+          "databaseId": 132911694479,
+          "name": "Native C++ tests",
+          "startedAt": "2026-11-15T18:26:30Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-15T18:26:31Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-15T18:26:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:34Z",
+              "conclusion": "success",
+              "name": "Check out source and pinned submodules",
+              "number": 2,
+              "startedAt": "2026-11-15T18:26:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:54Z",
+              "conclusion": "success",
+              "name": "Install VSTGUI build dependencies",
+              "number": 3,
+              "startedAt": "2026-11-15T18:26:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:57Z",
+              "conclusion": "success",
+              "name": "Configure",
+              "number": 4,
+              "startedAt": "2026-11-15T18:26:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:28:22Z",
+              "conclusion": "success",
+              "name": "Build native tests",
+              "number": 5,
+              "startedAt": "2026-11-15T18:26:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:28Z",
+              "conclusion": "success",
+              "name": "Run native tests",
+              "number": 6,
+              "startedAt": "2026-11-15T18:28:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:48Z",
+              "conclusion": "success",
+              "name": "Build production VST3",
+              "number": 7,
+              "startedAt": "2026-11-15T18:29:28Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:49Z",
+              "conclusion": "success",
+              "name": "Package production VST3",
+              "number": 8,
+              "startedAt": "2026-11-15T18:29:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:50Z",
+              "conclusion": "success",
+              "name": "Save production bundle",
+              "number": 9,
+              "startedAt": "2026-11-15T18:29:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:51Z",
+              "conclusion": "success",
+              "name": "Save build diagnostics",
+              "number": 10,
+              "startedAt": "2026-11-15T18:29:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:51Z",
+              "conclusion": "success",
+              "name": "Post Check out source and pinned submodules",
+              "number": 20,
+              "startedAt": "2026-11-15T18:29:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:29:51Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 21,
+              "startedAt": "2026-11-15T18:29:51Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767/job/132911694479"
+        },
+        {
+          "completedAt": "2026-11-15T18:26:41Z",
+          "conclusion": "success",
+          "databaseId": 132911694697,
+          "name": "Source contracts",
+          "startedAt": "2026-11-15T18:26:30Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-15T18:26:32Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-15T18:26:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:36Z",
+              "conclusion": "success",
+              "name": "Check out source and pinned submodules",
+              "number": 2,
+              "startedAt": "2026-11-15T18:26:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:36Z",
+              "conclusion": "success",
+              "name": "Set up Python",
+              "number": 3,
+              "startedAt": "2026-11-15T18:26:36Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:37Z",
+              "conclusion": "success",
+              "name": "Run portable Python contracts",
+              "number": 4,
+              "startedAt": "2026-11-15T18:26:36Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:38Z",
+              "conclusion": "success",
+              "name": "Validate authored source",
+              "number": 5,
+              "startedAt": "2026-11-15T18:26:37Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:38Z",
+              "conclusion": "success",
+              "name": "Post Set up Python",
+              "number": 9,
+              "startedAt": "2026-11-15T18:26:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:38Z",
+              "conclusion": "success",
+              "name": "Post Check out source and pinned submodules",
+              "number": 10,
+              "startedAt": "2026-11-15T18:26:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-15T18:26:38Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 11,
+              "startedAt": "2026-11-15T18:26:38Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767/job/132911694697"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767"
+    }
+  ],
+  "last_remote_observation_at": "2026-11-15T18:30:53.253687+00:00",
+  "worker_observation": {
+    "conclusion": "success",
+    "databaseId": 43746794015,
+    "headSha": "894ec3325becd1f79b301f9aefe59c5aa90213b9",
+    "jobs": [
+      {
+        "completedAt": "2026-11-15T18:29:58Z",
+        "conclusion": "success",
+        "databaseId": 132911766793,
+        "name": "process",
+        "startedAt": "2026-11-15T18:26:46Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-15T18:26:50Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-15T18:26:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:26:52Z",
+            "conclusion": "success",
+            "name": "Verify public destination and source selection",
+            "number": 2,
+            "startedAt": "2026-11-15T18:26:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:26:57Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-15T18:26:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:26:57Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-15T18:26:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:04Z",
+            "conclusion": "success",
+            "name": "Download and verify inputs",
+            "number": 5,
+            "startedAt": "2026-11-15T18:26:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:37Z",
+            "conclusion": "success",
+            "name": "Build offline replay on GitHub",
+            "number": 6,
+            "startedAt": "2026-11-15T18:27:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:37Z",
+            "conclusion": "skipped",
+            "name": "Check bounded allocation recorder",
+            "number": 7,
+            "startedAt": "2026-11-15T18:27:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "success",
+            "name": "Check diagnosis and comparison contracts",
+            "number": 8,
+            "startedAt": "2026-11-15T18:27:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Replay saved MIDI through the production note ledger",
+            "number": 9,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen direct evidence retention through energy dips",
+            "number": 10,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace calibrated-output resets with unchanged OFF replay",
+            "number": 11,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen energy-blocked preview string ownership",
+            "number": 12,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace the rejected trial string transfer without changing output",
+            "number": 13,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace the recorded cross-sample MIDI lane replacement",
+            "number": 14,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace the first remaining ON note ledger collision",
+            "number": 15,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace the remaining coasting owner trial conflict",
+            "number": 16,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Trace the fragmented bass note without changing output",
+            "number": 17,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen pending string reservation against both output baselines",
+            "number": 18,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen forced pending conflicts against both output baselines",
+            "number": 19,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen actual MIDI retention with unchanged detector inference",
+            "number": 20,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen calibrated MIDI retention without changing detector inference",
+            "number": 21,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Validate calibrated MIDI retention across all fourteen datasets",
+            "number": 22,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Capture missing assignment costs for MIDI retention losses",
+            "number": 23,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Capture preceding assignments for forced preview passage losses",
+            "number": 24,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Compare assignment maturity on the improved and lost notes",
+            "number": 25,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen fresh spectral incumbents in physical assignment",
+            "number": 26,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Diagnose passage losses in the rejected retained assignment trial",
+            "number": 27,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen conflicting spectral outputs without changing physical assignment",
+            "number": 28,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen isolated upper-partial string identity",
+            "number": 29,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Check paired core processing without offline observer bookkeeping",
+            "number": 30,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Locate processing allocations",
+            "number": 31,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Diagnose slow blocks without changing acceptance limits",
+            "number": 32,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Compare calibrated retention wall and thread CPU timing",
+            "number": 33,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Validate qualified tier retention across all fourteen datasets",
+            "number": 34,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:27:46Z",
+            "conclusion": "skipped",
+            "name": "Screen freshly qualified tier retention before wider validation",
+            "number": 35,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "success",
+            "name": "Screen continuous tier retention and known middle-string regression",
+            "number": 36,
+            "startedAt": "2026-11-15T18:27:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Screen suppressed adjacent owners before wider validation",
+            "number": 37,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Screen initial fine subset consensus before wider validation",
+            "number": 38,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Observe saved admission policies around extra attacks",
+            "number": 39,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Trace initial physical three-string locking",
+            "number": 40,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Observe the first rejected tier retention divergence",
+            "number": 41,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Observe periodic physical three-string sustain gaps",
+            "number": 42,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Diagnose string assignment",
+            "number": 43,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Compare OFF and ON across the recorded corpus",
+            "number": 44,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Recover and screen held-out overlap controls",
+            "number": 45,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Diagnose the selected octave control timing failure",
+            "number": 46,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:50Z",
+            "conclusion": "skipped",
+            "name": "Isolate processing stage costs in the retained octave pair",
+            "number": 47,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:52Z",
+            "conclusion": "success",
+            "name": "Keep small reports and failure logs",
+            "number": 48,
+            "startedAt": "2026-11-15T18:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:55Z",
+            "conclusion": "success",
+            "name": "Keep compressed trace and reference evidence",
+            "number": 49,
+            "startedAt": "2026-11-15T18:29:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:55Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 97,
+            "startedAt": "2026-11-15T18:29:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:55Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 98,
+            "startedAt": "2026-11-15T18:29:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-15T18:29:55Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 99,
+            "startedAt": "2026-11-15T18:29:55Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43746794015/job/132911766793"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43746794015"
+  },
+  "collection_receipt": "build/github-results/continuous-tier-retention-43746794015/collection-receipt.json",
+  "report": "build/github-results/continuous-tier-retention-43746794015/continuous-tier-retention/report.json",
+  "report_sha256": "4e21a01323ccf3fea940f6a36faa257effd474a41e8fea077629ab53ec3cc5fb",
+  "collected_verdict": "build/github-results/continuous-tier-retention-43746794015/collected-verdict.json",
+  "result": {
+    "schema": "m3_continuous_tier_retention_collected_verdict_v1",
+    "recorded_at": "2026-11-15T18:33:34.689424+00:00",
+    "run_id": "43746794015",
+    "source_commit": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
+    "workflow_conclusion": "success",
+    "screen_verdict": "rejected",
+    "final": true,
+    "declared_datasets": [
+      "physical-long",
+      "extended-middle",
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "completed_datasets": [
+      "physical-long",
+      "extended-middle"
+    ],
+    "unrun_datasets": [
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "completed_replays": 6,
+    "maximum_replays": 15,
+    "reference_identity_pass_observed": true,
+    "observed_reference_conditions": 4,
+    "reference_scope": "Two completed datasets, both OFF and current-ON full scored/raw references; not all fourteen corpus datasets.",
+    "target_hold": {
+      "before": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1614912,
+        "unmatched_hold_samples": 905280,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 13,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 88
+      },
+      "improved": true
+    },
+    "datasets": {
+      "physical-long": {
+        "current_snapshot": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "6ecf88865ddc34e4"
+        },
+        "trial_snapshot": {
+          "labeled": 68441,
+          "matched": 41470,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "73d6769148363f76"
+        },
+        "comparison": {
+          "snapshot": {
+            "delta": {
+              "matched": 18,
+              "false_wrong_note_voices": 0,
+              "false_wrong_string_voices": 0,
+              "false_gap_voices": 0,
+              "false_positive_voices": 0
+            },
+            "changed_labels": [
+              {
+                "label_index": 3,
+                "midi_note": 40,
+                "string_mask": 7,
+                "labeled": 39378,
+                "baseline_matched": 25219,
+                "current_matched": 25237,
+                "matched_delta": 18
+              }
+            ],
+            "lost_labels": [],
+            "increased_error_counts": [],
+            "gate_pass": true,
+            "output_bit_identical": false
+          },
+          "inference_bit_identical": null,
+          "inference_identity_required": false,
+          "sample_clock_identical": true,
+          "held_pairing_valid": true,
+          "changed_held_labels": [
+            {
+              "label_index": 3,
+              "midi_note": 40,
+              "exact_held_samples_before": 1613760,
+              "exact_held_samples_after": 1614912,
+              "held_delta": 1152,
+              "note_ons_before": 104,
+              "note_ons_after": 88,
+              "note_on_delta": -16
+            }
+          ],
+          "held_losses": [],
+          "improved_hold_and_attack_labels": [
+            {
+              "label_index": 3,
+              "midi_note": 40,
+              "exact_held_samples_before": 1613760,
+              "exact_held_samples_after": 1614912,
+              "held_delta": 1152,
+              "note_ons_before": 104,
+              "note_ons_after": 88,
+              "note_on_delta": -16
+            }
+          ],
+          "exact_held_samples_delta": 1152,
+          "output_safety_delta": {
+            "false_wrong_note_voice_samples": 0,
+            "false_wrong_string_voice_samples": 0,
+            "false_gap_voice_samples": 0,
+            "false_wrong_note_onsets": 0,
+            "false_wrong_string_onsets": 0,
+            "false_gap_onsets": 0
+          },
+          "raw_conflict_delta": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          },
+          "note_safety_pass": true
+        },
+        "note_safety_pass": true
+      },
+      "extended-middle": {
+        "current_snapshot": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "trial_snapshot": {
+          "labeled": 32400,
+          "matched": 4497,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24740,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41185,
+          "fingerprint": "1d90d349c9d7dfd6"
+        },
+        "comparison": {
+          "snapshot": {
+            "delta": {
+              "matched": -14,
+              "false_wrong_note_voices": 0,
+              "false_wrong_string_voices": 15,
+              "false_gap_voices": 0,
+              "false_positive_voices": 15
+            },
+            "changed_labels": [
+              {
+                "label_index": 1,
+                "midi_note": 52,
+                "string_mask": 40,
+                "labeled": 5400,
+                "baseline_matched": 4225,
+                "current_matched": 4211,
+                "matched_delta": -14
+              }
+            ],
+            "lost_labels": [
+              1
+            ],
+            "increased_error_counts": [
+              "false_wrong_string_voices",
+              "false_positive_voices"
+            ],
+            "gate_pass": false,
+            "output_bit_identical": false
+          },
+          "inference_bit_identical": null,
+          "inference_identity_required": false,
+          "sample_clock_identical": true,
+          "held_pairing_valid": true,
+          "changed_held_labels": [
+            {
+              "label_index": 1,
+              "midi_note": 52,
+              "exact_held_samples_before": 266625,
+              "exact_held_samples_after": 265793,
+              "held_delta": -832,
+              "note_ons_before": 63,
+              "note_ons_after": 57,
+              "note_on_delta": -6
+            },
+            {
+              "label_index": 2,
+              "midi_note": 52,
+              "exact_held_samples_before": 0,
+              "exact_held_samples_after": 0,
+              "held_delta": 0,
+              "note_ons_before": 251,
+              "note_ons_after": 246,
+              "note_on_delta": -5
+            }
+          ],
+          "held_losses": [
+            {
+              "label_index": 1,
+              "midi_note": 52,
+              "exact_held_samples_before": 266625,
+              "exact_held_samples_after": 265793,
+              "held_delta": -832,
+              "note_ons_before": 63,
+              "note_ons_after": 57,
+              "note_on_delta": -6
+            }
+          ],
+          "improved_hold_and_attack_labels": [],
+          "exact_held_samples_delta": -832,
+          "output_safety_delta": {
+            "false_wrong_note_voice_samples": 0,
+            "false_wrong_string_voice_samples": 896,
+            "false_gap_voice_samples": 0,
+            "false_wrong_note_onsets": 0,
+            "false_wrong_string_onsets": -7,
+            "false_gap_onsets": 0
+          },
+          "raw_conflict_delta": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          },
+          "note_safety_pass": false
+        },
+        "note_safety_pass": false
+      }
+    },
+    "native_focused_tests_passed": 5,
+    "python_contract_tests_passed": 277,
+    "source_checks": [
+      {
+        "conclusion": "success",
+        "databaseId": 43746772762,
+        "headSha": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
+        "jobs": [
+          {
+            "completedAt": "2026-11-15T18:27:24Z",
+            "conclusion": "success",
+            "databaseId": 132911694519,
+            "name": "offline",
+            "startedAt": "2026-11-15T18:26:29Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T18:26:31Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T18:26:30Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:32Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-11-15T18:26:31Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:32Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v7",
+                "number": 3,
+                "startedAt": "2026-11-15T18:26:32Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:49Z",
+                "conclusion": "success",
+                "name": "Configure and build diagnostic replay",
+                "number": 4,
+                "startedAt": "2026-11-15T18:26:32Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:10Z",
+                "conclusion": "success",
+                "name": "Native tests",
+                "number": 5,
+                "startedAt": "2026-11-15T18:26:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:19Z",
+                "conclusion": "success",
+                "name": "Replay comparison contracts",
+                "number": 6,
+                "startedAt": "2026-11-15T18:27:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:21Z",
+                "conclusion": "success",
+                "name": "Synthetic buffer parity smoke check",
+                "number": 7,
+                "startedAt": "2026-11-15T18:27:19Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:22Z",
+                "conclusion": "success",
+                "name": "Keep bounded diagnostic artifacts",
+                "number": 8,
+                "startedAt": "2026-11-15T18:27:21Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:22Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v7",
+                "number": 15,
+                "startedAt": "2026-11-15T18:27:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:22Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-11-15T18:27:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:27:23Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-11-15T18:27:22Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772762/job/132911694519"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772762"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 43746772767,
+        "headSha": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
+        "jobs": [
+          {
+            "completedAt": "2026-11-15T18:29:53Z",
+            "conclusion": "success",
+            "databaseId": 132911694479,
+            "name": "Native C++ tests",
+            "startedAt": "2026-11-15T18:26:30Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T18:26:31Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T18:26:30Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:34Z",
+                "conclusion": "success",
+                "name": "Check out source and pinned submodules",
+                "number": 2,
+                "startedAt": "2026-11-15T18:26:31Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:54Z",
+                "conclusion": "success",
+                "name": "Install VSTGUI build dependencies",
+                "number": 3,
+                "startedAt": "2026-11-15T18:26:34Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:57Z",
+                "conclusion": "success",
+                "name": "Configure",
+                "number": 4,
+                "startedAt": "2026-11-15T18:26:54Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:28:22Z",
+                "conclusion": "success",
+                "name": "Build native tests",
+                "number": 5,
+                "startedAt": "2026-11-15T18:26:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:28Z",
+                "conclusion": "success",
+                "name": "Run native tests",
+                "number": 6,
+                "startedAt": "2026-11-15T18:28:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:48Z",
+                "conclusion": "success",
+                "name": "Build production VST3",
+                "number": 7,
+                "startedAt": "2026-11-15T18:29:28Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:49Z",
+                "conclusion": "success",
+                "name": "Package production VST3",
+                "number": 8,
+                "startedAt": "2026-11-15T18:29:48Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:50Z",
+                "conclusion": "success",
+                "name": "Save production bundle",
+                "number": 9,
+                "startedAt": "2026-11-15T18:29:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:51Z",
+                "conclusion": "success",
+                "name": "Save build diagnostics",
+                "number": 10,
+                "startedAt": "2026-11-15T18:29:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:51Z",
+                "conclusion": "success",
+                "name": "Post Check out source and pinned submodules",
+                "number": 20,
+                "startedAt": "2026-11-15T18:29:51Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:29:51Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 21,
+                "startedAt": "2026-11-15T18:29:51Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767/job/132911694479"
+          },
+          {
+            "completedAt": "2026-11-15T18:26:41Z",
+            "conclusion": "success",
+            "databaseId": 132911694697,
+            "name": "Source contracts",
+            "startedAt": "2026-11-15T18:26:30Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T18:26:32Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T18:26:31Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:36Z",
+                "conclusion": "success",
+                "name": "Check out source and pinned submodules",
+                "number": 2,
+                "startedAt": "2026-11-15T18:26:32Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:36Z",
+                "conclusion": "success",
+                "name": "Set up Python",
+                "number": 3,
+                "startedAt": "2026-11-15T18:26:36Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:37Z",
+                "conclusion": "success",
+                "name": "Run portable Python contracts",
+                "number": 4,
+                "startedAt": "2026-11-15T18:26:36Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:38Z",
+                "conclusion": "success",
+                "name": "Validate authored source",
+                "number": 5,
+                "startedAt": "2026-11-15T18:26:37Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:38Z",
+                "conclusion": "success",
+                "name": "Post Set up Python",
+                "number": 9,
+                "startedAt": "2026-11-15T18:26:38Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:38Z",
+                "conclusion": "success",
+                "name": "Post Check out source and pinned submodules",
+                "number": 10,
+                "startedAt": "2026-11-15T18:26:38Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T18:26:38Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 11,
+                "startedAt": "2026-11-15T18:26:38Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767/job/132911694697"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43746772767"
+      }
+    ],
+    "report": "build/github-results/continuous-tier-retention-43746794015/continuous-tier-retention/report.json",
+    "report_sha256": "4e21a01323ccf3fea940f6a36faa257effd474a41e8fea077629ab53ec3cc5fb",
+    "collection_receipt": "build/github-results/continuous-tier-retention-43746794015/collection-receipt.json",
+    "installed_output_changed": false,
+    "production_defaults_changed": false,
+    "scoreboard_changed": false,
+    "unmeasured_gates": [
+      "full corpus",
+      "buffer identity",
+      "processing allocations",
+      "p99<=166666ns",
+      "max<=333333ns",
+      "zero deadline overruns",
+      "external DAW/device delivery"
+    ],
+    "decision": "Reject. Improved physical-long target cannot compensate for lost extended-middle label1 matches/held samples and increased wrong-string duration. Do not broaden or repeat the screen.",
+    "next": "Separate default-off completion-window screen: preserve fine proposal and correction counter; retain only at final commit after uninterrupted qualification through the existing dwell. No broadened continuous-tier rerun."
+  },
+  "bulk_collection_receipt": "build/github-results/continuous-tier-retention-43746794015/bulk-download-receipt.json",
+  "bulk_archive_sha256": "8b8adbda4dabe8ff924fd0421ca0544d120a392b03595c939c6bb66c9d40d071",
+  "saved_output_diagnosis": {
+    "report": "build/github-results/continuous-tier-retention-43746794015/extended-middle-saved-midi-diagnosis.json",
+    "reference_context": "build/github-results/continuous-tier-retention-43746794015/extended-middle-reference-context.json",
+    "lost_exact_samples": 832,
+    "gained_exact_samples": 0,
+    "lost_intervals": 12,
+    "wrong_lane_0_samples": 704,
+    "wrong_lane_4_samples": 128,
+    "finding": "Twelve one- or two-tick delays of a current-ON fine-subset correction add an incorrect lane. Fresh equality qualification can delay the start of the generic correction counter. The prior paired trace does not overlap these intervals.",
+    "new_audio_replay": false,
+    "runtime_rule_changed": false,
+    "limits": "Aggregate scored TSV does not localize the 14 changed snapshot frames; new trial internal trace is unavailable."
+  }
 }

@@ -10322,6 +10322,14 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
     candidate_states_[candidate].diagnostic_unison_proposal_mask = 0U;
     candidate_states_[candidate].diagnostic_unison_temporal = false;
+    auto& state = candidate_states_[candidate];
+    if (!diagnostic_completion_window_retention_ || !selected[candidate] ||
+        !state.active || state.assigned_string >= kM3OpenNotes.size() ||
+        ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+         diagnostic_assignment_previews_[candidate]) ||
+        decision_counter_ - state.diagnostic_completion_window.last_tick != 1U) {
+      state.diagnostic_completion_window = {};
+    }
   }
   fine_group_dispositions_.fill(FineGroupDisposition::unresolved);
   tier_completion_dispositions_.fill(
@@ -10490,6 +10498,9 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       state.unison_evidence_ticks = 0U;
       state.unison_gap_ticks = 0U;
       state.pending_unison_mask = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      state.diagnostic_completion_window = {};
+#endif
     }
     const std::uint8_t committed_for_candidate =
         state.assigned_string_mask != 0U ? state.assigned_string_mask
@@ -10606,6 +10617,36 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       }
     }
     const std::uint8_t tier_members = string_count(tier_completion);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    bool retain_completed_window = false;
+    if (diagnostic_completion_window_retention_) {
+      auto& window = state.diagnostic_completion_window;
+      // Observe the same fresh completion throughout the existing correction
+      // dwell. Never replace the fine proposal or restart its evidence counter.
+      const bool qualified_current_group = state.active &&
+          tier_completion_qualified && tier_completion == state.assigned_string_mask &&
+          temporal_group_selected && proposed_group == fine_group &&
+          fine_group != tier_completion && (fine_group & tier_completion) == fine_group &&
+          (tier_completion & primary_bit) != 0U && tier_members >= 2U &&
+          tier_members <= 4U && (tier_completion & other_owned_strings) == 0U &&
+          (tier_completion & allocated_extra_strings) == 0U &&
+          tier_members - 1U <= candidate_extra_capacity;
+      if (qualified_current_group) {
+        if (window.group != tier_completion || window.fine_group != fine_group ||
+            window.primary != primary) {
+          window = {};
+        }
+        window.group = tier_completion;
+        window.fine_group = fine_group;
+        window.primary = primary;
+        window.last_tick = decision_counter_;
+        if (window.ticks < std::numeric_limits<std::uint8_t>::max()) ++window.ticks;
+        retain_completed_window = window.ticks >= unison_evidence_ticks;
+      } else {
+        window = {};
+      }
+    }
+#endif
     bool apply_tier_completion =
         tier_completion != state.assigned_string_mask;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -11285,11 +11326,22 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       }
       state.unison_gap_ticks = 0U;
       if (state.unison_evidence_ticks >= unison_evidence_ticks) {
-        state.assigned_string_mask = proposed_group;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (assignment_diagnostics_enabled_)
-          assignment_diagnostics_[candidate].group_transition = jointly_reserved ? 2U : 1U;
+        if (retain_completed_window && !jointly_reserved &&
+            proposed_group == state.diagnostic_completion_window.fine_group) {
+          // Keep the original fine correction fully pending. If qualification
+          // fails next tick, it can commit immediately without another dwell.
+          if (assignment_diagnostics_enabled_)
+            assignment_diagnostics_[candidate].group_transition = 7U;
+        } else
 #endif
+        {
+          state.assigned_string_mask = proposed_group;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+          if (assignment_diagnostics_enabled_)
+            assignment_diagnostics_[candidate].group_transition = jointly_reserved ? 2U : 1U;
+#endif
+        }
       }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       else if (assignment_diagnostics_enabled_) {

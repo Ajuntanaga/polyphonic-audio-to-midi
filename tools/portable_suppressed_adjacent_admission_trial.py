@@ -49,7 +49,15 @@ POLICIES = {
         description='Default-off fresh equality completion only when the pending '
             'group still equals the committed group. Preserve an already pending '
             'fine-subset correction and all existing qualification, ownership and '
-            'capacity guards; no new state, threshold or hold delay.')}
+            'capacity guards; no new state, threshold or hold delay.'),
+    'completion-window-retention': dict(mode='completion-window-retention-on',
+        flag='--diagnostic-completion-window-retention', schema='m3_completion_window_retention_trial_v1',
+        datasets=('physical-long', 'extended-middle', 'ordinary', 'constructed', 'synthetic-four'),
+        description='Default-off final-commit guard: retain the current group only '
+            'after a full uninterrupted window of fresh completion qualification '
+            'for the same accepted fine subset and primary. Preserve the fine '
+            'proposal, selector reservation and correction counter; lost evidence '
+            'allows the pending correction immediately. No new threshold.')}
 
 
 def target_hold(current, trial):

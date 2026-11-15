@@ -228,5 +228,9 @@ class ContinuousTierRetentionTests(SuppressedAdjacentAdmissionTests):
         self.assertNotIn('ordinary', report['datasets'])
 
 
+class CompletionWindowRetentionTests(ContinuousTierRetentionTests):
+    policy = 'completion-window-retention'
+
+
 if __name__ == '__main__':
     unittest.main()
