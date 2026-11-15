@@ -1,6 +1,6 @@
 {
   "schema": "m3_suppressed_adjacent_admission_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T15:15:49.044244+00:00",
+  "updated_at": "2026-11-15T15:23:27.277872+00:00",
   "state": "completed",
   "final": true,
   "source": {
@@ -83,7 +83,7 @@
     "Observer computation runs in offline diagnostic selections; recorded trace output is bounded.",
     "No timing, allocation or external DAW/device acceptance is measured by this trace."
   ],
-  "next": "Read the collected paired admission/assignment observations to resolve the six extra note52 switches and unchanged target delay. Verify the one-line native trace-test parser correction on GitHub. Keep the policy rejected; no repeated worker capture or safety screen.",
+  "next": "Use existing fine-fit trace and source to isolate the earlier fine-mask4 interval before selecting a targeted policy. Keep the admission trial rejected; no new transition-reason capture or repeat screen.",
   "dispatch_receipt": "build/github-results/suppressed-adjacent-admission-trace-dispatch-20261115/dispatch-result.json",
   "local_output": "build/github-results/suppressed-adjacent-admission-trace-43728184329",
   "small_artifact": "m3-report-43728184329-1",
@@ -151,8 +151,7 @@
     }
   ],
   "active_step": [
-    "diagnose the observed paired assignments",
-    "verify the native trace-test column correction in source CI"
+    "inspect existing fine-fit evidence for earlier fine-mask4 interval"
   ],
   "collection_receipt": "build/github-results/suppressed-adjacent-admission-trace-43728184329/successful-collection-receipt.json",
   "small_artifact_bytes": 73599,
@@ -240,11 +239,386 @@
     "native_joint_assignment_reproduced": true
   },
   "source_validation_followup": {
-    "state": "fix_prepared",
+    "state": "passed",
     "cause": "The native trace test expected route_capacity_blocked to be the newline-terminated last header field. admission_peers now follows it; the test searched the wrong column.",
     "fix": "Match route_capacity_blocked without a newline in native/tests/test_offline_replay.cpp.",
     "scope": "Test-only; no runtime or replay behavior change. No worker replay is required.",
     "native_execution_local": false,
-    "next": "Commit/push the test correction and follow the resulting source CI and portable runs."
+    "next": "No further verification or repeated worker capture required for this test-only correction.",
+    "commit": "9016a7fa7530470142b491c13cb6821a0684d61f",
+    "source_runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 43728927764,
+        "headSha": "9016a7fa7530470142b491c13cb6821a0684d61f",
+        "jobs": [
+          {
+            "completedAt": "2026-11-15T15:17:48Z",
+            "conclusion": "success",
+            "databaseId": 132856847250,
+            "name": "offline",
+            "startedAt": "2026-11-15T15:16:17Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T15:16:20Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T15:16:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:26Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-11-15T15:16:20Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:26Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-python@v7",
+                "number": 3,
+                "startedAt": "2026-11-15T15:16:26Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:04Z",
+                "conclusion": "success",
+                "name": "Configure and build diagnostic replay",
+                "number": 4,
+                "startedAt": "2026-11-15T15:16:26Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:30Z",
+                "conclusion": "success",
+                "name": "Native tests",
+                "number": 5,
+                "startedAt": "2026-11-15T15:17:04Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:43Z",
+                "conclusion": "success",
+                "name": "Replay comparison contracts",
+                "number": 6,
+                "startedAt": "2026-11-15T15:17:30Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:46Z",
+                "conclusion": "success",
+                "name": "Synthetic buffer parity smoke check",
+                "number": 7,
+                "startedAt": "2026-11-15T15:17:43Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:47Z",
+                "conclusion": "success",
+                "name": "Keep bounded diagnostic artifacts",
+                "number": 8,
+                "startedAt": "2026-11-15T15:17:46Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:47Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-python@v7",
+                "number": 15,
+                "startedAt": "2026-11-15T15:17:47Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:47Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-11-15T15:17:47Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:47Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-11-15T15:17:47Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728927764/job/132856847250"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728927764",
+        "workflowName": "Portable offline replay"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 43728927813,
+        "headSha": "9016a7fa7530470142b491c13cb6821a0684d61f",
+        "jobs": [
+          {
+            "completedAt": "2026-11-15T15:16:24Z",
+            "conclusion": "success",
+            "databaseId": 132856847342,
+            "name": "Source contracts",
+            "startedAt": "2026-11-15T15:16:17Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T15:16:18Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T15:16:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:21Z",
+                "conclusion": "success",
+                "name": "Check out source and pinned submodules",
+                "number": 2,
+                "startedAt": "2026-11-15T15:16:18Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:21Z",
+                "conclusion": "success",
+                "name": "Set up Python",
+                "number": 3,
+                "startedAt": "2026-11-15T15:16:21Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:22Z",
+                "conclusion": "success",
+                "name": "Run portable Python contracts",
+                "number": 4,
+                "startedAt": "2026-11-15T15:16:21Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:22Z",
+                "conclusion": "success",
+                "name": "Validate authored source",
+                "number": 5,
+                "startedAt": "2026-11-15T15:16:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:22Z",
+                "conclusion": "success",
+                "name": "Post Set up Python",
+                "number": 9,
+                "startedAt": "2026-11-15T15:16:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:23Z",
+                "conclusion": "success",
+                "name": "Post Check out source and pinned submodules",
+                "number": 10,
+                "startedAt": "2026-11-15T15:16:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:23Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 11,
+                "startedAt": "2026-11-15T15:16:23Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728927813/job/132856847342"
+          },
+          {
+            "completedAt": "2026-11-15T15:18:42Z",
+            "conclusion": "success",
+            "databaseId": 132856847523,
+            "name": "Native C++ tests",
+            "startedAt": "2026-11-15T15:16:17Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-11-15T15:16:18Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-11-15T15:16:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:20Z",
+                "conclusion": "success",
+                "name": "Check out source and pinned submodules",
+                "number": 2,
+                "startedAt": "2026-11-15T15:16:18Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:37Z",
+                "conclusion": "success",
+                "name": "Install VSTGUI build dependencies",
+                "number": 3,
+                "startedAt": "2026-11-15T15:16:20Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:16:40Z",
+                "conclusion": "success",
+                "name": "Configure",
+                "number": 4,
+                "startedAt": "2026-11-15T15:16:37Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:17:45Z",
+                "conclusion": "success",
+                "name": "Build native tests",
+                "number": 5,
+                "startedAt": "2026-11-15T15:16:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:23Z",
+                "conclusion": "success",
+                "name": "Run native tests",
+                "number": 6,
+                "startedAt": "2026-11-15T15:17:45Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:39Z",
+                "conclusion": "success",
+                "name": "Build production VST3",
+                "number": 7,
+                "startedAt": "2026-11-15T15:18:23Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:39Z",
+                "conclusion": "success",
+                "name": "Package production VST3",
+                "number": 8,
+                "startedAt": "2026-11-15T15:18:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:40Z",
+                "conclusion": "success",
+                "name": "Save production bundle",
+                "number": 9,
+                "startedAt": "2026-11-15T15:18:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:40Z",
+                "conclusion": "success",
+                "name": "Save build diagnostics",
+                "number": 10,
+                "startedAt": "2026-11-15T15:18:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:41Z",
+                "conclusion": "success",
+                "name": "Post Check out source and pinned submodules",
+                "number": 20,
+                "startedAt": "2026-11-15T15:18:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-11-15T15:18:41Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 21,
+                "startedAt": "2026-11-15T15:18:41Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728927813/job/132856847523"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728927813",
+        "workflowName": "CI"
+      }
+    ],
+    "observation": "build/github-results/suppressed-adjacent-admission-trace-dispatch-20261115/trace-test-fix-source-runs.json",
+    "validation": [
+      "source contracts",
+      "native C++ tests",
+      "production VST3 build/package",
+      "portable native tests",
+      "replay comparison contracts",
+      "synthetic buffer parity"
+    ]
+  },
+  "paired_diagnosis": {
+    "path": "build/github-results/suppressed-adjacent-admission-trace-43728184329/paired-admission-diagnosis.json",
+    "sha256": "5526293e37b7606a714544c668c760679680c2d6124208fa6123f0eba4b26b05",
+    "summary": "The extra output-lane switches occur with note39 absent, not reactivated. Removing its admission perturbs note52 output resolution without recovering target40 holds.",
+    "tradeoff": {
+      "removed_note39_attacks": 2,
+      "added_note52_attacks": 6,
+      "net_extra_false_onsets": 4,
+      "target_held_change_samples": 0,
+      "target_first_exact_hold_change_samples": 0,
+      "timing_gain": "not measured"
+    },
+    "target_group_transition": {
+      "at_3453183": {
+        "note39_absent_and_unreserved": true,
+        "note52_mask": 8,
+        "target_playable_mask": 7,
+        "group_proposal": 6,
+        "group_transition": 6,
+        "group_after": 4,
+        "final_mask": 4,
+        "midi_mask": 4,
+        "group_origin": 1,
+        "group_before": 4,
+        "fine_member_mask": 6
+      },
+      "at_3453247": {
+        "group_proposal": 7,
+        "group_after": 7,
+        "final_mask": 7,
+        "midi_mask": 7,
+        "group_origin": 2,
+        "group_before": 4,
+        "group_transition": 2,
+        "fine_member_mask": 6
+      },
+      "shared_fields": {
+        "fine_valid": 1,
+        "fine_pending_mask": 6,
+        "dp_primary": 2,
+        "spectral_proposal": 2,
+        "reserved_coasting": 0
+      },
+      "limit": "The generic one-tick retention predicate is resolved by recorded origin/transition and source; its unrecorded counter subcase is not needed for the next decision.",
+      "source_explanation": {
+        "source_commit": "9016a7fa7530470142b491c13cb6821a0684d61f",
+        "source_file": "native/src/polyphonic_pitch_detector.cpp",
+        "fine_proposal_guard_line": 10529,
+        "pending_evidence_guard_line": 11226,
+        "joint_reservation_bypass_line": 11215,
+        "tier_completion_lines": [
+          10541,
+          10599
+        ],
+        "at_3453183": "Fine proposal6 passes ownership, primary, size and capacity guards but generic unison evidence is below threshold, retaining group4 (transition6). Selector reservation cannot equal6, because equality would commit immediately.",
+        "at_3453247": "Tier completion replaces the proposal with7 and reserves that mask in selector_group_masks_; the joint-reservation path commits group4 directly to7 (transition2). There is no committed group6-to7 transition.",
+        "remaining_counter_limit": "Trace does not distinguish a fresh/mismatched generic pending mask from the same pending mask below threshold. fine_pending_mask is separate fine-fit consensus state.",
+        "decision": "A new reason capture would not change the decision. Relaxing generic evidence could only admit intermediate group6 one tick earlier and would not repair the preceding fine-mask4 interval. The 0.450-second group dropout guard does not apply while already at the primary group4."
+      }
+    },
+    "next": "Use existing fine-fit trace and source to isolate the earlier fine-mask4 interval before selecting a targeted policy. Keep the admission trial rejected; no new transition-reason capture or repeat screen."
   }
 }

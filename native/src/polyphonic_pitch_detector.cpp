@@ -8261,6 +8261,33 @@ double PolyphonicPitchDetector::fine_frequency_consensus_seconds(
   return kFineFrequencyReplacementConsensusSeconds;
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+bool PolyphonicPitchDetector::carry_fine_subset_consensus_for_diagnostics(
+    FineFrequencyEvidenceState& state, std::uint8_t members,
+    bool active, bool selected, double beat_minimum,
+    bool beat_connected) noexcept {
+  const std::uint8_t previous = state.pending_member_mask;
+  if (!diagnostic_fine_subset_consensus_ || !active || !selected ||
+      !state.valid || !state.multi_source_observed || state.pending_count == 0U ||
+      string_count(state.member_mask) != 1U ||
+      string_count(previous) > 4U || string_count(members) < 2U ||
+      members == previous || (members & previous) != members ||
+      (members & state.member_mask) != state.member_mask ||
+      !beat_connected || !std::isfinite(beat_minimum) ||
+      !std::isfinite(state.pending_minimum_pairwise_beat_coherence) ||
+      beat_minimum < state.pending_minimum_pairwise_beat_coherence) {
+    return false;
+  }
+  // Only initial multi-string acquisition may reuse inclusion history when a
+  // pending group shrinks. The fit/source/residual checks have already run.
+  // Preserve the old full-mask beat minimum for the usual EMA below: it is not
+  // a reconstructed historical subset fit or an inflated subset coherence.
+  // No established-group replacement or added/swapped string receives credit.
+  state.pending_member_mask = members;
+  return true;
+}
+#endif
+
 std::uint8_t PolyphonicPitchDetector::bounded_fine_mask_complexity_output(
     bool active, bool selected, bool direct_fundamental, bool quiet,
     double score_threshold_ratio, std::uint8_t current_output_mask,
@@ -9440,6 +9467,11 @@ void PolyphonicPitchDetector::update_fine_frequency_evidence(
     const PairwiseBeatResult proposed_beat_support =
         pairwise_beat_coherence(members);
     const double proposed_beat_coherence = proposed_beat_support.minimum;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    carry_fine_subset_consensus_for_diagnostics(
+        state, members, candidate_state.active, selected[candidate],
+        proposed_beat_coherence, proposed_beat_support.connected);
+#endif
     if (members == state.pending_member_mask) {
       if (state.pending_count < std::numeric_limits<std::uint16_t>::max()) {
         ++state.pending_count;

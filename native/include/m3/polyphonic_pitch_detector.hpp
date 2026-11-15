@@ -751,6 +751,9 @@ class PolyphonicPitchDetector final {
   void set_calibrated_midi_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_midi_retention_ = enabled;
   }
+  void set_fine_subset_consensus_for_diagnostics(bool enabled) noexcept {
+    diagnostic_fine_subset_consensus_ = enabled;
+  }
   void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_suppressed_adjacent_admission_ = enabled;
     diagnostic_suppressed_adjacent_ticks_ = {};
@@ -1356,6 +1359,12 @@ class PolyphonicPitchDetector final {
       std::uint8_t current_member_mask,
       std::uint8_t proposed_member_mask,
       std::uint8_t playable_member_mask) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  bool carry_fine_subset_consensus_for_diagnostics(
+      FineFrequencyEvidenceState& state, std::uint8_t members,
+      bool active, bool selected, double beat_minimum,
+      bool beat_connected) noexcept;
+#endif
   [[nodiscard]] static std::uint8_t bounded_fine_mask_complexity_output(
       bool active, bool selected, bool direct_fundamental, bool quiet,
       double score_threshold_ratio, std::uint8_t current_output_mask,
@@ -1768,6 +1777,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_forced_pending_string_reservation_{};
   bool diagnostic_pending_midi_retention_{};
   bool diagnostic_calibrated_midi_retention_{};
+  bool diagnostic_fine_subset_consensus_{};
   bool diagnostic_suppressed_adjacent_admission_{};
   std::array<std::uint16_t, kMaxCandidates> diagnostic_suppressed_adjacent_ticks_{};
   std::uint32_t diagnostic_suppressed_adjacent_last_tick_{};

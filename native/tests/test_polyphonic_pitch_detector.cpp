@@ -4581,6 +4581,57 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(detector.diagnostic_suppressed_adjacent_last_tick_, 0U);
   }
 
+  static void fine_subset_consensus_probe(
+      PolyphonicPitchDetector& detector, unsigned guard, bool enabled) noexcept {
+    M3_EXPECT_FALSE(detector.diagnostic_fine_subset_consensus_);
+    detector.set_fine_subset_consensus_for_diagnostics(enabled);
+    auto& state = detector.fine_frequency_evidence_states_[0U];
+    state.valid = true;
+    state.multi_source_observed = true;
+    state.member_mask = 4U;
+    state.pending_member_mask = 7U;
+    state.pending_count = 2U;
+    state.pending_minimum_pairwise_beat_coherence = 0.0647193;
+    std::uint8_t members = 6U;
+    bool active = true, selected = true, connected = true;
+    double beat = 0.788858;
+    switch (guard) {
+      case 1U: members = 15U; break;  // Added member.
+      case 2U: members = 12U; break;  // Swapped member.
+      case 3U: members = 4U; break;   // Singleton fallback.
+      case 4U: members = 0U; break;
+      case 5U: members = 3U; break;   // Drops the established singleton.
+      case 6U: state.member_mask = 6U; break;  // Established group replacement.
+      case 7U: state.pending_count = 0U; break;
+      case 8U: state.valid = false; break;
+      case 9U: state.multi_source_observed = false; break;
+      case 10U: active = false; break;
+      case 11U: selected = false; break;
+      case 12U: beat = 0.01; break;
+      case 13U: connected = false; break;
+      case 14U: beat = std::numeric_limits<double>::quiet_NaN(); break;
+      case 15U: state.pending_member_mask = 31U; break;
+      case 16U: state.member_mask = 0U; break;
+      case 17U: members = 7U; break;  // Unchanged masks use the original path.
+      default: break;
+    }
+    const auto prior_mask = state.pending_member_mask;
+    const auto prior_count = state.pending_count;
+    const auto prior_member = state.member_mask;
+    const auto prior_beat = state.pending_minimum_pairwise_beat_coherence;
+    const bool carried = detector.carry_fine_subset_consensus_for_diagnostics(
+        state, members, active, selected, beat, connected);
+    M3_EXPECT_EQ(carried, enabled && guard == 0U);
+    M3_EXPECT_EQ(state.pending_member_mask, carried ? members : prior_mask);
+    // This helper only enables the existing counter/EMA path. It neither
+    // fabricates a fit nor commits fine membership or changes its duration.
+    M3_EXPECT_EQ(state.pending_count, prior_count);
+    M3_EXPECT_EQ(state.member_mask, prior_member);
+    M3_EXPECT_EQ(state.pending_minimum_pairwise_beat_coherence, prior_beat);
+    M3_EXPECT_NEAR(fine_consensus_seconds(4U, 6U, 7U), 0.20, 1.0e-12);
+    M3_EXPECT_NEAR(fine_consensus_seconds(3U, 6U, 7U), 2.25, 1.0e-12);
+  }
+
   static CandidateAdmissionDiagnostics floor_reentry_observation_probe(
       PolyphonicPitchDetector& detector, bool diagnostics,
       bool signal_present) noexcept {
@@ -9413,6 +9464,23 @@ M3_TEST(native_detector_suppressed_adjacent_admission_is_default_off) {
   m3::PolyphonicPitchDetector detector;
   m3::PolyphonicPitchDetectorTestAccess::suppressed_adjacent_admission_probe(
       detector, 0U, false);
+}
+
+M3_TEST(native_detector_fine_subset_consensus_carries_only_initial_supported_subset) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::fine_subset_consensus_probe(detector, 0U, true);
+}
+
+M3_TEST(native_detector_fine_subset_consensus_preserves_replacement_and_evidence_guards) {
+  for (unsigned guard = 1U; guard <= 17U; ++guard) {
+    m3::PolyphonicPitchDetector detector;
+    m3::PolyphonicPitchDetectorTestAccess::fine_subset_consensus_probe(detector, guard, true);
+  }
+}
+
+M3_TEST(native_detector_fine_subset_consensus_is_default_off) {
+  m3::PolyphonicPitchDetector detector;
+  m3::PolyphonicPitchDetectorTestAccess::fine_subset_consensus_probe(detector, 0U, false);
 }
 
 M3_TEST(native_detector_floor_reentry_observation_does_not_admit_or_seed_notes) {

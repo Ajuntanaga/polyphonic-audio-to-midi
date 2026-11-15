@@ -12,6 +12,15 @@ from tools import portable_suppressed_adjacent_admission_trial as trial
 
 
 class SuppressedAdjacentAdmissionTests(unittest.TestCase):
+    policy = 'suppressed-adjacent-admission'
+
+    def setUp(self):
+        selected = trial.POLICIES[self.policy]
+        self.trial_mode = selected['mode']
+        self.flag = selected['flag']
+        self.conditions = ((trial.OFF, ()), (trial.CURRENT, (trial.COLLISION,)),
+                           (self.trial_mode, (trial.COLLISION, self.flag)))
+
     def exercise(self, *, change=None, drift=False, failure=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -41,13 +50,13 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
 
             def selection(path):
                 name = next(name for name in trial.SCREEN_DATASETS if path.name.startswith(name + '-'))
-                mode = next(mode for mode, _ in trial.CONDITIONS if mode in path.name)
+                mode = next(mode for mode, _ in self.conditions if mode in path.name)
                 return name, mode
 
             def parsed(path):
                 name, mode = selection(path)
                 row = deepcopy(base)
-                if mode == trial.TRIAL:
+                if mode == self.trial_mode:
                     row['output']['fingerprint'] = 'fedcba9876543210'
                 if change:
                     change('snapshot', name, mode, row)
@@ -58,7 +67,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                 rows = [dict({key: label[key] for key in shared.LABEL_IDENTITY},
                              exact_held_samples=5, note_ons_inside_label=10)
                         for label in labels]
-                if name == 'physical-long' and mode == trial.TRIAL:
+                if name == 'physical-long' and mode == self.trial_mode:
                     rows[0].update(exact_held_samples=8, note_ons_inside_label=9)
                 row = dict(coverage_valid=True, labels=rows, sample_count=5646848,
                     sample_rate=96000,
@@ -71,10 +80,10 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
 
             references = dict(schema=shared.REFERENCE_SCHEMA, settings=shared.SETTINGS,
                 block_samples=512, source=source, anchor_report_sha256='saved-report',
-                reference_flags={m: list(f) for m, f in trial.CONDITIONS[:2]}, datasets={})
+                reference_flags={m: list(f) for m, f in self.conditions[:2]}, datasets={})
             for name in trial.SCREEN_DATASETS:
                 references['datasets'][name] = {}
-                for mode, _ in trial.CONDITIONS[:2]:
+                for mode, _ in self.conditions[:2]:
                     references['datasets'][name][mode] = dict(output=base['output'],
                         exact_matches_by_string_count=base['exact_matches_by_string_count'],
                         tsv_sha256=hashlib.sha256(mode.encode()).hexdigest(),
@@ -91,7 +100,10 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                 self.assertEqual(command[command.index('--block') + 1], '512')
                 self.assertNotIn('--outcome-trace', command)
                 self.assertNotIn('--diagnostic-core-timing', command)
-                self.assertEqual(trial.FLAG in command, mode == trial.TRIAL)
+                self.assertEqual(self.flag in command, mode == self.trial_mode)
+                for name, policy in trial.POLICIES.items():
+                    if name != self.policy:
+                        self.assertNotIn(policy['flag'], command)
                 self.assertEqual(trial.COLLISION in command, mode != trial.OFF)
                 if failure:
                     stderr.write('named replay fixture failure')
@@ -108,10 +120,12 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                                side_effect=lambda path, **kw: dict(raw_sha256=selection(path)[1]))):
                 if drift or failure:
                     with self.assertRaises((ValueError, subprocess.CalledProcessError)):
-                        trial.run(binary, inputs, manifest, reference_path, output)
+                        trial.run(binary, inputs, manifest, reference_path, output, policy=self.policy)
                 else:
-                    trial.run(binary, inputs, manifest, reference_path, output)
+                    trial.run(binary, inputs, manifest, reference_path, output, policy=self.policy)
             report = json.loads((output / 'report.json').read_text())
+            self.assertEqual(report['policy_name'], self.policy)
+            self.assertEqual(report['schema'], trial.POLICIES[self.policy]['schema'])
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
             self.assertFalse(report['installed_output_changed'])
@@ -129,7 +143,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
 
     def test_target_parity_stops_after_first_dataset(self):
         def change(kind, name, mode, row):
-            if kind == 'held' and mode == trial.TRIAL:
+            if kind == 'held' and mode == self.trial_mode:
                 row['labels'][0].update(exact_held_samples=5, note_ons_inside_label=10)
         report, commands = self.exercise(change=change)
         self.assertEqual(len(commands), 3)
@@ -138,7 +152,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
 
     def test_one_held_loss_rejects_despite_target_gain(self):
         def change(kind, name, mode, row):
-            if kind == 'held' and mode == trial.TRIAL:
+            if kind == 'held' and mode == self.trial_mode:
                 row['labels'][1]['exact_held_samples'] -= 1
         report, commands = self.exercise(change=change)
         self.assertTrue(report['target_hold']['improved'])
@@ -147,7 +161,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
 
     def test_later_passage_loss_stops_before_remaining_datasets(self):
         def change(kind, name, mode, row):
-            if kind == 'snapshot' and name == 'ordinary' and mode == trial.TRIAL:
+            if kind == 'snapshot' and name == 'ordinary' and mode == self.trial_mode:
                 row['labels'][1]['matched'] -= 1
         report, commands = self.exercise(change=change)
         self.assertFalse(report['bounded_screen_pass'])
@@ -160,7 +174,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                               ('clock', ('sample_count', 'sample_rate'))):
             for field in fields:
                 def change(kind, name, mode, row):
-                    if kind == 'held' and mode == trial.TRIAL:
+                    if kind == 'held' and mode == self.trial_mode:
                         if group == 'clock':
                             row[field] += 1
                         else:
@@ -182,6 +196,10 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
         self.assertEqual(report['state'], 'failed')
         self.assertEqual(report['failure_stderr_tail'], 'named replay fixture failure')
         self.assertFalse(report['bounded_screen_pass'])
+
+
+class FineSubsetConsensusTests(SuppressedAdjacentAdmissionTests):
+    policy = 'fine-subset-consensus'
 
 
 if __name__ == '__main__':
