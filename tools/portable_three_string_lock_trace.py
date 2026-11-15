@@ -1,6 +1,6 @@
-"""Trace the initial physical-long three-string delay without changing policy.
+"""Trace fixed physical-long three-string acquisition or sustain without changing policy.
 
-The fixed window follows a measured raw-MIDI delay in a completed corpus replay.
+Fixed windows follow measured raw-MIDI acquisition delays or sustain gaps.
 It is an annotation-relative diagnostic, not a physical onset or latency test.
 All native execution belongs on the offloaded worker.
 """
@@ -19,6 +19,9 @@ DATASET = 'physical-long'
 CASE = dict(label_index=3, midi_note=40, string_mask=7,
             start_sample=2932608, end_sample=5452800)
 WINDOW = (2932544, 3453312)
+SUSTAIN_WINDOW = (3556992, 3610048)
+PHASES = {'initial': (WINDOW, 'm3_three_string_lock_references_v1'),
+          'sustain': (SUSTAIN_WINDOW, 'm3_three_string_sustain_references_v1')}
 CONDITIONS = (('current-on', ('--diagnostic-spectral-lane-collision',)),)
 REFERENCE_SCHEMA = 'm3_three_string_lock_references_v1'
 INPUT_NAMES = (DATASET + '.wav', DATASET + '.tsv', 'calibration.m3cb', 'templates.tsv')
@@ -30,10 +33,11 @@ INTERPRETATION = (
     'is not external host delivery; no native timing or live acceptance is established.')
 
 
-def validate_reference(reference, manifest):
-    if (reference['schema'] != REFERENCE_SCHEMA or reference['dataset'] != DATASET
+def validate_reference(reference, manifest, *, phase='initial'):
+    window, schema = PHASES[phase]
+    if (reference['schema'] != schema or reference['dataset'] != DATASET
             or reference['settings'] != SETTINGS or reference['case'] != CASE
-            or reference['window'] != list(WINDOW) or reference['block_samples'] != 512
+            or reference['window'] != list(window) or reference['block_samples'] != 512
             or reference['conditions'] != {name: list(flags) for name, flags in CONDITIONS}
             or set(reference['replay_references']) != {'current-on'}):
         raise ValueError('Wrong fixed three-string reference selection')
@@ -50,8 +54,7 @@ def validate_reference(reference, manifest):
     held = row['held_labels'][str(CASE['label_index'])]
     if (row['sample_count'] != 5646848 or row['sample_rate'] != 96000
             or any(held[key] != value for key, value in CASE.items())
-            or held['first_exact_hold_delay_samples'] != 520639
-            or not WINDOW[0] <= CASE['start_sample'] + held['first_exact_hold_delay_samples'] < WINDOW[1]):
+            or held['first_exact_hold_delay_samples'] != 520639):
         raise ValueError('Saved annotation, sample clock or first exact hold changed')
 
 
@@ -140,14 +143,48 @@ def chronology(assignments, frames, label):
         interpretation=INTERPRETATION)
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def sustain_chronology(assignments, frames, label):
+    """Retain both sides of every observed MIDI-mask change, without a 32-event cap.
+
+    Assignment terms distinguish rendering from routing. Complete native candidate
+    rows (including group/reset details) stay in the compressed bounded evidence.
+    Unobserved routing is represented by None, never interpreted as a silent mask.
+    """
+    result = chronology(assignments, frames, label)
+    by_sample = defaultdict(list)
+    for row in assignments:
+        if int(row['observed']):
+            by_sample[int(row['sample'])].append(row)
+    previous, previous_mask, changes = None, None, []
+    for frame in frames:
+        peers = by_sample[frame['sample']]
+        target = next((row for row in peers if int(row['note']) == label['midi_note']), None)
+        routing = frame['routing']
+        mask = routing['midi_after'] if routing['render_observed'] or routing['continuity_observed'] else None
+        current = dict(frame={key: value for key, value in frame.items() if key != 'admission_peers'},
+            target_admission=(frame.get('admission_peers') or {}).get(label['midi_note']),
+            target_assignment=target,
+            peers=[{key: row[key] for key in ('note', 'prior_active', 'prior_midi',
+                'playable', 'dp_primary', 'final_mask', 'valid')} for row in peers])
+        if previous is not None and mask != previous_mask:
+            changes.append(dict(sample=frame['sample'], before_mask=previous_mask,
+                after_mask=mask, before=previous, after=current))
+        previous, previous_mask = current, mask
+    result.update(route_change_count=len(changes), route_changes=changes,
+                  interpretation=INTERPRETATION)
+    return result
+
+
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900, phase='initial'):
     if timeout <= 0:
         raise ValueError('timeout must be positive')
-    validate_reference(json.loads(reference_path.read_text()), json.loads(manifest_path.read_text()))
+    validate_reference(json.loads(reference_path.read_text()), json.loads(manifest_path.read_text()), phase=phase)
+    window, _ = PHASES[phase]
     return capture(binary, corpus, manifest_path, reference_path, output,
         timeout=timeout, dataset=DATASET, cases=(CASE,), conditions=CONDITIONS,
-        window=lambda label: WINDOW, diagnose=chronology,
-        schema='m3_three_string_lock_trace_v1', interpretation=INTERPRETATION)
+        window=lambda label: window, diagnose=sustain_chronology if phase == 'sustain' else chronology,
+        schema='m3_three_string_sustain_trace_v1' if phase == 'sustain' else 'm3_three_string_lock_trace_v1',
+        interpretation=INTERPRETATION)
 
 
 def main():
@@ -155,9 +192,10 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--phase', choices=PHASES, default='initial')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+        timeout=args.replay_timeout_seconds, phase=args.phase)
 
 
 if __name__ == '__main__':

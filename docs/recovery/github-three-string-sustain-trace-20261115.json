@@ -1,0 +1,74 @@
+{
+  "schema": "m3_three_string_sustain_trace_checkpoint_v1",
+  "updated_at": "2026-11-15T15:51:00.682649+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "5f4fe2fa7321d72d83b77c910936f8fee87532bc",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "task": "three-string-sustain-trace",
+    "dataset": "physical-long",
+    "note": 40,
+    "label_index": 3,
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "reference": "docs/recovery/three-string-sustain-references-20261115.json",
+  "saved_evidence": {
+    "path": "build/github-results/suppressed-adjacent-admission-43726121150/sustain-midi-diagnosis.json",
+    "sha256": "61ea6fa925921cad595c92a65da586a3067d4cfad32fc84cf8ec7430e2211d77",
+    "source_run_id": "43726121150"
+  },
+  "scope": {
+    "dataset": "physical-long",
+    "label_index": 3,
+    "note": 40,
+    "string_mask": 7,
+    "window_samples": [
+      3556992,
+      3610048
+    ],
+    "decision_ticks": 829,
+    "condition": "current-on",
+    "flags": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "block_samples": 512,
+    "full_recording_samples": 5646848
+  },
+  "purpose": "Distinguish candidate loss, member-group change and MIDI routing at the recorded all-three dropout and 17 periodic mask7-to6-to7 gaps. No native instrumentation or policy change.",
+  "required": [
+    "saved complete scored TSV, raw MIDI and detector outcome bit-identical",
+    "saved exact-held target measurement identical",
+    "complete 64-sample decision window and complete joint assignment peer decisions",
+    "retain both sides of every observed route-mask change; unobserved is not silent"
+  ],
+  "local_validation": {
+    "parser_mock_tests_passed": 25,
+    "workflow_yaml_and_shell_syntax": true,
+    "diff_check": true,
+    "native_processing_run_locally": false,
+    "implementation_review": "One root review of runner, schema selection, current-ON-only wiring, before/after route observations, and worker mirrors; no concrete blocker."
+  },
+  "runtime_policy_changed": false,
+  "native_instrumentation_changed": false,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "unmeasured_gates": [
+    "new policy acceptance",
+    "full-corpus no-regression",
+    "processing allocations",
+    "p99 <= 166666 ns",
+    "max <= 333333 ns",
+    "zero deadline overruns",
+    "external DAW/device delivery"
+  ],
+  "next": "Dispatch one bounded GitHub current-ON capture, collect the small report once, and identify the stage at the saved sustain losses before selecting any replacement. Do not rerun rejected policies or broaden the capture. Keep installed scores unchanged.",
+  "dispatch_directory": "build/github-results/three-string-sustain-dispatch-20261115"
+}

@@ -1,21 +1,22 @@
 {
   "schema": "m3_fine_subset_consensus_checkpoint_v1",
-  "updated_at": "2026-11-15T15:36:38.929456+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T15:42:15.589366+00:00",
+  "state": "rejected",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "9016a7fa7530470142b491c13cb6821a0684d61f",
-    "commit": null,
+    "commit": "5f4fe2fa7321d72d83b77c910936f8fee87532bc",
     "worker_repository": "Ajuntanaga/m3-offload",
     "worker_commit": "d677410910242898539298d8bb3cc3745c4662cc",
-    "run_id": null,
+    "run_id": "43730891755",
     "task": "fine-subset-consensus-trial",
     "dataset": "physical-long",
     "note": 40,
     "label_index": 3,
     "input_release": "corpus-20261108",
-    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "run_attempt": "1"
   },
   "reference": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "reference_report": "build/github-results/calibrated-midi-retention-corpus-43714618511/calibrated-midi-retention-corpus/report.json",
@@ -69,7 +70,7 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once; bulk evidence remains remote",
   "unmeasured_gates": [
     "full corpus",
     "buffer identity",
@@ -84,5 +85,280 @@
     "Any gain in this bounded screen is eligibility for wider validation only. Calibrated MIDI retention and rejected suppressed-adjacent admission flags remain disabled.",
     "The carried old full-mask beat minimum seeds the unchanged EMA with current subset support; prior full-mask connectivity is not required. This does not establish historical subset qualification."
   ],
-  "next": "Push scoped source and worker commits, then dispatch the bounded GitHub screen once. Keep bulk evidence remote unless needed for a named diagnosis."
+  "next": "Keep the initial-acquisition trial default-off and rejected under its stated hold-plus-attack gate. Use existing full current-ON raw MIDI to locate the remaining target label3 fragmentation/retriggers before choosing a sustain-specific change. Require more exact held samples, fewer attacks, zero passage loss or false-output growth, reference/buffer identity, zero allocations, p99<=166666ns, max<=333333ns and zero overruns; external DAW/device gates remain open. Do not rerun this screen or poll/recollect completed jobs.",
+  "dispatch_receipt": "build/github-results/fine-subset-consensus-dispatch-20261115/dispatch-result.json",
+  "local_output": "build/github-results/fine-subset-consensus-43730891755",
+  "small_artifact": "m3-report-43730891755-1",
+  "bulk_artifact": "m3-evidence-43730891755-1",
+  "workflow_conclusion": "success",
+  "last_remote_observation_at": "2026-11-15T15:41:06.856939+00:00",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T15:36:50Z",
+      "databaseId": 43730859486,
+      "headSha": "5f4fe2fa7321d72d83b77c910936f8fee87532bc",
+      "status": "completed",
+      "updatedAt": "2026-11-15T15:38:27Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43730859486",
+      "workflowName": "Portable offline replay"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T15:36:50Z",
+      "databaseId": 43730859555,
+      "headSha": "5f4fe2fa7321d72d83b77c910936f8fee87532bc",
+      "status": "completed",
+      "updatedAt": "2026-11-15T15:40:25Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43730859555",
+      "workflowName": "CI"
+    }
+  ],
+  "active_step": [],
+  "artifact_metadata": [
+    {
+      "id": 14168920382,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2ODkyMDM4Mg==",
+      "name": "m3-report-43730891755-1",
+      "size_in_bytes": 10930,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14168920382",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14168920382/zip",
+      "expired": false,
+      "digest": "sha256:42da0beadd3388d4d160af537eb0ccbb6fae1a220f68cde290e7d585fd9fab86",
+      "created_at": "2026-11-15T15:39:48Z",
+      "updated_at": "2026-11-15T15:39:48Z",
+      "expires_at": "2026-11-29T15:39:47Z",
+      "workflow_run": {
+        "id": 43730891755,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "d677410910242898539298d8bb3cc3745c4662cc"
+      }
+    },
+    {
+      "id": 14168417304,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2ODQxNzMwNA==",
+      "name": "m3-evidence-43730891755-1",
+      "size_in_bytes": 690204,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14168417304",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14168417304/zip",
+      "expired": false,
+      "digest": "sha256:dd7f7c3aaed2e38c78348f572807ec9344e4b4a946596e9ccb02a5bb456b1dbe",
+      "created_at": "2026-11-15T15:39:49Z",
+      "updated_at": "2026-11-15T15:39:49Z",
+      "expires_at": "2026-11-22T15:39:48Z",
+      "workflow_run": {
+        "id": 43730891755,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "d677410910242898539298d8bb3cc3745c4662cc"
+      }
+    }
+  ],
+  "small_report_archive": "build/github-results/fine-subset-consensus-43730891755/small-report.zip",
+  "small_report_sha256": "42da0beadd3388d4d160af537eb0ccbb6fae1a220f68cde290e7d585fd9fab86",
+  "collection_receipt": "build/github-results/fine-subset-consensus-43730891755/collection-receipt.json",
+  "stage": "stopped without target hold and attack improvement",
+  "finished_at": "2026-11-15T15:39:47.086120+00:00",
+  "result": {
+    "decision": "rejected: target attacks did not decrease",
+    "completed_datasets": 1,
+    "unrun_datasets": [
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "reference_identity_pass": true,
+    "saved_reference_modes": [
+      "reference-off",
+      "current-on"
+    ],
+    "note_safety_pass": true,
+    "bounded_screen_pass": false,
+    "target_hold": {
+      "before": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1618560,
+        "unmatched_hold_samples": 901632,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 515839,
+        "note_ons_inside_label": 104
+      },
+      "improved": false
+    },
+    "target_exact_held_percent_before": 64.03321651683682,
+    "target_exact_held_percent_after": 64.22367819594697,
+    "target_held_gain_samples": 4800,
+    "target_first_hold_advance_samples": 4800,
+    "target_first_hold_advance_seconds": 0.05,
+    "snapshot_before": {
+      "labeled": 68441,
+      "matched": 41452,
+      "false_wrong_note_voices": 67769,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75881,
+      "fingerprint": "6ecf88865ddc34e4"
+    },
+    "snapshot_after": {
+      "labeled": 68441,
+      "matched": 41527,
+      "false_wrong_note_voices": 67694,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75806,
+      "fingerprint": "60a96f8ee2594b7a"
+    },
+    "exact_matches_by_string_count_before": {
+      "2": {
+        "labeled": 29063,
+        "matched": 16233
+      },
+      "3": {
+        "labeled": 39378,
+        "matched": 25219
+      }
+    },
+    "exact_matches_by_string_count_after": {
+      "2": {
+        "labeled": 29063,
+        "matched": 16233
+      },
+      "3": {
+        "labeled": 39378,
+        "matched": 25294
+      }
+    },
+    "comparison": {
+      "snapshot": {
+        "delta": {
+          "matched": 75,
+          "false_wrong_note_voices": -75,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 0,
+          "false_positive_voices": -75
+        },
+        "changed_labels": [
+          {
+            "label_index": 3,
+            "midi_note": 40,
+            "string_mask": 7,
+            "labeled": 39378,
+            "baseline_matched": 25219,
+            "current_matched": 25294,
+            "matched_delta": 75
+          }
+        ],
+        "lost_labels": [],
+        "increased_error_counts": [],
+        "gate_pass": true,
+        "output_bit_identical": false
+      },
+      "inference_bit_identical": null,
+      "inference_identity_required": false,
+      "sample_clock_identical": true,
+      "held_pairing_valid": true,
+      "changed_held_labels": [
+        {
+          "label_index": 3,
+          "midi_note": 40,
+          "exact_held_samples_before": 1613760,
+          "exact_held_samples_after": 1618560,
+          "held_delta": 4800,
+          "note_ons_before": 104,
+          "note_ons_after": 104,
+          "note_on_delta": 0
+        }
+      ],
+      "held_losses": [],
+      "improved_hold_and_attack_labels": [],
+      "exact_held_samples_delta": 4800,
+      "output_safety_delta": {
+        "false_wrong_note_voice_samples": -4800,
+        "false_wrong_string_voice_samples": 0,
+        "false_gap_voice_samples": 0,
+        "false_wrong_note_onsets": 0,
+        "false_wrong_string_onsets": 0,
+        "false_gap_onsets": 0
+      },
+      "raw_conflict_delta": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "note_safety_pass": true
+    },
+    "raw_output_safety_before": {
+      "false_wrong_note_voice_samples": 3770334,
+      "false_wrong_string_voice_samples": 174751,
+      "false_gap_voice_samples": 281028,
+      "matched_voice_samples": 7935231,
+      "emitted_voice_samples": 12161344,
+      "false_wrong_note_onsets": 411,
+      "false_wrong_string_onsets": 44,
+      "false_gap_onsets": 141,
+      "matched_onsets": 159,
+      "emitted_onsets": 755
+    },
+    "raw_output_safety_after": {
+      "false_wrong_note_voice_samples": 3765534,
+      "false_wrong_string_voice_samples": 174751,
+      "false_gap_voice_samples": 281028,
+      "matched_voice_samples": 7944831,
+      "emitted_voice_samples": 12166144,
+      "false_wrong_note_onsets": 411,
+      "false_wrong_string_onsets": 44,
+      "false_gap_onsets": 141,
+      "matched_onsets": 159,
+      "emitted_onsets": 755
+    },
+    "raw_conflicts_before": {
+      "cross_pitch_on_before_release": 0,
+      "repeated_pitch_on_before_release": 0,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "raw_conflicts_after": {
+      "cross_pitch_on_before_release": 0,
+      "repeated_pitch_on_before_release": 0,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "target_note_ons_before": 104,
+    "target_note_ons_after": 104,
+    "worker_native_tests_passed": 3,
+    "worker_python_tests_passed": 237,
+    "installed_output_changed": false,
+    "production_defaults_changed": false,
+    "promotion_accepted": false,
+    "scope": "Physical-long only; raw held samples, labeled-frame matches and false voice-samples/onsets are separate. No timing, allocation, buffer or live-host acceptance is established."
+  },
+  "report": "build/github-results/fine-subset-consensus-43730891755/fine-subset-consensus/report.json",
+  "report_sha256": "ec4d76b034c4448d39b0ebefc7ad25c3a0e7a52e4012f906f9f16b598463c17d"
 }
