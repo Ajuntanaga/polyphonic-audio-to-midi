@@ -3,16 +3,16 @@
   "task": "pending-string-reservation-trace",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
+  "source_commit": "ff63283ce4f0b021f64be76b813348947658fa75",
   "worker_commit": "343ab18aba24931bd9318572a6ed2377b0fd3dcf",
-  "run_id": 43698095088,
-  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43698095088",
-  "status": "completed",
-  "conclusion": "failure",
-  "result_final": true,
+  "run_id": 43698368720,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43698368720",
+  "status": "in_progress",
+  "conclusion": null,
+  "result_final": false,
   "created_at": "2026-11-15T09:10:21.615173+00:00",
-  "observed_at": "2026-11-15T09:15:08.289064+00:00",
-  "stage": "Stopped before recorded captures: native assignment trace contract expected 96 columns instead of 99",
+  "observed_at": "2026-11-15T09:19:35.255966+00:00",
+  "stage": "Running six bounded current/trial assignment maturity captures on GitHub",
   "checkpoint": "docs/recovery/github-pending-string-trace-20261115.json",
   "reference_checkpoint": "docs/recovery/pending-string-trace-references-20261115.json",
   "prior_trial_checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
@@ -29,13 +29,13 @@
     "trial-on"
   ],
   "capture_count": 6,
-  "output_target": "build/github-results/pending-string-reservation-trace-43698095088",
+  "output_target": "build/github-results/pending-string-reservation-trace-43698368720",
   "report_relative_path": "pending-string-reservation-trace/report.json",
   "report_available": false,
-  "outputs_downloaded_once": true,
+  "outputs_downloaded_once": false,
   "artifact_names": {
-    "small": "m3-report-43698095088-1",
-    "bulk": "m3-evidence-43698095088-1"
+    "small": "m3-report-43698368720-1",
+    "bulk": "m3-evidence-43698368720-1"
   },
   "local_checks": {
     "python_tests": 48,
@@ -56,73 +56,163 @@
   },
   "source_runs": [
     {
-      "conclusion": "failure",
-      "createdAt": "2026-11-15T09:12:07Z",
-      "databaseId": 43698083354,
-      "displayTitle": "Trace assignment maturity for pending string regression",
-      "headSha": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
+      "conclusion": "success",
+      "databaseId": 43698351370,
+      "headSha": "ff63283ce4f0b021f64be76b813348947658fa75",
       "status": "completed",
-      "updatedAt": "2026-11-15T09:13:28Z",
-      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698083354",
+      "updatedAt": "2026-11-15T09:16:38Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698351370",
       "workflowName": "Portable offline replay"
     },
     {
-      "conclusion": "",
-      "createdAt": "2026-11-15T09:12:07Z",
-      "databaseId": 43698083278,
-      "displayTitle": "Trace assignment maturity for pending string regression",
-      "headSha": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
-      "status": "in_progress",
-      "updatedAt": "2026-11-15T09:12:11Z",
-      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698083278",
+      "conclusion": "success",
+      "databaseId": 43698351242,
+      "headSha": "ff63283ce4f0b021f64be76b813348947658fa75",
+      "status": "completed",
+      "updatedAt": "2026-11-15T09:19:08Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698351242",
       "workflowName": "CI"
     }
   ],
-  "dispatch_receipt": "build/github-results/pending-string-trace-dispatch-20261115/attempt.json",
-  "small_artifact_collected": true,
-  "artifact_metadata": [
+  "dispatch_receipt": "build/github-results/pending-string-trace-dispatch-20261115-corrected/attempt.json",
+  "small_artifact_collected": false,
+  "captures_completed": null,
+  "previous_attempts": [
     {
-      "id": 14155417554,
-      "node_id": "MDg6QXJ0aWZhY3QxNDE1NTQxNzU1NA==",
-      "name": "m3-report-43698095088-1",
-      "size_in_bytes": 4799,
-      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155417554",
-      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155417554/zip",
-      "expired": false,
-      "digest": "sha256:1fcacc28ecb97081a5a2457a9874c47792405a51396166a97717e6e53e507fb7",
-      "created_at": "2026-11-15T09:13:18Z",
-      "updated_at": "2026-11-15T09:13:18Z",
-      "expires_at": "2026-11-29T09:13:17Z",
-      "workflow_run": {
-        "id": 43698095088,
-        "repository_id": 1450767070,
-        "head_repository_id": 1450767070,
-        "head_branch": "main",
-        "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
-      }
-    },
-    {
-      "id": 14154564933,
-      "node_id": "MDg6QXJ0aWZhY3QxNDE1NDU2NDkzMw==",
-      "name": "m3-evidence-43698095088-1",
-      "size_in_bytes": 478909,
-      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14154564933",
-      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14154564933/zip",
-      "expired": false,
-      "digest": "sha256:ebc058ba08c74387ebf08ad97cd24933d748b9d7eb7e2bd270bd13b06bbc5857",
-      "created_at": "2026-11-15T09:13:20Z",
-      "updated_at": "2026-11-15T09:13:20Z",
-      "expires_at": "2026-11-22T09:13:19Z",
-      "workflow_run": {
-        "id": 43698095088,
-        "repository_id": 1450767070,
-        "head_repository_id": 1450767070,
-        "head_branch": "main",
-        "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
-      }
+      "schema": "m3_github_pending_string_trace_checkpoint_v1",
+      "task": "pending-string-reservation-trace",
+      "repository": "Ajuntanaga/m3-offload",
+      "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "source_commit": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
+      "worker_commit": "343ab18aba24931bd9318572a6ed2377b0fd3dcf",
+      "run_id": 43698095088,
+      "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43698095088",
+      "status": "completed",
+      "conclusion": "failure",
+      "result_final": true,
+      "created_at": "2026-11-15T09:10:21.615173+00:00",
+      "observed_at": "2026-11-15T09:15:08.289064+00:00",
+      "stage": "Stopped before recorded captures: native assignment trace contract expected 96 columns instead of 99",
+      "checkpoint": "docs/recovery/github-pending-string-trace-20261115.json",
+      "reference_checkpoint": "docs/recovery/pending-string-trace-references-20261115.json",
+      "prior_trial_checkpoint": "docs/recovery/github-pending-string-reservation-20261110.json",
+      "dataset": "ordinary",
+      "note": 37,
+      "label_index": 17,
+      "labels": [
+        17,
+        306,
+        335
+      ],
+      "policies": [
+        "current-on",
+        "trial-on"
+      ],
+      "capture_count": 6,
+      "output_target": "build/github-results/pending-string-reservation-trace-43698095088",
+      "report_relative_path": "pending-string-reservation-trace/report.json",
+      "report_available": false,
+      "outputs_downloaded_once": true,
+      "artifact_names": {
+        "small": "m3-report-43698095088-1",
+        "bulk": "m3-evidence-43698095088-1"
+      },
+      "local_checks": {
+        "python_tests": 48,
+        "result": "passed",
+        "native_execution": false
+      },
+      "acceptance": "All six full snapshot and raw MIDI streams retain their respective saved references; held measurements unchanged; complete observed joint assignments reproduce exactly; repeated complete outcome/MIDI streams match per policy. Diagnostic only: the reservation policy remains rejected.",
+      "installed_output_changed": false,
+      "promotion_accepted": false,
+      "runtime_rule_changed": false,
+      "local_native_execution": false,
+      "native_timing": "not measured",
+      "external_host_and_hardware": "not measured",
+      "next_step": "Read assignment maturity and feasibility for labels17,306,335 before choosing a replacement policy. No lost passage/held samples or increased false outputs; OFF/buffer identity, zero allocations, p99<=166666ns, max<=333333ns and zero overruns remain required.",
+      "routing": {
+        "github_actions": "Native compilation, tests and all six recorded replays; retain large evidence remotely.",
+        "kaggle": "Legacy recovery runs are terminal and collected. Existing GPU checks are synthetic only. No duplicate native replay or useful independent GPU task is currently queued; use Kaggle only for a distinct suitable task."
+      },
+      "source_runs": [
+        {
+          "conclusion": "failure",
+          "createdAt": "2026-11-15T09:12:07Z",
+          "databaseId": 43698083354,
+          "displayTitle": "Trace assignment maturity for pending string regression",
+          "headSha": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
+          "status": "completed",
+          "updatedAt": "2026-11-15T09:13:28Z",
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698083354",
+          "workflowName": "Portable offline replay"
+        },
+        {
+          "conclusion": "failure",
+          "createdAt": "2026-11-15T09:12:07Z",
+          "databaseId": 43698083278,
+          "displayTitle": "Trace assignment maturity for pending string regression",
+          "headSha": "459356351d97e8c87e3dabff4cb028feae6e6bb4",
+          "status": "completed",
+          "updatedAt": "2026-11-15T09:15:08Z",
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43698083278",
+          "workflowName": "CI"
+        }
+      ],
+      "dispatch_receipt": "build/github-results/pending-string-trace-dispatch-20261115/attempt.json",
+      "small_artifact_collected": true,
+      "artifact_metadata": [
+        {
+          "id": 14155417554,
+          "node_id": "MDg6QXJ0aWZhY3QxNDE1NTQxNzU1NA==",
+          "name": "m3-report-43698095088-1",
+          "size_in_bytes": 4799,
+          "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155417554",
+          "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14155417554/zip",
+          "expired": false,
+          "digest": "sha256:1fcacc28ecb97081a5a2457a9874c47792405a51396166a97717e6e53e507fb7",
+          "created_at": "2026-11-15T09:13:18Z",
+          "updated_at": "2026-11-15T09:13:18Z",
+          "expires_at": "2026-11-29T09:13:17Z",
+          "workflow_run": {
+            "id": 43698095088,
+            "repository_id": 1450767070,
+            "head_repository_id": 1450767070,
+            "head_branch": "main",
+            "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
+          }
+        },
+        {
+          "id": 14154564933,
+          "node_id": "MDg6QXJ0aWZhY3QxNDE1NDU2NDkzMw==",
+          "name": "m3-evidence-43698095088-1",
+          "size_in_bytes": 478909,
+          "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14154564933",
+          "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14154564933/zip",
+          "expired": false,
+          "digest": "sha256:ebc058ba08c74387ebf08ad97cd24933d748b9d7eb7e2bd270bd13b06bbc5857",
+          "created_at": "2026-11-15T09:13:20Z",
+          "updated_at": "2026-11-15T09:13:20Z",
+          "expires_at": "2026-11-22T09:13:19Z",
+          "workflow_run": {
+            "id": 43698095088,
+            "repository_id": 1450767070,
+            "head_repository_id": 1450767070,
+            "head_branch": "main",
+            "head_sha": "343ab18aba24931bd9318572a6ed2377b0fd3dcf"
+          }
+        }
+      ],
+      "captures_completed": 0,
+      "failure": "Stale native trace column expectations at test_offline_replay.cpp:1091,1498,1659. Updated to 99 columns and named maturity headers; replacement prepared.",
+      "collection_receipt": "build/github-results/pending-string-reservation-trace-43698095088/collection-receipt.json"
     }
   ],
-  "captures_completed": 0,
-  "failure": "Stale native trace column expectations at test_offline_replay.cpp:1091,1498,1659. Updated to 99 columns and named maturity headers; replacement prepared.",
-  "collection_receipt": "build/github-results/pending-string-reservation-trace-43698095088/collection-receipt.json"
+  "remote_observation": {
+    "path": "build/github-results/pending-string-trace-dispatch-20261115-corrected/run-43698368720.json",
+    "build": "passed",
+    "python_contracts": "passed",
+    "source_portable": "passed",
+    "transient_read_failure": "Recovered; no duplicate dispatch",
+    "source_ci": "passed"
+  }
 }
