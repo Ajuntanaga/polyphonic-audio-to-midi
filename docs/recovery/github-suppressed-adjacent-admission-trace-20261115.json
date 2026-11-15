@@ -1,15 +1,15 @@
 {
   "schema": "m3_suppressed_adjacent_admission_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T15:07:45.274427+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T15:15:49.044244+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "5c40fee93f43cb8cf893f7bb473bd47ee7d7cdbf",
-    "commit": null,
+    "commit": "b92da1448f58b61a79ad2784b67287f35dde8d73",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "958eb6b032657e320191dd65ecea2e7290b1df9c",
+    "run_id": "43728184329",
     "run_attempt": "1",
     "task": "suppressed-adjacent-admission-trace",
     "dataset": "physical-long",
@@ -77,11 +77,174 @@
   "installed_output_changed": false,
   "runtime_rule_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
+  "collection_state": "collected_once_hash_verified",
   "limitations": [
     "Rejected-trial complete prior outcome was not measured; its full scored/raw references are available.",
     "Observer computation runs in offline diagnostic selections; recorded trace output is bounded.",
     "No timing, allocation or external DAW/device acceptance is measured by this trace."
   ],
-  "next": "Dispatch this bounded capture once on GitHub; collect its small report once, then inspect paired anchor observations. Keep admission trial rejected and all installed scores unchanged."
+  "next": "Read the collected paired admission/assignment observations to resolve the six extra note52 switches and unchanged target delay. Verify the one-line native trace-test parser correction on GitHub. Keep the policy rejected; no repeated worker capture or safety screen.",
+  "dispatch_receipt": "build/github-results/suppressed-adjacent-admission-trace-dispatch-20261115/dispatch-result.json",
+  "local_output": "build/github-results/suppressed-adjacent-admission-trace-43728184329",
+  "small_artifact": "m3-report-43728184329-1",
+  "bulk_artifact": "m3-evidence-43728184329-1",
+  "workflow_conclusion": "success",
+  "last_remote_observation_at": "2026-11-15T15:11:28.550279+00:00",
+  "source_runs": [
+    {
+      "conclusion": "failure",
+      "databaseId": 43728155209,
+      "headSha": "b92da1448f58b61a79ad2784b67287f35dde8d73",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728155209",
+      "workflowName": "CI"
+    },
+    {
+      "conclusion": "failure",
+      "databaseId": 43728155210,
+      "headSha": "b92da1448f58b61a79ad2784b67287f35dde8d73",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43728155210",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "artifact_metadata": [
+    {
+      "id": 14167162741,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2NzE2Mjc0MQ==",
+      "name": "m3-evidence-43728184329-1",
+      "size_in_bytes": 4083873,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14167162741",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14167162741/zip",
+      "expired": false,
+      "digest": "sha256:5d67cf3406eef690cbed5e6ca3f13476bfc0f9c745eddc0ac5f005beffee722c",
+      "created_at": "2026-11-15T15:11:04Z",
+      "updated_at": "2026-11-15T15:11:04Z",
+      "expires_at": "2026-11-22T15:11:03Z",
+      "workflow_run": {
+        "id": 43728184329,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "958eb6b032657e320191dd65ecea2e7290b1df9c"
+      }
+    },
+    {
+      "id": 14166928083,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2NjkyODA4Mw==",
+      "name": "m3-report-43728184329-1",
+      "size_in_bytes": 73599,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14166928083",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14166928083/zip",
+      "expired": false,
+      "digest": "sha256:91c1072d6ef902120139e2014dad003700c8db7d0db571a526f463ad2fdc3b14",
+      "created_at": "2026-11-15T15:11:02Z",
+      "updated_at": "2026-11-15T15:11:02Z",
+      "expires_at": "2026-11-29T15:11:01Z",
+      "workflow_run": {
+        "id": 43728184329,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "958eb6b032657e320191dd65ecea2e7290b1df9c"
+      }
+    }
+  ],
+  "active_step": [
+    "diagnose the observed paired assignments",
+    "verify the native trace-test column correction in source CI"
+  ],
+  "collection_receipt": "build/github-results/suppressed-adjacent-admission-trace-43728184329/successful-collection-receipt.json",
+  "small_artifact_bytes": 73599,
+  "small_artifact_sha256": "91c1072d6ef902120139e2014dad003700c8db7d0db571a526f463ad2fdc3b14",
+  "report": "build/github-results/suppressed-adjacent-admission-trace-43728184329/suppressed-adjacent-admission-trace/report.json",
+  "report_sha256": "b4cd223fdb3c24d9e314a7753428c9b9589842b4ad3df9bd61f0469c6a418d95",
+  "bulk_collection_state": "remote_not_collected",
+  "result": {
+    "saved_references_bit_identical": true,
+    "repeated_policy_streams_bit_identical": true,
+    "runtime_rule_changed": false,
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "native_timing": "not measured",
+    "live_readiness": "not measured",
+    "interpretation": "Paired observation of the unchanged current and rejected admission policies. Complete scored output and raw MIDI must match each saved reference; current-ON also preserves its saved complete outcome. A prior complete outcome for the rejected trial was not measured. Admission and complete selected-peer costs are observations, not proof of a sufficient replacement rule. Raw MIDI is not host delivery. No timing, allocation or live acceptance is measured here.",
+    "runs": {
+      "current-on-label3": {
+        "tsv_sha256": "bce5ab56f14da796e8c3f8eeef9e921a96ef444a95c398f7221ef01953861d09",
+        "midi_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+        "saved_reference_bit_identical": true,
+        "held_label": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1613760,
+          "unmatched_hold_samples": 906432,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 30,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 104
+        },
+        "snapshot_label": {
+          "label_index": 3,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "midi_note": 40,
+          "string_mask": 7,
+          "calibration_pass": 0,
+          "labeled": 39378,
+          "matched": 25219
+        },
+        "outcome_sha256": "64acc724e0bc6b7f7ba0fdb83713ef461047f6ae654e9bfc5e15352345ac6408",
+        "saved_outcome_bit_identical": true
+      },
+      "suppressed-adjacent-admission-on-label3": {
+        "tsv_sha256": "fcbd59f142756c21402252ced3d4f6eafaa09a08af031a06e35baa7fc7f12b10",
+        "midi_sha256": "5018bd3779c1838187a7bd76bb3f3c8e2cbcdc60a557aff22c6c24c468cdddcb",
+        "saved_reference_bit_identical": true,
+        "held_label": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1613760,
+          "unmatched_hold_samples": 906432,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 30,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 104
+        },
+        "snapshot_label": {
+          "label_index": 3,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "midi_note": 40,
+          "string_mask": 7,
+          "calibration_pass": 0,
+          "labeled": 39378,
+          "matched": 25219
+        }
+      }
+    }
+  },
+  "worker_validation": {
+    "focused_native_tests_passed": 3,
+    "python_contracts_passed": 230,
+    "complete_decision_ticks_per_policy": 679,
+    "observed_notes_per_tick": 53,
+    "native_joint_assignment_reproduced": true
+  },
+  "source_validation_followup": {
+    "state": "fix_prepared",
+    "cause": "The native trace test expected route_capacity_blocked to be the newline-terminated last header field. admission_peers now follows it; the test searched the wrong column.",
+    "fix": "Match route_capacity_blocked without a newline in native/tests/test_offline_replay.cpp.",
+    "scope": "Test-only; no runtime or replay behavior change. No worker replay is required.",
+    "native_execution_local": false,
+    "next": "Commit/push the test correction and follow the resulting source CI and portable runs."
+  }
 }

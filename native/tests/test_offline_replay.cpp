@@ -611,7 +611,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
           if (fields[column] == "route_continuity_observed") routing_continuity_column = column;
           if (fields[column] == "route_pruned_mask") routing_pruned_column = column;
           if (fields[column] == "route_midi_after") routing_after_column = column;
-          if (fields[column] == "route_capacity_blocked\n") routing_blocked_column = column;
+          if (fields[column] == "route_capacity_blocked") routing_blocked_column = column;
         }
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
