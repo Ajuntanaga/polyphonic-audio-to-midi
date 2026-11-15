@@ -6140,7 +6140,7 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_pending_string_reservation_)
+  if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_)
     diagnostic_assignment_previews_.fill(false);
 #endif
   if (profile_mode_ != ProfileMode::m3) {
@@ -6318,12 +6318,26 @@ void PolyphonicPitchDetector::assign_m3_strings(
   current[reserved_strings].valid = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   bool pending_preview_enabled = false;
-  if (diagnostic_pending_string_reservation_ &&
+  if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
       midi_routing_ == MidiRouting::per_voice) {
     for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate)
       pending_preview_enabled |= candidate_states_[candidate].active;
   }
   const auto pending_attack_decisions = pending_preview_enabled ? attack_decisions() : 0U;
+  std::uint8_t forced_pending_owner_lanes = 0U;
+  if (diagnostic_forced_pending_string_reservation_ &&
+      diagnostic_spectral_lane_collision_ && midi_routing_ == MidiRouting::per_voice) {
+    for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+      const auto& owner = diagnostic_midi_owners_[lane];
+      if (owner.candidate >= candidate_count_ || !selected[owner.candidate]) continue;
+      const auto& state = candidate_states_[owner.candidate];
+      const auto bit = static_cast<std::uint8_t>(1U << lane);
+      if (state.active && !output_suppressed(state) && state.assigned_string == lane &&
+          state.assigned_string_mask == bit && state.midi_voice_mask == bit &&
+          owner.note == candidate_midi_output_note(owner.candidate))
+        forced_pending_owner_lanes = static_cast<std::uint8_t>(forced_pending_owner_lanes | bit);
+    }
+  }
   if (retained_enabled) retained[reserved_strings].valid = true;
   // Reuse the native costs without running the posterior, spectral cache, or
   // assignment updates for these misses. Restrict this to non-isolated context:
@@ -7026,6 +7040,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
         string_count(fine.pending_member_mask) <= 1U &&
         !beat_evidence_states_[candidate].valid &&
         string_count(selector_group_masks_[candidate]) <= 1U;
+    if (preview && !diagnostic_pending_string_reservation_) {
+      // Narrow replacement for the rejected broad preview: only a forced
+      // pending string competing with a sounding physical singleton qualifies.
+      // Free lanes, multi-string choices, coasting owners and groups retain
+      // ordinary allocation. The sounding note's costs are never pinned.
+      preview = string_count(playable) == 1U &&
+          (playable & forced_pending_owner_lanes) == playable;
+    }
     if (preview) {
       for (const auto& owner : diagnostic_midi_owners_)
         if (owner.candidate == candidate) preview = false;
@@ -7279,7 +7301,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #endif
   if (!best.valid) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_pending_string_reservation_)
+    if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_)
       diagnostic_assignment_previews_.fill(false);
 #endif
     return;
@@ -7291,7 +7313,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
     state.assigned_string =
         static_cast<std::uint8_t>((best.strings >> (voice * 3U)) & 0x07U);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_pending_string_reservation_ &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
         diagnostic_assignment_previews_[candidates[voice]])
       state.assigned_string_mask = static_cast<std::uint8_t>(1U << state.assigned_string);
 #endif
@@ -10114,7 +10136,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     // A preview owns no physical lane or committed polyphony capacity.
-    if (diagnostic_pending_string_reservation_ &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
         diagnostic_assignment_previews_[candidate]) continue;
 #endif
     ++selected_count;
@@ -10207,7 +10229,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       continue;
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_pending_string_reservation_ &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
         diagnostic_assignment_previews_[candidate]) continue;
     if (assignment_diagnostics_enabled_)
       assignment_diagnostics_[candidate].group_before = state.assigned_string_mask;

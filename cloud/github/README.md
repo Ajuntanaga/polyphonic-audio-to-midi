@@ -148,3 +148,21 @@ state, and raw events on every observed lane, including notes held before the
 window. It checks the annotation and raw pairing before reporting held duration.
 This trace investigates why the note retriggers; it changes no runtime policy
 and measures neither native timing nor delivered-host MIDI.
+
+`forced-pending-string-reservation-trial` screens a narrower replacement for
+the rejected broad pending preview. Use `-f dataset=ordinary -f note=37
+-f label_index=17`. Only an immature singleton with one playable string that
+conflicts with a selected, active actual MIDI owner on the same physical and
+virtual singleton lane receives a non-consuming preview. Free lanes, multiple
+playable strings, coasting or grouped owners, ready attacks and atomic handoffs
+retain the ordinary assignment. The sounding note's costs remain unchanged.
+
+The separate default-off flag is
+`--diagnostic-forced-pending-string-reservation`. The old trial and its trace
+remain reproducible. Three full ordinary replays must retain both saved OFF and
+current-ON snapshot/MIDI references, improve label17's held samples and attacks,
+and lose no passage matches or held samples or increase false outputs. Reports
+use `forced-pending-string-reservation/report.json` and the `forced-trial-on`
+condition. Passing this screen only permits wider corpus, buffer, allocation,
+timing and host validation; it does not change installed output or establish
+live readiness.

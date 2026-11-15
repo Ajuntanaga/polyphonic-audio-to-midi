@@ -30,8 +30,12 @@ def midi_text(events):
 
 
 class PortablePendingStringTrialTests(unittest.TestCase):
+    runner = trial
+    trial_stem = 'trial-on'
+
     def execute(self, root, *, after=None, events=BETTER_EVENTS, drift=None,
                 baseline_events=BASE_EVENTS):
+        trial = self.runner
         before = replay_text(target=1, transitions=len(baseline_events))
         args = fixtures.PortableEvidenceRetentionTrialTests().fixture(root, baseline_text=before)
         reference_path = args[3]
@@ -50,6 +54,10 @@ class PortablePendingStringTrialTests(unittest.TestCase):
             index = len(calls)
             self.assertEqual(trial.COLLISION_FLAG in command, index > 0)
             self.assertEqual(trial.FLAG in command, index == 2)
+            for flag in ('--diagnostic-pending-string-reservation',
+                         '--diagnostic-forced-pending-string-reservation'):
+                if flag != trial.FLAG:
+                    self.assertNotIn(flag, command)
             self.assertNotIn('--diagnostic-direct-evidence-retention', command)
             self.assertNotIn('--candidate-trace', command)
             text = before if index < 2 else (after or replay_text(target=2, transitions=len(events)))
@@ -77,8 +85,8 @@ class PortablePendingStringTrialTests(unittest.TestCase):
             self.assertFalse(report['promotion_accepted'])
             self.assertFalse(report['installed_output_changed'])
             self.assertEqual(report['runs']['current-on']['held_label']['exact_held_samples'], 80)
-            self.assertEqual(report['runs']['trial-on']['held_label']['exact_held_samples'], 159)
-            self.assertEqual(report['runs']['trial-on']['held_label']['note_ons_inside_label'], 1)
+            self.assertEqual(report['runs'][self.trial_stem]['held_label']['exact_held_samples'], 159)
+            self.assertEqual(report['runs'][self.trial_stem]['held_label']['note_ons_inside_label'], 1)
             self.assertEqual(report['held_sample_losses'], [])
             self.assertEqual(len(list((root / 'output').glob('*/midi-event.tsv.gz'))), 3)
             self.assertFalse(list((root / 'output').glob('*/midi-event.tsv')))
@@ -93,7 +101,7 @@ class PortablePendingStringTrialTests(unittest.TestCase):
                     report = json.loads((root / 'output/report.json').read_text())
                     self.assertEqual(report['state'], 'failed')
                     self.assertTrue(report['final'])
-                    self.assertNotIn('trial-on', report['runs'])
+                    self.assertNotIn(self.trial_stem, report['runs'])
 
     def test_unchanged_hold_rejected_even_if_snapshot_matches_increase(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -118,8 +126,8 @@ class PortablePendingStringTrialTests(unittest.TestCase):
     def test_invalid_pairing_cannot_claim_duration_improvement(self):
         with tempfile.TemporaryDirectory() as temp:
             report, _ = self.execute(Path(temp), events=((32, 'on', 42), (191, 'off', 43)))
-            self.assertFalse(report['runs']['trial-on']['lifecycle']['coverage_valid'])
-            self.assertNotIn('held_label', report['runs']['trial-on'])
+            self.assertFalse(report['runs'][self.trial_stem]['lifecycle']['coverage_valid'])
+            self.assertNotIn('held_label', report['runs'][self.trial_stem])
             self.assertIsNone(report['held_sample_losses'])
             self.assertFalse(report['full_recording_screen_pass'])
 
