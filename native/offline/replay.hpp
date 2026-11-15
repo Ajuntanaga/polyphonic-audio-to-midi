@@ -1740,6 +1740,7 @@ struct ReplayLabelResult final {
 // Offline detector-only second pass. Label scoring and fingerprint hashing are
 // outside the timed blocks; the fingerprint must equal the scored replay.
 struct ReplayCoreTiming final {
+  static constexpr std::size_t kMaximumStageControls = 16U;
   struct Phase final {
     std::uint64_t blocks{}, wall_maximum_ns{}, cpu_maximum_ns{}, wall_minus_cpu_maximum_ns{};
     std::uint64_t wall_deadline_overruns{}, cpu_deadline_overruns{};
@@ -1780,6 +1781,8 @@ struct ReplayCoreTiming final {
   std::uint64_t stage_cpu_blocks{};
   std::array<StageTotal, stage_timing::kCount> stage_totals{};
   std::array<StageSlowBlock, 16U> slowest_cpu_blocks{};
+  std::array<StageSlowBlock, kMaximumStageControls> control_cpu_blocks{};
+  std::size_t control_cpu_block_count{};
 #endif
 };
 
@@ -2383,7 +2386,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_qualified_tier_retention = false,
                          bool diagnostic_continuous_tier_retention = false,
                          bool diagnostic_completion_window_retention = false,
-                         bool diagnostic_completion_midi_retention = false);
+                         bool diagnostic_completion_midi_retention = false,
+                         const std::vector<std::uint64_t>& diagnostic_stage_end_samples = {});
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

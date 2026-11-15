@@ -233,7 +233,8 @@ bool read_thread_cpu_ns(std::uint64_t& result) noexcept {
 
 void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues,
     const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output,
-    bool thread_cpu) {
+    bool thread_cpu,
+    [[maybe_unused]] const std::vector<std::uint64_t>& stage_end_samples) {
   output = {};
   output.fingerprint = kFnvOffset;
   output.thread_cpu_enabled = thread_cpu;
@@ -322,6 +323,14 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
         for (auto& retained : output.slowest_cpu_blocks) {
           if (slow.cpu_ns > retained.cpu_ns) std::swap(slow, retained);
         }
+      }
+      // Fixed controls survive even when they do not enter the slowest set.
+      // Retention happens after the clocks and allocation accounting stop.
+      if (output.control_cpu_block_count < stage_end_samples.size() &&
+          stage_end_samples[output.control_cpu_block_count] == begin + count) {
+        output.control_cpu_blocks[output.control_cpu_block_count++] = {
+            begin + count, cpu_ns, elapsed,
+            cpu_ns >= stage_ns ? cpu_ns - stage_ns : 0U, stages};
       }
 #endif
       cpu_times[output.blocks] = cpu_ns;
@@ -2908,7 +2917,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_qualified_tier_retention,
                          bool diagnostic_continuous_tier_retention,
                          bool diagnostic_completion_window_retention,
-                         bool diagnostic_completion_midi_retention) {
+                         bool diagnostic_completion_midi_retention,
+                         const std::vector<std::uint64_t>& diagnostic_stage_end_samples) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -2923,6 +2933,22 @@ bool run_detector_replay(const WaveData& wave,
 #endif
   if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
     return false;
+  if (!diagnostic_stage_end_samples.empty()) {
+#if !defined(M3_OFFLINE_STAGE_TIMING)
+    return false;
+#else
+    if (!diagnostic_thread_cpu ||
+        diagnostic_stage_end_samples.size() > ReplayCoreTiming::kMaximumStageControls)
+      return false;
+    std::uint64_t previous = 0U;
+    for (const auto end_sample : diagnostic_stage_end_samples) {
+      // End-exclusive positions must select distinct, complete timed blocks.
+      if (end_sample <= previous || end_sample % 32U != 0U ||
+          end_sample > wave.mono_samples.size()) return false;
+      previous = end_sample;
+    }
+#endif
+  }
   if (core_timing != nullptr) {
     *core_timing = {};
 #if !defined(M3_FROZEN_CUE_COOPERATIVE)
@@ -9304,7 +9330,8 @@ bool run_detector_replay(const WaveData& wave,
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   if (core_timing != nullptr) {
     measure_replay_core(detector, diagnostic_odd_partial_cues, wave, input_gain,
-                        input_partition, *core_timing, diagnostic_thread_cpu);
+                        input_partition, *core_timing, diagnostic_thread_cpu,
+                        diagnostic_stage_end_samples);
     core_timing->fingerprint_identical = core_timing->fingerprint == result.fingerprint;
   }
 #endif

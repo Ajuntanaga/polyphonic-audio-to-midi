@@ -213,6 +213,7 @@ void usage(const char* program) {
       "[--diagnostic-native-partial-cues] "
       "[--diagnostic-core-timing FILE] "
       "[--diagnostic-thread-cpu] "
+      "[--diagnostic-stage-end-sample N (repeat up to 16, ascending block ends)] "
       "[--diagnostic-skip-empty-fine-reset] "
       "[--diagnostic-provisional-open-retention-guard] "
       "[--diagnostic-residual-pitch-recovery] "
@@ -317,6 +318,7 @@ int main(int argc, char** argv) {
   bool diagnostic_native_partial_cues = false;
   const char* diagnostic_core_timing_path = nullptr;
   bool diagnostic_thread_cpu = false;
+  std::vector<std::uint64_t> diagnostic_stage_end_samples;
   bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_residual_pitch_recovery = false;
@@ -668,6 +670,18 @@ int main(int argc, char** argv) {
       diagnostic_core_timing_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-thread-cpu") == 0) {
       diagnostic_thread_cpu = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-stage-end-sample") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const char* text = argv[++index];
+      const auto parsed = std::strtoull(text, &end, 10);
+      if (errno != 0 || text[0] == '-' || end == text || *end != '\0' || parsed == 0ULL ||
+          parsed > std::numeric_limits<std::uint64_t>::max() ||
+          diagnostic_stage_end_samples.size() >= m3::offline::ReplayCoreTiming::kMaximumStageControls) {
+        usage(argv[0]);
+        return 2;
+      }
+      diagnostic_stage_end_samples.push_back(static_cast<std::uint64_t>(parsed));
     } else if (std::strcmp(argv[index], "--diagnostic-skip-empty-fine-reset") == 0) {
       diagnostic_skip_empty_fine_reset = true;
     } else if (std::strcmp(argv[index],
@@ -1219,7 +1233,7 @@ int main(int argc, char** argv) {
           diagnostic_calibrated_midi_retention, diagnostic_suppressed_adjacent_admission,
           diagnostic_fine_subset_consensus, diagnostic_qualified_tier_retention,
           diagnostic_continuous_tier_retention, diagnostic_completion_window_retention,
-          diagnostic_completion_midi_retention)) {
+          diagnostic_completion_midi_retention, diagnostic_stage_end_samples)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1343,12 +1357,11 @@ int main(int argc, char** argv) {
           number(total.maximum_end_sample)) < 0 || failed;
     }
     failed = std::fprintf(stream, "},\"slowest_cpu_blocks\":[") < 0 || failed;
-    bool first_stage_block = true;
-    for (const auto& block : core_timing.slowest_cpu_blocks) {
-      if (block.cpu_ns == 0U) continue;
+    auto write_stage_block = [&](const m3::offline::ReplayCoreTiming::StageSlowBlock& block,
+                                 bool first) {
       failed = std::fprintf(stream,
           "%s{\"end_sample\":%llu,\"cpu_ns\":%llu,\"wall_ns\":%llu,\"unattributed_cpu_ns\":%llu,\"stages\":{",
-          first_stage_block ? "" : ",", number(block.end_sample), number(block.cpu_ns),
+          first ? "" : ",", number(block.end_sample), number(block.cpu_ns),
           number(block.wall_ns), number(block.unattributed_cpu_ns)) < 0 || failed;
       for (std::size_t index = 0U; index < m3::offline::stage_timing::kCount; ++index) {
         failed = std::fprintf(stream, "%s\"%s\":{\"ns\":%llu,\"calls\":%llu}",
@@ -1356,10 +1369,19 @@ int main(int argc, char** argv) {
             number(block.stages.ns[index]), number(block.stages.calls[index])) < 0 || failed;
       }
       failed = std::fprintf(stream, "}}") < 0 || failed;
+    };
+    bool first_stage_block = true;
+    for (const auto& block : core_timing.slowest_cpu_blocks) {
+      if (block.cpu_ns == 0U) continue;
+      write_stage_block(block, first_stage_block);
       first_stage_block = false;
     }
+    failed = std::fprintf(stream, "],\"control_cpu_blocks\":[") < 0 || failed;
+    for (std::size_t index = 0U; index < core_timing.control_cpu_block_count; ++index)
+      write_stage_block(core_timing.control_cpu_blocks[index], index == 0U);
     failed = std::fprintf(stream, "]}") < 0 || failed;
-    failed = !core_timing.stage_cpu_valid || failed;
+    failed = !core_timing.stage_cpu_valid ||
+        core_timing.control_cpu_block_count != diagnostic_stage_end_samples.size() || failed;
 #endif
     failed = std::fprintf(stream, "}\n") < 0 || failed;
     failed = std::fclose(stream) != 0 || failed;

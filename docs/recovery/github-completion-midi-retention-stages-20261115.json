@@ -1,0 +1,82 @@
+{
+  "schema": "m3_completion_midi_retention_stages_checkpoint_v1",
+  "updated_at": "2026-11-15T23:41:12.454260+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "4566512b2fccf3d1891fea50dde5380ab3521a85",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "run_attempt": 1,
+    "task": "completion-midi-retention-stages",
+    "dataset": "ordinary",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+  "reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "anchor": {
+    "run_id": 43774069298,
+    "report_sha256": "26ae426ab28abb765c332d99c70aaf503c798dce89cd69df55c0d499cf19eb38"
+  },
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "mode": "current-on",
+      "end_samples": [
+        1172736
+      ]
+    },
+    {
+      "dataset": "ordinary",
+      "mode": "completion-midi-retention-on",
+      "end_samples": [
+        7664256,
+        7671744
+      ]
+    },
+    {
+      "dataset": "physical-long",
+      "mode": "completion-midi-retention-on",
+      "end_samples": [
+        3512640
+      ]
+    }
+  ],
+  "block_samples": 32,
+  "maximum_replays": 3,
+  "control_count": 4,
+  "worker_output": "build/github-results/completion-midi-retention-stages",
+  "local_output": null,
+  "small_artifact": null,
+  "bulk_artifact": null,
+  "collection_state": "not_dispatched",
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scope": "Compile-only stage timing with fixed sample retention; detector policy and strict acceptance limits unchanged.",
+  "required": [
+    "complete scored TSV identity against all three saved references",
+    "four exact control positions and nonoverlapping stage arithmetic",
+    "valid CPU clocks, identical block counts and input provenance",
+    "zero observed processing allocations/frees",
+    "preserve saved uninstrumented failures"
+  ],
+  "limits": {
+    "p99_ns": 166666,
+    "maximum_ns": 333333,
+    "deadline_overruns": 0
+  },
+  "caveat": "Stage clocks add overhead. This bounded diagnostic cannot establish native timing acceptance or live readiness.",
+  "local_validation": {
+    "python_tests_passed": 21,
+    "native_cli_tests_deferred_to_github": 2,
+    "workflow_run_sections_syntax_passed": 55,
+    "workflow_yaml_valid": true,
+    "native_processing_run_locally": false
+  },
+  "next": "Build and run the two small generated-audio CLI checks on GitHub, then collect the three diagnostic replays once. Use measured stages to select a CPU optimization before any uninstrumented corpus rerun."
+}

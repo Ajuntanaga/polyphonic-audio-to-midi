@@ -1,16 +1,16 @@
 {
   "schema": "m3_completion_midi_retention_timing_checkpoint_v1",
-  "updated_at": "2026-11-15T23:15:58.144890+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T23:32:32.481954+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "7b52e2792e865c858ee88277ad393b4dd177a6fb",
-    "commit": null,
+    "commit": "4566512b2fccf3d1891fea50dde5380ab3521a85",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
-    "run_attempt": null,
+    "worker_commit": "b9defd0c66602d3a19e6b5ac8fbdf6ee9863a93c",
+    "run_id": "43774069298",
+    "run_attempt": 1,
     "task": "completion-midi-retention-timing",
     "dataset": "ordinary",
     "input_release": "corpus-20261108"
@@ -31,11 +31,11 @@
   ],
   "block_samples": 32,
   "maximum_replays": 9,
-  "local_output": null,
+  "local_output": "build/github-results/completion-midi-retention-timing-43774069298",
   "worker_output": "build/github-results/completion-midi-retention-timing",
-  "small_artifact": null,
-  "bulk_artifact": null,
-  "collection_state": "not dispatched",
+  "small_artifact": "m3-report-43774069298-1",
+  "bulk_artifact": "m3-evidence-43774069298-1",
+  "collection_state": "collected_once_hash_verified",
   "local_validation": {
     "parser_mock_tests_passed": 27,
     "workflow_shell_sections_passed": 50,
@@ -59,5 +59,372 @@
     "deadline_overruns": 0
   },
   "caveat": "Instrumented timing cannot establish native acceptance. Nonrecurrence cannot clear the saved failure; wall-minus-CPU is not proof of scheduler cause.",
-  "next": "Dispatch this existing bounded route once on GitHub Actions; collect the small report once. Diagnose recorded slow blocks before any policy change or further corpus replay; keep component/host routes blocked by the final timing rejection."
+  "next": "Use the existing compile-only stage CPU probes for a bounded ordinary/current, ordinary/trial and physical-long/trial diagnosis, retaining these four sample positions as controls and requiring full saved scored output identity. Avoid another corpus sweep or threshold change. Optimize only an identified cost, then require uninstrumented corpus p99 <=166666 ns, max <=333333 ns and zero overruns before component/host progression.",
+  "dispatch_receipt_directory": "build/github-results/completion-midi-retention-timing-dispatch-20261115",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43774069298",
+  "source_checks": [
+    {
+      "id": 43774023894,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43774023894",
+      "observed_at": "2026-11-15T23:20:35Z"
+    }
+  ],
+  "workflow_conclusion": "success",
+  "workflow_finished_at": "2026-11-15T23:28:16Z",
+  "collected_at": "2026-11-15T23:30:05.207907+00:00",
+  "report_path": "build/github-results/completion-midi-retention-timing-43774069298/completion-midi-retention-timing/report.json",
+  "report_sha256": "26ae426ab28abb765c332d99c70aaf503c798dce89cd69df55c0d499cf19eb38",
+  "collected_verdict_path": "build/github-results/completion-midi-retention-timing-43774069298/collected-verdict.json",
+  "collected_verdict_sha256": "d5ff7812d50b3e9fe931efa1d908fb3e95e62d44b275bbcd0777fed08a883927",
+  "download_receipt": "build/github-results/completion-midi-retention-timing-43774069298/download-receipt.json",
+  "artifacts": [
+    {
+      "id": 14185746448,
+      "name": "m3-evidence-43774069298-1",
+      "size_in_bytes": 7033380,
+      "digest": "sha256:6694e64b3f801fe9ea81e1946069efb270dccb572e4f3366597e73e83de6da3a",
+      "expires_at": "2026-11-22T23:28:10Z",
+      "collection_state": "retained_remote"
+    },
+    {
+      "id": 14184984237,
+      "name": "m3-report-43774069298-1",
+      "size_in_bytes": 44527,
+      "digest": "sha256:47f4f0f1e4a41f5d398fac066587c8784d8d40318914efdec3efcde42d8b3a68",
+      "expires_at": "2026-11-29T23:28:08Z",
+      "collection_state": "collected_once_hash_verified"
+    }
+  ],
+  "results": {
+    "collection_pass": true,
+    "scored_identity": "9/9 full saved scored TSVs bit-identical",
+    "thread_cpu_resolution": "9/9 usable",
+    "wall_and_cpu_overruns": 4,
+    "rows": [
+      {
+        "dataset": "ordinary",
+        "mode": "reference-off",
+        "blocks": 334050,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 108845,
+          "maximum_ns": 201740,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 109204,
+          "maximum_ns": 203395,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "ordinary",
+        "mode": "current-on",
+        "blocks": 334050,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 109709,
+          "maximum_ns": 574201,
+          "deadline_overruns": 1
+        },
+        "thread_cpu": {
+          "p99_ns": 110072,
+          "maximum_ns": 574864,
+          "deadline_overruns": 1,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "ordinary",
+        "mode": "completion-midi-retention-on",
+        "blocks": 334050,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 109967,
+          "maximum_ns": 607862,
+          "deadline_overruns": 2
+        },
+        "thread_cpu": {
+          "p99_ns": 110333,
+          "maximum_ns": 608636,
+          "deadline_overruns": 2,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "reference-off",
+        "blocks": 176464,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 108369,
+          "maximum_ns": 204288,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 108746,
+          "maximum_ns": 204661,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "current-on",
+        "blocks": 176464,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 109235,
+          "maximum_ns": 204659,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 109608,
+          "maximum_ns": 205037,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "completion-midi-retention-on",
+        "blocks": 176464,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 108973,
+          "maximum_ns": 418077,
+          "deadline_overruns": 1
+        },
+        "thread_cpu": {
+          "p99_ns": 109334,
+          "maximum_ns": 419736,
+          "deadline_overruns": 1,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "extended-high",
+        "mode": "reference-off",
+        "blocks": 81600,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 111868,
+          "maximum_ns": 235842,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 112216,
+          "maximum_ns": 236265,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "extended-high",
+        "mode": "current-on",
+        "blocks": 81600,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 110958,
+          "maximum_ns": 237104,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 111334,
+          "maximum_ns": 237525,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      },
+      {
+        "dataset": "extended-high",
+        "mode": "completion-midi-retention-on",
+        "blocks": 81600,
+        "saved_scored_tsv_bit_identical": true,
+        "timed_scored_identity": true,
+        "wall": {
+          "p99_ns": 111193,
+          "maximum_ns": 261363,
+          "deadline_overruns": 0
+        },
+        "thread_cpu": {
+          "p99_ns": 111499,
+          "maximum_ns": 261951,
+          "deadline_overruns": 0,
+          "block_resolution_pass": true
+        },
+        "observed_allocations_and_frees": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        }
+      }
+    ],
+    "overrun_blocks": [
+      {
+        "dataset": "ordinary",
+        "mode": "current-on",
+        "end_sample": 1172736,
+        "wall_ns": 574201,
+        "cpu_ns": 574864,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 18324,
+        "signal_samples": 111915,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 3,
+        "active_candidates": 3,
+        "assigned_candidates": 24,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 83,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 97,
+        "last_fine_reset_tick": 17580,
+        "signal_floor_reset_candidates": 0,
+        "last_signal_floor_reset_tick": 0,
+        "selection_pool_candidates": 5,
+        "selection_state_transitions": 90,
+        "selection_assignment_edges": 90
+      },
+      {
+        "dataset": "ordinary",
+        "mode": "completion-midi-retention-on",
+        "end_sample": 7664256,
+        "wall_ns": 607862,
+        "cpu_ns": 608636,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 119754,
+        "signal_samples": 75363,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 3,
+        "active_candidates": 3,
+        "assigned_candidates": 28,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 72,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 698,
+        "last_fine_reset_tick": 119610,
+        "signal_floor_reset_candidates": 7,
+        "last_signal_floor_reset_tick": 118576,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 4,
+        "selection_assignment_edges": 4
+      },
+      {
+        "dataset": "ordinary",
+        "mode": "completion-midi-retention-on",
+        "end_sample": 7671744,
+        "wall_ns": 602761,
+        "cpu_ns": 603810,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 119871,
+        "signal_samples": 82851,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 5,
+        "active_candidates": 3,
+        "assigned_candidates": 28,
+        "fine_valid_candidates": 0,
+        "fine_max_count": 72,
+        "fine_update_scheduled": false,
+        "fine_reset_serial_sum": 698,
+        "last_fine_reset_tick": 119610,
+        "signal_floor_reset_candidates": 7,
+        "last_signal_floor_reset_tick": 118576,
+        "selection_pool_candidates": 7,
+        "selection_state_transitions": 159,
+        "selection_assignment_edges": 159
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "completion-midi-retention-on",
+        "end_sample": 3512640,
+        "wall_ns": 418077,
+        "cpu_ns": 419736,
+        "detector_state_available": true,
+        "selection_work_available": true,
+        "decision_tick": 54885,
+        "signal_samples": 413808,
+        "decision_snapshots": 1,
+        "snapshot_voice_count": 3,
+        "active_candidates": 1,
+        "assigned_candidates": 13,
+        "fine_valid_candidates": 1,
+        "fine_max_count": 424,
+        "fine_update_scheduled": true,
+        "fine_reset_serial_sum": 41,
+        "last_fine_reset_tick": 54855,
+        "signal_floor_reset_candidates": 6,
+        "last_signal_floor_reset_tick": 46341,
+        "selection_pool_candidates": 1,
+        "selection_state_transitions": 1,
+        "selection_assignment_edges": 3
+      }
+    ],
+    "interpretation": "Four observed slow blocks exceeded 333333 ns in both elapsed and thread CPU time. Elapsed-only descheduling is not sufficient to explain these events. CPU brackets include clock overhead. Three ordinary overruns have no scheduled fine-frequency update; one has only four selection transitions. A single scheduled fine-fit or large selection search cannot explain all four. Per-stage probes were not enabled, so the costly stage remains unlocalized. These observations do not establish the cause of the earlier uninstrumented spikes or clear their rejection.",
+    "allocation_gate_note": "All nine raw C/C++ allocation/free counts are zero. The report deliberately does not grant allocation or timing acceptance to instrumented runs."
+  },
+  "no_further_poll_or_collection": true
 }

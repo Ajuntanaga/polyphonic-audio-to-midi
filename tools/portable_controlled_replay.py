@@ -50,6 +50,28 @@ def validate_stage_timing(timing, mode):
             raise ValueError('Overlapping or incomplete stage intervals: ' + mode)
 
 
+def validate_stage_controls(timing, expected, mode):
+    """Require every fixed audio position, even when outside the slowest set."""
+    validate_stage_timing(timing, mode)
+    controls = timing['stage_cpu'].get('control_cpu_blocks', [])
+    if [row.get('end_sample') for row in controls] != list(expected):
+        raise ValueError('Missing or reordered stage controls: ' + mode)
+    for block in controls:
+        rows = block.get('stages', {})
+        if (set(rows) != set(STAGES)
+                or any(type(row.get(key)) is not int or row[key] < 0
+                       for row in rows.values() for key in ('ns', 'calls'))
+                or any(type(block.get(key)) is not int or block[key] <= 0
+                       for key in ('cpu_ns', 'wall_ns', 'end_sample'))
+                or block['end_sample'] > timing['blocks'] * 32
+                or block['end_sample'] % 32 != 0
+                or type(block.get('unattributed_cpu_ns')) is not int
+                or block['unattributed_cpu_ns'] < 0
+                or sum(row['ns'] for row in rows.values()) + block['unattributed_cpu_ns']
+                   != block['cpu_ns']):
+            raise ValueError('Overlapping or incomplete control intervals: ' + mode)
+
+
 def prepare_cases(corpus, manifest, reference_path, output):
     import numpy as np
     reference = json.loads(reference_path.read_text())

@@ -12,7 +12,7 @@
   "conclusion": "success",
   "result_final": true,
   "created_at": "2026-11-15T20:02:13.745675+00:00",
-  "updated_at": "2026-11-15T21:50:56.546332+00:00",
+  "updated_at": "2026-11-15T23:24:17.227278+00:00",
   "stage": "final corpus screen: note safety passed; timing failed",
   "checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json",
   "bounded_checkpoint": "docs/recovery/github-completion-midi-retention-20261115.json",
@@ -489,6 +489,75 @@
         "conclusion": "Global threshold relaxation is not justified; this exact low-margin target remains a distinct diagnostic question."
       },
       "next": "If pursuing ordinary pitch recovery, test one fixed target-local counterfactual against frozen nearby false-output controls on GitHub Actions; first preserve exact current-reference output. No global admission grid and no installed policy change."
+    },
+    "ordinary_weak_admission_comparison": {
+      "report": "build/github-results/completion-midi-retention-43753713533/ordinary-weak-admission-comparison.json",
+      "report_sha256": "906b542bc64f0accc4942f9f92fe2671d7425fc4f9f289d4d9cbae8c50bcaee7",
+      "created_at": "2026-11-15T23:23:34.396546+00:00",
+      "source_run": 43707756793,
+      "source_commit": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
+      "source_outcome_raw_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+      "source_outcome_raw_digest_verified": true,
+      "complete_scored_reference_identical_to_bounded_run": 43753713533,
+      "target_label": 10,
+      "target_note": 75,
+      "target_frames": 1124,
+      "target_below_threshold_frames": 1062,
+      "target_serialized_below_threshold_frames": 941,
+      "target_quiet_frames": 62,
+      "target_omitted_below_0_2_score_frames": 121,
+      "target_serialized_similarity_range": [
+        0.96534231,
+        0.97722488
+      ],
+      "target_serialized_margin_range": [
+        0.0019411099999999681,
+        0.01595084000000002
+      ],
+      "calibration_margin_only_relaxation_candidate_frames": {
+        "target_expected_pitch": 921,
+        "all_expected_pitches": 8660,
+        "wrong_pitch": 4232,
+        "unlabeled_gap": 1777
+      },
+      "frozen_controls": [
+        {
+          "sample": 4991,
+          "note": 70,
+          "expected_notes": [
+            78,
+            58,
+            67,
+            69,
+            42
+          ],
+          "best_similarity": 0.99157325,
+          "margin": 0.008301919999999963,
+          "classification": "wrong-pitch candidate; not emitted as note70"
+        },
+        {
+          "sample": 72063,
+          "note": 70,
+          "expected_notes": [],
+          "best_similarity": 0.99157572,
+          "margin": 0.008292200000000083,
+          "classification": "candidate in unlabeled gap; not a missing note"
+        }
+      ],
+      "finding": "The upper triad note passes all existing calibrated-band gates except the margin on 921 observed frames. Removing only that margin also opens 4232 wrong-pitch and 1777 unlabeled-gap candidate frames; calibration similarity and direct-peak evidence alone do not distinguish the target.",
+      "decision": "Do not implement a blanket margin relaxation. Preserve the target and these negative controls for a mechanism-based replacement.",
+      "limits": [
+        "Historical current-ON internal trace; complete scored output is bit-identical to the newer bounded current-ON reference.",
+        "Candidate-frame counts are observations, not emitted-note counts or causal gains.",
+        "The serializer omits inactive candidates below score ratio 0.2; missing rows are not evidence of no spectral energy.",
+        "Calibration values are recorded decimal approximations, not full internal binary values.",
+        "Labels classify observations only. Lowering a guard requires replay and corpus safety/timing acceptance."
+      ],
+      "new_native_execution": false,
+      "new_download": false,
+      "native_policy_changed": false,
+      "installed_output_changed": false,
+      "next": "Use independent pitch evidence or distinguishable onset/decay behavior before a bounded admission trial; do not choose label-specific thresholds."
     }
   },
   "last_read_attempt": {

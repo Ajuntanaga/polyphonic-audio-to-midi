@@ -1,6 +1,7 @@
 """Locate slow blocks in the three failed completion-retention trial datasets.
 
 Nine fixed OFF/current/trial replays reuse the existing thread CPU diagnostic.
+Stage mode retains four recorded overrun positions in three fixed replays.
 Instrumented timing is diagnostic only and cannot replace the rejected corpus.
 """
 import argparse
@@ -13,6 +14,7 @@ from tools.frozen_cue_corpus_gate import read_replay
 from tools.portable_allocation_trace import reference_identity
 from tools.portable_assignment_trace import digest, verify_inputs
 from tools.portable_calibrated_midi_retention_corpus import POLICIES
+from tools.portable_controlled_replay import validate_stage_controls
 from tools.portable_corpus_replay import (
     MEASUREMENT_SCOPE, SETTINGS, command_for, now, timing_gates, validate_timing_diagnosis)
 
@@ -20,6 +22,13 @@ from tools.portable_corpus_replay import (
 DATASETS = ('ordinary', 'physical-long', 'extended-high')
 CONDITIONS = POLICIES['completion-midi-retention']['conditions']
 REFERENCE_SCHEMA = 'm3_completion_midi_retention_timing_references_v1'
+STAGE_CONTROLS = {
+    ('ordinary', 'current-on'): (1172736,),
+    ('ordinary', 'completion-midi-retention-on'): (7664256, 7671744),
+    ('physical-long', 'completion-midi-retention-on'): (3512640,),
+}
+STAGE_ANCHOR = dict(run_id=43774069298,
+    report_sha256='26ae426ab28abb765c332d99c70aaf503c798dce89cd69df55c0d499cf19eb38')
 
 
 def validate_reference(reference, manifest):
@@ -45,14 +54,19 @@ def validate_reference(reference, manifest):
                 raise ValueError('Reference is not saved uninstrumented timing: ' + dataset + '/' + mode)
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
+        stage_diagnosis=False):
     if timeout <= 0:
         raise ValueError('timeout must be positive')
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
-    report = dict(schema='m3_completion_midi_retention_timing_v1', started_at=now(),
+    selected = (tuple(STAGE_CONTROLS) if stage_diagnosis else
+                tuple((ds, mode) for ds in DATASETS for mode, _ in CONDITIONS))
+    datasets = tuple(dict.fromkeys(ds for ds, _ in selected))
+    report = dict(schema=('m3_completion_midi_retention_stages_v1' if stage_diagnosis
+                         else 'm3_completion_midi_retention_timing_v1'), started_at=now(),
         state='running', final=False, stage='verify saved references and inputs',
-        declared_datasets=list(DATASETS), datasets={}, block_samples=32, settings=SETTINGS,
+        declared_datasets=list(datasets), datasets={}, block_samples=32, settings=SETTINGS,
         conditions={mode: list(flags) for mode, flags in CONDITIONS},
         diagnostic_only=True, collection_pass=False, native_gate_pass=False,
         promotion_accepted=False, installed_output_changed=False,
@@ -62,6 +76,11 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
         interpretation='Thread CPU brackets include clock overhead. Wall-minus-CPU is '
             'diagnostic evidence, not proof of scheduler cause. Nonrecurrence does '
             'not clear the saved uninstrumented failures.')
+    if stage_diagnosis:
+        report.update(stage_anchor=STAGE_ANCHOR, declared_cases=[dict(dataset=ds, mode=mode,
+            end_samples=list(STAGE_CONTROLS[ds, mode])) for ds, mode in selected],
+            interpretation=report['interpretation'] +
+                ' Stage clocks add overhead; these results cannot establish native timing acceptance.')
 
     def save():
         report['updated_at'] = now()
@@ -74,16 +93,18 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
         manifest = json.loads(manifest_path.read_text())
         reference = json.loads(reference_path.read_text())
         validate_reference(reference, manifest)
-        for dataset in DATASETS:
+        for dataset in datasets:
             verify_inputs(corpus, manifest, dataset)
-        report.update(source=manifest['source'], verified_inputs=2 + 2 * len(DATASETS),
+        report.update(source=manifest['source'], verified_inputs=2 + 2 * len(datasets),
             input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
             reference_manifest_sha256=digest(reference_path),
             reference_source=reference['source'],
             reference_report_sha256=reference['anchor_report_sha256'])
-        for dataset in DATASETS:
+        for dataset in datasets:
             runs = report['datasets'][dataset] = {}
             for mode, flags in CONDITIONS:
+                if (dataset, mode) not in selected:
+                    continue
                 report['stage'] = dataset + '/' + mode + ' block-32 thread CPU diagnosis'
                 save()
                 stem = dataset + '-' + mode + '-32'
@@ -92,6 +113,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                 command = command_for(binary, corpus, dataset, 'off', 32, timing_path.resolve())
                 command.extend(flags)
                 command.append('--diagnostic-thread-cpu')
+                if stage_diagnosis:
+                    for sample in STAGE_CONTROLS[dataset, mode]:
+                        command.extend(('--diagnostic-stage-end-sample', str(sample)))
                 started = time.monotonic()
                 with tsv.open('x') as out, stderr.open('x') as err:
                     subprocess.run(command, stdout=out, stderr=err, timeout=timeout, check=True)
@@ -114,13 +138,18 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                         and timing['blocks'] == saved['timing']['blocks']):
                     raise ValueError('Scored output, block count or measurement scope changed: ' + stem)
                 validate_timing_diagnosis(timing, stem)
+                if stage_diagnosis:
+                    validate_stage_controls(timing, STAGE_CONTROLS[dataset, mode], stem)
+                    row['stage_controls_verified'] = True
                 for block in timing['thread_cpu']['slowest_blocks']:
                     if (type(block.get('end_sample')) is not int
                             or not 0 < block['end_sample'] <= timing['blocks'] * 32
                             or any(type(block.get(k)) is not int or block[k] < 0
                                    for k in ('wall_ns', 'cpu_ns'))):
                         raise ValueError('Missing slow-block sample/clock evidence: ' + stem)
-        report.update(state='completed', stage='nine fixed diagnostic replays collected',
+        report.update(state='completed', stage=(
+            'three fixed stage replays and four controls collected' if stage_diagnosis
+            else 'nine fixed diagnostic replays collected'),
             collection_pass=True, cpu_block_statistics_usable=all(
                 row['timing']['thread_cpu']['block_resolution_pass']
                 for runs in report['datasets'].values() for row in runs.values()))
@@ -138,9 +167,10 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
+    parser.add_argument('--stage-diagnosis', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+        timeout=args.replay_timeout_seconds, stage_diagnosis=args.stage_diagnosis)
 
 
 if __name__ == '__main__':

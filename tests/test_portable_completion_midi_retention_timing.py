@@ -9,12 +9,13 @@ from unittest.mock import patch
 from tools.frozen_cue_corpus_gate import read_replay
 from tools.portable_assignment_trace import digest
 from tools.portable_completion_midi_retention_timing import (
-    CONDITIONS, DATASETS, MEASUREMENT_SCOPE, REFERENCE_SCHEMA, SETTINGS, run)
+    CONDITIONS, DATASETS, MEASUREMENT_SCOPE, REFERENCE_SCHEMA, SETTINGS, STAGE_CONTROLS, run)
+from tools.portable_controlled_replay import STAGES
 from tests import test_portable_calibrated_midi_retention_timing as legacy_timing_tests
 
 
 class CompletionTimingTests(unittest.TestCase):
-    def exercise(self, *, mutate_reference=None, mutate_run=None):
+    def exercise(self, *, mutate_reference=None, mutate_run=None, stage_diagnosis=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest, reference, output = (root / name for name in
@@ -26,7 +27,8 @@ class CompletionTimingTests(unittest.TestCase):
             retained = root / 'retained.tsv'
             retained.write_text(legacy_timing_tests.RetentionTimingTests.TSV)
             timing = dict(schema='m3_replay_core_timing_v1', sample_rate=96000,
-                block_samples=32, blocks=32, measurement_scope=MEASUREMENT_SCOPE,
+                block_samples=32, blocks=334080 if stage_diagnosis else 32,
+                measurement_scope=MEASUREMENT_SCOPE,
                 fingerprint='0123456789abcdef', fingerprint_identical=True,
                 allocation_guard=True,
                 cpp_allocations=0, cpp_frees=0, c_allocations=0, c_frees=0,
@@ -48,8 +50,21 @@ class CompletionTimingTests(unittest.TestCase):
                 observed = dict(timing, maximum_ns=200000, deadline_overruns=0,
                     timing_diagnostic_only=True, thread_cpu=dict(
                         valid=True, block_resolution_pass=True,
-                        phases=[dict(blocks=1, wall_deadline_overruns=0) for _ in range(32)],
+                        phases=[dict(blocks=timing['blocks'] // 32, wall_deadline_overruns=0)
+                                for _ in range(32)],
                         slowest_blocks=[dict(wall_ns=200000, cpu_ns=190000, end_sample=32)]))
+                if stage_diagnosis:
+                    def stage_block(sample):
+                        return dict(end_sample=sample, cpu_ns=190000, wall_ns=200000,
+                            unattributed_cpu_ns=10000,
+                            stages={name: dict(ns=20000, calls=1) for name in STAGES})
+                    controls = [int(command[i + 1]) for i, arg in enumerate(command)
+                                if arg == '--diagnostic-stage-end-sample']
+                    observed['thread_cpu'].update(maximum_ns=190000, total_ns=1900000)
+                    observed['stage_cpu'] = dict(valid=True, blocks=timing['blocks'],
+                        totals={name: dict(ns=20000, calls=1) for name in STAGES},
+                        slowest_cpu_blocks=[stage_block(32)],
+                        control_cpu_blocks=[stage_block(sample) for sample in controls])
                 kwargs['stdout'].write(legacy_timing_tests.RetentionTimingTests.TSV)
                 if mutate_run:
                     mutate_run(index, observed, kwargs['stdout'])
@@ -61,7 +76,8 @@ class CompletionTimingTests(unittest.TestCase):
                  patch('tools.portable_completion_midi_retention_timing.subprocess.run',
                        side_effect=execute):
                 try:
-                    passed = run(binary, root, manifest, reference, output)
+                    passed = run(binary, root, manifest, reference, output,
+                                 stage_diagnosis=stage_diagnosis)
                 except (ValueError, subprocess.TimeoutExpired) as caught:
                     error = caught
             report = json.loads((output / 'report.json').read_text())
@@ -137,6 +153,45 @@ class CompletionTimingTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertFalse(report['cpu_block_statistics_usable'])
         self.assertFalse(report['native_gate_pass'])
+
+    def test_three_stage_replays_retain_four_fixed_controls_without_acceptance(self):
+        passed, report, error, commands, verified = self.exercise(stage_diagnosis=True)
+        self.assertIsNone(error)
+        self.assertTrue(passed)
+        self.assertEqual([call.args[2] for call in verified], ['ordinary', 'physical-long'])
+        self.assertEqual(len(commands), 3)
+        self.assertEqual(report['schema'], 'm3_completion_midi_retention_stages_v1')
+        self.assertEqual(report['stage_anchor']['run_id'], 43774069298)
+        for command, ((ds, mode), expected) in zip(commands, STAGE_CONTROLS.items()):
+            self.assertEqual([int(command[i + 1]) for i, arg in enumerate(command)
+                if arg == '--diagnostic-stage-end-sample'], list(expected))
+            self.assertEqual([arg for arg in command if arg in dict(CONDITIONS)[mode]],
+                             list(dict(CONDITIONS)[mode]))
+            row = report['datasets'][ds][mode]
+            self.assertTrue(row['stage_controls_verified'])
+            self.assertTrue(row['recorded_reference_bit_identical'])
+            self.assertEqual(row['saved_uninstrumented_timing']['maximum_ns'], 584577)
+            self.assertFalse(row['gates']['timing_pass'])
+        self.assertFalse(report['native_gate_pass'])
+        self.assertFalse(report['promotion_accepted'])
+
+    def test_stage_controls_require_complete_nonoverlapping_usable_measurements(self):
+        changes = (
+            lambda i, t, out: t.pop('stage_cpu'),
+            lambda i, t, out: t['stage_cpu']['control_cpu_blocks'].clear(),
+            lambda i, t, out: t['stage_cpu']['control_cpu_blocks'][0].update(end_sample=32),
+            lambda i, t, out: t['stage_cpu']['control_cpu_blocks'][0]['stages'].pop('selection'),
+            lambda i, t, out: t['stage_cpu']['control_cpu_blocks'][0].update(unattributed_cpu_ns=1),
+            lambda i, t, out: t['stage_cpu']['control_cpu_blocks'][0].update(wall_ns=-1),
+            lambda i, t, out: t['thread_cpu'].update(block_resolution_pass=False),
+            lambda i, t, out: t.update(cpp_allocations=1))
+        for change in changes:
+            with self.subTest(change=change):
+                _, report, error, commands, _ = self.exercise(
+                    stage_diagnosis=True, mutate_run=change)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(len(commands), 1)
+                self.assertFalse(report['collection_pass'])
 
 
 if __name__ == '__main__':
