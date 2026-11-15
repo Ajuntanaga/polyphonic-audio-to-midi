@@ -161,6 +161,10 @@ class MidiLifecycleTests(unittest.TestCase):
             raw = analyze_trace(midi, replay, include_raw_conflicts=True)
             self.assertEqual(sum(raw['raw_midi']['counts'].values()), 0)
             self.assertEqual(raw['exact_held_samples'], result['exact_held_samples'])
+            grouped = analyze_trace(midi, replay, include_group_coverage=True)
+            groups = grouped.pop('simultaneous_group_coverage')
+            self.assertEqual(grouped, result)
+            self.assertEqual(groups['exact_group_held_samples'], 100)
             trace(midi, [event(10, 'on')])
             with self.assertRaisesRegex(ValueError, 'transition count'):
                 analyze_trace(midi, replay, include_raw_conflicts=True)
@@ -229,6 +233,93 @@ class MidiLifecycleTests(unittest.TestCase):
                            sample_rate=96000, include_output_safety=True)
         self.assertFalse(result['output_safety']['valid'])
         self.assertIsNone(result['output_safety']['counts'])
+
+    def test_four_singleton_labels_measure_one_simultaneous_group_without_changing_legacy(self):
+        labels = [label(i, mask=1 << i) for i in range(4)]
+        events = ([event(10, 'on', voice=i) for i in range(4)]
+                  + [event(50, 'off'), event(50, 'on')]
+                  + [event(150, 'off', voice=i) for i in range(4)])
+        legacy = summarize(events, labels, sample_count=200, sample_rate=96000,
+                           include_output_safety=True)
+        result = summarize(events, labels, sample_count=200, sample_rate=96000,
+                           include_output_safety=True, include_group_coverage=True)
+        groups = result.pop('simultaneous_group_coverage')
+        self.assertEqual(result, legacy)
+        self.assertEqual(legacy['exact_held_samples'], 0)
+        self.assertEqual(groups['annotated_group_samples'], 100)
+        self.assertEqual(groups['exact_group_held_samples'], 100)
+        self.assertEqual(groups['by_string_count'], {'4': dict(
+            groups=1, annotated_group_samples=100, exact_group_held_samples=100)})
+        row = groups['groups'][0]
+        self.assertEqual(row['source_label_indices'], [0, 1, 2, 3])
+        self.assertEqual(row['exact_group_hold_segments'], 1)
+        self.assertEqual(row['longest_exact_group_hold_samples'], 100)
+        self.assertEqual(row['note_ons_inside_group'], 1)
+
+    def test_group_coverage_excludes_extra_and_unassigned_lanes(self):
+        events = [event(0, 'on'), event(0, 'on', voice=1),
+                  event(30, 'on', voice=2), event(40, 'off', voice=2),
+                  event(60, 'on', voice=255), event(70, 'off', voice=255),
+                  event(150, 'off'), event(150, 'off', voice=1)]
+        result = summarize(events, [label(), label(1, mask=2)],
+                           sample_count=200, sample_rate=96000, include_group_coverage=True)
+        row = result['simultaneous_group_coverage']['groups'][0]
+        self.assertEqual(row['exact_group_held_samples'], 80)
+        self.assertEqual(row['unmatched_group_samples'], 20)
+        self.assertEqual(row['exact_group_hold_segments'], 3)
+        self.assertEqual(row['longest_exact_group_hold_samples'], 50)
+
+    def test_partially_overlapping_annotations_partition_groups_without_duplicate_samples(self):
+        labels = [label(0, 0, 80), label(1, 40, 100, mask=2), label(2, 40, 60)]
+        events = [event(0, 'on'), event(40, 'on', voice=1),
+                  event(80, 'off'), event(100, 'off', voice=1)]
+        result = summarize(events, labels, sample_count=120, sample_rate=96000,
+                           include_group_coverage=True)['simultaneous_group_coverage']
+        self.assertEqual([(row['start_sample'], row['end_sample'], row['string_mask'],
+                           row['source_label_indices']) for row in result['groups']],
+                         [(0, 40, 1, [0]), (40, 60, 3, [0, 1, 2]),
+                          (60, 80, 3, [0, 1]), (80, 100, 2, [1])])
+        self.assertEqual(result['annotated_group_samples'], 100)
+        self.assertEqual(result['exact_group_held_samples'], 100)
+        self.assertEqual(result['by_string_count'], {
+            '1': dict(groups=2, annotated_group_samples=60, exact_group_held_samples=60),
+            '2': dict(groups=2, annotated_group_samples=40, exact_group_held_samples=40)})
+
+    def test_zero_mask_leaves_simultaneous_string_membership_unmeasured(self):
+        for labels, measured in (([label(0, 0, 100, mask=0)], 0),
+                                 ([label(0, 0, 100), label(1, 20, 80, mask=0)], 40)):
+            with self.subTest(labels=labels):
+                result = summarize([event(0, 'on')], labels,
+                    sample_count=120, sample_rate=96000,
+                    include_group_coverage=True)['simultaneous_group_coverage']
+                self.assertTrue(result['valid'])
+                self.assertEqual(result['annotated_group_samples'], measured)
+                self.assertEqual(result['exact_group_held_samples'], measured)
+                self.assertEqual(result['unmeasured_group_samples'], 100 - measured)
+                self.assertNotIn('0', result['by_string_count'])
+                for row in result['groups']:
+                    if not row['string_membership_measured']:
+                        self.assertIsNone(row['exact_group_held_samples'])
+                        self.assertIsNone(row['unmatched_group_samples'])
+                        self.assertIsNone(row['longest_exact_group_hold_samples'])
+
+    def test_different_pitch_group_samples_overlap_and_are_not_unique_audio_duration(self):
+        labels = [label(0, 0, 100), label(1, 0, 100, note=64, mask=2)]
+        result = summarize([event(0, 'on'), event(0, 'on', note=64, voice=1)], labels,
+            sample_count=120, sample_rate=96000,
+            include_group_coverage=True)['simultaneous_group_coverage']
+        self.assertEqual(result['annotated_group_samples'], 200)
+        self.assertEqual(result['exact_group_held_samples'], 200)
+        self.assertEqual([row['midi_note'] for row in result['groups']], [60, 64])
+
+    def test_invalid_pairing_suppresses_group_coverage(self):
+        result = summarize([event(10, 'off')], [label()], sample_count=200,
+                           sample_rate=96000, include_group_coverage=True)
+        groups = result['simultaneous_group_coverage']
+        self.assertFalse(groups['valid'])
+        self.assertIsNone(groups['groups'])
+        self.assertIsNone(groups['exact_group_held_samples'])
+        self.assertIsNone(groups['by_string_count'])
 
 
 if __name__ == '__main__':

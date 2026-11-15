@@ -70,7 +70,8 @@ def analyze_midi(trace, tsv, replay):
     events = read_events(trace, sample_count=clock['samples'],
                          transition_count=clock['transitions'])
     result = summarize(events, replay['labels'], sample_count=clock['samples'],
-                       sample_rate=clock['sample_rate'], include_output_safety=True)
+                       sample_rate=clock['sample_rate'], include_output_safety=True,
+                       include_group_coverage=True)
     result['raw_midi'] = raw_conflicts(events)
     return result
 

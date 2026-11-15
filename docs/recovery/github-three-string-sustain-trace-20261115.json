@@ -1,6 +1,6 @@
 {
   "schema": "m3_three_string_sustain_trace_checkpoint_v1",
-  "updated_at": "2026-11-15T16:07:05.912721+00:00",
+  "updated_at": "2026-11-15T16:50:14.337231+00:00",
   "state": "completed",
   "final": true,
   "source": {
@@ -60,7 +60,7 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "small report collected once and hash-verified; bulk evidence remains remote",
+  "collection_state": "Small report and1,425,590-byte bulk archive collected once and hash-verified; only five compressed text files extracted, native binary not extracted or executed.",
   "unmeasured_gates": [
     "new policy acceptance",
     "full-corpus no-regression",
@@ -70,7 +70,7 @@
     "zero deadline overruns",
     "external DAW/device delivery"
   ],
-  "next": "Test a default-off explicit fresh-qualification flag at the inference caller; preserve all primary, spectral, beat, energy, ownership, allocation and capacity guards. Do not repeat the completed sustain trace.",
+  "next": "Follow the already-dispatched qualified-tier-retention full-corpus run. Preserve the signal-floor and dwell gates; do not repeat historical rejected floor-relief trials.",
   "dispatch_directory": "build/github-results/three-string-sustain-dispatch-20261115",
   "dispatch_receipt": "build/github-results/three-string-sustain-dispatch-20261115/dispatch-result.json",
   "local_output": "build/github-results/three-string-sustain-trace-43732232462",
@@ -131,7 +131,7 @@
       }
     }
   ],
-  "stage": "completed; source-rule conflict isolated",
+  "stage": "completed; periodic membership gaps and distinct post-floor dropout decoded",
   "collection_receipt": "build/github-results/three-string-sustain-trace-43732232462/collection-receipt.json",
   "report": "build/github-results/three-string-sustain-trace-43732232462/three-string-sustain-trace/report.json",
   "report_sha256": "0d0e53f79247d44730aff424d0a880ba02ff40c25dfbdb81bbf0fc4f94f62a4b",
@@ -187,5 +187,21 @@
     "parser_comparison_contracts_passed": 240,
     "source_portable_run": "43732186359",
     "source_portable_conclusion": "success"
+  },
+  "bulk_downloaded": true,
+  "bulk_collected_once": true,
+  "bulk_collection_receipt": "build/github-results/three-string-sustain-trace-43732232462/bulk-download-receipt.json",
+  "bulk_purpose": "Inspect candidate selection fields for the distinct 21504-sample sustain dropout; no new replay.",
+  "signal_floor_dropout_diagnosis": {
+    "path": "build/github-results/three-string-sustain-trace-43732232462/signal-floor-dropout-diagnosis.json",
+    "sha256": "9f39af2f56433730741479b717bc5eecf0214ce2a6d940312c9bae42bb0d8999",
+    "quiet_ticks": 339,
+    "zero_signal_evidence_ticks": 268,
+    "minimum_evidence_samples": 3840,
+    "signal_samples_at_return": 3861,
+    "gap_samples": 21504,
+    "gap_ms": 224.0,
+    "cause": "post-signal-floor minimum evidence; fine6/owned7 prevents active resume, fine6 has only2 members after release",
+    "historical_floor_relief_remains_rejected": true
   }
 }

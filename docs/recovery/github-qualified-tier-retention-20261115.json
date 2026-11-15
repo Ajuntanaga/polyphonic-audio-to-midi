@@ -1,6 +1,6 @@
 {
   "schema": "m3_qualified_tier_retention_checkpoint_v1",
-  "updated_at": "2026-11-15T16:35:04.890352+00:00",
+  "updated_at": "2026-11-15T17:28:45.224528+00:00",
   "state": "completed",
   "final": true,
   "source": {
@@ -75,7 +75,7 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "small report collected once; hash verified; bulk remote",
+  "collection_state": "Small report collected once and hash verified; bulk subsequently collected once for synthetic-four diagnosis, hash verified; two compressed text members extracted.",
   "stage": "final bounded screen",
   "unmeasured_gates": [
     "full corpus",
@@ -90,7 +90,7 @@
     "The separate full candidate dropout is not addressed.",
     "Any bounded-screen pass is eligibility for full corpus checks only. Previously rejected diagnostic policies remain off."
   ],
-  "next": "Prepare full 14-dataset OFF/current/trial checks for the same qualified-tier policy on GitHub Actions. Require zero passage or false-output regression, identical references and buffers, zero allocations, p99<=166666ns, max<=333333ns and zero overruns. Completed worker/source runs must not be polled, rerun or recollected.",
+  "next": "Full corpus run43736868711 is already active; follow its checkpoint read-only and collect its small report once when final. Do not repeat the bounded run or its collection. Preserve installed scores; simultaneous synthetic-four coverage is separately measured at zero and needs a narrow cause diagnosis before any later trial.",
   "dispatch_directory": "build/github-results/qualified-tier-retention-dispatch-20261115",
   "dispatch_preflight": "build/github-results/qualified-tier-retention-dispatch-20261115/preflight.json",
   "dispatch_receipt": "build/github-results/qualified-tier-retention-dispatch-20261115/dispatch-attempt.json",
@@ -1201,5 +1201,176 @@
       "note_safety_pass": true
     }
   },
-  "decision": "eligible for full corpus and native safety checks; not promotion"
+  "decision": "eligible for full corpus and native safety checks; not promotion",
+  "bulk_downloaded": true,
+  "bulk_collection_receipt": "build/github-results/qualified-tier-retention-43734173233/bulk-download-receipt.json",
+  "bulk_extraction_receipt": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-extraction-receipt.json",
+  "synthetic_four_group_diagnosis": {
+    "report": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-group-diagnosis.json",
+    "report_sha256": "d0c93e96cd038ccb12abdcb050e1d1743d47e7b577b07d1029701821ac8d1134",
+    "basis": "Saved scored TSV and complete raw MIDI only; no new native execution.",
+    "source_run": 43734173233,
+    "source_commit": "11e4043f470218729780dc752f58d2bf6aede023",
+    "dataset": "synthetic-four",
+    "policy": "current-on",
+    "group_snapshot": {
+      "physical_group_labeled": 77660,
+      "physical_group_matched": 0,
+      "physical_group_missing_string_voices": 238816,
+      "physical_group_extra_string_voices": 12339
+    },
+    "group_held_by_string_count": {
+      "4": {
+        "groups": 24,
+        "annotated_group_samples": 4969955,
+        "exact_group_held_samples": 0
+      }
+    },
+    "legacy_output": {
+      "labeled": 310640,
+      "matched": 51027,
+      "false_wrong_note_voices": 39044,
+      "false_wrong_string_voices": 12339,
+      "false_gap_voices": 6721,
+      "false_positive_voices": 58104,
+      "fingerprint": "c12f010c225a00a9"
+    },
+    "legacy_held": {
+      "exact_held_samples": 3234746,
+      "annotated_hold_samples": 19879820
+    },
+    "interpretation": "All four intended strings must be correct simultaneously. Legacy label metrics compare the complete observed same-pitch mask separately with each singleton label, so legacy 51027/310640 and 3234746/19879820 do not measure simultaneous four-string coverage. Native group snapshot and the raw union-of-concurrent-labels metric both measure zero. Historical scoreboard and frozen gates remain unchanged; this is a separate diagnostic measurement.",
+    "target": {
+      "labels": [
+        36,
+        37,
+        38,
+        39
+      ],
+      "midi_note": 53,
+      "expected_mask": 15,
+      "start_sample": 2073693,
+      "end_sample": 2294400,
+      "observed_mask_samples": {
+        "0": 4578,
+        "32": 18112,
+        "8": 62912,
+        "4": 131521,
+        "2": 3584
+      },
+      "lane0_note_samples": {
+        "unowned": 220707
+      },
+      "note53_onsets_by_lane": {
+        "5": 2,
+        "3": 23,
+        "2": 24,
+        "1": 2
+      }
+    },
+    "trial_relation": "The bounded trial scored TSV and complete raw MIDI are bit-identical to current-ON for synthetic-four; the same group result therefore applies to that trial.",
+    "installed_output_changed": false,
+    "promotion_accepted": false
+  },
+  "synthetic_four_prefit_diagnosis": {
+    "report": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-prefit-diagnosis.json",
+    "report_sha256": "d19bed526a85cd286f74e067e423fe9d477a629ee773b378b845038016af8c7a",
+    "source_run": 43734173233,
+    "basis": "Saved scored TSV only, deduplicated by concurrent same-note group; no native execution.",
+    "summary": {
+      "groups": 24,
+      "candidate_snapshots": 77660,
+      "no_history_snapshots": 9478,
+      "collecting_snapshots": 68182,
+      "other_unresolved_reasons": 0,
+      "nonzero_fine_fit_masks": 0,
+      "nonzero_fine_member_masks": 0,
+      "annotated_duration_range_seconds": [
+        1.2393541666666668,
+        2.29903125
+      ],
+      "minimum_fine_evidence_seconds": 3.0,
+      "initial_consensus_seconds": 0.2
+    },
+    "finding": "All24 groups remain before the fine candidate-fit stage throughout annotated audio. No four-string fine group exists for selector/ownership to reject. Every annotated hold is shorter than the required three-second fine history.",
+    "limits": [
+      "Annotated duration is not the measured span of usable fine history; per-tick history count/span and reset reasons are absent.",
+      "This establishes pre-fit failure, not whether history resets contribute to its duration.",
+      "Occasional diagnostic spectral mask15 does not prove production-qualified four-string evidence.",
+      "The original long physical trace did not justify shortening the fine window; this short-note incompatibility likewise is not evidence that a shorter window is safe."
+    ],
+    "next": "After the active corpus result, address evidence-qualified short-note group acquisition with fixed simultaneous-group metrics; do not repeat a selector trace for this settled fork or lower the three-second window solely from these aggregates."
+  },
+  "short_note_acquisition_route": {
+    "observed_at": "2026-11-15T17:19:01.195402+00:00",
+    "native_candidate_commit": "11e4043f470218729780dc752f58d2bf6aede023",
+    "source": "native/src/polyphonic_pitch_detector.cpp",
+    "source_locations": {
+      "calibrated_spectral_heads": 2845,
+      "spectral_tier_completion_candidate": 2925,
+      "bounded_completion_guards": 2949,
+      "production_selector_qualification": 4913
+    },
+    "existing_route": "Spectral tier completion can add one calibrated head only to an already valid two- or three-member fine-frequency group. It cannot initialize a four-string group independently of fine history.",
+    "first_failed_prerequisite": "fine_members >= 2; all 77660 saved synthetic-four candidate snapshots have fine member mask zero",
+    "other_guards": "Active/current assignment compatibility, finite in-range beat coherence, component energy, retained score and direct fundamental remain required; saved aggregates do not establish their per-tick values.",
+    "diagnostic_limit": "Counterfactual spectral fit/shadow mask15 is not a production-qualified four-string result.",
+    "next": "Await the active corpus verdict. No additional selector diagnostic or existing safe short-history implementation is indicated. A future independent initializer would need calibrated per-tick head/margin and ownership/capacity evidence plus explicit simultaneous-group measures; the three-second fine-history limit remains unchanged.",
+    "new_native_execution": false,
+    "policy_changed": false,
+    "saved_spectral_evidence": {
+      "observed_at": "2026-11-15T17:38:05.003361+00:00",
+      "report_path": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-spectral-evidence-availability.json",
+      "sha256": "dda10db4f7811aee2cabdb2c1d2643fbf74a06facdfc7dfc2ad8a795e13f2a4a",
+      "sufficient_for_independent_initializer": false,
+      "reason": "No. It preserves distributions and means but not the joint sequence needed to qualify admission.",
+      "next": "Await the existing full-corpus result. If short-note initialization remains the next implementation target, gather one bounded joint spectral-admission diagnostic on GitHub, preserving the untraced scored/raw reference; do not repeat the already-settled fine-history/selector diagnostic."
+    }
+  },
+  "simultaneous_group_metric": {
+    "implemented_at": "2026-11-15T17:26:53.904375+00:00",
+    "report": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-simultaneous-group-coverage.json",
+    "report_sha256": "8085cf67def15d91e6ea682896305187e3bb8543eab36250aca3bbde51dec397",
+    "source_run": 43734173233,
+    "source_commit": "11e4043f470218729780dc752f58d2bf6aede023",
+    "code_files": [
+      "tools/midi_lifecycle_analysis.py",
+      "tools/portable_calibrated_midi_retention_corpus.py"
+    ],
+    "code_state": "local uncommitted reporting change; active corpus source remains pinned",
+    "semantics": "Union concurrent same-pitch annotation masks over intervals with a constant active-label set. Exact coverage requires every intended string at once, with no extra or unassigned lane. Unknown mask-zero membership is unmeasured and excluded from known totals.",
+    "summary": {
+      "valid": true,
+      "annotated_group_samples": 4969955,
+      "unmeasured_group_samples": 0,
+      "exact_group_held_samples": 0,
+      "by_string_count": {
+        "4": {
+          "groups": 24,
+          "annotated_group_samples": 4969955,
+          "exact_group_held_samples": 0
+        }
+      }
+    },
+    "legacy_held": {
+      "exact_held_samples": 3234746,
+      "annotated_hold_samples": 19879820
+    },
+    "validation": {
+      "legacy_lifecycle_and_false_output_unchanged": true,
+      "raw_conflicts_unchanged": true,
+      "saved_group_diagnosis_reproduced": true,
+      "focused_python_tests_passed": 44,
+      "diff_check": "passed",
+      "test_command": "python3 -m unittest tests.test_midi_lifecycle_analysis tests.test_portable_calibrated_midi_retention_corpus"
+    },
+    "analyzer_sha256": "62e2be52692174ceb80d9aa9cf66f5917a7f1354e36a337f67757f9771282c3b",
+    "corpus_reporter_sha256": "35a4dce0e26ee9fdcfe22466cf6cd3f5988ae9d45ec924342d038b72cefe2cca",
+    "interpretation": "Each group is one pitch over a constant set of active annotations. Known string masks are unioned, so simultaneous singleton labels count once. An exact group requires every intended lane at the same time, no extra lane for that pitch and no unassigned voice. Any zero-mask annotation leaves string membership unmeasured and excludes that interval from exact-group totals. Different pitches can overlap in group-sample totals; these are not unique audio duration, snapshot scores, all-pitch chord accuracy or host delivery. False outputs remain separate. Legacy per-label scores are unchanged.",
+    "gate_policy": "Parallel metric only; frozen acceptance gates and historical scores unchanged.",
+    "new_native_execution": false,
+    "installed_output_changed": false,
+    "active_corpus_run_unchanged": 43736868711,
+    "next": "Use the additive group metric in a future justified corpus run; do not relaunch the current pinned run to add it."
+  }
 }

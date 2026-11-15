@@ -174,7 +174,86 @@ def _output_safety(spans, labels, sample_count):
     return counts
 
 
-def summarize(events, labels, *, sample_count, sample_rate, include_output_safety=False):
+def _simultaneous_group_annotations(labels):
+    """Partition each pitch at annotation edges and union its known lane masks."""
+    boundaries = defaultdict(lambda: defaultdict(list))
+    for label in labels:
+        for edge, opening in (('start_sample', True), ('end_sample', False)):
+            boundaries[label['midi_note']][label[edge]].append((opening, label))
+    groups = []
+    for note, edges in sorted(boundaries.items()):
+        active, previous = {}, None
+        for sample, actions in sorted(edges.items()):
+            if active and previous < sample:
+                mask = 0
+                known = all(label['string_mask'] != 0 for label in active.values())
+                for label in active.values():
+                    mask |= label['string_mask']
+                groups.append(dict(midi_note=note, start_sample=previous, end_sample=sample,
+                    string_mask=mask if known else 0,
+                    source_label_indices=sorted(active)))
+            for opening, label in actions:
+                if opening:
+                    active[label['label_index']] = label
+                else:
+                    del active[label['label_index']]
+            previous = sample
+    groups.sort(key=lambda row: (row['start_sample'], row['midi_note'], row['end_sample']))
+    return [dict(label_index=index, **row) for index, row in enumerate(groups)]
+
+
+def _group_coverage(events, labels, *, sample_count, sample_rate):
+    groups = _simultaneous_group_annotations(labels)
+    # Reuse the established half-open raw-event reduction. The opt-in is omitted
+    # here so this call cannot recurse and legacy per-label scores stay intact.
+    held = summarize(events, groups, sample_count=sample_count, sample_rate=sample_rate)
+    rows, totals = None, {}
+    if held['coverage_valid']:
+        rows = []
+        for group, row in zip(groups, held['labels']):
+            known = group['string_mask'] != 0
+            result = dict(group_index=group['label_index'], midi_note=group['midi_note'],
+                start_sample=group['start_sample'], end_sample=group['end_sample'],
+                string_mask=group['string_mask'], source_label_indices=group['source_label_indices'],
+                string_membership_measured=known,
+                annotated_group_samples=row['annotated_hold_samples'],
+                note_ons_inside_group=row['note_ons_inside_label'])
+            for old, new in (
+                    ('exact_held_samples', 'exact_group_held_samples'),
+                    ('unmatched_hold_samples', 'unmatched_group_samples'),
+                    ('longest_exact_hold_samples', 'longest_exact_group_hold_samples'),
+                    ('exact_hold_segments', 'exact_group_hold_segments'),
+                    ('first_exact_hold_delay_samples', 'first_exact_group_hold_delay_samples')):
+                result[new] = row[old] if known else None
+            rows.append(result)
+            if known:
+                count = str(group['string_mask'].bit_count())
+                total = totals.setdefault(count, dict(groups=0, annotated_group_samples=0,
+                                                       exact_group_held_samples=0))
+                total['groups'] += 1
+                total['annotated_group_samples'] += result['annotated_group_samples']
+                total['exact_group_held_samples'] += result['exact_group_held_samples']
+    return dict(schema='m3_simultaneous_same_pitch_group_coverage_v1',
+        valid=held['coverage_valid'], groups=rows,
+        annotated_group_samples=sum(group['end_sample'] - group['start_sample']
+                                    for group in groups if group['string_mask']),
+        unmeasured_group_samples=sum(group['end_sample'] - group['start_sample']
+                                    for group in groups if not group['string_mask']),
+        exact_group_held_samples=None if rows is None else
+            sum(row['exact_group_held_samples'] for row in rows if row['string_membership_measured']),
+        by_string_count=totals if rows is not None else None,
+        interpretation='Each group is one pitch over a constant set of active annotations. '
+            'Known string masks are unioned, so simultaneous singleton labels count once. '
+            'An exact group requires every intended lane at the same time, no extra lane '
+            'for that pitch and no unassigned voice. Any zero-mask annotation leaves string '
+            'membership unmeasured and excludes that interval from exact-group totals. '
+            'Different pitches can overlap in group-sample totals; these are not unique '
+            'audio duration, snapshot scores, all-pitch chord accuracy or host delivery. '
+            'False outputs remain separate. Legacy per-label scores are unchanged.')
+
+
+def summarize(events, labels, *, sample_count, sample_rate, include_output_safety=False,
+              include_group_coverage=False):
     """Reduce complete detector transitions, retaining EOF uncertainty explicitly."""
     if (type(sample_count) is not int or sample_count <= 0
             or type(sample_rate) is not int or sample_rate <= 0):
@@ -301,10 +380,14 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
                 'outputs are disjoint. Gap outputs are extra notes, not missing notes. '
                 'A zero label mask accepts any lane; unassigned output fails a nonzero mask. '
                 'No onset/release grace. These are not snapshot frames or host MIDI.')
+    if include_group_coverage:
+        result['simultaneous_group_coverage'] = _group_coverage(
+            events, labels, sample_count=sample_count, sample_rate=sample_rate)
     return result
 
 
-def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False):
+def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False,
+                  include_group_coverage=False):
     replay = read_replay(replay_path)
     with Path(replay_path).open(newline='') as stream:
         aggregate = next(csv.DictReader(stream, delimiter='\t'))
@@ -316,7 +399,8 @@ def analyze_trace(event_path, replay_path, *, include_raw_conflicts=False):
     events = read_events(event_path, sample_count=values['samples'],
                          transition_count=values['transitions'])
     result = summarize(events, replay['labels'], sample_count=values['samples'],
-                       sample_rate=values['sample_rate'])
+                       sample_rate=values['sample_rate'],
+                       include_group_coverage=include_group_coverage)
     if include_raw_conflicts:
         result['raw_midi'] = raw_conflicts(events)
     return result

@@ -1,0 +1,76 @@
+{
+  "schema": "m3_github_qualified_tier_retention_trace_checkpoint_v1",
+  "updated_at": "2026-11-15T18:11:21.469526+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "task": "qualified-tier-retention-trace",
+    "dataset": "extended-middle",
+    "note": 52,
+    "label_index": 1,
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "reference": {
+    "path": "docs/recovery/qualified-tier-retention-trace-references-20261115.json",
+    "sha256": "9c125842fcd40569add19dde898c6c8b4e90d10adf595917b58594e072866b97",
+    "corpus_run_id": "43736868711"
+  },
+  "scope": {
+    "case": {
+      "label_index": 1,
+      "midi_note": 52,
+      "string_mask": 40,
+      "start_sample": 393600,
+      "end_sample": 739200
+    },
+    "window": [
+      461568,
+      462336
+    ],
+    "decision_ticks_per_policy": 12,
+    "conditions": {
+      "current-on": [
+        "--diagnostic-spectral-lane-collision"
+      ],
+      "qualified-tier-retention-on": [
+        "--diagnostic-spectral-lane-collision",
+        "--diagnostic-qualified-tier-retention"
+      ]
+    },
+    "replays": 2
+  },
+  "purpose": "Capture a paired unchanged-policy trace over12 ticks at [461568,462336), exposing DP primary, fine-group disposition and complete assignment costs while preserving both complete scored/raw/outcome references. Requiring accepted fine alone is not yet safe: the equality override can retain a wrong extra lane even with fine40 accepted. No replacement policy is selected.",
+  "required": [
+    "both complete scored TSV, raw MIDI and outcome SHA-256 equal saved corpus references",
+    "unchanged target held-label counts and sample clock",
+    "complete joint assignment reproduction and all admission peers",
+    "named fine-group ownership disposition, DP primary, group proposal/origin/transition/commit and prior anchor ticks"
+  ],
+  "local_validation": {
+    "mock_contract_tests": 38,
+    "workflow_yaml_and_shell_syntax": "passed",
+    "native_execution": false,
+    "focused_review": "passed: no blocker; native offloaded execution remains unverified"
+  },
+  "runtime_policy_changed": false,
+  "native_instrumentation_changed": false,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "unmeasured_gates": [
+    "new policy safety",
+    "native allocations and deadlines",
+    "external DAW/device delivery"
+  ],
+  "next": "Interpret primary/fine route at first divergence against saved physical-long fine6-to7 repair; select one minimal replacement only if evidence distinguishes it.",
+  "dispatch_directory": "build/github-results/qualified-tier-retention-trace-dispatch-20261115",
+  "local_output": null
+}

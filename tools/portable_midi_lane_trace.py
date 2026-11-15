@@ -98,6 +98,30 @@ def raw_lane_history(events, *, lane, start, end):
                 'This is not delivered MIDI ownership or a held-duration acceptance gate.')
 
 
+def fine_group_observation(row):
+    """Keep the named ownership decision distinct from fine-frequency fitting."""
+    if 'fine_group_disposition' not in row:
+        return None  # Older captures did not record this stage.
+    disposition = row['fine_group_disposition']
+    if disposition not in ('unresolved', 'missing_primary', 'invalid_size',
+            'conflicts_other_owned', 'conflicts_allocated', 'over_capacity', 'accepted'):
+        raise ValueError('Unknown fine group disposition')
+    fields = ('fine_valid', 'fine_mask', 'committed_mask', 'ownership_observed',
+        'fine_group_evaluated', 'fine_group_mask', 'fine_group_other_owned',
+        'fine_group_overlap', 'fine_group_allocated', 'fine_group_extra_capacity')
+    if any(key not in row for key in fields):
+        raise ValueError('Incomplete fine group observation')
+    result = {key: int(row[key]) for key in fields}
+    if (any(value < 0 or value > 255 for value in result.values())
+            or any(result[key] not in (0, 1) for key in
+                   ('fine_valid', 'ownership_observed', 'fine_group_evaluated'))):
+        raise ValueError('Invalid fine group observation')
+    result['disposition'] = disposition
+    result['owners'] = row.get('fine_group_owners')
+    result['owner_counts'] = row.get('fine_group_owner_counts')
+    return result
+
+
 def candidate_frames(rows, outcomes, *, note, start, end):
     expected = set(range(((start + 64) // 64) * 64 - 1, end, 64))
     snapshots = {int(row['sample']): row for row in outcomes}
@@ -123,6 +147,7 @@ def candidate_frames(rows, outcomes, *, note, start, end):
             selected_or_coasting=row['selected_or_coasting'],
             labels=frame['labels'], matched_labels=sorted(frame['matched']),
             voices=frame['voices'], candidate_state=states.get(note),
+            fine_group=fine_group_observation(row),
             admission_peers=admission_peers(row.get('admission_peers'), tick=tick)))
     if seen != expected:
         raise ValueError('Incomplete lane candidate window')

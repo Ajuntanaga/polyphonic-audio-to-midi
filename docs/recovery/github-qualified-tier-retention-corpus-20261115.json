@@ -3,25 +3,25 @@
   "task": "qualified-tier-retention-corpus",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_commit": null,
-  "worker_commit": null,
+  "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+  "worker_commit": "5456ea2ab82a2fd34a82fb8d6760801e99cfc0a7",
   "native_candidate_commit": "11e4043f470218729780dc752f58d2bf6aede023",
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
-  "created_at": "2026-11-15T16:38:35.075586+00:00",
-  "updated_at": "2026-11-15T16:39:19.102642+00:00",
-  "stage": "reviewed and prepared for one GHA dispatch",
+  "run_id": 43736868711,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
+  "created_at": "2026-11-15T16:41:16Z",
+  "updated_at": "2026-11-15T17:57:36.181377+00:00",
+  "stage": "stopped at note safety regression",
   "checkpoint": "docs/recovery/github-qualified-tier-retention-corpus-20261115.json",
   "bounded_checkpoint": "docs/recovery/github-qualified-tier-retention-20261115.json",
   "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "report_relative_path": "qualified-tier-retention-corpus/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
-  "local_output_dir": null,
+  "local_output_dir": "build/github-results/qualified-tier-retention-corpus-43736868711",
   "local_checks": {
     "python_contract_tests": 42,
     "workflow_yaml_and_shell_syntax": "passed in both source and worker copies",
@@ -74,6 +74,517 @@
   "external_host_and_hardware": "unverified",
   "routing": "GHA only for native processing; no useful separate Kaggle GPU job for this CPU policy; terminal legacy jobs unchanged",
   "dispatch_directory": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115",
-  "next_step": "Commit and push reviewed source/worker route; dispatch once. Collect small final report once and preserve bulk remote; report note safety, buffer, allocation and native timing separately.",
-  "dispatch_preflight": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/preflight.json"
+  "next_step": "Capture a paired unchanged-policy trace over12 ticks at [461568,462336), exposing DP primary, fine-group disposition and complete assignment costs while preserving both complete scored/raw/outcome references. Requiring accepted fine alone is not yet safe: the equality override can retain a wrong extra lane even with fine40 accepted. No replacement policy is selected.",
+  "dispatch_preflight": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/preflight.json",
+  "dispatch_attempt": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/dispatch-attempt.json",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43736868711",
+  "remote_updated_at": "2026-11-15T17:38:12Z",
+  "last_observed_at": "2026-11-15T17:40:38.184499+00:00",
+  "small_artifact_name": "m3-report-43736868711-1",
+  "bulk_artifact_name": "m3-evidence-43736868711-1",
+  "artifact_count_observed": 2,
+  "artifact_metadata_path": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/artifacts-20261115T174032Z.stdout.json",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-15T16:40:56Z",
+      "databaseId": 43736837500,
+      "displayTitle": "Validate qualified tier retention across the full corpus",
+      "headSha": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-15T16:42:32Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43736837500",
+      "workflowName": "Portable offline replay",
+      "stage": "completed",
+      "observation_path": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/source-portable-current.stdout.json"
+    }
+  ],
+  "dispatch_confirmed": true,
+  "latest_remote_observation": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/worker-20261115T174032Z.stdout.json",
+  "separate_saved_evidence_diagnosis": {
+    "checkpoint": "docs/recovery/github-qualified-tier-retention-20261115.json",
+    "report": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-group-diagnosis.json",
+    "finding": "Synthetic-four group snapshot0/77660 and exact raw group-held0/4969955; legacy per-label scoreboard is not simultaneous group coverage. This saved diagnosis uses the completed bounded run. Synthetic-four was not reached by the rejected full-corpus run.",
+    "prefit_report": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-prefit-diagnosis.json",
+    "prefit_finding": "All24 groups remain before the fine candidate-fit stage throughout annotated audio. No four-string fine group exists for selector/ownership to reject. Every annotated hold is shorter than the required three-second fine history."
+  },
+  "result": "rejected",
+  "small_artifact_download_receipt": "build/github-results/qualified-tier-retention-corpus-43736868711/small-download-receipt.json",
+  "small_artifact_sha256": "c76fa9cc303835f2ad88a5147e4a6c93c33601a83275df475523e07aade62626",
+  "small_artifact_bytes": 138174,
+  "report_path": "build/github-results/qualified-tier-retention-corpus-43736868711/qualified-tier-retention-corpus/report.json",
+  "report_sha256": "9497c87479b6d75e5acde6beb63fa295cfd499f3757a147b3619cd1dcf366daf",
+  "collected_verdict_path": "build/github-results/qualified-tier-retention-corpus-43736868711/collected-verdict.json",
+  "collected_verdict_sha256": "ece26f61b728ac9580c0df91c1d7ffdf02fcb82f69edef234a1f99454ec09798",
+  "artifacts": [
+    {
+      "id": 14173410181,
+      "name": "m3-evidence-43736868711-1",
+      "size_in_bytes": 316014359,
+      "digest": "sha256:10d8db7d681f9fb35eb3c53330f2881fd92b89d72aeaae578c6ece5540dd230c"
+    },
+    {
+      "id": 14172711368,
+      "name": "m3-report-43736868711-1",
+      "size_in_bytes": 138174,
+      "digest": "sha256:c76fa9cc303835f2ad88a5147e4a6c93c33601a83275df475523e07aade62626"
+    }
+  ],
+  "final_result": {
+    "schema": "m3_qualified_tier_retention_corpus_collected_verdict_v1",
+    "report": "build/github-results/qualified-tier-retention-corpus-43736868711/qualified-tier-retention-corpus/report.json",
+    "report_sha256": "9497c87479b6d75e5acde6beb63fa295cfd499f3757a147b3619cd1dcf366daf",
+    "run_id": 43736868711,
+    "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+    "worker_commit": "5456ea2ab82a2fd34a82fb8d6760801e99cfc0a7",
+    "native_candidate_commit": "11e4043f470218729780dc752f58d2bf6aede023",
+    "workflow_conclusion": "success",
+    "result": "rejected",
+    "final": true,
+    "stage": "stopped at note safety regression",
+    "finished_at": "2026-11-15T17:37:59.575302+00:00",
+    "declared_datasets": 14,
+    "measured_datasets": [
+      "ordinary",
+      "constructed",
+      "isolated-08",
+      "isolated-05",
+      "isolated-02",
+      "physical-long",
+      "physical-middle",
+      "physical-highmid",
+      "physical-high",
+      "extended-middle"
+    ],
+    "unrun_datasets": [
+      "extended-highmid",
+      "extended-high",
+      "physical-four",
+      "synthetic-four"
+    ],
+    "completed_replays": 84,
+    "note_safety": {
+      "passed": 9,
+      "measured": 10,
+      "required": 14,
+      "failed": [
+        "extended-middle"
+      ]
+    },
+    "reference_identity": {
+      "observed_passed": 20,
+      "observed_total": 20,
+      "required_total": 28,
+      "full_corpus_gate": false,
+      "reason": "full-corpus gate requires complete coverage; all observed saved OFF/current references are bit-identical"
+    },
+    "buffer_identity": {
+      "datasets_passed": 9,
+      "pair_checks_passed": 54,
+      "pair_checks_measured": 54,
+      "required_datasets": 14,
+      "extended_middle": "not run after note-safety rejection"
+    },
+    "native": {
+      "reference-off": {
+        "measured": 9,
+        "passed": 7,
+        "p99_passed": 9,
+        "zero_allocations_and_frees": 9,
+        "timed_scored_identity": 9,
+        "maximum_p99_ns": 101731,
+        "maximum_ns": 438982,
+        "deadline_overruns": 5
+      },
+      "current-on": {
+        "measured": 9,
+        "passed": 7,
+        "p99_passed": 9,
+        "zero_allocations_and_frees": 9,
+        "timed_scored_identity": 9,
+        "maximum_p99_ns": 101551,
+        "maximum_ns": 502937,
+        "deadline_overruns": 5
+      },
+      "qualified-tier-retention-on": {
+        "measured": 9,
+        "passed": 9,
+        "p99_passed": 9,
+        "zero_allocations_and_frees": 9,
+        "timed_scored_identity": 9,
+        "maximum_p99_ns": 101240,
+        "maximum_ns": 216611,
+        "deadline_overruns": 0
+      }
+    },
+    "native_failures": [
+      {
+        "dataset": "constructed",
+        "mode": "reference-off",
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": false
+        },
+        "p99_ns": 95963,
+        "maximum_ns": 358503,
+        "deadline_overruns": 3
+      },
+      {
+        "dataset": "physical-middle",
+        "mode": "reference-off",
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": false
+        },
+        "p99_ns": 93879,
+        "maximum_ns": 438982,
+        "deadline_overruns": 2
+      },
+      {
+        "dataset": "constructed",
+        "mode": "current-on",
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": false
+        },
+        "p99_ns": 90695,
+        "maximum_ns": 502937,
+        "deadline_overruns": 4
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "current-on",
+        "gates": {
+          "timed_scored_identity": true,
+          "zero_processing_allocations": true,
+          "timing_pass": false
+        },
+        "p99_ns": 100609,
+        "maximum_ns": 416719,
+        "deadline_overruns": 1
+      }
+    ],
+    "all_modes_native_datasets_passed": 6,
+    "protected_trial_scored_datasets": [
+      "ordinary",
+      "constructed",
+      "isolated-08",
+      "isolated-05",
+      "isolated-02",
+      "physical-middle",
+      "physical-highmid",
+      "physical-high"
+    ],
+    "target_physical_long": {
+      "snapshot_before": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "6ecf88865ddc34e4"
+      },
+      "snapshot_after": {
+        "labeled": 68441,
+        "matched": 41470,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "73d6769148363f76"
+      },
+      "label3": {
+        "current-on": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1613760,
+          "unmatched_hold_samples": 906432,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 30,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 104
+        },
+        "qualified-tier-retention-on": {
+          "label_index": 3,
+          "midi_note": 40,
+          "string_mask": 7,
+          "start_sample": 2932608,
+          "end_sample": 5452800,
+          "annotated_hold_samples": 2520192,
+          "exact_held_samples": 1614912,
+          "unmatched_hold_samples": 905280,
+          "longest_exact_hold_samples": 711104,
+          "exact_hold_segments": 13,
+          "first_exact_hold_delay_samples": 520639,
+          "note_ons_inside_label": 88
+        }
+      },
+      "comparison": {
+        "snapshot": {
+          "delta": {
+            "matched": 18,
+            "false_wrong_note_voices": 0,
+            "false_wrong_string_voices": 0,
+            "false_gap_voices": 0,
+            "false_positive_voices": 0
+          },
+          "changed_labels": [
+            {
+              "label_index": 3,
+              "midi_note": 40,
+              "string_mask": 7,
+              "labeled": 39378,
+              "baseline_matched": 25219,
+              "current_matched": 25237,
+              "matched_delta": 18
+            }
+          ],
+          "lost_labels": [],
+          "increased_error_counts": [],
+          "gate_pass": true,
+          "output_bit_identical": false
+        },
+        "inference_bit_identical": false,
+        "inference_identity_required": false,
+        "sample_clock_identical": true,
+        "held_pairing_valid": true,
+        "changed_held_labels": [
+          {
+            "label_index": 3,
+            "midi_note": 40,
+            "exact_held_samples_before": 1613760,
+            "exact_held_samples_after": 1614912,
+            "held_delta": 1152,
+            "note_ons_before": 104,
+            "note_ons_after": 88,
+            "note_on_delta": -16
+          }
+        ],
+        "held_losses": [],
+        "improved_hold_and_attack_labels": [
+          {
+            "label_index": 3,
+            "midi_note": 40,
+            "exact_held_samples_before": 1613760,
+            "exact_held_samples_after": 1614912,
+            "held_delta": 1152,
+            "note_ons_before": 104,
+            "note_ons_after": 88,
+            "note_on_delta": -16
+          }
+        ],
+        "exact_held_samples_delta": 1152,
+        "output_safety_delta": {
+          "false_wrong_note_voice_samples": 0,
+          "false_wrong_string_voice_samples": 0,
+          "false_gap_voice_samples": 0,
+          "false_wrong_note_onsets": 0,
+          "false_wrong_string_onsets": 0,
+          "false_gap_onsets": 0
+        },
+        "raw_conflict_delta": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "note_safety_pass": true
+      }
+    },
+    "regression_extended_middle": {
+      "snapshot_before": {
+        "labeled": 32400,
+        "matched": 4511,
+        "false_wrong_note_voices": 9393,
+        "false_wrong_string_voices": 24725,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41170,
+        "fingerprint": "73d712146be4b1d2"
+      },
+      "snapshot_after": {
+        "labeled": 32400,
+        "matched": 4331,
+        "false_wrong_note_voices": 9390,
+        "false_wrong_string_voices": 24960,
+        "false_gap_voices": 7052,
+        "false_positive_voices": 41402,
+        "fingerprint": "6340eb87114230aa"
+      },
+      "label1": {
+        "current-on": {
+          "label_index": 1,
+          "midi_note": 52,
+          "string_mask": 40,
+          "start_sample": 393600,
+          "end_sample": 739200,
+          "annotated_hold_samples": 345600,
+          "exact_held_samples": 266625,
+          "unmatched_hold_samples": 78975,
+          "longest_exact_hold_samples": 76032,
+          "exact_hold_segments": 60,
+          "first_exact_hold_delay_samples": 5311,
+          "note_ons_inside_label": 63
+        },
+        "qualified-tier-retention-on": {
+          "label_index": 1,
+          "midi_note": 52,
+          "string_mask": 40,
+          "start_sample": 393600,
+          "end_sample": 739200,
+          "annotated_hold_samples": 345600,
+          "exact_held_samples": 257281,
+          "unmatched_hold_samples": 88319,
+          "longest_exact_hold_samples": 76032,
+          "exact_hold_segments": 27,
+          "first_exact_hold_delay_samples": 5311,
+          "note_ons_inside_label": 31
+        }
+      },
+      "comparison": {
+        "snapshot": {
+          "delta": {
+            "matched": -180,
+            "false_wrong_note_voices": -3,
+            "false_wrong_string_voices": 235,
+            "false_gap_voices": 0,
+            "false_positive_voices": 232
+          },
+          "changed_labels": [
+            {
+              "label_index": 1,
+              "midi_note": 52,
+              "string_mask": 40,
+              "labeled": 5400,
+              "baseline_matched": 4225,
+              "current_matched": 4045,
+              "matched_delta": -180
+            }
+          ],
+          "lost_labels": [
+            1
+          ],
+          "increased_error_counts": [
+            "false_wrong_string_voices",
+            "false_positive_voices"
+          ],
+          "gate_pass": false,
+          "output_bit_identical": false
+        },
+        "inference_bit_identical": false,
+        "inference_identity_required": false,
+        "sample_clock_identical": true,
+        "held_pairing_valid": true,
+        "changed_held_labels": [
+          {
+            "label_index": 1,
+            "midi_note": 52,
+            "exact_held_samples_before": 266625,
+            "exact_held_samples_after": 257281,
+            "held_delta": -9344,
+            "note_ons_before": 63,
+            "note_ons_after": 31,
+            "note_on_delta": -32
+          },
+          {
+            "label_index": 2,
+            "midi_note": 52,
+            "exact_held_samples_before": 0,
+            "exact_held_samples_after": 0,
+            "held_delta": 0,
+            "note_ons_before": 251,
+            "note_ons_after": 234,
+            "note_on_delta": -17
+          }
+        ],
+        "held_losses": [
+          {
+            "label_index": 1,
+            "midi_note": 52,
+            "exact_held_samples_before": 266625,
+            "exact_held_samples_after": 257281,
+            "held_delta": -9344,
+            "note_ons_before": 63,
+            "note_ons_after": 31,
+            "note_on_delta": -32
+          }
+        ],
+        "improved_hold_and_attack_labels": [],
+        "exact_held_samples_delta": -9344,
+        "output_safety_delta": {
+          "false_wrong_note_voice_samples": 0,
+          "false_wrong_string_voice_samples": 12480,
+          "false_gap_voice_samples": 0,
+          "false_wrong_note_onsets": 0,
+          "false_wrong_string_onsets": -40,
+          "false_gap_onsets": 0
+        },
+        "raw_conflict_delta": {
+          "cross_pitch_on_before_release": 0,
+          "repeated_pitch_on_before_release": 0,
+          "off_without_raw_on": 0,
+          "zero_velocity_on": 0,
+          "unassigned_on": 0
+        },
+        "note_safety_pass": false
+      }
+    },
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "default_enabled": false,
+    "live_readiness": "not measured",
+    "scope": "Offline frames, exact held label-samples, raw false voice-samples and onsets are separate. Fewer attacks do not excuse lost exact hold or wrong-string growth."
+  },
+  "saved_extended_middle_diagnosis": {
+    "report": "build/github-results/qualified-tier-retention-corpus-43736868711/extended-middle-saved-trace-diagnosis.json",
+    "report_sha256": "acbf36739be44eac48a0c5a0057dabaf13707b4456dcf0bc1ac6e1486b75fe4f",
+    "run_id": 43736868711,
+    "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+    "label_index": 1,
+    "midi_note": 52,
+    "expected_string_mask": 40,
+    "raw_exact_samples_lost": 10176,
+    "raw_exact_samples_gained": 832,
+    "raw_exact_samples_net": -9344,
+    "raw_mask40_to41_lost_samples": 8064,
+    "snapshot_exact_ticks_lost": 196,
+    "snapshot_exact_ticks_gained": 16,
+    "first_changed_snapshot_sample": 461823,
+    "first_lost_raw_midi_sample": 461887,
+    "changed_outcomes": 261,
+    "changed_outcomes_path": "build/github-results/qualified-tier-retention-corpus-43736868711/extended-middle-changed-outcomes.jsonl.gz",
+    "changed_outcomes_sha256": "3fbb83df58dbeacbf9ed330115781fc37ad9a3f838422288de3a29789a85efbd",
+    "finding": "Both conditions retain valid fine mask40 at changed outcomes; extra assigned string0 accounts for8064 of10176 lost raw exact-held samples. Gaining832 leaves net-9344. Other added strings also lose correct holds. Fine/candidate-evidence fields do not change in the261 changed outcomes; assignment/commit and selector fields do.",
+    "evidence_limit": "Outcome best calibration string is not the DP primary. Fine-route acceptance, joint primary and fresh qualification are not recorded here, so the narrower accepted-fine guard is a hypothesis pending source reasoning and bounded native measurement.",
+    "new_audio_replay": false,
+    "runtime_rule_changed": false
+  },
+  "selective_bulk_collection": {
+    "receipt": "build/github-results/qualified-tier-retention-corpus-43736868711/bulk-selective-collection-receipt.json",
+    "receipt_sha256": "469ceb277b6f88df208495d5c903fa5e3d3b82f6848fe1b717d15b6c1b7e534a",
+    "artifact_id": 14173410181,
+    "artifact_bytes": 316014359,
+    "full_archive_downloaded": false,
+    "full_archive_hash_verified": false,
+    "members_verified": 4,
+    "retained_compressed_bytes": 8632470,
+    "member_range_payload_bytes": 8752682,
+    "central_directory_range_bytes": 65557,
+    "verification": "ZIP CRC and compressed/raw SHA-256 against collected report",
+    "disposition": "Only four compressed extended-middle current/trial MIDI/outcome members retained; full bulk archive remains remote."
+  },
+  "retention_guard_source_review": {
+    "finding": "selector_used_mask, selector voice count and open count describe the whole DP result. Fresh equality completion may override an accepted fine subset and reserve/retain a wrong extra lane even if primary lies in fine40. committed_fine_group_matches_assignment would exclude the intended physical fine6/current7 repair.",
+    "next": "paired bounded trace before selecting a minimal guard",
+    "native_processing": false
+  }
 }
