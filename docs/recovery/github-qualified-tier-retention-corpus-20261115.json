@@ -1,0 +1,79 @@
+{
+  "schema": "m3_github_qualified_tier_retention_corpus_checkpoint_v1",
+  "task": "qualified-tier-retention-corpus",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": null,
+  "worker_commit": null,
+  "native_candidate_commit": "11e4043f470218729780dc752f58d2bf6aede023",
+  "run_id": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T16:38:35.075586+00:00",
+  "updated_at": "2026-11-15T16:39:19.102642+00:00",
+  "stage": "reviewed and prepared for one GHA dispatch",
+  "checkpoint": "docs/recovery/github-qualified-tier-retention-corpus-20261115.json",
+  "bounded_checkpoint": "docs/recovery/github-qualified-tier-retention-20261115.json",
+  "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
+  "report_relative_path": "qualified-tier-retention-corpus/report.json",
+  "report_available": false,
+  "outputs_downloaded_once": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "local_output_dir": null,
+  "local_checks": {
+    "python_contract_tests": 42,
+    "workflow_yaml_and_shell_syntax": "passed in both source and worker copies",
+    "diff_check": "passed",
+    "native_execution": false,
+    "focused_review": "passed; no material blocker"
+  },
+  "declared_datasets": 14,
+  "planned_replays": 126,
+  "conditions": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "qualified-tier-retention-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-qualified-tier-retention"
+    ]
+  },
+  "buffer_sizes": [
+    512,
+    32,
+    1024
+  ],
+  "input_release": "corpus-20261108",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_checklist_count": 30,
+  "acceptance": [
+    "all14 saved OFF/current scored/raw references bit-identical",
+    "no per-label frame or exact-held loss and no false snapshot/duration/onset or raw-conflict growth",
+    "physical-long label3/note40 more exact held samples and fewer attacks than current-ON",
+    "all modes preserve output across512/32/1024 buffers",
+    "all modes zero processing allocations/frees, p99<=166666ns, max<=333333ns, zero overruns"
+  ],
+  "target": {
+    "dataset": "physical-long",
+    "label_index": 3,
+    "midi_note": 40,
+    "string_mask": 7,
+    "total_label_samples": 2520192,
+    "baseline_exact_held_samples": 1613760,
+    "baseline_note_ons": 104,
+    "bounded_trial_exact_held_samples": 1614912,
+    "bounded_trial_note_ons": 88
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "default_enabled": false,
+  "local_native_execution": false,
+  "external_host_and_hardware": "unverified",
+  "routing": "GHA only for native processing; no useful separate Kaggle GPU job for this CPU policy; terminal legacy jobs unchanged",
+  "dispatch_directory": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115",
+  "next_step": "Commit and push reviewed source/worker route; dispatch once. Collect small final report once and preserve bulk remote; report note safety, buffer, allocation and native timing separately.",
+  "dispatch_preflight": "build/github-results/qualified-tier-retention-corpus-dispatch-20261115/preflight.json"
+}

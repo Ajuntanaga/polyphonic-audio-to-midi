@@ -1,4 +1,4 @@
-"""Compare OFF, saved current ON and calibrated retention on replacement compute.
+"""Compare OFF, saved current ON and a bounded-screen policy on replacement compute.
 
 Snapshot inference, raw held-note safety and untraced native timing are separate
 gates. A successful offline screen never promotes or installs the candidate.
@@ -22,6 +22,13 @@ from tools.replay_corpus import DATASETS
 
 REFERENCE_SCHEMA = 'm3_calibrated_midi_retention_corpus_references_v1'
 OFF, CURRENT, TRIAL = (mode for mode, _ in CONDITIONS)
+POLICIES = {
+    'calibrated-midi-retention': dict(conditions=CONDITIONS, require_inference=True),
+    'qualified-tier-retention': dict(
+        conditions=CONDITIONS[:2] + (('qualified-tier-retention-on', (
+            '--diagnostic-spectral-lane-collision', '--diagnostic-qualified-tier-retention')),),
+        require_inference=False),
+}
 LABEL_IDENTITY = ('label_index', 'midi_note', 'string_mask', 'start_sample', 'end_sample')
 
 
@@ -125,21 +132,26 @@ def buffer_identity(reference, replay):
             and reference['exact_matches_by_string_count'] == replay['exact_matches_by_string_count'])
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800, *,
+        policy='calibrated-midi-retention'):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
+    selection = POLICIES[policy]
+    conditions = selection['conditions']
+    trial = conditions[-1][0]
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     manifest = json.loads(manifest_path.read_text())
     references = json.loads(reference_path.read_text())
-    report = dict(schema='m3_calibrated_midi_retention_corpus_v1', started_at=now(),
+    report = dict(schema='m3_' + policy.replace('-', '_') + '_corpus_v1',
+        policy_name=policy, inference_identity_required=selection['require_inference'], started_at=now(),
         state='running', final=False, stage='verify saved references and corpus inputs',
         source=manifest.get('source', {}), settings=SETTINGS,
         reference_manifest_sha256=digest(reference_path),
         reference_report_sha256=references['anchor_report_sha256'],
         reference_source=references['source'], input_manifest_sha256=digest(manifest_path),
         binary_sha256=digest(binary), declared_datasets=len(DATASETS), datasets={},
-        conditions={mode: list(flags) for mode, flags in CONDITIONS},
+        conditions={mode: list(flags) for mode, flags in conditions},
         timing_limits=dict(block_samples=32, sample_rate=96000, p99_ns=166666,
                            maximum_ns=333333, deadline_overruns=0),
         metric_scope='Snapshot assignments, overlapping held label-samples and raw false '
@@ -160,7 +172,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
             dataset = report['datasets'][name] = dict(runs={}, buffer_parity={})
             cached = {}
             for block in BLOCKS:
-                for mode, flags in CONDITIONS:
+                for mode, flags in conditions:
                     stem = name + '-' + mode + '-' + str(block)
                     report.update(stage='corpus replay', current_run=stem)
                     save()
@@ -213,8 +225,9 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                     save()
                 if block == 512:
                     dataset['comparison'] = compare_notes(dataset['runs'][CURRENT + '-512'],
-                        dataset['runs'][TRIAL + '-512'], cached[CURRENT], cached[TRIAL])
-                    dataset['snapshot_vs_off'] = compare_replays(cached[OFF], cached[TRIAL])
+                        dataset['runs'][trial + '-512'], cached[CURRENT], cached[trial],
+                        require_inference=selection['require_inference'])
+                    dataset['snapshot_vs_off'] = compare_replays(cached[OFF], cached[trial])
                     dataset['note_safety_pass'] = (dataset['comparison']['note_safety_pass']
                                                    and dataset['snapshot_vs_off']['gate_pass'])
                     save()
@@ -226,7 +239,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
             dataset['buffer_pass'] = (len(dataset['buffer_parity']) == 6
                                       and all(dataset['buffer_parity'].values()))
             dataset['native_gate_pass'] = all(all(dataset['runs'][mode + '-32']['gates'].values())
-                                              for mode, _ in CONDITIONS)
+                                              for mode, _ in conditions)
             save()
             if not dataset['buffer_pass']:
                 report.update(state='rejected', stage='stopped at buffer identity regression')
@@ -246,14 +259,24 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
         report['note_safety_datasets_passed'] = sum(d.get('note_safety_pass', False) for d in datasets)
         report['buffer_datasets_passed'] = sum(d.get('buffer_pass', False) for d in datasets)
         report['native_datasets_passed'] = sum(d.get('native_gate_pass', False) for d in datasets)
+        report['native_datasets_passed_by_mode'] = {
+            mode: sum(bool(d['runs'].get(mode + '-32', {}).get('gates'))
+                      and all(d['runs'][mode + '-32']['gates'].values()) for d in datasets)
+            for mode, _ in conditions}
         report['improved_hold_and_attack_labels'] = sum(len(d.get('comparison', {}).get(
             'improved_hold_and_attack_labels', [])) for d in datasets)
         report['reference_identity_pass'] = complete and all(
             d['runs'][mode + '-512'].get('saved_reference_bit_identical', False)
             for d in datasets for mode in (OFF, CURRENT))
+        target_improved = None
+        if policy == 'qualified-tier-retention':
+            target_improved = any(row['label_index'] == 3 and row['midi_note'] == 40
+                for row in report['datasets'].get('physical-long', {}).get('comparison', {}).get(
+                    'improved_hold_and_attack_labels', []))
+        report['required_target_hold_and_attack_improved'] = target_improved
         report['corpus_note_safety_pass'] = bool(complete and report['reference_identity_pass']
             and report['note_safety_datasets_passed'] == len(DATASETS)
-            and report['improved_hold_and_attack_labels'] > 0)
+            and report['improved_hold_and_attack_labels'] > 0 and target_improved is not False)
         report['full_corpus_screen_pass'] = bool(report['corpus_note_safety_pass']
             and report['buffer_datasets_passed'] == len(DATASETS)
             and report['native_datasets_passed'] == len(DATASETS))
@@ -269,8 +292,10 @@ def main():
     for flag in ('binary', 'corpus', 'manifest', 'references', 'output'):
         parser.add_argument('--' + flag, type=Path, required=True)
     parser.add_argument('--max-seconds', type=int, default=10800)
+    parser.add_argument('--policy', choices=POLICIES, default='calibrated-midi-retention')
     args = parser.parse_args()
-    run(args.binary, args.corpus, args.manifest, args.references, args.output, args.max_seconds)
+    run(args.binary, args.corpus, args.manifest, args.references, args.output, args.max_seconds,
+        policy=args.policy)
 
 
 if __name__ == '__main__':

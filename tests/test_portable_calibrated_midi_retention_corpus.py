@@ -12,6 +12,15 @@ from tools.portable_corpus_replay import MEASUREMENT_SCOPE
 
 
 class CalibratedRetentionCorpusTests(unittest.TestCase):
+    POLICY = 'calibrated-midi-retention'
+    DATASET = 'ordinary'
+    LABEL_OFFSET = 0
+    TRIAL = corpus.TRIAL
+
+    @property
+    def conditions(self):
+        return corpus.POLICIES[self.POLICY]['conditions']
+
     def exercise(self, *, change=None, reference_drift=None, failure=False,
                  input_drift=False):
         with tempfile.TemporaryDirectory() as temporary:
@@ -21,7 +30,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
             binary = root / 'replay'
             binary.write_text('fixture binary, never executed')
             files = {}
-            for name in ('calibration.m3cb', 'templates.tsv', 'ordinary.wav', 'ordinary.tsv'):
+            for name in ('calibration.m3cb', 'templates.tsv', self.DATASET + '.wav', self.DATASET + '.tsv'):
                 (inputs / name).write_text(name)
                 files[name] = dict(sha256=corpus.digest(inputs / name))
             source = dict(input_release='release', input_bundle_sha256='bundle',
@@ -29,8 +38,8 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
             manifest = root / 'manifest.json'
             manifest.write_text(json.dumps(dict(source=source, files=files)))
             if input_drift:
-                (inputs / 'ordinary.wav').write_text('changed')
-            labels = [dict(label_index=i, midi_note=37 + i, string_mask=1 << i,
+                (inputs / (self.DATASET + '.wav')).write_text('changed')
+            labels = [dict(label_index=i + self.LABEL_OFFSET, midi_note=37 + i + self.LABEL_OFFSET, string_mask=1 << i,
                            start_sample=i * 64, end_sample=(i + 1) * 64,
                            calibration_pass=0, labeled=10, matched=6)
                       for i in range(2)]
@@ -41,13 +50,13 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                                exact_matches_by_string_count={'1': dict(labeled=20, matched=12)})
 
             def mode_of(path):
-                return next(mode for mode, _ in corpus.CONDITIONS if mode in str(path))
+                return next(mode for mode, _ in self.conditions if mode in str(path))
 
             def parsed(path):
                 mode = mode_of(path)
                 block = int(path.stem.rsplit('-', 1)[1])
                 result = deepcopy(base_replay)
-                if mode == corpus.TRIAL:
+                if mode == self.TRIAL:
                     result['output']['fingerprint'] = 'fedcba9876543210'
                 if change:
                     change('replay', mode, block, result)
@@ -57,7 +66,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                 mode = mode_of(path)
                 rows = [dict({key: label[key] for key in corpus.LABEL_IDENTITY},
                              exact_held_samples=5, note_ons_inside_label=10) for label in labels]
-                if mode == corpus.TRIAL:
+                if mode == self.TRIAL:
                     rows[0].update(exact_held_samples=8, note_ons_inside_label=9)
                 result = dict(coverage_valid=True, labels=rows, sample_count=128, sample_rate=96000,
                     output_safety=dict(valid=True, counts=dict.fromkeys(corpus.OUTPUT_SAFETY_FIELDS, 5)),
@@ -68,16 +77,16 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                 return result
 
             references = dict(schema=corpus.REFERENCE_SCHEMA, settings=corpus.SETTINGS,
-                block_samples=512, reference_flags={m: list(f) for m, f in corpus.CONDITIONS[:2]},
-                source=source, anchor_report_sha256='saved-report', datasets={'ordinary': {}})
-            for mode, _ in corpus.CONDITIONS[:2]:
-                references['datasets']['ordinary'][mode] = dict(output=deepcopy(base_output),
+                block_samples=512, reference_flags={m: list(f) for m, f in self.conditions[:2]},
+                source=source, anchor_report_sha256='saved-report', datasets={self.DATASET: {}})
+            for mode, _ in self.conditions[:2]:
+                references['datasets'][self.DATASET][mode] = dict(output=deepcopy(base_output),
                     exact_matches_by_string_count=base_replay['exact_matches_by_string_count'],
                     tsv_sha256=hashlib.sha256(mode.encode()).hexdigest(), midi_trace_sha256=mode,
                     sample_count=128, sample_rate=96000)
             if reference_drift:
                 mode, field = reference_drift
-                references['datasets']['ordinary'][mode][field] = 'different'
+                references['datasets'][self.DATASET][mode][field] = 'different'
             reference_path = root / 'references.json'
             reference_path.write_text(json.dumps(references))
             commands = []
@@ -105,7 +114,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                     if change:
                         change('timing', mode, block, timing)
                     Path(command[command.index('--diagnostic-core-timing') + 1]).write_text(json.dumps(timing))
-                self.assertEqual('--diagnostic-calibrated-midi-retention' in command, mode == corpus.TRIAL)
+                self.assertEqual('--diagnostic-' + self.POLICY in command, mode == self.TRIAL)
                 self.assertEqual('--diagnostic-spectral-lane-collision' in command, mode != corpus.OFF)
 
             def compressed(path, **kwargs):
@@ -115,7 +124,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                 return result
 
             output = root / 'output'
-            with (patch.object(corpus, 'DATASETS', ('ordinary',)),
+            with (patch.object(corpus, 'DATASETS', (self.DATASET,)),
                   patch.object(corpus.subprocess, 'run', side_effect=native),
                   patch.object(corpus, 'read_replay', side_effect=parsed),
                   patch.object(corpus, 'analyze_midi', side_effect=lifecycle),
@@ -123,9 +132,9 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                   patch.object(corpus, 'compress_trace_window', side_effect=compressed)):
                 if reference_drift or failure or input_drift:
                     with self.assertRaises((ValueError, subprocess.CalledProcessError)):
-                        corpus.run(binary, inputs, manifest, reference_path, output)
+                        corpus.run(binary, inputs, manifest, reference_path, output, policy=self.POLICY)
                 else:
-                    corpus.run(binary, inputs, manifest, reference_path, output)
+                    corpus.run(binary, inputs, manifest, reference_path, output, policy=self.POLICY)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
@@ -140,6 +149,11 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
         self.assertTrue(report['full_corpus_screen_pass'])
         self.assertEqual(report['improved_hold_and_attack_labels'], 1)
         self.assertEqual(report['native_datasets_passed'], 1)
+        self.assertEqual(report['native_datasets_passed_by_mode'],
+                         {mode: 1 for mode, _ in self.conditions})
+        self.assertEqual(report['policy_name'], self.POLICY)
+        self.assertEqual(report['inference_identity_required'],
+                         self.POLICY == 'calibrated-midi-retention')
 
     def test_saved_reference_drift_stops_before_trial(self):
         for mode in (corpus.OFF, corpus.CURRENT):
@@ -153,10 +167,10 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
 
     def test_one_held_loss_rejects_despite_positive_aggregate(self):
         def change(kind, mode, block, row):
-            if kind == 'lifecycle' and mode == corpus.TRIAL:
+            if kind == 'lifecycle' and mode == self.TRIAL:
                 row['labels'][1]['exact_held_samples'] -= 1
         report, commands = self.exercise(change=change)
-        comparison = report['datasets']['ordinary']['comparison']
+        comparison = report['datasets'][self.DATASET]['comparison']
         self.assertGreater(comparison['exact_held_samples_delta'], 0)
         self.assertEqual(len(comparison['held_losses']), 1)
         self.assertFalse(report['corpus_note_safety_pass'])
@@ -167,7 +181,7 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                               ('raw_midi', corpus.CONFLICT_FIELDS)):
             for field in fields:
                 def change(kind, mode, block, row):
-                    if kind == 'lifecycle' and mode == corpus.TRIAL:
+                    if kind == 'lifecycle' and mode == self.TRIAL:
                         row[group]['counts'][field] += 1
                 with self.subTest(field=field):
                     report, commands = self.exercise(change=change)
@@ -177,18 +191,18 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
     def test_outcome_or_snapshot_inference_change_rejects(self):
         for selected in ('trace', 'replay'):
             def change(kind, mode, block, row):
-                if kind == selected and mode == corpus.TRIAL:
+                if kind == selected and mode == self.TRIAL:
                     if selected == 'trace':
                         row['raw_sha256'] = 'changed'
                     else:
                         row['output']['false_wrong_note_voices'] += 1
             with self.subTest(selected=selected):
                 report, _ = self.exercise(change=change)
-                self.assertFalse(report['datasets']['ordinary']['comparison']['inference_bit_identical'])
+                self.assertFalse(report['datasets'][self.DATASET]['comparison']['inference_bit_identical'])
                 self.assertFalse(report['full_corpus_screen_pass'])
 
     def test_timing_and_allocations_gate_each_mode_separately(self):
-        for selected_mode, _ in corpus.CONDITIONS:
+        for selected_mode, _ in self.conditions:
             for field in ('p99_ns', 'maximum_ns', 'deadline_overruns', 'cpp_allocations',
                           'cpp_frees', 'c_allocations', 'c_frees'):
                 def change(kind, mode, block, row):
@@ -199,9 +213,12 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                     self.assertTrue(report['corpus_note_safety_pass'])
                     self.assertFalse(report['full_corpus_screen_pass'])
                     self.assertEqual(len(commands), 9)
+                    self.assertEqual(report['native_datasets_passed_by_mode'],
+                                     {mode: int(mode != selected_mode)
+                                      for mode, _ in self.conditions})
 
     def test_buffer_identity_required_for_each_untraced_mode_and_block(self):
-        for selected_mode, _ in corpus.CONDITIONS:
+        for selected_mode, _ in self.conditions:
             for selected_block in (32, 1024):
                 def change(kind, mode, block, row):
                     if kind == 'replay' and mode == selected_mode and block == selected_block:
@@ -209,14 +226,14 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
                 with self.subTest(mode=selected_mode, block=selected_block):
                     report, _ = self.exercise(change=change)
                     self.assertFalse(report['full_corpus_screen_pass'])
-                    self.assertFalse(report['datasets']['ordinary']['buffer_pass'])
+                    self.assertFalse(report['datasets'][self.DATASET]['buffer_pass'])
 
     def test_parity_without_hold_and_attack_improvement_does_not_qualify(self):
         def change(kind, mode, block, row):
-            if kind == 'lifecycle' and mode == corpus.TRIAL:
+            if kind == 'lifecycle' and mode == self.TRIAL:
                 row['labels'][0].update(exact_held_samples=5, note_ons_inside_label=10)
         report, _ = self.exercise(change=change)
-        self.assertTrue(report['datasets']['ordinary']['note_safety_pass'])
+        self.assertTrue(report['datasets'][self.DATASET]['note_safety_pass'])
         self.assertFalse(report['corpus_note_safety_pass'])
 
     def test_changed_inputs_and_native_failure_keep_final_failure_report(self):
@@ -228,6 +245,65 @@ class CalibratedRetentionCorpusTests(unittest.TestCase):
         self.assertTrue(report['failure_stderr'].endswith('.stderr'))
         self.assertEqual(report['failure_stderr_tail'], 'named native fixture failure')
 
+
+
+class QualifiedTierRetentionCorpusTests(CalibratedRetentionCorpusTests):
+    POLICY = 'qualified-tier-retention'
+    DATASET = 'physical-long'
+    LABEL_OFFSET = 3
+    TRIAL = 'qualified-tier-retention-on'
+
+    def test_outcome_or_snapshot_inference_change_rejects(self):
+        # This policy changes assignments, so safe gains are allowed; false
+        # snapshot growth must still reject even when inference identity is off.
+        for field in ('false_wrong_note_voices', 'false_wrong_string_voices',
+                      'false_gap_voices', 'false_positive_voices'):
+            def change(kind, mode, block, row):
+                if kind == 'replay' and mode == self.TRIAL:
+                    row['output'][field] += 1
+            with self.subTest(field=field):
+                report, commands = self.exercise(change=change)
+                self.assertFalse(report['full_corpus_screen_pass'])
+                self.assertEqual(len(commands), 3)
+
+    def test_safe_snapshot_and_outcome_gain_keeps_all_other_gates(self):
+        def change(kind, mode, block, row):
+            if mode != self.TRIAL:
+                return
+            if kind == 'trace':
+                row['raw_sha256'] = 'changed-outcome'
+            elif kind == 'replay':
+                row['output']['matched'] += 1
+                row['labels'][0]['matched'] += 1
+                row['exact_matches_by_string_count']['1']['matched'] += 1
+        report, commands = self.exercise(change=change)
+        self.assertFalse(report['datasets'][self.DATASET]['comparison']['inference_bit_identical'])
+        self.assertTrue(report['required_target_hold_and_attack_improved'])
+        self.assertTrue(report['full_corpus_screen_pass'])
+        self.assertEqual(len(commands), 9)
+
+    def test_one_passage_loss_rejects_despite_positive_frame_aggregate(self):
+        def change(kind, mode, block, row):
+            if kind == 'replay' and mode == self.TRIAL:
+                row['labels'][0]['matched'] += 2
+                row['labels'][1]['matched'] -= 1
+                row['output']['matched'] += 1
+        report, commands = self.exercise(change=change)
+        comparison = report['datasets'][self.DATASET]['comparison']['snapshot']
+        self.assertEqual(comparison['delta']['matched'], 1)
+        self.assertEqual(comparison['lost_labels'], [4])
+        self.assertFalse(report['corpus_note_safety_pass'])
+        self.assertEqual(len(commands), 3)
+
+    def test_unrelated_hold_gain_cannot_replace_required_physical_target(self):
+        def change(kind, mode, block, row):
+            if kind == 'lifecycle' and mode == self.TRIAL:
+                row['labels'][0].update(exact_held_samples=5, note_ons_inside_label=10)
+                row['labels'][1].update(exact_held_samples=8, note_ons_inside_label=9)
+        report, _ = self.exercise(change=change)
+        self.assertEqual(report['improved_hold_and_attack_labels'], 1)
+        self.assertFalse(report['required_target_hold_and_attack_improved'])
+        self.assertFalse(report['corpus_note_safety_pass'])
 
 if __name__ == '__main__':
     unittest.main()
