@@ -18,6 +18,7 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
         selected = trial.POLICIES[self.policy]
         self.trial_mode = selected['mode']
         self.flag = selected['flag']
+        self.require_inference = selected.get('require_inference', False)
         self.screen_datasets = selected.get('datasets', trial.SCREEN_DATASETS)
         self.conditions = ((trial.OFF, ()), (trial.CURRENT, (trial.COLLISION,)),
                            (self.trial_mode, (trial.COLLISION, self.flag)))
@@ -99,7 +100,8 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                 commands.append(command)
                 _, mode = selection(Path(stdout.name))
                 self.assertEqual(command[command.index('--block') + 1], '512')
-                self.assertNotIn('--outcome-trace', command)
+                self.assertEqual('--outcome-trace' in command,
+                                 self.require_inference and mode != trial.OFF)
                 self.assertNotIn('--diagnostic-core-timing', command)
                 self.assertEqual(self.flag in command, mode == self.trial_mode)
                 for name, policy in trial.POLICIES.items():
@@ -111,14 +113,24 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
                     raise subprocess.CalledProcessError(1, command)
                 stdout.write(mode)
                 Path(command[command.index('--midi-event-trace') + 1]).write_text('fixture')
+                if '--outcome-trace' in command:
+                    Path(command[command.index('--outcome-trace') + 1]).write_text('fixture')
+
+            def compress(path, **kwargs):
+                name, mode = selection(path)
+                is_outcome = path.name.endswith('-outcome.tsv')
+                row = dict(raw_sha256='inference' if is_outcome else mode)
+                if is_outcome and change:
+                    change('outcome', name, mode, row)
+                return row
 
             output = root / 'output'
             with (patch.object(shared, 'DATASETS', self.screen_datasets),
                   patch.object(trial.subprocess, 'run', side_effect=native),
                   patch.object(trial, 'read_replay', side_effect=parsed),
                   patch.object(trial, 'analyze_midi', side_effect=lifecycle),
-                  patch.object(trial, 'compress_trace_window',
-                               side_effect=lambda path, **kw: dict(raw_sha256=selection(path)[1]))):
+                  patch.object(trial, 'outcome_window'),
+                  patch.object(trial, 'compress_trace_window', side_effect=compress)):
                 if drift or failure:
                     with self.assertRaises((ValueError, subprocess.CalledProcessError)):
                         trial.run(binary, inputs, manifest, reference_path, output, policy=self.policy)
@@ -141,8 +153,8 @@ class SuppressedAdjacentAdmissionTests(unittest.TestCase):
         self.assertEqual(len(commands), 3 * len(self.screen_datasets))
         self.assertEqual(report['note_safety_datasets_passed'], len(self.screen_datasets))
         comparison = report['datasets']['physical-long']['comparison']
-        self.assertFalse(comparison['inference_identity_required'])
-        self.assertIsNone(comparison['inference_bit_identical'])
+        self.assertEqual(comparison['inference_identity_required'], self.require_inference)
+        self.assertIs(comparison['inference_bit_identical'], True if self.require_inference else None)
 
     def test_target_parity_stops_after_first_dataset(self):
         def change(kind, name, mode, row):
@@ -230,6 +242,32 @@ class ContinuousTierRetentionTests(SuppressedAdjacentAdmissionTests):
 
 class CompletionWindowRetentionTests(ContinuousTierRetentionTests):
     policy = 'completion-window-retention'
+
+
+class CompletionMidiRetentionTests(ContinuousTierRetentionTests):
+    policy = 'completion-midi-retention'
+
+    def test_inference_outcome_drift_rejects_despite_target_gain(self):
+        def change(kind, name, mode, row):
+            if kind == 'outcome' and mode == self.trial_mode:
+                row['raw_sha256'] = 'changed'
+        report, commands = self.exercise(change=change)
+        self.assertTrue(report['target_hold']['improved'])
+        self.assertFalse(report['datasets']['physical-long']['comparison']['inference_bit_identical'])
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(len(commands), 3)
+
+    def test_snapshot_gain_is_also_inference_drift(self):
+        def change(kind, name, mode, row):
+            if kind == 'snapshot' and mode == self.trial_mode:
+                row['output']['matched'] += 1
+                row['labels'][0]['matched'] += 1
+                row['exact_matches_by_string_count']['3']['matched'] += 1
+        report, commands = self.exercise(change=change)
+        self.assertTrue(report['target_hold']['improved'])
+        self.assertFalse(report['datasets']['physical-long']['comparison']['inference_bit_identical'])
+        self.assertFalse(report['bounded_screen_pass'])
+        self.assertEqual(len(commands), 3)
 
 
 if __name__ == '__main__':

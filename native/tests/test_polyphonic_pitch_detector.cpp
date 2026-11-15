@@ -5404,7 +5404,7 @@ struct PolyphonicPitchDetectorTestAccess final {
 
   static CompletionMidiProbe completion_midi_retention_probe(
       PolyphonicPitchDetector& detector, bool enabled,
-      std::uint64_t qualified_ticks) noexcept {
+      std::uint64_t qualified_ticks, std::size_t decisions = 34U) noexcept {
     constexpr std::size_t kCandidate = 40U - 32U;
     (void)retained_unison_completion_selector_probe(detector);
     detector.set_qualified_tier_retention_for_diagnostics(false);
@@ -5426,7 +5426,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     std::array<double, kMaxCandidates> scores{}, fundamentals{};
     scores[kCandidate] = fundamentals[kCandidate] = 1.0;
     CompletionMidiProbe result;
-    for (std::size_t tick = 0U; tick < result.physical.size(); ++tick) {
+    for (std::size_t tick = 0U; tick < std::min(decisions, result.physical.size()); ++tick) {
       ++detector.decision_counter_;
       detector.selector_group_masks_ = {};
       detector.fine_frequency_evidence_states_[kCandidate].added_member_beat_coherence[0U] =
@@ -5449,6 +5449,78 @@ struct PolyphonicPitchDetectorTestAccess final {
       }
     }
     return result;
+  }
+
+  enum class CompletionMidiBreak {
+    none, disabled, setter, stale, unselected, inactive, suppressed, projected,
+    partial_owner, no_owner, unplayable, virtual_change, physical_change,
+    handoff, selected_peer, coasting_peer, pending_peer, capacity,
+    nonconflicting_peer
+  };
+
+  static void completion_midi_retention_guard_probe(
+      PolyphonicPitchDetector& detector, CompletionMidiBreak interruption) {
+    constexpr std::size_t kCandidate = 40U - 32U;
+    constexpr std::size_t kPeer = 44U - 32U;
+    (void)completion_midi_retention_probe(detector, true, 0xffffU, 16U);
+    auto& state = detector.candidate_states_[kCandidate];
+    std::array<bool, kMaxCandidates> selected{};
+    selected[kCandidate] = true;
+    std::uint8_t retained = 0x07U;
+    switch (interruption) {
+      case CompletionMidiBreak::disabled:
+        detector.set_completion_midi_retention_for_diagnostics(false); break;
+      case CompletionMidiBreak::setter:
+        detector.set_completion_midi_retention_for_diagnostics(true); break;
+      case CompletionMidiBreak::stale: ++detector.decision_counter_; break;
+      case CompletionMidiBreak::unselected: selected[kCandidate] = false; break;
+      case CompletionMidiBreak::inactive: state.active = false; break;
+      case CompletionMidiBreak::suppressed: state.spectral_duplicate_output_suppressed = true; break;
+      case CompletionMidiBreak::projected: state.emitted_note = 39U; break;
+      case CompletionMidiBreak::partial_owner: retained = 0x06U; break;
+      case CompletionMidiBreak::no_owner: retained = 0U; break;
+      case CompletionMidiBreak::unplayable: detector.playable_string_masks_[kCandidate] = 0x06U; break;
+      case CompletionMidiBreak::virtual_change: state.midi_voice_mask = 0x02U; break;
+      case CompletionMidiBreak::physical_change: state.assigned_string_mask = 0x02U; break;
+      case CompletionMidiBreak::handoff: detector.selector_atomic_handoff_targets_[kCandidate] = true; break;
+      case CompletionMidiBreak::selected_peer:
+      case CompletionMidiBreak::coasting_peer:
+      case CompletionMidiBreak::pending_peer:
+      case CompletionMidiBreak::capacity:
+      case CompletionMidiBreak::nonconflicting_peer: {
+        auto& peer = detector.candidate_states_[kPeer];
+        selected[kPeer] = interruption != CompletionMidiBreak::coasting_peer;
+        peer.assigned_string = 0U;
+        peer.active = interruption != CompletionMidiBreak::pending_peer;
+        peer.assigned_string_mask = peer.midi_voice_mask =
+            interruption == CompletionMidiBreak::capacity ? 0x18U :
+            interruption == CompletionMidiBreak::nonconflicting_peer ? 0x08U :
+            interruption == CompletionMidiBreak::pending_peer ? 0U : 0x01U;
+        break;
+      }
+      case CompletionMidiBreak::none: break;
+    }
+    const auto physical = state.assigned_string_mask;
+    const auto virtual_mask = state.midi_voice_mask;
+    const auto allocations = test::allocation_count();
+    const bool can_retain = interruption == CompletionMidiBreak::none ||
+        interruption == CompletionMidiBreak::nonconflicting_peer;
+    M3_EXPECT_EQ(detector.completion_midi_retention_request(
+        kCandidate, retained, virtual_mask, selected), can_retain ? 0x07U : virtual_mask);
+    M3_EXPECT_EQ(state.assigned_string_mask, physical);
+    M3_EXPECT_EQ(state.midi_voice_mask, virtual_mask);
+    if (interruption == CompletionMidiBreak::inactive ||
+        interruption == CompletionMidiBreak::stale) {
+      std::array<double, kMaxCandidates> scores{}, fundamentals{};
+      scores[kCandidate] = fundamentals[kCandidate] = 1.0;
+      DetectorDecision decision;
+      detector.reconcile_diagnostic_midi_owners(decision, selected, scores, fundamentals);
+      M3_EXPECT_EQ(decision.transitions.size(),
+                    interruption == CompletionMidiBreak::inactive ? 3U : 1U);
+      for (const auto& event : decision.transitions)
+        M3_EXPECT_EQ(event.kind, TransitionKind::note_off);
+    }
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 #endif
 
@@ -9257,6 +9329,49 @@ M3_TEST(native_detector_completion_midi_retention_holds_without_inference_feedba
     M3_EXPECT_EQ(trial.actual[tick], 0x07U);
     M3_EXPECT_EQ(trial.releases[tick], 0U);
     M3_EXPECT_EQ(trial.attacks[tick], 0U);
+  }
+}
+
+M3_TEST(native_detector_completion_midi_retention_requires_uninterrupted_evidence) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  constexpr std::uint64_t kAllTicks = (std::uint64_t{1U} << 34U) - 1U;
+  for (std::size_t missing = 0U; missing < 16U; ++missing) {
+    const auto qualified = kAllTicks & ~(std::uint64_t{1U} << missing);
+    const auto current = m3::PolyphonicPitchDetectorTestAccess::
+        completion_midi_retention_probe(detector, false, qualified);
+    const auto trial = m3::PolyphonicPitchDetectorTestAccess::
+        completion_midi_retention_probe(detector, true, qualified);
+    M3_EXPECT_EQ(trial.physical, current.physical);
+    M3_EXPECT_EQ(trial.pending, current.pending);
+    M3_EXPECT_EQ(trial.evidence, current.evidence);
+    M3_EXPECT_EQ(trial.actual[15U], 0x06U);
+    M3_EXPECT_EQ(trial.releases[15U], 1U);
+  }
+}
+
+M3_TEST(native_detector_completion_midi_retention_yields_and_releases_without_allocation) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.midi_routing = m3::MidiRouting::per_voice;
+  config.max_fret = 24U;
+  config.max_polyphony = 4U;
+  using Break = m3::PolyphonicPitchDetectorTestAccess::CompletionMidiBreak;
+  for (const auto interruption : {Break::none, Break::disabled, Break::setter,
+        Break::stale, Break::unselected, Break::inactive, Break::suppressed,
+        Break::projected, Break::partial_owner, Break::no_owner, Break::unplayable,
+        Break::virtual_change, Break::physical_change, Break::handoff,
+        Break::selected_peer, Break::coasting_peer, Break::pending_peer,
+        Break::capacity, Break::nonconflicting_peer}) {
+    m3::PolyphonicPitchDetector detector;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    m3::PolyphonicPitchDetectorTestAccess::completion_midi_retention_guard_probe(
+        detector, interruption);
   }
 }
 #endif

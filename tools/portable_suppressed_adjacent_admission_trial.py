@@ -14,6 +14,7 @@ from tools.portable_assignment_trace import compress_trace_window, digest
 from tools.portable_calibrated_midi_retention_corpus import (
     analyze_midi, compare_notes, saved_identity, verify_references)
 from tools.portable_corpus_replay import SETTINGS, command_for, now
+from tools.portable_routing_trace import outcome_window
 
 
 OFF, CURRENT, TRIAL = 'reference-off', 'current-on', 'suppressed-adjacent-admission-on'
@@ -57,7 +58,16 @@ POLICIES = {
             'after a full uninterrupted window of fresh completion qualification '
             'for the same accepted fine subset and primary. Preserve the fine '
             'proposal, selector reservation and correction counter; lost evidence '
-            'allows the pending correction immediately. No new threshold.')}
+            'allows the pending correction immediately. No new threshold.'),
+    'completion-midi-retention': dict(mode='completion-midi-retention-on',
+        flag='--diagnostic-completion-midi-retention', schema='m3_completion_midi_retention_trial_v1',
+        datasets=('physical-long', 'extended-middle', 'ordinary', 'constructed', 'synthetic-four'),
+        require_inference=True,
+        description='Default-off actual MIDI retention only: keep an already sounding '
+            'group on a fine-subset commit after the existing uninterrupted completion '
+            'evidence window. Preserve physical and virtual inference, yield to any '
+            'competing claim and capacity limit, and release without a fresh certificate. '
+            'No new threshold or inference hold; require full outcome identity.')}
 
 
 def target_hold(current, trial):
@@ -80,6 +90,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         raise ValueError('max_seconds must be positive')
     selection = POLICIES[policy]
     screen_datasets = selection.get('datasets', SCREEN_DATASETS)
+    require_inference = selection.get('require_inference', False)
     trial_mode = selection['mode']
     conditions = ((OFF, ()), (CURRENT, (COLLISION,)),
                   (trial_mode, (COLLISION, selection['flag'])))
@@ -96,6 +107,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         binary_sha256=digest(binary), declared_datasets=list(screen_datasets), datasets={},
         conditions={mode: list(flags) for mode, flags in conditions}, target=TARGET,
         policy=selection['description'], policy_name=policy,
+        inference_identity_required=require_inference,
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
             'voice-samples/onsets are separate. Gap outputs are extra notes, not missing notes.',
         installed_output_changed=False, promotion_accepted=False,
@@ -122,8 +134,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                 tsv, stderr, timing = (output / (stem + suffix)
                                       for suffix in ('.tsv', '.stderr', '-timing.json'))
                 midi = output / (stem + '-midi.tsv')
+                outcome = output / (stem + '-outcome.tsv')
                 command = command_for(binary, corpus, name, 'off', 512, timing, midi_trace=midi)
                 command.extend(flags)
+                if require_inference and mode != OFF:
+                    command.extend(('--outcome-trace', str(outcome)))
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise TimeoutError('Bounded screen wall-clock budget exhausted')
@@ -141,6 +156,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                 row['midi_trace'] = compress_trace_window(midi, start=0, end=row['sample_count'])
                 row['midi_trace_sha256'] = row['midi_trace']['raw_sha256']
                 midi.unlink()
+                if require_inference and mode != OFF:
+                    outcome_window(outcome, row['sample_count'], 0, 0)
+                    row['outcome_trace'] = compress_trace_window(outcome, start=0,
+                                                               end=row['sample_count'])
+                    outcome.unlink()
                 if mode in (OFF, CURRENT):
                     row['saved_reference_bit_identical'] = saved_identity(
                         row, references['datasets'][name][mode])
@@ -149,7 +169,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                 cached[mode] = replay
                 save()
             dataset['comparison'] = compare_notes(dataset['runs'][CURRENT], dataset['runs'][trial_mode],
-                cached[CURRENT], cached[trial_mode], require_inference=False)
+                cached[CURRENT], cached[trial_mode], require_inference=require_inference)
             dataset['snapshot_vs_off'] = compare_replays(cached[OFF], cached[trial_mode])
             dataset['note_safety_pass'] = bool(dataset['comparison']['note_safety_pass']
                                               and dataset['snapshot_vs_off']['gate_pass'])

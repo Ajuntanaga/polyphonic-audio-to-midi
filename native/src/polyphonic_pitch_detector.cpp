@@ -6197,6 +6197,48 @@ std::uint8_t PolyphonicPitchDetector::pending_midi_retention_request(
   return retained;
 }
 
+std::uint8_t PolyphonicPitchDetector::completion_midi_retention_request(
+    std::size_t candidate, std::uint8_t retained, std::uint8_t desired,
+    const std::array<bool, kMaxCandidates>& selected) const noexcept {
+  const auto& state = candidate_states_[candidate];
+  const auto& window = state.diagnostic_completion_window;
+  // A complete window can bridge an already sounding group's fine-subset
+  // commit. Keep the physical and virtual trajectory intact: only this final
+  // MIDI request may retain the original, fully owned group for this decision.
+  if (!diagnostic_completion_midi_retention_ || !selected[candidate] ||
+      !state.active || output_suppressed(state) ||
+      candidate_midi_output_note(candidate) != lowest_note_ + candidate ||
+      state.diagnostic_completion_output_mask == 0U ||
+      state.diagnostic_completion_output_mask != retained || window.group != retained ||
+      window.last_tick != decision_counter_ || string_count(retained) < 2U ||
+      string_count(retained) > 4U ||
+      (retained & playable_string_mask(candidate)) != retained ||
+      desired == 0U || desired == retained || (desired & retained) != desired ||
+      desired != window.fine_group || desired != state.assigned_string_mask ||
+      desired != state.midi_voice_mask || selector_atomic_handoff_targets_[candidate])
+    return desired;
+  std::uint8_t occupied = retained;
+  for (std::size_t peer = 0U; peer < candidate_count_; ++peer) {
+    if (peer == candidate) continue;
+    const auto& other = candidate_states_[peer];
+    std::uint8_t claim = other.active ? other.midi_voice_mask : 0U;
+    if (selected[peer]) {
+      claim = static_cast<std::uint8_t>(claim | other.assigned_string_mask |
+                                        selector_group_masks_[peer]);
+      if (claim == 0U)
+        claim = other.assigned_string < kMaxVoices
+            ? static_cast<std::uint8_t>(1U << other.assigned_string)
+            : playable_string_mask(peer);
+    }
+    // Even a pending selected pitch or an unselected coasting owner wins.
+    // Retention cannot displace a competing note or consume its voice budget.
+    if ((claim & retained) != 0U) return desired;
+    occupied = static_cast<std::uint8_t>(occupied | claim);
+  }
+  if (string_count(occupied) > max_polyphony_) return desired;
+  return retained;
+}
+
 void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
     DetectorDecision& decision,
     const std::array<bool, kMaxCandidates>& selected,
@@ -6253,6 +6295,7 @@ void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
         retained = static_cast<std::uint8_t>(retained | (1U << lane));
     }
     desired = pending_midi_retention_request(candidate, retained, selected);
+    desired = completion_midi_retention_request(candidate, retained, desired, selected);
     // A previously suppressed candidate cannot appear as a new coasting
     // onset, and a coasting group cannot grow or retune without selection.
     if (!selected[candidate] && (desired & retained) != desired) continue;
@@ -10323,7 +10366,9 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     candidate_states_[candidate].diagnostic_unison_proposal_mask = 0U;
     candidate_states_[candidate].diagnostic_unison_temporal = false;
     auto& state = candidate_states_[candidate];
-    if (!diagnostic_completion_window_retention_ || !selected[candidate] ||
+    state.diagnostic_completion_output_mask = 0U;
+    if ((!diagnostic_completion_window_retention_ && !diagnostic_completion_midi_retention_) ||
+        !selected[candidate] ||
         !state.active || state.assigned_string >= kM3OpenNotes.size() ||
         ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
          diagnostic_assignment_previews_[candidate]) ||
@@ -10619,7 +10664,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::uint8_t tier_members = string_count(tier_completion);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     bool retain_completed_window = false;
-    if (diagnostic_completion_window_retention_) {
+    if (diagnostic_completion_window_retention_ || diagnostic_completion_midi_retention_) {
       auto& window = state.diagnostic_completion_window;
       // Observe the same fresh completion throughout the existing correction
       // dwell. Never replace the fine proposal or restart its evidence counter.
@@ -11327,7 +11372,11 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       state.unison_gap_ticks = 0U;
       if (state.unison_evidence_ticks >= unison_evidence_ticks) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-        if (retain_completed_window && !jointly_reserved &&
+        if (diagnostic_completion_midi_retention_ && retain_completed_window &&
+            !jointly_reserved && proposed_group == state.diagnostic_completion_window.fine_group) {
+          state.diagnostic_completion_output_mask = state.diagnostic_completion_window.group;
+        }
+        if (diagnostic_completion_window_retention_ && retain_completed_window && !jointly_reserved &&
             proposed_group == state.diagnostic_completion_window.fine_group) {
           // Keep the original fine correction fully pending. If qualification
           // fails next tick, it can commit immediately without another dwell.

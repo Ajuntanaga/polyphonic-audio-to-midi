@@ -770,6 +770,7 @@ class PolyphonicPitchDetector final {
     diagnostic_completion_midi_retention_ = enabled;
     for (auto& state : candidate_states_) {
       state.diagnostic_completion_window = {};
+      state.diagnostic_completion_output_mask = 0U;
     }
   }
   void set_suppressed_adjacent_admission_for_diagnostics(bool enabled) noexcept {
@@ -1052,6 +1053,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t ticks{};
       std::uint32_t last_tick{};
     } diagnostic_completion_window{};
+    // One-decision certificate for actual MIDI only; never fed into inference.
+    std::uint8_t diagnostic_completion_output_mask{};
     std::uint8_t group_continuity_diagnostic_flags{};
     // Output-only production-shaped candidate. It can only remove lanes from
     // the currently emitted same-pitch group and never mutates ownership.
@@ -1515,6 +1518,9 @@ class PolyphonicPitchDetector final {
       std::size_t candidate, std::uint8_t lane) const noexcept;
   [[nodiscard]] std::uint8_t pending_midi_retention_request(
       std::size_t candidate, std::uint8_t retained,
+      const std::array<bool, kMaxCandidates>& selected) const noexcept;
+  [[nodiscard]] std::uint8_t completion_midi_retention_request(
+      std::size_t candidate, std::uint8_t retained, std::uint8_t desired,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
   void reconcile_diagnostic_midi_owners(
       DetectorDecision& decision,

@@ -1,10 +1,24 @@
-# Current checkpoint: paired completion-window snapshot diagnostic prepared
+# Current checkpoint: completion MIDI retention source validation pending
 
-Checkpoint: `docs/recovery/github-completion-window-retention-trace-20261115.json`; status key `portable_compute.completion_window_retention_trace`. This diagnostic is prepared but not dispatched. It captures exactly two unchanged physical-long policies: current-ON and the rejected completion-window retention trial. Both complete scored/raw references must match; current-ON also has a saved complete outcome digest. The prior trial outcome digest was not measured.
+Checkpoint: `docs/recovery/github-completion-midi-retention-20261115.json`; status key `portable_compute.completion_midi_retention`. Main-task goal continuation is testing MIDI sustain independently of inference. Default-off, uninstalled. The earlier completion-window candidate remains rejected; preserve its final evidence below.
 
-Every added or removed snapshot wrong-note voice is retained with paired preceding context across the full recording. Separate assignment traces cover [3580736,3598656),280 decision ticks around the known target raw-held changes. Full compressed outcomes stay in the remote bulk artifact; collect only the small report unless a specific diagnosis requires more.71 focused Python mock/parser contracts and both workflows' YAML/shell syntax pass locally. No native code or policy changed and no native processing ran locally.
+The regression-only source commit `f80d520c4193b682e533d0a76190edf796dcea13` is intentionally red: portable `43752590479` and CI `43752590494` finished with the new held-lane/retrigger assertions failing. Do not poll or rerun these completed checks. The fix is in the working tree with three focused native tests;47 lightweight Python runner contracts pass. One native source review is in progress. All native builds/tests/replays stay on GitHub Actions.
 
-Next: commit/push this diagnostic and dispatch exactly once on GitHub. Record exact source/worker commits, run, artifact names and output path in the checkpoint. The six extra snapshot wrong-note outputs still reject the earlier trial. Installed output, defaults and scoreboard are unchanged; timing and external DAW/device gates remain open. The ntfy ping and680-file lossless compression (~1.34GB reclaimed) are complete; do not repeat them. No distinct useful Kaggle GPU workload is identified for this native CPU question.
+The bounded worker will use the existing authorized input release and saved references, at most15 replays over physical-long, extended-middle, ordinary, constructed and synthetic-four, stopping on first failure. It must improve target label3/note40/mask7 holds above1613760/2520192 and reduce104 attacks, while current/trial full inference remains bit-identical and no label or false-output gate regresses. Full corpus, runtime and live-host gates remain separate. No worker dispatched yet.
+
+Next: finish the native review, require source CI/portable checks to pass, then dispatch exactly one `completion-midi-retention-trial` using pinned source/worker revisions and record its run before monitoring.
+
+# Previous checkpoint: paired completion-window snapshot diagnostic final
+
+Checkpoint: `docs/recovery/github-completion-window-retention-trace-20261115.json`; status key `portable_compute.completion_window_retention_trace`. GitHub worker `43750921512` and source portable `43750881612` are final/successful at source `8b092713ab1bbd3e8b1c91f910f0c1e2908e581e`, worker `578df56eec12a16b5c063f907f3117f885f7174b`. Do not poll, rerun or recollect completed jobs. All native processing ran on GitHub.
+
+The 23655-byte small report archive is collected and SHA-256 verified at `build/github-results/completion-window-retention-trace-43750921512`; archive SHA-256 `091c11ad3b8b9b75de81d78479b0732617e8722d91c8a442e42f29b03116708a`. The initial zero-byte network failure and successful retry receipts are retained. The 26014266-byte bulk artifact remains remote.
+
+Both complete scored/raw references and the saved current-ON outcome are bit-identical; the trial has no prior saved full-outcome digest. Full outcome comparison locates nine added and three removed wrong-note voice identities across six frames: samples3598207,3598271,3598463,3598527,3598591,3598655. Net growth remains six snapshot wrong-note outputs. Snapshot label matches gain16 and lose4 frame-level assignments, net+12. These counts are distinct from raw emitted MIDI. The earlier trial remains rejected. No DSP policy, installed output, defaults or scoreboard changed; native timing, allocation and external DAW/device acceptance are not established by this diagnostic.
+
+The user requested an overall completion assessment. No further experiment was started after that request. Reliable live use remains unverified and overall completion has no measured percentage. Core note quality, maximum-time failures and live host/device gates remain unresolved. Future work must use this completed evidence without repeating the diagnostic.
+
+The ntfy ping and 680-file lossless compression (~1.34 GB reclaimed) are complete; do not repeat. No distinct useful Kaggle GPU workload is identified for this native CPU question.
 
 # Previous checkpoint: completion-window retention rejected on physical-long
 
