@@ -5,15 +5,15 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
   "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
+  "source_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+  "worker_commit": "698f07785d6d687fa037396df2ed46d18197111e",
+  "run_id": 43756240245,
+  "status": "in_progress",
   "conclusion": null,
   "result_final": false,
   "created_at": "2026-11-15T20:02:13.745675+00:00",
-  "updated_at": "2026-11-15T20:02:13.745675+00:00",
-  "stage": "prepared for source and worker push",
+  "updated_at": "2026-11-15T20:36:32.518234+00:00",
+  "stage": "Validate completion MIDI retention across all fourteen datasets",
   "checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json",
   "bounded_checkpoint": "docs/recovery/github-completion-midi-retention-20261115.json",
   "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
@@ -21,7 +21,7 @@
   "report_available": false,
   "small_artifact_collected": false,
   "bulk_downloaded": false,
-  "local_output_dir": null,
+  "local_output_dir": "build/github-results/completion-midi-retention-corpus-43756240245",
   "local_checks": {
     "python_mock_tests_passed": 78,
     "workflow_shell_sections_syntax_passed": 48,
@@ -75,5 +75,85 @@
   "external_host_and_hardware": "unverified",
   "routing": "Native processing on GitHub Actions only. Existing authorized inputs; no media upload to source. No separate useful Kaggle GPU workload identified.",
   "dispatch_directory": "build/github-results/completion-midi-retention-corpus-dispatch-20261115",
-  "next_step": "Push the exact prepared source and worker revisions, await source checks, then dispatch one completion-midi-retention-corpus run. Capture all command output before parsing. Keep bulk evidence remote."
+  "next_step": "Read this existing run only; collect its small report once when final. Do not dispatch another corpus run.",
+  "source_checks": {
+    "portable": {
+      "run_id": 43755927642,
+      "source_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43755927642",
+      "observed_at": "2026-11-15T20:07:08.368113+00:00",
+      "result_final": true
+    },
+    "production_ci": {
+      "status": "not_triggered_by_path_filter",
+      "reason": "This revision changes Python corpus routing/tests and checkpoint documentation only; native code is unchanged from the candidate whose CI passed.",
+      "native_candidate_source_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+      "native_candidate_ci_run_id": 43753304120,
+      "native_candidate_ci_conclusion": "success"
+    }
+  },
+  "dispatch_attempted_at": "2026-11-15T20:07:09.373788+00:00",
+  "dispatch_returned_success": true,
+  "dispatch_response": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43756240245",
+  "run_created_at": "2026-11-15T20:07:17Z",
+  "observed_at": "2026-11-15T20:35:56.448904+00:00",
+  "last_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T203555Z-run.stdout",
+  "artifact_count": 0,
+  "last_artifact_observation_raw": "build/github-results/completion-midi-retention-corpus-dispatch-20261115/20261115T203555Z-artifacts.stdout",
+  "short_note_acquisition_follow_up": {
+    "reviewed_at": "2026-11-15T20:32:14.046269+00:00",
+    "source_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+    "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+    "scope": "Read-only source and saved-report schema review; separate from the active retention corpus result.",
+    "prior_evidence": "build/github-results/qualified-tier-retention-43734173233/synthetic-four-spectral-evidence-availability.json",
+    "full_outcome_review": {
+      "report": "build/github-results/completion-midi-retention-43753713533/completion-midi-retention/report.json",
+      "remote_member": "synthetic-four-current-on-512-outcome.tsv.gz",
+      "raw_sha256": "b41bc316a291d8e74f75a84b7748d4d5a14a1e872e4577c3ef15ad6eb20538bf",
+      "sufficient_for_initial_spectral_qualification": false,
+      "reason": "Full outcome includes admission/tracking context but omits joint spectral-head winners/margins and a pre-fine initial proposal. It cannot settle early group qualification.",
+      "retrieved_for_this_review": false
+    },
+    "structural_limit": {
+      "fine_history_minimum_seconds": 3.0,
+      "synthetic_four_group_duration_seconds_range": [
+        1.239354,
+        2.299031
+      ],
+      "existing_completion": "Requires an already valid two- or three-member fine group and adds exactly one lane; cannot initialize four strings before fine maturity.",
+      "component_energy": "Filled only after a successful mature-history least-squares solve. It is not available during the less-than-three-second collecting phase.",
+      "added_member_beat_coherence": "Filled only after a successful mature fine solve with an already committed two- or three-member group.",
+      "validity_caveat": "fine.valid false alone does not identify short collecting: mature unconverged fits can have component energy.",
+      "source": "native/src/polyphonic_pitch_detector.cpp",
+      "source_lines": {
+        "minimum_history": 81,
+        "completion_prerequisites": 2925,
+        "fine_producer": 8461,
+        "collecting_early_return": 8570,
+        "component_energy_producer": 9002,
+        "beat_coherence_producer": 9561
+      }
+    },
+    "next": "Await the existing corpus verdict before dispatch. Prepare one unchanged-current-ON synthetic-four label36/note53 observation over the labels36-39 group, recording the existing harmonic-profile first-addition decisions and joint assignments. Preserve complete scored/raw/outcome references. The first greedy pass does not expose every later guard and cannot by itself qualify admission. Do not repeat the fine-history/selector trace or shorten thresholds blindly.",
+    "new_native_execution": false,
+    "dsp_policy_changed": false,
+    "installed_output_changed": false,
+    "existing_early_routes": {
+      "harmonic_profile_mixture": "Available at 0.25 seconds, using short memory then a long-memory blend after 0.75 seconds. Multiple calibrated templates fit one aggregate harmonic observation; this is not independent per-string corroboration. Existing near-unison and static-large-group guards remain necessary.",
+      "early_phase": "Approximately 0.16 seconds; one composite pitch offset, not per-string membership.",
+      "spectral_corridor": "Approximately 0.35 seconds; lanes receive the same mono stream. Early admission exception is singleton-only and physical-group emergence disables its mask.",
+      "independent_pre_fine_admission_cue": "No unexploited justified cue identified by source review."
+    },
+    "saved_assignment_trace_inventory": {
+      "archive": "build/github-results/qualified-tier-retention-43734173233/m3-evidence-43734173233-1.zip",
+      "method": "Read local ZIP central directory only",
+      "synthetic_four_members": "Scored TSVs and raw MIDI only; no detailed assignment trace",
+      "new_download": false
+    },
+    "prepared_checkpoint": "docs/recovery/github-short-four-profile-trace-20261115.json",
+    "next_step": "Package and validate the prepared source while the existing full-corpus run continues; dispatch the single unchanged-output trace only after its verdict is collected."
+  }
 }

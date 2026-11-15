@@ -1,0 +1,90 @@
+{
+  "schema": "m3_short_four_profile_trace_checkpoint_v1",
+  "task": "short-four-profile-trace",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+  "native_candidate_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "source_packaging",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-15T20:35:30.898863+00:00",
+  "updated_at": "2026-11-15T20:36:32.518234+00:00",
+  "checkpoint": "docs/recovery/github-short-four-profile-trace-20261115.json",
+  "blocked_on_corpus_run": 43756240245,
+  "reference_manifest": "docs/recovery/short-four-profile-references-20261115.json",
+  "reference_run_id": 43753713533,
+  "reference_source_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
+  "reference_report_sha256": "465278aebdb20a93482bf8a63a5fcad10009a99bf0bd23dc8fe92ab0c674f7b5",
+  "report_relative_path": "short-four-profile-trace/report.json",
+  "report_available": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "dataset": "synthetic-four",
+  "case": {
+    "label_index": 36,
+    "midi_note": 53,
+    "string_mask": 8,
+    "start_sample": 2073693,
+    "end_sample": 2294400
+  },
+  "group": {
+    "label_indices": [
+      36,
+      37,
+      38,
+      39
+    ],
+    "string_masks": [
+      8,
+      4,
+      2,
+      1
+    ],
+    "midi_note": 53,
+    "string_mask": 15,
+    "start_sample": 2073693,
+    "end_sample": 2294400
+  },
+  "window": [
+    2073408,
+    2294400
+  ],
+  "conditions": {
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ]
+  },
+  "planned_replays": 1,
+  "block_samples": 512,
+  "replay_timeout_seconds": 900,
+  "input_release": "corpus-20261108",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_checklist_count": 30,
+  "local_checks": {
+    "python_mock_tests_passed": 23,
+    "new_trace_tests": 5,
+    "shared_capture_tests": 18,
+    "workflow_shell_sections_syntax_passed": 49,
+    "diff_check": "passed",
+    "review": "Reviewed fixed singleton versus group annotations, complete saved output/outcome identity, missing observations, first-addition limits and worker routing.",
+    "native_execution": false
+  },
+  "question": "Which observed existing early harmonic-profile fit and first-addition dispositions precede failure to acquire synthetic-four labels36-39 together?",
+  "evidence_limits": "A first greedy pass is not final admission. The harmonic fit uses aggregate audio, not independent string evidence. Absence of a fit does not identify the failed prerequisite. Later veto reasons are not fully observed.",
+  "acceptance": [
+    "Full scored TSV, raw MIDI and complete detector outcome remain bit-identical to saved current-ON.",
+    "Verified authorized input hashes and all four saved annotation identities; unchanged anchor held measurement and valid MIDI pairing.",
+    "One complete existing current-ON replay with bounded joint assignment/candidate traces; no new native instrumentation or policy."
+  ],
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "promotion_accepted": false,
+  "runtime_rule_changed": false,
+  "native_timing": "not measured by trace",
+  "external_host_and_hardware": "unverified",
+  "next_step": "Package and validate the prepared source while the existing full-corpus run continues; dispatch the single unchanged-output trace only after its verdict is collected."
+}
