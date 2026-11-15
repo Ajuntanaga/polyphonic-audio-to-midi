@@ -7,19 +7,19 @@
   "worker_commit": "3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d",
   "native_candidate_commit": "4e1ebd54d2e34d53fdb6b647a6c91cd1a47340c4",
   "run_id": 43714618511,
-  "status": "in_progress",
-  "conclusion": null,
-  "result_final": false,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-15T12:33:39.112396+00:00",
-  "updated_at": "2026-11-15T12:35:44.337821+00:00",
-  "stage": "GitHub native build in progress; corpus replay pending",
+  "updated_at": "2026-11-15T13:35:44.155244+00:00",
+  "stage": "Final report collected: note safety passes; native timing fails",
   "checkpoint": "docs/recovery/github-calibrated-midi-retention-corpus-20261115.json",
   "ordinary_checkpoint": "docs/recovery/github-calibrated-midi-retention-20261115.json",
   "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "report_relative_path": "calibrated-midi-retention-corpus/report.json",
-  "report_available": false,
-  "outputs_downloaded_once": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "outputs_downloaded_once": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "local_output_dir": "build/github-results/calibrated-midi-retention-corpus-43714618511",
   "local_checks": {
@@ -48,7 +48,7 @@
   "default_enabled": false,
   "local_native_execution": false,
   "external_host_and_hardware": "not measured",
-  "next_step": "Follow this existing run read-only; collect its small final artifact once. Do not dispatch a duplicate. Keep bulk evidence remote unless diagnosis needs named members.",
+  "next_step": "Diagnose maximum-time failures before another corpus matrix: inspect existing timing instrumentation, then one bounded GitHub comparison with per-block wall/thread-CPU evidence and unchanged scored/raw output if required. Keep the strict wall-time deadline gate; do not infer scheduling noise or candidate causality from aggregate outliers. Three/four-string quality and external host gates remain open.",
   "routing": {
     "github_actions": "All native work through existing authorized m3-offload release inputs; no source dataset upload.",
     "kaggle": "No distinct useful GPU task for this native MIDI policy. Terminal legacy recovery remains terminal."
@@ -57,7 +57,7 @@
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43714618511",
   "run_observation": "build/github-results/calibrated-midi-retention-corpus-43714618511/run-observation.json",
   "artifact_observation": "build/github-results/calibrated-midi-retention-corpus-43714618511/artifact-observation.json",
-  "artifact_count": 0,
+  "artifact_count": 2,
   "small_artifact_name": "m3-report-43714618511-1",
   "bulk_artifact_name": "m3-evidence-43714618511-1",
   "source_checks": [
@@ -72,5 +72,607 @@
       "workflowName": "Portable offline replay"
     }
   ],
-  "source_checks_observed_at": "2026-11-15T12:35:04.360704+00:00"
+  "source_checks_observed_at": "2026-11-15T12:35:04.360704+00:00",
+  "last_observed_at": "2026-11-15T13:32:13.126264+00:00",
+  "monitor_turn_classification": "final collected result",
+  "quality_context": {
+    "provenance": "Retained full-corpus report from GitHub run 42643461303, current-ON reference; this is not a result from the active run.",
+    "physical_long_three_string": {
+      "snapshot_matches": 25219,
+      "snapshot_labeled": 39378,
+      "held_samples": 1613760,
+      "annotated_samples": 2520192,
+      "first_exact_hold_delay_samples": 520639,
+      "sample_rate": 96000,
+      "note_ons_inside_label": 104
+    },
+    "physical_four": {
+      "labels": 18,
+      "labels_without_string_mask": 18,
+      "snapshot_matches": 53051,
+      "snapshot_labeled": 55380,
+      "scope": "pitch presence only; exact four-string assignment is not measured",
+      "annotation_provenance": {
+        "source_note": "build/physical-capture/unison-08-07-06-05-04/README.md",
+        "label_file": "build/physical-capture/unison-08-07-06-05-04/diagnostic-spans.tsv",
+        "declared_positions": "string4 open, string5 fret4, string6 fret8, string7 fret12, string8 fret16",
+        "recording_note": "The performance changes membership, later adds strings 7 and 8, and ends with an attempted four-string fingering with prominent harmonics. The recording notes explicitly decline an exact string mask.",
+        "label_observation": "All 18 retained activity windows are MIDI48 with mask0. These support pitch presence only.",
+        "acceptance_gap": "Exact physical four-string assignment and wrong-string safety need time-aligned actual membership from a reliable annotation source or an annotated capture. Do not infer masks from the filename or declared fingering.",
+        "installed_scores_changed": false
+      }
+    },
+    "synthetic_four": {
+      "labels": 96,
+      "labels_with_zero_exact_hold": 31,
+      "snapshot_matches": 51027,
+      "snapshot_labeled": 310640,
+      "held_samples": 3234746,
+      "annotated_samples": 19879820
+    },
+    "next_quality_decision": "Latest corpus keeps physical-long and synthetic-four held coverage unchanged. Native timing diagnosis is next; no-regression does not close three/four-string quality, physical-four annotation or external live-host gates.",
+    "diagnostic_route": {
+      "question": "Does the retained physical-long label3 delay arise before multi-string maturity or during physical/spectral string assignment?",
+      "scope": "Conditional next diagnosis after the active corpus verdict; not a new job or a measured cause.",
+      "target": {
+        "dataset": "physical-long",
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "sample_rate": 96000
+      },
+      "first_step": "Deferred behind native timing diagnosis now that note safety passes. Inspect physical-long raw MIDI/outcome before any bounded candidate/assignment capture; no cause is established.",
+      "existing_evidence": "Outcome records active/assigned/rescue, admission/onset/maturity counters, fine and committed-unison masks. Candidate and assignment traces are already implemented.",
+      "code_references": [
+        "native/offline/replay.cpp:1014",
+        "native/offline/replay.cpp:3063",
+        "native/offline/replay.cpp:651",
+        "native/offline/replay.hpp:69",
+        "tools/portable_assignment_trace.py:232",
+        "tools/portable_pending_string_trace.py:109"
+      ],
+      "conditional_bounded_capture": {
+        "start": "label start minus one 64-sample tick",
+        "end": "label start plus 520704 samples",
+        "mode": "saved current-ON with exact flags and saved output/raw identity",
+        "outputs": [
+          "candidate",
+          "assignment",
+          "outcome",
+          "raw MIDI"
+        ]
+      },
+      "limits": "Post-observation counts alone do not prove cause. Direct per-string physical onset timestamps and a true multi-string-mask posterior are absent; first exact held delay is relative to annotation."
+    }
+  },
+  "artifacts_observed_at": "2026-11-15T13:32:28.303256+00:00",
+  "finished_at": "2026-11-15T13:29:10.601980+00:00",
+  "report_sha256": "506e7226a72ef02273c86c510bc8304b28066434ac6df2761801de8500ca2c8b",
+  "small_collection_receipt": "build/github-results/calibrated-midi-retention-corpus-43714618511/small-collection-receipt.json",
+  "small_artifact_sha256": "84c83c0631ce55286e6184a5d722b965bf81bd53eb507136d2912d94f29b9477",
+  "small_artifact_bytes": 178172,
+  "artifacts": [
+    {
+      "id": 14163662784,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2MzY2Mjc4NA==",
+      "name": "m3-evidence-43714618511-1",
+      "size_in_bytes": 397715701,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163662784",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163662784/zip",
+      "expired": false,
+      "digest": "sha256:2ff4b392c4626616c5aa6183e473533b88fb789932afe780f810ce001034d35e",
+      "created_at": "2026-11-15T13:29:20Z",
+      "updated_at": "2026-11-15T13:29:20Z",
+      "expires_at": "2026-11-22T13:29:12Z",
+      "workflow_run": {
+        "id": 43714618511,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d"
+      }
+    },
+    {
+      "id": 14163303893,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE2MzMwMzg5Mw==",
+      "name": "m3-report-43714618511-1",
+      "size_in_bytes": 178172,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163303893",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14163303893/zip",
+      "expired": false,
+      "digest": "sha256:84c83c0631ce55286e6184a5d722b965bf81bd53eb507136d2912d94f29b9477",
+      "created_at": "2026-11-15T13:29:11Z",
+      "updated_at": "2026-11-15T13:29:11Z",
+      "expires_at": "2026-11-29T13:29:10Z",
+      "workflow_run": {
+        "id": 43714618511,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "3ef7ef49e1ffbd68046a6cd0f27c59563ee6e32d"
+      }
+    }
+  ],
+  "completed_replays": 126,
+  "result": {
+    "note_safety_datasets_passed": 14,
+    "buffer_datasets_passed": 14,
+    "native_datasets_passed": 0,
+    "native_dataset_definition": "All three timed modes must pass; zero of14 does not mean all42 individual runs fail.",
+    "reference_identity_pass": true,
+    "inference_identity_datasets": 14,
+    "corpus_note_safety_pass": true,
+    "full_corpus_screen_pass": false,
+    "held_gain_labels": 8,
+    "improved_hold_and_attack_labels": 6,
+    "exact_held_label_samples_delta": 18334,
+    "held_loss_labels": 0,
+    "held_changes": {
+      "ordinary": [
+        {
+          "label_index": 17,
+          "midi_note": 37,
+          "exact_held_samples_before": 40000,
+          "exact_held_samples_after": 45056,
+          "held_delta": 5056,
+          "note_ons_before": 156,
+          "note_ons_after": 112,
+          "note_on_delta": -44
+        },
+        {
+          "label_index": 79,
+          "midi_note": 41,
+          "exact_held_samples_before": 61825,
+          "exact_held_samples_after": 64257,
+          "held_delta": 2432,
+          "note_ons_before": 31,
+          "note_ons_after": 1,
+          "note_on_delta": -30
+        },
+        {
+          "label_index": 267,
+          "midi_note": 36,
+          "exact_held_samples_before": 12416,
+          "exact_held_samples_after": 12736,
+          "held_delta": 320,
+          "note_ons_before": 19,
+          "note_ons_after": 19,
+          "note_on_delta": 0
+        },
+        {
+          "label_index": 327,
+          "midi_note": 41,
+          "exact_held_samples_before": 56704,
+          "exact_held_samples_after": 61406,
+          "held_delta": 4702,
+          "note_ons_before": 52,
+          "note_ons_after": 1,
+          "note_on_delta": -51
+        },
+        {
+          "label_index": 332,
+          "midi_note": 36,
+          "exact_held_samples_before": 42561,
+          "exact_held_samples_after": 43265,
+          "held_delta": 704,
+          "note_ons_before": 25,
+          "note_ons_after": 19,
+          "note_on_delta": -6
+        },
+        {
+          "label_index": 350,
+          "midi_note": 39,
+          "exact_held_samples_before": 896,
+          "exact_held_samples_after": 3008,
+          "held_delta": 2112,
+          "note_ons_before": 13,
+          "note_ons_after": 9,
+          "note_on_delta": -4
+        }
+      ],
+      "isolated-08": [
+        {
+          "label_index": 4,
+          "midi_note": 36,
+          "exact_held_samples_before": 204737,
+          "exact_held_samples_after": 207617,
+          "held_delta": 2880,
+          "note_ons_before": 22,
+          "note_ons_after": 16,
+          "note_on_delta": -6
+        },
+        {
+          "label_index": 7,
+          "midi_note": 39,
+          "exact_held_samples_before": 211201,
+          "exact_held_samples_after": 211329,
+          "held_delta": 128,
+          "note_ons_before": 9,
+          "note_ons_after": 9,
+          "note_on_delta": 0
+        }
+      ]
+    },
+    "output_safety_delta": {
+      "false_wrong_note_voice_samples": 0,
+      "false_wrong_string_voice_samples": -18334,
+      "false_gap_voice_samples": 0,
+      "false_wrong_note_onsets": -230,
+      "false_wrong_string_onsets": -71,
+      "false_gap_onsets": -41
+    },
+    "timing": {
+      "reference-off": {
+        "datasets_passed": 5,
+        "datasets_total": 14,
+        "p99_passed": 14,
+        "maximum_ns": 527476,
+        "deadline_overruns": 21,
+        "zero_allocation_runs": 14,
+        "timed_scored_identity_runs": 14,
+        "datasets": {
+          "ordinary": {
+            "p99_ns": 67232,
+            "maximum_ns": 337589,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "constructed": {
+            "p99_ns": 61743,
+            "maximum_ns": 527476,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-08": {
+            "p99_ns": 52399,
+            "maximum_ns": 106671,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "isolated-05": {
+            "p99_ns": 64667,
+            "maximum_ns": 402828,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-02": {
+            "p99_ns": 60482,
+            "maximum_ns": 175655,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-long": {
+            "p99_ns": 67161,
+            "maximum_ns": 224740,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-middle": {
+            "p99_ns": 66030,
+            "maximum_ns": 283488,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-highmid": {
+            "p99_ns": 63907,
+            "maximum_ns": 385262,
+            "deadline_overruns": 3,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-high": {
+            "p99_ns": 66210,
+            "maximum_ns": 342237,
+            "deadline_overruns": 2,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-middle": {
+            "p99_ns": 73030,
+            "maximum_ns": 378922,
+            "deadline_overruns": 2,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-highmid": {
+            "p99_ns": 65098,
+            "maximum_ns": 305351,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "extended-high": {
+            "p99_ns": 79210,
+            "maximum_ns": 413143,
+            "deadline_overruns": 3,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-four": {
+            "p99_ns": 65358,
+            "maximum_ns": 414907,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "synthetic-four": {
+            "p99_ns": 61533,
+            "maximum_ns": 346264,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        }
+      },
+      "current-on": {
+        "datasets_passed": 6,
+        "datasets_total": 14,
+        "p99_passed": 14,
+        "maximum_ns": 589219,
+        "deadline_overruns": 27,
+        "zero_allocation_runs": 14,
+        "timed_scored_identity_runs": 14,
+        "datasets": {
+          "ordinary": {
+            "p99_ns": 68663,
+            "maximum_ns": 165099,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "constructed": {
+            "p99_ns": 61633,
+            "maximum_ns": 428116,
+            "deadline_overruns": 5,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-08": {
+            "p99_ns": 54101,
+            "maximum_ns": 135194,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "isolated-05": {
+            "p99_ns": 65028,
+            "maximum_ns": 216477,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "isolated-02": {
+            "p99_ns": 62544,
+            "maximum_ns": 469129,
+            "deadline_overruns": 5,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-long": {
+            "p99_ns": 70687,
+            "maximum_ns": 589219,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-middle": {
+            "p99_ns": 67592,
+            "maximum_ns": 458052,
+            "deadline_overruns": 3,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-highmid": {
+            "p99_ns": 62835,
+            "maximum_ns": 141354,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-high": {
+            "p99_ns": 64047,
+            "maximum_ns": 378371,
+            "deadline_overruns": 2,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-middle": {
+            "p99_ns": 70196,
+            "maximum_ns": 190147,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "extended-highmid": {
+            "p99_ns": 66541,
+            "maximum_ns": 403519,
+            "deadline_overruns": 3,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-high": {
+            "p99_ns": 70086,
+            "maximum_ns": 179811,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-four": {
+            "p99_ns": 65288,
+            "maximum_ns": 488167,
+            "deadline_overruns": 6,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "synthetic-four": {
+            "p99_ns": 62715,
+            "maximum_ns": 386684,
+            "deadline_overruns": 2,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        }
+      },
+      "calibrated-midi-retention-on": {
+        "datasets_passed": 2,
+        "datasets_total": 14,
+        "p99_passed": 14,
+        "maximum_ns": 737423,
+        "deadline_overruns": 54,
+        "zero_allocation_runs": 14,
+        "timed_scored_identity_runs": 14,
+        "datasets": {
+          "ordinary": {
+            "p99_ns": 69875,
+            "maximum_ns": 483770,
+            "deadline_overruns": 6,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "constructed": {
+            "p99_ns": 61764,
+            "maximum_ns": 573295,
+            "deadline_overruns": 5,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-08": {
+            "p99_ns": 53991,
+            "maximum_ns": 399703,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-05": {
+            "p99_ns": 66590,
+            "maximum_ns": 737423,
+            "deadline_overruns": 7,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "isolated-02": {
+            "p99_ns": 62825,
+            "maximum_ns": 426293,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-long": {
+            "p99_ns": 69535,
+            "maximum_ns": 374656,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-middle": {
+            "p99_ns": 67722,
+            "maximum_ns": 500556,
+            "deadline_overruns": 7,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-highmid": {
+            "p99_ns": 63165,
+            "maximum_ns": 537652,
+            "deadline_overruns": 5,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "physical-high": {
+            "p99_ns": 64828,
+            "maximum_ns": 349218,
+            "deadline_overruns": 1,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-middle": {
+            "p99_ns": 77457,
+            "maximum_ns": 467396,
+            "deadline_overruns": 6,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "extended-highmid": {
+            "p99_ns": 64488,
+            "maximum_ns": 285971,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "extended-high": {
+            "p99_ns": 70887,
+            "maximum_ns": 158329,
+            "deadline_overruns": 0,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": true
+          },
+          "physical-four": {
+            "p99_ns": 65339,
+            "maximum_ns": 573997,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          },
+          "synthetic-four": {
+            "p99_ns": 62894,
+            "maximum_ns": 419914,
+            "deadline_overruns": 4,
+            "timed_scored_identity": true,
+            "zero_processing_allocations": true,
+            "timing_pass": false
+          }
+        }
+      }
+    },
+    "metric_scope": "Snapshot assignments, overlapping held label-samples and raw false voice-samples/onsets are separate. Gap outputs are extra notes, not missing notes.",
+    "verdict": "Note safety and buffers pass14/14; promotion rejected because native maximum-time/deadline gates fail. Wall-time outliers occur in OFF,currentON and candidate; cause is not measured."
+  }
 }

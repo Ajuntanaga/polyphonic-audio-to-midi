@@ -1,0 +1,150 @@
+{
+  "schema": "m3_calibrated_midi_retention_timing_references_v1",
+  "dataset": "isolated-05",
+  "block_samples": 32,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "conditions": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "calibrated-midi-retention-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-calibrated-midi-retention"
+    ]
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "53167b32d22e1644cb7b7855861a0ca7e907607b",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43714618511",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "anchor_report_sha256": "506e7226a72ef02273c86c510bc8304b28066434ac6df2761801de8500ca2c8b",
+  "anchor_report_path": "build/github-results/calibrated-midi-retention-corpus-43714618511/calibrated-midi-retention-corpus/report.json",
+  "runs": {
+    "reference-off": {
+      "output": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 31050,
+          "matched": 25681
+        }
+      },
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "87edbea93db1fb35",
+        "fingerprint_identical": true,
+        "blocks": 69600,
+        "total_ns": 2139810004,
+        "p99_ns": 64667,
+        "maximum_ns": 402828,
+        "half_budget_overruns": 15,
+        "deadline_overruns": 1,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      }
+    },
+    "current-on": {
+      "output": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 31050,
+          "matched": 25681
+        }
+      },
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "87edbea93db1fb35",
+        "fingerprint_identical": true,
+        "blocks": 69600,
+        "total_ns": 2127955555,
+        "p99_ns": 65028,
+        "maximum_ns": 216477,
+        "half_budget_overruns": 3,
+        "deadline_overruns": 0,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      }
+    },
+    "calibrated-midi-retention-on": {
+      "output": {
+        "labeled": 31050,
+        "matched": 25681,
+        "false_wrong_note_voices": 12028,
+        "false_wrong_string_voices": 4037,
+        "false_gap_voices": 3860,
+        "false_positive_voices": 19925,
+        "fingerprint": "87edbea93db1fb35"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 31050,
+          "matched": 25681
+        }
+      },
+      "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+      "timing": {
+        "schema": "m3_replay_core_timing_v1",
+        "sample_rate": 96000,
+        "block_samples": 32,
+        "measurement_scope": "detector_and_optional_cues_without_offline_frequency_reporting",
+        "fingerprint": "87edbea93db1fb35",
+        "fingerprint_identical": true,
+        "blocks": 69600,
+        "total_ns": 2163391370,
+        "p99_ns": 66590,
+        "maximum_ns": 737423,
+        "half_budget_overruns": 38,
+        "deadline_overruns": 7,
+        "allocation_guard": true,
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      }
+    }
+  },
+  "scope": "Exact saved scored TSV and uninstrumented timing; no recordings or calibration included."
+}
