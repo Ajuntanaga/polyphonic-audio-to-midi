@@ -1,0 +1,78 @@
+{
+  "schema": "m3_github_completion_window_retention_trace_checkpoint_v1",
+  "updated_at": "2026-11-15T19:08:18.676012+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "ba900bdf2e9da9cadad134d4e5d9b7cb41aa78eb",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "task": "completion-window-retention-trace",
+    "dataset": "physical-long",
+    "note": 40,
+    "label_index": 3,
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "reference": {
+    "path": "docs/recovery/completion-window-retention-trace-references-20261115.json",
+    "sha256": "42c965174224db6d8f82c7b6cee47ec2512fb97078a88fa49f262d8b79859d55",
+    "trial_run_id": "43749001347"
+  },
+  "scope": {
+    "case": {
+      "label_index": 3,
+      "midi_note": 40,
+      "string_mask": 7,
+      "start_sample": 2932608,
+      "end_sample": 5452800
+    },
+    "assignment_window": [
+      3580736,
+      3598656
+    ],
+    "decision_ticks_per_policy": 280,
+    "conditions": {
+      "current-on": [
+        "--diagnostic-spectral-lane-collision"
+      ],
+      "completion-window-retention-on": [
+        "--diagnostic-spectral-lane-collision",
+        "--diagnostic-completion-window-retention"
+      ]
+    },
+    "replays": 2,
+    "complete_outcome": "entire recording, both unchanged policies"
+  },
+  "purpose": "Locate all snapshot wrong-note multiplicity changes, including paired preceding context, over the complete recording. Preserve the rejected completion-window trial and current-ON scored/raw output. Separately retain bounded assignment evidence around the known target raw-held divergence.",
+  "required": [
+    "Both complete scored TSV and raw MIDI hashes equal the saved references",
+    "Current-ON complete outcome equals its earlier saved digest; prior trial outcome digest is unavailable",
+    "Full outcome totals reconcile to saved score totals and every wrong-note addition/removal is retained without deduplication or truncation",
+    "Target held-label counts, annotation and clock are unchanged",
+    "Complete bounded joint assignments reproduce"
+  ],
+  "local_validation": {
+    "mock_contract_tests": 71,
+    "workflow_yaml_and_shell_syntax": "passed",
+    "native_execution": false,
+    "focused_review": "passed; corrected sparse zero-count reconciliation exposed by the synthetic fixture"
+  },
+  "runtime_policy_changed": false,
+  "native_instrumentation_changed": false,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "collection_state": "not dispatched",
+  "unmeasured_gates": [
+    "new policy safety",
+    "native allocations and deadlines",
+    "external DAW/device delivery"
+  ],
+  "next": "Dispatch this paired diagnostic once on GitHub; collect the small report once, retain complete compressed outcomes remotely and use exact snapshot context to identify the six additions without changing the rejection gate.",
+  "dispatch_directory": "build/github-results/completion-window-retention-trace-dispatch-20261115",
+  "source_checks": []
+}

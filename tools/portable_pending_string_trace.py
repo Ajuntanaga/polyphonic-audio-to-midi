@@ -77,7 +77,7 @@ def explain_frames(frames, assignments, label):
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
-        cases=None, conditions=None, window=None, diagnose=None,
+        cases=None, conditions=None, window=None, diagnose=None, observe_outcome=None,
         schema='m3_pending_string_reservation_trace_v1', dataset='ordinary',
         interpretation=None):
     cases = CASES if cases is None else cases
@@ -156,6 +156,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                 held = next(row for row in lifecycle['labels'] if row['label_index'] == index)
                 if not lifecycle['coverage_valid'] or held != reference['held_labels'][str(index)]:
                     raise ValueError('Saved held-note measurement changed or pairing is invalid')
+                if observe_outcome is not None:
+                    result['complete_outcome_diagnosis'] = observe_outcome(policy, traces['outcome'])
                 outcomes = outcome_window(traces['outcome'], samples, start, end)
                 frames = candidate_frames(read_rows(traces['candidate']), outcomes,
                                           note=note, start=start, end=end)

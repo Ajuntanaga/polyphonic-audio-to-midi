@@ -1,22 +1,24 @@
 {
   "schema": "m3_completion_window_retention_checkpoint_v1",
-  "updated_at": "2026-11-15T18:49:16.180282+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T18:55:18.414126+00:00",
+  "state": "rejected",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "89757a8f222488e1ff24d1c50b3cdd544c5d3ad7",
-    "commit": null,
+    "commit": "ba900bdf2e9da9cadad134d4e5d9b7cb41aa78eb",
     "worker_repository": "Ajuntanaga/m3-offload",
     "worker_base_commit": "894ec3325becd1f79b301f9aefe59c5aa90213b9",
     "worker_commit": "c269155cc03f1c49c18ee45247aecf47f7be299b",
-    "run_id": null,
+    "run_id": "43749001347",
     "task": "completion-window-retention-trial",
     "dataset": "physical-long",
     "note": 40,
     "label_index": 3,
     "input_release": "corpus-20261108",
-    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "run_attempt": 1,
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43749001347"
   },
   "reference": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "source_diagnosis": {
@@ -94,8 +96,8 @@
   "promotion_accepted": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
-  "collection_state": "not dispatched",
-  "stage": "local preparation complete; native tests pending on GitHub",
+  "collection_state": "collected_and_verified",
+  "stage": "Final offline screen rejected on physical-long snapshot wrong-note growth; later datasets not run",
   "unmeasured_gates": [
     "full corpus",
     "buffer identity",
@@ -112,10 +114,252 @@
   ],
   "dispatch_directory": "build/github-results/completion-window-retention-dispatch-20261115",
   "expected_artifacts": {
-    "report": "m3-report-<run_id>-1",
-    "bulk": "m3-evidence-<run_id>-1",
-    "local_output": "build/github-results/completion-window-retention-<run_id>",
+    "report": "m3-report-43749001347-1",
+    "bulk": "m3-evidence-43749001347-1",
+    "local_output": "build/github-results/completion-window-retention-43749001347",
     "report_member": "completion-window-retention/report.json"
   },
-  "next": "Pin source/worker commits and dispatch one bounded screen on GitHub. Stop on any missing target gain, per-label loss or false-output growth."
+  "next": "Locate six additional snapshot wrong-note outputs using saved evidence and the snapshot-versus-MIDI source path before choosing another bounded diagnostic. Do not broaden or repeat the rejected trial.",
+  "dispatch_receipt": "build/github-results/completion-window-retention-dispatch-20261115/dispatch-receipt.json",
+  "local_output": "build/github-results/completion-window-retention-43749001347",
+  "remote_observation": {
+    "observed_at": "2026-11-15T18:53:47Z",
+    "worker_status": "completed",
+    "worker_conclusion": "success",
+    "current_step": "final",
+    "artifacts_available": 2,
+    "raw_directory": "build/github-results/completion-window-retention-dispatch-20261115"
+  },
+  "source_checks": {
+    "portable": {
+      "run_id": "43748964526",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "ba900bdf2e9da9cadad134d4e5d9b7cb41aa78eb",
+      "collected": false,
+      "followup": "terminal; do not repoll"
+    },
+    "ci": {
+      "run_id": "43748964532",
+      "status": "completed",
+      "conclusion": "success",
+      "source_commit": "ba900bdf2e9da9cadad134d4e5d9b7cb41aa78eb",
+      "followup": "terminal; do not repoll"
+    }
+  },
+  "workflow_conclusion": "success",
+  "collection_receipt": "build/github-results/completion-window-retention-43749001347/collection-receipt.json",
+  "report": "build/github-results/completion-window-retention-43749001347/completion-window-retention/report.json",
+  "report_sha256": "de23bf11c72e7b62701227eab9ba86ff9387de95dc0acccabab16719178d1d3a",
+  "collected_verdict": "build/github-results/completion-window-retention-43749001347/collected-verdict.json",
+  "result": {
+    "run_id": "43749001347",
+    "source": {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "commit": "ba900bdf2e9da9cadad134d4e5d9b7cb41aa78eb",
+      "provider": "github-actions",
+      "worker_repository": "Ajuntanaga/m3-offload",
+      "run_id": "43749001347",
+      "run_attempt": "1",
+      "input_release": "corpus-20261108",
+      "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+      "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+    },
+    "state": "rejected",
+    "final": true,
+    "completed_datasets": 1,
+    "declared_datasets": 5,
+    "completed_replays": 3,
+    "maximum_replays": 15,
+    "datasets_not_run": [
+      "extended-middle",
+      "ordinary",
+      "constructed",
+      "synthetic-four"
+    ],
+    "verified_inputs": 30,
+    "reference_identity_pass": true,
+    "observed_saved_references": 2,
+    "target_hold": {
+      "before": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1613760,
+        "unmatched_hold_samples": 906432,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 30,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 104
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 40,
+        "string_mask": 7,
+        "start_sample": 2932608,
+        "end_sample": 5452800,
+        "annotated_hold_samples": 2520192,
+        "exact_held_samples": 1614464,
+        "unmatched_hold_samples": 905728,
+        "longest_exact_hold_samples": 711104,
+        "exact_hold_segments": 14,
+        "first_exact_hold_delay_samples": 520639,
+        "note_ons_inside_label": 87
+      },
+      "improved": true
+    },
+    "snapshot_before": {
+      "labeled": 68441,
+      "matched": 41452,
+      "false_wrong_note_voices": 67769,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75881,
+      "fingerprint": "6ecf88865ddc34e4"
+    },
+    "snapshot_after": {
+      "labeled": 68441,
+      "matched": 41464,
+      "false_wrong_note_voices": 67775,
+      "false_wrong_string_voices": 2709,
+      "false_gap_voices": 5403,
+      "false_positive_voices": 75887,
+      "fingerprint": "103f2fd30f6ac92a"
+    },
+    "exact_matches_by_string_count_before": {
+      "2": {
+        "labeled": 29063,
+        "matched": 16233
+      },
+      "3": {
+        "labeled": 39378,
+        "matched": 25219
+      }
+    },
+    "exact_matches_by_string_count_after": {
+      "2": {
+        "labeled": 29063,
+        "matched": 16233
+      },
+      "3": {
+        "labeled": 39378,
+        "matched": 25231
+      }
+    },
+    "comparison": {
+      "snapshot": {
+        "delta": {
+          "matched": 12,
+          "false_wrong_note_voices": 6,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 0,
+          "false_positive_voices": 6
+        },
+        "changed_labels": [
+          {
+            "label_index": 3,
+            "midi_note": 40,
+            "string_mask": 7,
+            "labeled": 39378,
+            "baseline_matched": 25219,
+            "current_matched": 25231,
+            "matched_delta": 12
+          }
+        ],
+        "lost_labels": [],
+        "increased_error_counts": [
+          "false_wrong_note_voices",
+          "false_positive_voices"
+        ],
+        "gate_pass": false,
+        "output_bit_identical": false
+      },
+      "inference_bit_identical": null,
+      "inference_identity_required": false,
+      "sample_clock_identical": true,
+      "held_pairing_valid": true,
+      "changed_held_labels": [
+        {
+          "label_index": 3,
+          "midi_note": 40,
+          "exact_held_samples_before": 1613760,
+          "exact_held_samples_after": 1614464,
+          "held_delta": 704,
+          "note_ons_before": 104,
+          "note_ons_after": 87,
+          "note_on_delta": -17
+        }
+      ],
+      "held_losses": [],
+      "improved_hold_and_attack_labels": [
+        {
+          "label_index": 3,
+          "midi_note": 40,
+          "exact_held_samples_before": 1613760,
+          "exact_held_samples_after": 1614464,
+          "held_delta": 704,
+          "note_ons_before": 104,
+          "note_ons_after": 87,
+          "note_on_delta": -17
+        }
+      ],
+      "exact_held_samples_delta": 704,
+      "output_safety_delta": {
+        "false_wrong_note_voice_samples": 0,
+        "false_wrong_string_voice_samples": 0,
+        "false_gap_voice_samples": 0,
+        "false_wrong_note_onsets": 0,
+        "false_wrong_string_onsets": 0,
+        "false_gap_onsets": 0
+      },
+      "raw_conflict_delta": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "note_safety_pass": false
+    },
+    "github_validation": {
+      "focused_native_tests_passed": 6,
+      "python_contracts_passed": 285,
+      "source_portable": "43748964526 success",
+      "source_ci": "43748964532 success"
+    },
+    "installed_output_changed": false,
+    "production_defaults_changed": false,
+    "promotion_accepted": false,
+    "unmeasured": [
+      "extended-middle and remaining bounded datasets",
+      "full corpus",
+      "buffer identity",
+      "allocations",
+      "native timing",
+      "external DAW/device delivery"
+    ]
+  },
+  "bulk_artifact": {
+    "id": 14175617268,
+    "name": "m3-evidence-43749001347-1",
+    "bytes": 689762,
+    "sha256": "e08aa763550bc9605e02aff5e011803b3837baac5fb078931393352583361683",
+    "collection_state": "collected once; compressed text inspected in memory; native binary not extracted or executed",
+    "receipt": "build/github-results/completion-window-retention-43749001347/bulk-download-receipt.json"
+  },
+  "saved_evidence_diagnosis": {
+    "report": "build/github-results/completion-window-retention-43749001347/saved-snapshot-midi-diagnosis.json",
+    "snapshot_wrong_note_growth": {
+      "expected40_observed39": 5,
+      "expected40_observed46": 1
+    },
+    "target_time_aligned_raw_held_gain_samples": 1024,
+    "target_time_aligned_raw_held_loss_samples": 320,
+    "target_net_raw_held_gain_samples": 704,
+    "non_target_raw_events_identical_ignoring_sequence": true,
+    "limitation": "Aggregate scored TSV does not give individual snapshot sample times; no runtime or scoring rule changed."
+  }
 }

@@ -134,7 +134,7 @@ def _features(candidate: dict | None, voice: tuple, frame: dict) -> dict[str, st
 
 def compare_streams(control: TextIO, trial: TextIO,
                     expected_control: dict | None = None,
-                    expected_trial: dict | None = None) -> dict:
+                    expected_trial: dict | None = None, *, observe_frame=None) -> dict:
     for stream in (control, trial):
         if stream.readline() not in SCHEMAS or stream.readline() != HEADER:
             raise ValueError("unsupported outcome trace schema")
@@ -156,6 +156,8 @@ def compare_streams(control: TextIO, trial: TextIO,
         if a["sample"] <= last_sample:
             raise ValueError("samples are not strictly increasing")
         last_sample = a["sample"]
+        if observe_frame is not None:
+            observe_frame(a, b)
         for total, frame in zip(totals, frames):
             total["snapshots"] += 1
             total["labeled"] += len(frame["labels"])
