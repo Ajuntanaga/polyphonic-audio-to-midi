@@ -1,0 +1,26 @@
+{
+  "schema": "m3_ordinary_harmonic_attribution_references_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 43794247378,
+  "source_commit": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
+  "worker_commit": "522097e6993d1b5905002d1639c9990c5f8b70ad",
+  "focus_labels": [10, 117, 206],
+  "report": {
+    "file": "ordinary-harmonic-admission/report.json",
+    "bytes": 1494028,
+    "sha256": "9868889c9c4314e467b8e5822fdc12b94a26577c005b039e10831cfef95db69d"
+  },
+  "small_artifact": {
+    "id": 14193873085,
+    "name": "m3-report-43794247378-1",
+    "bytes": 95708,
+    "sha256": "44819a69b7ed2e08333e55d1a55167eb87abf403c91db5f5d093ef00c511f635"
+  },
+  "bulk_artifact": {
+    "id": 14194072638,
+    "name": "m3-evidence-43794247378-1",
+    "bytes": 45663466,
+    "sha256": "5a09317f197aa9515c2493c73b341a9c538bdbc5db904794db443cc2bfe71cf1"
+  },
+  "scope": "Read retained MIDI, annotations and cue evidence on GitHub; no recording download, native replay or policy change."
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "m3_ordinary_harmonic_attribution_checkpoint_v1",
+  "task": "ordinary-harmonic-attribution",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "result_final": false,
+  "created_at": "2026-11-16T03:15:48.770653+00:00",
+  "updated_at": "2026-11-16T03:15:48.770653+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-harmonic-attribution-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-harmonic-attribution-references-20261116.json",
+  "dataset": "ordinary",
+  "question": "Are the rejected admission trial losses missing pitches or changed string assignments, and which added false outputs coincide with causal cues?",
+  "scope": {
+    "retained_run_id": 43794247378,
+    "focus_labels": [
+      10,
+      117,
+      206
+    ],
+    "native_replays": 0,
+    "audio_processed": false,
+    "policy_changed": false,
+    "bulk_inputs": "Retained report and text evidence archives consumed only by GitHub Actions; no laptop download."
+  },
+  "local_validation": {
+    "focused_tests": 10,
+    "result": "pass",
+    "workflow_syntax": "pass",
+    "source_bash_sections": 4,
+    "worker_bash_sections": 57
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-harmonic-attribution",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "midi_lifecycle": "false"
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "prepared retained-output comparison",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-harmonic-attribution-{run_id}",
+  "collection_status": "not dispatched",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "acceptance": [
+    "Both archive digests and selected member digests match the recorded admission screen.",
+    "Reproduce all 499 current/trial exact label holds and each output-safety voice-sample count.",
+    "Attribute target recovery and losses to pitch absence versus exact string assignment, preserving gross gains and losses.",
+    "Associate added false spans with only preceding cue evidence; do not infer a native branch from timing alone."
+  ],
+  "limitations": [
+    "Saved output establishes delivered offline pitches and lanes, not why the joint assignment changed.",
+    "No new detector, audio, timing, allocation, buffer or host measurement."
+  ],
+  "next_step": "Use the retained comparison to choose the smallest replacement admission or assignment condition. Require target recovery with no passage or false-output regression before any corpus or host work.",
+  "source_checks": []
+}

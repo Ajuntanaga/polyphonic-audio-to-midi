@@ -5,14 +5,14 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "322bc9e481e1e68088a1a0ccc923e95eab565cd6",
   "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
-  "source_commit": null,
+  "source_commit": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
   "worker_commit": "522097e6993d1b5905002d1639c9990c5f8b70ad",
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
+  "run_id": 43794247378,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-16T02:39:48.203323+00:00",
-  "updated_at": "2026-11-16T02:39:48.203323+00:00",
+  "updated_at": "2026-11-16T02:58:53.898058+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-admission-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-admission-references-20261116.json",
   "dataset": "ordinary",
@@ -67,7 +67,7 @@
     "source_bash_sections": 4,
     "worker_bash_sections": 56,
     "workflow_syntax": "pass",
-    "native_execution": "GitHub only; pending source checks"
+    "native_execution": "GitHub Actions only. Source portable43793792730 and production CI43793792661 passed; worker43794247378 completed the bounded screen, which was rejected for note-quality regressions."
   },
   "dispatch_inputs": {
     "task": "ordinary-harmonic-admission",
@@ -77,11 +77,11 @@
     "midi_lifecycle": "false"
   },
   "workflow": "m3-offload.yml",
-  "stage": "prepared; source checks required before one dispatch",
+  "stage": "final bounded screen; rejected for passage loss and false-output growth",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-harmonic-admission-{run_id}",
-  "collection_status": "not dispatched",
+  "collection_status": "small report collected once; bulk remains remote",
   "promotion_accepted": false,
   "installed_output_changed": false,
   "scoreboard_changed": false,
@@ -99,5 +99,339 @@
     "Every ordinary label retains snapshot matches and exact held samples; no false-output or raw-conflict growth.",
     "No widening or promotion on rejection; passing only authorizes consideration of a bounded native implementation."
   ],
-  "next_step": "Pass source portable and production CI, then dispatch one ordinary-harmonic-admission GHA screen. Collect its small report once; leave bulk remote. Do not widen a rejected screen or retry the unchanged corpus."
+  "next_step": "Compare recovered label10/note75 with newly admitted false-output cases and held-loss labels117/note60 and206/note46 before choosing a replacement admission criterion. Do not widen this rejected policy. Any replacement must retain target recovery with zero passage snapshot/held loss, zero false-output growth and preserved OFF/current references; corpus, buffer, allocation, p99/max/deadline and external host gates remain separate. No new processing is launched by this checkpoint update; all native and recorded-audio execution remains on GitHub Actions.",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-16T02:42:33Z",
+      "databaseId": 43793792661,
+      "headSha": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-16T02:46:12Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43793792661",
+      "jobs": [
+        {
+          "name": "Native C++ tests",
+          "status": "completed",
+          "conclusion": "success",
+          "stage": null
+        },
+        {
+          "name": "Source contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "stage": null
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-16T02:42:33Z",
+      "databaseId": 43793792730,
+      "headSha": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-16T02:44:04Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43793792730",
+      "jobs": [
+        {
+          "name": "offline",
+          "status": "completed",
+          "conclusion": "success",
+          "stage": null
+        }
+      ]
+    }
+  ],
+  "dispatch_attempted_at": "2026-11-16T02:47:11.261966+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_stdout_path": "build/github-results/ordinary-harmonic-admission-source-checks/dispatch.stdout.txt",
+  "dispatch_stderr_path": "build/github-results/ordinary-harmonic-admission-source-checks/dispatch.stderr.txt",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43794247378",
+  "final": true,
+  "collection_state": "small_report_collected_once",
+  "report_artifact": "m3-report-43794247378-1",
+  "bulk_artifact": "m3-evidence-43794247378-1",
+  "local_directory": "build/github-results/ordinary-harmonic-admission-43794247378",
+  "remote_status": "completed",
+  "workflow_conclusion": "success",
+  "last_observed_at": "2026-11-16T02:55:21.953670+00:00",
+  "jobs": [
+    {
+      "name": "process",
+      "status": "completed",
+      "conclusion": "success",
+      "stage": null
+    }
+  ],
+  "artifact": {
+    "id": 14193873085,
+    "name": "m3-report-43794247378-1",
+    "size_in_bytes": 95708,
+    "digest": "sha256:44819a69b7ed2e08333e55d1a55167eb87abf403c91db5f5d093ef00c511f635",
+    "expired": false
+  },
+  "collection_attempted_at": "2026-11-16T02:55:54.435799+00:00",
+  "artifact_receipt": "build/github-results/ordinary-harmonic-admission-43794247378/artifact-download-receipt.json",
+  "result": "rejected",
+  "measurement_complete": true,
+  "collected_at": "2026-11-16T02:55:59.104414+00:00",
+  "report": "build/github-results/ordinary-harmonic-admission-43794247378/ordinary-harmonic-admission/report.json",
+  "report_sha256": "9868889c9c4314e467b8e5822fdc12b94a26577c005b039e10831cfef95db69d",
+  "report_bytes": 1494028,
+  "collected_verdict": "build/github-results/ordinary-harmonic-admission-43794247378/collected-verdict.json",
+  "bulk_artifact_metadata": {
+    "name": "m3-evidence-43794247378-1",
+    "id": 14194072638,
+    "bytes": 45663466,
+    "sha256": "5a09317f197aa9515c2493c73b341a9c538bdbc5db904794db443cc2bfe71cf1",
+    "location": "remote only",
+    "downloaded": false
+  },
+  "result_summary": {
+    "target": {
+      "before": {
+        "label_index": 10,
+        "midi_note": 75,
+        "string_mask": 128,
+        "start_sample": 163306,
+        "end_sample": 235200,
+        "annotated_hold_samples": 71894,
+        "exact_held_samples": 0,
+        "unmatched_hold_samples": 71894,
+        "longest_exact_hold_samples": 0,
+        "exact_hold_segments": 0,
+        "first_exact_hold_delay_samples": null,
+        "note_ons_inside_label": 0,
+        "snapshot_matched": 0,
+        "snapshot_labeled": 1124,
+        "exact_held_percent": 0.0,
+        "longest_exact_hold_ms": 0.0,
+        "first_exact_hold_delay_ms": null,
+        "snapshot_match_percent": 0.0
+      },
+      "after": {
+        "label_index": 10,
+        "midi_note": 75,
+        "string_mask": 128,
+        "start_sample": 163306,
+        "end_sample": 235200,
+        "annotated_hold_samples": 71894,
+        "exact_held_samples": 64193,
+        "unmatched_hold_samples": 7701,
+        "longest_exact_hold_samples": 64193,
+        "exact_hold_segments": 1,
+        "first_exact_hold_delay_samples": 7701,
+        "note_ons_inside_label": 1,
+        "snapshot_matched": 1036,
+        "snapshot_labeled": 1124,
+        "exact_held_percent": 89.28839680640944,
+        "longest_exact_hold_ms": 668.6770833333334,
+        "first_exact_hold_delay_ms": 80.21875,
+        "snapshot_match_percent": 92.17081850533808
+      },
+      "improved": true
+    },
+    "ordinary_snapshot": {
+      "current": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6",
+        "labeled_frame_match_percent": 27.50495618880431
+      },
+      "trial": {
+        "labeled": 528632,
+        "matched": 154117,
+        "false_wrong_note_voices": 166296,
+        "false_wrong_string_voices": 102310,
+        "false_gap_voices": 66420,
+        "false_positive_voices": 335026,
+        "fingerprint": "205bc79e44256153",
+        "labeled_frame_match_percent": 29.153929387551266
+      },
+      "delta": {
+        "matched": 8717,
+        "false_wrong_note_voices": 2033,
+        "false_wrong_string_voices": 9672,
+        "false_gap_voices": 3564,
+        "false_positive_voices": 15269
+      },
+      "match_percentage_point_delta": 1.6489731987469545,
+      "lost_labels": [
+        {
+          "label_index": 51,
+          "midi_note": 37,
+          "string_mask": 1,
+          "labeled": 1122,
+          "baseline_matched": 133,
+          "current_matched": 131,
+          "matched_delta": -2
+        },
+        {
+          "label_index": 117,
+          "midi_note": 60,
+          "string_mask": 16,
+          "labeled": 1122,
+          "baseline_matched": 648,
+          "current_matched": 609,
+          "matched_delta": -39
+        },
+        {
+          "label_index": 206,
+          "midi_note": 46,
+          "string_mask": 4,
+          "labeled": 1122,
+          "baseline_matched": 813,
+          "current_matched": 793,
+          "matched_delta": -20
+        },
+        {
+          "label_index": 329,
+          "midi_note": 49,
+          "string_mask": 16,
+          "labeled": 1122,
+          "baseline_matched": 722,
+          "current_matched": 716,
+          "matched_delta": -6
+        }
+      ],
+      "lost_label_count": 4,
+      "lost_frame_matches": 67,
+      "gate_pass": false
+    },
+    "ordinary_held": {
+      "current_exact_samples": 8580917,
+      "trial_exact_samples": 9069617,
+      "annotated_label_samples": 33819101,
+      "net_exact_sample_delta": 488700,
+      "losses": [
+        {
+          "label_index": 117,
+          "midi_note": 60,
+          "exact_held_samples_before": 41409,
+          "exact_held_samples_after": 38913,
+          "held_delta": -2496,
+          "note_ons_before": 28,
+          "note_ons_after": 24,
+          "note_on_delta": -4
+        },
+        {
+          "label_index": 206,
+          "midi_note": 46,
+          "exact_held_samples_before": 48961,
+          "exact_held_samples_after": 47553,
+          "held_delta": -1408,
+          "note_ons_before": 1,
+          "note_ons_after": 7,
+          "note_on_delta": 6
+        }
+      ],
+      "lost_label_count": 2,
+      "lost_samples": 3904
+    },
+    "raw_output_safety": {
+      "current": {
+        "false_wrong_note_voice_samples": 8222039,
+        "false_wrong_string_voice_samples": 4953010,
+        "false_gap_voice_samples": 3761781,
+        "matched_voice_samples": 8721923,
+        "emitted_voice_samples": 25658753,
+        "false_wrong_note_onsets": 1200,
+        "false_wrong_string_onsets": 2597,
+        "false_gap_onsets": 517,
+        "matched_onsets": 1612,
+        "emitted_onsets": 5926
+      },
+      "trial": {
+        "false_wrong_note_voice_samples": 8370110,
+        "false_wrong_string_voice_samples": 5402480,
+        "false_gap_voice_samples": 3941524,
+        "matched_voice_samples": 9210623,
+        "emitted_voice_samples": 26924737,
+        "false_wrong_note_onsets": 1205,
+        "false_wrong_string_onsets": 2634,
+        "false_gap_onsets": 534,
+        "matched_onsets": 1630,
+        "emitted_onsets": 6003
+      },
+      "delta": {
+        "false_wrong_note_voice_samples": 148071,
+        "false_wrong_string_voice_samples": 449470,
+        "false_gap_voice_samples": 179743,
+        "false_wrong_note_onsets": 5,
+        "false_wrong_string_onsets": 37,
+        "false_gap_onsets": 17
+      }
+    },
+    "raw_midi": {
+      "current_counts": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "trial_counts": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "conflict_delta": {
+        "cross_pitch_on_before_release": 0,
+        "repeated_pitch_on_before_release": 0,
+        "off_without_raw_on": 0,
+        "zero_velocity_on": 0,
+        "unassigned_on": 0
+      },
+      "held_pairing_valid": true,
+      "sample_clock_identical": true,
+      "current_open_at_eof": [
+        {
+          "voice_id": 0,
+          "note": 44,
+          "start_sample": 10627135,
+          "observed_hold_samples": 62465
+        }
+      ],
+      "trial_open_at_eof": [
+        {
+          "voice_id": 0,
+          "note": 44,
+          "start_sample": 10627135,
+          "observed_hold_samples": 62465
+        }
+      ],
+      "interpretation": "One note remains open at recording EOF in both modes; this is not proof of stuck MIDI or host delivery."
+    },
+    "protected": {
+      "verified_inputs": 4,
+      "reference_identity_pass": true,
+      "off_full_snapshot_and_raw_midi_bit_identical": true,
+      "current_full_snapshot_and_raw_midi_bit_identical": true,
+      "current_full_outcome_bit_identical": true,
+      "trial_no_regression": false
+    },
+    "gates": {
+      "target_improved": true,
+      "reference_identity": true,
+      "snapshot_no_regression": false,
+      "held_no_loss": false,
+      "false_output_no_growth": false,
+      "raw_conflict_no_growth": true,
+      "note_safety_pass": false,
+      "bounded_screen_pass": false,
+      "native_timing": "not measured",
+      "allocations": "not measured",
+      "buffer_identity": "not measured",
+      "live_readiness": "not measured"
+    },
+    "metric_scope": "Snapshot assignments, overlapping held label-samples and false voice-samples/onsets are separate. Gap outputs are extra notes, not missing notes. Ordinary labeled-frame matches are exact pitch/assignment matches, not chord success or project completion. Held label-samples overlap and are not unique audio duration. Replay wall-clock duration is not a real-time deadline measurement."
+  }
 }
