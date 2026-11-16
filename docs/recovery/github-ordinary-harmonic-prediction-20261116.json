@@ -5,14 +5,14 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "4fe86bf6503f2b015e63313f32a398f0cfed5305",
   "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
+  "source_commit": "322bc9e481e1e68088a1a0ccc923e95eab565cd6",
+  "worker_commit": "6df00ee1ecbff402bcb43b1c2e095c88f581959c",
+  "run_id": 43790959190,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-16T02:12:18.384991+00:00",
-  "updated_at": "2026-11-16T02:12:18.384991+00:00",
+  "updated_at": "2026-11-16T02:17:12.675622+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-prediction-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-prediction-references-20261116.json",
   "retained_artifact": {
@@ -81,14 +81,14 @@
     "note": "75",
     "label_index": "10",
     "midi_lifecycle": "false",
-    "source_sha": null
+    "source_sha": "322bc9e481e1e68088a1a0ccc923e95eab565cd6"
   },
   "workflow": "m3-offload.yml",
-  "stage": "Prepared fixed causal prediction comparison; source and worker not yet pushed.",
+  "stage": "Final harmonic prediction result interpreted; gain alone is unsafe, independent-support distinction recorded.",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-harmonic-prediction-{run_id}",
-  "collection_status": "not dispatched",
+  "collection_status": "collected once; archive SHA-256 verified",
   "promotion_accepted": false,
   "installed_output_changed": false,
   "scoreboard_changed": false,
@@ -105,5 +105,336 @@
     "promotion_accepted": false,
     "reason": "Native maximum-time and deadline failures remain open."
   },
-  "next_step": "Push exact prepared source/worker revisions, wait for source checks, then dispatch one fixed GitHub comparison. Inspect prediction gains, independent columns, rank and case history before choosing any rule; no unchanged corpus retry."
+  "next_step": "Prototype a causal independent-harmonic-support check that rejects nearly shared candidate bases before using prediction gain. Fix its criterion from numerical conditioning and synthetic near-harmonic/true-note controls, not a threshold fitted to these three recordings. Then run one bounded GitHub ordinary admission screen with all passage/false-output gates before any corpus or host work. No repeated comparison or unchanged corpus retry.",
+  "source_pushed": true,
+  "worker_pushed": true,
+  "source_checks": {
+    "observed_at": "2026-11-16T02:13:42.992266+00:00",
+    "last_observation_raw": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/source-43790730070-20261116T021342Z.stdout",
+    "last_observation_stderr": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/source-43790730070-20261116T021342Z.stderr",
+    "runs": [
+      {
+        "conclusion": "success",
+        "createdAt": "2026-11-16T02:12:23Z",
+        "databaseId": 43790730070,
+        "headSha": "322bc9e481e1e68088a1a0ccc923e95eab565cd6",
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43790730070",
+        "workflowName": "Portable offline replay"
+      }
+    ]
+  },
+  "source_portable_run_id": 43790730070,
+  "source_portable_status": "completed",
+  "source_portable_conclusion": "success",
+  "dispatch_attempted_at": "2026-11-16T02:14:34.734071+00:00",
+  "dispatch_stdout": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/dispatch-20261116T021434Z.stdout",
+  "dispatch_stderr": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/dispatch-20261116T021434Z.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_output": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43790959190",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43790959190",
+  "local_dir": "build/github-results/ordinary-harmonic-prediction-43790959190",
+  "small_artifact_name": "m3-report-43790959190-1",
+  "bulk_artifact_name": "m3-evidence-43790959190-1",
+  "last_observed_at": "2026-11-16T02:15:46.191138+00:00",
+  "last_observation_raw": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/worker-43790959190-20261116T021546Z.stdout",
+  "last_observation_stderr": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/worker-43790959190-20261116T021546Z.stderr",
+  "artifact_metadata_raw": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/artifacts-20261116T021617Z.stdout",
+  "artifact_metadata_stderr": "build/github-results/ordinary-harmonic-prediction-dispatch-20261116/artifacts-20261116T021617Z.stderr",
+  "artifact_metadata_observed_at": "2026-11-16T02:16:17.959761+00:00",
+  "artifacts": [
+    {
+      "id": 14192311223,
+      "name": "m3-evidence-43790959190-1",
+      "size_in_bytes": 57912,
+      "digest": "sha256:362a842864cd3529ec3fece396a73524f49ef3412776afa8529562a8d31273ac",
+      "expired": false,
+      "created_at": "2026-11-16T02:15:22Z",
+      "expires_at": "2026-11-23T02:15:21Z",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14192311223/zip"
+    },
+    {
+      "id": 14191474359,
+      "name": "m3-report-43790959190-1",
+      "size_in_bytes": 7640,
+      "digest": "sha256:ed091ba750823896291b5b0c106ea19aa69e2fa75c5a50dcb8a10dab8ad1e12d",
+      "expired": false,
+      "created_at": "2026-11-16T02:15:21Z",
+      "expires_at": "2026-11-30T02:15:20Z",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14191474359/zip"
+    }
+  ],
+  "collected_at": "2026-11-16T02:16:22.977715+00:00",
+  "report_path": "build/github-results/ordinary-harmonic-prediction-43790959190/ordinary-harmonic-prediction/report.json",
+  "report_sha256": "fffe65c7dab1c6134dbd8bca9796f87c00ac27018bf21477e1ff3812d51056ab",
+  "collection_receipt": "build/github-results/ordinary-harmonic-prediction-43790959190/collection-receipt.json",
+  "result_summary": {
+    "schema": "m3_ordinary_harmonic_prediction_verdict_v1",
+    "run_id": 43790959190,
+    "source_commit": "322bc9e481e1e68088a1a0ccc923e95eab565cd6",
+    "worker_commit": "6df00ee1ecbff402bcb43b1c2e095c88f581959c",
+    "report_path": "build/github-results/ordinary-harmonic-prediction-43790959190/ordinary-harmonic-prediction/report.json",
+    "report_sha256": "fffe65c7dab1c6134dbd8bca9796f87c00ac27018bf21477e1ff3812d51056ab",
+    "diagnostic_acceptance": "passed; source/input/outcome identities verified",
+    "admission_acceptance": "not established; prediction-gain-only rule is unsafe on the fixed false chord control",
+    "metric": "Reduction in prediction squared error divided by prediction audio energy; not a note, frame or live-delivery percentage.",
+    "positive_count_caveat": "Strict gain > 0 includes floating-point roundoff; false control maximum 0.16049267141478749 is substantive and overlaps the missing-note range.",
+    "interpretation": [
+      "Missing note75 improves prediction in all 56 measured below-threshold windows wholly inside the passage; median gain 0.03586299822161609, range 0.0068441031694259835 to 0.3143479038075495.",
+      "False chord note70 has 47 comparable measured windows; gain range -0.10150637092508642 to 0.16049267141478749. Positive gain alone cannot safely distinguish it.",
+      "False chord candidate columns are almost explained by the owned-note basis: median independent-column fraction at most 0.0002506704447674279. Missing-note median is 0.2509512619395106, but its minimum 0.0000014132190718334534 overlaps false cases; do not derive a universal threshold from these three cases.",
+      "The gap has only two nonzero-energy measured windows, both cross the passage boundary and both worsen prediction; no inside-gap below-threshold measurement exists.",
+      "At the early missing example the causal baseline contains old note57, not the expected current chord. The false early example has no owned baseline. These examples do not establish early acquisition."
+    ],
+    "cases": [
+      {
+        "name": "missing-note75",
+        "groups": {
+          "below_threshold": {
+            "observations": 58,
+            "statuses": {
+              "measured": 58
+            },
+            "positive_prediction_gains": 58,
+            "rank_deficient": 0,
+            "history_crosses_case": 2,
+            "prediction_gain_fraction": {
+              "min": 0.0068441031694259835,
+              "p10": 0.018630414973223836,
+              "p50": 0.039406498145028626,
+              "p90": 0.1529569612817282,
+              "max": 0.3143479038075495
+            },
+            "candidate_independent_fraction_min": {
+              "min": 4.430474395142344e-08,
+              "p10": 0.0007503748787774597,
+              "p50": 0.02008421059876974,
+              "p90": 0.08879050448697687,
+              "max": 0.9520398418729961
+            },
+            "candidate_independent_fraction_median": {
+              "min": 1.4132190718334534e-06,
+              "p10": 0.022717150289907055,
+              "p50": 0.2509512619395106,
+              "p90": 0.9399708725038711,
+              "max": 0.991658956074158
+            }
+          },
+          "below_threshold_history_inside_case": {
+            "observations": 56,
+            "statuses": {
+              "measured": 56
+            },
+            "positive_prediction_gains": 56,
+            "rank_deficient": 0,
+            "history_crosses_case": 0,
+            "prediction_gain_fraction": {
+              "min": 0.0068441031694259835,
+              "p10": 0.018295147660719067,
+              "p50": 0.03586299822161609,
+              "p90": 0.15809116866590855,
+              "max": 0.3143479038075495
+            },
+            "candidate_independent_fraction_min": {
+              "min": 4.430474395142344e-08,
+              "p10": 0.0007246727896866151,
+              "p50": 0.019787449792766417,
+              "p90": 0.07380232214948348,
+              "max": 0.10969981349711079
+            },
+            "candidate_independent_fraction_median": {
+              "min": 1.4132190718334534e-06,
+              "p10": 0.021637459474852367,
+              "p50": 0.2509512619395106,
+              "p90": 0.7595203224546544,
+              "max": 0.9539986669315084
+            }
+          }
+        },
+        "example": {
+          "available_sample": 167359,
+          "status": "measured",
+          "base_pitches": [
+            {
+              "note": 57,
+              "frequency_hz": 220.0,
+              "phase_cents": 0.0,
+              "phase_valid": false
+            }
+          ],
+          "window_starts_before_case": true
+        }
+      },
+      {
+        "name": "false-note70-chord",
+        "groups": {
+          "below_threshold": {
+            "observations": 49,
+            "statuses": {
+              "unavailable_base": 2,
+              "measured": 47
+            },
+            "positive_prediction_gains": 25,
+            "rank_deficient": 14,
+            "history_crosses_case": 1,
+            "prediction_gain_fraction": {
+              "min": -0.10150637092508642,
+              "p10": -0.03173228319115453,
+              "p50": 1.7566516953857514e-15,
+              "p90": 0.04803639940710973,
+              "max": 0.16049267141478749
+            },
+            "candidate_independent_fraction_min": {
+              "min": 1.3594685517773594e-30,
+              "p10": 3.339386828787684e-30,
+              "p50": 5.158297585451951e-07,
+              "p90": 5.449019155074635e-07,
+              "max": 5.544028015379992e-07
+            },
+            "candidate_independent_fraction_median": {
+              "min": 2.5909957695580995e-30,
+              "p10": 6.686797207876081e-30,
+              "p50": 0.00023181035290524766,
+              "p90": 0.00024668049505158153,
+              "max": 0.0002506704447674279
+            }
+          },
+          "below_threshold_history_inside_case": {
+            "observations": 48,
+            "statuses": {
+              "unavailable_base": 1,
+              "measured": 47
+            },
+            "positive_prediction_gains": 25,
+            "rank_deficient": 14,
+            "history_crosses_case": 0,
+            "prediction_gain_fraction": {
+              "min": -0.10150637092508642,
+              "p10": -0.03173228319115453,
+              "p50": 1.7566516953857514e-15,
+              "p90": 0.04803639940710973,
+              "max": 0.16049267141478749
+            },
+            "candidate_independent_fraction_min": {
+              "min": 1.3594685517773594e-30,
+              "p10": 3.339386828787684e-30,
+              "p50": 5.158297585451951e-07,
+              "p90": 5.449019155074635e-07,
+              "max": 5.544028015379992e-07
+            },
+            "candidate_independent_fraction_median": {
+              "min": 2.5909957695580995e-30,
+              "p10": 6.686797207876081e-30,
+              "p50": 0.00023181035290524766,
+              "p90": 0.00024668049505158153,
+              "max": 0.0002506704447674279
+            }
+          }
+        },
+        "example": {
+          "available_sample": 4991,
+          "status": "unavailable_base",
+          "base_pitches": [],
+          "window_starts_before_case": true
+        }
+      },
+      {
+        "name": "false-note70-gap",
+        "groups": {
+          "below_threshold": {
+            "observations": 4,
+            "statuses": {
+              "measured": 2,
+              "zero_energy": 2
+            },
+            "positive_prediction_gains": 0,
+            "rank_deficient": 0,
+            "history_crosses_case": 4,
+            "prediction_gain_fraction": {
+              "min": -0.5138660328120583,
+              "p10": -0.4693935013399415,
+              "p50": -0.2915033754514742,
+              "p90": -0.11361324956300693,
+              "max": -0.06914071809089012
+            },
+            "candidate_independent_fraction_min": {
+              "min": 5.105010971175341e-07,
+              "p10": 5.112270544414951e-07,
+              "p50": 5.141308837373394e-07,
+              "p90": 5.170347130331836e-07,
+              "max": 5.177606703571447e-07
+            },
+            "candidate_independent_fraction_median": {
+              "min": 0.00024226069760576634,
+              "p10": 0.00024247071658457507,
+              "p50": 0.00024331079249980994,
+              "p90": 0.00024415086841504484,
+              "max": 0.00024436088739385355
+            }
+          },
+          "below_threshold_history_inside_case": {
+            "observations": 0,
+            "statuses": {},
+            "positive_prediction_gains": 0,
+            "rank_deficient": 0,
+            "history_crosses_case": 0,
+            "prediction_gain_fraction": {
+              "min": null,
+              "p10": null,
+              "p50": null,
+              "p90": null,
+              "max": null
+            },
+            "candidate_independent_fraction_min": {
+              "min": null,
+              "p10": null,
+              "p50": null,
+              "p90": null,
+              "max": null
+            },
+            "candidate_independent_fraction_median": {
+              "min": null,
+              "p10": null,
+              "p50": null,
+              "p90": null,
+              "max": null
+            }
+          }
+        },
+        "example": {
+          "available_sample": 72063,
+          "status": "measured",
+          "base_pitches": [
+            {
+              "note": 39,
+              "frequency_hz": 77.78174593052023,
+              "phase_cents": 0.0,
+              "phase_valid": false
+            },
+            {
+              "note": 42,
+              "frequency_hz": 90.1430995597831,
+              "phase_cents": -44.657473,
+              "phase_valid": true
+            },
+            {
+              "note": 58,
+              "frequency_hz": 234.21222532579762,
+              "phase_cents": 8.3754312,
+              "phase_valid": true
+            }
+          ],
+          "window_starts_before_case": true
+        }
+      }
+    ],
+    "native_replays": 0,
+    "production_policy_changed": false,
+    "installed_output_changed": false,
+    "scoreboard_changed": false,
+    "protection": "This diagnostic consumed hash-verified saved audio/outcomes and performed no detector replay. Prior full current-ON TSV/MIDI/outcome identity remains attributed to run43787737937, not re-proven here.",
+    "remaining_gates": "Independent-note admission, full-corpus no-loss/no-false-growth, zero allocations/frees, p99<=166666ns, max<=333333ns, zero deadline overruns, and actual external host/device delivery.",
+    "next_step": "Prototype a causal independent-harmonic-support check that rejects nearly shared candidate bases before using prediction gain. Fix its criterion from numerical conditioning and synthetic near-harmonic/true-note controls, not a threshold fitted to these three recordings. Then run one bounded GitHub ordinary admission screen with all passage/false-output gates before any corpus or host work. No repeated comparison or unchanged corpus retry."
+  },
+  "result_verdict_path": "build/github-results/ordinary-harmonic-prediction-43790959190/collected-verdict.json"
 }

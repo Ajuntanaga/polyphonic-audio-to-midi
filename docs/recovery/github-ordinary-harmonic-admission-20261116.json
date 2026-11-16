@@ -1,0 +1,103 @@
+{
+  "schema": "m3_ordinary_harmonic_admission_checkpoint_v1",
+  "task": "ordinary-harmonic-admission",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "322bc9e481e1e68088a1a0ccc923e95eab565cd6",
+  "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+  "source_commit": null,
+  "worker_commit": "522097e6993d1b5905002d1639c9990c5f8b70ad",
+  "run_id": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-16T02:39:48.203323+00:00",
+  "updated_at": "2026-11-16T02:39:48.203323+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-harmonic-admission-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-harmonic-admission-references-20261116.json",
+  "dataset": "ordinary",
+  "question": "Can past-only, geometrically independent harmonic prediction recover missing note75 without any ordinary passage loss or false-output growth?",
+  "scope": {
+    "config": {
+      "train_samples": 3840,
+      "predict_samples": 960,
+      "stride_samples": 1024,
+      "maximum_hz": 3000,
+      "candidate_harmonics": 4,
+      "maximum_base_notes": 8,
+      "svd_relative_cutoff": 1e-06,
+      "a4_hz": 440,
+      "baseline_frequency": "saved phase cents when valid at training cutoff; otherwise equal temperament",
+      "candidate_frequency": "equal temperament",
+      "amplitude": "constant sine/cosine coefficients plus DC",
+      "lowest_note": 32,
+      "highest_note": 84,
+      "minimum_independent_pairs": 2,
+      "pair_singular_ratio_floor": 0.001,
+      "full_singular_ratio_floor": 0.0001,
+      "numerical_guard_factor": 64,
+      "score_ratio": 0.2,
+      "fundamental_ratio": 0.8,
+      "selection": "all eligible below-threshold pitches at the past-only fixed cadence",
+      "baseline": "frozen current detector shadow; not candidate replay feedback"
+    },
+    "target": {
+      "label_index": 10,
+      "midi_note": 75,
+      "string_mask": 128,
+      "start_sample": 163306,
+      "end_sample": 235200
+    },
+    "native_replays": 3,
+    "conditions": [
+      "reference-off",
+      "current-on",
+      "harmonic-admission-on"
+    ],
+    "block_samples": 512,
+    "maximum_seconds": 2400,
+    "sample_rate": 96000,
+    "sample_count": 10689600,
+    "labels_used_by_model": false,
+    "baseline": "Frozen current-detector shadow, independent of trial feedback"
+  },
+  "local_validation": {
+    "focused_tests": 19,
+    "result": "pass",
+    "source_bash_sections": 4,
+    "worker_bash_sections": 56,
+    "workflow_syntax": "pass",
+    "native_execution": "GitHub only; pending source checks"
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-harmonic-admission",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "midi_lifecycle": "false"
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "prepared; source checks required before one dispatch",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-harmonic-admission-{run_id}",
+  "collection_status": "not dispatched",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "limitations": [
+    "Offline cues and a compile-only native rescue are not a bounded native feedback implementation or a real-time cost measurement.",
+    "Two independent harmonic basis pairs establish geometric distinguishability, not two independently audible partials.",
+    "The numerical gain guard rejects roundoff and is not an audibility threshold.",
+    "This trial is one ordinary recording; allocation, buffer, deadline and external host gates remain separate."
+  ],
+  "prerequisite_corpus": "docs/recovery/github-sample-observation-corpus-20261116.json",
+  "acceptance": [
+    "All four inputs and saved OFF/current scored TSV/raw MIDI plus current outcome retain exact identity.",
+    "Target label10 note75 gains exact held samples and snapshot matches with a new note-on.",
+    "Every ordinary label retains snapshot matches and exact held samples; no false-output or raw-conflict growth.",
+    "No widening or promotion on rejection; passing only authorizes consideration of a bounded native implementation."
+  ],
+  "next_step": "Pass source portable and production CI, then dispatch one ordinary-harmonic-admission GHA screen. Collect its small report once; leave bulk remote. Do not widen a rejected screen or retry the unchanged corpus."
+}

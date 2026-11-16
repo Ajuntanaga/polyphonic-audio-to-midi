@@ -9741,6 +9741,26 @@ M3_TEST(native_detector_diagnostic_rescue_preserves_calibrated_admission) {
   }
 }
 
+M3_TEST(native_detector_harmonic_rescue_needs_current_pitch_cue) {
+  m3::PersistentConfig config;
+  config.profile_mode = m3::ProfileMode::m3;
+  config.lowest_note = 32U;
+  config.highest_note = 84U;
+  config.max_polyphony = 5U;
+  config.max_fret = 24U;
+  m3::PolyphonicPitchDetector detector;
+  M3_EXPECT_TRUE(detector.configure(96000.0, config));
+  M3_EXPECT_TRUE(detector.set_candidate_admission_rescue_for_diagnostics(0.20, 0.80, true));
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  M3_EXPECT_FALSE(Access::diagnostic_band_rescue_probe(detector, 0.0, 0.0));
+  detector.set_odd_partial_cue_mask_for_diagnostics({0U, std::uint64_t{1U} << 7U});
+  M3_EXPECT_FALSE(Access::diagnostic_band_rescue_probe(detector, 0.0, 0.0));
+  detector.set_odd_partial_cue_mask_for_diagnostics({0U, std::uint64_t{1U} << 8U});
+  M3_EXPECT_TRUE(Access::diagnostic_band_rescue_probe(detector, 0.0, 0.0));
+  detector.set_odd_partial_cue_mask_for_diagnostics({0U, 0U});
+  M3_EXPECT_FALSE(Access::diagnostic_band_rescue_probe(detector, 0.0, 0.0));
+}
+
 M3_TEST(native_detector_diagnostic_rescue_requires_pitch_band_dominance) {
   for (const double scale : {0.1, 1.0, 4.0}) {
     m3::PersistentConfig config;

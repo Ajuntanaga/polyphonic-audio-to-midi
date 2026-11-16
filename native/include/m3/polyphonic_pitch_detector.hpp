@@ -698,7 +698,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   bool set_candidate_admission_rescue_for_diagnostics(
       double score_threshold_ratio,
-      double fundamental_score_ratio) noexcept;
+      double fundamental_score_ratio,
+      bool require_harmonic_cue = false) noexcept;
   void set_calibrated_collision_revalidation_for_diagnostics(
       bool enabled) noexcept {
     diagnostic_calibrated_collision_revalidation_ = enabled;
@@ -1789,6 +1790,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_correlation_shadow_only_{};
   double diagnostic_candidate_rescue_fundamental_ratio_{};
   bool diagnostic_candidate_rescue_enabled_{};
+  bool diagnostic_candidate_rescue_requires_cue_{};
   std::array<std::uint8_t, kMaxCandidates>
       diagnostic_candidate_rescue_string_masks_{};
   bool diagnostic_calibrated_collision_revalidation_{};

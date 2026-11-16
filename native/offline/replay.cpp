@@ -2963,8 +2963,15 @@ bool run_detector_replay(const WaveData& wave,
   }
   if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues == nullptr)
     return false;
+  const bool harmonic_rescue = candidate_admission_rescue != nullptr &&
+      candidate_admission_rescue->require_harmonic_cue;
+  if (harmonic_rescue && (diagnostic_odd_partial_cues == nullptr ||
+      diagnostic_cue_free_lane_reassignment || diagnostic_fundamental_admission))
+    return false;
   if (diagnostic_odd_partial_cues != nullptr) {
     if (diagnostic_fundamental_admission || config.profile_mode != ProfileMode::m3 ||
+        harmonic_rescue != (diagnostic_odd_partial_cues->kind() ==
+                           FrozenNoteCues::Kind::harmonic_admission) ||
         !diagnostic_odd_partial_cues->matches(wave.sample_rate, wave.mono_samples.size())) {
       return false;
     }
@@ -3285,7 +3292,8 @@ bool run_detector_replay(const WaveData& wave,
   if (candidate_admission_rescue != nullptr &&
       !detector.set_candidate_admission_rescue_for_diagnostics(
           candidate_admission_rescue->score_threshold_ratio,
-          candidate_admission_rescue->fundamental_score_ratio)) {
+          candidate_admission_rescue->fundamental_score_ratio,
+          candidate_admission_rescue->require_harmonic_cue)) {
     return false;
   }
   if (fretted_position_prior != nullptr &&

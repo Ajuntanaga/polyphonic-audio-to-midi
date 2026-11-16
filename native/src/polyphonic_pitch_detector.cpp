@@ -2794,7 +2794,8 @@ bool PolyphonicPitchDetector::demodulated_harmonic_tracks_for_diagnostics(
 
 bool PolyphonicPitchDetector::set_candidate_admission_rescue_for_diagnostics(
     double score_threshold_ratio,
-    double fundamental_score_ratio) noexcept {
+    double fundamental_score_ratio,
+    bool require_harmonic_cue) noexcept {
   if (!std::isfinite(score_threshold_ratio) ||
       !std::isfinite(fundamental_score_ratio) || score_threshold_ratio < 0.0 ||
       score_threshold_ratio > 1.0 || fundamental_score_ratio < 0.0 ||
@@ -2804,6 +2805,7 @@ bool PolyphonicPitchDetector::set_candidate_admission_rescue_for_diagnostics(
   diagnostic_candidate_rescue_score_ratio_ = score_threshold_ratio;
   diagnostic_candidate_rescue_fundamental_ratio_ = fundamental_score_ratio;
   diagnostic_candidate_rescue_enabled_ = true;
+  diagnostic_candidate_rescue_requires_cue_ = require_harmonic_cue;
   return true;
 }
 
@@ -5067,6 +5069,9 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
           static_cast<std::uint8_t>(lowest_note_ + candidate));
       const bool diagnostic_rescue =
           diagnostic_candidate_rescue_enabled_ &&
+          (!diagnostic_candidate_rescue_requires_cue_ ||
+           (diagnostic_odd_partial_cue_mask_[(lowest_note_ + candidate) / 64U] &
+            (std::uint64_t{1U} << ((lowest_note_ + candidate) % 64U))) != 0U) &&
           scores[candidate] >
               threshold * diagnostic_candidate_rescue_score_ratio_ &&
           fundamentals[candidate] >=
@@ -5144,6 +5149,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
   // those cues admit another pitch can change harmonic suppression and voice
   // history before any string correction, confounding this separate trial.
   const bool cue_pitch_admission = !diagnostic_cue_free_lane_reassignment_ &&
+      !diagnostic_candidate_rescue_requires_cue_ &&
       (diagnostic_odd_partial_cue_mask_[0U] != 0U ||
        diagnostic_odd_partial_cue_mask_[1U] != 0U);
   if ((diagnostic_fundamental_admission_ || cue_pitch_admission) && !narrow_profile) {

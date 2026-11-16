@@ -569,6 +569,7 @@ classify_adjacent_wrong_note_expected_presence(
 struct CandidateAdmissionRescuePolicy final {
   double score_threshold_ratio{};
   double fundamental_score_ratio{};
+  bool require_harmonic_cue{};
 };
 
 // Exact replay-only selector counterfactual. Values may only reduce the

@@ -22,6 +22,31 @@
 
 namespace {
 
+M3_TEST(offline_harmonic_cues_require_explicit_schema_and_complete_history) {
+  using Cues = m3::offline::FrozenNoteCues;
+  Cues cues;
+  const std::string header = "m3_harmonic_admission_cues_v1\t96000\t1024\n";
+  const std::string rows = "5120\t6144\t72\n";
+  M3_EXPECT_FALSE(cues.parse(header + rows, 96000U, 8192U));
+  M3_EXPECT_FALSE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n",
+      96000U, 8192U, 0U, Cues::Kind::harmonic_admission));
+  M3_EXPECT_FALSE(cues.parse(header + "4096\t5120\t72\n",
+      96000U, 8192U, 0U, Cues::Kind::harmonic_admission));
+  M3_EXPECT_TRUE(cues.parse(header + rows, 96000U, 8192U,
+      0U, Cues::Kind::harmonic_admission));
+  M3_EXPECT_TRUE(cues.kind() == Cues::Kind::harmonic_admission);
+  const auto allocations = m3::test::allocation_count();
+  M3_EXPECT_FALSE(cues.advance(5119U));
+  M3_EXPECT_TRUE(cues.advance(5120U));
+  M3_EXPECT_EQ(cues.mask()[1U], std::uint64_t{1U} << 8U);
+  M3_EXPECT_TRUE(cues.advance(6144U));
+  M3_EXPECT_EQ(cues.mask()[1U], 0U);
+  cues.reset();
+  M3_EXPECT_FALSE(cues.advance(5119U));
+  M3_EXPECT_TRUE(cues.advance(5120U));
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+}
+
 M3_TEST(offline_frozen_cues_are_causal_expiring_and_allocation_free) {
   m3::offline::FrozenNoteCues cues;
   M3_EXPECT_TRUE(cues.parse("m3_frozen_note_cues_v1\t96000\t1024\n"

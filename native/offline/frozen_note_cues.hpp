@@ -19,15 +19,20 @@ namespace m3::offline {
 // The fixed window is complete before begin; labels and string IDs are absent.
 class FrozenNoteCues final {
  public:
+  enum class Kind { odd_partial, harmonic_admission };
   bool parse(std::string_view text, std::uint32_t sample_rate,
-             std::uint64_t sample_count, std::uint32_t availability_delay_samples = 0U) {
+             std::uint64_t sample_count, std::uint32_t availability_delay_samples = 0U,
+             Kind kind = Kind::odd_partial) {
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
     native_.reset();
 #endif
     spans_.clear();
     reset();
     valid_ = false;
-    constexpr std::string_view header = "m3_frozen_note_cues_v1\t96000\t1024\n";
+    const std::string_view header = kind == Kind::harmonic_admission ?
+        "m3_harmonic_admission_cues_v1\t96000\t1024\n" :
+        "m3_frozen_note_cues_v1\t96000\t1024\n";
+    const std::uint64_t history = kind == Kind::harmonic_admission ? 4800U : 16384U;
     if (sample_rate != 96000U || sample_count == 0U || availability_delay_samples > 1024U ||
         text.substr(0U, header.size()) != header) return false;
     text.remove_prefix(header.size());
@@ -45,7 +50,7 @@ class FrozenNoteCues final {
         text.remove_prefix(length + 1U);
       }
       const auto begin = fields[0U], end = fields[1U], note = fields[2U];
-      if (note > 127U || begin < 16384U || begin >= end || end > sample_count ||
+      if (note > 127U || begin < history || begin >= end || end > sample_count ||
           begin % 1024U != 0U || end - begin != std::min<std::uint64_t>(1024U, sample_count - begin) ||
           begin < previous_begin || (begin == previous_begin && note <= previous_note) ||
           begin < previous_end[note] || spans_.size() >= 100000U) return false;
@@ -67,6 +72,7 @@ class FrozenNoteCues final {
       spans_.resize(retained);
     }
     sample_count_ = sample_count;
+    kind_ = kind;
     valid_ = true;
     return true;
   }
@@ -75,6 +81,7 @@ class FrozenNoteCues final {
   // Explicit offline opt-in. Preparation may allocate; observe/advance do not.
   bool prepare_native(std::uint32_t rate, std::uint64_t count) {
     valid_ = false;
+    kind_ = Kind::odd_partial;
     spans_.clear();
     native_ = std::make_unique<FrozenPartialCue>();
     reset();
@@ -100,6 +107,7 @@ class FrozenNoteCues final {
   bool matches(std::uint32_t rate, std::uint64_t count) const noexcept {
     return valid_ && rate == 96000U && count == sample_count_;
   }
+  Kind kind() const noexcept { return kind_; }
   void reset() noexcept {
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
     if (native_ != nullptr) native_->reset();
@@ -160,6 +168,7 @@ class FrozenNoteCues final {
   std::size_t cursor_{};
   std::uint64_t next_transition_{}, sample_count_{};
   bool valid_{};
+  Kind kind_{Kind::odd_partial};
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   std::unique_ptr<FrozenPartialCue> native_;
   std::array<std::uint64_t, 2U> pending_mask_{};

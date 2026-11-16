@@ -179,6 +179,7 @@ void usage(const char* program) {
       "--fine-window-min-spacing SECONDS] "
       "[--candidate-rescue-score-ratio 0..1 "
       "--candidate-rescue-fundamental-ratio 0..1] "
+      "[--candidate-rescue-harmonic-cues FILE] "
       "[--diagnostic-fretted-fixed-penalty 0..0.20 "
       "--diagnostic-fretted-per-fret-penalty 0..0.005] "
       "[--diagnostic-calibrated-selector-margin 0..1] "
@@ -312,6 +313,7 @@ int main(int argc, char** argv) {
   bool diagnostic_completion_midi_retention = false;
   bool diagnostic_suppressed_adjacent_admission = false;
   const char* diagnostic_odd_partial_cues_path = nullptr;
+  const char* candidate_rescue_harmonic_cues_path = nullptr;
   std::uint32_t diagnostic_cue_delay_samples = 0U;
   bool diagnostic_cue_delay_explicit = false;
   bool diagnostic_cue_free_lane_reassignment = false;
@@ -652,6 +654,8 @@ int main(int argc, char** argv) {
       diagnostic_retained_spectral_assignment = true;
     } else if (std::strcmp(argv[index], "--diagnostic-odd-partial-cues") == 0 && has_value) {
       diagnostic_odd_partial_cues_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--candidate-rescue-harmonic-cues") == 0 && has_value) {
+      candidate_rescue_harmonic_cues_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-cue-delay-samples") == 0 && has_value) {
       diagnostic_cue_delay_explicit = true;
       errno = 0;
@@ -876,6 +880,13 @@ int main(int argc, char** argv) {
     usage(argv[0]);
     return 2;
   }
+  if (candidate_rescue_harmonic_cues_path != nullptr &&
+      (!candidate_rescue_requested || diagnostic_odd_partial_cues_path != nullptr ||
+       diagnostic_native_partial_cues || diagnostic_cue_delay_explicit ||
+       diagnostic_cue_free_lane_reassignment || diagnostic_fundamental_admission)) {
+    std::fprintf(stderr, "m3_replay: harmonic cues require rescue ratios and no other cue policy\n");
+    return 2;
+  }
   const bool diagnostic_fretted_prior_requested =
       diagnostic_fretted_fixed_penalty >= 0.0 ||
       diagnostic_fretted_per_fret_penalty >= 0.0;
@@ -930,6 +941,17 @@ int main(int argc, char** argv) {
             std::string_view(reinterpret_cast<const char*>(cue_bytes.data()), cue_bytes.size()),
             wave.sample_rate, wave.mono_samples.size(), diagnostic_cue_delay_samples)) {
       std::fprintf(stderr, "m3_replay: invalid frozen odd-partial cues\n");
+      return 1;
+    }
+  }
+  if (candidate_rescue_harmonic_cues_path != nullptr) {
+    std::vector<std::uint8_t> cue_bytes;
+    if (!read_file(candidate_rescue_harmonic_cues_path, cue_bytes) || cue_bytes.empty() ||
+        !diagnostic_odd_partial_cues.parse(
+            std::string_view(reinterpret_cast<const char*>(cue_bytes.data()), cue_bytes.size()),
+            wave.sample_rate, wave.mono_samples.size(), 0U,
+            m3::offline::FrozenNoteCues::Kind::harmonic_admission)) {
+      std::fprintf(stderr, "m3_replay: invalid frozen harmonic admission cues\n");
       return 1;
     }
   }
@@ -1067,7 +1089,8 @@ int main(int argc, char** argv) {
   m3::offline::ReplayResult result;
   m3::offline::ReplayCoreTiming core_timing;
   m3::offline::CandidateAdmissionRescuePolicy candidate_rescue{
-      candidate_rescue_score_ratio, candidate_rescue_fundamental_ratio};
+      candidate_rescue_score_ratio, candidate_rescue_fundamental_ratio,
+      candidate_rescue_harmonic_cues_path != nullptr};
   const m3::offline::CandidateAdmissionRescuePolicy* candidate_rescue_pointer =
       candidate_rescue_requested ? &candidate_rescue : nullptr;
   m3::offline::FrettedPositionPriorPolicy fretted_position_prior{
@@ -1221,7 +1244,8 @@ int main(int argc, char** argv) {
           joint_ownership_ablation,
           partial_motion_stream != nullptr ? &partial_motion_trace : nullptr,
           diagnostic_fundamental_admission,
-          (diagnostic_odd_partial_cues_path != nullptr || diagnostic_native_partial_cues) ?
+          (diagnostic_odd_partial_cues_path != nullptr || diagnostic_native_partial_cues ||
+           candidate_rescue_harmonic_cues_path != nullptr) ?
               &diagnostic_odd_partial_cues : nullptr,
           diagnostic_cue_free_lane_reassignment,
           diagnostic_core_timing_path != nullptr ? &core_timing : nullptr,
