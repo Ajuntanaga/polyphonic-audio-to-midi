@@ -1,0 +1,71 @@
+{
+  "schema": "m3_ordinary_harmonic_competition_attribution_references_v1",
+  "focus_labels": [
+    10,
+    117
+  ],
+  "focus_cue": {
+    "available_sample": 2966527,
+    "candidate_note": 74
+  },
+  "screens": {
+    "tuning": {
+      "schema": "m3_ordinary_harmonic_attribution_references_v1",
+      "repository": "Ajuntanaga/m3-offload",
+      "run_id": 43801355401,
+      "source_commit": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
+      "worker_commit": "267482abe0e8bb12801099fa3d1c8b2133280f13",
+      "focus_labels": [
+        10,
+        117
+      ],
+      "report": {
+        "file": "ordinary-harmonic-tuning/report.json",
+        "bytes": 1487608,
+        "sha256": "de5b94520ad8e7ac0b33f03b0ae83cc9d23c1d9fd0502d97c4c02d25573e95c0"
+      },
+      "small_artifact": {
+        "id": 14197001980,
+        "name": "m3-report-43801355401-1",
+        "bytes": 95275,
+        "sha256": "d7763891e5ec3d3cdaad2223bea002fa47ed7f4205af000918cf8016eb234728"
+      },
+      "bulk_artifact": {
+        "id": 14196947132,
+        "name": "m3-evidence-43801355401-1",
+        "bytes": 46109948,
+        "sha256": "2bdb96996dd14879e3d370c8122b11a91792467712df40a0d491a57b3fcfb1bf"
+      },
+      "scope": "Attribute only the new completed tuning screen using saved cues and MIDI. Determine whether surviving major false admissions still use an unresolved parent or also occur with fitted/valid parent frequencies; compare target75. Keep the known label117 assignment loss separate. Zero audio or native replay."
+    },
+    "competition": {
+      "schema": "m3_ordinary_harmonic_attribution_references_v1",
+      "repository": "Ajuntanaga/m3-offload",
+      "run_id": 43958359342,
+      "source_commit": "901810163bce0487211db46d2d1a8b46ff250313",
+      "worker_commit": "58c1c80ae38a3c2ec1cfa3d8debf2ae432e29bb3",
+      "focus_labels": [
+        10,
+        117
+      ],
+      "report": {
+        "file": "ordinary-harmonic-competition/report.json",
+        "bytes": 1488310,
+        "sha256": "468e4c4ff8ae3ef1e4bba136c918c0ca3d88cb4c2c2cdfde51e191622003bae6"
+      },
+      "small_artifact": {
+        "id": 14274352206,
+        "name": "m3-report-43958359342-1",
+        "bytes": 95565,
+        "sha256": "974f8d22779fa4e1e1abf504d5e53504e8f5d4e8e30fea9c642d6173aa14a53d"
+      },
+      "bulk_artifact": {
+        "id": 14274642151,
+        "name": "m3-evidence-43958359342-1",
+        "bytes": 46198915,
+        "sha256": "572d133ee8065de445a9ee88615e2ad1d24520bd1eaaef375de165431e886a45"
+      }
+    }
+  },
+  "scope": "Compare all withheld causal admission cues and retained raw MIDI; contrast false74/lower62, target75 and lost label117. No audio or native replay; no rule change."
+}

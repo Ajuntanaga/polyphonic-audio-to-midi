@@ -209,8 +209,8 @@ def compare(events, labels, sample_count, context, focus_indices):
                 per_note_deltas=deltas, cases=list(cases.values())), changes, label_counts
 
 
-def analyze(reference_path, small_path, bulk_path, output):
-    reference = json.loads(reference_path.read_text())
+def load_screen(reference, small_path, bulk_path):
+    """Load pinned retained text for either standalone or paired attribution."""
     if reference['schema'] != 'm3_ordinary_harmonic_attribution_references_v1':
         raise ValueError('Unexpected attribution reference')
     for path, name in ((small_path, 'small_artifact'), (bulk_path, 'bulk_artifact')):
@@ -246,7 +246,11 @@ def analyze(reference_path, small_path, bulk_path, output):
                               dict(bytes=cue['evidence_bytes'], sha256=cue['evidence_sha256']))
     cues, observations = read_cues(cue_data, evidence_data, count, cue['cue_spans'])
     context = CueContext(cues)
-    result, changes, label_counts = compare(events, labels, count, context, reference['focus_labels'])
+    return dict(saved=saved, labels=labels, events=events, sample_count=count,
+                sample_rate=rate, cues=cues, observations=observations, context=context)
+
+
+def reproduce_metrics(saved, result, label_counts):
     for mode in MODES:
         lifecycle = saved['runs'][mode]['midi_lifecycle']
         for row in lifecycle['labels']:
@@ -255,6 +259,16 @@ def analyze(reference_path, small_path, bulk_path, output):
         for kind in KINDS:
             if result['totals'][mode].get(kind, 0) != lifecycle['output_safety']['counts'][kind + '_voice_samples']:
                 raise ValueError('Retained output safety does not reproduce screen')
+
+
+def analyze(reference_path, small_path, bulk_path, output):
+    reference = json.loads(reference_path.read_text())
+    screen = load_screen(reference, small_path, bulk_path)
+    count, rate = screen['sample_count'], screen['sample_rate']
+    cues, observations = screen['cues'], screen['observations']
+    result, changes, label_counts = compare(screen['events'], screen['labels'], count,
+                                            screen['context'], reference['focus_labels'])
+    reproduce_metrics(screen['saved'], result, label_counts)
     result['largest_added_false_spans'] = {kind: sorted(
         [row for row in changes if row['sign'] == 1 and row['classification'] == kind],
         key=lambda row: (-row['voice_samples'], row['start_sample'], row['note']))[:12]

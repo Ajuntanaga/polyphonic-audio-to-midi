@@ -1,0 +1,74 @@
+{
+  "schema": "m3_ordinary_harmonic_competition_attribution_checkpoint_v1",
+  "task": "ordinary-harmonic-competition-attribution",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "901810163bce0487211db46d2d1a8b46ff250313",
+  "source_commit": null,
+  "worker_base_commit": "58c1c80ae38a3c2ec1cfa3d8debf2ae432e29bb3",
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "result_final": false,
+  "created_at": "2026-11-16T22:25:04.512280+00:00",
+  "updated_at": "2026-11-16T22:25:04.512280+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-harmonic-competition-attribution-references-20261116.json",
+  "dataset": "ordinary",
+  "question": "Which admissions did the 44 withheld cues remove, does false74/lower62 survive, and are target75 recovery and label117 loss unchanged?",
+  "scope": {
+    "retained_run_ids": [
+      43801355401,
+      43958359342
+    ],
+    "focus_labels": [
+      10,
+      117
+    ],
+    "focus_cue": {
+      "available_sample": 2966527,
+      "candidate_note": 74
+    },
+    "native_replays": 0,
+    "audio_processed": false,
+    "policy_changed": false,
+    "bulk_inputs": "downloaded only on GitHub"
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-harmonic-competition-attribution",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "source_sha": null
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "prepared retained cue/output comparison",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-harmonic-competition-attribution-{run_id}",
+  "collection_status": "not_started",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "acceptance": [
+    "All retained archives and members match fixed hashes.",
+    "Shared labels, clocks and current MIDI retain identity; all saved label holds and output-safety totals reproduce.",
+    "Report all 44 withdrawals and fixed false74, target75 and label117 controls.",
+    "Do not interpret cue association as native branch causation."
+  ],
+  "limitations": [
+    "No new audio, native, timing, allocation, buffer or host measurement.",
+    "Both underlying policies remain rejected; attribution cannot promote either policy."
+  ],
+  "next_step": "Collect this saved-text comparison once, then choose the smallest falsifiable correction from its observed lower-support and shared-assignment evidence.",
+  "local_validation": {
+    "focused_synthetic_tests": 15,
+    "focused_synthetic_result": "passed",
+    "workflow_syntax": "passed",
+    "worker_bash_sections": 58,
+    "route_exclusions": "audio input download and native build/tests skipped",
+    "artifact_routes": "matched both pinned report/evidence pairs",
+    "diff_check": "passed"
+  }
+}
