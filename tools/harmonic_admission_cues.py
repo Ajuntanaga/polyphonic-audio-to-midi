@@ -133,6 +133,13 @@ def evaluate_candidate(window, prepared, note):
             base_error=float(residual @ residual) / prepared['energy'])
         result.update(base_pitches=fitted, base_partials=len(base_frequencies),
                       base_singular_ratio=float(parts[1][-1] / parts[1][0]))
+    return dict(result, **evaluate_partial_support(prepared, frequencies))
+
+
+def evaluate_partial_support(prepared, frequencies):
+    """Measure separate partial support conditional on an already fitted base."""
+    result = dict(admitted=False)
+    train = CONFIG['train_samples']
     candidate = design(frequencies, train + CONFIG['predict_samples'])[:, 1:]
     ratios, passing, added = independent_pairs(prepared['base'], candidate, train, prepared['factor'])
     result.update(pair_singular_ratios=ratios, independent_harmonics=[i + 1 for i in passing])
@@ -213,7 +220,7 @@ def causal_states(stream, samples):
         raise ValueError('Incomplete shadow outcome length')
 
 
-def generate(audio, outcome_path, cue_path, evidence_path, deadline):
+def generate(audio, outcome_path, cue_path, evidence_path, deadline, decision=None):
     statuses, notes = Counter(), Counter()
     windows = observations = admitted = 0
     with outcome_path.open() as states, cue_path.open('w') as cues, gzip.open(evidence_path, 'wt') as evidence:
@@ -227,7 +234,8 @@ def generate(audio, outcome_path, cue_path, evidence_path, deadline):
                 continue
             window, prepared = prediction_window(audio, available, state)
             for note in sorted(eligible):
-                row = evaluate_candidate(window, prepared, note)
+                row = (evaluate_candidate(window, prepared, note) if decision is None
+                       else decision(window, prepared, note, state))
                 statuses[row['status']] += 1
                 observations += 1
                 if row['admitted']:

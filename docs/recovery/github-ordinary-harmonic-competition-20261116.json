@@ -1,0 +1,142 @@
+{
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+  "dataset": "ordinary",
+  "workflow": "m3-offload.yml",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "prerequisite_corpus": "docs/recovery/github-sample-observation-corpus-20261116.json",
+  "acceptance": [
+    "All four inputs and saved OFF/current scored TSV/raw MIDI plus current outcome retain exact identity.",
+    "Target label10 note75 gains exact held samples and snapshot matches with a new note-on.",
+    "Every ordinary label retains snapshot matches and exact held samples; no false-output or raw-conflict growth.",
+    "No widening or promotion on rejection; passing only authorizes consideration of a bounded native implementation."
+  ],
+  "schema": "m3_ordinary_harmonic_competition_checkpoint_v1",
+  "task": "ordinary-harmonic-competition",
+  "source_base_commit": "89e80beb0f8429975ae728f6b1bcdbc532de7d6a",
+  "source_commit": null,
+  "worker_commit": "58c1c80ae38a3c2ec1cfa3d8debf2ae432e29bb3",
+  "run_id": null,
+  "status": "prepared",
+  "result_final": false,
+  "created_at": "2026-11-16T21:15:20.502024+00:00",
+  "updated_at": "2026-11-16T21:15:20.502024+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-harmonic-competition-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-harmonic-competition-references-20261116.json",
+  "question": "Can independently supported lower-note competition suppress false octave admissions while preserving target label10/note75 and every ordinary passage?",
+  "stage": "Synthetic and runner checks passed; one bounded GHA screen pending dispatch",
+  "collection_status": "not started",
+  "local_dir_template": "build/github-results/ordinary-harmonic-competition-{run_id}",
+  "dispatch_inputs": {
+    "source_sha": null,
+    "task": "ordinary-harmonic-competition",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10"
+  },
+  "source_runs": {},
+  "scope": {
+    "native_replays": 3,
+    "conditions": [
+      "reference-off",
+      "current-on",
+      "harmonic-admission-on"
+    ],
+    "block_samples": 512,
+    "maximum_seconds": 2400,
+    "sample_rate": 96000,
+    "sample_count": 10689600,
+    "labels_used_by_model": false,
+    "baseline": "Frozen current-detector shadow, independent of trial feedback",
+    "config": {
+      "train_samples": 3840,
+      "predict_samples": 960,
+      "stride_samples": 1024,
+      "maximum_hz": 3000,
+      "candidate_harmonics": 4,
+      "maximum_base_notes": 8,
+      "svd_relative_cutoff": 1e-06,
+      "a4_hz": 440,
+      "baseline_frequency": "saved valid phase; otherwise bounded tuning from training audio with proposed partials",
+      "candidate_frequency": "equal temperament",
+      "amplitude": "constant sine/cosine coefficients plus DC",
+      "lowest_note": 32,
+      "highest_note": 84,
+      "minimum_independent_pairs": 2,
+      "minimum_supported_pairs": 2,
+      "harmonic_support": "leave-one-pair-out held-out prediction gain above numerical guard",
+      "pair_singular_ratio_floor": 0.001,
+      "full_singular_ratio_floor": 0.0001,
+      "numerical_guard_factor": 64,
+      "score_ratio": 0.2,
+      "fundamental_ratio": 0.8,
+      "selection": "all eligible below-threshold pitches at the past-only fixed cadence",
+      "baseline": "frozen current detector shadow; not candidate replay feedback",
+      "parent_tuning": {
+        "method": "training-only variable projection for phase-invalid parents, conditional on proposed partials",
+        "bounds_cents": 50.0,
+        "max_evaluations": 12,
+        "tolerance": 1.4901161193847656e-08,
+        "partials": "fixed harmonic indices selected at the seed; frequencies may cross 3000Hz",
+        "failure": "withhold admission on rank loss, boundary, or nonconvergence"
+      },
+      "lower_competition": {
+        "selection": "observed unowned lower candidates at training cutoff; no labels",
+        "score_ratio": 0.2,
+        "fundamental_ratio": 0.2,
+        "band_score": 0.9,
+        "band_fund": 0.8,
+        "maximum_candidates": 8,
+        "support": "two independent supported pairs conditional on owned notes and upper partials",
+        "comparison": "upper must survive each supported lower full harmonic series",
+        "overflow": "withhold; never truncate candidates or owned notes",
+        "lower_frequency": "valid saved phase; otherwise equal temperament for support, training-only fit for comparison"
+      }
+    },
+    "target": {
+      "label_index": 10,
+      "midi_note": 75,
+      "string_mask": 128,
+      "start_sample": 163306,
+      "end_sample": 235200
+    },
+    "rule_change": "After original admission, condition on every independently supported unowned lower candidate observed at the training cutoff; retain the upper only if it survives each full lower harmonic model. Lower hypotheses alone cannot veto. No labels or future state select candidates; no threshold sweep."
+  },
+  "local_validation": {
+    "focused_tests": {
+      "result": "pass",
+      "count": 33,
+      "seconds": 3.538,
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -B -m unittest tests.test_harmonic_admission_cues tests.test_harmonic_competition_cues tests.test_portable_ordinary_harmonic_admission"
+    },
+    "worker_yaml": "parsed",
+    "worker_bash_run_blocks": {
+      "count": 57,
+      "result": "pass"
+    },
+    "source_and_worker_diff_check": "pass",
+    "native_execution": "none"
+  },
+  "synthetic_controls": [
+    "Omitted lower62 harmonics cause original false74 admission; supported lower62 vetoes it.",
+    "Independent upper75 survives lower62 competition.",
+    "Pure upper74 cannot be vetoed by an unsupported lower62 hypothesis.",
+    "Spurious lower52 cannot veto upper74.",
+    "Selection uses only causal state and native evidence floors; mismatched/future state is refused.",
+    "Candidate overflow withholds without truncation.",
+    "Generation uses frozen shadow state and future-only cues."
+  ],
+  "limitations": [
+    "This offline screen cannot establish native deadlines, processing allocations, buffers or external host/device delivery.",
+    "Lower support uses equal temperament if saved phase is invalid; detuned lower candidates may be missed.",
+    "Shared assignment can still lose a passage after any added note; all passage losses reject the screen.",
+    "Recorded lower62 is an observed alternative explanation, not established source separation."
+  ],
+  "next_step": "Dispatch exactly one fixed ordinary screen on GitHub Actions; collect its small report once. Require target recovery with zero passage loss or false-output growth and exact saved OFF/current identities. Do not widen or promote a rejected trial."
+}

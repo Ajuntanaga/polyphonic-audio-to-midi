@@ -9,10 +9,11 @@ from unittest.mock import patch
 
 from tools import portable_calibrated_midi_retention_corpus as shared
 from tools import portable_ordinary_harmonic_admission as trial
+from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
-    def exercise(self, *, change=None, drift=None, failure=None):
+    def exercise(self, *, change=None, drift=None, failure=None, competition=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             corpus = root / 'corpus'
@@ -71,7 +72,8 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
 
             references = dict(schema=trial.REFERENCE_SCHEMA, dataset='ordinary',
                 settings=trial.SETTINGS, block_samples=512, source=source,
-                reference_flags=trial.REFERENCE_FLAGS, inputs=inputs, config=trial.CONFIG,
+                reference_flags=trial.REFERENCE_FLAGS, inputs=inputs,
+                config=competing.CONFIG if competition else trial.CONFIG,
                 target=trial.TARGET, runs={},
                 current_outcome_sha256=hashlib.sha256(b'shadow fixture').hexdigest())
             for mode in trial.REFERENCE_FLAGS:
@@ -84,7 +86,9 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
             if drift == 'outcome':
                 references['current_outcome_sha256'] = 'changed'
             if drift == 'config':
-                references['config'] = dict(trial.CONFIG, minimum_independent_pairs=1)
+                references['config'] = dict(references['config'], minimum_independent_pairs=1)
+            if drift == 'competition':
+                references['config'] = trial.CONFIG
             reference_path = root / 'references.json'
             reference_path.write_text(json.dumps(references))
             if drift == 'input':
@@ -131,13 +135,13 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                   patch.object(trial, 'read_replay', side_effect=parsed),
                   patch.object(trial, 'analyze_midi', side_effect=lifecycle),
                   patch.object(trial, 'load_audio', return_value=object()),
-                  patch.object(trial, 'generate', side_effect=generate),
+                  patch.object(competing if competition else trial, 'generate', side_effect=generate),
                   patch.object(trial, 'compress_trace_window', side_effect=compress)):
                 if drift or failure:
                     with self.assertRaises((ValueError, TimeoutError, subprocess.CalledProcessError)):
-                        trial.run(binary, corpus, manifest, reference_path, output)
+                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition)
                 else:
-                    trial.run(binary, corpus, manifest, reference_path, output)
+                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
@@ -154,6 +158,17 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
         self.assertTrue(report['reference_identity_pass'])
         self.assertTrue(report['target_result']['improved'])
         self.assertFalse(report['comparison']['inference_identity_required'])
+
+    def test_competition_selects_its_generator_and_frozen_policy(self):
+        report, commands, generated = self.exercise(competition=True)
+        self.assertEqual(len(commands), 3)
+        self.assertEqual(len(generated), 1)
+        self.assertEqual(report['config'], competing.CONFIG)
+        self.assertTrue(report['bounded_screen_pass'])
+        report, commands, generated = self.exercise(competition=True, drift='competition')
+        self.assertEqual(commands, [])
+        self.assertEqual(generated, [])
+        self.assertFalse(report['bounded_screen_pass'])
 
     def test_target_without_new_hold_or_snapshot_gain_is_rejected(self):
         for missing in ('held', 'snapshot'):
@@ -245,6 +260,10 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
         self.assertEqual(selected['current_outcome_sha256'], partial['replay_reference']['outcome_sha256'])
         self.assertEqual(selected['inputs'], partial['inputs'])
         self.assertEqual(selected['config'], trial.CONFIG)
+        competition = json.loads((root / 'ordinary-harmonic-competition-references-20261116.json').read_text())
+        for key in ('runs', 'inputs', 'current_outcome_sha256', 'source', 'target'):
+            self.assertEqual(competition[key], selected[key])
+        self.assertEqual(competition['config'], competing.CONFIG)
 
 
 if __name__ == '__main__':

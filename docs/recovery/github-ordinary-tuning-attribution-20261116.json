@@ -4,13 +4,13 @@
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "result_final": false,
+  "source_commit": "89e80beb0f8429975ae728f6b1bcdbc532de7d6a",
+  "worker_commit": "ce2867d76c5fe35498549ba5742b6675a40d67a8",
+  "run_id": 43954390036,
+  "status": "completed",
+  "result_final": true,
   "created_at": "2026-11-16T20:51:58.014777+00:00",
-  "updated_at": "2026-11-16T20:51:58.014777+00:00",
+  "updated_at": "2026-11-16T21:02:47.037726+00:00",
   "checkpoint": "docs/recovery/github-ordinary-tuning-attribution-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-tuning-attribution-references-20261116.json",
   "dataset": "ordinary",
@@ -31,14 +31,15 @@
     "task": "ordinary-tuning-attribution",
     "dataset": "ordinary",
     "note": "75",
-    "label_index": "10"
+    "label_index": "10",
+    "source_sha": "89e80beb0f8429975ae728f6b1bcdbc532de7d6a"
   },
   "workflow": "m3-offload.yml",
-  "stage": "prepared retained tuning attribution",
+  "stage": "final retained attribution; omitted-parent mechanism reproduced",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-tuning-attribution-{run_id}",
-  "collection_status": "not dispatched",
+  "collection_status": "collected_once_hash_verified",
   "promotion_accepted": false,
   "installed_output_changed": false,
   "scoreboard_changed": false,
@@ -53,7 +54,7 @@
     "No new audio, native, timing, allocation, buffer or host measurement.",
     "Attribution chooses a falsifiable model correction; it cannot accept the rejected tuning policy."
   ],
-  "next_step": "Use the surviving case to choose one synthetic mechanism check; do not repeat an unchanged corpus or tune thresholds.",
+  "next_step": "Test omitted lower-candidate competition using only the saved causal detector state, first on synthetic controls, then one bounded ordinary GHA screen. Keep shared-assignment and false-output safety gates separate.",
   "pre_dispatch_pending_runs": [],
   "local_validation": {
     "workflow_syntax": "passed",
@@ -62,5 +63,152 @@
     "artifact_routes": "all three branches correct",
     "attribution_runner": "unchanged; worker runs existing synthetic contracts",
     "diff_check": "passed"
+  },
+  "dispatch_attempt": {
+    "started_at": "2026-11-16T20:53:09.511860+00:00",
+    "state": "sent",
+    "finished_at": "2026-11-16T20:53:18.923053+00:00",
+    "returncode": 0
+  },
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43954390036",
+  "conclusion": "success",
+  "local_dir": "build/github-results/ordinary-tuning-attribution-43954390036",
+  "observed_run": {
+    "databaseId": 43954390036,
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "ce2867d76c5fe35498549ba5742b6675a40d67a8",
+    "displayTitle": "ordinary-tuning-attribution / ordinary / 89e80beb0f8429975ae728f6b1bcdbc532de7d6a",
+    "completedAt": "2026-11-16T20:53:45Z",
+    "observed_at": "2026-11-16T20:55:09.806705+00:00"
+  },
+  "collection_receipt": {
+    "collected_at": "2026-11-16T20:55:32.233832+00:00",
+    "artifact": {
+      "id": 14272530637,
+      "node_id": "MDg6QXJ0aWZhY3QxNDI3MjUzMDYzNw==",
+      "name": "m3-report-43954390036-1",
+      "size_in_bytes": 33759,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14272530637",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14272530637/zip",
+      "expired": false,
+      "digest": "sha256:c039c70059e2c51247b22bbbe69db26dba10d186a1d92d4dec37dd7d892344ef",
+      "created_at": "2026-11-16T20:53:38Z",
+      "updated_at": "2026-11-16T20:53:38Z",
+      "expires_at": "2026-11-30T20:53:36Z",
+      "workflow_run": {
+        "id": 43954390036,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "ce2867d76c5fe35498549ba5742b6675a40d67a8"
+      }
+    },
+    "archive_bytes": 33759,
+    "archive_sha256": "c039c70059e2c51247b22bbbe69db26dba10d186a1d92d4dec37dd7d892344ef",
+    "bulk_artifact": {
+      "id": 14271825792,
+      "node_id": "MDg6QXJ0aWZhY3QxNDI3MTgyNTc5Mg==",
+      "name": "m3-evidence-43954390036-1",
+      "size_in_bytes": 38150,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14271825792",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14271825792/zip",
+      "expired": false,
+      "digest": "sha256:9b1fb3069c653054e4551fdafa01bb77dac1da78678fde5476e78711db3b0f05",
+      "created_at": "2026-11-16T20:53:40Z",
+      "updated_at": "2026-11-16T20:53:40Z",
+      "expires_at": "2026-11-23T20:53:38Z",
+      "workflow_run": {
+        "id": 43954390036,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "ce2867d76c5fe35498549ba5742b6675a40d67a8"
+      }
+    },
+    "bulk_collected": false
+  },
+  "report": "build/github-results/ordinary-tuning-attribution-43954390036/ordinary-tuning-attribution/report.json",
+  "report_sha256": "5cfd2571c273f819c32be1dd2a080b7420b7041050a782c4856ba7e5ba085bca",
+  "collected_verdict": "build/github-results/ordinary-tuning-attribution-43954390036/collected-verdict.json",
+  "result": {
+    "schema": "m3_ordinary_tuning_attribution_collected_verdict_v1",
+    "run_id": "43954390036",
+    "source_commit": "89e80beb0f8429975ae728f6b1bcdbc532de7d6a",
+    "worker_commit": "ce2867d76c5fe35498549ba5742b6675a40d67a8",
+    "final": true,
+    "workflow_conclusion": "success",
+    "input_identity_pass": true,
+    "saved_metric_reproduction_pass": true,
+    "observations": 3456,
+    "cues": 810,
+    "output_difference_rows": 106,
+    "totals": {
+      "current-on": {
+        "matched": 8721923,
+        "false_wrong_string": 4953010,
+        "false_wrong_note": 8222039,
+        "false_gap": 3761781
+      },
+      "harmonic-admission-on": {
+        "matched": 9019488,
+        "false_wrong_string": 5280441,
+        "false_wrong_note": 8351198,
+        "false_gap": 3882762
+      }
+    },
+    "change_totals": {
+      "matched": {
+        "added": 299101,
+        "removed": 1536
+      },
+      "false_wrong_note": {
+        "added": 148423,
+        "removed": 19264
+      },
+      "false_wrong_string": {
+        "added": 334727,
+        "removed": 7296
+      },
+      "false_gap": {
+        "added": 126165,
+        "removed": 5184
+      }
+    },
+    "target": {
+      "label_index": 10,
+      "note": 75,
+      "before_exact_samples": 0,
+      "after_exact_samples": 58433,
+      "annotated_samples": 71894
+    },
+    "lost_label": {
+      "label_index": 117,
+      "note": 60,
+      "before_exact_samples": 41409,
+      "after_exact_samples": 40257,
+      "before_pitch_present_samples": 62081,
+      "after_pitch_present_samples": 60353
+    },
+    "largest_wrong_note": {
+      "note": 74,
+      "voice": 6,
+      "added_samples": 42433,
+      "base_notes": [
+        40
+      ],
+      "base_phase_valid": true,
+      "lower_candidate_note": 62,
+      "training_cutoff": 2965567
+    },
+    "synthetic_falsifier": "build/github-results/ordinary-tuning-attribution-source-checks/synthetic-omitted-parent-falsifier.json",
+    "causal_candidate_evidence": "build/github-results/ordinary-tuning-attribution-source-checks/retained-lower-candidates.json",
+    "interpretation": "Omitted lower-note harmonics can cause a false upper-note admission even with exact tuning. This mechanism is reproduced synthetically; it is not proof of the recording source. Candidate62 is present in the saved pre-prediction detector state. The label117 lane loss is separate, and cue association does not prove its native branch cause.",
+    "native_replays": 0,
+    "audio_processed": false,
+    "installed_output_changed": false,
+    "scoreboard_changed": false,
+    "promotion_accepted": false,
+    "next_step": "Test omitted lower-candidate competition using only the saved causal detector state, first on synthetic controls, then one bounded ordinary GHA screen. Keep shared-assignment and false-output safety gates separate."
   }
 }

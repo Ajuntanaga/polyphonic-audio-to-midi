@@ -30,11 +30,11 @@ TARGET = dict(label_index=10, midi_note=75, string_mask=128,
               start_sample=163306, end_sample=235200)
 
 
-def verify_references(reference, manifest, corpus):
+def verify_references(reference, manifest, corpus, config=CONFIG):
     if (reference['schema'] != REFERENCE_SCHEMA or reference['dataset'] != 'ordinary'
             or reference['settings'] != SETTINGS or reference['block_samples'] != 512
             or reference['reference_flags'] != REFERENCE_FLAGS
-            or reference['config'] != CONFIG or reference['target'] != TARGET
+            or reference['config'] != config or reference['target'] != TARGET
             or set(reference['inputs']) != INPUTS
             or set(reference['runs']) != {OFF, CURRENT}):
         raise ValueError('Invalid frozen harmonic-admission reference selection')
@@ -82,9 +82,13 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
+    config, cue_generate = CONFIG, generate
+    if competition:
+        from tools import harmonic_competition_cues
+        config, cue_generate = harmonic_competition_cues.CONFIG, harmonic_competition_cues.generate
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     manifest = json.loads(manifest_path.read_text())
@@ -94,7 +98,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400)
         source=manifest.get('source', {}), reference_source=references['source'],
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
-        dataset='ordinary', settings=SETTINGS, block_samples=512, config=CONFIG,
+        dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
         target=TARGET, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
@@ -109,8 +113,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400)
     cue_path = output / 'ordinary-harmonic-admission-cues.tsv'
     evidence_path = output / 'ordinary-harmonic-admission-evidence.jsonl.gz'
     conditions = ((OFF, ()), (CURRENT, (COLLISION,)), (TRIAL, (COLLISION,
-        '--candidate-rescue-score-ratio', str(CONFIG['score_ratio']),
-        '--candidate-rescue-fundamental-ratio', str(CONFIG['fundamental_ratio']),
+        '--candidate-rescue-score-ratio', str(config['score_ratio']),
+        '--candidate-rescue-fundamental-ratio', str(config['fundamental_ratio']),
         '--candidate-rescue-harmonic-cues', str(cue_path.resolve()))))
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
@@ -123,7 +127,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400)
     save()
     cached = {}
     try:
-        report['verified_inputs'] = verify_references(references, manifest, corpus)
+        report['verified_inputs'] = verify_references(references, manifest, corpus, config)
         for mode, flags in conditions:
             stem = 'ordinary-' + mode + '-512'
             report.update(stage='bounded replay', current_run=stem)
@@ -168,8 +172,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400)
                 report.update(stage='generate past-only frozen-shadow cues')
                 save()
                 started = time.monotonic()
-                cue_summary = generate(load_audio(corpus / 'ordinary.wav'), outcome,
-                                       cue_path, evidence_path, deadline)
+                cue_summary = cue_generate(load_audio(corpus / 'ordinary.wav'), outcome,
+                                           cue_path, evidence_path, deadline)
                 cue_summary.update(elapsed_seconds=time.monotonic() - started,
                     complete=True, cue_sha256=digest(cue_path), cue_bytes=cue_path.stat().st_size,
                     evidence_sha256=digest(evidence_path), evidence_bytes=evidence_path.stat().st_size)
@@ -211,8 +215,11 @@ def main():
     for flag in ('binary', 'corpus', 'manifest', 'references', 'output'):
         parser.add_argument('--' + flag, type=Path, required=True)
     parser.add_argument('--max-seconds', type=int, default=2400)
+    parser.add_argument('--competition', action='store_true',
+                        help='Condition admission on independently supported unowned lower notes')
     args = parser.parse_args()
-    run(args.binary, args.corpus, args.manifest, args.references, args.output, args.max_seconds)
+    run(args.binary, args.corpus, args.manifest, args.references, args.output,
+        args.max_seconds, competition=args.competition)
 
 
 if __name__ == '__main__':
