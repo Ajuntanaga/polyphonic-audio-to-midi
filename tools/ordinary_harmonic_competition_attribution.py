@@ -3,9 +3,11 @@ import argparse
 from collections import Counter
 from datetime import datetime, timezone
 import json
+import hashlib
 import math
 import os
 from pathlib import Path
+import zipfile
 
 from tools import ordinary_harmonic_attribution as attribution
 
@@ -16,6 +18,32 @@ CURRENT, TRIAL = attribution.CURRENT, attribution.TRIAL
 
 def observation_key(row):
     return row['available_sample'], row['candidate_note']
+
+
+def read_input_manifest(small_path, saved):
+    with zipfile.ZipFile(small_path) as archive:
+        raw = archive.read('runtime-manifest.json')
+    if hashlib.sha256(raw).hexdigest() != saved['input_manifest_sha256']:
+        raise ValueError('Retained runtime manifest hash differs')
+    manifest = json.loads(raw)
+    for key in ('commit', 'run_id'):
+        if str(manifest['source'][key]) != str(saved['source'][key]):
+            raise ValueError('Retained runtime manifest source differs: ' + key)
+    return manifest
+
+
+def require_shared_inputs(before, after):
+    if before['files'] != after['files']:
+        raise ValueError('Shared input file identities differ')
+    for key in ('input_release', 'input_bundle_sha256', 'original_input_manifest_sha256'):
+        if before['source'][key] != after['source'][key]:
+            raise ValueError('Shared input provenance differs: ' + key)
+
+
+def load_screen(reference, small_path, bulk_path):
+    screen = attribution.load_screen(reference, small_path, bulk_path)
+    screen['input_manifest'] = read_input_manifest(small_path, screen['saved'])
+    return screen
 
 
 def compare_parent_inputs(left, right):
@@ -90,8 +118,7 @@ def require_shared_reference(screens):
     if (left['saved']['runs'][CURRENT]['midi_trace']['raw_sha256'] !=
             right['saved']['runs'][CURRENT]['midi_trace']['raw_sha256']):
         raise ValueError('Shared current MIDI bytes differ')
-    if left['saved']['input_manifest_sha256'] != right['saved']['input_manifest_sha256']:
-        raise ValueError('Shared input manifest differs')
+    require_shared_inputs(left['input_manifest'], right['input_manifest'])
     if (left['saved']['runs'][CURRENT]['outcome_sha256'] !=
             right['saved']['runs'][CURRENT]['outcome_sha256']):
         raise ValueError('Shared causal detector outcome differs')
@@ -183,7 +210,7 @@ def paired_analysis(screens, focus_labels, focus_cue):
     target_decisions = [row for row in new.values() if row['candidate_note'] == target['midi_note']
         and target['start_sample'] <= row['available_sample'] + 1 < target['end_sample']]
     result = dict(shared_current_identity_pass=True, saved_metric_reproduction_pass=True,
-        shared_input_manifest_and_causal_outcome_pass=True, original_decision_statuses_identical=True,
+        shared_input_files_and_causal_outcome_pass=True, original_decision_statuses_identical=True,
         fitted_parent_output_differences=dict(observations=len(fit_differences),
             maximum_absolute_cents=max((abs(parent['difference_cents']) for row in fit_differences
                 for parent in row['parents']), default=0.), rows=fit_differences),
@@ -207,7 +234,7 @@ def analyze(reference_path, archives, output):
     reference = json.loads(reference_path.read_text())
     if reference['schema'] != 'm3_ordinary_harmonic_competition_attribution_references_v1':
         raise ValueError('Unexpected paired attribution reference')
-    screens = {name: attribution.load_screen(reference['screens'][name], *archives[name]) for name in SCREENS}
+    screens = {name: load_screen(reference['screens'][name], *archives[name]) for name in SCREENS}
     result, withheld, changes = paired_analysis(screens, reference['focus_labels'], reference['focus_cue'])
     output.mkdir(parents=True, exist_ok=True)
     for name, rows in (('withheld-cues', withheld), ('paired-output-changes', changes)):

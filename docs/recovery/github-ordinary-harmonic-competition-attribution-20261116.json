@@ -3,14 +3,14 @@
   "task": "ordinary-harmonic-competition-attribution",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_base_commit": "9152f953e77c9ac7a6b298091b3ed4d815d1cdff",
+  "source_base_commit": "e1b6969c57d56a5359ed1b9243eb6fd616c426fc",
   "source_commit": null,
   "worker_base_commit": "58c1c80ae38a3c2ec1cfa3d8debf2ae432e29bb3",
   "worker_commit": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4",
-  "status": "replacement_prepared",
+  "status": "repair_ready",
   "result_final": false,
   "created_at": "2026-11-16T22:25:04.512280+00:00",
-  "updated_at": "2026-11-16T22:32:13.816727+00:00",
+  "updated_at": "2026-11-16T22:36:37.814227+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-competition-attribution-references-20261116.json",
   "dataset": "ordinary",
@@ -38,10 +38,10 @@
     "dataset": "ordinary",
     "note": "75",
     "label_index": "10",
-    "source_sha": null
+    "source_sha": "pending repaired source commit"
   },
   "workflow": "m3-offload.yml",
-  "stage": "separate fitted outputs from frozen input identity, then run one replacement saved-text analysis",
+  "stage": "input file identity guard repaired; ready for one replacement",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-harmonic-competition-attribution-{run_id}",
@@ -62,13 +62,14 @@
   ],
   "next_step": "Dispatch one replacement at the repaired source, collect its small report once, and choose the narrow next correction from the paired evidence.",
   "local_validation": {
-    "focused_synthetic_tests": 17,
+    "focused_synthetic_tests": 19,
     "focused_synthetic_result": "passed",
     "workflow_syntax": "passed",
     "worker_bash_sections": 58,
     "route_exclusions": "audio input download and native build/tests skipped",
     "artifact_routes": "matched both pinned report/evidence pairs",
-    "diff_check": "passed"
+    "diff_check": "passed",
+    "retained_input_manifest_check": "passed: both saved manifests match their report hash and run provenance; all four input file hashes and original bundle provenance are identical"
   },
   "pre_dispatch_pending_runs": [],
   "source_workflow_runs": [
@@ -78,6 +79,14 @@
       "headSha": "9152f953e77c9ac7a6b298091b3ed4d815d1cdff",
       "status": "completed",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43969920170",
+      "workflowName": "Portable offline replay"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43971002315,
+      "headSha": "e1b6969c57d56a5359ed1b9243eb6fd616c426fc",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43971002315",
       "workflowName": "Portable offline replay"
     }
   ],
@@ -126,12 +135,57 @@
       "result_final": false,
       "failure": "Original causal decision differs: the guard also compared independently fitted parent frequencies as immutable inputs.",
       "analysis_result": false
+    },
+    {
+      "run_id": 43971072792,
+      "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43971072792",
+      "source_commit": "e1b6969c57d56a5359ed1b9243eb6fd616c426fc",
+      "worker_commit": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4",
+      "local_dir": "build/github-results/ordinary-harmonic-competition-attribution-43971072792",
+      "dispatch_attempt": {
+        "started_at": "2026-11-16T22:32:42.600077+00:00",
+        "state": "sent",
+        "returncode": 0,
+        "finished_at": "2026-11-16T22:32:44.801111+00:00"
+      },
+      "status": "completed",
+      "conclusion": "failure",
+      "collection_status": "collected_once_hash_verified",
+      "collection_receipt": {
+        "collected_at": "2026-11-16T22:33:29.449717+00:00",
+        "artifact": {
+          "id": 14277129997,
+          "node_id": "MDg6QXJ0aWZhY3QxNDI3NzEyOTk5Nw==",
+          "name": "m3-report-43971072792-1",
+          "size_in_bytes": 1389,
+          "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14277129997",
+          "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14277129997/zip",
+          "expired": false,
+          "digest": "sha256:06467724daf488a2b6cc959d43f554c3e8d19da4582ccbc2803272cb13a925fe",
+          "created_at": "2026-11-16T22:33:07Z",
+          "updated_at": "2026-11-16T22:33:07Z",
+          "expires_at": "2026-11-30T22:33:06Z",
+          "workflow_run": {
+            "id": 43971072792,
+            "repository_id": 1450767070,
+            "head_repository_id": 1450767070,
+            "head_branch": "main",
+            "head_sha": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4"
+          }
+        },
+        "archive_bytes": 1389,
+        "archive_sha256": "06467724daf488a2b6cc959d43f554c3e8d19da4582ccbc2803272cb13a925fe",
+        "hash_verified": true
+      },
+      "result_final": false,
+      "analysis_result": false,
+      "failure": "Shared input manifest differs: per-run source commit and run ID were incorrectly treated as shared input identity; all input file hashes are identical."
     }
   ],
   "repair": {
     "fitted_frequency_handling": "Record all independently fitted parent frequency differences and their maximum absolute cents.",
     "strict_identity_checks": [
-      "input manifest",
+      "input files and original bundle provenance; each per-run manifest hash and run provenance verified separately",
       "current detector outcome",
       "current raw MIDI",
       "labels and sample clocks",
@@ -140,6 +194,7 @@
       "original decision statuses"
     ],
     "saved_phase_frequency": "Still exact; only invalid-phase fitted frequencies are derived outputs.",
-    "measured_fit_differences": "pending replacement result"
+    "measured_fit_differences": "pending replacement result",
+    "runtime_manifest_handling": "Allow distinct source commit and run ID; compare exact files and original input release/bundle/manifest provenance."
   }
 }

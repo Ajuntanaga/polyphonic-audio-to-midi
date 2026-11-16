@@ -37,8 +37,11 @@ def make_archives(root):
     for index, (name, rows) in enumerate(zip(subject.SCREENS, decisions())):
         small, bulk = root / (name + '-small.zip'), root / (name + '-bulk.zip')
         trial = events(common + ([(1536, 2560, 72, 4)] if name == 'tuning' else []))
+        manifest = json.dumps(dict(files={'ordinary.wav': dict(bytes=8192, sha256='shared-audio')},
+            source=dict(commit=str(index) * 40, run_id=str(index + 1), input_release='shared',
+                        input_bundle_sha256='shared-bundle', original_input_manifest_sha256='shared-manifest'))).encode()
         saved = dict(final=True, source=dict(commit=str(index) * 40, run_id=index + 1),
-                     input_manifest_sha256='shared-input', runs={})
+                     input_manifest_sha256=spec(manifest)['sha256'], runs={})
         with zipfile.ZipFile(bulk, 'w') as archive:
             for mode, trace, holds, totals in (
                 (subject.CURRENT, current, [0, 2048], [2048, 0, 0, 0]),
@@ -67,6 +70,7 @@ def make_archives(root):
         report = json.dumps(saved).encode()
         with zipfile.ZipFile(small, 'w') as archive:
             archive.writestr(name + '/report.json', report)
+            archive.writestr('runtime-manifest.json', manifest)
         reference['screens'][name] = dict(schema='m3_ordinary_harmonic_attribution_references_v1',
             source_commit=str(index) * 40, run_id=index + 1, report=dict(file=name + '/report.json', **spec(report)),
             small_artifact=spec(small.read_bytes()), bulk_artifact=spec(bulk.read_bytes()))
@@ -142,11 +146,36 @@ class PairedAttributionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path, archives = make_archives(Path(temporary))
             refs = json.loads(path.read_text())['screens']
-            screens = {name: subject.attribution.load_screen(refs[name], *archives[name]) for name in subject.SCREENS}
+            screens = {name: subject.load_screen(refs[name], *archives[name]) for name in subject.SCREENS}
             changed = copy.deepcopy(screens)
             changed['competition']['events'][subject.CURRENT][0]['note'] = 61
             with self.assertRaisesRegex(ValueError, 'current MIDI differs'):
                 subject.require_shared_reference(changed)
+
+    def test_run_metadata_can_differ_but_input_bytes_and_provenance_cannot(self):
+        before = dict(files={'ordinary.wav': dict(bytes=8, sha256='audio')}, source=dict(
+            commit='a', run_id=1, input_release='release', input_bundle_sha256='bundle',
+            original_input_manifest_sha256='manifest'))
+        after = copy.deepcopy(before)
+        after['source'].update(commit='b', run_id=2)
+        subject.require_shared_inputs(before, after)
+        after['files']['ordinary.wav']['sha256'] = 'different-audio'
+        with self.assertRaisesRegex(ValueError, 'input file identities'):
+            subject.require_shared_inputs(before, after)
+        after = copy.deepcopy(before)
+        after['source']['input_bundle_sha256'] = 'different-bundle'
+        with self.assertRaisesRegex(ValueError, 'input provenance'):
+            subject.require_shared_inputs(before, after)
+
+    def test_runtime_manifest_is_bound_to_report(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path, archives = make_archives(Path(temporary))
+            refs = json.loads(path.read_text())['screens']
+            with zipfile.ZipFile(archives['tuning'][0]) as archive:
+                saved = json.loads(archive.read(refs['tuning']['report']['file']))
+            saved['input_manifest_sha256'] = 'different'
+            with self.assertRaisesRegex(ValueError, 'manifest hash differs'):
+                subject.read_input_manifest(archives['tuning'][0], saved)
 
     def test_pitch_classification_does_not_double_count_overlapping_labels(self):
         labels = [dict(start_sample=0, end_sample=10, midi_note=75),
