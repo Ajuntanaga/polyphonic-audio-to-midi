@@ -1223,7 +1223,7 @@ class PolyphonicPitchDetector final {
 #endif
 
   [[nodiscard]] DetectorDecision make_decision() noexcept;
-  void update_cell(Cell& cell, double sample) noexcept;
+  void update_cells(double sample) noexcept;
   [[nodiscard]] std::uint8_t dynamic_velocity() const noexcept;
   [[nodiscard]] std::uint8_t attack_decisions() const noexcept;
   [[nodiscard]] std::uint16_t release_decisions() const noexcept;

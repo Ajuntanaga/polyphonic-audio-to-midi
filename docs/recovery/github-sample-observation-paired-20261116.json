@@ -1,0 +1,69 @@
+{
+  "schema": "m3_sample_observation_paired_checkpoint_v1",
+  "updated_at": "2026-11-16T00:04:20.164549+00:00",
+  "state": "prepared",
+  "final": false,
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "base_commit": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
+    "commit": null,
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "worker_commit": null,
+    "run_id": null,
+    "run_attempt": 1,
+    "task": "sample-observe-paired",
+    "dataset": "ordinary",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "anchor": "docs/recovery/github-completion-midi-retention-stages-20261115.json",
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "mode": "current-on"
+    },
+    {
+      "dataset": "ordinary",
+      "mode": "completion-midi-retention-on"
+    },
+    {
+      "dataset": "physical-long",
+      "mode": "completion-midi-retention-on"
+    }
+  ],
+  "block_samples": 32,
+  "maximum_replays": 6,
+  "worker_output": "build/github-results/sample-observe-paired",
+  "local_output": null,
+  "small_artifact": null,
+  "bulk_artifact": null,
+  "collection_state": "not_dispatched",
+  "scope": "Hoist sample-invariant correlation and diagnostic-selection coefficients into one update_cells call; preserve arithmetic and cell iteration order. Compare baseline and candidate builds on one GitHub CPU runner with identical Release flags and alternating pair order.",
+  "required": [
+    "all six complete scored TSVs bit-identical to their saved references",
+    "valid block CPU clocks and identical block counts",
+    "zero C/C++ processing allocations and frees",
+    "CPU total at least 2 percent lower and CPU p99 no higher in every pair"
+  ],
+  "limits": {
+    "minimum_cpu_total_reduction_percent": 2,
+    "maximum_cpu_p99_growth_ns": 0,
+    "allocations_and_frees": 0,
+    "native_p99_ns": 166666,
+    "native_maximum_ns": 333333,
+    "native_deadline_overruns": 0
+  },
+  "diagnostic_only": true,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "caveat": "Thread CPU clock overhead remains. A usefulness screen pass only justifies uninstrumented corpus acceptance. Earlier timing failures, note quality and live host delivery remain unresolved. No note-policy or default changes.",
+  "local_validation": {
+    "python_tests_passed": 11,
+    "workflow_run_sections_syntax_passed": 57,
+    "workflow_yaml_valid": true,
+    "diff_check_passed": true,
+    "native_processing_run_locally": false
+  },
+  "next": "Commit the prepared source and worker route, pass source portable and production CI, then dispatch exactly one six-replay GitHub comparison. Revert the native optimization if any usefulness or identity condition fails; do not broaden it."
+}

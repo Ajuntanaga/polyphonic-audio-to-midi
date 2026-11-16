@@ -3052,29 +3052,46 @@ void PolyphonicPitchDetector::invalidate_fine_frequency_uniform_gram_cache()
   fine_frequency_uniform_gram_cache_ = {};
 }
 
-void PolyphonicPitchDetector::update_cell(Cell& cell, double sample) noexcept {
-  const double next_cosine =
-      cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
-  const double next_sine =
-      cell.sine * cell.cosine_step + cell.cosine * cell.sine_step;
-  cell.cosine = next_cosine;
-  cell.sine = next_sine;
-  const double mix = 1.0 - correlation_decay;
-  cell.fast_real = correlation_decay * cell.fast_real +
-                   mix * sample * next_cosine;
-  cell.fast_imaginary = correlation_decay * cell.fast_imaginary -
-                        mix * sample * next_sine;
+void PolyphonicPitchDetector::update_cells(double sample) noexcept {
+  // All cells see the same sample and decay. Keep the original multiplication
+  // order, but calculate its common prefix before any indexed cell writes.
+  const double decay = correlation_decay;
+  const double mixed_sample = (1.0 - decay) * sample;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_selection_window_only_) {
-    const double selection_mix = 1.0 - diagnostic_selection_decay_;
-    cell.diagnostic_selection_real =
-        diagnostic_selection_decay_ * cell.diagnostic_selection_real +
-        selection_mix * sample * next_cosine;
-    cell.diagnostic_selection_imaginary =
-        diagnostic_selection_decay_ * cell.diagnostic_selection_imaginary -
-        selection_mix * sample * next_sine;
-  }
+  const bool selection_enabled = diagnostic_selection_window_only_;
+  const double selection_decay = diagnostic_selection_decay_;
+  const double selection_sample =
+      selection_enabled ? (1.0 - selection_decay) * sample : 0.0;
 #endif
+  const auto update = [=](Cell& cell) noexcept {
+    const double next_cosine =
+        cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
+    const double next_sine =
+        cell.sine * cell.cosine_step + cell.cosine * cell.sine_step;
+    cell.cosine = next_cosine;
+    cell.sine = next_sine;
+    cell.fast_real = decay * cell.fast_real + mixed_sample * next_cosine;
+    cell.fast_imaginary = decay * cell.fast_imaginary - mixed_sample * next_sine;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (selection_enabled) {
+      cell.diagnostic_selection_real =
+          selection_decay * cell.diagnostic_selection_real +
+          selection_sample * next_cosine;
+      cell.diagnostic_selection_imaginary =
+          selection_decay * cell.diagnostic_selection_imaginary -
+          selection_sample * next_sine;
+    }
+#endif
+  };
+  for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
+    update(cells_[enabled_cell_indices_[index]]);
+  }
+  for (std::size_t index = 0U; index < lower_cents_guard_count_; ++index) {
+    update(lower_cents_guard_cells_[lower_cents_guard_indices_[index]]);
+  }
+  for (std::size_t index = 0U; index < upper_cents_guard_count_; ++index) {
+    update(upper_cents_guard_cells_[upper_cents_guard_indices_[index]]);
+  }
 }
 
 std::uint8_t PolyphonicPitchDetector::attack_decisions() const noexcept {
@@ -12940,17 +12957,7 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
   fast_energy_ = input_energy_decay * fast_energy_ + energy_mix * power;
   const double slow_energy_mix = 1.0 - slow_energy_decay;
   slow_energy_ = slow_energy_decay * slow_energy_ + slow_energy_mix * power;
-  for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
-    update_cell(cells_[enabled_cell_indices_[index]], dc_blocked);
-  }
-  for (std::size_t index = 0U; index < lower_cents_guard_count_; ++index) {
-    update_cell(lower_cents_guard_cells_[lower_cents_guard_indices_[index]],
-                dc_blocked);
-  }
-  for (std::size_t index = 0U; index < upper_cents_guard_count_; ++index) {
-    update_cell(upper_cents_guard_cells_[upper_cents_guard_indices_[index]],
-                dc_blocked);
-  }
+  update_cells(dc_blocked);
   if (profile_mode_ == ProfileMode::m3 && max_fret_ <= 2U) {
     const double narrow_mix = 1.0 - narrow_correlation_decay;
     for (std::size_t candidate = 0U;

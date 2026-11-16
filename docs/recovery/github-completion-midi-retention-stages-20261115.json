@@ -1,15 +1,15 @@
 {
   "schema": "m3_completion_midi_retention_stages_checkpoint_v1",
-  "updated_at": "2026-11-15T23:41:12.454260+00:00",
-  "state": "prepared",
-  "final": false,
+  "updated_at": "2026-11-15T23:55:45.792769+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "4566512b2fccf3d1891fea50dde5380ab3521a85",
-    "commit": null,
+    "commit": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
-    "run_id": null,
+    "worker_commit": "3255829e915c3c220d546ff28cfd2a962e70a268",
+    "run_id": 43776647926,
     "run_attempt": 1,
     "task": "completion-midi-retention-stages",
     "dataset": "ordinary",
@@ -50,10 +50,10 @@
   "maximum_replays": 3,
   "control_count": 4,
   "worker_output": "build/github-results/completion-midi-retention-stages",
-  "local_output": null,
-  "small_artifact": null,
-  "bulk_artifact": null,
-  "collection_state": "not_dispatched",
+  "local_output": "build/github-results/completion-midi-retention-stages-43776647926",
+  "small_artifact": "m3-report-43776647926-1",
+  "bulk_artifact": "m3-evidence-43776647926-1",
+  "collection_state": "collected_once",
   "diagnostic_only": true,
   "promotion_accepted": false,
   "installed_output_changed": false,
@@ -78,5 +78,104 @@
     "workflow_yaml_valid": true,
     "native_processing_run_locally": false
   },
-  "next": "Build and run the two small generated-audio CLI checks on GitHub, then collect the three diagnostic replays once. Use measured stages to select a CPU optimization before any uninstrumented corpus rerun."
+  "next": "Inspect the measured sample-observation path for a concrete behavior-preserving cost reduction; require a bounded same-input comparison before another uninstrumented corpus acceptance run. Do not repeat the unchanged corpus or infer a cause from nonrecurrence. Preserve native deadline, note-quality and external host gates.",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 43776174952,
+      "headSha": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-15T23:43:27Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43776174952"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43776174916,
+      "headSha": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-15T23:45:15Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43776174916"
+    }
+  ],
+  "dispatch_requested_at": "2026-11-15T23:46:43.493225+00:00",
+  "dispatch_response_path": "build/github-results/completion-midi-retention-stages-dispatch-20261115/20261115T234636Z-dispatch.stdout",
+  "remote": {
+    "conclusion": "success",
+    "createdAt": "2026-11-15T23:46:50Z",
+    "databaseId": 43776647926,
+    "headSha": "3255829e915c3c220d546ff28cfd2a962e70a268",
+    "name": "completion-midi-retention-stages / ordinary / 072d1e5f721cd24dc6fcdd5c210838f8685366ed",
+    "status": "completed",
+    "updatedAt": "2026-11-15T23:51:18Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43776647926"
+  },
+  "artifact_metadata": {
+    "small": {
+      "id": 14186950689,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE4Njk1MDY4OQ==",
+      "name": "m3-report-43776647926-1",
+      "size_in_bytes": 33955,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14186950689",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14186950689/zip",
+      "expired": false,
+      "digest": "sha256:9fe03b2ba635b6cc250274167652c3d22810d7e8fd861446ba2a71fd86e3e6b1",
+      "created_at": "2026-11-15T23:51:16Z",
+      "updated_at": "2026-11-15T23:51:16Z",
+      "expires_at": "2026-11-29T23:51:15Z",
+      "workflow_run": {
+        "id": 43776647926,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "3255829e915c3c220d546ff28cfd2a962e70a268"
+      }
+    },
+    "bulk": {
+      "id": 14186876093,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE4Njg3NjA5Mw==",
+      "name": "m3-evidence-43776647926-1",
+      "size_in_bytes": 4392834,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14186876093",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14186876093/zip",
+      "expired": false,
+      "digest": "sha256:a35064e0bd29c909060e056f2efc3599c0c2b76340ce6d27b8aebb844ca10855",
+      "created_at": "2026-11-15T23:51:17Z",
+      "updated_at": "2026-11-15T23:51:17Z",
+      "expires_at": "2026-11-22T23:51:16Z",
+      "workflow_run": {
+        "id": 43776647926,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "3255829e915c3c220d546ff28cfd2a962e70a268"
+      }
+    }
+  },
+  "collection_receipt": {
+    "run_id": 43776647926,
+    "artifact_id": 14186950689,
+    "artifact_name": "m3-report-43776647926-1",
+    "archive": "build/github-results/completion-midi-retention-stages-43776647926/m3-report-43776647926-1.zip",
+    "archive_bytes": 33955,
+    "archive_sha256": "9fe03b2ba635b6cc250274167652c3d22810d7e8fd861446ba2a71fd86e3e6b1",
+    "digest_verified": true,
+    "download_started_at": "2026-11-15T23:52:34.400056+00:00",
+    "download_finished_at": "2026-11-15T23:52:46.505923+00:00",
+    "report": "build/github-results/completion-midi-retention-stages-43776647926/completion-midi-retention-stages/report.json",
+    "report_sha256": "c80206ae37a8a033b777021f191f9ca7e37f23244c96ae4d9fd3de3b52b4ce62",
+    "bulk_downloaded": false
+  },
+  "report": "build/github-results/completion-midi-retention-stages-43776647926/completion-midi-retention-stages/report.json",
+  "report_sha256": "c80206ae37a8a033b777021f191f9ca7e37f23244c96ae4d9fd3de3b52b4ce62",
+  "collection_pass": true,
+  "verdict": "build/github-results/completion-midi-retention-stages-43776647926/collected-verdict.json",
+  "result_summary": {
+    "reference_identity_passed": 3,
+    "reference_identity_total": 3,
+    "fixed_control_count": 4,
+    "interpretation": "All three full scored references are bit-identical and all four retained sample controls are verified. Earlier 419736-608636 ns CPU spikes do not recur at the fixed controls (71700-106137 ns). Other slow blocks occur in different stages; no single costly stage or deterministic cause is isolated. Signal observation is approximately 40 percent of instrumented CPU totals, including clock overhead, which identifies a substantial regular cost but not the cause of prior overruns. Diagnostic nonrecurrence does not clear prior acceptance failures.",
+    "native_cli_tests_passed": 2
+  }
 }
