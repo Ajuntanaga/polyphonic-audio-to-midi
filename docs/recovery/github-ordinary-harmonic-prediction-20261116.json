@@ -1,0 +1,109 @@
+{
+  "schema": "m3_ordinary_harmonic_prediction_checkpoint_v1",
+  "task": "ordinary-harmonic-prediction",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "4fe86bf6503f2b015e63313f32a398f0cfed5305",
+  "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-16T02:12:18.384991+00:00",
+  "updated_at": "2026-11-16T02:12:18.384991+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-harmonic-prediction-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-harmonic-prediction-references-20261116.json",
+  "retained_artifact": {
+    "repository": "Ajuntanaga/m3-offload",
+    "run_id": 43787737937,
+    "id": 14190932436,
+    "name": "m3-evidence-43787737937-1",
+    "bytes": 7593673,
+    "sha256": "65f6518df4484423c4e112a7e58d3ad601e50aa4307a7767d1ae7b509b6aea7b",
+    "member_suffix": "ordinary-partial-comparison/parent-47/outcome.tsv.gz",
+    "compressed_bytes": 722878,
+    "compressed_sha256": "f8b3248b5c25d679775b4d070d422d7a2c31cdc5848d14d1e4167a1d0304ba5e",
+    "raw_bytes": 2380096,
+    "raw_sha256": "dcd0536942c39b0914a1db76209437fbaf06b65e07242381faaf2dd07af92146"
+  },
+  "dataset": "ordinary",
+  "question": "Does adding the missing candidate improve prediction of unseen samples beyond all owned-note harmonics, while false note70 controls do not?",
+  "scope": {
+    "prefix_end_sample": 235200,
+    "sample_rate": 96000,
+    "config": {
+      "train_samples": 3840,
+      "predict_samples": 960,
+      "stride_samples": 1024,
+      "maximum_hz": 3000,
+      "candidate_harmonics": 4,
+      "maximum_base_notes": 8,
+      "svd_relative_cutoff": 1e-06,
+      "a4_hz": 440,
+      "baseline_frequency": "saved phase cents when valid at training cutoff; otherwise equal temperament",
+      "candidate_frequency": "equal temperament",
+      "amplitude": "constant sine/cosine coefficients plus DC",
+      "candidates": [
+        70,
+        75
+      ]
+    },
+    "cases": [
+      "missing-note75",
+      "false-note70-chord",
+      "false-note70-gap"
+    ],
+    "native_replays": 0,
+    "labels_used_by_model": false,
+    "label_based_resets": false
+  },
+  "local_validation": {
+    "focused_tests": 9,
+    "combined_tests": 60,
+    "result": "pass",
+    "modules": [
+      "tests.test_portable_ordinary_harmonic_prediction",
+      "tests.test_portable_ordinary_partial_comparison",
+      "tests.test_candidate_outcome_analysis"
+    ],
+    "source_bash_sections": 4,
+    "worker_bash_sections": 55,
+    "yaml_and_bash_syntax": "pass",
+    "diff_check": "pass",
+    "native_execution": false,
+    "recording_processing": false
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-harmonic-prediction",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "midi_lifecycle": "false",
+    "source_sha": null
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "Prepared fixed causal prediction comparison; source and worker not yet pushed.",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-harmonic-prediction-{run_id}",
+  "collection_status": "not dispatched",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "limitations": [
+    "Prediction gain is not independent-note proof: frequency, amplitude and transient model error can create it.",
+    "A 50 ms causal window can include preceding passages; report this explicitly.",
+    "Shared harmonics and rank deficiency remain ambiguous; no threshold fitting to the three cases.",
+    "Offline Python diagnosis does not establish detector improvement, native timing or live delivery."
+  ],
+  "prerequisite_corpus": {
+    "run_id": 43780127538,
+    "final_collected": true,
+    "promotion_accepted": false,
+    "reason": "Native maximum-time and deadline failures remain open."
+  },
+  "next_step": "Push exact prepared source/worker revisions, wait for source checks, then dispatch one fixed GitHub comparison. Inspect prediction gains, independent columns, rank and case history before choosing any rule; no unchanged corpus retry."
+}

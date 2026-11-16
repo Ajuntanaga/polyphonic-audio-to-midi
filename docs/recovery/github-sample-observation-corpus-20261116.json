@@ -8,12 +8,12 @@
   "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
   "retention_policy_commit": "7d3b5fa5c46069ed8418ce5a036a815ccf767ac9",
   "run_id": 43780127538,
-  "status": "in_progress",
-  "conclusion": "",
-  "result_final": false,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-16T00:23:39.319276+00:00",
-  "updated_at": "2026-11-16T00:52:40.650292+00:00",
-  "stage": "Validate completion MIDI retention across all fourteen datasets",
+  "updated_at": "2026-11-16T01:39:20.732017+00:00",
+  "stage": "final corpus screen; promotion rejected by timing",
   "checkpoint": "docs/recovery/github-sample-observation-corpus-20261116.json",
   "bounded_checkpoint": "docs/recovery/github-sample-observation-paired-20261116.json",
   "previous_corpus_checkpoint": "docs/recovery/github-completion-midi-retention-corpus-20261115.json",
@@ -53,15 +53,15 @@
   "worker_output_dir": "build/github-results/completion-midi-retention-corpus",
   "report_relative_path": "completion-midi-retention-corpus/report.json",
   "local_output_dir": "build/github-results/sample-observation-corpus-43780127538",
-  "report_available": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
   "promotion_accepted": false,
   "external_host_and_hardware": "not verified; accepting component and host routes remain blocked pending corpus acceptance",
   "purpose": "Uninstrumented corpus acceptance after 13.91-14.56 percent lower thread CPU cost with six identical scored references in the paired screen. No note policy or default change. Earlier native timing rejection remains until this result.",
-  "next_step": "Monitor only run43780127538; collect the small report once when final and inspect all corpus gates. Leave bulk remote. Do not dispatch component/host work before acceptance.",
+  "next_step": "Do not rerun the unchanged corpus. Dispatch the prepared ordinary-partial-comparison once at its recorded source and worker revisions to investigate missing-note acquisition; component/host routes remain blocked by timing.",
   "reference_manifest": "docs/recovery/calibrated-midi-retention-corpus-references-20261115.json",
   "declared_datasets": 14,
   "planned_replays": 126,
@@ -125,6 +125,112 @@
   "small_artifact": "m3-report-43780127538-1",
   "bulk_artifact": "m3-evidence-43780127538-1",
   "run_created_at": "2026-11-16T00:23:58Z",
-  "observed_at": "2026-11-16T00:51:57.262768+00:00",
-  "last_observation_raw": "build/github-results/sample-observation-corpus-dispatch-20261116/worker-43780127538-20261116T005156Z.stdout"
+  "observed_at": "2026-11-16T01:37:36.442110+00:00",
+  "last_observation_raw": "build/github-results/sample-observation-corpus-dispatch-20261116/worker-43780127538-20261116T013735Z.stdout",
+  "report_path": "build/github-results/sample-observation-corpus-43780127538/completion-midi-retention-corpus/report.json",
+  "report_sha256": "2ac52798ee3fd531630cec8bd8fbf2c408b57ef4e6689fcb8a3c61dd418bcd4d",
+  "collection_receipt": "build/github-results/sample-observation-corpus-43780127538/collection-receipt.json",
+  "collected_at": "2026-11-16T01:38:23.128706+00:00",
+  "verdict": {
+    "run_id": 43780127538,
+    "source_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+    "worker_commit": "7fb5c0f1fb70d3cdfcc3acc0e4f632ad566d926f",
+    "workflow_conclusion": "success",
+    "report_final": true,
+    "promotion_accepted": false,
+    "reason": "Native maximum-time/deadline gate fails despite corpus note-safety and buffer parity.",
+    "completed_replays": 126,
+    "saved_reference_identity_counts": {
+      "reference-off": 14,
+      "current-on": 14
+    },
+    "inference_identity_datasets": 14,
+    "snapshot_count_and_error_deltas_zero": true,
+    "held_loss_labels": 0,
+    "raw_false_duration_and_onset_deltas_zero": true,
+    "raw_conflict_deltas_zero": true,
+    "current_and_trial_valid_pairing": 28,
+    "buffer_comparisons_passed": 84,
+    "all_mode_native_datasets_passed": 10,
+    "timing_by_mode": {
+      "reference-off": {
+        "timing_passed": 12,
+        "datasets": 14,
+        "deadline_overruns": 6,
+        "all_p99_pass": true,
+        "all_allocations_and_frees_zero": true
+      },
+      "current-on": {
+        "timing_passed": 13,
+        "datasets": 14,
+        "deadline_overruns": 1,
+        "all_p99_pass": true,
+        "all_allocations_and_frees_zero": true
+      },
+      "completion-midi-retention-on": {
+        "timing_passed": 12,
+        "datasets": 14,
+        "deadline_overruns": 4,
+        "all_p99_pass": true,
+        "all_allocations_and_frees_zero": true
+      }
+    },
+    "timing_failures": [
+      {
+        "mode": "reference-off",
+        "dataset": "constructed",
+        "p99_ns": 82782,
+        "maximum_ns": 504864,
+        "deadline_overruns": 4
+      },
+      {
+        "mode": "reference-off",
+        "dataset": "extended-high",
+        "p99_ns": 95000,
+        "maximum_ns": 436914,
+        "deadline_overruns": 2
+      },
+      {
+        "mode": "current-on",
+        "dataset": "physical-four",
+        "p99_ns": 87790,
+        "maximum_ns": 333552,
+        "deadline_overruns": 1
+      },
+      {
+        "mode": "completion-midi-retention-on",
+        "dataset": "ordinary",
+        "p99_ns": 91405,
+        "maximum_ns": 364788,
+        "deadline_overruns": 3
+      },
+      {
+        "mode": "completion-midi-retention-on",
+        "dataset": "constructed",
+        "p99_ns": 82772,
+        "maximum_ns": 346351,
+        "deadline_overruns": 1
+      }
+    ],
+    "target": {
+      "dataset": "physical-long",
+      "label_index": 3,
+      "midi_note": 40,
+      "string_mask": 7,
+      "labeled_samples": 2520192,
+      "baseline_exact_held_samples": 1613760,
+      "baseline_note_ons": 104,
+      "bounded_trial_exact_held_samples": 1614784,
+      "bounded_trial_note_ons": 88,
+      "baseline_held_percent": 64.03321651683682,
+      "trial_held_percent": 64.07384834171364,
+      "held_sample_delta": 1024,
+      "note_on_delta": -16
+    },
+    "installed_output_changed": false,
+    "production_defaults_changed": false,
+    "live_readiness": "not verified",
+    "bulk_downloaded": false
+  },
+  "verdict_path": "build/github-results/sample-observation-corpus-43780127538/collected-verdict.json"
 }

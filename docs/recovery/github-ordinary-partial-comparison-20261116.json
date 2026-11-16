@@ -5,16 +5,16 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
   "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
-  "source_commit": null,
+  "source_commit": "4fe86bf6503f2b015e63313f32a398f0cfed5305",
   "worker_commit": "90417256ae83d6dd90cc9fc6164b997db90031a8",
-  "run_id": null,
-  "status": "prepared_locally",
-  "conclusion": null,
-  "result_final": false,
+  "run_id": 43787737937,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-16T00:49:45.922021+00:00",
-  "updated_at": "2026-11-16T00:52:40.650292+00:00",
+  "updated_at": "2026-11-16T01:48:52.310404+00:00",
   "checkpoint": "docs/recovery/github-ordinary-partial-comparison-20261116.json",
-  "waiting_for_corpus_run": 43780127538,
+  "waiting_for_corpus_run": null,
   "reference_manifest": "docs/recovery/ordinary-partial-references-20261116.json",
   "reference_run_id": 43707756793,
   "reference_report_sha256": "fba03015f4b0664b995481fedec82f0172e5d43d7dd5228be432c196740b16cf",
@@ -96,8 +96,8 @@
   "worker_output_dir": "build/github-results/ordinary-partial-comparison",
   "report_relative_path": "ordinary-partial-comparison/report.json",
   "dispatch_directory": "build/github-results/ordinary-partial-comparison-dispatch-20261116",
-  "report_available": false,
-  "small_artifact_collected": false,
+  "report_available": true,
+  "small_artifact_collected": true,
   "bulk_downloaded": false,
   "installed_output_changed": false,
   "production_defaults_changed": false,
@@ -117,8 +117,353 @@
     "dataset": "ordinary",
     "note": "75",
     "label_index": "10",
-    "midi_lifecycle": "false"
+    "midi_lifecycle": "false",
+    "source_sha": "4fe86bf6503f2b015e63313f32a398f0cfed5305"
   },
-  "next_step": "Prepare the exact source/worker revisions and source check. After collecting the existing corpus verdict, dispatch one bounded unchanged-output comparison. Inspect separation, overlap and unavailable observations before any native policy choice.",
-  "worker_pushed": true
+  "next_step": "Inspect the existing ordinary admission score terms for missing note75 and fixed false note70, looking for independent harmonic support beyond the shared parent fifth. Start from retained outcomes and source; no threshold grid or repeat of completed replays. A proposed rule must use causal evidence and recover the missing note while retaining rejection of both false controls before broader safety and timing validation.",
+  "worker_pushed": true,
+  "source_pushed": true,
+  "source_checks": {
+    "observation_status": "observed",
+    "observed_at": "2026-11-16T00:54:22.351677+00:00",
+    "last_observation_raw": "build/github-results/ordinary-partial-comparison-dispatch-20261116/source-runs-20261116T005422Z.stdout",
+    "last_observation_stderr": "build/github-results/ordinary-partial-comparison-dispatch-20261116/source-runs-20261116T005422Z.stderr",
+    "runs": [
+      {
+        "conclusion": "success",
+        "createdAt": "2026-11-16T00:52:54Z",
+        "databaseId": 43782965759,
+        "headSha": "4fe86bf6503f2b015e63313f32a398f0cfed5305",
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43782965759",
+        "workflowName": "Portable offline replay"
+      }
+    ]
+  },
+  "source_portable_run_id": 43782965759,
+  "source_portable_status": "completed",
+  "source_portable_conclusion": "success",
+  "prerequisite_corpus": {
+    "run_id": 43780127538,
+    "final_collected": true,
+    "promotion_accepted": false,
+    "reason": "Timing failures; acquisition diagnostic remains independent."
+  },
+  "dispatch_attempted_at": "2026-11-16T01:41:31.757541+00:00",
+  "stage": "Final diagnostic interpreted; no safe admission rule established.",
+  "dispatch_returncode": 0,
+  "dispatch_stdout": "build/github-results/ordinary-partial-comparison-dispatch-20261116/dispatch-20261116T014131Z.stdout",
+  "dispatch_stderr": "build/github-results/ordinary-partial-comparison-dispatch-20261116/dispatch-20261116T014131Z.stderr",
+  "dispatch_output": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43787737937",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43787737937",
+  "local_dir": "build/github-results/ordinary-partial-comparison-43787737937",
+  "small_artifact_name": "m3-report-43787737937-1",
+  "bulk_artifact_name": "m3-evidence-43787737937-1",
+  "last_observed_at": "2026-11-16T01:45:42.929624+00:00",
+  "last_observation_raw": "build/github-results/ordinary-partial-comparison-dispatch-20261116/worker-43787737937-20261116T014541Z.stdout",
+  "last_observation_stderr": "build/github-results/ordinary-partial-comparison-dispatch-20261116/worker-43787737937-20261116T014541Z.stderr",
+  "artifact_metadata_raw": "build/github-results/ordinary-partial-comparison-dispatch-20261116/artifacts-20261116T014551Z.stdout",
+  "artifact_metadata_stderr": "build/github-results/ordinary-partial-comparison-dispatch-20261116/artifacts-20261116T014551Z.stderr",
+  "artifact_metadata_observed_at": "2026-11-16T01:45:56.922768+00:00",
+  "artifacts": [
+    {
+      "id": 14190932436,
+      "name": "m3-evidence-43787737937-1",
+      "size_in_bytes": 7593673,
+      "digest": "sha256:65f6518df4484423c4e112a7e58d3ad601e50aa4307a7767d1ae7b509b6aea7b",
+      "expired": false,
+      "created_at": "2026-11-16T01:45:05Z",
+      "expires_at": "2026-11-23T01:45:03Z",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14190932436/zip"
+    },
+    {
+      "id": 14190792809,
+      "name": "m3-report-43787737937-1",
+      "size_in_bytes": 9338,
+      "digest": "sha256:dd934e574d59a725bca201bcda0049d3c14a70a562729ed152eefc99a219fd97",
+      "expired": false,
+      "created_at": "2026-11-16T01:45:03Z",
+      "expires_at": "2026-11-30T01:45:01Z",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14190792809/zip"
+    }
+  ],
+  "collected_at": "2026-11-16T01:46:15.870773+00:00",
+  "report_path": "build/github-results/ordinary-partial-comparison-43787737937/ordinary-partial-comparison/report.json",
+  "report_sha256": "aa1631c8521e914ac337aab3c26725cf628857cd647d298f127e5ba3c66bb7b0",
+  "collection_receipt": "build/github-results/ordinary-partial-comparison-43787737937/collection-receipt.json",
+  "result_verdict_path": "build/github-results/ordinary-partial-comparison-43787737937/collected-verdict.json",
+  "result_summary": {
+    "schema": "m3_ordinary_partial_comparison_verdict_v1",
+    "run_id": 43787737937,
+    "source_commit": "4fe86bf6503f2b015e63313f32a398f0cfed5305",
+    "worker_commit": "90417256ae83d6dd90cc9fc6164b997db90031a8",
+    "report_path": "build/github-results/ordinary-partial-comparison-43787737937/ordinary-partial-comparison/report.json",
+    "report_sha256": "aa1631c8521e914ac337aab3c26725cf628857cd647d298f127e5ba3c66bb7b0",
+    "diagnostic_acceptance": "passed",
+    "admission_conclusion": "No safe admission rule established by this relative-partial-motion comparison.",
+    "saved_references_bit_identical": true,
+    "reference_scope": "Both complete current-ON ordinary scored TSVs, raw MIDI and outcome traces match the saved reference.",
+    "metric": "Fifth-minus-fundamental cents from demodulated mixture tracks; not source-pure partials or note/string identity.",
+    "cases": [
+      {
+        "case": {
+          "name": "missing-note75",
+          "parent_note": 47,
+          "candidate_note": 75,
+          "start_sample": 163306,
+          "end_sample": 235200,
+          "example_sample": 167359,
+          "expected_labels": [
+            10,
+            11,
+            12
+          ]
+        },
+        "counts": {
+          "frames": 1124,
+          "candidate_unobserved": 182,
+          "candidate_selection_0": 1,
+          "candidate_selection_1": 941
+        },
+        "below_threshold": {
+          "raw": {
+            "observations": 941,
+            "valid_pairs": 941,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": -593.3931134796991,
+              "p10": -115.24922883213488,
+              "p50": 11.017019684013183,
+              "p90": 214.78028154423455,
+              "max": 3973.112964580327
+            }
+          },
+          "conditioned": {
+            "observations": 941,
+            "valid_pairs": 941,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": -485.6481839964449,
+              "p10": -11.547254998991772,
+              "p50": 7.7855031914107045,
+              "p90": 125.18809224920889,
+              "max": 411.32283568558785
+            }
+          },
+          "conditioned_160ms": {
+            "observations": 5,
+            "valid_pairs": 5,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 1,
+            "fifth_minus_fundamental_cents": {
+              "min": -60.14276023784634,
+              "p10": -51.02385283380366,
+              "p50": 43.44784876579399,
+              "p90": 50.56667175325949,
+              "max": 52.15338268667353
+            }
+          }
+        },
+        "example_sample": 167359,
+        "example_estimates": {
+          "raw": {
+            "available_sample": 167359,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": 18.99037122792555
+          },
+          "conditioned": {
+            "available_sample": 167359,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": -4.506313814176901
+          },
+          "conditioned_160ms": {
+            "available_sample": 153727,
+            "age_samples": 13632,
+            "valid": true,
+            "fifth_minus_fundamental_cents": -170.49400943536858
+          }
+        },
+        "example_160ms_available_before_case": true
+      },
+      {
+        "case": {
+          "name": "false-note70-chord",
+          "parent_note": 42,
+          "candidate_note": 70,
+          "start_sample": 217,
+          "end_sample": 72000,
+          "example_sample": 4991,
+          "expected_labels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "counts": {
+          "frames": 1122,
+          "candidate_unobserved": 59,
+          "candidate_selection_0": 15,
+          "candidate_selection_1": 741,
+          "candidate_selection_2": 307
+        },
+        "below_threshold": {
+          "raw": {
+            "observations": 741,
+            "valid_pairs": 741,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": -151.4353101804009,
+              "p10": -46.653038646716105,
+              "p50": 38.697973323602156,
+              "p90": 229.62092019204295,
+              "max": 504.26753539170363
+            }
+          },
+          "conditioned": {
+            "observations": 741,
+            "valid_pairs": 741,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": 30.1096491312863,
+              "p10": 44.34224487258543,
+              "p50": 60.917304385885814,
+              "p90": 63.27417276049775,
+              "max": 65.31978261204706
+            }
+          },
+          "conditioned_160ms": {
+            "observations": 3,
+            "valid_pairs": 2,
+            "valid_pair_fraction": 0.6666666666666666,
+            "windows_starting_before_case": 1,
+            "fifth_minus_fundamental_cents": {
+              "min": 61.748014562979066,
+              "p10": 61.792990494554395,
+              "p50": 61.97289422085571,
+              "p90": 62.15279794715702,
+              "max": 62.19777387873235
+            }
+          }
+        },
+        "example_sample": 4991,
+        "example_estimates": {
+          "raw": {
+            "available_sample": 4991,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": -32.22521785293917
+          },
+          "conditioned": {
+            "available_sample": 4991,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": 32.952604835713586
+          },
+          "conditioned_160ms": null
+        },
+        "example_160ms_available_before_case": null
+      },
+      {
+        "case": {
+          "name": "false-note70-gap",
+          "parent_note": 42,
+          "candidate_note": 70,
+          "start_sample": 72000,
+          "end_sample": 81839,
+          "example_sample": 72063,
+          "expected_labels": []
+        },
+        "counts": {
+          "frames": 153,
+          "candidate_selection_1": 57,
+          "candidate_unobserved": 96
+        },
+        "below_threshold": {
+          "raw": {
+            "observations": 57,
+            "valid_pairs": 57,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": -15.659930418628397,
+              "p10": -6.431853560709936,
+              "p50": 0.2948715437554883,
+              "p90": 8.552178277510901,
+              "max": 23.492136671513318
+            }
+          },
+          "conditioned": {
+            "observations": 57,
+            "valid_pairs": 57,
+            "valid_pair_fraction": 1.0,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": 14.717167614117294,
+              "p10": 17.15496740290001,
+              "p50": 32.6121982008224,
+              "p90": 57.8219307189514,
+              "max": 61.92090036064389
+            }
+          },
+          "conditioned_160ms": {
+            "observations": 0,
+            "valid_pairs": 0,
+            "valid_pair_fraction": null,
+            "windows_starting_before_case": 0,
+            "fifth_minus_fundamental_cents": {
+              "min": null,
+              "p10": null,
+              "p50": null,
+              "p90": null,
+              "max": null
+            }
+          }
+        },
+        "example_sample": 72063,
+        "example_estimates": {
+          "raw": {
+            "available_sample": 72063,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": -10.489644835579508
+          },
+          "conditioned": {
+            "available_sample": 72063,
+            "age_samples": 0,
+            "valid": true,
+            "fifth_minus_fundamental_cents": 61.92090036064389
+          },
+          "conditioned_160ms": {
+            "available_sample": 61503,
+            "age_samples": 10560,
+            "valid": true,
+            "fifth_minus_fundamental_cents": 62.19777387873235
+          }
+        },
+        "example_160ms_available_before_case": true
+      }
+    ],
+    "findings": [
+      "Raw and conditioned below-threshold measurements overlap the fixed false-note controls. A nonzero fifth-relative offset is not sufficient evidence of an independent note: the false chord control has a conditioned median of about 61 cents.",
+      "At the saved early decision samples, the 160ms estimate is either unavailable or was already available before the current case began. It cannot establish early acquisition of this passage.",
+      "Conditioning retains the complete causal prefix and can retain preceding-passage influence. This comparison does not isolate the physical cause of the offsets.",
+      "These three fixed cases do not justify a new threshold, a general classifier claim or relaxing the calibrated admission margin."
+    ],
+    "installed_output_changed": false,
+    "production_defaults_changed": false,
+    "runtime_policy_changed": false,
+    "native_timing": "Not measured by this diagnostic; corpus run 43780127538 remains rejected on maximum/deadline gates.",
+    "external_host_and_hardware": "unverified",
+    "bulk_downloaded": false,
+    "next_step": "Inspect the existing ordinary admission score terms for missing note75 and fixed false note70, looking for independent harmonic support beyond the shared parent fifth. Start from retained outcomes and source; no threshold grid or repeat of completed replays. A proposed rule must use causal evidence and recover the missing note while retaining rejection of both false controls before broader safety and timing validation."
+  },
+  "completed_run_handling": "Final and collected once. Do not poll, rerun or recollect; bulk evidence remains remote."
 }

@@ -1,0 +1,35 @@
+{
+  "schema": "m3_ordinary_harmonic_prediction_references_v1",
+  "config": {
+    "train_samples": 3840,
+    "predict_samples": 960,
+    "stride_samples": 1024,
+    "maximum_hz": 3000,
+    "candidate_harmonics": 4,
+    "maximum_base_notes": 8,
+    "svd_relative_cutoff": 1e-06,
+    "a4_hz": 440,
+    "baseline_frequency": "saved phase cents when valid at training cutoff; otherwise equal temperament",
+    "candidate_frequency": "equal temperament",
+    "amplitude": "constant sine/cosine coefficients plus DC",
+    "candidates": [
+      70,
+      75
+    ]
+  },
+  "anchor_file": "ordinary-partial-references-20261116.json",
+  "anchor_sha256": "ed622065db92b5b103eb54ab6210858fccc59b3be83c42a5ee95690b20a9a35a",
+  "artifact": {
+    "repository": "Ajuntanaga/m3-offload",
+    "run_id": 43787737937,
+    "id": 14190932436,
+    "name": "m3-evidence-43787737937-1",
+    "bytes": 7593673,
+    "sha256": "65f6518df4484423c4e112a7e58d3ad601e50aa4307a7767d1ae7b509b6aea7b",
+    "member_suffix": "ordinary-partial-comparison/parent-47/outcome.tsv.gz",
+    "compressed_bytes": 722878,
+    "compressed_sha256": "f8b3248b5c25d679775b4d070d422d7a2c31cdc5848d14d1e4167a1d0304ba5e",
+    "raw_bytes": 2380096,
+    "raw_sha256": "dcd0536942c39b0914a1db76209437fbaf06b65e07242381faaf2dd07af92146"
+  }
+}
