@@ -67,22 +67,22 @@
   "schema": "m3_ordinary_harmonic_support_checkpoint_v1",
   "task": "ordinary-harmonic-support",
   "source_base_commit": "2c2fa302377911bea77394e3a180dd7de3fe87b7",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "conclusion": null,
-  "result_final": false,
+  "source_commit": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
+  "worker_commit": "d38a0106abc31a7a68cdf5078a872db88f718847",
+  "run_id": 43798217887,
+  "status": "completed",
+  "conclusion": "success",
+  "result_final": true,
   "created_at": "2026-11-16T03:24:11.264022+00:00",
-  "updated_at": "2026-11-16T03:26:01.903319+00:00",
+  "updated_at": "2026-11-16T03:40:33.871330+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-support-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-support-references-20261116.json",
   "question": "Does requiring two separately supported harmonic pairs preserve target note75 recovery without any ordinary passage loss or false-output growth?",
-  "stage": "focused checks passed; ready for one bounded GitHub screen",
-  "collection_status": "not dispatched",
+  "stage": "final; target retained but ordinary safety rejected",
+  "collection_status": "small report collected once; bulk remains remote",
   "local_dir_template": "build/github-results/ordinary-harmonic-support-{run_id}",
   "dispatch_inputs": {
-    "source_sha": null,
+    "source_sha": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
     "task": "ordinary-harmonic-support",
     "dataset": "ordinary",
     "note": "75",
@@ -99,5 +99,118 @@
     "native_execution": "GitHub Actions only"
   },
   "limitations": "Offline frozen current-shadow cues; numerical guard is not an audibility/noise threshold. Multiple conditional contributions may still explain model mismatch rather than independent notes. No native cost, allocation, buffer or host gate is established by this screen.",
-  "next_step": "Commit the corrected offline rule and worker route, then dispatch one bounded ordinary screen. Require target recovery and zero per-label snapshot/held loss, false-output growth or raw-conflict growth with exact references."
+  "next_step": "Compare retained target and surviving false-output cue contributions, plus remaining label117 loss; no replay, threshold sweep or production promotion.",
+  "source_runs": [
+    {
+      "databaseId": 43798166807,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43798166807",
+      "last_observed_at": "2026-11-16T03:28:17.205239+00:00"
+    }
+  ],
+  "dispatch_attempt": {
+    "started_at": "2026-11-16T03:26:34.618875+00:00",
+    "state": "submitted; run identified",
+    "finished_at": "2026-11-16T03:26:37.023818+00:00",
+    "returncode": 0
+  },
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43798217887",
+  "local_dir": "build/github-results/ordinary-harmonic-support-43798217887",
+  "small_artifact": "m3-report-43798217887-1",
+  "bulk_artifact": "m3-evidence-43798217887-1",
+  "last_observed_at": "2026-11-16T03:37:33.213223+00:00",
+  "collected_at": "2026-11-16T03:37:59.541023+00:00",
+  "small_artifact_collected": true,
+  "small_artifact_metadata": {
+    "id": 14195238041,
+    "node_id": "MDg6QXJ0aWZhY3QxNDE5NTIzODA0MQ==",
+    "name": "m3-report-43798217887-1",
+    "size_in_bytes": 95549,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195238041",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195238041/zip",
+    "expired": false,
+    "digest": "sha256:6e89bf07970319286500ab7825e15e39907edf8a3864edecb9b5b5ab14a6a968",
+    "created_at": "2026-11-16T03:37:04Z",
+    "updated_at": "2026-11-16T03:37:04Z",
+    "expires_at": "2026-11-30T03:37:03Z",
+    "workflow_run": {
+      "id": 43798217887,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "d38a0106abc31a7a68cdf5078a872db88f718847"
+    }
+  },
+  "bulk_artifact_metadata": {
+    "id": 14196015794,
+    "node_id": "MDg6QXJ0aWZhY3QxNDE5NjAxNTc5NA==",
+    "name": "m3-evidence-43798217887-1",
+    "size_in_bytes": 45829672,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14196015794",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14196015794/zip",
+    "expired": false,
+    "digest": "sha256:8dcd2adc3c4a758595cdccf83037257d50c4162aee7315fb165d03cf27115548",
+    "created_at": "2026-11-16T03:37:06Z",
+    "updated_at": "2026-11-16T03:37:06Z",
+    "expires_at": "2026-11-23T03:37:04Z",
+    "workflow_run": {
+      "id": 43798217887,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "d38a0106abc31a7a68cdf5078a872db88f718847"
+    }
+  },
+  "small_archive_path": "build/github-results/ordinary-harmonic-support-43798217887/small-report.zip",
+  "small_archive_sha256": "6e89bf07970319286500ab7825e15e39907edf8a3864edecb9b5b5ab14a6a968",
+  "small_archive_digest_verified": true,
+  "report_path": "build/github-results/ordinary-harmonic-support-43798217887/ordinary-harmonic-support/report.json",
+  "report_sha256": "7e3bcfc024b5d640074bf9fa9bf404bfdb4e12c22b099883e9647b65413f7447",
+  "report_bytes": 1491747,
+  "screen_state": "rejected",
+  "bounded_screen_pass": false,
+  "decision": "rejected; do not promote or widen",
+  "collected_verdict": "build/github-results/ordinary-harmonic-support-43798217887/collected-verdict.json",
+  "result_summary": {
+    "target_exact_before": 0,
+    "target_exact_after": 64193,
+    "target_annotated_samples": 71894,
+    "target_note_ons_after": 1,
+    "snapshot_matches_before": 145400,
+    "snapshot_matches_after": 153176,
+    "snapshot_denominator": 528632,
+    "lost_snapshot_labels": [
+      51,
+      117,
+      329
+    ],
+    "lost_snapshot_matches": 26,
+    "held_loss_labels": [
+      117
+    ],
+    "held_samples_lost": 1152,
+    "false_snapshot_delta": {
+      "matched": 7776,
+      "false_wrong_note_voices": 1948,
+      "false_wrong_string_voices": 8281,
+      "false_gap_voices": 2903,
+      "false_positive_voices": 13132
+    },
+    "false_voice_sample_delta": {
+      "false_wrong_note_voice_samples": 142167,
+      "false_wrong_string_voice_samples": 407677,
+      "false_gap_voice_samples": 158896,
+      "false_wrong_note_onsets": 4,
+      "false_wrong_string_onsets": 22,
+      "false_gap_onsets": 1
+    },
+    "exact_held_samples_delta": 472636,
+    "reference_identity_pass": true,
+    "label206_held_unchanged": 48961,
+    "previous_cue_count": 1635,
+    "current_cue_count": 1086
+  }
 }

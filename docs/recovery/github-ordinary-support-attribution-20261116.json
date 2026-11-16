@@ -1,0 +1,65 @@
+{
+  "schema": "m3_ordinary_support_attribution_checkpoint_v1",
+  "task": "ordinary-support-attribution",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "result_final": false,
+  "created_at": "2026-11-16T03:43:00.430647+00:00",
+  "updated_at": "2026-11-16T03:43:29.949993+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-support-attribution-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-support-attribution-references-20261116.json",
+  "dataset": "ordinary",
+  "question": "Which supported harmonic pairs accompany target75 recovery and surviving false outputs, and is the remaining label117 loss pitch absence or changed string assignment?",
+  "scope": {
+    "retained_run_id": 43798217887,
+    "focus_labels": [
+      10,
+      117
+    ],
+    "native_replays": 0,
+    "audio_processed": false,
+    "policy_changed": false,
+    "bulk_inputs": "Retained report and text evidence archives consumed only on GitHub Actions; no laptop bulk download.",
+    "analysis": "Reuse the tested attribution runner unchanged, including full causal cue evidence."
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-support-attribution",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "midi_lifecycle": "false"
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "prepared retained support attribution",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-support-attribution-{run_id}",
+  "collection_status": "not dispatched",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "acceptance": [
+    "Verify archive and selected member identity against the completed support screen.",
+    "Reproduce all 499 exact held-label counts and each output-safety voice-sample total in both modes.",
+    "Separate gross target/lost-note pitch absence from exact string assignment losses.",
+    "Compare supported-pair cue contributions at output onset; timing association alone does not establish a native branch."
+  ],
+  "limitations": [
+    "No new detector, audio, timing, allocation, buffer or host measurement.",
+    "Numerical support is not independent note identity; do not fit thresholds to selected passages."
+  ],
+  "next_step": "Use the retained contribution patterns to select one mechanistic falsifier before any replacement policy or audio replay.",
+  "local_validation": {
+    "workflow_syntax": "pass",
+    "worker_bash_sections": 57,
+    "route_exclusions": "pass; no recording download, native build or generic native contracts",
+    "attribution_runner": "unchanged; existing focused tests run on GitHub",
+    "diff_check": "pass"
+  }
+}

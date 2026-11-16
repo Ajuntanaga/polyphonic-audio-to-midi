@@ -1,0 +1,29 @@
+{
+  "schema": "m3_ordinary_harmonic_attribution_references_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "run_id": 43798217887,
+  "source_commit": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
+  "worker_commit": "d38a0106abc31a7a68cdf5078a872db88f718847",
+  "focus_labels": [
+    10,
+    117
+  ],
+  "report": {
+    "file": "ordinary-harmonic-support/report.json",
+    "bytes": 1491747,
+    "sha256": "7e3bcfc024b5d640074bf9fa9bf404bfdb4e12c22b099883e9647b65413f7447"
+  },
+  "small_artifact": {
+    "id": 14195238041,
+    "name": "m3-report-43798217887-1",
+    "bytes": 95549,
+    "sha256": "6e89bf07970319286500ab7825e15e39907edf8a3864edecb9b5b5ab14a6a968"
+  },
+  "bulk_artifact": {
+    "id": 14196015794,
+    "name": "m3-evidence-43798217887-1",
+    "bytes": 45829672,
+    "sha256": "8dcd2adc3c4a758595cdccf83037257d50c4162aee7315fb165d03cf27115548"
+  },
+  "scope": "Read retained raw MIDI, annotations and two-pair support evidence on GitHub to compare target75, surviving false notes and held-loss label117. No recording download, native replay, policy change or threshold fitting."
+}
