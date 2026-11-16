@@ -1,15 +1,15 @@
 {
   "schema": "m3_sample_observation_paired_checkpoint_v1",
-  "updated_at": "2026-11-16T00:07:00.183493+00:00",
-  "state": "source_test_helper_corrected",
-  "final": false,
+  "updated_at": "2026-11-16T00:23:39.319276+00:00",
+  "state": "completed",
+  "final": true,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
-    "commit": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+    "commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
     "worker_repository": "Ajuntanaga/m3-offload",
     "worker_commit": "7fb5c0f1fb70d3cdfcc3acc0e4f632ad566d926f",
-    "run_id": null,
+    "run_id": 43778863377,
     "run_attempt": 1,
     "task": "sample-observe-paired",
     "dataset": "ordinary",
@@ -35,10 +35,10 @@
   "block_samples": 32,
   "maximum_replays": 6,
   "worker_output": "build/github-results/sample-observe-paired",
-  "local_output": null,
-  "small_artifact": null,
-  "bulk_artifact": null,
-  "collection_state": "not_dispatched",
+  "local_output": "build/github-results/sample-observe-paired-43778863377",
+  "small_artifact": "m3-report-43778863377-1",
+  "bulk_artifact": "m3-evidence-43778863377-1",
+  "collection_state": "collected_once_digest_verified",
   "scope": "Hoist sample-invariant correlation and diagnostic-selection coefficients into one update_cells call; preserve arithmetic and cell iteration order. Compare baseline and candidate builds on one GitHub CPU runner with identical Release flags and alternating pair order.",
   "required": [
     "all six complete scored TSVs bit-identical to their saved references",
@@ -65,28 +65,32 @@
     "diff_check_passed": true,
     "native_processing_run_locally": false
   },
-  "next": "Push corrected native test helper, pass replacement source portable and production CI, then dispatch exactly one six-replay comparison.",
+  "next": "One uninstrumented 14-dataset corpus acceptance run at source67ec4bf211321cca03d692d03c1b8dbdb6bf57fa; follow docs/recovery/github-sample-observation-corpus-20261116.json. Do not poll or recollect this completed pair.",
   "source_checks": [
     {
-      "conclusion": "",
-      "databaseId": 43778210875,
-      "headSha": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+      "conclusion": "success",
+      "databaseId": 43778457552,
+      "headSha": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
       "name": "CI",
-      "status": "in_progress",
-      "updatedAt": "2026-11-16T00:04:35Z",
-      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778210875"
+      "status": "completed",
+      "updatedAt": "2026-11-16T00:07:07Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778457552",
+      "observed_at": "2026-11-16T00:10:57.459389+00:00",
+      "receipt": "build/github-results/sample-observation-paired-dispatch-20261116/source-43778457552-watch.stdout"
     },
     {
-      "conclusion": "",
-      "databaseId": 43778210904,
-      "headSha": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+      "conclusion": "success",
+      "databaseId": 43778457493,
+      "headSha": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
       "name": "Portable offline replay",
-      "status": "in_progress",
-      "updatedAt": "2026-11-16T00:04:34Z",
-      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778210904"
+      "status": "completed",
+      "updatedAt": "2026-11-16T00:07:07Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778457493",
+      "observed_at": "2026-11-16T00:09:17.939450+00:00",
+      "receipt": "build/github-results/sample-observation-paired-dispatch-20261116/source-43778457493-watch.stdout"
     }
   ],
-  "source_checks_raw": "build/github-results/sample-observation-paired-dispatch-20261116/20261116T000444Z-source-checks.stdout",
+  "source_checks_raw": "build/github-results/sample-observation-paired-dispatch-20261116/20261116T000711Z-source-checks.stdout",
   "source_attempts": [
     {
       "commit": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
@@ -99,5 +103,220 @@
       "failed_log": "build/github-results/sample-observation-paired-dispatch-20261116/source-43778210904-failed.stdout",
       "worker_dispatched": false
     }
-  ]
+  ],
+  "dispatch_requested_at": "2026-11-16T00:10:57.459431+00:00",
+  "dispatch_receipt": {
+    "exit_code": 0,
+    "stdout": "build/github-results/sample-observation-paired-dispatch-20261116/dispatch.stdout",
+    "stderr": "build/github-results/sample-observation-paired-dispatch-20261116/dispatch.stderr",
+    "finished_at": "2026-11-16T00:11:10.188582+00:00"
+  },
+  "remote_observation": {
+    "conclusion": "success",
+    "createdAt": "2026-11-16T00:11:09Z",
+    "databaseId": 43778863377,
+    "headSha": "7fb5c0f1fb70d3cdfcc3acc0e4f632ad566d926f",
+    "status": "completed",
+    "updatedAt": "2026-11-16T00:18:49Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43778863377",
+    "raw": "build/github-results/sample-observation-paired-dispatch-20261116/worker-43778863377-view-20261116T001930Z.stdout"
+  },
+  "collection": {
+    "run_id": 43778863377,
+    "artifact_id": 14187507250,
+    "artifact_name": "m3-report-43778863377-1",
+    "archive": "build/github-results/sample-observe-paired-43778863377/m3-report-43778863377-1.retry1.zip",
+    "bytes": 34753,
+    "sha256": "ff65fb1e0ffa0ccdaaf568ee1dcc0c14a1f1091b591076e58862989940dd9bc7",
+    "metadata_digest": "sha256:ff65fb1e0ffa0ccdaaf568ee1dcc0c14a1f1091b591076e58862989940dd9bc7",
+    "digest_verified": true,
+    "collected_at": "2026-11-16T00:20:42.828133+00:00",
+    "report": "build/github-results/sample-observe-paired-43778863377/sample-observe-paired/report.json",
+    "report_sha256": "b49def6aece6703972d87e82278d09f84577824dae376d722fe6c9fcf22994a9",
+    "bulk_downloaded": false,
+    "previous_attempt": "network failure; no successful collection"
+  },
+  "result_summary": {
+    "usefulness_screen_pass": true,
+    "pairs_passed": 3,
+    "pairs_total": 3,
+    "scored_references_bit_identical": 6,
+    "scored_references_total": 6,
+    "zero_allocation_runs": 6,
+    "verified_inputs": 6,
+    "cases": [
+      {
+        "dataset": "ordinary",
+        "mode": "current-on",
+        "execution_order": [
+          "baseline",
+          "candidate"
+        ],
+        "cpu_total_reduction_percent": 14.558935507749284,
+        "cpu_p99_delta_ns": -6592,
+        "usefulness_screen_pass": true,
+        "runs": {
+          "baseline": {
+            "scored_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 334050,
+              "p99_ns": 85248,
+              "maximum_ns": 213725,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 13386739669,
+              "p99_ns": 85525,
+              "maximum_ns": 214088,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          },
+          "candidate": {
+            "scored_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 334050,
+              "p99_ns": 78671,
+              "maximum_ns": 166723,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 11437772874,
+              "p99_ns": 78933,
+              "maximum_ns": 151313,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          }
+        }
+      },
+      {
+        "dataset": "ordinary",
+        "mode": "completion-midi-retention-on",
+        "execution_order": [
+          "candidate",
+          "baseline"
+        ],
+        "cpu_total_reduction_percent": 14.191923123994346,
+        "cpu_p99_delta_ns": -6643,
+        "usefulness_screen_pass": true,
+        "runs": {
+          "candidate": {
+            "scored_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 334050,
+              "p99_ns": 78699,
+              "maximum_ns": 286592,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 11441883243,
+              "p99_ns": 78961,
+              "maximum_ns": 286911,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          },
+          "baseline": {
+            "scored_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 334050,
+              "p99_ns": 85332,
+              "maximum_ns": 189842,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 13334273019,
+              "p99_ns": 85604,
+              "maximum_ns": 178659,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          }
+        }
+      },
+      {
+        "dataset": "physical-long",
+        "mode": "completion-midi-retention-on",
+        "execution_order": [
+          "baseline",
+          "candidate"
+        ],
+        "cpu_total_reduction_percent": 13.913629456982232,
+        "cpu_p99_delta_ns": -7805,
+        "usefulness_screen_pass": true,
+        "runs": {
+          "baseline": {
+            "scored_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 176464,
+              "p99_ns": 86926,
+              "maximum_ns": 163357,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 6634622870,
+              "p99_ns": 87217,
+              "maximum_ns": 163609,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          },
+          "candidate": {
+            "scored_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+            "reference_bit_identical": true,
+            "observation_verified": true,
+            "wall": {
+              "blocks": 176464,
+              "p99_ns": 79152,
+              "maximum_ns": 155825,
+              "deadline_overruns": 0,
+              "cpp_allocations": 0,
+              "cpp_frees": 0,
+              "c_allocations": 0,
+              "c_frees": 0
+            },
+            "thread_cpu": {
+              "total_ns": 5711506028,
+              "p99_ns": 79412,
+              "maximum_ns": 156094,
+              "deadline_overruns": 0,
+              "block_resolution_pass": true
+            }
+          }
+        }
+      }
+    ],
+    "interpretation": "One same-runner pair per case, alternating execution order. Thread CPU brackets include clock overhead. A screen pass justifies uninstrumented corpus validation; it does not clear earlier timing failures or establish note-quality gains or live readiness."
+  }
 }

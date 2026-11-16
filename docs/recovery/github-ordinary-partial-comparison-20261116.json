@@ -1,0 +1,124 @@
+{
+  "schema": "m3_ordinary_partial_comparison_checkpoint_v1",
+  "task": "ordinary-partial-comparison",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+  "native_candidate_commit": "67ec4bf211321cca03d692d03c1b8dbdb6bf57fa",
+  "source_commit": null,
+  "worker_commit": "90417256ae83d6dd90cc9fc6164b997db90031a8",
+  "run_id": null,
+  "status": "prepared_locally",
+  "conclusion": null,
+  "result_final": false,
+  "created_at": "2026-11-16T00:49:45.922021+00:00",
+  "updated_at": "2026-11-16T00:52:40.650292+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-partial-comparison-20261116.json",
+  "waiting_for_corpus_run": 43780127538,
+  "reference_manifest": "docs/recovery/ordinary-partial-references-20261116.json",
+  "reference_run_id": 43707756793,
+  "reference_report_sha256": "fba03015f4b0664b995481fedec82f0172e5d43d7dd5228be432c196740b16cf",
+  "dataset": "ordinary",
+  "cases": [
+    {
+      "name": "missing-note75",
+      "parent_note": 47,
+      "candidate_note": 75,
+      "start_sample": 163306,
+      "end_sample": 235200,
+      "example_sample": 167359,
+      "expected_labels": [
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "name": "false-note70-chord",
+      "parent_note": 42,
+      "candidate_note": 70,
+      "start_sample": 217,
+      "end_sample": 72000,
+      "example_sample": 4991,
+      "expected_labels": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "false-note70-gap",
+      "parent_note": 42,
+      "candidate_note": 70,
+      "start_sample": 72000,
+      "end_sample": 81839,
+      "example_sample": 72063,
+      "expected_labels": []
+    }
+  ],
+  "window": [
+    0,
+    235200
+  ],
+  "parent_notes": [
+    47,
+    42
+  ],
+  "planned_replays": 2,
+  "block_samples": 512,
+  "replay_timeout_seconds": 900,
+  "conditions": {
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ]
+  },
+  "input_release": "corpus-20261108",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "question": "Does measured fifth-partial motion relative to its fundamental distinguish missing note75 near parent47 from false note70 near parent42, at the saved decision times?",
+  "acceptance": [
+    "Two complete current-ON ordinary replays retain bit-identical scored TSV, raw MIDI and full outcome against the saved reference.",
+    "Fixed input hashes, annotation cases, zero-based sample clock and complete observation prefix are preserved.",
+    "Record raw, causally conditioned and 160ms preceding-window estimates with valid-pair coverage; missing or future-only estimates remain unknown."
+  ],
+  "interpretation": "Observations are demodulated mixture tracks, not source-pure partials. The 160ms fit may include the preceding passage and uses availability time. Relative amplitude is not SNR. No admission rule, threshold, timing or live-delivery claim follows from completing this diagnostic.",
+  "local_checks": {
+    "python_tests_passed": 31,
+    "new_runner_tests": 9,
+    "worker_shell_sections_passed": 54,
+    "source_shell_sections_passed": 4,
+    "yaml_parsed": true,
+    "diff_check": "passed",
+    "review": "Fixed cases, all six harmonic indexes, sample availability, full output identity, failure status and artifact retention reviewed once.",
+    "native_execution": false
+  },
+  "worker_output_dir": "build/github-results/ordinary-partial-comparison",
+  "report_relative_path": "ordinary-partial-comparison/report.json",
+  "dispatch_directory": "build/github-results/ordinary-partial-comparison-dispatch-20261116",
+  "report_available": false,
+  "small_artifact_collected": false,
+  "bulk_downloaded": false,
+  "installed_output_changed": false,
+  "production_defaults_changed": false,
+  "runtime_policy_changed": false,
+  "promotion_accepted": false,
+  "native_timing": "not measured by this diagnostic",
+  "external_host_and_hardware": "unverified",
+  "routing": {
+    "native_execution": "GitHub Actions only",
+    "workflow": "m3-offload.yml",
+    "ref": "main",
+    "dispatch_once": true,
+    "bulk_evidence": "remote; retain raw bounded motion if analysis fails"
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-partial-comparison",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10",
+    "midi_lifecycle": "false"
+  },
+  "next_step": "Prepare the exact source/worker revisions and source check. After collecting the existing corpus verdict, dispatch one bounded unchanged-output comparison. Inspect separation, overlap and unavailable observations before any native policy choice.",
+  "worker_pushed": true
+}
