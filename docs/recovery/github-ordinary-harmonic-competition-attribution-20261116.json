@@ -3,15 +3,14 @@
   "task": "ordinary-harmonic-competition-attribution",
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_base_commit": "901810163bce0487211db46d2d1a8b46ff250313",
+  "source_base_commit": "9152f953e77c9ac7a6b298091b3ed4d815d1cdff",
   "source_commit": null,
   "worker_base_commit": "58c1c80ae38a3c2ec1cfa3d8debf2ae432e29bb3",
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
+  "worker_commit": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4",
+  "status": "replacement_prepared",
   "result_final": false,
   "created_at": "2026-11-16T22:25:04.512280+00:00",
-  "updated_at": "2026-11-16T22:25:04.512280+00:00",
+  "updated_at": "2026-11-16T22:32:13.816727+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-competition-attribution-references-20261116.json",
   "dataset": "ordinary",
@@ -42,7 +41,7 @@
     "source_sha": null
   },
   "workflow": "m3-offload.yml",
-  "stage": "prepared retained cue/output comparison",
+  "stage": "separate fitted outputs from frozen input identity, then run one replacement saved-text analysis",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-harmonic-competition-attribution-{run_id}",
@@ -61,14 +60,86 @@
     "No new audio, native, timing, allocation, buffer or host measurement.",
     "Both underlying policies remain rejected; attribution cannot promote either policy."
   ],
-  "next_step": "Collect this saved-text comparison once, then choose the smallest falsifiable correction from its observed lower-support and shared-assignment evidence.",
+  "next_step": "Dispatch one replacement at the repaired source, collect its small report once, and choose the narrow next correction from the paired evidence.",
   "local_validation": {
-    "focused_synthetic_tests": 15,
+    "focused_synthetic_tests": 17,
     "focused_synthetic_result": "passed",
     "workflow_syntax": "passed",
     "worker_bash_sections": 58,
     "route_exclusions": "audio input download and native build/tests skipped",
     "artifact_routes": "matched both pinned report/evidence pairs",
     "diff_check": "passed"
+  },
+  "pre_dispatch_pending_runs": [],
+  "source_workflow_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 43969920170,
+      "headSha": "9152f953e77c9ac7a6b298091b3ed4d815d1cdff",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43969920170",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "prior_attempts": [
+    {
+      "run_id": 43970011258,
+      "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43970011258",
+      "source_commit": "9152f953e77c9ac7a6b298091b3ed4d815d1cdff",
+      "worker_commit": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4",
+      "status": "completed",
+      "conclusion": "failure",
+      "local_dir": "build/github-results/ordinary-harmonic-competition-attribution-43970011258",
+      "collection_status": "collected_once_hash_verified",
+      "collection_receipt": {
+        "collected_at": "2026-11-16T22:27:07.027773+00:00",
+        "artifact": {
+          "id": 14278376280,
+          "node_id": "MDg6QXJ0aWZhY3QxNDI3ODM3NjI4MA==",
+          "name": "m3-report-43970011258-1",
+          "size_in_bytes": 1437,
+          "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14278376280",
+          "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14278376280/zip",
+          "expired": false,
+          "digest": "sha256:acc990464c6f99184da931e31e358f8f0f13768171c688aed50cad4bac8af7d5",
+          "created_at": "2026-11-16T22:26:21Z",
+          "updated_at": "2026-11-16T22:26:21Z",
+          "expires_at": "2026-11-30T22:26:20Z",
+          "workflow_run": {
+            "id": 43970011258,
+            "repository_id": 1450767070,
+            "head_repository_id": 1450767070,
+            "head_branch": "main",
+            "head_sha": "beb42b5e16f62a2451576c7eb2c54da74eb8e5c4"
+          }
+        },
+        "archive_bytes": 1437,
+        "archive_sha256": "acc990464c6f99184da931e31e358f8f0f13768171c688aed50cad4bac8af7d5",
+        "hash_verified": true
+      },
+      "dispatch_attempt": {
+        "started_at": "2026-11-16T22:26:02.988931+00:00",
+        "state": "sent",
+        "returncode": 0,
+        "finished_at": "2026-11-16T22:26:05.271501+00:00"
+      },
+      "result_final": false,
+      "failure": "Original causal decision differs: the guard also compared independently fitted parent frequencies as immutable inputs.",
+      "analysis_result": false
+    }
+  ],
+  "repair": {
+    "fitted_frequency_handling": "Record all independently fitted parent frequency differences and their maximum absolute cents.",
+    "strict_identity_checks": [
+      "input manifest",
+      "current detector outcome",
+      "current raw MIDI",
+      "labels and sample clocks",
+      "observation timestamps",
+      "parent identities and saved phase values",
+      "original decision statuses"
+    ],
+    "saved_phase_frequency": "Still exact; only invalid-phase fitted frequencies are derived outputs.",
+    "measured_fit_differences": "pending replacement result"
   }
 }

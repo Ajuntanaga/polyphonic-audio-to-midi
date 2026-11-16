@@ -3,6 +3,7 @@ import argparse
 from collections import Counter
 from datetime import datetime, timezone
 import json
+import math
 import os
 from pathlib import Path
 
@@ -15,6 +16,30 @@ CURRENT, TRIAL = attribution.CURRENT, attribution.TRIAL
 
 def observation_key(row):
     return row['available_sample'], row['candidate_note']
+
+
+def compare_parent_inputs(left, right):
+    """Fitted frequencies are outputs; saved phase and parent identity are inputs."""
+    before, after = left.get('base_pitches', []), right.get('base_pitches', [])
+    if len(before) != len(after):
+        raise ValueError('Causal parent count differs')
+    both_fitted = all(row.get('parent_tuning', {}).get('status') == 'fitted'
+                      for row in (left, right))
+    differences = []
+    for old, new in zip(before, after):
+        fitted = both_fitted and old.get('phase_valid') is False
+        fields = set(old) | set(new)
+        if fitted:
+            fields.discard('frequency_hz')
+        if any(old.get(field) != new.get(field) for field in fields):
+            raise ValueError('Causal parent identity or saved phase differs')
+        if fitted and old['frequency_hz'] != new['frequency_hz']:
+            hz = old['frequency_hz'], new['frequency_hz']
+            if not all(math.isfinite(value) and value > 0 for value in hz):
+                raise ValueError('Invalid fitted parent frequency')
+            differences.append(dict(note=old['note'], tuning_hz=hz[0], competition_hz=hz[1],
+                                    difference_cents=1200 * math.log2(hz[1] / hz[0])))
+    return differences
 
 
 def match_observations(before, after):
@@ -32,20 +57,27 @@ def match_observations(before, after):
     old, new = indexed
     if old.keys() != new.keys():
         raise ValueError('Frozen observation identities differ')
-    withheld = []
+    withheld, fit_differences = [], []
     for key in sorted(old):
         left, right = old[key], new[key]
-        if (any(left.get(field) != right.get(field) for field in
-                ('window_start_sample', 'baseline_state_sample', 'base_pitches'))
-                or left['status'] != right['original_status']):
-            raise ValueError('Original causal decision differs')
+        for field in ('window_start_sample', 'baseline_state_sample'):
+            if left[field] != right[field]:
+                raise ValueError(f'Causal observation {key} differs at {field}: '
+                                 f'{left[field]!r} != {right[field]!r}')
+        if left['status'] != right['original_status']:
+            raise ValueError(f'Original decision {key} differs: '
+                             f'{left["status"]!r} != {right["original_status"]!r}')
+        differences = compare_parent_inputs(left, right)
+        if differences:
+            fit_differences.append(dict(available_sample=key[0], candidate_note=key[1],
+                                        parents=differences))
         if right['admitted'] and not left['admitted']:
             raise ValueError('Competition added an admission')
         if left['admitted'] and not right['admitted']:
             if right['status'] != 'lower_competition_withheld':
                 raise ValueError('Unexpected reason for withholding')
             withheld.append(right)
-    return old, new, withheld
+    return old, new, withheld, fit_differences
 
 
 def require_shared_reference(screens):
@@ -58,6 +90,11 @@ def require_shared_reference(screens):
     if (left['saved']['runs'][CURRENT]['midi_trace']['raw_sha256'] !=
             right['saved']['runs'][CURRENT]['midi_trace']['raw_sha256']):
         raise ValueError('Shared current MIDI bytes differ')
+    if left['saved']['input_manifest_sha256'] != right['saved']['input_manifest_sha256']:
+        raise ValueError('Shared input manifest differs')
+    if (left['saved']['runs'][CURRENT]['outcome_sha256'] !=
+            right['saved']['runs'][CURRENT]['outcome_sha256']):
+        raise ValueError('Shared causal detector outcome differs')
 
 
 def expected_pitch_intervals(labels, start, end, note):
@@ -80,7 +117,8 @@ def overlap(left, right, start, end):
 
 def paired_analysis(screens, focus_labels, focus_cue):
     require_shared_reference(screens)
-    old, new, withheld = match_observations(*(screens[name]['observations'] for name in SCREENS))
+    old, new, withheld, fit_differences = match_observations(
+        *(screens[name]['observations'] for name in SCREENS))
     labels = screens['tuning']['labels']
     count = screens['tuning']['sample_count']
     reproduction, screen_changes = {}, {}
@@ -145,6 +183,10 @@ def paired_analysis(screens, focus_labels, focus_cue):
     target_decisions = [row for row in new.values() if row['candidate_note'] == target['midi_note']
         and target['start_sample'] <= row['available_sample'] + 1 < target['end_sample']]
     result = dict(shared_current_identity_pass=True, saved_metric_reproduction_pass=True,
+        shared_input_manifest_and_causal_outcome_pass=True, original_decision_statuses_identical=True,
+        fitted_parent_output_differences=dict(observations=len(fit_differences),
+            maximum_absolute_cents=max((abs(parent['difference_cents']) for row in fit_differences
+                for parent in row['parents']), default=0.), rows=fit_differences),
         observations=len(old), cue_counts={name: len(screens[name]['cues']) for name in SCREENS},
         withheld_count=len(rows), withheld_by_upper_lower=[dict(upper=upper, lower=lower, count=n)
             for (upper, lower), n in sorted(by_pair.items())],
@@ -180,6 +222,8 @@ def analyze(reference_path, archives, output):
         'Cue pitch annotation does not test string assignment. Output durations are voice-samples; '
         'exact held durations count overlapping label-samples. Gap outputs are extra notes, not missing notes. '
         'Cue/output overlaps are associations, not proof of native branch selection. '
+        'Fitted parent frequencies are computed outputs; any differences are reported separately '
+        'from identical frozen detector input and original decision status. '
         'The competition and tuning trials remain rejected; no new note quality, timing, allocation, buffer '
         'or host measurement is performed.')
     (output / 'report.json').write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')

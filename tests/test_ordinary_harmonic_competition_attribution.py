@@ -37,7 +37,8 @@ def make_archives(root):
     for index, (name, rows) in enumerate(zip(subject.SCREENS, decisions())):
         small, bulk = root / (name + '-small.zip'), root / (name + '-bulk.zip')
         trial = events(common + ([(1536, 2560, 72, 4)] if name == 'tuning' else []))
-        saved = dict(final=True, source=dict(commit=str(index) * 40, run_id=index + 1), runs={})
+        saved = dict(final=True, source=dict(commit=str(index) * 40, run_id=index + 1),
+                     input_manifest_sha256='shared-input', runs={})
         with zipfile.ZipFile(bulk, 'w') as archive:
             for mode, trace, holds, totals in (
                 (subject.CURRENT, current, [0, 2048], [2048, 0, 0, 0]),
@@ -49,6 +50,7 @@ def make_archives(root):
                 filename = mode + '.tsv.gz'
                 archive.writestr(filename, packed)
                 saved['runs'][mode] = dict(sample_count=4096, sample_rate=96000,
+                    outcome_sha256='shared-outcome',
                     midi_trace=dict(file=filename, **spec(packed), raw_bytes=len(raw), raw_sha256=spec(raw)['sha256']),
                     midi_lifecycle=dict(transitions=len(trace), labels=[dict(row, exact_held_samples=hold)
                         for row, hold in zip(labels, holds)], output_safety=dict(counts={
@@ -110,6 +112,31 @@ class PairedAttributionTests(unittest.TestCase):
         after[-1]['admitted'] = True
         with self.assertRaisesRegex(ValueError, 'added an admission'):
             subject.match_observations(before, after)
+
+    def test_fitted_parent_difference_is_reported_not_treated_as_changed_input(self):
+        before, after = decisions()
+        for row in (before[0], after[0]):
+            row.update(parent_tuning=dict(status='fitted'), base_pitches=[
+                dict(note=40, frequency_hz=82., phase_cents=0., phase_valid=False)])
+        after[0]['base_pitches'][0]['frequency_hz'] = 82.000000000001
+        _, _, _, differences = subject.match_observations(before, after)
+        self.assertEqual(len(differences), 1)
+        self.assertGreater(differences[0]['parents'][0]['difference_cents'], 0.)
+        for field, value in [('note', 41), ('phase_cents', 1.), ('phase_valid', True)]:
+            changed = copy.deepcopy(after)
+            changed[0]['base_pitches'][0][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Causal parent'):
+                subject.match_observations(before, changed)
+        after[0]['original_status'] = 'prediction_rejected'
+        with self.assertRaisesRegex(ValueError, 'Original decision'):
+            subject.match_observations(before, after)
+
+    def test_saved_phase_frequency_must_remain_identical(self):
+        old = dict(base_pitches=[dict(note=40, frequency_hz=82., phase_valid=True)])
+        new = copy.deepcopy(old)
+        new['base_pitches'][0]['frequency_hz'] = 83.
+        with self.assertRaisesRegex(ValueError, 'Causal parent'):
+            subject.compare_parent_inputs(old, new)
 
     def test_different_reference_stops_pairing(self):
         with tempfile.TemporaryDirectory() as temporary:
