@@ -1,14 +1,14 @@
 {
   "schema": "m3_sample_observation_paired_checkpoint_v1",
-  "updated_at": "2026-11-16T00:04:20.164549+00:00",
-  "state": "prepared",
+  "updated_at": "2026-11-16T00:07:00.183493+00:00",
+  "state": "source_test_helper_corrected",
   "final": false,
   "source": {
     "repository": "Ajuntanaga/polyphonic-audio-to-midi",
     "base_commit": "072d1e5f721cd24dc6fcdd5c210838f8685366ed",
-    "commit": null,
+    "commit": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
     "worker_repository": "Ajuntanaga/m3-offload",
-    "worker_commit": null,
+    "worker_commit": "7fb5c0f1fb70d3cdfcc3acc0e4f632ad566d926f",
     "run_id": null,
     "run_attempt": 1,
     "task": "sample-observe-paired",
@@ -65,5 +65,39 @@
     "diff_check_passed": true,
     "native_processing_run_locally": false
   },
-  "next": "Commit the prepared source and worker route, pass source portable and production CI, then dispatch exactly one six-replay GitHub comparison. Revert the native optimization if any usefulness or identity condition fails; do not broaden it."
+  "next": "Push corrected native test helper, pass replacement source portable and production CI, then dispatch exactly one six-replay comparison.",
+  "source_checks": [
+    {
+      "conclusion": "",
+      "databaseId": 43778210875,
+      "headSha": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+      "name": "CI",
+      "status": "in_progress",
+      "updatedAt": "2026-11-16T00:04:35Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778210875"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 43778210904,
+      "headSha": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+      "name": "Portable offline replay",
+      "status": "in_progress",
+      "updatedAt": "2026-11-16T00:04:34Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43778210904"
+    }
+  ],
+  "source_checks_raw": "build/github-results/sample-observation-paired-dispatch-20261116/20261116T000444Z-source-checks.stdout",
+  "source_attempts": [
+    {
+      "commit": "109269b047477e2e266b6cee03eda6e9a9b5fdf6",
+      "portable_run": 43778210904,
+      "portable_conclusion": "failure",
+      "ci_run": 43778210875,
+      "ci_state": "superseded; last observation in_progress",
+      "failure": "Existing guard-reference fixture called removed private update_cell method at two sites; compilation stopped before replay.",
+      "correction": "Retain original scalar arithmetic in the fixture and compare against the batched detector path.",
+      "failed_log": "build/github-results/sample-observation-paired-dispatch-20261116/source-43778210904-failed.stdout",
+      "worker_dispatched": false
+    }
+  ]
 }

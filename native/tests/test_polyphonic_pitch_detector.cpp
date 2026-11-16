@@ -46,6 +46,31 @@ struct PolyphonicPitchDetectorTestAccess final {
       }
     };
     constexpr std::array<double, 4U> samples{0.25, -0.5, 0.125, 0.0};
+    // Retain the original scalar arithmetic independently of the batched path.
+    const auto update_reference = [&](auto& cell, double sample) noexcept {
+      const double next_cosine =
+          cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
+      const double next_sine =
+          cell.sine * cell.cosine_step + cell.cosine * cell.sine_step;
+      cell.cosine = next_cosine;
+      cell.sine = next_sine;
+      const double mix = 1.0 - detector.correlation_decay;
+      cell.fast_real = detector.correlation_decay * cell.fast_real +
+                       mix * sample * next_cosine;
+      cell.fast_imaginary = detector.correlation_decay * cell.fast_imaginary -
+                            mix * sample * next_sine;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (detector.diagnostic_selection_window_only_) {
+        const double selection_mix = 1.0 - detector.diagnostic_selection_decay_;
+        cell.diagnostic_selection_real =
+            detector.diagnostic_selection_decay_ * cell.diagnostic_selection_real +
+            selection_mix * sample * next_cosine;
+        cell.diagnostic_selection_imaginary =
+            detector.diagnostic_selection_decay_ * cell.diagnostic_selection_imaginary -
+            selection_mix * sample * next_sine;
+      }
+#endif
+    };
     for (std::size_t index = 0U; index < 32U; ++index) {
       const double sample = samples[index % samples.size()];
       const double dc_blocked = sample - detector.previous_input_ +
@@ -53,10 +78,10 @@ struct PolyphonicPitchDetectorTestAccess final {
       // Keep the former enabled-cell scan as the reference, including cells
       // excluded by the harmonic limit or sample-rate cutoff.
       for (auto& cell : lower) {
-        if (cell.enabled) detector.update_cell(cell, dc_blocked);
+        if (cell.enabled) update_reference(cell, dc_blocked);
       }
       for (auto& cell : upper) {
-        if (cell.enabled) detector.update_cell(cell, dc_blocked);
+        if (cell.enabled) update_reference(cell, dc_blocked);
       }
       (void)detector.process_sample(sample);
       expect_cells(detector.lower_cents_guard_cells_, lower);
