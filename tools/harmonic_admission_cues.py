@@ -18,6 +18,8 @@ from tools.portable_ordinary_harmonic_prediction import (
 
 CONFIG = {key: value for key, value in PREDICTION_CONFIG.items() if key != 'candidates'}
 CONFIG.update(lowest_note=32, highest_note=84, minimum_independent_pairs=2,
+    minimum_supported_pairs=2,
+    harmonic_support='leave-one-pair-out held-out prediction gain above numerical guard',
     pair_singular_ratio_floor=1e-3, full_singular_ratio_floor=1e-4,
     numerical_guard_factor=64, score_ratio=.20, fundamental_ratio=.80,
     selection='all eligible below-threshold pitches at the past-only fixed cadence',
@@ -131,10 +133,33 @@ def evaluate_candidate(window, prepared, note):
     base_error = prepared['base_error']
     gain = base_error - error
     guard = numerical_gain_guard(base_error, error)
-    return dict(result, status='prediction_pass' if gain > guard else 'prediction_rejected',
-        admitted=bool(gain > guard), base_prediction_error_fraction=base_error,
+    result.update(base_prediction_error_fraction=base_error,
         added_prediction_error_fraction=error, prediction_gain_fraction=gain,
         numerical_gain_guard=guard)
+    if gain <= guard:
+        return dict(result, status='prediction_rejected')
+
+    # Geometric independence only says a partial could be distinguished from
+    # the baseline. Require its own held-out contribution, conditional on all
+    # other candidate partials. One strong partial must not supply the evidence
+    # for every geometrically independent (but silent) pair.
+    support = []
+    base_columns, count = prepared['base'].shape[1], len(passing)
+    for index, harmonic in enumerate(passing):
+        reduced = np.delete(full, [base_columns + index, base_columns + count + index], axis=1)
+        reduced_weights = coefficients(factor(reduced[:train]), prepared['signal'][:train])
+        reduced_residual = prepared['signal'][train:] - reduced[train:] @ reduced_weights
+        reduced_error = float(reduced_residual @ reduced_residual) / prepared['energy']
+        pair_gain = reduced_error - error
+        pair_guard = numerical_gain_guard(reduced_error, error)
+        support.append(dict(harmonic=harmonic + 1,
+            without_pair_prediction_error_fraction=reduced_error,
+            conditional_prediction_gain_fraction=pair_gain,
+            numerical_gain_guard=pair_guard, supported=bool(pair_gain > pair_guard)))
+    supported = [row['harmonic'] for row in support if row['supported']]
+    admitted = len(supported) >= CONFIG['minimum_supported_pairs']
+    return dict(result, status='prediction_pass' if admitted else 'insufficient_supported_pairs',
+        admitted=admitted, supported_harmonics=supported, harmonic_support=support)
 
 
 def eligible_notes(frame):

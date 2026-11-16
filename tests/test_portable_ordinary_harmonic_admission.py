@@ -238,7 +238,7 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
 
     def test_saved_selection_is_consistent_with_existing_full_file_anchors(self):
         root = Path(__file__).resolve().parents[1] / 'docs/recovery'
-        selected = json.loads((root / 'ordinary-harmonic-admission-references-20261116.json').read_text())
+        selected = json.loads((root / 'ordinary-harmonic-support-references-20261116.json').read_text())
         corpus = json.loads((root / 'calibrated-midi-retention-corpus-references-20261115.json').read_text())
         partial = json.loads((root / 'ordinary-partial-references-20261116.json').read_text())
         self.assertEqual(selected['runs'], corpus['datasets']['ordinary'])

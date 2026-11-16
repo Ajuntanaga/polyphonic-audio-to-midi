@@ -56,7 +56,30 @@ class HarmonicAdmissionCueTests(unittest.TestCase):
         self.assertTrue(added['admitted'])
         self.assertGreater(added['prediction_gain_fraction'], .01)
         self.assertGreaterEqual(len(added['independent_harmonics']), 2)
+        self.assertEqual(added['supported_harmonics'], [1, 2])
         self.assertLess(added['added_prediction_error_fraction'], 1e-20)
+
+    def test_one_actual_partial_cannot_borrow_support_from_silent_pairs(self):
+        clock = np.arange(4800) / RATE
+        parent, extra = [440 * 2 ** ((n - 69) / 12) for n in (48, 73)]
+        baseline = np.cos(2 * np.pi * parent * clock) + .3 * np.sin(2 * np.pi * parent * 9 * clock)
+        for harmonic in (1, 2, 3, 4):
+            with self.subTest(harmonic=harmonic):
+                row = self.evaluate(baseline + .3 * np.sin(2 * np.pi * extra * harmonic * clock + .4))
+                self.assertEqual(row['independent_harmonics'], [1, 2, 3, 4])
+                self.assertGreater(row['prediction_gain_fraction'], .01)
+                self.assertEqual(row['supported_harmonics'], [harmonic])
+                self.assertEqual(row['status'], 'insufficient_supported_pairs')
+                self.assertFalse(row['admitted'])
+
+    def test_two_nonadjacent_actual_partials_have_separate_support(self):
+        clock = np.arange(4800) / RATE
+        parent, extra = [440 * 2 ** ((n - 69) / 12) for n in (48, 73)]
+        baseline = np.cos(2 * np.pi * parent * clock)
+        row = self.evaluate(baseline + .3 * np.cos(2 * np.pi * extra * 2 * clock)
+                            + .2 * np.sin(2 * np.pi * extra * 4 * clock))
+        self.assertEqual(row['supported_harmonics'], [2, 4])
+        self.assertTrue(row['admitted'])
 
     def test_exact_and_near_shared_parent_grid_cannot_admit_parent_only_signal(self):
         clock = np.arange(4800) / RATE

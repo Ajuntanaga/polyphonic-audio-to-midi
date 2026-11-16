@@ -101,9 +101,10 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400)
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
             'voice-samples/onsets are separate. Gap outputs are extra notes, not missing notes.',
         limitations='Offline frozen-shadow cues do not establish a native feedback path or '
-            'real-time cost. Two geometrically independent harmonic pairs do not prove two '
-            'audible partials. The prediction-gain guard excludes numerical roundoff; it is '
-            'not an audibility threshold. Labels are used only after cue generation for scoring.')
+            'real-time cost. Conditional prediction contributions can still explain model '
+            'mismatch rather than independent notes. The prediction-gain guard excludes '
+            'numerical roundoff; it is not an audibility or noise threshold. Labels are '
+            'used only after cue generation for scoring.')
     deadline = time.monotonic() + max_seconds
     cue_path = output / 'ordinary-harmonic-admission-cues.tsv'
     evidence_path = output / 'ordinary-harmonic-admission-evidence.jsonl.gz'

@@ -4,13 +4,13 @@
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "3efeddfe3a8e64bb66cb2c30a2b22393f3df1877",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "result_final": false,
+  "source_commit": "2c2fa302377911bea77394e3a180dd7de3fe87b7",
+  "worker_commit": "c6af6cd0fe4b060f1141f939ed13c6ebb0721c11",
+  "run_id": 43797328355,
+  "status": "completed",
+  "result_final": true,
   "created_at": "2026-11-16T03:15:48.770653+00:00",
-  "updated_at": "2026-11-16T03:15:48.770653+00:00",
+  "updated_at": "2026-11-16T03:21:26.087392+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-attribution-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-attribution-references-20261116.json",
   "dataset": "ordinary",
@@ -39,14 +39,15 @@
     "dataset": "ordinary",
     "note": "75",
     "label_index": "10",
-    "midi_lifecycle": "false"
+    "midi_lifecycle": "false",
+    "source_sha": "2c2fa302377911bea77394e3a180dd7de3fe87b7"
   },
   "workflow": "m3-offload.yml",
-  "stage": "prepared retained-output comparison",
+  "stage": "final attribution; geometric-only admission flaw isolated",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-harmonic-attribution-{run_id}",
-  "collection_status": "not dispatched",
+  "collection_status": "collected",
   "promotion_accepted": false,
   "installed_output_changed": false,
   "scoreboard_changed": false,
@@ -61,6 +62,182 @@
     "Saved output establishes delivered offline pitches and lanes, not why the joint assignment changed.",
     "No new detector, audio, timing, allocation, buffer or host measurement."
   ],
-  "next_step": "Use the retained comparison to choose the smallest replacement admission or assignment condition. Require target recovery with no passage or false-output regression before any corpus or host work.",
-  "source_checks": []
+  "next_step": "Require two separately supported harmonic pairs using leave-one-pair-out held-out prediction. Preserve fixed cadence, conditioning, numerical guard and native assignment policy; test a one-partial negative and two-partial positive before one bounded ordinary GHA screen.",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-16T03:16:03Z",
+      "databaseId": 43797140355,
+      "headSha": "2c2fa302377911bea77394e3a180dd7de3fe87b7",
+      "status": "completed",
+      "updatedAt": "2026-11-16T03:17:30Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43797140355",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "dispatch_attempted_at": "2026-11-16T03:17:50.158991+00:00",
+  "dispatch_exit_code": 0,
+  "dispatch_output_saved": "build/github-results/ordinary-harmonic-attribution-source-checks/dispatch.stdout.txt",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43797328355",
+  "local_dir": "build/github-results/ordinary-harmonic-attribution-43797328355",
+  "small_artifact_name": "m3-report-43797328355-1",
+  "bulk_artifact_name": "m3-evidence-43797328355-1",
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "id": 14195315223,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5NTMxNTIyMw==",
+      "name": "m3-evidence-43797328355-1",
+      "size_in_bytes": 22791,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195315223",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195315223/zip",
+      "expired": false,
+      "digest": "sha256:5ae0c12184ec2c4315dab3eb506ba8d46ee1caf61a11f8668f1fab1dd0630166",
+      "created_at": "2026-11-16T03:18:26Z",
+      "updated_at": "2026-11-16T03:18:26Z",
+      "expires_at": "2026-11-23T03:18:25Z",
+      "workflow_run": {
+        "id": 43797328355,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "c6af6cd0fe4b060f1141f939ed13c6ebb0721c11"
+      }
+    },
+    {
+      "id": 14193964947,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5Mzk2NDk0Nw==",
+      "name": "m3-report-43797328355-1",
+      "size_in_bytes": 16569,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14193964947",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14193964947/zip",
+      "expired": false,
+      "digest": "sha256:de49e0cc6057dd204fc8a2691197f156df54aa416fc862bdc3dd1d1698c837d8",
+      "created_at": "2026-11-16T03:18:25Z",
+      "updated_at": "2026-11-16T03:18:25Z",
+      "expires_at": "2026-11-30T03:18:24Z",
+      "workflow_run": {
+        "id": 43797328355,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "c6af6cd0fe4b060f1141f939ed13c6ebb0721c11"
+      }
+    }
+  ],
+  "collection_attempted_at": "2026-11-16T03:18:52.647971+00:00",
+  "collected_at": "2026-11-16T03:18:53.985271+00:00",
+  "report": "build/github-results/ordinary-harmonic-attribution-43797328355/ordinary-harmonic-attribution/report.json",
+  "report_sha256": "20554fbb96613709d4f1aa3f6cf129f649be3eda0f7d7d5d398d64fb68d653ac",
+  "report_bytes": 149430,
+  "small_archive_sha256": "de49e0cc6057dd204fc8a2691197f156df54aa416fc862bdc3dd1d1698c837d8",
+  "collected_verdict": "build/github-results/ordinary-harmonic-attribution-43797328355/collected-verdict.json",
+  "result_summary": {
+    "run_id": 43797328355,
+    "source_commit": "2c2fa302377911bea77394e3a180dd7de3fe87b7",
+    "result": "completed attribution; prior admission screen remains rejected",
+    "input_identity_pass": true,
+    "saved_metric_reproduction_pass": true,
+    "focus_cases": [
+      {
+        "label": {
+          "label_index": 10,
+          "midi_note": 75,
+          "string_mask": 128,
+          "start_sample": 163306,
+          "end_sample": 235200
+        },
+        "lost_exact_samples": 0,
+        "gained_exact_samples": 64193,
+        "loss_causes": {},
+        "coverage": {
+          "current-on": {
+            "exact": 0,
+            "pitch_present": 0
+          },
+          "harmonic-admission-on": {
+            "exact": 64193,
+            "pitch_present": 64193
+          }
+        },
+        "net_exact_change": 64193
+      },
+      {
+        "label": {
+          "label_index": 117,
+          "midi_note": 60,
+          "string_mask": 16,
+          "start_sample": 2121799,
+          "end_sample": 2193600
+        },
+        "lost_exact_samples": 2816,
+        "gained_exact_samples": 320,
+        "loss_causes": {
+          "wrong_or_incomplete_assignment": 2816
+        },
+        "coverage": {
+          "current-on": {
+            "exact": 41409,
+            "pitch_present": 62081
+          },
+          "harmonic-admission-on": {
+            "exact": 38913,
+            "pitch_present": 59201
+          }
+        },
+        "net_exact_change": -2496
+      },
+      {
+        "label": {
+          "label_index": 206,
+          "midi_note": 46,
+          "string_mask": 4,
+          "start_sample": 3672217,
+          "end_sample": 3744000
+        },
+        "lost_exact_samples": 1408,
+        "gained_exact_samples": 0,
+        "loss_causes": {
+          "wrong_or_incomplete_assignment": 1408
+        },
+        "coverage": {
+          "current-on": {
+            "exact": 48961,
+            "pitch_present": 48961
+          },
+          "harmonic-admission-on": {
+            "exact": 47553,
+            "pitch_present": 48961
+          }
+        },
+        "net_exact_change": -1408
+      }
+    ],
+    "false_voice_samples": {
+      "current-on": {
+        "matched": 8721923,
+        "false_wrong_string": 4953010,
+        "false_wrong_note": 8222039,
+        "false_gap": 3761781
+      },
+      "harmonic-admission-on": {
+        "matched": 9210623,
+        "false_wrong_string": 5402480,
+        "false_wrong_note": 8370110,
+        "false_gap": 3941524
+      }
+    },
+    "interpretation": [
+      "Target label10/note75 gains 64193 exact and pitch-present samples; this is real offline pitch recovery.",
+      "Label117/note60 loses 2816 exact samples and gains 320: exact-loss spans retain the pitch on the wrong lane. Separately, total pitch-present coverage falls 62081 to59201, so this label also has a2880-sample pitch-presence regression.",
+      "Label206/note46 loses1408 exact samples while pitch-present coverage stays48961. Wrong lane1 replaces expected lane2 while admitted note57 occupies lane2; preceding cues are association, not a native branch trace.",
+      "Wrong-note, wrong-string and gap voice-samples increase148071,449470,179743. Gap outputs are extra notes during unlabeled gaps.",
+      "The admission model counts geometric distinguishability but checks prediction support only in aggregate. A synthetic parent plus one candidate partial passes despite the intended two-partial requirement."
+    ],
+    "next_step": "Require two separately supported harmonic pairs using leave-one-pair-out held-out prediction. Preserve fixed cadence, conditioning, numerical guard and native assignment policy; test a one-partial negative and two-partial positive before one bounded ordinary GHA screen.",
+    "limits": "No native/audio execution in attribution; no native branch trace, timing, allocation, buffer or host evidence. Correcting harmonic support alone may not prevent incumbent string movement.",
+    "installed_output_changed": false,
+    "scoreboard_changed": false,
+    "promotion_accepted": false
+  }
 }
