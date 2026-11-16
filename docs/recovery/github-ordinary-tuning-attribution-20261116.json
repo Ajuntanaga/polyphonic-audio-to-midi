@@ -1,0 +1,66 @@
+{
+  "schema": "m3_ordinary_tuning_attribution_checkpoint_v1",
+  "task": "ordinary-tuning-attribution",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_base_commit": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
+  "source_commit": null,
+  "worker_commit": null,
+  "run_id": null,
+  "status": "prepared",
+  "result_final": false,
+  "created_at": "2026-11-16T20:51:58.014777+00:00",
+  "updated_at": "2026-11-16T20:51:58.014777+00:00",
+  "checkpoint": "docs/recovery/github-ordinary-tuning-attribution-20261116.json",
+  "reference_manifest": "docs/recovery/ordinary-tuning-attribution-references-20261116.json",
+  "dataset": "ordinary",
+  "question": "Do the largest surviving false admissions occur despite fitted or valid parent tuning, or is unresolved tuning still responsible? Contrast recovered target75 and preserve the separate label117 loss evidence.",
+  "scope": {
+    "retained_run_id": 43801355401,
+    "focus_labels": [
+      10,
+      117
+    ],
+    "native_replays": 0,
+    "audio_processed": false,
+    "policy_changed": false,
+    "bulk_inputs": "downloaded only on GitHub",
+    "analysis": "existing saved-output attribution runner"
+  },
+  "dispatch_inputs": {
+    "task": "ordinary-tuning-attribution",
+    "dataset": "ordinary",
+    "note": "75",
+    "label_index": "10"
+  },
+  "workflow": "m3-offload.yml",
+  "stage": "prepared retained tuning attribution",
+  "small_artifact_name_template": "m3-report-{run_id}-1",
+  "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
+  "local_dir_template": "build/github-results/ordinary-tuning-attribution-{run_id}",
+  "collection_status": "not dispatched",
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "production_policy_changed": false,
+  "acceptance": [
+    "All retained archives and members match fixed hashes.",
+    "All saved label holds and output-safety totals reproduce.",
+    "Report parent-tuning state and supported pairs for target75 and largest false outputs.",
+    "Do not interpret cue association as native branch causation."
+  ],
+  "limitations": [
+    "No new audio, native, timing, allocation, buffer or host measurement.",
+    "Attribution chooses a falsifiable model correction; it cannot accept the rejected tuning policy."
+  ],
+  "next_step": "Use the surviving case to choose one synthetic mechanism check; do not repeat an unchanged corpus or tune thresholds.",
+  "pre_dispatch_pending_runs": [],
+  "local_validation": {
+    "workflow_syntax": "passed",
+    "worker_bash_sections": 57,
+    "route_exclusions": "audio download and native build/tests skipped",
+    "artifact_routes": "all three branches correct",
+    "attribution_runner": "unchanged; worker runs existing synthetic contracts",
+    "diff_check": "passed"
+  }
+}

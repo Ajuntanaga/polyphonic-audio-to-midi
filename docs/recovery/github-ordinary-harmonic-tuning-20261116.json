@@ -75,27 +75,138 @@
   "schema": "m3_ordinary_harmonic_tuning_checkpoint_v1",
   "task": "ordinary-harmonic-tuning",
   "source_base_commit": "854217c877fcdb016f67a1784b718bb6813dec6b",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "result_final": false,
+  "source_commit": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
+  "worker_commit": "267482abe0e8bb12801099fa3d1c8b2133280f13",
+  "run_id": 43801355401,
+  "status": "completed",
+  "result_final": true,
   "created_at": "2026-11-16T03:56:38.547218+00:00",
-  "updated_at": "2026-11-16T03:58:55.859830+00:00",
+  "updated_at": "2026-11-16T20:49:16.825664+00:00",
   "checkpoint": "docs/recovery/github-ordinary-harmonic-tuning-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-harmonic-tuning-references-20261116.json",
   "question": "Does training-only parent tuning remove harmonic model-mismatch admissions while retaining target note75 and every ordinary passage without false-output growth?",
-  "stage": "synthetic controls passed; bounded ordinary screen prepared",
-  "collection_status": "not dispatched",
+  "stage": "final bounded screen; rejected",
+  "collection_status": "small artifact collected once; bulk remains remote",
   "local_dir_template": "build/github-results/ordinary-harmonic-tuning-{run_id}",
   "dispatch_inputs": {
-    "source_sha": null,
+    "source_sha": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
     "task": "ordinary-harmonic-tuning",
     "dataset": "ordinary",
     "note": "75",
     "label_index": "10"
   },
-  "source_runs": [],
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-16T03:59:08Z",
+      "databaseId": 43801316296,
+      "headSha": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
+      "jobs": [
+        {
+          "completedAt": "2026-11-16T04:00:46Z",
+          "conclusion": "success",
+          "databaseId": 133082012818,
+          "name": "offline",
+          "startedAt": "2026-11-16T03:59:12Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-16T03:59:15Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-16T03:59:13Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T03:59:19Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-16T03:59:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T03:59:20Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-python@v7",
+              "number": 3,
+              "startedAt": "2026-11-16T03:59:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T03:59:56Z",
+              "conclusion": "success",
+              "name": "Configure and build diagnostic replay",
+              "number": 4,
+              "startedAt": "2026-11-16T03:59:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:21Z",
+              "conclusion": "success",
+              "name": "Native tests",
+              "number": 5,
+              "startedAt": "2026-11-16T03:59:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:38Z",
+              "conclusion": "success",
+              "name": "Replay comparison contracts",
+              "number": 6,
+              "startedAt": "2026-11-16T04:00:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:40Z",
+              "conclusion": "success",
+              "name": "Synthetic buffer parity smoke check",
+              "number": 7,
+              "startedAt": "2026-11-16T04:00:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:42Z",
+              "conclusion": "success",
+              "name": "Keep bounded diagnostic artifacts",
+              "number": 8,
+              "startedAt": "2026-11-16T04:00:40Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:43Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@v7",
+              "number": 15,
+              "startedAt": "2026-11-16T04:00:42Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:43Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 16,
+              "startedAt": "2026-11-16T04:00:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-16T04:00:43Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-11-16T04:00:43Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43801316296/job/133082012818"
+        }
+      ],
+      "status": "completed",
+      "updatedAt": "2026-11-16T04:00:47Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/43801316296"
+    }
+  ],
   "local_validation": {
     "result": "pass",
     "test_result": "build/github-results/ordinary-harmonic-tuning-source-checks/tests.stderr",
@@ -107,7 +218,7 @@
     "diff_check": "pass"
   },
   "limitations": "Offline frozen-shadow admission only. Training-only nonlinear tuning is not a proposed real-time implementation. Synthetic falsification establishes a model failure mechanism, not its cause in the recording. Passing this screen does not establish corpus safety, native deadlines, allocations, buffers or external host delivery.",
-  "next_step": "Run this fixed ordinary screen once on GitHub Actions. Reject any passage loss or false-output growth; do not broaden or promote a rejected rule.",
+  "next_step": "Use retained tuning-screen cue and MIDI evidence to identify which remaining false admissions survive, and distinguish their model failure from the already recorded label117 shared-assignment loss. No unchanged corpus rerun, threshold sweep or production promotion.",
   "synthetic_controls": {
     "result": "pass; all 25 focused tests including the frozen reference manifest",
     "tests": [
@@ -121,5 +232,794 @@
     "fit_bounds_cents": 50,
     "max_evaluations": 12,
     "causal_mechanism_evidence": "build/github-results/ordinary-support-attribution-source-checks/synthetic-parent-tuning-falsifier.json"
+  },
+  "pre_dispatch_pending_runs": [],
+  "dispatch_receipt": "build/github-results/ordinary-harmonic-tuning-source-checks/dispatch-result.json",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43801355401",
+  "local_dir": "build/github-results/ordinary-harmonic-tuning-43801355401",
+  "small_artifact_name": "m3-report-43801355401-1",
+  "bulk_artifact_name": "m3-evidence-43801355401-1",
+  "workflow_conclusion": "success",
+  "last_observation": "2026-11-16T20:44:40.515460+00:00",
+  "remote_observation": {
+    "conclusion": "success",
+    "createdAt": "2026-11-16T03:59:35Z",
+    "databaseId": 43801355401,
+    "headSha": "267482abe0e8bb12801099fa3d1c8b2133280f13",
+    "jobs": [
+      {
+        "completedAt": "2026-11-16T04:15:50Z",
+        "conclusion": "success",
+        "databaseId": 133082150158,
+        "name": "process",
+        "startedAt": "2026-11-16T03:59:39Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-16T03:59:42Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-16T03:59:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T03:59:45Z",
+            "conclusion": "success",
+            "name": "Verify public destination and source selection",
+            "number": 2,
+            "startedAt": "2026-11-16T03:59:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T03:59:49Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-16T03:59:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T03:59:49Z",
+            "conclusion": "skipped",
+            "name": "Run actions/checkout@v7",
+            "number": 4,
+            "startedAt": "2026-11-16T03:59:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T03:59:49Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 5,
+            "startedAt": "2026-11-16T03:59:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T03:59:54Z",
+            "conclusion": "success",
+            "name": "Download and verify inputs",
+            "number": 6,
+            "startedAt": "2026-11-16T03:59:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "success",
+            "name": "Build offline replay on GitHub",
+            "number": 7,
+            "startedAt": "2026-11-16T03:59:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Build fixed sample-observation baseline with matching flags",
+            "number": 8,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Check bounded allocation recorder",
+            "number": 9,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Check diagnosis and comparison contracts",
+            "number": 10,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Replay saved MIDI through the production note ledger",
+            "number": 11,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen direct evidence retention through energy dips",
+            "number": 12,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace calibrated-output resets with unchanged OFF replay",
+            "number": 13,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen energy-blocked preview string ownership",
+            "number": 14,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace the rejected trial string transfer without changing output",
+            "number": 15,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace the recorded cross-sample MIDI lane replacement",
+            "number": 16,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace the first remaining ON note ledger collision",
+            "number": 17,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace the remaining coasting owner trial conflict",
+            "number": 18,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Trace the fragmented bass note without changing output",
+            "number": 19,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen pending string reservation against both output baselines",
+            "number": 20,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen forced pending conflicts against both output baselines",
+            "number": 21,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen actual MIDI retention with unchanged detector inference",
+            "number": 22,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen calibrated MIDI retention without changing detector inference",
+            "number": 23,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Validate calibrated MIDI retention across all fourteen datasets",
+            "number": 24,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Capture missing assignment costs for MIDI retention losses",
+            "number": 25,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Capture preceding assignments for forced preview passage losses",
+            "number": 26,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Compare assignment maturity on the improved and lost notes",
+            "number": 27,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen fresh spectral incumbents in physical assignment",
+            "number": 28,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Diagnose passage losses in the rejected retained assignment trial",
+            "number": 29,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen conflicting spectral outputs without changing physical assignment",
+            "number": 30,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen isolated upper-partial string identity",
+            "number": 31,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Check paired core processing without offline observer bookkeeping",
+            "number": 32,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Locate processing allocations",
+            "number": 33,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Diagnose slow blocks without changing acceptance limits",
+            "number": 34,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Compare calibrated retention wall and thread CPU timing",
+            "number": 35,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Locate slow blocks in the three failed completion retention datasets",
+            "number": 36,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Compare fixed baseline and optimized sample observation on the same runner",
+            "number": 37,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Diagnose stages at the four recorded CPU-overrun positions",
+            "number": 38,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Validate qualified tier retention across all fourteen datasets",
+            "number": 39,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Validate completion MIDI retention across all fourteen datasets",
+            "number": 40,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen freshly qualified tier retention before wider validation",
+            "number": 41,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen continuous tier retention and known middle-string regression",
+            "number": 42,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen completion window retention and known middle-string regression",
+            "number": 43,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen completion MIDI retention with unchanged inference",
+            "number": 44,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen suppressed adjacent owners before wider validation",
+            "number": 45,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Screen initial fine subset consensus before wider validation",
+            "number": 46,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Observe saved admission policies around extra attacks",
+            "number": 47,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:00:21Z",
+            "conclusion": "skipped",
+            "name": "Attribute retained harmonic-admission outputs",
+            "number": 48,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "success",
+            "name": "Screen independent harmonic admission on ordinary",
+            "number": 49,
+            "startedAt": "2026-11-16T04:00:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Compare causal harmonic prediction from retained ordinary outcomes",
+            "number": 50,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Compare the fixed ordinary missing note and false partials",
+            "number": 51,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Observe the existing short four-string harmonic profile route",
+            "number": 52,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Trace initial physical three-string locking",
+            "number": 53,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Observe the first rejected tier retention divergence",
+            "number": 54,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Localize snapshot changes in the saved completion-window trial",
+            "number": 55,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Observe periodic physical three-string sustain gaps",
+            "number": 56,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Diagnose string assignment",
+            "number": 57,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Compare OFF and ON across the recorded corpus",
+            "number": 58,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Recover and screen held-out overlap controls",
+            "number": 59,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Diagnose the selected octave control timing failure",
+            "number": 60,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:46Z",
+            "conclusion": "skipped",
+            "name": "Isolate processing stage costs in the retained octave pair",
+            "number": 61,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:47Z",
+            "conclusion": "success",
+            "name": "Keep small reports and failure logs",
+            "number": 62,
+            "startedAt": "2026-11-16T04:15:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:49Z",
+            "conclusion": "success",
+            "name": "Keep compressed trace and reference evidence",
+            "number": 63,
+            "startedAt": "2026-11-16T04:15:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:49Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 125,
+            "startedAt": "2026-11-16T04:15:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:49Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 126,
+            "startedAt": "2026-11-16T04:15:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-16T04:15:49Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 127,
+            "startedAt": "2026-11-16T04:15:49Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43801355401/job/133082150158"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-16T04:15:51Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43801355401"
+  },
+  "artifacts": [
+    {
+      "id": 14197001980,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5NzAwMTk4MA==",
+      "name": "m3-report-43801355401-1",
+      "size_in_bytes": 95275,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14197001980",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14197001980/zip",
+      "expired": false,
+      "digest": "sha256:d7763891e5ec3d3cdaad2223bea002fa47ed7f4205af000918cf8016eb234728",
+      "created_at": "2026-11-16T04:15:47Z",
+      "updated_at": "2026-11-16T04:15:47Z",
+      "expires_at": "2026-11-30T04:15:46Z",
+      "workflow_run": {
+        "id": 43801355401,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "267482abe0e8bb12801099fa3d1c8b2133280f13"
+      }
+    },
+    {
+      "id": 14196947132,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5Njk0NzEzMg==",
+      "name": "m3-evidence-43801355401-1",
+      "size_in_bytes": 46109948,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14196947132",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14196947132/zip",
+      "expired": false,
+      "digest": "sha256:2bdb96996dd14879e3d370c8122b11a91792467712df40a0d491a57b3fcfb1bf",
+      "created_at": "2026-11-16T04:15:49Z",
+      "updated_at": "2026-11-16T04:15:49Z",
+      "expires_at": "2026-11-23T04:15:47Z",
+      "workflow_run": {
+        "id": 43801355401,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "267482abe0e8bb12801099fa3d1c8b2133280f13"
+      }
+    }
+  ],
+  "collection_receipt": {
+    "artifact_id": 14197001980,
+    "archive": "build/github-results/ordinary-harmonic-tuning-43801355401/m3-report-43801355401-1.zip",
+    "bytes": 95275,
+    "sha256": "d7763891e5ec3d3cdaad2223bea002fa47ed7f4205af000918cf8016eb234728",
+    "server_digest_verified": true,
+    "collected_at": "2026-11-16T20:45:46.514543+00:00"
+  },
+  "result_state": "rejected",
+  "bounded_screen_pass": false,
+  "note_safety_pass": false,
+  "reference_identity_pass": true,
+  "report": "build/github-results/ordinary-harmonic-tuning-43801355401/ordinary-harmonic-tuning/report.json",
+  "report_sha256": "de5b94520ad8e7ac0b33f03b0ae83cc9d23c1d9fd0502d97c4c02d25573e95c0",
+  "collected_verdict": "build/github-results/ordinary-harmonic-tuning-43801355401/collected-verdict.json",
+  "result": {
+    "schema": "m3_ordinary_harmonic_tuning_collected_verdict_v1",
+    "run_id": 43801355401,
+    "source_commit": "756d7ce0e7efe00cf13a24e322e2b235117fbea7",
+    "worker_commit": "267482abe0e8bb12801099fa3d1c8b2133280f13",
+    "final": true,
+    "workflow_conclusion": "success",
+    "screen_state": "rejected",
+    "promotion_accepted": false,
+    "reference_identity_pass": true,
+    "target": {
+      "before": {
+        "label_index": 10,
+        "midi_note": 75,
+        "string_mask": 128,
+        "start_sample": 163306,
+        "end_sample": 235200,
+        "annotated_hold_samples": 71894,
+        "exact_held_samples": 0,
+        "unmatched_hold_samples": 71894,
+        "longest_exact_hold_samples": 0,
+        "exact_hold_segments": 0,
+        "first_exact_hold_delay_samples": null,
+        "note_ons_inside_label": 0,
+        "snapshot_matched": 0,
+        "snapshot_labeled": 1124
+      },
+      "after": {
+        "label_index": 10,
+        "midi_note": 75,
+        "string_mask": 128,
+        "start_sample": 163306,
+        "end_sample": 235200,
+        "annotated_hold_samples": 71894,
+        "exact_held_samples": 58433,
+        "unmatched_hold_samples": 13461,
+        "longest_exact_hold_samples": 58433,
+        "exact_hold_segments": 1,
+        "first_exact_hold_delay_samples": 13461,
+        "note_ons_inside_label": 1,
+        "snapshot_matched": 923,
+        "snapshot_labeled": 1124
+      },
+      "improved": true
+    },
+    "snapshot": {
+      "before": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "after": {
+        "labeled": 528632,
+        "matched": 150451,
+        "false_wrong_note_voices": 166065,
+        "false_wrong_string_voices": 99384,
+        "false_gap_voices": 65213,
+        "false_positive_voices": 330662,
+        "fingerprint": "0f2fc149bb88a845"
+      },
+      "delta": {
+        "matched": 5051,
+        "false_wrong_note_voices": 1802,
+        "false_wrong_string_voices": 6746,
+        "false_gap_voices": 2357,
+        "false_positive_voices": 10905
+      },
+      "lost_labels": [
+        {
+          "label_index": 117,
+          "midi_note": 60,
+          "string_mask": 16,
+          "labeled": 1122,
+          "baseline_matched": 648,
+          "current_matched": 630,
+          "matched_delta": -18
+        }
+      ],
+      "lost_matches": 18
+    },
+    "held": {
+      "before": 8580917,
+      "after": 8878482,
+      "annotated_label_samples": 33819101,
+      "delta": 297565,
+      "losses": [
+        {
+          "label_index": 117,
+          "midi_note": 60,
+          "exact_held_samples_before": 41409,
+          "exact_held_samples_after": 40257,
+          "held_delta": -1152,
+          "note_ons_before": 28,
+          "note_ons_after": 20,
+          "note_on_delta": -8
+        }
+      ]
+    },
+    "raw_false_output_delta": {
+      "false_wrong_note_voice_samples": 129159,
+      "false_wrong_string_voice_samples": 327431,
+      "false_gap_voice_samples": 120981,
+      "false_wrong_note_onsets": 3,
+      "false_wrong_string_onsets": 14,
+      "false_gap_onsets": 1
+    },
+    "raw_conflict_delta": {
+      "cross_pitch_on_before_release": 0,
+      "repeated_pitch_on_before_release": 0,
+      "off_without_raw_on": 0,
+      "zero_velocity_on": 0,
+      "unassigned_on": 0
+    },
+    "current_trial_raw_pairing_valid": true,
+    "sample_clock_identical": true,
+    "cue_generation": {
+      "windows": 10439,
+      "observations": 3456,
+      "statuses": {
+        "unavailable_base": 3,
+        "unavailable_parent_tuning": 1024,
+        "prediction_rejected": 475,
+        "zero_energy": 99,
+        "prediction_pass": 810,
+        "insufficient_supported_pairs": 416,
+        "ill_conditioned_base": 619,
+        "already_owned": 6,
+        "insufficient_independent_pairs": 4
+      },
+      "cue_spans": 810,
+      "cue_spans_by_note": {
+        "52": 1,
+        "54": 3,
+        "56": 9,
+        "57": 41,
+        "58": 43,
+        "59": 29,
+        "60": 4,
+        "61": 33,
+        "63": 27,
+        "64": 1,
+        "65": 71,
+        "66": 83,
+        "67": 51,
+        "68": 62,
+        "69": 3,
+        "70": 43,
+        "71": 4,
+        "72": 18,
+        "74": 144,
+        "75": 122,
+        "76": 18
+      },
+      "elapsed_seconds": 722.244863019,
+      "complete": true,
+      "cue_sha256": "f2ea3220df726436d4f3895bf46e2150698d3549981ccf3167842390884ffa51",
+      "cue_bytes": 15240,
+      "evidence_sha256": "01429971d9992a4aebbd5ac1e5a00ea3f25506fb419e6832ac22acfca94a418a",
+      "evidence_bytes": 851627
+    },
+    "report_sha256": "de5b94520ad8e7ac0b33f03b0ae83cc9d23c1d9fd0502d97c4c02d25573e95c0",
+    "native_timing": "not measured",
+    "allocations": "not measured",
+    "buffers": "not measured",
+    "host_delivery": "not measured",
+    "installed_output_changed": false,
+    "scoreboard_changed": false,
+    "interpretation": "Target recovery is reduced versus the earlier support trial and does not offset passage loss or increased false output. Gap outputs are extra notes during unlabeled gaps. Held label-samples overlap; they are not unique audio duration or tuner frame scores. One open note at EOF is not proof of stuck MIDI.",
+    "next_step": "Use retained tuning-screen cue and MIDI evidence to identify which remaining false admissions survive, and distinguish their model failure from the already recorded label117 shared-assignment loss. No unchanged corpus rerun, threshold sweep or production promotion."
   }
 }
