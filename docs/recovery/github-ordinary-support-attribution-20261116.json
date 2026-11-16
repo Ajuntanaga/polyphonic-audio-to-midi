@@ -4,13 +4,13 @@
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_base_commit": "fc4a8bce75db8e554799181bbd89edf645e38bc9",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
-  "status": "prepared",
-  "result_final": false,
+  "source_commit": "854217c877fcdb016f67a1784b718bb6813dec6b",
+  "worker_commit": "787664714d77473b90bdfe6a7bbbffc0a58c68ef",
+  "run_id": 43799898440,
+  "status": "completed",
+  "result_final": true,
   "created_at": "2026-11-16T03:43:00.430647+00:00",
-  "updated_at": "2026-11-16T03:43:29.949993+00:00",
+  "updated_at": "2026-11-16T03:56:38.547218+00:00",
   "checkpoint": "docs/recovery/github-ordinary-support-attribution-20261116.json",
   "reference_manifest": "docs/recovery/ordinary-support-attribution-references-20261116.json",
   "dataset": "ordinary",
@@ -32,14 +32,15 @@
     "dataset": "ordinary",
     "note": "75",
     "label_index": "10",
-    "midi_lifecycle": "false"
+    "midi_lifecycle": "false",
+    "source_sha": "854217c877fcdb016f67a1784b718bb6813dec6b"
   },
   "workflow": "m3-offload.yml",
-  "stage": "prepared retained support attribution",
+  "stage": "final retained attribution; parent tuning hypothesis selected",
   "small_artifact_name_template": "m3-report-{run_id}-1",
   "bulk_artifact_name_template": "m3-evidence-{run_id}-1",
   "local_dir_template": "build/github-results/ordinary-support-attribution-{run_id}",
-  "collection_status": "not dispatched",
+  "collection_status": "collected",
   "promotion_accepted": false,
   "installed_output_changed": false,
   "scoreboard_changed": false,
@@ -54,12 +55,261 @@
     "No new detector, audio, timing, allocation, buffer or host measurement.",
     "Numerical support is not independent note identity; do not fit thresholds to selected passages."
   ],
-  "next_step": "Use the retained contribution patterns to select one mechanistic falsifier before any replacement policy or audio replay.",
+  "next_step": "Bounded training-only parent tuning has synthetic negative, positive and causality controls. Follow docs/recovery/github-ordinary-harmonic-tuning-20261116.json for the fixed ordinary screen; the completed attribution result is unchanged.",
   "local_validation": {
     "workflow_syntax": "pass",
     "worker_bash_sections": 57,
     "route_exclusions": "pass; no recording download, native build or generic native contracts",
     "attribution_runner": "unchanged; existing focused tests run on GitHub",
     "diff_check": "pass"
+  },
+  "dispatch_attempt": {
+    "started_at": "2026-11-16T03:43:52.425319+00:00",
+    "state": "submitted; run identified",
+    "finished_at": "2026-11-16T03:43:54.755437+00:00",
+    "returncode": 0
+  },
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/43799898440",
+  "local_dir": "build/github-results/ordinary-support-attribution-43799898440",
+  "small_artifact_name": "m3-report-43799898440-1",
+  "bulk_artifact_name": "m3-evidence-43799898440-1",
+  "source_runs": [],
+  "conclusion": "success",
+  "last_observed_at": "2026-11-16T03:46:53.416846+00:00",
+  "collected_at": "2026-11-16T03:46:53.416846+00:00",
+  "artifacts": [
+    {
+      "id": 14195552602,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5NTU1MjYwMg==",
+      "name": "m3-evidence-43799898440-1",
+      "size_in_bytes": 28048,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195552602",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195552602/zip",
+      "expired": false,
+      "digest": "sha256:c9fe87bb155f8d9948a4b982179e7ea8a2b7c0000e6a6d76d488620f6cc2de59",
+      "created_at": "2026-11-16T03:44:21Z",
+      "updated_at": "2026-11-16T03:44:21Z",
+      "expires_at": "2026-11-23T03:44:20Z",
+      "workflow_run": {
+        "id": 43799898440,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "787664714d77473b90bdfe6a7bbbffc0a58c68ef"
+      }
+    },
+    {
+      "id": 14195492981,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE5NTQ5Mjk4MQ==",
+      "name": "m3-report-43799898440-1",
+      "size_in_bytes": 22939,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195492981",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14195492981/zip",
+      "expired": false,
+      "digest": "sha256:31d0fa91cd4e338115f029020253b679f5d15649e1cd308e1262225e5fbb97b6",
+      "created_at": "2026-11-16T03:44:19Z",
+      "updated_at": "2026-11-16T03:44:19Z",
+      "expires_at": "2026-11-30T03:44:18Z",
+      "workflow_run": {
+        "id": 43799898440,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "787664714d77473b90bdfe6a7bbbffc0a58c68ef"
+      }
+    }
+  ],
+  "report": "build/github-results/ordinary-support-attribution-43799898440/ordinary-support-attribution/report.json",
+  "report_sha256": "ce57fbd5f05ee975ccd64173657c2bd4491ca42c136270cc89f7a05217077b7b",
+  "report_bytes": 245649,
+  "small_archive_sha256": "31d0fa91cd4e338115f029020253b679f5d15649e1cd308e1262225e5fbb97b6",
+  "collected_verdict": "build/github-results/ordinary-support-attribution-43799898440/collected-verdict.json",
+  "result_summary": {
+    "run_id": 43799898440,
+    "source_commit": "854217c877fcdb016f67a1784b718bb6813dec6b",
+    "result": "completed retained attribution; two-pair screen remains rejected",
+    "input_identity_pass": true,
+    "saved_metric_reproduction_pass": true,
+    "focus_cases": [
+      {
+        "label": {
+          "label_index": 10,
+          "midi_note": 75,
+          "string_mask": 128,
+          "start_sample": 163306,
+          "end_sample": 235200
+        },
+        "lost_exact_samples": 0,
+        "gained_exact_samples": 64193,
+        "loss_causes": {},
+        "coverage": {
+          "current-on": {
+            "exact": 0,
+            "pitch_present": 0
+          },
+          "harmonic-admission-on": {
+            "exact": 64193,
+            "pitch_present": 64193
+          }
+        },
+        "net_exact_change": 64193
+      },
+      {
+        "label": {
+          "label_index": 117,
+          "midi_note": 60,
+          "string_mask": 16,
+          "start_sample": 2121799,
+          "end_sample": 2193600
+        },
+        "lost_exact_samples": 1536,
+        "gained_exact_samples": 384,
+        "loss_causes": {
+          "wrong_or_incomplete_assignment": 1536
+        },
+        "coverage": {
+          "current-on": {
+            "exact": 41409,
+            "pitch_present": 62081
+          },
+          "harmonic-admission-on": {
+            "exact": 40257,
+            "pitch_present": 60353
+          }
+        },
+        "net_exact_change": -1152
+      }
+    ],
+    "false_voice_samples": {
+      "current-on": {
+        "matched": 8721923,
+        "false_wrong_string": 4953010,
+        "false_wrong_note": 8222039,
+        "false_gap": 3761781
+      },
+      "harmonic-admission-on": {
+        "matched": 9194559,
+        "false_wrong_string": 5360687,
+        "false_wrong_note": 8364206,
+        "false_gap": 3920677
+      }
+    },
+    "largest_added_false_spans": [
+      {
+        "classification": "false_wrong_note",
+        "note": 74,
+        "voice_id": 6,
+        "start_sample": 2964095,
+        "end_sample": 3009600,
+        "voice_samples": 45505,
+        "original_onset_sample": 2964095,
+        "supported_harmonics": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "base_pitches": [
+          {
+            "note": 40,
+            "frequency_hz": 81.56281289635555,
+            "phase_cents": -17.824105,
+            "phase_valid": true
+          },
+          {
+            "note": 43,
+            "frequency_hz": 97.99885899543733,
+            "phase_cents": 0.0,
+            "phase_valid": false
+          }
+        ],
+        "prediction_gain_fraction": 0.008015942152918398
+      },
+      {
+        "classification": "false_wrong_string",
+        "note": 66,
+        "voice_id": 5,
+        "start_sample": 1086527,
+        "end_sample": 1132800,
+        "voice_samples": 46273,
+        "original_onset_sample": 1086527,
+        "supported_harmonics": [
+          1,
+          2
+        ],
+        "base_pitches": [
+          {
+            "note": 40,
+            "frequency_hz": 80.51271328531338,
+            "phase_cents": -40.258012,
+            "phase_valid": true
+          },
+          {
+            "note": 48,
+            "frequency_hz": 129.06150712935843,
+            "phase_cents": -23.333695,
+            "phase_valid": true
+          }
+        ],
+        "prediction_gain_fraction": 0.22442122436891726
+      },
+      {
+        "classification": "false_gap",
+        "note": 66,
+        "voice_id": 5,
+        "start_sample": 2090546,
+        "end_sample": 2121799,
+        "voice_samples": 31253,
+        "original_onset_sample": 2075711,
+        "supported_harmonics": [
+          1,
+          2,
+          3
+        ],
+        "base_pitches": [
+          {
+            "note": 41,
+            "frequency_hz": 85.2212957864333,
+            "phase_cents": -41.861157,
+            "phase_valid": true
+          },
+          {
+            "note": 50,
+            "frequency_hz": 145.20783018011812,
+            "phase_cents": -19.261127,
+            "phase_valid": true
+          },
+          {
+            "note": 60,
+            "frequency_hz": 261.6255653005986,
+            "phase_cents": 0.0,
+            "phase_valid": false
+          }
+        ],
+        "prediction_gain_fraction": 0.145517489580436
+      }
+    ],
+    "observations": 3456,
+    "cues": 1086,
+    "output_difference_rows": 135,
+    "interpretation": [
+      "Target75 gains64193 exact/pitch-present samples; first cue supports harmonics1and3.",
+      "Label117/note60 loses1536 exact samples and gains384, net-1152. Lost exact spans have note60 on lane7 instead of4. Separately pitch presence falls62081to60353, a1728-sample decrease. No active cue at exact-loss starts.",
+      "Largest wrong-note span is74/lane6 for45505samples. Its onset cue supports all4harmonics but base43 uses equal temperament because phase_valid is false. Candidate74 is close to six times base43; parent tuning mismatch is a hypothesis to falsify, not an established cause.",
+      "Largest wrong-string span66/lane5 supports1and2; largest gap span66/lane5 supports1,2,3. Extra gap outputs are not missing notes.",
+      "Saved associations do not prove native assignment branches."
+    ],
+    "next_step": "Falsify the two-pair admission rule with a single slightly detuned harmonic parent at the observed false-note relation (parent43/candidate74), comparing correct versus unavailable parent tuning. If reproduced, correct parent-frequency uncertainty before another bounded ordinary screen; preserve target and reject every passage or false-output regression.",
+    "native_replays": 0,
+    "audio_processed": false,
+    "installed_output_changed": false,
+    "scoreboard_changed": false,
+    "promotion_accepted": false
+  },
+  "source_run_note": "Documentation-only source commit did not trigger a source workflow; unchanged implementation previously passed Portable offline replay43798166807.",
+  "post_result_follow_up": {
+    "synthetic_falsifier": "build/github-results/ordinary-support-attribution-source-checks/synthetic-parent-tuning-falsifier.json",
+    "finding": "A single parent detuned by -1.955000865 cents can falsely support its sixth-harmonic candidate when parent tuning is unavailable. Correct tuning rejects it; a separate two-partial note remains supported. This is a constructed mechanism, not proof of the recording cause.",
+    "next_checkpoint": "docs/recovery/github-ordinary-harmonic-tuning-20261116.json"
   }
 }

@@ -12,6 +12,7 @@ import time
 import numpy as np
 
 from tools.candidate_outcome_analysis import HEADER, SCHEMAS, _candidates, _frame
+from tools.harmonic_parent_fit import FIT_CONFIG, refine_parents
 from tools.portable_ordinary_harmonic_prediction import (
     CONFIG as PREDICTION_CONFIG, RATE, base_pitches, design, harmonic_frequencies)
 
@@ -24,6 +25,8 @@ CONFIG.update(lowest_note=32, highest_note=84, minimum_independent_pairs=2,
     numerical_guard_factor=64, score_ratio=.20, fundamental_ratio=.80,
     selection='all eligible below-threshold pitches at the past-only fixed cadence',
     baseline='frozen current detector shadow; not candidate replay feedback')
+CONFIG.update(parent_tuning=FIT_CONFIG,
+    baseline_frequency='saved valid phase; otherwise bounded tuning from training audio with proposed partials')
 CUE_HEADER = 'm3_harmonic_admission_cues_v1\t96000\t1024\n'
 
 
@@ -116,6 +119,20 @@ def evaluate_candidate(window, prepared, note):
     f = CONFIG['a4_hz'] * 2 ** ((note - 69) / 12)
     frequencies = [f * h for h in range(1, CONFIG['candidate_harmonics'] + 1)
                    if f * h <= CONFIG['maximum_hz']]
+    fitted, tuning = refine_parents(prepared['signal'][:train], window['base_pitches'], CONFIG, frequencies)
+    result['parent_tuning'] = tuning
+    if fitted is None:
+        return dict(result, status='unavailable_parent_tuning')
+    if tuning['status'] == 'fitted':
+        base_frequencies = tuning['frequencies_hz']
+        base = normalized(design(base_frequencies, train + CONFIG['predict_samples']), train)
+        parts = factor(base[:train])
+        weights = coefficients(parts, prepared['signal'][:train])
+        residual = prepared['signal'][train:] - base[train:] @ weights
+        prepared = dict(prepared, base=base, factor=parts,
+            base_error=float(residual @ residual) / prepared['energy'])
+        result.update(base_pitches=fitted, base_partials=len(base_frequencies),
+                      base_singular_ratio=float(parts[1][-1] / parts[1][0]))
     candidate = design(frequencies, train + CONFIG['predict_samples'])[:, 1:]
     ratios, passing, added = independent_pairs(prepared['base'], candidate, train, prepared['factor'])
     result.update(pair_singular_ratios=ratios, independent_harmonics=[i + 1 for i in passing])

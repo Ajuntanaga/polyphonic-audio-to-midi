@@ -1,8 +1,22 @@
-# Current checkpoint: retained support attribution prepared
+# Current checkpoint: bounded parent-tuning screen prepared
 
-Checkpoint: `docs/recovery/github-ordinary-support-attribution-20261116.json`; status key `portable_compute.ordinary_support_attribution`. Reuse the existing tested attribution runner on final support run `43798217887`, with exact artifact IDs/hashes in `docs/recovery/ordinary-support-attribution-references-20261116.json`. Focus: target label10/note75, surviving false outputs and remaining held-loss label117/note60. No audio, native replay or policy change; retained text analysis runs only on GitHub Actions. The worker excludes recording download, native build and native contracts for this task.
+Checkpoint: `docs/recovery/github-ordinary-harmonic-tuning-20261116.json`; status key `portable_compute.ordinary_harmonic_tuning`. Source base `854217c877fcdb016f67a1784b718bb6813dec6b`. The new fixed ordinary screen is prepared, not committed, pushed or dispatched. All native and recorded-audio execution remains on GitHub Actions.
 
-The two-pair support rule remains rejected: target64193/71894 held samples retained, but three labels lose26 snapshot matches, label117 loses1152 held samples, and false outputs grow. Installed output/default/scoreboard unchanged. Compare supported-pair contributions before choosing one mechanistic falsifier; do not fit a threshold to these examples, repeat completed runs, broaden the rejected rule or send another ntfy ping.
+Synthetic controls reproduce a false harmonic admission from a single parent only 1.955 cents flat. The correction fits unresolved parent tuning from the 40 ms training prefix, with proposed partial amplitudes free, and keeps valid saved phase frequencies fixed. It rejects that false candidate and each single-partial impostor, retains an independent two-partial note, and produces identical tuning when only the 10 ms prediction audio changes. This is a mechanism control, not proof of the recording cause. Numerical settings are frozen in `docs/recovery/ordinary-harmonic-tuning-references-20261116.json`; older manifests remain intact.
+
+Validation: all 25 focused Python tests, both workflow YAML files, 4 source and 57 worker shell sections, and diff checks pass. One implementation review is complete.
+
+Next: commit/push the prepared source and worker route, then dispatch exactly one ordinary OFF/current/trial screen. Require saved reference identity, target note 75 recovery, no lost passage matches or held samples, and no false-output or raw-conflict growth. Reject and diagnose any failure; no broad threshold sweep or unchanged corpus retry. This offline fit does not establish a native implementation, timing or live-host readiness. Installed output/default/scoreboard remain unchanged. No repeat ntfy ping, cleanup or terminal Kaggle work.
+
+# Previous checkpoint: support attribution final; tuning falsifier reproduced
+
+Checkpoint: `docs/recovery/github-ordinary-support-attribution-20261116.json`; status key `portable_compute.ordinary_support_attribution`. GitHub run `43799898440` at source `854217c877fcdb016f67a1784b718bb6813dec6b`, worker `787664714d77473b90bdfe6a7bbbffc0a58c68ef`, is final/successful and collected once. The22939-byte small archive was SHA-256 verified; report at `build/github-results/ordinary-support-attribution-43799898440/ordinary-support-attribution/report.json`, compact result `collected-verdict.json`. Bulk28048bytes remains remote. All499 saved holds and four output-safety totals reproduce in both modes;1086cues and135output-difference spans analyzed. No audio or native replay. Do not poll, rerun or recollect completed jobs.
+
+Target label10/note75 retains64193/71894 exact held samples; its first cue supports harmonics1and3. Label117/note60 loses1536 exact samples and gains384 (net-1152); lost exact spans retain pitch60 on lane7 instead of4. Separately pitch-present coverage falls62081to60353 (-1728samples). No active cue at exact-loss starts; these outputs do not prove native branch causation.
+
+The largest new wrong-note span is74/lane6 for45505samples. Its cue supports all4harmonics, but base43 has no valid phase estimate and uses equal temperament. Candidate74 lies near its sixth harmonic. Next: a synthetic single-parent falsifier comparing unavailable versus correct parent tuning; use the result to address frequency-model mismatch before any new audio screen. This is a hypothesis, not an established recording diagnosis. Do not fit a threshold, broaden the rejected rule, repeat unchanged corpus processing or send another ntfy ping.
+
+Two-pair support remains rejected: three labels lose26 snapshot matches and false outputs grow. Installed output/default/scoreboard unchanged. Native deadline and external host/device gates remain open. All native and recorded-audio execution remains on GitHub Actions.
 
 # Previous checkpoint: ordinary harmonic support final; rejected
 

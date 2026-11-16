@@ -14,6 +14,7 @@ from tools.harmonic_admission_cues import (CONFIG, CUE_HEADER, causal_states,
     eligible_notes, evaluate_candidate, generate, independent_pairs,
     numerical_gain_guard, prediction_window)
 from tools.portable_ordinary_harmonic_prediction import RATE, design
+from tools.harmonic_parent_fit import refine_parents
 
 
 MODULE = 'tools.harmonic_admission_cues.'
@@ -96,6 +97,66 @@ class HarmonicAdmissionCueTests(unittest.TestCase):
         guard = numerical_gain_guard(0., 0.)
         self.assertAlmostEqual(guard, 64 * np.finfo(float).eps / 1e-8)
         self.assertEqual(numerical_gain_guard(5., 3.), 5 * guard)
+
+    def detuned_parent(self):
+        clock = np.arange(4800) / RATE
+        # The sixth harmonic of this slightly flat G2 is exactly D5. Without
+        # parent tuning, four D5 columns can absorb its model mismatch.
+        frequency = 440 * 2 ** ((74 - 69) / 12) / 6
+        signal = sum(np.sin(2 * np.pi * frequency * h * clock + .31 * h) / h
+                     for h in range(1, int(3000 // frequency) + 1))
+        frame = state(text=candidate(43, selection=4, phase_valid=0))
+        return clock, frequency, signal, frame
+
+    def test_missing_phase_detuned_parent_does_not_create_harmonic_note(self):
+        _, _, signal, frame = self.detuned_parent()
+        result = evaluate_candidate(*prediction_window(signal, 4799, frame), 74)
+        self.assertFalse(result['admitted'])
+        self.assertEqual(result['status'], 'unavailable_parent_tuning')
+        self.assertEqual(result['parent_tuning']['status'], 'unidentifiable_parent_fit')
+
+    def test_missing_phase_fit_retains_a_real_independent_note(self):
+        clock, frequency, signal, frame = self.detuned_parent()
+        extra = 440 * 2 ** ((75 - 69) / 12)
+        signal += .3 * np.sin(2 * np.pi * extra * clock) + .2 * np.cos(2 * np.pi * extra * 3 * clock)
+        result = evaluate_candidate(*prediction_window(signal, 4799, frame), 75)
+        self.assertTrue(result['admitted'])
+        self.assertEqual(result['supported_harmonics'], [1, 3])
+        self.assertAlmostEqual(result['base_pitches'][0]['frequency_hz'], frequency, places=6)
+
+    def test_proposed_partial_does_not_pull_unknown_parent_into_false_support(self):
+        clock, frequency, signal, frame = self.detuned_parent()
+        extra = 440 * 2 ** ((75 - 69) / 12)
+        for harmonic in (1, 2, 3, 4):
+            with self.subTest(harmonic=harmonic):
+                audio = signal + .3 * np.sin(2 * np.pi * extra * harmonic * clock + .4)
+                result = evaluate_candidate(*prediction_window(audio, 4799, frame), 75)
+                self.assertFalse(result['admitted'])
+                self.assertEqual(result['status'], 'insufficient_supported_pairs')
+                self.assertEqual(result['supported_harmonics'], [harmonic])
+                self.assertAlmostEqual(result['base_pitches'][0]['frequency_hz'], frequency, places=6)
+
+    def test_parent_fit_uses_training_only_and_preserves_valid_phase(self):
+        clock, frequency, signal, frame = self.detuned_parent()
+        valid = 440 * 2 ** ((40 - 69 - .17) / 12)
+        signal += .4 * np.cos(2 * np.pi * valid * clock)
+        frame = state(text=','.join((candidate(43, selection=4, phase_valid=0),
+            candidate(40, selection=4, phase_valid=1, phase_cents=-17))))
+        window, _ = prediction_window(signal, 4799, frame)
+        extra = 440 * 2 ** ((75 - 69) / 12)
+        proposed = [extra * h for h in range(1, 5)]
+        fitted, evidence = refine_parents(signal[:3840], window['base_pitches'], CONFIG, proposed)
+        self.assertEqual(evidence['status'], 'fitted')
+        self.assertEqual(evidence['notes'], [43])
+        by_note = {row['note']: row for row in fitted}
+        self.assertEqual(by_note[40]['frequency_hz'], valid)
+        self.assertAlmostEqual(by_note[43]['frequency_hz'], frequency, places=6)
+        before = evaluate_candidate(*prediction_window(signal, 4799, frame), 75)['parent_tuning']
+        signal[3840:] = np.cos(np.arange(960) * .73) * 7
+        after = evaluate_candidate(*prediction_window(signal, 4799, frame), 75)['parent_tuning']
+        self.assertEqual(before, after)
+        with self.assertRaisesRegex(ValueError, 'training prefix'):
+            refine_parents(signal, window['base_pitches'], CONFIG, proposed)
 
     def test_future_samples_annotations_and_unavailable_states(self):
         signal = np.sin(2 * np.pi * 130.8128 * np.arange(4900) / RATE)
