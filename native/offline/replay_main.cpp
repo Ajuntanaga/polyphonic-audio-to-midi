@@ -899,13 +899,6 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  if (midi_event_trace.continuation_tags &&
-      (midi_event_trace_path == nullptr || !diagnostic_spectral_lane_collision ||
-       config.midi_routing != m3::MidiRouting::per_voice)) {
-    std::fprintf(stderr, "m3_replay: stable identity tags require MIDI trace, independent ownership and per_voice routing\n");
-    return 2;
-  }
-
   std::vector<std::uint8_t> wave_bytes;
   if (!read_file(wave_path, wave_bytes)) {
     std::fprintf(stderr, "m3_replay: cannot read WAV: %s\n", wave_path);
@@ -1030,6 +1023,12 @@ int main(int argc, char** argv) {
   config.response = static_cast<std::uint8_t>(response);
   config.max_polyphony = static_cast<std::uint8_t>(max_polyphony);
   config.max_fret = static_cast<std::uint8_t>(max_fret);
+  if (midi_event_trace.continuation_tags &&
+      (midi_event_trace_path == nullptr || !diagnostic_spectral_lane_collision ||
+       config.midi_routing != m3::MidiRouting::per_voice)) {
+    std::fprintf(stderr, "m3_replay: stable identity tags require MIDI trace, independent ownership and per_voice routing\n");
+    return 2;
+  }
   if (calibration_string >= 0) {
     if (calibration_output_path == nullptr || labels.empty()) {
       usage(argv[0]);
