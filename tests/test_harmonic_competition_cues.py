@@ -31,11 +31,11 @@ class HarmonicCompetitionTests(unittest.TestCase):
         self.frame = state(text=','.join((candidate(40, selection=4, phase_valid=1), lower())))
 
     @staticmethod
-    def hz(note):
-        return 440 * 2 ** ((note - 69) / 12)
+    def hz(note, cents=0.):
+        return 440 * 2 ** ((note - 69 + cents / 100) / 12)
 
-    def signal(self, note, harmonics):
-        return sum(amplitude * np.sin(2 * np.pi * self.hz(note) * h * self.clock + .31 * h)
+    def signal(self, note, harmonics, cents=0.):
+        return sum(amplitude * np.sin(2 * np.pi * self.hz(note, cents) * h * self.clock + .31 * h)
                    for h, amplitude in harmonics)
 
     def evaluate(self, signal, note=74, frame=None):
@@ -55,6 +55,36 @@ class HarmonicCompetitionTests(unittest.TestCase):
         # Shared partials make this model unable to distinguish the octave.
         # Withholding is not a declaration that the upper note cannot be real.
         self.assertFalse(check['upper_comparison']['admitted'])
+        self.assertEqual(check['upper_comparison']['status'], 'insufficient_independent_pairs')
+
+    def test_real_65_survives_lower_63_with_unresolved_owned_51(self):
+        frame = state(text=','.join((candidate(51, selection=4, phase_valid=0), lower(63))))
+        signal = self.signal(51, [(h, 1. / h) for h in range(1, int(3000 // self.hz(51, -25)) + 1)], -25)
+        signal += self.signal(63, [(h, .4 / h) for h in range(1, 5)])
+        signal += self.signal(65, [(1, .6), (2, .3)])
+        result = self.evaluate(signal, note=65, frame=frame)
+        self.assertEqual(result['parent_tuning']['status'], 'fitted')
+        self.assertTrue(result['admitted'])
+        check = result['lower_comparisons'][0]
+        self.assertTrue(check['independent_lower_support']['admitted'])
+        self.assertTrue(check['upper_comparison']['admitted'])
+
+    def test_unavailable_comparison_retains_original_admission(self):
+        signal = self.base + self.signal(62, [(h, .6 / h) for h in range(1, int(3000 // self.hz(62)) + 1)])
+        signal += self.signal(75, [(1, .6), (3, .4)])
+        evaluate_support = admission.evaluate_partial_support
+        calls = []
+        def unavailable_comparison(prepared, frequencies):
+            calls.append(frequencies)
+            if len(calls) == 3:  # Original upper and lower support were measured normally.
+                return dict(admitted=False, status='ill_conditioned_augmented_design')
+            return evaluate_support(prepared, frequencies)
+        with patch.object(admission, 'evaluate_partial_support', side_effect=unavailable_comparison):
+            result = self.evaluate(signal, note=75)
+        self.assertTrue(result['admitted'])
+        self.assertEqual(result['status'], 'competition_incomplete')
+        self.assertEqual(result['unavailable_comparisons'], 1)
+        self.assertEqual(result['lower_comparisons'][0]['comparison_outcome'], 'unavailable')
 
     def test_real_independent_upper_survives_supported_lower(self):
         signal = self.base + self.signal(62, [(h, .6 / h) for h in range(1, int(3000 // self.hz(62)) + 1)])

@@ -1,0 +1,173 @@
+{
+  "schema": "m3_ordinary_harmonic_admission_references_v1",
+  "dataset": "ordinary",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "block_samples": 512,
+  "reference_flags": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ]
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43707756793",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "inputs": {
+    "ordinary.wav": {
+      "bytes": 21379244,
+      "sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5"
+    },
+    "ordinary.tsv": {
+      "bytes": 16808,
+      "sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "calibration.m3cb": {
+      "bytes": 6425,
+      "sha256": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997"
+    },
+    "templates.tsv": {
+      "bytes": 1311987,
+      "sha256": "5bb98dfe3a295da1b9db857b083c650059de8dc3ab2b1984ceb2be1d1255ac87"
+    }
+  },
+  "config": {
+    "train_samples": 3840,
+    "predict_samples": 960,
+    "stride_samples": 1024,
+    "maximum_hz": 3000,
+    "candidate_harmonics": 4,
+    "maximum_base_notes": 8,
+    "svd_relative_cutoff": 1e-06,
+    "a4_hz": 440,
+    "baseline_frequency": "saved valid phase; otherwise bounded tuning from training audio with proposed partials",
+    "candidate_frequency": "equal temperament",
+    "amplitude": "constant sine/cosine coefficients plus DC",
+    "lowest_note": 32,
+    "highest_note": 84,
+    "minimum_independent_pairs": 2,
+    "minimum_supported_pairs": 2,
+    "harmonic_support": "leave-one-pair-out held-out prediction gain above numerical guard",
+    "pair_singular_ratio_floor": 0.001,
+    "full_singular_ratio_floor": 0.0001,
+    "numerical_guard_factor": 64,
+    "score_ratio": 0.2,
+    "fundamental_ratio": 0.8,
+    "selection": "all eligible below-threshold pitches at the past-only fixed cadence",
+    "baseline": "frozen current detector shadow; not candidate replay feedback",
+    "parent_tuning": {
+      "method": "training-only variable projection for phase-invalid parents, conditional on proposed partials",
+      "bounds_cents": 50.0,
+      "max_evaluations": 12,
+      "tolerance": 1.4901161193847656e-08,
+      "partials": "fixed harmonic indices selected at the seed; frequencies may cross 3000Hz",
+      "failure": "withhold admission on rank loss, boundary, or nonconvergence"
+    },
+    "lower_competition": {
+      "selection": "observed unowned lower candidates at training cutoff; no labels",
+      "score_ratio": 0.2,
+      "fundamental_ratio": 0.2,
+      "band_score": 0.9,
+      "band_fund": 0.8,
+      "maximum_candidates": 8,
+      "support": "two independent supported pairs conditional on owned notes and upper partials",
+      "comparison": "upper support conditional on frozen fitted ownership and fixed supported lower full series",
+      "unavailable": "retain original admission and record incomplete comparison",
+      "overflow": "withhold; never truncate candidates or owned notes",
+      "lower_frequency": "valid saved phase; otherwise equal temperament, fixed for support and comparison"
+    }
+  },
+  "target": {
+    "label_index": 10,
+    "midi_note": 75,
+    "string_mask": 128,
+    "start_sample": 163306,
+    "end_sample": 235200
+  },
+  "runs": {
+    "reference-off": {
+      "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+      "output": {
+        "labeled": 528632,
+        "matched": 145385,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92653,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319772,
+        "fingerprint": "bbed96f3be505756"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145385
+        }
+      },
+      "midi_trace_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+      "sample_count": 10689600,
+      "sample_rate": 96000
+    },
+    "current-on": {
+      "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "exact_matches_by_string_count": {
+        "1": {
+          "labeled": 528632,
+          "matched": 145400
+        }
+      },
+      "midi_trace_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+      "sample_count": 10689600,
+      "sample_rate": 96000
+    }
+  },
+  "current_outcome_sha256": "9607e414dd0a11aaf78df7197e5239651f5f3c580d934b556189c4fbf37971b5",
+  "reference_provenance": {
+    "snapshot_midi_source": {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "commit": "78395c30de96cdc34c31b5c6549660a728515f4a",
+      "provider": "github-actions",
+      "worker_repository": "Ajuntanaga/m3-offload",
+      "run_id": "42643461303",
+      "run_attempt": "1",
+      "input_release": "corpus-20261108",
+      "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+      "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+    },
+    "snapshot_midi_report_sha256": "2a229fea4601db54217eb5b75c5f9c8636f3380e90bb83e63f4d913bbb0a915d",
+    "outcome_source": {
+      "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+      "commit": "27418980164c4f3c1eba3f30acc1e524da1b2c5e",
+      "provider": "github-actions",
+      "worker_repository": "Ajuntanaga/m3-offload",
+      "run_id": "43707756793",
+      "run_attempt": "1",
+      "input_release": "corpus-20261108",
+      "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+      "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+    },
+    "outcome_report_sha256": "fba03015f4b0664b995481fedec82f0172e5d43d7dd5228be432c196740b16cf"
+  },
+  "policy_revision": "Freeze original fitted owned frequencies; require independent lower support at its causal saved phase or equal-temperament frequency, then compare the upper against that same fixed lower full series. Merge exactly shared frequencies only. Measured conditional upper rejection may withhold; unavailable comparisons retain the original admission and are reported as incomplete. No labels, threshold changes or parent retuning in the comparison."
+}

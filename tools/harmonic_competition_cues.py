@@ -3,7 +3,8 @@
 Only observed, unowned lower candidates at the training cutoff are compared.
 Their presence alone cannot veto an upper note: each must predict at least two
 partials beyond the fitted owned notes and proposed upper note. An upper note
-must then survive comparison with each supported lower candidate's harmonics.
+must then survive each measurable comparison with a supported lower candidate's
+harmonics. An unavailable comparison cannot overturn the original admission.
 This frozen-shadow model is not a native real-time implementation.
 """
 import numpy as np
@@ -18,9 +19,13 @@ CONFIG = dict(admission.CONFIG, lower_competition=dict(
     score_ratio=.20, fundamental_ratio=.20, band_score=.90, band_fund=.80,
     maximum_candidates=8,
     support='two independent supported pairs conditional on owned notes and upper partials',
-    comparison='upper must survive each supported lower full harmonic series',
+    comparison='upper support conditional on frozen fitted ownership and fixed supported lower full series',
+    unavailable='retain original admission and record incomplete comparison',
     overflow='withhold; never truncate candidates or owned notes',
-    lower_frequency='valid saved phase; otherwise equal temperament for support, training-only fit for comparison'))
+    lower_frequency='valid saved phase; otherwise equal temperament, fixed for support and comparison'))
+
+MEASURED_REJECTIONS = frozenset((
+    'insufficient_independent_pairs', 'prediction_rejected', 'insufficient_supported_pairs'))
 
 
 def partials(frequency):
@@ -63,7 +68,8 @@ def prepared_with_base(prepared, base):
 
 def evaluate_candidate(window, prepared, note, state):
     original = admission.evaluate_candidate(window, prepared, note)
-    result = dict(original, original_status=original['status'], lower_comparisons=[])
+    result = dict(original, original_status=original['status'], lower_comparisons=[],
+                  unavailable_comparisons=0)
     if not original['admitted']:
         return result
     if (state is None or state['sample'] > window['available_sample'] - CONFIG['predict_samples']
@@ -98,22 +104,35 @@ def evaluate_candidate(window, prepared, note, state):
             continue
         if len(owned) + 1 > CONFIG['maximum_base_notes']:
             return dict(result, admitted=False, status='too_many_comparison_parents')
-        # Use original seeds, not the previously fitted invalid-phase parents:
-        # otherwise the same +/-50 cent fitting bound could shift a second time.
-        pitches = sorted(window['base_pitches'] + [lower], key=lambda pitch: pitch['note'])
-        compared = prepared_with_base(prepared, design(harmonic_frequencies(pitches), count))
+        # Keep the original fitted frequency list (including its fixed harmonic
+        # indices) and the lower frequency whose independent support was just
+        # measured. Refitting all parents introduces duplicate shared columns
+        # and can turn an unavailable fit into a veto against a real upper note.
+        comparison_frequencies = list(frequencies)
+        for frequency in harmonic_frequencies([lower]):
+            # Same exact-sharing tolerance as harmonic_frequencies; do not merge
+            # nearby but distinguishable harmonics or move any fitted frequency.
+            if not any(abs(frequency - old) < 1e-6 for old in comparison_frequencies):
+                comparison_frequencies.append(frequency)
+        compared = prepared_with_base(prepared, design(sorted(comparison_frequencies), count))
         parts = compared['factor']
         ratio = float(parts[1][-1] / parts[1][0])
         if ratio < CONFIG['full_singular_ratio_floor']:
             row['upper_comparison'] = dict(admitted=False, status='ill_conditioned_comparison_base',
                                             base_singular_ratio=ratio)
         else:
-            row['upper_comparison'] = admission.evaluate_candidate(
-                dict(window, base_pitches=pitches), compared, note)
-        if not row['upper_comparison']['admitted']:
+            row['upper_comparison'] = admission.evaluate_partial_support(compared, partials(upper_hz))
+        check = row['upper_comparison']
+        if check['admitted']:
+            row['comparison_outcome'] = 'pass'
+        elif check['status'] in MEASURED_REJECTIONS:
+            row['comparison_outcome'] = 'measured_rejection'
             return dict(result, admitted=False, status='lower_competition_withheld',
                         withholding_lower_note=lower['note'])
-    return dict(result, status='competition_pass')
+        else:
+            row['comparison_outcome'] = 'unavailable'
+            result['unavailable_comparisons'] += 1
+    return dict(result, status='competition_incomplete' if result['unavailable_comparisons'] else 'competition_pass')
 
 
 def generate(audio, outcome_path, cue_path, evidence_path, deadline):

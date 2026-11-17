@@ -261,9 +261,12 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
         self.assertEqual(selected['inputs'], partial['inputs'])
         self.assertEqual(selected['config'], trial.CONFIG)
         competition = json.loads((root / 'ordinary-harmonic-competition-references-20261116.json').read_text())
+        fixed = json.loads((root / 'ordinary-harmonic-fixed-competition-references-20261116.json').read_text())
         for key in ('runs', 'inputs', 'current_outcome_sha256', 'source', 'target'):
             self.assertEqual(competition[key], selected[key])
-        self.assertEqual(competition['config'], competing.CONFIG)
+        for key in competition.keys() - {'config', 'policy_revision'}:
+            self.assertEqual(fixed[key], competition[key])
+        self.assertEqual(fixed['config'], competing.CONFIG)
 
 
 if __name__ == '__main__':
