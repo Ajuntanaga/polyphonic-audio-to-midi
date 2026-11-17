@@ -2696,7 +2696,9 @@ struct PolyphonicPitchDetectorTestAccess final {
     state.assigned_string = 1U;
     const auto allocations = test::allocation_count();
     DetectorDecision move;
-    M3_EXPECT_TRUE(detector.reconcile_selected_midi_output(move, 0U, selected, continuous));
+    // The return value reports a collision correction, not successful output.
+    // This ordinary assignment move needs no collision correction.
+    M3_EXPECT_FALSE(detector.reconcile_selected_midi_output(move, 0U, selected, continuous));
     detector.reconcile_diagnostic_midi_owners(move, selected, scores, fundamentals);
     M3_EXPECT_EQ(move.transitions.size(), 2U);
     M3_EXPECT_EQ(move.transitions[0].kind, TransitionKind::note_off);
