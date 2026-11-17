@@ -31,24 +31,31 @@ bool read_events(const char* path, std::uint64_t samples, std::uint64_t expected
                  std::vector<Event>& events) {
   std::ifstream input(path);
   std::string line;
-  if (!std::getline(input, line) || line != "# m3_midi_events_v1" ||
-      !std::getline(input, line) ||
-      line != "sample\tkind\tnote\tvelocity\tvoice_id\tsequence") return false;
+  if (!std::getline(input, line)) return false;
+  const bool tagged = line == "# m3_midi_events_v2";
+  if ((!tagged && line != "# m3_midi_events_v1") || !std::getline(input, line) ||
+      line != (tagged
+          ? "sample\tkind\tnote\tvelocity\tvoice_id\tsequence\tcontinuation_voice_id"
+          : "sample\tkind\tnote\tvelocity\tvoice_id\tsequence")) return false;
+  const std::size_t field_count = tagged ? 7U : 6U;
   while (std::getline(input, line)) {
     if (line.size() > 256U || events.size() >= expected) return false;
-    std::array<std::string_view, 6> fields{};
+    std::array<std::string_view, 7> fields{};
     std::size_t start = 0;
-    for (std::size_t index = 0; index < fields.size(); ++index) {
+    for (std::size_t index = 0; index < field_count; ++index) {
       const auto end = line.find('\t', start);
-      if ((index + 1U < fields.size()) != (end != std::string::npos)) return false;
+      if ((index + 1U < field_count) != (end != std::string::npos)) return false;
       fields[index] = std::string_view(line).substr(start,
           end == std::string::npos ? line.size() - start : end - start);
       start = end == std::string::npos ? line.size() : end + 1U;
     }
-    std::uint64_t sample{}, note{}, velocity{}, voice{}, sequence{};
+    std::uint64_t sample{}, note{}, velocity{}, voice{}, sequence{}, continuation{255U};
     if (!number(fields[0], sample) || !number(fields[2], note) ||
         !number(fields[3], velocity) || !number(fields[4], voice) ||
-        !number(fields[5], sequence) || sample >= samples || note > 127U ||
+        !number(fields[5], sequence) ||
+        (tagged && (!number(fields[6], continuation) ||
+                    (continuation >= m3::kMaxVoices && continuation != 255U))) ||
+        sample >= samples || note > 127U ||
         velocity > 127U || (voice >= m3::kMaxVoices && voice != 255U) ||
         sequence > std::numeric_limits<std::uint32_t>::max() ||
         (fields[1] != "on" && fields[1] != "off") ||
@@ -57,7 +64,8 @@ bool read_events(const char* path, std::uint64_t samples, std::uint64_t expected
     events.push_back(Event{sample, m3::VoiceTransition{0U,
         fields[1] == "on" ? m3::TransitionKind::note_on : m3::TransitionKind::note_off,
         static_cast<std::uint8_t>(note), static_cast<std::uint8_t>(velocity),
-        static_cast<std::uint32_t>(sequence), static_cast<std::uint8_t>(voice)}});
+        static_cast<std::uint32_t>(sequence), static_cast<std::uint8_t>(voice),
+        static_cast<std::uint8_t>(continuation)}});
   }
   return input.eof() && events.size() == expected;
 }
@@ -107,8 +115,9 @@ int main(int argc, char** argv) {
       samples > std::numeric_limits<std::uint32_t>::max() || expected > 1000000U ||
       block == 0U || block > m3::kMaxHostFrames ||
       (samples + block - 1U) / block > 1000000U ||
-      (std::string_view(argv[5]) != "single" && std::string_view(argv[5]) != "per_voice")) {
-    std::cerr << "usage: midi_ledger_replay events samples event_count block_size single|per_voice callbacks\n";
+      (std::string_view(argv[5]) != "single" && std::string_view(argv[5]) != "per_voice" &&
+       std::string_view(argv[5]) != "stable_note")) {
+    std::cerr << "usage: midi_ledger_replay events samples event_count block_size single|per_voice|stable_note callbacks\n";
     return 2;
   }
   std::vector<Event> events;
@@ -126,6 +135,8 @@ int main(int argc, char** argv) {
   const m3::NoteEventSink sink{&capture, Capture::push};
   const auto routing = std::string_view(argv[5]) == "single"
       ? m3::MidiRouting::single : m3::MidiRouting::per_voice;
+  const auto identity_mode = std::string_view(argv[5]) == "stable_note"
+      ? m3::NoteIdentityMode::stable_note : m3::NoteIdentityMode::physical_string;
   std::uint64_t queued{}, rejected{}, unqueued{}, blocked_blocks{}, disabled_blocks{};
   std::optional<std::uint64_t> first_blocked;
   std::optional<Event> first_blocking_event;
@@ -155,12 +166,12 @@ int main(int argc, char** argv) {
     }
     // The constant finite signal only supplies ledger hold state. No waveform,
     // silence-based recovery, detector feedback, controls or host rejection.
-    const auto result = ledger.deliver_queued(frames, sink, 0.5, true, true, routing, 1U);
+    const auto result = ledger.deliver_queued(frames, sink, 0.5, true, true, routing, 1U, identity_mode);
     if (result.output_blocked) {
       ++blocked_blocks;
       if (!first_blocked) {
         first_blocked = start;
-        if (!queue_failed) {
+        if (!queue_failed && identity_mode == m3::NoteIdentityMode::physical_string) {
           std::vector<Event> ordered(events.begin() + static_cast<std::ptrdiff_t>(first),
                                      events.begin() + static_cast<std::ptrdiff_t>(cursor));
           std::sort(ordered.begin(), ordered.end(), [](const Event& a, const Event& b) {
@@ -186,6 +197,7 @@ int main(int argc, char** argv) {
       << ",\"queue_rejected_events\":" << rejected << ",\"unqueued_after_failure\":" << unqueued
       << ",\"source_callbacks\":" << capture.source_callbacks
       << ",\"suppressed_source_events\":" << events.size() - capture.source_callbacks
+      << ",\"transferred_pairs\":" << ledger.transferred_pairs()
       << ",\"cleanup_callbacks\":" << capture.cleanup_callbacks
       << ",\"blocked_blocks\":" << blocked_blocks << ",\"detection_disabled_blocks\":" << disabled_blocks
       << ",\"first_blocked_block_start\":";

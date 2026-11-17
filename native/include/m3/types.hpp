@@ -57,6 +57,10 @@ struct VoiceTransition final {
   // general-profile producers leave this unassigned and retain pitch-keyed
   // behavior.
   std::uint8_t voice_id{kUnassignedVoiceId};
+  // Reciprocal source/destination on a diagnostic assignment-only Off/On
+  // pair. Ordinary producers leave this unset. This is provenance, not a
+  // request to merge arbitrary adjacent same-pitch attacks.
+  std::uint8_t continuation_voice_id{kUnassignedVoiceId};
 };
 
 using TickTransitions = FixedVector<VoiceTransition, kMaxTickTransitions>;

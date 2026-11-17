@@ -63,8 +63,9 @@ m3::VoiceTransition transition(std::uint32_t offset,
                                std::uint8_t velocity,
                                std::uint32_t sequence,
                                std::uint8_t voice_id =
-                                   m3::kUnassignedVoiceId) noexcept {
-  return m3::VoiceTransition{offset, kind, note, velocity, sequence, voice_id};
+                                   m3::kUnassignedVoiceId,
+                               std::uint8_t continuation = m3::kUnassignedVoiceId) noexcept {
+  return m3::VoiceTransition{offset, kind, note, velocity, sequence, voice_id, continuation};
 }
 
 m3::NoteDeliveryResult deliver(m3::GeneratedNoteLedger& ledger,
@@ -72,9 +73,10 @@ m3::NoteDeliveryResult deliver(m3::GeneratedNoteLedger& ledger,
                                double peak = 0.0, bool finite = true,
                                bool supported = true,
                                m3::MidiRouting routing = m3::MidiRouting::single,
-                               std::uint8_t start_channel = 1U) noexcept {
+                               std::uint8_t start_channel = 1U,
+                               m3::NoteIdentityMode identity = m3::NoteIdentityMode::physical_string) noexcept {
   return ledger.deliver(frames, capture.sink(), peak, finite, supported,
-                        routing, start_channel);
+                        routing, start_channel, identity);
 }
 
 void establish_note(m3::GeneratedNoteLedger& ledger, std::uint8_t note,
@@ -530,4 +532,146 @@ M3_TEST(generated_note_ledger_null_sink_and_delivery_are_allocation_free) {
   M3_EXPECT_FALSE(ledger.is_active(60));
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations_before);
   M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations_before);
+}
+
+M3_TEST(generated_note_ledger_stable_identity_survives_moves_and_string_reuse) {
+  for (const auto mode : {m3::NoteIdentityMode::physical_string,
+                          m3::NoteIdentityMode::stable_note}) {
+    const bool stable = mode == m3::NoteIdentityMode::stable_note;
+    m3::GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64));
+    NoteCapture capture;
+    const auto allocations = m3::test::allocation_count();
+    const auto send = [&]() {
+      M3_EXPECT_TRUE(deliver(ledger, 64, capture, 0.5, true, true,
+          m3::MidiRouting::per_voice, 1, mode).detection_allowed);
+      ledger.begin_block();
+    };
+    const auto add = [&](std::uint32_t offset, m3::TransitionKind kind,
+                         std::uint8_t note, std::uint8_t voice,
+                         std::uint8_t continuation, std::uint32_t sequence) {
+      M3_EXPECT_TRUE(ledger.queue_transition(transition(offset, kind, note,
+          kind == m3::TransitionKind::note_on ? 90 : 0, sequence, voice, continuation), 64));
+    };
+    add(0, m3::TransitionKind::note_on, 37, 0, 255, 1);
+    send();
+    // Two distinct ticks in one block; both are explicit assignment moves.
+    add(8, m3::TransitionKind::note_off, 37, 0, 1, 2);
+    add(8, m3::TransitionKind::note_on, 37, 1, 0, 3);
+    add(40, m3::TransitionKind::note_off, 37, 1, 2, 4);
+    add(40, m3::TransitionKind::note_on, 37, 2, 1, 5);
+    send();
+    M3_EXPECT_EQ(capture.size(), stable ? 1U : 5U);
+    M3_EXPECT_EQ(ledger.transferred_pairs(), stable ? 2U : 0U);
+    add(0, m3::TransitionKind::note_on, 44, 0, 255, 6);
+    send();
+    const auto second = capture.size() - 1U;
+    // Reuse of the old physical string cannot reuse the held sink identity.
+    M3_EXPECT_TRUE(capture[second].voice_id != (stable ? capture[0].voice_id : 2U));
+    M3_EXPECT_EQ(capture.channel(second), stable ? 2U : 1U);
+    M3_EXPECT_TRUE(ledger.queue_active_releases(63, 64));
+    send();
+    M3_EXPECT_EQ(capture[capture.size() - 2U].note, 37U);
+    M3_EXPECT_EQ(capture[capture.size() - 2U].voice_id, stable ? 0U : 2U);
+    M3_EXPECT_EQ(capture.channel(capture.size() - 2U), stable ? 1U : 3U);
+    M3_EXPECT_EQ(capture[capture.size() - 1U].voice_id, capture[second].voice_id);
+    M3_EXPECT_FALSE(ledger.is_active(37));
+    M3_EXPECT_FALSE(ledger.is_active(44));
+    M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+  }
+}
+
+M3_TEST(generated_note_ledger_invalid_routing_still_delivers_legacy_releases) {
+  for (const bool invalid_channel : {false, true}) {
+    m3::GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64));
+    NoteCapture capture;
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(0, m3::TransitionKind::note_on, 37, 90, 1, 2), 64));
+    M3_EXPECT_TRUE(deliver(ledger, 64, capture, 0.5, true, true,
+        m3::MidiRouting::per_voice, 1).detection_allowed);
+    ledger.begin_block();
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(0, m3::TransitionKind::note_off, 37, 0, 2, 2), 64));
+    const auto routing = invalid_channel ? m3::MidiRouting::per_voice
+        : static_cast<m3::MidiRouting>(255U);
+    const auto result = deliver(ledger, 64, capture, 0.5, true, true,
+        routing, invalid_channel ? 0U : 1U);
+    M3_EXPECT_FALSE(result.detection_allowed);
+    M3_EXPECT_EQ(capture.size(), 2U);
+    M3_EXPECT_EQ(capture[1].kind, m3::TransitionKind::note_off);
+    M3_EXPECT_EQ(capture.channel(1), 3U);
+    M3_EXPECT_FALSE(ledger.is_active(37));
+  }
+}
+
+M3_TEST(generated_note_ledger_stable_identity_preserves_replucks_and_unisons) {
+  // Untagged, one-sided, same-lane re-pluck, and simultaneous unison cases.
+  for (int scenario = 0; scenario < 4; ++scenario) {
+    m3::GeneratedNoteLedger ledger;
+    M3_EXPECT_TRUE(ledger.activate(64));
+    NoteCapture capture;
+    const auto send = [&]() {
+      M3_EXPECT_TRUE(deliver(ledger, 64, capture, 0.5, true, true,
+          m3::MidiRouting::per_voice, 1, m3::NoteIdentityMode::stable_note).detection_allowed);
+      ledger.begin_block();
+    };
+    M3_EXPECT_TRUE(ledger.queue_transition(
+        transition(0, m3::TransitionKind::note_on, 37, 90, 1, 0), 64));
+    if (scenario == 3)
+      M3_EXPECT_TRUE(ledger.queue_transition(
+          transition(0, m3::TransitionKind::note_on, 37, 90, 2, 3), 64));
+    send();
+    const auto before = capture.size();
+    const std::uint8_t destination = scenario == 2 ? 0U : 1U;
+    M3_EXPECT_TRUE(ledger.queue_transition(transition(8, m3::TransitionKind::note_off,
+        37, 0, 3, 0, scenario == 0 ? 255 : destination), 64));
+    M3_EXPECT_TRUE(ledger.queue_transition(transition(8, m3::TransitionKind::note_on,
+        37, 91, 4, destination, scenario < 2 ? 255 : 0), 64));
+    send();
+    M3_EXPECT_EQ(ledger.transferred_pairs(), 0U);
+    M3_EXPECT_EQ(capture.size(), before + 2U);
+    M3_EXPECT_EQ(capture[before].kind, m3::TransitionKind::note_off);
+    M3_EXPECT_EQ(capture[before + 1U].kind, m3::TransitionKind::note_on);
+    if (scenario == 3)
+      M3_EXPECT_TRUE(capture[1].voice_id != capture[before + 1U].voice_id);
+    ledger.request_release_all();
+    M3_EXPECT_TRUE(ledger.retry_pending_releases(capture.sink()));
+    M3_EXPECT_FALSE(ledger.is_active(37));
+  }
+}
+
+M3_TEST(generated_note_ledger_stable_identity_failure_releases_original_sink_owner) {
+  m3::GeneratedNoteLedger ledger;
+  M3_EXPECT_TRUE(ledger.activate(64));
+  NoteCapture capture(1); // Refuse the first real NoteOff, after the silent move.
+  const auto send = [&]() {
+    const auto result = deliver(ledger, 64, capture, 0.5, true, true,
+        m3::MidiRouting::per_voice, 4, m3::NoteIdentityMode::stable_note);
+    ledger.begin_block();
+    return result;
+  };
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(0, m3::TransitionKind::note_on, 37, 90, 1, 4), 64));
+  M3_EXPECT_TRUE(send().detection_allowed);
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(8, m3::TransitionKind::note_off, 37, 0, 2, 4, 1), 64));
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(8, m3::TransitionKind::note_on, 37, 90, 3, 1, 4), 64));
+  M3_EXPECT_TRUE(send().detection_allowed);
+  M3_EXPECT_EQ(capture.attempts(), 1U);
+  M3_EXPECT_TRUE(ledger.queue_transition(
+      transition(0, m3::TransitionKind::note_off, 37, 0, 4, 1), 64));
+  M3_EXPECT_TRUE(send().output_blocked);
+  M3_EXPECT_TRUE(ledger.is_pending_release(37));
+  M3_EXPECT_TRUE(ledger.retry_pending_releases(capture.sink()));
+  M3_EXPECT_EQ(capture.size(), 2U);
+  M3_EXPECT_EQ(capture[0].voice_id, capture[1].voice_id);
+  M3_EXPECT_EQ(capture.channel(0), capture.channel(1));
+  M3_EXPECT_FALSE(ledger.is_active(37));
+  ledger.request_recovery();
+  static_cast<void>(deliver(ledger, 64, capture, 0.0, true, true,
+      m3::MidiRouting::per_voice, 4, m3::NoteIdentityMode::stable_note));
+  M3_EXPECT_TRUE(deliver(ledger, 64, capture, 0.0, true, true,
+      m3::MidiRouting::per_voice, 4, m3::NoteIdentityMode::stable_note).detection_allowed);
 }

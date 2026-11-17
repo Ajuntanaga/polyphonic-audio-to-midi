@@ -168,7 +168,7 @@ void usage(const char* program) {
       "[--assignment-trace-start SECONDS --assignment-trace-end SECONDS] "
       "[--partial-motion-trace FILE --partial-motion-note 0..127 "
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
-      "[--midi-event-trace FILE] [--diagnostic-residual-recovery-continuity] "
+      "[--midi-event-trace FILE] [--diagnostic-stable-note-identity] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-direct-evidence-retention] "
       "[--diagnostic-projection-preview-admission] "
       "[--diagnostic-retained-spectral-assignment] "
@@ -730,6 +730,8 @@ int main(int argc, char** argv) {
       candidate_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--outcome-trace") == 0 && has_value) {
       outcome_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--diagnostic-stable-note-identity") == 0) {
+      midi_event_trace.continuation_tags = true;
     } else if (std::strcmp(argv[index], "--midi-event-trace") == 0 && has_value) {
       midi_event_trace_path = argv[++index];
     } else if ((std::strcmp(argv[index], "--assignment-trace") == 0 ||
@@ -894,6 +896,13 @@ int main(int argc, char** argv) {
       (diagnostic_fretted_fixed_penalty < 0.0 ||
        diagnostic_fretted_per_fret_penalty < 0.0)) {
     usage(argv[0]);
+    return 2;
+  }
+
+  if (midi_event_trace.continuation_tags &&
+      (midi_event_trace_path == nullptr || !diagnostic_spectral_lane_collision ||
+       config.midi_routing != m3::MidiRouting::per_voice)) {
+    std::fprintf(stderr, "m3_replay: stable identity tags require MIDI trace, independent ownership and per_voice routing\n");
     return 2;
   }
 

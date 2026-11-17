@@ -206,6 +206,7 @@ struct CandidateAdmissionDiagnostics final {
   // Existing causal string/fret-posterior onset evidence. Replay exposes it
   // to test articulation boundaries; production builds omit this structure.
   double string_fret_onset_strength{};
+  bool string_fret_onset_observed{};
   // Scale-invariant evidence relative to the strongest playable candidate in
   // the same one-octave pitch band. This is replay-only: it measures whether
   // a quiet upper-string fundamental is locally strong even when a louder low
@@ -736,6 +737,9 @@ class PolyphonicPitchDetector final {
   }
   void set_projection_preview_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_projection_preview_admission_ = enabled;
+  }
+  void set_stable_note_identity_for_diagnostics(bool enabled) noexcept {
+    diagnostic_stable_note_identity_ = enabled;
   }
   void set_spectral_lane_collision_for_diagnostics(bool enabled) noexcept {
     diagnostic_spectral_lane_collision_ = enabled;
@@ -1279,7 +1283,8 @@ class PolyphonicPitchDetector final {
       std::uint8_t voice_id = kUnassignedVoiceId) noexcept;
   [[nodiscard]] bool reconcile_selected_midi_output(
       DetectorDecision& decision, std::size_t candidate,
-      const std::array<bool, kMaxCandidates>& selected) noexcept;
+      const std::array<bool, kMaxCandidates>& selected,
+      bool continuous_selection = true) noexcept;
   [[nodiscard]] static bool output_suppressed(const CandidateState& state) noexcept;
   [[nodiscard]] bool append_candidate_note_on(
       DetectorDecision& decision, std::size_t candidate,
@@ -1806,6 +1811,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_projection_preview_admission_{};
   bool diagnostic_retained_spectral_assignment_{};
   bool diagnostic_spectral_lane_collision_{};
+  bool diagnostic_stable_note_identity_{};
   bool diagnostic_pending_string_reservation_{};
   bool diagnostic_forced_pending_string_reservation_{};
   bool diagnostic_pending_midi_retention_{};

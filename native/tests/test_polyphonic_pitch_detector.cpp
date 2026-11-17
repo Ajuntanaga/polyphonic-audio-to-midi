@@ -2666,6 +2666,53 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
+  static void stable_identity_provenance(PolyphonicPitchDetector& detector,
+                                         bool enabled, bool continuous, bool unison,
+                                         double onset = 0.0, bool observed = true,
+                                         bool pending_attack = false) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = config.highest_note = 37U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_spectral_lane_collision_for_diagnostics(true);
+    detector.set_stable_note_identity_for_diagnostics(enabled);
+    auto& state = detector.candidate_states_[0U];
+    state.active = true;
+    state.age_ticks = 100U;
+    state.evidence_ticks = 59U;
+    state.attack_ticks = pending_attack ? 1U : 0U;
+    auto& articulation = detector.candidate_admission_diagnostics_[0U];
+    articulation.string_fret_onset_strength = onset;
+    articulation.string_fret_onset_observed = observed;
+    state.midi_voice_mask = unison ? 5U : 1U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = true;
+    std::array<double, kMaxCandidates> scores{}, fundamentals{};
+    scores[0U] = fundamentals[0U] = 4.0;
+    DetectorDecision initial;
+    detector.reconcile_diagnostic_midi_owners(initial, selected, scores, fundamentals);
+    state.assigned_string_mask = unison ? 6U : 2U;
+    state.assigned_string = 1U;
+    const auto allocations = test::allocation_count();
+    DetectorDecision move;
+    M3_EXPECT_TRUE(detector.reconcile_selected_midi_output(move, 0U, selected, continuous));
+    detector.reconcile_diagnostic_midi_owners(move, selected, scores, fundamentals);
+    M3_EXPECT_EQ(move.transitions.size(), 2U);
+    M3_EXPECT_EQ(move.transitions[0].kind, TransitionKind::note_off);
+    M3_EXPECT_EQ(move.transitions[0].voice_id, 0U);
+    M3_EXPECT_EQ(move.transitions[1].kind, TransitionKind::note_on);
+    M3_EXPECT_EQ(move.transitions[1].voice_id, 1U);
+    const bool tagged = enabled && continuous && !unison && observed &&
+        onset == 0.0 && !pending_attack;
+    M3_EXPECT_EQ(move.transitions[0].continuation_voice_id, tagged ? 1U : 255U);
+    M3_EXPECT_EQ(move.transitions[1].continuation_voice_id, tagged ? 0U : 255U);
+    M3_EXPECT_EQ(state.assigned_string_mask, unison ? 6U : 2U);
+    M3_EXPECT_EQ(state.midi_voice_mask, unison ? 6U : 2U);
+    M3_EXPECT_EQ(state.evidence_ticks, 59U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static void independent_midi_owner_lifecycle(
       PolyphonicPitchDetector& detector, MidiRouting delivery_routing) {
     PersistentConfig config;
@@ -14940,3 +14987,20 @@ M3_TEST(native_detector_residual_lane_costs_respect_capture_and_candidate_gates)
   M3_EXPECT_EQ(restricted.lane_totals[3U], 0.0);
 }
 #endif
+
+M3_TEST(native_detector_stable_identity_tags_only_continuous_singleton_moves) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  for (const bool enabled : {false, true})
+    for (const bool continuous : {false, true})
+      for (const bool unison : {false, true})
+        m3::PolyphonicPitchDetectorTestAccess::stable_identity_provenance(
+            detector, enabled, continuous, unison);
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  Access::stable_identity_provenance(detector, true, true, false, 0.25);
+  Access::stable_identity_provenance(detector, true, true, false, 0.0, false);
+  Access::stable_identity_provenance(detector, true, true, false, 0.0, true, true);
+  Access::stable_identity_provenance(detector, true, true, false,
+      std::numeric_limits<double>::quiet_NaN());
+#endif
+}

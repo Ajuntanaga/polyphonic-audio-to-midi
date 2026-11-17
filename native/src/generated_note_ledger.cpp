@@ -76,6 +76,7 @@ void GeneratedNoteLedger::deactivate() noexcept {
   panic_hold_ = false;
   recovery_requested_ = false;
   hold_calls_remaining_ = 0;
+  transferred_pairs_ = 0U;
 }
 
 void GeneratedNoteLedger::begin_block() noexcept {
@@ -209,7 +210,7 @@ bool GeneratedNoteLedger::push(
 
 std::uint8_t GeneratedNoteLedger::allocate_channel(
     MidiRouting routing, std::uint8_t start_channel,
-    const VoiceTransition& transition) const noexcept {
+    const VoiceTransition& transition, NoteIdentityMode identity_mode) const noexcept {
   if (start_channel < 1U || start_channel > 16U) {
     return 0U;
   }
@@ -219,7 +220,8 @@ std::uint8_t GeneratedNoteLedger::allocate_channel(
   if (routing != MidiRouting::per_voice) {
     return 0U;
   }
-  if (transition.voice_id < kMaxVoices) {
+  if (transition.voice_id < kMaxVoices &&
+      identity_mode == NoteIdentityMode::physical_string) {
     const std::uint8_t channel = static_cast<std::uint8_t>(
         ((static_cast<std::uint16_t>(start_channel) - 1U +
           transition.voice_id) %
@@ -249,6 +251,36 @@ std::uint8_t GeneratedNoteLedger::allocate_channel(
     }
   }
   return 0U;
+}
+
+std::size_t GeneratedNoteLedger::continuation_partner(
+    std::size_t index, std::size_t slot) const noexcept {
+  const auto& event = storage_[index];
+  const auto target = event.continuation_voice_id;
+  if (event.voice_id >= kMaxVoices || target >= kMaxVoices ||
+      target == event.voice_id || !voices_[slot].active ||
+      voices_[slot].pending_release || panic_hold_) return size_;
+  // A single owner only. An unison, occupied destination or ambiguous batch
+  // falls back to the original release/attack path.
+  for (std::size_t other = 0U; other < voices_.size(); ++other) {
+    const auto& voice = voices_[other];
+    if (other != slot && (voice.active || voice.pending_release) &&
+        (voice.note == event.note || voice.voice_id == target)) return size_;
+  }
+  std::size_t partner = size_;
+  for (std::size_t other = 0U; other < size_; ++other) {
+    const auto& next = storage_[other];
+    if (other == index || next.sample_offset != event.sample_offset) continue;
+    if (next.kind == TransitionKind::note_on && next.note == event.note &&
+        next.voice_id == target && next.continuation_voice_id == event.voice_id &&
+        partner == size_) {
+      partner = other;
+    } else if (next.note == event.note || next.voice_id == target ||
+               next.voice_id == event.voice_id) {
+      return size_;
+    }
+  }
+  return partner;
 }
 
 void GeneratedNoteLedger::request_release_all() noexcept {
@@ -292,7 +324,7 @@ bool GeneratedNoteLedger::retry_pending_releases(NoteEventSink sink) noexcept {
       }
       const VoiceTransition release{
           0U, TransitionKind::note_off, voice.note, 0U,
-          static_cast<std::uint32_t>(note), voice.voice_id};
+          static_cast<std::uint32_t>(note), voice.output_voice_id};
       if (!push(sink, release, voice.channel)) {
         enter_blocked();
         return false;
@@ -329,23 +361,30 @@ void GeneratedNoteLedger::finish_hold(double selected_peak, bool finite_input,
 NoteDeliveryResult GeneratedNoteLedger::deliver(
     std::uint32_t frames, NoteEventSink sink, double selected_peak,
     bool finite_input, bool supported_layout, MidiRouting routing,
-    std::uint8_t start_channel) noexcept {
+    std::uint8_t start_channel, NoteIdentityMode identity_mode) noexcept {
   static_cast<void>(retry_pending_releases(sink));
   return deliver_queued(frames, sink, selected_peak, finite_input,
-                        supported_layout, routing, start_channel);
+                        supported_layout, routing, start_channel, identity_mode);
 }
 
 NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
     std::uint32_t frames, NoteEventSink sink, double selected_peak,
     bool finite_input, bool supported_layout, MidiRouting routing,
-    std::uint8_t start_channel) noexcept {
+    std::uint8_t start_channel, NoteIdentityMode identity_mode) noexcept {
   if (!storage_ || frames == 0 || frames > max_frames_) {
     invalid_transition_ = true;
     return NoteDeliveryResult{output_blocked_, panic_hold_, false};
   }
   if (start_channel < 1U || start_channel > 16U ||
       (routing != MidiRouting::single && routing != MidiRouting::per_voice)) {
+    // Preserve legacy release/cleanup handling even with invalid routing.
     invalid_transition_ = true;
+  }
+  if ((identity_mode != NoteIdentityMode::physical_string &&
+       identity_mode != NoteIdentityMode::stable_note) ||
+      (identity_mode == NoteIdentityMode::stable_note && routing != MidiRouting::per_voice)) {
+    invalid_transition_ = true;
+    return NoteDeliveryResult{output_blocked_, panic_hold_, false};
   }
   for (std::size_t index = 0; index < size_; ++index) {
     if (storage_[index].sample_offset >= frames) {
@@ -355,8 +394,16 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
   }
 
   if (!release_pending() && !output_blocked_) {
+    std::array<std::size_t, kMaxVoices> consumed{};
+    std::size_t consumed_count = 0U;
     for (std::size_t index = 0; index < size_; ++index) {
       const VoiceTransition& event = storage_[index];
+      if (index == 0U || event.sample_offset != storage_[index - 1U].sample_offset)
+        consumed_count = 0U;
+      bool skip = false;
+      for (std::size_t item = 0U; item < consumed_count; ++item)
+        skip = skip || consumed[item] == index;
+      if (skip) continue;
       if (event.sample_offset >= frames) {
         continue;
       }
@@ -367,7 +414,19 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
           break;
         }
         ActiveVoice& voice = voices_[slot];
-        if (!push(sink, event, voice.channel)) {
+        if (identity_mode == NoteIdentityMode::stable_note && consumed_count < consumed.size()) {
+          const auto partner = continuation_partner(index, slot);
+          if (partner < size_) {
+            voice.voice_id = event.continuation_voice_id;
+            consumed[consumed_count++] = partner;
+            ++transferred_pairs_;
+            continue;
+          }
+        }
+        auto delivered = event;
+        delivered.voice_id = voice.output_voice_id;
+        delivered.continuation_voice_id = kUnassignedVoiceId;
+        if (!push(sink, delivered, voice.channel)) {
           voice.pending_release = true;
           enter_blocked();
           break;
@@ -399,15 +458,19 @@ NoteDeliveryResult GeneratedNoteLedger::deliver_queued(
         break;
       }
       const std::uint8_t channel =
-          allocate_channel(routing, start_channel, event);
+          allocate_channel(routing, start_channel, event, identity_mode);
       const std::size_t slot = find_free_voice();
+      auto delivered = event;
+      if (identity_mode == NoteIdentityMode::stable_note)
+        delivered.voice_id = static_cast<std::uint8_t>(slot);
+      delivered.continuation_voice_id = kUnassignedVoiceId;
       if (channel == 0U || slot >= voices_.size() ||
-          !push(sink, event, channel)) {
+          !push(sink, delivered, channel)) {
         enter_blocked();
         break;
       }
       voices_[slot] = ActiveVoice{true, false, event.note, channel,
-                                  event.voice_id};
+                                  event.voice_id, delivered.voice_id};
       ++active_count_;
     }
   }

@@ -3540,10 +3540,12 @@ bool PolyphonicPitchDetector::append_transition(
 
 bool PolyphonicPitchDetector::reconcile_selected_midi_output(
     DetectorDecision& decision, std::size_t candidate,
-    const std::array<bool, kMaxCandidates>& selected) noexcept {
+    const std::array<bool, kMaxCandidates>& selected,
+    bool continuous_selection) noexcept {
   auto& state = candidate_states_[candidate];
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   static_cast<void>(selected);
+  static_cast<void>(continuous_selection);
 #endif
   std::uint8_t desired =
       state.spectral_duplicate_output_suppressed
@@ -3618,6 +3620,21 @@ bool PolyphonicPitchDetector::reconcile_selected_midi_output(
                      decision.transitions.size()) {
     return false;
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  const auto first_transition = decision.transitions.size();
+  const auto& articulation = candidate_admission_diagnostics_[candidate];
+  // A rising or unavailable causal onset measurement may be a re-pick.
+  // Keep that Off/On pair intact. No new onset threshold is tuned here.
+  const bool no_observed_attack = state.attack_ticks == 0U &&
+      articulation.string_fret_onset_observed &&
+      articulation.string_fret_onset_strength == 0.0;
+  bool assignment_only = diagnostic_stable_note_identity_ && continuous_selection &&
+      no_observed_attack && selected[candidate] && state.active && state.age_ticks > 0U &&
+      string_count(state.midi_voice_mask) == 1U &&
+      string_count(pruned_desired) == 1U && required == 2U;
+  for (const auto& prior : decision.transitions)
+    if (prior.note == note) assignment_only = false;
+#endif
   for (std::uint8_t string = 0U; string < kM3OpenNotes.size(); ++string) {
     const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
     if ((removed & bit) != 0U) {
@@ -3633,6 +3650,14 @@ bool PolyphonicPitchDetector::reconcile_selected_midi_output(
           decision, TransitionKind::note_on, note, velocity, string));
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (assignment_only && decision.transitions.size() == first_transition + 2U) {
+    auto& release = decision.transitions[first_transition];
+    auto& attack = decision.transitions[first_transition + 1U];
+    release.continuation_voice_id = attack.voice_id;
+    attack.continuation_voice_id = release.voice_id;
+  }
+#endif
   state.midi_voice_mask = pruned_desired;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (routing_diagnostics_enabled_) {
@@ -6380,6 +6405,41 @@ void PolyphonicPitchDetector::reconcile_diagnostic_midi_owners(
     static_cast<void>(output.push_back({0U, TransitionKind::note_on, next.note, velocity,
                                        sequence++, static_cast<std::uint8_t>(lane)}));
   }
+  if (diagnostic_stable_note_identity_) {
+    // Preserve only marked assignment provenance that survives the final
+    // owner arbitration unchanged. Never infer a continuation from timing.
+    for (auto& release : output) {
+      if (release.kind != TransitionKind::note_off) continue;
+      for (const auto& intent : decision.transitions) {
+        const auto destination = intent.continuation_voice_id;
+        if (intent.kind != TransitionKind::note_off || intent.note != release.note ||
+            intent.voice_id != release.voice_id || destination >= kMaxVoices) continue;
+        const auto& old = diagnostic_midi_owners_[release.voice_id];
+        const auto& next = next_owners[destination];
+        if (old.candidate != next.candidate || old.note != next.note ||
+            old.candidate >= count || !selected[old.candidate]) continue;
+        std::size_t before_count = 0U, after_count = 0U;
+        for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
+          before_count += diagnostic_midi_owners_[lane].note == release.note;
+          after_count += next_owners[lane].note == release.note;
+        }
+        if (before_count != 1U || after_count != 1U) continue;
+        bool reciprocal = false;
+        for (const auto& request : decision.transitions)
+          reciprocal = reciprocal || (request.kind == TransitionKind::note_on &&
+              request.note == release.note && request.voice_id == destination &&
+              request.continuation_voice_id == release.voice_id);
+        if (!reciprocal) continue;
+        for (auto& attack : output) {
+          if (attack.kind == TransitionKind::note_on && attack.note == release.note &&
+              attack.voice_id == destination) {
+            release.continuation_voice_id = destination;
+            attack.continuation_voice_id = release.voice_id;
+          }
+        }
+      }
+    }
+  }
   decision.transitions = output;
   diagnostic_midi_owners_ = next_owners;
   diagnostic_midi_sequence_ = sequence;
@@ -6958,6 +7018,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       candidate_admission_diagnostics_[candidate]
           .string_fret_onset_strength = posterior_frame.onset_strength;
+      candidate_admission_diagnostics_[candidate].string_fret_onset_observed = true;
 #endif
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
@@ -12717,14 +12778,15 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       }
     }
     if (selected[candidate]) {
+      const bool continuous_selection = state.release_ticks == 0U;
       state.release_ticks = 0U;
       if (!joint_output_path && profile_mode_ == ProfileMode::m3 &&
           midi_routing_ == MidiRouting::per_voice) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
         collision_reassigned |=
-            reconcile_selected_midi_output(decision, candidate, selected);
+            reconcile_selected_midi_output(decision, candidate, selected, continuous_selection);
 #else
-        static_cast<void>(reconcile_selected_midi_output(decision, candidate, selected));
+        static_cast<void>(reconcile_selected_midi_output(decision, candidate, selected, continuous_selection));
 #endif
       }
       ++active_count;

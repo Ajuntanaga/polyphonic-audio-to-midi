@@ -24,6 +24,8 @@ class FrozenNoteCues;
 
 // Actual public detector transitions, independent of tuner snapshots/labels.
 struct MidiEventTrace final {
+  // Diagnostic v2 provenance only; v1 and detector output remain unchanged.
+  bool continuation_tags{};
   static constexpr std::size_t kMaximumRows = 1000000U;
   std::FILE* stream{};
   std::size_t rows{};

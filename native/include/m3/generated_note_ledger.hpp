@@ -9,6 +9,10 @@
 
 namespace m3 {
 
+// The experimental mode allocates channels to note lifetimes. It is an
+// explicit offline caller option, not a new persistent physical-string route.
+enum class NoteIdentityMode : std::uint8_t { physical_string, stable_note };
+
 struct NoteEventSink final {
   void* context{};
   bool (*push)(void*, const VoiceTransition&, std::uint8_t) noexcept = nullptr;
@@ -43,18 +47,21 @@ class GeneratedNoteLedger final {
                                     double selected_peak, bool finite_input,
                                     bool supported_layout,
                                     MidiRouting routing = MidiRouting::single,
-                                    std::uint8_t start_channel = 1U) noexcept;
+                                    std::uint8_t start_channel = 1U,
+                                    NoteIdentityMode identity_mode = NoteIdentityMode::physical_string) noexcept;
   NoteDeliveryResult deliver(std::uint32_t frames, NoteEventSink sink,
                              double selected_peak, bool finite_input,
                              bool supported_layout,
                              MidiRouting routing = MidiRouting::single,
-                             std::uint8_t start_channel = 1U) noexcept;
+                             std::uint8_t start_channel = 1U,
+                             NoteIdentityMode identity_mode = NoteIdentityMode::physical_string) noexcept;
   [[nodiscard]] bool is_active(std::uint8_t note) const noexcept;
   [[nodiscard]] bool is_pending_release(std::uint8_t note) const noexcept;
   [[nodiscard]] bool release_pending() const noexcept;
   [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
   [[nodiscard]] bool output_blocked() const noexcept { return output_blocked_; }
   [[nodiscard]] bool panic_hold() const noexcept { return panic_hold_; }
+  [[nodiscard]] std::uint64_t transferred_pairs() const noexcept { return transferred_pairs_; }
 
  private:
   static bool transition_before(const VoiceTransition& left,
@@ -65,6 +72,7 @@ class GeneratedNoteLedger final {
     std::uint8_t note{};
     std::uint8_t channel{};
     std::uint8_t voice_id{kUnassignedVoiceId};
+    std::uint8_t output_voice_id{kUnassignedVoiceId};
   };
   [[nodiscard]] std::size_t find_voice(
       const VoiceTransition& transition) const noexcept;
@@ -74,7 +82,9 @@ class GeneratedNoteLedger final {
                    std::uint8_t one_based_channel) noexcept;
   [[nodiscard]] std::uint8_t allocate_channel(
       MidiRouting routing, std::uint8_t start_channel,
-      const VoiceTransition& transition) const noexcept;
+      const VoiceTransition& transition, NoteIdentityMode identity_mode) const noexcept;
+  [[nodiscard]] std::size_t continuation_partner(std::size_t index,
+                                                std::size_t slot) const noexcept;
   void enter_blocked() noexcept;
   void finish_hold(double selected_peak, bool finite_input,
                    bool supported_layout) noexcept;
@@ -92,6 +102,7 @@ class GeneratedNoteLedger final {
   bool panic_hold_{};
   bool recovery_requested_{};
   std::uint8_t hold_calls_remaining_{};
+  std::uint64_t transferred_pairs_{};
 };
 
 }  // namespace m3

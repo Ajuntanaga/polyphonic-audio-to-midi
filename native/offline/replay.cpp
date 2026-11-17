@@ -2928,7 +2928,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_midi_retention || diagnostic_suppressed_adjacent_admission ||
       diagnostic_fine_subset_consensus || diagnostic_qualified_tier_retention ||
       diagnostic_continuous_tier_retention || diagnostic_completion_window_retention ||
-      diagnostic_completion_midi_retention)
+      diagnostic_completion_midi_retention ||
+      (midi_event_trace != nullptr && midi_event_trace->continuation_tags))
     return false;
 #endif
   if (diagnostic_thread_cpu && (core_timing == nullptr || input_partition != 32U))
@@ -3015,7 +3016,9 @@ bool run_detector_replay(const WaveData& wave,
     trace.failed = trace.stream == nullptr;
     if (trace.failed) return false;
     trace.failed = std::fputs(
-        "# m3_midi_events_v1\nsample\tkind\tnote\tvelocity\tvoice_id\tsequence\n",
+        trace.continuation_tags
+            ? "# m3_midi_events_v2\nsample\tkind\tnote\tvelocity\tvoice_id\tsequence\tcontinuation_voice_id\n"
+            : "# m3_midi_events_v1\nsample\tkind\tnote\tvelocity\tvoice_id\tsequence\n",
         trace.stream) < 0;
     if (trace.failed) return false;
   }
@@ -3239,6 +3242,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_projection_preview_admission);
   detector.set_spectral_lane_collision_for_diagnostics(
       diagnostic_spectral_lane_collision);
+  detector.set_stable_note_identity_for_diagnostics(
+      midi_event_trace != nullptr && midi_event_trace->continuation_tags);
   detector.set_pending_string_reservation_for_diagnostics(
       diagnostic_pending_string_reservation);
   detector.set_forced_pending_string_reservation_for_diagnostics(
@@ -3568,10 +3573,14 @@ bool run_detector_replay(const WaveData& wave,
           auto& trace = *midi_event_trace;
           if (trace.rows >= trace.kMaximumRows) trace.truncated = true;
           else {
-            trace.failed = std::fprintf(trace.stream, "%zu\t%s\t%u\t%u\t%u\t%u\n",
+            trace.failed = std::fprintf(trace.stream, "%zu\t%s\t%u\t%u\t%u\t%u",
                 sample_index, transition.kind == TransitionKind::note_on ? "on" : "off",
                 unsigned(transition.note), unsigned(transition.velocity),
                 unsigned(transition.voice_id), unsigned(transition.sequence)) < 0;
+            if (trace.continuation_tags)
+              trace.failed = (std::fprintf(trace.stream, "\t%u",
+                  unsigned(transition.continuation_voice_id)) < 0) || trace.failed;
+            trace.failed = (std::fputc('\n', trace.stream) == EOF) || trace.failed;
             ++trace.rows;
           }
         }
