@@ -1707,8 +1707,8 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       bool has_undecimated_tick = false;
       while (std::fgets(line.data(), line.size(), bounded.get()) != nullptr) {
         const auto columns = fields(line.data(), '\t');
-        M3_EXPECT_EQ(columns.size(), 104U);
-        if (columns.size() != 104U) return;
+        M3_EXPECT_EQ(columns.size(), 111U);
+        if (columns.size() != 111U) return;
         const auto sample = std::stoul(columns[0]);
         M3_EXPECT_TRUE(sample >= 48000U && sample < 50048U);
         has_undecimated_tick |= std::stoul(columns[1]) % trace.kTickDecimation != 0U;
@@ -1716,12 +1716,12 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
         auto& group = peers[sample];
         group.first |= 1U << std::stoul(columns[6]);
         group.second = static_cast<unsigned>(std::stoul(columns[5]));
-        M3_EXPECT_TRUE(std::stoul(columns[93]) <= 1U);
-        M3_EXPECT_TRUE(std::stoul(columns[94]) <= 255U);
-        M3_EXPECT_TRUE(std::stoul(columns[95]) <= 255U);
-        M3_EXPECT_TRUE(std::stoul(columns[96]) <= 1U);
-        M3_EXPECT_TRUE(std::stoul(columns[97]) <= 255U);
-        M3_EXPECT_TRUE(std::stoul(columns[98]) <= 255U);
+        M3_EXPECT_TRUE(std::stoul(columns[100]) <= 1U);
+        M3_EXPECT_TRUE(std::stoul(columns[101]) <= 255U);
+        M3_EXPECT_TRUE(std::stoul(columns[102]) <= 255U);
+        M3_EXPECT_TRUE(std::stoul(columns[103]) <= 1U);
+        M3_EXPECT_TRUE(std::stoul(columns[104]) <= 255U);
+        M3_EXPECT_TRUE(std::stoul(columns[105]) <= 255U);
       }
       M3_EXPECT_TRUE(has_undecimated_tick);
       M3_EXPECT_EQ(peers.size(), trace.sampled_frames);
