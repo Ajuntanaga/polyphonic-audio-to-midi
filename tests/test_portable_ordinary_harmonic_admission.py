@@ -13,7 +13,7 @@ from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
-    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, contradicted_retention=False):
+    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, contradicted_retention=False, assignment_diagnostic=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             corpus = root / 'corpus'
@@ -138,12 +138,17 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                   patch.object(trial, 'analyze_midi', side_effect=lifecycle),
                   patch.object(trial, 'load_audio', return_value=object()),
                   patch.object(competing if competition else trial, 'generate', side_effect=generate),
-                  patch.object(trial, 'compress_trace_window', side_effect=compress)):
+                  patch.object(trial, 'compress_trace_window', side_effect=compress),
+                  patch.object(trial, 'trace_local_onset_assignments', return_value={'identity': True}) as trace):
                 if drift or failure:
                     with self.assertRaises((ValueError, TimeoutError, subprocess.CalledProcessError)):
-                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention)
+                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, assignment_diagnostic=assignment_diagnostic)
                 else:
-                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention)
+                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, assignment_diagnostic=assignment_diagnostic)
+            if assignment_diagnostic and contradicted_retention:
+                self.assertEqual([(call.kwargs['start'], call.kwargs['end']) for call in trace.call_args_list],
+                                 [(30.6, 31.4), (58.6, 59.5), (73.9, 74.8)])
+                self.assertEqual(len({call.kwargs['prefix'] for call in trace.call_args_list}), 3)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
@@ -151,6 +156,12 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
             for key in ('native_timing', 'allocations', 'buffer_identity', 'live_readiness'):
                 self.assertEqual(report[key], 'not measured')
             return report, commands, generated
+
+    def test_contradicted_retention_trace_keeps_screen_and_references(self):
+        report, commands, _ = self.exercise(competition=True, contradicted_retention=True, assignment_diagnostic=True)
+        self.assertTrue(report['reference_identity_pass'])
+        self.assertEqual(set(report['contradicted_retention_assignment_diagnostic']), {'165', '306', '367'})
+        self.assertEqual(len(commands), 3)
 
     def test_safe_gain_finishes_only_the_ordinary_offline_screen(self):
         report, commands, generated = self.exercise()

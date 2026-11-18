@@ -185,7 +185,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
     if contradicted_retention and any((persistent_candidate_admission, supported_sustain_renewal,
             local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
             joint_rescue_eligibility, pending_string_posterior, posterior_loss_diagnostic,
-            energy_weighted_descriptor, common_detuning_support, assignment_diagnostic)):
+            energy_weighted_descriptor, common_detuning_support)):
         raise ValueError("Contradicted retention trial must be isolated")
     if persistent_candidate_admission and any((supported_sustain_renewal,
             local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
@@ -345,6 +345,15 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     report['cue_generation'] = cue_summary
                 row['outcome_trace'] = compress_trace_window(outcome, start=0, end=row['sample_count'])
                 outcome.unlink()
+                save()
+        if assignment_diagnostic and contradicted_retention:
+            report.update(stage='paired contradicted retention assignment trace')
+            save()
+            report['contradicted_retention_assignment_diagnostic'] = {}
+            for label, start, end in ((165, 30.6, 31.4), (306, 58.6, 59.5), (367, 73.9, 74.8)):
+                report['contradicted_retention_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
+                    binary, corpus, output, conditions, cached, report['runs'], deadline,
+                    start=start, end=end, prefix='retention-assignment-' + str(label))
                 save()
         if assignment_diagnostic and local_onset_evidence:
             report.update(stage='paired local onset assignment trace')
