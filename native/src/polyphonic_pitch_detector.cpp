@@ -7125,8 +7125,23 @@ void PolyphonicPitchDetector::assign_m3_strings(
          static_cast<std::uint8_t>(fine.member_mask - 1U)) != 0U;
     const bool physical_unison_resolved =
         fine.valid && fine.multi_source_observed && fine_has_multiple_members;
+    bool pending_posterior_ready = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const auto& pending_identity = candidate_states_[candidate];
+    pending_posterior_ready = diagnostic_pending_string_posterior_ &&
+        !pending_identity.active && pending_identity.attack_ticks > 0U &&
+        pending_identity.midi_voice_mask == 0U &&
+        !selector_atomic_handoff_targets_[candidate] &&
+        string_count(pending_identity.assigned_string_mask) <= 1U &&
+        string_count(pending_identity.pending_unison_mask) <= 1U &&
+        string_count(pending_identity.continuity_cached_group_mask) <= 1U &&
+        string_count(selector_group_masks_[candidate]) <= 1U &&
+        !fine.multi_source_observed && string_count(fine.member_mask) <= 1U &&
+        string_count(fine.pending_member_mask) <= 1U;
+#endif
     const bool use_posterior =
-        posterior_available && calibrated_reassignment_ready &&
+        posterior_available &&
+        (calibrated_reassignment_ready || pending_posterior_ready) &&
         !beat_evidence_states_[candidate].valid &&
         !calibrated_cents_are_decisive && !physical_unison_resolved;
     double posterior_cost = 0.0;
@@ -7138,7 +7153,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
               ? string_fret_posteriors_.probability(candidate, posterior_best)
               : 0.0;
       posterior_cost =
-          posterior_best_probability >= kM3StringPosteriorDecisiveProbability &&
+          !pending_posterior_ready &&
+                  posterior_best_probability >= kM3StringPosteriorDecisiveProbability &&
                   posterior_best == best_detuning_string
               ? kM3StringPosteriorDecisiveCost
               : kM3StringPosteriorCost;

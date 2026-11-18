@@ -2441,6 +2441,56 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
+  static void pending_posterior_probe(PolyphonicPitchDetector& detector,
+                                      bool enabled, unsigned scenario) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 37U;
+    config.highest_note = 37U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_pending_string_posterior_for_diagnostics(enabled);
+    detector.assignment_diagnostics_enabled_ = true;
+    detector.playable_string_masks_[0U] = 3U;
+    StringCalibrationBank bank;
+    for (std::size_t string = 0U; string < 2U; ++string) {
+      auto& point = bank.points[string][37U - kM3OpenNotes[string]];
+      point.harmonic_profile_q15[string] = 32767U;
+      point.confidence_q15 = 32767U;
+      point.observation_count = 128U;
+      point.quality = CalibrationPointQuality::measured;
+      bank.calibrated_string_mask |= static_cast<std::uint8_t>(1U << string);
+    }
+    if (scenario == 6U)
+      bank.points[1U][37U - kM3OpenNotes[1U]].quality =
+          CalibrationPointQuality::missing;
+    detector.set_calibration_bank(bank);
+    for (std::size_t h = 0U; h < kCalibrationHarmonicCount; ++h) {
+      auto& cell = detector.cells_[detector.cell_index(0U, h)];
+      cell.enabled = true;
+      cell.fast_real = h == 0U ? 1.0 : 0.0;
+      cell.fast_imaginary = 0.0;
+    }
+    auto& state = detector.candidate_states_[0U];
+    state.attack_ticks = scenario == 1U ? 0U : 4U;
+    state.assigned_string = 0U;
+    state.assigned_string_mask = scenario == 3U ? 3U : 1U;
+    state.active = scenario == 2U;
+    state.midi_voice_mask = scenario == 4U ? 1U : 0U;
+    detector.selector_atomic_handoff_targets_[0U] = scenario == 5U;
+    detector.fine_frequency_evidence_states_[0U].multi_source_observed =
+        scenario == 7U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = true;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].use_posterior,
+                 enabled && scenario == 0U);
+    M3_EXPECT_EQ(state.attack_ticks, scenario == 1U ? 0U : 4U);
+    M3_EXPECT_EQ(state.midi_voice_mask, scenario == 4U ? 1U : 0U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static void joint_rescue_probe(PolyphonicPitchDetector& detector,
                                 bool enabled, bool selected_owner) {
     PersistentConfig config;
@@ -15046,5 +15096,17 @@ M3_TEST(native_detector_joint_rescue_preserves_owner_and_admission_masks) {
     for (bool selected_owner : {false, true})
       m3::PolyphonicPitchDetectorTestAccess::joint_rescue_probe(
           detector, enabled, selected_owner);
+#endif
+}
+
+M3_TEST(native_detector_pending_posterior_requires_calibrated_pending_singleton) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (bool enabled : {false, true}) {
+    for (unsigned scenario = 0U; scenario < 8U; ++scenario) {
+      m3::PolyphonicPitchDetector detector;
+      m3::PolyphonicPitchDetectorTestAccess::pending_posterior_probe(
+          detector, enabled, scenario);
+    }
+  }
 #endif
 }

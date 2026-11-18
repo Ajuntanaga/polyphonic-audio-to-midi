@@ -82,7 +82,7 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     if fundamental_veto_check and not competition:
@@ -104,7 +104,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=TARGET, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
+        target=TARGET, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
@@ -126,6 +126,9 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                             if mode == TRIAL else flags) for mode, flags in conditions)
     if joint_rescue_eligibility:
         conditions = tuple((mode, flags + ('--diagnostic-joint-rescue-eligibility',)
+                            if mode == TRIAL else flags) for mode, flags in conditions)
+    if pending_string_posterior:
+        conditions = tuple((mode, flags + ('--diagnostic-pending-string-posterior',)
                             if mode == TRIAL else flags) for mode, flags in conditions)
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
@@ -271,13 +274,16 @@ def main():
                         help='Offline complete-calibration assignment fret-prior experiment')
     parser.add_argument('--joint-rescue-eligibility', action='store_true',
                         help='Offline owner-protected rescue assignment alternatives')
+    parser.add_argument('--pending-string-posterior', action='store_true',
+                        help='Offline pending singleton posterior assignment cost')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
         fundamental_veto_check=args.fundamental_veto_check,
         assignment_diagnostic=args.assignment_diagnostic,
         calibrated_assignment_prior=args.calibrated_assignment_prior,
-        joint_rescue_eligibility=args.joint_rescue_eligibility)
+        joint_rescue_eligibility=args.joint_rescue_eligibility,
+        pending_string_posterior=args.pending_string_posterior)
 
 
 if __name__ == '__main__':
