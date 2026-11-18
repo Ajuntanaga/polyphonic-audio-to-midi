@@ -170,6 +170,7 @@ void usage(const char* program) {
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-stable-note-identity] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-direct-evidence-retention] "
+      "[--diagnostic-supported-sustain-renewal] "
       "[--diagnostic-local-onset-evidence] "
       "[--diagnostic-projection-preview-admission] "
       "[--diagnostic-retained-spectral-assignment] "
@@ -300,6 +301,7 @@ int main(int argc, char** argv) {
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
   bool diagnostic_direct_evidence_retention = false;
+  bool diagnostic_supported_sustain_renewal = false;
   bool diagnostic_local_onset_evidence = false;
   bool diagnostic_projection_preview_admission = false;
   bool diagnostic_retained_spectral_assignment = false;
@@ -631,6 +633,8 @@ int main(int argc, char** argv) {
       diagnostic_calibrated_harmonic_admission_guard = true;
     } else if (std::strcmp(argv[index], "--diagnostic-fundamental-admission") == 0) {
       diagnostic_fundamental_admission = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-supported-sustain-renewal") == 0) {
+      diagnostic_supported_sustain_renewal = true;
     } else if (std::strcmp(argv[index], "--diagnostic-local-onset-evidence") == 0) {
       diagnostic_local_onset_evidence = true;
     } else if (std::strcmp(argv[index], "--diagnostic-direct-evidence-retention") == 0) {
@@ -1294,7 +1298,8 @@ int main(int argc, char** argv) {
           diagnostic_joint_rescue_eligibility,
           diagnostic_pending_string_posterior,
           diagnostic_energy_weighted_descriptor,
-          diagnostic_common_detuning_support, diagnostic_local_onset_evidence)) {
+          diagnostic_common_detuning_support, diagnostic_local_onset_evidence,
+          diagnostic_supported_sustain_renewal)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

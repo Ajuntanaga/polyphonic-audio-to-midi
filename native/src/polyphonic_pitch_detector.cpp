@@ -1684,6 +1684,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
+  unsupported_sustain_ticks_ = {};
   local_onset_ticks_ = {};
   local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
@@ -3034,6 +3035,7 @@ void PolyphonicPitchDetector::set_calibration_bank(
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
+  unsupported_sustain_ticks_ = {};
   local_onset_ticks_ = {};
   local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
@@ -12831,6 +12833,33 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       ++state.evidence_ticks;
     }
   }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_supported_sustain_renewal_) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      auto& state = candidate_states_[candidate];
+      auto& unsupported = unsupported_sustain_ticks_[candidate];
+      // Selection can recur from overlapping partials without renewed pitch
+      // evidence. Keep the existing release grace, but do not restart it on
+      // selection alone. Resolved groups retain their existing sustain policy.
+      const bool singleton = string_count(state.assigned_string_mask) == 1U;
+      const bool supported = has_direct_fundamental_peak(
+          scores, fundamentals, candidate, count) ||
+          has_m3_candidate_evidence(scores, fundamentals, candidate, count);
+      if (!state.active || profile_mode_ != ProfileMode::m3 || !singleton ||
+          (selected[candidate] && supported)) {
+        unsupported = 0U;
+        continue;
+      }
+      const auto release = candidate_release_decisions(candidate, quiet);
+      if (unsupported < release) ++unsupported;
+      if (unsupported >= release) {
+        selected[candidate] = false;
+        state.release_ticks = release;
+      }
+    }
+  }
+#endif
 
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   std::array<bool, kMaxCandidates> joint_output_veto{};

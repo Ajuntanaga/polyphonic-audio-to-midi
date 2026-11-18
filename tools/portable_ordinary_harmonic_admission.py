@@ -64,6 +64,10 @@ LOCAL_ONSET_TARGET = dict(label_index=451, midi_note=65, string_mask=64,
     start_sample=9220937, end_sample=9292800)
 
 
+SUSTAIN_TARGET = dict(label_index=252, midi_note=55, string_mask=2,
+    start_sample=4569706, end_sample=4641600)
+
+
 def target_result(current, trial, current_replay, trial_replay, target=TARGET):
     result = {}
     for name, row, replay in (('before', current, current_replay), ('after', trial, trial_replay)):
@@ -78,6 +82,12 @@ def target_result(current, trial, current_replay, trial_replay, target=TARGET):
         result[name] = dict(held[0], snapshot_matched=snapshots[0]['matched'],
                             snapshot_labeled=snapshots[0]['labeled'])
     before, after = result['before'], result['after']
+    if target == SUSTAIN_TARGET:
+        result['improved'] = bool(
+            after['exact_held_samples'] > before['exact_held_samples']
+            and after['note_ons_inside_label'] <= before['note_ons_inside_label']
+            and after['snapshot_matched'] >= before['snapshot_matched'])
+        return result
     if before['exact_held_samples'] != 0 or before['note_ons_inside_label'] != 0:
         raise ValueError('Missing-note baseline no longer matches the declared target')
     snapshot_gain = (after['snapshot_matched'] >= before['snapshot_matched']
@@ -162,7 +172,12 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False):
+    if supported_sustain_renewal and any((local_onset_evidence, assignment_diagnostic,
+            fundamental_veto_check, calibrated_assignment_prior, joint_rescue_eligibility,
+            pending_string_posterior, posterior_loss_diagnostic, energy_weighted_descriptor,
+            common_detuning_support)):
+        raise ValueError('Sustain renewal trial must be isolated')
     if local_onset_evidence and any((fundamental_veto_check,
             calibrated_assignment_prior, joint_rescue_eligibility, pending_string_posterior,
             posterior_loss_diagnostic, energy_weighted_descriptor, common_detuning_support)):
@@ -190,7 +205,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=LOCAL_ONSET_TARGET if local_onset_evidence else TARGET,
+        target=SUSTAIN_TARGET if supported_sustain_renewal else (LOCAL_ONSET_TARGET if local_onset_evidence else TARGET),
+        supported_sustain_renewal=supported_sustain_renewal,
         local_onset_evidence=local_onset_evidence, common_detuning_support=common_detuning_support, energy_weighted_descriptor=energy_weighted_descriptor, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
@@ -228,6 +244,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                       (TRIAL, (COLLISION, '--diagnostic-local-onset-evidence')))
         report['limitations'] = ('Native offline onset policy; timing, allocations, full corpus '
                                 'and live host acceptance remain unmeasured.')
+    if supported_sustain_renewal:
+        conditions = ((OFF, ()), (CURRENT, (COLLISION,)),
+                      (TRIAL, (COLLISION, '--diagnostic-supported-sustain-renewal')))
+        report['limitations'] = ('Native offline sustain renewal policy; timing, allocations, '
+                                'full corpus and live host acceptance remain unmeasured.')
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
     def save():
@@ -281,7 +302,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     row['outcome_sha256'] == references['current_outcome_sha256'])
                 if not row['saved_outcome_bit_identical']:
                     raise ValueError('Saved current outcome identity drift')
-                if not local_onset_evidence:
+                if not (local_onset_evidence or supported_sustain_renewal):
                     report.update(stage='generate past-only frozen-shadow cues')
                     save()
                     started = time.monotonic()
@@ -362,7 +383,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             'saved_reference_bit_identical', False) for mode in REFERENCE_FLAGS) and bool(
                 report['runs'].get(CURRENT, {}).get('saved_outcome_bit_identical', False))
         report['bounded_screen_pass'] = bool(report['state'] == 'completed'
-            and report['reference_identity_pass'] and (local_onset_evidence or
+            and report['reference_identity_pass'] and (local_onset_evidence or supported_sustain_renewal or
                 report.get('cue_generation', {}).get('complete')))
         report['decision'] = ('offline screen passed; corpus timing and live acceptance remain'
             if report['bounded_screen_pass'] else 'rejected or incomplete; do not widen this policy')
@@ -392,6 +413,7 @@ def main():
     parser.add_argument('--energy-weighted-descriptor', action='store_true')
     parser.add_argument('--common-detuning-support', action='store_true')
     parser.add_argument('--local-onset-evidence', action='store_true')
+    parser.add_argument('--supported-sustain-renewal', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
@@ -403,7 +425,8 @@ def main():
         posterior_loss_diagnostic=args.posterior_loss_diagnostic,
         energy_weighted_descriptor=args.energy_weighted_descriptor,
         common_detuning_support=args.common_detuning_support,
-        local_onset_evidence=args.local_onset_evidence)
+        local_onset_evidence=args.local_onset_evidence,
+        supported_sustain_renewal=args.supported_sustain_renewal)
 
 
 if __name__ == '__main__':

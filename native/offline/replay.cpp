@@ -2934,11 +2934,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_pending_string_posterior,
                          bool diagnostic_energy_weighted_descriptor,
                          bool diagnostic_common_detuning_support,
-                         bool diagnostic_local_onset_evidence) {
+                         bool diagnostic_local_onset_evidence,
+                         bool diagnostic_supported_sustain_renewal) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3257,6 +3258,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_harmonic_admission_guard);
   detector.set_fundamental_admission_for_diagnostics(
       diagnostic_fundamental_admission);
+  detector.set_supported_sustain_renewal_for_diagnostics(
+      diagnostic_supported_sustain_renewal);
   detector.set_local_onset_evidence_for_diagnostics(
       diagnostic_local_onset_evidence);
   detector.set_direct_evidence_retention_for_diagnostics(
@@ -3318,7 +3321,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_harmonic_admission_guard ||
       diagnostic_fundamental_admission || diagnostic_odd_partial_cues != nullptr ||
       diagnostic_cue_free_lane_reassignment || diagnostic_direct_evidence_retention ||
-      diagnostic_local_onset_evidence ||
+      diagnostic_local_onset_evidence || diagnostic_supported_sustain_renewal ||
       diagnostic_projection_preview_admission ||
       diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||
       diagnostic_joint_spectral_ownership) {
