@@ -12968,7 +12968,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_supported_sustain_renewal_) {
+  if (diagnostic_supported_sustain_renewal_ || diagnostic_contradicted_retention_) {
     for (std::size_t candidate = 0U; candidate < count; ++candidate) {
       auto& state = candidate_states_[candidate];
       auto& unsupported = unsupported_sustain_ticks_[candidate];
