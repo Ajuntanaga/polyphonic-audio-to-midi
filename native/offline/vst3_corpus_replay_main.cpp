@@ -311,6 +311,8 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
   std::vector<std::uint64_t> durations(measure_process ?
       (wave.mono_samples.size() + block_size - 1U) / block_size : 0U);
   std::uint64_t measured_blocks = 0, deadline_overruns = 0;
+  std::uint64_t maximum_elapsed = 0, maximum_block_start_sample = 0;
+  std::uint32_t maximum_block_frames = 0;
   std::uint64_t cpp_allocations = 0, cpp_frees = 0, c_allocations = 0, c_frees = 0;
   while (processed < wave.mono_samples.size()) {
     const auto frames = static_cast<std::uint32_t>(std::min<std::uint64_t>(
@@ -339,6 +341,13 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
       c_allocations += m3::test::c_allocation_count() - c_before;
       c_frees += m3::test::c_deallocation_count() - c_free_before;
       durations[measured_blocks++] = elapsed;
+      // Keep the first slowest block before sorting destroys temporal order.
+      // This bookkeeping is outside the measured process call.
+      if (measured_blocks == 1U || elapsed > maximum_elapsed) {
+        maximum_elapsed = elapsed;
+        maximum_block_start_sample = processed;
+        maximum_block_frames = frames;
+      }
       deadline_overruns += elapsed > static_cast<std::uint64_t>(frames) *
           1000000000ULL / wave.sample_rate ? 1U : 0U;
     } else {
@@ -416,10 +425,12 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
     std::printf("{\"scope\":\"instrumented_vst3_process_with_accepting_test_sink\","
         "\"clock\":\"steady_clock\",\"cold_blocks_included\":true,\"blocks\":%llu,"
         "\"p99_ns\":%llu,\"max_ns\":%llu,\"deadline_overruns\":%llu,"
+        "\"max_block_start_sample\":%llu,\"max_block_frames\":%u,"
         "\"allocation_guard\":true,\"cpp_allocations\":%llu,\"cpp_frees\":%llu,"
         "\"c_allocations\":%llu,\"c_frees\":%llu}",
         static_cast<unsigned long long>(measured_blocks), static_cast<unsigned long long>(p99),
         static_cast<unsigned long long>(maximum), static_cast<unsigned long long>(deadline_overruns),
+        static_cast<unsigned long long>(maximum_block_start_sample), maximum_block_frames,
         static_cast<unsigned long long>(cpp_allocations), static_cast<unsigned long long>(cpp_frees),
         static_cast<unsigned long long>(c_allocations), static_cast<unsigned long long>(c_frees));
   }
