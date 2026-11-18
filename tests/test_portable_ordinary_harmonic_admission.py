@@ -149,6 +149,7 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                 self.assertEqual([(call.kwargs['start'], call.kwargs['end']) for call in trace.call_args_list],
                                  [(29.9, 31.4), (58.6, 59.5), (73.1, 74.8)])
                 self.assertEqual(len({call.kwargs['prefix'] for call in trace.call_args_list}), 3)
+                self.assertTrue(all(call.kwargs['lifecycle'] for call in trace.call_args_list))
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])

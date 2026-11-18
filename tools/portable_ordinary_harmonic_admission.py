@@ -147,7 +147,7 @@ def trace_posterior_losses(binary, corpus, output, flags, trial_replay, trial_mi
 
 
 def trace_local_onset_assignments(binary, corpus, output, conditions, cached, runs, deadline,
-                                  start=47.5, end=48.5, prefix="assignment"):
+                                  start=47.5, end=48.5, prefix="assignment", lifecycle=False):
     """Observe both policies in a bounded window; require full replay/MIDI parity."""
     start_sample, end_sample = round(start * 96000), round(end * 96000)
     result = {}
@@ -158,10 +158,13 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
         tsv = stem.with_suffix('.tsv')
         midi = output / (stem.name + '-midi.tsv')
         costs = output / (stem.name + '-costs.tsv')
+        outcome = output / (stem.name + '-outcome.tsv')
         command = command_for(binary, corpus, 'ordinary', 'off', 512, None, midi_trace=midi)
         command.extend(flags)
         command.extend(('--assignment-trace', str(costs),
                         '--assignment-trace-start', str(start), '--assignment-trace-end', str(end)))
+        if lifecycle:
+            command.extend(('--outcome-trace', str(outcome)))
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Local onset assignment diagnostic budget exhausted')
@@ -176,6 +179,10 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
         result[mode] = dict(command=command, comparison=comparison,
             midi_bit_identical=identical, start_sample=start_sample, end_sample=end_sample,
             trace=compress_trace_window(costs, start=start_sample, end=end_sample))
+        if lifecycle:
+            result[mode]['outcome_trace'] = compress_trace_window(
+                outcome, start=start_sample, end=end_sample)
+            outcome.unlink()
         costs.unlink()
         midi.unlink()
     return result
@@ -355,7 +362,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             for label, start, end in ((165, 29.9, 31.4), (306, 58.6, 59.5), (367, 73.1, 74.8)):
                 report['contradicted_retention_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
-                    start=start, end=end, prefix='retention-assignment-' + str(label))
+                    start=start, end=end, prefix='retention-assignment-' + str(label), lifecycle=True)
                 save()
         if assignment_diagnostic and local_onset_evidence:
             report.update(stage='paired local onset assignment trace')

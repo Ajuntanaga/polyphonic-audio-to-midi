@@ -8,7 +8,7 @@ from tools import portable_ordinary_harmonic_admission as t
 
 
 class LocalOnsetAssignmentTraceTests(unittest.TestCase):
-    def exercise(self, drift=False, sustain=False):
+    def exercise(self, drift=False, sustain=False, lifecycle=False):
         flag = "--diagnostic-supported-sustain-renewal" if sustain else "--diagnostic-local-onset-evidence"
         start, end = (58.6, 59.5) if sustain else (47.5, 48.5)
         with tempfile.TemporaryDirectory() as directory:
@@ -18,6 +18,8 @@ class LocalOnsetAssignmentTraceTests(unittest.TestCase):
             commands = []
             def native(command, **kwargs):
                 commands.append(command)
+                if lifecycle:
+                    Path(command[command.index('--outcome-trace') + 1]).write_text('lifecycle')
                 Path(command[command.index('--midi-event-trace') + 1]).write_bytes(b'events')
                 Path(command[command.index('--assignment-trace') + 1]).write_text('costs')
             runs = {mode: {'midi_trace_sha256': hashlib.sha256(b'events').hexdigest()}
@@ -30,12 +32,16 @@ class LocalOnsetAssignmentTraceTests(unittest.TestCase):
                       'output_bit_identical': True, 'changed_labels': []}),
                   patch.object(t, 'compress_trace_window', return_value={'verified': True})):
                 result = t.trace_local_onset_assignments(root/'binary', root, root,
-                    conditions, {t.CURRENT: {}, t.TRIAL: {}}, runs, time.monotonic()+10, start=start, end=end)
+                    conditions, {t.CURRENT: {}, t.TRIAL: {}}, runs, time.monotonic()+10, start=start, end=end, lifecycle=lifecycle)
             self.assertEqual(set(result), {t.CURRENT, t.TRIAL})
             self.assertEqual(len(commands), 2)
             self.assertNotIn(flag, commands[0])
             self.assertIn(flag, commands[1])
+            for mode in result:
+                self.assertEqual("outcome_trace" in result[mode], lifecycle)
+            self.assertFalse(list(root.glob("*-outcome.tsv")))
             for command in commands:
+                self.assertEqual("--outcome-trace" in command, lifecycle)
                 self.assertEqual(command[command.index('--assignment-trace-start')+1], str(start))
                 self.assertEqual(command[command.index('--assignment-trace-end')+1], str(end))
                 self.assertNotIn('--candidate-rescue-harmonic-cues', command)
@@ -49,3 +55,8 @@ class LocalOnsetAssignmentTraceTests(unittest.TestCase):
 
     def test_sustain_loss_window_preserves_policy_and_bounds(self):
         self.exercise(sustain=True)
+
+    def test_paired_lifecycle_capture_retains_existing_identity_gate(self):
+        self.exercise(lifecycle=True)
+        with self.assertRaisesRegex(ValueError, "tracing changed output"):
+            self.exercise(lifecycle=True, drift=True)
