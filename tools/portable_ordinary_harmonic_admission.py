@@ -82,7 +82,50 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False):
+def trace_posterior_losses(binary, corpus, output, flags, trial_replay, trial_midi_hash, deadline):
+    """Observe both policies with identical cues; labels only select trace windows."""
+    result = {}
+    for enabled in (False, True):
+        name = 'posterior-loss-' + ('on' if enabled else 'off')
+        selected = [flag for flag in flags
+                    if enabled or flag != '--diagnostic-pending-string-posterior']
+        baseline, midi = output / (name + '.tsv'), output / (name + '-midi.tsv')
+        command = command_for(binary, corpus, 'ordinary', 'off', 512, None, midi_trace=midi)
+        command.extend(selected)
+        def execute(args, target, suffix):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Posterior loss diagnostic budget exhausted')
+            with target.open('w') as out, (output / (name + suffix + '.stderr')).open('w') as err:
+                subprocess.run(args, stdout=out, stderr=err, timeout=min(900, remaining), check=True)
+        if enabled:
+            reference, midi_hash = trial_replay, trial_midi_hash
+        else:
+            execute(command, baseline, '-reference')
+            reference, midi_hash = read_replay(baseline), digest(midi)
+        rows = []
+        for start, end in ((23.5, 24.6), (46.5, 47.6)):
+            trace = output / (name + '-' + str(start) + '-costs.tsv')
+            traced = output / (name + '-traced.tsv')
+            args = command + ['--assignment-trace', str(trace),
+                              '--assignment-trace-start', str(start),
+                              '--assignment-trace-end', str(end)]
+            execute(args, traced, '-' + str(start))
+            comparison = compare_replays(reference, read_replay(traced))
+            identical = digest(midi) == midi_hash
+            if not comparison['output_bit_identical'] or comparison['changed_labels'] or not identical:
+                raise ValueError('Posterior loss tracing changed output or MIDI')
+            rows.append(dict(start_seconds=start, end_seconds=end, comparison=comparison,
+                midi_bit_identical=identical, trace=compress_trace_window(
+                    trace, start=round(start * RATE), end=round(end * RATE))))
+            trace.unlink()
+        result[name] = dict(command=command, windows=rows)
+    return result
+
+
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False):
+    if posterior_loss_diagnostic and not pending_string_posterior:
+        raise ValueError('posterior loss diagnostic requires pending posterior')
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     if fundamental_veto_check and not competition:
@@ -230,6 +273,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             assignment.unlink()
             traced_midi.unlink()
             save()
+        if posterior_loss_diagnostic:
+            report['posterior_loss_diagnostic'] = trace_posterior_losses(
+                binary, corpus, output, conditions[-1][1], cached[TRIAL],
+                report['runs'][TRIAL]['midi_trace_sha256'], deadline)
+            save()
         report['comparison'] = compare_notes(report['runs'][CURRENT], report['runs'][TRIAL],
             cached[CURRENT], cached[TRIAL], require_inference=False)
         report['snapshot_vs_off'] = compare_replays(cached[OFF], cached[TRIAL])
@@ -276,6 +324,7 @@ def main():
                         help='Offline owner-protected rescue assignment alternatives')
     parser.add_argument('--pending-string-posterior', action='store_true',
                         help='Offline pending singleton posterior assignment cost')
+    parser.add_argument('--posterior-loss-diagnostic', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
@@ -283,7 +332,8 @@ def main():
         assignment_diagnostic=args.assignment_diagnostic,
         calibrated_assignment_prior=args.calibrated_assignment_prior,
         joint_rescue_eligibility=args.joint_rescue_eligibility,
-        pending_string_posterior=args.pending_string_posterior)
+        pending_string_posterior=args.pending_string_posterior,
+        posterior_loss_diagnostic=args.posterior_loss_diagnostic)
 
 
 if __name__ == '__main__':
