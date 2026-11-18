@@ -98,13 +98,13 @@ def read_callbacks(path, *, sample_count, expected_count, include_events=False):
     return result
 
 
-def assess(native, callbacks, *, clock, sample_bits, trial, stable_note_identity=False):
+def assess(native, callbacks, *, clock, sample_bits, trial, stable_note_identity=False, block_samples=512):
     if (any(type(native.get(key)) is not int or native[key] < 0 for key in COUNTERS)
             or any(type(native.get(key)) is not bool for key in FLAGS)):
         raise ValueError('Incomplete native counters or flags')
     if (native.get('schema') != 'm3_vst3_corpus_native_v1'
             or native.get('routing') != 'per_voice' or native['sample_bits'] != sample_bits
-            or native['trial'] != trial or native['block_samples'] != 512
+            or native['trial'] != trial or native['block_samples'] != block_samples
             or any(native[key] != value for key, value in clock.items())):
         raise ValueError('Native report provenance differs')
     transfers = native.get('transferred_pairs', 0)
@@ -116,13 +116,13 @@ def assess(native, callbacks, *, clock, sample_bits, trial, stable_note_identity
     blocked = native['output_blocked_blocks']
     if (native['processed_samples'] > clock['sample_count']
             or native['detector_samples'] > native['processed_samples']
-            or native['blocks'] != (native['processed_samples'] + 511) // 512
+            or native['blocks'] != (native['processed_samples'] + block_samples - 1) // block_samples
             or blocked > native['blocks']
             or native['accepted_events'] != callbacks['observed_events']
             or native['accepted_events'] > native['event_add_attempts']
             or (blocked == 0 and (first is not None or native['output_blocked_at_eof']))
             or (blocked > 0 and (type(first) is not int or not 0 <= first < native['processed_samples']
-                               or first % 512 != 0))):
+                               or first % block_samples != 0))):
         raise ValueError('Native callback or sample accounting differs')
     gates = dict(
         full_audio_processed=native['processed_samples'] == clock['sample_count'] and native['process_failures'] == 0,

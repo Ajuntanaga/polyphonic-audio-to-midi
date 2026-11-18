@@ -196,7 +196,7 @@ m3_apply_project_options(m3_native_tests)
 add_test(NAME m3_native_tests COMMAND m3_native_tests)
 
 # Recorded waveform -> real VST3 component -> accepting event-list diagnosis.
-# This is offline instrumentation, not a production package or timing target.
+# This is offline component instrumentation, not an external DAW or production package.
 add_executable(m3_vst3_corpus_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
     ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
@@ -206,6 +206,8 @@ add_executable(m3_vst3_corpus_replay EXCLUDE_FROM_ALL
     native/offline/replay.cpp
     native/offline/unison_spectral_shadow.cpp
     native/offline/vst3_corpus_replay_main.cpp
+    native/tests/test_support.cpp
+    native/tests/offline_c_allocation_guard.cpp
     native/tests/fake_vst3_host.cpp
     third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
 )
@@ -222,6 +224,9 @@ target_include_directories(m3_vst3_corpus_replay SYSTEM BEFORE PRIVATE
 )
 target_link_libraries(m3_vst3_corpus_replay PRIVATE Threads::Threads vstgui_support sdk m)
 m3_apply_project_options(m3_vst3_corpus_replay)
+foreach(function malloc calloc realloc aligned_alloc posix_memalign free)
+    target_link_options(m3_vst3_corpus_replay PRIVATE "-Wl,--wrap=${function}")
+endforeach()
 
 # The aggregate native suite deliberately compiles the detector with large
 # replay-only diagnostic collectors.  Keep the hard callback deadline in a

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -9,6 +10,8 @@
 #include <vector>
 
 #include "fake_vst3_host.hpp"
+#include "test_support.hpp"
+#include "offline_c_allocation_guard.hpp"
 #include "m3/calibration_state_image.hpp"
 #include "m3/factory_calibration.hpp"
 #include "m3/parameter_contract.hpp"
@@ -285,7 +288,7 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
 template <typename Sample>
 int replay(Instance& instance, const m3::offline::WaveData& wave,
            const m3::StringCalibrationBank& calibration, std::uint32_t block_size,
-           bool trial, bool completion_midi_retention, bool stable_note_identity, const char* events_path) {
+           bool trial, bool completion_midi_retention, bool stable_note_identity, bool measure_process, const char* events_path) {
   auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
   component->enable_corpus_ownership_trial(trial);
   component->enable_corpus_completion_midi_retention(completion_midi_retention);
@@ -303,6 +306,12 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
   std::uint64_t blocked_blocks = 0, dry_mismatches = 0, process_failures = 0;
   std::uint64_t first_blocked = std::numeric_limits<std::uint64_t>::max();
   bool invalid_event = false;
+  // Storage, trace serialization and input copying are outside process().
+  // Include cold blocks and the final partial block; no timing warmup is hidden.
+  std::vector<std::uint64_t> durations(measure_process ?
+      (wave.mono_samples.size() + block_size - 1U) / block_size : 0U);
+  std::uint64_t measured_blocks = 0, deadline_overruns = 0;
+  std::uint64_t cpp_allocations = 0, cpp_frees = 0, c_allocations = 0, c_frees = 0;
   while (processed < wave.mono_samples.size()) {
     const auto frames = static_cast<std::uint32_t>(std::min<std::uint64_t>(
         block_size, wave.mono_samples.size() - processed));
@@ -315,7 +324,27 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
     }
     output.reset();
     block.data().outputEvents = &output;
-    if (instance.processor->process(block.data()) != Steinberg::kResultOk) {
+    Steinberg::tresult process_result;
+    if (measure_process) {
+      const auto cpp_before = m3::test::allocation_count();
+      const auto cpp_free_before = m3::test::deallocation_count();
+      const auto c_before = m3::test::c_allocation_count();
+      const auto c_free_before = m3::test::c_deallocation_count();
+      const auto start = std::chrono::steady_clock::now();
+      process_result = instance.processor->process(block.data());
+      const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
+          std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+      cpp_allocations += m3::test::allocation_count() - cpp_before;
+      cpp_frees += m3::test::deallocation_count() - cpp_free_before;
+      c_allocations += m3::test::c_allocation_count() - c_before;
+      c_frees += m3::test::c_deallocation_count() - c_free_before;
+      durations[measured_blocks++] = elapsed;
+      deadline_overruns += elapsed > static_cast<std::uint64_t>(frames) *
+          1000000000ULL / wave.sample_rate ? 1U : 0U;
+    } else {
+      process_result = instance.processor->process(block.data());
+    }
+    if (process_result != Steinberg::kResultOk) {
       ++process_failures;
       break;
     }
@@ -375,9 +404,26 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
       static_cast<unsigned long long>(process_failures), component->corpus_output_blocked() ? "true" : "false",
       calibration_matches ? "true" : "false", invalid_event ? "true" : "false",
       write_failed || close_failed ? "true" : "false");
-  if (first_blocked == std::numeric_limits<std::uint64_t>::max()) std::printf("null}");
-  else std::printf("%llu}", static_cast<unsigned long long>(first_blocked));
-  std::printf("\n");
+  if (first_blocked == std::numeric_limits<std::uint64_t>::max()) std::printf("null");
+  else std::printf("%llu", static_cast<unsigned long long>(first_blocked));
+  std::printf(",\"process_measurement\":");
+  if (!measure_process) std::printf("null");
+  else {
+    durations.resize(static_cast<std::size_t>(measured_blocks));
+    std::sort(durations.begin(), durations.end());
+    const auto p99 = durations.empty() ? 0U : durations[(durations.size() * 99U + 99U) / 100U - 1U];
+    const auto maximum = durations.empty() ? 0U : durations.back();
+    std::printf("{\"scope\":\"instrumented_vst3_process_with_accepting_test_sink\","
+        "\"clock\":\"steady_clock\",\"cold_blocks_included\":true,\"blocks\":%llu,"
+        "\"p99_ns\":%llu,\"max_ns\":%llu,\"deadline_overruns\":%llu,"
+        "\"allocation_guard\":true,\"cpp_allocations\":%llu,\"cpp_frees\":%llu,"
+        "\"c_allocations\":%llu,\"c_frees\":%llu}",
+        static_cast<unsigned long long>(measured_blocks), static_cast<unsigned long long>(p99),
+        static_cast<unsigned long long>(maximum), static_cast<unsigned long long>(deadline_overruns),
+        static_cast<unsigned long long>(cpp_allocations), static_cast<unsigned long long>(cpp_frees),
+        static_cast<unsigned long long>(c_allocations), static_cast<unsigned long long>(c_frees));
+  }
+  std::printf("}\n");
   // EOF is observed before teardown. No silence, panic or forced release is injected.
   return process_failures != 0 || invalid_event || write_failed || close_failed ||
       !calibration_matches ? 2 : 0;
@@ -394,7 +440,8 @@ int main(int argc, char** argv) {
   bool completion_midi_retention = false;
   bool stable_note_identity = false;
   bool recovery = false;
-  constexpr std::uint32_t block_size = 512U;
+  std::uint32_t block_size = 512U;
+  bool measure_process = false;
   for (int index = 1; index < argc; index += 2) {
     if (index + 1 >= argc) return 2;
     const char* value = argv[index + 1];
@@ -403,6 +450,10 @@ int main(int argc, char** argv) {
     else if (std::strcmp(argv[index], "--events") == 0) events_path = value;
     else if (std::strcmp(argv[index], "--sample-bits") == 0 && std::strcmp(value, "32") == 0) sample_bits = 32;
     else if (std::strcmp(argv[index], "--sample-bits") == 0 && std::strcmp(value, "64") == 0) sample_bits = 64;
+    else if (std::strcmp(argv[index], "--block") == 0 && std::strcmp(value, "32") == 0) block_size = 32U;
+    else if (std::strcmp(argv[index], "--block") == 0 && std::strcmp(value, "512") == 0) block_size = 512U;
+    else if (std::strcmp(argv[index], "--block") == 0 && std::strcmp(value, "1024") == 0) block_size = 1024U;
+    else if (std::strcmp(argv[index], "--measure-process") == 0 && std::strcmp(value, "1") == 0) measure_process = true;
     else if (std::strcmp(argv[index], "--trial") == 0 && (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
       trial = std::strcmp(value, "1") == 0;
       trial_given = true;
@@ -418,6 +469,7 @@ int main(int argc, char** argv) {
   }
   if (wav_path == nullptr || calibration_path == nullptr || events_path == nullptr ||
       sample_bits == 0 || !trial_given) return 2;
+  if (recovery && (measure_process || block_size != 512U)) return 2;
   if ((recovery || stable_note_identity) && !trial) return 2;
   if (stable_note_identity && completion_midi_retention) return 2;
   if (completion_midi_retention && (!trial || recovery)) return 2;
@@ -460,7 +512,7 @@ int main(int argc, char** argv) {
                             : replay_recovery<double>(instance, wave, calibration, block_size, stable_note_identity, events_path);
   }
   return sample_bits == 32 ? replay<float>(instance, wave, calibration, block_size,
-                                         trial, completion_midi_retention, stable_note_identity, events_path)
+                                         trial, completion_midi_retention, stable_note_identity, measure_process, events_path)
                            : replay<double>(instance, wave, calibration, block_size,
-                                          trial, completion_midi_retention, stable_note_identity, events_path);
+                                          trial, completion_midi_retention, stable_note_identity, measure_process, events_path);
 }
