@@ -1130,8 +1130,8 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 111U);
-      if (columns.size() != 111U) return;
+      M3_EXPECT_EQ(columns.size(), 112U);
+      if (columns.size() != 112U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
@@ -1148,6 +1148,7 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
         M3_EXPECT_EQ(columns[108], "selector_override");
         M3_EXPECT_EQ(columns[109], "rescue_allowed");
         M3_EXPECT_EQ(columns[110], "rescue_effective");
+        M3_EXPECT_EQ(columns[111], "unreserved_lane_terms");
         continue;
       }
       for (std::size_t column = 97U; column < 100U; ++column)
@@ -1545,8 +1546,8 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 111U);
-      if (columns.size() != 111U) return;
+      M3_EXPECT_EQ(columns.size(), 112U);
+      if (columns.size() != 112U) return;
       const auto physical = std::stoul(columns[106]);
       const auto selector_override = std::stoul(columns[108]);
       const auto rescue_allowed = std::stoul(columns[110]);
@@ -1652,12 +1653,25 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       M3_EXPECT_EQ(reserved & (1U << winner), 0U);
       const auto totals = fields(columns[29], ',');
       const auto terms = fields(columns[30], ',');
+      const auto unreserved = fields(columns[111], ',');
+      M3_EXPECT_EQ(unreserved.size(), 8U);
+      if (unreserved.size() != 8U) return;
       M3_EXPECT_EQ(totals.size(), 8U);
       M3_EXPECT_EQ(terms.size(), 8U);
       if (totals.size() != 8U || terms.size() != 8U) return;
       for (std::size_t lane = 0U; lane < 8U; ++lane) {
         double sum = 0.0;
         const auto lane_terms = fields(terms[lane], ':');
+        const auto full_terms = fields(unreserved[lane], ':');
+        M3_EXPECT_EQ(full_terms.size(), 7U);
+        if (full_terms.size() != 7U || lane_terms.size() != 7U) return;
+        for (std::size_t term = 0U; term < 7U; ++term) {
+          M3_EXPECT_TRUE(std::isfinite(std::stod(full_terms[term])));
+          if ((reserved & (1U << lane)) == 0U)
+            M3_EXPECT_EQ(std::stod(full_terms[term]), std::stod(lane_terms[term]));
+          else
+            M3_EXPECT_EQ(std::stod(lane_terms[term]), 0.0);
+        }
         M3_EXPECT_EQ(lane_terms.size(), 7U);
         for (const auto& term : lane_terms) sum += std::stod(term);
         M3_EXPECT_NEAR(sum, std::stod(totals[lane]), 1.0e-10);
@@ -1724,8 +1738,8 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       bool has_undecimated_tick = false;
       while (std::fgets(line.data(), line.size(), bounded.get()) != nullptr) {
         const auto columns = fields(line.data(), '\t');
-        M3_EXPECT_EQ(columns.size(), 111U);
-        if (columns.size() != 111U) return;
+        M3_EXPECT_EQ(columns.size(), 112U);
+        if (columns.size() != 112U) return;
         const auto sample = std::stoul(columns[0]);
         M3_EXPECT_TRUE(sample >= 48000U && sample < 50048U);
         has_undecimated_tick |= std::stoul(columns[1]) % trace.kTickDecimation != 0U;
