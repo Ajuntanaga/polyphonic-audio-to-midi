@@ -1885,6 +1885,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_stable_note_identity_{};
   bool diagnostic_pending_string_reservation_{};
   bool diagnostic_forced_pending_string_reservation_{};
+  std::array<bool, kMaxCandidates> diagnostic_unsupported_pending_{};
   bool diagnostic_pending_midi_retention_{};
   bool diagnostic_calibrated_midi_retention_{};
   bool diagnostic_fine_subset_consensus_{};

@@ -6540,7 +6540,8 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_)
+  if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_)
     diagnostic_assignment_previews_.fill(false);
 #endif
   if (profile_mode_ != ProfileMode::m3) {
@@ -6718,14 +6719,15 @@ void PolyphonicPitchDetector::assign_m3_strings(
   current[reserved_strings].valid = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   bool pending_preview_enabled = false;
-  if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+  if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_) &&
       midi_routing_ == MidiRouting::per_voice) {
     for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate)
       pending_preview_enabled |= candidate_states_[candidate].active;
   }
   const auto pending_attack_decisions = pending_preview_enabled ? attack_decisions() : 0U;
   std::uint8_t forced_pending_owner_lanes = 0U;
-  if (diagnostic_forced_pending_string_reservation_ &&
+  if ((diagnostic_forced_pending_string_reservation_ || diagnostic_contradicted_retention_) &&
       diagnostic_spectral_lane_collision_ && midi_routing_ == MidiRouting::per_voice) {
     for (std::size_t lane = 0U; lane < kMaxVoices; ++lane) {
       const auto& owner = diagnostic_midi_owners_[lane];
@@ -7559,6 +7561,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
         string_count(fine.pending_member_mask) <= 1U &&
         !beat_evidence_states_[candidate].valid &&
         string_count(selector_group_masks_[candidate]) <= 1U;
+    if (preview && diagnostic_contradicted_retention_) {
+      // Unlike the rejected all-immature preview, keep ordinary allocation as
+      // soon as a pending pitch has support or starts its attack. Observation
+      // and evidence accumulation remain intact while unsupported ownership
+      // is withheld from an already sounding singleton's only lane.
+      preview = pending.attack_ticks == 0U &&
+          diagnostic_unsupported_pending_[candidate];
+    }
     if (preview && !diagnostic_pending_string_reservation_) {
       // Narrow replacement for the rejected broad preview: only a forced
       // pending string competing with a sounding physical singleton qualifies.
@@ -7820,7 +7830,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
 #endif
   if (!best.valid) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_)
+    if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_)
       diagnostic_assignment_previews_.fill(false);
 #endif
     return;
@@ -7832,7 +7843,8 @@ void PolyphonicPitchDetector::assign_m3_strings(
     state.assigned_string =
         static_cast<std::uint8_t>((best.strings >> (voice * 3U)) & 0x07U);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_) &&
         diagnostic_assignment_previews_[candidates[voice]])
       state.assigned_string_mask = static_cast<std::uint8_t>(1U << state.assigned_string);
 #endif
@@ -10637,7 +10649,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     if ((!diagnostic_completion_window_retention_ && !diagnostic_completion_midi_retention_) ||
         !selected[candidate] ||
         !state.active || state.assigned_string >= kM3OpenNotes.size() ||
-        ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+        ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_) &&
          diagnostic_assignment_previews_[candidate]) ||
         decision_counter_ - state.diagnostic_completion_window.last_tick != 1U) {
       state.diagnostic_completion_window = {};
@@ -10700,7 +10713,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     // A preview owns no physical lane or committed polyphony capacity.
-    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_) &&
         diagnostic_assignment_previews_[candidate]) continue;
 #endif
     ++selected_count;
@@ -10793,7 +10807,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
       continue;
     }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_) &&
+    if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
+        diagnostic_contradicted_retention_) &&
         diagnostic_assignment_previews_[candidate]) continue;
     if (assignment_diagnostics_enabled_)
       assignment_diagnostics_[candidate].group_before = state.assigned_string_mask;
@@ -12804,6 +12819,17 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
   update_spectral_lane_states(selected, quiet);
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_unsupported_pending_.fill(false);
+  if (diagnostic_contradicted_retention_) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      if (selected[candidate] && !candidate_states_[candidate].active) {
+        // Compute policy evidence directly; diagnostic logging may be disabled.
+        diagnostic_unsupported_pending_[candidate] =
+            !has_direct_fundamental_peak(scores, fundamentals, candidate, count) &&
+            !has_m3_candidate_evidence(scores, fundamentals, candidate, count);
+      }
+    }
+  }
   auto projection_ownership = projection_ownership_selection(selected);
   // OFF aliases the original selection, including later DP replacements.
   const auto& ownership_selected = diagnostic_projection_preview_admission_

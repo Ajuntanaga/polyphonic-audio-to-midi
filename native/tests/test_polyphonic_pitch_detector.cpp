@@ -2614,7 +2614,7 @@ struct PolyphonicPitchDetectorTestAccess final {
 
   static std::uint8_t pending_string_reservation_probe(
       PolyphonicPitchDetector& detector, bool enabled, unsigned scenario,
-      bool forced = false) {
+      bool forced = false, bool unsupported = false) {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.midi_routing = MidiRouting::per_voice;
@@ -2625,7 +2625,9 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_TRUE(detector.configure(96000.0, config));
     detector.set_spectral_lane_collision_for_diagnostics(true);
     detector.set_pending_string_reservation_for_diagnostics(enabled && !forced);
-    detector.set_forced_pending_string_reservation_for_diagnostics(enabled && forced);
+    detector.set_forced_pending_string_reservation_for_diagnostics(enabled && forced && !unsupported);
+    detector.diagnostic_contradicted_retention_ = enabled && unsupported;
+    detector.diagnostic_unsupported_pending_[0U] = unsupported && scenario != 15U;
     detector.assignment_diagnostics_enabled_ = true;
     auto& pending = detector.candidate_states_[0U];
     auto& held = detector.candidate_states_[4U];
@@ -2633,7 +2635,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.playable_string_masks_[4U] = 3U;
     pending.assigned_string = held.assigned_string = 0U;
     pending.assigned_string_mask = held.assigned_string_mask = 1U;
-    pending.attack_ticks = 1U;
+    pending.attack_ticks = unsupported && scenario != 16U ? 0U : 1U;
     pending.evidence_ticks = 59U;
     pending.unison_evidence_ticks = 7U;
     held.active = true;
@@ -14423,6 +14425,23 @@ M3_TEST(native_detector_pending_string_reservation_forced_preserves_other_assign
             off, false, scenario, true);
     M3_EXPECT_EQ(m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
         on, true, scenario, true), baseline);
+  }
+#endif
+}
+
+M3_TEST(native_detector_unsupported_pending_preserves_owner_without_freezing_attack) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  for (unsigned scenario : {0U, 1U, 2U, 3U, 4U, 5U, 6U, 9U, 10U, 11U, 12U, 13U, 14U, 15U, 16U}) {
+    m3::PolyphonicPitchDetector off, on;
+    const auto baseline =
+        m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+            off, false, scenario, true, true);
+    const auto result =
+        m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
+            on, true, scenario, true, true);
+    // Supported candidates (15) and an attack already underway (16) must
+    // participate normally, as must ready/group/atomic and invalid owners.
+    M3_EXPECT_EQ(result, scenario == 0U ? 0U : baseline);
   }
 #endif
 }
