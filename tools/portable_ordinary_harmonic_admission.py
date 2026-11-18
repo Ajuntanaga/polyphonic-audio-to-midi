@@ -129,8 +129,41 @@ def trace_posterior_losses(binary, corpus, output, flags, trial_replay, trial_mi
     return result
 
 
+def trace_local_onset_assignments(binary, corpus, output, conditions, cached, runs, deadline):
+    """Observe both policies around label252; require full replay/MIDI parity."""
+    result = {}
+    for mode, flags in conditions:
+        if mode == OFF:
+            continue
+        stem = output / ('assignment-' + mode)
+        tsv = stem.with_suffix('.tsv')
+        midi = output / (stem.name + '-midi.tsv')
+        costs = output / (stem.name + '-costs.tsv')
+        command = command_for(binary, corpus, 'ordinary', 'off', 512, None, midi_trace=midi)
+        command.extend(flags)
+        command.extend(('--assignment-trace', str(costs),
+                        '--assignment-trace-start', '47.5', '--assignment-trace-end', '48.5'))
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError('Local onset assignment diagnostic budget exhausted')
+        with tsv.open('w') as stdout, stem.with_suffix('.stderr').open('w') as stderr:
+            subprocess.run(command, stdout=stdout, stderr=stderr,
+                           timeout=min(900, remaining), check=True)
+        comparison = compare_replays(cached[mode], read_replay(tsv))
+        identical = digest(midi) == runs[mode]['midi_trace_sha256']
+        if (not comparison['output_bit_identical'] or comparison['changed_labels']
+                or not identical):
+            raise ValueError('Local onset assignment tracing changed output: ' + mode)
+        result[mode] = dict(command=command, comparison=comparison,
+            midi_bit_identical=identical, start_sample=4560000, end_sample=4656000,
+            trace=compress_trace_window(costs, start=4560000, end=4656000))
+        costs.unlink()
+        midi.unlink()
+    return result
+
+
 def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False):
-    if local_onset_evidence and any((fundamental_veto_check, assignment_diagnostic,
+    if local_onset_evidence and any((fundamental_veto_check,
             calibrated_assignment_prior, joint_rescue_eligibility, pending_string_posterior,
             posterior_loss_diagnostic, energy_weighted_descriptor, common_detuning_support)):
         raise ValueError('Local onset trial must be isolated from rescue policies')
@@ -261,7 +294,13 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                 row['outcome_trace'] = compress_trace_window(outcome, start=0, end=row['sample_count'])
                 outcome.unlink()
                 save()
-        if assignment_diagnostic:
+        if assignment_diagnostic and local_onset_evidence:
+            report.update(stage='paired local onset assignment trace')
+            save()
+            report['local_onset_assignment_diagnostic'] = trace_local_onset_assignments(
+                binary, corpus, output, conditions, cached, report['runs'], deadline)
+            save()
+        if assignment_diagnostic and not local_onset_evidence:
             # Observation only: replay identical cues, then compare complete output
             # and raw MIDI before retaining the bounded assignment evidence.
             report.update(stage='trace experimental initial assignment',
