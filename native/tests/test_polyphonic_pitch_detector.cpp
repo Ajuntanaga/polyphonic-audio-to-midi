@@ -4262,7 +4262,8 @@ struct PolyphonicPitchDetectorTestAccess final {
       bool beat_valid = false, std::uint8_t fine_mask = 0U,
       const std::array<double, kCalibrationHarmonicCount>* long_profile = nullptr,
       const std::array<double, kCalibrationHarmonicCount>* current_profile = nullptr,
-      bool pending_preview = false) noexcept {
+      bool pending_preview = false, bool joint_valid = true,
+      std::uint8_t existing_mask = 0U, bool validity_guard = false) noexcept {
     detector.max_polyphony_ = max_polyphony;
     detector.fast_energy_ = 1.0;
     detector.candidate_states_ = {};
@@ -4271,6 +4272,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     state.age_ticks = observation_updates;
     state.assigned_string = primary;
     state.assigned_string_mask = static_cast<std::uint8_t>(1U << primary);
+    if (existing_mask != 0U) state.assigned_string_mask = existing_mask;
     state.midi_voice_mask = state.assigned_string_mask;
     detector.beat_evidence_states_[candidate] = {};
     detector.beat_evidence_states_[candidate].valid = beat_valid;
@@ -4294,7 +4296,8 @@ struct PolyphonicPitchDetectorTestAccess final {
     std::array<bool, kMaxCandidates> selected{};
     selected[candidate] = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    detector.diagnostic_contradicted_retention_ = pending_preview;
+    detector.diagnostic_contradicted_retention_ = pending_preview || validity_guard;
+    detector.diagnostic_joint_assignment_valid_ = joint_valid;
     detector.diagnostic_assignment_previews_.fill(false);
     if (pending_preview) {
       const std::size_t preview = candidate == 0U ? 1U : 0U;
@@ -4303,6 +4306,8 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
 #else
     (void)pending_preview;
+    (void)joint_valid;
+    (void)validity_guard;
 #endif
     for (std::uint8_t decision = 0U; decision < 16U; ++decision) {
       detector.infer_m3_unison_strings(selected);
@@ -12490,6 +12495,24 @@ M3_TEST(native_detector_preview_capacity_limits_only_profile_admission) {
       static_cast<std::uint8_t>(1U << kSharedUnisonPrimary));
   M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
       kSharedUnisonPrimary, observed, 2U, 1000U, false, pair, nullptr, nullptr, true), pair);
+  // Failed joint assignment cannot turn a retained singleton into a pair.
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 3U, 1000U, false, 0U, nullptr, nullptr,
+      false, false, 0U, true),
+      static_cast<std::uint8_t>(1U << kSharedUnisonPrimary));
+  // OFF, a valid solution, committed groups and fine evidence retain coverage.
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 3U, 1000U, false, 0U, nullptr, nullptr,
+      false, false), pair);
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 3U, 1000U, false, 0U, nullptr, nullptr,
+      false, true, 0U, true), pair);
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 3U, 1000U, false, 0U, nullptr, nullptr,
+      false, false, pair, true), pair);
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 3U, 1000U, false, pair, nullptr, nullptr,
+      false, false, 0U, true), pair);
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
 }
 

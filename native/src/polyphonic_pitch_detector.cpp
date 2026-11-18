@@ -6540,6 +6540,7 @@ std::uint8_t PolyphonicPitchDetector::retained_spectral_assignment_lane(
 void PolyphonicPitchDetector::assign_m3_strings(
     const std::array<bool, kMaxCandidates>& selected) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_joint_assignment_valid_ = false;
   if (diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
         diagnostic_contradicted_retention_)
     diagnostic_assignment_previews_.fill(false);
@@ -7827,6 +7828,9 @@ void PolyphonicPitchDetector::assign_m3_strings(
       }
     }
   }
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_joint_assignment_valid_ = best.valid;
 #endif
   if (!best.valid) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -11629,6 +11633,17 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
         proposed_group = primary_bit;
       }
     }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // A retained lane after failed joint assignment is not permission to
+    // acquire another owner. Preserve existing groups and independent paths.
+    if (diagnostic_contradicted_retention_ &&
+        !diagnostic_joint_assignment_valid_ &&
+        (diagnostic_group_origin == 3U || diagnostic_group_origin == 4U) &&
+        (proposed_group & ~committed_for_candidate) != 0U) {
+      proposed_group = committed_for_candidate;
+    }
+#endif
 
     state.latest_unison_proposal_mask = proposed_group;
     state.latest_unison_proposal_temporal = temporal_group_selected;

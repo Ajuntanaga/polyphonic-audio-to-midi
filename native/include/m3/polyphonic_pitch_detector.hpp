@@ -1871,6 +1871,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_fundamental_admission_{};
   bool diagnostic_direct_evidence_retention_{};
   bool diagnostic_contradicted_retention_{};
+  bool diagnostic_joint_assignment_valid_{};
   bool diagnostic_persistent_candidate_admission_{};
   std::array<std::uint8_t, kMaxCandidates> persistent_candidate_ticks_{};
   std::uint64_t persistent_candidate_last_tick_{};
