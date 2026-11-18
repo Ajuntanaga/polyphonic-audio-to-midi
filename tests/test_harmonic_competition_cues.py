@@ -155,6 +155,18 @@ class HarmonicCompetitionTests(unittest.TestCase):
         self.assertEqual(result['status'], 'too_many_lower_candidates')
         self.assertEqual(len(result['lower_candidates']), 9)
 
+    def test_generation_experiment_is_explicit_and_default_is_preserved(self):
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled):
+                with patch.object(admission, 'generate') as generate, patch.object(
+                        competition, 'evaluate_candidate', return_value={'admitted': True}) as evaluate:
+                    competition.generate(None, None, None, None, 100,
+                                         fundamental_veto_check=enabled)
+                    decision = generate.call_args.kwargs['decision']
+                    decision('window', 'prepared', 65, 'state')
+                    expected = {'fundamental_veto_check': True} if enabled else {}
+                    evaluate.assert_called_once_with('window', 'prepared', 65, 'state', **expected)
+
     def test_generation_passes_old_state_and_fixed_cue_expiry(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

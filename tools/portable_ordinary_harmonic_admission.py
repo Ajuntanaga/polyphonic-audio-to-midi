@@ -82,13 +82,18 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
+    if fundamental_veto_check and not competition:
+        raise ValueError('fundamental veto check requires competition')
     config, cue_generate = CONFIG, generate
     if competition:
         from tools import harmonic_competition_cues
         config, cue_generate = harmonic_competition_cues.CONFIG, harmonic_competition_cues.generate
+    if fundamental_veto_check:
+        from functools import partial
+        cue_generate = partial(cue_generate, fundamental_veto_check=True)
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     manifest = json.loads(manifest_path.read_text())
@@ -99,7 +104,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=TARGET, runs={}, installed_output_changed=False, promotion_accepted=False,
+        target=TARGET, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
@@ -217,9 +222,12 @@ def main():
     parser.add_argument('--max-seconds', type=int, default=2400)
     parser.add_argument('--competition', action='store_true',
                         help='Condition admission on independently supported unowned lower notes')
+    parser.add_argument('--fundamental-veto-check', action='store_true',
+                        help='Offline experiment; preserve the default competition policy')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
-        args.max_seconds, competition=args.competition)
+        args.max_seconds, competition=args.competition,
+        fundamental_veto_check=args.fundamental_veto_check)
 
 
 if __name__ == '__main__':

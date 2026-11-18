@@ -173,6 +173,10 @@ def evaluate_candidate(window, prepared, note, state, *, continuity_diagnostic=F
     return dict(result, status='competition_incomplete' if result['unavailable_comparisons'] else 'competition_pass')
 
 
-def generate(audio, outcome_path, cue_path, evidence_path, deadline):
+def generate(audio, outcome_path, cue_path, evidence_path, deadline, *,
+             fundamental_veto_check=False):
+    from functools import partial
+    decision = (partial(evaluate_candidate, fundamental_veto_check=True)
+                if fundamental_veto_check else evaluate_candidate)
     return admission.generate(audio, outcome_path, cue_path, evidence_path, deadline,
-                              decision=evaluate_candidate)
+                              decision=decision)
