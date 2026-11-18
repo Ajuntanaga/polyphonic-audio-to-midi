@@ -12968,7 +12968,21 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_supported_sustain_renewal_ || diagnostic_contradicted_retention_) {
+  // A coasting singleton must regain pitch evidence before selection can
+  // restart its release. Do not age uninterrupted selected sustains: weak
+  // fundamentals there are not evidence that a valid note has ended.
+  if (diagnostic_contradicted_retention_ && profile_mode_ == ProfileMode::m3) {
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      const auto& state = candidate_states_[candidate];
+      if (selected[candidate] && state.active && state.release_ticks != 0U &&
+          string_count(state.assigned_string_mask) == 1U &&
+          !has_direct_fundamental_peak(scores, fundamentals, candidate, count) &&
+          !has_m3_candidate_evidence(scores, fundamentals, candidate, count)) {
+        selected[candidate] = false;
+      }
+    }
+  }
+  if (diagnostic_supported_sustain_renewal_) {
     for (std::size_t candidate = 0U; candidate < count; ++candidate) {
       auto& state = candidate_states_[candidate];
       auto& unsupported = unsupported_sustain_ticks_[candidate];
