@@ -1113,27 +1113,27 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
                      assignment_stream.get()) != nullptr) {
       assignment_captured += assignment_line.data();
       const auto columns = fields(assignment_line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 104U);
-      if (columns.size() != 104U) return;
+      M3_EXPECT_EQ(columns.size(), 111U);
+      if (columns.size() != 111U) return;
       if (assignment_rows++ == 0U) {
         M3_EXPECT_EQ(columns[69], "fixed_context");
         M3_EXPECT_EQ(columns[70], "phase_shadow");
-        M3_EXPECT_EQ(columns[79], "cue_evaluated");
-        M3_EXPECT_EQ(columns[89], "cue_cents_errors");
-        M3_EXPECT_EQ(columns[90], "profile_first_pass_reasons");
-        M3_EXPECT_EQ(columns[91], "profile_first_pass_alpha");
-        M3_EXPECT_EQ(columns[92], "profile_first_pass_errors");
-        M3_EXPECT_EQ(columns[96], "allocation_preview");
-        M3_EXPECT_EQ(columns[97], "prior_attack_ticks");
-        M3_EXPECT_EQ(columns[98], "attack_required");
-        M3_EXPECT_EQ(columns[99], "physical_playable");
-        M3_EXPECT_EQ(columns[100], "selector_used");
-        M3_EXPECT_EQ(columns[101], "selector_override");
-        M3_EXPECT_EQ(columns[102], "rescue_allowed");
-        M3_EXPECT_EQ(columns[103], "rescue_effective");
+        M3_EXPECT_EQ(columns[86], "cue_evaluated");
+        M3_EXPECT_EQ(columns[96], "cue_cents_errors");
+        M3_EXPECT_EQ(columns[97], "profile_first_pass_reasons");
+        M3_EXPECT_EQ(columns[98], "profile_first_pass_alpha");
+        M3_EXPECT_EQ(columns[99], "profile_first_pass_errors");
+        M3_EXPECT_EQ(columns[103], "allocation_preview");
+        M3_EXPECT_EQ(columns[104], "prior_attack_ticks");
+        M3_EXPECT_EQ(columns[105], "attack_required");
+        M3_EXPECT_EQ(columns[106], "physical_playable");
+        M3_EXPECT_EQ(columns[107], "selector_used");
+        M3_EXPECT_EQ(columns[108], "selector_override");
+        M3_EXPECT_EQ(columns[109], "rescue_allowed");
+        M3_EXPECT_EQ(columns[110], "rescue_effective");
         continue;
       }
-      for (std::size_t column = 90U; column < 93U; ++column)
+      for (std::size_t column = 97U; column < 100U; ++column)
         M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
       if (columns[69] != "1") {
         M3_EXPECT_EQ(columns[70], "0");
@@ -1528,22 +1528,22 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       captured += line.data();
       if (rows++ == 0U) continue;
       const auto columns = fields(line.data(), '\t');
-      M3_EXPECT_EQ(columns.size(), 104U);
-      if (columns.size() != 104U) return;
-      const auto physical = std::stoul(columns[99]);
-      const auto selector_override = std::stoul(columns[101]);
-      const auto rescue_allowed = std::stoul(columns[103]);
-      M3_EXPECT_EQ(std::stoul(columns[102]), std::stoul(columns[103]));
-      for (std::size_t column = 99U; column < 104U; ++column)
+      M3_EXPECT_EQ(columns.size(), 111U);
+      if (columns.size() != 111U) return;
+      const auto physical = std::stoul(columns[106]);
+      const auto selector_override = std::stoul(columns[108]);
+      const auto rescue_allowed = std::stoul(columns[110]);
+      M3_EXPECT_EQ(std::stoul(columns[109]), std::stoul(columns[110]));
+      for (std::size_t column = 106U; column < 111U; ++column)
         M3_EXPECT_TRUE(std::stoul(columns[column]) <= 255U);
       auto eligible = selector_override != 0U ? selector_override : physical;
       if (rescue_allowed != 0U) eligible &= physical & rescue_allowed;
       M3_EXPECT_EQ(std::stoul(columns[11]), eligible);
-      for (std::size_t column = 90U; column < 93U; ++column)
+      for (std::size_t column = 97U; column < 100U; ++column)
         M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
-      for (std::size_t column = 79U; column < 88U; ++column)
+      for (std::size_t column = 86U; column < 95U; ++column)
         M3_EXPECT_EQ(std::stod(columns[column]), 0.0);
-      for (std::size_t column = 88U; column < 90U; ++column) {
+      for (std::size_t column = 95U; column < 97U; ++column) {
         const auto values = fields(columns[column], ',');
         M3_EXPECT_EQ(values.size(), 8U);
         for (const auto& value : values) M3_EXPECT_EQ(std::stod(value), 0.0);
@@ -1552,6 +1552,15 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       M3_EXPECT_EQ(std::stoul(columns[70]), 0U);
       for (std::size_t column = 74U; column < 77U; ++column)
         M3_EXPECT_EQ(fields(columns[column], ',').size(), 8U);
+      const auto transient = std::stod(columns[79]);
+      M3_EXPECT_TRUE(std::isfinite(transient));
+      M3_EXPECT_TRUE(transient >= 0.0 && transient <= 1.0);
+      for (std::size_t column = 80U; column < 86U; ++column) {
+        const auto components = fields(columns[column], ',');
+        M3_EXPECT_EQ(components.size(), 8U);
+        for (const auto& component : components)
+          M3_EXPECT_TRUE(std::isfinite(std::stod(component)));
+      }
       const auto detuning_mask = std::stoul(columns[77]);
       const auto detuning = fields(columns[78], ',');
       M3_EXPECT_EQ(detuning.size(), 8U);
