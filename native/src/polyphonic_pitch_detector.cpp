@@ -1683,6 +1683,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
+  activation_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -2655,6 +2656,7 @@ PolyphonicPitchDetector::candidate_tracking_diagnostics(
   }
   const std::size_t candidate = midi_note - lowest_note_;
   const auto& state = candidate_states_[candidate];
+  result.activation = activation_diagnostics_[candidate];
   result.phase_cents = phase_cents_states_[candidate].cents;
   result.phase_updates = phase_cents_states_[candidate].accepted_updates;
   result.age_ticks = state.age_ticks;
@@ -3029,6 +3031,7 @@ void PolyphonicPitchDetector::set_calibration_bank(
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
+  activation_diagnostics_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -12430,6 +12433,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
                 FineGroupOwnershipDiagnostics{});
   }
 #endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  activation_diagnostics_ = {};
+#endif
   ++decision_counter_;
   std::array<double, kMaxCandidates> scores{};
   std::array<double, kMaxCandidates> fundamentals{};
@@ -12938,7 +12944,20 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
   for (std::size_t candidate = 0U; candidate < count; ++candidate) {
     CandidateState& state = candidate_states_[candidate];
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    auto& activation = activation_diagnostics_[candidate];
+    activation.fast_energy = fast_energy_;
+    activation.slow_energy = slow_energy_;
+    activation.required_energy = slow_energy_ * kAttackEnergyRatio;
+    activation.active_count = static_cast<std::uint8_t>(active_count);
+    activation.evidence_ticks = state.evidence_ticks;
+    activation.attack_ticks = state.attack_ticks;
+    activation.gate = ActivationGate::attack_delay;
+#endif
     if (!selected[candidate]) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::not_selected;
+#endif
       if (!state.active) {
         state.attack_ticks = 0U;
         state.age_ticks = 0U;
@@ -12947,18 +12966,27 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     }
     state.release_ticks = 0U;
     if (state.active) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::already_active;
+#endif
       if (state.age_ticks < std::numeric_limits<std::uint16_t>::max()) {
         ++state.age_ticks;
       }
       continue;
     }
     if (active_count >= static_cast<std::size_t>(max_polyphony_)) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::capacity;
+#endif
       state = {};
       continue;
     }
     const bool atomic_handoff =
         selector_atomic_handoff_targets_[candidate];
     if (!atomic_handoff && fast_energy_ < slow_energy_ * kAttackEnergyRatio) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::energy;
+#endif
       state.attack_ticks = 0U;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       // A whole-chord energy dip still blocks onset. The offline trial keeps
@@ -12975,6 +13003,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
       continue;
     }
     if (!atomic_handoff && state.evidence_ticks == 0U) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::no_evidence;
+#endif
       state.attack_ticks = 0U;
       continue;
     }
@@ -12987,6 +13018,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
               ? static_cast<std::uint8_t>(total_evidence - attack + 1U)
               : 1U;
       if (state.evidence_ticks < pre_attack_evidence) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        activation.gate = ActivationGate::pre_attack_evidence;
+#endif
         state.attack_ticks = 0U;
         continue;
       }
@@ -13003,6 +13037,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     if (state.attack_ticks >= attack_decisions()) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       if (joint_attacks) {
+        activation.gate = ActivationGate::joint_deferred;
         joint_ready[candidate] = true;
         state.attack_ticks = attack_decisions();
         continue;
@@ -13010,6 +13045,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
       const std::uint8_t velocity = dynamic_velocity();
       if (!append_candidate_note_on(decision, candidate, velocity)) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        activation.gate = ActivationGate::note_on_refused;
+#endif
         // Preserve the accumulated causal evidence so the candidate can be
         // retried as soon as its playable physical lane is released.
         state.attack_ticks = attack_decisions();
@@ -13025,6 +13063,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
         else
           diagnostic_residual_recovery_lease_ = {};
       }
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      activation.gate = ActivationGate::activated;
 #endif
       state.active = true;
       state.attack_ticks = 0U;

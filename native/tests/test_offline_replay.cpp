@@ -604,6 +604,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     std::size_t calibrated_tick_column = 0U;
     std::size_t calibrated_reason_column = 0U;
     std::size_t calibrated_failures_column = 0U;
+    std::size_t activation_column = 0U;
     std::size_t routing_column = 0U;
     std::size_t routing_render_column = 0U;
     std::size_t routing_continuity_column = 0U;
@@ -624,6 +625,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
       while (std::getline(record, field, '\t')) fields.push_back(field);
       if (rows++ == 0U) {
         for (std::size_t column = 0U; column < fields.size(); ++column) {
+          if (fields[column] == "activation_gate") activation_column = column;
           if (fields[column] == "ownership_observed") observed_column = column;
           if (fields[column] == "fine_group_evaluated") evaluated_column = column;
           if (fields[column] == "cal_observed") calibrated_column = column;
@@ -638,6 +640,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
           if (fields[column] == "route_midi_after") routing_after_column = column;
           if (fields[column] == "route_capacity_blocked") routing_blocked_column = column;
         }
+        M3_EXPECT_TRUE(activation_column > 0U);
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
         M3_EXPECT_TRUE(calibrated_column > evaluated_column);
@@ -648,6 +651,20 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
       }
       M3_EXPECT_TRUE(fields.size() > routing_blocked_column);
       if (fields.size() <= routing_blocked_column) return;
+      M3_EXPECT_TRUE(fields.size() > activation_column + 6U);
+      if (fields.size() <= activation_column + 6U) return;
+      const double fast_energy = std::stod(fields[activation_column + 1U]);
+      const double required_energy = std::stod(fields[activation_column + 3U]);
+      M3_EXPECT_TRUE(std::isfinite(fast_energy));
+      M3_EXPECT_TRUE(std::isfinite(required_energy));
+      if (fields[activation_column] == "energy") {
+        M3_EXPECT_TRUE(fast_energy < required_energy);
+        M3_EXPECT_EQ(fields[14U], std::string("0"));
+      }
+      if (fields[activation_column] == "already_active" ||
+          fields[activation_column] == "activated") {
+        M3_EXPECT_EQ(fields[14U], std::string("1"));
+      }
       if (fields[routing_render_column] == "1" ||
           fields[routing_continuity_column] == "1") {
         M3_EXPECT_EQ(fields[routing_column], fields[1U]);

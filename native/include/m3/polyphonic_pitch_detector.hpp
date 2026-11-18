@@ -340,6 +340,22 @@ struct CandidateRoutingDiagnostics final {
   bool capacity_blocked{};
 };
 
+// First exit from the onset loop, captured before later routing mutates state.
+enum class ActivationGate : std::uint8_t {
+  not_observed, not_selected, already_active, capacity, energy,
+  no_evidence, pre_attack_evidence, attack_delay, joint_deferred,
+  note_on_refused, activated,
+};
+struct ActivationDiagnostics final {
+  ActivationGate gate{ActivationGate::not_observed};
+  double fast_energy{};
+  double slow_energy{};
+  double required_energy{};
+  std::uint8_t active_count{};
+  std::uint8_t evidence_ticks{};
+  std::uint8_t attack_ticks{};
+};
+
 // Read-only timeline snapshot for bounded offline causal comparisons.
 struct CandidateTrackingDiagnostics final {
   std::uint32_t decision_tick{};
@@ -362,6 +378,7 @@ struct CandidateTrackingDiagnostics final {
   bool fine_valid{};
   bool multi_source{};
   bool fine_update_scheduled{};
+  ActivationDiagnostics activation{};
   FineHistoryResetDiagnostics fine_reset{};
   CalibratedOutputDiagnostics calibrated_output{};
   CandidateRoutingDiagnostics routing{};
@@ -1796,6 +1813,7 @@ class PolyphonicPitchDetector final {
   bool calibrated_output_diagnostics_enabled_{};
   std::array<CalibratedOutputDiagnostics, kMaxCandidates>
       calibrated_output_diagnostics_{};
+  std::array<ActivationDiagnostics, kMaxCandidates> activation_diagnostics_{};
   bool routing_diagnostics_enabled_{};
   std::array<CandidateRoutingDiagnostics, kMaxCandidates> routing_diagnostics_{};
 #if defined(M3_UNISON_SPECTRAL_SHADOW)

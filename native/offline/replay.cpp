@@ -3165,7 +3165,7 @@ bool run_detector_replay(const WaveData& wave,
         "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
         "route_pruned_mask\troute_midi_before\troute_midi_after\t"
         "route_other_owned\troute_final_continuity_mask\t"
-        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\n") < 0;
+        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3830,7 +3830,17 @@ bool run_detector_replay(const WaveData& wave,
                   a.post_attack, a.post_release};
               for (const auto value : after) integer(value);
             }
-            trace.failed = std::fputc('\n', trace.stream) == EOF || trace.failed;
+            constexpr std::array<const char*, 11U> activation_names{
+                "not_observed", "not_selected", "already_active", "capacity",
+                "energy", "no_evidence", "pre_attack_evidence", "attack_delay",
+                "joint_deferred", "note_on_refused", "activated"};
+            const auto& activation = tracking.activation;
+            trace.failed = std::fprintf(trace.stream,
+                "\t%s\t%.17g\t%.17g\t%.17g\t%u\t%u\t%u\n",
+                activation_names[static_cast<std::size_t>(activation.gate)],
+                activation.fast_energy, activation.slow_energy,
+                activation.required_energy, activation.active_count,
+                activation.evidence_ticks, activation.attack_ticks) < 0 || trace.failed;
             ++trace.frames;
           }
         }
