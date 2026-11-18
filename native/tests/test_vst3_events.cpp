@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <limits>
 
 #include "fake_vst3_host.hpp"
@@ -25,7 +26,8 @@ struct ActiveInstance final {
 };
 
 bool open_active(ActiveInstance& instance,
-                 Steinberg::int32 max_frames = 192) noexcept {
+                 Steinberg::int32 max_frames = 192,
+                 bool stable_note_identity = false) noexcept {
   instance.factory = GetPluginFactory();
   if (instance.factory == nullptr) {
     return false;
@@ -52,6 +54,8 @@ bool open_active(ActiveInstance& instance,
       instance.controller == nullptr) {
     return false;
   }
+  if (stable_note_identity && !static_cast<m3::vst3::M3Component*>(instance.processor)->
+          enable_stable_note_identity_for_test(true)) return false;
   Steinberg::Vst::ProcessSetup setup{};
   setup.processMode = Steinberg::Vst::kRealtime;
   setup.symbolicSampleSize = Steinberg::Vst::kSample32;
@@ -584,4 +588,159 @@ M3_TEST(vst3_event_sink_normal_null_and_rejection_paths_are_allocation_free) {
   }
   M3_EXPECT_EQ(m3::test::allocation_count(), allocations_before);
   M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations_before);
+}
+
+M3_TEST(vst3_stable_note_identity_preserves_repluck_unison_and_original_sink) {
+  constexpr std::uint32_t frames = 64;
+  for (bool stable : {false, true}) {
+    ActiveInstance instance;
+    M3_EXPECT_TRUE(open_active(instance, frames, stable));
+    if (instance.processor == nullptr || instance.controller == nullptr) {
+      close_active(instance);
+      continue;
+    }
+    auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
+    M3_EXPECT_FALSE(component->enable_stable_note_identity_for_test(!stable));
+    M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330001U, 1.0),
+                 Steinberg::kResultTrue);
+    m3::test::FakeVst3ProcessBlock<float> block;
+    m3::test::FakeVst3EventList events;
+    const auto prepare = [&]() {
+      events.reset();
+      block.configure(frames, false);
+      block.fill_finite();
+      block.data().outputEvents = &events;
+      begin_notes(instance);
+    };
+    const auto process = [&]() {
+      const auto allocations = m3::test::allocation_count();
+      const auto deallocations = m3::test::deallocation_count();
+      M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+      M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+      M3_EXPECT_EQ(m3::test::deallocation_count(), deallocations);
+      expect_dry(block, frames);
+    };
+    prepare();
+    M3_EXPECT_TRUE(queue_note(instance, transition(1, m3::TransitionKind::note_on, 60, 100, 1, 3), frames));
+    process();
+    M3_EXPECT_EQ(events.stored_event_count(), 1U);
+    const auto original = events.stored_event(0).noteOn;
+    M3_EXPECT_EQ(original.channel, stable ? 0 : 3);
+
+    prepare();
+    auto off = transition(2, m3::TransitionKind::note_off, 60, 0, 2, 3);
+    auto on = transition(2, m3::TransitionKind::note_on, 60, 100, 3, 5);
+    off.continuation_voice_id = 5;
+    on.continuation_voice_id = 3;
+    M3_EXPECT_TRUE(queue_note(instance, off, frames));
+    M3_EXPECT_TRUE(queue_note(instance, on, frames));
+    process();
+    M3_EXPECT_EQ(events.stored_event_count(), stable ? 0U : 2U);
+    M3_EXPECT_EQ(component->stable_note_transfers_for_test(), stable ? 1U : 0U);
+
+    // An untagged same-pitch re-pluck still emits its Off/On, and a second
+    // physical owner of that pitch remains a separate simultaneous note.
+    prepare();
+    M3_EXPECT_TRUE(queue_note(instance, transition(3, m3::TransitionKind::note_off, 60, 0, 4, 5), frames));
+    M3_EXPECT_TRUE(queue_note(instance, transition(3, m3::TransitionKind::note_on, 60, 90, 5, 5), frames));
+    M3_EXPECT_TRUE(queue_note(instance, transition(4, m3::TransitionKind::note_on, 60, 80, 6, 6), frames));
+    process();
+    M3_EXPECT_EQ(events.stored_event_count(), 3U);
+    M3_EXPECT_EQ(events.stored_event(0).type, Steinberg::Vst::Event::kNoteOffEvent);
+    M3_EXPECT_EQ(events.stored_event(0).noteOff.channel, stable ? original.channel : 5);
+    M3_EXPECT_EQ(events.stored_event(0).noteOff.noteId, stable ? original.noteId : -1700);
+    M3_EXPECT_EQ(events.stored_event(1).type, Steinberg::Vst::Event::kNoteOnEvent);
+    M3_EXPECT_EQ(events.stored_event(2).type, Steinberg::Vst::Event::kNoteOnEvent);
+    M3_EXPECT_TRUE(events.stored_event(1).noteOn.noteId != events.stored_event(2).noteOn.noteId);
+    const auto first_unison = events.stored_event(1).noteOn;
+    const auto second_unison = events.stored_event(2).noteOn;
+
+    // Even reciprocal continuation tags cannot collapse an active unison.
+    prepare();
+    off = transition(5, m3::TransitionKind::note_off, 60, 0, 7, 5);
+    on = transition(5, m3::TransitionKind::note_on, 60, 90, 8, 7);
+    off.continuation_voice_id = 7;
+    on.continuation_voice_id = 5;
+    M3_EXPECT_TRUE(queue_note(instance, off, frames));
+    M3_EXPECT_TRUE(queue_note(instance, on, frames));
+    process();
+    M3_EXPECT_EQ(events.stored_event_count(), 2U);
+    M3_EXPECT_EQ(events.stored_event(0).noteOff.noteId, first_unison.noteId);
+    const auto moved_unison = events.stored_event(1).noteOn;
+    M3_EXPECT_TRUE(moved_unison.noteId != second_unison.noteId);
+    M3_EXPECT_EQ(component->stable_note_transfers_for_test(), stable ? 1U : 0U);
+    prepare();
+    M3_EXPECT_TRUE(queue_note(instance, transition(6, m3::TransitionKind::note_off, 60, 0, 9, 7), frames));
+    M3_EXPECT_TRUE(queue_note(instance, transition(6, m3::TransitionKind::note_off, 60, 0, 10, 6), frames));
+    process();
+    M3_EXPECT_EQ(events.stored_event_count(), 2U);
+    M3_EXPECT_EQ(events.stored_event(0).noteOff.noteId, moved_unison.noteId);
+    M3_EXPECT_EQ(events.stored_event(1).noteOff.noteId, second_unison.noteId);
+    M3_EXPECT_EQ(component->status_for_test(), m3::Status::ready);
+    close_active(instance);
+  }
+}
+
+M3_TEST(vst3_stable_note_identity_refused_off_releases_transferred_owner_then_recovers) {
+  constexpr std::uint32_t frames = 64;
+  ActiveInstance instance;
+  M3_EXPECT_TRUE(open_active(instance, frames, true));
+  if (instance.processor == nullptr || instance.controller == nullptr) {
+    close_active(instance);
+    return;
+  }
+  auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330001U, 1.0), Steinberg::kResultTrue);
+  m3::test::FakeVst3ProcessBlock<float> block;
+  m3::test::FakeVst3EventList events;
+  const auto prepare = [&]() {
+    events.reset();
+    block.configure(frames, false);
+    block.fill_finite();
+    block.data().outputEvents = &events;
+    begin_notes(instance);
+  };
+  prepare();
+  M3_EXPECT_TRUE(queue_note(instance, transition(1, m3::TransitionKind::note_on, 60, 100, 1, 3), frames));
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 1U);
+  const auto original = events.stored_event(0).noteOn;
+  prepare();
+  auto off = transition(2, m3::TransitionKind::note_off, 60, 0, 2, 3);
+  auto on = transition(2, m3::TransitionKind::note_on, 60, 100, 3, 5);
+  off.continuation_voice_id = 5;
+  on.continuation_voice_id = 3;
+  M3_EXPECT_TRUE(queue_note(instance, off, frames));
+  M3_EXPECT_TRUE(queue_note(instance, on, frames));
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 0U);
+  M3_EXPECT_EQ(component->stable_note_transfers_for_test(), 1U);
+  prepare();
+  events.reject_attempt(0);
+  M3_EXPECT_TRUE(queue_note(instance, transition(3, m3::TransitionKind::note_off, 60, 0, 4, 5), frames));
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 0U);
+  M3_EXPECT_EQ(component->status_for_test(), m3::Status::midi_output_blocked);
+  prepare();
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 1U);
+  M3_EXPECT_EQ(events.stored_event(0).type, Steinberg::Vst::Event::kNoteOffEvent);
+  M3_EXPECT_EQ(events.stored_event(0).noteOff.noteId, original.noteId);
+  M3_EXPECT_EQ(events.stored_event(0).noteOff.channel, original.channel);
+  M3_EXPECT_EQ(component->status_for_test(), m3::Status::midi_output_blocked);
+  M3_EXPECT_EQ(instance.controller->setParamNormalized(m3::kPanicParameterId, 1.0), Steinberg::kResultTrue);
+  for (int hold = 0; hold < 2; ++hold) {
+    prepare();
+    block.fill_silence();
+    M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+    M3_EXPECT_EQ(events.stored_event_count(), 0U);
+  }
+  M3_EXPECT_EQ(component->status_for_test(), m3::Status::ready);
+  prepare();
+  M3_EXPECT_TRUE(queue_note(instance, transition(4, m3::TransitionKind::note_on, 67, 90, 5, 7), frames));
+  M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
+  M3_EXPECT_EQ(events.stored_event_count(), 1U);
+  M3_EXPECT_EQ(events.stored_event(0).noteOn.pitch, 67);
+  M3_EXPECT_EQ(events.stored_event(0).noteOn.channel, 0);
+  close_active(instance);
 }

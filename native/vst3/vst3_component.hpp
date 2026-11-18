@@ -116,6 +116,20 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   }
 #endif
 #if defined(M3_TESTING)
+  // Configure only before first activation. This offline route is deliberately
+  // absent from plugin parameters/state and cannot change live note identities.
+  bool enable_stable_note_identity_for_test(bool enabled) noexcept {
+    if (active_ || processing_started_once_) return false;
+    test_note_identity_ = enabled ? NoteIdentityMode::stable_note
+                                  : NoteIdentityMode::physical_string;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    detector_.set_stable_note_identity_for_diagnostics(enabled);
+#endif
+    return true;
+  }
+  [[nodiscard]] std::uint64_t stable_note_transfers_for_test() const noexcept {
+    return generated_notes_.transferred_pairs();
+  }
   void set_dry_passthrough_for_test(bool enabled) noexcept {
     audio_requested_config_.dry_passthrough = enabled;
   }
@@ -243,6 +257,9 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   std::uint64_t corpus_detector_samples_{};
   std::uint64_t corpus_detector_transitions_{};
   std::uint64_t corpus_queue_rejections_{};
+#endif
+#if defined(M3_TESTING)
+  NoteIdentityMode test_note_identity_{NoteIdentityMode::physical_string};
 #endif
   bool initialized_{};
   bool setup_complete_{};

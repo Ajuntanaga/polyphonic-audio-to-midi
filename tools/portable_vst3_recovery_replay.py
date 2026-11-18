@@ -37,7 +37,7 @@ def identity(event):
     return event['channel'], event['note_id'], event['note']
 
 
-def assess(native, callbacks, *, clock, sample_bits):
+def assess(native, callbacks, *, clock, sample_bits, stable_note_identity=False):
     if (any(type(native.get(key)) is not int or native[key] < 0 for key in COUNTERS)
             or any(type(native.get(key)) is not bool for key in FLAGS)):
         raise ValueError('Incomplete recovery counters or flags')
@@ -47,6 +47,8 @@ def assess(native, callbacks, *, clock, sample_bits):
             or native['sample_bits'] != sample_bits or native['block_samples'] != 512
             or any(native[key] != value for key, value in clock.items())):
         raise ValueError('Recovery provenance differs')
+    if native.get('stable_note_identity', False) is not stable_note_identity:
+        raise ValueError('Recovery note identity differs')
     boundaries = native.get('boundaries')
     if (not isinstance(boundaries, list) or len(boundaries) != len(NAMES)
             or any(not isinstance(b, dict) or b.get('name') != name
@@ -54,6 +56,11 @@ def assess(native, callbacks, *, clock, sample_bits):
                    or any(type(b.get(key)) is not bool for key in ('output_blocked', 'panic_hold'))
                    for b, name in zip(boundaries, NAMES))):
         raise ValueError('Missing recovery stages or counters')
+    transfers = [b.get('transferred_pairs', 0) for b in boundaries]
+    if (any(type(value) is not int or value < 0 for value in transfers)
+            or any(a > b for a, b in zip(transfers, transfers[1:]))
+            or (not stable_note_identity and any(transfers))):
+        raise ValueError('Recovery transfer accounting differs')
     fault, cleanup, panic, ready, end = boundaries
     rejected = native.get('rejected_event', {})
     if (any(type(rejected.get(key)) is not int for key in ('sample', 'note', 'note_id', 'channel'))
@@ -104,12 +111,13 @@ def assess(native, callbacks, *, clock, sample_bits):
             and panic['event_add_attempts'] == cleanup['event_add_attempts'] == ready['event_add_attempts'],
         detector_waits_for_recovery=all(b['detector_samples'] == fault['detector_samples']
             and b['detector_transitions'] == fault['detector_transitions'] for b in (cleanup, panic, ready)),
+        no_transfers_while_recovering=all(value == transfers[0] for value in transfers[1:4]),
         full_recording_resumed=end['recording_samples'] == clock['sample_count']
             and end['timeline_samples'] == expected_timeline
             and fault['detector_samples'] == fault['recording_samples']
             and end['detector_samples'] == clock['sample_count']
             and end['detector_samples'] - ready['detector_samples'] == resumed_samples,
-        resumed_transitions_delivered=len(resumed_events) == resumed_transitions > 0
+        resumed_transitions_delivered=len(resumed_events) + 2 * (transfers[4] - transfers[3]) == resumed_transitions > 0
             and any(e['kind'] == 'on' for e in resumed_events),
         no_extra_output_faults=native['queue_rejections'] == 0 and native['process_failures'] == 0,
         calibration_restored=native['calibration_merge_matches'],
@@ -118,6 +126,7 @@ def assess(native, callbacks, *, clock, sample_bits):
         legal_callback_ownership=all(value == 0 for value in callbacks['counts'].values()))
     return dict(gates=gates, gate_pass=all(gates.values()),
         accepted_cleanup_note_offs=len(cleanup_events),
+        post_recovery_transferred_pairs=transfers[4] - transfers[3],
         owners_before_cleanup=len(held), post_recovery_detector_transitions=resumed_transitions,
         post_recovery_accepted_events=len(resumed_events),
         post_recovery_note_ons=sum(e['kind'] == 'on' for e in resumed_events),

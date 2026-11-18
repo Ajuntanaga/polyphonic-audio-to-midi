@@ -931,11 +931,16 @@ void M3Component::deliver_generated_notes(
     Steinberg::Vst::ProcessData& data, bool finite_input,
     bool supported_layout, double selected_peak) noexcept {
   Vst3EventSinkContext context{data.outputEvents};
+#if defined(M3_TESTING)
+  const NoteIdentityMode identity = test_note_identity_;
+#else
+  constexpr NoteIdentityMode identity = NoteIdentityMode::physical_string;
+#endif
   const NoteDeliveryResult result = generated_notes_.deliver_queued(
       static_cast<std::uint32_t>(data.numSamples),
       NoteEventSink{&context, &push_vst3_note}, selected_peak, finite_input,
       supported_layout, active_config_.midi_routing,
-      active_config_.midi_channel);
+      active_config_.midi_channel, identity);
   if (status_ == Status::unsupported_layout ||
       status_ == Status::invalid_input_or_state) {
     return;

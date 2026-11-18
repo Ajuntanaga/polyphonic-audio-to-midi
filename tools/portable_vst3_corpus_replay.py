@@ -98,7 +98,7 @@ def read_callbacks(path, *, sample_count, expected_count, include_events=False):
     return result
 
 
-def assess(native, callbacks, *, clock, sample_bits, trial):
+def assess(native, callbacks, *, clock, sample_bits, trial, stable_note_identity=False):
     if (any(type(native.get(key)) is not int or native[key] < 0 for key in COUNTERS)
             or any(type(native.get(key)) is not bool for key in FLAGS)):
         raise ValueError('Incomplete native counters or flags')
@@ -107,6 +107,11 @@ def assess(native, callbacks, *, clock, sample_bits, trial):
             or native['trial'] != trial or native['block_samples'] != 512
             or any(native[key] != value for key, value in clock.items())):
         raise ValueError('Native report provenance differs')
+    transfers = native.get('transferred_pairs', 0)
+    if (native.get('stable_note_identity', False) is not stable_note_identity
+            or type(transfers) is not int or transfers < 0
+            or (not stable_note_identity and transfers != 0)):
+        raise ValueError('Native note identity or transfer accounting differs')
     first = native.get('first_blocked_sample')
     blocked = native['output_blocked_blocks']
     if (native['processed_samples'] > clock['sample_count']
@@ -123,7 +128,7 @@ def assess(native, callbacks, *, clock, sample_bits, trial):
         full_audio_processed=native['processed_samples'] == clock['sample_count'] and native['process_failures'] == 0,
         full_detector_coverage=native['detector_samples'] == clock['sample_count'],
         no_output_faults=native['queue_rejections'] == 0 and blocked == 0 and not native['output_blocked_at_eof'],
-        all_transitions_delivered=native['accepted_events'] == native['detector_transitions'] > 0,
+        all_transitions_delivered=native['accepted_events'] + 2 * transfers == native['detector_transitions'] > 0,
         accepting_event_list=native['event_add_attempts'] == native['accepted_events'],
         calibration_restored=native['calibration_merge_matches'],
         dry_audio_preserved=native['dry_audio_mismatches'] == 0,

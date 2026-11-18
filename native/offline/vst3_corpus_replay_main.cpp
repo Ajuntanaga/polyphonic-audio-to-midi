@@ -42,7 +42,7 @@ struct Instance final {
 
   bool open(const m3::PersistentConfig& config,
             const m3::StringCalibrationBank& calibration, double sample_rate,
-            int sample_bits, std::uint32_t frames) {
+            int sample_bits, std::uint32_t frames, bool stable_note_identity) {
     factory = GetPluginFactory();
     if (factory == nullptr) return false;
     const auto& words = m3::vst3::kProbeClassIdWords;
@@ -55,6 +55,8 @@ struct Instance final {
         component->queryInterface(Steinberg::Vst::IAudioProcessor::iid,
             reinterpret_cast<void**>(&processor)) != Steinberg::kResultOk ||
         processor == nullptr) return false;
+    if (!static_cast<m3::vst3::M3Component*>(processor)->
+            enable_stable_note_identity_for_test(stable_note_identity)) return false;
     m3::test::FakeVst3Stream state;
     state.reset_output(8192);
     if (!m3::vst3::save_vst3_state_with_calibration(config, calibration, &state) ||
@@ -132,14 +134,14 @@ class RejectFirstOff final : public Steinberg::Vst::IEventList {
 
 struct RecoveryBoundary final {
   const char* name{};
-  std::uint64_t timeline{}, recording{}, detector{}, transitions{}, accepted{}, attempts{};
+  std::uint64_t timeline{}, recording{}, detector{}, transitions{}, accepted{}, attempts{}, transfers{};
   bool blocked{}, hold{};
 };
 
 template <typename Sample>
 int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
                     const m3::StringCalibrationBank& calibration,
-                    std::uint32_t block_size, const char* events_path) {
+                    std::uint32_t block_size, bool stable_note_identity, const char* events_path) {
   auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
   component->enable_corpus_ownership_trial(true);
   m3::CalibrationStateImage restored_image{}, expected_image{};
@@ -161,7 +163,8 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
   const auto boundary = [&](const char* name) {
     boundaries[boundary_count++] = RecoveryBoundary{name, timeline, recording,
         component->corpus_detector_samples(), component->corpus_detector_transitions(),
-        accepted, output.attempts, component->corpus_output_blocked(), component->corpus_panic_hold()};
+        accepted, output.attempts, component->stable_note_transfers_for_test(),
+        component->corpus_output_blocked(), component->corpus_panic_hold()};
   };
   const auto process = [&](bool silence, bool panic) {
     const auto frames = silence ? block_size : static_cast<std::uint32_t>(
@@ -243,6 +246,7 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
   const bool close_failed = std::fclose(events) != 0;
   std::printf("{\"schema\":\"m3_vst3_recovery_native_v1\","
       "\"scenario\":\"reject-off-panic\",\"trial\":true,\"routing\":\"per_voice\","
+      "\"stable_note_identity\":%s,"
       "\"sample_count\":%llu,\"sample_rate\":%u,\"sample_bits\":%zu,\"block_samples\":%u,"
       "\"queue_rejections\":%llu,\"output_blocked_blocks\":%llu,"
       "\"dry_audio_mismatches\":%llu,\"process_failures\":%llu,"
@@ -250,6 +254,7 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
       "\"calibration_merge_matches\":%s,\"invalid_event\":%s,\"trace_write_failed\":%s,"
       "\"rejected_event\":{\"sample\":%llu,\"note\":%d,\"note_id\":%d,\"channel\":%d},"
       "\"boundaries\":[",
+      stable_note_identity ? "true" : "false",
       static_cast<unsigned long long>(wave.mono_samples.size()), wave.sample_rate,
       sizeof(Sample) * 8U, block_size,
       static_cast<unsigned long long>(component->corpus_queue_rejections()),
@@ -264,11 +269,12 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
     const auto& value = boundaries[index];
     std::printf("%s{\"name\":\"%s\",\"timeline_samples\":%llu,\"recording_samples\":%llu,"
         "\"detector_samples\":%llu,\"detector_transitions\":%llu,"
-        "\"accepted_events\":%llu,\"event_add_attempts\":%llu,"
+        "\"accepted_events\":%llu,\"event_add_attempts\":%llu,\"transferred_pairs\":%llu,"
         "\"output_blocked\":%s,\"panic_hold\":%s}", index == 0 ? "" : ",", value.name,
         static_cast<unsigned long long>(value.timeline), static_cast<unsigned long long>(value.recording),
         static_cast<unsigned long long>(value.detector), static_cast<unsigned long long>(value.transitions),
         static_cast<unsigned long long>(value.accepted), static_cast<unsigned long long>(value.attempts),
+        static_cast<unsigned long long>(value.transfers),
         value.blocked ? "true" : "false", value.hold ? "true" : "false");
   }
   std::printf("]}\n");
@@ -279,7 +285,7 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
 template <typename Sample>
 int replay(Instance& instance, const m3::offline::WaveData& wave,
            const m3::StringCalibrationBank& calibration, std::uint32_t block_size,
-           bool trial, bool completion_midi_retention, const char* events_path) {
+           bool trial, bool completion_midi_retention, bool stable_note_identity, const char* events_path) {
   auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
   component->enable_corpus_ownership_trial(trial);
   component->enable_corpus_completion_midi_retention(completion_midi_retention);
@@ -348,7 +354,7 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
   std::printf("{\"schema\":\"m3_vst3_corpus_native_v1\","
       "\"sample_count\":%llu,\"sample_rate\":%u,\"sample_bits\":%zu,"
       "\"block_samples\":%u,\"trial\":%s,\"routing\":\"per_voice\","
-      "\"completion_midi_retention\":%s,"
+      "\"completion_midi_retention\":%s,\"stable_note_identity\":%s,\"transferred_pairs\":%llu,"
       "\"processed_samples\":%llu,\"blocks\":%llu,"
       "\"detector_samples\":%llu,\"detector_transitions\":%llu,"
       "\"queue_rejections\":%llu,\"event_add_attempts\":%llu,"
@@ -358,7 +364,8 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
       "\"invalid_event\":%s,\"trace_write_failed\":%s,\"first_blocked_sample\":",
       static_cast<unsigned long long>(wave.mono_samples.size()), wave.sample_rate,
       sizeof(Sample) * 8U, block_size, trial ? "true" : "false",
-      completion_midi_retention ? "true" : "false",
+      completion_midi_retention ? "true" : "false", stable_note_identity ? "true" : "false",
+      static_cast<unsigned long long>(component->stable_note_transfers_for_test()),
       static_cast<unsigned long long>(processed), static_cast<unsigned long long>(blocks),
       static_cast<unsigned long long>(component->corpus_detector_samples()),
       static_cast<unsigned long long>(component->corpus_detector_transitions()),
@@ -385,6 +392,7 @@ int main(int argc, char** argv) {
   int sample_bits = 0;
   bool trial = false, trial_given = false;
   bool completion_midi_retention = false;
+  bool stable_note_identity = false;
   bool recovery = false;
   constexpr std::uint32_t block_size = 512U;
   for (int index = 1; index < argc; index += 2) {
@@ -401,13 +409,17 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--completion-midi-retention") == 0 &&
                (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
       completion_midi_retention = std::strcmp(value, "1") == 0;
+    } else if (std::strcmp(argv[index], "--stable-note-identity") == 0 &&
+               (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
+      stable_note_identity = std::strcmp(value, "1") == 0;
     } else if (std::strcmp(argv[index], "--scenario") == 0 && std::strcmp(value, "reject-off-panic") == 0) {
       recovery = true;
     } else return 2;
   }
   if (wav_path == nullptr || calibration_path == nullptr || events_path == nullptr ||
       sample_bits == 0 || !trial_given) return 2;
-  if (recovery && !trial) return 2;
+  if ((recovery || stable_note_identity) && !trial) return 2;
+  if (stable_note_identity && completion_midi_retention) return 2;
   if (completion_midi_retention && (!trial || recovery)) return 2;
   std::vector<std::uint8_t> bytes;
   m3::offline::WaveData wave;
@@ -439,16 +451,16 @@ int main(int argc, char** argv) {
   config.max_fret = 24;
   config.dry_passthrough = true;
   Instance instance;
-  if (!instance.open(config, calibration, wave.sample_rate, sample_bits, block_size)) {
+  if (!instance.open(config, calibration, wave.sample_rate, sample_bits, block_size, stable_note_identity)) {
     std::fprintf(stderr, "VST3 component initialization or state restore failed.\n");
     return 2;
   }
   if (recovery) {
-    return sample_bits == 32 ? replay_recovery<float>(instance, wave, calibration, block_size, events_path)
-                            : replay_recovery<double>(instance, wave, calibration, block_size, events_path);
+    return sample_bits == 32 ? replay_recovery<float>(instance, wave, calibration, block_size, stable_note_identity, events_path)
+                            : replay_recovery<double>(instance, wave, calibration, block_size, stable_note_identity, events_path);
   }
   return sample_bits == 32 ? replay<float>(instance, wave, calibration, block_size,
-                                         trial, completion_midi_retention, events_path)
+                                         trial, completion_midi_retention, stable_note_identity, events_path)
                            : replay<double>(instance, wave, calibration, block_size,
-                                          trial, completion_midi_retention, events_path);
+                                          trial, completion_midi_retention, stable_note_identity, events_path);
 }
