@@ -10662,6 +10662,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
 #endif
 
   std::size_t selected_count = 0U;
+  std::size_t speculative_preview_count = 0U;
   std::uint8_t committed_selected_strings = 0U;
   std::array<std::uint8_t, kMaxVoices> committed_owner_counts{};
   // A coasting voice (active, unselected during its release hold) still owns
@@ -10715,7 +10716,12 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     // A preview owns no physical lane or committed polyphony capacity.
     if ((diagnostic_pending_string_reservation_ || diagnostic_forced_pending_string_reservation_ ||
         diagnostic_contradicted_retention_) &&
-        diagnostic_assignment_previews_[candidate]) continue;
+        diagnostic_assignment_previews_[candidate]) {
+      // Releasing a tentative physical lane must not fund profile-only
+      // additions. Independently resolved groups retain the physical budget.
+      if (diagnostic_contradicted_retention_) ++speculative_preview_count;
+      continue;
+    }
 #endif
     ++selected_count;
     const std::uint8_t primary = candidate_state.assigned_string;
@@ -10842,6 +10848,11 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     const std::size_t candidate_extra_capacity =
         std::min<std::size_t>(3U,
                               remaining_extra + committed_extra_count);
+    const std::size_t profile_remaining_extra =
+        remaining_extra > speculative_preview_count
+            ? remaining_extra - speculative_preview_count : 0U;
+    const std::size_t profile_extra_capacity = std::min<std::size_t>(
+        3U, profile_remaining_extra + committed_extra_count);
     std::uint8_t other_owned_strings = coasting_strings;
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
@@ -11019,7 +11030,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
     }
 
     if (!temporal_group_selected && state.age_ticks >= profile_ready_ticks &&
-        candidate_extra_capacity > 0U) {
+        profile_extra_capacity > 0U) {
       const std::uint16_t long_profile_ready_ticks =
           static_cast<std::uint16_t>(std::clamp(
               std::ceil(kLongHarmonicProfileReadySeconds * sample_rate_ /
@@ -11220,7 +11231,7 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
           // rescales all retained weights, so every accepted member remains
           // physically present and no pairwise-only assumption survives.
           for (std::size_t extra_count = 0U;
-               extra_count < candidate_extra_capacity; ++extra_count) {
+               extra_count < profile_extra_capacity; ++extra_count) {
             std::uint8_t best_string = kUnassignedTunerString;
             double best_alpha = 0.0;
             double best_error = current_error;
@@ -11402,8 +11413,8 @@ void PolyphonicPitchDetector::infer_m3_unison_strings(
               // collapse and a real minimum weight for every member.
               bool accepted_complement = false;
               const std::size_t available_slots =
-                  candidate_extra_capacity > extra_count
-                      ? candidate_extra_capacity - extra_count
+                  profile_extra_capacity > extra_count
+                      ? profile_extra_capacity - extra_count
                       : 0U;
               if (beat_evidence_states_[candidate].valid &&
                   available_slots >= (extra_count == 0U ? 3U : 2U)) {

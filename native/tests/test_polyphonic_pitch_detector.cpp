@@ -4261,7 +4261,8 @@ struct PolyphonicPitchDetectorTestAccess final {
       std::uint8_t max_polyphony, std::uint16_t observation_updates,
       bool beat_valid = false, std::uint8_t fine_mask = 0U,
       const std::array<double, kCalibrationHarmonicCount>* long_profile = nullptr,
-      const std::array<double, kCalibrationHarmonicCount>* current_profile = nullptr) noexcept {
+      const std::array<double, kCalibrationHarmonicCount>* current_profile = nullptr,
+      bool pending_preview = false) noexcept {
     detector.max_polyphony_ = max_polyphony;
     detector.fast_energy_ = 1.0;
     detector.candidate_states_ = {};
@@ -4292,6 +4293,17 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.harmonic_memory_updates_[candidate] = observation_updates;
     std::array<bool, kMaxCandidates> selected{};
     selected[candidate] = true;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    detector.diagnostic_contradicted_retention_ = pending_preview;
+    detector.diagnostic_assignment_previews_.fill(false);
+    if (pending_preview) {
+      const std::size_t preview = candidate == 0U ? 1U : 0U;
+      selected[preview] = true;
+      detector.diagnostic_assignment_previews_[preview] = true;
+    }
+#else
+    (void)pending_preview;
+#endif
     for (std::uint8_t decision = 0U; decision < 16U; ++decision) {
       detector.infer_m3_unison_strings(selected);
     }
@@ -12458,6 +12470,29 @@ void configure_calibrated_high_unison(
 }  // namespace
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_preview_capacity_limits_only_profile_admission) {
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  constexpr std::size_t candidate = kSharedUnisonNote - 32U;
+  constexpr std::uint8_t pair = (1U << kSharedUnisonPrimary) |
+      (1U << kSharedUnisonSecond);
+  m3::PolyphonicPitchDetector detector;
+  configure_calibrated_unison(detector);
+  const auto* first = detector.calibration_bank().point(kSharedUnisonPrimary, 0U);
+  const auto* second = detector.calibration_bank().point(kSharedUnisonSecond, 16U);
+  std::array<double, m3::kCalibrationHarmonicCount> observed{};
+  for (std::size_t h = 0U; h < observed.size(); ++h)
+    observed[h] = 0.5 * (first->harmonic_profile_q15[h] + second->harmonic_profile_q15[h]);
+  const auto allocations = m3::test::allocation_count();
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 2U, 1000U), pair);
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 2U, 1000U, false, 0U, nullptr, nullptr, true),
+      static_cast<std::uint8_t>(1U << kSharedUnisonPrimary));
+  M3_EXPECT_EQ(Access::profile_only_group_mask(detector, candidate,
+      kSharedUnisonPrimary, observed, 2U, 1000U, false, pair, nullptr, nullptr, true), pair);
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+}
+
 M3_TEST(native_detector_profile_fit_trace_is_normalized_and_observational) {
   using Access = m3::PolyphonicPitchDetectorTestAccess;
   constexpr std::size_t kCandidate = kSharedUnisonNote - 32U;
@@ -14431,7 +14466,7 @@ M3_TEST(native_detector_pending_string_reservation_forced_preserves_other_assign
 
 M3_TEST(native_detector_unsupported_pending_preserves_owner_without_freezing_attack) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  for (unsigned scenario : {0U, 1U, 2U, 3U, 4U, 5U, 6U, 9U, 10U, 11U, 12U, 13U, 14U, 15U, 16U}) {
+  for (unsigned scenario : {0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 9U, 10U, 11U, 12U, 13U, 14U, 15U, 16U}) {
     m3::PolyphonicPitchDetector off, on;
     const auto baseline =
         m3::PolyphonicPitchDetectorTestAccess::pending_string_reservation_probe(
@@ -14441,7 +14476,7 @@ M3_TEST(native_detector_unsupported_pending_preserves_owner_without_freezing_att
             on, true, scenario, true, true);
     // Supported candidates (15) and an attack already underway (16) must
     // participate normally, as must ready/group/atomic and invalid owners.
-    M3_EXPECT_EQ(result, scenario == 0U ? 0U : baseline);
+    M3_EXPECT_EQ(result, (scenario == 0U || scenario == 7U) ? 0U : baseline);
   }
 #endif
 }
