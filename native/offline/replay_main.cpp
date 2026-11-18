@@ -170,6 +170,7 @@ void usage(const char* program) {
       "--partial-motion-start SECONDS --partial-motion-end SECONDS] "
       "[--midi-event-trace FILE] [--diagnostic-stable-note-identity] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-direct-evidence-retention] "
+      "[--diagnostic-contradicted-retention] "
       "[--diagnostic-persistent-candidate-admission] "
       "[--diagnostic-supported-sustain-renewal] "
       "[--diagnostic-local-onset-evidence] "
@@ -302,6 +303,7 @@ int main(int argc, char** argv) {
   bool diagnostic_calibrated_harmonic_admission_guard = false;
   bool diagnostic_fundamental_admission = false;
   bool diagnostic_direct_evidence_retention = false;
+  bool diagnostic_contradicted_retention = false;
   bool diagnostic_persistent_candidate_admission = false;
   bool diagnostic_supported_sustain_renewal = false;
   bool diagnostic_local_onset_evidence = false;
@@ -635,6 +637,8 @@ int main(int argc, char** argv) {
       diagnostic_calibrated_harmonic_admission_guard = true;
     } else if (std::strcmp(argv[index], "--diagnostic-fundamental-admission") == 0) {
       diagnostic_fundamental_admission = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-contradicted-retention") == 0) {
+      diagnostic_contradicted_retention = true;
     } else if (std::strcmp(argv[index], "--diagnostic-persistent-candidate-admission") == 0) {
       diagnostic_persistent_candidate_admission = true;
     } else if (std::strcmp(argv[index], "--diagnostic-supported-sustain-renewal") == 0) {
@@ -1304,7 +1308,8 @@ int main(int argc, char** argv) {
           diagnostic_energy_weighted_descriptor,
           diagnostic_common_detuning_support, diagnostic_local_onset_evidence,
           diagnostic_supported_sustain_renewal,
-          diagnostic_persistent_candidate_admission)) {
+          diagnostic_persistent_candidate_admission,
+          diagnostic_contradicted_retention)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

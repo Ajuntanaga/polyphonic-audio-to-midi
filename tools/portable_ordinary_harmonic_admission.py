@@ -181,7 +181,12 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False, persistent_candidate_admission=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False, persistent_candidate_admission=False, contradicted_retention=False):
+    if contradicted_retention and any((persistent_candidate_admission, supported_sustain_renewal,
+            local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
+            joint_rescue_eligibility, pending_string_posterior, posterior_loss_diagnostic,
+            energy_weighted_descriptor, common_detuning_support, assignment_diagnostic)):
+        raise ValueError("Contradicted retention trial must be isolated")
     if persistent_candidate_admission and any((supported_sustain_renewal,
             local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
             joint_rescue_eligibility, pending_string_posterior, posterior_loss_diagnostic,
@@ -219,7 +224,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=PERSISTENCE_TARGET if persistent_candidate_admission else (SUSTAIN_TARGET if supported_sustain_renewal else (LOCAL_ONSET_TARGET if local_onset_evidence else TARGET)),
+        target=PERSISTENCE_TARGET if (persistent_candidate_admission or contradicted_retention) else (SUSTAIN_TARGET if supported_sustain_renewal else (LOCAL_ONSET_TARGET if local_onset_evidence else TARGET)),
+        contradicted_retention=contradicted_retention,
         persistent_candidate_admission=persistent_candidate_admission,
         supported_sustain_renewal=supported_sustain_renewal,
         local_onset_evidence=local_onset_evidence, common_detuning_support=common_detuning_support, energy_weighted_descriptor=energy_weighted_descriptor, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
@@ -269,6 +275,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                       (TRIAL, (COLLISION, '--diagnostic-persistent-candidate-admission')))
         report['limitations'] = ('Native offline admission policy; added onset delay is possible. '
                                 'Timing, allocations, full corpus and live host acceptance remain unmeasured.')
+    if contradicted_retention:
+        conditions = ((OFF, ()), (CURRENT, (COLLISION,)),
+                      (TRIAL, (COLLISION, '--diagnostic-contradicted-retention')))
+        report['limitations'] = ('Offline provisional retention diagnostic. Timing, allocations, '
+                                'full corpus and live host acceptance remain unmeasured.')
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
     def save():
@@ -322,7 +333,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     row['outcome_sha256'] == references['current_outcome_sha256'])
                 if not row['saved_outcome_bit_identical']:
                     raise ValueError('Saved current outcome identity drift')
-                if not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission):
+                if not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or contradicted_retention):
                     report.update(stage='generate past-only frozen-shadow cues')
                     save()
                     started = time.monotonic()
@@ -350,7 +361,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
                     start=start, end=end, prefix='sustain-assignment-' + str(label))
                 save()
-        if assignment_diagnostic and not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission):
+        if assignment_diagnostic and not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or contradicted_retention):
             # Observation only: replay identical cues, then compare complete output
             # and raw MIDI before retaining the bounded assignment evidence.
             report.update(stage='trace experimental initial assignment',
@@ -412,7 +423,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             'saved_reference_bit_identical', False) for mode in REFERENCE_FLAGS) and bool(
                 report['runs'].get(CURRENT, {}).get('saved_outcome_bit_identical', False))
         report['bounded_screen_pass'] = bool(report['state'] == 'completed'
-            and report['reference_identity_pass'] and (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or
+            and report['reference_identity_pass'] and (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or contradicted_retention or
                 report.get('cue_generation', {}).get('complete')))
         report['decision'] = ('offline screen passed; corpus timing and live acceptance remain'
             if report['bounded_screen_pass'] else 'rejected or incomplete; do not widen this policy')
@@ -443,6 +454,7 @@ def main():
     parser.add_argument('--common-detuning-support', action='store_true')
     parser.add_argument('--local-onset-evidence', action='store_true')
     parser.add_argument('--supported-sustain-renewal', action='store_true')
+    parser.add_argument('--contradicted-retention', action='store_true')
     parser.add_argument('--persistent-candidate-admission', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
@@ -457,7 +469,8 @@ def main():
         common_detuning_support=args.common_detuning_support,
         local_onset_evidence=args.local_onset_evidence,
         supported_sustain_renewal=args.supported_sustain_renewal,
-        persistent_candidate_admission=args.persistent_candidate_admission)
+        persistent_candidate_admission=args.persistent_candidate_admission,
+        contradicted_retention=args.contradicted_retention)
 
 
 if __name__ == '__main__':

@@ -2936,11 +2936,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_common_detuning_support,
                          bool diagnostic_local_onset_evidence,
                          bool diagnostic_supported_sustain_renewal,
-                         bool diagnostic_persistent_candidate_admission) {
+                         bool diagnostic_persistent_candidate_admission,
+                         bool diagnostic_contradicted_retention) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3259,6 +3260,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_harmonic_admission_guard);
   detector.set_fundamental_admission_for_diagnostics(
       diagnostic_fundamental_admission);
+  detector.set_contradicted_retention_for_diagnostics(diagnostic_contradicted_retention);
   detector.set_persistent_candidate_admission_for_diagnostics(
       diagnostic_persistent_candidate_admission);
   detector.set_supported_sustain_renewal_for_diagnostics(
@@ -3324,7 +3326,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_calibrated_harmonic_admission_guard ||
       diagnostic_fundamental_admission || diagnostic_odd_partial_cues != nullptr ||
       diagnostic_cue_free_lane_reassignment || diagnostic_direct_evidence_retention ||
-      diagnostic_persistent_candidate_admission ||
+      diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission ||
       diagnostic_local_onset_evidence || diagnostic_supported_sustain_renewal ||
       diagnostic_projection_preview_admission ||
       diagnostic_provisional_open_retention_guard || diagnostic_residual_pitch_recovery ||

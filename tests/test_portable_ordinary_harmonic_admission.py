@@ -13,7 +13,7 @@ from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
-    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False):
+    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, contradicted_retention=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             corpus = root / 'corpus'
@@ -29,7 +29,7 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                           original_input_manifest_sha256='manifest')
             manifest = root / 'manifest.json'
             manifest.write_text(json.dumps(dict(source=source, files=inputs)))
-            labels = [dict(trial.LOCAL_ONSET_TARGET if local_onset_evidence else trial.TARGET, calibration_pass=0, labeled=10, matched=0),
+            labels = [dict(trial.PERSISTENCE_TARGET if contradicted_retention else (trial.LOCAL_ONSET_TARGET if local_onset_evidence else trial.TARGET), calibration_pass=0, labeled=10, matched=0),
                       dict(label_index=11, midi_note=47, string_mask=2,
                            start_sample=163306, end_sample=235200,
                            calibration_pass=0, labeled=10, matched=6)]
@@ -102,10 +102,10 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                 self.assertEqual('--outcome-trace' in command, mode == trial.CURRENT)
                 self.assertNotIn('--diagnostic-core-timing', command)
                 self.assertEqual(trial.COLLISION in command, mode != trial.OFF)
-                self.assertEqual('--candidate-rescue-harmonic-cues' in command, mode == trial.TRIAL and not local_onset_evidence)
+                self.assertEqual('--candidate-rescue-harmonic-cues' in command, mode == trial.TRIAL and not (local_onset_evidence or contradicted_retention))
                 self.assertEqual('--diagnostic-local-onset-evidence' in command,
                                  mode == trial.TRIAL and local_onset_evidence)
-                if mode == trial.TRIAL and not local_onset_evidence:
+                if mode == trial.TRIAL and not (local_onset_evidence or contradicted_retention):
                     self.assertEqual(len(generated), 1)
                     cue = Path(command[command.index('--candidate-rescue-harmonic-cues') + 1])
                     self.assertTrue(cue.exists())
@@ -141,9 +141,9 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                   patch.object(trial, 'compress_trace_window', side_effect=compress)):
                 if drift or failure:
                     with self.assertRaises((ValueError, TimeoutError, subprocess.CalledProcessError)):
-                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence)
+                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention)
                 else:
-                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence)
+                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
@@ -178,6 +178,23 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
             with self.subTest(kind=kind):
                 report, _, _ = self.exercise(local_onset_evidence=True, change=lose)
                 self.assertFalse(report['bounded_screen_pass'])
+
+    def test_contradicted_retention_isolated_and_passage_loss_rejected(self):
+        report, commands, generated = self.exercise(contradicted_retention=True)
+        self.assertEqual(generated, [])
+        self.assertEqual(report['target'], trial.PERSISTENCE_TARGET)
+        self.assertEqual(report['conditions'][trial.TRIAL],
+                         [trial.COLLISION, '--diagnostic-contradicted-retention'])
+        self.assertEqual(['--diagnostic-contradicted-retention' in c for c in commands],
+                         [False, False, True])
+        def lose(kind, row):
+            if kind == 'snapshot':
+                row['labels'][1]['matched'] -= 1
+        report, _, _ = self.exercise(contradicted_retention=True, change=lose)
+        self.assertFalse(report['bounded_screen_pass'])
+        with self.assertRaisesRegex(ValueError, 'must be isolated'):
+            trial.run(None, None, None, None, None,
+                      contradicted_retention=True, persistent_candidate_admission=True)
 
     def test_common_detuning_support_applies_only_to_trial(self):
         report, commands, _ = self.exercise(common_detuning_support=True)

@@ -7368,10 +7368,35 @@ void PolyphonicPitchDetector::assign_m3_strings(
             has_learned_profile[string] &&
             best_learned_similarity - learned_similarities[string] >=
                 kM3CalibratedCandidateMinimumAdvantage;
+        bool contradicted_provisional_lane = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        const auto& state = candidate_states_[candidate];
+        const auto posterior_best = string_fret_posteriors_.best_string(candidate);
+        // Use this decision's proposal, not the previous render's cached mask.
+        // Keep physical multi-source evidence and committed assignments intact.
+        contradicted_provisional_lane =
+            diagnostic_contradicted_retention_ && !fixed_context &&
+            posterior_available && !state.calibrated_lane_committed &&
+            string_count(state.assigned_string_mask) == 1U &&
+            string_count(state.pending_unison_mask) <= 1U &&
+            string_count(state.continuity_cached_group_mask) <= 1U &&
+            string_count(selector_group_masks_[candidate]) <= 1U &&
+            !beat_evidence_states_[candidate].valid &&
+            !fine.multi_source_observed && string_count(fine.member_mask) <= 1U &&
+            string_count(fine.pending_member_mask) <= 1U &&
+            posterior_best < kMaxVoices &&
+            spectral_lane == static_cast<std::uint8_t>(1U << posterior_best) &&
+            (spectral_lane & playable) != 0U && spectral_lane != bit &&
+            string_fret_posteriors_.probability(candidate, posterior_best) >= 0.95 &&
+            has_learned_profile[string] &&
+            learned_similarities[posterior_best] - learned_similarities[string] >=
+                kM3CalibratedCandidateMinimumAdvantage;
+#endif
         const bool settled_tuner_lane =
             candidate_states_[candidate].age_ticks >= stable_tuner_ticks &&
             !contradicted_by_fine_evidence &&
             !contradicted_by_calibrated_profile &&
+            !contradicted_provisional_lane &&
             !contradicted_by_calibrated_cents;
         // Fresh notes may correct a provisional lane as evidence settles.
         cost.retention_bonus = settled_tuner_lane
