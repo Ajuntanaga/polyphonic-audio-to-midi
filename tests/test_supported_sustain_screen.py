@@ -29,7 +29,7 @@ class SupportedSustainScreenTests(unittest.TestCase):
             t.run(None, None, None, None, None,
                   supported_sustain_renewal=True, local_onset_evidence=True)
 
-    def test_cue_assignment_trace_cannot_be_combined(self):
+    def test_rescue_assignment_policy_cannot_be_combined(self):
         with self.assertRaisesRegex(ValueError, 'must be isolated'):
             t.run(None, None, None, None, None,
-                  supported_sustain_renewal=True, assignment_diagnostic=True)
+                  supported_sustain_renewal=True, calibrated_assignment_prior=True)

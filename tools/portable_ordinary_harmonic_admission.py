@@ -139,20 +139,22 @@ def trace_posterior_losses(binary, corpus, output, flags, trial_replay, trial_mi
     return result
 
 
-def trace_local_onset_assignments(binary, corpus, output, conditions, cached, runs, deadline):
-    """Observe both policies around label252; require full replay/MIDI parity."""
+def trace_local_onset_assignments(binary, corpus, output, conditions, cached, runs, deadline,
+                                  start=47.5, end=48.5, prefix="assignment"):
+    """Observe both policies in a bounded window; require full replay/MIDI parity."""
+    start_sample, end_sample = round(start * 96000), round(end * 96000)
     result = {}
     for mode, flags in conditions:
         if mode == OFF:
             continue
-        stem = output / ('assignment-' + mode)
+        stem = output / (prefix + '-' + mode)
         tsv = stem.with_suffix('.tsv')
         midi = output / (stem.name + '-midi.tsv')
         costs = output / (stem.name + '-costs.tsv')
         command = command_for(binary, corpus, 'ordinary', 'off', 512, None, midi_trace=midi)
         command.extend(flags)
         command.extend(('--assignment-trace', str(costs),
-                        '--assignment-trace-start', '47.5', '--assignment-trace-end', '48.5'))
+                        '--assignment-trace-start', str(start), '--assignment-trace-end', str(end)))
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Local onset assignment diagnostic budget exhausted')
@@ -165,15 +167,15 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
                 or not identical):
             raise ValueError('Local onset assignment tracing changed output: ' + mode)
         result[mode] = dict(command=command, comparison=comparison,
-            midi_bit_identical=identical, start_sample=4560000, end_sample=4656000,
-            trace=compress_trace_window(costs, start=4560000, end=4656000))
+            midi_bit_identical=identical, start_sample=start_sample, end_sample=end_sample,
+            trace=compress_trace_window(costs, start=start_sample, end=end_sample))
         costs.unlink()
         midi.unlink()
     return result
 
 
 def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False):
-    if supported_sustain_renewal and any((local_onset_evidence, assignment_diagnostic,
+    if supported_sustain_renewal and any((local_onset_evidence,
             fundamental_veto_check, calibrated_assignment_prior, joint_rescue_eligibility,
             pending_string_posterior, posterior_loss_diagnostic, energy_weighted_descriptor,
             common_detuning_support)):
@@ -321,7 +323,16 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             report['local_onset_assignment_diagnostic'] = trace_local_onset_assignments(
                 binary, corpus, output, conditions, cached, report['runs'], deadline)
             save()
-        if assignment_diagnostic and not local_onset_evidence:
+        if assignment_diagnostic and supported_sustain_renewal:
+            report.update(stage='paired supported sustain assignment trace')
+            save()
+            report['supported_sustain_assignment_diagnostic'] = {}
+            for label, start, end in ((252, 47.5, 48.5), (306, 58.6, 59.5)):
+                report['supported_sustain_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
+                    binary, corpus, output, conditions, cached, report['runs'], deadline,
+                    start=start, end=end, prefix='sustain-assignment-' + str(label))
+                save()
+        if assignment_diagnostic and not (local_onset_evidence or supported_sustain_renewal):
             # Observation only: replay identical cues, then compare complete output
             # and raw MIDI before retaining the bounded assignment evidence.
             report.update(stage='trace experimental initial assignment',
