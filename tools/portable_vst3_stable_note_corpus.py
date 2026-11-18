@@ -23,8 +23,9 @@ def read_labels(path, samples):
     for index, row in enumerate(rows):
         label = {key: int(row[key]) for key in ('start_sample', 'end_sample', 'midi_note', 'string_mask')}
         if not (0 <= label['start_sample'] < label['end_sample'] <= samples
-                and 0 <= label['midi_note'] <= 127 and 0 < label['string_mask'] < 256):
-            raise ValueError('Invalid annotation bounds or pitch/string identity')
+                and 0 <= label['midi_note'] <= 127 and 0 <= label['string_mask'] < 256):
+            raise ValueError(f'{path}: row {index + 2}: invalid annotation bounds or pitch/string identity: {label}')
+        # Zero means unknown string identity; pitch-level comparisons remain valid.
         labels.append(dict(label_index=index, **label))
     if not labels:
         raise ValueError('Empty annotation set')
@@ -58,12 +59,19 @@ def run(args):
 
     save()
     try:
+        inputs = {}
         for dataset in DATASETS:
+            report['stage'] = dataset + '/annotation-preflight'
+            save()
             clock = {key: reference['datasets'][dataset]['current-on'][key]
                      for key in ('sample_count', 'sample_rate')}
             if clock['sample_rate'] != 96000 or type(clock['sample_count']) is not int or clock['sample_count'] <= 0:
                 raise ValueError('Invalid fixed-budget recording clock')
             labels = read_labels(args.corpus / (dataset + '.tsv'), clock['sample_count'])
+            inputs[dataset] = (clock, labels)
+        report['annotation_preflight_passed'] = True
+        save()
+        for dataset, (clock, labels) in inputs.items():
             row = dict(clock=clock, runs={}, comparisons={})
             report['datasets'][dataset] = row
             canonical = {}

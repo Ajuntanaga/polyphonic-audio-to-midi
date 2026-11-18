@@ -11,13 +11,20 @@ from tests.test_portable_vst3_corpus_replay import HEADER
 
 
 class CorpusRunnerTests(unittest.TestCase):
-    def exercise(self, fail_timing=False):
+    def exercise(self, fail_timing=False, invalid_second=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'fixture.tsv').write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n0\t80\t60\t1\n')
             (root / 'manifest.json').write_text(json.dumps({'source': {'commit': 'a'*40}}))
             (root / 'reference.json').write_text(json.dumps({'datasets': {'fixture': {'current-on': {
                 'sample_count': 100, 'sample_rate': 96000}}}}))
+            datasets = {'fixture': {}}
+            if invalid_second:
+                datasets['bad'] = {}
+                reference = json.loads((root/'reference.json').read_text())
+                reference['datasets']['bad'] = reference['datasets']['fixture']
+                (root/'reference.json').write_text(json.dumps(reference))
+                (root/'bad.tsv').write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n0\t101\t60\t1\n')
             binary = root / 'binary'
             binary.write_bytes(b'fixture only')
             args = SimpleNamespace(binary=binary, corpus=root, manifest=root/'manifest.json',
@@ -43,9 +50,17 @@ class CorpusRunnerTests(unittest.TestCase):
                         cpp_allocations=0, cpp_frees=0, c_allocations=0, c_frees=0)
                 stdout.write(json.dumps(data))
                 return SimpleNamespace(returncode=0)
-            with patch.object(runner, 'DATASETS', {'fixture': {}}), patch.object(runner, 'verify_references', return_value=4), \
+            with patch.object(runner, 'DATASETS', datasets), patch.object(runner, 'verify_references', return_value=4), \
                     patch.object(runner.subprocess, 'check_output', return_value='a'*40+'\n'), \
                     patch.object(runner.subprocess, 'run', side_effect=native) as process:
+                if invalid_second:
+                    with self.assertRaisesRegex(ValueError, 'bad.tsv: row 2'):
+                        runner.run(args)
+                    process.assert_not_called()
+                    report = json.loads((args.output/'report.json').read_text())
+                    self.assertEqual(report['stage'], 'bad/annotation-preflight')
+                    self.assertEqual(report['state'], 'error')
+                    return
                 result = runner.run(args)
             self.assertEqual(process.call_count, 16)
             self.assertEqual(json.loads((args.output/'report.json').read_text()), result)
@@ -64,3 +79,17 @@ class CorpusRunnerTests(unittest.TestCase):
             path.write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n0\t101\t60\t1\n')
             with self.assertRaises(ValueError):
                 runner.read_labels(path, 100)
+
+    def test_all_annotations_checked_before_native_processing(self):
+        self.exercise(invalid_second=True)
+
+    def test_unknown_string_pitch_label_is_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'labels.tsv'
+            path.write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n0\t80\t48\t0\n')
+            self.assertEqual(runner.read_labels(path, 100), [dict(
+                label_index=0, start_sample=0, end_sample=80, midi_note=48, string_mask=0)])
+            for mask in (-1, 256):
+                path.write_text(f'start_sample\tend_sample\tmidi_note\tstring_mask\n0\t80\t48\t{mask}\n')
+                with self.assertRaisesRegex(ValueError, 'row 2'):
+                    runner.read_labels(path, 100)
