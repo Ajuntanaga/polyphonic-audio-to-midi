@@ -6911,6 +6911,22 @@ void PolyphonicPitchDetector::assign_m3_strings(
             transient_strength *
                 settled_comparison.combined_log_likelihood();
         descriptor_sum += descriptor_log_likelihoods[string];
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+        if (assignment_diagnostics_enabled_) {
+          auto& observation = assignment_diagnostics_[candidate];
+          observation.posterior_transient_strength = transient_strength;
+          const std::array<double, 6U> components{
+              fast_comparison.lower_log_likelihood,
+              fast_comparison.upper_log_likelihood,
+              fast_comparison.balance_log_likelihood,
+              settled_comparison.lower_log_likelihood,
+              settled_comparison.upper_log_likelihood,
+              settled_comparison.balance_log_likelihood};
+          for (std::size_t component = 0U; component < components.size(); ++component)
+            observation.posterior_descriptor_components[component][string] =
+                components[component];
+        }
+#endif
       }
       const PartialDetuningEvidence observed_detuning =
           partial_detuning_trackers_[candidate].evidence();

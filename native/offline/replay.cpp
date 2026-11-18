@@ -735,6 +735,12 @@ void write_string_assignment_frame(
     for (std::size_t string = 0U; string < kMaxVoices; ++string)
       std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",",
                    a.posterior_detuning_log_likelihood[string]);
+    std::fprintf(trace.stream, "\t%.17g", a.posterior_transient_strength);
+    for (const auto& values : a.posterior_descriptor_components) {
+      std::fputc('\t', trace.stream);
+      for (std::size_t string = 0U; string < kMaxVoices; ++string)
+        std::fprintf(trace.stream, "%s%.17g", string == 0U ? "" : ",", values[string]);
+    }
     for (const unsigned field : {unsigned(a.cue_evaluated),
              unsigned(a.cue_protected_group), unsigned(a.cue_occupied_mask),
              unsigned(a.cue_calibrated_mask), unsigned(a.cue_primary_mask),
@@ -3071,6 +3077,9 @@ bool run_detector_replay(const WaveData& wave,
         "posterior_observation_available\tposterior_updated\tposterior_onset_strength\t"
         "posterior_log_likelihood\tposterior_prior\tposterior_probability\t"
         "posterior_detuning_valid_mask\tposterior_detuning_log_likelihood\t"
+        "posterior_transient_strength\tposterior_fast_lower\tposterior_fast_upper\t"
+        "posterior_fast_balance\tposterior_settled_lower\tposterior_settled_upper\t"
+        "posterior_settled_balance\t"
         "cue_evaluated\tcue_protected_group\tcue_occupied_mask\tcue_calibrated_mask\t"
         "cue_primary_mask\tcue_proposal_mask\tcue_applied\tcue_tuning_valid\t"
         "cue_assignment_cents\tcue_similarities\tcue_cents_errors\t"

@@ -512,6 +512,9 @@ struct StringAssignmentDiagnostics final {
   // A valid comparison can contribute zero; keep availability separate.
   std::uint8_t posterior_detuning_valid_mask{};
   std::array<double, kMaxVoices> posterior_detuning_log_likelihood{};
+  // Raw descriptor components before centering/weighting; fast and settled.
+  double posterior_transient_strength{};
+  std::array<std::array<double, kMaxVoices>, 6U> posterior_descriptor_components{};
   // Exact inputs after the current phase update, at the optional cue decision.
   // Admission snapshots precede that update and can use different energies.
   bool cue_evaluated{};
