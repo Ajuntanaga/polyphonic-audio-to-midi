@@ -28,7 +28,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.set_persistent_candidate_admission_for_diagnostics(true);
     detector.candidate_states_[0U].active = true;
     const auto required = detector.candidate_evidence_decisions(false);
-    std::array<bool, PolyphonicPitchDetector::kMaxCandidates> eligible{};
+    std::array<bool, kMaxCandidates> eligible{};
     const auto tick = [&](bool supported, bool expected) {
       ++detector.decision_counter_;
       eligible[0U] = true;
