@@ -7026,6 +7026,28 @@ void PolyphonicPitchDetector::assign_m3_strings(
       distinctive_cents_override =
           profile_distance >= kM3DistinctiveCalibrationProfileDistance;
     }
+    const FineFrequencyEvidenceState& fine =
+        fine_frequency_evidence_states_[candidate];
+    const bool fine_has_multiple_members =
+        fine.member_mask != 0U &&
+        (fine.member_mask &
+         static_cast<std::uint8_t>(fine.member_mask - 1U)) != 0U;
+    const bool physical_unison_resolved =
+        fine.valid && fine.multi_source_observed && fine_has_multiple_members;
+    bool pending_posterior_ready = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    const auto& pending_identity = candidate_states_[candidate];
+    pending_posterior_ready = diagnostic_pending_string_posterior_ &&
+        !pending_identity.active && pending_identity.attack_ticks > 0U &&
+        pending_identity.midi_voice_mask == 0U &&
+        !selector_atomic_handoff_targets_[candidate] &&
+        string_count(pending_identity.assigned_string_mask) <= 1U &&
+        string_count(pending_identity.pending_unison_mask) <= 1U &&
+        string_count(pending_identity.continuity_cached_group_mask) <= 1U &&
+        string_count(selector_group_masks_[candidate]) <= 1U &&
+        !fine.multi_source_observed && string_count(fine.member_mask) <= 1U &&
+        string_count(fine.pending_member_mask) <= 1U;
+#endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     if (!fixed_context) {
 #endif
@@ -7039,8 +7061,12 @@ void PolyphonicPitchDetector::assign_m3_strings(
                                previous_energy,
                            0.0, 1.0)
               : 1.0;
+      // A continuing pending attack already has temporal evidence. Reusing
+      // onset=1 on every pending tick erases the predicted string prior.
+      // Keep genuine energy-rise resets and the first-attack uniform prior.
       posterior_frame.onset_strength =
-          candidate_states_[candidate].active
+          (candidate_states_[candidate].active ||
+           (pending_posterior_ready && previous_energy > kScoreEpsilon))
               ? energy_rise * (0.5 + 0.5 * transient_strength)
               : 1.0;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -7117,28 +7143,6 @@ void PolyphonicPitchDetector::assign_m3_strings(
     // retain each addition/subtraction separately so accumulation and tie
     // breaking have the same order as the uncached assignment.
     std::array<LaneCost, kMaxVoices> lane_costs{};
-    const FineFrequencyEvidenceState& fine =
-        fine_frequency_evidence_states_[candidate];
-    const bool fine_has_multiple_members =
-        fine.member_mask != 0U &&
-        (fine.member_mask &
-         static_cast<std::uint8_t>(fine.member_mask - 1U)) != 0U;
-    const bool physical_unison_resolved =
-        fine.valid && fine.multi_source_observed && fine_has_multiple_members;
-    bool pending_posterior_ready = false;
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    const auto& pending_identity = candidate_states_[candidate];
-    pending_posterior_ready = diagnostic_pending_string_posterior_ &&
-        !pending_identity.active && pending_identity.attack_ticks > 0U &&
-        pending_identity.midi_voice_mask == 0U &&
-        !selector_atomic_handoff_targets_[candidate] &&
-        string_count(pending_identity.assigned_string_mask) <= 1U &&
-        string_count(pending_identity.pending_unison_mask) <= 1U &&
-        string_count(pending_identity.continuity_cached_group_mask) <= 1U &&
-        string_count(selector_group_masks_[candidate]) <= 1U &&
-        !fine.multi_source_observed && string_count(fine.member_mask) <= 1U &&
-        string_count(fine.pending_member_mask) <= 1U;
-#endif
     const bool use_posterior =
         posterior_available &&
         (calibrated_reassignment_ready || pending_posterior_ready) &&

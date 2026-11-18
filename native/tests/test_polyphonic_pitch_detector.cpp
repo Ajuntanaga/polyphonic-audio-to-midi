@@ -2488,6 +2488,27 @@ struct PolyphonicPitchDetectorTestAccess final {
                  enabled && scenario == 0U);
     M3_EXPECT_EQ(state.attack_ticks, scenario == 1U ? 0U : 4U);
     M3_EXPECT_EQ(state.midi_voice_mask, scenario == 4U ? 1U : 0U);
+    if (scenario == 0U) {
+      // The first observation has no previous energy and starts uniformly.
+      M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].posterior_onset_strength,
+                   1.0);
+      detector.assign_m3_strings(selected);
+      // Identical continuing attack evidence must retain the temporal prior
+      // only when the offline diagnostic is enabled.
+      M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].posterior_onset_strength,
+                   enabled ? 0.0 : 1.0);
+      detector.cells_[detector.cell_index(0U, 0U)].fast_real = 2.0;
+      detector.assign_m3_strings(selected);
+      M3_EXPECT_TRUE(
+          detector.assignment_diagnostics_[0U].posterior_onset_strength >= 0.5);
+      M3_EXPECT_TRUE(
+          detector.assignment_diagnostics_[0U].posterior_onset_strength <= 1.0);
+      state.attack_ticks = 0U;
+      detector.assign_m3_strings(selected);
+      M3_EXPECT_EQ(detector.assignment_diagnostics_[0U].posterior_onset_strength,
+                   1.0);
+      M3_EXPECT_EQ(state.midi_voice_mask, 0U);
+    }
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
