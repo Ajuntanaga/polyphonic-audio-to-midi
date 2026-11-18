@@ -357,11 +357,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             report.update(stage='paired contradicted retention assignment trace')
             save()
             report['contradicted_retention_assignment_diagnostic'] = {}
-            # Unsupported-pair release frees lanes previously occupied by false
-            # owners. Capture the newly exposed wrong-lane switches: note49 at
-            # sample596031 and note41 at1411071, with their preceding context.
+            # Unsupported tentative ownership exposes a note49 wrong-lane switch
+            # at sample6226431 and extra same-pitch ownership from6249791.
+            # Capture both transitions and their preceding assignment context.
             # Annotation windows select observations only; detector policy is unchanged.
-            for label, start, end in ((36, 5.9, 6.3), (79, 14.4, 14.9)):
+            for label, start, end in ((329, 64.8, 65.3),):
                 report['contradicted_retention_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
                     start=start, end=end, prefix='retention-assignment-' + str(label), lifecycle=True)
