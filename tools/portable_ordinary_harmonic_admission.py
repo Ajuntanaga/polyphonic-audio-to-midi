@@ -357,9 +357,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             report.update(stage='paired contradicted retention assignment trace')
             save()
             report['contradicted_retention_assignment_diagnostic'] = {}
-            # Include the first MIDI routing divergence, before inherited lane
-            # state obscures the initiating decision (notes 47 and 42).
-            for label, start, end in ((165, 29.9, 31.4), (306, 58.6, 59.5), (367, 73.1, 74.8)):
+            # Unsupported-pair release frees lanes previously occupied by false
+            # owners. Capture the newly exposed wrong-lane switches: note49 at
+            # sample596031 and note41 at1411071, with their preceding context.
+            # Annotation windows select observations only; detector policy is unchanged.
+            for label, start, end in ((36, 5.9, 6.3), (79, 14.4, 14.9)):
                 report['contradicted_retention_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
                     start=start, end=end, prefix='retention-assignment-' + str(label), lifecycle=True)
