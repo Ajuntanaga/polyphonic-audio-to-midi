@@ -7271,7 +7271,13 @@ void PolyphonicPitchDetector::assign_m3_strings(
     }
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
-      if ((playable & bit) == 0U || (reserved_strings & bit) != 0U) {
+      bool omit_reserved_cost = (reserved_strings & bit) != 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      // Observe counterfactual costs without changing ownership: the DP still
+      // starts with reserved_strings occupied and cannot select these lanes.
+      omit_reserved_cost = omit_reserved_cost && !assignment_diagnostics_enabled_;
+#endif
+      if ((playable & bit) == 0U || omit_reserved_cost) {
         continue;
       }
       LaneCost& cost = lane_costs[string];
@@ -12968,20 +12974,6 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
   }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  // A coasting singleton must regain pitch evidence before selection can
-  // restart its release. Do not age uninterrupted selected sustains: weak
-  // fundamentals there are not evidence that a valid note has ended.
-  if (diagnostic_contradicted_retention_ && profile_mode_ == ProfileMode::m3) {
-    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
-      const auto& state = candidate_states_[candidate];
-      if (selected[candidate] && state.active && state.release_ticks != 0U &&
-          string_count(state.assigned_string_mask) == 1U &&
-          !has_direct_fundamental_peak(scores, fundamentals, candidate, count) &&
-          !has_m3_candidate_evidence(scores, fundamentals, candidate, count)) {
-        selected[candidate] = false;
-      }
-    }
-  }
   if (diagnostic_supported_sustain_renewal_) {
     for (std::size_t candidate = 0U; candidate < count; ++candidate) {
       auto& state = candidate_states_[candidate];

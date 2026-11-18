@@ -362,7 +362,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             # Capture that missed correction before the later lane reservation.
             # Full snapshot and MIDI parity are required for each traced mode.
             # Annotation windows select observations only; detector policy is unchanged.
-            for label, start, end in ((367, 73.30, 73.48),):
+            for label, start, end in ((367, 73.9, 74.2),):
                 report['contradicted_retention_assignment_diagnostic'][str(label)] = trace_local_onset_assignments(
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
                     start=start, end=end, prefix='retention-assignment-' + str(label), lifecycle=True)
