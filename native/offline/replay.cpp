@@ -766,6 +766,7 @@ void write_string_assignment_frame(
     std::fprintf(trace.stream, "\t%u\t%u\t%u\t%u",
                  unsigned(a.physical_playable), unsigned(a.selector_used),
                  unsigned(a.selector_override), unsigned(a.rescue_allowed));
+    std::fprintf(trace.stream, "\t%u", unsigned(a.rescue_effective));
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -2922,11 +2923,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_completion_window_retention,
                          bool diagnostic_completion_midi_retention,
                          const std::vector<std::uint64_t>& diagnostic_stage_end_samples,
-                         bool diagnostic_calibrated_assignment_prior) {
+                         bool diagnostic_calibrated_assignment_prior,
+                         bool diagnostic_joint_rescue_eligibility) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3074,7 +3076,7 @@ bool run_detector_replay(const WaveData& wave,
         "profile_first_pass_reasons\tprofile_first_pass_alpha\t"
         "profile_first_pass_errors\tprior_active\tprior_midi\tprior_spectral\t"
         "allocation_preview\tprior_attack_ticks\tattack_required\t"
-        "physical_playable\tselector_used\tselector_override\trescue_allowed\n") < 0;
+        "physical_playable\tselector_used\tselector_override\trescue_allowed\trescue_effective\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
@@ -3268,6 +3270,8 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_routing_diagnostics_enabled(candidate_trace != nullptr);
   detector.set_cue_free_lane_reassignment_for_diagnostics(
       diagnostic_cue_free_lane_reassignment);
+  detector.set_joint_rescue_eligibility_for_diagnostics(
+      diagnostic_joint_rescue_eligibility);
   detector.set_calibrated_assignment_prior_for_diagnostics(
       diagnostic_calibrated_assignment_prior);
   detector.set_provisional_open_retention_guard_for_diagnostics(

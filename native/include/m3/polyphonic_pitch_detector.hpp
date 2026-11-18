@@ -428,6 +428,7 @@ struct StringAssignmentDiagnostics final {
   std::uint8_t selector_used{};
   std::uint8_t selector_override{};
   std::uint8_t rescue_allowed{};
+  std::uint8_t rescue_effective{};
   // The independent pending preview was applied, even if a later peer made
   // the complete joint assignment infeasible. Observation only.
   bool allocation_preview{};
@@ -807,6 +808,9 @@ class PolyphonicPitchDetector final {
       bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
       std::uint8_t occupied_mask, bool protected_group,
       bool tuning_required = false, bool established_assignment = false) noexcept;
+  void set_joint_rescue_eligibility_for_diagnostics(bool enabled) noexcept {
+    diagnostic_joint_rescue_eligibility_ = enabled;
+  }
   void set_calibrated_assignment_prior_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_assignment_prior_ = enabled;
   }
@@ -1846,6 +1850,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
   bool diagnostic_calibrated_assignment_prior_{};
+  bool diagnostic_joint_rescue_eligibility_{};
   bool diagnostic_joint_spectral_ownership_{};
   bool diagnostic_joint_midi_owner_guard_{};
   bool diagnostic_residual_pitch_recovery_{};

@@ -6718,10 +6718,31 @@ void PolyphonicPitchDetector::assign_m3_strings(
     if (diagnostic_selector_string_masks_[candidate] != 0U) {
       playable = diagnostic_selector_string_masks_[candidate];
     }
+    std::uint8_t rescue_effective = 0U;
     if (diagnostic_candidate_rescue_string_masks_[candidate] != 0U) {
+      auto allowed = diagnostic_candidate_rescue_string_masks_[candidate];
+      if (diagnostic_joint_rescue_eligibility_) {
+        // Keep the admission witness and fine-frequency rescue sentinel intact.
+        // Add only alternatives not owned by another sounding candidate. The
+        // ordinary joint DP still enforces unique lanes and group reservations.
+        std::uint8_t owners = 0U;
+        for (std::size_t other = 0U; other < candidate_count_; ++other) {
+          const auto& owner = candidate_states_[other];
+          if (other == candidate || !owner.active) continue;
+          auto owned = static_cast<std::uint8_t>(
+              owner.assigned_string_mask | owner.midi_voice_mask);
+          if (owner.assigned_string < kM3OpenNotes.size()) {
+            owned = static_cast<std::uint8_t>(
+                owned | (1U << owner.assigned_string));
+          }
+          owners = static_cast<std::uint8_t>(owners | owned);
+        }
+        allowed = static_cast<std::uint8_t>(allowed |
+            (playable & playable_string_mask(candidate) & ~owners));
+      }
+      rescue_effective = allowed;
       playable = static_cast<std::uint8_t>(
-          playable & playable_string_mask(candidate) &
-          diagnostic_candidate_rescue_string_masks_[candidate]);
+          playable & playable_string_mask(candidate) & allowed);
     }
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -6739,6 +6760,7 @@ void PolyphonicPitchDetector::assign_m3_strings(
       observation.selector_override = diagnostic_selector_string_masks_[candidate];
       observation.rescue_allowed =
           diagnostic_candidate_rescue_string_masks_[candidate];
+      observation.rescue_effective = rescue_effective;
       observation.reserved_coasting = diagnostic_reserved_coasting;
       observation.reserved_extras = diagnostic_reserved_extras;
       observation.prior_primary = prior.assigned_string;

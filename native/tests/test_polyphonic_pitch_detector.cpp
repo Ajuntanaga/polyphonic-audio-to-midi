@@ -2441,6 +2441,38 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
+  static void joint_rescue_probe(PolyphonicPitchDetector& detector,
+                                bool enabled, bool selected_owner) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 60U;
+    config.highest_note = 65U;
+    config.max_polyphony = 4U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_joint_rescue_eligibility_for_diagnostics(enabled);
+    detector.assignment_diagnostics_enabled_ = true;
+    detector.playable_string_masks_[5U] = 248U;
+    detector.diagnostic_candidate_rescue_string_masks_[5U] = 72U;
+    auto& owner = detector.candidate_states_[0U];
+    owner.active = true;
+    owner.assigned_string = 5U;
+    owner.assigned_string_mask = 32U;
+    owner.midi_voice_mask = 128U;
+    detector.playable_string_masks_[0U] = 32U;
+    std::array<bool, kMaxCandidates> selected{};
+    selected[5U] = true;
+    selected[0U] = selected_owner;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    const auto& observed = detector.assignment_diagnostics_[5U];
+    M3_EXPECT_EQ(observed.playable, enabled ? 88U : 72U);
+    M3_EXPECT_EQ(observed.rescue_effective, enabled ? 88U : 72U);
+    M3_EXPECT_EQ(observed.rescue_allowed, 72U);
+    M3_EXPECT_EQ(detector.diagnostic_candidate_rescue_string_masks_[5U], 72U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
   static std::uint8_t pending_string_reservation_probe(
       PolyphonicPitchDetector& detector, bool enabled, unsigned scenario,
       bool forced = false) {
@@ -15004,5 +15036,15 @@ M3_TEST(native_detector_stable_identity_tags_only_continuous_singleton_moves) {
   Access::stable_identity_provenance(detector, true, true, false, 0.0, true, true);
   Access::stable_identity_provenance(detector, true, true, false,
       std::numeric_limits<double>::quiet_NaN());
+#endif
+}
+
+M3_TEST(native_detector_joint_rescue_preserves_owner_and_admission_masks) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetector detector;
+  for (bool enabled : {false, true})
+    for (bool selected_owner : {false, true})
+      m3::PolyphonicPitchDetectorTestAccess::joint_rescue_probe(
+          detector, enabled, selected_owner);
 #endif
 }
