@@ -1533,7 +1533,7 @@ M3_TEST(offline_assignment_trace_preserves_output_and_records_winner_costs) {
       const auto physical = std::stoul(columns[99]);
       const auto selector_override = std::stoul(columns[101]);
       const auto rescue_allowed = std::stoul(columns[103]);
-      M3_EXPECT_EQ(columns[102], columns[103]);
+      M3_EXPECT_EQ(std::stoul(columns[102]), std::stoul(columns[103]));
       for (std::size_t column = 99U; column < 104U; ++column)
         M3_EXPECT_TRUE(std::stoul(columns[column]) <= 255U);
       auto eligible = selector_override != 0U ? selector_override : physical;
