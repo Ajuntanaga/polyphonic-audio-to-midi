@@ -33,6 +33,11 @@ def read_labels(path, samples):
 
 
 def run(args):
+    requested = getattr(args, 'datasets', None)
+    selected = list(DATASETS) if requested is None else list(requested)
+    if not selected or len(set(selected)) != len(selected) or any(name not in DATASETS for name in selected):
+        raise ValueError('Dataset selection must contain unique known corpus names')
+    diagnostic = requested is not None
     captured = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True)
     if captured.strip() != args.source_sha:
         raise ValueError('Harness source differs')
@@ -44,6 +49,7 @@ def run(args):
     args.output.mkdir(parents=True, exist_ok=False)
     report = dict(schema='m3_vst3_stable_note_corpus_v1', state='running', final=False,
         source=manifest['source'], settings=SETTINGS, datasets={},
+        scope='bounded diagnostic' if diagnostic else 'full corpus', selected_datasets=selected,
         verified_input_files=verified_count, manifest_sha256=digest(args.manifest),
         reference_sha256=digest(args.reference), binary_sha256=digest(args.binary),
         installed_output_changed=False, promotion_accepted=False,
@@ -60,7 +66,7 @@ def run(args):
     save()
     try:
         inputs = {}
-        for dataset in DATASETS:
+        for dataset in selected:
             report['stage'] = dataset + '/annotation-preflight'
             save()
             clock = {key: reference['datasets'][dataset]['current-on'][key]
@@ -134,9 +140,11 @@ def run(args):
             row['gate_pass'] = (row['comparisons']['gate_pass'] and row['detector_transition_count_identical']
                 and all(item['gate_pass'] for item in row['runs'].values()))
             save()
-        passed = set(report['datasets']) == set(DATASETS) and all(row['gate_pass'] for row in report['datasets'].values())
-        report.update(state='completed', final=True, corpus_gate_pass=passed,
-            decision='eligible for further validation' if passed else 'rejected', stage='corpus complete')
+        passed = set(report['datasets']) == set(selected) and all(row['gate_pass'] for row in report['datasets'].values())
+        report.update(state='completed', final=True, screen_gate_pass=passed,
+            corpus_gate_pass=None if diagnostic else passed,
+            decision=('diagnostic passed; no corpus verdict' if diagnostic else 'eligible for further validation') if passed else 'rejected',
+            stage='diagnostic complete' if diagnostic else 'corpus complete')
     except Exception as error:
         report.update(state='error', final=True, error=f'{type(error).__name__}: {error}')
         raise
@@ -150,8 +158,10 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--source-sha', required=True)
+    parser.add_argument('--datasets', nargs='+', choices=tuple(DATASETS),
+                        help='Bounded diagnostic only; never produces a full-corpus verdict')
     report = run(parser.parse_args())
-    return 0 if report['corpus_gate_pass'] else 1
+    return 0 if report['screen_gate_pass'] else 1
 
 
 if __name__ == '__main__':

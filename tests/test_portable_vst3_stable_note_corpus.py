@@ -11,7 +11,7 @@ from tests.test_portable_vst3_corpus_replay import HEADER
 
 
 class CorpusRunnerTests(unittest.TestCase):
-    def exercise(self, fail_timing=False, invalid_second=False):
+    def exercise(self, fail_timing=False, invalid_second=False, diagnostic=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'fixture.tsv').write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n0\t80\t60\t1\n')
@@ -29,6 +29,8 @@ class CorpusRunnerTests(unittest.TestCase):
             binary.write_bytes(b'fixture only')
             args = SimpleNamespace(binary=binary, corpus=root, manifest=root/'manifest.json',
                 reference=root/'reference.json', source_sha='a'*40, output=root/'output')
+            if diagnostic:
+                args.datasets = ['fixture']
             def native(command, stdout, stderr, **kwargs):
                 block = int(command[command.index('--block')+1])
                 bits = int(command[command.index('--sample-bits')+1])
@@ -72,6 +74,19 @@ class CorpusRunnerTests(unittest.TestCase):
 
     def test_timing_failure_prevents_corpus_acceptance(self):
         self.assertFalse(self.exercise(fail_timing=True)['corpus_gate_pass'])
+
+    def test_diagnostic_never_claims_corpus_acceptance(self):
+        result = self.exercise(diagnostic=True)
+        self.assertTrue(result['screen_gate_pass'])
+        self.assertIsNone(result['corpus_gate_pass'])
+        self.assertEqual(result['scope'], 'bounded diagnostic')
+        self.assertFalse(self.exercise(diagnostic=True, fail_timing=True)['screen_gate_pass'])
+
+    def test_invalid_selection_rejected_before_processing(self):
+        for names in ([], ['unknown'], ['fixture', 'fixture']):
+            with patch.object(runner, 'DATASETS', {'fixture': {}}):
+                with self.assertRaisesRegex(ValueError, 'Dataset selection'):
+                    runner.run(SimpleNamespace(datasets=names))
 
     def test_labels_cannot_exceed_recording(self):
         with tempfile.TemporaryDirectory() as directory:
