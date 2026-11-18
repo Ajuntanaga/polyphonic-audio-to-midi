@@ -19,6 +19,37 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void unsupported_pair_release_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.response = 81U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    auto& state = detector.candidate_states_[0U];
+    state.assigned_string_mask = 3U;
+    const auto original = detector.candidate_release_decisions(0U, false);
+    const auto ordinary = detector.release_decisions();
+    M3_EXPECT_TRUE(original > ordinary);
+    detector.set_contradicted_retention_for_diagnostics(true);
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), ordinary);
+    detector.beat_evidence_states_[0U].valid = true;
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), original);
+    detector.beat_evidence_states_[0U].valid = false;
+    auto& fine = detector.fine_frequency_evidence_states_[0U];
+    fine.valid = true;
+    fine.multi_source_observed = true;
+    fine.member_mask = 3U;
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), original);
+    fine.valid = false;
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), ordinary);
+    state.assigned_string_mask = 7U;
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), original);
+    state.assigned_string_mask = 3U;
+    detector.set_contradicted_retention_for_diagnostics(false);
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, false), original);
+    M3_EXPECT_EQ(detector.candidate_release_decisions(0U, true), ordinary);
+  }
+
   static void persistent_admission_probe() {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -15237,3 +15268,9 @@ M3_TEST(native_detector_admission_persists_before_allocation_without_starvation)
   m3::PolyphonicPitchDetectorTestAccess::persistent_admission_probe();
 #endif
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_unsupported_pair_release_uses_ordinary_grace) {
+  m3::PolyphonicPitchDetectorTestAccess::unsupported_pair_release_probe();
+}
+#endif

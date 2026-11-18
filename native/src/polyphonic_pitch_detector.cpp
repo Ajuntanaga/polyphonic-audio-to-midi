@@ -3146,6 +3146,21 @@ std::uint16_t PolyphonicPitchDetector::candidate_release_decisions(
   const bool resolved_unison =
       members != 0U &&
       (members & static_cast<std::uint8_t>(members - 1U)) != 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // A retained pair is not itself evidence of two sounding strings. The
+  // contradicted-lane experiment can carry a provisional second owner across
+  // an articulation boundary; do not grant it unison dropout grace without
+  // independent physical support. Keep the ordinary release (not a hard cut),
+  // and leave established three/four-string groups on their original path.
+  const auto& fine = fine_frequency_evidence_states_[candidate];
+  const bool supported_pair = beat_evidence_states_[candidate].valid ||
+      (fine.valid && fine.multi_source_observed &&
+       string_count(fine.member_mask) > 1U);
+  if (diagnostic_contradicted_retention_ && string_count(members) == 2U &&
+      !supported_pair) {
+    return ordinary;
+  }
+#endif
   return resolved_unison
              ? std::max(ordinary, unison_dropout_decisions(candidate))
              : ordinary;
