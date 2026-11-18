@@ -27,6 +27,7 @@ def run(corpus, manifest_path, reference_path, archive, output):
         raise ValueError('Retained outcome archive identity differs')
     audio = load_audio(corpus / 'ordinary.wav')
     rows = []
+    experiment_rows = []
     with zipfile.ZipFile(archive) as bundle:
         if bundle.namelist().count(MEMBER) != 1:
             raise ValueError('Retained outcome member is not unique')
@@ -51,6 +52,10 @@ def run(corpus, manifest_path, reference_path, archive, output):
                         comparison.pop('source_continuity', None)
                     if without_observations != baseline:
                         raise ValueError('Observation changed the admission decision or evidence')
+                    experiment = competition.evaluate_candidate(
+                        window, prepared, note, state, fundamental_veto_check=True)
+                    experiment_rows.append(dict(available_sample=available, note=note,
+                        baseline_admitted=baseline['admitted'], result=experiment))
                     rows.append(diagnostic)
     if not rows:
         raise ValueError('No focused observations')
@@ -58,7 +63,10 @@ def run(corpus, manifest_path, reference_path, archive, output):
                   archive_sha256=ARCHIVE_SHA, archive_member=MEMBER, focus=FOCUS,
                   decision_parity=True, policy_changed=False, corpus_gate_pass=None,
                   limits='Diagnostic energy/phase only; no acoustic onset labels, score gain, native timing or live-host acceptance.',
-                  rows=rows)
+                  rows=rows, fundamental_veto_experiment=dict(
+                      enabled_in_production=False, corpus_gate_pass=None,
+                      limits='Focused admission evidence only; no native replay or false-output gate.',
+                      rows=experiment_rows))
     output.mkdir(parents=True, exist_ok=True)
     (output / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
 

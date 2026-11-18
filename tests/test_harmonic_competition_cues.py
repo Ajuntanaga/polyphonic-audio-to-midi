@@ -42,6 +42,21 @@ class HarmonicCompetitionTests(unittest.TestCase):
         frame = self.frame if frame is None else frame
         return competition.evaluate_candidate(*admission.prediction_window(signal, 4799, frame), note, frame)
 
+    def test_fundamental_veto_check_requires_independent_predictive_energy(self):
+        from tools.portable_ordinary_harmonic_prediction import design
+        # A real upper fundamental can survive a lower non-octave background.
+        background = design([self.hz(63), 2*self.hz(63)], 4800)
+        for present in (True, False):
+            signal = background[:, 1] + (self.signal(65, [(1, .8)]) if present else 0)
+            prepared = dict(signal=signal, energy=float(signal[3840:] @ signal[3840:]))
+            prepared = competition.prepared_with_base(prepared, background)
+            result = competition.fundamental_comparison(prepared, self.hz(65))
+            self.assertEqual(result['admitted'], present)
+        # An octave is already represented by the lower second harmonic.
+        result = competition.fundamental_comparison(prepared, 2*self.hz(63))
+        self.assertFalse(result['admitted'])
+        self.assertEqual(result['status'], 'shared_or_unidentifiable_fundamental')
+
     def test_observed_omitted_parent_removes_false_octave(self):
         signal = self.base + self.signal(62, [(h, .6 / h) for h in range(1, int(3000 // self.hz(62)) + 1)])
         original = admission.evaluate_candidate(*admission.prediction_window(signal, 4799, self.frame), 74)

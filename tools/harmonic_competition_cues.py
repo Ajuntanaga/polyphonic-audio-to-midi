@@ -66,7 +66,36 @@ def prepared_with_base(prepared, base):
         base_error=float(residual @ residual) / prepared['energy'])
 
 
-def evaluate_candidate(window, prepared, note, state, *, continuity_diagnostic=False):
+def fundamental_comparison(prepared, frequency):
+    """Experimental veto check, only after original two-partial admission.
+
+    Fit the fundamental alone against the complete competing background; do not
+    count a shared harmonic or borrow gain from other upper harmonics.
+    """
+    train = CONFIG['train_samples']
+    candidate = design([frequency], train + CONFIG['predict_samples'])[:, 1:]
+    ratios, passing, added = admission.independent_pairs(
+        prepared['base'], candidate, train, prepared['factor'])
+    result = dict(admitted=False, pair_singular_ratios=ratios)
+    if passing != [0]:
+        return dict(result, status='shared_or_unidentifiable_fundamental')
+    full = np.column_stack((prepared['base'], added))
+    parts = admission.factor(full[:train])
+    ratio = float(parts[1][-1] / parts[1][0])
+    if parts[3] != full.shape[1] or ratio < CONFIG['full_singular_ratio_floor']:
+        return dict(result, status='unidentifiable_fundamental_fit', full_singular_ratio=ratio)
+    weights = admission.coefficients(parts, prepared['signal'][:train])
+    residual = prepared['signal'][train:] - full[train:] @ weights
+    error = float(residual @ residual) / prepared['energy']
+    gain = prepared['base_error'] - error
+    guard = admission.numerical_gain_guard(prepared['base_error'], error)
+    return dict(result, admitted=bool(gain > guard), status='fundamental_prediction_measured',
+                prediction_gain_fraction=gain, numerical_gain_guard=guard,
+                full_singular_ratio=ratio)
+
+
+def evaluate_candidate(window, prepared, note, state, *, continuity_diagnostic=False,
+                       fundamental_veto_check=False):
     original = admission.evaluate_candidate(window, prepared, note)
     result = dict(original, original_status=original['status'], lower_comparisons=[],
                   unavailable_comparisons=0)
@@ -126,6 +155,12 @@ def evaluate_candidate(window, prepared, note, state, *, continuity_diagnostic=F
         else:
             row['upper_comparison'] = admission.evaluate_partial_support(compared, partials(upper_hz))
         check = row['upper_comparison']
+        if (fundamental_veto_check and check['status'] == 'insufficient_supported_pairs'
+                and check.get('supported_harmonics') == [1]):
+            row['fundamental_veto_check'] = fundamental_comparison(compared, upper_hz)
+            if row['fundamental_veto_check']['admitted']:
+                row['comparison_outcome'] = 'fundamental_prediction_pass'
+                continue
         if check['admitted']:
             row['comparison_outcome'] = 'pass'
         elif check['status'] in MEASURED_REJECTIONS:
