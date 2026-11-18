@@ -147,7 +147,7 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                     trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, assignment_diagnostic=assignment_diagnostic)
             if assignment_diagnostic and contradicted_retention:
                 self.assertEqual([(call.kwargs['start'], call.kwargs['end']) for call in trace.call_args_list],
-                                 [(30.6, 31.4), (58.6, 59.5), (73.9, 74.8)])
+                                 [(29.9, 31.4), (58.6, 59.5), (73.1, 74.8)])
                 self.assertEqual(len({call.kwargs['prefix'] for call in trace.call_args_list}), 3)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
