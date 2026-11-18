@@ -6733,6 +6733,12 @@ void PolyphonicPitchDetector::assign_m3_strings(
       observation.selected_count = static_cast<std::uint8_t>(selected_count);
       observation.ordinal = fixed_context ? 255U : static_cast<std::uint8_t>(voice);
       observation.playable = playable;
+      observation.physical_playable = playable_string_mask(candidate);
+      observation.selector_used =
+          candidate_admission_diagnostics_[candidate].selector_used_mask;
+      observation.selector_override = diagnostic_selector_string_masks_[candidate];
+      observation.rescue_allowed =
+          diagnostic_candidate_rescue_string_masks_[candidate];
       observation.reserved_coasting = diagnostic_reserved_coasting;
       observation.reserved_extras = diagnostic_reserved_extras;
       observation.prior_primary = prior.assigned_string;

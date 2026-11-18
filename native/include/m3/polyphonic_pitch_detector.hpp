@@ -423,6 +423,11 @@ struct StringAssignmentDiagnostics final {
   std::uint8_t prior_spectral{};
   std::uint8_t prior_attack_ticks{};
   std::uint8_t attack_required{};
+  // Eligibility provenance; observations only, never assignment inputs.
+  std::uint8_t physical_playable{};
+  std::uint8_t selector_used{};
+  std::uint8_t selector_override{};
+  std::uint8_t rescue_allowed{};
   // The independent pending preview was applied, even if a later peer made
   // the complete joint assignment infeasible. Observation only.
   bool allocation_preview{};

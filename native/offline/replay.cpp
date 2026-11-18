@@ -763,6 +763,9 @@ void write_string_assignment_frame(
                  unsigned(a.prior_midi), unsigned(a.prior_spectral));
     std::fprintf(trace.stream, "\t%u\t%u\t%u", unsigned(a.allocation_preview),
                  unsigned(a.prior_attack_ticks), unsigned(a.attack_required));
+    std::fprintf(trace.stream, "\t%u\t%u\t%u\t%u",
+                 unsigned(a.physical_playable), unsigned(a.selector_used),
+                 unsigned(a.selector_override), unsigned(a.rescue_allowed));
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -3070,7 +3073,8 @@ bool run_detector_replay(const WaveData& wave,
         "cue_assignment_cents\tcue_similarities\tcue_cents_errors\t"
         "profile_first_pass_reasons\tprofile_first_pass_alpha\t"
         "profile_first_pass_errors\tprior_active\tprior_midi\tprior_spectral\t"
-        "allocation_preview\tprior_attack_ticks\tattack_required\n") < 0;
+        "allocation_preview\tprior_attack_ticks\tattack_required\t"
+        "physical_playable\tselector_used\tselector_override\trescue_allowed\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
