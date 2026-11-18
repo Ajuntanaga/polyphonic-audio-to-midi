@@ -427,6 +427,7 @@ struct ProfileAdditionDiagnostics final {
 struct StringAssignmentDiagnostics final {
   std::array<std::array<double, 7U>, kMaxVoices> lane_terms{};
   std::array<double, kMaxVoices> lane_totals{};
+  std::array<std::array<double, 7U>, kMaxVoices> unreserved_lane_terms{};
   double joint_cost{};
   std::uint32_t joint_strings{};
   std::uint8_t selected_count{};

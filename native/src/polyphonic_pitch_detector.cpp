@@ -7499,6 +7499,14 @@ void PolyphonicPitchDetector::assign_m3_strings(
             cost.use_cents ? cost.cents_penalty : 0.0,
             cost.use_fine_bonus ? -512.0 : 0.0,
             cost.use_retention ? -cost.retention_bonus : 0.0};
+        observation.unreserved_lane_terms[string] = observation.lane_terms[string];
+        if ((reserved_strings & static_cast<std::uint8_t>(1U << string)) != 0U) {
+          // Keep the independent pending preview and captured actual-DP costs
+          // identical to the untraced path. Only the new observation has costs
+          // for a hypothetical release of an occupied string.
+          lane_costs[string] = LaneCost{};
+          observation.lane_terms[string] = {};
+        }
         observation.lane_totals[string] = 0.0;
         for (double term : observation.lane_terms[string])
           observation.lane_totals[string] += term;

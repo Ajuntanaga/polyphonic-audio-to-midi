@@ -357,9 +357,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             report.update(stage='paired contradicted retention assignment trace')
             save()
             report['contradicted_retention_assignment_diagnostic'] = {}
-            # Label367 loses exact hold when note42 and note49 swap lanes0/2.
-            # Both modes acquire lane0 at7038783; only reference corrects at7040063.
-            # Capture that missed correction before the later lane reservation.
+            # Capture the next-chord transition and stale string reservations.
             # Full snapshot and MIDI parity are required for each traced mode.
             # Annotation windows select observations only; detector policy is unchanged.
             for label, start, end in ((367, 73.9, 74.2),):

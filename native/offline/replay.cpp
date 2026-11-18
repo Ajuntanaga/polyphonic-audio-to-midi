@@ -773,6 +773,13 @@ void write_string_assignment_frame(
                  unsigned(a.physical_playable), unsigned(a.selector_used),
                  unsigned(a.selector_override), unsigned(a.rescue_allowed));
     std::fprintf(trace.stream, "\t%u", unsigned(a.rescue_effective));
+    std::fputc('\t', trace.stream);
+    for (std::size_t string = 0U; string < kMaxVoices; ++string) {
+      if (string != 0U) std::fputc(',', trace.stream);
+      for (std::size_t term = 0U; term < a.unreserved_lane_terms[string].size(); ++term)
+        std::fprintf(trace.stream, "%s%.17g", term == 0U ? "" : ":",
+                     a.unreserved_lane_terms[string][term]);
+    }
     std::fputc('\n', trace.stream);
     trace.failed = std::ferror(trace.stream) != 0;
     ++trace.rows;
@@ -3092,7 +3099,7 @@ bool run_detector_replay(const WaveData& wave,
         "profile_first_pass_reasons\tprofile_first_pass_alpha\t"
         "profile_first_pass_errors\tprior_active\tprior_midi\tprior_spectral\t"
         "allocation_preview\tprior_attack_ticks\tattack_required\t"
-        "physical_playable\tselector_used\tselector_override\trescue_allowed\trescue_effective\n") < 0;
+        "physical_playable\tselector_used\tselector_override\trescue_allowed\trescue_effective\tunreserved_lane_terms\n") < 0;
 #endif
   }
   if (residual_admission_trace != nullptr) {
