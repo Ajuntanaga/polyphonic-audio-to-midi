@@ -66,7 +66,7 @@ def prepared_with_base(prepared, base):
         base_error=float(residual @ residual) / prepared['energy'])
 
 
-def evaluate_candidate(window, prepared, note, state):
+def evaluate_candidate(window, prepared, note, state, *, continuity_diagnostic=False):
     original = admission.evaluate_candidate(window, prepared, note)
     result = dict(original, original_status=original['status'], lower_comparisons=[],
                   unavailable_comparisons=0)
@@ -99,6 +99,9 @@ def evaluate_candidate(window, prepared, note, state):
     for lower in lowers:
         support = admission.evaluate_partial_support(conditional, partials(lower['frequency_hz']))
         row = dict(lower=lower, independent_lower_support=support)
+        if continuity_diagnostic:
+            from tools.harmonic_source_continuity import measure
+            row['source_continuity'] = measure(conditional, partials(lower['frequency_hz']))
         result['lower_comparisons'].append(row)
         if not support['admitted']:
             continue
