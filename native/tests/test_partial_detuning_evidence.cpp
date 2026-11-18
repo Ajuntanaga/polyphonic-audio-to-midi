@@ -124,3 +124,24 @@ M3_TEST(partial_detuning_comparison_uses_only_shared_nonfundamental_partials) {
   M3_EXPECT_EQ(wrong.common_partials, 3U);
   M3_EXPECT_TRUE(matching.log_likelihood > wrong.log_likelihood);
 }
+
+M3_TEST(partial_detuning_common_support_excludes_unshared_penalties) {
+  m3::PartialDetuningEvidence observed;
+  observed.valid_mask = 0x06U;  // Partials two and three.
+  observed.residual_cents = {0.0, 2.0, 30.0, 0.0, 0.0, 0.0};
+  observed.valid = true;
+  constexpr std::array<double, m3::kPartialDetuningCount> reference{
+      0.0, 2.0, 0.0, 0.0, 0.0, 0.0};
+  // One reference supports only partial two. Both must compare that same
+  // partial; the unshared mismatch on partial three cannot rank strings.
+  observed.valid_mask &= 0x02U;
+  const auto sparse = m3::compare_partial_detuning(observed, reference, 0x02U);
+  const auto dense = m3::compare_partial_detuning(observed, reference, 0x06U);
+  M3_EXPECT_TRUE(sparse.valid && dense.valid);
+  M3_EXPECT_EQ(sparse.common_partials, 1U);
+  M3_EXPECT_EQ(dense.common_partials, 1U);
+  M3_EXPECT_EQ(sparse.log_likelihood, dense.log_likelihood);
+  observed.valid_mask = 0U;
+  M3_EXPECT_FALSE(m3::compare_partial_detuning(observed, reference, 0x02U).valid);
+  M3_EXPECT_FALSE(m3::compare_partial_detuning(observed, reference, 0x06U).valid);
+}

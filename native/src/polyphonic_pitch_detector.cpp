@@ -6933,8 +6933,25 @@ void PolyphonicPitchDetector::assign_m3_strings(
         }
 #endif
       }
-      const PartialDetuningEvidence observed_detuning =
+      PartialDetuningEvidence observed_detuning =
           partial_detuning_trackers_[candidate].evidence();
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (diagnostic_common_detuning_support_) {
+        // Compare like observations across every playable string. A missing
+        // reference must not gain a neutral score against a measured penalty.
+        for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+          const auto bit = static_cast<std::uint8_t>(1U << string);
+          if ((playable & bit) == 0U) continue;
+          if (!has_learned_profile[string]) {
+            observed_detuning.valid_mask = 0U;
+            break;
+          }
+          observed_detuning.valid_mask = static_cast<std::uint8_t>(
+              observed_detuning.valid_mask &
+              learned_points[string]->partial_detuning_valid_mask);
+        }
+      }
+#endif
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         if (!has_learned_profile[string]) {
           continue;

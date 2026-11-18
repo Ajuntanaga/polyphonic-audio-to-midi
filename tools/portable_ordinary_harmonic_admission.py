@@ -123,7 +123,7 @@ def trace_posterior_losses(binary, corpus, output, flags, trial_replay, trial_mi
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False):
     if posterior_loss_diagnostic and not pending_string_posterior:
         raise ValueError('posterior loss diagnostic requires pending posterior')
     if max_seconds <= 0:
@@ -147,7 +147,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=TARGET, energy_weighted_descriptor=energy_weighted_descriptor, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
+        target=TARGET, common_detuning_support=common_detuning_support, energy_weighted_descriptor=energy_weighted_descriptor, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
@@ -175,6 +175,9 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                             if mode == TRIAL else flags) for mode, flags in conditions)
     if energy_weighted_descriptor:
         conditions = tuple((mode, flags + ('--diagnostic-energy-weighted-descriptor',)
+                            if mode == TRIAL else flags) for mode, flags in conditions)
+    if common_detuning_support:
+        conditions = tuple((mode, flags + ('--diagnostic-common-detuning-support',)
                             if mode == TRIAL else flags) for mode, flags in conditions)
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
@@ -329,6 +332,7 @@ def main():
                         help='Offline pending singleton posterior assignment cost')
     parser.add_argument('--posterior-loss-diagnostic', action='store_true')
     parser.add_argument('--energy-weighted-descriptor', action='store_true')
+    parser.add_argument('--common-detuning-support', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
@@ -338,7 +342,8 @@ def main():
         joint_rescue_eligibility=args.joint_rescue_eligibility,
         pending_string_posterior=args.pending_string_posterior,
         posterior_loss_diagnostic=args.posterior_loss_diagnostic,
-        energy_weighted_descriptor=args.energy_weighted_descriptor)
+        energy_weighted_descriptor=args.energy_weighted_descriptor,
+        common_detuning_support=args.common_detuning_support)
 
 
 if __name__ == '__main__':
