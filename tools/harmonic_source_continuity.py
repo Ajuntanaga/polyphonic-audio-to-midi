@@ -36,7 +36,19 @@ def measure(prepared, frequencies):
         if np.any(norms <= np.finfo(float).tiny):
             row['reason'] = 'zero_column'
             continue
-        parts = admission.factor(matrix / norms)
+        scaled = matrix / norms
+        nuisance = admission.factor(scaled[:, :base_columns])
+        q = nuisance[0][:, :nuisance[3]]
+        proposed = scaled[:, base_columns:]
+        independent = proposed - q @ (q.T @ proposed)
+        independent_values = np.linalg.svd(independent, compute_uv=False)
+        proposed_scale = np.linalg.svd(proposed, compute_uv=False)[0]
+        row.update(nuisance_columns=base_columns, nuisance_rank=nuisance[3],
+                   proposed_columns=proposed.shape[1],
+                   conditional_singular_ratio=float(independent_values[-1] / proposed_scale))
+        # Geometry only: do not reinterpret a truncated nuisance fit as proof
+        # that the source vanished, or relax the original availability gate.
+        parts = admission.factor(scaled)
         ratio = float(parts[1][-1] / parts[1][0])
         row['singular_ratio'] = ratio
         if parts[3] != matrix.shape[1] or ratio < admission.CONFIG['full_singular_ratio_floor']:
@@ -46,7 +58,7 @@ def measure(prepared, frequencies):
         residual = signal[begin:end] - matrix @ weights
         row.update(available=True, residual_mean_square=float(np.mean(residual ** 2)), partials=[])
         for index, harmonic in enumerate(passing):
-            # Same training-normalized residual columns in all three segments;
+            # Same training-normalized sinusoidal columns in all three segments;
             # powers are comparable across segments, not raw source amplitudes.
             a, b = weights[base_columns + index], weights[base_columns + count + index]
             row['partials'].append(dict(harmonic=harmonic + 1,

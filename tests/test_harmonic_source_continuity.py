@@ -28,6 +28,18 @@ class SourceContinuityTests(unittest.TestCase):
         self.assertGreater(result['segments'][1]['partials'][0]['coefficient_power'], 1)
         self.assertEqual(result['segments'][2]['partials'][0]['coefficient_power'], 0)
 
+    def test_redundant_nuisance_is_distinguished_from_candidate_overlap(self):
+        from tools.portable_ordinary_harmonic_prediction import design
+        base = np.column_stack((np.ones(4800), np.ones(4800)))
+        signal = design([300.], 4800)[:, 1]
+        prepared = dict(base=base, factor=admission.factor(base[:3840]), signal=signal)
+        result = measure(prepared, [300.])
+        for segment in result['segments']:
+            self.assertFalse(segment['available'])
+            self.assertEqual(segment['nuisance_columns'], 2)
+            self.assertEqual(segment['nuisance_rank'], 1)
+            self.assertGreater(segment['conditional_singular_ratio'], .1)
+
     def test_future_samples_are_rejected_instead_of_used(self):
         with self.assertRaisesRegex(ValueError, 'exactly the observed'):
             measure(self.prepared(np.zeros(4801)), [300.])
