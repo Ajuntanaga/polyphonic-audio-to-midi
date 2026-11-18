@@ -326,6 +326,7 @@ int main(int argc, char** argv) {
   bool diagnostic_calibrated_assignment_prior = false;
   bool diagnostic_joint_rescue_eligibility = false;
   bool diagnostic_pending_string_posterior = false;
+  bool diagnostic_energy_weighted_descriptor = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
@@ -703,6 +704,9 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-pending-string-posterior") == 0) {
       diagnostic_pending_string_posterior = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-energy-weighted-descriptor") == 0) {
+      diagnostic_energy_weighted_descriptor = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-residual-pitch-recovery") == 0) {
       diagnostic_residual_pitch_recovery = true;
@@ -1280,7 +1284,8 @@ int main(int argc, char** argv) {
           diagnostic_completion_midi_retention, diagnostic_stage_end_samples,
           diagnostic_calibrated_assignment_prior,
           diagnostic_joint_rescue_eligibility,
-          diagnostic_pending_string_posterior)) {
+          diagnostic_pending_string_posterior,
+          diagnostic_energy_weighted_descriptor)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

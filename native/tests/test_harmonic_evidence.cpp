@@ -70,3 +70,37 @@ M3_TEST(harmonic_evidence_rejects_empty_or_nonfinite_energy) {
   empty[3U] = -0.1;
   M3_EXPECT_FALSE(m3::make_harmonic_evidence(empty).valid);
 }
+
+M3_TEST(harmonic_ratio_weight_ignores_absent_observed_partials) {
+  const auto observed = m3::make_harmonic_evidence({1, 0, 0, 0, 0, 0});
+  const auto reference = m3::make_harmonic_evidence({1, .1, .01, .001, .01, .1});
+  const auto weighted = m3::compare_harmonic_evidence(observed, reference, true);
+  const auto original = m3::compare_harmonic_evidence(observed, reference);
+  M3_EXPECT_NEAR(weighted.lower_log_likelihood, 0.0, 1e-12);
+  M3_EXPECT_NEAR(weighted.upper_log_likelihood, 0.0, 1e-12);
+  M3_EXPECT_TRUE(original.lower_log_likelihood < 0.0);
+  M3_EXPECT_NEAR(weighted.balance_log_likelihood,
+                 original.balance_log_likelihood, 1e-12);
+}
+
+M3_TEST(harmonic_ratio_weight_preserves_supported_and_scale_invariant_evidence) {
+  const auto observed = m3::make_harmonic_evidence({1, 1, 1, 1, 1, 1});
+  const auto scaled = m3::make_harmonic_evidence({10, 10, 10, 10, 10, 10});
+  const auto reference = m3::make_harmonic_evidence({1, .5, .25, .125, .0625, .03125});
+  const auto original = m3::compare_harmonic_evidence(observed, reference);
+  const auto weighted = m3::compare_harmonic_evidence(observed, reference, true);
+  const auto scaled_result = m3::compare_harmonic_evidence(scaled, reference, true);
+  M3_EXPECT_NEAR(weighted.combined_log_likelihood(), original.combined_log_likelihood(), 1e-12);
+  M3_EXPECT_NEAR(weighted.combined_log_likelihood(), scaled_result.combined_log_likelihood(), 1e-12);
+}
+
+M3_TEST(harmonic_ratio_weight_limits_tiny_upper_partial_influence) {
+  const auto observed = m3::make_harmonic_evidence({32747, 18, 2, 4, 1, 1});
+  const auto reference = m3::make_harmonic_evidence({32547, 214, 2, 4, 0, 0});
+  const auto original = m3::compare_harmonic_evidence(observed, reference);
+  const auto weighted = m3::compare_harmonic_evidence(observed, reference, true);
+  M3_EXPECT_TRUE(original.upper_log_likelihood < 0.0);
+  M3_EXPECT_TRUE(weighted.upper_log_likelihood > original.upper_log_likelihood * .001);
+  const auto exact = m3::compare_harmonic_evidence(observed, observed, true);
+  M3_EXPECT_NEAR(exact.combined_log_likelihood(), 0.0, 1e-12);
+}

@@ -48,7 +48,8 @@ HarmonicEvidence make_harmonic_evidence(
     const std::array<double, kHarmonicEvidenceCount>& energy) noexcept;
 HarmonicEvidenceComparison compare_harmonic_evidence(
     const HarmonicEvidence& observed,
-    const HarmonicEvidence& reference) noexcept;
+    const HarmonicEvidence& reference,
+    bool weight_by_observed_energy = false) noexcept;
 SpectralTierComparison compare_spectral_tiers(
     const HarmonicEvidence& observed,
     const HarmonicEvidence& reference) noexcept;

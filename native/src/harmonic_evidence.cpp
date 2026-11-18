@@ -47,7 +47,8 @@ HarmonicEvidence make_harmonic_evidence(
 
 HarmonicEvidenceComparison compare_harmonic_evidence(
     const HarmonicEvidence& observed,
-    const HarmonicEvidence& reference) noexcept {
+    const HarmonicEvidence& reference,
+    bool weight_by_observed_energy) noexcept {
   HarmonicEvidenceComparison result;
   if (!observed.valid || !reference.valid) {
     result.lower_log_likelihood = -64.0;
@@ -55,15 +56,27 @@ HarmonicEvidenceComparison compare_harmonic_evidence(
     result.balance_log_likelihood = -64.0;
     return result;
   }
+  // One observation-derived weight is shared by all candidate strings.
+  // Harmonic mean approaches zero when either member of a ratio is absent.
+  // Six equal-energy partials retain unit weight; stronger pairs are capped.
+  const auto ratio_weight = [&](std::size_t ratio) noexcept {
+    if (!weight_by_observed_energy) return 1.0;
+    const double a = observed.normalized_energy[ratio];
+    const double b = observed.normalized_energy[ratio + 1U];
+    const double total = a + b;
+    return total > 0.0
+               ? std::min(1.0, 2.0 * kHarmonicEvidenceCount * a * b / total)
+               : 0.0;
+  };
   double lower_error = 0.0;
   for (std::size_t ratio = 0U; ratio < 2U; ++ratio) {
-    lower_error += square(observed.adjacent_log_ratio[ratio] -
+    lower_error += ratio_weight(ratio) * square(observed.adjacent_log_ratio[ratio] -
                           reference.adjacent_log_ratio[ratio]);
   }
   double upper_error = 0.0;
   for (std::size_t ratio = 3U;
        ratio < observed.adjacent_log_ratio.size(); ++ratio) {
-    upper_error += square(observed.adjacent_log_ratio[ratio] -
+    upper_error += ratio_weight(ratio) * square(observed.adjacent_log_ratio[ratio] -
                           reference.adjacent_log_ratio[ratio]);
   }
   result.lower_log_likelihood = -0.75 * lower_error;

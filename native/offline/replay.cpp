@@ -2931,11 +2931,12 @@ bool run_detector_replay(const WaveData& wave,
                          const std::vector<std::uint64_t>& diagnostic_stage_end_samples,
                          bool diagnostic_calibrated_assignment_prior,
                          bool diagnostic_joint_rescue_eligibility,
-                         bool diagnostic_pending_string_posterior) {
+                         bool diagnostic_pending_string_posterior,
+                         bool diagnostic_energy_weighted_descriptor) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3280,6 +3281,8 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_routing_diagnostics_enabled(candidate_trace != nullptr);
   detector.set_cue_free_lane_reassignment_for_diagnostics(
       diagnostic_cue_free_lane_reassignment);
+  detector.set_energy_weighted_descriptor_for_diagnostics(
+      diagnostic_energy_weighted_descriptor);
   detector.set_pending_string_posterior_for_diagnostics(
       diagnostic_pending_string_posterior);
   detector.set_joint_rescue_eligibility_for_diagnostics(

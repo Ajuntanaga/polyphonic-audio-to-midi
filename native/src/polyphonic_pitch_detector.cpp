@@ -6884,6 +6884,10 @@ void PolyphonicPitchDetector::assign_m3_strings(
           make_harmonic_evidence(settled_energy);
       transient_strength =
           harmonic_transient_strength(fast_descriptor, settled_descriptor);
+      bool weight_descriptor_energy = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      weight_descriptor_energy = diagnostic_energy_weighted_descriptor_;
+#endif
       for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
         if (!has_learned_profile[string]) {
           continue;
@@ -6897,10 +6901,11 @@ void PolyphonicPitchDetector::assign_m3_strings(
         const HarmonicEvidence learned_descriptor =
             make_harmonic_evidence(learned_energy);
         const HarmonicEvidenceComparison fast_comparison =
-            compare_harmonic_evidence(fast_descriptor, learned_descriptor);
+            compare_harmonic_evidence(fast_descriptor, learned_descriptor,
+                                      weight_descriptor_energy);
         const HarmonicEvidenceComparison settled_comparison =
             compare_harmonic_evidence(settled_descriptor,
-                                      learned_descriptor);
+                                      learned_descriptor, weight_descriptor_energy);
         // During a changing attack/decay envelope, retain part of the settled
         // observation instead of letting one upper-partial frame erase every
         // alternative. Once the envelope settles, the current lower/upper

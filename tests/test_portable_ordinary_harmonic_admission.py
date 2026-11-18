@@ -13,7 +13,7 @@ from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
-    def exercise(self, *, change=None, drift=None, failure=None, competition=False):
+    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             corpus = root / 'corpus'
@@ -139,9 +139,9 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                   patch.object(trial, 'compress_trace_window', side_effect=compress)):
                 if drift or failure:
                     with self.assertRaises((ValueError, TimeoutError, subprocess.CalledProcessError)):
-                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition)
+                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor)
                 else:
-                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition)
+                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor)
             report = json.loads((output / 'report.json').read_text())
             self.assertTrue(report['final'])
             self.assertFalse(report['promotion_accepted'])
@@ -158,6 +158,12 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
         self.assertTrue(report['reference_identity_pass'])
         self.assertTrue(report['target_result']['improved'])
         self.assertFalse(report['comparison']['inference_identity_required'])
+
+    def test_energy_weighting_applies_only_to_trial(self):
+        report, commands, _ = self.exercise(energy_weighted_descriptor=True)
+        self.assertTrue(report['energy_weighted_descriptor'])
+        flag = '--diagnostic-energy-weighted-descriptor'
+        self.assertEqual([flag in command for command in commands], [False, False, True])
 
     def test_competition_selects_its_generator_and_frozen_policy(self):
         report, commands, generated = self.exercise(competition=True)

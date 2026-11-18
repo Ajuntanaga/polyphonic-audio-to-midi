@@ -811,6 +811,9 @@ class PolyphonicPitchDetector final {
       bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
       std::uint8_t occupied_mask, bool protected_group,
       bool tuning_required = false, bool established_assignment = false) noexcept;
+  void set_energy_weighted_descriptor_for_diagnostics(bool enabled) noexcept {
+    diagnostic_energy_weighted_descriptor_ = enabled;
+  }
   void set_pending_string_posterior_for_diagnostics(bool enabled) noexcept {
     diagnostic_pending_string_posterior_ = enabled;
   }
@@ -1858,6 +1861,7 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_assignment_prior_{};
   bool diagnostic_joint_rescue_eligibility_{};
   bool diagnostic_pending_string_posterior_{};
+  bool diagnostic_energy_weighted_descriptor_{};
   bool diagnostic_joint_spectral_ownership_{};
   bool diagnostic_joint_midi_owner_guard_{};
   bool diagnostic_residual_pitch_recovery_{};
