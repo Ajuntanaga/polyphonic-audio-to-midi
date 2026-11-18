@@ -44,6 +44,31 @@ class SourceContinuityTests(unittest.TestCase):
         self.assertAlmostEqual(partial['training_coefficient_power'],
                                partial['prediction_coefficient_power'], places=8)
 
+    def test_shared_gain_separates_background_change_from_candidate_loss(self):
+        from tools.portable_ordinary_harmonic_prediction import design
+        base = design([137.], 4800)
+        background = .2 + 2*base[:, 1] + .4*base[:, 2]
+        source = np.cos(2*np.pi*300*np.arange(4800)/RATE + .3)
+        for retained in (True, False):
+            signal = background + source
+            signal[3840:] = 2.5*background[3840:] + (source[3840:] if retained else 0)
+            prepared = dict(base=base, factor=admission.factor(base[:3840]), signal=signal)
+            result = measure(prepared, [300.])['shared_background_gain']
+            self.assertTrue(result['available'])
+            self.assertAlmostEqual(result['background_gain'], 2.5, places=10)
+            partial = result['partials'][0]
+            if retained:
+                self.assertAlmostEqual(partial['prediction_coefficient_power'],
+                                       partial['training_coefficient_power'], places=8)
+            else:
+                self.assertLess(partial['prediction_coefficient_power'], 1e-20)
+
+    def test_absent_background_does_not_invent_a_gain(self):
+        signal = np.cos(2*np.pi*300*np.arange(4800)/RATE)
+        result = measure(self.prepared(signal), [300.])['shared_background_gain']
+        self.assertFalse(result['available'])
+        self.assertEqual(result['reason'], 'no_resolvable_background_gain')
+
     def test_redundant_nuisance_is_distinguished_from_candidate_overlap(self):
         from tools.portable_ordinary_harmonic_prediction import design
         base = np.column_stack((np.ones(4800), np.ones(4800)))

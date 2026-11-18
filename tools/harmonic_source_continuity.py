@@ -27,6 +27,8 @@ def measure(prepared, frequencies):
     base_columns = prepared['base'].shape[1]
     count = len(passing)
     result['frozen_background'] = frozen_background(signal, full, base_columns, passing, train)
+    result['shared_background_gain'] = frozen_background(
+        signal, full, base_columns, passing, train, adapt_gain=True)
     for name, begin, end in (('early_train', 0, train // 2),
                              ('late_train', train // 2, train),
                              ('observed_prediction', train, total)):
@@ -69,7 +71,7 @@ def measure(prepared, frequencies):
     return result
 
 
-def frozen_background(signal, full, base_columns, passing, train):
+def frozen_background(signal, full, base_columns, passing, train, adapt_gain=False):
     """Conditional observation with nuisance coefficients frozen from training.
 
     Unlike independent segment fits, this cannot let a flexible background absorb
@@ -83,7 +85,8 @@ def frozen_background(signal, full, base_columns, passing, train):
     parts = admission.factor(scaled[:train])
     ratio = float(parts[1][-1] / parts[1][0])
     result = dict(available=False, training_singular_ratio=ratio,
-                  assumption='nuisance coefficients stationary after training',
+                  assumption=('one common nuisance gain after training' if adapt_gain else
+                              'nuisance coefficients stationary after training'),
                   interpretation='conditional fit, not proof of source presence or onset')
     if parts[3] != full.shape[1] or ratio < admission.CONFIG['full_singular_ratio_floor']:
         return dict(result, reason='unidentifiable_training_fit')
@@ -91,6 +94,13 @@ def frozen_background(signal, full, base_columns, passing, train):
     background = scaled[:, :base_columns] @ weights[:base_columns]
     residual = signal[train:] - background[train:]
     candidate = scaled[train:, base_columns:]
+    if adapt_gain:
+        # Only one fitted background waveform may change amplitude. Individual
+        # nuisance harmonics remain tied to their training coefficients.
+        candidate = np.column_stack((background[train:], candidate))
+        residual = signal[train:]
+        if np.linalg.norm(background[train:]) <= np.finfo(float).eps * max(1., np.linalg.norm(signal[:train])):
+            return dict(result, reason='no_resolvable_background_gain')
     candidate_norms = np.linalg.norm(candidate, axis=0)
     if np.any(candidate_norms <= np.finfo(float).tiny):
         return dict(result, reason='zero_prediction_column')
@@ -100,11 +110,15 @@ def frozen_background(signal, full, base_columns, passing, train):
     if fit[3] != candidate.shape[1] or prediction_ratio < admission.CONFIG['full_singular_ratio_floor']:
         return dict(result, reason='unidentifiable_prediction_candidate')
     updated = admission.coefficients(fit, residual) / candidate_norms
-    before = residual - candidate @ weights[base_columns:]
+    before_weights = (np.r_[1., weights[base_columns:]] if adapt_gain else weights[base_columns:])
+    before = residual - candidate @ before_weights
     after = residual - candidate @ updated
     result.update(available=True, partials=[],
                   frozen_residual_mean_square=float(np.mean(before**2)),
                   adapted_residual_mean_square=float(np.mean(after**2)))
+    if adapt_gain:
+        result['background_gain'] = float(updated[0])
+        updated = updated[1:]
     count = len(passing)
     for i, harmonic in enumerate(passing):
         a, b = weights[base_columns+i], weights[base_columns+count+i]
