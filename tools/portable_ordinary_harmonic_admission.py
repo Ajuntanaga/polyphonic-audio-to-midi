@@ -82,7 +82,7 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     if fundamental_veto_check and not competition:
@@ -186,6 +186,41 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                 row['outcome_trace'] = compress_trace_window(outcome, start=0, end=row['sample_count'])
                 outcome.unlink()
                 save()
+        if assignment_diagnostic:
+            # Observation only: replay identical cues, then compare complete output
+            # and raw MIDI before retaining the bounded assignment evidence.
+            report.update(stage='trace experimental initial assignment',
+                          current_run='ordinary-assignment-diagnostic')
+            save()
+            stem = output / 'ordinary-assignment-diagnostic'
+            traced_tsv = stem.with_suffix('.tsv')
+            traced_midi = output / 'ordinary-assignment-diagnostic-midi.tsv'
+            assignment = output / 'ordinary-assignment-diagnostic-costs.tsv'
+            trace_command = command_for(binary, corpus, 'ordinary', 'off', 512,
+                                        None, midi_trace=traced_midi)
+            trace_command.extend(conditions[-1][1])
+            trace_command.extend(('--assignment-trace', str(assignment),
+                                  '--assignment-trace-start', '6.7',
+                                  '--assignment-trace-end', '7.3'))
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Assignment diagnostic wall-clock budget exhausted')
+            with traced_tsv.open('w') as out, stem.with_suffix('.stderr').open('w') as err:
+                subprocess.run(trace_command, stdout=out, stderr=err,
+                               timeout=min(900, remaining), check=True)
+            comparison = compare_replays(cached[TRIAL], read_replay(traced_tsv))
+            midi_identical = digest(traced_midi) == report['runs'][TRIAL]['midi_trace_sha256']
+            report['assignment_diagnostic'] = dict(command=trace_command,
+                comparison=comparison, midi_bit_identical=midi_identical,
+                start_sample=643200, end_sample=700800)
+            if (not comparison['output_bit_identical'] or comparison['changed_labels']
+                    or not midi_identical):
+                raise ValueError('Assignment tracing changed experimental output')
+            report['assignment_diagnostic']['trace'] = compress_trace_window(
+                assignment, start=643200, end=700800)
+            assignment.unlink()
+            traced_midi.unlink()
+            save()
         report['comparison'] = compare_notes(report['runs'][CURRENT], report['runs'][TRIAL],
             cached[CURRENT], cached[TRIAL], require_inference=False)
         report['snapshot_vs_off'] = compare_replays(cached[OFF], cached[TRIAL])
@@ -224,10 +259,13 @@ def main():
                         help='Condition admission on independently supported unowned lower notes')
     parser.add_argument('--fundamental-veto-check', action='store_true',
                         help='Offline experiment; preserve the default competition policy')
+    parser.add_argument('--assignment-diagnostic', action='store_true',
+                        help='Trace initial assignment with full untraced output parity')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
-        fundamental_veto_check=args.fundamental_veto_check)
+        fundamental_veto_check=args.fundamental_veto_check,
+        assignment_diagnostic=args.assignment_diagnostic)
 
 
 if __name__ == '__main__':
