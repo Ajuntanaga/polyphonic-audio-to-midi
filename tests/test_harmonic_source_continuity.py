@@ -28,6 +28,22 @@ class SourceContinuityTests(unittest.TestCase):
         self.assertGreater(result['segments'][1]['partials'][0]['coefficient_power'], 1)
         self.assertEqual(result['segments'][2]['partials'][0]['coefficient_power'], 0)
 
+    def test_frozen_background_tracks_loss_without_refitting_nuisance(self):
+        signal = .2 + np.cos(2*np.pi*300*np.arange(4800)/RATE)
+        signal[3840:] = .2
+        result = measure(self.prepared(signal), [300.])['frozen_background']
+        self.assertTrue(result['available'])
+        self.assertGreater(result['partials'][0]['training_coefficient_power'], 1)
+        self.assertLess(result['partials'][0]['prediction_coefficient_power'], 1e-20)
+
+    def test_frozen_background_retains_stationary_candidate(self):
+        signal = .2 + np.cos(2*np.pi*300*np.arange(4800)/RATE + .3)
+        result = measure(self.prepared(signal), [300.])['frozen_background']
+        self.assertTrue(result['available'])
+        partial = result['partials'][0]
+        self.assertAlmostEqual(partial['training_coefficient_power'],
+                               partial['prediction_coefficient_power'], places=8)
+
     def test_redundant_nuisance_is_distinguished_from_candidate_overlap(self):
         from tools.portable_ordinary_harmonic_prediction import design
         base = np.column_stack((np.ones(4800), np.ones(4800)))

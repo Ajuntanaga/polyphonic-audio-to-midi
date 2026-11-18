@@ -26,6 +26,7 @@ def measure(prepared, frequencies):
     full = np.column_stack((prepared['base'], added))
     base_columns = prepared['base'].shape[1]
     count = len(passing)
+    result['frozen_background'] = frozen_background(signal, full, base_columns, passing, train)
     for name, begin, end in (('early_train', 0, train // 2),
                              ('late_train', train // 2, train),
                              ('observed_prediction', train, total)):
@@ -65,4 +66,52 @@ def measure(prepared, frequencies):
                 coefficient_power=float(a*a + b*b), phase_radians=float(np.arctan2(b, a))))
     result['status'] = ('measured' if all(r['available'] for r in result['segments'])
                         else 'partially_unavailable')
+    return result
+
+
+def frozen_background(signal, full, base_columns, passing, train):
+    """Conditional observation with nuisance coefficients frozen from training.
+
+    Unlike independent segment fits, this cannot let a flexible background absorb
+    the candidate in the short prediction segment. Background evolution can still
+    contaminate the estimate: this is not an independent source-presence verdict.
+    """
+    norms = np.linalg.norm(full[:train], axis=0)
+    if np.any(norms <= np.finfo(float).tiny):
+        return dict(available=False, reason='zero_training_column')
+    scaled = full / norms
+    parts = admission.factor(scaled[:train])
+    ratio = float(parts[1][-1] / parts[1][0])
+    result = dict(available=False, training_singular_ratio=ratio,
+                  assumption='nuisance coefficients stationary after training',
+                  interpretation='conditional fit, not proof of source presence or onset')
+    if parts[3] != full.shape[1] or ratio < admission.CONFIG['full_singular_ratio_floor']:
+        return dict(result, reason='unidentifiable_training_fit')
+    weights = admission.coefficients(parts, signal[:train])
+    background = scaled[:, :base_columns] @ weights[:base_columns]
+    residual = signal[train:] - background[train:]
+    candidate = scaled[train:, base_columns:]
+    candidate_norms = np.linalg.norm(candidate, axis=0)
+    if np.any(candidate_norms <= np.finfo(float).tiny):
+        return dict(result, reason='zero_prediction_column')
+    fit = admission.factor(candidate / candidate_norms)
+    prediction_ratio = float(fit[1][-1] / fit[1][0])
+    result['prediction_singular_ratio'] = prediction_ratio
+    if fit[3] != candidate.shape[1] or prediction_ratio < admission.CONFIG['full_singular_ratio_floor']:
+        return dict(result, reason='unidentifiable_prediction_candidate')
+    updated = admission.coefficients(fit, residual) / candidate_norms
+    before = residual - candidate @ weights[base_columns:]
+    after = residual - candidate @ updated
+    result.update(available=True, partials=[],
+                  frozen_residual_mean_square=float(np.mean(before**2)),
+                  adapted_residual_mean_square=float(np.mean(after**2)))
+    count = len(passing)
+    for i, harmonic in enumerate(passing):
+        a, b = weights[base_columns+i], weights[base_columns+count+i]
+        c, d = updated[i], updated[count+i]
+        result['partials'].append(dict(harmonic=harmonic+1,
+            training_coefficient_power=float(a*a+b*b),
+            prediction_coefficient_power=float(c*c+d*d),
+            training_phase_radians=float(np.arctan2(b,a)),
+            prediction_phase_radians=float(np.arctan2(d,c))))
     return result
