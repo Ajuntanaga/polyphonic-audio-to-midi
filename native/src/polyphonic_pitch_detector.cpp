@@ -1684,6 +1684,8 @@ void PolyphonicPitchDetector::reset() noexcept {
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
+  local_onset_ticks_ = {};
+  local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -3032,6 +3034,8 @@ void PolyphonicPitchDetector::set_calibration_bank(
   calibrated_output_diagnostics_ = {};
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
+  local_onset_ticks_ = {};
+  local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
     frequency_refinement_observer_(frequency_refinement_context_, {});
   }
@@ -12953,6 +12957,31 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     activation.evidence_ticks = state.evidence_ticks;
     activation.attack_ticks = state.attack_ticks;
     activation.gate = ActivationGate::attack_delay;
+    auto& local_ticks = local_onset_ticks_[candidate];
+    auto& local_mask = local_onset_masks_[candidate];
+    const auto assigned = state.assigned_string_mask;
+    const bool local_observation = diagnostic_local_onset_evidence_ &&
+        profile_mode_ == ProfileMode::m3 && !quiet && !state.active &&
+        selected[candidate] && assigned != 0U &&
+        (assigned & (assigned - 1U)) == 0U &&
+        has_direct_fundamental_peak(scores, fundamentals, candidate, count);
+    if (!local_observation) {
+      local_ticks = 0U;
+      local_mask = 0U;
+    } else {
+      if (local_mask != assigned) {
+        local_ticks = 0U;
+        local_mask = assigned;
+      }
+      if (local_ticks < 255U) {
+        ++local_ticks;
+      }
+    }
+    const bool local_onset_ready = local_observation &&
+        local_ticks >= candidate_evidence_decisions(false);
+    if (local_onset_ready) {
+      state.evidence_ticks = std::max(state.evidence_ticks, local_ticks);
+    }
 #endif
     if (!selected[candidate]) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -12983,7 +13012,12 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     }
     const bool atomic_handoff =
         selector_atomic_handoff_targets_[candidate];
-    if (!atomic_handoff && fast_energy_ < slow_energy_ * kAttackEnergyRatio) {
+    bool energy_blocks_onset =
+        fast_energy_ < slow_energy_ * kAttackEnergyRatio;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    energy_blocks_onset = energy_blocks_onset && !local_onset_ready;
+#endif
+    if (!atomic_handoff && energy_blocks_onset) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       activation.gate = ActivationGate::energy;
 #endif

@@ -4643,6 +4643,61 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
   }
 
+  static void local_onset_evidence_probe(bool enabled, bool interrupt) noexcept {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 84U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    config.sensitivity = 60U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_local_onset_evidence_for_diagnostics(enabled);
+    constexpr std::uint8_t note = 40U;
+    const std::size_t candidate = note - detector.lowest_note_;
+    detector.cells_ = {};
+    detector.signal_samples_ = 100000U;
+    detector.candidate_states_[0U].active = true;
+    auto& fundamental = detector.cells_[detector.cell_index(candidate, 0U)];
+    fundamental.enabled = true;
+    fundamental.fast_real = 1.0;
+    detector.fast_energy_ = 0.87;
+    detector.slow_energy_ = 1.0;
+    detector.previous_decision_energy_ = 0.87;
+    const unsigned required = detector.candidate_evidence_decisions(false);
+    const unsigned attack = detector.attack_decisions();
+    unsigned ons = 0U;
+    const auto step = [&]() {
+      const auto decision = detector.make_decision();
+      for (const auto& event : decision.transitions) {
+        if (event.note == note && event.kind == TransitionKind::note_on) ++ons;
+      }
+    };
+    for (unsigned tick = 1U; tick < required; ++tick) {
+      step();
+      M3_EXPECT_EQ(ons, 0U);
+      M3_EXPECT_FALSE(detector.candidate_states_[candidate].active);
+    }
+    if (interrupt) {
+      // Changing lanes must discard the accumulated same-lane evidence.
+      detector.local_onset_masks_[candidate] = 128U;
+      step();
+      M3_EXPECT_EQ(detector.local_onset_ticks_[candidate], enabled ? 1U : 0U);
+      M3_EXPECT_EQ(ons, 0U);
+      for (unsigned tick = 2U; tick < required; ++tick) step();
+    }
+    for (unsigned tick = 1U; tick <= attack; ++tick) {
+      step();
+      M3_EXPECT_EQ(ons, enabled && tick == attack ? 1U : 0U);
+    }
+    M3_EXPECT_EQ(detector.candidate_states_[candidate].active, enabled);
+    detector.reset();
+    M3_EXPECT_EQ(detector.local_onset_ticks_[candidate], 0U);
+    M3_EXPECT_EQ(detector.local_onset_masks_[candidate], 0U);
+  }
+
   static void suppressed_adjacent_admission_probe(
       PolyphonicPitchDetector& detector, unsigned guard, bool enabled,
       bool lower_peer = false) noexcept {
@@ -10256,6 +10311,14 @@ M3_TEST(native_detector_state_local_open_prior_requires_direct_open_evidence) {
   M3_EXPECT_TRUE(result.selected[41U]);
   M3_EXPECT_EQ(result.open_pitches, 1U);
   M3_EXPECT_NEAR(result.score, 1.70, 1.0e-12);
+}
+
+M3_TEST(native_detector_local_onset_requires_evidence_and_attack_and_resets_on_lane_change) {
+  for (const bool enabled : {false, true}) {
+    for (const bool interrupt : {false, true}) {
+      m3::PolyphonicPitchDetectorTestAccess::local_onset_evidence_probe(enabled, interrupt);
+    }
+  }
 }
 
 M3_TEST(native_detector_direct_evidence_retention_keeps_onset_and_evidence_gates) {

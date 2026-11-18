@@ -758,6 +758,11 @@ class PolyphonicPitchDetector final {
   void set_fundamental_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_fundamental_admission_ = enabled;
   }
+  void set_local_onset_evidence_for_diagnostics(bool enabled) noexcept {
+    diagnostic_local_onset_evidence_ = enabled;
+    local_onset_ticks_ = {};
+    local_onset_masks_ = {};
+  }
   void set_direct_evidence_retention_for_diagnostics(bool enabled) noexcept {
     diagnostic_direct_evidence_retention_ = enabled;
   }
@@ -1851,6 +1856,9 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_fundamental_admission_{};
   bool diagnostic_direct_evidence_retention_{};
+  bool diagnostic_local_onset_evidence_{};
+  std::array<std::uint8_t, kMaxCandidates> local_onset_ticks_{};
+  std::array<std::uint8_t, kMaxCandidates> local_onset_masks_{};
   bool diagnostic_projection_preview_admission_{};
   bool diagnostic_retained_spectral_assignment_{};
   bool diagnostic_spectral_lane_collision_{};
