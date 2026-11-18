@@ -758,6 +758,11 @@ class PolyphonicPitchDetector final {
   void set_fundamental_admission_for_diagnostics(bool enabled) noexcept {
     diagnostic_fundamental_admission_ = enabled;
   }
+  void set_persistent_candidate_admission_for_diagnostics(bool enabled) noexcept {
+    diagnostic_persistent_candidate_admission_ = enabled;
+    persistent_candidate_ticks_ = {};
+    persistent_candidate_last_tick_ = 0U;
+  }
   void set_supported_sustain_renewal_for_diagnostics(bool enabled) noexcept {
     diagnostic_supported_sustain_renewal_ = enabled;
     unsupported_sustain_ticks_ = {};
@@ -1296,6 +1301,8 @@ class PolyphonicPitchDetector final {
       std::size_t candidate,
       const std::array<bool, kMaxCandidates>& selected) const noexcept;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  void filter_persistent_candidate_admission_for_diagnostics(
+      std::size_t count, std::array<bool, kMaxCandidates>& eligible) noexcept;
   void filter_suppressed_adjacent_admission_for_diagnostics(
       const std::array<double, kMaxCandidates>& scores,
       const std::array<double, kMaxCandidates>& fundamentals,
@@ -1860,6 +1867,9 @@ class PolyphonicPitchDetector final {
   bool diagnostic_calibrated_harmonic_admission_guard_{};
   bool diagnostic_fundamental_admission_{};
   bool diagnostic_direct_evidence_retention_{};
+  bool diagnostic_persistent_candidate_admission_{};
+  std::array<std::uint8_t, kMaxCandidates> persistent_candidate_ticks_{};
+  std::uint64_t persistent_candidate_last_tick_{};
   bool diagnostic_supported_sustain_renewal_{};
   std::array<std::uint16_t, kMaxCandidates> unsupported_sustain_ticks_{};
   bool diagnostic_local_onset_evidence_{};

@@ -18,6 +18,43 @@
 namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void persistent_admission_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.max_fret = 24U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_persistent_candidate_admission_for_diagnostics(true);
+    detector.candidate_states_[0U].active = true;
+    const auto required = detector.candidate_evidence_decisions(false);
+    std::array<bool, PolyphonicPitchDetector::kMaxCandidates> eligible{};
+    const auto tick = [&](bool supported, bool expected) {
+      ++detector.decision_counter_;
+      eligible[0U] = true;
+      eligible[1U] = supported;
+      detector.filter_persistent_candidate_admission_for_diagnostics(2U, eligible);
+      M3_EXPECT_TRUE(eligible[0U]);
+      M3_EXPECT_EQ(eligible[1U], expected);
+    };
+    for (unsigned i = 1U; i < required; ++i) tick(true, false);
+    // Capacity/lifecycle resets cannot starve the independent admission clock.
+    detector.candidate_states_[1U] = {};
+    tick(true, true);
+    tick(false, false);
+    tick(true, required == 1U);
+    detector.decision_counter_ += 2U;
+    tick(true, required == 1U);
+    detector.candidate_states_[1U].active = true;
+    tick(true, true);
+    detector.candidate_states_[0U] = {};
+    detector.candidate_states_[1U] = {};
+    tick(true, true); // Initial chord acquisition retains its existing gate.
+    detector.candidate_states_[0U].active = true;
+    detector.set_persistent_candidate_admission_for_diagnostics(false);
+    tick(true, true);
+  }
+#endif
   static void guard_updates_match_enabled_scan(
       PolyphonicPitchDetector& detector, std::size_t expected_enabled) noexcept {
     auto lower = detector.lower_cents_guard_cells_;
@@ -15192,5 +15229,11 @@ M3_TEST(native_detector_pending_posterior_requires_calibrated_pending_singleton)
           detector, enabled, scenario);
     }
   }
+#endif
+}
+
+M3_TEST(native_detector_admission_persists_before_allocation_without_starvation) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  m3::PolyphonicPitchDetectorTestAccess::persistent_admission_probe();
 #endif
 }

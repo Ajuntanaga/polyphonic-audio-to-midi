@@ -1685,6 +1685,8 @@ void PolyphonicPitchDetector::reset() noexcept {
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
   unsupported_sustain_ticks_ = {};
+  persistent_candidate_ticks_ = {};
+  persistent_candidate_last_tick_ = 0U;
   local_onset_ticks_ = {};
   local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
@@ -3036,6 +3038,8 @@ void PolyphonicPitchDetector::set_calibration_bank(
   routing_diagnostics_ = {};
   activation_diagnostics_ = {};
   unsupported_sustain_ticks_ = {};
+  persistent_candidate_ticks_ = {};
+  persistent_candidate_last_tick_ = 0U;
   local_onset_ticks_ = {};
   local_onset_masks_ = {};
   if (frequency_refinement_observer_ != nullptr) {
@@ -3279,6 +3283,39 @@ bool PolyphonicPitchDetector::
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void PolyphonicPitchDetector::filter_persistent_candidate_admission_for_diagnostics(
+    std::size_t count,
+    std::array<bool, kMaxCandidates>& eligible) noexcept {
+  if (diagnostic_persistent_candidate_admission_) {
+    // Accumulate pitch eligibility BEFORE physical allocation, independently of
+    // CandidateState: selection/capacity resets must not erase this evidence.
+    // Preserve ordinary harmonic classification and its missing-fundamental
+    // routes. No amplitude threshold or lane preference is changed here.
+    if (decision_counter_ - persistent_candidate_last_tick_ != 1U)
+      persistent_candidate_ticks_ = {};
+    persistent_candidate_last_tick_ = decision_counter_;
+    bool has_active = false;
+    for (std::size_t candidate = 0U; candidate < count; ++candidate)
+      has_active = has_active || candidate_states_[candidate].active;
+    const auto required = candidate_evidence_decisions(false);
+    for (std::size_t candidate = 0U; candidate < count; ++candidate) {
+      auto& ticks = persistent_candidate_ticks_[candidate];
+      if (profile_mode_ != ProfileMode::m3 || max_fret_ <= 2U ||
+          !has_active || candidate_states_[candidate].active ||
+          string_count(selector_group_masks_[candidate]) > 1U) {
+        ticks = 0U;
+        continue;
+      }
+      if (!eligible[candidate]) {
+        ticks = 0U;
+      } else {
+        if (ticks < required) ++ticks;
+        if (ticks < required) eligible[candidate] = false;
+      }
+    }
+  }
+}
+
 void PolyphonicPitchDetector::filter_suppressed_adjacent_admission_for_diagnostics(
     const std::array<double, kMaxCandidates>& scores,
     const std::array<double, kMaxCandidates>& fundamentals,
@@ -5435,6 +5472,10 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
       priority_unison != count ? selector_group_masks_[priority_unison] : 0U;
   const std::uint8_t priority_unison_members =
       string_count(priority_unison_mask);
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  filter_persistent_candidate_admission_for_diagnostics(count, spectral_eligible);
+#endif
 
   const auto selector_string_mask = [this](std::size_t candidate) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)

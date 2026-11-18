@@ -68,6 +68,10 @@ SUSTAIN_TARGET = dict(label_index=252, midi_note=55, string_mask=2,
     start_sample=4569706, end_sample=4641600)
 
 
+PERSISTENCE_TARGET = dict(label_index=306, midi_note=42, string_mask=1,
+    start_sample=5630617, end_sample=5702400)
+
+
 def target_result(current, trial, current_replay, trial_replay, target=TARGET):
     result = {}
     for name, row, replay in (('before', current, current_replay), ('after', trial, trial_replay)):
@@ -82,11 +86,14 @@ def target_result(current, trial, current_replay, trial_replay, target=TARGET):
         result[name] = dict(held[0], snapshot_matched=snapshots[0]['matched'],
                             snapshot_labeled=snapshots[0]['labeled'])
     before, after = result['before'], result['after']
-    if target == SUSTAIN_TARGET:
+    if target in (SUSTAIN_TARGET, PERSISTENCE_TARGET):
         result['improved'] = bool(
             after['exact_held_samples'] > before['exact_held_samples']
             and after['note_ons_inside_label'] <= before['note_ons_inside_label']
             and after['snapshot_matched'] >= before['snapshot_matched'])
+        if target == PERSISTENCE_TARGET:
+            result['improved'] = bool(result['improved'] and
+                after['longest_exact_hold_samples'] >= before['longest_exact_hold_samples'])
         return result
     if before['exact_held_samples'] != 0 or before['note_ons_inside_label'] != 0:
         raise ValueError('Missing-note baseline no longer matches the declared target')
@@ -174,7 +181,12 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False, persistent_candidate_admission=False):
+    if persistent_candidate_admission and any((supported_sustain_renewal,
+            local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
+            joint_rescue_eligibility, pending_string_posterior, posterior_loss_diagnostic,
+            energy_weighted_descriptor, common_detuning_support, assignment_diagnostic)):
+        raise ValueError('Persistent admission trial must be isolated')
     if supported_sustain_renewal and any((local_onset_evidence,
             fundamental_veto_check, calibrated_assignment_prior, joint_rescue_eligibility,
             pending_string_posterior, posterior_loss_diagnostic, energy_weighted_descriptor,
@@ -207,7 +219,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=SUSTAIN_TARGET if supported_sustain_renewal else (LOCAL_ONSET_TARGET if local_onset_evidence else TARGET),
+        target=PERSISTENCE_TARGET if persistent_candidate_admission else (SUSTAIN_TARGET if supported_sustain_renewal else (LOCAL_ONSET_TARGET if local_onset_evidence else TARGET)),
+        persistent_candidate_admission=persistent_candidate_admission,
         supported_sustain_renewal=supported_sustain_renewal,
         local_onset_evidence=local_onset_evidence, common_detuning_support=common_detuning_support, energy_weighted_descriptor=energy_weighted_descriptor, pending_string_posterior=pending_string_posterior, joint_rescue_eligibility=joint_rescue_eligibility, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
@@ -251,6 +264,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                       (TRIAL, (COLLISION, '--diagnostic-supported-sustain-renewal')))
         report['limitations'] = ('Native offline sustain renewal policy; timing, allocations, '
                                 'full corpus and live host acceptance remain unmeasured.')
+    if persistent_candidate_admission:
+        conditions = ((OFF, ()), (CURRENT, (COLLISION,)),
+                      (TRIAL, (COLLISION, '--diagnostic-persistent-candidate-admission')))
+        report['limitations'] = ('Native offline admission policy; added onset delay is possible. '
+                                'Timing, allocations, full corpus and live host acceptance remain unmeasured.')
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
     def save():
@@ -304,7 +322,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     row['outcome_sha256'] == references['current_outcome_sha256'])
                 if not row['saved_outcome_bit_identical']:
                     raise ValueError('Saved current outcome identity drift')
-                if not (local_onset_evidence or supported_sustain_renewal):
+                if not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission):
                     report.update(stage='generate past-only frozen-shadow cues')
                     save()
                     started = time.monotonic()
@@ -332,7 +350,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                     binary, corpus, output, conditions, cached, report['runs'], deadline,
                     start=start, end=end, prefix='sustain-assignment-' + str(label))
                 save()
-        if assignment_diagnostic and not (local_onset_evidence or supported_sustain_renewal):
+        if assignment_diagnostic and not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission):
             # Observation only: replay identical cues, then compare complete output
             # and raw MIDI before retaining the bounded assignment evidence.
             report.update(stage='trace experimental initial assignment',
@@ -394,7 +412,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             'saved_reference_bit_identical', False) for mode in REFERENCE_FLAGS) and bool(
                 report['runs'].get(CURRENT, {}).get('saved_outcome_bit_identical', False))
         report['bounded_screen_pass'] = bool(report['state'] == 'completed'
-            and report['reference_identity_pass'] and (local_onset_evidence or supported_sustain_renewal or
+            and report['reference_identity_pass'] and (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or
                 report.get('cue_generation', {}).get('complete')))
         report['decision'] = ('offline screen passed; corpus timing and live acceptance remain'
             if report['bounded_screen_pass'] else 'rejected or incomplete; do not widen this policy')
@@ -425,6 +443,7 @@ def main():
     parser.add_argument('--common-detuning-support', action='store_true')
     parser.add_argument('--local-onset-evidence', action='store_true')
     parser.add_argument('--supported-sustain-renewal', action='store_true')
+    parser.add_argument('--persistent-candidate-admission', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
@@ -437,7 +456,8 @@ def main():
         energy_weighted_descriptor=args.energy_weighted_descriptor,
         common_detuning_support=args.common_detuning_support,
         local_onset_evidence=args.local_onset_evidence,
-        supported_sustain_renewal=args.supported_sustain_renewal)
+        supported_sustain_renewal=args.supported_sustain_renewal,
+        persistent_candidate_admission=args.persistent_candidate_admission)
 
 
 if __name__ == '__main__':
