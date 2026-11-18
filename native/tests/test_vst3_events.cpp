@@ -605,6 +605,8 @@ M3_TEST(vst3_stable_note_identity_preserves_repluck_unison_and_original_sink) {
                  Steinberg::kResultTrue);
     m3::test::FakeVst3ProcessBlock<float> block;
     m3::test::FakeVst3EventList events;
+    m3::test::FakeVst3ParameterChanges routing;
+    M3_EXPECT_TRUE(routing.append_input(0x4D330001U, 0, 1.0));
     const auto prepare = [&]() {
       events.reset();
       block.configure(frames, false);
@@ -621,6 +623,7 @@ M3_TEST(vst3_stable_note_identity_preserves_repluck_unison_and_original_sink) {
       expect_dry(block, frames);
     };
     prepare();
+    block.data().inputParameterChanges = &routing;
     M3_EXPECT_TRUE(queue_note(instance, transition(1, m3::TransitionKind::note_on, 60, 100, 1, 3), frames));
     process();
     M3_EXPECT_EQ(events.stored_event_count(), 1U);
@@ -693,6 +696,8 @@ M3_TEST(vst3_stable_note_identity_refused_off_releases_transferred_owner_then_re
   M3_EXPECT_EQ(instance.controller->setParamNormalized(0x4D330001U, 1.0), Steinberg::kResultTrue);
   m3::test::FakeVst3ProcessBlock<float> block;
   m3::test::FakeVst3EventList events;
+  m3::test::FakeVst3ParameterChanges routing;
+  M3_EXPECT_TRUE(routing.append_input(0x4D330001U, 0, 1.0));
   const auto prepare = [&]() {
     events.reset();
     block.configure(frames, false);
@@ -701,6 +706,7 @@ M3_TEST(vst3_stable_note_identity_refused_off_releases_transferred_owner_then_re
     begin_notes(instance);
   };
   prepare();
+  block.data().inputParameterChanges = &routing;
   M3_EXPECT_TRUE(queue_note(instance, transition(1, m3::TransitionKind::note_on, 60, 100, 1, 3), frames));
   M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
   M3_EXPECT_EQ(events.stored_event_count(), 1U);
@@ -729,9 +735,12 @@ M3_TEST(vst3_stable_note_identity_refused_off_releases_transferred_owner_then_re
   M3_EXPECT_EQ(events.stored_event(0).noteOff.channel, original.channel);
   M3_EXPECT_EQ(component->status_for_test(), m3::Status::midi_output_blocked);
   M3_EXPECT_EQ(instance.controller->setParamNormalized(m3::kPanicParameterId, 1.0), Steinberg::kResultTrue);
+  m3::test::FakeVst3ParameterChanges panic;
+  M3_EXPECT_TRUE(panic.append_input(m3::kPanicParameterId, 0, 1.0));
   for (int hold = 0; hold < 2; ++hold) {
     prepare();
     block.fill_silence();
+    if (hold == 0) block.data().inputParameterChanges = &panic;
     M3_EXPECT_EQ(instance.processor->process(block.data()), Steinberg::kResultOk);
     M3_EXPECT_EQ(events.stored_event_count(), 0U);
   }
