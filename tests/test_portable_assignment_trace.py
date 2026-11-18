@@ -10,6 +10,52 @@ from tools.portable_assignment_trace import (assignment_summary, compress_trace_
 
 
 class PortableAssignmentTraceTests(unittest.TestCase):
+    def test_activation_route_requires_midi_identity(self):
+        import json
+        from unittest.mock import patch
+        from tools.portable_assignment_trace import run
+        for changed in (False, True):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                binary = root / 'binary'
+                binary.write_text('fixture')
+                manifest = root / 'manifest.json'
+                manifest.write_text('{}')
+                commands = []
+                def fake_run(command, *, stdout, **kwargs):
+                    commands.append(command)
+                    stdout.write('samples\tsample_rate\n4096\t96000\n')
+                    midi = Path(command[command.index('--midi-event-trace') + 1])
+                    midi.write_text('changed' if changed and len(commands) == 2 else 'same')
+                    if '--candidate-trace' in command:
+                        trace = Path(command[command.index('--candidate-trace') + 1])
+                        trace.write_text('sample\tactivation_gate\n1024\tenergy\n')
+                parsed = dict(output={}, exact_matches_by_string_count={}, labels=[dict(
+                    label_index=0, midi_note=65, start_sample=1000, end_sample=1100)])
+                with patch('tools.portable_assignment_trace.verify_inputs'), \
+                     patch('tools.portable_assignment_trace.subprocess.run', side_effect=fake_run), \
+                     patch('tools.frozen_cue_corpus_gate.read_replay', return_value=parsed), \
+                     patch('tools.frozen_cue_corpus_gate.compare_replays', return_value=dict(
+                         output_bit_identical=True, changed_labels=[])):
+                    args = (binary, root, manifest, root / 'output')
+                    if changed:
+                        with self.assertRaisesRegex(ValueError, 'raw MIDI'):
+                            run(*args, dataset='ordinary', note=65, timeout=1,
+                                label_index=0, activation_gates=True)
+                    else:
+                        report = run(*args, dataset='ordinary', note=65, timeout=1,
+                                     label_index=0, activation_gates=True)
+                        self.assertEqual(report['windows'][0]['activation_gates'], {'energy': 1})
+                        self.assertTrue(report['midi_identity']['bit_identical'])
+                self.assertEqual(len(commands), 2)
+                for command in commands:
+                    self.assertIn('--diagnostic-spectral-lane-collision', command)
+                    self.assertNotIn('--diagnostic-native-partial-cues', command)
+                    self.assertNotIn('--diagnostic-cue-free-lane-reassignment', command)
+                    self.assertNotIn('--outcome-trace', command)
+                saved = json.loads((root / 'output/report.json').read_text())
+                self.assertEqual(saved['state'], 'failed' if changed else 'completed')
+
     def test_mask_counts_preserve_missing_and_extra_strings(self):
         row = dict(note='52', sample='1023', expected_note='1', expected_mask='40',
                    observed='1', valid='1', complete_calibration='1', playable='63',

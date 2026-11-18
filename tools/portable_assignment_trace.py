@@ -191,7 +191,7 @@ def trace_bounds(labels, sample_count, sample_rate):
     return start / sample_rate, end / sample_rate
 
 
-def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_index=None):
+def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_index=None, activation_gates=False):
     from tools.frozen_cue_corpus_gate import compare_replays, read_replay
     from tools.portable_corpus_replay import SETTINGS, command_for
     from tools.selection_trace_diagnosis import summarize_selection
@@ -229,8 +229,15 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_
         verify_inputs(corpus, manifest, dataset)
         report.update(source=manifest.get('source', {}), binary_sha256=digest(binary),
                       input_manifest_sha256=digest(manifest_path))
-        base_command = command_for(binary, corpus, dataset, 'off', 512, None)
-        reference_path, before = replay(base_command, 'reference-off')
+        base_command = command_for(binary, corpus, dataset,
+                                   'on' if activation_gates else 'off', 512, None,
+                                   spectral_lane_collision=activation_gates)
+        reference_command = base_command.copy()
+        if activation_gates:
+            report['provenance'] = 'Fresh current-ON and traced current-ON; collision policy only'
+            reference_command.extend(('--midi-event-trace', str(output / 'reference-midi.tsv')))
+        reference_path, before = replay(reference_command,
+                                        'reference-current-on' if activation_gates else 'reference-off')
         labels = select_labels(before['labels'], note=note, label_index=label_index)
         report['label_selection'] = dict(
             indices=[label['label_index'] for label in labels],
@@ -242,18 +249,43 @@ def run(binary, corpus, manifest_path, output, *, dataset, note, timeout, label_
         sample_count, sample_rate = int(aggregate['samples']), int(aggregate['sample_rate'])
         retained_start, retained_end = trace_sample_bounds(labels, sample_count)
         start, end = trace_bounds(labels, sample_count, sample_rate)
-        traces = {kind: output / (kind + '.tsv') for kind in ('candidate', 'outcome', 'assignment')}
+        traces = {kind: output / (kind + '.tsv') for kind in
+                  (('candidate',) if activation_gates else ('candidate', 'outcome', 'assignment'))}
         command = base_command.copy()
         for kind, path in traces.items():
             command.extend(('--' + kind + '-trace', str(path)))
         command.extend(('--candidate-trace-note', str(note), '--candidate-trace-start', str(start),
                         '--candidate-trace-end', str(end)))
-        replay_path, after = replay(command, 'traced-off')
+        if activation_gates:
+            command.extend(('--midi-event-trace', str(output / 'traced-midi.tsv')))
+        replay_path, after = replay(command,
+                                   'traced-current-on' if activation_gates else 'traced-off')
         comparison = compare_replays(before, after)
         report.update(comparison=comparison, output=after['output'], sample_count=sample_count,
                       sample_rate=sample_rate, trace_start_seconds=start, trace_end_seconds=end)
         if not comparison['output_bit_identical'] or comparison['changed_labels']:
             raise ValueError('Tracing changed reference output')
+        if activation_gates:
+            reference_midi = digest(output / 'reference-midi.tsv')
+            traced_midi = digest(output / 'traced-midi.tsv')
+            report['midi_identity'] = dict(reference_sha256=reference_midi,
+                                          traced_sha256=traced_midi,
+                                          bit_identical=reference_midi == traced_midi)
+            if reference_midi != traced_midi:
+                raise ValueError('Tracing changed raw MIDI output')
+            candidates = read_rows(traces['candidate'])
+            for label in labels:
+                window = [row for row in candidates
+                          if label['start_sample'] <= int(row['sample']) < label['end_sample']]
+                if not window or any('activation_gate' not in row for row in window):
+                    raise ValueError('Missing activation gate observations')
+                report['windows'].append(dict(label=label, rows=len(window),
+                    activation_gates=dict(Counter(row['activation_gate'] for row in window))))
+            report['traces'] = {'candidate': compress_trace_window(
+                traces['candidate'], start=retained_start, end=retained_end)}
+            traces['candidate'].unlink()
+            report.update(state='completed', final=True, stage='activation diagnosis collected')
+            return report
         report['stage'] = 'summarize selection and assignment'
         save()
         candidates, outcomes, assignments = (read_rows(traces[kind]) for kind in
@@ -294,6 +326,8 @@ def main():
     parser.add_argument('--note', type=int, choices=range(128), default=52)
     parser.add_argument('--label-index', type=int,
                         help='One original replay label index; default traces every label for the note')
+    parser.add_argument('--activation-gates', action='store_true',
+                        help='Trace current-ON activation only, requiring full MIDI identity')
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     args = parser.parse_args()
     if args.replay_timeout_seconds <= 0:
@@ -301,7 +335,8 @@ def main():
     if args.label_index is not None and args.label_index < 0:
         parser.error('--label-index must be nonnegative')
     run(args.binary, args.corpus, args.manifest, args.output, dataset=args.dataset,
-        note=args.note, timeout=args.replay_timeout_seconds, label_index=args.label_index)
+        note=args.note, timeout=args.replay_timeout_seconds, label_index=args.label_index,
+        activation_gates=args.activation_gates)
 
 
 if __name__ == '__main__':
