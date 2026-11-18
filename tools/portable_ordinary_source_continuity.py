@@ -6,6 +6,8 @@ import io
 import json
 from pathlib import Path
 import zipfile
+import time
+from collections import Counter
 
 from tools import harmonic_admission_cues as admission
 from tools import harmonic_competition_cues as competition
@@ -19,13 +21,16 @@ MEMBER = 'github-results/ordinary-harmonic-fixed-competition/ordinary-current-on
 FOCUS = ((65, 650000, 680000), (74, 2960000, 3010560))
 
 
-def run(corpus, manifest_path, reference_path, archive, output):
+def run(corpus, manifest_path, reference_path, archive, output, all_admissions=False):
     reference = json.loads(reference_path.read_text())
     manifest = json.loads(manifest_path.read_text())
     verify_references(reference, manifest, corpus, config=competition.CONFIG)
     if archive.stat().st_size != ARCHIVE_BYTES or digest(archive) != ARCHIVE_SHA:
         raise ValueError('Retained outcome archive identity differs')
     audio = load_audio(corpus / 'ordinary.wav')
+    deadline = time.monotonic() + 2400
+    counts = Counter()
+    changes = []
     rows = []
     experiment_rows = []
     with zipfile.ZipFile(archive) as bundle:
@@ -35,6 +40,27 @@ def run(corpus, manifest_path, reference_path, archive, output):
             # Consume the whole stream to validate its clock and length, while
             # doing numerical work only inside the two predeclared windows.
             for available, state, current in admission.causal_states(stream, len(audio)):
+                if time.monotonic() >= deadline:
+                    raise TimeoutError('Admission comparison exceeded 2400 seconds')
+                if all_admissions:
+                    eligible = admission.eligible_notes(current)
+                    if not eligible:
+                        continue
+                    window, prepared = admission.prediction_window(audio, available, state)
+                    for note in sorted(eligible):
+                        baseline = competition.evaluate_candidate(window, prepared, note, state)
+                        experiment = baseline
+                        if (not baseline['admitted'] and any(
+                                c.get('upper_comparison', {}).get('status') == 'insufficient_supported_pairs'
+                                and c.get('upper_comparison', {}).get('supported_harmonics') == [1]
+                                for c in baseline['lower_comparisons'])):
+                            experiment = competition.evaluate_candidate(
+                                window, prepared, note, state, fundamental_veto_check=True)
+                        counts[f"{int(baseline['admitted'])}->{int(experiment['admitted'])}"] += 1
+                        if baseline['admitted'] != experiment['admitted']:
+                            changes.append(dict(available_sample=available, note=note,
+                                baseline=baseline, experiment=experiment))
+                    continue
                 notes = [note for note, begin, end in FOCUS if begin <= available < end]
                 if not notes:
                     continue
@@ -57,6 +83,14 @@ def run(corpus, manifest_path, reference_path, archive, output):
                     experiment_rows.append(dict(available_sample=available, note=note,
                         baseline_admitted=baseline['admitted'], result=experiment))
                     rows.append(diagnostic)
+    if all_admissions:
+        output.mkdir(parents=True, exist_ok=True)
+        report = dict(schema="m3_fundamental_veto_screen_v1", source=manifest["source"],
+            archive_sha256=ARCHIVE_SHA, scope="all eligible ordinary saved-state admissions",
+            transitions=dict(counts), changes=changes, final=True, corpus_gate_pass=None,
+            limits="Admission changes only, not delivered MIDI, labels, timing or live readiness.")
+        (output / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+        return
     if not rows:
         raise ValueError('No focused observations')
     report = dict(schema='m3_source_continuity_v1', source=manifest['source'],
@@ -75,8 +109,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('corpus', 'manifest', 'reference', 'archive', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--all-admissions', action='store_true')
     args = parser.parse_args()
-    run(args.corpus, args.manifest, args.reference, args.archive, args.output)
+    run(args.corpus, args.manifest, args.reference, args.archive, args.output, args.all_admissions)
 
 
 if __name__ == '__main__':
