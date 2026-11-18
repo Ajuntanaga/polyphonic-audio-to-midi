@@ -7136,8 +7136,15 @@ void PolyphonicPitchDetector::assign_m3_strings(
       const double fret_shape_penalty =
           all_playable_profiles_learned ? 0.0
                                         : kM3AssignmentFretShapePenalty;
+      // Offline experiment isolates the isolated-note readiness gate from
+      // the calibrated assignment prior; all other evidence gates stay intact.
+      const bool calibrated_prior_ready = calibrated_reassignment_ready
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+          || diagnostic_calibrated_assignment_prior_
+#endif
+          ;
       const double fret_position_prior =
-          all_playable_profiles_learned && calibrated_reassignment_ready
+          all_playable_profiles_learned && calibrated_prior_ready
               ? kM3FretPenalty * fret_position
               : fret_position;
       cost.fret_prior = fret_position_prior +

@@ -323,6 +323,7 @@ int main(int argc, char** argv) {
   std::vector<std::uint64_t> diagnostic_stage_end_samples;
   bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
+  bool diagnostic_calibrated_assignment_prior = false;
   bool diagnostic_residual_pitch_recovery = false;
   bool label_details = false;
   for (int index = 1; index < argc; ++index) {
@@ -691,6 +692,9 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-calibrated-assignment-prior") == 0) {
+      diagnostic_calibrated_assignment_prior = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-residual-pitch-recovery") == 0) {
       diagnostic_residual_pitch_recovery = true;
@@ -1265,7 +1269,8 @@ int main(int argc, char** argv) {
           diagnostic_calibrated_midi_retention, diagnostic_suppressed_adjacent_admission,
           diagnostic_fine_subset_consensus, diagnostic_qualified_tier_retention,
           diagnostic_continuous_tier_retention, diagnostic_completion_window_retention,
-          diagnostic_completion_midi_retention, diagnostic_stage_end_samples)) {
+          diagnostic_completion_midi_retention, diagnostic_stage_end_samples,
+          diagnostic_calibrated_assignment_prior)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

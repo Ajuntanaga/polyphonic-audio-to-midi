@@ -82,7 +82,7 @@ def target_result(current, trial, current_replay, trial_replay):
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     if fundamental_veto_check and not competition:
@@ -104,7 +104,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         reference_manifest_sha256=digest(reference_path),
         input_manifest_sha256=digest(manifest_path), binary_sha256=digest(binary),
         dataset='ordinary', settings=SETTINGS, block_samples=512, config=config,
-        target=TARGET, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
+        target=TARGET, calibrated_assignment_prior=calibrated_assignment_prior, fundamental_veto_check=fundamental_veto_check, runs={}, installed_output_changed=False, promotion_accepted=False,
         native_timing='not measured', allocations='not measured',
         buffer_identity='not measured', live_readiness='not measured',
         metric_scope='Snapshot assignments, overlapping held label-samples and false '
@@ -121,6 +121,9 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
         '--candidate-rescue-score-ratio', str(config['score_ratio']),
         '--candidate-rescue-fundamental-ratio', str(config['fundamental_ratio']),
         '--candidate-rescue-harmonic-cues', str(cue_path.resolve()))))
+    if calibrated_assignment_prior:
+        conditions = tuple((mode, flags + ('--diagnostic-calibrated-assignment-prior',)
+                            if mode == TRIAL else flags) for mode, flags in conditions)
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
     def save():
@@ -261,11 +264,14 @@ def main():
                         help='Offline experiment; preserve the default competition policy')
     parser.add_argument('--assignment-diagnostic', action='store_true',
                         help='Trace initial assignment with full untraced output parity')
+    parser.add_argument('--calibrated-assignment-prior', action='store_true',
+                        help='Offline complete-calibration assignment fret-prior experiment')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.references, args.output,
         args.max_seconds, competition=args.competition,
         fundamental_veto_check=args.fundamental_veto_check,
-        assignment_diagnostic=args.assignment_diagnostic)
+        assignment_diagnostic=args.assignment_diagnostic,
+        calibrated_assignment_prior=args.calibrated_assignment_prior)
 
 
 if __name__ == '__main__':

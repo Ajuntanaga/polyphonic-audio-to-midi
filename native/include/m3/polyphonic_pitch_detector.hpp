@@ -802,6 +802,10 @@ class PolyphonicPitchDetector final {
       bool tuning_valid, const std::array<double, kMaxVoices>& cents_errors,
       std::uint8_t occupied_mask, bool protected_group,
       bool tuning_required = false, bool established_assignment = false) noexcept;
+  void set_calibrated_assignment_prior_for_diagnostics(bool enabled) noexcept {
+    diagnostic_calibrated_assignment_prior_ = enabled;
+  }
+
   void set_provisional_open_retention_guard_for_diagnostics(bool enabled) noexcept {
     diagnostic_provisional_open_retention_guard_ = enabled;
   }
@@ -1836,6 +1840,7 @@ class PolyphonicPitchDetector final {
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
+  bool diagnostic_calibrated_assignment_prior_{};
   bool diagnostic_joint_spectral_ownership_{};
   bool diagnostic_joint_midi_owner_guard_{};
   bool diagnostic_residual_pitch_recovery_{};

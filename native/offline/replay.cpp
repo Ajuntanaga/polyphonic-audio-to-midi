@@ -2918,11 +2918,13 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_continuous_tier_retention,
                          bool diagnostic_completion_window_retention,
                          bool diagnostic_completion_midi_retention,
-                         const std::vector<std::uint64_t>& diagnostic_stage_end_samples) {
+                         const std::vector<std::uint64_t>& diagnostic_stage_end_samples,
+                         bool diagnostic_calibrated_assignment_prior) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
+  if (diagnostic_calibrated_assignment_prior ||
+      diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
       diagnostic_calibrated_midi_retention || diagnostic_suppressed_adjacent_admission ||
@@ -3262,6 +3264,8 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_routing_diagnostics_enabled(candidate_trace != nullptr);
   detector.set_cue_free_lane_reassignment_for_diagnostics(
       diagnostic_cue_free_lane_reassignment);
+  detector.set_calibrated_assignment_prior_for_diagnostics(
+      diagnostic_calibrated_assignment_prior);
   detector.set_provisional_open_retention_guard_for_diagnostics(
       diagnostic_provisional_open_retention_guard);
   detector.set_residual_pitch_recovery_for_diagnostics(
