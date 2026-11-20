@@ -703,6 +703,9 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateTrackingDiagnostics candidate_tracking_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  // Offline observation only: preserve absolute energies, including zeros.
+  [[nodiscard]] std::array<double, kCalibrationHarmonicCount>
+  corrected_harmonic_energies_for_diagnostics(std::uint8_t midi_note) const noexcept;
   void set_calibrated_output_diagnostics_enabled(bool enabled) noexcept {
     calibrated_output_diagnostics_enabled_ = enabled;
     if (!enabled) calibrated_output_diagnostics_ = {};

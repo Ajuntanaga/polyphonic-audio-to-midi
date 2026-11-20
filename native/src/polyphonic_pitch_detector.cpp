@@ -2649,6 +2649,20 @@ void PolyphonicPitchDetector::apply_residual_recovery_for_diagnostics(
   ++diagnostic_residual_recovery_stats_.selected_ticks;
 }
 
+std::array<double, kCalibrationHarmonicCount>
+PolyphonicPitchDetector::corrected_harmonic_energies_for_diagnostics(
+    std::uint8_t midi_note) const noexcept {
+  std::array<double, kCalibrationHarmonicCount> result{};
+  if (midi_note < lowest_note_ || midi_note - lowest_note_ >= candidate_count_) {
+    return result;
+  }
+  const std::size_t candidate = midi_note - lowest_note_;
+  for (std::size_t harmonic = 0U; harmonic < result.size(); ++harmonic) {
+    result[harmonic] = corrected_harmonic_energy(candidate, harmonic);
+  }
+  return result;
+}
+
 CandidateTrackingDiagnostics
 PolyphonicPitchDetector::candidate_tracking_diagnostics(
     std::uint8_t midi_note) const noexcept {

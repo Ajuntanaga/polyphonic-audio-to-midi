@@ -605,6 +605,8 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     std::size_t calibrated_reason_column = 0U;
     std::size_t calibrated_failures_column = 0U;
     std::size_t activation_column = 0U;
+    std::size_t harmonic_column = 0U;
+    std::size_t trace_column_count = 0U;
     std::size_t routing_column = 0U;
     std::size_t routing_render_column = 0U;
     std::size_t routing_continuity_column = 0U;
@@ -624,8 +626,10 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
       std::string field;
       while (std::getline(record, field, '\t')) fields.push_back(field);
       if (rows++ == 0U) {
+        trace_column_count = fields.size();
         for (std::size_t column = 0U; column < fields.size(); ++column) {
           if (fields[column] == "activation_gate") activation_column = column;
+          if (fields[column] == "corrected_harmonic_energy_1") harmonic_column = column;
           if (fields[column] == "ownership_observed") observed_column = column;
           if (fields[column] == "fine_group_evaluated") evaluated_column = column;
           if (fields[column] == "cal_observed") calibrated_column = column;
@@ -641,6 +645,8 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
           if (fields[column] == "route_capacity_blocked") routing_blocked_column = column;
         }
         M3_EXPECT_TRUE(activation_column > 0U);
+        M3_EXPECT_EQ(harmonic_column, activation_column + 7U);
+        M3_EXPECT_EQ(trace_column_count, harmonic_column + 6U);
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
         M3_EXPECT_TRUE(calibrated_column > evaluated_column);
@@ -653,6 +659,13 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
       if (fields.size() <= routing_blocked_column) return;
       M3_EXPECT_TRUE(fields.size() > activation_column + 6U);
       if (fields.size() <= activation_column + 6U) return;
+      M3_EXPECT_EQ(fields.size(), trace_column_count);
+      if (fields.size() != trace_column_count) return;
+      for (std::size_t harmonic = 0U; harmonic < 6U; ++harmonic) {
+        const double energy = std::stod(fields[harmonic_column + harmonic]);
+        M3_EXPECT_TRUE(std::isfinite(energy));
+        M3_EXPECT_TRUE(energy >= 0.0);
+      }
       const double fast_energy = std::stod(fields[activation_column + 1U]);
       const double required_energy = std::stod(fields[activation_column + 3U]);
       M3_EXPECT_TRUE(std::isfinite(fast_energy));

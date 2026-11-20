@@ -3177,7 +3177,7 @@ bool run_detector_replay(const WaveData& wave,
         "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
         "route_pruned_mask\troute_midi_before\troute_midi_after\t"
         "route_other_owned\troute_final_continuity_mask\t"
-        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\n") < 0;
+        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\tcorrected_harmonic_energy_1\tcorrected_harmonic_energy_2\tcorrected_harmonic_energy_3\tcorrected_harmonic_energy_4\tcorrected_harmonic_energy_5\tcorrected_harmonic_energy_6\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3859,11 +3859,17 @@ bool run_detector_replay(const WaveData& wave,
                 "joint_deferred", "note_on_refused", "activated"};
             const auto& activation = tracking.activation;
             trace.failed = std::fprintf(trace.stream,
-                "\t%s\t%.17g\t%.17g\t%.17g\t%u\t%u\t%u\n",
+                "\t%s\t%.17g\t%.17g\t%.17g\t%u\t%u\t%u",
                 activation_names[static_cast<std::size_t>(activation.gate)],
                 activation.fast_energy, activation.slow_energy,
                 activation.required_energy, activation.active_count,
                 activation.evidence_ticks, activation.attack_ticks) < 0 || trace.failed;
+            const auto harmonic_energies =
+                detector.corrected_harmonic_energies_for_diagnostics(note);
+            for (const double energy : harmonic_energies) {
+              trace.failed = std::fprintf(trace.stream, "\t%.17g", energy) < 0 || trace.failed;
+            }
+            trace.failed = std::fprintf(trace.stream, "\n") < 0 || trace.failed;
             ++trace.frames;
           }
         }
