@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import subprocess
 import numpy as np
+from tools.harmonic_cell_unmix import recover
 from tools.controlled_descriptor_overlap import read_float_wave
 from tools.portable_short_window_identity import features, evaluate
 from tools.portable_corpus_replay import SETTINGS
@@ -43,6 +44,43 @@ def summarize_trace(rows, begin, rate):
         shape -= shape.mean()
         result['features'] = {'shape': shape.tolist()}
     return result
+
+
+def summarize_complex_trace(rows, begin, rate, hypothesis):
+    """Fixed nominal pitch or valid runtime phase; no annotation string inputs."""
+    if hypothesis not in ('nominal', 'runtime_phase'):
+        raise ValueError('Unknown frequency hypothesis')
+    converted = []
+    rejected = 0
+    for row in rows:
+        sample = int(row['sample'])
+        if not begin <= sample < begin + 2 * round(rate * .080):
+            continue
+        power = np.zeros(6)
+        valid = row['complex_valid'] == '1'
+        cents = 0.0
+        if hypothesis == 'runtime_phase':
+            valid = valid and row['phase_valid'] == '1'
+            cents = float(row['phase_cents'])
+        valid = valid and np.isfinite(cents)
+        if valid:
+            frequencies = 440 * 2 ** ((52-69)/12 + cents/1200) * np.arange(1, 7)
+            fit = recover([float(row[f'complex_hz_{h}']) for h in range(1, 7)],
+                          [complex(float(row[f'complex_real_{h}']), float(row[f'complex_imag_{h}'])) for h in range(1, 7)],
+                          frequencies, rate, float(row['complex_decay']))
+            valid = fit['eligible']
+            if valid:
+                # Input-referred powers: exact existing 15Hz DC-blocker transfer.
+                z = np.exp(-2j*np.pi*frequencies/rate)
+                pole = np.exp(-2*np.pi*15/rate)
+                gain = np.abs((1-z)/(1-pole*z))**2
+                power = np.asarray(fit['power']) / gain
+        rejected += not valid
+        converted.append({'sample': str(sample), **{f'corrected_harmonic_energy_{h}': str(v) for h, v in enumerate(power, 1)}})
+    summary = summarize_trace(converted, begin, rate)
+    summary.update(frequency_hypothesis=hypothesis, rejected_ticks=rejected,
+                   limitation='Stationary harmonic model; numerical eligibility does not establish envelope or frequency validity.')
+    return summary
 
 
 def eligible_evaluation(rows, lanes):
@@ -89,7 +127,7 @@ def run(binary, corpus, manifest, output):
     if len(set(names)) != len(names) or any(Path(n).name != n for n in names):
         raise ValueError('Invalid clip identities')
     output.mkdir(parents=True, exist_ok=False)
-    result = dict(schema='m3_runtime_harmonic_identity_v1', state='running', final=False,
+    result = dict(schema='m3_runtime_harmonic_identity_v2', state='running', final=False,
                   source=data.get('source', {}), input_manifest_sha256=digest(manifest), binary_sha256=digest(binary),
                   settings=SETTINGS, calibration='Replay default bank; no uploaded personal bank in this input release.',
                   installed_output_changed=False, promotion_accepted=False, measurements=[],
@@ -128,12 +166,15 @@ def run(binary, corpus, manifest, output):
             if not comparison['output_bit_identical'] or comparison['changed_labels'] or not midi_identity:
                 raise ValueError('Tracing changed output')
             with (directory / 'candidate.tsv').open() as stream:
-                runtime = summarize_trace(list(csv.DictReader(stream, delimiter='\t')), begin, rate)
-            result['measurements'].append({**item, 'features': measured, 'context': context, 'runtime': runtime,
+                trace_rows = list(csv.DictReader(stream, delimiter='\t'))
+                runtime = summarize_trace(trace_rows, begin, rate)
+            complex_results = {mode: summarize_complex_trace(trace_rows, begin, rate, mode) for mode in ('nominal', 'runtime_phase')}
+            result['measurements'].append({**item, 'features': measured, 'context': context, 'runtime': runtime, 'complex': complex_results,
                                            'comparison': comparison, 'midi_bit_identical': midi_identity,
                                            'trace_sha256': digest(directory / 'candidate.tsv')})
             save()
         result['runtime_evaluations'] = [eligible_evaluation(result['measurements'], lanes) for lanes in ([0, 1], list(range(6)))]
+        result['complex_evaluations'] = {mode: [eligible_evaluation([{**r, 'runtime': r['complex'][mode]} for r in result['measurements']], lanes) for lanes in ([0, 1], list(range(6)))] for mode in ('nominal', 'runtime_phase')}
         result['fft_evaluations'] = [evaluate(result['measurements'], lanes, ['shape']) for lanes in ([0, 1], list(range(6)))]
         result.update(state='completed', final=True)
     except Exception as error:
