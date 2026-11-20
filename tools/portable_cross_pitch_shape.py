@@ -34,7 +34,7 @@ def read_input_wave(path):
     return rate, samples
 
 
-def evaluate_window(samples, rate, window):
+def evaluate_window(samples, rate, window, *, refine=False):
     begin, end = window['begin'], window['end']
     if (type(begin) is not int or type(end) is not int or
             not 0 <= begin < end <= len(samples) or end - begin > rate * .320):
@@ -54,13 +54,18 @@ def evaluate_window(samples, rate, window):
             raise ValueError('Detector frequencies must precede the fitted window')
         result = fit_shape(samples[begin:end], rate, spec['fundamentals_hz'],
                            input_role=spec['input_role'], harmonics=6)
+        if refine:
+            from tools.refined_cross_pitch_shape import fit_refined_shape
+            result['frequency_refinement'] = fit_refined_shape(
+                samples[begin:end], rate, spec['fundamentals_hz'],
+                input_role=spec['input_role'], harmonics=6)
         results.append({'provenance': provenance, **result})
     return {'id': window['id'], 'begin': begin, 'end': end,
             'wave_sha256': window['wave_sha256'], 'onset_verified': False,
             'fits': results}
 
 
-def run(manifest, root):
+def run(manifest, root, *, refine=False):
     if os.environ.get('GITHUB_ACTIONS') != 'true':
         raise RuntimeError('Recorded audio execution requires GitHub Actions')
     windows = manifest['windows']
@@ -90,7 +95,7 @@ def run(manifest, root):
                 if source_hash != provenance['sha256']:
                     raise ValueError('Frequency source hash mismatch')
         rate, samples = read_input_wave(path)
-        results.extend(evaluate_window(samples, rate, w) for w in selected)
+        results.extend(evaluate_window(samples, rate, w, refine=refine) for w in selected)
     return {'schema_version': 1, 'policy_admission': False,
             'installed_output_changed': False,
             'interpretation': 'Supplied-frequency offline fits, not tracking or timing gains',
@@ -102,9 +107,10 @@ def main():
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--input-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--refine-frequencies', action='store_true')
     args = parser.parse_args()
     raw = args.manifest.read_bytes()
-    report = run(json.loads(raw), args.input_root)
+    report = run(json.loads(raw), args.input_root, refine=args.refine_frequencies)
     report['manifest_sha256'] = hashlib.sha256(raw).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
