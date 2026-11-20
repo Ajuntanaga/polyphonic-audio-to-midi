@@ -93,3 +93,18 @@ class ComplexTraceContracts(unittest.TestCase):
         self.assertFalse(independent['eligible'])
         self.assertEqual(independent['rejected_ticks'], 1)
         self.assertEqual(independent['ticks_per_half'], [1, 1])
+
+
+class SignalWindowContracts(unittest.TestCase):
+    def test_silence_and_known_tone(self):
+        from tools.portable_runtime_harmonic_identity import signal_window_diagnostic
+        rate = 8000
+        silence = signal_window_diagnostic(np.zeros(1280), rate, 0)
+        self.assertEqual(silence['halves'][0]['spectral_peaks'], [])
+        t = np.arange(1280) / rate
+        result = signal_window_diagnostic(.1*np.sin(2*np.pi*165*t), rate, 0)
+        for half in result['halves']:
+            self.assertAlmostEqual(half['spectral_peaks'][0]['hz'], 165, delta=2)
+            self.assertAlmostEqual(half['mean_square'], .005, delta=.0002)
+        with self.assertRaises(ValueError):
+            signal_window_diagnostic(np.zeros(1279), rate, 0)

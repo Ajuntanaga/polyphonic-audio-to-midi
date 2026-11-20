@@ -18,6 +18,30 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def signal_window_diagnostic(samples, rate, begin):
+    """Fixed label-relative spectra; peaks are not fundamental-pitch truth."""
+    half = round(rate * .080)
+    if rate <= 0 or begin < 0 or begin + 2 * half > len(samples):
+        raise ValueError('Incomplete diagnostic window')
+    result = []
+    for offset in (0, half):
+        x = np.asarray(samples[begin + offset:begin + offset + half], dtype=float)
+        if x.ndim != 1 or not np.isfinite(x).all():
+            raise ValueError('Invalid mono samples')
+        nfft = 8 * len(x)
+        power = np.abs(np.fft.rfft((x - x.mean()) * np.hanning(len(x)), n=nfft)) ** 2
+        hz = np.fft.rfftfreq(nfft, 1 / rate)
+        peaks = np.flatnonzero((power[1:-1] > power[:-2]) & (power[1:-1] >= power[2:])) + 1
+        peaks = [int(i) for i in peaks if 50 <= hz[i] <= min(2000, rate / 2)]
+        peaks = sorted(peaks, key=lambda i: power[i], reverse=True)[:6]
+        top = float(power[peaks[0]]) if peaks else 0.0
+        result.append(dict(start_sample=begin + offset, samples=len(x),
+                           mean_square=float(np.mean(x*x)), peak_absolute=float(np.max(np.abs(x))),
+                           spectral_peaks=[dict(hz=float(hz[i]), relative_power=float(power[i]/top)) for i in peaks] if top > 0 else []))
+    return dict(halves=result, window_reference='first 160ms of labeled interval',
+                limitation='80ms Hann spectra, 8x interpolation only; strongest peak is not necessarily the fundamental. Raw mean square is not detector filtered energy or a signal-floor decision.')
+
+
 def summarize_trace(rows, begin, rate):
     """Two fixed 80ms halves, no energy floor; zero bins remain ineligible."""
     half = round(rate * .080)
@@ -170,7 +194,7 @@ def run(binary, corpus, manifest, output):
                 trace_rows = list(csv.DictReader(stream, delimiter='\t'))
                 runtime = summarize_trace(trace_rows, begin, rate)
             complex_results = {mode: summarize_complex_trace(trace_rows, begin, rate, mode) for mode in ('nominal', 'runtime_phase', 'independent_phase')}
-            result['measurements'].append({**item, 'features': measured, 'context': context, 'runtime': runtime, 'complex': complex_results,
+            result['measurements'].append({**item, 'features': measured, 'context': context, 'signal_diagnostic': signal_window_diagnostic(samples, rate, begin), 'runtime': runtime, 'complex': complex_results,
                                            'comparison': comparison, 'midi_bit_identical': midi_identity,
                                            'trace_sha256': digest(directory / 'candidate.tsv')})
             save()
