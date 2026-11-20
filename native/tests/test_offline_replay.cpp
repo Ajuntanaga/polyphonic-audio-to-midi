@@ -646,7 +646,8 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
         }
         M3_EXPECT_TRUE(activation_column > 0U);
         M3_EXPECT_EQ(harmonic_column, activation_column + 7U);
-        M3_EXPECT_EQ(trace_column_count, harmonic_column + 26U);
+        M3_EXPECT_EQ(trace_column_count, harmonic_column + 27U);
+        M3_EXPECT_EQ(fields.back(), std::string("phase_cents"));
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
         M3_EXPECT_TRUE(calibrated_column > evaluated_column);
@@ -661,6 +662,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
       if (fields.size() <= activation_column + 6U) return;
       M3_EXPECT_EQ(fields.size(), trace_column_count);
       if (fields.size() != trace_column_count) return;
+      M3_EXPECT_TRUE(std::isfinite(std::stod(fields.back())));
       for (std::size_t harmonic = 0U; harmonic < 6U; ++harmonic) {
         const double energy = std::stod(fields[harmonic_column + harmonic]);
         M3_EXPECT_TRUE(std::isfinite(energy));
