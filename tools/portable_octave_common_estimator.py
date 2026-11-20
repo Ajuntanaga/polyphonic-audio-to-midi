@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import statistics
 import subprocess
+import wave
 
 from tools.controlled_descriptor_overlap import read_float_wave, write_float_wave
 from tools.frozen_cue_corpus_gate import compare_replays, read_replay
@@ -18,6 +19,37 @@ from tools.portable_octave_parent_measurement import validate_inventory
 
 CELL_COUNTS = {(44, 0): 5, (48, 1): 6, (48, 2): 4, (60, 2): 4, (62, 6): 2}
 CHANNELS = ('parent_h2_over_h1_db', 'upper_h1_over_parent_h1_db')
+
+
+# Final partial report from run44819076437; all21 parent takes completed.
+PARENT_REPORT_SHA256 = '7829fd1c1cb87072e1153b785695dae2a70c8cc5d364c90c229f2b8090e6accc'
+
+
+def read_pcm16_wave(path):
+    """Exact native PCM16 scaling; no normalization or resampling."""
+    import numpy as np
+    with wave.open(str(path), 'rb') as stream:
+        if stream.getnchannels() != 1 or stream.getsampwidth() != 2 or stream.getcomptype() != 'NONE':
+            raise ValueError('Expected mono PCM16 waveform')
+        rate = stream.getframerate()
+        count = stream.getnframes()
+        payload = stream.readframes(count)
+    if rate <= 0 or len(payload) != count * 2:
+        raise ValueError('Invalid or truncated PCM16 waveform')
+    return rate, np.frombuffer(payload, dtype='<i2').astype(np.float32) / 32768.0
+
+
+def retained_parents(path, current):
+    if digest(path) != PARENT_REPORT_SHA256:
+        raise ValueError('Retained parent report hash mismatch')
+    previous = json.loads(path.read_text())
+    for key in ('protocol', 'binary_sha256', 'inventory_sha256', 'sources_sha256', 'plan_sha256'):
+        if previous[key] != current[key]:
+            raise ValueError('Retained parent provenance mismatch: ' + key)
+    items = previous['measurements']
+    if len(items) != 21 or any(r['kind'] != 'parent_only' for r in items):
+        raise ValueError('Incomplete retained parent measurements')
+    return items
 
 
 def select_takes(inventory, plan):
@@ -204,7 +236,7 @@ def measure(binary, audio, labels, item, output, rate):
     return result
 
 
-def run(binary, inputs, corpus, inventory, sources, plan, output):
+def run(binary, inputs, corpus, inventory, sources, plan, output, parent_report=None):
     if os.environ.get('GITHUB_ACTIONS') != 'true':
         raise RuntimeError('Recorded processing must run on GitHub Actions')
     data=json.loads(inventory.read_text()); protocol=json.loads(plan.read_text()); pins=json.loads(sources.read_text())
@@ -218,7 +250,11 @@ def run(binary, inputs, corpus, inventory, sources, plan, output):
     def save(): (output/'report.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
     save()
     try:
-        for label_file in sorted({t['label_file'] for t in takes}):
+        if parent_report is not None:
+            report['measurements'] = retained_parents(parent_report, report)
+            report['retained_parent_provenance'] = dict(run_id=44819076437, source_revision='b8268b9bdb95db87a263896e9f311ad370210498', report_sha256=PARENT_REPORT_SHA256, paired_traces_remote=True)
+            save()
+        for label_file in sorted({t['label_file'] for t in takes} if parent_report is None else set()):
             name=Path(label_file).name; label_path=inputs/'labels'/name
             if digest(label_path)!=data['label_sha256'][label_file]: raise ValueError('Label hash mismatch')
             with label_path.open() as stream: labels=list(csv.DictReader(stream,delimiter='\t'))
@@ -240,7 +276,7 @@ def run(binary, inputs, corpus, inventory, sources, plan, output):
         for name,sha in protocol['ordinary_inputs'].items():
             if digest(corpus/name)!=sha: raise ValueError('Ordinary hash mismatch: '+name)
         with (corpus/'ordinary.tsv').open() as stream: labels=list(csv.DictReader(stream,delimiter='\t'))
-        rate,audio=read_float_wave(corpus/'ordinary.wav')
+        rate,audio=read_pcm16_wave(corpus/'ordinary.wav')
         if rate!=protocol['sample_rate_hz']: raise ValueError('Ordinary rate mismatch')
         for case in protocol['cases']:
             parent=labels[case['parent_label']]
@@ -265,4 +301,5 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for key in ('binary','inputs','corpus','inventory','sources','plan','output'):
         parser.add_argument('--'+key,type=Path,required=True)
+    parser.add_argument('--parent-report',type=Path)
     run(**vars(parser.parse_args()))

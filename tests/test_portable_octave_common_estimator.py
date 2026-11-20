@@ -19,6 +19,32 @@ class CommonEstimatorTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'GitHub Actions'):
                 m.run(*([Path('/nonexistent')] * 7))
 
+    def test_pcm16_reader_exact_native_scale(self):
+        import wave, struct
+        import numpy as np
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'synthetic.wav'
+            with wave.open(str(path),'wb') as out:
+                out.setparams((1,2,96000,0,'NONE','not compressed'))
+                out.writeframes(struct.pack('<5h',-32768,-1,0,1,32767))
+            rate,values=m.read_pcm16_wave(path)
+            self.assertEqual(rate,96000)
+            np.testing.assert_array_equal(values,np.array([-1,-1/32768,0,1/32768,32767/32768],dtype=np.float32))
+            m.write_float_wave(path,96000,values)
+            with self.assertRaises(wave.Error): m.read_pcm16_wave(path)
+
+    def test_retained_parent_provenance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'report.json'
+            current={k:k for k in ('protocol','binary_sha256','inventory_sha256','sources_sha256','plan_sha256')}
+            previous=dict(current,measurements=[dict(kind='parent_only') for _ in range(21)])
+            path.write_text(json.dumps(previous))
+            with self.assertRaisesRegex(ValueError,'hash mismatch'): m.retained_parents(path,current)
+            with patch.object(m,'PARENT_REPORT_SHA256',m.digest(path)):
+                self.assertEqual(len(m.retained_parents(path,current)),21)
+                with self.assertRaisesRegex(ValueError,'provenance mismatch'):
+                    m.retained_parents(path,dict(current,binary_sha256='changed'))
+
     def test_frozen_metadata_selection(self):
         root=Path(__file__).resolve().parents[1]
         inventory=json.loads((root/'docs/recovery/octave-parent-inventory-20261120.json').read_text())
