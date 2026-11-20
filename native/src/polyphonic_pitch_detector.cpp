@@ -12758,6 +12758,9 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
             candidate_admission_diagnostics_[candidate];
         const std::size_t pitch_band = pitch_band_for_note(
             static_cast<std::uint8_t>(lowest_note_ + candidate));
+        diagnostic.preselection_score_energy = scores[candidate];
+        diagnostic.preselection_fundamental_energy = fundamentals[candidate];
+        diagnostic.preselection_energy_observed = true;
         diagnostic.score_threshold_ratio =
             scores[candidate] / std::max(threshold, kScoreEpsilon);
         diagnostic.fundamental_score_ratio = fundamentals[candidate] /

@@ -1050,7 +1050,7 @@ void write_candidate_outcome_frame(
     std::fprintf(trace.stream,
         "%s%zu:%u:%u:%u:%u:%u:%.8g:%.8g:%.8g:%.8g:%u:%u:%u:%u:%u:%u:"
         "%.8g:%.8g:%u:%.8g:%u:%.8g:%u:%u:%u:%u:%u:%u:%u:%u:%u:%d:%u:%u"
-        ":%u:%.8g:%.8g:%u:%u:%u:%u:%u:%u",
+        ":%u:%.8g:%.8g:%u:%u:%u:%u:%u:%u:%.17g:%.17g:%u",
         first ? "" : ",", note, static_cast<unsigned>(selection), t.active,
         t.assigned_mask, t.rescue_mask, detector.selector_group_mask(midi_note),
         a.score_threshold_ratio, a.fundamental_score_ratio,
@@ -1067,7 +1067,9 @@ void write_candidate_outcome_frame(
         a.selector_raw_score, a.selector_best_adjusted_score,
         a.selector_option_mask, a.selector_positive_mask,
         a.selector_used_mask, a.selector_voice_count, a.selector_open_count,
-        static_cast<unsigned>(a.string_fret_onset_observed));
+        static_cast<unsigned>(a.string_fret_onset_observed),
+        a.preselection_score_energy, a.preselection_fundamental_energy,
+        static_cast<unsigned>(a.preselection_energy_observed));
     first = false;
   }
   std::fputc('\n', trace.stream);
@@ -3134,7 +3136,7 @@ bool run_detector_replay(const WaveData& wave,
 #else
     if (trace.stream == nullptr) return false;
     trace.failed = std::fprintf(trace.stream,
-        "# m3_candidate_outcome_v3\n"
+        "# m3_candidate_outcome_v4\n"
         "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n") < 0;
 #endif
   }

@@ -207,6 +207,11 @@ struct CandidateAdmissionDiagnostics final {
   // to test articulation boundaries; production builds omit this structure.
   double string_fret_onset_strength{};
   bool string_fret_onset_observed{};
+  // Raw pre-selection resonator energies, without admission normalization.
+  // Valid only when the spectrum was evaluated; quiet defaults are unavailable.
+  double preselection_score_energy{};
+  double preselection_fundamental_energy{};
+  bool preselection_energy_observed{};
   // Scale-invariant evidence relative to the strongest playable candidate in
   // the same one-octave pitch band. This is replay-only: it measures whether
   // a quiet upper-string fundamental is locally strong even when a louder low

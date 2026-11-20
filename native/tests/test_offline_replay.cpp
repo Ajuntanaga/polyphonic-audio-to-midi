@@ -834,11 +834,12 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
     std::istringstream lines(captured);
     std::string line;
     std::getline(lines, line);
-    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v3");
+    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v4");
     std::getline(lines, line);
     std::size_t rows = 0U, labeled = 0U, matched = 0U;
     std::array<std::size_t, 4U> outcomes{};
     bool observed_candidate = false;
+    bool observed_positive_energy = false;
     while (std::getline(lines, line)) {
       const auto fields = split(line, '\t');
       M3_EXPECT_EQ(fields.size(), 8U);
@@ -859,14 +860,21 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
       if (!fields[7].empty()) {
         for (const auto& candidate : split(fields[7], ',')) {
           const auto values = split(candidate, ':');
-          M3_EXPECT_EQ(values.size(), 43U);
-          if (values.size() == 43U)
+          M3_EXPECT_EQ(values.size(), 46U);
+          if (values.size() == 46U) {
             M3_EXPECT_TRUE(values[42] == "0" || values[42] == "1");
+            M3_EXPECT_TRUE(values[45] == "0" || values[45] == "1");
+            M3_EXPECT_TRUE(std::stod(values[43]) >= 0.0);
+            M3_EXPECT_TRUE(std::stod(values[44]) >= 0.0);
+            if (values[45] == "1" && std::stod(values[43]) > 0.0 &&
+                std::stod(values[44]) > 0.0) observed_positive_energy = true;
+          }
           if (!values.empty() && values[0] == "40") observed_candidate = true;
         }
       }
     }
     M3_EXPECT_TRUE(observed_candidate);
+    M3_EXPECT_TRUE(observed_positive_energy);
     for (const auto outcome : outcomes) M3_EXPECT_TRUE(outcome > 0U);
     M3_EXPECT_EQ(rows, observed->snapshot_frames);
     M3_EXPECT_EQ(labeled, observed->labeled_frames);

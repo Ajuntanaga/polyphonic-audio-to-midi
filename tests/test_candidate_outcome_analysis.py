@@ -42,6 +42,23 @@ class CandidateOutcomeAnalysisTests(unittest.TestCase):
                          analyze_candidate_population(io.StringIO(
                              '# m3_candidate_outcome_v3\n' + HEADER + new)))
 
+    def test_v4_energy_available_for_below_threshold_candidate(self):
+        text = candidate(selection=1) + ':0:0.0008:0.0007:1'
+        row = _candidates(_frame(frame(100, candidates=text)))[40]
+        self.assertEqual(row['selection'], 1)
+        self.assertEqual(row['onset_observed'], 0)
+        self.assertEqual(row['energy_observed'], 1)
+        self.assertEqual(row['score_energy'], .0008)
+        self.assertEqual(row['fund_energy'], .0007)
+        old = frame(100, candidates=candidate(selection=1))
+        new = frame(100, candidates=text)
+        self.assertEqual(analyze_candidate_population(stream(old)),
+                         analyze_candidate_population(io.StringIO(
+                             '# m3_candidate_outcome_v4\n' + HEADER + new)))
+        for suffix in (':0:-1:0:1', ':0:0:0:2', ':0:nan:0:1'):
+            with self.assertRaises(ValueError):
+                _candidates(_frame(frame(100, candidates=candidate() + suffix)))
+
     def test_added_removed_outputs_and_group_recovery_have_separate_counts(self):
         a = stream(
             frame(100, '0:40:3', '', '40:40:0:0:10:1:0:3', candidate()),
