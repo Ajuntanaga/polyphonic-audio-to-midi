@@ -856,6 +856,11 @@ void evaluate_residual_admission_frame(
       recovery != nullptr) *recovery = {};
   if ((recovery == nullptr && (trace == nullptr || trace->failed)) ||
       frame.decision_tick % ResidualRecoveryScreen::kDecimation != 0U) return;
+  const bool targeted = trace != nullptr && trace->target_note >= 0;
+  // Target capture never feeds recovery, including callers bypassing CLI validation.
+  if (targeted && recovery != nullptr) return;
+  if (targeted && (static_cast<double>(sample_index) < trace->start_seconds * sample_rate ||
+                   static_cast<double>(sample_index) >= trace->end_seconds * sample_rate)) return;
   if (trace != nullptr && !trace->failed) ++trace->sampled_frames;
   if (detector.quiet_disposition() != QuietDisposition::not_quiet ||
       static_cast<double>(sample_index + 1U) < 0.8 * sample_rate) return;
@@ -888,14 +893,16 @@ void evaluate_residual_admission_frame(
   if (recovery != nullptr)
     evaluate_residual_recovery_renewals(*recovery, frame.decision_tick, detector,
         snapshot, owned, sample_rate, base_fit, added_fit);
-  if (selected_count == 0U || selected_count >= kMaxVoices ||
-      used_voices >= config.max_polyphony) return;
+  if (!targeted && (selected_count == 0U || selected_count >= kMaxVoices ||
+      used_voices >= config.max_polyphony)) return;
 
   std::array<m3::JointPitchObservation, kMaxVoices> observations{};
   std::size_t count = 0U;
   double energy = 0.0, decay = 0.0;
   for (std::size_t n = 0U; n < owned.size(); ++n) {
-    if (!owned[n]) continue;
+    // Leave target out even when owned, so genuine-note controls use the same fit.
+    if (!owned[n] || (targeted && n == static_cast<std::size_t>(trace->target_note))) continue;
+    if (count >= kMaxVoices - 1U) return;
     auto& observed = observations[count];
     observed.note = static_cast<std::uint8_t>(n);
     if (!detector.harmonic_correlations_for_diagnostics(
@@ -906,14 +913,15 @@ void evaluate_residual_admission_frame(
   const auto base = base_fit.evaluate(observations, count, sample_rate, decay, energy);
   for (std::size_t n = 0U; n < owned.size(); ++n) {
     const auto note = static_cast<std::uint8_t>(n);
-    if (owned[n] || detector.selection_disposition(note) != SelectionDisposition::dp_evicted)
+    if (targeted ? n != static_cast<std::size_t>(trace->target_note)
+                 : (owned[n] || detector.selection_disposition(note) != SelectionDisposition::dp_evicted))
       continue;
     const auto a = detector.candidate_admission_diagnostics(note);
     const auto free_mask = static_cast<std::uint8_t>(a.playable_string_mask & ~used_mask);
-    if (a.score_threshold_ratio < 1.0 || free_mask == 0U ||
+    if (!targeted && (a.score_threshold_ratio < 1.0 || free_mask == 0U ||
         mask_member_count(detector.fine_frequency_member_mask(note)) >= 2U ||
         mask_member_count(detector.fine_frequency_pending_member_mask(note)) >= 2U ||
-        mask_member_count(detector.committed_unison_mask(note)) >= 2U) continue;
+        mask_member_count(detector.committed_unison_mask(note)) >= 2U)) continue;
     bool log_row = trace != nullptr && !trace->failed;
     if (log_row) {
       ++trace->candidates;
@@ -3115,6 +3123,12 @@ bool run_detector_replay(const WaveData& wave,
 #else
     if (trace.stream == nullptr || config.profile_mode != ProfileMode::m3 ||
         diagnostic_correlation_seconds != -1.0) return false;
+    const bool target_options = trace.target_note != -1 || trace.start_seconds != -1.0 ||
+                                trace.end_seconds != -1.0;
+    if (target_options && (trace.target_note < 0 || trace.target_note > 127 ||
+        !std::isfinite(trace.start_seconds) || !std::isfinite(trace.end_seconds) ||
+        trace.start_seconds < 0.0 || trace.end_seconds <= trace.start_seconds ||
+        diagnostic_residual_pitch_recovery)) return false;
     trace.failed = std::fprintf(trace.stream,
         "sample\ttick\tnote\tbase_count\tused_mask\tfree_mask\tany_label\t"
         "expected_note\texpected_mask\talready_emitted\tbase_valid\tadded_valid\t"

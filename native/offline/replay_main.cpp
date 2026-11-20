@@ -164,6 +164,7 @@ void usage(const char* program) {
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
       "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "  --residual-admission-note N --residual-admission-start SEC --residual-admission-end SEC (observation only)\n"
       "[--retained-assignment-trace FILE] "
       "[--assignment-trace-start SECONDS --assignment-trace-end SECONDS] "
       "[--partial-motion-trace FILE --partial-motion-note 0..127 "
@@ -824,6 +825,24 @@ int main(int argc, char** argv) {
       partial_motion_options_set = true;
     } else if (std::strcmp(argv[index], "--residual-admission-trace") == 0 && has_value) {
       residual_admission_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--residual-admission-note") == 0 && has_value) {
+      errno = 0;
+      char* end = nullptr;
+      const long parsed = std::strtol(argv[++index], &end, 10);
+      if (errno != 0 || end == argv[index] || *end != '\0' || parsed < 0 || parsed > 127) {
+        usage(argv[0]); return 2;
+      }
+      residual_admission_trace.target_note = static_cast<int>(parsed);
+    } else if ((std::strcmp(argv[index], "--residual-admission-start") == 0 ||
+                std::strcmp(argv[index], "--residual-admission-end") == 0) && has_value) {
+      const bool start = std::strcmp(argv[index], "--residual-admission-start") == 0;
+      errno = 0;
+      char* end = nullptr;
+      const double parsed = std::strtod(argv[++index], &end);
+      if (errno != 0 || end == argv[index] || *end != '\0' || !std::isfinite(parsed) || parsed < 0.0) {
+        usage(argv[0]); return 2;
+      }
+      (start ? residual_admission_trace.start_seconds : residual_admission_trace.end_seconds) = parsed;
     } else if (std::strcmp(argv[index], "--candidate-trace-note") == 0 && has_value) {
       errno = 0;
       char* end = nullptr;
@@ -901,6 +920,15 @@ int main(int argc, char** argv) {
       partial_motion_trace.end_seconds <= partial_motion_trace.start_seconds) {
     usage(argv[0]);
     return 2;
+  }
+  const auto& residual_options = residual_admission_trace;
+  if ((residual_options.target_note != -1 || residual_options.start_seconds != -1.0 ||
+       residual_options.end_seconds != -1.0) &&
+      (residual_admission_trace_path == nullptr || residual_options.target_note < 0 ||
+       residual_options.start_seconds < 0.0 ||
+       residual_options.end_seconds <= residual_options.start_seconds ||
+       diagnostic_residual_pitch_recovery)) {
+    usage(argv[0]); return 2;
   }
   if ((candidate_trace_path == nullptr && candidate_trace_options_set) ||
       candidate_trace.end_seconds <= candidate_trace.start_seconds) {

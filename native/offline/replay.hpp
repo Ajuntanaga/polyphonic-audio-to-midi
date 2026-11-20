@@ -60,6 +60,10 @@ struct CandidateOutcomeTrace final {
 struct ResidualAdmissionTrace final {
   static constexpr std::size_t kMaximumRows = 500000U;
   static constexpr std::uint32_t kTickDecimation = 16U;
+  // Optional observation-only target; all three fields must be supplied together.
+  int target_note{-1};
+  double start_seconds{-1.0};
+  double end_seconds{-1.0};
   std::FILE* stream{};
   std::size_t rows{};
   std::size_t sampled_frames{};
