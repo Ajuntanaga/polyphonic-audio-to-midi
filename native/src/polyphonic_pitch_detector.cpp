@@ -10384,7 +10384,9 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
   for (std::size_t candidate = 0U;
        candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (independent_phase_diagnostics_enabled_ && signal_present_) {
+    // Observe resonator phase independently of production admission/silence.
+    // The observer retains its own energy, settling and pitch-validity gates.
+    if (independent_phase_diagnostics_enabled_) {
       update(candidate, diagnostic_independent_phase_states_[candidate], false);
     }
 #endif
@@ -13474,7 +13476,8 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       phase_cents_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       diagnostic_discarded_phase_states_ = {};
-      diagnostic_independent_phase_states_ = {};
+      // Independent diagnostic history is cleared by detector reset or its
+      // own energy gate, not by the production signal floor.
       diagnostic_residual_recovery_lease_ = {};
 #endif
       beat_evidence_states_ = {};

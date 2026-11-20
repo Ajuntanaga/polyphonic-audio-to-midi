@@ -57,9 +57,10 @@ def run(binary, corpus, manifest, output):
     data = json.loads(manifest.read_text())
     clips = validate_manifest(data)
     output.mkdir(parents=True, exist_ok=False)
-    report = dict(schema=2, state='running', final=False, input_manifest_sha256=digest(manifest),
+    report = dict(schema=3, state='running', final=False, input_manifest_sha256=digest(manifest),
         binary_sha256=digest(binary), source=data.get('source', {}), settings=SETTINGS,
         measurement_offset_seconds=MEASUREMENT_OFFSET_SECONDS, harmonics=HARMONICS,
+        phase_observer="resonator_energy_independent_of_production_signal_floor",
         measurements=[], installed_output_changed=False, promotion_accepted=False,
         limitations=['Known-pitch isolated clips; same-session held-out pass/pitch classification only.',
                      'Fixed320–480ms relative to label, not verified onset; clip-local state.',

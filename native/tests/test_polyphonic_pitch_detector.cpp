@@ -19,6 +19,35 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void independent_phase_below_signal_floor_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 52U;
+    config.highest_note = 52U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.independent_phase_diagnostics_enabled_ = true;
+    auto& fundamental = detector.cells_[detector.cell_index(0U, 0U)];
+    fundamental.fast_real = 0.0001;
+    fundamental.fast_imaginary = 0.0;
+    std::array<bool, kMaxCandidates> selected{};
+    detector.signal_present_ = false;
+    for (unsigned tick = 0; tick < 300U; ++tick)
+      detector.update_phase_cents_estimates(selected);
+    M3_EXPECT_TRUE(detector.diagnostic_independent_phase_states_[0U].valid);
+    M3_EXPECT_FALSE(detector.phase_cents_states_[0U].valid);
+    const auto updates = detector.diagnostic_independent_phase_states_[0U].accepted_updates;
+    detector.signal_present_ = true;
+    detector.fast_energy_ = 0.0;
+    detector.decision_phase_ = 0U;
+    (void)detector.process_sample(0.0);
+    M3_EXPECT_FALSE(detector.signal_present_);
+    M3_EXPECT_EQ(detector.diagnostic_independent_phase_states_[0U].accepted_updates, updates);
+    detector.reset();
+    M3_EXPECT_EQ(detector.diagnostic_independent_phase_states_[0U].accepted_updates, 0U);
+    M3_EXPECT_FALSE(detector.diagnostic_independent_phase_states_[0U].valid);
+  }
+
   static void unsupported_pair_release_probe() {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -15386,6 +15415,10 @@ M3_TEST(native_detector_admission_persists_before_allocation_without_starvation)
 }
 
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+M3_TEST(native_detector_independent_phase_survives_production_signal_floor) {
+  m3::PolyphonicPitchDetectorTestAccess::independent_phase_below_signal_floor_probe();
+}
+
 M3_TEST(native_detector_unsupported_pair_release_uses_ordinary_grace) {
   m3::PolyphonicPitchDetectorTestAccess::unsupported_pair_release_probe();
 }
