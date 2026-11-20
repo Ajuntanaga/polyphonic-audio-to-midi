@@ -954,7 +954,40 @@ void evaluate_residual_admission_frame(
     }
     if (!log_row) continue;
 
-    // Truth is attached after both counterfactual models have been evaluated.
+    // Observation-only octave competitor: labels and ownership do not select it.
+    // Keep the original fit intact; unavailable paired fits are not zero evidence.
+    const int parent_note = static_cast<int>(note) - 12;
+    const auto parent = detector.candidate_admission_diagnostics(
+        static_cast<std::uint8_t>(parent_note >= 0 ? parent_note : 0));
+    const bool parent_evidence = parent_note >= 0 && parent.direct_fundamental_peak &&
+        (parent.local_peak || parent.candidate_evidence);
+    bool parent_in_base = false, paired_available = false;
+    std::size_t paired_count = count;
+    m3::JointPitchResidualResult paired_base{}, paired_added{};
+    if (targeted && parent_evidence) {
+      auto paired_observations = observations;
+      for (std::size_t i = 0U; i < count; ++i)
+        parent_in_base = parent_in_base || observations[i].note == parent_note;
+      paired_available = parent_in_base;
+      double paired_energy = energy, paired_decay = decay;
+      if (!parent_in_base && count + 2U <= kMaxVoices) {
+        auto& competitor = paired_observations[paired_count];
+        competitor.note = static_cast<std::uint8_t>(parent_note);
+        paired_available = detector.harmonic_correlations_for_diagnostics(
+            competitor.note, competitor.frequency_hz, competitor.correlation,
+            paired_energy, paired_decay);
+        if (paired_available) ++paired_count;
+      }
+      if (paired_available) {
+        paired_base = base_fit.evaluate(paired_observations, paired_count,
+            sample_rate, paired_decay, paired_energy);
+        paired_observations[paired_count] = observations[count];
+        paired_added = added_fit.evaluate(paired_observations, paired_count + 1U,
+            sample_rate, paired_decay, paired_energy);
+      }
+    }
+
+    // Truth is attached after all counterfactual models have been evaluated.
     bool any_label = false, expected_note = false;
     std::uint8_t expected_mask = 0U;
     for (std::size_t i = 0U; i < labels.size(); ++i) {
@@ -984,6 +1017,15 @@ void evaluate_residual_admission_frame(
     for (std::size_t string = 0U; string < kMaxVoices; ++string)
       std::fprintf(trace->stream, "\t%.17g", (lane_available & (1U << string)) != 0U
           ? lane.lane_totals[string] : 0.0);
+    std::fprintf(trace->stream,
+        "\t%d\t%u\t%u\t%u\t%.17g\t%u\t%u\t%u\t%zu\t%u\t%u\t%.17g\t%.17g\t%.17g",
+        parent_note, parent.direct_fundamental_peak, parent.local_peak,
+        parent.candidate_evidence, parent.score_threshold_ratio, parent_evidence,
+        parent_in_base, paired_available, paired_count,
+        paired_base.valid, paired_added.valid, paired_base.residual_fraction,
+        paired_added.residual_fraction,
+        paired_base.valid && paired_added.valid
+            ? paired_base.residual_fraction - paired_added.residual_fraction : 0.0);
     std::fputc('\n', trace->stream);
     trace->failed = std::ferror(trace->stream) != 0;
     ++trace->rows;
@@ -3137,7 +3179,11 @@ bool run_detector_replay(const WaveData& wave,
         "direct\tlocal\tcalibration_similarity\tcalibration_string\tbase_notes\t"
         "lane_fixed_context\tlane_selected_count\tlane_available_mask\t"
         "lane_cost_0\tlane_cost_1\tlane_cost_2\tlane_cost_3\t"
-        "lane_cost_4\tlane_cost_5\tlane_cost_6\tlane_cost_7\n") < 0;
+        "lane_cost_4\tlane_cost_5\tlane_cost_6\tlane_cost_7\t"
+        "parent_note\tparent_direct\tparent_local\tparent_candidate_evidence\t"
+        "parent_score_ratio\tparent_evidence\tparent_in_base\tpaired_available\t"
+        "paired_base_count\tpaired_base_valid\tpaired_added_valid\t"
+        "paired_base_residual\tpaired_added_residual\tpaired_gain\n") < 0;
 #endif
   }
   if (outcome_trace != nullptr) {

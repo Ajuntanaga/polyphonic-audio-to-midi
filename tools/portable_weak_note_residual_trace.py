@@ -11,7 +11,10 @@ from tools.portable_assignment_trace import compress_trace_window, digest, read_
 from tools.portable_corpus_replay import SETTINGS, command_for
 
 RATE = 96000
+# Genuine octave windows are the saved outcome coverage for labels 29 and 42.
 CASES = (
+    ('genuine56', 56, 489855, 561600),
+    ('genuine60', 60, 653055, 724800),
     ('missing81', 81, 2692986, 2764800),
     ('missing72', 72, 2692986, 2764800),
     ('false74', 74, 2939903, 3009600),
@@ -34,7 +37,7 @@ def summarize(rows, note, start, end):
             raise ValueError('Wrong target or target included in base')
         if int(row['tick']) % 16:
             raise ValueError('Unexpected decimation')
-        for key in ('base_valid', 'added_valid'):
+        for key in ('base_valid', 'added_valid', 'paired_available', 'paired_base_valid', 'paired_added_valid', 'parent_evidence', 'parent_in_base'):
             if row[key] not in ('0', '1'):
                 raise ValueError('Invalid validity flag')
     valid = [r for r in rows if r['base_valid'] == r['added_valid'] == '1']
@@ -46,6 +49,23 @@ def summarize(rows, note, start, end):
         if any(not math.isfinite(v) for v in values):
             raise ValueError('Nonfinite valid-fit observation')
         result[key] = dict(min=min(values), median=statistics.median(values), max=max(values)) if values else None
+    paired = []
+    for row in rows:
+        if int(row['parent_note']) != note - 12:
+            raise ValueError('Wrong octave competitor')
+        available = row['paired_available'] == '1'
+        if not available and (row['paired_base_valid'] == '1' or row['paired_added_valid'] == '1'):
+            raise ValueError('Unavailable pair marked valid')
+        if available and row['parent_evidence'] != '1':
+            raise ValueError('Pair lacks candidate evidence')
+        if available and row['paired_base_valid'] == row['paired_added_valid'] == '1':
+            value = float(row['paired_gain'])
+            if not math.isfinite(value):
+                raise ValueError('Nonfinite paired gain')
+            paired.append(value)
+    result['paired_available_rows'] = sum(r['paired_available'] == '1' for r in rows)
+    result['paired_jointly_valid'] = len(paired)
+    result['paired_gain'] = dict(min=min(paired), median=statistics.median(paired), max=max(paired)) if paired else None
     return result
 
 
@@ -57,7 +77,7 @@ def check_identity(snapshot, midi, saved):
 def run(binary, corpus, manifest_path, reference_path, output, timeout=900):
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    report = dict(schema='m3_weak_note_residual_trace_v1', state='running', final=False,
+    report = dict(schema='m3_weak_note_residual_trace_v2', state='running', final=False,
                   installed_output_changed=False, promotion_accepted=False,
                   limits=LIMITS, captures=[], cases={}, settings=SETTINGS)
     def save():
