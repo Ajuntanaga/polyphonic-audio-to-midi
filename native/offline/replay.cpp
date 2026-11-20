@@ -3177,7 +3177,7 @@ bool run_detector_replay(const WaveData& wave,
         "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
         "route_pruned_mask\troute_midi_before\troute_midi_after\t"
         "route_other_owned\troute_final_continuity_mask\t"
-        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\tcorrected_harmonic_energy_1\tcorrected_harmonic_energy_2\tcorrected_harmonic_energy_3\tcorrected_harmonic_energy_4\tcorrected_harmonic_energy_5\tcorrected_harmonic_energy_6\n") < 0;
+        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\tcorrected_harmonic_energy_1\tcorrected_harmonic_energy_2\tcorrected_harmonic_energy_3\tcorrected_harmonic_energy_4\tcorrected_harmonic_energy_5\tcorrected_harmonic_energy_6\tcomplex_valid\tcomplex_decay\tcomplex_hz_1\tcomplex_real_1\tcomplex_imag_1\tcomplex_hz_2\tcomplex_real_2\tcomplex_imag_2\tcomplex_hz_3\tcomplex_real_3\tcomplex_imag_3\tcomplex_hz_4\tcomplex_real_4\tcomplex_imag_4\tcomplex_hz_5\tcomplex_real_5\tcomplex_imag_5\tcomplex_hz_6\tcomplex_real_6\tcomplex_imag_6\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3868,6 +3868,19 @@ bool run_detector_replay(const WaveData& wave,
                 detector.corrected_harmonic_energies_for_diagnostics(note);
             for (const double energy : harmonic_energies) {
               trace.failed = std::fprintf(trace.stream, "\t%.17g", energy) < 0 || trace.failed;
+            }
+            std::array<double, 6U> cell_frequencies{};
+            std::array<std::complex<double>, 6U> cell_correlations{};
+            double cell_signal_energy = 0.0;
+            double cell_decay = 0.0;
+            const bool cell_valid = detector.harmonic_correlations_for_diagnostics(
+                note, cell_frequencies, cell_correlations, cell_signal_energy, cell_decay);
+            trace.failed = std::fprintf(trace.stream, "\t%d\t%.17g",
+                cell_valid ? 1 : 0, cell_decay) < 0 || trace.failed;
+            for (std::size_t harmonic = 0U; harmonic < 6U; ++harmonic) {
+              trace.failed = std::fprintf(trace.stream, "\t%.17g\t%.17g\t%.17g",
+                  cell_frequencies[harmonic], cell_correlations[harmonic].real(),
+                  cell_correlations[harmonic].imag()) < 0 || trace.failed;
             }
             trace.failed = std::fprintf(trace.stream, "\n") < 0 || trace.failed;
             ++trace.frames;

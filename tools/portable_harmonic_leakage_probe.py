@@ -11,6 +11,7 @@ import subprocess
 import numpy as np
 from tools.portable_runtime_harmonic_identity import digest, summarize_trace
 from tools.portable_corpus_replay import SETTINGS
+from tools.harmonic_cell_unmix import recover
 from tools.frozen_cue_corpus_gate import read_replay, compare_replays
 
 
@@ -21,10 +22,34 @@ def write_float_wave(path, samples, rate):
                      struct.pack('<I', 16) + fmt + b'data' + struct.pack('<I', len(data)) + data)
 
 
+def summarize_unmixed(rows, frequency, rate):
+    # Oracle frequencies for this synthetic control, not detector inference.
+    ratios = []
+    conditions = []
+    for row in rows:
+        if row['complex_valid'] != '1':
+            continue
+        cells = [float(row[f'complex_hz_{h}']) for h in range(1, 7)]
+        readings = [complex(float(row[f'complex_real_{h}']),
+                            float(row[f'complex_imag_{h}'])) for h in range(1, 7)]
+        result = recover(cells, readings, frequency*np.arange(1, 7),
+                         rate, float(row['complex_decay']))
+        if not result['eligible'] or result['power'][0] <= 0:
+            continue
+        ratios.append(result['power'][1]/result['power'][0])
+        conditions.append(result['condition'])
+    return dict(role='known-input-frequency oracle', total=len(rows),
+                eligible=len(ratios), abstained=len(rows)-len(ratios),
+                h2_ratio_median=float(np.median(ratios)) if ratios else None,
+                h2_ratio_min=min(ratios) if ratios else None,
+                h2_ratio_max=max(ratios) if ratios else None,
+                max_condition=max(conditions) if conditions else None)
+
+
 def run(binary, output):
     output.mkdir(parents=True, exist_ok=False)
     rate, begin = 96000, 24000
-    report = dict(schema='m3_harmonic_leakage_probe_v1', state='running', final=False,
+    report = dict(schema='m3_harmonic_leakage_probe_v2', state='running', final=False,
                   binary_sha256=digest(binary), settings=SETTINGS, measurements=[],
                   source_commit=os.environ.get('SOURCE_SHA'),
                   worker_commit=os.environ.get('GITHUB_SHA'),
@@ -73,7 +98,7 @@ def run(binary, output):
                         selected = [r for r in rows if start <= int(r['sample']) < start + 15360]
                         if not selected:
                             raise ValueError('Missing candidate trace window')
-                        windows.append(dict(offset_samples=offset, all=summarize_trace(selected, start, rate),
+                        windows.append(dict(offset_samples=offset, unmixed=summarize_unmixed(selected, frequency, rate), all=summarize_trace(selected, start, rate),
                                             by_phase_valid={str(valid): summarize_trace([r for r in selected if int(r['phase_valid']) == valid], start, rate) for valid in (0, 1)}))
                     report['measurements'].append(dict(cents=cents, h2_input_power_ratio=h2_power,
                                                        h2_phase=relative_phase, windows=windows,

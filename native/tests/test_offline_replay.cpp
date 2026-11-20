@@ -596,7 +596,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     M3_EXPECT_FALSE(trace.failed);
     std::rewind(stream.get());
     std::string captured;
-    std::array<char, 4096U> line{};
+    std::array<char, 16384U> line{};
     std::size_t rows = 0U;
     std::size_t observed_column = 0U;
     std::size_t evaluated_column = 0U;
@@ -646,7 +646,7 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
         }
         M3_EXPECT_TRUE(activation_column > 0U);
         M3_EXPECT_EQ(harmonic_column, activation_column + 7U);
-        M3_EXPECT_EQ(trace_column_count, harmonic_column + 6U);
+        M3_EXPECT_EQ(trace_column_count, harmonic_column + 26U);
         M3_EXPECT_TRUE(observed_column > 0U);
         M3_EXPECT_TRUE(evaluated_column > 0U);
         M3_EXPECT_TRUE(calibrated_column > evaluated_column);
@@ -665,6 +665,15 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
         const double energy = std::stod(fields[harmonic_column + harmonic]);
         M3_EXPECT_TRUE(std::isfinite(energy));
         M3_EXPECT_TRUE(energy >= 0.0);
+      }
+      M3_EXPECT_EQ(fields[harmonic_column + 6U], std::string("1"));
+      const double cell_decay = std::stod(fields[harmonic_column + 7U]);
+      M3_EXPECT_TRUE(cell_decay > 0.0 && cell_decay < 1.0);
+      for (std::size_t harmonic = 0U; harmonic < 6U; ++harmonic) {
+        const auto column = harmonic_column + 8U + 3U * harmonic;
+        M3_EXPECT_TRUE(std::stod(fields[column]) > 0.0);
+        M3_EXPECT_TRUE(std::isfinite(std::stod(fields[column + 1U])));
+        M3_EXPECT_TRUE(std::isfinite(std::stod(fields[column + 2U])));
       }
       const double fast_energy = std::stod(fields[activation_column + 1U]);
       const double required_energy = std::stod(fields[activation_column + 3U]);
