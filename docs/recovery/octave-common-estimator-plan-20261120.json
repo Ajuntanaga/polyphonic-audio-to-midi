@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "sample_rate_hz": 96000,
+  "prefix_ms": 250,
+  "window_ms": [
+    320,
+    480
+  ],
+  "block_samples": 512,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "calibration": "Replay default bank for BOTH isolated and chord clips; no personal calibration, templates or experimental flags.",
+  "selection": "All takes in the five parent cells from the frozen 96-take inventory; all five annotated pairs with those cells and false74.",
+  "parent_cells": [
+    [
+      44,
+      0
+    ],
+    [
+      48,
+      1
+    ],
+    [
+      48,
+      2
+    ],
+    [
+      60,
+      2
+    ],
+    [
+      62,
+      6
+    ]
+  ],
+  "expected_parent_takes": 21,
+  "ordinary_inputs": {
+    "ordinary.wav": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+    "ordinary.tsv": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+  },
+  "cases": [
+    {
+      "id": "labels32-29",
+      "parent_label": 32,
+      "upper_label": 29,
+      "parent": 44,
+      "upper": 56,
+      "lane": 0,
+      "start_sample": 489817,
+      "end_sample": 561600,
+      "kind": "annotated_octave"
+    },
+    {
+      "id": "labels41-42",
+      "parent_label": 41,
+      "upper_label": 42,
+      "parent": 48,
+      "upper": 60,
+      "lane": 2,
+      "start_sample": 653030,
+      "end_sample": 724800,
+      "kind": "annotated_octave"
+    },
+    {
+      "id": "labels113-112",
+      "parent_label": 113,
+      "upper_label": 112,
+      "parent": 60,
+      "upper": 72,
+      "lane": 2,
+      "start_sample": 2040239,
+      "end_sample": 2090546,
+      "kind": "annotated_octave"
+    },
+    {
+      "id": "labels245-244",
+      "parent_label": 245,
+      "upper_label": 244,
+      "parent": 48,
+      "upper": 60,
+      "lane": 1,
+      "start_sample": 4406586,
+      "end_sample": 4478400,
+      "kind": "annotated_octave"
+    },
+    {
+      "id": "labels354-351",
+      "parent_label": 354,
+      "upper_label": 351,
+      "parent": 48,
+      "upper": 60,
+      "lane": 1,
+      "start_sample": 6772999,
+      "end_sample": 6844800,
+      "kind": "annotated_octave"
+    },
+    {
+      "id": "false74",
+      "parent_label": 162,
+      "upper_label": null,
+      "parent": 62,
+      "upper": 74,
+      "lane": 6,
+      "start_sample": 2937786,
+      "end_sample": 3009600,
+      "kind": "unlabeled_upper_control"
+    }
+  ],
+  "limitations": [
+    "Fresh clip-local state; no identity claim against full continuous recording.",
+    "Label-relative window, not verified onset.",
+    "False74 uses parent label162 start2937786 as anchor, not prior filtered-trace first tick2939903.",
+    "Correct parent lane supplied; observation only, no threshold fitting or DSP policy.",
+    "A control may cease to be a false output under the shared default configuration; report its activity explicitly."
+  ]
+}
