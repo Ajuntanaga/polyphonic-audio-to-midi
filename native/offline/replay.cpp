@@ -2944,11 +2944,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_local_onset_evidence,
                          bool diagnostic_supported_sustain_renewal,
                          bool diagnostic_persistent_candidate_admission,
-                         bool diagnostic_contradicted_retention) {
+                         bool diagnostic_contradicted_retention,
+                         bool diagnostic_common_assignment_confidence) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3308,6 +3309,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_pending_string_posterior);
   detector.set_joint_rescue_eligibility_for_diagnostics(
       diagnostic_joint_rescue_eligibility);
+  detector.set_common_assignment_confidence_for_diagnostics(
+      diagnostic_common_assignment_confidence);
   detector.set_calibrated_assignment_prior_for_diagnostics(
       diagnostic_calibrated_assignment_prior);
   detector.set_provisional_open_retention_guard_for_diagnostics(

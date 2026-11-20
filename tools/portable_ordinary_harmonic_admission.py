@@ -188,7 +188,9 @@ def trace_local_onset_assignments(binary, corpus, output, conditions, cached, ru
     return result
 
 
-def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False, persistent_candidate_admission=False, contradicted_retention=False):
+def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400, competition=False, fundamental_veto_check=False, assignment_diagnostic=False, calibrated_assignment_prior=False, joint_rescue_eligibility=False, pending_string_posterior=False, posterior_loss_diagnostic=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, supported_sustain_renewal=False, persistent_candidate_admission=False, contradicted_retention=False, common_assignment_confidence=False):
+    if common_assignment_confidence and not contradicted_retention:
+        raise ValueError("Common assignment confidence requires contradicted retention baseline")
     if contradicted_retention and any((persistent_candidate_admission, supported_sustain_renewal,
             local_onset_evidence, fundamental_veto_check, calibrated_assignment_prior,
             joint_rescue_eligibility, pending_string_posterior, posterior_loss_diagnostic,
@@ -287,6 +289,10 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
                       (TRIAL, (COLLISION, '--diagnostic-contradicted-retention')))
         report['limitations'] = ('Offline provisional retention diagnostic. Timing, allocations, '
                                 'full corpus and live host acceptance remain unmeasured.')
+    report['common_assignment_confidence'] = common_assignment_confidence
+    if common_assignment_confidence:
+        conditions = tuple((mode, flags + ('--diagnostic-common-assignment-confidence',)
+                            if mode == TRIAL else flags) for mode, flags in conditions)
     report['conditions'] = {mode: list(flags) for mode, flags in conditions}
 
     def save():
@@ -473,6 +479,7 @@ def main():
     parser.add_argument('--common-detuning-support', action='store_true')
     parser.add_argument('--local-onset-evidence', action='store_true')
     parser.add_argument('--supported-sustain-renewal', action='store_true')
+    parser.add_argument('--common-assignment-confidence', action='store_true')
     parser.add_argument('--contradicted-retention', action='store_true')
     parser.add_argument('--persistent-candidate-admission', action='store_true')
     args = parser.parse_args()
@@ -489,7 +496,8 @@ def main():
         local_onset_evidence=args.local_onset_evidence,
         supported_sustain_renewal=args.supported_sustain_renewal,
         persistent_candidate_admission=args.persistent_candidate_admission,
-        contradicted_retention=args.contradicted_retention)
+        contradicted_retention=args.contradicted_retention,
+        common_assignment_confidence=args.common_assignment_confidence)
 
 
 if __name__ == '__main__':

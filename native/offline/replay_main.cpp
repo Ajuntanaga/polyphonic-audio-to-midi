@@ -331,6 +331,7 @@ int main(int argc, char** argv) {
   std::vector<std::uint64_t> diagnostic_stage_end_samples;
   bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
+  bool diagnostic_common_assignment_confidence = false;
   bool diagnostic_calibrated_assignment_prior = false;
   bool diagnostic_joint_rescue_eligibility = false;
   bool diagnostic_pending_string_posterior = false;
@@ -712,6 +713,9 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-provisional-open-retention-guard") == 0) {
       diagnostic_provisional_open_retention_guard = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-common-assignment-confidence") == 0) {
+      diagnostic_common_assignment_confidence = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-calibrated-assignment-prior") == 0) {
       diagnostic_calibrated_assignment_prior = true;
@@ -1309,7 +1313,8 @@ int main(int argc, char** argv) {
           diagnostic_common_detuning_support, diagnostic_local_onset_evidence,
           diagnostic_supported_sustain_renewal,
           diagnostic_persistent_candidate_admission,
-          diagnostic_contradicted_retention)) {
+          diagnostic_contradicted_retention,
+          diagnostic_common_assignment_confidence)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;

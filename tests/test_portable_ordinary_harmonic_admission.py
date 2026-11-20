@@ -13,7 +13,7 @@ from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
-    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, contradicted_retention=False, assignment_diagnostic=False):
+    def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, common_assignment_confidence=False, contradicted_retention=False, assignment_diagnostic=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             corpus = root / 'corpus'
@@ -142,9 +142,9 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
                   patch.object(trial, 'trace_local_onset_assignments', return_value={'identity': True}) as trace):
                 if drift or failure:
                     with self.assertRaises((ValueError, TimeoutError, subprocess.CalledProcessError)):
-                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, assignment_diagnostic=assignment_diagnostic)
+                        trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, common_assignment_confidence=common_assignment_confidence, assignment_diagnostic=assignment_diagnostic)
                 else:
-                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, assignment_diagnostic=assignment_diagnostic)
+                    trial.run(binary, corpus, manifest, reference_path, output, competition=competition, energy_weighted_descriptor=energy_weighted_descriptor, common_detuning_support=common_detuning_support, local_onset_evidence=local_onset_evidence, contradicted_retention=contradicted_retention, common_assignment_confidence=common_assignment_confidence, assignment_diagnostic=assignment_diagnostic)
             if assignment_diagnostic and contradicted_retention:
                 self.assertEqual([(call.kwargs['start'], call.kwargs['end']) for call in trace.call_args_list],
                                  [(73.90, 74.20)])
@@ -207,6 +207,17 @@ class HarmonicAdmissionRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'must be isolated'):
             trial.run(None, None, None, None, None,
                       contradicted_retention=True, persistent_candidate_admission=True)
+
+    def test_common_assignment_confidence_is_trial_only(self):
+        report, commands, _ = self.exercise(
+            contradicted_retention=True, common_assignment_confidence=True)
+        flag = '--diagnostic-common-assignment-confidence'
+        self.assertTrue(report['common_assignment_confidence'])
+        self.assertEqual([flag in c for c in commands], [False, False, True])
+        self.assertIn('--diagnostic-contradicted-retention',
+                      report['conditions'][trial.TRIAL])
+        with self.assertRaisesRegex(ValueError, 'requires contradicted retention'):
+            trial.run(None, None, None, None, None, common_assignment_confidence=True)
 
     def test_common_detuning_support_applies_only_to_trial(self):
         report, commands, _ = self.exercise(common_detuning_support=True)

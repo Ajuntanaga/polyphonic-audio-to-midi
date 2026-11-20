@@ -2509,6 +2509,45 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
+  static std::array<double, 2U> common_confidence_probe(bool enabled,
+                                                       unsigned scenario) {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = config.highest_note = 37U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    detector.set_common_assignment_confidence_for_diagnostics(enabled);
+    detector.assignment_diagnostics_enabled_ = true;
+    detector.playable_string_masks_[0U] = 3U;
+    StringCalibrationBank bank;
+    for (std::size_t lane = 0U; lane < 2U; ++lane) {
+      auto& point = bank.points[lane][37U - kM3OpenNotes[lane]];
+      point.harmonic_profile_q15[scenario == 1U ? lane : 0U] = 32767U;
+      point.confidence_q15 = lane == 0U ? 32767U : 10000U;
+      point.observation_count = 2U;
+      point.quality = CalibrationPointQuality::measured;
+      bank.calibrated_string_mask |= static_cast<std::uint8_t>(1U << lane);
+    }
+    if (scenario >= 2U)
+      bank.points[1U][1U].quality = scenario == 2U
+          ? CalibrationPointQuality::interpolated : CalibrationPointQuality::missing;
+    detector.set_calibration_bank(bank);
+    for (std::size_t h = 0U; h < kCalibrationHarmonicCount; ++h) {
+      auto& cell = detector.cells_[detector.cell_index(0U, h)];
+      cell.enabled = true;
+      cell.fast_real = h == 0U ? 1.0 : 0.0;
+      cell.fast_imaginary = 0.0;
+    }
+    std::array<bool, kMaxCandidates> selected{};
+    selected[0U] = true;
+    const auto allocations = test::allocation_count();
+    detector.assign_m3_strings(selected);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+    const auto& terms = detector.assignment_diagnostics_[0U].lane_terms;
+    return {terms[0U][2U], terms[1U][2U]};
+  }
+
   static void pending_posterior_probe(PolyphonicPitchDetector& detector,
                                       bool enabled, unsigned scenario) {
     PersistentConfig config;
@@ -15351,3 +15390,22 @@ M3_TEST(native_detector_unsupported_pair_release_uses_ordinary_grace) {
   m3::PolyphonicPitchDetectorTestAccess::unsupported_pair_release_probe();
 }
 #endif
+
+M3_TEST(native_detector_common_confidence_preserves_shapes_and_incomplete_banks) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  const auto original = Access::common_confidence_probe(false, 0U);
+  const auto shared = Access::common_confidence_probe(true, 0U);
+  M3_EXPECT_TRUE(std::abs(original[0U] - original[1U]) > 1.0);
+  M3_EXPECT_TRUE(std::abs(shared[0U] - shared[1U]) < 1e-10);
+  const auto shaped = Access::common_confidence_probe(true, 1U);
+  // Profile terms are negative bonuses: a better matching shape costs less.
+  M3_EXPECT_TRUE(shaped[0U] < shaped[1U]);
+  for (unsigned scenario : {2U, 3U}) {
+    const auto off = Access::common_confidence_probe(false, scenario);
+    const auto on = Access::common_confidence_probe(true, scenario);
+    M3_EXPECT_EQ(off[0U], on[0U]);
+    M3_EXPECT_EQ(off[1U], on[1U]);
+  }
+#endif
+}

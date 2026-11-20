@@ -858,6 +858,9 @@ class PolyphonicPitchDetector final {
   void set_joint_rescue_eligibility_for_diagnostics(bool enabled) noexcept {
     diagnostic_joint_rescue_eligibility_ = enabled;
   }
+  void set_common_assignment_confidence_for_diagnostics(bool enabled) noexcept {
+    diagnostic_common_assignment_confidence_ = enabled;
+  }
   void set_calibrated_assignment_prior_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_assignment_prior_ = enabled;
   }
@@ -1910,6 +1913,7 @@ class PolyphonicPitchDetector final {
   std::array<std::uint64_t, 2U> diagnostic_odd_partial_cue_mask_{};
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
+  bool diagnostic_common_assignment_confidence_ = false;
   bool diagnostic_calibrated_assignment_prior_{};
   bool diagnostic_joint_rescue_eligibility_{};
   bool diagnostic_pending_string_posterior_{};

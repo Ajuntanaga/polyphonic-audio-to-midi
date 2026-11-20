@@ -6884,6 +6884,28 @@ void PolyphonicPitchDetector::assign_m3_strings(
         }
       }
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // Reliability scales this candidate's fingerprint evidence as a whole;
+    // it must not create a string preference between identical fingerprints.
+    // Leave incomplete/interpolated banks on the existing path.
+    bool common_confidence_ready = diagnostic_common_assignment_confidence_;
+    double common_confidence_weight = 1.0;
+    if (common_confidence_ready) {
+      for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+        if ((playable & static_cast<std::uint8_t>(1U << string)) == 0U)
+          continue;
+        const auto* point = calibrator_.bank().point(
+            string, note - kM3OpenNotes[string]);
+        if (point == nullptr ||
+            point->quality != CalibrationPointQuality::measured) {
+          common_confidence_ready = false;
+          break;
+        }
+        common_confidence_weight = std::min(common_confidence_weight,
+            0.75 + 0.25 * static_cast<double>(point->confidence_q15) / 32767.0);
+      }
+    }
+#endif
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t bit = static_cast<std::uint8_t>(1U << string);
       if ((playable & bit) == 0U) {
@@ -6923,6 +6945,13 @@ void PolyphonicPitchDetector::assign_m3_strings(
               ? settled_calibration_similarity_from_fast_similarity(
                     candidate, string, fast_similarity)
               : fast_similarity;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (common_confidence_ready) {
+        const double own_weight =
+            0.75 + 0.25 * static_cast<double>(point->confidence_q15) / 32767.0;
+        learned_similarities[string] *= common_confidence_weight / own_weight;
+      }
+#endif
       best_learned_similarity =
           std::max(best_learned_similarity, learned_similarities[string]);
       learned_cents[string] =
