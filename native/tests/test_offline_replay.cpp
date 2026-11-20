@@ -1263,8 +1263,14 @@ M3_TEST(offline_residual_admission_trace_preserves_audio_and_partitioning) {
       std::vector<std::string> values;
       std::string field;
       while (std::getline(residual_fields, field, '\t')) values.push_back(field);
-      M3_EXPECT_EQ(values.size(), 36U);
-      if (values.size() != 36U) continue;
+      M3_EXPECT_EQ(values.size(), 50U);
+      if (values.size() != 50U) continue;
+      M3_EXPECT_EQ(std::stoi(values[36U]), static_cast<int>(note) - 12);
+      // Untargeted observation retains the original fit and leaves the paired
+      // diagnostic unavailable; zero placeholders must not imply a valid fit.
+      M3_EXPECT_EQ(values[43U], "0");
+      M3_EXPECT_EQ(values[45U], "0");
+      M3_EXPECT_EQ(values[46U], "0");
       const auto lane_observed = std::stoul(values[25U]);
       const auto lane_count = std::stoul(values[26U]);
       const auto lane_mask = std::stoul(values[27U]);
