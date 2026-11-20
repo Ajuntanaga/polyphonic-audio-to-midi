@@ -843,7 +843,7 @@ def capture_controlled_selection(run_id: str, source_run: str):
         if sha256(assignment) != saved['trace_sha256']:
             raise ValueError('saved assignment trace changed')
         with candidate.open() as c, outcome.open() as o, assignment.open() as a:
-            if next(o).strip() != '# m3_candidate_outcome_v2':
+            if next(o).strip() not in {'# m3_candidate_outcome_v2', '# m3_candidate_outcome_v3'}:
                 raise ValueError('unknown outcome format')
             report['diagnosis'] = summarize_selection(
                 csv.DictReader(c, delimiter='\t'), csv.DictReader(o, delimiter='\t'),
@@ -1237,7 +1237,7 @@ def capture_frozen_cue_selection(run_id: str, source_run: str):
         if len(intervals) != saved['cue_intervals']:
             raise ValueError('saved cue count changed')
         with candidate.open() as c, outcome.open() as o:
-            if next(o).strip() != '# m3_candidate_outcome_v2':
+            if next(o).strip() not in {'# m3_candidate_outcome_v2', '# m3_candidate_outcome_v3'}:
                 raise ValueError('unknown outcome format')
             report['diagnosis'] = summarize_cues(
                 csv.DictReader(c, delimiter='\t'), csv.DictReader(o, delimiter='\t'), intervals,
@@ -1550,7 +1550,7 @@ def capture_corpus_cue_failure(run_id: str, source_run: str, label_index: int,
                     raise ValueError('incomplete ' + kind + ' trace accounting')
                 details['trace_counts'][kind] = list(map(int, counts[0]))
             with paths['candidate'].open() as c, paths['outcome'].open() as o:
-                if next(o).strip() != '# m3_candidate_outcome_v2':
+                if next(o).strip() not in {'# m3_candidate_outcome_v2', '# m3_candidate_outcome_v3'}:
                     raise ValueError('unknown outcome format')
                 details['diagnosis'] = summarize_cues(
                     (row for row in csv.DictReader(c, delimiter='\t') if start <= int(row['sample']) < end),

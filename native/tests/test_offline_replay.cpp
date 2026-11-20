@@ -834,7 +834,7 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
     std::istringstream lines(captured);
     std::string line;
     std::getline(lines, line);
-    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v2");
+    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v3");
     std::getline(lines, line);
     std::size_t rows = 0U, labeled = 0U, matched = 0U;
     std::array<std::size_t, 4U> outcomes{};
@@ -859,7 +859,9 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
       if (!fields[7].empty()) {
         for (const auto& candidate : split(fields[7], ',')) {
           const auto values = split(candidate, ':');
-          M3_EXPECT_EQ(values.size(), 42U);
+          M3_EXPECT_EQ(values.size(), 43U);
+          if (values.size() == 43U)
+            M3_EXPECT_TRUE(values[42] == "0" || values[42] == "1");
           if (!values.empty() && values[0] == "40") observed_candidate = true;
         }
       }

@@ -28,7 +28,7 @@ def summarize_selection(candidate_rows, outcome_rows, assignment_rows, *,
         entries = {}
         for item in filter(None, row['candidates'].split(',')):
             fields = item.split(':')
-            if len(fields) != 42 or int(fields[0]) in entries:
+            if len(fields) not in (42, 43) or int(fields[0]) in entries:
                 raise ValueError('incompatible outcome candidate schema')
             entries[int(fields[0])] = fields
         outcomes[sample] = entries.get(note)

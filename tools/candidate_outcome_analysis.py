@@ -28,9 +28,10 @@ CANDIDATE_FIELDS = CANDIDATE_FIELDS_V1 + (
     "selector_option_mask selector_positive_mask selector_used_mask "
     "selector_voice_count selector_open_count"
 ).split()
+CANDIDATE_FIELDS_V3 = CANDIDATE_FIELDS + ["onset_observed"]
 FLOAT_FIELDS = set(("score_ratio fund_ratio band_score band_fund best_cal second_cal onset phase_cents "
                     "selector_raw_score selector_best_adjusted_score").split())
-SCHEMAS = {"# m3_candidate_outcome_v1\n", "# m3_candidate_outcome_v2\n"}
+SCHEMAS = {"# m3_candidate_outcome_v1\n", "# m3_candidate_outcome_v2\n", "# m3_candidate_outcome_v3\n"}
 OUTCOMES = ("correct_voice", "wrong_note", "wrong_string", "extra_gap_output")
 HEADER = "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n"
 # Native score includes the fundamental with weight 1 plus nonnegative upper
@@ -70,12 +71,17 @@ def _candidates(frame: dict) -> dict[int, dict]:
     result = {}
     for item in frame["candidate_text"].split(",") if frame["candidate_text"] else ():
         values = item.split(":")
-        fields = (CANDIDATE_FIELDS if len(values) == len(CANDIDATE_FIELDS)
-                  else CANDIDATE_FIELDS_V1)
-        if len(values) != len(fields):
+        fields = next((names for names in
+                       (CANDIDATE_FIELDS_V1, CANDIDATE_FIELDS, CANDIDATE_FIELDS_V3)
+                       if len(values) == len(names)), None)
+        if fields is None:
             raise ValueError("invalid candidate tuple width")
         row = {name: (float(value) if name in FLOAT_FIELDS else int(value))
                for name, value in zip(fields, values)}
+        # Older traces did not serialize validity; zero strength is ambiguous.
+        row.setdefault("onset_observed", None)
+        if row["onset_observed"] not in (None, 0, 1):
+            raise ValueError("invalid onset validity")
         if any(not math.isfinite(row[name]) for name in FLOAT_FIELDS & row.keys()):
             raise ValueError("nonfinite candidate feature")
         if not 0 <= row["fund_ratio"] <= 1:
@@ -325,7 +331,7 @@ def analyze_fret_relief(stream: TextIO, expected: dict | None = None) -> dict:
     Labels and rendered state describe outcomes; they never select candidates.
     Counts are candidate observations, not counterfactual MIDI or frame gains.
     """
-    if stream.readline() != "# m3_candidate_outcome_v2\n" or stream.readline() != HEADER:
+    if stream.readline() not in {"# m3_candidate_outcome_v2\n", "# m3_candidate_outcome_v3\n"} or stream.readline() != HEADER:
         raise ValueError("fret relief requires outcome trace schema v2")
     if expected and (expected.get("max_fret", 24) != 24 or expected.get("selector_margin", -1) != -1):
         raise ValueError("fret relief requires the baseline 24-fret selector")

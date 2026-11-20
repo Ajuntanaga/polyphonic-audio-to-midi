@@ -2,7 +2,7 @@ import io
 import unittest
 
 from tools.candidate_outcome_analysis import (
-    CANDIDATE_FIELDS, CANDIDATE_FIELDS_V1, HEADER, analyze_candidate_population, analyze_label_failures,
+    _candidates, _frame, CANDIDATE_FIELDS, CANDIDATE_FIELDS_V1, HEADER, analyze_candidate_population, analyze_label_failures,
     analyze_group_failures, analyze_fret_relief, analyze_calibrated_harmonic_admission, compare_streams,
 )
 
@@ -24,6 +24,24 @@ def stream(*rows):
 
 
 class CandidateOutcomeAnalysisTests(unittest.TestCase):
+    def test_onset_zero_distinguishes_observed_unobserved_and_legacy(self):
+        legacy = candidate(onset=0)
+        for text, expected in [(legacy, None), (legacy + ':0', 0),
+                               (legacy + ':1', 1),
+                               (':'.join(legacy.split(':')[:len(CANDIDATE_FIELDS_V1)]), None)]:
+            row = _candidates(_frame(frame(100, candidates=text)))[40]
+            self.assertEqual(row['onset'], 0)
+            self.assertEqual(row['onset_observed'], expected)
+        with self.assertRaisesRegex(ValueError, 'onset validity'):
+            _candidates(_frame(frame(100, candidates=legacy + ':2')))
+
+    def test_v3_trace_preserves_population_results(self):
+        old = frame(100, candidates=candidate())
+        new = frame(100, candidates=candidate() + ':1')
+        self.assertEqual(analyze_candidate_population(stream(old)),
+                         analyze_candidate_population(io.StringIO(
+                             '# m3_candidate_outcome_v3\n' + HEADER + new)))
+
     def test_added_removed_outputs_and_group_recovery_have_separate_counts(self):
         a = stream(
             frame(100, '0:40:3', '', '40:40:0:0:10:1:0:3', candidate()),
