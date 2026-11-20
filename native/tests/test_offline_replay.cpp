@@ -622,7 +622,12 @@ M3_TEST(offline_candidate_trace_preserves_output_and_partitioning) {
     while (std::fgets(line.data(), line.size(), stream.get()) != nullptr) {
       captured += line.data();
       std::vector<std::string> fields;
-      std::istringstream record(line.data());
+      std::string record_text(line.data());
+      while (!record_text.empty() &&
+             (record_text.back() == '\n' || record_text.back() == '\r')) {
+        record_text.pop_back();
+      }
+      std::istringstream record(record_text);
       std::string field;
       while (std::getline(record, field, '\t')) fields.push_back(field);
       if (rows++ == 0U) {
