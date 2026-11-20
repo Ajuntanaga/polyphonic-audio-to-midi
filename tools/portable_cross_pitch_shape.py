@@ -59,6 +59,11 @@ def evaluate_window(samples, rate, window, *, refine=False):
             result['frequency_refinement'] = fit_refined_shape(
                 samples[begin:end], rate, spec['fundamentals_hz'],
                 input_role=spec['input_role'], harmonics=6)
+        if 'paired_addition_hz' in spec:
+            from tools.refined_cross_pitch_shape import fit_paired_addition
+            result['paired_addition'] = fit_paired_addition(
+                samples[begin:end], rate, spec['fundamentals_hz'],
+                spec['paired_addition_hz'], input_role=spec['input_role'], harmonics=6)
         results.append({'provenance': provenance, **result})
     return {'id': window['id'], 'begin': begin, 'end': end,
             'wave_sha256': window['wave_sha256'], 'onset_verified': False,
