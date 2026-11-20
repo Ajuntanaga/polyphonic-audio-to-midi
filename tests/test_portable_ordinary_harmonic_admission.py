@@ -13,6 +13,24 @@ from tools import harmonic_competition_cues as competing
 
 
 class HarmonicAdmissionRunnerTests(unittest.TestCase):
+    def test_extended_outcome_preserves_exact_frozen_fields(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'trace.tsv'
+            values = ':'.join(str(i) for i in range(42))
+            header = 'sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n'
+            row = '64\t1\t0\t64\t\t\t\t' + values
+            legacy = '# m3_candidate_outcome_v2\n' + header + row + '\n'
+            expected = hashlib.sha256(legacy.encode()).hexdigest()
+            for version, extra in ((2, ''), (3, ':0'), (4, ':0:0.2:0.1:1')):
+                text = f'# m3_candidate_outcome_v{version}\n' + header + row + extra + '\n'
+                path.write_text(text)
+                self.assertEqual(trial.outcome_v2_digest(path), expected)
+                path.write_text(text.replace('64\t1', '65\t1'))
+                self.assertNotEqual(trial.outcome_v2_digest(path), expected)
+            path.write_text(text.replace(':0:0.2:0.1:1', ':0'))
+            with self.assertRaises(ValueError):
+                trial.outcome_v2_digest(path)
+
     def exercise(self, *, change=None, drift=None, failure=None, competition=False, energy_weighted_descriptor=False, common_detuning_support=False, local_onset_evidence=False, common_assignment_confidence=False, contradicted_retention=False, assignment_diagnostic=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

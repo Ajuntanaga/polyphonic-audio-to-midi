@@ -4,6 +4,7 @@ Generate past-only cues from a separately frozen current-detector shadow. This
 tests an offline admission hypothesis, not a native feedback implementation.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -28,6 +29,34 @@ RATE, SAMPLES = 96000, 10689600
 INPUTS = {'ordinary.wav', 'ordinary.tsv', 'calibration.m3cb', 'templates.tsv'}
 TARGET = dict(label_index=10, midi_note=75, string_mask=128,
               start_sample=163306, end_sample=235200)
+
+
+def outcome_v2_digest(path):
+    """Hash the frozen v2 fields, retaining their exact serialized values."""
+    with Path(path).open('rb') as stream:
+        schema = stream.readline()
+        if schema == b'# m3_candidate_outcome_v2\n':
+            return digest(path)
+        width = {b'# m3_candidate_outcome_v3\n': 43,
+                 b'# m3_candidate_outcome_v4\n': 46}.get(schema)
+        if width is None:
+            raise ValueError('Unsupported outcome schema for frozen v2 identity')
+        hashed = hashlib.sha256(b'# m3_candidate_outcome_v2\n')
+        hashed.update(stream.readline())
+        for line in stream:
+            columns = line.rstrip(b'\n').split(b'\t')
+            if len(columns) != 8:
+                raise ValueError('Invalid outcome columns')
+            candidates = columns[7].split(b',') if columns[7] else []
+            projected = []
+            for candidate in candidates:
+                values = candidate.split(b':')
+                if len(values) != width:
+                    raise ValueError('Invalid outcome candidate width')
+                projected.append(b':'.join(values[:42]))
+            columns[7] = b','.join(projected)
+            hashed.update(b'\t'.join(columns) + b'\n')
+        return hashed.hexdigest()
 
 
 def verify_references(reference, manifest, corpus, config=CONFIG):
@@ -343,7 +372,9 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=2400,
             if mode == CURRENT:
                 row['outcome_sha256'] = digest(outcome)
                 row['saved_outcome_bit_identical'] = (
-                    row['outcome_sha256'] == references['current_outcome_sha256'])
+                    row['outcome_sha256'] == references['current_outcome_sha256']
+                    or outcome_v2_digest(outcome) == references['current_outcome_sha256'])
+                row['saved_outcome_identity_scope'] = 'frozen v2 fields; appended diagnostics excluded'
                 if not row['saved_outcome_bit_identical']:
                     raise ValueError('Saved current outcome identity drift')
                 if not (local_onset_evidence or supported_sustain_renewal or persistent_candidate_admission or contradicted_retention):
