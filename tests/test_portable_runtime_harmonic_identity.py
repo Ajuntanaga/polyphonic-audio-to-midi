@@ -72,11 +72,11 @@ class ComplexTraceContracts(unittest.TestCase):
         observed = response_matrix(frequencies, frequencies, rate, decay) @ coefficients
         rows = []
         for sample in (100, 7780):
-            row = dict(sample=str(sample), complex_valid='1', complex_decay=str(decay), phase_valid='1', phase_cents='0')
+            row = dict(sample=str(sample), complex_valid='1', complex_decay=str(decay), phase_valid='1', phase_cents='0', independent_phase_valid='1', independent_phase_cents='0')
             for i in range(6):
                 row.update({f'complex_hz_{i+1}': str(frequencies[i]), f'complex_real_{i+1}': str(observed[2*i]), f'complex_imag_{i+1}': str(observed[2*i+1])})
             rows.append(row)
-        for mode in ('nominal', 'runtime_phase'):
+        for mode in ('nominal', 'runtime_phase', 'independent_phase'):
             summary = summarize_complex_trace(rows, 100, rate, mode)
             self.assertTrue(summary['eligible'])
             expected = np.log10(powers); expected -= expected.mean()
@@ -86,3 +86,10 @@ class ComplexTraceContracts(unittest.TestCase):
         self.assertFalse(summary['eligible'])
         self.assertEqual(summary['rejected_ticks'], 1)
         self.assertEqual(summary['ticks_per_half'], [1, 1])
+
+        self.assertTrue(summarize_complex_trace(rows, 100, rate, 'independent_phase')['eligible'])
+        rows[0]['independent_phase_valid'] = '0'
+        independent = summarize_complex_trace(rows, 100, rate, 'independent_phase')
+        self.assertFalse(independent['eligible'])
+        self.assertEqual(independent['rejected_ticks'], 1)
+        self.assertEqual(independent['ticks_per_half'], [1, 1])

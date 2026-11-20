@@ -1677,6 +1677,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   fine_frequency_evidence_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   diagnostic_discarded_phase_states_ = {};
+  diagnostic_independent_phase_states_ = {};
   diagnostic_residual_recovery_lease_ = {};
   diagnostic_residual_recovery_stats_ = {};
   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
@@ -2678,6 +2679,9 @@ PolyphonicPitchDetector::candidate_tracking_diagnostics(
   result.activation = activation_diagnostics_[candidate];
   result.phase_cents = phase_cents_states_[candidate].cents;
   result.phase_updates = phase_cents_states_[candidate].accepted_updates;
+  result.independent_phase_cents = diagnostic_independent_phase_states_[candidate].cents;
+  result.independent_phase_valid = diagnostic_independent_phase_states_[candidate].valid;
+  result.independent_phase_updates = diagnostic_independent_phase_states_[candidate].accepted_updates;
   result.age_ticks = state.age_ticks;
   result.release_ticks = state.release_ticks;
   result.attack_ticks = state.attack_ticks;
@@ -10290,29 +10294,11 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
                  1.0,
                  static_cast<double>(
                      std::numeric_limits<std::uint16_t>::max())));
-  for (std::size_t candidate = 0U;
-       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
-    PhaseCentsState* phase_state = &phase_cents_states_[candidate];
-    if (!selected[candidate] && !candidate_states_[candidate].active) {
-      phase_cents_states_[candidate] = {};
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-      if (assignment_diagnostics_enabled_ &&
-          residual_assignment_diagnostics_enabled_ && signal_present_) {
-        phase_state = &diagnostic_discarded_phase_states_[candidate];
-      } else {
-        diagnostic_discarded_phase_states_[candidate] = {};
-        continue;
-      }
-    } else {
-      diagnostic_discarded_phase_states_[candidate] = {};
-#else
-      continue;
-#endif
-    }
+  const auto update = [&](std::size_t candidate, PhaseCentsState& state,
+                          [[maybe_unused]] bool publish_diagnostics) noexcept {
     const Cell& fundamental = cells_[cell_index(candidate, 0U)];
-    PhaseCentsState& state = *phase_state;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-    if (assignment_diagnostics_enabled_)
+    if (publish_diagnostics && assignment_diagnostics_enabled_)
       assignment_diagnostics_[candidate].phase_previous_cents = state.cents;
 #endif
     state.filtered_real +=
@@ -10364,7 +10350,7 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
           }
           accepted = true;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-          if (assignment_diagnostics_enabled_) {
+          if (publish_diagnostics && assignment_diagnostics_enabled_) {
             auto& observation = assignment_diagnostics_[candidate];
             const double raw_frequency = center_frequency + frequency_offset;
             observation.phase_accepted = raw_frequency > 0.0;
@@ -10394,6 +10380,32 @@ void PolyphonicPitchDetector::update_phase_cents_estimates(
                   state.cents <= 50.0;
     state.previous_real = state.filtered_twice_real;
     state.previous_imaginary = state.filtered_twice_imaginary;
+  };
+  for (std::size_t candidate = 0U;
+       candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (independent_phase_diagnostics_enabled_ && signal_present_) {
+      update(candidate, diagnostic_independent_phase_states_[candidate], false);
+    }
+#endif
+    PhaseCentsState* phase_state = &phase_cents_states_[candidate];
+    if (!selected[candidate] && !candidate_states_[candidate].active) {
+      phase_cents_states_[candidate] = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+      if (assignment_diagnostics_enabled_ &&
+          residual_assignment_diagnostics_enabled_ && signal_present_) {
+        phase_state = &diagnostic_discarded_phase_states_[candidate];
+      } else {
+        diagnostic_discarded_phase_states_[candidate] = {};
+        continue;
+      }
+    } else {
+      diagnostic_discarded_phase_states_[candidate] = {};
+#else
+      continue;
+#endif
+    }
+    update(candidate, *phase_state, true);
   }
 }
 
@@ -13462,6 +13474,7 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       phase_cents_states_ = {};
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       diagnostic_discarded_phase_states_ = {};
+      diagnostic_independent_phase_states_ = {};
       diagnostic_residual_recovery_lease_ = {};
 #endif
       beat_evidence_states_ = {};

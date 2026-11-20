@@ -3177,7 +3177,7 @@ bool run_detector_replay(const WaveData& wave,
         "route_continuity_mask\troute_cached_group_mask\troute_desired_mask\t"
         "route_pruned_mask\troute_midi_before\troute_midi_after\t"
         "route_other_owned\troute_final_continuity_mask\t"
-        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\tcorrected_harmonic_energy_1\tcorrected_harmonic_energy_2\tcorrected_harmonic_energy_3\tcorrected_harmonic_energy_4\tcorrected_harmonic_energy_5\tcorrected_harmonic_energy_6\tcomplex_valid\tcomplex_decay\tcomplex_hz_1\tcomplex_real_1\tcomplex_imag_1\tcomplex_hz_2\tcomplex_real_2\tcomplex_imag_2\tcomplex_hz_3\tcomplex_real_3\tcomplex_imag_3\tcomplex_hz_4\tcomplex_real_4\tcomplex_imag_4\tcomplex_hz_5\tcomplex_real_5\tcomplex_imag_5\tcomplex_hz_6\tcomplex_real_6\tcomplex_imag_6\tphase_cents\n") < 0;
+        "route_final_cached_group_mask\troute_capacity_blocked\tadmission_peers\tactivation_gate\tactivation_fast_energy\tactivation_slow_energy\tactivation_required_energy\tactivation_active_count\tactivation_evidence_ticks\tactivation_attack_ticks\tcorrected_harmonic_energy_1\tcorrected_harmonic_energy_2\tcorrected_harmonic_energy_3\tcorrected_harmonic_energy_4\tcorrected_harmonic_energy_5\tcorrected_harmonic_energy_6\tcomplex_valid\tcomplex_decay\tcomplex_hz_1\tcomplex_real_1\tcomplex_imag_1\tcomplex_hz_2\tcomplex_real_2\tcomplex_imag_2\tcomplex_hz_3\tcomplex_real_3\tcomplex_imag_3\tcomplex_hz_4\tcomplex_real_4\tcomplex_imag_4\tcomplex_hz_5\tcomplex_real_5\tcomplex_imag_5\tcomplex_hz_6\tcomplex_real_6\tcomplex_imag_6\tphase_cents\tindependent_phase_cents\tindependent_phase_valid\tindependent_phase_updates\n") < 0;
 #endif
   }
   if (wave.sample_rate == 0U || wave.source_channels == 0U ||
@@ -3386,6 +3386,7 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_assignment_diagnostics_enabled(
       assignment_trace != nullptr || needs_residual_evidence);
   detector.set_residual_assignment_diagnostics_enabled(needs_residual_evidence);
+  detector.set_independent_phase_diagnostics_enabled(candidate_trace != nullptr);
   if (!detector.set_fine_group_ownership_diagnostics_enabled(
           candidate_trace != nullptr)) return false;
   std::unique_ptr<m3::JointPitchResidual> admission_base_fit, admission_added_fit;
@@ -3882,7 +3883,9 @@ bool run_detector_replay(const WaveData& wave,
                   cell_frequencies[harmonic], cell_correlations[harmonic].real(),
                   cell_correlations[harmonic].imag()) < 0 || trace.failed;
             }
-            trace.failed = std::fprintf(trace.stream, "\t%.17g\n", tracking.phase_cents) < 0 || trace.failed;
+            trace.failed = std::fprintf(trace.stream, "\t%.17g\t%.17g\t%u\t%u\n", tracking.phase_cents,
+                tracking.independent_phase_cents, unsigned(tracking.independent_phase_valid),
+                unsigned(tracking.independent_phase_updates)) < 0 || trace.failed;
             ++trace.frames;
           }
         }

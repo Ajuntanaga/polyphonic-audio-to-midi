@@ -47,8 +47,8 @@ def summarize_trace(rows, begin, rate):
 
 
 def summarize_complex_trace(rows, begin, rate, hypothesis):
-    """Fixed nominal pitch or valid runtime phase; no annotation string inputs."""
-    if hypothesis not in ('nominal', 'runtime_phase'):
+    """Nominal, admitted phase, or independent diagnostic phase; no string labels."""
+    if hypothesis not in ('nominal', 'runtime_phase', 'independent_phase'):
         raise ValueError('Unknown frequency hypothesis')
     converted = []
     rejected = 0
@@ -59,9 +59,10 @@ def summarize_complex_trace(rows, begin, rate, hypothesis):
         power = np.zeros(6)
         valid = row['complex_valid'] == '1'
         cents = 0.0
-        if hypothesis == 'runtime_phase':
-            valid = valid and row['phase_valid'] == '1'
-            cents = float(row['phase_cents'])
+        if hypothesis != 'nominal':
+            prefix = 'independent_' if hypothesis == 'independent_phase' else ''
+            valid = valid and row[prefix + 'phase_valid'] == '1'
+            cents = float(row[prefix + 'phase_cents'])
         valid = valid and np.isfinite(cents)
         if valid:
             frequencies = 440 * 2 ** ((52-69)/12 + cents/1200) * np.arange(1, 7)
@@ -127,11 +128,11 @@ def run(binary, corpus, manifest, output):
     if len(set(names)) != len(names) or any(Path(n).name != n for n in names):
         raise ValueError('Invalid clip identities')
     output.mkdir(parents=True, exist_ok=False)
-    result = dict(schema='m3_runtime_harmonic_identity_v2', state='running', final=False,
+    result = dict(schema='m3_runtime_harmonic_identity_v3', state='running', final=False,
                   source=data.get('source', {}), input_manifest_sha256=digest(manifest), binary_sha256=digest(binary),
                   settings=SETTINGS, calibration='Replay default bank; no uploaded personal bank in this input release.',
                   installed_output_changed=False, promotion_accepted=False, measurements=[],
-                  limitations=['Known isolated note52; label-relative first160ms, onset unverified.',
+                  limitations=['Independent phase is diagnostic-only; it never controls admission or MIDI.', 'Known isolated note52; label-relative first160ms, onset unverified.',
                                'Clip-local detector state; not continuous-corpus state.',
                                'Runtime mean corrected energies differ from integrated Hann FFT powers.',
                                'Positive energies do not prove partial detection; same-session exploratory holdout only.',
@@ -168,13 +169,13 @@ def run(binary, corpus, manifest, output):
             with (directory / 'candidate.tsv').open() as stream:
                 trace_rows = list(csv.DictReader(stream, delimiter='\t'))
                 runtime = summarize_trace(trace_rows, begin, rate)
-            complex_results = {mode: summarize_complex_trace(trace_rows, begin, rate, mode) for mode in ('nominal', 'runtime_phase')}
+            complex_results = {mode: summarize_complex_trace(trace_rows, begin, rate, mode) for mode in ('nominal', 'runtime_phase', 'independent_phase')}
             result['measurements'].append({**item, 'features': measured, 'context': context, 'runtime': runtime, 'complex': complex_results,
                                            'comparison': comparison, 'midi_bit_identical': midi_identity,
                                            'trace_sha256': digest(directory / 'candidate.tsv')})
             save()
         result['runtime_evaluations'] = [eligible_evaluation(result['measurements'], lanes) for lanes in ([0, 1], list(range(6)))]
-        result['complex_evaluations'] = {mode: [eligible_evaluation([{**r, 'runtime': r['complex'][mode]} for r in result['measurements']], lanes) for lanes in ([0, 1], list(range(6)))] for mode in ('nominal', 'runtime_phase')}
+        result['complex_evaluations'] = {mode: [eligible_evaluation([{**r, 'runtime': r['complex'][mode]} for r in result['measurements']], lanes) for lanes in ([0, 1], list(range(6)))] for mode in ('nominal', 'runtime_phase', 'independent_phase')}
         result['fft_evaluations'] = [evaluate(result['measurements'], lanes, ['shape']) for lanes in ([0, 1], list(range(6)))]
         result.update(state='completed', final=True)
     except Exception as error:

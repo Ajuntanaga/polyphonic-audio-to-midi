@@ -360,6 +360,9 @@ struct ActivationDiagnostics final {
 struct CandidateTrackingDiagnostics final {
   std::uint32_t decision_tick{};
   std::uint32_t signal_samples{};
+  double independent_phase_cents{};
+  bool independent_phase_valid{};
+  std::uint16_t independent_phase_updates{};
   double phase_cents{};
   std::uint16_t phase_updates{};
   std::uint16_t age_ticks{};
@@ -701,6 +704,10 @@ class PolyphonicPitchDetector final {
       std::uint8_t midi_note) const noexcept;
   [[nodiscard]] CandidateAdmissionDiagnostics candidate_admission_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  void set_independent_phase_diagnostics_enabled(bool enabled) noexcept {
+    independent_phase_diagnostics_enabled_ = enabled;
+    if (!enabled) diagnostic_independent_phase_states_ = {};
+  }
   [[nodiscard]] CandidateTrackingDiagnostics candidate_tracking_diagnostics(
       std::uint8_t midi_note) const noexcept;
   // Offline observation only: preserve absolute energies, including zeros.
@@ -1727,6 +1734,8 @@ class PolyphonicPitchDetector final {
   // Fine-pitch evidence for discarded candidates, used only by fixed-context
   // assignment diagnostics. Never transferred to native candidate state.
   std::array<PhaseCentsState, kMaxCandidates> diagnostic_discarded_phase_states_{};
+  std::array<PhaseCentsState, kMaxCandidates> diagnostic_independent_phase_states_{};
+  bool independent_phase_diagnostics_enabled_{};
   std::array<FineHistoryResetDiagnostics, kMaxCandidates>
       fine_history_reset_diagnostics_{};
 #endif
