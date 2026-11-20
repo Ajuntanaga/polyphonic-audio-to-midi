@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import numpy as np
 from tools.harmonic_cell_unmix import recover
+from tools.paired_harmonic_measurement import paired_measurement
 from tools.controlled_descriptor_overlap import read_float_wave
 from tools.portable_short_window_identity import features, evaluate
 from tools.portable_corpus_replay import SETTINGS
@@ -194,7 +195,7 @@ def run(binary, corpus, manifest, output):
                 trace_rows = list(csv.DictReader(stream, delimiter='\t'))
                 runtime = summarize_trace(trace_rows, begin, rate)
             complex_results = {mode: summarize_complex_trace(trace_rows, begin, rate, mode) for mode in ('nominal', 'runtime_phase', 'independent_phase')}
-            result['measurements'].append({**item, 'features': measured, 'context': context, 'signal_diagnostic': signal_window_diagnostic(samples, rate, begin), 'runtime': runtime, 'complex': complex_results,
+            result['measurements'].append({**item, 'features': measured, 'context': context, 'signal_diagnostic': signal_window_diagnostic(samples, rate, begin), 'paired_measurement': paired_measurement(samples, rate, begin, trace_rows), 'runtime': runtime, 'complex': complex_results,
                                            'comparison': comparison, 'midi_bit_identical': midi_identity,
                                            'trace_sha256': digest(directory / 'candidate.tsv')})
             save()
