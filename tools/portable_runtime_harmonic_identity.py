@@ -43,14 +43,16 @@ def signal_window_diagnostic(samples, rate, begin):
                 limitation='80ms Hann spectra, 8x interpolation only; strongest peak is not necessarily the fundamental. Raw mean square is not detector filtered energy or a signal-floor decision.')
 
 
-def summarize_trace(rows, begin, rate):
+def summarize_trace(rows, begin, rate, *, harmonics=6):
     """Two fixed 80ms halves, no energy floor; zero bins remain ineligible."""
+    if harmonics not in (4, 6):
+        raise ValueError('Expected four or six enabled harmonics')
     half = round(rate * .080)
     buckets = [[], []]
     for row in rows:
         sample = int(row['sample'])
         if begin <= sample < begin + 2 * half:
-            energy = [float(row[f'corrected_harmonic_energy_{h}']) for h in range(1, 7)]
+            energy = [float(row[f'corrected_harmonic_energy_{h}']) for h in range(1, harmonics + 1)]
             if not np.isfinite(energy).all() or min(energy) < 0:
                 raise ValueError('Invalid runtime energy')
             buckets[(sample - begin) // half].append(energy)
@@ -58,8 +60,8 @@ def summarize_trace(rows, begin, rate):
     means = [np.mean(b, axis=0).tolist() if b else None for b in buckets]
     eligible = all(b and np.all(np.asarray(b) > 0) for b in buckets)
     result = dict(ticks_per_half=counts, mean_energy_per_half=means,
-                  eligible=eligible, eligibility='Both halves populated; all six energies positive at every tick. Numerical support only, not harmonic confidence.',
-                  zero_ticks_per_harmonic=[sum(row[h] == 0 for b in buckets for row in b) for h in range(6)])
+                  eligible=eligible, eligibility=f'Both halves populated; all {harmonics} energies positive at every tick. Numerical support only, not harmonic confidence.',
+                  zero_ticks_per_harmonic=[sum(row[h] == 0 for b in buckets for row in b) for h in range(harmonics)])
     if all(b for b in buckets):
         power = np.asarray(means)
         result['shares_per_half'] = [p.tolist() if p.sum() == 0 else (p / p.sum()).tolist() for p in power]

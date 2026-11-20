@@ -10,6 +10,11 @@ class GeneralizationTest(unittest.TestCase):
         self.assertEqual(result['correct'],4)
         for fold in result['folds']:
             self.assertTrue(all(int(c.split('-')[1])!=fold['held'] for c in fold['training_clips']))
+    def test_four_harmonic_protocol_is_explicit(self):
+        rows=self.rows()
+        for row in rows: row['shares']=row['shares'][:4]
+        self.assertEqual(evaluate(rows,holdout='midi_note',lanes=[0,1],harmonics=4)['correct'],4)
+        with self.assertRaises(ValueError): evaluate(rows,holdout='midi_note',lanes=[0,1])
     def test_single_pitch_cannot_validate_pitch_generalization(self):
         result=evaluate([r for r in self.rows() if r['midi_note']==52],holdout='midi_note',lanes=[0,1])
         self.assertEqual((result['total'],result['correct'],result['abstained']),(2,0,2))

@@ -30,9 +30,22 @@ def validate_manifest(data):
     return clips
 
 
+# Fixed before rerun: silence padding is not signal warm-up. No per-clip search.
+MEASUREMENT_OFFSET_SECONDS = .320
+HARMONICS = 4
+
+
+def measurement_bounds(begin, end, rate):
+    start = begin + round(MEASUREMENT_OFFSET_SECONDS * rate)
+    stop = start + 2 * round(.080 * rate)
+    if stop > end:
+        raise ValueError('Incomplete fixed post-warm-up window')
+    return start, stop
+
+
 def profile(rows, begin, rate):
     rows = [r for r in rows if begin <= int(r['sample']) < begin + 2 * round(rate * .080)]
-    summary = summarize_trace(rows, begin, rate)
+    summary = summarize_trace(rows, begin, rate, harmonics=HARMONICS)
     phase_ok = bool(rows) and all(r['independent_phase_valid'] == '1' and
         np.isfinite(float(r['independent_phase_cents'])) and abs(float(r['independent_phase_cents'])) <= 50 for r in rows)
     eligible = bool(summary['eligible'] and phase_ok)
@@ -44,11 +57,12 @@ def run(binary, corpus, manifest, output):
     data = json.loads(manifest.read_text())
     clips = validate_manifest(data)
     output.mkdir(parents=True, exist_ok=False)
-    report = dict(schema=1, state='running', final=False, input_manifest_sha256=digest(manifest),
+    report = dict(schema=2, state='running', final=False, input_manifest_sha256=digest(manifest),
         binary_sha256=digest(binary), source=data.get('source', {}), settings=SETTINGS,
+        measurement_offset_seconds=MEASUREMENT_OFFSET_SECONDS, harmonics=HARMONICS,
         measurements=[], installed_output_changed=False, promotion_accepted=False,
         limitations=['Known-pitch isolated clips; same-session held-out pass/pitch classification only.',
-                     'First160ms relative to label, not verified onset; clip-local state.',
+                     'Fixed320–480ms relative to label, not verified onset; clip-local state.',
                      'No chord, continuous-state, allocation, timing or host acceptance.'])
     def save():
         (output/'report.json').write_text(json.dumps(report, indent=2, allow_nan=False)+'\n')
@@ -62,6 +76,7 @@ def run(binary, corpus, manifest, output):
             begin, end, note = c['labeled_begin'], c['labeled_end'], c['midi_note']
             if end > len(samples) or begin + round(.160*rate) > end:
                 raise ValueError('Incomplete labeled window')
+            measurement_begin, measurement_end = measurement_bounds(begin, end, rate)
             directory = output/wav.stem
             directory.mkdir()
             labels = directory/'labels.tsv'
@@ -73,7 +88,7 @@ def run(binary, corpus, manifest, output):
                 command = base + ['--midi-event-trace', str((directory/(mode+'-midi.tsv')).resolve())]
                 if mode == 'traced':
                     command += ['--candidate-trace', str((directory/'candidate.tsv').resolve()), '--candidate-trace-note', str(note),
-                        '--candidate-trace-start', str(begin/rate), '--candidate-trace-end', str((begin+round(.160*rate))/rate)]
+                        '--candidate-trace-start', '0', '--candidate-trace-end', str(measurement_end/rate)]
                 with (directory/(mode+'.tsv')).open('x') as stdout, (directory/(mode+'.stderr')).open('x') as stderr:
                     subprocess.run(command, stdout=stdout, stderr=stderr, check=True, timeout=90)
             comparison = compare_replays(read_replay(directory/'reference.tsv'), read_replay(directory/'traced.tsv'))
@@ -81,10 +96,10 @@ def run(binary, corpus, manifest, output):
             if not comparison['output_bit_identical'] or comparison['changed_labels'] or not midi_same:
                 raise ValueError('Tracing changed detector output')
             with (directory/'candidate.tsv').open() as f:
-                measured = profile(list(csv.DictReader(f, delimiter='\t')), begin, rate)
-            report['measurements'].append({**c, **measured, 'measurement_source':'runtime', 'comparison':comparison, 'midi_bit_identical':midi_same})
+                measured = profile(list(csv.DictReader(f, delimiter='\t')), measurement_begin, rate)
+            report['measurements'].append({**c, **measured, 'measurement_begin':measurement_begin, 'measurement_end':measurement_end, 'measurement_source':'runtime', 'comparison':comparison, 'midi_bit_identical':midi_same})
             save()
-        report['evaluations'] = [evaluate(report['measurements'], holdout=h, lanes=list(range(6))) for h in ('pass', 'midi_note')]
+        report['evaluations'] = [evaluate(report['measurements'], holdout=h, lanes=list(range(6)), harmonics=HARMONICS) for h in ('pass', 'midi_note')]
         report.update(state='completed', final=True)
     except Exception as error:
         report.update(state='failed', final=True, error=str(error))

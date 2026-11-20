@@ -6,7 +6,9 @@ This module does not read audio or change detector policy.
 import numpy as np
 
 
-def evaluate(rows, *, holdout, lanes):
+def evaluate(rows, *, holdout, lanes, harmonics=6):
+    if harmonics not in (4, 6):
+        raise ValueError('Expected four or six harmonics')
     if holdout not in ('pass', 'midi_note') or len(lanes) < 2 or len(set(lanes)) != len(lanes):
         raise ValueError('Explicit pass/pitch split and distinct lanes required')
     if len({r['clip'] for r in rows}) != len(rows):
@@ -18,8 +20,8 @@ def evaluate(rows, *, holdout, lanes):
             raise ValueError('Runtime measurements required')
         if r['eligible']:
             x = np.asarray(r['shares'], dtype=float)
-            if x.shape != (6,) or not np.isfinite(x).all() or np.any(x <= 0):
-                raise ValueError('Six finite positive shares required')
+            if x.shape != (harmonics,) or not np.isfinite(x).all() or np.any(x <= 0):
+                raise ValueError(f'{harmonics} finite positive shares required')
             x = np.log(x / x.sum())
             vectors[r['clip']] = x - x.mean()
     folds = []
