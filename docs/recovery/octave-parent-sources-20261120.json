@@ -1,0 +1,42 @@
+{
+  "string-01-raw.wav": {
+    "sha256": "45d97a9a22e6168a85a2a1bf567a2c7e34d558ab8c54d2b857d11dd560377b3c",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-01-manifest.json"
+  },
+  "string-02-raw.wav": {
+    "sha256": "d109a50f0d822fcee1fc94162427b931da48a777a6e10f25508eaec07417f2ce",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-02-manifest.json"
+  },
+  "string-03-raw.wav": {
+    "sha256": "eb036d87eaf3c73e75309a102c9e0dc920214b8953ea148ee6c1d5e9601b2bbe",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-03-manifest.json"
+  },
+  "string-04-raw.wav": {
+    "sha256": "81c747a0c5a5f5138f44dfa4b166b8ab7463f7ddfa2a03ceb93c73900b453eda",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-04-manifest.json"
+  },
+  "string-05-raw.wav": {
+    "sha256": "68e8b3d34d0a38040585e93499c946c997295125bddd760fea26d7ce3d0b012c",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-05-manifest.json"
+  },
+  "string-06-raw.wav": {
+    "sha256": "4379d39e8a739408cd75a23880756cfcf18ac0d21beb8435427c80285e6df6cc",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-06-manifest.json"
+  },
+  "string-07-raw.wav": {
+    "sha256": "49030bd66b2f2de9eadecbcad9f8abf64237b430a20ac69f42bbe1ed88f8cc6c",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-07-manifest.json"
+  },
+  "string-08-raw.wav": {
+    "sha256": "084d1667307dbb017f6b47f9d80346532b62b50784cb47c3950623ca4d30c220",
+    "sample_rate_hz": 96000,
+    "provenance_manifest": "build/physical-capture/pitch-corrected/string-08-manifest.json"
+  }
+}
