@@ -48,6 +48,8 @@ struct CandidateDecisionTrace final {
 // Full-frame attribution stream, bounded independently of recording length.
 // Labels are reported only for analysis and never enter detector decisions.
 struct CandidateOutcomeTrace final {
+  // Observation only; retain legacy rows and force annotated pitches/octaves.
+  bool include_annotation_candidates{};
   static constexpr std::size_t kMaximumFrames = 2000000U;
   std::FILE* stream{};
   std::size_t frames{};

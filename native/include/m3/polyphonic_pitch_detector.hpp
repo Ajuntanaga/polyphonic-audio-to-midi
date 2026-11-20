@@ -707,6 +707,10 @@ class PolyphonicPitchDetector final {
   }
   [[nodiscard]] FineGroupOwnershipDiagnostics fine_group_ownership_diagnostics(
       std::uint8_t midi_note) const noexcept;
+  // Captured at the last decision, not at the end of a host buffer.
+  [[nodiscard]] double decision_input_power_for_diagnostics() const noexcept {
+    return previous_decision_energy_;
+  }
   [[nodiscard]] CandidateAdmissionDiagnostics candidate_admission_diagnostics(
       std::uint8_t midi_note) const noexcept;
   void set_independent_phase_diagnostics_enabled(bool enabled) noexcept {

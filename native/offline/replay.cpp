@@ -1084,17 +1084,40 @@ void write_candidate_outcome_frame(
     if (voice.detected_midi_note < emitted.size()) emitted[voice.detected_midi_note] = true;
   }
   std::fputc('\t', trace.stream);
+  std::array<bool, 128U> requested{};
+  if (trace.include_annotation_candidates) {
+    for (std::size_t index = 0U; index < labels.size(); ++index) {
+      if (!active_labels[index]) continue;
+      const auto note = static_cast<std::size_t>(labels[index].midi_note);
+      if (note < requested.size()) requested[note] = true;
+      if (note + 12U < requested.size()) requested[note + 12U] = true;
+    }
+  }
+  std::array<double, 128U> floor_scores{}, floor_fundamentals{};
+  std::array<double, 8U> band_sums{};
+  std::size_t floor_count = 0U;
   first = true;
   for (std::size_t note = 0U; note < 128U; ++note) {
     const auto midi_note = static_cast<std::uint8_t>(note);
     const auto a = detector.candidate_admission_diagnostics(midi_note);
+    // Aggregate before serialization filtering; annotations never select the floor.
+    // Out-of-range diagnostics return preselection_energy_observed=false.
+    if (trace.include_annotation_candidates && a.preselection_energy_observed) {
+      floor_scores[floor_count] = a.preselection_score_energy;
+      floor_fundamentals[floor_count++] = a.preselection_fundamental_energy;
+      if (note <= 84U) {
+        const std::size_t band = note < 48U ? 0U : note < 60U ? 1U : note < 72U ? 2U : 3U;
+        band_sums[2U * band] += a.preselection_score_energy;
+        band_sums[2U * band + 1U] += a.preselection_fundamental_energy;
+      }
+    }
     const auto t = detector.candidate_tracking_diagnostics(midi_note);
     const auto selection = detector.selection_disposition(midi_note);
     // Include the same weak direct candidates on both sides of a comparison,
     // even when rescue is disabled, plus every selected, held or emitted pitch.
     const bool weak_direct = a.score_threshold_ratio >= 0.20 &&
         a.direct_fundamental_peak && (a.local_peak || a.candidate_evidence);
-    if (!emitted[note] && !t.active && t.rescue_mask == 0U && !weak_direct &&
+    if (!requested[note] && !emitted[note] && !t.active && t.rescue_mask == 0U && !weak_direct &&
         selection != SelectionDisposition::selected &&
         selection != SelectionDisposition::coasting) continue;
     std::fprintf(trace.stream,
@@ -1121,6 +1144,24 @@ void write_candidate_outcome_frame(
         a.preselection_score_energy, a.preselection_fundamental_energy,
         static_cast<unsigned>(a.preselection_energy_observed));
     first = false;
+  }
+  if (trace.include_annotation_candidates) {
+    std::sort(floor_scores.begin(), floor_scores.begin() + floor_count);
+    std::sort(floor_fundamentals.begin(), floor_fundamentals.begin() + floor_count);
+    const auto quantile = [floor_count](const auto& values, double q) {
+      if (floor_count == 0U) return std::numeric_limits<double>::quiet_NaN();
+      const double position = q * static_cast<double>(floor_count - 1U);
+      const auto lower = static_cast<std::size_t>(position);
+      const auto upper = std::min(lower + 1U, floor_count - 1U);
+      return values[lower] + (position - static_cast<double>(lower)) *
+          (values[upper] - values[lower]);
+    };
+    std::fprintf(trace.stream, "\t%.17g\t%.17g:%.17g:%.17g:%.17g:%.17g",
+                 detector.decision_input_power_for_diagnostics(),
+                 static_cast<double>(floor_count),
+                 quantile(floor_scores, 0.5), quantile(floor_scores, 0.25),
+                 quantile(floor_fundamentals, 0.5), quantile(floor_fundamentals, 0.25));
+    for (const double sum : band_sums) std::fprintf(trace.stream, ":%.17g", sum);
   }
   std::fputc('\n', trace.stream);
   trace.failed = std::ferror(trace.stream) != 0;
@@ -3196,8 +3237,10 @@ bool run_detector_replay(const WaveData& wave,
 #else
     if (trace.stream == nullptr) return false;
     trace.failed = std::fprintf(trace.stream,
-        "# m3_candidate_outcome_v4\n"
-        "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\n") < 0;
+        "# m3_candidate_outcome_v%u\n"
+        "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates%s\n",
+        trace.include_annotation_candidates ? 5U : 4U,
+        trace.include_annotation_candidates ? "\tinput_power\tfloor_stats" : "") < 0;
 #endif
   }
   if (candidate_trace != nullptr) {

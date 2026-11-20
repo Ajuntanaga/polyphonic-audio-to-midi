@@ -163,7 +163,7 @@ void usage(const char* program) {
       "[--spectral-shadow-templates FILE] "
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
-      "[--outcome-trace FILE] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "[--outcome-trace FILE] [--outcome-trace-annotations] [--residual-admission-trace FILE] [--assignment-trace FILE] "
       "  --residual-admission-note N --residual-admission-start SEC --residual-admission-end SEC (observation only)\n"
       "[--retained-assignment-trace FILE] "
       "[--assignment-trace-start SECONDS --assignment-trace-end SECONDS] "
@@ -769,6 +769,8 @@ int main(int argc, char** argv) {
       spectral_shadow_template_path = argv[++index];
     } else if (std::strcmp(argv[index], "--candidate-trace") == 0 && has_value) {
       candidate_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--outcome-trace-annotations") == 0) {
+      outcome_trace.include_annotation_candidates = true;
     } else if (std::strcmp(argv[index], "--outcome-trace") == 0 && has_value) {
       outcome_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-stable-note-identity") == 0) {

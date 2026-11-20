@@ -885,6 +885,67 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
     M3_EXPECT_EQ(outcomes[1] + outcomes[2] + outcomes[3], observed->false_positive_voices);
     if (reference.empty()) reference = captured;
     M3_EXPECT_EQ(captured, reference);
+    // Opt-in v5 retains every legacy tuple and adds label-selected zero rows.
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> expanded(std::tmpfile(), &std::fclose);
+    M3_EXPECT_TRUE(expanded != nullptr);
+    if (!expanded) return;
+    trace.stream = expanded.get();
+    trace.include_annotation_candidates = true;
+    M3_EXPECT_TRUE(run());
+    M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+    M3_EXPECT_FALSE(trace.failed);
+    std::rewind(expanded.get());
+    std::string expanded_text;
+    while ((count = std::fread(chunk.data(), 1U, chunk.size(), expanded.get())) != 0U)
+      expanded_text.append(chunk.data(), count);
+    std::istringstream expanded_lines(expanded_text), legacy_lines(captured);
+    std::string legacy_line;
+    std::getline(expanded_lines, line);
+    M3_EXPECT_EQ(line, "# m3_candidate_outcome_v5");
+    std::getline(expanded_lines, line);
+    M3_EXPECT_EQ(line, "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates\tinput_power\tfloor_stats");
+    std::getline(legacy_lines, legacy_line);
+    std::getline(legacy_lines, legacy_line);
+    while (std::getline(expanded_lines, line)) {
+      M3_EXPECT_TRUE(static_cast<bool>(std::getline(legacy_lines, legacy_line)));
+      const auto fields = split(line, '\t');
+      const auto old = split(legacy_line, '\t');
+      M3_EXPECT_EQ(fields.size(), 10U);
+      if (fields.size() != 10U || old.size() != 8U) continue;
+      for (std::size_t column = 0; column < 7U; ++column)
+        M3_EXPECT_EQ(fields[column], old[column]);
+      const double power = std::stod(fields[8]);
+      M3_EXPECT_TRUE(std::isfinite(power) && power >= 0.0);
+      const auto floor = split(fields[9], ':');
+      M3_EXPECT_EQ(floor.size(), 13U);
+      if (floor.size() == 13U) {
+        const double n = std::stod(floor[0]);
+        M3_EXPECT_TRUE(n >= 0.0 && n <= 3.0);
+        for (std::size_t k = 1U; k < 5U; ++k)
+          M3_EXPECT_TRUE(n == 0.0 ? std::isnan(std::stod(floor[k])) :
+              std::isfinite(std::stod(floor[k])) && std::stod(floor[k]) >= 0.0);
+        for (std::size_t k = 7U; k < 13U; ++k)
+          M3_EXPECT_EQ(std::stod(floor[k]), 0.0); // configured notes 39..41
+      }
+      const auto tuples = split(fields[7], ',');
+      if (!old[7].empty()) for (const auto& tuple : split(old[7], ','))
+        M3_EXPECT_TRUE(std::find(tuples.begin(), tuples.end(), tuple) != tuples.end());
+      if (!fields[4].empty()) for (const auto& label : split(fields[4], ',')) {
+        const auto note = std::stoul(split(label, ':')[1]);
+        for (const auto wanted : {note, note + 12UL}) {
+          if (wanted >= 128UL) continue;
+          std::size_t found = 0U;
+          for (const auto& tuple : tuples) {
+            const auto values = split(tuple, ':');
+            if (values.empty() || values[0].empty()) continue;
+            M3_EXPECT_EQ(values.size(), 46U);
+            if (std::stoul(values[0]) == wanted) ++found;
+          }
+          M3_EXPECT_EQ(found, 1U);
+        }
+      }
+    }
+    M3_EXPECT_FALSE(static_cast<bool>(std::getline(legacy_lines, legacy_line)));
     trace.stream = nullptr;
     M3_EXPECT_FALSE(run());
     M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
