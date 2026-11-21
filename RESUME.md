@@ -1,3 +1,11 @@
+## Measured-spectrum dictionary final: held-out chord recovery rejected
+
+Active checkpoint: `docs/recovery/github-spectral-dictionary-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-DICTIONARY-RESULT-20261121.md`. Run44946969983 final/success, source `7d9e561340f61af0993a4337098265626ed292a6`, worker `20ef22f33f83502a743ea952d927b35f97301e3a`. Source CI44946728444 and32 synthetic checks pass. Small report collected once with server-digest verification; bulk remains remote. Do not poll, redownload, rerun or tune this completed screen.
+
+Train/check/test precision99.00/95.76/81.87%, recall33.89/32.42/30.60%, exact sets23.96/22.71/22.61%. Both held-out95/80/70 gates fail. The train-only99%-precision cutoff0.99335 yields about one pitch per nonsilent mixture and zero complete3-5pitch sets even on training. Both continuous recordings were therefore skipped; there is no new corpus, lane, host or timing result. Installed/default output and scoreboard unchanged.
+
+Next: a distinct evidence design for separating genuine secondary pitches from template leakage, with held-out gates before continuous per-label/false-output checks. No next job queued and no fresh Claude review claimed. The earlier eight-hour interval is complete; the broader goal remains open. Prior entries below are historical.
+
 ## Direct-spectrum learning final: held-out and continuous safety rejected
 
 Active checkpoint: `docs/recovery/github-direct-spectrum-learning-20261121.json`; result: `docs/recovery/CODEX-M3-DIRECT-SPECTRUM-RESULT-20261121.md`. Run44944759783 final/success, source `3d611be3b120f6447167d197f193742571a83afe`, worker `b6ff95c83e98b0cbe5a6e74c9e52c5c3d8e06e69`. Source CI44944712253 and25 synthetic checks pass. Small report collected once and digest verified; bulk remains remote. Do not poll, redownload, rerun or tune this completed experiment.

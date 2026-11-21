@@ -1,0 +1,23 @@
+# Measured-spectrum dictionary result: rejected
+
+Claude: run **44946969983** completed successfully; the frozen research screen **failed**. Both held-out gates failed, so the runner correctly skipped both continuous recordings. Installed output and the recorded scoreboard are unchanged. This is a completed result, not a proposed rerun or a new request for approval.
+
+| Role | Mixtures | True pitches | False pitches | Missed pitches | Precision | Recall | Exact pitch sets |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| train | 16384 | 15489 | 156 | 30209 | 99.0029% | 33.8943% | 23.9563% |
+| calibration | 4096 | 3745 | 166 | 7808 | 95.7556% | 32.4158% | 22.7051% |
+| test | 4096 | 3198 | 708 | 7254 | 81.8740% | 30.5970% | 22.6074% |
+
+The fixed targets were precision >=95%, recall >=80%, exact pitch sets >=70% on **both** held-out roles. Precision here counts predicted pitch memberships in synthetic mixtures; these percentages are not installed labeled-frame/string scores, live note quality or project completion. Exact pitch sets include the 5% silent examples, on which there were zero false predictions in all roles.
+
+The train-only precision constraint (>=99%) chose relative-coefficient cutoff **0.9933515113225926**. It retained 15,489 true and 156 false training pitch memberships but missed 30,209. The model was saved before either held-out evaluation. No threshold was fitted on check or test.
+
+The operating point emits about one pitch per nonsilent mixture: test 3,906 predictions across 3,891 nonsilent examples. Test recall is 82.85% for one pitch, 40.58% for two, 27.07% for three, 20.79% for four and 16.76% for five. It recovers zero complete pitch sets in the 2,072 test mixtures with three to five distinct pitches; the corresponding check count is zero of 2,361. Even training recovers zero complete three-to-five-pitch sets. This is a weak-secondary-pitch failure at the frozen operating point, not just transfer loss on pass 3. It does not rule out every measured-spectrum or factorization method.
+
+Harmonic-related test mixtures have recall 23.47%, versus 50.07% in the non-related stratum. Those strata have different pitch-count distributions, so this is descriptive, not an isolated causal harmonic penalty. All 555 source excerpts remain included (200 train, 200 check, 155 test); known pass-3 intended-pitch uncertainties were not relabeled or excluded. The roles have no original-source interval overlap but share instrument/session. Only pass 1 builds the 200 spectral atoms. No lane assignment, repeated-pitch unison, attacks/releases, MIDI delivery, continuous gap output, native timing or live-device result was measured by this screen.
+
+Source `7d9e561340f61af0993a4337098265626ed292a6`; worker `20ef22f33f83502a743ea952d927b35f97301e3a`; workflow `spectral-dictionary.yml`. Source CI44946728444 and all 32 remote synthetic checks passed. One independent source review found no blocker before dispatch. The frozen specification is `docs/recovery/spectral-dictionary-20261121.json` (SHA256 `3c91e616829aeb8361edef1b6632e756ff78616d8e45b8830cbbc3456cb7d521`). There was one processing dispatch and one small-archive download. Two artifact-metadata connection failures occurred before the successful lookup; neither downloaded an archive or reran processing.
+
+Small report: `build/github-results/spectral-dictionary-44946969983/artifact/spectral-dictionary-result/report/report.json`; report SHA256 `e63196952aa69abf3203b90c49a13ad18f3497629e3c3e1ee3a65da86ade9754`. Artifact14723658978, 20,204 bytes, archive SHA256 `c48e5ac3fb70339fcbbd3c009606baccd9a50eef989576c76a5a4fe2ca35e0e4` agrees with the server digest. Collection receipt: `build/github-results/spectral-dictionary-44946969983/collection-receipt.json`. Bulk artifact14724172434 (`m3-spectral-dictionary-evidence-44946969983-1`, 15,501,054 bytes) remains remote and expires 2026-12-05T20:35:31Z. The checkpoint holds its digest and the per-role/polyphony/stratum counts. Do not poll, redownload, tune or rerun this completed screen.
+
+Next design question: what evidence can distinguish a genuine secondary pitch from template leakage without suppressing the secondary pitch merely because it is weaker? Any new experiment needs a distinct frozen mechanism and must pass the 95/80/70 held-out gates before continuous no-loss/no-extra-output checks. There is no next job queued. This note is a result handoff for Claude, not a claim of a new joint decision; Claude has not reviewed this result yet. The earlier eight-hour interval is complete and the broader live-readiness goal remains open.
