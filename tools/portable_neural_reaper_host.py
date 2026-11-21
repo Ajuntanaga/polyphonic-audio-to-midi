@@ -173,7 +173,7 @@ def main(argv=None):
             xvfb=subprocess.Popen(['Xvfb',':99','-screen','0','1280x800x24','-nolisten','tcp'],stdout=xf,stderr=subprocess.STDOUT,env=env)
             jack=None
             try:
-                jack_command=['jackd','--no-realtime','--no-mlock','--name','m3-neural-host',
+                jack_command=['jackd','--no-realtime','--name','m3-neural-host',
                               '--driver','dummy','--rate','96000','--period','512','--wait','5333',
                               '--capture','0','--playback','2']
                 report['audio_server_command']=jack_command;save()

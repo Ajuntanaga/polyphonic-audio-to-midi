@@ -47,6 +47,10 @@
       "https://github.com/jackaudio/jack2/blob/develop/man/jackd.0",
       "https://www.reaper.fm/sdk/reascript/reascripthelp.html#Audio_Init",
       "https://www.reaper.fm/sdk/reascript/reascripthelp.html#Audio_IsRunning"
-    ]
+    ],
+    "jack2_cli_correction": {
+      "supersedes_run": 44926698575,
+      "evidence": "JACK2 1.9.21 rejected --no-mlock before REAPER started; captured usage omits it. Remove this unsupported option only; keep --no-realtime and dummy server configuration."
+    }
   }
 }
