@@ -1,0 +1,12 @@
+{
+  "schema": "m3_bass_view_completed_pair_recovery_v1",
+  "run_id": 44912280175,
+  "source_sha": "f061d299582eb17841b6c2cebfd321240100f0ae",
+  "worker_sha": "32076d6daf94b6aac907f6ab0a1be69314725f8a",
+  "original_spec_sha256": "5ba036d9b0cd5f723d1423dcdf9e1ec6ac706f5b2d90b4ed343b4b7c80559a57",
+  "artifact_id": 14710361704,
+  "artifact_bytes": 9764881,
+  "artifact_sha256": "408304c15a30ef9bb6ea10f7ba42a1bcd8c4be2f7571d6e691c240c1d0d628fb",
+  "reason": "Ordinary paired inference completed; bass-subset scoring retained sparse label IDs. Reuse all five completed ordinary evidence files and their original timing. Continue extended-middle and the two original-model identity companions only.",
+  "scope": "Frozen inference/decoder/scoring criteria unchanged; label subset IDs corrected; no ordinary inference rerun or tuning."
+}

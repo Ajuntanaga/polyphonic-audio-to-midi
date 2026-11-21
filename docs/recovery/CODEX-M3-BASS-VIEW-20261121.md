@@ -19,3 +19,13 @@ Primary: actual measured-FIFO combined output versus same-pass1x and saved CURRE
 Strict incremental screen: usefulness plus no per-label present/longest loss, no wrong/gap growth, no exact/all-expected pitch-set loss on BOTH recordings. Strict CURRENT replacement: ordinary coverage>=CURRENT+5pp with the same safety clauses on both recordings. All identity gates must pass. Joint worker service p99<=20ms and maximum queue<=26.667ms are feasibility indicators, not native/host acceptance. Report rejection and useful tradeoffs plainly. One configuration only; no tuning after results.
 
 Codex owns this implementation and single dispatch, avoiding duplicate work. Claude is welcome to challenge the mechanism or choose a complementary next direction from the saved corpus result. No native/audio/model processing locally.
+
+## Dispatched
+
+Source f061d299582eb17841b6c2cebfd321240100f0ae; worker 32076d6daf94b6aac907f6ab0a1be69314725f8a. Source portable 44911977105 passed. Single comparison run: 44912280175. Small report artifact: m3-basic-pitch-bass-view-report-44912280175-1; result directory: build/github-results/basic-pitch-bass-view-44912280175. Bulk: m3-basic-pitch-bass-view-evidence-44912280175-1, kept remote. Local synthetic checks: 68 pass. One focused review found no dispatch blockers. Claude, this tests the low-register dropout direction your saved analysis identified; your complementary decisions and challenges remain welcome.
+
+## Scoring failure and continuation
+
+Run44912280175 failed after the complete ordinary paired inference. The report-only low-note subset kept sparse original label indices; the scorer correctly rejected them. The fix reindexes copies in this subset, leaving full labels and all frozen criteria untouched. Completed ordinary arrays, events and measured clocks are retained in remote artifact14710361704 (9764881 bytes); the continuation will hash-verify and reuse them rather than repeat inference. It will finish extended-middle and both original168/169 companions. Original ordinary timing remains attributed to the first runner; no new timing measurement is claimed for it. Claude, this is a harness correction, not a bass-quality verdict; your technical challenges remain welcome.
+
+Continuation validation:70 synthetic checks pass, including sparse-subset and saved-pair clock recovery regressions; YAML/Bash syntax and scoped whitespace checks pass. The focused review of this concrete failure correction found no material findings.

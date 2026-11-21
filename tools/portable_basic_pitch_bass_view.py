@@ -5,7 +5,10 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
+import subprocess
 import sys
+import zipfile
 
 from tools.basic_pitch_bass_view import BASS_VIEW, View, mapped_bass_event, stream_pair
 from tools.basic_pitch_cached_diagnosis import compact_measurement
@@ -55,8 +58,10 @@ def chunks(audio):
 
 def low_pitch_coverage(spans, labels, clock):
     # Distinct low pitches, not a sum of overlapping same-pitch label durations.
+    low_labels = [dict(row,label_index=index) for index,row in
+                  enumerate(row for row in labels if row['midi_note']<60)]
     measured = score([s for s in spans if s[2]<60],
-                     [r for r in labels if r['midi_note']<60],**clock)
+                     low_labels,**clock)
     totals = measured['pitch_sets']['totals']
     expected,present = totals['expected_pitch_samples'],totals['present_pitch_samples']
     return dict(expected_pitch_samples=expected,present_pitch_samples=present,
@@ -73,6 +78,79 @@ def score_events(events, labels, clock):
     return views
 
 
+def save_pair_evidence(name, result, bulk):
+    import numpy as np
+    cleanup = max(ceil_div(result['source_samples']*NS,96000),result['worker_finish_ns'])
+    files = []
+    for view in ('reference','bass'):
+        row = result[view]
+        path = bulk/(name+'-'+view+'.npz')
+        np.savez_compressed(path,note=row['notes'],onset=row['onsets'],
+            frames=np.asarray(row['frames'],dtype='int64'),
+            timing=np.asarray(result['timing'],dtype='int64'))
+        files.append(path)
+        path = bulk/(name+'-'+view+'-events.json')
+        save_json(path,dict(events=row['events'],cleanup=dict(emitted_ns=cleanup,notes=row['open_decoder_pitches']),
+                           frame_columns=FRAME_COLUMNS,timing_columns=TIMING_COLUMNS))
+        files.append(path)
+    path = bulk/(name+'-combined-events.json')
+    save_json(path,dict(events=result['combined_events'],
+        cleanup=dict(emitted_ns=cleanup,notes=result['combined_open_pitches']),
+        ownership='1x at/above60;2x mapped down12 below60;all on original source clock'))
+    files.append(path)
+    return files
+
+
+def score_saved_pair(name, config, current, offline, inputs, bulk, cache, channels):
+    import numpy as np
+    arrays = {v:cached_arrays(bulk/(name+'-'+v+'.npz'),stream=True) for v in ('reference','bass')}
+    documents = {v:json.loads((bulk/(name+'-'+v+'-events.json')).read_text())
+                 for v in ('reference','bass','combined')}
+    for v in ('reference','bass'):
+        require_identity(documents[v]['frame_columns'],FRAME_COLUMNS,'paired frame columns')
+        require_identity(documents[v]['timing_columns'],TIMING_COLUMNS,'paired timing columns')
+        if len(arrays[v]['frames'])%2: raise ValueError('Incomplete paired readout')
+    timing = arrays['reference']['timing']
+    if not np.array_equal(timing,arrays['bass']['timing']):
+        raise ValueError('The views do not share a measured FIFO')
+    expected_ends = np.minimum(np.arange(640,config['sample_count']+640,640),config['sample_count'])
+    if not np.array_equal(timing[:,0],expected_ends):
+        raise ValueError('Incomplete paired source recording')
+    finish = int(timing[-1,3])
+    cleanup = max(ceil_div(config['sample_count']*NS,96000),finish)
+    for doc in documents.values():
+        require_identity(doc['cleanup']['emitted_ns'],cleanup,'paired cleanup clock')
+    saved = cached_arrays(cache/(name+'-stream.npz'),stream=True)
+    saved_events = json.loads((cache/(name+'-events.json')).read_text())
+    identity = activation_identity(dict(notes=arrays['reference']['note'],onsets=arrays['reference']['onset'],
+        frames=arrays['reference']['frames'],events=documents['reference']['events'],
+        open_decoder_pitches=documents['reference']['cleanup']['notes']),
+        dict(notes=saved['note'],onsets=saved['onset'],frames=saved['frames'],events=saved_events['events'],
+             open_decoder_pitches=saved_events['cleanup']['notes']))
+    # Annotation values are first read only after both models and decoders finish.
+    labels = read_labels(inputs/'corpus'/(name+'.tsv'))
+    clock = dict(sample_count=config['sample_count'],sample_rate=96000)
+    bass_events = [mapped for e in documents['bass']['events'] if (mapped:=mapped_bass_event(e)) is not None]
+    arms = {key:score_events(events,labels,clock) for key,events in (
+        ('reference_1x',documents['reference']['events']),('bass_only',bass_events),
+        ('combined',documents['combined']['events']),('historical_stream',saved_events['events']))}
+    for row in arms.values():
+        for view,values in row.items():
+            values['comparison_to_current'] = compare(current['measurement'],values['measurement'])
+            values['comparison_to_offline'] = compare(offline,values['measurement'])
+            values['comparison_to_same_pass_1x'] = compare(arms['reference_1x'][view]['measurement'],values['measurement'])
+            values['comparison_to_historical_stream'] = compare(arms['historical_stream'][view]['measurement'],values['measurement'])
+    files = [bulk/(name+'-'+v+suffix) for v in ('reference','bass') for suffix in ('.npz','-events.json')]
+    files.append(bulk/(name+'-combined-events.json'))
+    measured = dict(audio=dict(**clock,channels=channels),arms=arms,
+        reference_identity=identity,bass_crop_identity='pending untimed companion',
+        timing=timing_summary(timing.tolist()),model_calls={v:len(arrays[v]['frames'])//2 for v in ('reference','bass')},
+        source_samples_consumed=int(timing[-1,0]),worker_finish_ns=finish,
+        cleanup_emitted_ns=cleanup,
+        bulk={p.name:dict(bytes=p.stat().st_size,sha256=digest(p)) for p in files})
+    return measured
+
+
 def measure(name, config, current, offline, inputs, bulk, cache, reference, bass):
     remote_only()
     wav = inputs/'corpus'/(name+'.wav')
@@ -85,49 +163,34 @@ def measure(name, config, current, offline, inputs, bulk, cache, reference, bass
             progress=lambda a,b,s: print(f'{name}: 1x={a},2x={b},source={s}/{info.frames}',flush=True))
     if not result['reference']['model_calls'] or not result['bass']['model_calls']:
         raise ValueError('No model output')
-    saved = cached_arrays(cache/(name+'-stream.npz'),stream=True)
-    saved_events = json.loads((cache/(name+'-events.json')).read_text())
-    identity = activation_identity(result['reference'],dict(notes=saved['note'],onsets=saved['onset'],
-        frames=saved['frames'],events=saved_events['events'],
-        open_decoder_pitches=saved_events['cleanup']['notes']))
-    cleanup = max(ceil_div(info.frames*NS,96000),result['worker_finish_ns'])
-    files = []
-    for view in ('reference','bass'):
-        row = result[view]
-        path = bulk/(name+'-'+view+'.npz')
-        reference.np.savez_compressed(path,note=row['notes'],onset=row['onsets'],
-            frames=reference.np.asarray(row['frames'],dtype='int64'),
-            timing=reference.np.asarray(result['timing'],dtype='int64'))
-        files.append(path)
-        path = bulk/(name+'-'+view+'-events.json')
-        save_json(path,dict(events=row['events'],cleanup=dict(emitted_ns=cleanup,notes=row['open_decoder_pitches']),
-                           frame_columns=FRAME_COLUMNS,timing_columns=TIMING_COLUMNS))
-        files.append(path)
-    path = bulk/(name+'-combined-events.json')
-    save_json(path,dict(events=result['combined_events'],
-        cleanup=dict(emitted_ns=cleanup,notes=result['combined_open_pitches']),
-        ownership='1x at/above60;2x mapped down12 below60;all on original source clock'))
-    files.append(path)
-    # Annotation values are first read only after both models and decoders finish.
-    labels = read_labels(inputs/'corpus'/(name+'.tsv'))
-    clock = dict(sample_count=info.frames,sample_rate=96000)
-    bass_events = [mapped for e in result['bass']['events'] if (mapped:=mapped_bass_event(e)) is not None]
-    arms = {key:score_events(events,labels,clock) for key,events in (
-        ('reference_1x',result['reference']['events']),('bass_only',bass_events),
-        ('combined',result['combined_events']),('historical_stream',saved_events['events']))}
-    for row in arms.values():
-        for view,values in row.items():
-            values['comparison_to_current'] = compare(current['measurement'],values['measurement'])
-            values['comparison_to_offline'] = compare(offline,values['measurement'])
-            values['comparison_to_same_pass_1x'] = compare(arms['reference_1x'][view]['measurement'],values['measurement'])
-            values['comparison_to_historical_stream'] = compare(arms['historical_stream'][view]['measurement'],values['measurement'])
-    measured = dict(audio=dict(**clock,channels=info.channels),arms=arms,
-        reference_identity=identity,bass_crop_identity='pending untimed companion',
-        timing=timing_summary(result['timing']),model_calls={v:result[v]['model_calls'] for v in ('reference','bass')},
-        source_samples_consumed=result['source_samples'],worker_finish_ns=result['worker_finish_ns'],
-        cleanup_emitted_ns=cleanup,
-        bulk={p.name:dict(bytes=p.stat().st_size,sha256=digest(p)) for p in files})
-    return measured
+    save_pair_evidence(name,result,bulk)
+    return score_saved_pair(name,config,current,offline,inputs,bulk,cache,info.channels)
+
+
+def recover_ordinary(config, spec_path, repository, bulk, logs):
+    remote_only()
+    check_hash(spec_path,config['original_spec_sha256'])
+    archive = bulk.parent/'completed-ordinary.zip'
+    with archive.open('xb') as output:
+        process = subprocess.run(['gh','api',f'repos/{repository}/actions/artifacts/{config["artifact_id"]}/zip'],
+                                 stdout=output,stderr=subprocess.PIPE,check=False)
+    (logs/'recovery-download.stderr').write_bytes(process.stderr)
+    if process.returncode: raise RuntimeError('Completed ordinary evidence download failed')
+    check_hash(archive,config['artifact_sha256'])
+    if archive.stat().st_size!=config['artifact_bytes']: raise ValueError('Recovery archive length differs')
+    names = ['ordinary-'+v+suffix for v in ('reference','bass') for suffix in ('.npz','-events.json')]
+    names.append('ordinary-combined-events.json')
+    files = {}
+    with zipfile.ZipFile(archive) as bundle:
+        for name in names:
+            matches = [n for n in bundle.namelist() if Path(n).name==name]
+            if len(matches)!=1: raise ValueError('Missing/ambiguous completed pair member: '+name)
+            target = bulk/name
+            with bundle.open(matches[0]) as source,target.open('xb') as output:
+                shutil.copyfileobj(source,output)
+            files[name] = dict(bytes=target.stat().st_size,sha256=digest(target))
+    return dict(**config,files=files,ordinary_inference_repeated=False,
+                timing_origin='Original run; not remeasured on the recovery runner')
 
 
 def original_bass_companion(name, config, inputs, bulk, original):
@@ -178,7 +241,7 @@ def assess(datasets):
             for n,d in datasets.items()},promotion_accepted=False,installed_output_changed=False)
 
 
-def run(spec_path, inputs, model_checkout, output):
+def run(spec_path, inputs, model_checkout, output, recovery_spec=None):
     remote_only()  # Before any source recording, output directory or model access.
     output.mkdir(parents=True,exist_ok=False)
     report_dir,bulk,logs = (output/n for n in ('report','bulk','logs'))
@@ -224,6 +287,9 @@ def run(spec_path, inputs, model_checkout, output):
         (report_dir/'environment.txt').write_text(captured_text([sys.executable,'-m','pip','freeze','--all'])+'\n')
         cache = output/'reference-cache'
         report['reference_artifact'] = fetch_artifact(spec['worker_repository'],spec['stream_reference_artifact'],cache,logs)
+        if recovery_spec is not None:
+            report['recovery'] = recover_ordinary(json.loads(recovery_spec.read_text()),spec_path,
+                                                  spec['worker_repository'],bulk,logs)
         models = output/'models';models.mkdir()
         ref_model,bass_model = models/'readout164.onnx',models/'readout168.onnx'
         report['reference_crop'] = export(model,ref_model,report_dir/'reference-crop.json')
@@ -233,8 +299,17 @@ def run(spec_path, inputs, model_checkout, output):
         report['backends'] = dict(reference=reference.metadata,bass=bass.metadata)
         for name,config in spec['datasets'].items():
             report['stage'] = name+' measured paired pass';save_json(report_path,report)
-            report['datasets'][name] = measure(name,config,baseline['datasets'][name],offline['datasets'][name],
-                inputs,bulk,cache,reference,bass)
+            if name=='ordinary' and recovery_spec is not None:
+                print('ordinary: scoring completed evidence; no repeated inference',flush=True)
+                channels = reference.sf.info(str(inputs/'corpus'/'ordinary.wav')).channels
+                measured = score_saved_pair(name,config,baseline['datasets'][name],offline['datasets'][name],
+                                           inputs,bulk,cache,channels)
+                measured['execution_origin'] = report['recovery']
+            else:
+                measured = measure(name,config,baseline['datasets'][name],offline['datasets'][name],
+                                   inputs,bulk,cache,reference,bass)
+                measured['execution_origin'] = report['provenance']['run_id']
+            report['datasets'][name] = measured
             save_json(report_path,report)
         # Only load/run the full original session after BOTH timed passes finish.
         del reference,bass
@@ -258,5 +333,6 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ('spec','inputs','model-checkout','output'):
         parser.add_argument('--'+arg,dest='spec_path' if arg=='spec' else arg.replace('-','_'),type=Path,required=True)
+    parser.add_argument('--recovery-spec',type=Path)
     result = run(**vars(parser.parse_args()))
     print(json.dumps(dict(state=result['state'],screen=result['screen']),allow_nan=False))

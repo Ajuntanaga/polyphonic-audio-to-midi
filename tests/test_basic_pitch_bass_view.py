@@ -1,6 +1,8 @@
 """Synthetic FIR, scheduling and ownership checks; no model or recorded audio."""
 import os
+import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -137,6 +139,45 @@ class BassViewTests(unittest.TestCase):
         self.assertTrue(result['practical_usefulness_pass'])
         self.assertFalse(result['incremental_noninferiority_pass'])
         self.assertFalse(result['strict_current_replacement_pass'])
+
+    def test_low_pitch_subset_reindexes_without_changing_full_labels(self):
+        from tests.test_midi_lifecycle_analysis import label
+        from tools.portable_basic_pitch_bass_view import low_pitch_coverage
+        labels = [label(0,20,120,note=64),label(1,20,120,note=40),
+                  label(2,20,120,note=72),label(3,20,120,note=40)]
+        before = [dict(row) for row in labels]
+        result = low_pitch_coverage([(20,120,40)],labels,dict(sample_count=200,sample_rate=1000))
+        self.assertEqual(result,dict(expected_pitch_samples=100,present_pitch_samples=100,percent=100))
+        self.assertEqual(labels,before)
+
+    def test_completed_pair_can_be_scored_without_repeating_inference(self):
+        from tools.pitch_detector_comparison import read_labels, score
+        from tools.portable_basic_pitch_bass_view import save_pair_evidence, score_saved_pair
+        source = np.zeros(20000,dtype=np.float32)
+        reference,bass = FakeBackend(pitches=(64,)),FakeBackend(pitches=(52,))
+        result = stream_pair((source[i:i+640] for i in range(0,len(source),640)),len(source),reference,bass)
+        calls = (len(reference.windows),len(bass.windows))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bulk,cache,corpus = root/'bulk',root/'cache',root/'corpus'
+            for path in (bulk,cache,corpus): path.mkdir()
+            save_pair_evidence('ordinary',result,bulk)
+            shutil.copyfile(bulk/'ordinary-reference.npz',cache/'ordinary-stream.npz')
+            shutil.copyfile(bulk/'ordinary-reference-events.json',cache/'ordinary-events.json')
+            (corpus/'ordinary.tsv').write_text('start_sample\tend_sample\tmidi_note\tstring_mask\n'
+                '9000\t19000\t64\t1\n9000\t19000\t40\t2\n')
+            labels = read_labels(corpus/'ordinary.tsv')
+            baseline = score([(9000,19000,64)],labels,sample_count=len(source),sample_rate=96000)
+            measured = score_saved_pair('ordinary',dict(sample_count=len(source)),
+                dict(measurement=baseline),baseline,root,bulk,cache,1)
+            self.assertEqual(measured['model_calls'],dict(reference=calls[0],bass=calls[1]))
+            self.assertEqual(measured['source_samples_consumed'],len(source))
+            self.assertEqual(measured['worker_finish_ns'],result['worker_finish_ns'])
+            self.assertTrue(measured['reference_identity']['pass_'])
+            self.assertEqual(len(measured['arms']['combined']['serviced']['comparison_to_current']['label_deltas']),2)
+            self.assertEqual((len(reference.windows),len(bass.windows)),calls)
+            saved = json.loads((bulk/'ordinary-combined-events.json').read_text())
+            self.assertEqual(saved['events'],result['combined_events'])
 
 
 if __name__=='__main__': unittest.main()
