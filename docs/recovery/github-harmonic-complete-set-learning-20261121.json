@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T23:32:51.423545+00:00",
+  "updated_at": "2026-11-21T23:33:44.985370+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "77bce90b0096201674080fa46b8e58ff53aa0abe",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_base_commit": "b18546e6556e84659b307f46c4b61037c5bc7d98",
+  "worker_commit": null,
+  "workflow": "harmonic-complete-set-learning.yml",
+  "specification": "docs/recovery/harmonic-complete-set-learning-20261121.json",
+  "specification_sha256": "20340fd1a644ec8dec4e3118953f34fe93859f7ade6018e3049b95df5f2ea1cc",
+  "design": "docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "One fixed complete-set objective on the unchanged harmonic-context network, identical training mixtures, seed and schedule. Retain absolute pitch BCE and add an equally weighted worst-polarity logistic term per mixture. Same train-only cutoff rule and fail-closed gates.",
+  "stage": "local checks passed; source and worker publication pending",
+  "baseline": {
+    "run_id": 44960075844,
+    "source_commit": "a5f46bab45be9cf87126f21426857358c6f75b2d",
+    "report_sha256": "f50c9ed75951c50a4191c47e1af2dcf63835bff34994b8693822bd68019ecb79",
+    "five_pitch_exact": 1547,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771
+  },
+  "training_plan_identity": {
+    "baseline_run_id": 44960075844,
+    "file": "train-mixture-plan.json.gz",
+    "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+  },
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "bulk_policy": "Keep new model and predictions remote; collect small report once.",
+  "next": "Complete synthetic checks, pin source/worker, and dispatch one bounded CPU screen with unchanged gates.",
+  "validation": {
+    "local_synthetic_tests": 60,
+    "local_passed": 51,
+    "local_skipped": 9,
+    "skip_reason": "Eight Torch checks and one sklearn check run on GitHub before recorded fitting; no local installation.",
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "state": "complete",
+      "reviewer": "Codex",
+      "scope": "Loss formula, masked polarities, seeded fit and saved objective, training-plan identity, unchanged stage gates and CPU workflow",
+      "verdict": "No material blocker; remote Torch execution remains pending."
+    }
+  }
+}

@@ -20,6 +20,31 @@ MODEL_PARAMS = dict(channels=32, dilations=[1, 4, 12, 19], kernel_size=3,
     weight_decay=0.0001, batch_size=128, epochs=80, seed=20261121,
     torch_threads=1, deterministic=True, early_stopping=False,
     normalization='training-only mean/std per shared coordinate over mixtures and pitches')
+COMPLETE_SET_PARAMS = dict(MODEL_PARAMS,
+    loss='mean_bce_plus_worst_polarity_logistic_v1')
+
+
+def complete_set_loss(logits, targets):
+    """Mean pitch BCE plus one equally weighted worst-polarity term per mixture.
+
+    For a voiced mixture the added term is the mean of the weakest true
+    pitch's logistic loss and the strongest false pitch's logistic loss.
+    Silence has only the false-pitch term. No annotated cardinality is used
+    at inference, and absolute pitch loss remains in the objective.
+    """
+    import torch
+    from torch.nn import functional as F
+    if logits.ndim != 2 or logits.shape != targets.shape or not logits.numel():
+        raise ValueError('Expected nonempty aligned mixture/pitch matrices')
+    if not torch.all((targets == 0) | (targets == 1)):
+        raise ValueError('Expected binary complete-set targets')
+    positive = targets.bool()
+    negative = ~positive
+    weakest_true = F.softplus(-logits).masked_fill(negative, 0).amax(dim=1)
+    strongest_false = F.softplus(logits).masked_fill(positive, 0).amax(dim=1)
+    polarities = positive.any(dim=1).to(logits.dtype) + negative.any(dim=1).to(logits.dtype)
+    worst = ((weakest_true + strongest_false) / polarities).mean()
+    return F.binary_cross_entropy_with_logits(logits, targets.to(logits.dtype)) + worst
 
 
 def fit_normalization(features):

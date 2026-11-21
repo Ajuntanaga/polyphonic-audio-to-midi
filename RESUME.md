@@ -1,3 +1,11 @@
+## Complete-set objective prepared: one fixed loss, unchanged safety gates
+
+Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; frozen plan: `docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-PLAN-20261121.md`. One complete-set objective adds weakest-true/strongest-false logistic loss to the existing mean pitch BCE. Network, source roles, training mixtures, initialization/order seed, optimizer, schedule and cutoff rule are unchanged. The generated training plan must match run44960075844 before fitting.
+
+Sixty local synthetic checks: 51 passed, nine deferred to the pinned GitHub environment (eight Torch, one sklearn). Training precision>=99%, recall>=80%, exact sets>=70% overall and each3/4/5, zero silence extras; five-pitch target1771/2529. Both untouched held-out roles must then pass before any continuous replay. Installed/default output, labels and scoreboard unchanged. One CPU workflow authorized by the standing job instruction; no promotion, retune or automatic rerun.
+
+Next: publish only these source/worker files, record exact SHAs and dispatch `harmonic-complete-set-learning.yml` once. Run ID not yet assigned. Claude is paused; no fresh Claude review claimed. Earlier entries below are historical.
+
 ## Harmonic-context training diagnosis final: missing notes and ordering errors
 
 Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RANKING-RESULT-20261121.md`. Completed run44960075844 remains rejected. Evidence14729601382 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Frozen counts and all200 pass-1 source keys reproduce exactly; eight synthetic analysis checks pass. No new fit, audio/model loading, held-out evaluation or remote job. Do not repeat collection or diagnosis.

@@ -2,6 +2,8 @@
 import argparse
 from datetime import datetime, timezone
 from importlib.metadata import version
+import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,9 +14,9 @@ import time
 import numpy as np
 
 from tools.direct_spectrum_learning import SETTINGS, validate_manifest
-from tools.harmonic_context_learning import (PARAMETERS, MODEL_PARAMS, FEATURE_COUNT,
+from tools.harmonic_context_learning import (PARAMETERS, MODEL_PARAMS, COMPLETE_SET_PARAMS, FEATURE_COUNT,
     NOTE_COUNT, HarmonicFeatures, HarmonicContextModel, fit_normalization, normalized_context,
-    make_network, acceptance_gate, summarize)
+    make_network, complete_set_loss, acceptance_gate, summarize)
 from tools.spectral_dictionary import IdentityTransform, fit_training_cutoff
 from tools.portable_direct_spectrum_learning import (continuous_dataset, fetch_release,
     role_examples, source_waves)
@@ -31,12 +33,13 @@ def dependency_versions():
     return {name: version(name) for name in DEPENDENCIES}
 
 
-def fit_model(features, truth):
+def fit_model(features, truth, model_params=None):
     remote_only()
     import torch
-    torch.set_num_threads(MODEL_PARAMS['torch_threads'])
-    torch.use_deterministic_algorithms(MODEL_PARAMS['deterministic'])
-    torch.manual_seed(MODEL_PARAMS['seed'])
+    params = MODEL_PARAMS if model_params is None else model_params
+    torch.set_num_threads(params['torch_threads'])
+    torch.use_deterministic_algorithms(params['deterministic'])
+    torch.manual_seed(params['seed'])
     truth = np.asarray(truth, dtype=bool)
     if truth.shape != (len(features), NOTE_COUNT) or set(np.unique(truth)) != {False, True}:
         raise ValueError('Expected aligned training targets with both binary classes')
@@ -44,16 +47,21 @@ def fit_model(features, truth):
     inputs = torch.from_numpy(normalized_context(features, mean, scale))
     targets = torch.from_numpy(truth.astype(np.float32))
     network = make_network().train()
-    optimizer = torch.optim.Adam(network.parameters(), lr=MODEL_PARAMS['learning_rate'],
-                                 weight_decay=MODEL_PARAMS['weight_decay'])
-    criterion = torch.nn.BCEWithLogitsLoss()
-    generator = torch.Generator().manual_seed(MODEL_PARAMS['seed'])
+    optimizer = torch.optim.Adam(network.parameters(), lr=params['learning_rate'],
+                                 weight_decay=params['weight_decay'])
+    if params['loss'] == MODEL_PARAMS['loss']:
+        criterion = torch.nn.BCEWithLogitsLoss()
+    elif params['loss'] == COMPLETE_SET_PARAMS['loss']:
+        criterion = complete_set_loss
+    else:
+        raise ValueError('Unknown frozen training objective')
+    generator = torch.Generator().manual_seed(params['seed'])
     losses = []
     started = time.perf_counter()
-    for epoch in range(MODEL_PARAMS['epochs']):
+    for epoch in range(params['epochs']):
         order = torch.randperm(len(inputs), generator=generator)
         total_loss = 0.0
-        for indices in order.split(MODEL_PARAMS['batch_size']):
+        for indices in order.split(params['batch_size']):
             optimizer.zero_grad(set_to_none=True)
             loss = criterion(network(inputs[indices]), targets[indices])
             if not torch.isfinite(loss):
@@ -62,22 +70,24 @@ def fit_model(features, truth):
             optimizer.step()
             total_loss += float(loss.detach())*len(indices)
         losses.append(total_loss/len(inputs))
-        print(f'epoch {epoch+1}/{MODEL_PARAMS["epochs"]}: loss={losses[-1]:.9g}', flush=True)
+        print(f'epoch {epoch+1}/{params["epochs"]}: loss={losses[-1]:.9g}', flush=True)
     network.eval()
     return HarmonicContextModel(mean, scale, network), dict(seconds=time.perf_counter()-started,
         epochs=len(losses), mixtures=len(features), pooled_candidate_rows=len(features)*NOTE_COUNT,
         features_per_candidate=FEATURE_COUNT, shared_binary_outputs=1,
         parameter_count=sum(p.numel() for p in network.parameters()),
-        final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1)
+        final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1,
+        objective=params['loss'])
 
 
-def save_model(path, model, extractor):
+def save_model(path, model, extractor, model_params=None):
     remote_only()
     import torch
     torch.save(dict(state_dict=model.network.state_dict(), mean=torch.from_numpy(model.mean),
         scale=torch.from_numpy(model.scale), cutoff=model.cutoff,
         coordinate_names=extractor.coordinate_names, settings=SETTINGS,
-        feature_parameters=PARAMETERS, model_parameters=MODEL_PARAMS), path)
+        feature_parameters=PARAMETERS,
+        model_parameters=MODEL_PARAMS if model_params is None else model_params), path)
 
 
 def run(spec_path, output):
@@ -100,7 +110,13 @@ def run(spec_path, output):
         require_identity(versions, DEPENDENCIES, 'pinned CPU dependencies')
         require_identity(spec['mixture_and_clock_settings'], SETTINGS, 'unchanged mixtures, context and clocks')
         require_identity(spec['harmonic_parameters'], PARAMETERS, 'fixed relative harmonic coordinates')
-        require_identity(spec['model_parameters'], MODEL_PARAMS, 'one fixed shared context classifier')
+        params = spec['model_parameters']
+        complete_set = params.get('loss') == COMPLETE_SET_PARAMS['loss']
+        require_identity(params, COMPLETE_SET_PARAMS if complete_set else MODEL_PARAMS,
+                         'one fixed shared context classifier and objective')
+        report['training_objective'] = params['loss']
+        if complete_set:
+            report['schema'] = 'm3_harmonic_complete_set_learning_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -127,16 +143,21 @@ def run(spec_path, output):
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction='Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.')
+            distinction=('Only the training objective changes versus the frozen context baseline.' if complete_set else
+                'Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.'))
         report['stage'] = 'training mixtures; one shared fit and training-only cutoff'
         save_json(report_path, report)
         x, y, usage = role_examples('train', takes, waves, extractor, folders['bulk'])
-        model, report['fit'] = fit_model(x, y)
+        if 'training_plan_identity' in spec:
+            actual = hashlib.sha256(gzip.decompress((folders['bulk']/'train-mixture-plan.json.gz').read_bytes())).hexdigest()
+            require_identity(actual, spec['training_plan_identity']['decoded_sha256'], 'unchanged training mixture plan')
+            report['training_plan_identity'] = dict(spec['training_plan_identity'], verified=True)
+        model, report['fit'] = fit_model(x, y, model_params=params)
         probability = model.activity(x)
         report['cutoff_fit'] = fit_training_cutoff(probability, y)
         model.cutoff = report['cutoff_fit']['cutoff']
         model_path = folders['bulk']/'frozen-harmonic-context-model.pt'
-        save_model(model_path, model, extractor)
+        save_model(model_path, model, extractor, model_params=params)
         report['frozen_model'] = dict(sha256=digest(model_path), cutoff=model.cutoff,
             persisted_before_held_out_scoring=True, training_fits=1)
         measured = summarize(probability, y, model.cutoff)
@@ -189,7 +210,8 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                'Model capacity and optimizer also change; this is not an isolated context ablation.',
+                ('Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if complete_set else
+                 'Model capacity and optimizer also change; this is not an isolated context ablation.'),
                 'Zero padding and finite FFT resolution break exact pitch-shift equivariance.',
                 'The longer trailing context spans 170.67ms; measured callback cost is not pluck-to-MIDI latency.',
                 'Ordinary reuses source takes and is descriptive; no delivered-MIDI, native realtime or live-device proof.',

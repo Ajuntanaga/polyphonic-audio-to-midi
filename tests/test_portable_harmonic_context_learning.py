@@ -1,6 +1,9 @@
 """Synthetic fail-closed orchestration; no recorded files, audio or model fit."""
 from contextlib import ExitStack
+import gzip
+import hashlib
 import json
+from itertools import product
 import os
 from pathlib import Path
 import subprocess
@@ -30,8 +33,9 @@ class PortableContextTests(unittest.TestCase):
             cutoff = None
             def activity(self, features):
                 return np.zeros((len(features), 53))
-        for sequence in ([False], [True,False,True], [True,True,False], [True,True,True]):
-            with self.subTest(gates=sequence), tempfile.TemporaryDirectory() as directory:
+        for params, sequence in product((runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS),
+                ([False], [True,False,True], [True,True,False], [True,True,True])):
+            with self.subTest(gates=sequence, loss=params['loss']), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 refs = {}
                 for name in ('sources', 'baseline', 'source_consistency'):
@@ -39,11 +43,19 @@ class PortableContextTests(unittest.TestCase):
                     path.write_text(json.dumps(dict(datasets=dict(ordinary={}, middle={}))))
                     refs[name] = dict(path=str(path), sha256=runner.digest(path))
                 spec = root/'spec.json'
-                spec.write_text(json.dumps(dict(worker_repository='example/worker',
+                spec_data = dict(worker_repository='example/worker',
                     mixture_and_clock_settings=runner.SETTINGS, harmonic_parameters=runner.PARAMETERS,
-                    model_parameters=runner.MODEL_PARAMS, references=refs, input_releases=[],
-                    datasets=dict(ordinary={}, middle={}))))
-                def persist(path, model, extractor):
+                    model_parameters=params, references=refs, input_releases=[],
+                    datasets=dict(ordinary={}, middle={}))
+                if params == runner.COMPLETE_SET_PARAMS:
+                    spec_data['training_plan_identity'] = dict(
+                        decoded_sha256=hashlib.sha256(b'[]').hexdigest())
+                spec.write_text(json.dumps(spec_data))
+                def synthetic_examples(role, takes, waves, extractor, output):
+                    (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
+                    return (np.zeros((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)),
+                            np.zeros((3, 53), bool), {})
+                def persist(path, model, extractor, model_params=None):
                     path.write_text(str(model.cutoff))
                 def replay_result(*args):
                     return dict(timing={}, arms=dict(primary_fifo=dict(comparison=dict(
@@ -57,8 +69,7 @@ class PortableContextTests(unittest.TestCase):
                     stack.enter_context(patch.object(runner, 'dependency_versions', return_value=runner.DEPENDENCIES))
                     stack.enter_context(patch.object(runner, 'validate_manifest', return_value=([], dict(train=200, calibration=200, test=155))))
                     stack.enter_context(patch.object(runner, 'source_waves', return_value={}))
-                    examples = stack.enter_context(patch.object(runner, 'role_examples', return_value=(
-                        np.zeros((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3,53), bool), {})))
+                    examples = stack.enter_context(patch.object(runner, 'role_examples', side_effect=synthetic_examples))
                     fit = stack.enter_context(patch.object(runner, 'fit_model', return_value=(Model(), {})))
                     stack.enter_context(patch.object(runner, 'save_model', side_effect=persist))
                     stack.enter_context(patch.object(runner, 'fit_training_cutoff', return_value=dict(cutoff=.5, feasible=True)))
@@ -66,6 +77,10 @@ class PortableContextTests(unittest.TestCase):
                     replay = stack.enter_context(patch.object(runner, 'continuous_dataset', side_effect=replay_result))
                     result = runner.run(spec, root/'output')
                 self.assertEqual(fit.call_count, 1)
+                self.assertEqual(fit.call_args.kwargs['model_params'], params)
+                self.assertEqual(result['training_objective'], params['loss'])
+                if params == runner.COMPLETE_SET_PARAMS:
+                    self.assertTrue(result['training_plan_identity']['verified'])
                 self.assertEqual(examples.call_count, len(sequence))
                 self.assertEqual(replay.call_count, 2 if all(sequence) else 0)
                 self.assertEqual(result['state'], 'completed')
