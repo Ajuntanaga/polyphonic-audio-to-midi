@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "state": "frozen_single_causal_configuration",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": "corpus-20261108",
+  "input_asset": "recovery-inputs.tar.gz",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "baseline_file": "docs/recovery/basic-pitch-baseline-20261121.json",
+  "model": {
+    "repository": "spotify/basic-pitch",
+    "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec",
+    "backend": "ONNX CPU",
+    "license": "Apache-2.0"
+  },
+  "protocol": {
+    "design": "docs/recovery/CODEX-M3-STREAMING-PROTOTYPE-20261121.md",
+    "runs_per_dataset": 1,
+    "input_gain_db": 0,
+    "labels": "Read only after event generation; no relabeling or exclusions",
+    "primary_clock": "Measured single-worker FIFO completion, ceil to native sample. No backdating or fitted shift.",
+    "diagnostic_clock": "Same event sequence at input-block arrival, zero-compute diagnostic only",
+    "input": "Causal147/640 FIR, no delay compensation, past-only windows, zero left padding, no exposed right padding",
+    "decoder": "Forward-only .5 onset/.3 frame, three-frame fallback attack and release, no active retriggers, no offline duration filter or Melodia",
+    "comparison": "Distinct pitch occupancy; full range21..108, no string/polyphony cap or union",
+    "strict_screen": "Ordinary >=5pp over saved CURRENT; both datasets zero per-label hold/longest loss, no wrong/gap increase or complete/exact chord loss. No promotion.",
+    "feasibility_indicators": "Both ordinary upper bands retain>=75% of saved offline Basic Pitch coverage; service p99<=20ms, maximum queued backlog<=26.667ms on each dataset. Separate indicators, not live acceptance.",
+    "scope": "CPU Python feasibility; no native timing/allocation, physical attack latency, host/device, lane/unison/repluck/bend acceptance",
+    "installed_output_changed": false,
+    "bulk_policy": "Keep remote; collect small report once"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f",
+      "baseline": {
+        "run_id": 44835727027,
+        "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+        "raw_midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "transitions": 11851,
+        "local_midi_gzip": "build/github-results/unfiltered-observation-44835727027/evidence/github-results/unfiltered-observation/ordinary-current-on-512-untraced-midi.tsv.gz",
+        "local_labels": "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv"
+      }
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708",
+      "baseline": {
+        "run_id": 43736868711,
+        "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+        "raw_midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "transitions": 906,
+        "local_midi_gzip": "build/github-results/qualified-tier-retention-corpus-43736868711/saved-extended-middle/extended-middle-current-on-512-midi.tsv.gz",
+        "local_labels": "build/physical-capture/extended-upper-unison/physical-middle.tsv"
+      }
+    }
+  },
+  "baseline_sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1",
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "offline_reference_file": "docs/recovery/basic-pitch-offline-reference-20261121.json",
+  "offline_reference_sha256": "a1d9b9e6d37f912ec749856e6fec4af71c162655a86dfaaa086b902181fa2507"
+}
