@@ -1,10 +1,10 @@
-## Harmonic context classifier prepared: one frozen CPU screen
+## Harmonic context model final: five-pitch training gate rejected
 
-Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-PLAN-20261121.md`. New shared pitch-context convolutions use the unchanged harmonic features, source roles, mixture recipe and acceptance gates. Capacity and optimizer also change; this is not an isolated context ablation. Source and worker commits/run are not yet recorded; no dispatch yet.
+Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RESULT-20261121.md`. Run44960075844 final/success, source `a5f46bab45be9cf87126f21426857358c6f75b2d`, worker `b18546e6556e84659b307f46c4b61037c5bc7d98`. Source CI44960048802 and all54 GitHub synthetic checks passed. Small report collected once and server-digest verified; model/predictions remain remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Fifty local synthetic checks pass; four dependency-backed checks are deferred to GitHub before recorded-data fitting. The focused review found no material blocker. Training complete-chord failure stops held-out scoring; both held-out roles must pass before continuous safety/benefit replay. All555 source labels and installed/default output remain unchanged.
+Training expected-pitch recall rises35,732->43,101/45,698 (78.19%->94.32%); false pitches360->433 at99.00% precision. Complete3/4/5-pitch sets rise54.04/29.31/14.04%->87.11/73.28/61.17%. Five-pitch CURRENT1547/2529 misses TARGET1771 by224sets; all other training gates pass, including zero silence extras. Held-out and continuous scoring skipped. Context/capacity/optimizer changed together; no isolated causal claim. All555source labels, installed/default output and scoreboard unchanged.
 
-Next: publish only the scoped experiment files, dispatch one frozen CPU job under standing authorization, collect its small report once with digest verification. Keep bulk evidence remote. Claude is paused; no fresh Claude review claimed. The earlier eight-hour interval remains complete; the broader live-readiness goal is active. Earlier entries below are historical.
+Next: inspect saved five-pitch training errors before a distinct design, keeping cutoff, labels and safety gates fixed; no next job queued. Claude is paused; no fresh Claude review claimed. Prior eight-hour interval complete; broader live-readiness goal active. Earlier entries below are historical.
 
 ## Shared harmonic learning final: training chord gate rejected
 
