@@ -14,6 +14,7 @@ option(M3_ENABLE_ASAN_UBSAN "Enable AddressSanitizer and UndefinedBehaviorSaniti
 option(M3_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(M3_ENABLE_RESIDUAL_SHADOW_TESTS "Exercise bounded residual work in test and replay callbacks only" OFF)
 option(M3_BUILD_FROZEN_CUE_PROBE "Build the standalone frozen cue parity and timing probe" OFF)
+option(M3_BUILD_NEURAL_LAB "Build the separate uninstalled 96 kHz neural experiment" OFF)
 option(M3_FROZEN_CUE_PFFFT "Use the experimental AVX double FFT in the standalone cue probe" OFF)
 option(M3_FROZEN_CUE_COOPERATIVE "Enable bounded native cue work in offline probes and replay only" OFF)
 if(M3_FROZEN_CUE_PFFFT AND NOT M3_BUILD_FROZEN_CUE_PROBE)
@@ -449,6 +450,10 @@ m3_configure_vst3_bundle(
     m3_vst3_probe
     "M3_Polyphonic_Audio_to_MIDI_Probe"
 )
+
+if(M3_BUILD_NEURAL_LAB)
+    add_subdirectory(native/neural)
+endif()
 
 smtg_add_vst3plugin(m3_vst3_production
     PACKAGE_NAME "M3_Polyphonic_Audio_to_MIDI"

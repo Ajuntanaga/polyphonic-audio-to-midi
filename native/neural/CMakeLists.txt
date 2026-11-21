@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(m3_experimental_neural_worker LANGUAGES CXX)
-# Deliberately standalone: neither the production plugin nor its SDK depends on ORT.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  project(m3_experimental_neural_worker LANGUAGES CXX)
+endif()
+# Production targets never depend on this optional experiment.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(Threads REQUIRED)
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   message(FATAL_ERROR "This bounded measurement harness currently targets Linux only")
@@ -26,3 +29,55 @@ target_link_libraries(neural_ort_harness PRIVATE "${ORT_LIBRARY}" callback_alloc
 foreach(target callback_allocations neural_core_tests neural_ort_harness)
   target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 endforeach()
+
+if(M3_BUILD_NEURAL_LAB)
+  foreach(resource M3_NEURAL_MODEL M3_NEURAL_FILTER M3_NEURAL_MODEL_LICENSE M3_NEURAL_RUNTIME_LICENSE)
+    if(NOT EXISTS "${${resource}}")
+      message(FATAL_ERROR "Missing explicitly supplied lab resource: ${resource}")
+    endif()
+  endforeach()
+  add_library(neural_lab_worker STATIC lab_worker.cpp)
+  target_include_directories(neural_lab_worker PRIVATE "${ORT_INCLUDE}")
+  target_link_libraries(neural_lab_worker PUBLIC "${ORT_LIBRARY}" Threads::Threads)
+  set(lab_component_sources lab_component.cpp ../vst3/vst3_event_sink.cpp
+    "${M3_VST3_SDK_ROOT}/public.sdk/source/vst/vstsinglecomponenteffect.cpp")
+  add_library(neural_lab_test_component STATIC ${lab_component_sources})
+  target_compile_definitions(neural_lab_test_component PUBLIC M3_NEURAL_LAB_DIAGNOSTICS)
+  target_link_libraries(neural_lab_test_component PUBLIC neural_lab_worker sdk ${CMAKE_DL_LIBS})
+  add_executable(neural_lab_tests lab_component_test.cpp)
+  target_link_libraries(neural_lab_tests PRIVATE neural_lab_test_component callback_allocations)
+  add_test(NAME neural_lab_component COMMAND neural_lab_tests)
+  add_executable(neural_lab_harness lab_harness.cpp)
+  target_link_libraries(neural_lab_harness PRIVATE neural_lab_test_component callback_allocations)
+  add_executable(neural_lab_bundle_test lab_bundle_test.cpp)
+  target_link_libraries(neural_lab_bundle_test PRIVATE sdk ${CMAKE_DL_LIBS})
+  target_include_directories(neural_lab_bundle_test SYSTEM PRIVATE "${M3_VST3_SDK_ROOT}")
+  smtg_add_vst3plugin(m3_neural_lab PACKAGE_NAME "M3_Neural_Lab"
+    SOURCES_LIST ${lab_component_sources} lab_factory.cpp)
+  target_link_libraries(m3_neural_lab PRIVATE neural_lab_worker sdk ${CMAKE_DL_LIBS})
+  foreach(target neural_lab_test_component m3_neural_lab)
+    target_include_directories(${target} PUBLIC "${M3_PROJECT_ROOT}/native/include")
+    target_include_directories(${target} SYSTEM PUBLIC "${M3_VST3_SDK_ROOT}")
+  endforeach()
+  foreach(target neural_lab_worker neural_lab_test_component neural_lab_tests neural_lab_harness neural_lab_bundle_test m3_neural_lab)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+  endforeach()
+  set(lab_bundle "${CMAKE_BINARY_DIR}/VST3/M3_Neural_Lab.vst3")
+  set(lab_binary_dir "${lab_bundle}/Contents/x86_64-linux")
+  set(lab_resources "${lab_bundle}/Contents/Resources")
+  set_target_properties(m3_neural_lab PROPERTIES
+    BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN" BUILD_WITH_INSTALL_RPATH TRUE)
+  # Copy runtime and resources before moduleinfotool loads the new module.
+  add_custom_command(TARGET m3_neural_lab POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${lab_binary_dir}" "${lab_resources}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORT_LIBRARY}" "${lab_binary_dir}/libonnxruntime.so"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink libonnxruntime.so "${lab_binary_dir}/libonnxruntime.so.1"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink libonnxruntime.so "${lab_binary_dir}/libonnxruntime.so.1.20.1"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${M3_NEURAL_MODEL}" "${lab_resources}/nmp.onnx"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${M3_NEURAL_FILTER}" "${lab_resources}/coefficients.f64"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${M3_NEURAL_MODEL_LICENSE}" "${lab_resources}/MODEL-LICENSE.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${M3_NEURAL_RUNTIME_LICENSE}" "${lab_resources}/RUNTIME-LICENSE.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/LAB-README.txt" "${lab_resources}/LAB-README.txt"
+    VERBATIM)
+  m3_configure_vst3_bundle(m3_neural_lab "M3_Neural_Lab")
+endif()

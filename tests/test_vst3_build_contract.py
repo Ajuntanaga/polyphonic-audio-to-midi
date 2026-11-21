@@ -70,7 +70,8 @@ class Vst3BuildContractTests(unittest.TestCase):
                 self.assertIn(f"unapproved dependency token .pt: {path}", errors)
 
     def test_authorized_ort_harness_does_not_open_production_dependencies(self):
-        for path in ("native/neural/CMakeLists.txt", "native/neural/ort_harness.cpp"):
+        for path in ("native/neural/CMakeLists.txt", "native/neural/ort_harness.cpp",
+                     "native/neural/ort_model.hpp", "native/neural/lab_component.cpp"):
             self.assertEqual(self.validation_errors([(path, "onnxruntime")]), [])
             errors = self.validation_errors([(path, "tensorflow")])
             self.assertIn(f"unapproved dependency token tensorflow: {path}", errors)
@@ -78,6 +79,14 @@ class Vst3BuildContractTests(unittest.TestCase):
                      "native/neural/other.cpp"):
             errors = self.validation_errors([(path, "onnxruntime")])
             self.assertIn(f"unapproved dependency token onnx: {path}", errors)
+
+    def test_source_validator_distinguishes_sdk_use_from_abi_declarations(self):
+        for source in ("using namespace Steinberg;", "using namespace Steinberg::Vst;"):
+            self.assertEqual(self.validation_errors([("native/neural/lab_component.cpp", source)]), [])
+        for source in ("namespace Steinberg { class IComponent; }",
+                       "namespace Steinberg::Vst { struct ProcessData {}; }"):
+            errors = self.validation_errors([("native/neural/lab_component.cpp", source)])
+            self.assertTrue(any("handwritten VST3 ABI" in e for e in errors), errors)
 
     def test_sanitizer_keeps_memory_checks_without_vst3_abi_vptr_checks(self):
         compiler_options = (
