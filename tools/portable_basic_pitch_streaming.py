@@ -72,7 +72,7 @@ def assess(datasets):
             'do not override strict losses and do not establish native/host/live acceptance.')
 
 
-def measure(name, config, reference, offline, inputs, bulk, backend):
+def measure(name, config, reference, offline, inputs, bulk, backend, context_cache=None):
     remote_only()
     wav = inputs/'corpus'/(name+'.wav')
     info = backend.sf.info(str(wav))
@@ -87,7 +87,8 @@ def measure(name, config, reference, offline, inputs, bulk, backend):
                     return
                 yield chunk
         result = stream_blocks(chunks(), backend,
-            progress=lambda calls, samples: print(f'{name}: {calls} windows, {samples}/{info.frames} samples', flush=True))
+            progress=lambda calls, samples: print(f'{name}: {calls} windows, {samples}/{info.frames} samples', flush=True),
+            additional_readout_start=160 if context_cache is not None else None)
     if result['source_samples'] != info.frames:
         raise ValueError('Incomplete source consumption')
     if not result['model_calls']:
@@ -114,7 +115,7 @@ def measure(name, config, reference, offline, inputs, bulk, backend):
         views[label] = dict(measurement=measured, event_audit=audit,
             comparison_to_current=compare(reference['measurement'], measured),
             comparison_to_offline=compare(offline, measured))
-    return dict(audio=dict(**clock,channels=info.channels,subtype=info.subtype),
+    measured_result = dict(audio=dict(**clock,channels=info.channels,subtype=info.subtype),
         **views['serviced'], zero_compute_diagnostic=views['zero_compute'],
         timing=timing_summary(result['timing']), model_calls=result['model_calls'],
         observed_output_frames=len(result['frames']), resampled_samples=result['resampled_samples'],
@@ -122,6 +123,11 @@ def measure(name, config, reference, offline, inputs, bulk, backend):
         open_decoder_pitches_at_end=result['open_decoder_pitches'],
         cleanup_emitted_ns=cleanup_ns, worker_finish_ns=result['worker_finish_ns'],
         bulk={p.name:dict(bytes=p.stat().st_size,sha256=digest(p)) for p in (artifact,events_path)})
+    if context_cache is not None:
+        from tools.basic_pitch_context import save_context
+        measured_result['context_candidate'] = save_context(name,result,labels,clock,
+            reference['measurement'],offline,bulk,context_cache)
+    return measured_result
 
 
 def run(spec_path, inputs, model_checkout, output):
@@ -138,6 +144,11 @@ def run(spec_path, inputs, model_checkout, output):
         spec = json.loads(spec_path.read_text())
         if spec['streaming'] != SETTINGS:
             raise ValueError('Implementation settings differ from frozen specification')
+        context_cache = None
+        if 'paired_context' in spec:
+            from tools.basic_pitch_context import CONTEXT
+            if spec['paired_context'] != CONTEXT:
+                raise ValueError('Context candidate differs from frozen specification')
         root = Path(__file__).resolve().parents[1]
         source = captured_text(['git','-C',str(root),'rev-parse','HEAD'])
         if source != os.environ.get('SOURCE_SHA') or os.environ.get('GITHUB_REPOSITORY') != spec['worker_repository']:
@@ -175,15 +186,27 @@ def run(spec_path, inputs, model_checkout, output):
             no_claims=['native allocations/deadlines','physical attack latency','DAW/device delivery',
                        'string/unison assignment','replucks/bends','installed note gain'])
         (report_dir/'environment.txt').write_text(captured_text([sys.executable,'-m','pip','freeze','--all'])+'\n')
+        if 'paired_context' in spec:
+            from tools.portable_basic_pitch_cached_diagnosis import fetch_artifact
+            context_cache = output/'reference-cache'
+            logs = output/'logs'
+            logs.mkdir()
+            report['reference_artifact'] = fetch_artifact(spec['worker_repository'],
+                spec['stream_reference_artifact'],context_cache,logs)
+            report['scope']['service'] += '; paired context includes BOTH independent decoders'
+            report['schema'] = 'm3_basic_pitch_paired_context_v1'
         backend = StreamingBackend(model_path)
         report['backend'] = backend.metadata
         for name,config in spec['datasets'].items():
             report['stage'] = name
             save_json(report_path,report)
             report['datasets'][name] = measure(name,config,baseline['datasets'][name],
-                offline['datasets'][name],inputs,bulk,backend)
+                offline['datasets'][name],inputs,bulk,backend,context_cache=context_cache)
             save_json(report_path,report)
         report.update(state='completed',final=True,stage='both recordings scored',screen=assess(report['datasets']))
+        if context_cache is not None:
+            from tools.basic_pitch_context import context_screen
+            report['context_screen'] = context_screen(report['datasets'])
     except Exception as error:
         report.update(state='failed',final=True,error=f'{type(error).__name__}: {error}')
         raise
@@ -200,4 +223,5 @@ if __name__ == '__main__':
     parser.add_argument('--model-checkout',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
     result = run(**vars(parser.parse_args()))
-    print(json.dumps(dict(state=result['state'],screen=result['screen']),allow_nan=False))
+    print(json.dumps(dict(state=result['state'],screen=result['screen'],
+        context_screen=result.get('context_screen')),allow_nan=False))
