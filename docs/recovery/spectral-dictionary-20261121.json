@@ -1,0 +1,128 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    },
+    {
+      "release": "corpus-20261108",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    }
+  ],
+  "references": {
+    "sources": {
+      "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+      "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+    },
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "schema": "m3_spectral_dictionary_spec_v1",
+  "workflow": "spectral-dictionary.yml",
+  "mixture_and_clock_settings": {
+    "sample_rate": 96000,
+    "block": 512,
+    "windows": [
+      4096,
+      16384
+    ],
+    "grid_midi_low": 28,
+    "grid_midi_high": 120,
+    "bins_per_semitone": 3,
+    "note_low": 32,
+    "note_high": 84,
+    "cutoff": 0.5,
+    "input_trim_db": -9,
+    "train_examples": 16384,
+    "calibration_examples": 4096,
+    "test_examples": 4096,
+    "train_seed": 20261121,
+    "calibration_seed": 20261122,
+    "test_seed": 20261123,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "silence_every": 20,
+    "max_components": 5
+  },
+  "dictionary_parameters": {
+    "frequency_min": 20.0,
+    "frequency_max": 12000.0,
+    "template_windows": 9,
+    "whitening_floor_fraction": 0.01,
+    "ridge": 0.001,
+    "training_precision_percent": 99.0,
+    "harmonic_intervals": [
+      12,
+      19,
+      24,
+      28,
+      31,
+      36
+    ]
+  },
+  "protocol": {
+    "dispatches": 1,
+    "template_builds": 1,
+    "cutoff_fits": 1,
+    "held_out_tuning": false,
+    "installed_change": false,
+    "promotion": false,
+    "source_split": "All 555 raw source excerpts: pass1 train200, pass2 calibration200, pass3 test155. No original-source interval overlap across roles.",
+    "scope": "Different takes of the same instrument/session; not different-session or performer generalization.",
+    "ordinary": "Reuses training source takes; descriptive stress score, not independent validation.",
+    "template": "One median of nine source-contained crops per pass-1 note/string cell; 200 atoms. Dense linear FFT magnitude, 20..12000Hz, trailing Hann4096/16384.",
+    "solver": "Train-template whitening floor 0.01*peak mean-square; unit atom norm; ridge0.001 NNLS via equivalent augmented QR; sum by note, divide by strongest pitch.",
+    "cutoff": "One global train-only fit: maximize true positives at precision>=99%; strictest tie, positive values only, equal values indivisible. If infeasible, all-off and fail. Persist before any held-out evaluation.",
+    "primary_clock": "Measured serial FIFO completion including dense FFT, NNLS and threshold cost; source availability diagnostic only.",
+    "representation_gate": "Both calibration and test: precision>=95%, recall>=80%, exact_set>=70%.",
+    "conditional_execution": "Skip both continuous recordings unless both held-out representation gates and train cutoff feasibility pass.",
+    "replacement_research_gate": "Ordinary>=5pp, and every existing per-label and wrong/gap/exact-set/all-expected nonregression clause on both datasets.",
+    "strata": "Related if any two distinct truth pitches differ by 12/19/24/28/31/36; all other examples separate. Report-only; no policy branch.",
+    "no_tuning": "No retraining, parameter sweep, test-driven cutoff or repeated dispatch. Full rank ridge NNLS failure fails the job.",
+    "limitations": "Magnitude additivity is approximate with coherent overlap. Same session sustain mixtures, all intended labels retained. Pitch presence only, no live/lane/MIDI proof.",
+    "plan": "docs/recovery/CODEX-M3-SPECTRAL-DICTIONARY-PLAN-20261121.md"
+  }
+}

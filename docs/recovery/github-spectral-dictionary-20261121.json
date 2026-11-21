@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T20:30:14.765487+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "9a98d08ee8650b25f949a7aaeed9ebbb2fc6208e",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "spectral-dictionary.yml",
+  "specification": "docs/recovery/spectral-dictionary-20261121.json",
+  "specification_sha256": "3c91e616829aeb8361edef1b6632e756ff78616d8e45b8830cbbc3456cb7d521",
+  "design": "docs/recovery/CODEX-M3-SPECTRAL-DICTIONARY-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "200 pass-1 measured dense spectral templates; fixed weighted ridge NNLS; one train-only cutoff fit; both held-out 95/80/70 gates required before continuous replay.",
+  "validation": {
+    "synthetic_tests_passed": 32,
+    "workflow_yaml_parsed": true,
+    "review": "One independent read-only review: no blocker. QR, cutoff ties, train-only templates, persistence and both-held-out gating correct."
+  },
+  "pre_dispatch_run_inventory": "build/recovery/m3-spectral-dictionary-20261121/pre-dispatch-runs.stdout",
+  "active_worker_runs_before_dispatch": [],
+  "small_report_collection": "not_started",
+  "bulk_policy": "Keep model, mixture plans and predictions remote; collect small report/log once with server digest verification.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Complete the one review, then one bounded CPU dispatch. No repetition, tuning or promotion.",
+  "limits": [
+    "Same instrument/session; held-out takes are not independent-session evidence.",
+    "All 555 intended-label takes retained, including pass-3 target uncertainties.",
+    "Magnitude additivity is approximate when partials overlap coherently.",
+    "Sustain-mixture scores do not establish attacks, releases, lanes, unisons or delivered MIDI.",
+    "Ordinary reuses training takes and is descriptive stress evidence only.",
+    "Python cost is not native allocation, deadline or live latency proof.",
+    "Thirty-minute job limit bounds compute; completion time is unproven for 24,576 mixture NNLS solves plus any gated continuous replay."
+  ],
+  "updated_at": "2026-11-21T20:31:24.592140+00:00"
+}
