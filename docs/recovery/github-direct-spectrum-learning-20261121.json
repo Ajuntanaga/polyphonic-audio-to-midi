@@ -1,0 +1,522 @@
+{
+  "schema": 1,
+  "state": "completed",
+  "final": true,
+  "created_at": "2026-11-21T20:09:27.874571+00:00",
+  "updated_at": "2026-11-21T20:15:37.597575+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "388cdd0e27b47d12a72267e15501dab5f17d7044",
+  "source_commit": "3d611be3b120f6447167d197f193742571a83afe",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": "b6ff95c83e98b0cbe5a6e74c9e52c5c3d8e06e69",
+  "workflow": "direct-spectrum-learning.yml",
+  "specification": "docs/recovery/direct-spectrum-learning-20261121.json",
+  "specification_sha256": "c425d9030013b87957864596a52b81b917f63ed48dfecd065dc3b4da42b380cd",
+  "design": "docs/recovery/CODEX-M3-DIRECT-SPECTRUM-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": 44944759783,
+  "protocol": "One fixed direct-spectrum MLP fit, source-excerpt roles pass1/train200 pass2/check200 pass3/test155; fixed 0.5 cutoff; continuous FIFO-cost score.",
+  "validation": {
+    "synthetic_tests_passed": 25,
+    "workflow_yaml_parsed": true,
+    "review": "One independent read-only review: no blocking issue. Archive paths, source roles, one fit, FIFO and workflow verified."
+  },
+  "pre_dispatch_run_inventory": "build/recovery/m3-direct-spectrum-20261121/pre-dispatch-runs.stdout",
+  "active_worker_runs_before_dispatch": [],
+  "small_report_collection": "collected_once_digest_verified",
+  "bulk_policy": "Keep model, mixtures and predictions remote; collect small report/log once.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Joint next-design decision with Claude on a distinct model/data representation that generalizes across source takes; the check and test mixture gates and continuous per-label/false-output gates must all pass. No next job queued; do not tune, rerun or redownload this completed screen.",
+  "limits": [
+    "Different takes of one instrument/session, not independent player/session data.",
+    "Pass-3 target-pitch uncertainties retained; no relabeling or exclusion.",
+    "RMS-normalized isolated sustain mixtures do not establish real chord attack/decay performance.",
+    "Ordinary reuses training takes; only descriptive continuous stress evidence.",
+    "No lane assignment, unison multiplicity, delivered MIDI, native allocation/deadline or device test.",
+    "No tuning, rerun, installed change or promotion is authorized by a favorable research score.",
+    "The 80-epoch optimizer emitted a convergence warning; the frozen one-fit experiment remains final.",
+    "Python service time at block512 does not establish the native block32 deadline or pluck-to-MIDI latency."
+  ],
+  "dispatch_requested_at": "2026-11-21T20:09:27.903039+00:00",
+  "dispatch_command": [
+    "gh",
+    "workflow",
+    "run",
+    "direct-spectrum-learning.yml",
+    "--repo",
+    "Ajuntanaga/m3-offload",
+    "--ref",
+    "main",
+    "-f",
+    "source_sha=3d611be3b120f6447167d197f193742571a83afe"
+  ],
+  "dispatch_exit_code": 0,
+  "dispatch_output": "build/recovery/m3-direct-spectrum-20261121/dispatch.stdout",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44944759783",
+  "run_created_at": "2026-11-21T20:09:29Z",
+  "output_directory": "build/github-results/direct-spectrum-learning-44944759783",
+  "small_report_artifact": "m3-direct-spectrum-report-44944759783-1",
+  "bulk_artifact": "m3-direct-spectrum-evidence-44944759783-1",
+  "conclusion": "success",
+  "run_finished_at": "2026-11-21T20:10:53Z",
+  "collection_receipt": "build/github-results/direct-spectrum-learning-44944759783/collection-receipt.json",
+  "collection": {
+    "collected_at": "2026-11-21T20:12:22.859091+00:00",
+    "artifact_id": 14722764252,
+    "name": "m3-direct-spectrum-report-44944759783-1",
+    "bytes": 158513,
+    "sha256": "141e258d8acc6e4a126d311a741e927879830e572cedf7f581d8941c030cb081",
+    "server_digest": "sha256:141e258d8acc6e4a126d311a741e927879830e572cedf7f581d8941c030cb081",
+    "verified": true,
+    "bulk_downloaded": false
+  },
+  "report": "build/github-results/direct-spectrum-learning-44944759783/artifact/direct-spectrum-result/report/report.json",
+  "report_sha256": "466482fea522b531d8c9df536477473f056b63fb930e5effef9b421801d4e445",
+  "artifacts": [
+    {
+      "id": 14722769214,
+      "name": "m3-direct-spectrum-evidence-44944759783-1",
+      "size_in_bytes": 24177957,
+      "digest": "sha256:439b828ae2bb4f657ee0f7fe08858e1c46ab58e2ebc13e97ca0c1192cb6386b8",
+      "expires_at": "2026-12-05T20:10:50Z"
+    },
+    {
+      "id": 14722764252,
+      "name": "m3-direct-spectrum-report-44944759783-1",
+      "size_in_bytes": 158513,
+      "digest": "sha256:141e258d8acc6e4a126d311a741e927879830e572cedf7f581d8941c030cb081",
+      "expires_at": "2026-12-05T20:10:49Z"
+    }
+  ],
+  "bulk_collected": false,
+  "source_ci": {
+    "conclusion": "success",
+    "createdAt": "2026-11-21T20:08:58Z",
+    "databaseId": 44944712253,
+    "headSha": "3d611be3b120f6447167d197f193742571a83afe",
+    "status": "completed",
+    "updatedAt": "2026-11-21T20:10:32Z",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44944712253"
+  },
+  "result_note": "docs/recovery/CODEX-M3-DIRECT-SPECTRUM-RESULT-20261121.md",
+  "decision": "rejected as replacement; representation result reported separately",
+  "gates": {
+    "calibration_representation": false,
+    "test_representation": false,
+    "ordinary_gain_at_least_5pp": true,
+    "ordinary_no_pitch_safety_regression": false,
+    "extended-middle_no_pitch_safety_regression": false
+  },
+  "representation_feasibility_passed": false,
+  "research_screen_passed": false,
+  "source_roles": {
+    "counts": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "cross_role_original_overlap": false,
+    "all_takes_retained": true,
+    "held_out_unit": "Recording pass/source excerpt, same instrument/session"
+  },
+  "fit": {
+    "seconds": 17.647164676999978,
+    "epochs": 80,
+    "examples": 16384,
+    "feature_count": 556,
+    "output_count": 53,
+    "final_loss": 0.21576075329236363,
+    "held_out_used": false,
+    "fits": 1
+  },
+  "mixture_results": {
+    "train": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 44927,
+        "false_positive": 357,
+        "false_negative": 771,
+        "precision_percent": 99.21164208108824,
+        "recall_percent": 98.3128364479846,
+        "exact_set_percent": 93.963623046875
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3132,
+          "false_positive": 20,
+          "false_negative": 0,
+          "precision_percent": 99.36548223350253,
+          "recall_percent": 100.0,
+          "exact_set_percent": 99.45721583652617
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6395,
+          "false_positive": 51,
+          "false_negative": 45,
+          "precision_percent": 99.20881166614954,
+          "recall_percent": 99.30124223602485,
+          "exact_set_percent": 97.20496894409938
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9632,
+          "false_positive": 81,
+          "false_negative": 121,
+          "precision_percent": 99.16606609698343,
+          "recall_percent": 98.75935609556034,
+          "exact_set_percent": 94.30944324823132
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13471,
+          "false_positive": 103,
+          "false_negative": 257,
+          "precision_percent": 99.24119640489171,
+          "recall_percent": 98.12791375291376,
+          "exact_set_percent": 90.82167832167832
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 12297,
+          "false_positive": 102,
+          "false_negative": 348,
+          "precision_percent": 99.17735301233971,
+          "recall_percent": 97.24792408066429,
+          "exact_set_percent": 84.89521550019771
+        }
+      }
+    },
+    "calibration": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 9737,
+        "false_positive": 1576,
+        "false_negative": 1816,
+        "precision_percent": 86.06912401661805,
+        "recall_percent": 84.28113909806977,
+        "exact_set_percent": 53.2958984375
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0
+        },
+        "1": {
+          "examples": 753,
+          "true_positive": 738,
+          "false_positive": 70,
+          "false_negative": 15,
+          "precision_percent": 91.33663366336634,
+          "recall_percent": 98.00796812749005,
+          "exact_set_percent": 91.50066401062416
+        },
+        "2": {
+          "examples": 777,
+          "true_positive": 1444,
+          "false_positive": 211,
+          "false_negative": 110,
+          "precision_percent": 87.25075528700906,
+          "recall_percent": 92.92149292149293,
+          "exact_set_percent": 71.17117117117117
+        },
+        "3": {
+          "examples": 837,
+          "true_positive": 2224,
+          "false_positive": 366,
+          "false_negative": 287,
+          "precision_percent": 85.86872586872587,
+          "recall_percent": 88.57029072082835,
+          "exact_set_percent": 49.22341696535245
+        },
+        "4": {
+          "examples": 885,
+          "true_positive": 2926,
+          "false_positive": 479,
+          "false_negative": 614,
+          "precision_percent": 85.93245227606461,
+          "recall_percent": 82.65536723163842,
+          "exact_set_percent": 28.587570621468927
+        },
+        "5": {
+          "examples": 639,
+          "true_positive": 2405,
+          "false_positive": 450,
+          "false_negative": 790,
+          "precision_percent": 84.23817863397548,
+          "recall_percent": 75.27386541471049,
+          "exact_set_percent": 11.11111111111111
+        }
+      }
+    },
+    "test": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 7579,
+        "false_positive": 3265,
+        "false_negative": 2873,
+        "precision_percent": 69.8911840649207,
+        "recall_percent": 72.51243781094527,
+        "exact_set_percent": 36.5478515625
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0
+        },
+        "1": {
+          "examples": 869,
+          "true_positive": 745,
+          "false_positive": 435,
+          "false_negative": 124,
+          "precision_percent": 63.13559322033898,
+          "recall_percent": 85.7307249712313,
+          "exact_set_percent": 67.54890678941312
+        },
+        "2": {
+          "examples": 950,
+          "true_positive": 1537,
+          "false_positive": 722,
+          "false_negative": 363,
+          "precision_percent": 68.0389552899513,
+          "recall_percent": 80.89473684210526,
+          "exact_set_percent": 40.0
+        },
+        "3": {
+          "examples": 932,
+          "true_positive": 2049,
+          "false_positive": 931,
+          "false_negative": 747,
+          "precision_percent": 68.75838926174497,
+          "recall_percent": 73.28326180257511,
+          "exact_set_percent": 23.71244635193133
+        },
+        "4": {
+          "examples": 813,
+          "true_positive": 2231,
+          "false_positive": 830,
+          "false_negative": 1021,
+          "precision_percent": 72.88467820973538,
+          "recall_percent": 68.60393603936039,
+          "exact_set_percent": 10.947109471094711
+        },
+        "5": {
+          "examples": 327,
+          "true_positive": 1017,
+          "false_positive": 347,
+          "false_negative": 618,
+          "precision_percent": 74.56011730205279,
+          "recall_percent": 62.20183486238532,
+          "exact_set_percent": 4.587155963302752
+        }
+      }
+    }
+  },
+  "continuous_results": {
+    "ordinary": {
+      "current_complete_score_identity": true,
+      "clock": "measured serial FIFO completion",
+      "current_totals": {
+        "annotated_samples": 8914836,
+        "expected_pitch_samples": 33819101,
+        "present_pitch_samples": 13525345,
+        "all_expected_pitches_samples": 53249,
+        "exact_pitch_set_samples": 53249,
+        "one_voice_per_pitch_samples": 53249,
+        "extra_pitch_voice_samples": 7808309,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "model_totals": {
+        "annotated_samples": 8914836,
+        "expected_pitch_samples": 33819101,
+        "present_pitch_samples": 23340247,
+        "all_expected_pitches_samples": 3159993,
+        "exact_pitch_set_samples": 2367069,
+        "one_voice_per_pitch_samples": 2367069,
+        "extra_pitch_voice_samples": 7061634,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "comparison": {
+        "current_pitch_coverage_percent": 39.993212711360954,
+        "model_pitch_coverage_percent": 69.01498357392765,
+        "pitch_coverage_gain_pp": 29.02177086256669,
+        "current_exact_pitch_set_percent": 0.597307679019558,
+        "model_exact_pitch_set_percent": 26.55201957725302,
+        "sample_deltas": {
+          "annotated_samples": 0,
+          "expected_pitch_samples": 0,
+          "present_pitch_samples": 9814902,
+          "all_expected_pitches_samples": 3106744,
+          "exact_pitch_set_samples": 2313820,
+          "one_voice_per_pitch_samples": 2313820,
+          "extra_pitch_voice_samples": -746675,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "extra_gap_pitch_samples_delta": 1227591,
+        "label_bands": {
+          "below48": {
+            "annotated_label_samples": 9561144,
+            "current_present_label_samples": 6690873,
+            "model_present_label_samples": 6959341,
+            "lost_labels": 78
+          },
+          "48to59": {
+            "annotated_label_samples": 9852087,
+            "current_present_label_samples": 6292681,
+            "model_present_label_samples": 6819557,
+            "lost_labels": 73
+          },
+          "60to71": {
+            "annotated_label_samples": 9319146,
+            "current_present_label_samples": 541791,
+            "model_present_label_samples": 6298304,
+            "lost_labels": 4
+          },
+          "72plus": {
+            "annotated_label_samples": 5086724,
+            "current_present_label_samples": 0,
+            "model_present_label_samples": 3263045,
+            "lost_labels": 0
+          }
+        },
+        "no_pitch_safety_regression": false,
+        "promotion_accepted": false
+      },
+      "labels_gaining": 324,
+      "labels_losing": 155,
+      "labels_becoming_missing": 3,
+      "labels_losing_longest_hold": 161,
+      "occupancy_segments": 4713,
+      "timing": {
+        "callbacks": 20879,
+        "service_ns_p50": 346585.0,
+        "service_ns_p99": 412935.72000000003,
+        "service_ns_max": 740332,
+        "service_seconds_total": 7.477626801,
+        "queued_callbacks": 0,
+        "max_queue_ns": 0,
+        "results_after_recording_end": 1,
+        "scope": "Measured Python feature/scaler/MLP cost in a serial FIFO; no native allocations, audio driver, actual host scheduling or device delivery measurement."
+      },
+      "eof": {
+        "last_prediction_active_notes": [
+          49
+        ],
+        "closure": "Scoring boundary only, not evidence of a delivered NoteOff or stuck MIDI."
+      }
+    },
+    "extended-middle": {
+      "current_complete_score_identity": true,
+      "clock": "measured serial FIFO completion",
+      "current_totals": {
+        "annotated_samples": 2073600,
+        "expected_pitch_samples": 2073600,
+        "present_pitch_samples": 2021510,
+        "all_expected_pitches_samples": 2021510,
+        "exact_pitch_set_samples": 1516739,
+        "one_voice_per_pitch_samples": 1516739,
+        "extra_pitch_voice_samples": 528259,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "model_totals": {
+        "annotated_samples": 2073600,
+        "expected_pitch_samples": 2073600,
+        "present_pitch_samples": 2023903,
+        "all_expected_pitches_samples": 2023903,
+        "exact_pitch_set_samples": 1507482,
+        "one_voice_per_pitch_samples": 1507482,
+        "extra_pitch_voice_samples": 841725,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "comparison": {
+        "current_pitch_coverage_percent": 97.4879436728395,
+        "model_pitch_coverage_percent": 97.60334683641975,
+        "pitch_coverage_gain_pp": 0.11540316358024691,
+        "current_exact_pitch_set_percent": 73.14520640432099,
+        "model_exact_pitch_set_percent": 72.69878472222223,
+        "sample_deltas": {
+          "annotated_samples": 0,
+          "expected_pitch_samples": 0,
+          "present_pitch_samples": 2393,
+          "all_expected_pitches_samples": 2393,
+          "exact_pitch_set_samples": -9257,
+          "one_voice_per_pitch_samples": -9257,
+          "extra_pitch_voice_samples": 313466,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "extra_gap_pitch_samples_delta": -14945,
+        "label_bands": {
+          "below48": {
+            "annotated_label_samples": 0,
+            "current_present_label_samples": 0,
+            "model_present_label_samples": 0,
+            "lost_labels": 0
+          },
+          "48to59": {
+            "annotated_label_samples": 2073600,
+            "current_present_label_samples": 2021510,
+            "model_present_label_samples": 2023903,
+            "lost_labels": 3
+          },
+          "60to71": {
+            "annotated_label_samples": 0,
+            "current_present_label_samples": 0,
+            "model_present_label_samples": 0,
+            "lost_labels": 0
+          },
+          "72plus": {
+            "annotated_label_samples": 0,
+            "current_present_label_samples": 0,
+            "model_present_label_samples": 0,
+            "lost_labels": 0
+          }
+        },
+        "no_pitch_safety_regression": false,
+        "promotion_accepted": false
+      },
+      "labels_gaining": 3,
+      "labels_losing": 3,
+      "labels_becoming_missing": 0,
+      "labels_losing_longest_hold": 4,
+      "occupancy_segments": 354,
+      "timing": {
+        "callbacks": 4379,
+        "service_ns_p50": 355597.0,
+        "service_ns_p99": 406422.62000000005,
+        "service_ns_max": 736088,
+        "service_seconds_total": 1.607494579,
+        "queued_callbacks": 0,
+        "max_queue_ns": 0,
+        "results_after_recording_end": 1,
+        "scope": "Measured Python feature/scaler/MLP cost in a serial FIFO; no native allocations, audio driver, actual host scheduling or device delivery measurement."
+      },
+      "eof": {
+        "last_prediction_active_notes": [],
+        "closure": "Scoring boundary only, not evidence of a delivered NoteOff or stuck MIDI."
+      }
+    }
+  }
+}

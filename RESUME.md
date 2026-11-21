@@ -1,3 +1,11 @@
+## Direct-spectrum learning final: held-out and continuous safety rejected
+
+Active checkpoint: `docs/recovery/github-direct-spectrum-learning-20261121.json`; result: `docs/recovery/CODEX-M3-DIRECT-SPECTRUM-RESULT-20261121.md`. Run44944759783 final/success, source `3d611be3b120f6447167d197f193742571a83afe`, worker `b6ff95c83e98b0cbe5a6e74c9e52c5c3d8e06e69`. Source CI44944712253 and25 synthetic checks pass. Small report collected once and digest verified; bulk remains remote. Do not poll, redownload, rerun or tune this completed experiment.
+
+Train/check/test precision99.21/86.07/69.89%, recall98.31/84.28/72.51%, exact sets93.96/53.30/36.55%; fixed targets95/80/70 on both held-out roles fail. Ordinary source-reuse stress coverage39.9932% ->69.0150%, but155labels lose presence,161lose longest hold,3become missing, gap extras+1,227,591pitch-samples. Middle wrong-pitch+313,466. Both CURRENT score identities pass;512-sample Python service p99<0.413ms with no queue is not native deadline or live latency proof. Installed/default output and scoreboard unchanged.
+
+Next: joint distinct model/data-representation design with Claude addressing transfer across takes AND false-output safety, not a refit of this screen. No next job queued. The prior eight-hour interval is complete; full live-readiness goal remains open. Prior entries below are historical.
+
 # Current checkpoint: retained competition comparison repaired; dispatch pending
 
 Checkpoint: `docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json`; status key `portable_compute.ordinary_harmonic_competition_attribution`. Analysis attempts `43970011258` and `43971072792` failed before producing results: first on fitted-output frequency equality, then on per-run manifest equality. Both small failure logs are collected once and hash-verified. Source portable runs `43969920170` and `43971002315` passed. Do not poll or recollect these final jobs.
