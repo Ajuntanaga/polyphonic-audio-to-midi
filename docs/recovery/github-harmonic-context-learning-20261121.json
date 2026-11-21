@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T23:04:15.915493+00:00",
+  "updated_at": "2026-11-21T23:05:17.015305+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "7e8f329eed5e07a11b0c2bd255867357d53220f6",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "harmonic-context-learning.yml",
+  "specification": "docs/recovery/harmonic-context-learning-20261121.json",
+  "specification_sha256": "ff3128b13422f80a6d024e32eb7dbdf9183197c90de40d37f4021a3e86c9dd5e",
+  "design": "docs/recovery/CODEX-M3-HARMONIC-CONTEXT-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "One shared pitch-context convolutional model over the unchanged pitch-aligned harmonic coordinates. Training-only pooled coordinate normalization, one fixed fit and one train-only global cutoff. Same fail-closed complete-chord and continuous safety gates.",
+  "validation": {
+    "local_synthetic_tests": 54,
+    "local_passed": 50,
+    "local_skipped": 4,
+    "skip_reason": "Three Torch checks and one sklearn check run on GitHub before recorded fitting; no local installation.",
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "state": "complete",
+      "reviewer": "harmonic_context_review",
+      "scope": "Tensor alignment, training-only normalization/cutoff, persistence, stage gates and bounded CPU execution",
+      "verdict": "no material blocker",
+      "limits": "Remote Torch roundtrip and bounded CPU feasibility await GitHub; capacity/optimizer and source protocol limitations retained."
+    }
+  },
+  "small_report_collection": null,
+  "bulk_policy": "Collect small report once with server digest verification; keep model and predictions remote.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "Commit and push the scoped source and worker workflow, then dispatch one frozen CPU screen.",
+  "limits": [
+    "Capacity and optimizer also change versus the independent MLP, so this does not isolate a causal context effect.",
+    "Receptive field 73 pitch positions, radius 36; finite 53-pitch grid uses zero padding, which can encode boundary position. No exact pitch-shift invariance claim.",
+    "All 555 original labels retained including unresolved source disagreements; no exclusion, relabel, class weighting, top-k oracle or held-out tuning.",
+    "Long trailing context and Python CPU timing do not establish pluck-to-MIDI latency or native live readiness.",
+    "Source recording-pass protocols differ; ordinary source reuse is descriptive.",
+    "Claude is paused; no fresh Claude review claimed."
+  ]
+}

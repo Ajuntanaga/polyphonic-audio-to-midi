@@ -1,3 +1,11 @@
+## Harmonic context classifier prepared: one frozen CPU screen
+
+Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-PLAN-20261121.md`. New shared pitch-context convolutions use the unchanged harmonic features, source roles, mixture recipe and acceptance gates. Capacity and optimizer also change; this is not an isolated context ablation. Source and worker commits/run are not yet recorded; no dispatch yet.
+
+Fifty local synthetic checks pass; four dependency-backed checks are deferred to GitHub before recorded-data fitting. The focused review found no material blocker. Training complete-chord failure stops held-out scoring; both held-out roles must pass before continuous safety/benefit replay. All555 source labels and installed/default output remain unchanged.
+
+Next: publish only the scoped experiment files, dispatch one frozen CPU job under standing authorization, collect its small report once with digest verification. Keep bulk evidence remote. Claude is paused; no fresh Claude review claimed. The earlier eight-hour interval remains complete; the broader live-readiness goal is active. Earlier entries below are historical.
+
 ## Shared harmonic learning final: training chord gate rejected
 
 Active checkpoint: `docs/recovery/github-shared-harmonic-learning-20261121.json`; result: `docs/recovery/CODEX-M3-SHARED-HARMONIC-RESULT-20261121.md`. Run44958696453 final/success, source `6cb655e108d156c38d543871b2b077a55bc493ef`, worker `cd26fee87fe049a66725a001e50f71e36bbcaf27`. Source CI44958668959 and all47 synthetic checks passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload, rerun or retune this completed screen.
