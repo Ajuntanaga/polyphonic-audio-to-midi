@@ -174,7 +174,7 @@ def main(argv=None):
             jack=None
             try:
                 jack_command=['jackd','--no-realtime','--name','m3-neural-host',
-                              '--driver','dummy','--rate','96000','--period','512','--wait','5333',
+                              '-d','dummy','--rate','96000','--period','512','--wait','5333',
                               '--capture','0','--playback','2']
                 report['audio_server_command']=jack_command;save()
                 jack=subprocess.Popen(jack_command,stdout=jf,stderr=subprocess.STDOUT,env=env)
