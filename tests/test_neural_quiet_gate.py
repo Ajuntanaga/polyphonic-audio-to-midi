@@ -79,6 +79,42 @@ class NeuralQuietGateTests(unittest.TestCase):
         rows[runner.CORPUS[0]]['arms']['on']['integration_pass']=False
         self.assertFalse(runner.screen(rows)['component_integration_pass'])
 
+    def test_primary_reference_uses_m3_baseline_not_neural_measurement(self):
+        names=runner.PRIMARY
+        config={name:dict(labels_sha256='labels',baseline=dict(raw_midi_sha256='midi',run_id=1,source_commit='source')) for name in names}
+        reference=dict(schema='m3_neural_lab_component_v1',final=True,
+            provenance=dict(run_id=2,specification=dict(datasets=config)),
+            datasets={name:dict(integration_pass=True,formats={'32':{'measurement':'NEURAL'}}) for name in names})
+        baseline=dict(schema=2,method='Saved CURRENT MIDI; pitch union only',datasets={name:
+            dict(labels_sha256='labels',raw_midi_sha256='midi',run_id=1,source_commit='source',
+                 measurement='M3 CURRENT',pitch_spans=[]) for name in names})
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);path=root/'baseline.json';path.write_text(json.dumps(baseline))
+            spec=dict(datasets=config,reference_run=2,current_baseline=dict(path=path.name,sha256=runner.digest(path)))
+            bound=runner.current_references(reference,spec,root)
+            self.assertTrue(all(row['current']['measurement']=='M3 CURRENT' for row in bound.values()))
+            wrong=copy.deepcopy(reference);wrong['provenance']['run_id']=3
+            with self.assertRaisesRegex(ValueError,'reference provenance'):
+                runner.current_references(wrong,spec,root)
+            baseline['datasets'][names[0]]['run_id']=99;path.write_text(json.dumps(baseline))
+            spec['current_baseline']['sha256']=runner.digest(path)
+            with self.assertRaisesRegex(ValueError,'CURRENT baseline provenance'):
+                runner.current_references(reference,spec,root)
+            path.write_text('{}')
+            with self.assertRaises(ValueError): runner.current_references(reference,spec,root)
+
+    def test_primary_screen_cannot_claim_twelve_pairs(self):
+        rows={name:dict(arms={arm:dict(state='measured',integration_pass=True,quality_pass=True)
+                             for arm in runner.ARMS},
+                       on_vs_off=dict(component_delivery=dict(no_pitch_safety_regression=True)))
+              for name in runner.PRIMARY}
+        result=runner.screen(rows,runner.PRIMARY)
+        self.assertEqual((result['arms_measured'],result['arms_required']),(4,4))
+        self.assertTrue(result['component_integration_pass'])
+        self.assertFalse(runner.screen(rows)['component_integration_pass'])
+        del rows[runner.PRIMARY[0]]
+        self.assertFalse(runner.screen(rows,runner.PRIMARY)['component_integration_pass'])
+
     def test_remote_guard_precedes_file_access(self):
         with patch.dict(os.environ,{'GITHUB_ACTIONS':'false'}):
             with self.assertRaises(RuntimeError): runner.run(*[Path('/must-not-open')]*8)
@@ -90,6 +126,11 @@ class NeuralQuietGateTests(unittest.TestCase):
         self.assertEqual(tuple(spec['datasets']),runner.CORPUS)
         self.assertEqual(len(spec['artifacts']['evidence']['files']),12)
         self.assertTrue(all(n.endswith('-generated.tsv.gz') for n in spec['artifacts']['evidence']['files']))
+        primary=json.loads((Path(__file__).resolve().parents[1]/'docs/recovery/neural-quiet-gate-ordinary-20261121.json').read_text())
+        self.assertEqual(tuple(primary['datasets']),runner.PRIMARY)
+        self.assertEqual(primary['gate_settings'],spec['gate_settings'])
+        self.assertEqual(primary['derived_model_sha256'],spec['derived_model_sha256'])
+        self.assertEqual(len(primary['artifacts']['evidence']['files']),2)
 
 
 if __name__=='__main__': unittest.main()

@@ -1,0 +1,197 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": "corpus-20261108",
+  "input_asset": "recovery-inputs.tar.gz",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "model": {
+    "repository": "spotify/basic-pitch",
+    "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec",
+    "backend": "ONNX CPU",
+    "license": "Apache-2.0"
+  },
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "native_settings": {
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667,
+    "activation_absolute_tolerance": 1e-05,
+    "resampler_absolute_tolerance": 1e-07,
+    "sdk_version": "1.20.1",
+    "paced_callback": true,
+    "pitch_states": 88
+  },
+  "sdk": {
+    "version": "1.20.1",
+    "package": "Microsoft.ML.OnnxRuntime",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.20.1/microsoft.ml.onnxruntime.1.20.1.nupkg",
+    "sha512_base64": "/IZ7tO4xeqphNGAHn6dU+Ate5kmugmsQKwJpl2qJBAq4rtl2j2hQWlUn+KoxYcwS4ToIw4KzXVdzHuhMaw1HjQ==",
+    "bytes": 108611147,
+    "provenance": "Official CPU C/C++ NuGet package; SHA512 pinned from NuGet response, SHA256 recorded by worker; runtime version must match. Replaces unavailable GitHub tarball before any native measurement."
+  },
+  "lab_settings": {
+    "sample_formats": [
+      32
+    ],
+    "callback_pattern": [
+      32,
+      512,
+      1024
+    ],
+    "maximum_block": 1024,
+    "rate": 96000,
+    "mono_channels": 1,
+    "package_stereo_test": true,
+    "pitch_states": 88,
+    "midi_channel": 1,
+    "midi_velocity": 100,
+    "output_sample_offset": 0,
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667
+  },
+  "schema": "m3_neural_quiet_gate_spec_v1",
+  "state": "frozen_before_dispatch",
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f",
+      "baseline": {
+        "run_id": 44835727027,
+        "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+        "raw_midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "transitions": 11851,
+        "local_midi_gzip": "build/github-results/unfiltered-observation-44835727027/evidence/github-results/unfiltered-observation/ordinary-current-on-512-untraced-midi.tsv.gz",
+        "local_labels": "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv"
+      }
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708",
+      "baseline": {
+        "run_id": 43736868711,
+        "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+        "raw_midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "transitions": 906,
+        "local_midi_gzip": "build/github-results/qualified-tier-retention-corpus-43736868711/saved-extended-middle/extended-middle-current-on-512-midi.tsv.gz",
+        "local_labels": "build/physical-capture/extended-upper-unison/physical-middle.tsv"
+      }
+    }
+  },
+  "shared_inputs": {
+    "calibration.m3cb": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997",
+    "templates.tsv": "5bb98dfe3a295da1b9db857b083c650059de8dc3ab2b1984ceb2be1d1255ac87"
+  },
+  "derived_model_sha256": "1b6f85ae2265d4ed5ceeda33163951c37f118766f6521b0cbe702baae933b87d",
+  "protocol": {
+    "runs_per_dataset": {
+      "gate_off_float32": 1,
+      "gate_on_minus60_float32": 1
+    },
+    "model": "Unchanged pinned crop, coefficients, decoder thresholds, input gain and thread counts.",
+    "control": "Gate OFF by default; fixed -60dBFS close, +6dB reopen,40ms dwell; settings latched at first sample of each source packet.",
+    "intent": "Optional user-controlled weak-sustain versus unwanted-output tradeoff; not a lossless replacement claim.",
+    "primary_clock": "Actual accepted VST3 callback timestamp, paced96kHz variable32/512/1024 blocks; no fitted offset.",
+    "diagnostics": [
+      "worker-ready timestamps",
+      "zero-compute source availability",
+      "per-label accepted NoteOns",
+      "gate level/state and forced-release counters"
+    ],
+    "identity": "Every OFF generated frame/note/on/source_end exactly equals saved44905197832. Wall scheduling excluded. Every ON/OFF source and dry buffer preserved.",
+    "reference": "Separate pinned saved M3 CURRENT MIDI baseline; rescore its spans after both causal executions; no new M3 replay.",
+    "quality": "All per-label present/longest-hold deltas, raw NoteOn counts, pitch coverage, exact/all-expected, wrong pitch and gap extras; separate per dataset; all strict gates reported even if rejected.",
+    "runtime": "Callback p99<=166666ns,max<=333333ns;zero allocations/frees/overruns/drops/faults;worker service p99<=20000000ns,max backlog<=26666667ns;all source, dry identity, accepted pairing.",
+    "labels": "Read after both executions; no relabeling or exclusions. Pitch occupancy deduplicates unisons, no string assignment/MPE/bends.",
+    "scope": "Ordinary and extended-middle only, float32; same fixed gate as the supplemental twelve. No rerun of those twelve.",
+    "failure_behavior": "Continue measured quality/runtime rejections; stop malformed evidence or provenance. No sweep or tuning.",
+    "package": "Separate uninstalled M3_Neural_Lab.vst3, gate OFF by default; no installed/default change.",
+    "bulk": "Generated MIDI, gate level/state and timing only, remote; no audio/calibration.",
+    "total_source_samples_per_arm": 12931200
+  },
+  "reference_run": 44905197832,
+  "gate_settings": {
+    "default_enabled": false,
+    "threshold_dbfs": -60.0,
+    "reopen_margin_db": 6.0,
+    "windows_samples": [
+      1920,
+      7680
+    ],
+    "close_dwell_samples": 3840,
+    "feature": "maximum trailing mean-square power; observed-sample startup",
+    "release": "decoder-owned NoteOff at next model readout",
+    "control": "latched at first sample of each source packet"
+  },
+  "artifacts": {
+    "report": {
+      "id": 14707842749,
+      "bytes": 739112,
+      "sha256": "4ecda0b49165dd53d40bf00822a27549a4e04a70a1d35e0792413a2b929cfd83",
+      "files": {
+        "report.json": {
+          "bytes": 12255659,
+          "sha256": "0222178a88040d3111563db28c0f89a854d803ac34bcbb6696b7850d1cb3e8df"
+        }
+      }
+    },
+    "evidence": {
+      "id": 14707922211,
+      "bytes": 7996333,
+      "sha256": "247547ccea638a3a249195a84b0465b04b4f73928d85b87df4f0370b2c96ea8d",
+      "files": {
+        "ordinary-32-generated.tsv.gz": {
+          "bytes": 14968,
+          "sha256": "37a1abd67ca04b5f887785165661d24ed1cff17f384af4a90ae5b4008001e64a",
+          "uncompressed_bytes": 35489
+        },
+        "extended-middle-32-generated.tsv.gz": {
+          "bytes": 459,
+          "sha256": "add635c098032bd9c00418878bd87a4489276724a3fd034f345f4df1e8ae9c40",
+          "uncompressed_bytes": 838
+        }
+      }
+    }
+  },
+  "current_baseline": {
+    "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+    "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+  }
+}

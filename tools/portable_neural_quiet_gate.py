@@ -29,6 +29,7 @@ GATE = dict(default_enabled=False, threshold_dbfs=-60.0, reopen_margin_db=6.0,
             control='latched at first sample of each source packet')
 GENERATED_COLUMNS = ['frame','note','on','source_end','ready_ns']
 ARMS = ('off','on')
+PRIMARY = ('ordinary','extended-middle')
 
 
 def generated_identity(actual, expected):
@@ -159,6 +160,10 @@ def measure(name,config,inputs,model,harness,folders,reference,evidence):
     current=reference['current']['measurement']
     if current['sample_count']!=len(mono) or current['sample_rate']!=rate:
         raise ValueError('Saved CURRENT clock differs')
+    if 'pitch_spans' in reference['current']:
+        reproduced=score(reference['current']['pitch_spans'],labels,sample_count=len(mono),sample_rate=rate)
+        if reproduced!=current:
+            raise ValueError('Saved CURRENT score does not reproduce from pinned MIDI spans')
     saved=integer_table(evidence/(name+'-32-generated.tsv.gz'),GENERATED_COLUMNS)
     result=dict(current=current,arms={})
     for arm in ARMS:
@@ -176,10 +181,43 @@ def measure(name,config,inputs,model,harness,folders,reference,evidence):
     return result
 
 
-def screen(rows):
-    complete=set(rows)==set(CORPUS) and all(set(r.get('arms',{}))==set(ARMS) for r in rows.values())
+def current_references(reference, spec, root):
+    """Bind neural OFF identity separately from the saved M3 CURRENT scores."""
+    names = tuple(spec['datasets'])
+    expected_schema = ('m3_neural_lab_supplemental_corpus_v1' if names == CORPUS
+                       else 'm3_neural_lab_component_v1')
+    if (names not in (CORPUS, PRIMARY) or reference['schema'] != expected_schema
+            or reference['final'] is not True
+            or str(reference['provenance']['run_id']) != str(spec['reference_run'])
+            or reference['provenance']['specification']['datasets'] != spec['datasets']
+            or set(reference['datasets']) != set(names)):
+        raise ValueError('Saved reference provenance differs')
+    if names == CORPUS:
+        return reference['datasets']
+    baseline_pin = spec['current_baseline']
+    path = root / baseline_pin['path']
+    check_hash(path, baseline_pin['sha256'])
+    baseline = json.loads(path.read_text())
+    if (baseline['schema'] != 2 or baseline['method'] != 'Saved CURRENT MIDI; pitch union only'
+            or set(baseline['datasets']) != set(names)):
+        raise ValueError('Saved CURRENT baseline schema differs')
+    result = {}
+    for name, config in spec['datasets'].items():
+        saved = baseline['datasets'][name]
+        if (not reference['datasets'][name]['integration_pass']
+                or saved['labels_sha256'] != config['labels_sha256']
+                or any(saved[key] != config['baseline'][key]
+                       for key in ('raw_midi_sha256','run_id','source_commit'))):
+            raise ValueError('Saved CURRENT baseline provenance differs')
+        result[name] = dict(current=dict(measurement=saved['measurement'],
+                                        pitch_spans=saved['pitch_spans']))
+    return result
+
+
+def screen(rows, required=CORPUS):
+    complete=set(rows)==set(required) and all(set(r.get('arms',{}))==set(ARMS) for r in rows.values())
     arms=[arm for row in rows.values() for arm in row.get('arms',{}).values()]
-    return dict(arms_measured=sum(r.get('state')=='measured' for r in arms),arms_required=len(CORPUS)*2,
+    return dict(arms_measured=sum(r.get('state')=='measured' for r in arms),arms_required=len(required)*2,
         component_integration_pass=complete and all(r.get('integration_pass') is True for r in arms),
         on_vs_off_lossless_pass=complete and all(r.get('on_vs_off',{}).get('component_delivery',{}).get('no_pitch_safety_regression') is True for r in rows.values()),
         on_vs_current_replacement_pass=complete and all(r['arms']['on'].get('quality_pass') is True for r in rows.values()),
@@ -203,7 +241,7 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output,cropped_model,crop
                 or spec['streaming_settings']!=SETTINGS or spec['lab_settings']!=CORPUS_LAB
                 or spec['native_settings']!=NATIVE or spec['gate_settings']!=GATE
                 or os.environ.get('INPUT_SHA256')!=spec['input_bundle_sha256']
-                or tuple(spec['datasets'])!=CORPUS or spec['derived_model_sha256']!=MODEL_SHA256
+                or tuple(spec['datasets']) not in (CORPUS,PRIMARY) or spec['derived_model_sha256']!=MODEL_SHA256
                 or any(c['sample_rate']!=LAB['rate'] for c in spec['datasets'].values())):
             raise ValueError('Dispatch or frozen configuration differs')
         if captured_text(['git','-C',str(model_checkout),'rev-parse','HEAD'])!=spec['model']['commit']:
@@ -234,28 +272,24 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output,cropped_model,crop
             paths[kind]=folders['scratch']/kind
             report['artifacts'][kind]=fetch_artifact(spec['worker_repository'],config,paths[kind],folders['logs'])
         reference=json.loads((paths['report']/'report.json').read_text())
-        if (reference['schema']!='m3_neural_lab_supplemental_corpus_v1' or reference['final'] is not True
-                or str(reference['provenance']['run_id'])!=str(spec['reference_run'])
-                or reference['provenance']['specification']['datasets']!=spec['datasets']
-                or set(reference['datasets'])!=set(CORPUS)):
-            raise ValueError('Saved reference provenance differs')
+        references=current_references(reference,spec,root)
         report['interpretation']=(
-            'Optional default-off quiet-input gate; one fixed -60dBFS ON arm against OFF on each of12 recordings. '
+            f'Optional default-off quiet-input gate; one fixed -60dBFS ON arm against OFF on each of{len(spec["datasets"])} recordings. '
             'A deliberate weak-sustain tradeoff, not a claimed lossless replacement. '
-            'OFF generated source-clock MIDI must match saved run44908632391; wall scheduling is fresh. '
+            f'OFF generated source-clock MIDI must match saved run{spec["reference_run"]}; wall scheduling is fresh. '
             'Primary quality uses accepted callback timestamps; worker-ready/zero-compute are diagnostic. '
             'Every label and per-label present/longest-hold/NoteOn delta retained. Wrong-pitch and gap extras separate. '
-            'M3 CURRENT is the pinned saved reference, not rerun. No ordinary/middle or new cross-format corpus result. '
+            'M3 CURRENT is the separately pinned saved reference, not rerun. Recorded measurements use float32. '
             'Pitch-only occupancy deduplicates unisons; no lanes, bends or MPE claim. '
             'Package/integration success is not external DAW/device acceptance; no installed/default change.')
         save_json(target,report)
         for name,config in spec['datasets'].items():
             report['stage']=name;save_json(target,report)
             report['datasets'][name]=measure(name,config,inputs,cropped_model,harness,folders,
-                                             reference['datasets'][name],paths['evidence'])
+                                             references[name],paths['evidence'])
             save_json(target,report)
-            print(json.dumps(dict(dataset=name,screen=screen(report['datasets'])),allow_nan=False),flush=True)
-        report.update(state='completed',final=True,stage='all twelve OFF/ON pairs complete',screen=screen(report['datasets']))
+            print(json.dumps(dict(dataset=name,screen=screen(report['datasets'],spec['datasets'])),allow_nan=False),flush=True)
+        report.update(state='completed',final=True,stage='all specified OFF/ON pairs complete',screen=screen(report['datasets'],spec['datasets']))
     except Exception as error:
         report.update(state='failed',final=True,error=f'{type(error).__name__}: {error}')
         raise
