@@ -1,22 +1,22 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T22:46:28.560623+00:00",
-  "updated_at": "2026-11-21T22:48:43.919955+00:00",
+  "updated_at": "2026-11-21T22:54:05.116762+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "b2421d91a3929158cc855d730ea3b03ccb88b39d",
-  "source_commit": null,
+  "source_commit": "6cb655e108d156c38d543871b2b077a55bc493ef",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
-  "worker_commit": null,
+  "worker_commit": "cd26fee87fe049a66725a001e50f71e36bbcaf27",
   "workflow": "shared-harmonic-learning.yml",
   "specification": "docs/recovery/shared-harmonic-learning-20261121.json",
   "specification_sha256": "bcc27b2bfd36d74cdf55228f3bfb970937759683e5b9e3681649281eb86e37e2",
   "design": "docs/recovery/CODEX-M3-SHARED-HARMONIC-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44958696453,
   "protocol": "One shared binary MLP over candidate-relative harmonic features; training-only pooled scaling and cutoff; complete-chord training and both source-disjoint role gates before continuous safety/benefit screen.",
   "validation": {
     "local_synthetic_tests": 47,
@@ -30,19 +30,169 @@
       "reviewer": "shared_harmonic_review",
       "verdict": "no blocking finding",
       "scope": "Candidate alignment, training-only fit/cutoff, held-out gating, API and provenance"
+    },
+    "github_synthetic_tests": {
+      "count": 47,
+      "passed": 47,
+      "real_sklearn_api_passed": true
     }
   },
-  "small_report_collection": null,
+  "small_report_collection": {
+    "collected_at": "2026-11-21T22:51:52.581164+00:00",
+    "artifact_id": 14727774140,
+    "name": "m3-shared-harmonic-report-44958696453-1",
+    "bytes": 14897,
+    "sha256": "ed8f48af676a457ae2f3437d4c3cf5d3a51bb4821ede79e031cd25aad296b28b",
+    "server_digest": "sha256:ed8f48af676a457ae2f3437d4c3cf5d3a51bb4821ede79e031cd25aad296b28b",
+    "verified": true,
+    "bulk_downloaded": false
+  },
   "bulk_policy": "Collect small report once with server digest verification; retain bulk model and predictions remotely.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Publish scoped source and workflow, then dispatch one frozen CPU screen. Do not repeat earlier completed screens.",
+  "next": "Joint next design: address complete multi-pitch consistency and transfer across recording passes with a distinct representation or model. Freeze one hypothesis and unchanged safety/benefit gates before any new job. No next job queued; do not rerun or retune this rejected screen.",
   "limits": [
-    "Known source-content disagreements remain in the original labels and denominator.",
-    "Recording pass is confounded with ascending, descending and checkpoint protocol.",
-    "Shared harmonic coordinates at fixed FFT resolution are not exact pitch-shift equivariance.",
-    "Sustained-mixture feasibility is separate from continuous note/string, MIDI lifecycle, native deadline and live readiness.",
+    "All 555 intended-label excerpts retained, including known unresolved source-content disagreements.",
+    "Pass1 ascending, pass2 descending, pass3 checkpoint protocols differ; not a pure take-only generalization test.",
+    "Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.",
+    "RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.",
+    "Per-pitch binary outputs need not be mutually consistent chord explanations.",
+    "The longer trailing context spans 170.67ms; measured callback cost is not pluck-to-MIDI latency.",
+    "Ordinary reuses source takes and is descriptive; no delivered-MIDI, native realtime or live-device proof.",
+    "One configuration and train-only cutoff; no held-out tuning, promotion or installed change.",
     "Claude is paused; no fresh Claude review claimed."
-  ]
+  ],
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44958696453",
+  "output_directory": "build/github-results/shared-harmonic-learning-44958696453",
+  "small_artifact_name": "m3-shared-harmonic-report-44958696453-1",
+  "bulk_artifact_name": "m3-shared-harmonic-evidence-44958696453-1",
+  "stage": "frozen shared-harmonic screen complete",
+  "source_ci": {
+    "run_id": 44958668959,
+    "status": "completed",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44958668959",
+    "conclusion": "success",
+    "current_steps": []
+  },
+  "workflow_conclusion": "success",
+  "decision": "rejected at training complete-chord gate",
+  "representation_feasibility_passed": false,
+  "research_screen_passed": false,
+  "report": "build/github-results/shared-harmonic-learning-44958696453/artifact/shared-harmonic-result/report/report.json",
+  "report_sha256": "2acc8af1fe7b1ab901a1c3bea511a8d8bb0f354790e2b18e2928bd93e6d542cf",
+  "result_note": "docs/recovery/CODEX-M3-SHARED-HARMONIC-RESULT-20261121.md",
+  "bulk_artifact": {
+    "id": 14727689314,
+    "name": "m3-shared-harmonic-evidence-44958696453-1",
+    "size_in_bytes": 4648197,
+    "digest": "sha256:e0b0b59777ea7080856feeb4b0f0d73e9b6f206563f5eb0c13ce56586e6590fd",
+    "expires_at": "2026-12-05T22:51:16Z",
+    "collected": false
+  },
+  "metrics": {
+    "training_precision_percent": 99.0025490413388,
+    "training_true_positive": 35732,
+    "training_false_positive": 360,
+    "training_false_negative": 9966,
+    "training_expected_pitches": 45698,
+    "training_recall_percent": 78.19160575955183,
+    "training_examples": 16384,
+    "training_complete_sets": 9499,
+    "training_complete_set_percent": 57.977294921875,
+    "training_silence_examples": 820,
+    "training_silence_false_predictions": 0,
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 820,
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision_percent": 0.0,
+        "recall_percent": null,
+        "exact_set_percent": 100.0,
+        "complete_sets": 820
+      },
+      "1": {
+        "examples": 3132,
+        "true_positive": 3048,
+        "false_positive": 7,
+        "false_negative": 84,
+        "precision_percent": 99.7708674304419,
+        "recall_percent": 97.31800766283524,
+        "exact_set_percent": 97.09450830140486,
+        "complete_sets": 3041
+      },
+      "2": {
+        "examples": 3220,
+        "true_positive": 5701,
+        "false_positive": 35,
+        "false_negative": 739,
+        "precision_percent": 99.38981868898188,
+        "recall_percent": 88.5248447204969,
+        "exact_set_percent": 78.26086956521739,
+        "complete_sets": 2520
+      },
+      "3": {
+        "examples": 3251,
+        "true_positive": 7936,
+        "false_positive": 83,
+        "false_negative": 1817,
+        "precision_percent": 98.96495822421748,
+        "recall_percent": 81.36983492258793,
+        "exact_set_percent": 54.044909258689636,
+        "complete_sets": 1757
+      },
+      "4": {
+        "examples": 3432,
+        "true_positive": 10278,
+        "false_positive": 124,
+        "false_negative": 3450,
+        "precision_percent": 98.80792155354739,
+        "recall_percent": 74.86888111888112,
+        "exact_set_percent": 29.312354312354312,
+        "complete_sets": 1006
+      },
+      "5": {
+        "examples": 2529,
+        "true_positive": 8769,
+        "false_positive": 111,
+        "false_negative": 3876,
+        "precision_percent": 98.75,
+        "recall_percent": 69.34756820877817,
+        "exact_set_percent": 14.037168841439303,
+        "complete_sets": 355
+      }
+    }
+  },
+  "fit": {
+    "seconds": 74.99321769400007,
+    "epochs": 80,
+    "mixtures": 16384,
+    "pooled_candidate_rows": 868352,
+    "features_per_candidate": 62,
+    "shared_binary_outputs": 1,
+    "final_loss": 0.026695187819834914,
+    "held_out_used": false,
+    "fits": 1
+  },
+  "cutoff_fit": {
+    "cutoff": 0.8947283625602722,
+    "feasible": true,
+    "true_positive": 35732,
+    "false_positive": 360,
+    "training_only": true,
+    "selection": "maximum train TP at >=99% precision; stricter tie"
+  },
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training complete-chord gate failed."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "gates": {
+    "train_complete_chords": false
+  }
 }

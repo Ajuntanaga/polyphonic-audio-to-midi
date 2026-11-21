@@ -1,10 +1,10 @@
-## Shared harmonic learning prepared: one frozen CPU screen
+## Shared harmonic learning final: training chord gate rejected
 
-Active checkpoint: `docs/recovery/github-shared-harmonic-learning-20261121.json`; design: `docs/recovery/CODEX-M3-SHARED-HARMONIC-PLAN-20261121.md`. One shared binary classifier across candidate pitches tests harmonic-pattern transfer between recording passes. Frozen source-disjoint train/calibration/test roles, all555 original source labels retained; no cutoff retune, relabeling or installed/default change.
+Active checkpoint: `docs/recovery/github-shared-harmonic-learning-20261121.json`; result: `docs/recovery/CODEX-M3-SHARED-HARMONIC-RESULT-20261121.md`. Run44958696453 final/success, source `6cb655e108d156c38d543871b2b077a55bc493ef`, worker `cd26fee87fe049a66725a001e50f71e36bbcaf27`. Source CI44958668959 and all47 synthetic checks passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Local synthetic checks:46pass, one real-sklearn API check deferred to GitHub;47 total. Focused review found no blocking issue. Training must reach99% precision,80% recall,70% complete sets overall and separately for3/4/5 pitches, with zero silence extras, before held-out scoring. Both held-out roles must pass95/80/70 and silence gates before continuous ordinary/middle safety and benefit checks. Full protocol and existing private input pins are frozen in the specification.
+Training precision99.0025% (360false), recall35,732/45,698=78.1916%, complete sets9,499/16,384=57.9773%; zero false on820silence examples. Three/four/five-pitch complete sets1,757/3,251=54.0449%,1,006/3,432=29.3124%,355/2,529=14.0372%, all below70%. Recall/complete-set gates reject the configuration; held-out and continuous replay were skipped. All555 source labels retained. These are sustained-mixture pitch counts, not installed frame/string scores. Installed/default output and scoreboard unchanged.
 
-Next: publish the scoped source and workflow and dispatch exactly once under standing authorization; record both SHAs and run id here. No run launched yet. Claude is paused; no fresh Claude review claimed. Earlier entries below are historical.
+Next: distinct joint multi-pitch consistency/transfer design with a frozen hypothesis and unchanged safety/benefit gates. No next job queued. Claude is paused; no fresh Claude review claimed. The prior eight-hour interval is complete; broader live-readiness goal remains open. Earlier entries below are historical.
 
 ## Pitch-local residual screen final: training chord gate rejected
 
