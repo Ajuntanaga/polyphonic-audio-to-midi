@@ -28,7 +28,7 @@
     "sample_rate": 96000
   },
   "protocol": {
-    "environment": "GitHub CPU, Xvfb, isolated REAPER profile, dummy audio,512 sample blocks, no user profile or hardware",
+    "environment": "GitHub CPU, Xvfb, isolated REAPER profile, explicit JACK dummy server96000/512 with5333us pacing, no user profile or hardware",
     "configuration": "Existing packaged model/decoder and default-OFF gate; no processing or policy changes",
     "recording": "Full111.35 seconds plus0.5 seconds tail; if no held output at EOF, seek10 seconds and allow at most12 seconds to establish a held note for explicit Panic",
     "state": "Verify gate OFF and threshold-60 default; save gate ON/threshold-54, mutate and restore; reset OFF/-60 before playback",
@@ -36,6 +36,17 @@
     "gates": "Actual96000/512, full source without discontinuity, real-time wall pacing, dry error0, no capture overflow, MIDI received, raw pairing valid, state restoration, nonvacuous Panic",
     "limits": "No audio-device, live guitar, musical quality, string assignment, MPE, callback deadline/allocation or installation claim. Observation overhead excluded from native timing evidence.",
     "failure": "Record actual failure; no automatic retry, tuning or policy change",
-    "artifacts": "Small report/logs collected once; generated MIDI retained remote; no audio re-upload"
+    "artifacts": "Small report/logs collected once; generated MIDI retained remote; no audio re-upload",
+    "audio_start": "Start named JACK dummy server, retain ports and INI, call Audio_Init, require Audio_IsRunning and JACK mode before playback; fail within3s if callbacks/transport do not advance."
+  },
+  "harness_correction": {
+    "supersedes_run": 44925514858,
+    "evidence": "Plugin/default/state passed, but zero callback samples and180s transport timeout. Earlier harness omitted explicit audio initialization and device-state evidence.",
+    "scope": "Audio initialization and diagnostics only. Same package, recording, controls, Panic and acceptance gates; no policy tuning.",
+    "references": [
+      "https://github.com/jackaudio/jack2/blob/develop/man/jackd.0",
+      "https://www.reaper.fm/sdk/reascript/reascripthelp.html#Audio_Init",
+      "https://www.reaper.fm/sdk/reascript/reascripthelp.html#Audio_IsRunning"
+    ]
   }
 }

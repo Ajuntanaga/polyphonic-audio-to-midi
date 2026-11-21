@@ -70,6 +70,8 @@ def evaluate(metrics, events, sample_count):
     duration = sample_count / 96000
     gates = {
         'script_completed': metrics.get('failure_count') == 0,
+        'audio_engine_started': metrics.get('audio_running_at_play', 0) != 0
+                                and 'JACK' in str(metrics.get('audio_mode', '')).upper(),
         'rate_and_block': metrics.get('sample_rate') == 96000
                           and metrics.get('block_size') == 512
                           and metrics.get('max_block') == 512,
@@ -156,16 +158,29 @@ def main(argv=None):
             shutil.copy2(root/f'Effects/tests/m3_neural_host_{name}.jsfx',profile/'Effects')
         script=profile/'Scripts/m3_neural_host.lua'
         shutil.copy2(root/'Scripts/tests/m3_neural_host.lua',script)
-        (profile/'reaper.ini').write_text('[reaper]\nlinux_audio_bsize=512\nlinux_audio_bufs=2\nlinux_audio_mode=3\nlinux_audio_nch_in=0\nlinux_audio_nch_out=2\nlinux_audio_srate=96000\nnewprojdo=0\nsaveFlags=0\nwarnmaxram64=0\nvstpath='+str(vst)+'\n')
+        # Use an explicit, paced JACK dummy server instead of relying on the
+        # undocumented defaults of REAPER's internal dummy device. This profile
+        # belongs only to this runner; no user device or profile is accessed.
+        (profile/'reaper.ini').write_text('[reaper]\nlinux_audio_bsize=512\nlinux_audio_bufs=2\nlinux_audio_mode=0\nlinux_audio_nch_in=0\nlinux_audio_nch_out=2\nlinux_audio_srate=96000\naudiocloseinactive=0\naudioclosestop=0\nnewprojdo=0\nsaveFlags=0\nwarnmaxram64=0\nvstpath='+str(vst)+'\n')
+        shutil.copy2(profile/'reaper.ini',logs/'reaper-before.ini')
         (profile/'host_config.lua').write_text('return {wav='+json.dumps(str(wav))+',output='+json.dumps(str(bulk))+',samples='+str(spec['recording']['samples'])+'}\n')
         run_capture(['luac','-p',str(script)],logs/'lua-syntax.log')
         report.update(stage='real REAPER playback',bundle_sha256=digest(bundle/'Contents/x86_64-linux/M3_Neural_Lab.so'))
         save()
         env=os.environ.copy();env['DISPLAY']=':99';env['XDG_CONFIG_HOME']=str(scratch/'xdg')
-        with (logs/'xvfb.log').open('wb') as xf:
+        env['JACK_DEFAULT_SERVER']='m3-neural-host';env['JACK_NO_START_SERVER']='1'
+        with (logs/'xvfb.log').open('wb') as xf, (logs/'jack.log').open('wb') as jf:
             xvfb=subprocess.Popen(['Xvfb',':99','-screen','0','1280x800x24','-nolisten','tcp'],stdout=xf,stderr=subprocess.STDOUT,env=env)
+            jack=None
             try:
-                time.sleep(1)
+                jack_command=['jackd','--no-realtime','--no-mlock','--name','m3-neural-host',
+                              '--driver','dummy','--rate','96000','--period','512','--wait','5333',
+                              '--capture','0','--playback','2']
+                report['audio_server_command']=jack_command;save()
+                jack=subprocess.Popen(jack_command,stdout=jf,stderr=subprocess.STDOUT,env=env)
+                time.sleep(2)
+                if jack.poll() is not None: raise RuntimeError('JACK dummy server exited; see jack.log')
+                run_capture(['jack_lsp'],logs/'jack-ports-before.txt',env=env,timeout=10)
                 command=[str(executable),'-newinst','-noactivate','-cfgfile',str(profile/'reaper.ini'),'-nosplash',str(script)]
                 report['host_command']=command;save()
                 with (logs/'reaper.log').open('wb') as lf:
@@ -180,6 +195,10 @@ def main(argv=None):
                         raise RuntimeError('REAPER observation timed out; window inventory retained')
                     report['host_exit']=proc.returncode
             finally:
+                if (profile/'reaper.ini').is_file():
+                    shutil.copy2(profile/'reaper.ini',logs/'reaper-after.ini')
+                if jack is not None and jack.poll() is None:
+                    jack.terminate();jack.wait(timeout=10)
                 xvfb.terminate();xvfb.wait(timeout=10)
         metrics=read_metrics(bulk/'metrics.tsv')
         with (bulk/'events.tsv').open() as f:

@@ -35,9 +35,19 @@ local function get(name)
   return reaper.TrackFX_GetParamNormalized(track,fx,param(name))
 end
 local function near(a,b) return math.abs(a-b)<0.00001 end
+local function audio_info()
+  metrics.audio_running=reaper.Audio_IsRunning()
+  metrics.play_state=reaper.GetPlayState()
+  metrics.play_position=reaper.GetPlayPosition()
+  for _,key in ipairs({'MODE','IDENT_IN','IDENT_OUT','BSIZE','SRATE','BPS'}) do
+    local ok,value=reaper.GetAudioDeviceInfo(key)
+    metrics['audio_'..key:lower()]=ok and value or 'unavailable'
+  end
+end
 local function finish()
   if finished then return end
   finished=true
+  audio_info()
   metrics.elapsed_seconds=reaper.time_precise()-started
   metrics.failure_count=#failures
   metrics.final_active=reaper.gmem_read(20)
@@ -104,17 +114,32 @@ local function setup()
   for i=0,32767*6+16390 do reaper.gmem_write(i,0) end
   reaper.gmem_write(31,cfg.samples)
   reaper.SetEditCurPos(0,false,false)
-  reaper.gmem_write(0,1)
-  metrics.play_start_time=reaper.time_precise()
-  reaper.OnPlayButton()
-  phase='ordinary';phase_started=reaper.time_precise()
+  metrics.audio_running_before_init=reaper.Audio_IsRunning()
+  reaper.Audio_Init()
+  phase='audio-start';phase_started=reaper.time_precise()
+  audio_info()
   log(phase)
 end
 local function tick()
   if finished then return end
   local now=reaper.time_precise()
   if now-started>180 then check(false,'script-timeout');finish();return end
-  if phase=='ordinary' and reaper.GetPlayPosition()>=cfg.samples/96000+0.5 then
+  if phase=='audio-start' then
+    if reaper.Audio_IsRunning()~=0 then
+      audio_info()
+      metrics.audio_running_at_play=metrics.audio_running
+      if not check(tostring(metrics.audio_mode):upper():find('JACK',1,true)~=nil,'jack-backend') then finish();return end
+      reaper.gmem_write(0,1)
+      metrics.play_start_time=now
+      reaper.OnPlayButton()
+      phase='ordinary';phase_started=now;log(phase)
+    elseif now-phase_started>10 then
+      check(false,'audio-engine-not-running');finish();return
+    end
+  elseif phase=='ordinary' and now-phase_started>3 and
+         (reaper.gmem_read(4)==0 or reaper.GetPlayPosition()<=0) then
+    check(false,'audio-callback-or-transport-not-running');finish();return
+  elseif phase=='ordinary' and reaper.GetPlayPosition()>=cfg.samples/96000+0.5 then
     metrics.ordinary_wall_seconds=now-metrics.play_start_time
     metrics.ordinary_event_count=reaper.gmem_read(10)
     metrics.eof_active=reaper.gmem_read(20)

@@ -5,7 +5,8 @@ from tools.portable_neural_reaper_host import evaluate
 
 class HostVerdictTests(unittest.TestCase):
     def fixture(self):
-        metrics=dict(failure_count=0,sample_rate=96000,block_size=512,max_block=512,
+        metrics=dict(failure_count=0,audio_running_at_play=1,audio_mode='JACK',
+                     sample_rate=96000,block_size=512,max_block=512,
                      recorded_samples=96000,last_recorded_sample=96000,recording_discontinuities=0,
                      ordinary_wall_seconds=1.5,dry_max_error=0,dry_changed_samples=0,
                      dry_samples=144000,input_peak=.1,nonfinite=0,overflow=0,event_count=2,
@@ -22,6 +23,11 @@ class HostVerdictTests(unittest.TestCase):
     def test_silent_or_bypassed_plugin_cannot_pass(self):
         m,_=self.fixture();m.update(event_count=0,panic_before_active=0)
         self.assertFalse(evaluate(m,[],96000)['passed'])
+
+    def test_unverified_audio_engine_cannot_pass(self):
+        for name,value in [('audio_running_at_play',0),('audio_mode','unavailable')]:
+            m,e=self.fixture();m[name]=value
+            self.assertFalse(evaluate(m,e,96000)['passed'],name)
 
     def test_clipped_recording_and_audio_change_rejected(self):
         for name,value in [('recorded_samples',95999),('dry_max_error',1e-9),
