@@ -1,0 +1,813 @@
+{
+  "schema": "m3_source_consistency_metadata_v1",
+  "purpose": "Report-only source observations; not a replacement manifest or evaluation filter.",
+  "source_manifest": {
+    "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+    "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c",
+    "rows": 555,
+    "unchanged": true
+  },
+  "evidence": {
+    "run_id": 44951646663,
+    "summary_path": "docs/recovery/source-pitch-verification-summary-20261121.json",
+    "summary_sha256": "d3f9a1809451e7951796cd5b623e73667e7fc3313a6dd8137fea4c9ba85a8862",
+    "report_path": "build/github-results/source-pitch-verification-44951646663/artifact/source-pitch-verification-result/report/report.json",
+    "report_sha256": "2bc94036c01e6b71723c4601a0987af5d2b22e574e207a6a5b0da4f28a0c1e52"
+  },
+  "default_status_for_unlisted_sources": "not_examined_by_targeted_verification",
+  "counts": {
+    "all_original_sources": 555,
+    "unexamined_by_targeted_verification": 515,
+    "observed_agreement": 25,
+    "non_octave_disagreement": 8,
+    "octave_related_ambiguous": 7
+  },
+  "policy": {
+    "source_exclusion": false,
+    "label_replacement": false,
+    "held_out_role_change": false,
+    "scoreboard_change": false,
+    "original_denominators_retained": true
+  },
+  "limitations": [
+    "Selected after a diagnostic result; not unbiased detection performance.",
+    "Overlapping windows are correlated; count is not independent examples.",
+    "Pitch agreement does not verify played string or complete capture history.",
+    "No replacement pitch inferred, including octave-related cases."
+  ],
+  "sources": [
+    {
+      "source_key": "string-01:0",
+      "role": "train",
+      "label_note": 60,
+      "string_mask": 128,
+      "raw_interval": [
+        24000,
+        244800
+      ],
+      "original_interval": [
+        933120,
+        1153920
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9981109642312262
+    },
+    {
+      "source_key": "string-01:12",
+      "role": "train",
+      "label_note": 72,
+      "string_mask": 128,
+      "raw_interval": [
+        2577120,
+        2782560
+      ],
+      "original_interval": [
+        7340160,
+        7545600
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 72,
+      "windows": 25,
+      "unique_spectral_contexts": 19,
+      "median_label_harmonic_power_fraction": 0.9928987006107948
+    },
+    {
+      "source_key": "string-01:16",
+      "role": "train",
+      "label_note": 76,
+      "string_mask": 128,
+      "raw_interval": [
+        3273120,
+        3459360
+      ],
+      "original_interval": [
+        8912640,
+        9098880
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 76,
+      "windows": 22,
+      "unique_spectral_contexts": 16,
+      "median_label_harmonic_power_fraction": 0.9948260193287544
+    },
+    {
+      "source_key": "string-01:20",
+      "role": "train",
+      "label_note": 80,
+      "string_mask": 128,
+      "raw_interval": [
+        3774720,
+        3826320
+      ],
+      "original_interval": [
+        10223520,
+        10275120
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 80,
+      "windows": 6,
+      "unique_spectral_contexts": 1,
+      "median_label_harmonic_power_fraction": 0.97093851799122
+    },
+    {
+      "source_key": "string-01:24",
+      "role": "train",
+      "label_note": 84,
+      "string_mask": 128,
+      "raw_interval": [
+        4184400,
+        4259280
+      ],
+      "original_interval": [
+        11308800,
+        11383680
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 84,
+      "windows": 9,
+      "unique_spectral_contexts": 3,
+      "median_label_harmonic_power_fraction": 0.968383015117344
+    },
+    {
+      "source_key": "string-01:25",
+      "role": "calibration",
+      "label_note": 84,
+      "string_mask": 128,
+      "raw_interval": [
+        4283280,
+        4384080
+      ],
+      "original_interval": [
+        11630400,
+        11731200
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 84,
+      "windows": 12,
+      "unique_spectral_contexts": 6,
+      "median_label_harmonic_power_fraction": 0.8950393344575638
+    },
+    {
+      "source_key": "string-01:29",
+      "role": "calibration",
+      "label_note": 80,
+      "string_mask": 128,
+      "raw_interval": [
+        4598880,
+        4631280
+      ],
+      "original_interval": [
+        13155360,
+        13187760
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 80,
+      "windows": 3,
+      "unique_spectral_contexts": 1,
+      "median_label_harmonic_power_fraction": 0.8363802229170886
+    },
+    {
+      "source_key": "string-01:33",
+      "role": "calibration",
+      "label_note": 76,
+      "string_mask": 128,
+      "raw_interval": [
+        5168880,
+        5235120
+      ],
+      "original_interval": [
+        14335680,
+        14401920
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 76,
+      "windows": 8,
+      "unique_spectral_contexts": 2,
+      "median_label_harmonic_power_fraction": 0.9866041746555678
+    },
+    {
+      "source_key": "string-01:37",
+      "role": "calibration",
+      "label_note": 72,
+      "string_mask": 128,
+      "raw_interval": [
+        5816880,
+        6005040
+      ],
+      "original_interval": [
+        15492480,
+        15680640
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 72,
+      "windows": 22,
+      "unique_spectral_contexts": 16,
+      "median_label_harmonic_power_fraction": 0.9977759658851958
+    },
+    {
+      "source_key": "string-01:4",
+      "role": "train",
+      "label_note": 64,
+      "string_mask": 128,
+      "raw_interval": [
+        947520,
+        1116480
+      ],
+      "original_interval": [
+        3582720,
+        3751680
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 64,
+      "windows": 20,
+      "unique_spectral_contexts": 14,
+      "median_label_harmonic_power_fraction": 0.993155951622468
+    },
+    {
+      "source_key": "string-01:41",
+      "role": "calibration",
+      "label_note": 68,
+      "string_mask": 128,
+      "raw_interval": [
+        6571440,
+        6665040
+      ],
+      "original_interval": [
+        16689120,
+        16782720
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 68,
+      "windows": 11,
+      "unique_spectral_contexts": 5,
+      "median_label_harmonic_power_fraction": 0.9481591302958997
+    },
+    {
+      "source_key": "string-01:45",
+      "role": "calibration",
+      "label_note": 64,
+      "string_mask": 128,
+      "raw_interval": [
+        7271760,
+        7461840
+      ],
+      "original_interval": [
+        17796480,
+        17986560
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 64,
+      "windows": 23,
+      "unique_spectral_contexts": 17,
+      "median_label_harmonic_power_fraction": 0.9995420307914711
+    },
+    {
+      "source_key": "string-01:49",
+      "role": "calibration",
+      "label_note": 60,
+      "string_mask": 128,
+      "raw_interval": [
+        8164560,
+        8385360
+      ],
+      "original_interval": [
+        19098240,
+        19319040
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9992753756093575
+    },
+    {
+      "source_key": "string-01:50",
+      "role": "test",
+      "label_note": 60,
+      "string_mask": 128,
+      "raw_interval": [
+        8409360,
+        8436960
+      ],
+      "original_interval": [
+        20378400,
+        20406000
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 84,
+      "windows": 3,
+      "unique_spectral_contexts": 1,
+      "median_label_harmonic_power_fraction": 0.9901560414754681
+    },
+    {
+      "source_key": "string-01:51",
+      "role": "test",
+      "label_note": 72,
+      "string_mask": 128,
+      "raw_interval": [
+        8460960,
+        8498160
+      ],
+      "original_interval": [
+        20658720,
+        20695920
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 84,
+      "windows": 4,
+      "unique_spectral_contexts": 1,
+      "median_label_harmonic_power_fraction": 0.9855507877590517
+    },
+    {
+      "source_key": "string-01:53",
+      "role": "test",
+      "label_note": 84,
+      "string_mask": 128,
+      "raw_interval": [
+        8584560,
+        8740080
+      ],
+      "original_interval": [
+        21335040,
+        21490560
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 72,
+      "windows": 18,
+      "unique_spectral_contexts": 12,
+      "median_label_harmonic_power_fraction": 0.0007088669914801118
+    },
+    {
+      "source_key": "string-01:54",
+      "role": "test",
+      "label_note": 72,
+      "string_mask": 128,
+      "raw_interval": [
+        8764080,
+        8984880
+      ],
+      "original_interval": [
+        21678720,
+        21899520
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.20440031182710894
+    },
+    {
+      "source_key": "string-01:56",
+      "role": "test",
+      "label_note": 60,
+      "string_mask": 128,
+      "raw_interval": [
+        9253680,
+        9474480
+      ],
+      "original_interval": [
+        23180160,
+        23400960
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 64,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 8.850004761709959e-05
+    },
+    {
+      "source_key": "string-01:57",
+      "role": "test",
+      "label_note": 64,
+      "string_mask": 128,
+      "raw_interval": [
+        9498480,
+        9719280
+      ],
+      "original_interval": [
+        23754240,
+        23975040
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 68,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.005846119309577104
+    },
+    {
+      "source_key": "string-01:58",
+      "role": "test",
+      "label_note": 68,
+      "string_mask": 128,
+      "raw_interval": [
+        9743280,
+        9964080
+      ],
+      "original_interval": [
+        24337920,
+        24558720
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 72,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.0006389945762227373
+    },
+    {
+      "source_key": "string-01:60",
+      "role": "test",
+      "label_note": 76,
+      "string_mask": 128,
+      "raw_interval": [
+        10202160,
+        10307760
+      ],
+      "original_interval": [
+        25493760,
+        25599360
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 80,
+      "windows": 12,
+      "unique_spectral_contexts": 6,
+      "median_label_harmonic_power_fraction": 0.00013933560830047155
+    },
+    {
+      "source_key": "string-01:61",
+      "role": "test",
+      "label_note": 80,
+      "string_mask": 128,
+      "raw_interval": [
+        10331760,
+        10366560
+      ],
+      "original_interval": [
+        26051040,
+        26085840
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 84,
+      "windows": 4,
+      "unique_spectral_contexts": 1,
+      "median_label_harmonic_power_fraction": 0.00032537777841755184
+    },
+    {
+      "source_key": "string-01:8",
+      "role": "train",
+      "label_note": 68,
+      "string_mask": 128,
+      "raw_interval": [
+        1642080,
+        1862880
+      ],
+      "original_interval": [
+        5685120,
+        5905920
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 68,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.998223057956185
+    },
+    {
+      "source_key": "string-04:0",
+      "role": "train",
+      "label_note": 48,
+      "string_mask": 16,
+      "raw_interval": [
+        24000,
+        244800
+      ],
+      "original_interval": [
+        520320,
+        741120
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 48,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9996873244659797
+    },
+    {
+      "source_key": "string-04:12",
+      "role": "train",
+      "label_note": 60,
+      "string_mask": 16,
+      "raw_interval": [
+        2961600,
+        3182400
+      ],
+      "original_interval": [
+        9726720,
+        9947520
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9994982317291239
+    },
+    {
+      "source_key": "string-04:37",
+      "role": "calibration",
+      "label_note": 60,
+      "string_mask": 16,
+      "raw_interval": [
+        7247280,
+        7468080
+      ],
+      "original_interval": [
+        21553920,
+        21774720
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9998732379265121
+    },
+    {
+      "source_key": "string-04:4",
+      "role": "train",
+      "label_note": 52,
+      "string_mask": 16,
+      "raw_interval": [
+        1003200,
+        1224000
+      ],
+      "original_interval": [
+        4356480,
+        4577280
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 52,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9997013290034338
+    },
+    {
+      "source_key": "string-04:45",
+      "role": "calibration",
+      "label_note": 52,
+      "string_mask": 16,
+      "raw_interval": [
+        9205680,
+        9426480
+      ],
+      "original_interval": [
+        25555200,
+        25776000
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 52,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9996981272196044
+    },
+    {
+      "source_key": "string-04:49",
+      "role": "calibration",
+      "label_note": 48,
+      "string_mask": 16,
+      "raw_interval": [
+        10184880,
+        10405680
+      ],
+      "original_interval": [
+        28723200,
+        28944000
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 48,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9998436475438146
+    },
+    {
+      "source_key": "string-04:54",
+      "role": "test",
+      "label_note": 60,
+      "string_mask": 16,
+      "raw_interval": [
+        11076960,
+        11146080
+      ],
+      "original_interval": [
+        32177280,
+        32246400
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 72,
+      "windows": 8,
+      "unique_spectral_contexts": 2,
+      "median_label_harmonic_power_fraction": 0.989569514309331
+    },
+    {
+      "source_key": "string-04:55",
+      "role": "test",
+      "label_note": 48,
+      "string_mask": 16,
+      "raw_interval": [
+        11170080,
+        11390880
+      ],
+      "original_interval": [
+        32739840,
+        32960640
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 60,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9995380065590227
+    },
+    {
+      "source_key": "string-04:57",
+      "role": "test",
+      "label_note": 52,
+      "string_mask": 16,
+      "raw_interval": [
+        11659680,
+        11880480
+      ],
+      "original_interval": [
+        34584960,
+        34805760
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 48,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 2.1884568651427256e-05
+    },
+    {
+      "source_key": "string-06:0",
+      "role": "train",
+      "label_note": 40,
+      "string_mask": 4,
+      "raw_interval": [
+        24000,
+        244800
+      ],
+      "original_interval": [
+        335040,
+        555840
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 40,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9995329369558786
+    },
+    {
+      "source_key": "string-06:49",
+      "role": "calibration",
+      "label_note": 40,
+      "string_mask": 4,
+      "raw_interval": [
+        12019200,
+        12240000
+      ],
+      "original_interval": [
+        34632960,
+        34853760
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 40,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9990412639411979
+    },
+    {
+      "source_key": "string-06:68",
+      "role": "test",
+      "label_note": 40,
+      "string_mask": 4,
+      "raw_interval": [
+        16670400,
+        16891200
+      ],
+      "original_interval": [
+        50246400,
+        50467200
+      ],
+      "status": "octave_related_disagreement_ambiguous",
+      "periodic_pitch_estimate": 52,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9998953002732713
+    },
+    {
+      "source_key": "string-08:20",
+      "role": "train",
+      "label_note": 52,
+      "string_mask": 1,
+      "raw_interval": [
+        4920000,
+        5140800
+      ],
+      "original_interval": [
+        12909120,
+        13129920
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 52,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9931115652531973
+    },
+    {
+      "source_key": "string-08:4",
+      "role": "train",
+      "label_note": 36,
+      "string_mask": 1,
+      "raw_interval": [
+        1003200,
+        1224000
+      ],
+      "original_interval": [
+        2888640,
+        3109440
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 36,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9400350000062543
+    },
+    {
+      "source_key": "string-08:45",
+      "role": "calibration",
+      "label_note": 36,
+      "string_mask": 1,
+      "raw_interval": [
+        11040000,
+        11260800
+      ],
+      "original_interval": [
+        27271680,
+        27492480
+      ],
+      "status": "observed_agreement_in_selected_windows",
+      "periodic_pitch_estimate": 36,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.9143770274949066
+    },
+    {
+      "source_key": "string-08:63",
+      "role": "test",
+      "label_note": 52,
+      "string_mask": 1,
+      "raw_interval": [
+        15422400,
+        15643200
+      ],
+      "original_interval": [
+        39696960,
+        39917760
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 32,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 4.086942068569845e-05
+    },
+    {
+      "source_key": "string-08:66",
+      "role": "test",
+      "label_note": 36,
+      "string_mask": 1,
+      "raw_interval": [
+        16156800,
+        16377600
+      ],
+      "original_interval": [
+        42725760,
+        42946560
+      ],
+      "status": "sustained_non_octave_disagreement_unresolved",
+      "periodic_pitch_estimate": 32,
+      "windows": 26,
+      "unique_spectral_contexts": 20,
+      "median_label_harmonic_power_fraction": 0.0003328915374696846
+    }
+  ],
+  "provenance_review": {
+    "conclusion": "No deterministic indexing, crop-coordinate, pitch-shift or annotation-provenance mechanism established.",
+    "non_octave_status": "source-pitch/label-content inconsistency; provenance unresolved",
+    "next_cue_pattern": "Five string-01 rows, but intervening agreeing row59 contradicts a uniform off-by-one mapping.",
+    "missing_evidence": "Capture-time cue/performance ledger or DAW marker export anchored to hashes/sample positions and retaining discarded/retake events.",
+    "original_labels_unchanged": true,
+    "references": [
+      "tools/generate_pitch_corrected_corpus.py:475-505",
+      "tools/direct_spectrum_learning.py:37-53",
+      "docs/recovery/CLAUDE-M3-PROVENANCE-20261120.md:15-19",
+      "docs/recovery/CLAUDE-M3-PROVENANCE-20261120.md:39-41"
+    ]
+  }
+}

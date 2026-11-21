@@ -1,3 +1,11 @@
+## Cross-fitted power-ablation screen prepared
+
+Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; fixed design: `docs/recovery/CODEX-M3-SPECTRAL-ABLATION-PLAN-20261121.md`. One bounded CPU GitHub screen under the recorded standing authorization. Thirty-nine synthetic checks pass; focused review found no remaining blocker. No dispatch yet.
+
+Removing every template of one pitch and refitting competitors on held spectral coordinates replaces the failed strongest-pitch-relative activity. All original source rows and labels remain. Training complete-chord gates must pass before both held-out source roles; all must pass before continuous ordinary/middle replay. No tuning or automatic rerun after rejection, no installation or default change.
+
+Saved provenance does not establish an indexing or pitch-shift fault for the eight non-octave discrepancies. `source-consistency-20261121.json` records examined and unresolved takes without relabeling or exclusion. Claude is paused; no fresh Claude review claimed. Earlier eight-hour interval complete; broader live-readiness goal open. Prior entries below are historical.
+
 ## Targeted source verification final: sustained disagreement, labels preserved
 
 Active checkpoint: `docs/recovery/github-source-pitch-verification-20261121.json`; result: `docs/recovery/CODEX-M3-SOURCE-PITCH-VERIFICATION-RESULT-20261121.md`. Run44951646663 final/success, source `f06303acaad412b8c35902d1954193ea3c62b5e3`, worker `161098abbaa98c67689ee7f3a85fd88981fabc75`. Eight synthetic checks, focused review and source CI44951599483 passed. Small report collected once and server-digest verified; detailed spectra remain remote. Do not poll, redownload or rerun this completed diagnostic.

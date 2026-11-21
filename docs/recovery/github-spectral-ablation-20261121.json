@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "state": "reviewed_ready",
+  "final": false,
+  "created_at": "2026-11-21T21:46:15.279299+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "0c8a1a7a300f661ac583baa9a42facb517af99c3",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "spectral-ablation.yml",
+  "specification": "docs/recovery/spectral-ablation-20261121.json",
+  "specification_sha256": "ddf8293751ec4a0f4a2cb631ad3db8e7c0dc94f1a2244f754a81e013f832407f",
+  "design": "docs/recovery/CODEX-M3-SPECTRAL-ABLATION-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "Averaged-power whole-pitch ablation with cross-fitted spectral coordinates; one train-only cutoff and complete-chord train/held-out gates before continuous replay.",
+  "validation": {
+    "synthetic_tests_passed": 39,
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "verdict": "no remaining blocker",
+      "reviewer": "dictionary_review",
+      "finding": "Frozen specification workflow name matched the new spectral-ablation.yml before publication; earlier stale spectral-dictionary.yml was corrected before the final review arrived.",
+      "checked": "Ridge NNLS reduction, whole-pitch exclusion, swapped held-coordinate evaluation, train-only cutoff, no held-out fitting."
+    }
+  },
+  "small_report_collection": "not available",
+  "bulk_policy": "Retain remotely; collect only small report/log archive once with server digest.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "Publish scoped source/worker changes and dispatch one bounded CPU run; no repetition or tuning after rejection.",
+  "limits": [
+    "Original source/label discrepancies remain included and separately disclosed; no alternate label manifest.",
+    "Spectral-coordinate folds are correlated; source passes share an instrument/session.",
+    "Sustained mixtures do not establish note/string, MIDI lifecycle, native timing or live readiness."
+  ],
+  "dispatch_attempt": "build/recovery/m3-spectral-ablation-20261121/dispatch-attempt.json",
+  "updated_at": "2026-11-21T21:49:03.187543+00:00"
+}
