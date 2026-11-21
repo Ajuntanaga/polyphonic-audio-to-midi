@@ -1,3 +1,11 @@
+## Saved training rankings final: cutoff-only repair ruled out
+
+Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-RANKING-RESULT-20261121.md`. Saved-array diagnosis of completed run44953542438; no new job, audio, fitting or held-out evaluation. Evidence artifact14726114992 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Original counts and source-use identities reproduce exactly; five synthetic checks pass. Do not redownload or repeat this completed diagnosis.
+
+On the saved scores, even an oracle threshold selected separately for each mixture could recover complete3/4/5-pitch sets in only267/799 (33.42%),154/889 (17.32%),40/635 (6.30%), below each70% target. Including205 silent examples, the oracle ceiling is1934/4096 (47.22%). These are diagnostic bounds, not gains. Of7864 frozen misses,4182 beat all false pitches but3682 tie or lose;2956 have zero activity. The original rejected screen, labels, installed/default output and scoreboard remain unchanged.
+
+Next: design distinct pitch-local residual evidence that changes weak true/false ordering and addresses zero activity; no new cutoff on this saved score. Require training precision>=99%, recall>=80%, complete sets>=70% overall and each3/4/5 before held-out and corpus safety gates. No next job queued. Claude is paused; no fresh Claude review claimed. Earlier eight-hour interval complete; broader live-readiness goal active. Prior entries below are historical.
+
 ## Cross-fitted power-ablation screen final: training chord gate rejected
 
 Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-ABLATION-RESULT-20261121.md`. Run44953542438 final/success, source `6bfd3af5b47c9023d177f0396a0873ff03cfe595`, worker `e9672b14afc2a7c425c7b3075c4e963298258925`. Thirty-nine synthetic checks and source portable CI44953503086 passed. Small report collected once with verified server digest; bulk model/predictions remain remote. Do not poll, redownload or rerun this completed screen.

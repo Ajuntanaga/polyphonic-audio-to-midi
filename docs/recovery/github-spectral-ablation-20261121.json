@@ -39,18 +39,18 @@
     "verified": true,
     "bulk_downloaded": false
   },
-  "bulk_policy": "Retain remotely; collect only small report/log archive once with server digest.",
+  "bulk_policy": "Archive collected once for saved training-score diagnosis. Only train-predictions.npz and train-mixture-plan.json.gz extracted. Model and template plan remain unopened in archive; no redownload.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Use the saved training activity and mixture plans for one report-only ranking diagnosis: distinguish weak true pitches ranked below false pitches from a conservative global cutoff, stratified by component level and 3/4/5-pitch mixtures. Preserve this rejection and all labels; no refit, cutoff change, held-out scoring or repeated screen. A future candidate needs complete-chord recovery without false-output growth before corpus or live work.",
+  "next": "Design pitch-local residual evidence that changes weak true versus false pitch ordering and explains zero-activity targets; do not retune the saved cutoff. Freeze the distinct design before any new job. Require training precision>=99%, recall>=80%, complete sets>=70% overall and separately for 3/4/5 pitches, then existing held-out and corpus safety gates. Original labels and installed output stay unchanged.",
   "limits": [
     "Original source/label discrepancies remain included and separately disclosed; no alternate label manifest.",
     "Spectral-coordinate folds are correlated; source passes share an instrument/session.",
     "Sustained mixtures do not establish note/string, MIDI lifecycle, native timing or live readiness."
   ],
   "dispatch_attempt": "build/recovery/m3-spectral-ablation-20261121/dispatch-attempt.json",
-  "updated_at": "2026-11-21T21:56:05.371306+00:00",
+  "updated_at": "2026-11-21T22:06:55.687601+00:00",
   "dispatch_started_at": "2026-11-21T21:49:33.748267+00:00",
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44953542438",
   "output_directory": "build/github-results/spectral-ablation-44953542438",
@@ -253,7 +253,7 @@
       "head_sha": "e9672b14afc2a7c425c7b3075c4e963298258925"
     }
   },
-  "bulk_collected": false,
+  "bulk_collected": true,
   "gates": {
     "train_complete_chord_identifiability": false
   },
@@ -332,5 +332,68 @@
   "continuous_replay": {
     "executed": false,
     "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "bulk_collection": {
+    "started_at": "2026-11-21T22:02:52.293110+00:00",
+    "collected_at": "2026-11-21T22:04:36.976937+00:00",
+    "artifact_id": 14726114992,
+    "name": "m3-spectral-ablation-evidence-44953542438-1",
+    "bytes": 5029034,
+    "sha256": "85e1269bafbf992764a47fbd5bfa89d998dd1cda900f92e3f506a892993d5893",
+    "server_digest": "sha256:85e1269bafbf992764a47fbd5bfa89d998dd1cda900f92e3f506a892993d5893",
+    "verified": true,
+    "extracted": [
+      {
+        "name": "train-predictions.npz",
+        "bytes": 157943,
+        "sha256": "7d570e29fd96f60b1c31c62d76cad69a1ad431ce7fd84ecccfbeed4135598de8"
+      },
+      {
+        "name": "train-mixture-plan.json.gz",
+        "bytes": 189559,
+        "sha256": "6f6081bce0b44d0c954d5e5053e959536af94319bcd4bfc58585968941446d6d"
+      }
+    ],
+    "archive_inventory": [
+      {
+        "name": "template-plan.json.gz",
+        "bytes": 9408
+      },
+      {
+        "name": "train-mixture-plan.json.gz",
+        "bytes": 189559
+      },
+      {
+        "name": "frozen-ablation-model.npz",
+        "bytes": 4671548
+      },
+      {
+        "name": "train-predictions.npz",
+        "bytes": 157943
+      }
+    ],
+    "reason": "Saved training rankings diagnosis; only prediction and mixture-plan members extracted; model not opened."
+  },
+  "saved_ranking_diagnosis": {
+    "state": "completed",
+    "final": true,
+    "completed_at": "2026-11-21T22:05:31.119018+00:00",
+    "plan": "docs/recovery/CODEX-M3-SPECTRAL-RANKING-PLAN-20261121.md",
+    "plan_sha256": "eb7936eb60fe90b1eb9670efdb5a5659dbae0f40eded4b8aa1c099778631e733",
+    "report": "build/recovery/m3-spectral-ranking-20261121/report.json",
+    "report_sha256": "adc1a6a42b3cef11ed975f33b56134c662a14e676194447546330bb288f72601",
+    "summary": "docs/recovery/spectral-ranking-summary-20261121.json",
+    "result_note": "docs/recovery/CODEX-M3-SPECTRAL-RANKING-RESULT-20261121.md",
+    "identities_passed": true,
+    "synthetic_tests_passed": 5,
+    "new_processing_job": false,
+    "decision": "Cutoff-only repair cannot reach complete-chord gates on these saved scores; original rejection unchanged.",
+    "oracle_ceiling": {
+      "count": 1934,
+      "total": 4096,
+      "percent": 47.216796875,
+      "includes_silence": 205,
+      "operational_gain": false
+    }
   }
 }

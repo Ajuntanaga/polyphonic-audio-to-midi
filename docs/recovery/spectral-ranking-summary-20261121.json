@@ -1,0 +1,653 @@
+{
+  "schema": "m3_saved_ablation_ranking_v1",
+  "final": true,
+  "created_at": "2026-11-21T22:05:31.119018+00:00",
+  "run_id": "44953542438",
+  "source_commit": "6bfd3af5b47c9023d177f0396a0873ff03cfe595",
+  "input_hashes": {
+    "report.json": "d49cf77b9357d54d12ed1cec52c13fc8f18affa0ccb3c1b05abe791f466f78b5",
+    "train-predictions.npz": "7d570e29fd96f60b1c31c62d76cad69a1ad431ce7fd84ecccfbeed4135598de8",
+    "train-mixture-plan.json.gz": "6f6081bce0b44d0c954d5e5053e959536af94319bcd4bfc58585968941446d6d",
+    "direct-spectrum-sources-20261121.json": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+  },
+  "frozen_cutoff": 0.8386819553485484,
+  "original_decision": "rejected at training identifiability",
+  "identities_passed": true,
+  "analysis_script_sha256": "2f2a7956d9e0b37f8961032ee9f5fb21db10e4bf7c0cd608914039a1b761c885",
+  "limits": [
+    "Training-only, no held-out or continuous score.",
+    "Strict separation is an oracle per-mixture possibility, not an operational rule.",
+    "Scheduled component gain is not measured mixture power; unisons may interfere.",
+    "Original labels retained, including unresolved source-content uncertainty."
+  ],
+  "details_sha256": "2d9b334c39ec5083c19481947de487424913855c60f9001ddf9221ed8e2850b0",
+  "full_local_report": "build/recovery/m3-spectral-ranking-20261121/report.json",
+  "full_local_report_sha256": "adc1a6a42b3cef11ed975f33b56134c662a14e676194447546330bb288f72601",
+  "summary": {
+    "frozen": {
+      "examples": 4096,
+      "expected": 11489,
+      "true_positive": 3625,
+      "false_positive": 36,
+      "false_negative": 7864,
+      "complete_sets": 951
+    },
+    "nonsilent": {
+      "examples": 3891,
+      "strict_separation": 1729,
+      "exact_tie": 486,
+      "false_above_weakest": 1676,
+      "frozen_complete": 746,
+      "strict_separation_but_frozen_incomplete": 983,
+      "margin_quantiles": {
+        "min": -0.9796259082742251,
+        "p10": -0.13423043147434202,
+        "median": 0.0,
+        "p90": 0.9636668603227002,
+        "max": 0.9999476183011293
+      }
+    },
+    "targets": {
+      "expected": 11489,
+      "detected": 3625,
+      "zero_activity": 2956,
+      "above_all_false": 7803,
+      "tied_with_strongest_false": 695,
+      "below_strongest_false": 2991,
+      "score_quantiles": {
+        "min": 0.0,
+        "p10": 0.0,
+        "median": 0.3781194572703587,
+        "p90": 0.9882177616945736,
+        "max": 0.9999682763929408
+      },
+      "false_pitches_above_quantiles": {
+        "min": 0.0,
+        "p10": 0.0,
+        "median": 0.0,
+        "p90": 2.0,
+        "max": 14.0
+      }
+    },
+    "frozen_missed_targets": {
+      "expected": 7864,
+      "detected": 0,
+      "zero_activity": 2956,
+      "above_all_false": 4182,
+      "tied_with_strongest_false": 695,
+      "below_strongest_false": 2987,
+      "score_quantiles": {
+        "min": 0.0,
+        "p10": 0.0,
+        "median": 0.02678178653124747,
+        "p90": 0.6974689429852988,
+        "max": 0.838491419287607
+      },
+      "false_pitches_above_quantiles": {
+        "min": 0.0,
+        "p10": 0.0,
+        "median": 0.0,
+        "p90": 2.0,
+        "max": 14.0
+      }
+    },
+    "by_distinct_pitch_count": {
+      "1": {
+        "frozen": {
+          "examples": 775,
+          "expected": 775,
+          "true_positive": 585,
+          "false_positive": 8,
+          "false_negative": 190,
+          "complete_sets": 580
+        },
+        "mixtures": {
+          "examples": 775,
+          "strict_separation": 745,
+          "exact_tie": 0,
+          "false_above_weakest": 30,
+          "frozen_complete": 580,
+          "strict_separation_but_frozen_incomplete": 165,
+          "margin_quantiles": {
+            "min": -0.5281230382068665,
+            "p10": 0.34373156893818213,
+            "median": 0.9576211170322159,
+            "p90": 0.99807985756313,
+            "max": 0.9999476183011293
+          }
+        },
+        "targets": {
+          "expected": 775,
+          "detected": 585,
+          "zero_activity": 10,
+          "above_all_false": 745,
+          "tied_with_strongest_false": 0,
+          "below_strongest_false": 30,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.5597719218418681,
+            "median": 0.9769559245599733,
+            "p90": 0.9984477047717095,
+            "max": 0.9999633279730008
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "max": 12.0
+          }
+        }
+      },
+      "2": {
+        "frozen": {
+          "examples": 793,
+          "expected": 1586,
+          "true_positive": 746,
+          "false_positive": 10,
+          "false_negative": 840,
+          "complete_sets": 140
+        },
+        "mixtures": {
+          "examples": 793,
+          "strict_separation": 523,
+          "exact_tie": 70,
+          "false_above_weakest": 200,
+          "frozen_complete": 140,
+          "strict_separation_but_frozen_incomplete": 383,
+          "margin_quantiles": {
+            "min": -0.9582103631080905,
+            "p10": -0.05142049832495396,
+            "median": 0.10545553684554058,
+            "p90": 0.8892060764855584,
+            "max": 0.9968827429175573
+          }
+        },
+        "targets": {
+          "expected": 1586,
+          "detected": 746,
+          "zero_activity": 208,
+          "above_all_false": 1296,
+          "tied_with_strongest_false": 70,
+          "below_strongest_false": 220,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.7891443350617493,
+            "p90": 0.9953076549007919,
+            "max": 0.9999682763929408
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "max": 11.0
+          }
+        }
+      },
+      "3": {
+        "frozen": {
+          "examples": 799,
+          "expected": 2397,
+          "true_positive": 789,
+          "false_positive": 7,
+          "false_negative": 1608,
+          "complete_sets": 24
+        },
+        "mixtures": {
+          "examples": 799,
+          "strict_separation": 267,
+          "exact_tie": 137,
+          "false_above_weakest": 395,
+          "frozen_complete": 24,
+          "strict_separation_but_frozen_incomplete": 243,
+          "margin_quantiles": {
+            "min": -0.9746418286691257,
+            "p10": -0.1861224208220981,
+            "median": 0.0,
+            "p90": 0.3457730281903953,
+            "max": 0.9840009018452748
+          }
+        },
+        "targets": {
+          "expected": 2397,
+          "detected": 789,
+          "zero_activity": 582,
+          "above_all_false": 1668,
+          "tied_with_strongest_false": 160,
+          "below_strongest_false": 569,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.4251116436994503,
+            "p90": 0.9880202536748596,
+            "max": 0.9999277493770956
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 14.0
+          }
+        }
+      },
+      "4": {
+        "frozen": {
+          "examples": 889,
+          "expected": 3556,
+          "true_positive": 872,
+          "false_positive": 8,
+          "false_negative": 2684,
+          "complete_sets": 2
+        },
+        "mixtures": {
+          "examples": 889,
+          "strict_separation": 154,
+          "exact_tie": 162,
+          "false_above_weakest": 573,
+          "frozen_complete": 2,
+          "strict_separation_but_frozen_incomplete": 152,
+          "margin_quantiles": {
+            "min": -0.9796259082742251,
+            "p10": -0.20473325931451958,
+            "median": -0.00021144737104550565,
+            "p90": 0.035475018936937275,
+            "max": 0.82959826194926
+          }
+        },
+        "targets": {
+          "expected": 3556,
+          "detected": 872,
+          "zero_activity": 1027,
+          "above_all_false": 2278,
+          "tied_with_strongest_false": 243,
+          "below_strongest_false": 1035,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.20222134320542387,
+            "p90": 0.9734562482531276,
+            "max": 0.9999268936262667
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 12.0
+          }
+        }
+      },
+      "5": {
+        "frozen": {
+          "examples": 635,
+          "expected": 3175,
+          "true_positive": 633,
+          "false_positive": 3,
+          "false_negative": 2542,
+          "complete_sets": 0
+        },
+        "mixtures": {
+          "examples": 635,
+          "strict_separation": 40,
+          "exact_tie": 117,
+          "false_above_weakest": 478,
+          "frozen_complete": 0,
+          "strict_separation_but_frozen_incomplete": 40,
+          "margin_quantiles": {
+            "min": -0.9310056089058465,
+            "p10": -0.2083405491745154,
+            "median": -0.0015915676023072634,
+            "p90": 0.0,
+            "max": 0.514323665285074
+          }
+        },
+        "targets": {
+          "expected": 3175,
+          "detected": 633,
+          "zero_activity": 1129,
+          "above_all_false": 1816,
+          "tied_with_strongest_false": 222,
+          "below_strongest_false": 1137,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.05778490459909056,
+            "p90": 0.959786867243156,
+            "max": 0.999771626180571
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 11.0
+          }
+        }
+      }
+    },
+    "by_relative_scheduled_gain_db": {
+      "-24": {
+        "all": {
+          "expected": 942,
+          "detected": 1,
+          "zero_activity": 688,
+          "above_all_false": 137,
+          "tied_with_strongest_false": 141,
+          "below_strongest_false": 664,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.005655600775367686,
+            "max": 0.9669818004379351
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 1.0,
+            "p90": 3.0,
+            "max": 14.0
+          }
+        },
+        "single_component_pitch": {
+          "expected": 935,
+          "detected": 0,
+          "zero_activity": 684,
+          "above_all_false": 134,
+          "tied_with_strongest_false": 139,
+          "below_strongest_false": 662,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.005609217900136126,
+            "max": 0.7537943938229444
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 1.0,
+            "p90": 3.0,
+            "max": 14.0
+          }
+        }
+      },
+      "-18": {
+        "all": {
+          "expected": 1550,
+          "detected": 1,
+          "zero_activity": 926,
+          "above_all_false": 441,
+          "tied_with_strongest_false": 229,
+          "below_strongest_false": 880,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.08521374429302793,
+            "max": 0.9282467917981277
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 1.0,
+            "p90": 3.0,
+            "max": 11.0
+          }
+        },
+        "single_component_pitch": {
+          "expected": 1536,
+          "detected": 1,
+          "zero_activity": 918,
+          "above_all_false": 436,
+          "tied_with_strongest_false": 227,
+          "below_strongest_false": 873,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.0834449991904363,
+            "max": 0.9282467917981277
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 1.0,
+            "p90": 3.0,
+            "max": 11.0
+          }
+        }
+      },
+      "-12": {
+        "all": {
+          "expected": 1871,
+          "detected": 57,
+          "zero_activity": 716,
+          "above_all_false": 965,
+          "tied_with_strongest_false": 199,
+          "below_strongest_false": 707,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.020130932500812698,
+            "p90": 0.5671031245344742,
+            "max": 0.9760319486055171
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 12.0
+          }
+        },
+        "single_component_pitch": {
+          "expected": 1830,
+          "detected": 55,
+          "zero_activity": 702,
+          "above_all_false": 942,
+          "tied_with_strongest_false": 197,
+          "below_strongest_false": 691,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.019804032091246024,
+            "p90": 0.5673566026560151,
+            "max": 0.9760319486055171
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 12.0
+          }
+        }
+      },
+      "-6": {
+        "all": {
+          "expected": 2060,
+          "detected": 423,
+          "zero_activity": 405,
+          "above_all_false": 1550,
+          "tied_with_strongest_false": 99,
+          "below_strongest_false": 411,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.38654698974461843,
+            "p90": 0.9401637821089226,
+            "max": 0.9993088079318165
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "max": 8.0
+          }
+        },
+        "single_component_pitch": {
+          "expected": 2005,
+          "detected": 407,
+          "zero_activity": 395,
+          "above_all_false": 1509,
+          "tied_with_strongest_false": 98,
+          "below_strongest_false": 398,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.3858395542950959,
+            "p90": 0.9396157679554759,
+            "max": 0.9993088079318165
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "max": 8.0
+          }
+        }
+      },
+      "0": {
+        "all": {
+          "expected": 5066,
+          "detected": 3143,
+          "zero_activity": 221,
+          "above_all_false": 4710,
+          "tied_with_strongest_false": 27,
+          "below_strongest_false": 329,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.2609707647844682,
+            "median": 0.921523194996357,
+            "p90": 0.9965751506613268,
+            "max": 0.9999682763929408
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "max": 14.0
+          }
+        },
+        "single_component_pitch": {
+          "expected": 4849,
+          "detected": 3012,
+          "zero_activity": 205,
+          "above_all_false": 4516,
+          "tied_with_strongest_false": 24,
+          "below_strongest_false": 309,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.2684233132195837,
+            "median": 0.9216132535691688,
+            "p90": 0.996622076603041,
+            "max": 0.9999682763929408
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "max": 14.0
+          }
+        }
+      }
+    },
+    "by_duplicate_pitch": {
+      "false": {
+        "mixtures": {
+          "examples": 3559,
+          "strict_separation": 1618,
+          "exact_tie": 439,
+          "false_above_weakest": 1502,
+          "frozen_complete": 715,
+          "strict_separation_but_frozen_incomplete": 903,
+          "margin_quantiles": {
+            "min": -0.9796259082742251,
+            "p10": -0.1335735524105733,
+            "median": 0.0,
+            "p90": 0.9655088404784933,
+            "max": 0.9999476183011293
+          }
+        },
+        "targets": {
+          "expected": 11155,
+          "detected": 3475,
+          "zero_activity": 2904,
+          "above_all_false": 7537,
+          "tied_with_strongest_false": 685,
+          "below_strongest_false": 2933,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.3648623859130393,
+            "p90": 0.9880670652296858,
+            "max": 0.9999682763929408
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 2.0,
+            "max": 14.0
+          }
+        }
+      },
+      "true": {
+        "mixtures": {
+          "examples": 332,
+          "strict_separation": 111,
+          "exact_tie": 47,
+          "false_above_weakest": 174,
+          "frozen_complete": 31,
+          "strict_separation_but_frozen_incomplete": 80,
+          "margin_quantiles": {
+            "min": -0.8979312989307324,
+            "p10": -0.14309218027096102,
+            "median": -3.891599414646684e-07,
+            "p90": 0.6465023626925333,
+            "max": 0.9983830245980818
+          }
+        },
+        "targets": {
+          "expected": 334,
+          "detected": 150,
+          "zero_activity": 52,
+          "above_all_false": 266,
+          "tied_with_strongest_false": 10,
+          "below_strongest_false": 58,
+          "score_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.6912160714826778,
+            "p90": 0.9920466458905493,
+            "max": 0.9997104820435285
+          },
+          "false_pitches_above_quantiles": {
+            "min": 0.0,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "max": 7.0
+          }
+        }
+      }
+    },
+    "training_sources": 200
+  },
+  "oracle_complete_set_ceiling": {
+    "count": 1934,
+    "total": 4096,
+    "percent": 47.216796875,
+    "includes_silence": 205,
+    "operational_gain": false
+  },
+  "decision": "Cutoff-only repair cannot reach complete-chord gates on these saved scores; original rejection unchanged."
+}
