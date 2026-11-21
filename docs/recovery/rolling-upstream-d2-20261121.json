@@ -1,0 +1,261 @@
+{
+  "schema": "m3_rolling_upstream_d2_checkpoint_v1",
+  "state": "completed",
+  "final": true,
+  "verdict": "retrospective decoder rejected as a presence-recovery route",
+  "completed_at": "2026-11-21T19:15:27.683102+00:00",
+  "decode_started_at": "2026-11-21T19:15:27.548512+00:00",
+  "decode_completed_at": "2026-11-21T19:15:27.671333+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "d11ae86dc2e41ab5876e7692d5f225152fdd839d",
+  "source_run": 44889388628,
+  "bridge_run": 44891340815,
+  "upstream_revision": "fa5997af0a8210982619003269994a1be25eddf3",
+  "implementation": "tools/basic_pitch_rolling_upstream.py",
+  "handoff": "docs/recovery/CODEX-M3-ROLLING-D2-TAKEOVER-20261121.md",
+  "result_note": "docs/recovery/CODEX-M3-ROLLING-D2-RESULT-20261121.md",
+  "report": "build/recovery/m3-rolling-upstream-d2-20261121/report.json",
+  "report_bytes": 3237995,
+  "report_sha256": "ccc1635aa4410ed70712c6806eb74bd065231c58b1df7fd0f458d66c59101009",
+  "summary": "build/recovery/m3-rolling-upstream-d2-20261121/summary.json",
+  "source_pins": {
+    "build/github-results/basic-pitch-streaming-44889388628/selected-evidence/ordinary-stream.npz": "c363e9545b16b57b0f74ea756c1b80262bed12eb2b57eace189b3bfd840c548e",
+    "build/github-results/basic-pitch-streaming-44889388628/basic-pitch-streaming-result/report/report.json": "a56b822b669ffa1510880d20f138819434751489a8dd74a81fe1939761ebec32",
+    "build/github-results/basic-pitch-cached-44891340815/basic-pitch-cached-result/report/report.json": "da1ba0a1e2aa0bd0df9b9db07a12344d24c683a793545e60c84d2ac4a2aec773",
+    "build/github-results/basic-pitch-cached-44891340815/claude-event-evidence/files/ordinary-bridge-events.json.gz": "acd64c3588191b8a5e14cf5928b73296df6e2b0abc9c2c70bb1723960787844d",
+    "build/recovery/basic-pitch-cached-diagnosis-20261121/upstream/note_creation.py": "83346193f834edfc37aeadbed91a4092b574727dd2b4535e03e5ad89d2e89506"
+  },
+  "settings": {
+    "onset_thresh": 0.5,
+    "frame_thresh": 0.3,
+    "min_note_len": 11,
+    "infer_onsets": true,
+    "max_freq": null,
+    "min_freq": null,
+    "melodia_trick": true,
+    "energy_tol": 11
+  },
+  "identity_gates": {
+    "source_pins": true,
+    "d0_events": 1192,
+    "eof_identity": true,
+    "full_score_identity": true,
+    "common_A_identity": true,
+    "common_C_identity": true,
+    "labels": 499,
+    "removed_label_samples": 0
+  },
+  "common_clock": {
+    "sample_count": 10681922,
+    "sample_rate": 96000
+  },
+  "indexed_notes": 459,
+  "measurements": {
+    "A": {
+      "annotated_samples": 8914836,
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 18583289,
+      "all_expected_pitches_samples": 1353515,
+      "exact_pitch_set_samples": 882053,
+      "one_voice_per_pitch_samples": 882053,
+      "extra_pitch_voice_samples": 3008188,
+      "duplicate_expected_pitch_voice_samples": 0,
+      "extra_gap_pitch_samples": 3568575,
+      "pitch_coverage_percent": 54.94909223045284,
+      "exact_pitch_set_percent": 9.894214543038144
+    },
+    "C": {
+      "annotated_samples": 8914836,
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 20841454,
+      "all_expected_pitches_samples": 1456912,
+      "exact_pitch_set_samples": 952020,
+      "one_voice_per_pitch_samples": 952020,
+      "extra_pitch_voice_samples": 3076092,
+      "duplicate_expected_pitch_voice_samples": 0,
+      "extra_gap_pitch_samples": 1482117,
+      "pitch_coverage_percent": 61.626280367417216,
+      "exact_pitch_set_percent": 10.679052312347642
+    },
+    "D": {
+      "annotated_samples": 8914836,
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 24233982,
+      "all_expected_pitches_samples": 2708480,
+      "exact_pitch_set_samples": 1376438,
+      "one_voice_per_pitch_samples": 1376438,
+      "extra_pitch_voice_samples": 4258568,
+      "duplicate_expected_pitch_voice_samples": 0,
+      "extra_gap_pitch_samples": 1685418,
+      "pitch_coverage_percent": 71.65767653019518,
+      "exact_pitch_set_percent": 15.43985778313813
+    },
+    "E": {
+      "annotated_samples": 8914836,
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 22831839,
+      "all_expected_pitches_samples": 2278830,
+      "exact_pitch_set_samples": 1940890,
+      "one_voice_per_pitch_samples": 1940890,
+      "extra_pitch_voice_samples": 2416268,
+      "duplicate_expected_pitch_voice_samples": 0,
+      "extra_gap_pitch_samples": 1452194,
+      "pitch_coverage_percent": 67.51166744497436,
+      "exact_pitch_set_percent": 21.771460518174422
+    },
+    "D2": {
+      "annotated_samples": 8914836,
+      "expected_pitch_samples": 33819101,
+      "present_pitch_samples": 20453998,
+      "all_expected_pitches_samples": 1359972,
+      "exact_pitch_set_samples": 1190558,
+      "one_voice_per_pitch_samples": 1190558,
+      "extra_pitch_voice_samples": 3007695,
+      "duplicate_expected_pitch_voice_samples": 0,
+      "extra_gap_pitch_samples": 1281499,
+      "pitch_coverage_percent": 60.48060828110126,
+      "exact_pitch_set_percent": 13.354794188025444
+    }
+  },
+  "comparisons": {
+    "C_to_D2": {
+      "current_pitch_coverage_percent": 61.626280367417216,
+      "model_pitch_coverage_percent": 60.48060828110126,
+      "pitch_coverage_gain_pp": -1.145672086315955,
+      "current_exact_pitch_set_percent": 10.679052312347642,
+      "model_exact_pitch_set_percent": 13.354794188025444,
+      "sample_deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": -387456,
+        "all_expected_pitches_samples": -96940,
+        "exact_pitch_set_samples": 238538,
+        "one_voice_per_pitch_samples": 238538,
+        "extra_pitch_voice_samples": -68397,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "extra_gap_pitch_samples_delta": -200618,
+      "no_pitch_safety_regression": false,
+      "promotion_accepted": false
+    },
+    "D2_to_E": {
+      "current_pitch_coverage_percent": 60.48060828110126,
+      "model_pitch_coverage_percent": 67.51166744497436,
+      "pitch_coverage_gain_pp": 7.031059163873103,
+      "current_exact_pitch_set_percent": 13.354794188025444,
+      "model_exact_pitch_set_percent": 21.771460518174422,
+      "sample_deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": 2377841,
+        "all_expected_pitches_samples": 918858,
+        "exact_pitch_set_samples": 750332,
+        "one_voice_per_pitch_samples": 750332,
+        "extra_pitch_voice_samples": -591427,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "extra_gap_pitch_samples_delta": 170695,
+      "no_pitch_safety_regression": false,
+      "promotion_accepted": false
+    },
+    "C_to_E": {
+      "current_pitch_coverage_percent": 61.626280367417216,
+      "model_pitch_coverage_percent": 67.51166744497436,
+      "pitch_coverage_gain_pp": 5.885387077557147,
+      "current_exact_pitch_set_percent": 10.679052312347642,
+      "model_exact_pitch_set_percent": 21.771460518174422,
+      "sample_deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": 1990385,
+        "all_expected_pitches_samples": 821918,
+        "exact_pitch_set_samples": 988870,
+        "one_voice_per_pitch_samples": 988870,
+        "extra_pitch_voice_samples": -659824,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "extra_gap_pitch_samples_delta": -29923,
+      "no_pitch_safety_regression": false,
+      "promotion_accepted": false
+    },
+    "D_to_E": {
+      "current_pitch_coverage_percent": 71.65767653019518,
+      "model_pitch_coverage_percent": 67.51166744497436,
+      "pitch_coverage_gain_pp": -4.146009085220805,
+      "current_exact_pitch_set_percent": 15.43985778313813,
+      "model_exact_pitch_set_percent": 21.771460518174422,
+      "sample_deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": -1402143,
+        "all_expected_pitches_samples": -429650,
+        "exact_pitch_set_samples": 564452,
+        "one_voice_per_pitch_samples": 564452,
+        "extra_pitch_voice_samples": -1842300,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "extra_gap_pitch_samples_delta": -233224,
+      "no_pitch_safety_regression": false,
+      "promotion_accepted": false
+    }
+  },
+  "label_counts": {
+    "C_to_D2": {
+      "present_gain": 126,
+      "present_loss": 198,
+      "longest_gain": 125,
+      "longest_loss": 199
+    },
+    "D2_to_E": {
+      "present_gain": 249,
+      "present_loss": 97,
+      "longest_gain": 249,
+      "longest_loss": 97
+    },
+    "C_to_E": {
+      "present_gain": 230,
+      "present_loss": 131,
+      "longest_gain": 231,
+      "longest_loss": 130
+    },
+    "D_to_E": {
+      "present_gain": 70,
+      "present_loss": 285,
+      "longest_gain": 70,
+      "longest_loss": 285
+    }
+  },
+  "delays": {
+    "C_to_D2": {
+      "common_present_labels": 355,
+      "paired_median_delta_samples": 0,
+      "paired_median_delta_ms": 0.0,
+      "newly_present_labels": 3,
+      "newly_missing_labels": 32
+    },
+    "D2_to_E": {
+      "common_present_labels": 354,
+      "paired_median_delta_samples": -3.5,
+      "paired_median_delta_ms": -0.036458333333333336,
+      "newly_present_labels": 34,
+      "newly_missing_labels": 4
+    }
+  },
+  "measurement": "Distinct-pitch sample occupancy on a nominal grid; no causal D2 emission clock.",
+  "audio_opened": false,
+  "inference_performed": false,
+  "new_remote_job": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "limits": [
+    "D2 uses future frames, inferred onsets with whole-record scaling and backward Melodia traversal; no live emission clock exists here.",
+    "Nominal source samples use the rolling grid, without the upstream offline timestamp correction.",
+    "D2-to-E bundles rolling/offline activations and their coordinate maps; it does not isolate one cause.",
+    "First-present delay is clipped to the annotation; zero can be pre-existing output, not a measured acoustic onset.",
+    "Pitch occupancy merges same-pitch overlaps; strings, unison multiplicity, raw retriggers and host delivery are not measured.",
+    "All 499 labels remain, including missing labels with null delay. Extra gap outputs are not missing notes."
+  ],
+  "next": "Joint activation/context design with a distinct hypothesis; do not rerun or tune the completed D2, ladder, normalization or fusion screens.",
+  "previous_eight_hour_window": "Completed at 2026-11-21T17:38:42Z; broader live-readiness goal remains open."
+}
