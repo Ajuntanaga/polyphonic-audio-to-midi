@@ -1,0 +1,15 @@
+# Remote comparison environment only. Never a native/plugin dependency.
+# Install the separately pinned Basic Pitch checkout with --no-deps (no TF).
+numpy==1.26.4
+scipy==1.13.1
+scikit-learn==1.5.2
+librosa==0.10.2.post1
+pretty_midi==0.2.10
+mir_eval==0.8.2
+resampy==0.4.2
+onnxruntime==1.20.1
+typing_extensions==4.12.2
+numba==0.60.0
+llvmlite==0.43.0
+soundfile==0.12.1
+soxr==0.5.0.post1

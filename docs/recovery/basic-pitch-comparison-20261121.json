@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "state": "authorized_frozen_not_dispatched",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": "corpus-20261108",
+  "input_asset": "recovery-inputs.tar.gz",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "baseline_file": "docs/recovery/basic-pitch-baseline-20261121.json",
+  "model": {
+    "repository": "spotify/basic-pitch",
+    "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec",
+    "backend": "ONNX CPU",
+    "license": "Apache-2.0"
+  },
+  "prediction": {
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "minimum_note_length": 127.7,
+    "minimum_frequency": null,
+    "maximum_frequency": null,
+    "multiple_pitch_bends": false,
+    "melodia_trick": true,
+    "midi_tempo": 120
+  },
+  "protocol": {
+    "runs_per_dataset": 1,
+    "input_gain_db": 0,
+    "input": "Pinned WAV bytes via upstream mono/22050-Hz loader; no added normalization",
+    "time": "Upstream note-event seconds rounded to nearest 96000-Hz sample; no fitted offset or grace",
+    "output": "All upstream notes retained; MIDI 21-108 model range, no M3 range or polyphony filter",
+    "labels": "Scoring only, loaded after inference; no relabeling or exclusion",
+    "comparison": "Same-pitch overlap/touch union for BOTH detectors; distinct pitch occupancy, no lanes",
+    "strict_pitch_screen": "Ordinary coverage gain >=5 percentage points; neither dataset loses any per-label pitch hold or longest hold, loses all-expected or exact pitch-set duration, increases wrong-pitch duration or unlabeled-gap pitch duration. This is a research screen, never live acceptance.",
+    "installed_output_changed": false,
+    "baseline_configuration": "Saved collision-enabled CURRENT at block512, A4=440, trim=-9, sensitivity60, response75, maxpoly5, maxfret24. Independently configured from the upstream model defaults; not a controlled production-policy comparison.",
+    "report_only_diagnostics": {
+      "per_label": "Present-duration and longest-hold before/after/deltas for every label, including unchanged labels; retained on rejection.",
+      "union": "Literal same-pitch occupancy union of all Basic Pitch and saved CURRENT outputs, without label-based selection, shifts or exclusions. Report complete pitch/label metrics, wrong/gap costs and added expected-pitch duration over each detector; never used for the research verdict or promotion."
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f",
+      "baseline": {
+        "run_id": 44835727027,
+        "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+        "raw_midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "transitions": 11851,
+        "local_midi_gzip": "build/github-results/unfiltered-observation-44835727027/evidence/github-results/unfiltered-observation/ordinary-current-on-512-untraced-midi.tsv.gz",
+        "local_labels": "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv"
+      }
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708",
+      "baseline": {
+        "run_id": 43736868711,
+        "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+        "raw_midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "transitions": 906,
+        "local_midi_gzip": "build/github-results/qualified-tier-retention-corpus-43736868711/saved-extended-middle/extended-middle-current-on-512-midi.tsv.gz",
+        "local_labels": "build/physical-capture/extended-upper-unison/physical-middle.tsv"
+      }
+    }
+  },
+  "baseline_sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+}
