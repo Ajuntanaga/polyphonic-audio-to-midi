@@ -123,8 +123,11 @@
   },
   "sdk": {
     "version": "1.20.1",
-    "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.20.1/onnxruntime-linux-x64-1.20.1.tgz",
-    "provenance": "Official versioned CPU SDK; archive digest recorded by worker; runtime version must match"
+    "package": "Microsoft.ML.OnnxRuntime",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.20.1/microsoft.ml.onnxruntime.1.20.1.nupkg",
+    "sha512_base64": "/IZ7tO4xeqphNGAHn6dU+Ate5kmugmsQKwJpl2qJBAq4rtl2j2hQWlUn+KoxYcwS4ToIw4KzXVdzHuhMaw1HjQ==",
+    "bytes": 108611147,
+    "provenance": "Official CPU C/C++ NuGet package; SHA512 pinned from NuGet response, SHA256 recorded by worker; runtime version must match. Replaces unavailable GitHub tarball before any native measurement."
   },
   "protocol": {
     "runs_per_dataset": 1,

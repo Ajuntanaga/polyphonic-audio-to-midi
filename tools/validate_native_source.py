@@ -40,6 +40,12 @@ UNAPPROVED_DEPENDENCIES = (
     "iplug2",
     "iplug_include_in_plug_src.h",
 )
+# Authorized standalone CPU experiment. Production targets never include these
+# files, and the exception does not permit other models or runtime dependencies.
+OFFLINE_DEPENDENCY_EXCEPTIONS = {
+    "native/neural/CMakeLists.txt": {"onnx"},
+    "native/neural/ort_harness.cpp": {"onnx"},
+}
 UNAPPROVED_BUILD_TOKENS = (
     "-march=native",
     "ninja",
@@ -355,6 +361,8 @@ def validate_entries(
             errors.append(f"unapproved dependency token vstgui: {relative}")
         if relative.startswith(NATIVE_PREFIXES):
             for token in UNAPPROVED_DEPENDENCIES:
+                if token in OFFLINE_DEPENDENCY_EXCEPTIONS.get(relative, ()):
+                    continue
                 # Match model-file extensions, not C++ members such as .ptr.
                 present = (
                     re.search(r"\.pt(?:h|2)?\b", lowered) is not None

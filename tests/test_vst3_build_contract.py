@@ -69,6 +69,16 @@ class Vst3BuildContractTests(unittest.TestCase):
                 errors = self.validation_errors([(path, f'load("model{suffix}")')])
                 self.assertIn(f"unapproved dependency token .pt: {path}", errors)
 
+    def test_authorized_ort_harness_does_not_open_production_dependencies(self):
+        for path in ("native/neural/CMakeLists.txt", "native/neural/ort_harness.cpp"):
+            self.assertEqual(self.validation_errors([(path, "onnxruntime")]), [])
+            errors = self.validation_errors([(path, "tensorflow")])
+            self.assertIn(f"unapproved dependency token tensorflow: {path}", errors)
+        for path in ("native/src/example.cpp", "native/vst3/example.cpp",
+                     "native/neural/other.cpp"):
+            errors = self.validation_errors([(path, "onnxruntime")])
+            self.assertIn(f"unapproved dependency token onnx: {path}", errors)
+
     def test_sanitizer_keeps_memory_checks_without_vst3_abi_vptr_checks(self):
         compiler_options = (
             ROOT / "cmake/M3CompilerOptions.cmake"
