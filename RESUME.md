@@ -1,3 +1,11 @@
+## Pitch-local residual screen frozen; one CPU dispatch next
+
+Active checkpoint: `docs/recovery/github-pitch-local-residual-20261121.json`; design: `docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-PLAN-20261121.md`. Forty-seven synthetic checks pass; frozen specification, workflow and reference pins verified. The focused numerical review found ridge shrinkage in the competing-note fit could create false upper support; the unregularized null fit and exact-parent test resolve it. This is conditional target-only local residual support, not a full local likelihood ratio.
+
+The distinct screen changes evidence ordering and tests globally inactive targets. Keep all555 original source labels, fixed plans and train-only cutoff. Require training precision>=99%, recall>=80%, complete sets>=70% overall and separately for3/4/5 pitches before both held-out roles and continuous safety checks. One bounded CPU workflow `pitch-local-residual.yml`; standing job authorization applies. No installed/default or scoreboard change. Claude is paused; no fresh Claude review claimed.
+
+Next: dispatch once at the recorded source/worker SHAs, collect the small report once and leave bulk remote. Do not retune a rejected outcome or repeat the completed ranking diagnosis. Prior entries below are historical.
+
 ## Saved training rankings final: cutoff-only repair ruled out
 
 Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-RANKING-RESULT-20261121.md`. Saved-array diagnosis of completed run44953542438; no new job, audio, fitting or held-out evaluation. Evidence artifact14726114992 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Original counts and source-use identities reproduce exactly; five synthetic checks pass. Do not redownload or repeat this completed diagnosis.

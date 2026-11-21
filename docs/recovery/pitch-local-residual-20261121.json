@@ -1,0 +1,138 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    },
+    {
+      "release": "corpus-20261108",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    }
+  ],
+  "references": {
+    "sources": {
+      "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+      "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+    },
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "source_consistency": {
+      "path": "docs/recovery/source-consistency-20261121.json",
+      "sha256": "2a2a252af3a1fb29669ded93bd9f3e41cf61f8e6e897798aa246c6da11588fda"
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "schema": "m3_pitch_local_residual_spec_v1",
+  "workflow": "pitch-local-residual.yml",
+  "mixture_and_clock_settings": {
+    "sample_rate": 96000,
+    "block": 512,
+    "windows": [
+      4096,
+      16384
+    ],
+    "grid_midi_low": 28,
+    "grid_midi_high": 120,
+    "bins_per_semitone": 3,
+    "note_low": 32,
+    "note_high": 84,
+    "cutoff": 0.5,
+    "input_trim_db": -9,
+    "train_examples": 16384,
+    "calibration_examples": 4096,
+    "test_examples": 4096,
+    "train_seed": 20261121,
+    "calibration_seed": 20261122,
+    "test_seed": 20261123,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "silence_every": 20,
+    "max_components": 5
+  },
+  "protocol": "One conditional pitch-local residual-addition screen: unregularized global competitor fit; fit-fold-only target scaling; swapped held-coordinate support; every target tested, including globally inactive groups. One train-only cutoff, unchanged fail-closed gates.",
+  "gates": {
+    "training": ">=99% precision cutoff; aggregate recall>=80%, exact sets>=70%; each 3/4/5 distinct-pitch exact sets>=70%; zero silence false outputs",
+    "calibration_and_test": "each: precision>=95%, recall>=80%, exact sets>=70%; each 3/4/5 distinct-pitch exact sets>=70%; zero silence false outputs",
+    "continuous": "only after all representation gates; existing full CURRENT identity, >=5pp ordinary gain; no per-label presence/longest-hold loss, wrong-pitch or extra-gap growth on either recording"
+  },
+  "scope": "One CPU GitHub job, no new uploads, no local recorded processing, no label changes, no installation or promotion.",
+  "max_worker_minutes": 45,
+  "effective_example_counts": "local_residual_parameters.mixture_counts overrides inherited generator defaults; context, source roles, seeds, gains and clocks are unchanged.",
+  "local_residual_parameters": {
+    "frequency_min": 20.0,
+    "frequency_max": 12000.0,
+    "power_windows": [
+      4096,
+      8192
+    ],
+    "power_hop_fraction": 0.5,
+    "template_windows": 9,
+    "whitening_floor_fraction": 0.01,
+    "ridge": 0.001,
+    "residual_floor_fraction": 1e-12,
+    "training_precision_percent": 99.0,
+    "mixture_counts": {
+      "train": 4096,
+      "calibration": 1024,
+      "test": 1024
+    },
+    "crossfit": "alternating retained bins within each window; swap fit and evaluation halves",
+    "support": "min over folds of positive candidate-local residual reduction / null residual SSE",
+    "harmonic_intervals": [
+      12,
+      19,
+      24,
+      28,
+      31,
+      36
+    ],
+    "nuisance_ridge": 0.0,
+    "support_half_width_fft_bins": 2.0,
+    "support_overlap_weight": "inverse_sqrt_pitch_count",
+    "candidate_ridge": "ridge * number_of_same_pitch_atoms_after_fit_fold_unit_norm",
+    "nuisance_fit": "unregularized NNLS, all other pitches, global training-only whitening",
+    "inactive_group_rule": "test local residual even when global joint coefficient is zero"
+  }
+}

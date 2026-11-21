@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T22:21:04.524264+00:00",
+  "updated_at": "2026-11-21T22:21:04.524264+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "ca63123e3ac3911f999f51229e747e3d28ec56f7",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": "e16a4294413cba341ff8282d11c3cc340714bdf0",
+  "workflow": "pitch-local-residual.yml",
+  "specification": "docs/recovery/pitch-local-residual-20261121.json",
+  "specification_sha256": "23e820a85c5e6db1bce90310cc33ecb09f61bb6cc0a0ba77ae5114fc91801fab",
+  "design": "docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "Cross-fitted pitch-local conditional residual support after global unregularized competing-pitch NNLS; all target groups evaluated including globally inactive groups; train-only cutoff and complete-chord gates before held-out/continuous replay.",
+  "validation": {
+    "synthetic_tests_passed": 47,
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "reviewer": "dictionary_review",
+      "finding": "Ridge shrinkage in the competing-note null fit could create false upper support; replaced by unregularized QR/NNLS and verified exact-parent false-upper support remains zero.",
+      "disposition": "Resolved. Candidate-only conditional local addition is explicitly not a local full-refit likelihood ratio."
+    }
+  },
+  "small_report_collection": null,
+  "bulk_policy": "Collect small report once with server digest verification; retain bulk remotely.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "Dispatch this frozen CPU workflow once; collect its small report and apply unchanged train, held-out and corpus safety gates. No retuning or rerun.",
+  "limits": [
+    "Original source/label discrepancies stay included; no alternate label manifest.",
+    "Masks use nominal A440 and correlated shared harmonic bins; template mismatch and detuning remain risks.",
+    "Conditional residual support is not probability or audibility.",
+    "Sustained mixtures do not establish note/string, MIDI lifecycle, native timing or live readiness."
+  ],
+  "dispatch_attempt": "build/recovery/m3-pitch-local-residual-20261121/dispatch-attempt.json"
+}

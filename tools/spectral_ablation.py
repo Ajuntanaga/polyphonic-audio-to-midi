@@ -26,6 +26,7 @@ class AveragedPower:
     def __init__(self):
         self.windows = {n: np.hanning(n) for n in PARAMETERS['power_windows']}
         self.bins, self.starts, self.names, folds = {}, {}, [], []
+        frequencies, bin_widths = [], []
         context = max(SETTINGS['windows'])
         for n in self.windows:
             frequency = np.fft.rfftfreq(n, 1/SETTINGS['sample_rate'])
@@ -34,7 +35,11 @@ class AveragedPower:
             self.starts[n] = range(0, context-n+1, int(n*PARAMETERS['power_hop_fraction']))
             self.names.extend(f'w{n}:bin{k}:mean_power' for k in self.bins[n])
             folds.extend((np.arange(len(self.bins[n])) % 2).tolist())
+            frequencies.extend(frequency[self.bins[n]].tolist())
+            bin_widths.extend([SETTINGS['sample_rate']/n]*len(self.bins[n]))
         self.folds = np.asarray(folds, dtype=np.int8)
+        self.frequency_hz = np.asarray(frequencies)
+        self.bin_width_hz = np.asarray(bin_widths)
 
     def __call__(self, past):
         past = np.asarray(past, dtype=np.float64)
