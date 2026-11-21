@@ -12,6 +12,17 @@ Panic releases accepted notes and resets worker state. After a worker failure,
 deactivate and reactivate the component. A host refusing output prevents new
 notes until Panic and successful cleanup; accepted notes remain owed releases.
 
+Quiet input gate is optional and OFF by default. Its threshold defaults to
+-60 dBFS (adjustable -90..-30 dBFS); reopening requires 6 dB more level.
+It uses the larger trailing 20/80 ms input power and a 40 ms quiet dwell.
+Closing releases tracked notes at the next model readout and blocks new notes
+until the input rises again. The model keeps processing the continuous input.
+This can remove weak sustains as well as false notes in silence. Adjust it to
+your input level; it does not distinguish a quiet intended note from noise.
+Controls take effect on a source packet boundary, then worker/host delivery;
+they are not sample-accurate and do not discard already queued output. Use
+Panic for immediate accepted-note cleanup. Settings are saved with the plugin.
+
 This is a research artifact, not the installed M3 tracker or an accepted
 replacement. Corpus label losses remain; external DAW/device operation and
 reliable live use are unverified. Keep both bundled license notices.

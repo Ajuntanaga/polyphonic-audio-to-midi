@@ -6,6 +6,7 @@
 #include <limits>
 #include <new>
 #include <thread>
+#include <vector>
 
 using namespace m3::neural;
 namespace {
@@ -36,6 +37,58 @@ void decoder_test() {
   Decoder all;notes.fill(1);onsets.fill(1);Batch chord;
   all.consume(notes.data(),onsets.data(),chord);
   require(chord.count==88 && chord.events[87].note==108,"all 88 pitches survive");
+}
+void quiet_gate_test() {
+  constexpr auto settings=kGateEnabled|kGateDefault;
+  QuietGate whole,chunked,disabled;
+  std::vector<float> samples(24000,0.01F);
+  std::fill(samples.begin()+8000,samples.end(),0.0F);
+  whole.consume(samples.data(),samples.size(),settings);
+  for(std::size_t begin=0;begin<samples.size();) {
+    const auto count=std::min<std::size_t>(137,samples.size()-begin);
+    chunked.consume(samples.data()+begin,count,settings);begin+=count;
+  }
+  require(whole.power()==chunked.power() && !whole.permits_notes() && !chunked.permits_notes(),
+          "quiet gate is chunk invariant and closes after quiet dwell");
+  disabled.consume(samples.data(),samples.size(),kGateDefault);
+  require(disabled.permits_notes() && !disabled.enabled(),"gate defaults disabled");
+  QuietGate hysteresis;float value=0.0015F;
+  hysteresis.consume(&value,1,settings);
+  require(!hysteresis.permits_notes(),"closed gate waits for reopen threshold");
+  std::array<float,kGateSlow> high{};high.fill(0.01F);
+  hysteresis.consume(high.data(),high.size(),settings);
+  require(hysteresis.permits_notes(),"loud input opens gate");
+  high.fill(0.0015F);hysteresis.consume(high.data(),high.size(),settings);
+  require(hysteresis.permits_notes(),"open gate stays open inside hysteresis band");
+  high.fill(0);hysteresis.consume(high.data(),kGateDwell-1,settings);
+  require(hysteresis.permits_notes(),"close dwell is not shortened by packet size");
+  hysteresis.consume(high.data(),high.size(),settings);
+  require(!hysteresis.permits_notes(),"quiet tail closes gate");
+  hysteresis.consume(high.data(),1,kGateDefault);
+  require(hysteresis.permits_notes(),"disable bypasses gate immediately at packet boundary");
+  hysteresis.consume(high.data(),1,settings);
+  require(!hysteresis.permits_notes(),"reenable starts closed");
+  throws([&]{hysteresis.consume(high.data(),1,kGateEnabled|601U);});
+  high[0]=std::numeric_limits<float>::quiet_NaN();
+  throws([&]{hysteresis.consume(high.data(),1,settings);});
+
+  Decoder reference,off,gated;std::array<float,88> notes{},onsets{};notes.fill(.8F);onsets.fill(1);
+  Batch a,b,c;reference.consume(notes.data(),onsets.data(),a);off.consume(notes.data(),onsets.data(),b,true);
+  require(a.count==b.count,"disabled decoder event count identity");
+  for(std::size_t i=0;i<a.count;++i) require(a.events[i].frame==b.events[i].frame &&
+      a.events[i].note==b.events[i].note && a.events[i].on==b.events[i].on,"disabled decoder identity");
+  gated.consume(notes.data(),onsets.data(),c);c.count=0;
+  gated.consume(notes.data(),onsets.data(),c,false);
+  require(c.count==88 && !c.events[87].on && c.events[87].frame==1,"close releases all decoder owners once");
+  gated.consume(notes.data(),onsets.data(),c,false);
+  require(c.count==88 && gated.frame()==3,"closed frame still advances without repeated releases");
+  c.count=0;onsets.fill(0);
+  gated.consume(notes.data(),onsets.data(),c,true);gated.consume(notes.data(),onsets.data(),c,true);
+  require(c.count==0,"reopen clears stale attack evidence");
+  gated.consume(notes.data(),onsets.data(),c,true);
+  require(c.count==88 && c.events[0].frame==5,"fresh persistent evidence required after reopen");
+  notes[87]=std::numeric_limits<float>::quiet_NaN();
+  throws([&]{gated.consume(notes.data(),onsets.data(),c,false);});
 }
 void resampler_window_test() {
   std::array<double,kTaps> h{};h[0]=1;
@@ -105,7 +158,7 @@ void allocation_test() {
 }
 }
 int main() {
-  try{decoder_test();resampler_window_test();queue_and_sink_test();allocation_test();
+  try{decoder_test();quiet_gate_test();resampler_window_test();queue_and_sink_test();allocation_test();
     std::cout<<"neural core tests passed\n";return 0;
   }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

@@ -78,7 +78,9 @@ int main(int argc,char** argv) {
     require(m.component->queryInterface(IEditController::iid,reinterpret_cast<void**>(&m.controller))==kResultOk,
             "single-component controller missing");
     require(m.component->initialize(&host)==kResultOk,"packaged initialize failed");m.initialized=true;
-    require(m.controller->getParameterCount()==1,"unexpected parameter count");
+    require(m.controller->getParameterCount()==3,"unexpected parameter count");
+    require(m.controller->getParamNormalized(1)==0 && m.controller->getParamNormalized(2)==0.5,
+            "quiet gate defaults differ");
     require(m.component->getBusCount(kAudio,kInput)==1 && m.component->getBusCount(kAudio,kOutput)==1 &&
             m.component->getBusCount(kEvent,kOutput)==1,"unexpected bus layout");
     ProcessSetup unsupported{kRealtime,kSample32,512,48000.0};

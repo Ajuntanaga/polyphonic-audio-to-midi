@@ -10,7 +10,7 @@ inline std::uint64_t monotonic_ns() noexcept {
   return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::steady_clock::now().time_since_epoch()).count());
 }
-struct EpochInput {std::uint64_t epoch{};Input input{};};
+struct EpochInput {std::uint64_t epoch{};Input input{};std::uint32_t gate_settings{kGateDefault};};
 struct EpochBatch {std::uint64_t epoch{};Batch batch{};};
 struct Exchange {
   m3::offline::FrozenCueQueue<EpochInput,16> input;
@@ -58,6 +58,7 @@ class Bridge {
   bool feed(const float* samples,std::size_t count) noexcept {
     if(!ready() || input_finished_) return false;
     while(count) {
+      if(partial_.count==0) partial_gate_=gate_settings_;
       const auto n=std::min(count,kBlock-partial_.count);
       for(std::size_t i=0;i<n;++i) if(!std::isfinite(samples[i])) {fault();return false;}
       std::copy_n(samples,n,partial_.data.begin()+partial_.count);
@@ -66,6 +67,7 @@ class Bridge {
     }
     return true;
   }
+  void set_gate_settings(std::uint32_t value) noexcept {gate_settings_=value;}
   // Test/offline EOF boundary; live transport resets use reset().
   bool finish_input() noexcept {
     if(!ready()) return false;
@@ -88,11 +90,12 @@ class Bridge {
  private:
   bool publish() noexcept {
     partial_.end=source_samples_;partial_.arrival_ns=monotonic_ns();
-    if(!exchange_->input.push(EpochInput{epoch_,partial_})) {++input_drops_;fault();return false;}
+    if(!exchange_->input.push(EpochInput{epoch_,partial_,partial_gate_})) {++input_drops_;fault();return false;}
     partial_.count=0;return true;
   }
   Exchange* exchange_{};PitchState state_;Input partial_;
   std::uint64_t epoch_{},source_samples_{},input_drops_{},delivery_faults_{};
+  std::uint32_t gate_settings_{kGateDefault},partial_gate_{kGateDefault};
   bool blocked_{},holding_{true},input_finished_{};
 };
 } // namespace m3::neural

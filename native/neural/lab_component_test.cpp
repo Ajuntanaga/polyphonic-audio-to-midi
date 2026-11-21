@@ -2,6 +2,8 @@
 #include "lab_test_host.hpp"
 #include "allocation_guard.hpp"
 #include "pluginterfaces/vst/vstspeaker.h"
+#include "public.sdk/source/common/memorystream.h"
+#include "public.sdk/source/vst/hosting/parameterchanges.h"
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -107,10 +109,60 @@ void unsupported_and_nonfinite() {
   call(f.component,f.data);require(f.component.diagnostic_bridge().blocked(),"nonfinite input blocks detector");
   require(std::memcmp(input.data(),out.data(),sizeof(float))==0,"dry path preserves input bits");
 }
+std::array<unsigned char,12> saved_state(LabComponent& component) {
+  MemoryStream stream;require(component.getState(&stream)==kResultOk && stream.getSize()==12,"state write");
+  std::array<unsigned char,12> bytes{};std::memcpy(bytes.data(),stream.getData(),bytes.size());return bytes;
+}
+void gate_state_test() {
+  Fixture f;
+  require(f.component.getParameterCount()==3 && f.component.getParamNormalized(1)==0 &&
+      f.component.getParamNormalized(2)==.5,"gate defaults");
+  require(f.component.setParamNormalized(1,1)==kResultOk && f.component.setParamNormalized(2,.75)==kResultOk,"gate UI controls");
+  const auto original=saved_state(f.component);
+  require(original[8]==194 && original[9]==1 && original[10]==0 && original[11]==128,"little endian gate state");
+  f.component.setParamNormalized(1,0);f.component.setParamNormalized(2,0);
+  MemoryStream roundtrip(const_cast<unsigned char*>(original.data()),original.size());
+  require(f.component.setState(&roundtrip)==kResultOk && saved_state(f.component)==original &&
+      f.component.getParamNormalized(1)==1 && f.component.getParamNormalized(2)==.75,"gate state roundtrip");
+  auto invalid=original;invalid[10]=1;
+  MemoryStream bad(invalid.data(),invalid.size());
+  require(f.component.setState(&bad)==kResultFalse && saved_state(f.component)==original,"invalid bits leave state unchanged");
+  MemoryStream short_state(invalid.data(),10);
+  require(f.component.setState(&short_state)==kResultFalse && saved_state(f.component)==original,"truncated state leaves settings unchanged");
+  for(double value:{-1.,2.,std::numeric_limits<double>::quiet_NaN()})
+    require(f.component.setParamNormalized(2,value)==kInvalidArgument && saved_state(f.component)==original,"invalid parameter ignored");
+  char legacy[]{'M','3','N','L','0','0','0','1'};MemoryStream old(legacy,sizeof legacy);
+  require(f.component.setState(&old)==kResultOk && f.component.getParamNormalized(1)==0 &&
+      f.component.getParamNormalized(2)==.5,"legacy preset remains gate off");
+}
+template<class Sample> void gate_automation_test(int format) {
+  Fixture f(format);std::array<Sample,640> input{},output{};input.fill(Sample(.01));
+  Sample* ip=input.data();Sample* op=output.data();AudioBusBuffers in{},out{};
+  in.numChannels=out.numChannels=1;
+  if constexpr(std::is_same_v<Sample,float>) {in.channelBuffers32=&ip;out.channelBuffers32=&op;}
+  else {in.channelBuffers64=&ip;out.channelBuffers64=&op;}
+  f.data.numInputs=f.data.numOutputs=1;f.data.inputs=&in;f.data.outputs=&out;f.data.numSamples=32;
+  call(f.component,f.data); // This partial packet belongs to the old settings.
+  ParameterChanges changes(2);int32 index=0;
+  auto* enabled=changes.addParameterData(1,index);require(enabled!=nullptr,"enable queue");
+  enabled->addPoint(0,1,index);
+  auto* threshold=changes.addParameterData(2,index);require(threshold!=nullptr,"threshold queue");
+  threshold->addPoint(0,0,index);threshold->addPoint(0,.75,index);
+  f.data.inputParameterChanges=&changes;f.data.numSamples=608;call(f.component,f.data);
+  auto* packet=f.exchange.input.front();
+  require(packet && packet->gate_settings==kGateDefault && packet->input.end==640,"partial packet retains old settings");
+  f.exchange.input.pop();f.data.inputParameterChanges=nullptr;f.data.numSamples=640;call(f.component,f.data);
+  packet=f.exchange.input.front();
+  require(packet && packet->gate_settings==(kGateEnabled|450U) && packet->input.end==1280,"automation reaches next packet");
+  require(std::memcmp(input.data(),output.data(),sizeof input)==0,"gate automation preserves dry audio");
+  const auto state=saved_state(f.component);
+  require(state[8]==194 && state[9]==1 && state[11]==128,"automated values saved");
+}
 }
 int main(){try{
   ownership_and_epoch();full_pitch_and_faults();
   audio_test<float>(kSample32,1);audio_test<float>(kSample32,2);
   audio_test<double>(kSample64,1);audio_test<double>(kSample64,2);unsupported_and_nonfinite();
+  gate_state_test();gate_automation_test<float>(kSample32);gate_automation_test<double>(kSample64);
   std::cout<<"neural component ownership, epoch, overflow, dry and callback allocation tests passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

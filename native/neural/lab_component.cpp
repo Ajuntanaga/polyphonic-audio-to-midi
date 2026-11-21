@@ -20,7 +20,9 @@ std::filesystem::path resource_directory() {
     throw std::runtime_error("module resource directory unavailable");
   return std::filesystem::path(info.dli_fname).parent_path().parent_path()/"Resources";
 }
-constexpr std::array<char,8> state_tag{'M','3','N','L','0','0','0','1'};
+constexpr std::array<char,8> old_state_tag{'M','3','N','L','0','0','0','1'};
+constexpr std::array<char,8> state_tag{'M','3','N','L','0','0','0','2'};
+static_assert(std::atomic<std::uint32_t>::is_always_lock_free);
 }
 LabComponent::~LabComponent(){stop_worker();}
 FUnknown* LabComponent::createInstance(void*) {
@@ -32,6 +34,9 @@ tresult PLUGIN_API LabComponent::initialize(FUnknown* context) {
   addAudioOutput(STR16("Dry output"),SpeakerArr::kStereo);
   addEventOutput(STR16("Experimental pitch MIDI"),1);
   parameters.addParameter(STR16("Panic"),nullptr,1,0,ParameterInfo::kCanAutomate,0);
+  parameters.addParameter(STR16("Quiet input gate"),nullptr,1,0,ParameterInfo::kCanAutomate,1);
+  parameters.addParameter(new RangeParameter(STR16("Gate threshold"),2,STR16("dBFS"),
+      -90.0,-30.0,-60.0,600,ParameterInfo::kCanAutomate));
   return kResultOk;
 }
 void LabComponent::stop_worker() noexcept {
@@ -74,19 +79,44 @@ tresult PLUGIN_API LabComponent::setProcessing(TBool state) {
   if(!state) bridge_.reset(false);
   processing_=state!=0;return kResultOk;
 }
+bool LabComponent::apply_gate_parameter(ParamID id,ParamValue value) noexcept {
+  if(!std::isfinite(value) || value<0 || value>1) return false;
+  if(id==1) gate_enabled_.store(value>=0.5,std::memory_order_relaxed);
+  else if(id==2) gate_threshold_.store(static_cast<std::uint32_t>(std::lround(value*600)),std::memory_order_relaxed);
+  else return false;
+  return true;
+}
 tresult PLUGIN_API LabComponent::setParamNormalized(ParamID id,ParamValue value) {
-  if(id!=0 || !std::isfinite(value) || value<0 || value>1) return kInvalidArgument;
-  if(value>=0.5) panic_.store(true,std::memory_order_release);
-  return SingleComponentEffect::setParamNormalized(id,0.0);
+  if(!std::isfinite(value) || value<0 || value>1) return kInvalidArgument;
+  if(id==0) {
+    if(value>=0.5) panic_.store(true,std::memory_order_release);
+    return SingleComponentEffect::setParamNormalized(id,0.0);
+  }
+  if(!apply_gate_parameter(id,value)) return kInvalidArgument;
+  return SingleComponentEffect::setParamNormalized(id,id==1?(value>=0.5?1.0:0.0):std::round(value*600)/600);
 }
 tresult PLUGIN_API LabComponent::getState(IBStream* stream) {
-  int32 n=0;return stream && stream->write(const_cast<char*>(state_tag.data()),state_tag.size(),&n)==kResultOk &&
-      n==static_cast<int32>(state_tag.size())?kResultOk:kResultFalse;
+  std::array<unsigned char,12> bytes{};std::copy(state_tag.begin(),state_tag.end(),bytes.begin());
+  const auto settings=gate_settings();
+  for(unsigned i=0;i<4;++i) bytes[8+i]=static_cast<unsigned char>(settings>>(i*8));
+  int32 n=0;return stream && stream->write(bytes.data(),bytes.size(),&n)==kResultOk &&
+      n==static_cast<int32>(bytes.size())?kResultOk:kResultFalse;
 }
 tresult PLUGIN_API LabComponent::setState(IBStream* stream) {
   std::array<char,8> tag{};int32 n=0;
-  if(!stream || stream->read(tag.data(),tag.size(),&n)!=kResultOk || n!=static_cast<int32>(tag.size()) || tag!=state_tag)
+  if(!stream || stream->read(tag.data(),tag.size(),&n)!=kResultOk || n!=static_cast<int32>(tag.size()))
     return kResultFalse;
+  std::uint32_t settings=kGateDefault;
+  if(tag==state_tag) {
+    std::array<unsigned char,4> bytes{};
+    if(stream->read(bytes.data(),bytes.size(),&n)!=kResultOk || n!=4) return kResultFalse;
+    settings=0;for(unsigned i=0;i<4;++i) settings|=static_cast<std::uint32_t>(bytes[i])<<(i*8);
+    if(!valid_gate_settings(settings)) return kResultFalse;
+  } else if(tag!=old_state_tag) return kResultFalse;
+  gate_enabled_.store((settings&kGateEnabled)!=0,std::memory_order_relaxed);
+  gate_threshold_.store(settings&~kGateEnabled,std::memory_order_relaxed);
+  SingleComponentEffect::setParamNormalized(1,(settings&kGateEnabled)?1.0:0.0);
+  SingleComponentEffect::setParamNormalized(2,static_cast<double>(settings&~kGateEnabled)/600);
   panic_.store(true,std::memory_order_release);return kResultOk;
 }
 tresult PLUGIN_API LabComponent::process(ProcessData& data) {
@@ -95,11 +125,15 @@ tresult PLUGIN_API LabComponent::process(ProcessData& data) {
   bool panic=panic_.exchange(false,std::memory_order_acq_rel);
   if(data.inputParameterChanges) for(int32 i=0;i<data.inputParameterChanges->getParameterCount();++i) {
     auto* q=data.inputParameterChanges->getParameterData(i);
-    if(q && q->getParameterId()==0 && q->getPointCount()>0) {
+    if(q && q->getPointCount()>0) {
       int32 offset=0;ParamValue value=0;
-      if(q->getPoint(q->getPointCount()-1,offset,value)==kResultOk && value>=0.5) panic=true;
+      if(q->getPoint(q->getPointCount()-1,offset,value)==kResultOk && std::isfinite(value) && value>=0 && value<=1) {
+        if(q->getParameterId()==0 && value>=0.5) panic=true;
+        else apply_gate_parameter(q->getParameterId(),value);
+      }
     }
   }
+  bridge_.set_gate_settings(gate_settings());
   if(panic) bridge_.reset(true);
   if(data.numSamples && (data.numInputs!=1 || data.numOutputs!=1 || !data.inputs || !data.outputs ||
       data.inputs[0].numChannels!=channels_ || data.outputs[0].numChannels!=channels_))

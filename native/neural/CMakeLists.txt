@@ -54,7 +54,9 @@ if(M3_BUILD_NEURAL_LAB)
   add_library(neural_lab_test_component STATIC ${lab_component_sources})
   target_compile_definitions(neural_lab_test_component PUBLIC M3_NEURAL_LAB_DIAGNOSTICS)
   target_link_libraries(neural_lab_test_component PUBLIC neural_lab_worker sdk ${CMAKE_DL_LIBS})
-  add_executable(neural_lab_tests lab_component_test.cpp)
+  add_executable(neural_lab_tests lab_component_test.cpp
+    "${M3_VST3_SDK_ROOT}/public.sdk/source/common/memorystream.cpp"
+    "${M3_VST3_SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp")
   target_link_libraries(neural_lab_tests PRIVATE neural_lab_test_component callback_allocations)
   add_test(NAME neural_lab_component COMMAND neural_lab_tests)
   add_executable(neural_lab_harness lab_harness.cpp)

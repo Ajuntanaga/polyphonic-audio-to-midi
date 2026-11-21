@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <type_traits>
 
@@ -40,16 +41,20 @@ std::string quote(const std::string& s) {
 void require(Steinberg::tresult r,const char* message) {
   if(r!=Steinberg::kResultOk) throw std::runtime_error(message);
 }
-template<class Sample> int run(const char* audio,const char* coefficients,const char* model,const char* output) {
+template<class Sample> int run(const char* audio,const char* coefficients,const char* model,const char* output,
+                              bool gate_enabled,double gate_db) {
   if(!std::getenv("GITHUB_ACTIONS") || std::string(std::getenv("GITHUB_ACTIONS"))!="true")
     throw std::runtime_error("recorded component measurement requires GitHub Actions");
   using namespace Steinberg;using namespace Steinberg::Vst;
   const auto f32=read_audio(audio);
   const std::vector<Sample> source(f32.begin(),f32.end());
   LabEvidence evidence;evidence.generated.reserve(32768);evidence.timing.reserve(ceil_div(source.size(),640));
+  evidence.gate.reserve(ceil_div(source.size(),2000));
   test::Host host;test::Events events(100000);
   LabComponent component;
   require(component.initialize(&host),"initialize failed");
+  require(component.setParamNormalized(2,(gate_db+90)/60),"gate threshold failed");
+  require(component.setParamNormalized(1,gate_enabled?1:0),"gate enable failed");
   SpeakerArrangement arrangement=SpeakerArr::kMono;
   require(component.setBusArrangements(&arrangement,1,&arrangement,1),"mono arrangement failed");
   constexpr int32 format=std::is_same_v<Sample,float>?kSample32:kSample64;
@@ -132,15 +137,19 @@ template<class Sample> int run(const char* audio,const char* coefficients,const 
   }
   std::ofstream workers(folder/"worker.tsv");workers<<"source_end\tqueued_ns\tservice_ns\tmodel_ns\n";
   for(const auto& r:evidence.timing) workers<<r.source_end<<'\t'<<r.queued_ns<<'\t'<<r.service_ns<<'\t'<<r.model_ns<<'\n';
+  std::ofstream gate(folder/"gate.tsv");gate<<"source_end\tframe\tpower\tenabled\topen\n"<<std::setprecision(17);
+  for(const auto& r:evidence.gate) gate<<r.source_end<<'\t'<<r.frame<<'\t'<<r.power<<'\t'<<r.enabled<<'\t'<<r.open<<'\n';
   std::ofstream callbacks(folder/"callbacks.tsv");callbacks<<"source_end\tsamples\tstarted_ns\tduration_ns\tlate_ns\tallocations\tfrees\n";
   for(std::size_t i=0;i<calls;++i) {const auto& r=timing[i];callbacks<<r.source_end<<'\t'<<r.samples<<'\t'
     <<r.started_ns<<'\t'<<r.duration_ns<<'\t'<<r.late_ns<<'\t'<<r.allocations<<'\t'<<r.frees<<'\n';}
-  if(!generated || !delivered || !workers || !callbacks) throw std::runtime_error("table write failed");
+  if(!generated || !delivered || !workers || !callbacks || !gate) throw std::runtime_error("table write failed");
   const bool ok=process_ok && log_ok && dry_identical && event_contract && finish_ok && finished && !blocked &&
     source_received==source.size() && evidence.consumed==source.size() && !input_drops && !delivery_faults &&
     !evidence.output_drops && evidence.error.empty() && !events.overflow && !events.refused && !active_after;
   std::ofstream summary(folder/"summary.json");
   summary<<"{\"sample_format\":"<<(std::is_same_v<Sample,float>?32:64)<<",\"source_samples\":"<<source.size()
+    <<",\"gate_enabled\":"<<(gate_enabled?"true":"false")<<",\"gate_threshold_db\":"<<gate_db
+    <<",\"gate_closed_frames\":"<<evidence.gate_closed_frames<<",\"gate_forced_releases\":"<<evidence.gate_forced_releases
     <<",\"source_received\":"<<source_received<<",\"consumed_samples\":"<<evidence.consumed
     <<",\"model_calls\":"<<evidence.calls<<",\"input_drops\":"<<input_drops
     <<",\"output_drops\":"<<evidence.output_drops<<",\"delivery_faults\":"<<delivery_faults
@@ -156,10 +165,12 @@ template<class Sample> int run(const char* audio,const char* coefficients,const 
 }
 }
 int main(int argc,char** argv) {
-  if(argc!=6) {std::cerr<<"usage: neural_lab_harness mono.f32 coefficients.f64 model output-directory 32|64\n";return 1;}
+  if(argc!=6 && argc!=7) {std::cerr<<"usage: neural_lab_harness mono.f32 coefficients.f64 model output-directory 32|64 [gate-dBFS]\n";return 1;}
   try {
-    if(std::string(argv[5])=="32") return run<float>(argv[1],argv[2],argv[3],argv[4]);
-    if(std::string(argv[5])=="64") return run<double>(argv[1],argv[2],argv[3],argv[4]);
+    const double db=argc==7?std::stod(argv[6]):-60;
+    if(!std::isfinite(db) || db < -90 || db > -30) throw std::runtime_error("invalid gate threshold");
+    if(std::string(argv[5])=="32") return run<float>(argv[1],argv[2],argv[3],argv[4],argc==7,db);
+    if(std::string(argv[5])=="64") return run<double>(argv[1],argv[2],argv[3],argv[4],argc==7,db);
     throw std::runtime_error("unsupported sample format");
   } catch(const std::exception& e) {std::cerr<<"component failure: "<<e.what()<<'\n';return 1;}
 }

@@ -23,7 +23,7 @@ std::array<double,kTaps> load_filter(const std::string& path) {
 }
 struct Processor {
   explicit Processor(const std::array<double,kTaps>& h):resampler(h){}
-  Resampler resampler;Window window;Decoder decoder;std::uint64_t consumed{};
+  Resampler resampler;Window window;Decoder decoder;QuietGate gate;std::uint64_t consumed{};
 };
 }
 struct Worker::Impl {
@@ -56,14 +56,23 @@ struct Worker::Impl {
         const auto& input=packet.input;auto& p=*processor;
         if(input.end!=p.consumed+input.count) throw std::runtime_error("source discontinuity");
         const auto began=monotonic_ns();
+        p.gate.consume(input.data.data(),input.count,packet.gate_settings);
         const auto count=p.resampler.consume(input.data.data(),input.count,converted);
         p.window.append(converted.data(),count);Batch batch;batch.source_end=input.end;
         std::uint64_t model_time=0;
         if(p.window.ready()) {
           p.window.copy(model.window.data());const auto started=monotonic_ns();
           auto prediction=model.predict();model_time=monotonic_ns()-started;
-          for(std::size_t j=0;j<2;++j) p.decoder.consume(
-              model.readout(prediction,0,j),model.readout(prediction,1,j),batch);
+          const bool permit=p.gate.permits_notes();
+          if(evidence) evidence->gate.push_back({input.end,p.decoder.frame(),p.gate.power(),p.gate.enabled(),permit});
+          for(std::size_t j=0;j<2;++j) {
+            const auto before=batch.count;
+            p.decoder.consume(model.readout(prediction,0,j),model.readout(prediction,1,j),batch,permit);
+            if(evidence && !permit) {
+              ++evidence->gate_closed_frames;
+              evidence->gate_forced_releases+=batch.count-before;
+            }
+          }
           p.window.advance();if(evidence) ++evidence->calls;
         }
         p.consumed=input.end;batch.ready_ns=monotonic_ns();

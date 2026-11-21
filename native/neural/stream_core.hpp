@@ -23,13 +23,67 @@ struct Batch {
     events[count++]=e;
   }
 };
+// Optional worker-side level gate. Settings travel with the source packet, not
+// with model completion time. Off preserves the original decoder exactly.
+constexpr std::uint32_t kGateEnabled=0x80000000U, kGateDefault=300U;
+constexpr std::size_t kGateFast=1920, kGateSlow=7680, kGateDwell=3840;
+inline bool valid_gate_settings(std::uint32_t value) noexcept {
+  return (value&~kGateEnabled)<=600U;
+}
+inline double gate_threshold_db(std::uint32_t value) noexcept {
+  return -90.0+0.1*static_cast<double>(value&~kGateEnabled);
+}
+class QuietGate {
+ public:
+  void consume(const float* samples,std::size_t count,std::uint32_t settings) {
+    if(!valid_gate_settings(settings)) throw std::runtime_error("invalid gate settings");
+    if(settings!=settings_) {
+      const bool was_enabled=enabled();settings_=settings;
+      close_power_=std::pow(10.0,gate_threshold_db(settings)/10.0);
+      open_power_=close_power_*std::pow(10.0,6.0/10.0);
+      quiet_=0;
+      if(enabled()!=was_enabled) {
+        history_.fill(0);position_=seen_=0;fast_=slow_=level_=0;open_=false;
+      }
+    }
+    if(!enabled()) return;
+    for(std::size_t i=0;i<count;++i) {
+      if(!std::isfinite(samples[i])) throw std::runtime_error("nonfinite gate source");
+      const double power=static_cast<double>(samples[i])*samples[i];
+      if(seen_>=kGateFast) fast_-=history_[(position_+kGateSlow-kGateFast)%kGateSlow];
+      if(seen_>=kGateSlow) slow_-=history_[position_];
+      history_[position_]=power;position_=(position_+1)%kGateSlow;
+      seen_=std::min(kGateSlow,seen_+1);fast_+=power;slow_+=power;
+      fast_=std::max(0.0,fast_);slow_=std::max(0.0,slow_);
+      level_=std::max(fast_/std::min(seen_,kGateFast),slow_/seen_);
+      if(!open_) {
+        if(level_>=open_power_) {open_=true;quiet_=0;}
+      } else if(level_<close_power_) {
+        if(++quiet_>=kGateDwell) {open_=false;quiet_=0;}
+      } else quiet_=0;
+    }
+  }
+  bool enabled() const noexcept {return (settings_&kGateEnabled)!=0;}
+  bool permits_notes() const noexcept {return !enabled() || open_;}
+  double power() const noexcept {return level_;}
+ private:
+  std::array<double,kGateSlow> history_{};
+  std::size_t position_{},seen_{},quiet_{};
+  std::uint32_t settings_{kGateDefault};
+  double fast_{},slow_{},level_{},close_power_{1e-6},open_power_{3.981071705534972e-6};
+  bool open_{};
+};
 class Decoder {
  public:
-  void consume(const float* notes,const float* onsets,Batch& events) {
+  void consume(const float* notes,const float* onsets,Batch& events,bool permit_notes=true) {
     for(std::size_t i=0;i<kPitches;++i) {
       if(!std::isfinite(notes[i]) || !std::isfinite(onsets[i]) || notes[i]<0 ||
           notes[i]>1 || onsets[i]<0 || onsets[i]>1)
         throw std::runtime_error("invalid activation");
+      if(!permit_notes) {
+        if(active_[i]) events.add({frame_,static_cast<std::uint16_t>(i+21),false});
+        active_[i]=false;attack_[i]=release_[i]=0;continue;
+      }
       // Match Python's float64 comparison with its literal 0.3 threshold.
       const bool high=static_cast<double>(notes[i])>=0.3;
       attack_[i]=high ? std::min(3U,attack_[i]+1U) : 0U;

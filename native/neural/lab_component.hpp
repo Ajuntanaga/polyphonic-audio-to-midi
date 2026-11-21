@@ -36,10 +36,17 @@ class LabComponent final:public Steinberg::Vst::SingleComponentEffect {
  private:
   template<class Sample> Steinberg::tresult process_audio(Steinberg::Vst::ProcessData&);
   void stop_worker() noexcept;
+  bool apply_gate_parameter(Steinberg::Vst::ParamID,Steinberg::Vst::ParamValue) noexcept;
+  std::uint32_t gate_settings() const noexcept {
+    return gate_threshold_.load(std::memory_order_relaxed) |
+      (gate_enabled_.load(std::memory_order_relaxed)?kGateEnabled:0U);
+  }
   Bridge bridge_;std::unique_ptr<Worker> worker_;
   std::string model_path_,filter_path_;LabEvidence* evidence_{};
   std::array<float,1024> mono_{};
   std::atomic<bool> panic_{false};
+  // Host parameters are independent. One packed snapshot is latched per source packet.
+  std::atomic<std::uint32_t> gate_enabled_{0},gate_threshold_{kGateDefault};
   Steinberg::int32 channels_{2},format_{Steinberg::Vst::kSample32},max_block_{1024};
   bool configured_{},active_{},processing_{};
 };
