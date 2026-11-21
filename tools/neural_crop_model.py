@@ -15,10 +15,14 @@ SHAPES = {
 }
 
 
-def export(source, destination, report_path):
+def export(source, destination, report_path, readout_start=164):
     import numpy as np
     import onnx
     from onnx import helper, numpy_helper
+    if readout_start not in (164, 168):
+        raise ValueError('Only the frozen reference and bass readouts are supported')
+    readout = (readout_start, readout_start + 1)
+    schema = SCHEMA if readout_start == 164 else 'm3_basic_pitch_readout168_169_tail144_v1'
     data = source.read_bytes()
     if hashlib.sha256(data).hexdigest() != PARENT_SHA256:
         raise ValueError('Crop only supports the pinned original model')
@@ -61,7 +65,7 @@ def export(source, destination, report_path):
             raise ValueError('Unexpected final head')
         tail = name + '_tail'
         nodes[index].output[0] = tail
-        output_slices.append(sliced(tail,name,READOUT[0]-CROP_START,READOUT[1]+1-CROP_START,
+        output_slices.append(sliced(tail,name,readout[0]-CROP_START,readout[1]+1-CROP_START,
                                     'm3_readout_' + str(index)))
     del model.graph.node[:]
     model.graph.node.extend(nodes[:210]+[crop]+nodes[210:]+output_slices)
@@ -73,8 +77,8 @@ def export(source, destination, report_path):
         shape[1].ClearField('dim_param')
         shape[1].dim_value = 28 if output.name == 'StatefulPartitionedCall:0' else 2
     metadata = {value.key:value.value for value in model.metadata_props}
-    metadata.update({'m3.crop.schema':SCHEMA,'m3.crop.parent_sha256':PARENT_SHA256,
-                     'm3.crop.original_readout':'164,165'})
+    metadata.update({'m3.crop.schema':schema,'m3.crop.parent_sha256':PARENT_SHA256,
+                     'm3.crop.original_readout':','.join(map(str,readout))})
     helper.set_model_props(model,metadata)
     if [node.SerializeToString() for node in model.graph.node[:210]] != upstream:
         raise ValueError('Crop modified the full-window front end')
@@ -84,10 +88,10 @@ def export(source, destination, report_path):
     onnx.checker.check_model(model,full_check=True)
     destination.parent.mkdir(parents=True,exist_ok=True)
     onnx.save_model(model,destination)
-    report = dict(schema=SCHEMA,parent_sha256=PARENT_SHA256,
+    report = dict(schema=schema,parent_sha256=PARENT_SHA256,
         derived_sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
         derived_bytes=destination.stat().st_size,onnx_version=onnx.__version__,
-        retained_time_range=[CROP_START,CROP_END],original_readout=list(READOUT),
+        retained_time_range=[CROP_START,CROP_END],original_readout=list(readout),
         output_frames=2,downstream_maximum_temporal_radius=10,
         full_front_end_unchanged=True,weights_unchanged=True,onnx_check_pass=True,
         numerical_identity='not measured by export')
@@ -100,6 +104,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('source','destination','report-path'):
         parser.add_argument('--'+name,type=Path,required=True)
+    parser.add_argument('--readout-start',type=int,default=164,choices=(164,168))
     print(json.dumps(export(**vars(parser.parse_args()))))
 
 
