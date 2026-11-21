@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T19:39:45.445936+00:00",
-  "updated_at": "2026-11-21T19:39:45.445936+00:00",
+  "updated_at": "2026-11-21T19:45:51.751066+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "1e39a47a96cf92cf10d3e9edde2431356dfa043e",
-  "source_commit": null,
+  "source_commit": "ddd51edd7683ec9a5590a5190b54363b29341d73",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
-  "worker_commit": null,
+  "worker_commit": "ed0d97364b118900dfedc36dc03cb914609d35ec",
   "workflow": "basic-pitch-temporal-reliability.yml",
-  "run_id": null,
+  "run_id": 44942243299,
   "specification": "docs/recovery/basic-pitch-temporal-reliability-20261121.json",
   "specification_sha256": "562b0224eb2dde26a780e01b74ca369e80b098923a30759ba5f250d0d05975e5",
   "design": "docs/recovery/CODEX-M3-TEMPORAL-RELIABILITY-20261121.md",
@@ -22,18 +22,468 @@
     "synthetic_tests_passed": 31,
     "temporal_tests_passed": 9,
     "workflow_yaml_parsed": true,
-    "review": "One independent read-only review: no blocking issue; source reuse and unmeasured classifier overhead disclosed."
+    "review": "One independent read-only review: no blocking issue; source reuse and unmeasured classifier overhead disclosed.",
+    "github_synthetic_checks_passed": true
   },
   "pre_dispatch_run_inventory": "build/recovery/m3-temporal-reliability-20261121/pre-dispatch-runs.stdout",
   "active_worker_runs_before_dispatch": [],
-  "small_report_collection": "not dispatched",
+  "small_report_collection": "collected_once_digest_verified",
   "bulk_policy": "Model, predictions and event spans remain remote",
   "limits": [
-    "Source takes recur across mixtures: not source-disjoint generalization.",
-    "Historical FIFO excludes new classifier overhead: causal-feature feasibility, not measured live delivery.",
-    "No string/unison, raw MIDI lifecycle, allocation, deadline or live-device acceptance."
+    "Source takes recur across mixtures; passage split is not source-disjoint.",
+    "Output uses measured historical FIFO completions but excludes new classifier overhead.",
+    "No string assignment, unison multiplicity, delivered hybrid MIDI, allocation or deadline test.",
+    "Full-record/train scores are descriptive and cannot substitute for test gates.",
+    "No installed change or promotion; positive result only justifies a new-recording test."
   ],
-  "next": "Finish the one review; commit/push scoped files and dispatch one CPU screen. No retuning or second fit.",
+  "next": "Share the final result with Claude and choose a distinct source-disjoint learning or additional-evidence design. This temporal screen is closed: no cutoff change, refit, rerun or promotion. Any new candidate must demonstrate held-out gains without per-label, wrong-note or gap regressions.",
   "installed_output_changed": false,
-  "promotion_accepted": false
+  "promotion_accepted": false,
+  "dispatch_requested_at": "2026-11-21T19:40:59.754335+00:00",
+  "dispatch_exit_code": 0,
+  "dispatch_output": "build/recovery/m3-temporal-reliability-20261121/dispatch.stdout",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44942243299",
+  "output_directory": "build/github-results/basic-pitch-temporal-reliability-44942243299",
+  "small_report_artifact": "m3-basic-pitch-temporal-report-44942243299-1",
+  "bulk_artifact": "m3-basic-pitch-temporal-evidence-44942243299-1",
+  "github_conclusion": "success",
+  "run_created_at": "2026-11-21T19:41:06Z",
+  "last_observed_stage": [
+    "Complete"
+  ],
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 44942194634,
+      "headSha": "ddd51edd7683ec9a5590a5190b54363b29341d73",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44942194634"
+    }
+  ],
+  "artifact_metadata": "build/github-results/basic-pitch-temporal-reliability-44942243299/artifacts.json",
+  "collection_receipt": "build/github-results/basic-pitch-temporal-reliability-44942243299/collection-receipt.json",
+  "report": "build/github-results/basic-pitch-temporal-reliability-44942243299/artifact/basic-pitch-temporal-result/report/report.json",
+  "report_sha256": "8ae4fb5ce5a17e403a2d5f58e85f041512c0363131f15896940dd95ee84ab471",
+  "report_bytes": 1951273,
+  "report_completed_at": "2026-11-21T19:41:50.352014+00:00",
+  "feasibility_passed": false,
+  "decision": "rejected; do not retune this screen",
+  "gates": {
+    "calibration_no_false_growth": true,
+    "ordinary_test_no_regression": true,
+    "ordinary_test_gain_at_least_1pp": false,
+    "ordinary_test_at_least_5_gaining_labels": false,
+    "middle_test_no_regression": true
+  },
+  "identities": {
+    "ordinary": {
+      "current_complete_score": true,
+      "A_complete_score": true,
+      "complete_events_and_clocks": true,
+      "EOF_state": true
+    },
+    "extended-middle": {
+      "current_complete_score": true,
+      "A_complete_score": true,
+      "complete_events_and_clocks": true,
+      "EOF_state": true
+    }
+  },
+  "fit": {
+    "seconds": 7.7521565360000295,
+    "rows": 253880,
+    "positive_rows": 9853,
+    "negative_rows": 244027,
+    "positive_duration": 21941317.0,
+    "negative_duration": 543978235.0,
+    "weights": "Duration weighted, equal total weight for each class, mean weight 1."
+  },
+  "cutoff": {
+    "value": 0.9827410625849704,
+    "rule": "nextafter(max probability of any negative calibration interval, +infinity)",
+    "tuned_on_test": false,
+    "all_admissions_blocked": false
+  },
+  "summary": {
+    "ordinary": {
+      "train": {
+        "source_region": [
+          0,
+          6441719
+        ],
+        "labels": 340,
+        "current": {
+          "annotated_samples": 5330475,
+          "expected_pitch_samples": 22854907,
+          "present_pitch_samples": 8864416,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 5292348,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 5330475,
+          "expected_pitch_samples": 22854907,
+          "present_pitch_samples": 8894359,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 5292348,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 2595612,
+        "candidate_gap_voice_samples": 2595612,
+        "comparison": {
+          "current_pitch_coverage_percent": 38.785613960275576,
+          "model_pitch_coverage_percent": 38.916627400846565,
+          "pitch_coverage_gain_pp": 0.13101344057098985,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 29943,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 7,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 390,
+          "candidate": 395
+        }
+      },
+      "calibration": {
+        "source_region": [
+          6768099,
+          8563308
+        ],
+        "labels": 72,
+        "current": {
+          "annotated_samples": 1556748,
+          "expected_pitch_samples": 5078090,
+          "present_pitch_samples": 2112882,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 1442479,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 1556748,
+          "expected_pitch_samples": 5078090,
+          "present_pitch_samples": 2112882,
+          "all_expected_pitches_samples": 0,
+          "exact_pitch_set_samples": 0,
+          "one_voice_per_pitch_samples": 0,
+          "extra_pitch_voice_samples": 1442479,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 468941,
+        "candidate_gap_voice_samples": 468941,
+        "comparison": {
+          "current_pitch_coverage_percent": 41.60780923536211,
+          "model_pitch_coverage_percent": 41.60780923536211,
+          "pitch_coverage_gain_pp": 0.0,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 0,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 0,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 59,
+          "candidate": 59
+        }
+      },
+      "test": {
+        "source_region": [
+          8889626,
+          10689600
+        ],
+        "labels": 63,
+        "current": {
+          "annotated_samples": 1508216,
+          "expected_pitch_samples": 4328055,
+          "present_pitch_samples": 1973489,
+          "all_expected_pitches_samples": 53249,
+          "exact_pitch_set_samples": 53249,
+          "one_voice_per_pitch_samples": 53249,
+          "extra_pitch_voice_samples": 933383,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 1508216,
+          "expected_pitch_samples": 4328055,
+          "present_pitch_samples": 1973489,
+          "all_expected_pitches_samples": 53249,
+          "exact_pitch_set_samples": 53249,
+          "one_voice_per_pitch_samples": 53249,
+          "extra_pitch_voice_samples": 933383,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 438291,
+        "candidate_gap_voice_samples": 438291,
+        "comparison": {
+          "current_pitch_coverage_percent": 45.59759522464479,
+          "model_pitch_coverage_percent": 45.59759522464479,
+          "pitch_coverage_gain_pp": 0.0,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 0,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 0,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 74,
+          "candidate": 74
+        }
+      },
+      "full_record_descriptive": {
+        "source_region": [
+          0,
+          10689600
+        ],
+        "labels": 499,
+        "current": {
+          "annotated_samples": 8914836,
+          "expected_pitch_samples": 33819101,
+          "present_pitch_samples": 13525345,
+          "all_expected_pitches_samples": 53249,
+          "exact_pitch_set_samples": 53249,
+          "one_voice_per_pitch_samples": 53249,
+          "extra_pitch_voice_samples": 7808309,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 8914836,
+          "expected_pitch_samples": 33819101,
+          "present_pitch_samples": 13555288,
+          "all_expected_pitches_samples": 53249,
+          "exact_pitch_set_samples": 53249,
+          "one_voice_per_pitch_samples": 53249,
+          "extra_pitch_voice_samples": 7808309,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 3629163,
+        "candidate_gap_voice_samples": 3629163,
+        "comparison": {
+          "current_pitch_coverage_percent": 39.993212711360954,
+          "model_pitch_coverage_percent": 40.08175143390122,
+          "pitch_coverage_gain_pp": 0.08853872254025913,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 29943,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 7,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 528,
+          "candidate": 533
+        }
+      },
+      "probability_diagnostics": {
+        "train": {
+          "interval_pitch_rows": 253968,
+          "positive_rows": 9853,
+          "negative_rows": 244115,
+          "admitted_positive_rows": 26,
+          "admitted_negative_rows": 0,
+          "duration_weighted_auc": 0.9775975751778192,
+          "caveat": "Diagnostic only; full-interval target treats every partial-label interval as negative. This statistic cannot change the frozen cutoff or acceptance gates."
+        },
+        "calibration": {
+          "interval_pitch_rows": 71016,
+          "positive_rows": 2204,
+          "negative_rows": 68812,
+          "admitted_positive_rows": 0,
+          "admitted_negative_rows": 0,
+          "duration_weighted_auc": 0.9758614457791288,
+          "caveat": "Diagnostic only; full-interval target treats every partial-label interval as negative. This statistic cannot change the frozen cutoff or acceptance gates."
+        },
+        "test": {
+          "interval_pitch_rows": 71192,
+          "positive_rows": 1878,
+          "negative_rows": 69314,
+          "admitted_positive_rows": 0,
+          "admitted_negative_rows": 0,
+          "duration_weighted_auc": 0.9789099343654623,
+          "caveat": "Diagnostic only; full-interval target treats every partial-label interval as negative. This statistic cannot change the frozen cutoff or acceptance gates."
+        }
+      }
+    },
+    "extended-middle": {
+      "test": {
+        "source_region": [
+          0,
+          2241600
+        ],
+        "labels": 6,
+        "current": {
+          "annotated_samples": 2073600,
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2021510,
+          "all_expected_pitches_samples": 2021510,
+          "exact_pitch_set_samples": 1516739,
+          "one_voice_per_pitch_samples": 1516739,
+          "extra_pitch_voice_samples": 528259,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 2073600,
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2021510,
+          "all_expected_pitches_samples": 2021510,
+          "exact_pitch_set_samples": 1516739,
+          "one_voice_per_pitch_samples": 1516739,
+          "extra_pitch_voice_samples": 528259,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 189175,
+        "candidate_gap_voice_samples": 189175,
+        "comparison": {
+          "current_pitch_coverage_percent": 97.4879436728395,
+          "model_pitch_coverage_percent": 97.4879436728395,
+          "pitch_coverage_gain_pp": 0.0,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 0,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 0,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 14,
+          "candidate": 14
+        }
+      },
+      "full_record_descriptive": {
+        "source_region": [
+          0,
+          2241600
+        ],
+        "labels": 6,
+        "current": {
+          "annotated_samples": 2073600,
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2021510,
+          "all_expected_pitches_samples": 2021510,
+          "exact_pitch_set_samples": 1516739,
+          "one_voice_per_pitch_samples": 1516739,
+          "extra_pitch_voice_samples": 528259,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "candidate": {
+          "annotated_samples": 2073600,
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2021510,
+          "all_expected_pitches_samples": 2021510,
+          "exact_pitch_set_samples": 1516739,
+          "one_voice_per_pitch_samples": 1516739,
+          "extra_pitch_voice_samples": 528259,
+          "duplicate_expected_pitch_voice_samples": 0
+        },
+        "current_gap_voice_samples": 189175,
+        "candidate_gap_voice_samples": 189175,
+        "comparison": {
+          "current_pitch_coverage_percent": 97.4879436728395,
+          "model_pitch_coverage_percent": 97.4879436728395,
+          "pitch_coverage_gain_pp": 0.0,
+          "sample_deltas": {
+            "annotated_samples": 0,
+            "expected_pitch_samples": 0,
+            "present_pitch_samples": 0,
+            "all_expected_pitches_samples": 0,
+            "exact_pitch_set_samples": 0,
+            "one_voice_per_pitch_samples": 0,
+            "extra_pitch_voice_samples": 0,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "extra_gap_pitch_samples_delta": 0,
+          "no_pitch_safety_regression": true
+        },
+        "labels_gaining": 0,
+        "labels_losing": 0,
+        "longest_hold_losses": 0,
+        "occupancy_segments": {
+          "current": 14,
+          "candidate": 14
+        }
+      },
+      "probability_diagnostics": {
+        "test": {
+          "interval_pitch_rows": 88176,
+          "positive_rows": 925,
+          "negative_rows": 87251,
+          "admitted_positive_rows": 0,
+          "admitted_negative_rows": 0,
+          "duration_weighted_auc": 0.9994617362193362,
+          "caveat": "Diagnostic only; full-interval target treats every partial-label interval as negative. This statistic cannot change the frozen cutoff or acceptance gates."
+        }
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "id": 14722246207,
+      "name": "m3-basic-pitch-temporal-evidence-44942243299-1",
+      "size_in_bytes": 2561249,
+      "digest": "sha256:4821731f741ece4a6eda6f71b53851ef221579ae33c150065985017521b53d08",
+      "expired": false
+    },
+    {
+      "id": 14721647779,
+      "name": "m3-basic-pitch-temporal-report-44942243299-1",
+      "size_in_bytes": 115962,
+      "digest": "sha256:b95563371499ab962cfa1b3e826259f47f5b31f3fde64eb204bef78380a22496",
+      "expired": false
+    }
+  ],
+  "collected_at": "2026-11-21T19:43:13.391423+00:00",
+  "bulk_downloaded": false
 }

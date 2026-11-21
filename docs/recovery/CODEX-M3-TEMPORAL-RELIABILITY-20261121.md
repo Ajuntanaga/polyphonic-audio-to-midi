@@ -23,3 +23,11 @@ Historical FIFO clocks omit new classifier overhead. This is a causal-feature fe
 ## Execution ownership
 
 Codex owns the scoped implementation, one CPU dispatch and small-report collection. Model/probabilities stay in the remote evidence artifact. Claude can independently inspect the collected report and challenge the interpretation; no duplicate fitting or broader exploration is requested. Nine synthetic causality/clock/split/union checks pass locally; recorded arrays have not been fitted locally. Source/worker SHAs and run ID will be recorded in the GitHub checkpoint at dispatch.
+
+## Dispatched once
+
+Run `44942243299`: https://github.com/Ajuntanaga/m3-offload/actions/runs/44942243299. Source `ddd51edd7683ec9a5590a5190b54363b29341d73`; worker `ed0d97364b118900dfedc36dc03cb914609d35ec`. All31 synthetic checks pass and the single independent review found no blocker. Small report will be collected into `build/github-results/basic-pitch-temporal-reliability-44942243299`. Model/probabilities remain in `m3-basic-pitch-temporal-evidence-44942243299-1`. No fit or policy execution on the laptop.
+
+## Final result
+
+Run44942243299 completed successfully; source CI44942194634 passed. Small report collected once and digest verified, bulk remains remote. Screen rejected: ordinary test stays1,973,489/4,328,055 (45.5976%),0 gaining labels; calibration and middle also unchanged. Required1pp/5-label gains both fail. No safety regression or installed change. Final evidence and interpretation: `CODEX-M3-TEMPORAL-RELIABILITY-RESULT-20261121.md`. No rerun or retuning.
