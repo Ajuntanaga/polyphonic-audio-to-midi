@@ -1,0 +1,375 @@
+{
+  "schema": 1,
+  "state": "completed",
+  "final": true,
+  "verdict": "rejected",
+  "started_at": "2026-11-21T19:02:32.757949+00:00",
+  "completed_at": "2026-11-21T19:02:46.844900+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "2b75f8fe0dc9fe4bf46f6e50a2ce6bd5e5efad0a",
+  "design": "docs/recovery/CODEX-M3-NATIVE-NEURAL-CONSENSUS-20261121.md",
+  "implementation": "tools/native_neural_consensus.py",
+  "tests": "tests/test_native_neural_consensus.py",
+  "result_note": "docs/recovery/CODEX-M3-NATIVE-NEURAL-CONSENSUS-RESULT-20261121.md",
+  "report": "build/recovery/m3-native-neural-consensus-20261121/report.json",
+  "report_bytes": 1291882,
+  "report_sha256": "6a80b45e7f7ba5a3732e471cb825fa6474297938a5a24661dc23792b6dc34d06",
+  "provenance": {
+    "bridge_run": 44891340815,
+    "bridge_sha256": "da1ba0a1e2aa0bd0df9b9db07a12344d24c683a793545e60c84d2ac4a2aec773",
+    "baseline_sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1",
+    "implementation_sha256": "02e81d0658d95c891b0ce719a0b203ea53f7f9cf4759e48760665840e95de24a"
+  },
+  "protocol": {
+    "predicate": "quiet == 0 and selector_pool_member == 1 and direct == 1",
+    "fusion": "CURRENT union (measured FIFO Basic Pitch intersection native confirmation)",
+    "neural_arm": "A measured FIFO completion",
+    "native_confirmation_availability": "ceil((post_sample_index + 1)/512)*512; last observation per callback; one subsequent block; missing observation expires",
+    "no_pitch_cutoff_or_tuning": true
+  },
+  "measurement": "Distinct-pitch sample occupancy, not installed tuner frame/string matches",
+  "validation": {
+    "synthetic_tests_passed": 7,
+    "current_and_neural_full_score_identities_passed": 4,
+    "trace_hashes_and_event_pins_verified": true,
+    "all_505_current_labels_preserve_presence_and_longest": true
+  },
+  "acceptance": {
+    "both_datasets_no_pitch_safety_regression": false,
+    "ordinary_present_gain": true
+  },
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "new_cloud_job": false,
+  "new_audio_model_or_native_processing": false,
+  "pre_score_stops": [
+    {
+      "report": "build/recovery/m3-native-neural-consensus-20261121-input-pin-stop/report.json",
+      "correction": "Distinguish producer raw TSV digest from local gzip digest; no policy change."
+    },
+    {
+      "report": "build/recovery/m3-native-neural-consensus-20261121-quiet-schema-stop/report.json",
+      "correction": "Quiet disposition is enum 0..7, with 0 not_quiet. Predicate unchanged; nonzero remains blocked."
+    }
+  ],
+  "limits": [
+    "Native confirmation projected to completed aligned 512-sample callbacks; joint runtime unmeasured",
+    "Fail closed: legacy inclusion filters may omit eligible candidate rows",
+    "Distinct-pitch occupancy; no lane, unison multiplicity or delivered-host MIDI claim",
+    "Hybrid raw ownership, retriggers, allocations, native deadlines and joint host delivery were not executed."
+  ],
+  "datasets": {
+    "ordinary": {
+      "trace_pin": {
+        "path": "build/github-results/unfiltered-observation-44835727027/evidence/github-results/unfiltered-observation/ordinary-current-on-512-outcome-v5.tsv.gz",
+        "sha256": "cd905b2f5c2d9e9ff0d898c87c893fe3f79ca6b388c685dd052256d421879541",
+        "raw_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93",
+        "run_id": 44835727027,
+        "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+        "raw_midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a"
+      },
+      "trace": {
+        "schema": "# m3_candidate_outcome_v5",
+        "rows": 167025,
+        "candidate_rows": 1310294,
+        "confirmed_candidate_rows": 314662,
+        "missing_decision_rows": 0,
+        "quiet_rows": 16108,
+        "quiet_disposition_counts": [
+          150917,
+          62,
+          4783,
+          0,
+          0,
+          10949,
+          0,
+          314
+        ],
+        "first_sample": 63,
+        "first_tick": 1,
+        "last_sample": 10689599,
+        "last_tick": 167025,
+        "raw_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93"
+      },
+      "projection": {
+        "observed_rows": 167025,
+        "observed_callbacks": 20879,
+        "last_observed_sample": 10689599,
+        "block_size": 512,
+        "expiry": "One callback after availability; missing observations do not coast"
+      },
+      "common_support": {
+        "sample_count": 10681922,
+        "sample_rate": 96000,
+        "recording_sample_count": 10689600,
+        "removed_source_samples": 7678,
+        "removed_label_samples": 0,
+        "wholly_outside_labels": 0
+      },
+      "current_identity": true,
+      "neural_A_identity": true,
+      "compact": {
+        "CURRENT": {
+          "expected_pitch_samples": 33819101,
+          "present_pitch_samples": 13525345,
+          "present_percent": 39.993212711360954,
+          "wrong_pitch_samples": 7808309,
+          "gap_extra_pitch_samples": 3621485,
+          "exact_pitch_set_samples": 53249,
+          "all_expected_samples": 53249
+        },
+        "A": {
+          "expected_pitch_samples": 33819101,
+          "present_pitch_samples": 18583289,
+          "present_percent": 54.94909223045284,
+          "wrong_pitch_samples": 3008188,
+          "gap_extra_pitch_samples": 3568575,
+          "exact_pitch_set_samples": 882053,
+          "all_expected_samples": 1353515
+        },
+        "hybrid": {
+          "expected_pitch_samples": 33819101,
+          "present_pitch_samples": 15737208,
+          "present_percent": 46.53349005344642,
+          "wrong_pitch_samples": 7960475,
+          "gap_extra_pitch_samples": 3804554,
+          "exact_pitch_set_samples": 297030,
+          "all_expected_samples": 431309
+        }
+      },
+      "deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": 2211863,
+        "all_expected_pitches_samples": 378060,
+        "exact_pitch_set_samples": 243781,
+        "one_voice_per_pitch_samples": 243781,
+        "extra_pitch_voice_samples": 152166,
+        "duplicate_expected_pitch_voice_samples": 0,
+        "extra_gap_pitch_samples": 183069,
+        "pitch_coverage_gain_pp": 6.540277342085468
+      },
+      "labels": {
+        "count": 499,
+        "presence_gain": 99,
+        "presence_loss": 0,
+        "longest_gain": 94,
+        "longest_loss": 0
+      },
+      "pitch_bands": {
+        "below48": {
+          "annotated_label_samples": 9561144,
+          "current_present_label_samples": 6690873,
+          "model_present_label_samples": 7143154,
+          "lost_labels": 0
+        },
+        "48to59": {
+          "annotated_label_samples": 9852087,
+          "current_present_label_samples": 6292681,
+          "model_present_label_samples": 6448581,
+          "lost_labels": 0
+        },
+        "60to71": {
+          "annotated_label_samples": 9319146,
+          "current_present_label_samples": 541791,
+          "model_present_label_samples": 2098049,
+          "lost_labels": 0
+        },
+        "72plus": {
+          "annotated_label_samples": 5086724,
+          "current_present_label_samples": 0,
+          "model_present_label_samples": 47424,
+          "lost_labels": 0
+        }
+      },
+      "pitch_occupancy_segments": {
+        "current": 528,
+        "hybrid": 1063,
+        "confirmed_neural": 1611
+      },
+      "source_raw_event_audits": {
+        "current": {
+          "raw_transitions": 11851,
+          "raw_note_ons": 5926,
+          "open_at_recording_end": [
+            {
+              "voice_id": 0,
+              "note": 44,
+              "start_sample": 10627135,
+              "observed_hold_samples": 62465
+            }
+          ],
+          "pairing_valid": true,
+          "eof_policy": "Occupancy observed through EOF; no physical release is inferred."
+        },
+        "neural_A": {
+          "event_count": 1192,
+          "events_at_or_after_eof": 0,
+          "pitches_active_at_recording_end": [],
+          "pairing_valid": true,
+          "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+        }
+      },
+      "spans_evidence": {
+        "name": "ordinary-consensus-spans.json.gz",
+        "bytes": 49987,
+        "sha256": "0d0dc2973a0dc3e4c4392b62706887bfae1f7cc36b9054c3714aed816022f2a3"
+      },
+      "no_pitch_safety_regression": false
+    },
+    "extended-middle": {
+      "trace_pin": {
+        "path": "build/github-results/qualified-tier-retention-corpus-43736868711/saved-extended-middle/extended-middle-current-on-512-outcome.tsv.gz",
+        "sha256": "82781c2db888e66c2de3acda0bc904701299891f40a5d56a1bbe2ca000e0a269",
+        "raw_sha256": "04f0a2c56fdb7713653181b1ba70981044824df9b6b515afa7cb9ebb97e1aa65",
+        "run_id": 43736868711,
+        "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+        "raw_midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601"
+      },
+      "trace": {
+        "schema": "# m3_candidate_outcome_v2",
+        "rows": 35025,
+        "candidate_rows": 86787,
+        "confirmed_candidate_rows": 26191,
+        "missing_decision_rows": 0,
+        "quiet_rows": 2555,
+        "quiet_disposition_counts": [
+          32470,
+          435,
+          817,
+          60,
+          342,
+          888,
+          0,
+          13
+        ],
+        "first_sample": 63,
+        "first_tick": 1,
+        "last_sample": 2241599,
+        "last_tick": 35025,
+        "raw_sha256": "04f0a2c56fdb7713653181b1ba70981044824df9b6b515afa7cb9ebb97e1aa65"
+      },
+      "projection": {
+        "observed_rows": 35025,
+        "observed_callbacks": 4379,
+        "last_observed_sample": 2241599,
+        "block_size": 512,
+        "expiry": "One callback after availability; missing observations do not coast"
+      },
+      "common_support": {
+        "sample_count": 2233574,
+        "sample_rate": 96000,
+        "recording_sample_count": 2241600,
+        "removed_source_samples": 8026,
+        "removed_label_samples": 0,
+        "wholly_outside_labels": 0
+      },
+      "current_identity": true,
+      "neural_A_identity": true,
+      "compact": {
+        "CURRENT": {
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2021510,
+          "present_percent": 97.4879436728395,
+          "wrong_pitch_samples": 528259,
+          "gap_extra_pitch_samples": 183006,
+          "exact_pitch_set_samples": 1516739,
+          "all_expected_samples": 2021510
+        },
+        "A": {
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2031528,
+          "present_percent": 97.97106481481481,
+          "wrong_pitch_samples": 261056,
+          "gap_extra_pitch_samples": 111451,
+          "exact_pitch_set_samples": 1770472,
+          "all_expected_samples": 2031528
+        },
+        "hybrid": {
+          "expected_pitch_samples": 2073600,
+          "present_pitch_samples": 2041605,
+          "present_percent": 98.45703125,
+          "wrong_pitch_samples": 531839,
+          "gap_extra_pitch_samples": 183006,
+          "exact_pitch_set_samples": 1513159,
+          "all_expected_samples": 2041605
+        }
+      },
+      "deltas": {
+        "annotated_samples": 0,
+        "expected_pitch_samples": 0,
+        "present_pitch_samples": 20095,
+        "all_expected_pitches_samples": 20095,
+        "exact_pitch_set_samples": -3580,
+        "one_voice_per_pitch_samples": -3580,
+        "extra_pitch_voice_samples": 3580,
+        "duplicate_expected_pitch_voice_samples": 0,
+        "extra_gap_pitch_samples": 0,
+        "pitch_coverage_gain_pp": 0.9690875771604939
+      },
+      "labels": {
+        "count": 6,
+        "presence_gain": 1,
+        "presence_loss": 0,
+        "longest_gain": 1,
+        "longest_loss": 0
+      },
+      "pitch_bands": {
+        "below48": {
+          "annotated_label_samples": 0,
+          "current_present_label_samples": 0,
+          "model_present_label_samples": 0,
+          "lost_labels": 0
+        },
+        "48to59": {
+          "annotated_label_samples": 2073600,
+          "current_present_label_samples": 2021510,
+          "model_present_label_samples": 2041605,
+          "lost_labels": 0
+        },
+        "60to71": {
+          "annotated_label_samples": 0,
+          "current_present_label_samples": 0,
+          "model_present_label_samples": 0,
+          "lost_labels": 0
+        },
+        "72plus": {
+          "annotated_label_samples": 0,
+          "current_present_label_samples": 0,
+          "model_present_label_samples": 0,
+          "lost_labels": 0
+        }
+      },
+      "pitch_occupancy_segments": {
+        "current": 14,
+        "hybrid": 15,
+        "confirmed_neural": 72
+      },
+      "source_raw_event_audits": {
+        "current": {
+          "raw_transitions": 906,
+          "raw_note_ons": 453,
+          "open_at_recording_end": [],
+          "pairing_valid": true,
+          "eof_policy": "Occupancy observed through EOF; no physical release is inferred."
+        },
+        "neural_A": {
+          "event_count": 28,
+          "events_at_or_after_eof": 0,
+          "pitches_active_at_recording_end": [],
+          "pairing_valid": true,
+          "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+        }
+      },
+      "spans_evidence": {
+        "name": "extended-middle-consensus-spans.json.gz",
+        "bytes": 1209,
+        "sha256": "da09fbe6fc18c1ad54d7b3a926e9bc95a06361c3e47b1ff13e18cf99ec3fb21d"
+      },
+      "no_pitch_safety_regression": false
+    }
+  },
+  "next": "Do not retune or rerun this rejected predicate. Reconcile Claude-owned rolling upstream U/D2 saved-data result before the next joint design; no duplicate processing.",
+  "previous_eight_hour_window": "Completed at 2026-11-21T17:38:42Z; broader live-readiness goal remains open."
+}
