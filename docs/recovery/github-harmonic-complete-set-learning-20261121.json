@@ -1,25 +1,25 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T23:32:51.423545+00:00",
-  "updated_at": "2026-11-21T23:33:44.985370+00:00",
+  "updated_at": "2026-11-21T23:42:53.907133+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "77bce90b0096201674080fa46b8e58ff53aa0abe",
-  "source_commit": null,
+  "source_commit": "f6d3fb3e7796f1734a96597e8eda4aaeae7a50d1",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_base_commit": "b18546e6556e84659b307f46c4b61037c5bc7d98",
-  "worker_commit": null,
+  "worker_commit": "953f3be4b5a5b98b19d5c59df761197fc0b9954c",
   "workflow": "harmonic-complete-set-learning.yml",
   "specification": "docs/recovery/harmonic-complete-set-learning-20261121.json",
   "specification_sha256": "20340fd1a644ec8dec4e3118953f34fe93859f7ade6018e3049b95df5f2ea1cc",
   "design": "docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44962588969,
   "protocol": "One fixed complete-set objective on the unchanged harmonic-context network, identical training mixtures, seed and schedule. Retain absolute pitch BCE and add an equally weighted worst-polarity logistic term per mixture. Same train-only cutoff rule and fail-closed gates.",
-  "stage": "local checks passed; source and worker publication pending",
+  "stage": "rejected at training complete-chord gate; held-out and continuous scoring skipped",
   "baseline": {
     "run_id": 44960075844,
     "source_commit": "a5f46bab45be9cf87126f21426857358c6f75b2d",
@@ -32,13 +32,14 @@
     "baseline_run_id": 44960075844,
     "file": "train-mixture-plan.json.gz",
     "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
-    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded",
+    "verified": true
   },
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Keep new model and predictions remote; collect small report once.",
-  "next": "Complete synthetic checks, pin source/worker, and dispatch one bounded CPU screen with unchanged gates.",
+  "next": "Compare the retained training errors against the baseline, including the eleven fewer complete single-pitch sets, before selecting a distinct design. Preserve this rejection, cutoff, source labels and all safety gates; no automatic rerun or held-out tuning. A later candidate still needs the 70% complete-set training gates, both untouched roles and continuous benefit without per-label or false-output regression. No next job queued.",
   "validation": {
     "local_synthetic_tests": 60,
     "local_passed": 51,
@@ -50,7 +51,218 @@
       "state": "complete",
       "reviewer": "Codex",
       "scope": "Loss formula, masked polarities, seeded fit and saved objective, training-plan identity, unchanged stage gates and CPU workflow",
-      "verdict": "No material blocker; remote Torch execution remains pending."
+      "verdict": "No material blocker; all 60 remote synthetic checks subsequently passed."
+    },
+    "remote_synthetic_step": "passed",
+    "remote_synthetic_tests": 60,
+    "remote_passed": 60,
+    "remote_skipped": 0,
+    "remote_test_log": "build/github-results/harmonic-complete-set-learning-44962588969/artifact/harmonic-complete-set-logs/tests.log"
+  },
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44962588969",
+  "output_directory": "build/github-results/harmonic-complete-set-learning-44962588969",
+  "small_artifact_name": "m3-harmonic-complete-set-report-44962588969-1",
+  "bulk_artifact_name": "m3-harmonic-complete-set-evidence-44962588969-1",
+  "collection_state": "collected_once_verified",
+  "source_ci": {
+    "run_id": 44962573168,
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44962573168",
+    "state": "completed",
+    "conclusion": "success"
+  },
+  "workflow_conclusion": "success",
+  "report": "build/github-results/harmonic-complete-set-learning-44962588969/artifact/harmonic-complete-set-result/report/report.json",
+  "report_sha256": "e21c4284ab15f2c23fb53988d3eba5c8ce29c1cf18b07181fa6f72f7b807251c",
+  "result_note": "docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-RESULT-20261121.md",
+  "collection_receipt": "build/github-results/harmonic-complete-set-learning-44962588969/collection-receipt.json",
+  "artifact": {
+    "collected_at": "2026-11-21T23:41:34.786059+00:00",
+    "artifact_id": 14730670654,
+    "name": "m3-harmonic-complete-set-report-44962588969-1",
+    "bytes": 17087,
+    "sha256": "65a913a254725a1e11695a90e63f2444106a9b5745ec1926f4047b118a4260c4",
+    "server_digest": "sha256:65a913a254725a1e11695a90e63f2444106a9b5745ec1926f4047b118a4260c4",
+    "verified": true,
+    "bulk_downloaded": false
+  },
+  "bulk_artifact": {
+    "id": 14730172985,
+    "name": "m3-harmonic-complete-set-evidence-44962588969-1",
+    "size_in_bytes": 4574244,
+    "digest": "sha256:a23bc1cdf58e1d03b6d0ad8c6c90c05bafa6dd35dcd554c4c085975eb350f209",
+    "expires_at": "2026-12-05T23:40:31Z"
+  },
+  "bulk_collected": false,
+  "comparison": {
+    "baseline_run": 44960075844,
+    "current_run": 44962588969,
+    "baseline": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 43101,
+        "false_positive": 433,
+        "false_negative": 2597,
+        "precision_percent": 99.00537510911012,
+        "recall_percent": 94.31703794476782,
+        "exact_set_percent": 84.625244140625,
+        "exact_sets": 13865
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3124,
+          "false_positive": 18,
+          "false_negative": 8,
+          "precision_percent": 99.42711648631445,
+          "recall_percent": 99.74457215836526,
+          "exact_set_percent": 99.23371647509579,
+          "exact_sets": 3108
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6303,
+          "false_positive": 50,
+          "false_negative": 137,
+          "precision_percent": 99.21297025027546,
+          "recall_percent": 97.87267080745342,
+          "exact_set_percent": 94.5031055900621,
+          "exact_sets": 3043
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9363,
+          "false_positive": 98,
+          "false_negative": 390,
+          "precision_percent": 98.96416869252722,
+          "recall_percent": 96.00123039064903,
+          "exact_set_percent": 87.11165795139956,
+          "exact_sets": 2832
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 12830,
+          "false_positive": 143,
+          "false_negative": 898,
+          "precision_percent": 98.89771062976952,
+          "recall_percent": 93.45862470862471,
+          "exact_set_percent": 73.28088578088578,
+          "exact_sets": 2515
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11481,
+          "false_positive": 124,
+          "false_negative": 1164,
+          "precision_percent": 98.93149504523912,
+          "recall_percent": 90.79478054567022,
+          "exact_set_percent": 61.17042309213127,
+          "exact_sets": 1547
+        }
+      },
+      "silence_false_predictions": 0
+    },
+    "current": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 43654,
+        "false_positive": 440,
+        "false_negative": 2044,
+        "precision_percent": 99.00213180931647,
+        "recall_percent": 95.52715654952077,
+        "exact_set_percent": 88.29345703125,
+        "exact_sets": 14466
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3125,
+          "false_positive": 32,
+          "false_negative": 7,
+          "precision_percent": 98.98637947418435,
+          "recall_percent": 99.7765006385696,
+          "exact_set_percent": 98.88250319284802,
+          "exact_sets": 3097
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6337,
+          "false_positive": 64,
+          "false_negative": 103,
+          "precision_percent": 99.00015622558975,
+          "recall_percent": 98.40062111801242,
+          "exact_set_percent": 95.31055900621118,
+          "exact_sets": 3069
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9485,
+          "false_positive": 101,
+          "false_negative": 268,
+          "precision_percent": 98.94638013770081,
+          "recall_percent": 97.25212755049728,
+          "exact_set_percent": 90.61827130113811,
+          "exact_sets": 2946
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13025,
+          "false_positive": 128,
+          "false_negative": 703,
+          "precision_percent": 99.02683798372995,
+          "recall_percent": 94.87907925407926,
+          "exact_set_percent": 80.85664335664336,
+          "exact_sets": 2775
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11682,
+          "false_positive": 115,
+          "false_negative": 963,
+          "precision_percent": 99.02517589217598,
+          "recall_percent": 92.38434163701068,
+          "exact_set_percent": 69.55318307631475,
+          "exact_sets": 1759
+        }
+      },
+      "silence_false_predictions": 0
+    },
+    "five_pitch_gate": {
+      "current": 1759,
+      "total": 2529,
+      "target": 1771,
+      "target_percent": 70.02767892447608,
+      "progress_percent": 99.32241671372107,
+      "gap_sets": 12,
+      "gap_percentage_points": 0.4744958481613286
     }
+  },
+  "decision": "rejected at training complete-chord gate",
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training complete-chord gate failed."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
   }
 }

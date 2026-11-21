@@ -1,10 +1,10 @@
-## Complete-set objective prepared: one fixed loss, unchanged safety gates
+## Complete-set objective final: five-pitch gate short by twelve sets
 
-Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; frozen plan: `docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-PLAN-20261121.md`. One complete-set objective adds weakest-true/strongest-false logistic loss to the existing mean pitch BCE. Network, source roles, training mixtures, initialization/order seed, optimizer, schedule and cutoff rule are unchanged. The generated training plan must match run44960075844 before fitting.
+Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-RESULT-20261121.md`. Run44962588969 final/success, source `f6d3fb3e7796f1734a96597e8eda4aaeae7a50d1`, worker `953f3be4b5a5b98b19d5c59df761197fc0b9954c`. Source CI44962573168 and all60 GitHub synthetic checks passed. Small report collected once and server-digest verified; model/predictions remain remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Sixty local synthetic checks: 51 passed, nine deferred to the pinned GitHub environment (eight Torch, one sklearn). Training precision>=99%, recall>=80%, exact sets>=70% overall and each3/4/5, zero silence extras; five-pitch target1771/2529. Both untouched held-out roles must then pass before any continuous replay. Installed/default output, labels and scoreboard unchanged. One CPU workflow authorized by the standing job instruction; no promotion, retune or automatic rerun.
+Loss-only comparison with identical training plan: complete3/4/5-pitch mixtures improve87.11/73.28/61.17%->90.62/80.86/69.55%. Five-pitch CURRENT1759/2529 misses TARGET1771 by12sets; screen REJECTED. Expected training pitches43101->43654/45698 (94.32->95.53%); false pitches433->440 at99.0021% precision. Complete single-pitch sets3108->3097/3132. Silence false0. Held-out and continuous scoring skipped; all555source labels and installed/default output unchanged.
 
-Next: publish only these source/worker files, record exact SHAs and dispatch `harmonic-complete-set-learning.yml` once. Run ID not yet assigned. Claude is paused; no fresh Claude review claimed. Earlier entries below are historical.
+Next: compare retained training errors, including the eleven fewer complete single-pitch sets, against the baseline before a distinct design. Preserve this rejection, cutoff and all gates; no automatic rerun or held-out tuning, no next job queued. Claude is paused; no fresh Claude review claimed. Live-readiness goal remains active. Earlier entries below are historical.
 
 ## Harmonic-context training diagnosis final: missing notes and ordering errors
 
