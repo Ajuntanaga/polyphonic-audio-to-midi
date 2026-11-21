@@ -1,0 +1,1313 @@
+{
+  "schema": "m3_source_pitch_diagnostic_summary_v1",
+  "created_at": "2026-11-21T21:10:38.892382+00:00",
+  "run_id": 44949401574,
+  "report": "build/github-results/source-pitch-diagnostic-44949401574/artifact/source-pitch-diagnostic-result/report/report.json",
+  "report_sha256": "c9e8b8563810d74c63568f6e43eadede4931d7507f803b093e31e4279c2e0b3c",
+  "integrity": {
+    "saved_plans_reproduced": 4,
+    "source_takes": 555,
+    "source_roles": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "unique_crops": 72153,
+    "component_exposures": 70395,
+    "template_exposures": 1800,
+    "expected_cents_rows_verified": 555
+  },
+  "roles": {
+    "train": {
+      "takes": 200,
+      "unique_crops": 48768,
+      "classes": {
+        "periodic_target": 45262,
+        "periodic_other": 879,
+        "unresolved_periodicity": 2627,
+        "silent": 0
+      },
+      "class_percent": {
+        "periodic_target": 92.8108595800525,
+        "periodic_other": 1.8024114173228347,
+        "unresolved_periodicity": 5.386729002624672,
+        "silent": 0.0
+      },
+      "takes_with_any_periodic_other": 27,
+      "takes_with_zero_periodic_target": 0,
+      "takes_with_all_periodic_other": 0,
+      "top_10_periodic_other_crops": 692,
+      "rms_dbfs_p05_p50_p95": [
+        -70.21070493917614,
+        -47.005591510058395,
+        -34.689622118161296
+      ],
+      "normalization_gain_db_p05_p50_p95": [
+        8.669022204881673,
+        20.984991596778777,
+        44.19010502589651
+      ],
+      "gain_ge20db_windows": 25793,
+      "gain_ge40db_windows": 3347,
+      "component_exposures": {
+        "count": 47005,
+        "classes": {
+          "periodic_target": 43634,
+          "periodic_other": 842,
+          "unresolved_periodicity": 2529,
+          "silent": 0
+        }
+      },
+      "mixtures": {
+        "examples": 16384,
+        "classes": {
+          "intentional_silence": 820,
+          "all_components_periodic_target": 12447,
+          "contains_unresolved_or_silent": 2295,
+          "contains_periodic_other": 822
+        }
+      },
+      "all_target_components_percent_of_nonsilent_mixtures": 79.97301464919045
+    },
+    "calibration": {
+      "takes": 200,
+      "unique_crops": 11844,
+      "classes": {
+        "periodic_target": 11095,
+        "periodic_other": 160,
+        "unresolved_periodicity": 589,
+        "silent": 0
+      },
+      "class_percent": {
+        "periodic_target": 93.67612293144208,
+        "periodic_other": 1.3508949679162445,
+        "unresolved_periodicity": 4.9729821006416755,
+        "silent": 0.0
+      },
+      "takes_with_any_periodic_other": 20,
+      "takes_with_zero_periodic_target": 0,
+      "takes_with_all_periodic_other": 0,
+      "top_10_periodic_other_crops": 127,
+      "rms_dbfs_p05_p50_p95": [
+        -73.22512632396986,
+        -44.26339361670391,
+        -33.27297738713546
+      ],
+      "normalization_gain_db_p05_p50_p95": [
+        7.252377473855837,
+        18.242793703424283,
+        47.204526410690285
+      ],
+      "gain_ge20db_windows": 5302,
+      "gain_ge40db_windows": 873,
+      "component_exposures": {
+        "count": 11846,
+        "classes": {
+          "periodic_target": 11097,
+          "periodic_other": 160,
+          "unresolved_periodicity": 589,
+          "silent": 0
+        }
+      },
+      "mixtures": {
+        "examples": 4096,
+        "classes": {
+          "intentional_silence": 205,
+          "all_components_periodic_target": 3197,
+          "contains_unresolved_or_silent": 536,
+          "contains_periodic_other": 158
+        }
+      },
+      "all_target_components_percent_of_nonsilent_mixtures": 82.1639681315857
+    },
+    "test": {
+      "takes": 155,
+      "unique_crops": 11541,
+      "classes": {
+        "periodic_target": 9110,
+        "periodic_other": 1529,
+        "unresolved_periodicity": 863,
+        "silent": 39
+      },
+      "class_percent": {
+        "periodic_target": 78.93596742050082,
+        "periodic_other": 13.248418681223464,
+        "unresolved_periodicity": 7.477688241920111,
+        "silent": 0.3379256563556018
+      },
+      "takes_with_any_periodic_other": 40,
+      "takes_with_zero_periodic_target": 20,
+      "takes_with_all_periodic_other": 15,
+      "top_10_periodic_other_crops": 785,
+      "rms_dbfs_p05_p50_p95": [
+        -75.62160167567355,
+        -45.55402455304602,
+        -32.97142496165366
+      ],
+      "normalization_gain_db_p05_p50_p95": [
+        6.950825048374036,
+        19.5334246397664,
+        49.60100176239392
+      ],
+      "gain_ge20db_windows": 5629,
+      "gain_ge40db_windows": 1111,
+      "component_exposures": {
+        "count": 11544,
+        "classes": {
+          "periodic_target": 9111,
+          "periodic_other": 1531,
+          "unresolved_periodicity": 863,
+          "silent": 39
+        }
+      },
+      "mixtures": {
+        "examples": 4096,
+        "classes": {
+          "intentional_silence": 205,
+          "contains_periodic_other": 1329,
+          "all_components_periodic_target": 1989,
+          "contains_unresolved_or_silent": 573
+        }
+      },
+      "all_target_components_percent_of_nonsilent_mixtures": 51.11796453353894
+    }
+  },
+  "previously_flagged_sources": {
+    "string-08:63": {
+      "source_key": "string-08:63",
+      "role": "test",
+      "note": 52,
+      "string_mask": 1,
+      "expected_cents": -16.355469,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -40.74109879974957,
+          -37.5585578894233,
+          -32.30350119544503
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          6.282901282165408,
+          11.537957976143677,
+          14.720498886469949
+        ],
+        "gain_ge20db_windows": 0,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "32": 82
+        }
+      },
+      "mixture_exposures": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-07:64": {
+      "source_key": "string-07:64",
+      "role": "test",
+      "note": 52,
+      "string_mask": 2,
+      "expected_cents": -19.015625,
+      "unique_crops": {
+        "count": 89,
+        "classes": {
+          "periodic_target": 23,
+          "periodic_other": 15,
+          "unresolved_periodicity": 51,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -74.96511212844023,
+          -60.79868662379332,
+          -30.74847726727057
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          4.727877353990946,
+          34.7780867105137,
+          48.94451221516059
+        ],
+        "gain_ge20db_windows": 60,
+        "gain_ge40db_windows": 36,
+        "periodic_nearest_midi_histogram": {
+          "35": 1,
+          "36": 14,
+          "52": 23
+        }
+      },
+      "mixture_exposures": {
+        "count": 89,
+        "classes": {
+          "periodic_target": 23,
+          "periodic_other": 15,
+          "unresolved_periodicity": 51,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-06:67": {
+      "source_key": "string-06:67",
+      "role": "test",
+      "note": 52,
+      "string_mask": 4,
+      "expected_cents": -10.472656,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 43,
+          "unresolved_periodicity": 28,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -85.71154490251399,
+          -77.10914103640023,
+          -59.686574442296504
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          33.66597452901688,
+          51.0885411231206,
+          59.69094498923437
+        ],
+        "gain_ge20db_windows": 71,
+        "gain_ge40db_windows": 48,
+        "periodic_nearest_midi_histogram": {
+          "36": 16,
+          "64": 27
+        }
+      },
+      "mixture_exposures": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 43,
+          "unresolved_periodicity": 28,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-04:57": {
+      "source_key": "string-04:57",
+      "role": "test",
+      "note": 52,
+      "string_mask": 16,
+      "expected_cents": 14.535156,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -39.459653809095514,
+          -34.911771737364,
+          -34.06200564073248
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.041405727452853,
+          8.891171824084376,
+          13.439053895815885
+        ],
+        "gain_ge20db_windows": 0,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "48": 83
+        }
+      },
+      "mixture_exposures": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-03:56": {
+      "source_key": "string-03:56",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "expected_cents": 4.816406,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -51.42188180183425,
+          -49.75040411855584,
+          -43.85579923624227
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          17.83519932296264,
+          23.729804205276217,
+          25.40128188855463
+        ],
+        "gain_ge20db_windows": 59,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "52": 69
+        }
+      },
+      "mixture_exposures": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-03:69": {
+      "source_key": "string-03:69",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "expected_cents": 4.816406,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -63.38990146785359,
+          -60.182595458758826,
+          -59.32505820161478
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          33.304458288335155,
+          34.1619955454792,
+          37.36930155457397
+        ],
+        "gain_ge20db_windows": 74,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "52": 74
+        }
+      },
+      "mixture_exposures": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-04:54": {
+      "source_key": "string-04:54",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "expected_cents": 2.9375,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -58.2238285548553,
+          -51.527914409084815,
+          -46.44650230121082
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          20.425902387931202,
+          25.50731449580519,
+          32.203228641575684
+        ],
+        "gain_ge20db_windows": 72,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "72": 72
+        }
+      },
+      "mixture_exposures": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    "string-04:55": {
+      "source_key": "string-04:55",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "expected_cents": 1.042969,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -55.676147977171276,
+          -45.19730768689635,
+          -34.90467103916107
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.884071125881453,
+          19.176707773616734,
+          29.65554806389165
+        ],
+        "gain_ge20db_windows": 31,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "60": 72
+        }
+      },
+      "mixture_exposures": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    }
+  },
+  "all_other_test_sources": [
+    {
+      "source_key": "string-01:50",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 73,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -60.995804462239164,
+          -58.311375228356354,
+          -56.159826695769205
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          30.139226782489587,
+          32.29077531507673,
+          34.97520454895954
+        ],
+        "gain_ge20db_windows": 73,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "84": 73
+        }
+      },
+      "mixture_exposures": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 74,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:51",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -61.70318080735374,
+          -57.51177254145304,
+          -53.82584596778851
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          27.80524605450888,
+          31.49117262817342,
+          35.682580894074114
+        ],
+        "gain_ge20db_windows": 83,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "84": 83
+        }
+      },
+      "mixture_exposures": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:53",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "expected_cents": 28.933594,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -57.71186775781437,
+          -52.932387158341214,
+          -49.32970978003141
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          23.30910986675178,
+          26.911787245061596,
+          31.691267844534742
+        ],
+        "gain_ge20db_windows": 72,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "72": 72
+        }
+      },
+      "mixture_exposures": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:54",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 73,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -48.7183455575815,
+          -44.42448551073874,
+          -40.277614719113444
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          14.257014805833817,
+          18.403885597459116,
+          22.69774564430188
+        ],
+        "gain_ge20db_windows": 24,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "60": 73
+        }
+      },
+      "mixture_exposures": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 73,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:56",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 75,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -55.44896092355069,
+          -49.36918236938949,
+          -40.36913211940942
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          14.3485322061298,
+          23.348582456109863,
+          29.428361010271068
+        ],
+        "gain_ge20db_windows": 56,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "64": 75
+        }
+      },
+      "mixture_exposures": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 75,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:57",
+      "role": "test",
+      "note": 64,
+      "string_mask": 128,
+      "expected_cents": 13.570312,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 69,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -56.129923757095455,
+          -49.405128014809705,
+          -42.05711976203842
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          16.03651984875879,
+          23.384528101530083,
+          30.10932384381583
+        ],
+        "gain_ge20db_windows": 53,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "68": 69
+        }
+      },
+      "mixture_exposures": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 69,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:58",
+      "role": "test",
+      "note": 68,
+      "string_mask": 128,
+      "expected_cents": 10.570312,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 65,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -52.107458636381565,
+          -42.77677133871003,
+          -35.87039646033129
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          9.84979654705167,
+          16.75617142543041,
+          26.08685872310194
+        ],
+        "gain_ge20db_windows": 18,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "72": 65
+        }
+      },
+      "mixture_exposures": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 65,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:60",
+      "role": "test",
+      "note": 76,
+      "string_mask": 128,
+      "expected_cents": 4.945312,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 79,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -65.19806849437704,
+          -57.614028884619906,
+          -51.67947697499299
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          25.658877061713362,
+          31.59342897134028,
+          39.17746858109743
+        ],
+        "gain_ge20db_windows": 79,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "80": 79
+        }
+      },
+      "mixture_exposures": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 79,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:61",
+      "role": "test",
+      "note": 80,
+      "string_mask": 128,
+      "expected_cents": 13.433594,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 77,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -64.35692141385655,
+          -62.191831133307375,
+          -59.94973666642615
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          33.92913675314653,
+          36.17123122002776,
+          38.33632150057693
+        ],
+        "gain_ge20db_windows": 77,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "84": 77
+        }
+      },
+      "mixture_exposures": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 77,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:54",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "expected_cents": 2.9375,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -58.2238285548553,
+          -51.527914409084815,
+          -46.44650230121082
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          20.425902387931202,
+          25.50731449580519,
+          32.203228641575684
+        ],
+        "gain_ge20db_windows": 72,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "72": 72
+        }
+      },
+      "mixture_exposures": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:55",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "expected_cents": 1.042969,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -55.676147977171276,
+          -45.19730768689635,
+          -34.90467103916107
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.884071125881453,
+          19.176707773616734,
+          29.65554806389165
+        ],
+        "gain_ge20db_windows": 31,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "60": 72
+        }
+      },
+      "mixture_exposures": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:57",
+      "role": "test",
+      "note": 52,
+      "string_mask": 16,
+      "expected_cents": 14.535156,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -39.459653809095514,
+          -34.911771737364,
+          -34.06200564073248
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.041405727452853,
+          8.891171824084376,
+          13.439053895815885
+        ],
+        "gain_ge20db_windows": 0,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "48": 83
+        }
+      },
+      "mixture_exposures": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:68",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "expected_cents": -12.671875,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 78,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -45.81498775741493,
+          -39.97289113482528,
+          -34.21919263567727
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.198592722397644,
+          13.952291221545657,
+          19.794387844135315
+        ],
+        "gain_ge20db_windows": 2,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "52": 78
+        }
+      },
+      "mixture_exposures": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 78,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:63",
+      "role": "test",
+      "note": 52,
+      "string_mask": 1,
+      "expected_cents": -16.355469,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -40.74109879974957,
+          -37.5585578894233,
+          -32.30350119544503
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          6.282901282165408,
+          11.537957976143677,
+          14.720498886469949
+        ],
+        "gain_ge20db_windows": 0,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "32": 82
+        }
+      },
+      "mixture_exposures": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:66",
+      "role": "test",
+      "note": 36,
+      "string_mask": 1,
+      "expected_cents": -43.214844,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        },
+        "rms_dbfs_p05_p50_p95": [
+          -42.70452595992755,
+          -39.19177056259434,
+          -34.369651539754436
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.349051626474816,
+          13.171170649314723,
+          16.68392604664793
+        ],
+        "gain_ge20db_windows": 0,
+        "gain_ge40db_windows": 0,
+        "periodic_nearest_midi_histogram": {
+          "32": 82
+        }
+      },
+      "mixture_exposures": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      },
+      "template_exposures": {
+        "count": 0,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    }
+  ],
+  "interpretation": "Held-out source pitch disagreement is concentrated and materially limits interpretation of the earlier learning screens. It does not establish label errors or explain the dictionary training failure.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "live_readiness": "not verified"
+}

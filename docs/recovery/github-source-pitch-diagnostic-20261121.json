@@ -1,32 +1,32 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T20:56:53.675297+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "e8b1ae05fb1d0deed2a6065a77f5217b5a0d2d39",
-  "source_commit": null,
+  "source_commit": "565e7907d63d6535d248209619c9f117c1c8226e",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
-  "worker_commit": null,
+  "worker_commit": "fb0580f5ecc5d9fc1ca1bea5ba6a0ff9aa4b7367",
   "workflow": "source-pitch-diagnostic.yml",
   "specification": "docs/recovery/source-pitch-diagnostic-20261121.json",
   "specification_sha256": "76cba12c84d843d71d8ae7ff10d1bc28433077456552a18c41120c3fed8e68d8",
   "design": "docs/recovery/CODEX-M3-SOURCE-PITCH-DIAGNOSTIC-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44949401574,
   "protocol": "Observation-only: all 555 sources, every exact saved mixture/template crop, label-independent periodicity and original RMS-normalization gain; no fitting or relabeling.",
   "validation": {
     "synthetic_tests_passed": 8,
     "workflow_yaml_parsed": true,
     "focused_review": "Complete: expected_cents metadata identity added before audio loading; accepted, mismatch and nonfinite synthetic cases pass. No remaining blocker."
   },
-  "small_report_collection": "not_started",
+  "small_report_collection": "collected_once_digest_verified",
   "bulk_policy": "Keep per-crop JSONL remote; collect small report once with server digest verification.",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Commit/push scoped source and worker files; dispatch one frozen CPU diagnostic.",
+  "next": "Freeze a targeted source-verification design for the 15 all-other test takes and same-string/same-pitch agreeing controls, using full-take pitch trajectories and harmonic evidence. Preserve the original manifest and all held-out scores; no automatic relabeling, exclusion or rejected-model refit. Any subsequent tracker design must pass held-out note coverage and per-label/false-output gates.",
   "limits": [
     "Fixed-window periodicity agreement is not proof of audibility, annotation correctness, or played string.",
     "YIN-style difference and first-threshold trough estimator; no temporal correction or claim of a validated full YIN implementation.",
@@ -37,5 +37,321 @@
     "No mixed-waveform detector replay, native timing, MIDI host delivery or live-guitar conclusion."
   ],
   "pre_dispatch_run_inventory": "build/recovery/m3-source-pitch-diagnostic-20261121/pre-dispatch-runs.stdout",
-  "active_worker_runs_before_dispatch": []
+  "active_worker_runs_before_dispatch": [],
+  "dispatch_attempt_started_at": "2026-11-21T21:02:10.054225+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-21T21:02:11.709724+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44949401574",
+  "output_directory": "build/github-results/source-pitch-diagnostic-44949401574",
+  "small_report_artifact": "m3-source-pitch-diagnostic-report-44949401574-1",
+  "evidence_artifact": "m3-source-pitch-diagnostic-evidence-44949401574-1",
+  "last_observed_at": "2026-11-21T21:05:23.228176+00:00",
+  "remote_observation": {
+    "conclusion": "success",
+    "createdAt": "2026-11-21T21:02:11Z",
+    "databaseId": 44949401574,
+    "headSha": "fb0580f5ecc5d9fc1ca1bea5ba6a0ff9aa4b7367",
+    "jobs": [
+      {
+        "completedAt": "2026-11-21T21:04:09Z",
+        "conclusion": "success",
+        "databaseId": 136983778753,
+        "name": "diagnostic",
+        "startedAt": "2026-11-21T21:02:15Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-21T21:02:17Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-21T21:02:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:02:17Z",
+            "conclusion": "success",
+            "name": "Check bounded dispatch inputs",
+            "number": 2,
+            "startedAt": "2026-11-21T21:02:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:02:19Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-21T21:02:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:02:19Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-21T21:02:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:02:26Z",
+            "conclusion": "success",
+            "name": "Pin source and CPU dependencies",
+            "number": 5,
+            "startedAt": "2026-11-21T21:02:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:02:27Z",
+            "conclusion": "success",
+            "name": "Check estimator, source inventory and remote guard on synthetic data",
+            "number": 6,
+            "startedAt": "2026-11-21T21:02:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:03Z",
+            "conclusion": "success",
+            "name": "Measure exact source crops without fitting or relabeling",
+            "number": 7,
+            "startedAt": "2026-11-21T21:02:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:04Z",
+            "conclusion": "success",
+            "name": "Retain small report and logs",
+            "number": 8,
+            "startedAt": "2026-11-21T21:04:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:06Z",
+            "conclusion": "success",
+            "name": "Retain per-crop diagnostics remotely",
+            "number": 9,
+            "startedAt": "2026-11-21T21:04:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 17,
+            "startedAt": "2026-11-21T21:04:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "2026-11-21T21:04:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:04:07Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-21T21:04:07Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44949401574/job/136983778753"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-21T21:04:09Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44949401574"
+  },
+  "source_ci_run": 44949372381,
+  "source_ci_state": "completed",
+  "source_ci_observation": "build/recovery/m3-source-pitch-diagnostic-20261121/source-ci-latest.stdout",
+  "source_ci_conclusion": "success",
+  "remote_conclusion": "success",
+  "completed_at": "2026-11-21T21:04:03.038737+00:00",
+  "result": "docs/recovery/CODEX-M3-SOURCE-PITCH-DIAGNOSTIC-RESULT-20261121.md",
+  "summary": "docs/recovery/source-pitch-diagnostic-summary-20261121.json",
+  "report": "build/github-results/source-pitch-diagnostic-44949401574/artifact/source-pitch-diagnostic-result/report/report.json",
+  "report_sha256": "c9e8b8563810d74c63568f6e43eadede4931d7507f803b093e31e4279c2e0b3c",
+  "collection_receipt": "build/github-results/source-pitch-diagnostic-44949401574/collection-receipt.json",
+  "collection": {
+    "collected_at": "2026-11-21T21:05:28.479552+00:00",
+    "artifact_id": 14725440388,
+    "name": "m3-source-pitch-diagnostic-report-44949401574-1",
+    "bytes": 69672,
+    "sha256": "a672988d5ba876ec494016f02912ccb5928c126462a3717e26788abef5faee52",
+    "server_digest": "sha256:a672988d5ba876ec494016f02912ccb5928c126462a3717e26788abef5faee52",
+    "verified": true,
+    "bulk_downloaded": false
+  },
+  "bulk_evidence": {
+    "id": 14724743068,
+    "name": "m3-source-pitch-diagnostic-evidence-44949401574-1",
+    "size_in_bytes": 6397628,
+    "digest": "sha256:e16e42f3bdbeafdb244a1fc6ca46509cbeb96d70b14923635cf79a09934bf385",
+    "expires_at": "2026-12-05T21:04:05Z"
+  },
+  "bulk_collected": false,
+  "diagnostic_summary": {
+    "roles": {
+      "train": {
+        "takes": 200,
+        "unique_crops": 48768,
+        "classes": {
+          "periodic_target": 45262,
+          "periodic_other": 879,
+          "unresolved_periodicity": 2627,
+          "silent": 0
+        },
+        "class_percent": {
+          "periodic_target": 92.8108595800525,
+          "periodic_other": 1.8024114173228347,
+          "unresolved_periodicity": 5.386729002624672,
+          "silent": 0.0
+        },
+        "takes_with_any_periodic_other": 27,
+        "takes_with_zero_periodic_target": 0,
+        "takes_with_all_periodic_other": 0,
+        "top_10_periodic_other_crops": 692,
+        "rms_dbfs_p05_p50_p95": [
+          -70.21070493917614,
+          -47.005591510058395,
+          -34.689622118161296
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          8.669022204881673,
+          20.984991596778777,
+          44.19010502589651
+        ],
+        "gain_ge20db_windows": 25793,
+        "gain_ge40db_windows": 3347,
+        "component_exposures": {
+          "count": 47005,
+          "classes": {
+            "periodic_target": 43634,
+            "periodic_other": 842,
+            "unresolved_periodicity": 2529,
+            "silent": 0
+          }
+        },
+        "mixtures": {
+          "examples": 16384,
+          "classes": {
+            "intentional_silence": 820,
+            "all_components_periodic_target": 12447,
+            "contains_unresolved_or_silent": 2295,
+            "contains_periodic_other": 822
+          }
+        },
+        "all_target_components_percent_of_nonsilent_mixtures": 79.97301464919045
+      },
+      "calibration": {
+        "takes": 200,
+        "unique_crops": 11844,
+        "classes": {
+          "periodic_target": 11095,
+          "periodic_other": 160,
+          "unresolved_periodicity": 589,
+          "silent": 0
+        },
+        "class_percent": {
+          "periodic_target": 93.67612293144208,
+          "periodic_other": 1.3508949679162445,
+          "unresolved_periodicity": 4.9729821006416755,
+          "silent": 0.0
+        },
+        "takes_with_any_periodic_other": 20,
+        "takes_with_zero_periodic_target": 0,
+        "takes_with_all_periodic_other": 0,
+        "top_10_periodic_other_crops": 127,
+        "rms_dbfs_p05_p50_p95": [
+          -73.22512632396986,
+          -44.26339361670391,
+          -33.27297738713546
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          7.252377473855837,
+          18.242793703424283,
+          47.204526410690285
+        ],
+        "gain_ge20db_windows": 5302,
+        "gain_ge40db_windows": 873,
+        "component_exposures": {
+          "count": 11846,
+          "classes": {
+            "periodic_target": 11097,
+            "periodic_other": 160,
+            "unresolved_periodicity": 589,
+            "silent": 0
+          }
+        },
+        "mixtures": {
+          "examples": 4096,
+          "classes": {
+            "intentional_silence": 205,
+            "all_components_periodic_target": 3197,
+            "contains_unresolved_or_silent": 536,
+            "contains_periodic_other": 158
+          }
+        },
+        "all_target_components_percent_of_nonsilent_mixtures": 82.1639681315857
+      },
+      "test": {
+        "takes": 155,
+        "unique_crops": 11541,
+        "classes": {
+          "periodic_target": 9110,
+          "periodic_other": 1529,
+          "unresolved_periodicity": 863,
+          "silent": 39
+        },
+        "class_percent": {
+          "periodic_target": 78.93596742050082,
+          "periodic_other": 13.248418681223464,
+          "unresolved_periodicity": 7.477688241920111,
+          "silent": 0.3379256563556018
+        },
+        "takes_with_any_periodic_other": 40,
+        "takes_with_zero_periodic_target": 20,
+        "takes_with_all_periodic_other": 15,
+        "top_10_periodic_other_crops": 785,
+        "rms_dbfs_p05_p50_p95": [
+          -75.62160167567355,
+          -45.55402455304602,
+          -32.97142496165366
+        ],
+        "normalization_gain_db_p05_p50_p95": [
+          6.950825048374036,
+          19.5334246397664,
+          49.60100176239392
+        ],
+        "gain_ge20db_windows": 5629,
+        "gain_ge40db_windows": 1111,
+        "component_exposures": {
+          "count": 11544,
+          "classes": {
+            "periodic_target": 9111,
+            "periodic_other": 1531,
+            "unresolved_periodicity": 863,
+            "silent": 39
+          }
+        },
+        "mixtures": {
+          "examples": 4096,
+          "classes": {
+            "intentional_silence": 205,
+            "contains_periodic_other": 1329,
+            "all_components_periodic_target": 1989,
+            "contains_unresolved_or_silent": 573
+          }
+        },
+        "all_target_components_percent_of_nonsilent_mixtures": 51.11796453353894
+      }
+    },
+    "all_other_test_takes": 15,
+    "zero_target_test_takes": 20
+  },
+  "decision": "Diagnostic completed; no promotion or label change. Source disagreement requires verification; it does not explain all prior model failures.",
+  "updated_at": "2026-11-21T21:10:38.892382+00:00"
 }

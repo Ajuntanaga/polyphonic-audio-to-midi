@@ -1,3 +1,11 @@
+## Source-crop diagnostic final: held-out source disagreement concentrated
+
+Active checkpoint: `docs/recovery/github-source-pitch-diagnostic-20261121.json`; result: `docs/recovery/CODEX-M3-SOURCE-PITCH-DIAGNOSTIC-RESULT-20261121.md`. Run44949401574 final/success, source `565e7907d63d6535d248209619c9f117c1c8226e`, worker `fb0580f5ecc5d9fc1ca1bea5ba6a0ff9aa4b7367`. Eight synthetic checks, source CI44949372381 and all four saved-plan identities pass. Small report collected once and server-digest verified; per-crop evidence remains remote. Do not poll, redownload or rerun this completed diagnostic.
+
+All555 sources and72,153 unique crops retained. Source-estimator target agreement train/calibration/test:45,262/48,768 (92.81%),11,095/11,844 (93.68%),9,110/11,541 (78.94%). Fifteen of155 test takes are entirely other-pitch estimates;20 have zero target estimates. Ten takes account for785/1,529 other-pitch test crops. This is a source-content verification question, not a detector score or proof of wrong labels. The earlier dictionary also failed complete3-5pitch recovery on training, so source disagreement does not explain all failures. No relabeling, exclusions, fits or installed/default/scoreboard change.
+
+Next: freeze targeted source verification for the15 all-other test takes and same-string/same-pitch agreeing controls, using full-take pitch trajectories and harmonic evidence before choosing source treatment or another learning design. Preserve the original manifest and held-out scores; no automatic refit. No next job queued and no fresh Claude review claimed. Earlier eight-hour interval complete; broader live-readiness goal open. Prior entries below are historical.
+
 ## Measured-spectrum dictionary final: held-out chord recovery rejected
 
 Active checkpoint: `docs/recovery/github-spectral-dictionary-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-DICTIONARY-RESULT-20261121.md`. Run44946969983 final/success, source `7d9e561340f61af0993a4337098265626ed292a6`, worker `20ef22f33f83502a743ea952d927b35f97301e3a`. Source CI44946728444 and32 synthetic checks pass. Small report collected once with server-digest verification; bulk remains remote. Do not poll, redownload, rerun or tune this completed screen.
