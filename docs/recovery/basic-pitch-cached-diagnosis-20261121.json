@@ -1,0 +1,108 @@
+{
+  "schema": "m3_basic_pitch_cached_diagnosis_spec_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "purpose": "One fixed saved-output bridge; no audio, inference, fitted shifts or threshold tuning.",
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "references": {
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "offline": {
+      "path": "docs/recovery/basic-pitch-offline-reference-20261121.json",
+      "sha256": "a1d9b9e6d37f912ec749856e6fec4af71c162655a86dfaaa086b902181fa2507"
+    },
+    "stream": {
+      "path": "docs/recovery/basic-pitch-stream-reference-20261121.json",
+      "sha256": "3d1111758724d889e6fb23f615b66edff559e005bde7119b8b9b2faff130ead0"
+    }
+  },
+  "artifacts": {
+    "stream": {
+      "run_id": 44889388628,
+      "id": 14701597272,
+      "bytes": 7451292,
+      "sha256": "62e729bcffca3fbc6ca8925559ce5c63e4c7347fafe24b4921051f42c3314548",
+      "files": {
+        "ordinary-stream.npz": {
+          "bytes": 6040965,
+          "sha256": "c363e9545b16b57b0f74ea756c1b80262bed12eb2b57eace189b3bfd840c548e"
+        },
+        "ordinary-events.json": {
+          "bytes": 166526,
+          "sha256": "b206fa06232c97fa6b0b6c97a60587b10f1655bbe33abf8e23d28760ea8153fc"
+        },
+        "extended-middle-stream.npz": {
+          "bytes": 1238848,
+          "sha256": "dda6f6018dd604240a474b7a1559fda6b14f05bd6e43001336222236ee41133c"
+        },
+        "extended-middle-events.json": {
+          "bytes": 4379,
+          "sha256": "120aa7ddeee4ff4e3d2099ffa9cce440d9f9eab2e35c36e060d9c35224c13adc"
+        }
+      }
+    },
+    "offline": {
+      "run_id": 44884737134,
+      "id": 14699373041,
+      "bytes": 17265097,
+      "sha256": "5acb749ea8068870f424482db0f54535b4b00e40985cf99bc4ad507a29592d7b",
+      "files": {
+        "ordinary-notes.json": {
+          "bytes": 316613,
+          "sha256": "4c722fa8c3abdfe8752c8dd822b40f37697f2a158bd7f1912dac8c564e0b5b60"
+        },
+        "ordinary-activations.npz": {
+          "bytes": 14023685,
+          "sha256": "66afda79c914db7c21c97858beab6609a3956e11e582c42926b3823491366f79"
+        },
+        "extended-middle-notes.json": {
+          "bytes": 26012,
+          "sha256": "8d9ed2162cc3a85d78fabb94685b88c222fdbda498e2a379d1d95004fbd3a849"
+        },
+        "extended-middle-activations.npz": {
+          "bytes": 2898197,
+          "sha256": "1c8338a55518d956d3346830fb092c572824cb8136bdfec34aa5ca6e9f899fe0"
+        }
+      }
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_count": 10689600,
+      "sample_rate": 96000
+    },
+    "extended-middle": {
+      "sample_count": 2241600,
+      "sample_rate": 96000
+    }
+  },
+  "upstream_revision": "fa5997af0a8210982619003269994a1be25eddf3",
+  "common_support": "Minimum of recording length and both nominal cache frame boundaries; report clipping and original label indices.",
+  "new_processing": "GitHub CPU cached arrays only",
+  "decision": "Separate worker/context, activation pipeline, decoder and timestamp components on one fixed signed path; use result to choose the next causal implementation. No promotion decision from nominal clocks."
+}
