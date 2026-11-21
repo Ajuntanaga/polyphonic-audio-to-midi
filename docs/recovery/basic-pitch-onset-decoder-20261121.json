@@ -1,0 +1,86 @@
+{
+  "schema": "m3_basic_pitch_onset_decoder_spec_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "purpose": "One onset-confirmed causal decoder comparison on pinned rolling arrays; no model or audio processing.",
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "candidate_settings": {
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "onset_memory_frames": 3,
+    "release_frames": 3,
+    "persistence_only_attack": false,
+    "active_note_retrigger": false
+  },
+  "references": {
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "stream": {
+      "path": "docs/recovery/basic-pitch-stream-reference-20261121.json",
+      "sha256": "3d1111758724d889e6fb23f615b66edff559e005bde7119b8b9b2faff130ead0"
+    }
+  },
+  "artifact": {
+    "run_id": 44889388628,
+    "id": 14701597272,
+    "bytes": 7451292,
+    "sha256": "62e729bcffca3fbc6ca8925559ce5c63e4c7347fafe24b4921051f42c3314548",
+    "files": {
+      "ordinary-stream.npz": {
+        "bytes": 6040965,
+        "sha256": "c363e9545b16b57b0f74ea756c1b80262bed12eb2b57eace189b3bfd840c548e"
+      },
+      "ordinary-events.json": {
+        "bytes": 166526,
+        "sha256": "b206fa06232c97fa6b0b6c97a60587b10f1655bbe33abf8e23d28760ea8153fc"
+      },
+      "extended-middle-stream.npz": {
+        "bytes": 1238848,
+        "sha256": "dda6f6018dd604240a474b7a1559fda6b14f05bd6e43001336222236ee41133c"
+      },
+      "extended-middle-events.json": {
+        "bytes": 4379,
+        "sha256": "120aa7ddeee4ff4e3d2099ffa9cce440d9f9eab2e35c36e060d9c35224c13adc"
+      }
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_count": 10689600,
+      "sample_rate": 96000
+    },
+    "extended-middle": {
+      "sample_count": 2241600,
+      "sample_rate": 96000
+    }
+  },
+  "primary_clock": "Saved measured FIFO completion from 44889388628; cached simulation only. Candidate service not measured.",
+  "secondary_clock": "Saved source-frame availability, zero compute. No nominal/backdated delivery scoring.",
+  "screen": "Strict replacement: ordinary coverage >= CURRENT+5pp and no per-label present/longest, exact/all-expected pitch-set, wrong-pitch or gap regression on either dataset. Also report the same incremental safety comparison to the causal reference. No promotion.",
+  "freeze": "Onset >=0.5 in current/previous2 frames plus note >=0.3 starts; token consumed once; active onsets ignored;3 low frames release; no persistence-only starts; no active retrigger; no parameter search."
+}
