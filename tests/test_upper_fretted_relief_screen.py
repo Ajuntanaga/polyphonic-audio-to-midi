@@ -16,16 +16,43 @@ class ReliefScreenTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 relief_counters(bad)
 
-    def test_usefulness_is_lane_matches_and_attacks_are_independent(self):
+    @staticmethod
+    def lifecycle(*, attacks=0, repeats=0, longest=0):
+        return dict(coverage_valid=True, labels=[dict(label_index=0, midi_note=65,
+            string_mask=1, start_sample=0, end_sample=100,
+            note_ons_inside_label=attacks, retrigger_note_ons_inside_label=repeats,
+            longest_exact_hold_samples=longest)])
+
+    def test_usefulness_is_lane_matches_and_retriggers_are_independent(self):
         before = {'labels': [{'midi_note': 60, 'matched': 0}, {'midi_note': 65, 'matched': 10}]}
         after = {'labels': [{'midi_note': 60, 'matched': 9000}, {'midi_note': 65, 'matched': 5009}]}
-        comparison = {'changed_held_labels': []}
-        self.assertFalse(relief_gate(comparison, before, after)['usefulness_pass'])
+        current = self.lifecycle()
+        trial = self.lifecycle(attacks=1, longest=100)
+        self.assertFalse(relief_gate(before, after, current, trial)['usefulness_pass'])
         after['labels'][1]['matched'] = 5010
-        comparison['changed_held_labels'] = [{'note_on_delta': 1}]
-        result = relief_gate(comparison, before, after)
+        result = relief_gate(before, after, current, trial)
         self.assertTrue(result['usefulness_pass'])
+        self.assertTrue(result['retrigger_pass'])
+        trial['labels'][0].update(note_ons_inside_label=2, retrigger_note_ons_inside_label=1)
+        result = relief_gate(before, after, current, trial)
         self.assertFalse(result['retrigger_pass'])
+
+    def test_same_total_attacks_can_hide_a_retrigger_regression(self):
+        replay = {'labels': []}
+        current = self.lifecycle(attacks=2, repeats=0, longest=80)
+        trial = self.lifecycle(attacks=2, repeats=1, longest=80)
+        result = relief_gate(replay, replay, current, trial)
+        self.assertFalse(result['retrigger_pass'])
+        self.assertEqual(result['retrigger_regressions'][0]['retrigger_delta'], 1)
+        self.assertTrue(result['longest_hold_pass'])
+        trial['labels'][0]['longest_exact_hold_samples'] = 79
+        self.assertFalse(relief_gate(replay, replay, current, trial)['longest_hold_pass'])
+
+    def test_invalid_pairing_cannot_pass_retrigger_or_longest_hold_gate(self):
+        invalid = dict(coverage_valid=False, labels=None)
+        result = relief_gate({'labels': []}, {'labels': []}, self.lifecycle(), invalid)
+        self.assertFalse(result['retrigger_pass'])
+        self.assertFalse(result['longest_hold_pass'])
 
     def test_local_execution_refused_before_io(self):
         with patch.dict(os.environ, {'GITHUB_ACTIONS': 'false'}):

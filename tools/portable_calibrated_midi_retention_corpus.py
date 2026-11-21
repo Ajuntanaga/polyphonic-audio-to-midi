@@ -162,15 +162,33 @@ def relief_counters(stderr):
     return result
 
 
-def relief_gate(comparison, before, after):
+def relief_gate(before, after, current_lifecycle, trial_lifecycle):
     # Snapshot comparison already enforces every label and false-output gate.
     gained = sum(max(0, b['matched'] - a['matched'])
                  for a, b in zip(before['labels'], after['labels'])
                  if 61 <= a['midi_note'] <= 71)
-    attacks = [row for row in comparison['changed_held_labels'] if row['note_on_delta'] > 0]
+    valid = current_lifecycle['coverage_valid'] and trial_lifecycle['coverage_valid']
+    attacks, longest_losses = [], []
+    if valid:
+        current_holds, trial_holds = current_lifecycle['labels'], trial_lifecycle['labels']
+        if (len(current_holds) != len(trial_holds) or any(a[key] != b[key]
+                for a, b in zip(current_holds, trial_holds) for key in LABEL_IDENTITY)):
+            raise ValueError('Held-label identity differs')
+        for a, b in zip(current_holds, trial_holds):
+            first, second = (row['retrigger_note_ons_inside_label'] for row in (a, b))
+            if second > first:
+                attacks.append(dict(label_index=a['label_index'], midi_note=a['midi_note'],
+                    retriggers_before=first, retriggers_after=second,
+                    retrigger_delta=second - first,
+                    note_ons_before=a['note_ons_inside_label'],
+                    note_ons_after=b['note_ons_inside_label']))
+            if b['longest_exact_hold_samples'] < a['longest_exact_hold_samples']:
+                longest_losses.append(a['label_index'])
     return dict(gained_matched_frames_61_71=gained,
                 usefulness_pass=gained >= 5000,
-                retrigger_regressions=attacks, retrigger_pass=not attacks)
+                retrigger_regressions=attacks, retrigger_pass=bool(valid and not attacks),
+                longest_hold_losses=longest_losses,
+                longest_hold_pass=bool(valid and not longest_losses))
 
 
 def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800, *,
@@ -278,14 +296,11 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                     dataset['note_safety_pass'] = (dataset['comparison']['note_safety_pass']
                                                    and dataset['snapshot_vs_off']['gate_pass'])
                     if relief:
-                        dataset['relief_gate'] = relief_gate(dataset['comparison'], cached[CURRENT], cached[trial])
-                        current_holds = dataset['runs'][CURRENT + '-512']['midi_lifecycle']['labels']
-                        trial_holds = dataset['runs'][trial + '-512']['midi_lifecycle']['labels']
-                        dataset['relief_gate']['longest_hold_losses'] = [
-                            a['label_index'] for a, b in zip(current_holds, trial_holds)
-                            if b['longest_exact_hold_samples'] < a['longest_exact_hold_samples']]
+                        dataset['relief_gate'] = relief_gate(cached[CURRENT], cached[trial],
+                            dataset['runs'][CURRENT + '-512']['midi_lifecycle'],
+                            dataset['runs'][trial + '-512']['midi_lifecycle'])
                         dataset['note_safety_pass'] &= (dataset['relief_gate']['retrigger_pass']
-                            and not dataset['relief_gate']['longest_hold_losses'])
+                            and dataset['relief_gate']['longest_hold_pass'])
                     save()
                     if not dataset['note_safety_pass']:
                         report.update(state='rejected', stage='stopped at note safety regression')

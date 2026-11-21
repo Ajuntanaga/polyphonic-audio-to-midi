@@ -210,9 +210,39 @@ class MidiLifecycleTests(unittest.TestCase):
         self.assertEqual(row['exact_held_samples'], 100)
         self.assertEqual(row['exact_hold_segments'], 1)
         self.assertEqual(row['note_ons_inside_label'], 1)
+        self.assertEqual(row['retrigger_note_ons_inside_label'], 1)
         self.assertEqual(result['note_ons'], 2)
         self.assertEqual(result['closed_note_duration_samples'],
                          dict(minimum=40, median=70, maximum=100))
+
+    def test_retrigger_exempts_first_acquisitions_including_unison_lanes(self):
+        events = [event(30, 'on'), event(40, 'on', voice=1), event(50, 'off'),
+                  event(70, 'on'), event(80, 'off', voice=1),
+                  event(90, 'on', voice=1)]
+        row = self.summary(events, [label(mask=3)])['labels'][0]
+        self.assertEqual(row['note_ons_inside_label'], 4)
+        self.assertEqual(row['retrigger_note_ons_inside_label'], 2)
+        first = self.summary([event(30, 'on')])['labels'][0]
+        self.assertEqual(first['note_ons_inside_label'], 1)
+        self.assertEqual(first['retrigger_note_ons_inside_label'], 0)
+
+    def test_retrigger_uses_prelabel_hold_and_half_open_boundaries(self):
+        events = [event(10, 'on'), event(20, 'off'), event(20, 'on'),
+                  event(119, 'off'), event(120, 'on')]
+        row = self.summary(events)['labels'][0]
+        self.assertEqual(row['note_ons_inside_label'], 1)
+        self.assertEqual(row['retrigger_note_ons_inside_label'], 1)
+        first = self.summary([event(10, 'on'), event(19, 'off'),
+                              event(20, 'on')])['labels'][0]
+        self.assertEqual(first['retrigger_note_ons_inside_label'], 0)
+
+    def test_retrigger_tracks_unassigned_pitches_independently(self):
+        events = [event(10, 'on', note=61, voice=255),
+                  event(20, 'on', voice=255), event(30, 'off', voice=255),
+                  event(40, 'on', voice=255)]
+        row = self.summary(events, [label(mask=0)])['labels'][0]
+        self.assertEqual(row['note_ons_inside_label'], 2)
+        self.assertEqual(row['retrigger_note_ons_inside_label'], 1)
 
     def test_trace_completeness_clock_order_and_native_voice_range(self):
         with tempfile.TemporaryDirectory() as directory:

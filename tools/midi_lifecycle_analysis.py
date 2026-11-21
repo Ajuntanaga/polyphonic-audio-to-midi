@@ -367,7 +367,7 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
             raise ValueError('Invalid M3 annotation interval')
 
     active, mask_starts, masks = {}, {}, {}
-    spans, on_samples = defaultdict(list), defaultdict(list)
+    spans, on_samples, on_lanes = defaultdict(list), defaultdict(list), defaultdict(list)
     durations, examples, errors = [], [], Counter()
     counts = Counter(event['kind'] for event in events)
 
@@ -386,6 +386,7 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
             prior = active.get(identity)
             if event['kind'] == 'on':
                 on_samples[note].append(sample)
+                on_lanes[note].append(lane)
                 if event['velocity'] == 0:
                     anomaly('zero_velocity_note_on', event)
                 if prior is not None:
@@ -440,13 +441,30 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
                     if first is None:
                         first = overlap_start
             ons = on_samples[note]
+            onset_begin, onset_end = bisect_left(ons, start), bisect_left(ons, end)
+            # A first acquisition on each lane can recover a missing note/unison.
+            # A lane already holding this pitch immediately before the label
+            # starts has already acquired it, including an off/on at the boundary.
+            acquired = set()
+            prior_index = bisect_left(ends.get(note, []), start)
+            if prior_index < len(intervals):
+                left, right, actual, unassigned = intervals[prior_index]
+                if left < start <= right:
+                    acquired.update(lane for lane in range(8) if actual & (1 << lane))
+                    if unassigned:
+                        acquired.add(UNASSIGNED_VOICE)
+            retriggers = 0
+            for lane in on_lanes[note][onset_begin:onset_end]:
+                retriggers += lane in acquired
+                acquired.add(lane)
             rows.append(dict(label_index=label['label_index'], midi_note=note,
                 string_mask=expected, start_sample=start, end_sample=end,
                 annotated_hold_samples=end - start, exact_held_samples=matched,
                 unmatched_hold_samples=end - start - matched,
                 longest_exact_hold_samples=longest, exact_hold_segments=segments,
                 first_exact_hold_delay_samples=None if first is None else first - start,
-                note_ons_inside_label=bisect_left(ons, end) - bisect_left(ons, start)))
+                note_ons_inside_label=onset_end - onset_begin,
+                retrigger_note_ons_inside_label=retriggers))
 
     result = dict(schema='m3_detector_midi_lifecycle_v1', sample_rate=sample_rate,
         sample_count=sample_count, transitions=len(events), note_ons=counts['on'],
@@ -462,6 +480,11 @@ def summarize(events, labels, *, sample_count, sample_rate, include_output_safet
         exact_held_samples=None if rows is None else sum(row['exact_held_samples'] for row in rows),
         samples_after_last_label=sample_count - max((label['end_sample'] for label in labels), default=0),
         onset_release_tolerance='not measured', acceptance_target='not measured',
+        retrigger_definition='Per-label repeated acquisitions of the same pitch on the same lane. '
+            'The first NoteOn per lane is exempt unless that lane held the pitch immediately '
+            'before label start. Later NoteOns on that lane count even after a gap. '
+            'Labels use [start,end); unassigned voices are pitch-keyed. '
+            'Total NoteOns and wrong-note/wrong-string/gap outputs remain separate.',
         host_delivery='not measured', physical_string_identity='not measured',
         interpretation='Raw annotated sample durations, not tuner labeled-frame matches. '
             'Overlapping labels count separately in duration totals. '

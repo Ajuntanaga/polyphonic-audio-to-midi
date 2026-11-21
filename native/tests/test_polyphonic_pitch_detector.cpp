@@ -730,10 +730,10 @@ struct PolyphonicPitchDetectorTestAccess final {
   }
 
   // Result order: selected, evaluated, no_parent, related_blocked, applied,
-  // rendered_disagreements, active_only.  The lower note is made active in the
-  // candidate state without a score, so it cannot enter the pool or the
+  // rendered_disagreements, active_only, anchor_selected. The lower note is
+  // made active without a score, so it cannot enter the pool or the
   // harmonic-shadow pass; only the parent predicate sees it.
-  static std::array<std::uint64_t, 7U> upper_fretted_relief_probe(
+  static std::array<std::uint64_t, 8U> upper_fretted_relief_probe(
       bool enabled, int parent_note, bool rendered_parent = false) noexcept {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -747,6 +747,7 @@ struct PolyphonicPitchDetectorTestAccess final {
     detector.set_upper_fretted_relief_for_diagnostics(enabled);
     detector.fast_energy_ = 1.0;
     constexpr std::size_t target = 65U - 32U;
+    constexpr std::size_t anchor = 52U - 32U;
     if (parent_note >= 0) {
       auto& parent =
           detector.candidate_states_[static_cast<std::size_t>(parent_note) - 32U];
@@ -757,6 +758,11 @@ struct PolyphonicPitchDetectorTestAccess final {
     std::array<double, kMaxCandidates> fundamentals{};
     std::array<double, kMaxCandidates> narrow{};
     std::array<bool, kMaxCandidates> selected{};
+    // Keep the DP nonempty: otherwise its existing lone-pitch fallback selects
+    // note 65 even with a negative adjusted score. The open anchor is not an
+    // active parent and leaves a separate playable lane for note 65.
+    scores[anchor] = 0.50;
+    fundamentals[anchor] = 0.49;
     // Above the 0.05 admission threshold but below the roughly 0.225 a fretted
     // note needs once the fixed 0.20 penalty applies.
     scores[target] = 0.15;
@@ -766,7 +772,8 @@ struct PolyphonicPitchDetectorTestAccess final {
     const auto stats = detector.upper_fretted_relief_stats();
     return {selected[target] ? 1U : 0U, stats.evaluated, stats.no_parent,
             stats.related_blocked, stats.relief_applied,
-            stats.rendered_disagreements, stats.relief_active_only};
+            stats.rendered_disagreements, stats.relief_active_only,
+            selected[anchor] ? 1U : 0U};
   }
 
   static bool odd_partial_cues_clear_on_reset(PolyphonicPitchDetector& detector) noexcept {
@@ -11155,11 +11162,13 @@ M3_TEST(native_detector_upper_fretted_relief_waives_only_the_fixed_term_for_unre
   // Off: identical to production, no counters, the fixed penalty keeps note 65 out.
   const auto off = Access::upper_fretted_relief_probe(false, 40);
   M3_EXPECT_EQ(off[0U], 0U);
-  for (std::size_t index = 1U; index < off.size(); ++index) {
+  M3_EXPECT_EQ(off[7U], 1U);
+  for (std::size_t index = 1U; index < 7U; ++index) {
     M3_EXPECT_EQ(off[index], 0U);
   }
   // On, no sounding lower note: nothing to explain the candidate, no relief.
   const auto none = Access::upper_fretted_relief_probe(true, -1);
+  M3_EXPECT_EQ(none[7U], 1U);
   M3_EXPECT_EQ(none[0U], 0U);
   M3_EXPECT_EQ(none[1U], 1U);
   M3_EXPECT_EQ(none[2U], 1U);
@@ -11167,6 +11176,7 @@ M3_TEST(native_detector_upper_fretted_relief_waives_only_the_fixed_term_for_unre
   // On, an active lower note at interval 25 (not listed): relief applies.
   // The parent is active but not rendered, so the two predicates disagree once.
   const auto unrelated = Access::upper_fretted_relief_probe(true, 40);
+  M3_EXPECT_EQ(unrelated[7U], 1U);
   M3_EXPECT_EQ(unrelated[0U], 1U);
   M3_EXPECT_EQ(unrelated[1U], 1U);
   M3_EXPECT_EQ(unrelated[2U], 0U);
@@ -11175,12 +11185,14 @@ M3_TEST(native_detector_upper_fretted_relief_waives_only_the_fixed_term_for_unre
   M3_EXPECT_EQ(unrelated[5U], 1U);
   M3_EXPECT_EQ(unrelated[6U], 1U);
   const auto rendered = Access::upper_fretted_relief_probe(true, 40, true);
+  M3_EXPECT_EQ(rendered[7U], 1U);
   M3_EXPECT_EQ(rendered[0U], 1U);
   M3_EXPECT_EQ(rendered[4U], 1U);
   M3_EXPECT_EQ(rendered[5U], 0U);
   // On, an active lower note at a listed interval (12 and 31): blocked.
   for (const int related : {53, 34}) {
     const auto blocked = Access::upper_fretted_relief_probe(true, related);
+    M3_EXPECT_EQ(blocked[7U], 1U);
     M3_EXPECT_EQ(blocked[0U], 0U);
     M3_EXPECT_EQ(blocked[1U], 1U);
     M3_EXPECT_EQ(blocked[2U], 0U);
