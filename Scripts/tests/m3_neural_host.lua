@@ -153,16 +153,29 @@ local function tick()
   elseif phase=='ordinary' and now-phase_started>3 and
          (reaper.gmem_read(4)==0 or reaper.GetPlayPosition()<=0) then
     check(false,'audio-callback-or-transport-not-running');finish();return
-  elseif phase=='ordinary' and reaper.GetPlayPosition()>=cfg.samples/96000+0.5 then
-    metrics.ordinary_wall_seconds=now-metrics.play_start_time
-    metrics.ordinary_event_count=reaper.gmem_read(10)
-    metrics.eof_active=reaper.gmem_read(20)
-    metrics.ordinary_dry_samples=reaper.gmem_read(13)
-    -- Full recording is complete. A bounded extra segment supplies real held
-    -- output for the explicit Panic check if EOF itself is already silent.
-    reaper.gmem_write(0,2)
-    if reaper.gmem_read(20)==0 then reaper.SetEditCurPos(10,false,true) end
-    phase='await-held';phase_started=now;log(phase)
+  elseif phase=='ordinary' and reaper.gmem_read(7)>=cfg.samples then
+    -- REAPER may stop at project EOF, so its transport cannot be required to
+    -- advance beyond the source. The input observer counts consumed samples.
+    if not metrics.recording_complete_time then
+      metrics.recording_complete_time=now
+      metrics.recording_wall_seconds=now-metrics.play_start_time
+      log('recording-complete')
+    end
+    if now-metrics.recording_complete_time>=0.5 then
+      metrics.ordinary_wall_seconds=now-metrics.play_start_time
+      metrics.ordinary_event_count=reaper.gmem_read(10)
+      metrics.eof_active=reaper.gmem_read(20)
+      metrics.ordinary_dry_samples=reaper.gmem_read(13)
+      -- A bounded extra segment supplies real held output for the explicit
+      -- Panic check if EOF is silent. Restart transport after an EOF stop.
+      reaper.gmem_write(0,2)
+      if reaper.gmem_read(20)==0 then
+        reaper.SetEditCurPos(10,false,true)
+        reaper.OnPlayButtonEx(0)
+        metrics.panic_probe_play_state=reaper.GetPlayState()
+      end
+      phase='await-held';phase_started=now;log(phase)
+    end
   elseif phase=='await-held' then
     if reaper.gmem_read(20)>0 then
       metrics.panic_before_active=reaper.gmem_read(20)

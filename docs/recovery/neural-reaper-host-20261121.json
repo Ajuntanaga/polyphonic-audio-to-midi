@@ -61,5 +61,11 @@
       "evidence": "JACK and569 callbacks ran, but transport stayed0, no recording samples or MIDI. Observation JSFX added1.5e-16 denormal noise.",
       "scope": "Defer setup2s to yield to host startup, refresh and verify the media item, use explicit current-project play and record immediate play state; ext_nodenorm=1 in both observation effects. Same package, recording and acceptance gates. Startup sequence is a hypothesis, not a proven cause."
     }
+  },
+  "eof_transition_correction": {
+    "previous_run_id": 44928684942,
+    "evidence": "Full recording and dry identity pass; transport stops at111.333333s; previous script waits for111.85s and times out.",
+    "change": "Use observer consumed-sample total to detect EOF, drain0.5s by wall clock, restart transport explicitly at10s for non-vacuous Panic if silent at EOF.",
+    "unchanged": "Package/model, ordinary recording, current-on gate OFF controls, observer sample clock, report acceptance gates."
   }
 }
