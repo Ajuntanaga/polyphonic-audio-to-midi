@@ -14,6 +14,8 @@ from tools.pitch_detector_comparison import compare, digest, read_labels, score
 from tools.portable_basic_pitch_cached_diagnosis import cached_arrays, fetch_artifact, require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 from tools.portable_basic_pitch_native import NATIVE, distribution, retain, sequence, table
+from tools.portable_neural_ort_diagnosis import cpu_metadata
+from tools.neural_crop_model import SCHEMA as CROP_SCHEMA, PARENT_SHA256
 
 
 LAB = dict(sample_formats=[32,64], callback_pattern=[32,512,1024], maximum_block=1024,
@@ -22,6 +24,31 @@ LAB = dict(sample_formats=[32,64], callback_pattern=[32,512,1024], maximum_block
     input_queue_capacity=16, output_queue_capacity=16,
     callback_p99_limit_ns=166666, callback_max_limit_ns=333333,
     worker_p99_limit_ns=20000000, backlog_max_limit_ns=26666667)
+
+CROP = dict(schema=CROP_SCHEMA, retained_time_range=[144,172], original_readout=[164,165],
+    full_front_end_unchanged=True, weights_unchanged=True, activation_absolute_tolerance=1e-5,
+    generated_event_identity=True, paired_every_window=True)
+
+
+def crop_identity(folder,cached,original,open_notes,source_samples):
+    """Numerical and event gates against both same-run original and saved Python."""
+    import numpy as np
+    summary=json.loads((folder/'summary.json').read_text())
+    values={key:np.fromfile(folder/(key+'s.f32'),dtype='<f4').reshape(-1,88) for key in ('note','onset')}
+    frames=table(folder/'frames.tsv',['frame','source_end'])
+    if any(values[key].shape!=cached[key].shape for key in values):
+        raise ValueError('Cropped output frame count differs from saved original')
+    errors={key:float(np.max(np.abs(values[key].astype(np.float64)-cached[key]))) for key in values}
+    decoded,opened=decode_cached(values['note'],values['onset'])
+    gates=dict(same_run_original=summary['paired_identity_pass'] is True,
+        complete_source=summary['source_samples']==source_samples,
+        complete_frames=summary['frames']==len(frames)==len(cached['frames']),
+        source_mapping=len(frames)==len(cached['frames']) and all(
+            row['frame']==i and row['source_end']==int(cached['frames'][i,3]) for i,row in enumerate(frames)),
+        cached_note_error=errors['note']<=CROP['activation_absolute_tolerance'],
+        cached_onset_error=errors['onset']<=CROP['activation_absolute_tolerance'],
+        cached_generated_sequence=decoded==original,cached_eof_owners=opened==open_notes)
+    return dict(paired=summary,cached_maximum_activation_error=errors,gates=gates,passed=all(gates.values()))
 
 
 def join_delivery(generated, delivered, source_samples):
@@ -93,7 +120,7 @@ def timing_report(callbacks,workers):
     return row
 
 
-def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk):
+def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk,crop=None):
     remote_only()
     import numpy as np
     import soundfile as sf
@@ -112,6 +139,20 @@ def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk)
     baseline=references['baseline']['datasets'][name]
     reference=references['stream']['datasets'][name]
     formats={};sequences={}
+    paired=None
+    if crop:
+        folder=work/'paired';tag=name+'-paired'
+        with (logs/(tag+'.stdout')).open('wb') as stdout,(logs/(tag+'.stderr')).open('wb') as stderr:
+            process=subprocess.run([str(crop['checker']),str(work/'mono.f32'),str(work/'coefficients.f64'),
+                str(crop['original']),str(model),str(folder)],stdout=stdout,stderr=stderr,check=False)
+        retained=retain(folder,bulk,tag) if folder.exists() else {}
+        if not (folder/'summary.json').is_file():
+            raise RuntimeError(f'{tag}: exit {process.returncode}, no summary; see captured logs')
+        paired=crop_identity(folder,cached,original,open_notes,len(mono))
+        paired.update(native_exit=process.returncode,bulk=retained)
+        if process.returncode or not paired['passed']:
+            return dict(formats={str(f):dict(state='crop_identity_failed',integration_pass=False)
+                for f in LAB['sample_formats']},crop_identity=paired,cross_format_generated_identity=False,integration_pass=False)
     for sample_format in LAB['sample_formats']:
         key=str(sample_format);tag=name+'-'+key;folder=work/key
         with (logs/(tag+'.stdout')).open('wb') as stdout,(logs/(tag+'.stderr')).open('wb') as stderr:
@@ -160,11 +201,11 @@ def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk)
                 comparison_to_offline=compare(references['offline']['datasets'][name],measured))
         row['compact']={k:compact_measurement(v['measurement']) for k,v in row['views'].items()}
         row.update(state='measured',delivery_audit=audit)
-    return dict(formats=formats,cross_format_generated_identity=len(sequences)==2 and sequences['32']==sequences['64'],
+    return dict(formats=formats,crop_identity=paired,cross_format_generated_identity=len(sequences)==2 and sequences['32']==sequences['64'],
         integration_pass=all(r['integration_pass'] for r in formats.values()) and len(sequences)==2 and sequences['32']==sequences['64'])
 
 
-def run(spec_path,inputs,model_checkout,harness,bundle,output):
+def run(spec_path,inputs,model_checkout,harness,bundle,output,cropped_model=None,crop_checker=None,crop_report=None):
     remote_only()
     output.mkdir(parents=True,exist_ok=False)
     folders={k:output/k for k in ('report','logs','cache','scratch','bulk')}
@@ -184,7 +225,22 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output):
             raise ValueError('Model revision differs')
         model=model_checkout/spec['model']['path'];check_hash(model,spec['model']['sha256'])
         resources=bundle/'Contents/Resources'
-        check_hash(resources/'nmp.onnx',spec['model']['sha256'])
+        crop=None
+        if any(v is not None for v in (cropped_model,crop_checker,crop_report)):
+            if not all(v is not None for v in (cropped_model,crop_checker,crop_report)) or spec.get('crop_settings')!=CROP:
+                raise ValueError('Incomplete or unfrozen crop configuration')
+            exported=json.loads(crop_report.read_text())
+            if (exported['schema']!=CROP_SCHEMA or exported['parent_sha256']!=PARENT_SHA256
+                    or not all(exported[k] is True for k in ('full_front_end_unchanged','weights_unchanged','onnx_check_pass'))):
+                raise ValueError('Invalid model crop provenance')
+            check_hash(cropped_model,exported['derived_sha256'])
+            check_hash(resources/'nmp.onnx',exported['derived_sha256'])
+            crop=dict(checker=crop_checker,original=model);model=cropped_model
+            report['crop_export']=exported
+            report['crop_checker_sha256']=digest(crop_checker)
+        else:
+            if 'crop_settings' in spec: raise ValueError('Crop specification requires paired checker')
+            check_hash(resources/'nmp.onnx',spec['model']['sha256'])
         expected_filter=CausalResampler().h.astype('<f8').tobytes()
         if (resources/'coefficients.f64').read_bytes()!=expected_filter:
             raise ValueError('Packaged resampler differs from frozen causal filter')
@@ -201,9 +257,9 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output):
             worker_repository=os.environ['GITHUB_REPOSITORY'],run_id=os.environ['GITHUB_RUN_ID'],
             run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],specification=spec,specification_sha256=digest(spec_path),
             native_executable_sha256=digest(harness),ort_sdk_archive_sha256=os.environ['ORT_SDK_SHA256'],
-            bundle_files=inventory,platform=platform.platform())
+            bundle_files=inventory,platform=platform.platform(),cpu_before=cpu_metadata())
         report['interpretation']=('Actual experimental VST3 component, paced 96 kHz variable 32/512/1024 blocks, both sample formats. '
-            'Model and decoder frozen; original generated events must agree exactly. Primary quality uses actual sink wall-clock timestamps, '
+            'Model weights, readout and decoder frozen; any graph crop is recorded separately. Original generated events must agree exactly. Primary quality uses actual sink wall-clock timestamps, '
             'not source offsets or backdating. Callback timing excludes pacing sleep and logging; lateness is separate. '
             'Allocation probes cover executable C calls and interposed C++ allocations, not all shared-library C calls. '
             'Accepting component test host and separate bundled-module smoke are not external DAW/device or hardware verification. '
@@ -214,7 +270,7 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output):
         for name,config in spec['datasets'].items():
             report['stage']=name;save_json(report_path,report)
             report['datasets'][name]=measure(name,config,references,inputs,folders['cache']/'stream',model,harness,
-                folders['scratch'],folders['logs'],folders['bulk'])
+                folders['scratch'],folders['logs'],folders['bulk'],crop=crop)
             save_json(report_path,report)
         rows=report['datasets'];quality_by_format={}
         for fmt in ('32','64'):
@@ -229,6 +285,7 @@ def run(spec_path,inputs,model_checkout,harness,bundle,output):
         report.update(state='failed',final=True,error=f'{type(error).__name__}: {error}')
         raise
     finally:
+        report['cpu_after']=cpu_metadata()
         report['finished_or_updated_at']=datetime.now(timezone.utc).isoformat();save_json(report_path,report)
     return report
 
@@ -237,6 +294,8 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     for arg in ('spec-path','inputs','model-checkout','harness','bundle','output'):
         parser.add_argument('--'+arg,type=Path,required=True)
+    for arg in ('cropped-model','crop-checker','crop-report'):
+        parser.add_argument('--'+arg,type=Path)
     result=run(**vars(parser.parse_args(argv)))
     print(json.dumps(dict(state=result['state'],screen=result.get('screen'),datasets={
         k:{f:r.get('compact',r.get('state')) for f,r in v['formats'].items()} for k,v in result['datasets'].items()}),allow_nan=False))

@@ -5,6 +5,13 @@
 
 namespace m3::neural {
 namespace {
+ModelOptions worker_model_options() {
+  ModelOptions options;
+#ifdef M3_NEURAL_CROPPED_READOUT
+  options.cropped_readout=true;
+#endif
+  return options;
+}
 std::array<double,kTaps> load_filter(const std::string& path) {
   std::array<double,kTaps> result{};std::ifstream file(path,std::ios::binary|std::ios::ate);
   if(!file || file.tellg()!=static_cast<std::streamoff>(sizeof(result)))
@@ -23,7 +30,7 @@ struct Worker::Impl {
   Model model;std::array<double,kTaps> coefficients;Exchange exchange;
   LabEvidence* evidence;std::unique_ptr<Processor> processor;std::thread thread;
   Impl(const std::string& model_path,const std::string& filter,LabEvidence* log)
-      :model(model_path.c_str()),coefficients(load_filter(filter)),evidence(log),
+      :model(model_path.c_str(),worker_model_options()),coefficients(load_filter(filter)),evidence(log),
        processor(std::make_unique<Processor>(coefficients)) {
     if(evidence) evidence->warmup_ns=model.warmup_ns;
     thread=std::thread([this]{run();});
@@ -56,8 +63,7 @@ struct Worker::Impl {
           p.window.copy(model.window.data());const auto started=monotonic_ns();
           auto prediction=model.predict();model_time=monotonic_ns()-started;
           for(std::size_t j=0;j<2;++j) p.decoder.consume(
-              prediction[0].GetTensorData<float>()+(164+j)*88,
-              prediction[1].GetTensorData<float>()+(164+j)*88,batch);
+              model.readout(prediction,0,j),model.readout(prediction,1,j),batch);
           p.window.advance();if(evidence) ++evidence->calls;
         }
         p.consumed=input.end;batch.ready_ns=monotonic_ns();

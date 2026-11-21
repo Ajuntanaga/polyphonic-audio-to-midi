@@ -47,6 +47,8 @@ OFFLINE_DEPENDENCY_EXCEPTIONS = {
     "native/neural/ort_harness.cpp": {"onnx"},
     "native/neural/ort_model.hpp": {"onnx"},
     "native/neural/lab_component.cpp": {"onnx"},
+    "native/neural/ort_crop_check.cpp": {"onnx"},
+    "native/neural/CROP-README.txt": {"basic pitch", "onnx"},
 }
 UNAPPROVED_BUILD_TOKENS = (
     "-march=native",

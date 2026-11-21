@@ -1,0 +1,192 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": "corpus-20261108",
+  "input_asset": "recovery-inputs.tar.gz",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "model": {
+    "repository": "spotify/basic-pitch",
+    "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec",
+    "backend": "ONNX CPU",
+    "license": "Apache-2.0"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f",
+      "baseline": {
+        "run_id": 44835727027,
+        "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+        "raw_midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "transitions": 11851,
+        "local_midi_gzip": "build/github-results/unfiltered-observation-44835727027/evidence/github-results/unfiltered-observation/ordinary-current-on-512-untraced-midi.tsv.gz",
+        "local_labels": "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv"
+      }
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708",
+      "baseline": {
+        "run_id": 43736868711,
+        "source_commit": "fb1c4b8c0edccd460f5ba9bea1c2963997d07206",
+        "raw_midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "transitions": 906,
+        "local_midi_gzip": "build/github-results/qualified-tier-retention-corpus-43736868711/saved-extended-middle/extended-middle-current-on-512-midi.tsv.gz",
+        "local_labels": "build/physical-capture/extended-upper-unison/physical-middle.tsv"
+      }
+    }
+  },
+  "schema": "m3_neural_lab_crop_spec_v1",
+  "state": "frozen_single_component_configuration",
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "native_settings": {
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667,
+    "activation_absolute_tolerance": 1e-05,
+    "resampler_absolute_tolerance": 1e-07,
+    "sdk_version": "1.20.1",
+    "paced_callback": true,
+    "pitch_states": 88
+  },
+  "artifact": {
+    "run_id": 44889388628,
+    "id": 14701597272,
+    "bytes": 7451292,
+    "sha256": "62e729bcffca3fbc6ca8925559ce5c63e4c7347fafe24b4921051f42c3314548",
+    "files": {
+      "ordinary-stream.npz": {
+        "bytes": 6040965,
+        "sha256": "c363e9545b16b57b0f74ea756c1b80262bed12eb2b57eace189b3bfd840c548e"
+      },
+      "ordinary-events.json": {
+        "bytes": 166526,
+        "sha256": "b206fa06232c97fa6b0b6c97a60587b10f1655bbe33abf8e23d28760ea8153fc"
+      },
+      "extended-middle-stream.npz": {
+        "bytes": 1238848,
+        "sha256": "dda6f6018dd604240a474b7a1559fda6b14f05bd6e43001336222236ee41133c"
+      },
+      "extended-middle-events.json": {
+        "bytes": 4379,
+        "sha256": "120aa7ddeee4ff4e3d2099ffa9cce440d9f9eab2e35c36e060d9c35224c13adc"
+      }
+    }
+  },
+  "references": {
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "stream": {
+      "path": "docs/recovery/basic-pitch-stream-reference-20261121.json",
+      "sha256": "3d1111758724d889e6fb23f615b66edff559e005bde7119b8b9b2faff130ead0"
+    },
+    "offline": {
+      "path": "docs/recovery/basic-pitch-offline-reference-20261121.json",
+      "sha256": "a1d9b9e6d37f912ec749856e6fec4af71c162655a86dfaaa086b902181fa2507"
+    }
+  },
+  "sdk": {
+    "version": "1.20.1",
+    "package": "Microsoft.ML.OnnxRuntime",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.20.1/microsoft.ml.onnxruntime.1.20.1.nupkg",
+    "sha512_base64": "/IZ7tO4xeqphNGAHn6dU+Ate5kmugmsQKwJpl2qJBAq4rtl2j2hQWlUn+KoxYcwS4ToIw4KzXVdzHuhMaw1HjQ==",
+    "bytes": 108611147,
+    "provenance": "Official CPU C/C++ NuGet package; SHA512 pinned from NuGet response, SHA256 recorded by worker; runtime version must match. Replaces unavailable GitHub tarball before any native measurement."
+  },
+  "protocol": {
+    "runs_per_dataset": 2,
+    "sample_formats": [
+      32,
+      64
+    ],
+    "configuration": "Original causal readout164/165 and decoder; full CQT/global normalization unchanged; CNN time crop [144,172), selected outputs [20,22). Fixed actual VST3, both sample formats.",
+    "primary_clock": "Actual accepted VST3 event callback timestamp on paced 96 kHz waveform",
+    "diagnostics": "Actual worker-ready and zero-compute source availability, separately reported",
+    "identity": "Every original and cropped rolling window paired on GitHub before component execution; selected note/onset error <=1e-5, exact event and EOF state; cached Python readout error <=1e-5 and exact event/frame/source/EOF identity.",
+    "scope": "Uninstalled separate class M3 Neural Lab (96 kHz); SDK module metadata, packaged runtime/resource activation, actual component lifecycle and delivery, callback allocation and timing; no promotion",
+    "quality": "Ordinary gain>=5pp over saved CURRENT and no per-label present/longest, exact/all-expected, wrong or gap regression on either dataset in either format; separate from integration feasibility",
+    "bulk": "Generated event/timing evidence and VST3 package remote; source recordings never in artifacts or repository",
+    "previous_native_run": 44897917751,
+    "package": "M3_Neural_Lab.vst3",
+    "class_id": "4DF13B289E8349D1B17DA623251F806C",
+    "previous_component_run": 44901520488,
+    "synthetic_diagnosis_run": 44902943232
+  },
+  "lab_settings": {
+    "sample_formats": [
+      32,
+      64
+    ],
+    "callback_pattern": [
+      32,
+      512,
+      1024
+    ],
+    "maximum_block": 1024,
+    "rate": 96000,
+    "mono_channels": 1,
+    "package_stereo_test": true,
+    "pitch_states": 88,
+    "midi_channel": 1,
+    "midi_velocity": 100,
+    "output_sample_offset": 0,
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667
+  },
+  "crop_settings": {
+    "schema": "m3_basic_pitch_readout164_165_tail144_v1",
+    "retained_time_range": [
+      144,
+      172
+    ],
+    "original_readout": [
+      164,
+      165
+    ],
+    "full_front_end_unchanged": true,
+    "weights_unchanged": true,
+    "activation_absolute_tolerance": 1e-05,
+    "generated_event_identity": true,
+    "paired_every_window": true
+  }
+}
