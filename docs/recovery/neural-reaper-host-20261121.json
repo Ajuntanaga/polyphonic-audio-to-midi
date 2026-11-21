@@ -49,8 +49,17 @@
       "https://www.reaper.fm/sdk/reascript/reascripthelp.html#Audio_IsRunning"
     ],
     "jack2_cli_correction": {
-      "supersedes_run": 44926698575,
-      "evidence": "JACK2 1.9.21 rejected --no-mlock before REAPER started; captured usage omits it. Remove this unsupported option only; keep --no-realtime and dummy server configuration."
+      "supersedes_runs": [
+        44926698575,
+        44927358967
+      ],
+      "evidence": "Corrected diagnosis: JACK2 1.9.21 accepts/ignores --no-mlock; the invalid option was --driver. Run44928218687 uses -d dummy and confirms the JACK engine at96000/512.",
+      "reference": "https://raw.githubusercontent.com/jackaudio/jack2/v1.9.21/common/Jackdmp.cpp"
+    },
+    "transport_start_correction": {
+      "supersedes_run": 44928218687,
+      "evidence": "JACK and569 callbacks ran, but transport stayed0, no recording samples or MIDI. Observation JSFX added1.5e-16 denormal noise.",
+      "scope": "Defer setup2s to yield to host startup, refresh and verify the media item, use explicit current-project play and record immediate play state; ext_nodenorm=1 in both observation effects. Same package, recording and acceptance gates. Startup sequence is a hypothesis, not a proven cause."
     }
   }
 }

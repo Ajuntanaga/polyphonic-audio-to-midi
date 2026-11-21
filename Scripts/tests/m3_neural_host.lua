@@ -7,7 +7,7 @@ local metrics={}
 local finished=false
 local track,fx
 local started=reaper.time_precise()
-local phase='setup'
+local phase='startup'
 local phase_started=started
 reaper.gmem_attach('m3_neural_host_v1')
 local function write(path,text)
@@ -104,6 +104,10 @@ local function setup()
   set('Quiet input gate',0);set('Gate threshold',0.5)
   local source=reaper.PCM_Source_CreateFromFile(cfg.wav)
   assert(source,'Cannot open pinned recording')
+  metrics.source_sample_rate=reaper.GetMediaSourceSampleRate(source)
+  metrics.source_seconds=reaper.GetMediaSourceLength(source)
+  assert(check(metrics.source_sample_rate==96000 and
+    near(metrics.source_seconds,cfg.samples/96000),'recording-source'), 'Recording source differs')
   local item=reaper.AddMediaItemToTrack(track)
   local take=reaper.AddTakeToMediaItem(item)
   reaper.SetMediaItemTake_Source(take,source)
@@ -111,6 +115,10 @@ local function setup()
   reaper.SetMediaItemInfo_Value(item,'D_LENGTH',cfg.samples/96000)
   reaper.SetMediaItemInfo_Value(item,'D_FADEINLEN',0)
   reaper.SetMediaItemInfo_Value(item,'D_FADEOUTLEN',0)
+  reaper.UpdateItemInProject(item)
+  reaper.UpdateArrange()
+  metrics.project_seconds=reaper.GetProjectLength(0)
+  assert(check(near(metrics.project_seconds,cfg.samples/96000),'project-length'), 'Project length differs')
   for i=0,32767*6+16390 do reaper.gmem_write(i,0) end
   reaper.gmem_write(31,cfg.samples)
   reaper.SetEditCurPos(0,false,false)
@@ -124,14 +132,20 @@ local function tick()
   if finished then return end
   local now=reaper.time_precise()
   if now-started>180 then check(false,'script-timeout');finish();return end
-  if phase=='audio-start' then
+  if phase=='startup' and now-started>=2 then
+    -- Command-line scripts can run before the host finishes opening its first
+    -- project. Yield to the UI before creating items or starting transport.
+    setup()
+  elseif phase=='audio-start' then
     if reaper.Audio_IsRunning()~=0 then
       audio_info()
       metrics.audio_running_at_play=metrics.audio_running
       if not check(tostring(metrics.audio_mode):upper():find('JACK',1,true)~=nil,'jack-backend') then finish();return end
       reaper.gmem_write(0,1)
       metrics.play_start_time=now
-      reaper.OnPlayButton()
+      metrics.play_state_before_request=reaper.GetPlayState()
+      reaper.OnPlayButtonEx(0)
+      metrics.play_state_after_request=reaper.GetPlayState()
       phase='ordinary';phase_started=now;log(phase)
     elseif now-phase_started>10 then
       check(false,'audio-engine-not-running');finish();return
@@ -172,5 +186,5 @@ local function tick()
     if not ok then check(false,err);finish() end
   end)
 end
-local ok,err=xpcall(setup,debug.traceback)
-if not ok then check(false,err);finish() else tick() end
+local ok,err=xpcall(tick,debug.traceback)
+if not ok then check(false,err);finish() end
