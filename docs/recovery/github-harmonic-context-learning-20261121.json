@@ -3,7 +3,7 @@
   "state": "completed",
   "final": true,
   "created_at": "2026-11-21T23:04:15.915493+00:00",
-  "updated_at": "2026-11-21T23:13:30.930060+00:00",
+  "updated_at": "2026-11-21T23:23:30.004848+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "7e8f329eed5e07a11b0c2bd255867357d53220f6",
@@ -51,11 +51,11 @@
     "verified": true,
     "bulk_downloaded": false
   },
-  "bulk_policy": "Collect small report once with server digest verification; keep model and predictions remote.",
+  "bulk_policy": "Evidence archive collected once and server-digest verified for the frozen training diagnosis; only train predictions and plan extracted. Model remains unextracted inside the archive and unloaded.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Inspect the saved five-pitch training errors to distinguish weak-target ranking errors from harmonic false outputs before a distinct model design. Preserve this cutoff, rejection and all labels; no automatic rerun or held-out tuning. Require >=70% complete sets overall and for each 3/4/5-pitch stratum at training precision>=99%, then both untouched roles and continuous no-regression/benefit gates. No next job queued.",
+  "next": "Specify one complete-set training objective including weakest-true/strongest-false ordering, retaining absolute pitch loss and silence safety, with architecture/source roles/mixtures fixed. Preserve this rejected screen and cutoff; no oracle labels at inference or held-out tuning. Require training precision>=99%, recall>=80%, complete sets>=70% overall and each 3/4/5-pitch stratum, zero silence extras, then untouched held-out and continuous gates. No next job queued.",
   "limits": [
     "All 555 intended-label excerpts retained, including known unresolved source-content disagreements.",
     "Pass1 ascending, pass2 descending, pass3 checkpoint protocols differ; not a pure take-only generalization test.",
@@ -93,7 +93,8 @@
     "size_in_bytes": 4582838,
     "digest": "sha256:bf18a1b950d5146b489d07a7b060d5fd34b70b132636fc1a4786918d06377359",
     "expires_at": "2026-12-05T23:10:10Z",
-    "collected": false
+    "collected": true,
+    "collection_receipt": "build/github-results/harmonic-context-learning-44960075844/training-evidence-collection-receipt.json"
   },
   "metrics": {
     "training_precision_percent": 99.00537510911012,
@@ -223,5 +224,111 @@
     "target_percent": 70.02767892447608,
     "gap_sets": 224,
     "progress_current_divided_by_integer_target_percent": 87.35177865612648
+  },
+  "training_evidence_collection": {
+    "started_at": "2026-11-21T23:19:02.777199+00:00",
+    "collected_at": "2026-11-21T23:20:21.717782+00:00",
+    "artifact_id": 14729601382,
+    "name": "m3-harmonic-context-evidence-44960075844-1",
+    "bytes": 4582838,
+    "sha256": "bf18a1b950d5146b489d07a7b060d5fd34b70b132636fc1a4786918d06377359",
+    "server_digest": "sha256:bf18a1b950d5146b489d07a7b060d5fd34b70b132636fc1a4786918d06377359",
+    "verified": true,
+    "archive": "build/github-results/harmonic-context-learning-44960075844/training-evidence.zip",
+    "output_directory": "build/github-results/harmonic-context-learning-44960075844/training-evidence",
+    "extracted": {
+      "train-predictions.npz": {
+        "archive_path": "train-predictions.npz",
+        "bytes": 3763938,
+        "sha256": "1275c123c17174fb0ad39fff4384a7250b08204498d196a1aa624208d0d17fc9"
+      },
+      "train-mixture-plan.json.gz": {
+        "archive_path": "train-mixture-plan.json.gz",
+        "bytes": 750676,
+        "sha256": "c4ca1279380500af798dc54913619f0aefd4241a27aba3939f78e6b80706d449"
+      }
+    },
+    "archive_members": [
+      {
+        "name": "frozen-harmonic-context-model.pt",
+        "bytes": 67768
+      },
+      {
+        "name": "train-mixture-plan.json.gz",
+        "bytes": 750676
+      },
+      {
+        "name": "train-predictions.npz",
+        "bytes": 3763938
+      }
+    ],
+    "model_extracted": false,
+    "model_loaded": false,
+    "purpose": "Frozen training error diagnosis only",
+    "retained_bytes": 9097452
+  },
+  "training_diagnosis": {
+    "state": "completed",
+    "final": true,
+    "completed_at": "2026-11-21T23:21:51.649139+00:00",
+    "report": "build/recovery/m3-harmonic-context-ranking-20261121/report.json",
+    "report_sha256": "50de3924070de84c2f5aecac95ec64c47213b270b273c5fcd290fa5451c60125",
+    "result_note": "docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RANKING-RESULT-20261121.md",
+    "plan": "docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RANKING-PLAN-20261121.md",
+    "plan_freeze": {
+      "frozen_at": "2026-11-21T23:19:02.776972+00:00",
+      "plan": "docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RANKING-PLAN-20261121.md",
+      "sha256": "f7a8e171f2b2ca7c1c55a68e0ed9ddae3dd6cedd16b76cbd5ad3bef33fa40a04"
+    },
+    "identities_passed": true,
+    "training_sources": 200,
+    "local_synthetic_tests": {
+      "passed": 8,
+      "failed": 0
+    },
+    "five_pitch_error_classes": {
+      "examples": 2529,
+      "exact": 1547,
+      "missing_only": 863,
+      "extra_only": 48,
+      "both": 71,
+      "missing_pitches": 1164,
+      "extra_pitches": 124
+    },
+    "five_pitch_ordering": {
+      "examples": 2529,
+      "strict_separation": 2029,
+      "exact_tie": 0,
+      "false_above_weakest": 500,
+      "frozen_complete": 1547,
+      "strict_separation_but_frozen_incomplete": 482,
+      "margin_quantiles": {
+        "min": -0.9645844846963882,
+        "p10": -0.1828115799842635,
+        "median": 0.6426809728145599,
+        "p90": 0.9649466045200825,
+        "max": 0.9996488036413211
+      }
+    },
+    "five_pitch_missed_ranking": {
+      "above_all_false": 577,
+      "below_strongest_false": 587,
+      "ties": 0
+    },
+    "five_pitch_low_scheduled_gain": {
+      "relative_db": [
+        -24,
+        -18
+      ],
+      "missed": 819,
+      "all_missed": 1164,
+      "expected": 3702,
+      "all_expected": 12645
+    },
+    "no_fit": true,
+    "no_audio_or_model_loaded": true,
+    "no_held_out_scoring": true,
+    "decision_unchanged": true,
+    "next": "Specify one complete-set training objective including weakest-true/strongest-false ordering, retaining absolute pitch loss and silence safety, with architecture/source roles/mixtures fixed. Preserve this rejected screen and cutoff; no oracle labels at inference or held-out tuning. Require training precision>=99%, recall>=80%, complete sets>=70% overall and each 3/4/5-pitch stratum, zero silence extras, then untouched held-out and continuous gates. No next job queued."
   }
 }

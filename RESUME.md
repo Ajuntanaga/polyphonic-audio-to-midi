@@ -1,3 +1,11 @@
+## Harmonic-context training diagnosis final: missing notes and ordering errors
+
+Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RANKING-RESULT-20261121.md`. Completed run44960075844 remains rejected. Evidence14729601382 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Frozen counts and all200 pass-1 source keys reproduce exactly; eight synthetic analysis checks pass. No new fit, audio/model loading, held-out evaluation or remote job. Do not repeat collection or diagnosis.
+
+Five-pitch complete sets remain1547/2529 (61.17%), TARGET1771, GAP224sets. Of982 failures,482 have all true pitches ranked above every false pitch but fail the frozen cutoff;500 have a false pitch above the weakest true pitch. The2029/2529 (80.23%) oracle separation bound is not an operational gain. Missing-only failures863; extra-only48; both71. Scheduled -24/-18dB components account for819/1164 misses (70.36%) on3702/12645 targets (29.28%). All555labels, installed/default output and scoreboard unchanged.
+
+Next: specify a distinct complete-set training objective addressing weakest-true/strongest-false ordering while retaining absolute pitch loss and silence safety; hold architecture/source roles/mixtures fixed and retain every acceptance gate. No cutoff retune, held-out tuning or next job queued. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Harmonic context model final: five-pitch training gate rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-context-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-CONTEXT-RESULT-20261121.md`. Run44960075844 final/success, source `a5f46bab45be9cf87126f21426857358c6f75b2d`, worker `b18546e6556e84659b307f46c4b61037c5bc7d98`. Source CI44960048802 and all54 GitHub synthetic checks passed. Small report collected once and server-digest verified; model/predictions remain remote. Do not poll, redownload, rerun or retune this completed screen.
