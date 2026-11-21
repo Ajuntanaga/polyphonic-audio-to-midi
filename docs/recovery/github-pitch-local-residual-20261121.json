@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T22:21:04.524264+00:00",
-  "updated_at": "2026-11-21T22:21:04.524264+00:00",
+  "updated_at": "2026-11-21T22:30:36.859428+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "ca63123e3ac3911f999f51229e747e3d28ec56f7",
-  "source_commit": null,
+  "source_commit": "bd8017ffcab2b41649fb347ee1cbd18aa4172d86",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_commit": "e16a4294413cba341ff8282d11c3cc340714bdf0",
@@ -16,7 +16,7 @@
   "specification_sha256": "23e820a85c5e6db1bce90310cc33ecb09f61bb6cc0a0ba77ae5114fc91801fab",
   "design": "docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44956322150,
   "protocol": "Cross-fitted pitch-local conditional residual support after global unregularized competing-pitch NNLS; all target groups evaluated including globally inactive groups; train-only cutoff and complete-chord gates before held-out/continuous replay.",
   "validation": {
     "synthetic_tests_passed": 47,
@@ -26,19 +26,390 @@
       "reviewer": "dictionary_review",
       "finding": "Ridge shrinkage in the competing-note null fit could create false upper support; replaced by unregularized QR/NNLS and verified exact-parent false-upper support remains zero.",
       "disposition": "Resolved. Candidate-only conditional local addition is explicitly not a local full-refit likelihood ratio."
-    }
+    },
+    "synthetic_tests_github_passed": 47
   },
-  "small_report_collection": null,
+  "small_report_collection": {
+    "collected_at": "2026-11-21T22:28:09.495220+00:00",
+    "artifact_id": 14727054292,
+    "name": "m3-pitch-local-residual-report-44956322150-1",
+    "bytes": 11666,
+    "sha256": "910c3ec043052cea1dec5aef626f320fc642eba20aad34793890e5766331d7f0",
+    "server_digest": "sha256:910c3ec043052cea1dec5aef626f320fc642eba20aad34793890e5766331d7f0",
+    "verified": true,
+    "bulk_downloaded": false
+  },
   "bulk_policy": "Collect small report once with server digest verification; retain bulk remotely.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Dispatch this frozen CPU workflow once; collect its small report and apply unchanged train, held-out and corpus safety gates. No retuning or rerun.",
+  "next": "Choose a distinct chord-evidence design with Claude when available; this frozen conditional-residual method is rejected, with no cutoff retune or rerun. Require training precision >=99%, recall >=80%, complete pitch sets >=70% overall and separately for 3/4/5 pitches, and zero silence extras before held-out and continuous safety checks. No next job queued.",
   "limits": [
     "Original source/label discrepancies stay included; no alternate label manifest.",
     "Masks use nominal A440 and correlated shared harmonic bins; template mismatch and detuning remain risks.",
     "Conditional residual support is not probability or audibility.",
     "Sustained mixtures do not establish note/string, MIDI lifecycle, native timing or live readiness."
   ],
-  "dispatch_attempt": "build/recovery/m3-pitch-local-residual-20261121/dispatch-attempt.json"
+  "dispatch_attempt": "build/recovery/m3-pitch-local-residual-20261121/dispatch-attempt.json",
+  "dispatch_started_at": "2026-11-21T22:21:24.043877+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44956322150",
+  "output_directory": "build/github-results/pitch-local-residual-44956322150",
+  "small_report_artifact": "m3-pitch-local-residual-report-44956322150-1",
+  "bulk_artifact": "m3-pitch-local-residual-evidence-44956322150-1",
+  "remote_observation": {
+    "conclusion": "success",
+    "createdAt": "2026-11-21T22:21:25Z",
+    "headSha": "e16a4294413cba341ff8282d11c3cc340714bdf0",
+    "jobs": [
+      {
+        "completedAt": "2026-11-21T22:27:46Z",
+        "conclusion": "success",
+        "databaseId": 137005135623,
+        "name": "screen",
+        "startedAt": "2026-11-21T22:21:30Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-21T22:21:33Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-21T22:21:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:21:33Z",
+            "conclusion": "success",
+            "name": "Check bounded dispatch inputs",
+            "number": 2,
+            "startedAt": "2026-11-21T22:21:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:21:38Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-21T22:21:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:21:38Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-21T22:21:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:21:48Z",
+            "conclusion": "success",
+            "name": "Pin source and CPU dependencies",
+            "number": 5,
+            "startedAt": "2026-11-21T22:21:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:21:49Z",
+            "conclusion": "success",
+            "name": "Check synthetic source isolation, waveform, clock and scoring behavior",
+            "number": 6,
+            "startedAt": "2026-11-21T22:21:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:39Z",
+            "conclusion": "success",
+            "name": "Build and screen one frozen dictionary; continuous replay only after held-out pass",
+            "number": 7,
+            "startedAt": "2026-11-21T22:21:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:41Z",
+            "conclusion": "success",
+            "name": "Retain small report and logs",
+            "number": 8,
+            "startedAt": "2026-11-21T22:27:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:43Z",
+            "conclusion": "success",
+            "name": "Retain model and predictions remotely",
+            "number": 9,
+            "startedAt": "2026-11-21T22:27:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 17,
+            "startedAt": "2026-11-21T22:27:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "2026-11-21T22:27:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T22:27:43Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-21T22:27:43Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44956322150/job/137005135623"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-21T22:27:47Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44956322150"
+  },
+  "observed_at": "2026-11-21T22:27:49.159267+00:00",
+  "source_ci": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-21T22:21:12Z",
+      "headSha": "bd8017ffcab2b41649fb347ee1cbd18aa4172d86",
+      "jobs": [
+        {
+          "completedAt": "2026-11-21T22:22:55Z",
+          "conclusion": "success",
+          "databaseId": 137005074795,
+          "name": "offline",
+          "startedAt": "2026-11-21T22:21:16Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-21T22:21:19Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-21T22:21:17Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:21:24Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 2,
+              "startedAt": "2026-11-21T22:21:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:21:25Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-python@v7",
+              "number": 3,
+              "startedAt": "2026-11-21T22:21:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:03Z",
+              "conclusion": "success",
+              "name": "Configure and build diagnostic replay",
+              "number": 4,
+              "startedAt": "2026-11-21T22:21:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:28Z",
+              "conclusion": "success",
+              "name": "Native tests",
+              "number": 5,
+              "startedAt": "2026-11-21T22:22:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:48Z",
+              "conclusion": "success",
+              "name": "Replay comparison contracts",
+              "number": 6,
+              "startedAt": "2026-11-21T22:22:28Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:50Z",
+              "conclusion": "success",
+              "name": "Synthetic buffer parity smoke check",
+              "number": 7,
+              "startedAt": "2026-11-21T22:22:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:52Z",
+              "conclusion": "success",
+              "name": "Keep bounded diagnostic artifacts",
+              "number": 8,
+              "startedAt": "2026-11-21T22:22:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:52Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@v7",
+              "number": 15,
+              "startedAt": "2026-11-21T22:22:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:52Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 16,
+              "startedAt": "2026-11-21T22:22:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-21T22:22:52Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-11-21T22:22:52Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44956304105/job/137005074795"
+        }
+      ],
+      "status": "completed",
+      "updatedAt": "2026-11-21T22:22:56Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44956304105"
+    }
+  ],
+  "decision": "rejected at training identifiability",
+  "result_note": "docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-RESULT-20261121.md",
+  "summary": "docs/recovery/pitch-local-residual-summary-20261121.json",
+  "report": "build/github-results/pitch-local-residual-44956322150/artifact/pitch-local-residual-result/report/report.json",
+  "report_sha256": "3d87625e58744ecb7c6fd8038bc57f732afbb03f1125c9c54631af982eb6a958",
+  "result": {
+    "train": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 137,
+        "false_positive": 1,
+        "false_negative": 11352,
+        "precision_percent": 99.27536231884058,
+        "recall_percent": 1.1924449473409349,
+        "exact_set_percent": 5.3466796875
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0
+        },
+        "1": {
+          "examples": 775,
+          "true_positive": 14,
+          "false_positive": 0,
+          "false_negative": 761,
+          "precision_percent": 100.0,
+          "recall_percent": 1.8064516129032258,
+          "exact_set_percent": 1.806451612903226
+        },
+        "2": {
+          "examples": 793,
+          "true_positive": 24,
+          "false_positive": 0,
+          "false_negative": 1562,
+          "precision_percent": 100.0,
+          "recall_percent": 1.5132408575031526,
+          "exact_set_percent": 0.0
+        },
+        "3": {
+          "examples": 799,
+          "true_positive": 30,
+          "false_positive": 1,
+          "false_negative": 2367,
+          "precision_percent": 96.7741935483871,
+          "recall_percent": 1.2515644555694618,
+          "exact_set_percent": 0.0
+        },
+        "4": {
+          "examples": 889,
+          "true_positive": 32,
+          "false_positive": 0,
+          "false_negative": 3524,
+          "precision_percent": 100.0,
+          "recall_percent": 0.8998875140607424,
+          "exact_set_percent": 0.0
+        },
+        "5": {
+          "examples": 635,
+          "true_positive": 37,
+          "false_positive": 0,
+          "false_negative": 3138,
+          "precision_percent": 100.0,
+          "recall_percent": 1.1653543307086613,
+          "exact_set_percent": 0.0
+        }
+      },
+      "silence_false_predictions": 0
+    },
+    "exact_set_counts": {
+      "all": {
+        "correct": 219,
+        "total": 4096
+      },
+      "silent": {
+        "correct": 205,
+        "total": 205
+      },
+      "voiced": {
+        "correct": 14,
+        "total": 3891
+      }
+    },
+    "gates": {
+      "train_complete_chord_identifiability": false
+    },
+    "held_out_scoring": {
+      "executed": false,
+      "reason": "Training identifiability failed; held-out data not evaluated."
+    },
+    "continuous_replay": {
+      "executed": false,
+      "reason": "Training and both held-out complete-chord gates must pass first."
+    },
+    "mechanism_counters": {
+      "global_inactive_pitch_frames": 173179,
+      "positive_local_support_from_global_inactive": 3153,
+      "null_fit_reuses": 298971,
+      "local_fits": 412446,
+      "numerical_floor_skips": 0
+    }
+  },
+  "bulk_artifact_metadata": {
+    "id": 14728375272,
+    "node_id": "MDg6QXJ0aWZhY3QxNDcyODM3NTI3Mg==",
+    "name": "m3-pitch-local-residual-evidence-44956322150-1",
+    "size_in_bytes": 5068730,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14728375272",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14728375272/zip",
+    "expired": false,
+    "digest": "sha256:6c8b6201cf50981120fda38927bdebdd146c398b9708cc7d3502321e7cc5b27e",
+    "created_at": "2026-11-21T22:27:43Z",
+    "updated_at": "2026-11-21T22:27:43Z",
+    "expires_at": "2026-12-05T22:27:41Z",
+    "workflow_run": {
+      "id": 44956322150,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "e16a4294413cba341ff8282d11c3cc340714bdf0"
+    }
+  }
 }

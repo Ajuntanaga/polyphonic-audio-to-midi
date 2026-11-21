@@ -1,10 +1,10 @@
-## Pitch-local residual screen frozen; one CPU dispatch next
+## Pitch-local residual screen final: training chord gate rejected
 
-Active checkpoint: `docs/recovery/github-pitch-local-residual-20261121.json`; design: `docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-PLAN-20261121.md`. Forty-seven synthetic checks pass; frozen specification, workflow and reference pins verified. The focused numerical review found ridge shrinkage in the competing-note fit could create false upper support; the unregularized null fit and exact-parent test resolve it. This is conditional target-only local residual support, not a full local likelihood ratio.
+Active checkpoint: `docs/recovery/github-pitch-local-residual-20261121.json`; result: `docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-RESULT-20261121.md`. Run44956322150 final/success, source `bd8017ffcab2b41649fb347ee1cbd18aa4172d86`, worker `e16a4294413cba341ff8282d11c3cc340714bdf0`. Source CI44956304105 and47 worker synthetic checks pass. Small report collected once with verified server digest; bulk remains remote. Do not poll, redownload or rerun this completed screen.
 
-The distinct screen changes evidence ordering and tests globally inactive targets. Keep all555 original source labels, fixed plans and train-only cutoff. Require training precision>=99%, recall>=80%, complete sets>=70% overall and separately for3/4/5 pitches before both held-out roles and continuous safety checks. One bounded CPU workflow `pitch-local-residual.yml`; standing job authorization applies. No installed/default or scoreboard change. Claude is paused; no fresh Claude review claimed.
+Training recovered137/11489 expected pitches (1.19%) with1 false pitch, versus prior3625/11489 (31.55%) with36 false. Complete sets219/4096 (5.35%) include205silent examples; only14/3891 voiced sets are exact. Complete3/4/5-pitch sets0/799,0/889,0/635 fail the70% gates. Failure stopped held-out scoring and continuous replay. All555source labels, installed/default output and scoreboard remain unchanged.
 
-Next: dispatch once at the recorded source/worker SHAs, collect the small report once and leave bulk remote. Do not retune a rejected outcome or repeat the completed ranking diagnosis. Prior entries below are historical.
+Next: choose a distinct chord-evidence design with Claude when available; this frozen conditional-residual method is rejected. Require training precision>=99%, recall>=80%, complete sets>=70% overall and separately for3/4/5 pitches, zero silence extras, then held-out and continuous safety gates. No cutoff retune or next job queued. Claude is paused; no fresh review claimed. Earlier eight-hour interval complete; broader live-readiness goal active. Prior entries below are historical.
 
 ## Saved training rankings final: cutoff-only repair ruled out
 

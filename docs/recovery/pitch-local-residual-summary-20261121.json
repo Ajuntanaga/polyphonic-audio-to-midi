@@ -1,0 +1,216 @@
+{
+  "schema": "m3_pitch_local_residual_summary_v1",
+  "run_id": 44956322150,
+  "source_commit": "bd8017ffcab2b41649fb347ee1cbd18aa4172d86",
+  "worker_commit": "e16a4294413cba341ff8282d11c3cc340714bdf0",
+  "report_path": "build/github-results/pitch-local-residual-44956322150/artifact/pitch-local-residual-result/report/report.json",
+  "report_sha256": "3d87625e58744ecb7c6fd8038bc57f732afbb03f1125c9c54631af982eb6a958",
+  "decision": "rejected at training identifiability",
+  "cutoff_fit": {
+    "cutoff": 0.9857675820830275,
+    "feasible": true,
+    "true_positive": 137,
+    "false_positive": 1,
+    "training_only": true,
+    "selection": "maximum train TP at >=99% precision; stricter tie"
+  },
+  "train": {
+    "overall": {
+      "examples": 4096,
+      "true_positive": 137,
+      "false_positive": 1,
+      "false_negative": 11352,
+      "precision_percent": 99.27536231884058,
+      "recall_percent": 1.1924449473409349,
+      "exact_set_percent": 5.3466796875
+    },
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 205,
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision_percent": 0.0,
+        "recall_percent": null,
+        "exact_set_percent": 100.0
+      },
+      "1": {
+        "examples": 775,
+        "true_positive": 14,
+        "false_positive": 0,
+        "false_negative": 761,
+        "precision_percent": 100.0,
+        "recall_percent": 1.8064516129032258,
+        "exact_set_percent": 1.806451612903226
+      },
+      "2": {
+        "examples": 793,
+        "true_positive": 24,
+        "false_positive": 0,
+        "false_negative": 1562,
+        "precision_percent": 100.0,
+        "recall_percent": 1.5132408575031526,
+        "exact_set_percent": 0.0
+      },
+      "3": {
+        "examples": 799,
+        "true_positive": 30,
+        "false_positive": 1,
+        "false_negative": 2367,
+        "precision_percent": 96.7741935483871,
+        "recall_percent": 1.2515644555694618,
+        "exact_set_percent": 0.0
+      },
+      "4": {
+        "examples": 889,
+        "true_positive": 32,
+        "false_positive": 0,
+        "false_negative": 3524,
+        "precision_percent": 100.0,
+        "recall_percent": 0.8998875140607424,
+        "exact_set_percent": 0.0
+      },
+      "5": {
+        "examples": 635,
+        "true_positive": 37,
+        "false_positive": 0,
+        "false_negative": 3138,
+        "precision_percent": 100.0,
+        "recall_percent": 1.1653543307086613,
+        "exact_set_percent": 0.0
+      }
+    },
+    "silence_false_predictions": 0
+  },
+  "exact_set_counts": {
+    "all": {
+      "correct": 219,
+      "total": 4096
+    },
+    "silent": {
+      "correct": 205,
+      "total": 205
+    },
+    "voiced": {
+      "correct": 14,
+      "total": 3891
+    }
+  },
+  "accepted_pitch_counts": [
+    {
+      "note": 76,
+      "support": 156,
+      "true_positive": 0,
+      "false_positive": 1,
+      "false_negative": 156
+    },
+    {
+      "note": 80,
+      "support": 121,
+      "true_positive": 55,
+      "false_positive": 0,
+      "false_negative": 66
+    },
+    {
+      "note": 82,
+      "support": 59,
+      "true_positive": 25,
+      "false_positive": 0,
+      "false_negative": 34
+    },
+    {
+      "note": 83,
+      "support": 68,
+      "true_positive": 5,
+      "false_positive": 0,
+      "false_negative": 63
+    },
+    {
+      "note": 84,
+      "support": 67,
+      "true_positive": 52,
+      "false_positive": 0,
+      "false_negative": 15
+    }
+  ],
+  "prior_screen_comparison": {
+    "run_id": 44953542438,
+    "source_commit": "6bfd3af5b47c9023d177f0396a0873ff03cfe595",
+    "worker_commit": "e9672b14afc2a7c425c7b3075c4e963298258925",
+    "true_positive": {
+      "baseline": 3625,
+      "current": 137,
+      "delta": -3488
+    },
+    "false_positive": {
+      "baseline": 36,
+      "current": 1,
+      "delta": -35
+    },
+    "recall_percent": {
+      "baseline": 31.551919227086778,
+      "current": 1.1924449473409349,
+      "delta_pp": -30.359474279745843
+    },
+    "exact_sets": {
+      "baseline": 951,
+      "current": 219,
+      "total": 4096,
+      "delta": -732
+    }
+  },
+  "target_progress": {
+    "recall": {
+      "current_count": 137,
+      "target_count": 9192,
+      "current_percent": 1.1924449473409349,
+      "target_percent": 80,
+      "progress_percent": 1.4905561841761685,
+      "gap_pp": 78.80755505265907
+    },
+    "complete_sets": {
+      "current_count": 219,
+      "target_count": 2868,
+      "current_percent": 5.3466796875,
+      "target_percent": 70,
+      "progress_percent": 7.6381138392857135,
+      "gap_pp": 64.6533203125
+    }
+  },
+  "mechanism_counters": {
+    "global_inactive_pitch_frames": 173179,
+    "positive_local_support_from_global_inactive": 3153,
+    "null_fit_reuses": 298971,
+    "local_fits": 412446,
+    "numerical_floor_skips": 0
+  },
+  "gates": {
+    "train_complete_chord_identifiability": false
+  },
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training identifiability failed; held-out data not evaluated."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "nnls_calls": 533703,
+  "train_fit_seconds": 324.20849720599995,
+  "source_roles": {
+    "counts": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "cross_role_original_overlap": false,
+    "all_original_labels_retained": true,
+    "source_consistency_metadata_used_to_filter": false,
+    "held_out_unit": "Recording pass/source excerpt, same instrument/session"
+  },
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "next": "Choose a distinct chord-evidence design with Claude when available; this frozen conditional-residual method is rejected, with no cutoff retune or rerun. Require training precision >=99%, recall >=80%, complete pitch sets >=70% overall and separately for 3/4/5 pitches, and zero silence extras before held-out and continuous safety checks. No next job queued."
+}
