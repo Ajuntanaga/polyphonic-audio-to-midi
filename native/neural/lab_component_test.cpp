@@ -117,6 +117,15 @@ void gate_state_test() {
   Fixture f;
   require(f.component.getParameterCount()==3 && f.component.getParamNormalized(1)==0 &&
       f.component.getParamNormalized(2)==.5,"gate defaults");
+  for(double normalized:{0.,.5,.75,1.}) {
+    const double dbfs=-90.+60.*normalized;
+    require(f.component.normalizedParamToPlain(2,normalized)==dbfs &&
+        f.component.plainParamToNormalized(2,dbfs)==normalized,"gate dBFS mapping");
+  }
+  String128 display{};ParamValue parsed{};
+  require(f.component.getParamStringByValue(2,301./600.,display)==kResultOk &&
+      f.component.getParamValueByString(2,display,parsed)==kResultOk &&
+      std::abs(parsed-301./600.)<1e-12,"gate tenth-decibel display roundtrip");
   require(f.component.setParamNormalized(1,1)==kResultOk && f.component.setParamNormalized(2,.75)==kResultOk,"gate UI controls");
   const auto original=saved_state(f.component);
   require(original[8]==194 && original[9]==1 && original[10]==0 && original[11]==128,"little endian gate state");

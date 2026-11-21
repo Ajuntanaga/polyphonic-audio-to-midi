@@ -81,6 +81,8 @@ int main(int argc,char** argv) {
     require(m.controller->getParameterCount()==3,"unexpected parameter count");
     require(m.controller->getParamNormalized(1)==0 && m.controller->getParamNormalized(2)==0.5,
             "quiet gate defaults differ");
+    require(m.controller->normalizedParamToPlain(2,.5)==-60. &&
+            m.controller->plainParamToNormalized(2,-60.)==.5,"quiet gate units differ");
     require(m.component->getBusCount(kAudio,kInput)==1 && m.component->getBusCount(kAudio,kOutput)==1 &&
             m.component->getBusCount(kEvent,kOutput)==1,"unexpected bus layout");
     ProcessSetup unsupported{kRealtime,kSample32,512,48000.0};

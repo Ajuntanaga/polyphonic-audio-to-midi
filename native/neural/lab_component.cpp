@@ -35,8 +35,11 @@ tresult PLUGIN_API LabComponent::initialize(FUnknown* context) {
   addEventOutput(STR16("Experimental pitch MIDI"),1);
   parameters.addParameter(STR16("Panic"),nullptr,1,0,ParameterInfo::kCanAutomate,0);
   parameters.addParameter(STR16("Quiet input gate"),nullptr,1,0,ParameterInfo::kCanAutomate,1);
-  parameters.addParameter(new RangeParameter(STR16("Gate threshold"),2,STR16("dBFS"),
-      -90.0,-30.0,-60.0,600,ParameterInfo::kCanAutomate));
+  // RangeParameter's stepped mode counts whole plain units. Keep a continuous
+  // dBFS mapping; apply_gate_parameter quantizes the DSP value to 0.1 dB.
+  auto* threshold=new RangeParameter(STR16("Gate threshold"),2,STR16("dBFS"),
+      -90.0,-30.0,-60.0,0,ParameterInfo::kCanAutomate);
+  threshold->setPrecision(1);parameters.addParameter(threshold);
   return kResultOk;
 }
 void LabComponent::stop_worker() noexcept {
