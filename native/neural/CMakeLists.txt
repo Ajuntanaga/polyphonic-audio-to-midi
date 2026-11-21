@@ -26,7 +26,10 @@ find_library(ORT_LIBRARY onnxruntime PATHS "${ORT_ROOT}/lib" NO_DEFAULT_PATH REQ
 add_executable(neural_ort_harness ort_harness.cpp)
 target_include_directories(neural_ort_harness PRIVATE "${ORT_INCLUDE}")
 target_link_libraries(neural_ort_harness PRIVATE "${ORT_LIBRARY}" callback_allocations Threads::Threads)
-foreach(target callback_allocations neural_core_tests neural_ort_harness)
+add_executable(neural_ort_diagnosis ort_diagnosis.cpp)
+target_include_directories(neural_ort_diagnosis PRIVATE "${ORT_INCLUDE}")
+target_link_libraries(neural_ort_diagnosis PRIVATE "${ORT_LIBRARY}" Threads::Threads)
+foreach(target callback_allocations neural_core_tests neural_ort_harness neural_ort_diagnosis)
   target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 endforeach()
 

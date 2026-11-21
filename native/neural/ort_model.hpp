@@ -6,15 +6,21 @@
 #include <string>
 #include <vector>
 namespace m3::neural {
+struct ModelOptions {
+  int intra_threads=2;
+  const char* profile_prefix=nullptr;
+};
 class Model {
  public:
-  explicit Model(const char* path):env_(ORT_LOGGING_LEVEL_WARNING,"m3-neural"),session_(nullptr),
+  explicit Model(const char* path,const ModelOptions& config={}):env_(ORT_LOGGING_LEVEL_WARNING,"m3-neural"),session_(nullptr),
       memory_(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator,OrtMemTypeDefault)),tensor_(nullptr) {
     if(std::string(OrtGetApiBase()->GetVersionString())!="1.20.1") throw std::runtime_error("ORT version mismatch");
     Ort::SessionOptions options;
-    options.SetIntraOpNumThreads(2);options.SetInterOpNumThreads(1);
+    if(config.intra_threads<1 || config.intra_threads>4) throw std::runtime_error("invalid worker thread count");
+    options.SetIntraOpNumThreads(config.intra_threads);options.SetInterOpNumThreads(1);
     options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
     options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+    if(config.profile_prefix) options.EnableProfiling(config.profile_prefix);
     session_=Ort::Session(env_,path,options);
     Ort::AllocatorWithDefaultOptions allocator;
     if(session_.GetInputCount()!=1 || std::string(session_.GetInputNameAllocated(0,allocator).get())!=input_names_[0])
@@ -38,6 +44,10 @@ class Model {
         throw std::runtime_error("model output shape/type mismatch");
     }
     return output;
+  }
+  std::string finish_profile() {
+    Ort::AllocatorWithDefaultOptions allocator;
+    auto path=session_.EndProfilingAllocated(allocator);return path.get();
   }
   std::array<float,kWindow> window{};
   std::uint64_t warmup_ns{};
