@@ -1,0 +1,37 @@
+desc:M3 Neural Host Input Observer
+options:gmem=m3_neural_host_v1
+in_pin:left
+in_pin:right
+out_pin:left
+out_pin:right
+
+@init
+ext_noinit=1;
+
+@block
+i=0;
+phase=gmem[0];
+start=floor(play_position*srate+0.5);
+gmem[1]=start;
+gmem[2]=srate;
+gmem[3]=samplesblock;
+gmem[8]=max(gmem[8],samplesblock);
+gmem[18]=phase;
+phase == 1 && (play_state & 1) ? (
+  begin=max(0,start);
+  end=min(start+samplesblock,gmem[31]);
+  end>begin ? (
+    begin != gmem[21] ? gmem[22]+=1;
+    gmem[7]+=end-begin;
+    gmem[21]=end;
+  );
+);
+
+@sample
+gmem[30] ? (spl0=0;spl1=0;);
+i<1024 ? (
+  gmem[4096+i]=spl0;
+  gmem[5120+i]=spl1;
+) : gmem[11]=1;
+phase>0 ? gmem[6]=max(gmem[6],max(abs(spl0),abs(spl1)));
+i+=1;

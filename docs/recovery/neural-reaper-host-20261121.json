@@ -1,0 +1,41 @@
+{
+  "schema": "m3_neural_reaper_host_spec_v1",
+  "purpose": "Actual REAPER MIDI delivery, dry identity, persistent settings, and explicit Panic with the already built uninstalled Neural Lab package",
+  "package": {
+    "run_id": 44920404451,
+    "source_commit": "7c5b8b6346b3472c9a78c3547b3f6ce342f5b25e",
+    "artifact_id": 14714601350,
+    "bytes": 6442123,
+    "sha256": "10ff40c6b5d45e9e8d6354bad92f723f66867c175b62768f58c8a77babae4901",
+    "model_sha256": "1b6f85ae2265d4ed5ceeda33163951c37f118766f6521b0cbe702baae933b87d"
+  },
+  "reaper": {
+    "version": "7.86",
+    "url": "https://www.reaper.fm/files/7.x/reaper786_linux_x86_64.tar.xz",
+    "sha256": "c2f9d8616bd1dc6175993b82451e1c6e352c6761e7ae6d72400a3f3dfb03bedb",
+    "hash_source": "https://www.reaper.fm/download.php?hashes=1",
+    "license": "Official fully functional evaluation; no copied license or license bypass"
+  },
+  "inputs": {
+    "tag": "corpus-20261108",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "recording": {
+    "name": "ordinary",
+    "sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+    "samples": 10689600,
+    "sample_rate": 96000
+  },
+  "protocol": {
+    "environment": "GitHub CPU, Xvfb, isolated REAPER profile, dummy audio,512 sample blocks, no user profile or hardware",
+    "configuration": "Existing packaged model/decoder and default-OFF gate; no processing or policy changes",
+    "recording": "Full111.35 seconds plus0.5 seconds tail; if no held output at EOF, seek10 seconds and allow at most12 seconds to establish a held note for explicit Panic",
+    "state": "Verify gate OFF and threshold-60 default; save gate ON/threshold-54, mutate and restore; reset OFF/-60 before playback",
+    "panic": "After full playback, silence future input upstream, explicitly request Panic while held MIDI exists, observe1 second; require all note owners released and no new attacks",
+    "gates": "Actual96000/512, full source without discontinuity, real-time wall pacing, dry error0, no capture overflow, MIDI received, raw pairing valid, state restoration, nonvacuous Panic",
+    "limits": "No audio-device, live guitar, musical quality, string assignment, MPE, callback deadline/allocation or installation claim. Observation overhead excluded from native timing evidence.",
+    "failure": "Record actual failure; no automatic retry, tuning or policy change",
+    "artifacts": "Small report/logs collected once; generated MIDI retained remote; no audio re-upload"
+  }
+}
