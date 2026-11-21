@@ -155,6 +155,15 @@ constexpr std::size_t kM3OpenChordMinimum = 2U;
 // state and the upper end of the declared M3 range can never enter attack.
 constexpr double kM3FrettedNotePenalty = 0.20;
 constexpr double kM3FretPenalty = 0.005;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+// Intervals (semitones) below a candidate at which a sounding lower note
+// explains it as an octave/fifth/third-partial relation: octave, octave+fifth,
+// two octaves, two octaves+major third, two octaves+fifth, three octaves.
+// Pure interval membership; this is not is_harmonic_shadow, which adds an
+// energy condition.
+constexpr std::array<std::uint8_t, 6U> kUpperFrettedReliefIntervals{
+    12U, 19U, 24U, 28U, 31U, 36U};
+#endif
 // A full eight-string assignment has the same summed linear fret count under
 // many cyclic permutations. A small convex position prior rejects those
 // implausible high-fret rotations while leaving a learned string fingerprint
@@ -1680,6 +1689,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_independent_phase_states_ = {};
   diagnostic_residual_recovery_lease_ = {};
   diagnostic_residual_recovery_stats_ = {};
+  diagnostic_upper_fretted_relief_stats_ = {};
   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
@@ -5701,6 +5711,52 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
     std::array<double, kMaxVoices> assignment_scores{};
     const auto note = static_cast<std::uint8_t>(
         lowest_note_ + option.detector_index);
+    double assignment_fixed_penalty = fretted_fixed_penalty;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (diagnostic_upper_fretted_relief_ && note > kM3OpenNotes.back()) {
+      // Parent snapshot: candidate_states_[].active is written only by the
+      // lifecycle pass after selection, so here it is the previous decision's
+      // flag.  The rendered proxy (midi_voice_mask != 0) is evaluated on the
+      // same lower notes so the replay reports how often the two disagree.
+      bool active_parent = false;
+      bool active_related = false;
+      bool rendered_parent = false;
+      bool rendered_related = false;
+      for (std::size_t lower = 0U; lower < option.detector_index; ++lower) {
+        const CandidateState& parent = candidate_states_[lower];
+        const bool parent_active = parent.active;
+        const bool parent_rendered = parent.midi_voice_mask != 0U;
+        if (!parent_active && !parent_rendered) {
+          continue;
+        }
+        const auto interval = static_cast<std::uint8_t>(
+            option.detector_index - lower);
+        bool related = false;
+        for (const std::uint8_t listed : kUpperFrettedReliefIntervals) {
+          related = related || interval == listed;
+        }
+        active_parent = active_parent || parent_active;
+        active_related = active_related || (parent_active && related);
+        rendered_parent = rendered_parent || parent_rendered;
+        rendered_related = rendered_related || (parent_rendered && related);
+      }
+      const bool relief_active = active_parent && !active_related;
+      const bool relief_rendered = rendered_parent && !rendered_related;
+      auto& relief_stats = diagnostic_upper_fretted_relief_stats_;
+      ++relief_stats.evaluated;
+      relief_stats.no_parent += active_parent ? 0U : 1U;
+      relief_stats.related_blocked += (active_parent && active_related) ? 1U : 0U;
+      relief_stats.relief_applied += relief_active ? 1U : 0U;
+      if (relief_active != relief_rendered) {
+        ++relief_stats.rendered_disagreements;
+        relief_stats.relief_active_only += relief_active ? 1U : 0U;
+        relief_stats.relief_rendered_only += relief_rendered ? 1U : 0U;
+      }
+      if (relief_active) {
+        assignment_fixed_penalty = 0.0;
+      }
+    }
+#endif
     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
       const std::uint8_t string_bit =
           static_cast<std::uint8_t>(1U << string);
@@ -5713,7 +5769,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
           (open_candidate_count >= kM3OpenChordMinimum ||
            note > kM3OpenNotes.back()) &&
                   fret > 0U
-              ? fretted_fixed_penalty +
+              ? assignment_fixed_penalty +
                     fretted_per_fret_penalty * static_cast<double>(fret)
               : 0.0;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)

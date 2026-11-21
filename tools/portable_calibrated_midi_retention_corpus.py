@@ -6,6 +6,8 @@ gates. A successful offline screen never promotes or installs the candidate.
 import argparse
 import csv
 import json
+import os
+import re
 from pathlib import Path
 import subprocess
 import time
@@ -23,6 +25,12 @@ from tools.replay_corpus import DATASETS
 REFERENCE_SCHEMA = 'm3_calibrated_midi_retention_corpus_references_v1'
 OFF, CURRENT, TRIAL = (mode for mode, _ in CONDITIONS)
 POLICIES = {
+    'upper-fretted-relief': dict(
+        conditions=CONDITIONS[:2] + (('upper-fretted-relief-on', (
+            '--diagnostic-spectral-lane-collision', '--diagnostic-upper-fretted-relief')),),
+        require_inference=False,
+        datasets=('ordinary', 'extended-middle', 'physical-long', 'extended-high',
+                  'isolated-02', 'isolated-05', 'isolated-08')),
     'calibrated-midi-retention': dict(conditions=CONDITIONS, require_inference=True),
     'qualified-tier-retention': dict(
         conditions=CONDITIONS[:2] + (('qualified-tier-retention-on', (
@@ -137,11 +145,43 @@ def buffer_identity(reference, replay):
             and reference['exact_matches_by_string_count'] == replay['exact_matches_by_string_count'])
 
 
+def relief_counters(stderr):
+    keys = ('evaluated', 'no_parent', 'related_blocked', 'applied',
+            'rendered_disagreements', 'active_only', 'rendered_only')
+    lines = [line.split('upper_fretted_relief ', 1)[1] for line in stderr.splitlines()
+             if line.startswith('m3_replay: upper_fretted_relief ')]
+    if len(lines) != 1:
+        raise ValueError('Missing or duplicate relief mechanism counters')
+    pairs = re.findall(r'(\w+)=(\d+)', lines[0])
+    if tuple(key for key, _ in pairs) != keys:
+        raise ValueError('Malformed relief mechanism counters')
+    result = {key: int(value) for key, value in pairs}
+    if (result['evaluated'] != result['no_parent'] + result['related_blocked'] + result['applied']
+            or result['rendered_disagreements'] != result['active_only'] + result['rendered_only']):
+        raise ValueError('Relief counter accounting differs')
+    return result
+
+
+def relief_gate(comparison, before, after):
+    # Snapshot comparison already enforces every label and false-output gate.
+    gained = sum(max(0, b['matched'] - a['matched'])
+                 for a, b in zip(before['labels'], after['labels'])
+                 if 61 <= a['midi_note'] <= 71)
+    attacks = [row for row in comparison['changed_held_labels'] if row['note_on_delta'] > 0]
+    return dict(gained_matched_frames_61_71=gained,
+                usefulness_pass=gained >= 5000,
+                retrigger_regressions=attacks, retrigger_pass=not attacks)
+
+
 def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800, *,
         policy='calibrated-midi-retention'):
     if max_seconds <= 0:
         raise ValueError('max_seconds must be positive')
     selection = POLICIES[policy]
+    relief = policy == 'upper-fretted-relief'
+    if relief and os.environ.get('GITHUB_ACTIONS') != 'true':
+        raise RuntimeError('Native relief screen runs only on GitHub Actions')
+    datasets_to_run = selection.get('datasets', DATASETS)
     conditions = selection['conditions']
     trial = conditions[-1][0]
     output.mkdir(parents=True, exist_ok=False)
@@ -155,7 +195,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
         reference_manifest_sha256=digest(reference_path),
         reference_report_sha256=references['anchor_report_sha256'],
         reference_source=references['source'], input_manifest_sha256=digest(manifest_path),
-        binary_sha256=digest(binary), declared_datasets=len(DATASETS), datasets={},
+        binary_sha256=digest(binary), declared_datasets=len(datasets_to_run), dataset_names=list(datasets_to_run), datasets={},
         conditions={mode: list(flags) for mode, flags in conditions},
         timing_limits=dict(block_samples=32, sample_rate=96000, p99_ns=166666,
                            maximum_ns=333333, deadline_overruns=0),
@@ -173,7 +213,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
     save()
     try:
         report['verified_inputs'] = verify_references(references, manifest, corpus)
-        for name in DATASETS:
+        for name in datasets_to_run:
             dataset = report['datasets'][name] = dict(runs={}, buffer_parity={})
             cached = {}
             for block in BLOCKS:
@@ -188,7 +228,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                     command = command_for(binary, corpus, name, 'off', block, timing_path,
                                           midi_trace=midi if block == 512 else None)
                     command.extend(flags)
-                    if block == 512 and mode != OFF:
+                    if block == 512 and mode != OFF and not relief:
                         command.extend(('--outcome-trace', str(outcome)))
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
@@ -203,6 +243,8 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                         exact_matches_by_string_count=replay['exact_matches_by_string_count'],
                         tsv_sha256=digest(tsv), command=command)
                     dataset['runs'][mode + '-' + str(block)] = row
+                    if relief and mode == trial:
+                        row['upper_relief_counters'] = relief_counters(stderr.read_text())
                     if block == 512:
                         lifecycle = analyze_midi(midi, tsv, replay)
                         row.update(midi_lifecycle=lifecycle, sample_count=lifecycle['sample_count'],
@@ -210,7 +252,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                         row['midi_trace'] = compress_trace_window(midi, start=0, end=row['sample_count'])
                         row['midi_trace_sha256'] = row['midi_trace']['raw_sha256']
                         midi.unlink()
-                        if mode != OFF:
+                        if mode != OFF and not relief:
                             outcome_window(outcome, row['sample_count'], 0, 0)
                             row['outcome_trace'] = compress_trace_window(outcome, start=0,
                                                                        end=row['sample_count'])
@@ -235,6 +277,15 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                     dataset['snapshot_vs_off'] = compare_replays(cached[OFF], cached[trial])
                     dataset['note_safety_pass'] = (dataset['comparison']['note_safety_pass']
                                                    and dataset['snapshot_vs_off']['gate_pass'])
+                    if relief:
+                        dataset['relief_gate'] = relief_gate(dataset['comparison'], cached[CURRENT], cached[trial])
+                        current_holds = dataset['runs'][CURRENT + '-512']['midi_lifecycle']['labels']
+                        trial_holds = dataset['runs'][trial + '-512']['midi_lifecycle']['labels']
+                        dataset['relief_gate']['longest_hold_losses'] = [
+                            a['label_index'] for a, b in zip(current_holds, trial_holds)
+                            if b['longest_exact_hold_samples'] < a['longest_exact_hold_samples']]
+                        dataset['note_safety_pass'] &= (dataset['relief_gate']['retrigger_pass']
+                            and not dataset['relief_gate']['longest_hold_losses'])
                     save()
                     if not dataset['note_safety_pass']:
                         report.update(state='rejected', stage='stopped at note safety regression')
@@ -260,7 +311,7 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
         raise
     finally:
         datasets = list(report['datasets'].values())
-        complete = report['state'] == 'completed' and len(datasets) == len(DATASETS)
+        complete = report['state'] == 'completed' and len(datasets) == len(datasets_to_run)
         report['note_safety_datasets_passed'] = sum(d.get('note_safety_pass', False) for d in datasets)
         report['buffer_datasets_passed'] = sum(d.get('buffer_pass', False) for d in datasets)
         report['native_datasets_passed'] = sum(d.get('native_gate_pass', False) for d in datasets)
@@ -280,13 +331,19 @@ def run(binary, corpus, manifest_path, reference_path, output, max_seconds=10800
                     'improved_hold_and_attack_labels', []))
         report['required_target_hold_and_attack_improved'] = target_improved
         report['corpus_note_safety_pass'] = bool(complete and report['reference_identity_pass']
-            and report['note_safety_datasets_passed'] == len(DATASETS)
-            and report['improved_hold_and_attack_labels'] > 0 and target_improved is not False)
+            and report['note_safety_datasets_passed'] == len(datasets_to_run)
+            and (report['datasets'].get('ordinary', {}).get('relief_gate', {}).get('usefulness_pass', False)
+                 if relief else report['improved_hold_and_attack_labels'] > 0)
+            and target_improved is not False)
         report['full_corpus_screen_pass'] = bool(report['corpus_note_safety_pass']
-            and report['buffer_datasets_passed'] == len(DATASETS)
-            and report['native_datasets_passed'] == len(DATASETS))
-        report['decision'] = ('eligible for external host validation; not promotion'
-            if report['full_corpus_screen_pass'] else 'rejected or incomplete; inspect separate gates')
+            and report['buffer_datasets_passed'] == len(datasets_to_run)
+            and report['native_datasets_passed'] == len(datasets_to_run))
+        if relief:
+            report['bounded_screen_pass'] = report.pop('full_corpus_screen_pass')
+        passed = report.get('bounded_screen_pass', report.get('full_corpus_screen_pass', False))
+        report['decision'] = (('bounded screen passed; no promotion or installed change' if relief
+                               else 'eligible for external host validation; not promotion')
+            if passed else 'rejected or incomplete; inspect separate gates')
         report.update(final=True, finished_at=now())
         save()
     return report

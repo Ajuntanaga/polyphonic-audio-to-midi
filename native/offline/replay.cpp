@@ -3039,11 +3039,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_supported_sustain_renewal,
                          bool diagnostic_persistent_candidate_admission,
                          bool diagnostic_contradicted_retention,
-                         bool diagnostic_common_assignment_confidence) {
+                         bool diagnostic_common_assignment_confidence,
+                         bool diagnostic_upper_fretted_relief) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3417,6 +3418,8 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_joint_rescue_eligibility);
   detector.set_common_assignment_confidence_for_diagnostics(
       diagnostic_common_assignment_confidence);
+  detector.set_upper_fretted_relief_for_diagnostics(
+      diagnostic_upper_fretted_relief);
   detector.set_calibrated_assignment_prior_for_diagnostics(
       diagnostic_calibrated_assignment_prior);
   detector.set_provisional_open_retention_guard_for_diagnostics(
@@ -9534,6 +9537,14 @@ bool run_detector_replay(const WaveData& wave,
   result.residual_recovery_proposals = recovery_stats.proposals;
   result.residual_recovery_selected_ticks = recovery_stats.selected_ticks;
   result.residual_recovery_note_ons = recovery_stats.note_ons;
+  const auto relief_stats = detector.upper_fretted_relief_stats();
+  result.upper_relief_evaluated = relief_stats.evaluated;
+  result.upper_relief_no_parent = relief_stats.no_parent;
+  result.upper_relief_related_blocked = relief_stats.related_blocked;
+  result.upper_relief_applied = relief_stats.relief_applied;
+  result.upper_relief_rendered_disagreements = relief_stats.rendered_disagreements;
+  result.upper_relief_active_only = relief_stats.relief_active_only;
+  result.upper_relief_rendered_only = relief_stats.relief_rendered_only;
 #endif
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   if (core_timing != nullptr) {

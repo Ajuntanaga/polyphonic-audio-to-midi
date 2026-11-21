@@ -1818,6 +1818,13 @@ struct ReplayResult final {
   std::uint32_t residual_recovery_proposals{};
   std::uint32_t residual_recovery_selected_ticks{};
   std::uint32_t residual_recovery_note_ons{};
+  std::uint64_t upper_relief_evaluated{};
+  std::uint64_t upper_relief_no_parent{};
+  std::uint64_t upper_relief_related_blocked{};
+  std::uint64_t upper_relief_applied{};
+  std::uint64_t upper_relief_rendered_disagreements{};
+  std::uint64_t upper_relief_active_only{};
+  std::uint64_t upper_relief_rendered_only{};
   ReplayCounterfactualMetrics calibrated_dp_replacement{};
   std::array<ReplayCounterfactualMetrics,
              kAdjacentSpectralDuplicatePolicies.size()>
@@ -2406,7 +2413,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_supported_sustain_renewal = false,
                          bool diagnostic_persistent_candidate_admission = false,
                          bool diagnostic_contradicted_retention = false,
-                         bool diagnostic_common_assignment_confidence = false);
+                         bool diagnostic_common_assignment_confidence = false,
+                         bool diagnostic_upper_fretted_relief = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

@@ -880,6 +880,30 @@ class PolyphonicPitchDetector final {
   void set_common_assignment_confidence_for_diagnostics(bool enabled) noexcept {
     diagnostic_common_assignment_confidence_ = enabled;
   }
+  // Replay-only causal screen: for a pooled note above the highest open string
+  // (always fretted), drop ONLY the fixed fretted-note penalty from the
+  // selection DP when the previous decision's active set holds at least one
+  // lower note and none of them sits at an octave/fifth/third-partial interval
+  // {12,19,24,28,31,36} below the candidate.  The per-fret term is kept.
+  // Default off; counters describe how often each branch fired and how often
+  // the active-set predicate disagrees with the same predicate evaluated on
+  // the rendered (midi_voice_mask != 0) set.
+  struct UpperFrettedReliefStats final {
+    std::uint64_t evaluated{};
+    std::uint64_t no_parent{};
+    std::uint64_t related_blocked{};
+    std::uint64_t relief_applied{};
+    std::uint64_t rendered_disagreements{};
+    std::uint64_t relief_active_only{};
+    std::uint64_t relief_rendered_only{};
+  };
+  void set_upper_fretted_relief_for_diagnostics(bool enabled) noexcept {
+    diagnostic_upper_fretted_relief_ = enabled;
+    diagnostic_upper_fretted_relief_stats_ = {};
+  }
+  [[nodiscard]] UpperFrettedReliefStats upper_fretted_relief_stats() const noexcept {
+    return diagnostic_upper_fretted_relief_stats_;
+  }
   void set_calibrated_assignment_prior_for_diagnostics(bool enabled) noexcept {
     diagnostic_calibrated_assignment_prior_ = enabled;
   }
@@ -1935,6 +1959,8 @@ class PolyphonicPitchDetector final {
   bool diagnostic_cue_free_lane_reassignment_{};
   bool diagnostic_provisional_open_retention_guard_{};
   bool diagnostic_common_assignment_confidence_ = false;
+  bool diagnostic_upper_fretted_relief_ = false;
+  UpperFrettedReliefStats diagnostic_upper_fretted_relief_stats_{};
   bool diagnostic_calibrated_assignment_prior_{};
   bool diagnostic_joint_rescue_eligibility_{};
   bool diagnostic_pending_string_posterior_{};

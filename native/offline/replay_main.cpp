@@ -172,6 +172,7 @@ void usage(const char* program) {
       "[--midi-event-trace FILE] [--diagnostic-stable-note-identity] [--diagnostic-residual-recovery-continuity] "
       "[--diagnostic-direct-evidence-retention] "
       "[--diagnostic-contradicted-retention] "
+      "[--diagnostic-upper-fretted-relief] "
       "[--diagnostic-persistent-candidate-admission] "
       "[--diagnostic-supported-sustain-renewal] "
       "[--diagnostic-local-onset-evidence] "
@@ -333,6 +334,7 @@ int main(int argc, char** argv) {
   bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_common_assignment_confidence = false;
+  bool diagnostic_upper_fretted_relief = false;
   bool diagnostic_calibrated_assignment_prior = false;
   bool diagnostic_joint_rescue_eligibility = false;
   bool diagnostic_pending_string_posterior = false;
@@ -717,6 +719,9 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-common-assignment-confidence") == 0) {
       diagnostic_common_assignment_confidence = true;
+    } else if (std::strcmp(argv[index],
+                           "--diagnostic-upper-fretted-relief") == 0) {
+      diagnostic_upper_fretted_relief = true;
     } else if (std::strcmp(argv[index],
                            "--diagnostic-calibrated-assignment-prior") == 0) {
       diagnostic_calibrated_assignment_prior = true;
@@ -1344,7 +1349,8 @@ int main(int argc, char** argv) {
           diagnostic_supported_sustain_renewal,
           diagnostic_persistent_candidate_admission,
           diagnostic_contradicted_retention,
-          diagnostic_common_assignment_confidence)) {
+          diagnostic_common_assignment_confidence,
+          diagnostic_upper_fretted_relief)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1508,6 +1514,18 @@ int main(int argc, char** argv) {
         "m3_replay: residual_recovery proposals=%u selected_ticks=%u note_ons=%u\n",
         result.residual_recovery_proposals, result.residual_recovery_selected_ticks,
         result.residual_recovery_note_ons);
+  }
+  if (diagnostic_upper_fretted_relief) {
+    std::fprintf(stderr,
+        "m3_replay: upper_fretted_relief evaluated=%llu no_parent=%llu related_blocked=%llu "
+        "applied=%llu rendered_disagreements=%llu active_only=%llu rendered_only=%llu\n",
+        static_cast<unsigned long long>(result.upper_relief_evaluated),
+        static_cast<unsigned long long>(result.upper_relief_no_parent),
+        static_cast<unsigned long long>(result.upper_relief_related_blocked),
+        static_cast<unsigned long long>(result.upper_relief_applied),
+        static_cast<unsigned long long>(result.upper_relief_rendered_disagreements),
+        static_cast<unsigned long long>(result.upper_relief_active_only),
+        static_cast<unsigned long long>(result.upper_relief_rendered_only));
   }
 #endif
   if (partial_motion_stream != nullptr) {

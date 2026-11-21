@@ -729,6 +729,46 @@ struct PolyphonicPitchDetectorTestAccess final {
     return selected[target];
   }
 
+  // Result order: selected, evaluated, no_parent, related_blocked, applied,
+  // rendered_disagreements, active_only.  The lower note is made active in the
+  // candidate state without a score, so it cannot enter the pool or the
+  // harmonic-shadow pass; only the parent predicate sees it.
+  static std::array<std::uint64_t, 7U> upper_fretted_relief_probe(
+      bool enabled, int parent_note, bool rendered_parent = false) noexcept {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = 32U;
+    config.highest_note = 87U;
+    config.max_polyphony = 5U;
+    config.max_fret = 24U;
+    config.response = 75U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_upper_fretted_relief_for_diagnostics(enabled);
+    detector.fast_energy_ = 1.0;
+    constexpr std::size_t target = 65U - 32U;
+    if (parent_note >= 0) {
+      auto& parent =
+          detector.candidate_states_[static_cast<std::size_t>(parent_note) - 32U];
+      parent.active = true;
+      parent.midi_voice_mask = rendered_parent ? 0x01U : 0U;
+    }
+    std::array<double, kMaxCandidates> scores{};
+    std::array<double, kMaxCandidates> fundamentals{};
+    std::array<double, kMaxCandidates> narrow{};
+    std::array<bool, kMaxCandidates> selected{};
+    // Above the 0.05 admission threshold but below the roughly 0.225 a fretted
+    // note needs once the fixed 0.20 penalty applies.
+    scores[target] = 0.15;
+    fundamentals[target] = 0.14;
+    detector.select_m3_feasible_candidates(
+        scores, fundamentals, narrow, 0.05, selected, detector.candidate_count_);
+    const auto stats = detector.upper_fretted_relief_stats();
+    return {selected[target] ? 1U : 0U, stats.evaluated, stats.no_parent,
+            stats.related_blocked, stats.relief_applied,
+            stats.rendered_disagreements, stats.relief_active_only};
+  }
+
   static bool odd_partial_cues_clear_on_reset(PolyphonicPitchDetector& detector) noexcept {
     detector.set_odd_partial_cue_mask_for_diagnostics({1U, 1U});
     detector.reset();
@@ -11107,6 +11147,48 @@ M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak
        Case::narrow}) {
     M3_EXPECT_FALSE(Access::fundamental_admission_probe(detector, true, scenario));
   }
+}
+
+M3_TEST(native_detector_upper_fretted_relief_waives_only_the_fixed_term_for_unrelated_parents) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  using Access = m3::PolyphonicPitchDetectorTestAccess;
+  // Off: identical to production, no counters, the fixed penalty keeps note 65 out.
+  const auto off = Access::upper_fretted_relief_probe(false, 40);
+  M3_EXPECT_EQ(off[0U], 0U);
+  for (std::size_t index = 1U; index < off.size(); ++index) {
+    M3_EXPECT_EQ(off[index], 0U);
+  }
+  // On, no sounding lower note: nothing to explain the candidate, no relief.
+  const auto none = Access::upper_fretted_relief_probe(true, -1);
+  M3_EXPECT_EQ(none[0U], 0U);
+  M3_EXPECT_EQ(none[1U], 1U);
+  M3_EXPECT_EQ(none[2U], 1U);
+  M3_EXPECT_EQ(none[4U], 0U);
+  // On, an active lower note at interval 25 (not listed): relief applies.
+  // The parent is active but not rendered, so the two predicates disagree once.
+  const auto unrelated = Access::upper_fretted_relief_probe(true, 40);
+  M3_EXPECT_EQ(unrelated[0U], 1U);
+  M3_EXPECT_EQ(unrelated[1U], 1U);
+  M3_EXPECT_EQ(unrelated[2U], 0U);
+  M3_EXPECT_EQ(unrelated[3U], 0U);
+  M3_EXPECT_EQ(unrelated[4U], 1U);
+  M3_EXPECT_EQ(unrelated[5U], 1U);
+  M3_EXPECT_EQ(unrelated[6U], 1U);
+  const auto rendered = Access::upper_fretted_relief_probe(true, 40, true);
+  M3_EXPECT_EQ(rendered[0U], 1U);
+  M3_EXPECT_EQ(rendered[4U], 1U);
+  M3_EXPECT_EQ(rendered[5U], 0U);
+  // On, an active lower note at a listed interval (12 and 31): blocked.
+  for (const int related : {53, 34}) {
+    const auto blocked = Access::upper_fretted_relief_probe(true, related);
+    M3_EXPECT_EQ(blocked[0U], 0U);
+    M3_EXPECT_EQ(blocked[1U], 1U);
+    M3_EXPECT_EQ(blocked[2U], 0U);
+    M3_EXPECT_EQ(blocked[3U], 1U);
+    M3_EXPECT_EQ(blocked[4U], 0U);
+    M3_EXPECT_EQ(blocked[5U], 0U);
+  }
+#endif
 }
 
 M3_TEST(native_detector_fundamental_admission_preserves_common_gain_and_silence) {
