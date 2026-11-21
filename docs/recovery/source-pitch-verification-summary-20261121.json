@@ -1,0 +1,2985 @@
+{
+  "schema": "m3_source_pitch_verification_summary_v1",
+  "run_id": 44951646663,
+  "report": "build/github-results/source-pitch-verification-44951646663/artifact/source-pitch-verification-result/report/report.json",
+  "report_sha256": "2bc94036c01e6b71723c4601a0987af5d2b22e574e207a6a5b0da4f28a0c1e52",
+  "source_commit": "f06303acaad412b8c35902d1954193ea3c62b5e3",
+  "worker_commit": "161098abbaa98c67689ee7f3a85fd88981fabc75",
+  "finished_at": "2026-11-21T21:28:19.687689+00:00",
+  "integrity": {
+    "source_roles": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "selection_reproduced": true,
+    "source_takes": 555,
+    "expected_cents_rows_verified": 555,
+    "selected_takes": 40,
+    "loaded_strings": [
+      "string-01",
+      "string-04",
+      "string-06",
+      "string-08"
+    ]
+  },
+  "groups": {
+    "flagged": {
+      "takes": 15,
+      "short_windows": 283,
+      "unique_spectral_contexts": 203,
+      "classifications": {
+        "periodic_other": 283
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-01:53",
+        "string-01:54",
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61",
+        "string-04:54",
+        "string-04:55",
+        "string-04:57",
+        "string-06:68",
+        "string-08:63",
+        "string-08:66"
+      ]
+    },
+    "controls": {
+      "takes": 25,
+      "short_windows": 525,
+      "unique_spectral_contexts": 380,
+      "classifications": {
+        "periodic_target": 525
+      },
+      "source_keys": [
+        "string-01:0",
+        "string-01:12",
+        "string-01:16",
+        "string-01:20",
+        "string-01:24",
+        "string-01:25",
+        "string-01:29",
+        "string-01:33",
+        "string-01:37",
+        "string-01:4",
+        "string-01:41",
+        "string-01:45",
+        "string-01:49",
+        "string-01:8",
+        "string-04:0",
+        "string-04:12",
+        "string-04:37",
+        "string-04:4",
+        "string-04:45",
+        "string-04:49",
+        "string-06:0",
+        "string-06:49",
+        "string-08:20",
+        "string-08:4",
+        "string-08:45"
+      ]
+    },
+    "non_octave_disagreement": {
+      "takes": 8,
+      "short_windows": 172,
+      "unique_spectral_contexts": 127,
+      "classifications": {
+        "periodic_other": 172
+      },
+      "source_keys": [
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61",
+        "string-04:57",
+        "string-08:63",
+        "string-08:66"
+      ]
+    },
+    "octave_related": {
+      "takes": 7,
+      "short_windows": 111,
+      "unique_spectral_contexts": 76,
+      "classifications": {
+        "periodic_other": 111
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-01:53",
+        "string-01:54",
+        "string-04:54",
+        "string-04:55",
+        "string-06:68"
+      ]
+    },
+    "upward_octave_related": {
+      "takes": 5,
+      "short_windows": 67,
+      "unique_spectral_contexts": 44,
+      "classifications": {
+        "periodic_other": 67
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-04:54",
+        "string-04:55",
+        "string-06:68"
+      ]
+    },
+    "four_semitones_up_matching_next_annotation": {
+      "takes": 5,
+      "short_windows": 94,
+      "unique_spectral_contexts": 67,
+      "classifications": {
+        "periodic_other": 94
+      },
+      "source_keys": [
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61"
+      ]
+    }
+  },
+  "non_octave_max_median_label_harmonic_fraction": 0.005846119309577104,
+  "upward_octave_max_median_odd_label_harmonic_fraction": 0.0003423287215751984,
+  "pairs": [
+    {
+      "flagged": "string-01:50",
+      "controls": {
+        "train": "string-01:0",
+        "calibration": "string-01:49"
+      }
+    },
+    {
+      "flagged": "string-01:51",
+      "controls": {
+        "train": "string-01:12",
+        "calibration": "string-01:37"
+      }
+    },
+    {
+      "flagged": "string-01:53",
+      "controls": {
+        "train": "string-01:24",
+        "calibration": "string-01:25"
+      }
+    },
+    {
+      "flagged": "string-01:54",
+      "controls": {
+        "train": "string-01:12",
+        "calibration": "string-01:37"
+      }
+    },
+    {
+      "flagged": "string-01:56",
+      "controls": {
+        "train": "string-01:0",
+        "calibration": "string-01:49"
+      }
+    },
+    {
+      "flagged": "string-01:57",
+      "controls": {
+        "train": "string-01:4",
+        "calibration": "string-01:45"
+      }
+    },
+    {
+      "flagged": "string-01:58",
+      "controls": {
+        "train": "string-01:8",
+        "calibration": "string-01:41"
+      }
+    },
+    {
+      "flagged": "string-01:60",
+      "controls": {
+        "train": "string-01:16",
+        "calibration": "string-01:33"
+      }
+    },
+    {
+      "flagged": "string-01:61",
+      "controls": {
+        "train": "string-01:20",
+        "calibration": "string-01:29"
+      }
+    },
+    {
+      "flagged": "string-04:54",
+      "controls": {
+        "train": "string-04:12",
+        "calibration": "string-04:37"
+      }
+    },
+    {
+      "flagged": "string-04:55",
+      "controls": {
+        "train": "string-04:0",
+        "calibration": "string-04:49"
+      }
+    },
+    {
+      "flagged": "string-04:57",
+      "controls": {
+        "train": "string-04:4",
+        "calibration": "string-04:45"
+      }
+    },
+    {
+      "flagged": "string-06:68",
+      "controls": {
+        "train": "string-06:0",
+        "calibration": "string-06:49"
+      }
+    },
+    {
+      "flagged": "string-08:63",
+      "controls": {
+        "train": "string-08:20",
+        "calibration": null
+      }
+    },
+    {
+      "flagged": "string-08:66",
+      "controls": {
+        "train": "string-08:4",
+        "calibration": "string-08:45"
+      }
+    }
+  ],
+  "takes": [
+    {
+      "source_key": "string-01:0",
+      "role": "train",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "context": {
+        "previous_note": null,
+        "next_note": 61,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -50.481942196217595,
+        -48.837194649474526,
+        -43.920362248169795
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9981109642312262,
+          "odd_union_fraction": 0.8796109091590938,
+          "even_union_fraction": 0.11875685380020946
+        },
+        "expected": {
+          "union_fraction": 0.9981265785330773,
+          "odd_union_fraction": 0.8796138671407574,
+          "even_union_fraction": 0.11876412618830673
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9954840828295625,
+          "odd_union_fraction": 2.9122964136117206e-05,
+          "even_union_fraction": 0.995441335830672
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.11897467937218162,
+          "odd_union_fraction": 0.11413079498099835,
+          "even_union_fraction": 0.0025490459689436877
+        },
+        "open_string": {
+          "union_fraction": 0.9981109642312262,
+          "odd_union_fraction": 0.8796109091590938,
+          "even_union_fraction": 0.11875685380020946
+        },
+        "next_note": {
+          "union_fraction": 4.1439376285481134e-05,
+          "odd_union_fraction": 1.495812440891021e-05,
+          "even_union_fraction": 2.6621361540617473e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 60,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:12",
+      "role": "train",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "context": {
+        "previous_note": 71,
+        "next_note": 73,
+        "open_note": 60
+      },
+      "sample_count": 205440,
+      "windows": 25,
+      "unique_spectral_windows": 19,
+      "classifications": {
+        "periodic_target": 25
+      },
+      "periodic_nearest_midi_histogram": {
+        "72": 25
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "72": 25
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -66.17838925419181,
+        -59.12170823563934,
+        -52.94930095953771
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9928987006107948,
+          "odd_union_fraction": 0.9831687061449661,
+          "even_union_fraction": 0.004450512708436633
+        },
+        "expected": {
+          "union_fraction": 0.99296883400016,
+          "odd_union_fraction": 0.9833334287153573,
+          "even_union_fraction": 0.004451112676865005
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9929151458000806,
+          "odd_union_fraction": 5.9195567976529305e-05,
+          "even_union_fraction": 0.9928559502321039
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.004477851748100776,
+          "odd_union_fraction": 0.0043444471145921435,
+          "even_union_fraction": 0.0001449613633637175
+        },
+        "open_string": {
+          "union_fraction": 0.9929151458000806,
+          "odd_union_fraction": 5.9195567976529305e-05,
+          "even_union_fraction": 0.9928559502321039
+        },
+        "previous_note": {
+          "union_fraction": 0.0011976953272153411,
+          "odd_union_fraction": 0.0011652717203422455,
+          "even_union_fraction": 4.2094031174702746e-05
+        },
+        "next_note": {
+          "union_fraction": 0.00015953197699740274,
+          "odd_union_fraction": 0.00010957798988584984,
+          "even_union_fraction": 4.995398711155289e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 72,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:16",
+      "role": "train",
+      "note": 76,
+      "string_mask": 128,
+      "expected_cents": 4.945312,
+      "context": {
+        "previous_note": 75,
+        "next_note": 77,
+        "open_note": 60
+      },
+      "sample_count": 186240,
+      "windows": 22,
+      "unique_spectral_windows": 16,
+      "classifications": {
+        "periodic_target": 22
+      },
+      "periodic_nearest_midi_histogram": {
+        "76": 22
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "76": 22
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -63.95595781997258,
+        -54.122722018128364,
+        -45.71453409842347
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9948260193287544,
+          "odd_union_fraction": 0.9946796321234463,
+          "even_union_fraction": 0.00014638720530802882
+        },
+        "expected": {
+          "union_fraction": 0.9948266011883444,
+          "odd_union_fraction": 0.9946801860417367,
+          "even_union_fraction": 0.00014641514660775323
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9947110756149391,
+          "odd_union_fraction": 1.979188596341678e-05,
+          "even_union_fraction": 0.9946912837289759
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.00015447281890520234,
+          "odd_union_fraction": 0.00014177420990986716,
+          "even_union_fraction": 1.619020755749001e-05
+        },
+        "open_string": {
+          "union_fraction": 0.00017395235249998152,
+          "odd_union_fraction": 0.00015643567897039248,
+          "even_union_fraction": 2.479401031330656e-05
+        },
+        "previous_note": {
+          "union_fraction": 4.624314531157897e-05,
+          "odd_union_fraction": 2.431787132019463e-05,
+          "even_union_fraction": 2.192527399138434e-05
+        },
+        "next_note": {
+          "union_fraction": 3.4891903628440996e-05,
+          "odd_union_fraction": 1.6531532033325126e-05,
+          "even_union_fraction": 1.8360371595115867e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 76,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:20",
+      "role": "train",
+      "note": 80,
+      "string_mask": 128,
+      "expected_cents": 13.433594,
+      "context": {
+        "previous_note": 79,
+        "next_note": 81,
+        "open_note": 60
+      },
+      "sample_count": 51600,
+      "windows": 6,
+      "unique_spectral_windows": 1,
+      "classifications": {
+        "periodic_target": 6
+      },
+      "periodic_nearest_midi_histogram": {
+        "80": 6
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "80": 6
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -64.85973090044772,
+        -62.49486176279319,
+        -59.668945191620686
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.97093851799122,
+          "odd_union_fraction": 0.9681076823314948,
+          "even_union_fraction": 0.00283083565972559
+        },
+        "expected": {
+          "union_fraction": 0.9709107473940557,
+          "odd_union_fraction": 0.9681098182725498,
+          "even_union_fraction": 0.0028009291215057236
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9714668454982195,
+          "odd_union_fraction": 0.0005826330458628578,
+          "even_union_fraction": 0.9708842124523565
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.0028840553688705174,
+          "odd_union_fraction": 0.00278914967691621,
+          "even_union_fraction": 9.490569195430746e-05
+        },
+        "open_string": {
+          "union_fraction": 0.00013218845102298452,
+          "odd_union_fraction": 5.1854840160757576e-05,
+          "even_union_fraction": 8.033361086222692e-05
+        },
+        "previous_note": {
+          "union_fraction": 0.0001283061197830445,
+          "odd_union_fraction": 7.88717121775402e-05,
+          "even_union_fraction": 4.943440760550431e-05
+        },
+        "next_note": {
+          "union_fraction": 0.00013227821317252423,
+          "odd_union_fraction": 7.625405341299727e-05,
+          "even_union_fraction": 5.6024159759526976e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 80,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:24",
+      "role": "train",
+      "note": 84,
+      "string_mask": 128,
+      "expected_cents": 28.933594,
+      "context": {
+        "previous_note": 83,
+        "next_note": null,
+        "open_note": 60
+      },
+      "sample_count": 74880,
+      "windows": 9,
+      "unique_spectral_windows": 3,
+      "classifications": {
+        "periodic_target": 9
+      },
+      "periodic_nearest_midi_histogram": {
+        "84": 9
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "84": 9
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -64.54415267556853,
+        -60.453927266691,
+        -54.72127535986765
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.968383015117344,
+          "odd_union_fraction": 0.9565919823474088,
+          "even_union_fraction": 0.011791032769935412
+        },
+        "expected": {
+          "union_fraction": 0.9683749086401171,
+          "odd_union_fraction": 0.9565820353436211,
+          "even_union_fraction": 0.011792873296495815
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9683746111400819,
+          "odd_union_fraction": 1.633065650980497e-05,
+          "even_union_fraction": 0.9683582804835724
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.01183441726450608,
+          "odd_union_fraction": 0.011796904949544142,
+          "even_union_fraction": 3.751231496194135e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9683252053083101,
+          "odd_union_fraction": 2.3446954803032843e-05,
+          "even_union_fraction": 0.9683017583535071
+        },
+        "previous_note": {
+          "union_fraction": 4.642777702164164e-05,
+          "odd_union_fraction": 2.0784205726280496e-05,
+          "even_union_fraction": 2.5643571295361145e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 84,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:25",
+      "role": "calibration",
+      "note": 84,
+      "string_mask": 128,
+      "expected_cents": 28.933594,
+      "context": {
+        "previous_note": null,
+        "next_note": 83,
+        "open_note": 60
+      },
+      "sample_count": 100800,
+      "windows": 12,
+      "unique_spectral_windows": 6,
+      "classifications": {
+        "periodic_target": 12
+      },
+      "periodic_nearest_midi_histogram": {
+        "84": 12
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "84": 12
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -66.46180753174201,
+        -60.658150410530226,
+        -54.00670397622022
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.8950393344575638,
+          "odd_union_fraction": 0.8927836509557088,
+          "even_union_fraction": 0.0022556835018552237
+        },
+        "expected": {
+          "union_fraction": 0.8950345569780204,
+          "odd_union_fraction": 0.8927792918516699,
+          "even_union_fraction": 0.0022552651263502872
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.8950269532672246,
+          "odd_union_fraction": 1.4387707534839663e-05,
+          "even_union_fraction": 0.8950125655596894
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.00229953477251105,
+          "odd_union_fraction": 0.0022612943079950262,
+          "even_union_fraction": 3.824046451602368e-05
+        },
+        "open_string": {
+          "union_fraction": 0.8949857162611998,
+          "odd_union_fraction": 2.0157761792782756e-05,
+          "even_union_fraction": 0.8949655584994072
+        },
+        "next_note": {
+          "union_fraction": 4.320241652690811e-05,
+          "odd_union_fraction": 2.0156603857579677e-05,
+          "even_union_fraction": 2.3045812669328432e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 84,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:29",
+      "role": "calibration",
+      "note": 80,
+      "string_mask": 128,
+      "expected_cents": 13.433594,
+      "context": {
+        "previous_note": 81,
+        "next_note": 79,
+        "open_note": 60
+      },
+      "sample_count": 32400,
+      "windows": 3,
+      "unique_spectral_windows": 1,
+      "classifications": {
+        "periodic_target": 3
+      },
+      "periodic_nearest_midi_histogram": {
+        "80": 3
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "80": 3
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -66.15415167061664,
+        -64.43747817442491,
+        -62.73595919429217
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.8363802229170886,
+          "odd_union_fraction": 0.46618196617703517,
+          "even_union_fraction": 0.3701982567400537
+        },
+        "expected": {
+          "union_fraction": 0.8363422928438143,
+          "odd_union_fraction": 0.46618239502639136,
+          "even_union_fraction": 0.37015989781742303
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.8339975096301474,
+          "odd_union_fraction": 0.00028216939766970107,
+          "even_union_fraction": 0.8337153402324777
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.37028259129957464,
+          "odd_union_fraction": 0.36409020239452244,
+          "even_union_fraction": 0.00619238890505221
+        },
+        "open_string": {
+          "union_fraction": 0.00018933717868370247,
+          "odd_union_fraction": 9.482921005477384e-05,
+          "even_union_fraction": 9.450796862892865e-05
+        },
+        "previous_note": {
+          "union_fraction": 0.00019235942297874046,
+          "odd_union_fraction": 0.00010667666944989883,
+          "even_union_fraction": 8.568275352884164e-05
+        },
+        "next_note": {
+          "union_fraction": 0.00016919606377237674,
+          "odd_union_fraction": 9.858744475912136e-05,
+          "even_union_fraction": 7.060861901325541e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 80,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:33",
+      "role": "calibration",
+      "note": 76,
+      "string_mask": 128,
+      "expected_cents": 4.945312,
+      "context": {
+        "previous_note": 77,
+        "next_note": 75,
+        "open_note": 60
+      },
+      "sample_count": 66240,
+      "windows": 8,
+      "unique_spectral_windows": 2,
+      "classifications": {
+        "periodic_target": 8
+      },
+      "periodic_nearest_midi_histogram": {
+        "76": 8
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "76": 8
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -64.52591515980338,
+        -60.34805390262355,
+        -55.279562217112115
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9866041746555678,
+          "odd_union_fraction": 0.986204674723701,
+          "even_union_fraction": 0.00039949993186695057
+        },
+        "expected": {
+          "union_fraction": 0.9866052771965261,
+          "odd_union_fraction": 0.9862047765928115,
+          "even_union_fraction": 0.00040050060371465344
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9849430336752181,
+          "odd_union_fraction": 7.777352149943229e-05,
+          "even_union_fraction": 0.9848652601537184
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.0004249293432739648,
+          "odd_union_fraction": 0.00038627529228596014,
+          "even_union_fraction": 3.865405098800459e-05
+        },
+        "open_string": {
+          "union_fraction": 0.0004446896044523929,
+          "odd_union_fraction": 0.00039574876159743976,
+          "even_union_fraction": 4.894084285495314e-05
+        },
+        "previous_note": {
+          "union_fraction": 7.158141578076064e-05,
+          "odd_union_fraction": 3.4987913797563065e-05,
+          "even_union_fraction": 3.659350198319758e-05
+        },
+        "next_note": {
+          "union_fraction": 0.00010419124856409162,
+          "odd_union_fraction": 5.674669104356574e-05,
+          "even_union_fraction": 4.744455752052587e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 76,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:37",
+      "role": "calibration",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "context": {
+        "previous_note": 73,
+        "next_note": 71,
+        "open_note": 60
+      },
+      "sample_count": 188160,
+      "windows": 22,
+      "unique_spectral_windows": 16,
+      "classifications": {
+        "periodic_target": 22
+      },
+      "periodic_nearest_midi_histogram": {
+        "72": 22
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "72": 22
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -63.03647258985903,
+        -56.02056377810544,
+        -49.65631757079105
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9977759658851958,
+          "odd_union_fraction": 0.99489982553516,
+          "even_union_fraction": 0.0011976225889669973
+        },
+        "expected": {
+          "union_fraction": 0.9977839924371026,
+          "odd_union_fraction": 0.9949140869967785,
+          "even_union_fraction": 0.0011977086180368413
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9977740737476075,
+          "odd_union_fraction": 7.258763507273639e-06,
+          "even_union_fraction": 0.9977668149841001
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.0012073645373055775,
+          "odd_union_fraction": 0.0011931825195560131,
+          "even_union_fraction": 3.17464908108008e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9977740737476075,
+          "odd_union_fraction": 7.258763507273639e-06,
+          "even_union_fraction": 0.9977668149841001
+        },
+        "previous_note": {
+          "union_fraction": 2.7105802113711533e-05,
+          "odd_union_fraction": 1.6977506621240633e-05,
+          "even_union_fraction": 1.0128295492470902e-05
+        },
+        "next_note": {
+          "union_fraction": 2.1398883435037744e-05,
+          "odd_union_fraction": 1.2660992096731496e-05,
+          "even_union_fraction": 8.737891338306252e-06
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 72,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:4",
+      "role": "train",
+      "note": 64,
+      "string_mask": 128,
+      "expected_cents": 13.570312,
+      "context": {
+        "previous_note": 63,
+        "next_note": 65,
+        "open_note": 60
+      },
+      "sample_count": 168960,
+      "windows": 20,
+      "unique_spectral_windows": 14,
+      "classifications": {
+        "periodic_target": 20
+      },
+      "periodic_nearest_midi_histogram": {
+        "64": 20
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "64": 20
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -66.47452927751758,
+        -60.88025690350699,
+        -56.37973151045716
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.993155951622468,
+          "odd_union_fraction": 0.9543704281405874,
+          "even_union_fraction": 0.03676802618021002
+        },
+        "expected": {
+          "union_fraction": 0.9931824051221614,
+          "odd_union_fraction": 0.9543924557850029,
+          "even_union_fraction": 0.0367710294102242
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9805417507309467,
+          "odd_union_fraction": 5.476557042023925e-05,
+          "even_union_fraction": 0.9801761824716344
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.03712097662080964,
+          "odd_union_fraction": 0.03706889487734847,
+          "even_union_fraction": 3.5973183967970614e-05
+        },
+        "open_string": {
+          "union_fraction": 0.00014449393077611223,
+          "odd_union_fraction": 0.00010924924370326263,
+          "even_union_fraction": 5.000500652317445e-05
+        },
+        "previous_note": {
+          "union_fraction": 7.040463114581183e-05,
+          "odd_union_fraction": 2.3340555927338394e-05,
+          "even_union_fraction": 4.511116963379896e-05
+        },
+        "next_note": {
+          "union_fraction": 0.0001054399275092032,
+          "odd_union_fraction": 5.449655245501633e-05,
+          "even_union_fraction": 5.094337505418686e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 64,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:41",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 128,
+      "expected_cents": 10.570312,
+      "context": {
+        "previous_note": 69,
+        "next_note": 67,
+        "open_note": 60
+      },
+      "sample_count": 93600,
+      "windows": 11,
+      "unique_spectral_windows": 5,
+      "classifications": {
+        "periodic_target": 11
+      },
+      "periodic_nearest_midi_histogram": {
+        "68": 11
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "80": 11
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -66.44539666091492,
+        -63.49780385124256,
+        -60.59136341475436
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9481591302958997,
+          "odd_union_fraction": 0.06380907120791457,
+          "even_union_fraction": 0.8846034611969638
+        },
+        "expected": {
+          "union_fraction": 0.948148883323989,
+          "odd_union_fraction": 0.06381164425278299,
+          "even_union_fraction": 0.8845888384842899
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.942779656500143,
+          "odd_union_fraction": 0.001188428876848502,
+          "even_union_fraction": 0.9415912276232945
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.8846769195545171,
+          "odd_union_fraction": 0.8226429632799322,
+          "even_union_fraction": 0.05469122736773676
+        },
+        "open_string": {
+          "union_fraction": 0.006395301695610419,
+          "odd_union_fraction": 0.00047035360474622647,
+          "even_union_fraction": 0.005924948090864192
+        },
+        "previous_note": {
+          "union_fraction": 0.0001365015390254332,
+          "odd_union_fraction": 5.506251210945636e-05,
+          "even_union_fraction": 8.096162748462758e-05
+        },
+        "next_note": {
+          "union_fraction": 0.0001289559692196235,
+          "odd_union_fraction": 6.207486006332556e-05,
+          "even_union_fraction": 6.753057359129512e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 68,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:45",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 128,
+      "expected_cents": 13.570312,
+      "context": {
+        "previous_note": 65,
+        "next_note": 63,
+        "open_note": 60
+      },
+      "sample_count": 190080,
+      "windows": 23,
+      "unique_spectral_windows": 17,
+      "classifications": {
+        "periodic_target": 23
+      },
+      "periodic_nearest_midi_histogram": {
+        "64": 23
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "64": 23
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -54.109592078959466,
+        -48.370693550277004,
+        -42.34693600044692
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9995420307914711,
+          "odd_union_fraction": 0.9137016342589123,
+          "even_union_fraction": 0.08584039653255847
+        },
+        "expected": {
+          "union_fraction": 0.9995444358668355,
+          "odd_union_fraction": 0.9137040084365811,
+          "even_union_fraction": 0.08584042743025452
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9987092633026697,
+          "odd_union_fraction": 1.1439962246831267e-05,
+          "even_union_fraction": 0.9986698887879292
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.08584317893497427,
+          "odd_union_fraction": 0.08583885059600006,
+          "even_union_fraction": 8.37905395909831e-06
+        },
+        "open_string": {
+          "union_fraction": 1.683916316894439e-05,
+          "odd_union_fraction": 1.2786715912984408e-05,
+          "even_union_fraction": 2.7484480279021833e-06
+        },
+        "previous_note": {
+          "union_fraction": 7.264280215757448e-06,
+          "odd_union_fraction": 4.899930181963028e-06,
+          "even_union_fraction": 2.364350033794421e-06
+        },
+        "next_note": {
+          "union_fraction": 1.2092216930189314e-05,
+          "odd_union_fraction": 9.654210047981503e-06,
+          "even_union_fraction": 2.532948108639225e-06
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 64,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:49",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "context": {
+        "previous_note": 61,
+        "next_note": null,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -48.19417677810857,
+        -43.79629641628915,
+        -38.57022655569716
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9992753756093575,
+          "odd_union_fraction": 0.7026946944160335,
+          "even_union_fraction": 0.2965806811933239
+        },
+        "expected": {
+          "union_fraction": 0.9992795633654965,
+          "odd_union_fraction": 0.7026968112538772,
+          "even_union_fraction": 0.2965827521116192
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9987330839494472,
+          "odd_union_fraction": 9.368213787263872e-06,
+          "even_union_fraction": 0.9987217819166412
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.2965871205555317,
+          "odd_union_fraction": 0.28994802715822654,
+          "even_union_fraction": 0.005378361196535298
+        },
+        "open_string": {
+          "union_fraction": 0.9992753756093575,
+          "odd_union_fraction": 0.7026946944160335,
+          "even_union_fraction": 0.2965806811933239
+        },
+        "previous_note": {
+          "union_fraction": 1.039837104193803e-05,
+          "odd_union_fraction": 6.208976975222114e-06,
+          "even_union_fraction": 4.189394066715916e-06
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 60,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-01:50",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "context": {
+        "previous_note": null,
+        "next_note": 72,
+        "open_note": 60
+      },
+      "sample_count": 27600,
+      "windows": 3,
+      "unique_spectral_windows": 1,
+      "classifications": {
+        "periodic_other": 3
+      },
+      "periodic_nearest_midi_histogram": {
+        "84": 3
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "84": 3
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -61.415802591443615,
+        -60.035801844544416,
+        -56.16688583213232
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9901560414754681,
+          "odd_union_fraction": 0.00027189802269023475,
+          "even_union_fraction": 0.9898841434527778
+        },
+        "expected": {
+          "union_fraction": 0.9901719377451177,
+          "odd_union_fraction": 0.00027225552122478485,
+          "even_union_fraction": 0.9898996822238928
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9606204903480642,
+          "odd_union_fraction": 0.0002475241445785426,
+          "even_union_fraction": 0.9603729662034857
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.9899253790877274,
+          "odd_union_fraction": 0.000374001155698059,
+          "even_union_fraction": 0.9895513779320292
+        },
+        "open_string": {
+          "union_fraction": 0.9901560414754681,
+          "odd_union_fraction": 0.00027189802269023475,
+          "even_union_fraction": 0.9898841434527778
+        },
+        "next_note": {
+          "union_fraction": 0.9899253790877274,
+          "odd_union_fraction": 0.000374001155698059,
+          "even_union_fraction": 0.9895513779320292
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 84,
+      "semitone_difference": 24
+    },
+    {
+      "source_key": "string-01:51",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "context": {
+        "previous_note": 60,
+        "next_note": 84,
+        "open_note": 60
+      },
+      "sample_count": 37200,
+      "windows": 4,
+      "unique_spectral_windows": 1,
+      "classifications": {
+        "periodic_other": 4
+      },
+      "periodic_nearest_midi_histogram": {
+        "84": 4
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "84": 4
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -62.06559059315852,
+        -58.7655119791778,
+        -53.97490474137612
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9855507877590517,
+          "odd_union_fraction": 3.089041948619303e-05,
+          "even_union_fraction": 0.9855198973395652
+        },
+        "expected": {
+          "union_fraction": 0.985556850483227,
+          "odd_union_fraction": 3.669316436390578e-05,
+          "even_union_fraction": 0.9855201573188632
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.985572011889888,
+          "odd_union_fraction": 3.1344921995271624e-05,
+          "even_union_fraction": 0.9855406669678928
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.9855345852981069,
+          "odd_union_fraction": 0.9834193778238854,
+          "even_union_fraction": 0.002115207474221483
+        },
+        "open_string": {
+          "union_fraction": 0.985572011889888,
+          "odd_union_fraction": 3.1344921995271624e-05,
+          "even_union_fraction": 0.9855406669678928
+        },
+        "previous_note": {
+          "union_fraction": 0.985572011889888,
+          "odd_union_fraction": 3.1344921995271624e-05,
+          "even_union_fraction": 0.9855406669678928
+        },
+        "next_note": {
+          "union_fraction": 0.9855345852981069,
+          "odd_union_fraction": 0.9834193778238854,
+          "even_union_fraction": 0.002115207474221483
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 84,
+      "semitone_difference": 12
+    },
+    {
+      "source_key": "string-01:53",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "expected_cents": 28.933594,
+      "context": {
+        "previous_note": 84,
+        "next_note": 72,
+        "open_note": 60
+      },
+      "sample_count": 155520,
+      "windows": 18,
+      "unique_spectral_windows": 12,
+      "classifications": {
+        "periodic_other": 18
+      },
+      "periodic_nearest_midi_histogram": {
+        "72": 18
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "72": 18
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -57.40350564821363,
+        -52.25193709811025,
+        -48.840644891401865
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.0007088669914801118,
+          "odd_union_fraction": 0.0006891307367858524,
+          "even_union_fraction": 6.7392542678042e-05
+        },
+        "expected": {
+          "union_fraction": 0.0007047194205464921,
+          "odd_union_fraction": 0.0006836365330077151,
+          "even_union_fraction": 6.793072173982351e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9984060576633489,
+          "odd_union_fraction": 0.9960543130351922,
+          "even_union_fraction": 0.0007019475097027343
+        },
+        "label_plus_octave": {
+          "union_fraction": 7.399245742002627e-05,
+          "odd_union_fraction": 6.746353728978897e-05,
+          "even_union_fraction": 1.012120805209193e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9983919360257608,
+          "odd_union_fraction": 7.553793165158605e-06,
+          "even_union_fraction": 0.9983843822325953
+        },
+        "previous_note": {
+          "union_fraction": 0.0007088669914801118,
+          "odd_union_fraction": 0.0006891307367858524,
+          "even_union_fraction": 6.7392542678042e-05
+        },
+        "next_note": {
+          "union_fraction": 0.9984060576633489,
+          "odd_union_fraction": 0.9960543130351922,
+          "even_union_fraction": 0.0007019475097027343
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 72,
+      "semitone_difference": -12
+    },
+    {
+      "source_key": "string-01:54",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "expected_cents": 5.660156,
+      "context": {
+        "previous_note": 84,
+        "next_note": 60,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -48.695557247391164,
+        -45.02429690688893,
+        -40.21412787052489
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.20440031182710894,
+          "odd_union_fraction": 0.20034821712361042,
+          "even_union_fraction": 0.003067094899859758
+        },
+        "expected": {
+          "union_fraction": 0.20440333796135918,
+          "odd_union_fraction": 0.20035125064364068,
+          "even_union_fraction": 0.003067072585829064
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9992086996812907,
+          "odd_union_fraction": 0.7948815621574616,
+          "even_union_fraction": 0.20439632165606342
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.003067515256669682,
+          "odd_union_fraction": 0.002715154384012842,
+          "even_union_fraction": 9.325641256559131e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9992086996812907,
+          "odd_union_fraction": 0.7948815621574616,
+          "even_union_fraction": 0.20439632165606342
+        },
+        "previous_note": {
+          "union_fraction": 0.003067515256669682,
+          "odd_union_fraction": 0.002715154384012842,
+          "even_union_fraction": 9.325641256559131e-05
+        },
+        "next_note": {
+          "union_fraction": 0.9992086996812907,
+          "odd_union_fraction": 0.7948815621574616,
+          "even_union_fraction": 0.20439632165606342
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 60,
+      "semitone_difference": -12
+    },
+    {
+      "source_key": "string-01:56",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "expected_cents": 8.761719,
+      "context": {
+        "previous_note": 60,
+        "next_note": 64,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "64": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "76": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -55.67896700350933,
+        -49.451766347657426,
+        -40.5694334958555
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 8.850004761709959e-05,
+          "odd_union_fraction": 7.671574119167199e-05,
+          "even_union_fraction": 6.566183821358535e-06
+        },
+        "expected": {
+          "union_fraction": 8.97364882444102e-05,
+          "odd_union_fraction": 7.588849730904589e-05,
+          "even_union_fraction": 7.780633106074954e-06
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.6084314531167265,
+          "odd_union_fraction": 0.6084041641917386,
+          "even_union_fraction": 2.646485148620428e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 4.683761058280155e-05,
+          "odd_union_fraction": 4.2856047827339126e-05,
+          "even_union_fraction": 3.952326383808524e-06
+        },
+        "open_string": {
+          "union_fraction": 8.850004761709959e-05,
+          "odd_union_fraction": 7.671574119167199e-05,
+          "even_union_fraction": 6.566183821358535e-06
+        },
+        "previous_note": {
+          "union_fraction": 8.850004761709959e-05,
+          "odd_union_fraction": 7.671574119167199e-05,
+          "even_union_fraction": 6.566183821358535e-06
+        },
+        "next_note": {
+          "union_fraction": 0.9964062563940361,
+          "odd_union_fraction": 0.3872197492808764,
+          "even_union_fraction": 0.6085367334408396
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 64,
+      "semitone_difference": 4
+    },
+    {
+      "source_key": "string-01:57",
+      "role": "test",
+      "note": 64,
+      "string_mask": 128,
+      "expected_cents": 13.570312,
+      "context": {
+        "previous_note": 60,
+        "next_note": 68,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "68": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "68": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -57.86172891818254,
+        -49.5522723214265,
+        -41.87549315391213
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.005846119309577104,
+          "odd_union_fraction": 0.00581545208839477,
+          "even_union_fraction": 3.357162997430093e-05
+        },
+        "expected": {
+          "union_fraction": 0.005847023618777144,
+          "odd_union_fraction": 0.00581634644732733,
+          "even_union_fraction": 3.358396820262016e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.014583261197690156,
+          "odd_union_fraction": 0.014455846713488062,
+          "even_union_fraction": 5.956532240437672e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.000248637867373767,
+          "odd_union_fraction": 0.00024563561271559925,
+          "even_union_fraction": 3.002254658167773e-06
+        },
+        "open_string": {
+          "union_fraction": 0.029996557240125933,
+          "odd_union_fraction": 1.1642383906112447e-05,
+          "even_union_fraction": 0.02998491485621982
+        },
+        "previous_note": {
+          "union_fraction": 0.029996557240125933,
+          "odd_union_fraction": 1.1642383906112447e-05,
+          "even_union_fraction": 0.02998491485621982
+        },
+        "next_note": {
+          "union_fraction": 0.9985082686264491,
+          "odd_union_fraction": 0.9778158229778087,
+          "even_union_fraction": 0.019263864810354917
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 68,
+      "semitone_difference": 4
+    },
+    {
+      "source_key": "string-01:58",
+      "role": "test",
+      "note": 68,
+      "string_mask": 128,
+      "expected_cents": 10.570312,
+      "context": {
+        "previous_note": 64,
+        "next_note": 72,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "72": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "72": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -51.71503845190863,
+        -44.508901972948706,
+        -35.786216853968014
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.0006389945762227373,
+          "odd_union_fraction": 0.0006380809415602312,
+          "even_union_fraction": 9.136346625062142e-07
+        },
+        "expected": {
+          "union_fraction": 0.0006387746481575439,
+          "odd_union_fraction": 0.0006381014584677885,
+          "even_union_fraction": 6.731896897554396e-07
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.00034664497630158624,
+          "odd_union_fraction": 0.00033960801441500026,
+          "even_union_fraction": 6.804717788695141e-06
+        },
+        "label_plus_octave": {
+          "union_fraction": 7.713769826043096e-06,
+          "odd_union_fraction": 6.7585287777134544e-06,
+          "even_union_fraction": 9.55241048329639e-07
+        },
+        "open_string": {
+          "union_fraction": 0.9996883118814841,
+          "odd_union_fraction": 1.4992779813947456e-06,
+          "even_union_fraction": 0.9996865468201088
+        },
+        "previous_note": {
+          "union_fraction": 9.139884457651646e-06,
+          "odd_union_fraction": 3.196057096951175e-06,
+          "even_union_fraction": 3.2054887807542964e-06
+        },
+        "next_note": {
+          "union_fraction": 0.9997540513423386,
+          "odd_union_fraction": 0.9988475323507146,
+          "even_union_fraction": 0.000995457104824358
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 72,
+      "semitone_difference": 4
+    },
+    {
+      "source_key": "string-01:60",
+      "role": "test",
+      "note": 76,
+      "string_mask": 128,
+      "expected_cents": 4.945312,
+      "context": {
+        "previous_note": 72,
+        "next_note": 80,
+        "open_note": 60
+      },
+      "sample_count": 105600,
+      "windows": 12,
+      "unique_spectral_windows": 6,
+      "classifications": {
+        "periodic_other": 12
+      },
+      "periodic_nearest_midi_histogram": {
+        "80": 12
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "80": 12
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -64.78091144057221,
+        -56.67178519223041,
+        -51.349216632993404
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.00013933560830047155,
+          "odd_union_fraction": 0.0001318606586616985,
+          "even_union_fraction": 7.474949638773052e-06
+        },
+        "expected": {
+          "union_fraction": 0.00013954383290246504,
+          "odd_union_fraction": 0.00013202531577222713,
+          "even_union_fraction": 7.518517130237949e-06
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.004697549057376169,
+          "odd_union_fraction": 0.004685117158541556,
+          "even_union_fraction": 1.2431898834612625e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 1.9243940954344022e-05,
+          "odd_union_fraction": 8.151034241648014e-06,
+          "even_union_fraction": 1.1092906712696009e-05
+        },
+        "open_string": {
+          "union_fraction": 1.685910608176471e-05,
+          "odd_union_fraction": 8.052001240417334e-06,
+          "even_union_fraction": 8.807104841347378e-06
+        },
+        "previous_note": {
+          "union_fraction": 1.8557487457977343e-05,
+          "odd_union_fraction": 7.289336767765566e-06,
+          "even_union_fraction": 1.2322721708418418e-05
+        },
+        "next_note": {
+          "union_fraction": 0.9974721429339704,
+          "odd_union_fraction": 0.9914067582514459,
+          "even_union_fraction": 0.004806639054109043
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 80,
+      "semitone_difference": 4
+    },
+    {
+      "source_key": "string-01:61",
+      "role": "test",
+      "note": 80,
+      "string_mask": 128,
+      "expected_cents": 13.433594,
+      "context": {
+        "previous_note": 76,
+        "next_note": 84,
+        "open_note": 60
+      },
+      "sample_count": 34800,
+      "windows": 4,
+      "unique_spectral_windows": 1,
+      "classifications": {
+        "periodic_other": 4
+      },
+      "periodic_nearest_midi_histogram": {
+        "84": 4
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "84": 4
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -64.57490259999743,
+        -62.86379551322375,
+        -59.97096006210875
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.00032537777841755184,
+          "odd_union_fraction": 0.0002902076593349423,
+          "even_union_fraction": 3.517011908260954e-05
+        },
+        "expected": {
+          "union_fraction": 0.00032254814871235566,
+          "odd_union_fraction": 0.00029004901887831434,
+          "even_union_fraction": 3.249912983404125e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.36471790626037376,
+          "odd_union_fraction": 0.36468697638065684,
+          "even_union_fraction": 3.092987971691618e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 8.46995381937642e-05,
+          "odd_union_fraction": 3.642199608056266e-05,
+          "even_union_fraction": 4.827754211320154e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9829232768542371,
+          "odd_union_fraction": 3.319294139245247e-05,
+          "even_union_fraction": 0.9828900839128448
+        },
+        "previous_note": {
+          "union_fraction": 8.632984331906158e-05,
+          "odd_union_fraction": 4.601995916396301e-05,
+          "even_union_fraction": 4.0309884155098564e-05
+        },
+        "next_note": {
+          "union_fraction": 0.9848646718273276,
+          "odd_union_fraction": 0.6199328712522382,
+          "even_union_fraction": 0.36493180057508995
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 84,
+      "semitone_difference": 4
+    },
+    {
+      "source_key": "string-01:8",
+      "role": "train",
+      "note": 68,
+      "string_mask": 128,
+      "expected_cents": 10.570312,
+      "context": {
+        "previous_note": 67,
+        "next_note": 69,
+        "open_note": 60
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "68": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "68": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -61.46704024659294,
+        -51.16487957077686,
+        -40.34498252954689
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.998223057956185,
+          "odd_union_fraction": 0.9366144811317785,
+          "even_union_fraction": 0.06174473194895656
+        },
+        "expected": {
+          "union_fraction": 0.9982176980114532,
+          "odd_union_fraction": 0.9366162086354423,
+          "even_union_fraction": 0.06173400086458938
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9625666018140048,
+          "odd_union_fraction": 8.73060954949247e-06,
+          "even_union_fraction": 0.9625578712044552
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.06177749995133107,
+          "odd_union_fraction": 0.03248416956055695,
+          "even_union_fraction": 0.03542946682037772
+        },
+        "open_string": {
+          "union_fraction": 0.034126499978554485,
+          "odd_union_fraction": 2.366416864271211e-05,
+          "even_union_fraction": 0.034102835809911775
+        },
+        "previous_note": {
+          "union_fraction": 7.776333536161853e-05,
+          "odd_union_fraction": 6.859403964420505e-05,
+          "even_union_fraction": 1.0101465552642614e-05
+        },
+        "next_note": {
+          "union_fraction": 2.0414535786181356e-05,
+          "odd_union_fraction": 8.079967086893926e-06,
+          "even_union_fraction": 1.2334568699287434e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 68,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:0",
+      "role": "train",
+      "note": 48,
+      "string_mask": 16,
+      "expected_cents": 1.042969,
+      "context": {
+        "previous_note": null,
+        "next_note": 49,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "48": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "48": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -45.59815075977049,
+        -42.16263616498563,
+        -41.7252499358432
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9996873244659797,
+          "odd_union_fraction": 0.9345427398891931,
+          "even_union_fraction": 0.06512277447247164
+        },
+        "expected": {
+          "union_fraction": 0.9996873746917566,
+          "odd_union_fraction": 0.9345427399782665,
+          "even_union_fraction": 0.06512281243316567
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9994522102992134,
+          "odd_union_fraction": 2.0039577821427227e-06,
+          "even_union_fraction": 0.9994514014957485
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.06512375461738404,
+          "odd_union_fraction": 0.0649405546717394,
+          "even_union_fraction": 6.80011212683983e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9996873244659797,
+          "odd_union_fraction": 0.9345427398891931,
+          "even_union_fraction": 0.06512277447247164
+        },
+        "next_note": {
+          "union_fraction": 9.468246237331917e-05,
+          "odd_union_fraction": 9.378591480933268e-05,
+          "even_union_fraction": 1.0726133061333466e-06
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 48,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:12",
+      "role": "train",
+      "note": 60,
+      "string_mask": 16,
+      "expected_cents": 2.9375,
+      "context": {
+        "previous_note": 59,
+        "next_note": 61,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -49.219168733066354,
+        -41.08963258944513,
+        -34.43211199565088
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9994982317291239,
+          "odd_union_fraction": 0.9971386748979096,
+          "even_union_fraction": 0.001729253622570496
+        },
+        "expected": {
+          "union_fraction": 0.9994981379686115,
+          "odd_union_fraction": 0.997138759869559,
+          "even_union_fraction": 0.0017294203793953682
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9994997253026741,
+          "odd_union_fraction": 1.665942901745162e-06,
+          "even_union_fraction": 0.9994980593597722
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.0017298834945707292,
+          "odd_union_fraction": 0.0017275084295008568,
+          "even_union_fraction": 2.974435641043358e-06
+        },
+        "open_string": {
+          "union_fraction": 0.9994997253026741,
+          "odd_union_fraction": 1.665942901745162e-06,
+          "even_union_fraction": 0.9994980593597722
+        },
+        "previous_note": {
+          "union_fraction": 0.00036218093631074685,
+          "odd_union_fraction": 0.00036203899995057706,
+          "even_union_fraction": 1.4193636016983653e-07
+        },
+        "next_note": {
+          "union_fraction": 3.103780358601589e-06,
+          "odd_union_fraction": 2.7593751582779624e-06,
+          "even_union_fraction": 3.4440520032362625e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 60,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:37",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 16,
+      "expected_cents": 2.9375,
+      "context": {
+        "previous_note": 61,
+        "next_note": 59,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -49.61765606445469,
+        -41.44495018548348,
+        -34.509271428749756
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9998732379265121,
+          "odd_union_fraction": 0.9987646331999825,
+          "even_union_fraction": 0.0009658371795929942
+        },
+        "expected": {
+          "union_fraction": 0.9998727713569918,
+          "odd_union_fraction": 0.9987641866446441,
+          "even_union_fraction": 0.0009661393404702248
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.999877785750148,
+          "odd_union_fraction": 4.6791189656214425e-06,
+          "even_union_fraction": 0.9998731066311823
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.0009666510236705664,
+          "odd_union_fraction": 0.0009657458322445792,
+          "even_union_fraction": 9.051914259870631e-07
+        },
+        "open_string": {
+          "union_fraction": 0.999877785750148,
+          "odd_union_fraction": 4.6791189656214425e-06,
+          "even_union_fraction": 0.9998731066311823
+        },
+        "previous_note": {
+          "union_fraction": 3.4350835916149576e-06,
+          "odd_union_fraction": 3.1787137555381147e-06,
+          "even_union_fraction": 3.1499730040023387e-07
+        },
+        "next_note": {
+          "union_fraction": 8.129465930171293e-06,
+          "odd_union_fraction": 8.0044154392526e-06,
+          "even_union_fraction": 1.2505049091869485e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 60,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:4",
+      "role": "train",
+      "note": 52,
+      "string_mask": 16,
+      "expected_cents": 14.535156,
+      "context": {
+        "previous_note": 51,
+        "next_note": 53,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "52": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -42.56996897661921,
+        -38.90080933045162,
+        -34.944959545110606
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9997013290034338,
+          "odd_union_fraction": 0.9173192583621852,
+          "even_union_fraction": 0.08237047162109472
+        },
+        "expected": {
+          "union_fraction": 0.9997509856336959,
+          "odd_union_fraction": 0.9173687015826119,
+          "even_union_fraction": 0.08237073845733578
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9996739774937707,
+          "odd_union_fraction": 8.053990952490559e-06,
+          "even_union_fraction": 0.9996656021410295
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.08237067863069975,
+          "odd_union_fraction": 0.08234503307408614,
+          "even_union_fraction": 2.564555661360515e-05
+        },
+        "open_string": {
+          "union_fraction": 6.910208493376079e-05,
+          "odd_union_fraction": 6.769514769379607e-05,
+          "even_union_fraction": 1.1222311544056985e-06
+        },
+        "previous_note": {
+          "union_fraction": 5.670322651939394e-05,
+          "odd_union_fraction": 5.2834573913137584e-05,
+          "even_union_fraction": 3.6148690214421674e-06
+        },
+        "next_note": {
+          "union_fraction": 0.00019364714383429744,
+          "odd_union_fraction": 0.00019144007875549748,
+          "even_union_fraction": 6.913347753213178e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 52,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:45",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 16,
+      "expected_cents": 14.535156,
+      "context": {
+        "previous_note": 53,
+        "next_note": 51,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "52": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -42.472541549541084,
+        -38.34356531823006,
+        -33.44547910944167
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9996981272196044,
+          "odd_union_fraction": 0.9249785621048519,
+          "even_union_fraction": 0.07469761616094836
+        },
+        "expected": {
+          "union_fraction": 0.9998571971726307,
+          "odd_union_fraction": 0.9251499590578938,
+          "even_union_fraction": 0.07469806937717499
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.999663103050121,
+          "odd_union_fraction": 2.7212262850947972e-06,
+          "even_union_fraction": 0.9996602240104182
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.07469769295741402,
+          "odd_union_fraction": 0.07466781128072535,
+          "even_union_fraction": 2.608844807517577e-05
+        },
+        "open_string": {
+          "union_fraction": 3.896747419587303e-05,
+          "odd_union_fraction": 3.864612189720607e-05,
+          "even_union_fraction": 3.3819826558970503e-07
+        },
+        "previous_note": {
+          "union_fraction": 0.0002403001723587736,
+          "odd_union_fraction": 0.00023968242140043724,
+          "even_union_fraction": 9.636352706800764e-07
+        },
+        "next_note": {
+          "union_fraction": 5.890633681753059e-05,
+          "odd_union_fraction": 5.846662006435161e-05,
+          "even_union_fraction": 3.9095003430718323e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 52,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:49",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 16,
+      "expected_cents": 1.042969,
+      "context": {
+        "previous_note": 49,
+        "next_note": null,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "48": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "48": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -37.25524289463717,
+        -32.57742027399773,
+        -31.383536649850384
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9998436475438146,
+          "odd_union_fraction": 0.7038542478229334,
+          "even_union_fraction": 0.29598998221472095
+        },
+        "expected": {
+          "union_fraction": 0.9998436474247026,
+          "odd_union_fraction": 0.7038542476495129,
+          "even_union_fraction": 0.29598998386087655
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9997509238199402,
+          "odd_union_fraction": 2.6280473534396412e-06,
+          "even_union_fraction": 0.9997490419153829
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.2959903714895652,
+          "odd_union_fraction": 0.2928103476528092,
+          "even_union_fraction": 0.0034698533906230853
+        },
+        "open_string": {
+          "union_fraction": 0.9998436475438146,
+          "odd_union_fraction": 0.7038542478229334,
+          "even_union_fraction": 0.29598998221472095
+        },
+        "previous_note": {
+          "union_fraction": 6.0650040962863185e-05,
+          "odd_union_fraction": 5.9914610293788565e-05,
+          "even_union_fraction": 7.258824325112696e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 48,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-04:54",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "expected_cents": 2.9375,
+      "context": {
+        "previous_note": 72,
+        "next_note": 48,
+        "open_note": 48
+      },
+      "sample_count": 69120,
+      "windows": 8,
+      "unique_spectral_windows": 2,
+      "classifications": {
+        "periodic_other": 8
+      },
+      "periodic_nearest_midi_histogram": {
+        "72": 8
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "72": 8
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -58.48383573129628,
+        -53.32844535080464,
+        -46.921991190921055
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.989569514309331,
+          "odd_union_fraction": 8.351505815896653e-06,
+          "even_union_fraction": 0.9895611628035152
+        },
+        "expected": {
+          "union_fraction": 0.9895699862695797,
+          "odd_union_fraction": 8.368181141166083e-06,
+          "even_union_fraction": 0.9895616180884387
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9897382402451644,
+          "odd_union_fraction": 0.00017813339386317392,
+          "even_union_fraction": 0.9895601068513014
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.989563355258984,
+          "odd_union_fraction": 0.9874374100958888,
+          "even_union_fraction": 0.002125945163095
+        },
+        "open_string": {
+          "union_fraction": 0.9897382402451644,
+          "odd_union_fraction": 0.00017813339386317392,
+          "even_union_fraction": 0.9895601068513014
+        },
+        "previous_note": {
+          "union_fraction": 0.989563355258984,
+          "odd_union_fraction": 0.9874374100958888,
+          "even_union_fraction": 0.002125945163095
+        },
+        "next_note": {
+          "union_fraction": 0.9897382402451644,
+          "odd_union_fraction": 0.00017813339386317392,
+          "even_union_fraction": 0.9895601068513014
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 72,
+      "semitone_difference": 12
+    },
+    {
+      "source_key": "string-04:55",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "expected_cents": 1.042969,
+      "context": {
+        "previous_note": 60,
+        "next_note": 48,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "60": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "60": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -56.488944120075715,
+        -44.33821443804631,
+        -34.87818662171969
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9995380065590227,
+          "odd_union_fraction": 0.0003423287215751984,
+          "even_union_fraction": 0.9991956778374477
+        },
+        "expected": {
+          "union_fraction": 0.999538027885576,
+          "odd_union_fraction": 0.00034233045769248467,
+          "even_union_fraction": 0.9991956974278835
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9991840542867387,
+          "odd_union_fraction": 0.0001384328627766048,
+          "even_union_fraction": 0.9989553873880148
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.9991960017900123,
+          "odd_union_fraction": 0.9896031406578782,
+          "even_union_fraction": 0.009388174020979297
+        },
+        "open_string": {
+          "union_fraction": 0.9995380065590227,
+          "odd_union_fraction": 0.0003423287215751984,
+          "even_union_fraction": 0.9991956778374477
+        },
+        "previous_note": {
+          "union_fraction": 0.9991960017900123,
+          "odd_union_fraction": 0.9896031406578782,
+          "even_union_fraction": 0.009388174020979297
+        },
+        "next_note": {
+          "union_fraction": 0.9995380065590227,
+          "odd_union_fraction": 0.0003423287215751984,
+          "even_union_fraction": 0.9991956778374477
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 60,
+      "semitone_difference": 12
+    },
+    {
+      "source_key": "string-04:57",
+      "role": "test",
+      "note": 52,
+      "string_mask": 16,
+      "expected_cents": 14.535156,
+      "context": {
+        "previous_note": 48,
+        "next_note": 56,
+        "open_note": 48
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "48": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "48": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -39.01943457012991,
+        -34.81302487687976,
+        -34.01300415331832
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 2.1884568651427256e-05,
+          "odd_union_fraction": 8.213359950142203e-06,
+          "even_union_fraction": 1.2180527539841042e-05
+        },
+        "expected": {
+          "union_fraction": 2.1903817045853304e-05,
+          "odd_union_fraction": 8.210608009454965e-06,
+          "even_union_fraction": 1.2200701539698412e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 2.970366394437229e-05,
+          "odd_union_fraction": 1.0035917872303989e-05,
+          "even_union_fraction": 2.1831967703586942e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 1.2288815277403613e-05,
+          "odd_union_fraction": 7.06817434402673e-08,
+          "even_union_fraction": 1.2177127698075005e-05
+        },
+        "open_string": {
+          "union_fraction": 0.9998356038383676,
+          "odd_union_fraction": 0.8780190138294537,
+          "even_union_fraction": 0.1218229732699729
+        },
+        "previous_note": {
+          "union_fraction": 0.9998356038383676,
+          "odd_union_fraction": 0.8780190138294537,
+          "even_union_fraction": 0.1218229732699729
+        },
+        "next_note": {
+          "union_fraction": 4.097788128132284e-06,
+          "odd_union_fraction": 3.905312850898508e-06,
+          "even_union_fraction": 2.0163217393246655e-07
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 48,
+      "semitone_difference": -4
+    },
+    {
+      "source_key": "string-06:0",
+      "role": "train",
+      "note": 40,
+      "string_mask": 4,
+      "expected_cents": -12.671875,
+      "context": {
+        "previous_note": null,
+        "next_note": 41,
+        "open_note": 40
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "40": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -44.616546184037645,
+        -41.569647722902445,
+        -37.60692807573787
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9995329369558786,
+          "odd_union_fraction": 0.19025061618670586,
+          "even_union_fraction": 0.8094223077373747
+        },
+        "expected": {
+          "union_fraction": 0.9997121383986742,
+          "odd_union_fraction": 0.19036935247006553,
+          "even_union_fraction": 0.8094134684444231
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9994027039219722,
+          "odd_union_fraction": 1.5938997601837264e-06,
+          "even_union_fraction": 0.999401435805773
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.8094224316915817,
+          "odd_union_fraction": 0.8090163042544405,
+          "even_union_fraction": 0.00039663020916523074
+        },
+        "open_string": {
+          "union_fraction": 0.9995329369558786,
+          "odd_union_fraction": 0.19025061618670586,
+          "even_union_fraction": 0.8094223077373747
+        },
+        "next_note": {
+          "union_fraction": 0.0001028080067505207,
+          "odd_union_fraction": 8.685689211537248e-05,
+          "even_union_fraction": 1.617834710870443e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 40,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-06:49",
+      "role": "calibration",
+      "note": 40,
+      "string_mask": 4,
+      "expected_cents": -12.671875,
+      "context": {
+        "previous_note": 41,
+        "next_note": null,
+        "open_note": 40
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "40": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -41.38145501411896,
+        -38.3079934511878,
+        -35.421560586653385
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9990412639411979,
+          "odd_union_fraction": 0.26166987053302093,
+          "even_union_fraction": 0.7373713934081768
+        },
+        "expected": {
+          "union_fraction": 0.9996964489910458,
+          "odd_union_fraction": 0.26234257143530954,
+          "even_union_fraction": 0.7373676879024277
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9989423319743531,
+          "odd_union_fraction": 1.1326142402606663e-06,
+          "even_union_fraction": 0.998941392188309
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.7373715154826317,
+          "odd_union_fraction": 0.7369949197860629,
+          "even_union_fraction": 0.00037659569656868605
+        },
+        "open_string": {
+          "union_fraction": 0.9990412639411979,
+          "odd_union_fraction": 0.26166987053302093,
+          "even_union_fraction": 0.7373713934081768
+        },
+        "previous_note": {
+          "union_fraction": 6.0829060283238616e-05,
+          "odd_union_fraction": 5.243293075753009e-05,
+          "even_union_fraction": 8.125739607545351e-06
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 40,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-06:68",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "expected_cents": -12.671875,
+      "context": {
+        "previous_note": 52,
+        "next_note": null,
+        "open_note": 40
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "52": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -45.52126899491,
+        -40.15140775304818,
+        -34.33777713474989
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9998953002732713,
+          "odd_union_fraction": 1.1728639869942467e-07,
+          "even_union_fraction": 0.9998951846276039
+        },
+        "expected": {
+          "union_fraction": 0.9999037849796489,
+          "odd_union_fraction": 1.1781486235386287e-07,
+          "even_union_fraction": 0.9999035972246445
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9998884152812368,
+          "odd_union_fraction": 6.585177579264399e-07,
+          "even_union_fraction": 0.9998875335365223
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.999895288194409,
+          "odd_union_fraction": 0.9990923478852947,
+          "even_union_fraction": 0.0008029403091142522
+        },
+        "open_string": {
+          "union_fraction": 0.9998953002732713,
+          "odd_union_fraction": 1.1728639869942467e-07,
+          "even_union_fraction": 0.9998951846276039
+        },
+        "previous_note": {
+          "union_fraction": 0.999895288194409,
+          "odd_union_fraction": 0.9990923478852947,
+          "even_union_fraction": 0.0008029403091142522
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 52,
+      "semitone_difference": 12
+    },
+    {
+      "source_key": "string-08:20",
+      "role": "train",
+      "note": 52,
+      "string_mask": 1,
+      "expected_cents": -16.355469,
+      "context": {
+        "previous_note": 51,
+        "next_note": 53,
+        "open_note": 32
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "52": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "52": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -67.98390469024173,
+        -65.62788119191612,
+        -39.961246934955405
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9931115652531973,
+          "odd_union_fraction": 0.9930079931701898,
+          "even_union_fraction": 9.81487132651213e-05
+        },
+        "expected": {
+          "union_fraction": 0.9930681529781087,
+          "odd_union_fraction": 0.9929655793429438,
+          "even_union_fraction": 9.689245771402935e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9964448736554423,
+          "odd_union_fraction": 0.002126737439424769,
+          "even_union_fraction": 0.9930898188132606
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.00013069518661811263,
+          "odd_union_fraction": 9.89491819789885e-05,
+          "even_union_fraction": 2.7020428395252386e-05
+        },
+        "open_string": {
+          "union_fraction": 0.0007676511459123795,
+          "odd_union_fraction": 0.0007003114219560103,
+          "even_union_fraction": 9.183642523265603e-05
+        },
+        "previous_note": {
+          "union_fraction": 0.0007369390099158527,
+          "odd_union_fraction": 0.0006935398104136057,
+          "even_union_fraction": 4.859340148584712e-05
+        },
+        "next_note": {
+          "union_fraction": 0.0001516984042197946,
+          "odd_union_fraction": 0.00012911238749146997,
+          "even_union_fraction": 2.0119563564454155e-05
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 52,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-08:4",
+      "role": "train",
+      "note": 36,
+      "string_mask": 1,
+      "expected_cents": -43.214844,
+      "context": {
+        "previous_note": 35,
+        "next_note": 37,
+        "open_note": 32
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "36": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "36": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -43.41118667951878,
+        -37.70384461954756,
+        -31.87347029433077
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9400350000062543,
+          "odd_union_fraction": 0.8387071256265203,
+          "even_union_fraction": 0.10170170902662802
+        },
+        "expected": {
+          "union_fraction": 0.9994419397464878,
+          "odd_union_fraction": 0.8815430175488012,
+          "even_union_fraction": 0.11790566696384239
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9400573366234681,
+          "odd_union_fraction": 1.7098035224800668e-05,
+          "even_union_fraction": 0.9400338920399531
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.10170180127376771,
+          "odd_union_fraction": 0.10168846925401612,
+          "even_union_fraction": 1.3332019751593766e-05
+        },
+        "open_string": {
+          "union_fraction": 1.7304458467257765e-05,
+          "odd_union_fraction": 1.4576439378504635e-05,
+          "even_union_fraction": 4.247862302686254e-06
+        },
+        "previous_note": {
+          "union_fraction": 0.7571568815505889,
+          "odd_union_fraction": 0.7270342822513635,
+          "even_union_fraction": 0.030122599299225512
+        },
+        "next_note": {
+          "union_fraction": 0.0002928892485834147,
+          "odd_union_fraction": 0.0002923836760480395,
+          "even_union_fraction": 5.622192976445289e-07
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 36,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-08:45",
+      "role": "calibration",
+      "note": 36,
+      "string_mask": 1,
+      "expected_cents": -43.214844,
+      "context": {
+        "previous_note": 37,
+        "next_note": 35,
+        "open_note": 32
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_target": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "36": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "36": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -42.11148903841979,
+        -36.12386193247188,
+        -30.342518161988085
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.9143770274949066,
+          "odd_union_fraction": 0.821068502061238,
+          "even_union_fraction": 0.09322651182844717
+        },
+        "expected": {
+          "union_fraction": 0.9994263123135665,
+          "odd_union_fraction": 0.8810253839229527,
+          "even_union_fraction": 0.11839423799801385
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.9144069771132,
+          "odd_union_fraction": 2.709222662258683e-05,
+          "even_union_fraction": 0.9143753652694429
+        },
+        "label_plus_octave": {
+          "union_fraction": 0.09322657737863846,
+          "odd_union_fraction": 0.09321348003200677,
+          "even_union_fraction": 1.3097346631709777e-05
+        },
+        "open_string": {
+          "union_fraction": 2.0899616083023326e-05,
+          "odd_union_fraction": 1.5487743569030458e-05,
+          "even_union_fraction": 5.623488356959659e-06
+        },
+        "previous_note": {
+          "union_fraction": 0.0002609455518826775,
+          "odd_union_fraction": 0.00026047469276134185,
+          "even_union_fraction": 5.105432251090049e-07
+        },
+        "next_note": {
+          "union_fraction": 0.8017771367158348,
+          "odd_union_fraction": 0.7596627364789218,
+          "even_union_fraction": 0.04211440023691297
+        }
+      },
+      "selection_role": "control",
+      "periodic_note": 36,
+      "semitone_difference": 0
+    },
+    {
+      "source_key": "string-08:63",
+      "role": "test",
+      "note": 52,
+      "string_mask": 1,
+      "expected_cents": -16.355469,
+      "context": {
+        "previous_note": 56,
+        "next_note": 48,
+        "open_note": 32
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "32": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "32": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -40.7748998517021,
+        -37.154831819722475,
+        -32.10386619898957
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 4.086942068569845e-05,
+          "odd_union_fraction": 4.076492580596815e-05,
+          "even_union_fraction": 1.266504693159209e-07
+        },
+        "expected": {
+          "union_fraction": 4.0199198644233765e-05,
+          "odd_union_fraction": 4.009538971397796e-05,
+          "even_union_fraction": 1.259416443753392e-07
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.0001049416769948117,
+          "odd_union_fraction": 5.177476291114214e-05,
+          "even_union_fraction": 4.079561714102787e-05
+        },
+        "label_plus_octave": {
+          "union_fraction": 1.801741652751079e-07,
+          "odd_union_fraction": 1.2330315118830294e-07,
+          "even_union_fraction": 5.246231382234942e-08
+        },
+        "open_string": {
+          "union_fraction": 0.8926716341421875,
+          "odd_union_fraction": 0.7963952180217453,
+          "even_union_fraction": 0.09627641612044224
+        },
+        "previous_note": {
+          "union_fraction": 0.0008546570090745308,
+          "odd_union_fraction": 0.0008541006474866211,
+          "even_union_fraction": 5.435341412205128e-07
+        },
+        "next_note": {
+          "union_fraction": 2.3617078440845986e-05,
+          "odd_union_fraction": 1.8606999962418256e-05,
+          "even_union_fraction": 4.035669564947429e-06
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 32,
+      "semitone_difference": -20
+    },
+    {
+      "source_key": "string-08:66",
+      "role": "test",
+      "note": 36,
+      "string_mask": 1,
+      "expected_cents": -43.214844,
+      "context": {
+        "previous_note": 40,
+        "next_note": 32,
+        "open_note": 32
+      },
+      "sample_count": 220800,
+      "windows": 26,
+      "unique_spectral_windows": 20,
+      "classifications": {
+        "periodic_other": 26
+      },
+      "periodic_nearest_midi_histogram": {
+        "32": 26
+      },
+      "dominant_spectral_peak_midi_histogram": {
+        "32": 26
+      },
+      "rms_dbfs_p05_p50_p95": [
+        -43.112939690324666,
+        -39.02864860938937,
+        -34.2973157830457
+      ],
+      "hypothesis_medians": {
+        "label": {
+          "union_fraction": 0.0003328915374696846,
+          "odd_union_fraction": 0.0003056871073545141,
+          "even_union_fraction": 3.268659310439992e-05
+        },
+        "expected": {
+          "union_fraction": 4.4851460753571054e-05,
+          "odd_union_fraction": 7.362617555685663e-06,
+          "even_union_fraction": 3.206473203935444e-05
+        },
+        "label_minus_octave": {
+          "union_fraction": 0.039389994422470265,
+          "odd_union_fraction": 0.03906080367799039,
+          "even_union_fraction": 0.0003291907444798714
+        },
+        "label_plus_octave": {
+          "union_fraction": 3.284056283440075e-05,
+          "odd_union_fraction": 2.479351527573128e-05,
+          "even_union_fraction": 3.4722286473430393e-06
+        },
+        "open_string": {
+          "union_fraction": 0.9154331214985547,
+          "odd_union_fraction": 0.8687601622846095,
+          "even_union_fraction": 0.04667295921394532
+        },
+        "previous_note": {
+          "union_fraction": 0.00017831840437312766,
+          "odd_union_fraction": 9.02585964516662e-05,
+          "even_union_fraction": 7.979652520035587e-05
+        },
+        "next_note": {
+          "union_fraction": 0.9154331214985547,
+          "odd_union_fraction": 0.8687601622846095,
+          "even_union_fraction": 0.04667295921394532
+        }
+      },
+      "selection_role": "flagged",
+      "periodic_note": 32,
+      "semitone_difference": -4
+    }
+  ],
+  "interpretation": "Sustained pitch disagreement in this selected source subset; eight non-octave differences have little intended-label harmonic support. Seven octave-related cases retain fundamental/harmonic ambiguity. No inferred replacement labels.",
+  "decision": "Observation completed; no policy acceptance, relabeling, exclusion, score update or automatic refit.",
+  "limits": [
+    "This is a targeted diagnostic subset selected after the earlier result, not an unbiased performance test or a new held-out score.",
+    "The short-window estimator is unchanged. Independent long-window spectra expose harmonic ambiguity; agreement does not prove the intended pitch or played string.",
+    "An even-harmonics-only lower note and an upper octave can have indistinguishable waveforms. Do not infer a corrected label from that case.",
+    "Spectral windows are centered retrospective observations; no causal or latency claim. Short takes use their full available length and report native frequency resolution. Zero padding only interpolates.",
+    "Overlapping windows are correlated. Counts describe this take, not independent examples or unique audio duration.",
+    "All selected takes, silent/unresolved windows and missing controls retained. No relabeling, exclusion, model fit, threshold sweep, score update or installed change.",
+    "Metadata neighbors are labeled pitches, not verified sounding notes; selected excerpts do not include the full original performance between takes."
+  ]
+}

@@ -1,21 +1,21 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T21:23:10.478358+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "b1f4c2dc5517409d821e18e5cbdf6f14330b7890",
-  "source_commit": null,
+  "source_commit": "f06303acaad412b8c35902d1954193ea3c62b5e3",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
-  "worker_commit": null,
+  "worker_commit": "161098abbaa98c67689ee7f3a85fd88981fabc75",
   "workflow": "source-pitch-verification.yml",
   "specification": "docs/recovery/source-pitch-verification-20261121.json",
   "specification_sha256": "1f36dcef33eab5b70de253ec7fdc75665afb9ca24babb070bdc353120960e0c1",
   "design": "docs/recovery/CODEX-M3-SOURCE-PITCH-VERIFICATION-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44951646663,
   "protocol": "Observation only: all 15 all-other held-out takes plus 25 unique same-string/same-note controls; systematic full-take periodicity trajectories and independent harmonic spectra, no model fit or relabeling.",
   "selection": {
     "flagged_takes": 15,
@@ -27,12 +27,12 @@
     "workflow_yaml_parsed": true,
     "focused_review": "passed; no material blocker; octave ambiguity, correlated contexts and targeted-selection limits retained"
   },
-  "small_report_collection": "not_dispatched",
+  "small_report_collection": "collected_once_digest_verified",
   "bulk_policy": "Retain per-window harmonic evidence remotely; collect small report and all compact trajectories once with server digest verification.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Commit the scoped source and worker files, dispatch once, collect the report and distinguish sustained non-octave disagreement, octave ambiguity and weak/variable source evidence. Preserve all original labels and scores.",
+  "next": "Preserve original benchmark; use explicit source-consistency metadata and provenance to resolve eight non-octave discrepancies before specifying any alternate source manifest. No automatic relabeling, exclusion, refit or new run. Complete three-to-five-note recovery and continuous per-label/false-output gates remain required.",
   "limits": [
     "This is a targeted diagnostic subset selected after the earlier result, not an unbiased performance test or a new held-out score.",
     "The short-window estimator is unchanged. Independent long-window spectra expose harmonic ambiguity; agreement does not prove the intended pitch or played string.",
@@ -41,5 +41,203 @@
     "Overlapping windows are correlated. Counts describe this take, not independent examples or unique audio duration.",
     "All selected takes, silent/unresolved windows and missing controls retained. No relabeling, exclusion, model fit, threshold sweep, score update or installed change.",
     "Metadata neighbors are labeled pitches, not verified sounding notes; selected excerpts do not include the full original performance between takes."
-  ]
+  ],
+  "dispatch_attempt": "build/recovery/m3-source-pitch-verification-20261121/dispatch-attempt.json",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44951646663",
+  "output_directory": "build/github-results/source-pitch-verification-44951646663",
+  "small_report_artifact": "m3-source-pitch-verification-report-44951646663-1",
+  "bulk_artifact": "m3-source-pitch-verification-evidence-44951646663-1",
+  "source_ci": [
+    {
+      "conclusion": "success",
+      "databaseId": 44951599483,
+      "headSha": "f06303acaad412b8c35902d1954193ea3c62b5e3",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44951599483",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "conclusion": "success",
+  "finished_at": "2026-11-21T21:28:19.687689+00:00",
+  "updated_at": "2026-11-21T21:32:42.222085+00:00",
+  "stage": "All 15 flagged and 25 control source takes measured; interpretation final, no relabeling or policy acceptance.",
+  "collection_receipt": "build/github-results/source-pitch-verification-44951646663/collection-receipt.json",
+  "collection": {
+    "collected_at": "2026-11-21T21:29:26.226944+00:00",
+    "artifact_id": 14724839590,
+    "name": "m3-source-pitch-verification-report-44951646663-1",
+    "bytes": 50837,
+    "sha256": "463e2849c36b30f3554d435e024b3e92fd6ee7064e789b7aeb42e90d04b986c3",
+    "server_digest": "sha256:463e2849c36b30f3554d435e024b3e92fd6ee7064e789b7aeb42e90d04b986c3",
+    "verified": true,
+    "bulk_downloaded": false
+  },
+  "report": "build/github-results/source-pitch-verification-44951646663/artifact/source-pitch-verification-result/report/report.json",
+  "report_sha256": "2bc94036c01e6b71723c4601a0987af5d2b22e574e207a6a5b0da4f28a0c1e52",
+  "result": "docs/recovery/CODEX-M3-SOURCE-PITCH-VERIFICATION-RESULT-20261121.md",
+  "summary": "docs/recovery/source-pitch-verification-summary-20261121.json",
+  "results": {
+    "flagged": {
+      "takes": 15,
+      "short_windows": 283,
+      "unique_spectral_contexts": 203,
+      "classifications": {
+        "periodic_other": 283
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-01:53",
+        "string-01:54",
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61",
+        "string-04:54",
+        "string-04:55",
+        "string-04:57",
+        "string-06:68",
+        "string-08:63",
+        "string-08:66"
+      ]
+    },
+    "controls": {
+      "takes": 25,
+      "short_windows": 525,
+      "unique_spectral_contexts": 380,
+      "classifications": {
+        "periodic_target": 525
+      },
+      "source_keys": [
+        "string-01:0",
+        "string-01:12",
+        "string-01:16",
+        "string-01:20",
+        "string-01:24",
+        "string-01:25",
+        "string-01:29",
+        "string-01:33",
+        "string-01:37",
+        "string-01:4",
+        "string-01:41",
+        "string-01:45",
+        "string-01:49",
+        "string-01:8",
+        "string-04:0",
+        "string-04:12",
+        "string-04:37",
+        "string-04:4",
+        "string-04:45",
+        "string-04:49",
+        "string-06:0",
+        "string-06:49",
+        "string-08:20",
+        "string-08:4",
+        "string-08:45"
+      ]
+    },
+    "non_octave_disagreement": {
+      "takes": 8,
+      "short_windows": 172,
+      "unique_spectral_contexts": 127,
+      "classifications": {
+        "periodic_other": 172
+      },
+      "source_keys": [
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61",
+        "string-04:57",
+        "string-08:63",
+        "string-08:66"
+      ]
+    },
+    "octave_related": {
+      "takes": 7,
+      "short_windows": 111,
+      "unique_spectral_contexts": 76,
+      "classifications": {
+        "periodic_other": 111
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-01:53",
+        "string-01:54",
+        "string-04:54",
+        "string-04:55",
+        "string-06:68"
+      ]
+    },
+    "upward_octave_related": {
+      "takes": 5,
+      "short_windows": 67,
+      "unique_spectral_contexts": 44,
+      "classifications": {
+        "periodic_other": 67
+      },
+      "source_keys": [
+        "string-01:50",
+        "string-01:51",
+        "string-04:54",
+        "string-04:55",
+        "string-06:68"
+      ]
+    },
+    "four_semitones_up_matching_next_annotation": {
+      "takes": 5,
+      "short_windows": 94,
+      "unique_spectral_contexts": 67,
+      "classifications": {
+        "periodic_other": 94
+      },
+      "source_keys": [
+        "string-01:56",
+        "string-01:57",
+        "string-01:58",
+        "string-01:60",
+        "string-01:61"
+      ]
+    }
+  },
+  "integrity": {
+    "source_roles": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "selection_reproduced": true,
+    "source_takes": 555,
+    "expected_cents_rows_verified": 555,
+    "selected_takes": 40,
+    "loaded_strings": [
+      "string-01",
+      "string-04",
+      "string-06",
+      "string-08"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 14726165320,
+      "name": "m3-source-pitch-verification-evidence-44951646663-1",
+      "size_in_bytes": 686083,
+      "digest": "sha256:dc852bd063fe642f2bad404aa34aba0ab472e9837b929cbc78caa3c600f6ff06",
+      "expires_at": "2026-12-05T21:28:20Z"
+    },
+    {
+      "id": 14724839590,
+      "name": "m3-source-pitch-verification-report-44951646663-1",
+      "size_in_bytes": 50837,
+      "digest": "sha256:463e2849c36b30f3554d435e024b3e92fd6ee7064e789b7aeb42e90d04b986c3",
+      "expires_at": "2026-12-05T21:28:19Z"
+    }
+  ],
+  "bulk_downloaded": false,
+  "decision": "Observation completed; no policy acceptance, relabeling, exclusion, score update or automatic refit.",
+  "interpretation": "Sustained pitch disagreement in this selected source subset; eight non-octave differences have little intended-label harmonic support. Seven octave-related cases retain fundamental/harmonic ambiguity. No inferred replacement labels.",
+  "do_not_repeat": "This diagnostic and its source CI are final and collected. Do not poll, rerun or redownload them."
 }
