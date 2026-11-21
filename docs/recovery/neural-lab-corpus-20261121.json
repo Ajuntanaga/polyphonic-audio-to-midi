@@ -1,0 +1,189 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": "corpus-20261108",
+  "input_asset": "recovery-inputs.tar.gz",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "model": {
+    "repository": "spotify/basic-pitch",
+    "commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec",
+    "backend": "ONNX CPU",
+    "license": "Apache-2.0"
+  },
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "native_settings": {
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667,
+    "activation_absolute_tolerance": 1e-05,
+    "resampler_absolute_tolerance": 1e-07,
+    "sdk_version": "1.20.1",
+    "paced_callback": true,
+    "pitch_states": 88
+  },
+  "sdk": {
+    "version": "1.20.1",
+    "package": "Microsoft.ML.OnnxRuntime",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.20.1/microsoft.ml.onnxruntime.1.20.1.nupkg",
+    "sha512_base64": "/IZ7tO4xeqphNGAHn6dU+Ate5kmugmsQKwJpl2qJBAq4rtl2j2hQWlUn+KoxYcwS4ToIw4KzXVdzHuhMaw1HjQ==",
+    "bytes": 108611147,
+    "provenance": "Official CPU C/C++ NuGet package; SHA512 pinned from NuGet response, SHA256 recorded by worker; runtime version must match. Replaces unavailable GitHub tarball before any native measurement."
+  },
+  "lab_settings": {
+    "sample_formats": [
+      32
+    ],
+    "callback_pattern": [
+      32,
+      512,
+      1024
+    ],
+    "maximum_block": 1024,
+    "rate": 96000,
+    "mono_channels": 1,
+    "package_stereo_test": true,
+    "pitch_states": 88,
+    "midi_channel": 1,
+    "midi_velocity": 100,
+    "output_sample_offset": 0,
+    "input_queue_capacity": 16,
+    "output_queue_capacity": 16,
+    "callback_p99_limit_ns": 166666,
+    "callback_max_limit_ns": 333333,
+    "worker_p99_limit_ns": 20000000,
+    "backlog_max_limit_ns": 26666667
+  },
+  "schema": "m3_neural_lab_supplemental_corpus_spec_v1",
+  "state": "frozen_before_dispatch",
+  "datasets": {
+    "constructed": {
+      "sample_rate": 96000,
+      "sample_count": 29491200,
+      "wav_sha256": "56919fb4ddab3955a53b3d0fb352ec201bd4f55c057a0f4b62fc3689bbbcdd3b",
+      "labels_sha256": "294a31b0dfe69f423ed56ab88c288f116d7e945d4f35ddce7aff2de3dbbe1384"
+    },
+    "isolated-08": {
+      "sample_rate": 96000,
+      "sample_count": 2227200,
+      "wav_sha256": "9c2688d09beb53ef9492479f7effb0e2a0c7b808116b374d3b497ea3a88f0e23",
+      "labels_sha256": "30033b955f2489d4ff38c52474d249136d5c308a03bc7257fbc5b8821907a5e1"
+    },
+    "isolated-05": {
+      "sample_rate": 96000,
+      "sample_count": 2227200,
+      "wav_sha256": "27e088c7ffa3b1d930ca4ead7371e2a95266f2f1c97273f889da70aa928c8f75",
+      "labels_sha256": "5a891aebc4432ff5ff51d4a6a71058907b095e34aba3f9ce718ca18aa2ddb32c"
+    },
+    "isolated-02": {
+      "sample_rate": 96000,
+      "sample_count": 2515200,
+      "wav_sha256": "c512a94fd79bd3ee86991de8acd35f47f677a99992174eba09986243b4d9d6de",
+      "labels_sha256": "788efe6bcc19210b0c0dfb2b2d007f34666f32a0f82f009c23bd1d765e3a7760"
+    },
+    "physical-long": {
+      "sample_rate": 96000,
+      "sample_count": 5646848,
+      "wav_sha256": "0c2a755f39f464f8e8bda4e41a6191c3c53612ed35ddbb9c04694525328f4a0c",
+      "labels_sha256": "26da7e8bdf464b6eb312f5c1a63b7dbb5d85edfe703271fa67ab2e7bcd71948b"
+    },
+    "physical-middle": {
+      "sample_rate": 96000,
+      "sample_count": 6198016,
+      "wav_sha256": "1e14b9b98a9f1965e48d1832b7ebf63e1852f0baea08fde142ee2640e7794ea4",
+      "labels_sha256": "5741a74340140d81c0ea58a42c149ec672a6edb1f82b6136971f51c5e9cc15c3"
+    },
+    "physical-highmid": {
+      "sample_rate": 96000,
+      "sample_count": 5819136,
+      "wav_sha256": "8145168a384c6c75105354f004d5495261ed38599d562c1c474f17923f1f1c17",
+      "labels_sha256": "619d517c894ef6f6aeca04608ad27048872e175d091dead5fd0d83ff4b2a175b"
+    },
+    "physical-high": {
+      "sample_rate": 96000,
+      "sample_count": 4933632,
+      "wav_sha256": "2deb090343ca005009d25f1e92687765b1851d40f9b625d385ec2133e9d0e44d",
+      "labels_sha256": "9ed3dd8c8d29a35d9d62525e5f57c0df7c863072a94f9b7ace150f2bd29df248"
+    },
+    "extended-highmid": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "df4f7e7865790aba63a9b472cb869b1f8d6ea4c0cef97cf91e50ffb0a1811ab7",
+      "labels_sha256": "1091620f32c3f13240c48c7619f136ede0bf4f5f96d8d3962ce46cfe0a38954d"
+    },
+    "extended-high": {
+      "sample_rate": 96000,
+      "sample_count": 2611200,
+      "wav_sha256": "239d02dd14d86fc7a342ef65b19776d94027668ae8aa6ac6b06fa7ed264e08a6",
+      "labels_sha256": "99eeebcb07df9addafaa41968aca8ba1af9294af265df01c142b682d4389be8b"
+    },
+    "physical-four": {
+      "sample_rate": 96000,
+      "sample_count": 12066797,
+      "wav_sha256": "e6f4b9ecdc669992008e3b16c52aa95ff9d77500185f26c0e9ffb9ad51f23615",
+      "labels_sha256": "065003dfc224dab7e1da4f322a3834177aa2fa666d4cda17777b4ad2e319b47e"
+    },
+    "synthetic-four": {
+      "sample_rate": 96000,
+      "sample_count": 5529600,
+      "wav_sha256": "8b93128af7c36799b1cdf1878dac42a3bc23ea98f246f078779dbf7481170e65",
+      "labels_sha256": "ea9ecdb30ea84f9e5e2eacbfb05624a3ebe69a9ed17ac06beb76912553985028"
+    }
+  },
+  "shared_inputs": {
+    "calibration.m3cb": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997",
+    "templates.tsv": "5bb98dfe3a295da1b9db857b083c650059de8dc3ab2b1984ceb2be1d1255ac87"
+  },
+  "derived_model_sha256": "1b6f85ae2265d4ed5ceeda33163951c37f118766f6521b0cbe702baae933b87d",
+  "protocol": {
+    "runs_per_dataset": {
+      "current_m3_block512": 1,
+      "neural_component_float32": 1
+    },
+    "current_configuration": "a4=440, input-trim=-9, sensitivity=60, response=75, max-polyphony=5, max-fret=24; calibration/templates; diagnostic-spectral-lane-collision only",
+    "primary_clock": "Actual accepted VST3 callback timestamp, paced 96kHz variable 32/512/1024 blocks; compare fresh M3 sample-clock occupancy without time fitting",
+    "diagnostics": [
+      "worker-ready timestamps",
+      "zero-compute source availability"
+    ],
+    "quality": "Per dataset: no pitch-coverage, exact/all-expected pitch-set, per-label present/longest-hold loss; no wrong-pitch or extra-gap growth. All deltas and every label retained even on rejection. No averaging across datasets.",
+    "runtime": "Callback p99<=166666ns,max<=333333ns; zero allocations/frees/overruns/drops/faults; worker service p99<=20000000ns,maximum backlog<=26666667ns; full source/dry identity and accepted-event pairing.",
+    "identity_scope": "Prior run44905197832 paired original/cropped all windows on ordinary/middle in both formats. Same derived-model hash here; no original/cropped pairing or cross-format identity claim on these12 datasets.",
+    "reference_scope": "Fresh M3 CURRENT references at this source revision. Clock metadata comes from run42643461303; no historical raw-output identity claim. Installed scoreboard unchanged.",
+    "labels": "Read only after detector execution; pitch-set occupancy deduplicates same-pitch voices. String assignment, same-pitch unison multiplicity and delivered-host MIDI are not established.",
+    "failure_behavior": "Continue through measured quality/runtime rejections; stop for malformed data or failed provenance. No policy tuning, thresholds or second dispatch.",
+    "package": "M3_Neural_Lab.vst3 uninstalled, class4DF13B289E8349D1B17DA623251F806C",
+    "bulk": "Generated MIDI/snapshot/timing only, remote. No source audio or calibration in artifacts.",
+    "prior_component_run": 44905197832,
+    "total_source_samples": 81507629
+  }
+}
