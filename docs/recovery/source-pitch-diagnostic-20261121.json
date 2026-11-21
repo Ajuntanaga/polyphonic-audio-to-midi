@@ -1,0 +1,134 @@
+{
+  "schema": "m3_source_pitch_diagnostic_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "parameters": {
+    "downsample": 2,
+    "note_min": 28,
+    "note_max": 96,
+    "trough_threshold": 0.1,
+    "target_tolerance_cents": 50.0,
+    "numerical_silence_rms": 1e-12,
+    "component_rms": 0.05
+  },
+  "mixture_settings": {
+    "sample_rate": 96000,
+    "block": 512,
+    "windows": [
+      4096,
+      16384
+    ],
+    "grid_midi_low": 28,
+    "grid_midi_high": 120,
+    "bins_per_semitone": 3,
+    "note_low": 32,
+    "note_high": 84,
+    "cutoff": 0.5,
+    "input_trim_db": -9,
+    "train_examples": 16384,
+    "calibration_examples": 4096,
+    "test_examples": 4096,
+    "train_seed": 20261121,
+    "calibration_seed": 20261122,
+    "test_seed": 20261123,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "silence_every": 20,
+    "max_components": 5
+  },
+  "generator_files": {
+    "tools/direct_spectrum_learning.py": {
+      "sha256": "b9dc06100e1963711e38f228f5a4b27adc996bfbd5708e2a307dc106d612d6ab"
+    },
+    "tools/spectral_dictionary.py": {
+      "sha256": "fef425009bd55b25a8ad3b28402e457be49901b28776ed4dfd94b24f075ba9cc"
+    }
+  },
+  "sources": {
+    "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+    "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+  },
+  "saved_plan_artifact": {
+    "id": 14724172434,
+    "bytes": 15501054,
+    "sha256": "64ee338882d3388e144ad4837badf0aa3045fa7775c54176b7de240b01734cac",
+    "files": {
+      "template-plan.json.gz": {
+        "bytes": 9408,
+        "sha256": "6d940740e408ad064783cf215f3d66677eae27ef0fbb01ebb96c4e24518081cd"
+      },
+      "train-mixture-plan.json.gz": {
+        "bytes": 750676,
+        "sha256": "2117e0c46335bd52224935c4c145e5df9f9d4479ca676ecbf464b3d66eccc498"
+      },
+      "calibration-mixture-plan.json.gz": {
+        "bytes": 193017,
+        "sha256": "bd6a2f7be55931c2a7c2b3285d8d3c59fffb9d91a4fb9446db76c234e6ebb322"
+      },
+      "test-mixture-plan.json.gz": {
+        "bytes": 176896,
+        "sha256": "f04f58216deb3630ab006ffeb46d826f72fa86f934a03d014f085be78cf053b2"
+      }
+    }
+  },
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    }
+  ],
+  "previously_flagged_sources": [
+    "string-08:63",
+    "string-07:64",
+    "string-06:67",
+    "string-04:57",
+    "string-03:56",
+    "string-03:69",
+    "string-04:54",
+    "string-04:55"
+  ],
+  "previous_runs": {
+    "direct_spectrum": 44944759783,
+    "spectral_dictionary": 44946969983
+  },
+  "decision_protocol": [
+    "Require exact source SHA, recorded input hashes, all source rows and four saved plans to reproduce before measurement.",
+    "Measure periodicity without using label pitch, then report nominal-label and expected-cents differences separately.",
+    "Report all source/role denominators, unique crops and mixture/template exposure counts; preserve unresolved and silent classes.",
+    "Inspect concentration by source and role before proposing another model. A periodic-other crop is a disagreement to verify, not an automatic label correction.",
+    "Do not rerun or tune either rejected model from these observations. Any new representation or source-treatment experiment must have a separately frozen question and unchanged acceptance gates."
+  ],
+  "limits": [
+    "Fixed-window periodicity agreement is not proof of audibility, annotation correctness, or played string.",
+    "YIN-style difference and first-threshold trough estimator; no temporal correction or claim of a validated full YIN implementation.",
+    "Octave errors, inharmonicity, low signal, beating and transients can make the independent estimate uncertain or incorrect.",
+    "All 555 intended-label sources and exact component/template crops retained. No relabeling, exclusions, fitting, threshold sweep or score changes.",
+    "Normalization gain reports the original mixture operation; it does not establish that a weak crop is invalid.",
+    "Role comparisons share one instrument/session. This diagnoses the existing experiments, not independent-player generalization.",
+    "No mixed-waveform detector replay, native timing, MIDI host delivery or live-guitar conclusion."
+  ]
+}

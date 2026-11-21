@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T20:56:53.675297+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "e8b1ae05fb1d0deed2a6065a77f5217b5a0d2d39",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "source-pitch-diagnostic.yml",
+  "specification": "docs/recovery/source-pitch-diagnostic-20261121.json",
+  "specification_sha256": "76cba12c84d843d71d8ae7ff10d1bc28433077456552a18c41120c3fed8e68d8",
+  "design": "docs/recovery/CODEX-M3-SOURCE-PITCH-DIAGNOSTIC-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "Observation-only: all 555 sources, every exact saved mixture/template crop, label-independent periodicity and original RMS-normalization gain; no fitting or relabeling.",
+  "validation": {
+    "synthetic_tests_passed": 8,
+    "workflow_yaml_parsed": true,
+    "focused_review": "Complete: expected_cents metadata identity added before audio loading; accepted, mismatch and nonfinite synthetic cases pass. No remaining blocker."
+  },
+  "small_report_collection": "not_started",
+  "bulk_policy": "Keep per-crop JSONL remote; collect small report once with server digest verification.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Commit/push scoped source and worker files; dispatch one frozen CPU diagnostic.",
+  "limits": [
+    "Fixed-window periodicity agreement is not proof of audibility, annotation correctness, or played string.",
+    "YIN-style difference and first-threshold trough estimator; no temporal correction or claim of a validated full YIN implementation.",
+    "Octave errors, inharmonicity, low signal, beating and transients can make the independent estimate uncertain or incorrect.",
+    "All 555 intended-label sources and exact component/template crops retained. No relabeling, exclusions, fitting, threshold sweep or score changes.",
+    "Normalization gain reports the original mixture operation; it does not establish that a weak crop is invalid.",
+    "Role comparisons share one instrument/session. This diagnoses the existing experiments, not independent-player generalization.",
+    "No mixed-waveform detector replay, native timing, MIDI host delivery or live-guitar conclusion."
+  ],
+  "pre_dispatch_run_inventory": "build/recovery/m3-source-pitch-diagnostic-20261121/pre-dispatch-runs.stdout",
+  "active_worker_runs_before_dispatch": []
+}
