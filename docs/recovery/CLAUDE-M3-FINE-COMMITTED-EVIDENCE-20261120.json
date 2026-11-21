@@ -1,0 +1,42 @@
+{
+ "48-59": {
+  "frames": 151486,
+  "fine_valid": 0,
+  "fine_mask!=0": 0,
+  "fine_mask_has_annotated": 0,
+  "fine_mask_only_annotated": 0,
+  "committed_mask!=0": 98109,
+  "committed_mask_has_annotated": 51241,
+  "committed_mask_only_annotated": 50643
+ },
+ "60-71": {
+  "frames": 143033,
+  "fine_valid": 0,
+  "fine_mask!=0": 0,
+  "fine_mask_has_annotated": 0,
+  "fine_mask_only_annotated": 0,
+  "committed_mask!=0": 8471,
+  "committed_mask_has_annotated": 5367,
+  "committed_mask_only_annotated": 5367
+ },
+ "72-84": {
+  "frames": 76846,
+  "fine_valid": 0,
+  "fine_mask!=0": 0,
+  "fine_mask_has_annotated": 0,
+  "fine_mask_only_annotated": 0,
+  "committed_mask!=0": 0,
+  "committed_mask_has_annotated": 0,
+  "committed_mask_only_annotated": 0
+ },
+ "<48": {
+  "frames": 146688,
+  "fine_valid": 0,
+  "fine_mask!=0": 0,
+  "fine_mask_has_annotated": 0,
+  "fine_mask_only_annotated": 0,
+  "committed_mask!=0": 103584,
+  "committed_mask_has_annotated": 69579,
+  "committed_mask_only_annotated": 67973
+ }
+}

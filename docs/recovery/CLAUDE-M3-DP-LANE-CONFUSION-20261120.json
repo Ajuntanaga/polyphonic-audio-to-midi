@@ -1,0 +1,84 @@
+{
+ "runs": 120,
+ "ticks": 6753,
+ "ticks_in_runs_with_no_lane_switch": 1530,
+ "lane_switches": 28,
+ "run_length_median": 2,
+ "run_length_max": 1088,
+ "outcome0_ticks_as_is": 4150,
+ "outcome0_ticks_if_first_lane_held": 1815,
+ "outcome0_ticks_if_modal_lane_oracle": 4652,
+ "runs_all_ticks_in_mask": 48,
+ "runs_no_tick_in_mask": 67,
+ "runs_mixed": 5,
+ "runs_first_lane_in_mask": 49,
+ "longest_runs": [
+  {
+   "label": 485,
+   "note": 64,
+   "ticks": 1088,
+   "lanes": [
+    4,
+    7
+   ],
+   "mask": 16,
+   "frac_in_mask": 0.779
+  },
+  {
+   "label": 292,
+   "note": 66,
+   "ticks": 1043,
+   "lanes": [
+    5,
+    6
+   ],
+   "mask": 64,
+   "frac_in_mask": 0.992
+  },
+  {
+   "label": 131,
+   "note": 61,
+   "ticks": 978,
+   "lanes": [
+    4,
+    5
+   ],
+   "mask": 16,
+   "frac_in_mask": 0.755
+  },
+  {
+   "label": 68,
+   "note": 64,
+   "ticks": 877,
+   "lanes": [
+    4,
+    6,
+    7
+   ],
+   "mask": 32,
+   "frac_in_mask": 0.0
+  },
+  {
+   "label": 337,
+   "note": 61,
+   "ticks": 771,
+   "lanes": [
+    3,
+    5
+   ],
+   "mask": 8,
+   "frac_in_mask": 0.689
+  }
+ ],
+ "confusion_outcome2": {
+  "annotated=5|assigned=6": 812,
+  "annotated=6|assigned=7": 396,
+  "annotated=4|assigned=5": 311,
+  "annotated=7|assigned=6": 270,
+  "annotated=5|assigned=7": 255,
+  "annotated=4|assigned=7": 242,
+  "annotated=3|assigned=5": 240,
+  "annotated=5|assigned=4": 69,
+  "annotated=6|assigned=5": 8
+ }
+}

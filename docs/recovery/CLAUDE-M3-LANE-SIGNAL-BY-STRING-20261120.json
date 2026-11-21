@@ -1,0 +1,108 @@
+{
+ "annotated_lane_2": {
+  "frames": 12368,
+  "in_playable_mask": 12368,
+  "in_cal_mask": 12368,
+  "in_selector_option_mask": 4,
+  "in_selector_positive_mask": 0,
+  "in_fine_mask": 0,
+  "in_committed_mask": 0,
+  "best_string_distribution": {
+   "4": 6025,
+   "5": 2375,
+   "6": 100,
+   "7": 3868
+  },
+  "best_string_equals_annotated": 0,
+  "best_string_defined": 12368
+ },
+ "annotated_lane_3": {
+  "frames": 24038,
+  "in_playable_mask": 24038,
+  "in_cal_mask": 24038,
+  "in_selector_option_mask": 5283,
+  "in_selector_positive_mask": 1,
+  "in_fine_mask": 0,
+  "in_committed_mask": 531,
+  "best_string_distribution": {
+   "3": 2106,
+   "4": 8184,
+   "5": 9775,
+   "6": 3355,
+   "7": 618
+  },
+  "best_string_equals_annotated": 2106,
+  "best_string_defined": 24038
+ },
+ "annotated_lane_4": {
+  "frames": 34968,
+  "in_playable_mask": 34968,
+  "in_cal_mask": 34968,
+  "in_selector_option_mask": 7511,
+  "in_selector_positive_mask": 1065,
+  "in_fine_mask": 0,
+  "in_committed_mask": 1586,
+  "best_string_distribution": {
+   "3": 5535,
+   "4": 5430,
+   "5": 9661,
+   "6": 9441,
+   "7": 4901
+  },
+  "best_string_equals_annotated": 5430,
+  "best_string_defined": 34968
+ },
+ "annotated_lane_5": {
+  "frames": 49857,
+  "in_playable_mask": 49857,
+  "in_cal_mask": 49857,
+  "in_selector_option_mask": 6296,
+  "in_selector_positive_mask": 928,
+  "in_fine_mask": 0,
+  "in_committed_mask": 44,
+  "best_string_distribution": {
+   "3": 4269,
+   "4": 4105,
+   "5": 14878,
+   "6": 16775,
+   "7": 9830
+  },
+  "best_string_equals_annotated": 14878,
+  "best_string_defined": 49857
+ },
+ "annotated_lane_6": {
+  "frames": 41225,
+  "in_playable_mask": 41225,
+  "in_cal_mask": 41225,
+  "in_selector_option_mask": 12874,
+  "in_selector_positive_mask": 1791,
+  "in_fine_mask": 0,
+  "in_committed_mask": 1026,
+  "best_string_distribution": {
+   "3": 2245,
+   "4": 436,
+   "5": 10016,
+   "6": 17152,
+   "7": 11376
+  },
+  "best_string_equals_annotated": 17152,
+  "best_string_defined": 41225
+ },
+ "annotated_lane_7": {
+  "frames": 43675,
+  "in_playable_mask": 43675,
+  "in_cal_mask": 43675,
+  "in_selector_option_mask": 645,
+  "in_selector_positive_mask": 284,
+  "in_fine_mask": 0,
+  "in_committed_mask": 0,
+  "best_string_distribution": {
+   "3": 54,
+   "5": 2643,
+   "6": 14530,
+   "7": 26448
+  },
+  "best_string_equals_annotated": 26448,
+  "best_string_defined": 43675
+ }
+}

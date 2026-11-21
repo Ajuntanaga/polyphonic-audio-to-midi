@@ -1,0 +1,82 @@
+{
+ "48-59|string=0": {
+  "voices": 11560,
+  "correct": 8482
+ },
+ "48-59|string=1": {
+  "voices": 20970,
+  "correct": 13479
+ },
+ "48-59|string=2": {
+  "voices": 16804,
+  "correct": 11031
+ },
+ "48-59|string=3": {
+  "voices": 20354,
+  "correct": 11771
+ },
+ "48-59|string=4": {
+  "voices": 15383,
+  "correct": 8123
+ },
+ "48-59|string=5": {
+  "voices": 12902,
+  "correct": 24
+ },
+ "48-59|string=6": {
+  "voices": 6805,
+  "correct": 2964
+ },
+ "60-71|string=1": {
+  "voices": 527,
+  "correct": 508
+ },
+ "60-71|string=2": {
+  "voices": 14,
+  "correct": 0
+ },
+ "60-71|string=3": {
+  "voices": 2215,
+  "correct": 2203
+ },
+ "60-71|string=4": {
+  "voices": 2303,
+  "correct": 2234
+ },
+ "60-71|string=5": {
+  "voices": 680,
+  "correct": 0
+ },
+ "60-71|string=6": {
+  "voices": 2573,
+  "correct": 1761
+ },
+ "60-71|string=7": {
+  "voices": 1804,
+  "correct": 0
+ },
+ "72-84|string=6": {
+  "voices": 538,
+  "correct": 268
+ },
+ "72-84|string=7": {
+  "voices": 16,
+  "correct": 4
+ },
+ "<48|string=0": {
+  "voices": 56885,
+  "correct": 53853
+ },
+ "<48|string=1": {
+  "voices": 38090,
+  "correct": 20107
+ },
+ "<48|string=2": {
+  "voices": 22105,
+  "correct": 9184
+ },
+ "<48|string=3": {
+  "voices": 7730,
+  "correct": 2078
+ }
+}

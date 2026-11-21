@@ -1,0 +1,159 @@
+{
+  "schema": "claude_m3_offline_clock_drift_check_v1",
+  "predicted_ms_per_s_offline_early": 1.5436998124283494,
+  "position_range_s": [
+    0.0022604166666666667,
+    110.50184375
+  ],
+  "T1_slope_ms_per_s": {
+    "Ds-Do": {
+      "slope": 0.04765655702926611,
+      "intercept": 117.36666061769304,
+      "se": 0.10178498374326765,
+      "n": 370,
+      "resid_sd": 61.24452597074606,
+      "theil_sen_slope": 0.03378840893008399,
+      "slope_over_se": 0.46820813126492494
+    },
+    "Ds-Dc": {
+      "slope": 0.21787922202480967,
+      "intercept": 55.53955315186741,
+      "se": 0.22889248563218076,
+      "n": 200,
+      "resid_sd": 100.2409452900812,
+      "theil_sen_slope": 0.11059974473211263,
+      "slope_over_se": 0.9518845558561985
+    },
+    "Do-Dc": {
+      "slope": 0.0682137175024679,
+      "intercept": -67.84893452836741,
+      "se": 0.13701973529587544,
+      "n": 201,
+      "resid_sd": 59.734067569382844,
+      "theil_sen_slope": -0.00887419809999193,
+      "slope_over_se": 0.49783863145823243
+    }
+  },
+  "T1_prediction_check": {
+    "Ds-Do predicted": 1.5436998124283494,
+    "Ds-Dc predicted": 0.0,
+    "Do-Dc predicted": -1.5436998124283494
+  },
+  "T2_T3_position_bins": [
+    {
+      "bin": 0,
+      "t_range_s": [
+        0.0022604166666666667,
+        18.702489583333332
+      ],
+      "n_labels": 99,
+      "median_Ds_minus_Do_ms": 95.25,
+      "n_Ds_minus_Do": 69,
+      "median_Ds_minus_Dc_ms": 57.67708333333334,
+      "n_Ds_minus_Dc": 36,
+      "median_Do_minus_Dc_ms": -61.729166666666664,
+      "n_Do_minus_Dc": 34,
+      "early_at_or_before_start_S": 7,
+      "median_first_delay_S_ms": 100.16666666666667,
+      "early_at_or_before_start_O": 40,
+      "median_first_delay_O_ms": 0.0,
+      "early_at_or_before_start_C": 5,
+      "median_first_delay_C_ms": 69.25
+    },
+    {
+      "bin": 1,
+      "t_range_s": [
+        18.702489583333332,
+        36.55248958333333
+      ],
+      "n_labels": 100,
+      "median_Ds_minus_Do_ms": 118.51041666666667,
+      "n_Ds_minus_Do": 74,
+      "median_Ds_minus_Dc_ms": 69.71875,
+      "n_Ds_minus_Dc": 39,
+      "median_Do_minus_Dc_ms": -59.385416666666664,
+      "n_Do_minus_Dc": 37,
+      "early_at_or_before_start_S": 3,
+      "median_first_delay_S_ms": 119.64583333333333,
+      "early_at_or_before_start_O": 52,
+      "median_first_delay_O_ms": 0.0,
+      "early_at_or_before_start_C": 5,
+      "median_first_delay_C_ms": 60.927083333333336
+    },
+    {
+      "bin": 2,
+      "t_range_s": [
+        37.40239583333334,
+        56.95248958333333
+      ],
+      "n_labels": 100,
+      "median_Ds_minus_Do_ms": 121.9375,
+      "n_Ds_minus_Do": 72,
+      "median_Ds_minus_Dc_ms": 32.47916666666667,
+      "n_Ds_minus_Dc": 45,
+      "median_Do_minus_Dc_ms": -73.5,
+      "n_Do_minus_Dc": 46,
+      "early_at_or_before_start_S": 3,
+      "median_first_delay_S_ms": 123.38541666666667,
+      "early_at_or_before_start_O": 42,
+      "median_first_delay_O_ms": 0.0,
+      "early_at_or_before_start_C": 5,
+      "median_first_delay_C_ms": 79.5
+    },
+    {
+      "bin": 3,
+      "t_range_s": [
+        56.95248958333333,
+        82.45184375
+      ],
+      "n_labels": 100,
+      "median_Ds_minus_Do_ms": 113.58333333333334,
+      "n_Ds_minus_Do": 79,
+      "median_Ds_minus_Dc_ms": 71.21875,
+      "n_Ds_minus_Dc": 41,
+      "median_Do_minus_Dc_ms": -63.78125,
+      "n_Do_minus_Dc": 44,
+      "early_at_or_before_start_S": 1,
+      "median_first_delay_S_ms": 122.38541666666667,
+      "early_at_or_before_start_O": 52,
+      "median_first_delay_O_ms": 0.0,
+      "early_at_or_before_start_C": 6,
+      "median_first_delay_C_ms": 67.59375
+    },
+    {
+      "bin": 4,
+      "t_range_s": [
+        83.30110416666666,
+        110.50184375
+      ],
+      "n_labels": 100,
+      "median_Ds_minus_Do_ms": 101.34375,
+      "n_Ds_minus_Do": 76,
+      "median_Ds_minus_Dc_ms": 51.083333333333336,
+      "n_Ds_minus_Dc": 39,
+      "median_Do_minus_Dc_ms": -57.729166666666664,
+      "n_Do_minus_Dc": 40,
+      "early_at_or_before_start_S": 0,
+      "median_first_delay_S_ms": 109.53125,
+      "early_at_or_before_start_O": 48,
+      "median_first_delay_O_ms": 0.0,
+      "early_at_or_before_start_C": 3,
+      "median_first_delay_C_ms": 58.145833333333336
+    }
+  ],
+  "T4_fixed_correction": {
+    "n": 370,
+    "raw_Ds_minus_Do_ms": {
+      "0.25": 86.25,
+      "0.5": 106.625,
+      "0.75": 145.20833333333334
+    },
+    "corrected_Ds_minus_Do_ms": {
+      "0.25": -11.748513142322224,
+      "0.5": 42.72000013616288,
+      "0.75": 81.49035723667538
+    },
+    "share_of_median_removed": 0.599343492275143,
+    "mean_correction_ms": 78.70717650843065
+  }
+}

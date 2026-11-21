@@ -1,0 +1,749 @@
+{
+ "schema": "claude_m3_streaming_assessment_v1",
+ "run_id": "44889388628",
+ "report_sha256_expected": "a56b822b669ffa1510880d20f138819434751489a8dd74a81fe1939761ebec32",
+ "units": {
+  "sample_rate": 96000,
+  "ms_samples": 96.0,
+  "frame_samples": 1114.5578231292518
+ },
+ "ordinary": {
+  "label_match_problems": [],
+  "n_labels": 499,
+  "label_sum_present": {
+   "S": 18583289,
+   "Z": 18873206,
+   "O": 22831126,
+   "C": 13525345
+  },
+  "distinct_pitch_present_reported": {
+   "S": 18583289,
+   "O": 22831126,
+   "C": 13525345
+  },
+  "R1_stream_vs_offline": {
+   "pair": "streaming vs offline",
+   "labels": 499,
+   "lose_present": 379,
+   "gain_present": 28,
+   "gross_loss_samples": 4800611,
+   "gross_gain_samples": 552774,
+   "lose_longest": 380,
+   "identity_violations": 0,
+   "classes": {
+    "DROPOUT": {
+     "labels": 18,
+     "lost_samples": 596155,
+     "share_of_gross": 0.12418315085308933,
+     "also_lose_longest": 18
+    },
+    "FRAGMENT": {
+     "labels": 41,
+     "lost_samples": 822391,
+     "share_of_gross": 0.1713096520422088,
+     "also_lose_longest": 41
+    },
+    "SHORT": {
+     "labels": 320,
+     "lost_samples": 3382065,
+     "share_of_gross": 0.7045071971047019,
+     "also_lose_longest": 320
+    }
+   },
+   "by_band": {
+    "below48": {
+     "labels": 139,
+     "X_present": 6793886,
+     "S_present": 5017340,
+     "classes": {
+      "DROPOUT": {
+       "labels": 6,
+       "lost_samples": 175488
+      },
+      "FRAGMENT": {
+       "labels": 21,
+       "lost_samples": 550099
+      },
+      "SHORT": {
+       "labels": 84,
+       "lost_samples": 1209768
+      }
+     },
+     "gain_labels": 6,
+     "gain_samples": 158809
+    },
+    "48to59": {
+     "labels": 147,
+     "X_present": 6585217,
+     "S_present": 5207744,
+     "classes": {
+      "DROPOUT": {
+       "labels": 10,
+       "lost_samples": 378315
+      },
+      "FRAGMENT": {
+       "labels": 7,
+       "lost_samples": 155281
+      },
+      "SHORT": {
+       "labels": 91,
+       "lost_samples": 1075419
+      }
+     },
+     "gain_labels": 10,
+     "gain_samples": 231542
+    },
+    "60to71": {
+     "labels": 135,
+     "X_present": 6114849,
+     "S_present": 5408846,
+     "classes": {
+      "DROPOUT": {
+       "labels": 2,
+       "lost_samples": 42352
+      },
+      "FRAGMENT": {
+       "labels": 11,
+       "lost_samples": 104194
+      },
+      "SHORT": {
+       "labels": 85,
+       "lost_samples": 704394
+      }
+     },
+     "gain_labels": 6,
+     "gain_samples": 144937
+    },
+    "72plus": {
+     "labels": 78,
+     "X_present": 3337174,
+     "S_present": 2949359,
+     "classes": {
+      "DROPOUT": {
+       "labels": 0,
+       "lost_samples": 0
+      },
+      "FRAGMENT": {
+       "labels": 2,
+       "lost_samples": 12817
+      },
+      "SHORT": {
+       "labels": 60,
+       "lost_samples": 392484
+      }
+     },
+     "gain_labels": 6,
+     "gain_samples": 17486
+    }
+   },
+   "decomposition_both_present_losers": {
+    "labels": 361,
+    "total_lost": 4204456,
+    "onset_delay_part": 4193124,
+    "gap_part": 11332,
+    "onset_fraction": 0.9973047642786605,
+    "single_segment_streaming_labels": 320,
+    "single_segment_gap_part_samples": -341921
+   },
+   "onset_shift_ms_all_both_present": {
+    "0.05": 66.32291666666667,
+    "0.25": 86.25,
+    "0.5": 106.625,
+    "0.75": 145.20833333333334,
+    "0.95": 211.84375,
+    "n": 370,
+    "min": -82.41666666666667,
+    "max": 563.7083333333334
+   },
+   "onset_shift_buckets_ms": {
+    "le0": 14,
+    "0_to_35": 1,
+    "35_to_100": 143,
+    "gt100": 212
+   }
+  },
+  "R1_stream_vs_current": {
+   "pair": "streaming vs CURRENT",
+   "labels": 499,
+   "lose_present": 197,
+   "gain_present": 226,
+   "gross_loss_samples": 4143292,
+   "gross_gain_samples": 9201236,
+   "lose_longest": 195,
+   "identity_violations": 0,
+   "classes": {
+    "DROPOUT": {
+     "labels": 34,
+     "lost_samples": 1893433,
+     "share_of_gross": 0.45698758378603294,
+     "also_lose_longest": 34
+    },
+    "FRAGMENT": {
+     "labels": 24,
+     "lost_samples": 645689,
+     "share_of_gross": 0.15583960773220906,
+     "also_lose_longest": 24
+    },
+    "SHORT": {
+     "labels": 139,
+     "lost_samples": 1604170,
+     "share_of_gross": 0.387172808481758,
+     "also_lose_longest": 136
+    }
+   },
+   "by_band": {
+    "below48": {
+     "labels": 139,
+     "X_present": 6690873,
+     "S_present": 5017340,
+     "classes": {
+      "DROPOUT": {
+       "labels": 18,
+       "lost_samples": 956716
+      },
+      "FRAGMENT": {
+       "labels": 15,
+       "lost_samples": 432616
+      },
+      "SHORT": {
+       "labels": 66,
+       "lost_samples": 944093
+      }
+     },
+     "gain_labels": 30,
+     "gain_samples": 659892
+    },
+    "48to59": {
+     "labels": 147,
+     "X_present": 6292681,
+     "S_present": 5207744,
+     "classes": {
+      "DROPOUT": {
+       "labels": 15,
+       "lost_samples": 890932
+      },
+      "FRAGMENT": {
+       "labels": 9,
+       "lost_samples": 213073
+      },
+      "SHORT": {
+       "labels": 69,
+       "lost_samples": 641283
+      }
+     },
+     "gain_labels": 30,
+     "gain_samples": 660351
+    },
+    "60to71": {
+     "labels": 135,
+     "X_present": 541791,
+     "S_present": 5408846,
+     "classes": {
+      "DROPOUT": {
+       "labels": 1,
+       "lost_samples": 45785
+      },
+      "FRAGMENT": {
+       "labels": 0,
+       "lost_samples": 0
+      },
+      "SHORT": {
+       "labels": 4,
+       "lost_samples": 18794
+      }
+     },
+     "gain_labels": 98,
+     "gain_samples": 4931634
+    },
+    "72plus": {
+     "labels": 78,
+     "X_present": 0,
+     "S_present": 2949359,
+     "classes": {
+      "DROPOUT": {
+       "labels": 0,
+       "lost_samples": 0
+      },
+      "FRAGMENT": {
+       "labels": 0,
+       "lost_samples": 0
+      },
+      "SHORT": {
+       "labels": 0,
+       "lost_samples": 0
+      }
+     },
+     "gain_labels": 68,
+     "gain_samples": 2949359
+    }
+   },
+   "decomposition_both_present_losers": {
+    "labels": 163,
+    "total_lost": 2249859,
+    "onset_delay_part": 1342901,
+    "gap_part": 906958,
+    "onset_fraction": 0.5968822935126157,
+    "single_segment_streaming_labels": 137,
+    "single_segment_gap_part_samples": 454607
+   },
+   "onset_shift_ms_all_both_present": {
+    "0.05": -56.25,
+    "0.25": 21.40625,
+    "0.5": 55.708333333333336,
+    "0.75": 102.16666666666667,
+    "0.95": 203.6875,
+    "n": 200,
+    "min": -422.8854166666667,
+    "max": 658.3229166666666
+   },
+   "onset_shift_buckets_ms": {
+    "le0": 32,
+    "0_to_35": 41,
+    "35_to_100": 76,
+    "gt100": 51
+   }
+  },
+  "R3_streaming_specific_vs_model_loss": {
+   "labels_losing_vs_current": 197,
+   "model_also_loses_labels": 96,
+   "model_also_loses_samples_streaming_loss": 3416311,
+   "model_ceiling_loss_samples": 2236095,
+   "streaming_specific_labels": 101,
+   "streaming_specific_samples": 726981,
+   "streaming_specific_classes": {
+    "DROPOUT": {
+     "labels": 0,
+     "lost_samples": 0
+    },
+    "FRAGMENT": {
+     "labels": 7,
+     "lost_samples": 127368
+    },
+    "SHORT": {
+     "labels": 94,
+     "lost_samples": 599613
+    }
+   },
+   "by_band": {
+    "below48": {
+     "streaming_specific_labels": 44,
+     "streaming_specific_samples": 388985,
+     "model_also_loses_labels": 55
+    },
+    "48to59": {
+     "streaming_specific_labels": 54,
+     "streaming_specific_samples": 326913,
+     "model_also_loses_labels": 39
+    },
+    "60to71": {
+     "streaming_specific_labels": 3,
+     "streaming_specific_samples": 11083,
+     "model_also_loses_labels": 2
+    },
+    "72plus": {
+     "streaming_specific_labels": 0,
+     "streaming_specific_samples": 0,
+     "model_also_loses_labels": 0
+    }
+   }
+  },
+  "R4_fragmentation": {
+   "S": {
+    "present_labels": 389,
+    "mean_segments_per_present_label": 1.1491002570694087,
+    "non_longest_share": 0.0171725252725715,
+    "by_band": {
+     "below48": {
+      "present_labels": 111,
+      "mean_segments": 1.2792792792792793,
+      "non_longest_share": 0.039728023215488684
+     },
+     "48to59": {
+      "present_labels": 108,
+      "mean_segments": 1.1018518518518519,
+      "non_longest_share": 0.010630514864017893
+     },
+     "60to71": {
+      "present_labels": 102,
+      "mean_segments": 1.1372549019607843,
+      "non_longest_share": 0.011421105352232251
+     },
+     "72plus": {
+      "present_labels": 68,
+      "mean_segments": 1.0294117647058822,
+      "non_longest_share": 0.0009008737152716912
+     }
+    }
+   },
+   "O": {
+    "present_labels": 388,
+    "mean_segments_per_present_label": 1,
+    "non_longest_share": 0.0,
+    "by_band": {
+     "below48": {
+      "present_labels": 113,
+      "mean_segments": 1,
+      "non_longest_share": 0.0
+     },
+     "48to59": {
+      "present_labels": 109,
+      "mean_segments": 1,
+      "non_longest_share": 0.0
+     },
+     "60to71": {
+      "present_labels": 101,
+      "mean_segments": 1,
+      "non_longest_share": 0.0
+     },
+     "72plus": {
+      "present_labels": 65,
+      "mean_segments": 1,
+      "non_longest_share": 0.0
+     }
+    }
+   },
+   "C": {
+    "present_labels": 234,
+    "mean_segments_per_present_label": 1.393162393162393,
+    "non_longest_share": 0.013449490567523417,
+    "by_band": {
+     "below48": {
+      "present_labels": 117,
+      "mean_segments": 1.7179487179487178,
+      "non_longest_share": 0.021811802435945205
+     },
+     "48to59": {
+      "present_labels": 108,
+      "mean_segments": 1.0740740740740742,
+      "non_longest_share": 0.005716005626218777
+     },
+     "60to71": {
+      "present_labels": 9,
+      "mean_segments": 1,
+      "non_longest_share": 0.0
+     },
+     "72plus": {
+      "present_labels": 0,
+      "mean_segments": null,
+      "non_longest_share": null
+     }
+    }
+   },
+   "Z": {
+    "present_labels": 389,
+    "mean_segments_per_present_label": 1.1491002570694087,
+    "non_longest_share": 0.016970301707086757,
+    "by_band": {
+     "below48": {
+      "present_labels": 111,
+      "mean_segments": 1.2882882882882882,
+      "non_longest_share": 0.04087082637688705
+     },
+     "48to59": {
+      "present_labels": 108,
+      "mean_segments": 1.1018518518518519,
+      "non_longest_share": 0.010409554028004213
+     },
+     "60to71": {
+      "present_labels": 102,
+      "mean_segments": 1.1274509803921569,
+      "non_longest_share": 0.01017854431192982
+     },
+     "72plus": {
+      "present_labels": 68,
+      "mean_segments": 1.0294117647058822,
+      "non_longest_share": 0.00017688862951179072
+     }
+    }
+   },
+   "share_both_present_S_more_segments_than_O": 0.11351351351351352,
+   "share_both_present_S_fewer_segments_than_O": 0.0,
+   "segment_delta_S_minus_O_quantiles": {
+    "0.05": 0,
+    "0.25": 0,
+    "0.5": 0,
+    "0.75": 0,
+    "0.95": 1,
+    "n": 370,
+    "min": 0,
+    "max": 3
+   }
+  },
+  "R5_scheduling_S_vs_Z": {
+   "onset_delay_ms_quantiles": {
+    "0.05": 10.96875,
+    "0.25": 11.03125,
+    "0.5": 11.09375,
+    "0.75": 11.239583333333334,
+    "0.95": 11.75,
+    "n": 389,
+    "min": -137.60416666666666,
+    "max": 18.1875
+   },
+   "labels_present_differs": 382,
+   "labels_lose_present_vs_Z": 328,
+   "labels_gain_present_vs_Z": 54,
+   "gross_loss_samples": 292994,
+   "gross_gain_samples": 3077
+  },
+  "R6_by_distinct_pitch_count": {
+   "S": {
+    "5": {
+     "expected": 14974245,
+     "present": 7554934,
+     "coverage": 0.5045285421735787
+    },
+    "3": {
+     "expected": 7293360,
+     "present": 4338271,
+     "coverage": 0.5948247446992881
+    },
+    "4": {
+     "expected": 9147524,
+     "present": 5052976,
+     "coverage": 0.552387290812246
+    },
+    "2": {
+     "expected": 2403972,
+     "present": 1637108,
+     "coverage": 0.6810012762211872
+    }
+   },
+   "O": {
+    "5": {
+     "expected": 14974245,
+     "present": 9084660,
+     "coverage": 0.6066856793113776
+    },
+    "3": {
+     "expected": 7293360,
+     "present": 5297510,
+     "coverage": 0.7263469786216504
+    },
+    "4": {
+     "expected": 9147524,
+     "present": 6517166,
+     "coverage": 0.7124513693541553
+    },
+    "2": {
+     "expected": 2403972,
+     "present": 1931790,
+     "coverage": 0.8035825708452511
+    }
+   },
+   "C": {
+    "5": {
+     "expected": 14974245,
+     "present": 5765059,
+     "coverage": 0.38499830876281244
+    },
+    "3": {
+     "expected": 7293360,
+     "present": 3004064,
+     "coverage": 0.41189026731163686
+    },
+    "4": {
+     "expected": 9147524,
+     "present": 3671374,
+     "coverage": 0.4013516663088285
+    },
+    "2": {
+     "expected": 2403972,
+     "present": 1084848,
+     "coverage": 0.45127314294842036
+    }
+   }
+  }
+ },
+ "extended-middle": {
+  "label_match_problems": [],
+  "n_labels": 6,
+  "label_sum_present": {
+   "S": 2031528,
+   "Z": 2038076,
+   "O": 2072543,
+   "C": 2021510
+  },
+  "distinct_pitch_present_reported": {
+   "S": 2031528,
+   "O": 2072543,
+   "C": 2021510
+  },
+  "R7_labels": [
+   {
+    "label_index": 0,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 337786,
+     "longest_present_samples": 337786,
+     "present_segments": 1,
+     "first_present_delay_samples": 7814
+    },
+    "Z": {
+     "present_samples": 338880,
+     "longest_present_samples": 338880,
+     "present_segments": 1,
+     "first_present_delay_samples": 6720
+    },
+    "O": {
+     "present_samples": 345080,
+     "longest_present_samples": 345080,
+     "present_segments": 1,
+     "first_present_delay_samples": 520
+    },
+    "C": {
+     "present_samples": 341121,
+     "longest_present_samples": 341121,
+     "present_segments": 1,
+     "first_present_delay_samples": 4479
+    }
+   },
+   {
+    "label_index": 1,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 339332,
+     "longest_present_samples": 339332,
+     "present_segments": 1,
+     "first_present_delay_samples": 6268
+    },
+    "Z": {
+     "present_samples": 340479,
+     "longest_present_samples": 340479,
+     "present_segments": 1,
+     "first_present_delay_samples": 5121
+    },
+    "O": {
+     "present_samples": 345515,
+     "longest_present_samples": 345515,
+     "present_segments": 1,
+     "first_present_delay_samples": 85
+    },
+    "C": {
+     "present_samples": 340993,
+     "longest_present_samples": 340993,
+     "present_segments": 1,
+     "first_present_delay_samples": 4607
+    }
+   },
+   {
+    "label_index": 2,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 339034,
+     "longest_present_samples": 339034,
+     "present_segments": 1,
+     "first_present_delay_samples": 6566
+    },
+    "Z": {
+     "present_samples": 340159,
+     "longest_present_samples": 340159,
+     "present_segments": 1,
+     "first_present_delay_samples": 5441
+    },
+    "O": {
+     "present_samples": 345600,
+     "longest_present_samples": 345600,
+     "present_segments": 1,
+     "first_present_delay_samples": 0
+    },
+    "C": {
+     "present_samples": 341057,
+     "longest_present_samples": 341057,
+     "present_segments": 1,
+     "first_present_delay_samples": 4543
+    }
+   },
+   {
+    "label_index": 3,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 338776,
+     "longest_present_samples": 338776,
+     "present_segments": 1,
+     "first_present_delay_samples": 6824
+    },
+    "Z": {
+     "present_samples": 339840,
+     "longest_present_samples": 339840,
+     "present_segments": 1,
+     "first_present_delay_samples": 5760
+    },
+    "O": {
+     "present_samples": 345600,
+     "longest_present_samples": 345600,
+     "present_segments": 1,
+     "first_present_delay_samples": 0
+    },
+    "C": {
+     "present_samples": 340673,
+     "longest_present_samples": 340673,
+     "present_segments": 1,
+     "first_present_delay_samples": 4927
+    }
+   },
+   {
+    "label_index": 4,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 338464,
+     "longest_present_samples": 338464,
+     "present_segments": 1,
+     "first_present_delay_samples": 7136
+    },
+    "Z": {
+     "present_samples": 339519,
+     "longest_present_samples": 339519,
+     "present_segments": 1,
+     "first_present_delay_samples": 6081
+    },
+    "O": {
+     "present_samples": 345600,
+     "longest_present_samples": 345600,
+     "present_segments": 1,
+     "first_present_delay_samples": 0
+    },
+    "C": {
+     "present_samples": 317505,
+     "longest_present_samples": 226881,
+     "present_segments": 2,
+     "first_present_delay_samples": 4607
+    }
+   },
+   {
+    "label_index": 5,
+    "midi_note": 52,
+    "annotated": 345600,
+    "S": {
+     "present_samples": 338136,
+     "longest_present_samples": 338136,
+     "present_segments": 1,
+     "first_present_delay_samples": 7464
+    },
+    "Z": {
+     "present_samples": 339199,
+     "longest_present_samples": 339199,
+     "present_segments": 1,
+     "first_present_delay_samples": 6401
+    },
+    "O": {
+     "present_samples": 345148,
+     "longest_present_samples": 345148,
+     "present_segments": 1,
+     "first_present_delay_samples": 452
+    },
+    "C": {
+     "present_samples": 340161,
+     "longest_present_samples": 340161,
+     "present_segments": 1,
+     "first_present_delay_samples": 5439
+    }
+   }
+  ]
+ }
+}

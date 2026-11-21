@@ -1,0 +1,130 @@
+{
+ "table_ticks": 167025,
+ "labels_in_table": 499,
+ "labels_missing_from_table": 0,
+ "sanity_pearson_rendered_share_vs_report_f_cur": 0.959569298764765,
+ "population_60_84": 213,
+ "blind_population": 204,
+ "strata": {
+  "HIGH": {
+   "labels": 140,
+   "ticks": 148014,
+   "rendered_share": 0.011789425324631455,
+   "non_rendered_ticks": 146269,
+   "no_evidence_share_of_non_rendered": 0.028844115978095154,
+   "observed_share_of_non_rendered": 0.9711558840219049,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.028844115978095154,
+    "spectral": 0.02307392543874642,
+    "dp": 0.16701419986463298,
+    "selected_not_rendered": 0.0019963218453670976,
+    "formation": 0.05458436168976338,
+    "admission": 0.724487075183395
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 123.90487228650828,
+   "sum_f_cur": 0.0
+  },
+  "MID": {
+   "labels": 18,
+   "ticks": 19692,
+   "rendered_share": 0.013914279910623604,
+   "non_rendered_ticks": 19418,
+   "no_evidence_share_of_non_rendered": 0.025440313111545987,
+   "observed_share_of_non_rendered": 0.974559686888454,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.025440313111545987,
+    "spectral": 0.016737048099701307,
+    "selected_not_rendered": 0.0005149860953754248,
+    "formation": 0.17993614172417344,
+    "admission": 0.7773715109692039
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 7.38113083701205,
+   "sum_f_cur": 0.0
+  },
+  "ZERO": {
+   "labels": 46,
+   "ticks": 47376,
+   "rendered_share": 8.443093549476529e-05,
+   "non_rendered_ticks": 47372,
+   "no_evidence_share_of_non_rendered": 0.012201300346196065,
+   "observed_share_of_non_rendered": 0.987798699653804,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.012201300346196065,
+    "spectral": 4.2219032339778774e-05,
+    "dp": 0.031769821835683526,
+    "selected_not_rendered": 2.1109516169889387e-05,
+    "formation": 0.49993667145149034,
+    "admission": 0.4560288778181204
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 0.0,
+   "sum_f_cur": 0.0
+  },
+  "CONTROL_cur_hears": {
+   "labels": 9,
+   "ticks": 10099,
+   "rendered_share": 0.8562233884543025,
+   "non_rendered_ticks": 1452,
+   "no_evidence_share_of_non_rendered": 0.007575757575757576,
+   "observed_share_of_non_rendered": 0.9924242424242424,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.007575757575757576,
+    "spectral": 0.003443526170798898,
+    "dp": 0.38705234159779617,
+    "selected_not_rendered": 0.06680440771349862,
+    "formation": 0.3643250688705234,
+    "admission": 0.17079889807162535
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 7.573456633714857,
+   "sum_f_cur": 7.547004549761628
+  }
+ },
+ "by_band_of_blind_HIGH": {
+  "60-71": {
+   "labels": 85,
+   "ticks": 91052,
+   "rendered_share": 0.016089706980626454,
+   "non_rendered_ticks": 89587,
+   "no_evidence_share_of_non_rendered": 0.022101420965095382,
+   "observed_share_of_non_rendered": 0.9778985790349046,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.022101420965095382,
+    "spectral": 0.030796879011463718,
+    "dp": 0.26318550682576713,
+    "formation": 0.07169567013071093,
+    "admission": 0.6122205230669628
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 78.05010810530781,
+   "sum_f_cur": 0.0
+  },
+  "72-84": {
+   "labels": 55,
+   "ticks": 56962,
+   "rendered_share": 0.004915557740247885,
+   "non_rendered_ticks": 56682,
+   "no_evidence_share_of_non_rendered": 0.03950107617938675,
+   "observed_share_of_non_rendered": 0.9604989238206132,
+   "reading": "after-observation",
+   "state_share_of_non_rendered": {
+    "quiet": 0.03950107617938675,
+    "spectral": 0.010867647577714265,
+    "dp": 0.015013584559472142,
+    "selected_not_rendered": 0.005151547228397022,
+    "formation": 0.02753960692988956,
+    "admission": 0.9019265375251403
+   },
+   "median_label_energy_observed_fraction": 1.0,
+   "sum_f_bp": 45.85476418120046,
+   "sum_f_cur": 0.0
+  }
+ }
+}

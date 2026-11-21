@@ -1,0 +1,87 @@
+{
+ "counts": {
+  "E_frames": 14038
+ },
+ "by_band": {
+  "61-71": {
+   "E": 13549,
+   "annotated_playable": 13549,
+   "annotated_free": 13225,
+   "hit_dp": 711
+  },
+  "72-84": {
+   "E": 489,
+   "annotated_playable": 489,
+   "annotated_free": 489,
+   "hit_dp": 0
+  }
+ },
+ "annotated_string_count": {
+  "1": 14038
+ },
+ "dp_lane_hist": {
+  "6": 1128,
+  "7": 12910
+ },
+ "annotated_lane_hist": {
+  "3": 2742,
+  "4": 2327,
+  "5": 3858,
+  "6": 5111
+ },
+ "hit_vs_free": {
+  "miss|annotated_free": 13003,
+  "miss|annotated_not_free": 324,
+  "hit|annotated_free": 711
+ },
+ "calibration_by_margin": {
+  "<=0.02": {
+   "n": 12486,
+   "hit_cal": 2195,
+   "cal_in_free": 11224,
+   "hit_dp_same_frames": 711,
+   "n_free": 12486
+  },
+  "0.02-0.05": {
+   "n": 1552,
+   "hit_cal": 748,
+   "cal_in_free": 1552,
+   "hit_dp_same_frames": 0,
+   "n_free": 1552
+  }
+ },
+ "fragmentation": {
+  "runs": 853,
+  "frames": 14038,
+  "run_len_quantiles": {
+   "min": 1,
+   "p25": 2,
+   "median": 4,
+   "p75": 10,
+   "max": 982
+  },
+  "runs_of_one_tick": 168,
+  "runs_of_at_most_4_ticks": 453,
+  "label13": {
+   "frames": 739,
+   "runs": [
+    5,
+    11,
+    23,
+    61,
+    67,
+    72,
+    119,
+    121,
+    130,
+    130
+   ]
+  },
+  "label56": {
+   "frames": 601,
+   "runs": [
+    601
+   ]
+  }
+ }
+}

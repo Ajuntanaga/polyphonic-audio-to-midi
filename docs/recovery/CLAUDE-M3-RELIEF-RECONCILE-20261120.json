@@ -1,0 +1,156 @@
+{
+ "changed_labels": 50,
+ "present_in_v5_table": 50,
+ "mapping_mismatches": [],
+ "mapping_verified": true,
+ "e_total": 14038,
+ "e_labels": 41,
+ "realized_total": 13412,
+ "realized_positive_total": 13441,
+ "realized_negative_total": -29,
+ "changed_labels_with_E_zero": [
+  8,
+  14,
+  19,
+  21,
+  26,
+  58,
+  60,
+  75,
+  91,
+  141,
+  181,
+  182,
+  183,
+  187,
+  188,
+  196,
+  200,
+  288,
+  291,
+  385,
+  441,
+  445,
+  470,
+  490
+ ],
+ "changed_labels_with_E_zero_realized_positive_total": 819,
+ "E_positive_labels_not_in_changed": [
+  38,
+  40,
+  61,
+  68,
+  69,
+  72,
+  89,
+  111,
+  126,
+  140,
+  180,
+  356,
+  383,
+  424,
+  451
+ ],
+ "E_total_on_labels_not_in_changed": 1771,
+ "E_positive_labels_realized_nonpositive": {},
+ "ratio_histogram_labels_both_positive": {
+  "0.9-1.1": 8,
+  "<=0.5": 7,
+  ">1.1": 9,
+  "0.5-0.9": 2
+ },
+ "largest_gaps": [
+  {
+   "label": 166,
+   "note": 65,
+   "E": 55,
+   "realized": 1010
+  },
+  {
+   "label": 13,
+   "note": 71,
+   "E": 739,
+   "realized": 206
+  },
+  {
+   "label": 180,
+   "note": 73,
+   "E": 489,
+   "realized": 0
+  },
+  {
+   "label": 71,
+   "note": 65,
+   "E": 935,
+   "realized": 455
+  },
+  {
+   "label": 140,
+   "note": 61,
+   "E": 440,
+   "realized": 0
+  },
+  {
+   "label": 56,
+   "note": 64,
+   "E": 601,
+   "realized": 169
+  },
+  {
+   "label": 175,
+   "note": 71,
+   "E": 514,
+   "realized": 923
+  },
+  {
+   "label": 48,
+   "note": 63,
+   "E": 245,
+   "realized": 646
+  },
+  {
+   "label": 469,
+   "note": 61,
+   "E": 664,
+   "realized": 306
+  },
+  {
+   "label": 83,
+   "note": 65,
+   "E": 253,
+   "realized": 544
+  },
+  {
+   "label": 284,
+   "note": 63,
+   "E": 318,
+   "realized": 56
+  },
+  {
+   "label": 491,
+   "note": 61,
+   "E": 101,
+   "realized": 358
+  },
+  {
+   "label": 424,
+   "note": 66,
+   "E": 254,
+   "realized": 0
+  },
+  {
+   "label": 69,
+   "note": 68,
+   "E": 246,
+   "realized": 0
+  },
+  {
+   "label": 170,
+   "note": 71,
+   "E": 691,
+   "realized": 450
+  }
+ ],
+ "sum_min": 9594
+}

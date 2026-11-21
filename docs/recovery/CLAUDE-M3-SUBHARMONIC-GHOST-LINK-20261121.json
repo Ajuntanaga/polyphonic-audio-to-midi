@@ -1,0 +1,219 @@
+{
+ "by_band": {
+  "48-59": {
+   "M": 47409,
+   "ghost_any": 32299,
+   "ghost_sub": 9297,
+   "ghost_sub_pct": 19.6,
+   "ghost_any_pct": 68.1
+  },
+  "60-71": {
+   "M": 132917,
+   "ghost_any": 85446,
+   "ghost_sub": 38275,
+   "ghost_sub_pct": 28.8,
+   "ghost_any_pct": 64.3
+  },
+  "72-84": {
+   "M": 76292,
+   "ghost_any": 48471,
+   "ghost_sub": 15603,
+   "ghost_sub_pct": 20.5,
+   "ghost_any_pct": 63.5
+  },
+  "<48": {
+   "M": 24117,
+   "ghost_any": 23435,
+   "ghost_sub": 1862,
+   "ghost_sub_pct": 7.7,
+   "ghost_any_pct": 97.2
+  }
+ },
+ "by_band_and_stage": {
+  "48-59|admission": {
+   "M": 16635,
+   "ghost_any": 9996,
+   "ghost_sub": 1500,
+   "ghost_sub_pct": 9.0,
+   "ghost_any_pct": 60.1
+  },
+  "48-59|dp": {
+   "M": 259,
+   "ghost_any": 229,
+   "ghost_sub": 57,
+   "ghost_sub_pct": 22.0,
+   "ghost_any_pct": 88.4
+  },
+  "48-59|formation": {
+   "M": 25130,
+   "ghost_any": 16692,
+   "ghost_sub": 5028,
+   "ghost_sub_pct": 20.0,
+   "ghost_any_pct": 66.4
+  },
+  "48-59|selected_not_rendered": {
+   "M": 4213,
+   "ghost_any": 4212,
+   "ghost_sub": 2434,
+   "ghost_sub_pct": 57.8,
+   "ghost_any_pct": 100.0
+  },
+  "48-59|spectral": {
+   "M": 1172,
+   "ghost_any": 1170,
+   "ghost_sub": 278,
+   "ghost_sub_pct": 23.7,
+   "ghost_any_pct": 99.8
+  },
+  "60-71|admission": {
+   "M": 77336,
+   "ghost_any": 50301,
+   "ghost_sub": 19773,
+   "ghost_sub_pct": 25.6,
+   "ghost_any_pct": 65.0
+  },
+  "60-71|dp": {
+   "M": 25645,
+   "ghost_any": 16375,
+   "ghost_sub": 10748,
+   "ghost_sub_pct": 41.9,
+   "ghost_any_pct": 63.9
+  },
+  "60-71|formation": {
+   "M": 27072,
+   "ghost_any": 15919,
+   "ghost_sub": 5588,
+   "ghost_sub_pct": 20.6,
+   "ghost_any_pct": 58.8
+  },
+  "60-71|selected_not_rendered": {
+   "M": 98,
+   "ghost_any": 96,
+   "ghost_sub": 91,
+   "ghost_sub_pct": 92.9,
+   "ghost_any_pct": 98.0
+  },
+  "60-71|spectral": {
+   "M": 2766,
+   "ghost_any": 2755,
+   "ghost_sub": 2075,
+   "ghost_sub_pct": 75.0,
+   "ghost_any_pct": 99.6
+  },
+  "72-84|admission": {
+   "M": 65580,
+   "ghost_any": 41233,
+   "ghost_sub": 14007,
+   "ghost_sub_pct": 21.4,
+   "ghost_any_pct": 62.9
+  },
+  "72-84|dp": {
+   "M": 851,
+   "ghost_any": 490,
+   "ghost_sub": 1,
+   "ghost_sub_pct": 0.1,
+   "ghost_any_pct": 57.6
+  },
+  "72-84|formation": {
+   "M": 8618,
+   "ghost_any": 5926,
+   "ghost_sub": 1540,
+   "ghost_sub_pct": 17.9,
+   "ghost_any_pct": 68.8
+  },
+  "72-84|selected_not_rendered": {
+   "M": 302,
+   "ghost_any": 302,
+   "ghost_sub": 16,
+   "ghost_sub_pct": 5.3,
+   "ghost_any_pct": 100.0
+  },
+  "72-84|spectral": {
+   "M": 941,
+   "ghost_any": 520,
+   "ghost_sub": 39,
+   "ghost_sub_pct": 4.1,
+   "ghost_any_pct": 55.3
+  },
+  "<48|admission": {
+   "M": 5430,
+   "ghost_any": 5396,
+   "ghost_sub": 532,
+   "ghost_sub_pct": 9.8,
+   "ghost_any_pct": 99.4
+  },
+  "<48|dp": {
+   "M": 2665,
+   "ghost_any": 2665,
+   "ghost_sub": 7,
+   "ghost_sub_pct": 0.3,
+   "ghost_any_pct": 100.0
+  },
+  "<48|formation": {
+   "M": 11870,
+   "ghost_any": 11225,
+   "ghost_sub": 786,
+   "ghost_sub_pct": 6.6,
+   "ghost_any_pct": 94.6
+  },
+  "<48|selected_not_rendered": {
+   "M": 2374,
+   "ghost_any": 2374,
+   "ghost_sub": 173,
+   "ghost_sub_pct": 7.3,
+   "ghost_any_pct": 100.0
+  },
+  "<48|spectral": {
+   "M": 1778,
+   "ghost_any": 1775,
+   "ghost_sub": 364,
+   "ghost_sub_pct": 20.5,
+   "ghost_any_pct": 99.8
+  }
+ },
+ "score_ratio_parent_vs_ghost": {
+  "48-59": {
+   "parent_equal_or_weaker": 5996,
+   "parent_stronger": 3301
+  },
+  "60-71": {
+   "parent_equal_or_weaker": 27625,
+   "parent_stronger": 10650
+  },
+  "72-84": {
+   "parent_equal_or_weaker": 14891,
+   "parent_stronger": 712
+  },
+  "<48": {
+   "parent_stronger": 1268,
+   "parent_equal_or_weaker": 594
+  }
+ },
+ "control_rendered_labeled_notes": {
+  "48-59": {
+   "N": 104077,
+   "ghost_sub": 19518,
+   "ghost_sub_pct": 18.8
+  },
+  "60-71": {
+   "N": 10116,
+   "ghost_sub": 2903,
+   "ghost_sub_pct": 28.7
+  },
+  "72-84": {
+   "N": 554,
+   "ghost_sub": 0,
+   "ghost_sub_pct": 0.0
+  },
+  "<48": {
+   "N": 122571,
+   "ghost_sub": 2448,
+   "ghost_sub_pct": 2.0
+  }
+ },
+ "pairs": {
+  "n": 610,
+  "median_ticks": 13,
+  "max_ticks": 1123
+ }
+}

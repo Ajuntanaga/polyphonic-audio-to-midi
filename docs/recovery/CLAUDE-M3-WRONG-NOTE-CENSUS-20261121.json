@@ -1,0 +1,99 @@
+{
+ "W_frames": 161526,
+ "relation": {
+  "subharmonic_below": [
+   81310,
+   50.3
+  ],
+  "other": [
+   31680,
+   19.6
+  ],
+  "near_semitone": [
+   27068,
+   16.8
+  ],
+  "harmonic_above": [
+   21468,
+   13.3
+  ]
+ },
+ "parent_state": {
+  "harmonic_above|parent_not_rendered": 3004,
+  "harmonic_above|parent_rendered": 18464,
+  "subharmonic_below|parent_not_rendered": 56442,
+  "subharmonic_below|parent_rendered": 24868
+ },
+ "rebinned": {
+  "same": [
+   161123,
+   99.8
+  ],
+  "rebinned": [
+   403,
+   0.2
+  ]
+ },
+ "selection_code_of_detected": {
+  "4": [
+   87612,
+   54.2
+  ],
+  "5": [
+   73914,
+   45.8
+  ]
+ },
+ "band": {
+  "<48": [
+   124917,
+   77.3
+  ],
+  "48-59": [
+   33269,
+   20.6
+  ],
+  "60-71": [
+   3318,
+   2.1
+  ],
+  "72-84": [
+   22,
+   0.0
+  ]
+ },
+ "labels_in_tick": {
+  "3+": [
+   148837,
+   92.1
+  ],
+  "2": [
+   12689,
+   7.9
+  ]
+ },
+ "relation_by_band": {
+  "harmonic_above|48-59": 11064,
+  "harmonic_above|60-71": 2663,
+  "harmonic_above|72-84": 21,
+  "harmonic_above|<48": 7720,
+  "near_semitone|48-59": 6000,
+  "near_semitone|60-71": 267,
+  "near_semitone|72-84": 1,
+  "near_semitone|<48": 20800,
+  "other|48-59": 6683,
+  "other|60-71": 388,
+  "other|<48": 24609,
+  "subharmonic_below|48-59": 9522,
+  "subharmonic_below|<48": 71788
+ },
+ "runs": {
+  "n": 13799,
+  "le4_frames": 22298,
+  "mid_frames": 35828,
+  "ge100_frames": 103400,
+  "longest": 1123,
+  "runs_le4": 10881,
+  "runs_ge100": 267
+ }
+}

@@ -1,0 +1,291 @@
+{
+ "report_schema": "m3_basic_pitch_comparison_v1",
+ "report_state": "completed",
+ "screen": {
+  "useful_pitch_gain": true,
+  "no_pitch_safety_regression": false,
+  "research_screen_pass": false,
+  "promotion_accepted": false,
+  "interpretation": "Offline research result only; string assignment, unisons, raw retriggers, native deadlines, host delivery and live readiness unmeasured."
+ },
+ "ordinary": {
+  "gates": {
+   "coverage_gain_pp": 27.516346457583246,
+   "coverage_gain_ge_5pp": true,
+   "extra_voice_delta": -5388708,
+   "extra_voice_ok": true,
+   "gap_delta": -2191650,
+   "gap_ok": true,
+   "exact_set_delta": 1888117,
+   "exact_set_ok": true,
+   "all_expected_delta": 2225370,
+   "all_expected_ok": true,
+   "labels_violating_per_label_clause": 99,
+   "per_label_ok": false,
+   "report_no_pitch_safety_regression": false
+  },
+  "label_losses": {
+   "labels": 499,
+   "losing_present": 99,
+   "losing_longest": 96,
+   "losing_either": 99,
+   "gaining_present": 321,
+   "unchanged": 79,
+   "summed_present_loss_samples": -2343938,
+   "summed_longest_loss_samples": -2298437,
+   "summed_present_gain_samples": 11649719,
+   "losing_labels_with_basic_pitch_zero": 33,
+   "zeroed_loss_samples": -1671346,
+   "zeroed_share_of_loss": 0.7130504305148003,
+   "loss_fraction_of_label": {
+    "median": 0.14761666388564437,
+    "p90": 0.9200050144862938,
+    "max": 1.0,
+    "under_5pct": 27,
+    "under_20pct": 54
+   },
+   "loss_seconds_at_96k": 24.416020833333334,
+   "bands": {
+    "below48": {
+     "labels": 139,
+     "annotated_samples": 9561144,
+     "current_coverage": 0.6997983714082749,
+     "basic_pitch_coverage": 0.7105725005292254,
+     "labels_losing_present": 57,
+     "labels_losing_longest": 55,
+     "labels_current_zero": 22,
+     "labels_basic_pitch_zero": 26,
+     "loss_samples": -1273960,
+     "gain_samples": 1376973
+    },
+    "48to59": {
+     "labels": 147,
+     "annotated_samples": 9852087,
+     "current_coverage": 0.6387155330642127,
+     "basic_pitch_coverage": 0.668408328103477,
+     "labels_losing_present": 40,
+     "labels_losing_longest": 39,
+     "labels_current_zero": 39,
+     "labels_basic_pitch_zero": 38,
+     "loss_samples": -1022930,
+     "gain_samples": 1315466
+    },
+    "60to71": {
+     "labels": 135,
+     "annotated_samples": 9319146,
+     "current_coverage": 0.05813740872822467,
+     "basic_pitch_coverage": 0.6561598026256913,
+     "labels_losing_present": 2,
+     "labels_losing_longest": 2,
+     "labels_current_zero": 126,
+     "labels_basic_pitch_zero": 34,
+     "loss_samples": -47048,
+     "gain_samples": 5620106
+    },
+    "72plus": {
+     "labels": 78,
+     "annotated_samples": 5086724,
+     "current_coverage": 0.0,
+     "basic_pitch_coverage": 0.6560556460307263,
+     "labels_losing_present": 0,
+     "labels_losing_longest": 0,
+     "labels_current_zero": 78,
+     "labels_basic_pitch_zero": 13,
+     "loss_samples": 0,
+     "gain_samples": 3337174
+    }
+   },
+   "worst": [
+    {
+     "label": 355,
+     "note": 39,
+     "annotated": 71801,
+     "current": 71801,
+     "basic_pitch": 0
+    },
+    {
+     "label": 392,
+     "note": 44,
+     "annotated": 71770,
+     "current": 67713,
+     "basic_pitch": 0
+    },
+    {
+     "label": 494,
+     "note": 48,
+     "annotated": 71770,
+     "current": 67265,
+     "basic_pitch": 0
+    },
+    {
+     "label": 411,
+     "note": 58,
+     "annotated": 71770,
+     "current": 67137,
+     "basic_pitch": 0
+    },
+    {
+     "label": 457,
+     "note": 45,
+     "annotated": 71783,
+     "current": 66945,
+     "basic_pitch": 0
+    },
+    {
+     "label": 445,
+     "note": 47,
+     "annotated": 71783,
+     "current": 66625,
+     "basic_pitch": 0
+    },
+    {
+     "label": 467,
+     "note": 44,
+     "annotated": 71823,
+     "current": 66497,
+     "basic_pitch": 0
+    },
+    {
+     "label": 129,
+     "note": 41,
+     "annotated": 71792,
+     "current": 66049,
+     "basic_pitch": 0
+    }
+   ]
+  },
+  "polyphony": {
+   "2": {
+    "labels": 34,
+    "losing_labels": 7,
+    "basic_pitch_zero_labels": 2,
+    "current_coverage": 0.45127314294842036,
+    "basic_pitch_coverage": 0.8035825708452511,
+    "intervals": 17,
+    "intervals_with_any_all_expected_time": 15
+   },
+   "3": {
+    "labels": 108,
+    "losing_labels": 23,
+    "basic_pitch_zero_labels": 18,
+    "current_coverage": 0.41189026731163686,
+    "basic_pitch_coverage": 0.7263469786216504,
+    "intervals": 36,
+    "intervals_with_any_all_expected_time": 18
+   },
+   "4": {
+    "labels": 132,
+    "losing_labels": 26,
+    "basic_pitch_zero_labels": 24,
+    "current_coverage": 0.4013516663088285,
+    "basic_pitch_coverage": 0.7124513693541553,
+    "intervals": 33,
+    "intervals_with_any_all_expected_time": 14
+   },
+   "5": {
+    "labels": 225,
+    "losing_labels": 43,
+    "basic_pitch_zero_labels": 67,
+    "current_coverage": 0.38499830876281244,
+    "basic_pitch_coverage": 0.6066856793113776,
+    "intervals": 45,
+    "intervals_with_any_all_expected_time": 2
+   }
+  },
+  "union": {
+   "present": {
+    "current": 13525345,
+    "basic_pitch": 22831126,
+    "union": 25627141
+   },
+   "extra_during_labels": {
+    "current": 7808309,
+    "basic_pitch": 2419601,
+    "union": 9319177
+   },
+   "gap_extras": {
+    "current": 3629163,
+    "basic_pitch": 1437513,
+    "union": 4450932
+   },
+   "current_only_increment_over_basic_pitch": {
+    "genuine": 2796015,
+    "extra": 6899576,
+    "gap": 3013419,
+    "share_genuine_vs_extra": 0.28838004820954183
+   },
+   "pitch_sample_share_during_labels": {
+    "current": 0.6339910171975227,
+    "basic_pitch": 0.9041769767658571,
+    "union": 0.7333287873131584
+   },
+   "exact_pitch_set_samples": {
+    "current": 53249,
+    "basic_pitch": 1941366,
+    "union": 1190153
+   },
+   "all_expected_samples": {
+    "current": 53249,
+    "basic_pitch": 2278619,
+    "union": 3200660
+   },
+   "report_added_over_basic_pitch": 2796015
+  }
+ },
+ "extended-middle": {
+  "gates": {
+   "coverage_gain_pp": 2.461082175925926,
+   "coverage_gain_ge_5pp": false,
+   "extra_voice_delta": -289620,
+   "extra_voice_ok": true,
+   "gap_delta": -156321,
+   "gap_ok": true,
+   "exact_set_delta": 317165,
+   "exact_set_ok": true,
+   "all_expected_delta": 51033,
+   "all_expected_ok": true,
+   "labels_violating_per_label_clause": 0,
+   "per_label_ok": true,
+   "report_no_pitch_safety_regression": true
+  },
+  "union": {
+   "present": {
+    "current": 2021510,
+    "basic_pitch": 2072543,
+    "union": 2072543
+   },
+   "extra_during_labels": {
+    "current": 528259,
+    "basic_pitch": 238639,
+    "union": 547701
+   },
+   "gap_extras": {
+    "current": 189175,
+    "basic_pitch": 32854,
+    "union": 190660
+   },
+   "current_only_increment_over_basic_pitch": {
+    "genuine": 0,
+    "extra": 309062,
+    "gap": 157806,
+    "share_genuine_vs_extra": 0.0
+   },
+   "pitch_sample_share_during_labels": {
+    "current": 0.7928208398486294,
+    "basic_pitch": 0.8967459075053371,
+    "union": 0.790973283404141
+   },
+   "exact_pitch_set_samples": {
+    "current": 1516739,
+    "basic_pitch": 1833904,
+    "union": 1524842
+   },
+   "all_expected_samples": {
+    "current": 2021510,
+    "basic_pitch": 2072543,
+    "union": 2072543
+   },
+   "report_added_over_basic_pitch": 0
+  }
+ }
+}

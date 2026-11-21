@@ -1,0 +1,364 @@
+diff --git a/native/include/m3/polyphonic_pitch_detector.hpp b/native/include/m3/polyphonic_pitch_detector.hpp
+index bc1d3bd..3a3999a 100644
+--- a/native/include/m3/polyphonic_pitch_detector.hpp
++++ b/native/include/m3/polyphonic_pitch_detector.hpp
+@@ -876,6 +876,30 @@ class PolyphonicPitchDetector final {
+   void set_common_assignment_confidence_for_diagnostics(bool enabled) noexcept {
+     diagnostic_common_assignment_confidence_ = enabled;
+   }
++  // Replay-only causal screen: for a pooled note above the highest open string
++  // (always fretted), drop ONLY the fixed fretted-note penalty from the
++  // selection DP when the previous decision's active set holds at least one
++  // lower note and none of them sits at an octave/fifth/third-partial interval
++  // {12,19,24,28,31,36} below the candidate.  The per-fret term is kept.
++  // Default off; counters describe how often each branch fired and how often
++  // the active-set predicate disagrees with the same predicate evaluated on
++  // the rendered (midi_voice_mask != 0) set.
++  struct UpperFrettedReliefStats final {
++    std::uint64_t evaluated{};
++    std::uint64_t no_parent{};
++    std::uint64_t related_blocked{};
++    std::uint64_t relief_applied{};
++    std::uint64_t rendered_disagreements{};
++    std::uint64_t relief_active_only{};
++    std::uint64_t relief_rendered_only{};
++  };
++  void set_upper_fretted_relief_for_diagnostics(bool enabled) noexcept {
++    diagnostic_upper_fretted_relief_ = enabled;
++    diagnostic_upper_fretted_relief_stats_ = {};
++  }
++  [[nodiscard]] UpperFrettedReliefStats upper_fretted_relief_stats() const noexcept {
++    return diagnostic_upper_fretted_relief_stats_;
++  }
+   void set_calibrated_assignment_prior_for_diagnostics(bool enabled) noexcept {
+     diagnostic_calibrated_assignment_prior_ = enabled;
+   }
+@@ -1931,6 +1955,8 @@ class PolyphonicPitchDetector final {
+   bool diagnostic_cue_free_lane_reassignment_{};
+   bool diagnostic_provisional_open_retention_guard_{};
+   bool diagnostic_common_assignment_confidence_ = false;
++  bool diagnostic_upper_fretted_relief_ = false;
++  UpperFrettedReliefStats diagnostic_upper_fretted_relief_stats_{};
+   bool diagnostic_calibrated_assignment_prior_{};
+   bool diagnostic_joint_rescue_eligibility_{};
+   bool diagnostic_pending_string_posterior_{};
+diff --git a/native/offline/replay.cpp b/native/offline/replay.cpp
+index 016574d..1afe8cb 100644
+--- a/native/offline/replay.cpp
++++ b/native/offline/replay.cpp
+@@ -2998,11 +2998,12 @@ bool run_detector_replay(const WaveData& wave,
+                          bool diagnostic_supported_sustain_renewal,
+                          bool diagnostic_persistent_candidate_admission,
+                          bool diagnostic_contradicted_retention,
+-                         bool diagnostic_common_assignment_confidence) {
++                         bool diagnostic_common_assignment_confidence,
++                         bool diagnostic_upper_fretted_relief) {
+   output = {};
+   error = ReplayError::invalid_config;
+ #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+-  if (diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
++  if (diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence ||diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
+       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
+       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
+@@ -3374,6 +3375,8 @@ bool run_detector_replay(const WaveData& wave,
+       diagnostic_joint_rescue_eligibility);
+   detector.set_common_assignment_confidence_for_diagnostics(
+       diagnostic_common_assignment_confidence);
++  detector.set_upper_fretted_relief_for_diagnostics(
++      diagnostic_upper_fretted_relief);
+   detector.set_calibrated_assignment_prior_for_diagnostics(
+       diagnostic_calibrated_assignment_prior);
+   detector.set_provisional_open_retention_guard_for_diagnostics(
+@@ -9491,6 +9494,14 @@ bool run_detector_replay(const WaveData& wave,
+   result.residual_recovery_proposals = recovery_stats.proposals;
+   result.residual_recovery_selected_ticks = recovery_stats.selected_ticks;
+   result.residual_recovery_note_ons = recovery_stats.note_ons;
++  const auto relief_stats = detector.upper_fretted_relief_stats();
++  result.upper_relief_evaluated = relief_stats.evaluated;
++  result.upper_relief_no_parent = relief_stats.no_parent;
++  result.upper_relief_related_blocked = relief_stats.related_blocked;
++  result.upper_relief_applied = relief_stats.relief_applied;
++  result.upper_relief_rendered_disagreements = relief_stats.rendered_disagreements;
++  result.upper_relief_active_only = relief_stats.relief_active_only;
++  result.upper_relief_rendered_only = relief_stats.relief_rendered_only;
+ #endif
+ #if defined(M3_FROZEN_CUE_COOPERATIVE)
+   if (core_timing != nullptr) {
+diff --git a/native/offline/replay.hpp b/native/offline/replay.hpp
+index 0d22e48..5f8c7d4 100644
+--- a/native/offline/replay.hpp
++++ b/native/offline/replay.hpp
+@@ -1816,6 +1816,13 @@ struct ReplayResult final {
+   std::uint32_t residual_recovery_proposals{};
+   std::uint32_t residual_recovery_selected_ticks{};
+   std::uint32_t residual_recovery_note_ons{};
++  std::uint64_t upper_relief_evaluated{};
++  std::uint64_t upper_relief_no_parent{};
++  std::uint64_t upper_relief_related_blocked{};
++  std::uint64_t upper_relief_applied{};
++  std::uint64_t upper_relief_rendered_disagreements{};
++  std::uint64_t upper_relief_active_only{};
++  std::uint64_t upper_relief_rendered_only{};
+   ReplayCounterfactualMetrics calibrated_dp_replacement{};
+   std::array<ReplayCounterfactualMetrics,
+              kAdjacentSpectralDuplicatePolicies.size()>
+@@ -2404,7 +2411,8 @@ bool run_detector_replay(const WaveData& wave,
+                          bool diagnostic_supported_sustain_renewal = false,
+                          bool diagnostic_persistent_candidate_admission = false,
+                          bool diagnostic_contradicted_retention = false,
+-                         bool diagnostic_common_assignment_confidence = false);
++                         bool diagnostic_common_assignment_confidence = false,
++                         bool diagnostic_upper_fretted_relief = false);
+ 
+ // Derives one physical-string map from discrete, stable, labeled fret holds.
+ // Every fret must have at least two rows for the requested single-bit lane.
+diff --git a/native/offline/replay_main.cpp b/native/offline/replay_main.cpp
+index b97a398..858b382 100644
+--- a/native/offline/replay_main.cpp
++++ b/native/offline/replay_main.cpp
+@@ -172,6 +172,7 @@ void usage(const char* program) {
+       "[--midi-event-trace FILE] [--diagnostic-stable-note-identity] [--diagnostic-residual-recovery-continuity] "
+       "[--diagnostic-direct-evidence-retention] "
+       "[--diagnostic-contradicted-retention] "
++      "[--diagnostic-upper-fretted-relief] "
+       "[--diagnostic-persistent-candidate-admission] "
+       "[--diagnostic-supported-sustain-renewal] "
+       "[--diagnostic-local-onset-evidence] "
+@@ -333,6 +334,7 @@ int main(int argc, char** argv) {
+   bool diagnostic_skip_empty_fine_reset = false;
+   bool diagnostic_provisional_open_retention_guard = false;
+   bool diagnostic_common_assignment_confidence = false;
++  bool diagnostic_upper_fretted_relief = false;
+   bool diagnostic_calibrated_assignment_prior = false;
+   bool diagnostic_joint_rescue_eligibility = false;
+   bool diagnostic_pending_string_posterior = false;
+@@ -717,6 +719,9 @@ int main(int argc, char** argv) {
+     } else if (std::strcmp(argv[index],
+                            "--diagnostic-common-assignment-confidence") == 0) {
+       diagnostic_common_assignment_confidence = true;
++    } else if (std::strcmp(argv[index],
++                           "--diagnostic-upper-fretted-relief") == 0) {
++      diagnostic_upper_fretted_relief = true;
+     } else if (std::strcmp(argv[index],
+                            "--diagnostic-calibrated-assignment-prior") == 0) {
+       diagnostic_calibrated_assignment_prior = true;
+@@ -1342,7 +1347,8 @@ int main(int argc, char** argv) {
+           diagnostic_supported_sustain_renewal,
+           diagnostic_persistent_candidate_admission,
+           diagnostic_contradicted_retention,
+-          diagnostic_common_assignment_confidence)) {
++          diagnostic_common_assignment_confidence,
++          diagnostic_upper_fretted_relief)) {
+     std::fprintf(stderr, "m3_replay: %s\n",
+                  m3::offline::replay_error_name(error));
+     return 1;
+@@ -1507,6 +1513,18 @@ int main(int argc, char** argv) {
+         result.residual_recovery_proposals, result.residual_recovery_selected_ticks,
+         result.residual_recovery_note_ons);
+   }
++  if (diagnostic_upper_fretted_relief) {
++    std::fprintf(stderr,
++        "m3_replay: upper_fretted_relief evaluated=%llu no_parent=%llu related_blocked=%llu "
++        "applied=%llu rendered_disagreements=%llu active_only=%llu rendered_only=%llu\n",
++        static_cast<unsigned long long>(result.upper_relief_evaluated),
++        static_cast<unsigned long long>(result.upper_relief_no_parent),
++        static_cast<unsigned long long>(result.upper_relief_related_blocked),
++        static_cast<unsigned long long>(result.upper_relief_applied),
++        static_cast<unsigned long long>(result.upper_relief_rendered_disagreements),
++        static_cast<unsigned long long>(result.upper_relief_active_only),
++        static_cast<unsigned long long>(result.upper_relief_rendered_only));
++  }
+ #endif
+   if (partial_motion_stream != nullptr) {
+     if (partial_motion_trace.failed || std::fflush(partial_motion_stream.get()) != 0) {
+diff --git a/native/src/polyphonic_pitch_detector.cpp b/native/src/polyphonic_pitch_detector.cpp
+index 540a116..11266d7 100644
+--- a/native/src/polyphonic_pitch_detector.cpp
++++ b/native/src/polyphonic_pitch_detector.cpp
+@@ -155,6 +155,15 @@ constexpr std::size_t kM3OpenChordMinimum = 2U;
+ // state and the upper end of the declared M3 range can never enter attack.
+ constexpr double kM3FrettedNotePenalty = 0.20;
+ constexpr double kM3FretPenalty = 0.005;
++#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
++// Intervals (semitones) below a candidate at which a sounding lower note
++// explains it as an octave/fifth/third-partial relation: octave, octave+fifth,
++// two octaves, two octaves+major third, two octaves+fifth, three octaves.
++// Pure interval membership; this is not is_harmonic_shadow, which adds an
++// energy condition.
++constexpr std::array<std::uint8_t, 6U> kUpperFrettedReliefIntervals{
++    12U, 19U, 24U, 28U, 31U, 36U};
++#endif
+ // A full eight-string assignment has the same summed linear fret count under
+ // many cyclic permutations. A small convex position prior rejects those
+ // implausible high-fret rotations while leaving a learned string fingerprint
+@@ -1680,6 +1689,7 @@ void PolyphonicPitchDetector::reset() noexcept {
+   diagnostic_independent_phase_states_ = {};
+   diagnostic_residual_recovery_lease_ = {};
+   diagnostic_residual_recovery_stats_ = {};
++  diagnostic_upper_fretted_relief_stats_ = {};
+   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
+   fine_history_reset_diagnostics_ = {};
+   calibrated_output_diagnostics_ = {};
+@@ -5701,6 +5711,52 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
+     std::array<double, kMaxVoices> assignment_scores{};
+     const auto note = static_cast<std::uint8_t>(
+         lowest_note_ + option.detector_index);
++    double assignment_fixed_penalty = fretted_fixed_penalty;
++#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
++    if (diagnostic_upper_fretted_relief_ && note > kM3OpenNotes.back()) {
++      // Parent snapshot: candidate_states_[].active is written only by the
++      // lifecycle pass after selection, so here it is the previous decision's
++      // flag.  The rendered proxy (midi_voice_mask != 0) is evaluated on the
++      // same lower notes so the replay reports how often the two disagree.
++      bool active_parent = false;
++      bool active_related = false;
++      bool rendered_parent = false;
++      bool rendered_related = false;
++      for (std::size_t lower = 0U; lower < option.detector_index; ++lower) {
++        const CandidateState& parent = candidate_states_[lower];
++        const bool parent_active = parent.active;
++        const bool parent_rendered = parent.midi_voice_mask != 0U;
++        if (!parent_active && !parent_rendered) {
++          continue;
++        }
++        const auto interval = static_cast<std::uint8_t>(
++            option.detector_index - lower);
++        bool related = false;
++        for (const std::uint8_t listed : kUpperFrettedReliefIntervals) {
++          related = related || interval == listed;
++        }
++        active_parent = active_parent || parent_active;
++        active_related = active_related || (parent_active && related);
++        rendered_parent = rendered_parent || parent_rendered;
++        rendered_related = rendered_related || (parent_rendered && related);
++      }
++      const bool relief_active = active_parent && !active_related;
++      const bool relief_rendered = rendered_parent && !rendered_related;
++      auto& relief_stats = diagnostic_upper_fretted_relief_stats_;
++      ++relief_stats.evaluated;
++      relief_stats.no_parent += active_parent ? 0U : 1U;
++      relief_stats.related_blocked += (active_parent && active_related) ? 1U : 0U;
++      relief_stats.relief_applied += relief_active ? 1U : 0U;
++      if (relief_active != relief_rendered) {
++        ++relief_stats.rendered_disagreements;
++        relief_stats.relief_active_only += relief_active ? 1U : 0U;
++        relief_stats.relief_rendered_only += relief_rendered ? 1U : 0U;
++      }
++      if (relief_active) {
++        assignment_fixed_penalty = 0.0;
++      }
++    }
++#endif
+     for (std::size_t string = 0U; string < kM3OpenNotes.size(); ++string) {
+       const std::uint8_t string_bit =
+           static_cast<std::uint8_t>(1U << string);
+@@ -5713,7 +5769,7 @@ void PolyphonicPitchDetector::select_m3_feasible_candidates(
+           (open_candidate_count >= kM3OpenChordMinimum ||
+            note > kM3OpenNotes.back()) &&
+                   fret > 0U
+-              ? fretted_fixed_penalty +
++              ? assignment_fixed_penalty +
+                     fretted_per_fret_penalty * static_cast<double>(fret)
+               : 0.0;
+ #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+diff --git a/native/tests/test_polyphonic_pitch_detector.cpp b/native/tests/test_polyphonic_pitch_detector.cpp
+index c18ae22..b87942c 100644
+--- a/native/tests/test_polyphonic_pitch_detector.cpp
++++ b/native/tests/test_polyphonic_pitch_detector.cpp
+@@ -729,6 +729,46 @@ struct PolyphonicPitchDetectorTestAccess final {
+     return selected[target];
+   }
+ 
++  // Result order: selected, evaluated, no_parent, related_blocked, applied,
++  // rendered_disagreements, active_only.  The lower note is made active in the
++  // candidate state without a score, so it cannot enter the pool or the
++  // harmonic-shadow pass; only the parent predicate sees it.
++  static std::array<std::uint64_t, 7U> upper_fretted_relief_probe(
++      bool enabled, int parent_note, bool rendered_parent = false) noexcept {
++    PolyphonicPitchDetector detector;
++    PersistentConfig config;
++    config.profile_mode = ProfileMode::m3;
++    config.lowest_note = 32U;
++    config.highest_note = 87U;
++    config.max_polyphony = 5U;
++    config.max_fret = 24U;
++    config.response = 75U;
++    M3_EXPECT_TRUE(detector.configure(48000.0, config));
++    detector.set_upper_fretted_relief_for_diagnostics(enabled);
++    detector.fast_energy_ = 1.0;
++    constexpr std::size_t target = 65U - 32U;
++    if (parent_note >= 0) {
++      auto& parent =
++          detector.candidate_states_[static_cast<std::size_t>(parent_note) - 32U];
++      parent.active = true;
++      parent.midi_voice_mask = rendered_parent ? 0x01U : 0U;
++    }
++    std::array<double, kMaxCandidates> scores{};
++    std::array<double, kMaxCandidates> fundamentals{};
++    std::array<double, kMaxCandidates> narrow{};
++    std::array<bool, kMaxCandidates> selected{};
++    // Above the 0.05 admission threshold but below the roughly 0.225 a fretted
++    // note needs once the fixed 0.20 penalty applies.
++    scores[target] = 0.15;
++    fundamentals[target] = 0.14;
++    detector.select_m3_feasible_candidates(
++        scores, fundamentals, narrow, 0.05, selected, detector.candidate_count_);
++    const auto stats = detector.upper_fretted_relief_stats();
++    return {selected[target] ? 1U : 0U, stats.evaluated, stats.no_parent,
++            stats.related_blocked, stats.relief_applied,
++            stats.rendered_disagreements, stats.relief_active_only};
++  }
++
+   static bool odd_partial_cues_clear_on_reset(PolyphonicPitchDetector& detector) noexcept {
+     detector.set_odd_partial_cue_mask_for_diagnostics({1U, 1U});
+     detector.reset();
+@@ -11109,6 +11149,48 @@ M3_TEST(native_detector_fundamental_admission_recovers_only_a_masked_direct_peak
+   }
+ }
+ 
++M3_TEST(native_detector_upper_fretted_relief_waives_only_the_fixed_term_for_unrelated_parents) {
++#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
++  using Access = m3::PolyphonicPitchDetectorTestAccess;
++  // Off: identical to production, no counters, the fixed penalty keeps note 65 out.
++  const auto off = Access::upper_fretted_relief_probe(false, 40);
++  M3_EXPECT_EQ(off[0U], 0U);
++  for (std::size_t index = 1U; index < off.size(); ++index) {
++    M3_EXPECT_EQ(off[index], 0U);
++  }
++  // On, no sounding lower note: nothing to explain the candidate, no relief.
++  const auto none = Access::upper_fretted_relief_probe(true, -1);
++  M3_EXPECT_EQ(none[0U], 0U);
++  M3_EXPECT_EQ(none[1U], 1U);
++  M3_EXPECT_EQ(none[2U], 1U);
++  M3_EXPECT_EQ(none[4U], 0U);
++  // On, an active lower note at interval 25 (not listed): relief applies.
++  // The parent is active but not rendered, so the two predicates disagree once.
++  const auto unrelated = Access::upper_fretted_relief_probe(true, 40);
++  M3_EXPECT_EQ(unrelated[0U], 1U);
++  M3_EXPECT_EQ(unrelated[1U], 1U);
++  M3_EXPECT_EQ(unrelated[2U], 0U);
++  M3_EXPECT_EQ(unrelated[3U], 0U);
++  M3_EXPECT_EQ(unrelated[4U], 1U);
++  M3_EXPECT_EQ(unrelated[5U], 1U);
++  M3_EXPECT_EQ(unrelated[6U], 1U);
++  const auto rendered = Access::upper_fretted_relief_probe(true, 40, true);
++  M3_EXPECT_EQ(rendered[0U], 1U);
++  M3_EXPECT_EQ(rendered[4U], 1U);
++  M3_EXPECT_EQ(rendered[5U], 0U);
++  // On, an active lower note at a listed interval (12 and 31): blocked.
++  for (const int related : {53, 34}) {
++    const auto blocked = Access::upper_fretted_relief_probe(true, related);
++    M3_EXPECT_EQ(blocked[0U], 0U);
++    M3_EXPECT_EQ(blocked[1U], 1U);
++    M3_EXPECT_EQ(blocked[2U], 0U);
++    M3_EXPECT_EQ(blocked[3U], 1U);
++    M3_EXPECT_EQ(blocked[4U], 0U);
++    M3_EXPECT_EQ(blocked[5U], 0U);
++  }
++#endif
++}
++
+ M3_TEST(native_detector_fundamental_admission_preserves_common_gain_and_silence) {
+   using Access = m3::PolyphonicPitchDetectorTestAccess;
+   for (const double scale : {0.0001, 0.01, 1.0, 100.0}) {
