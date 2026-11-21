@@ -1,10 +1,10 @@
-## Cross-fitted power-ablation screen prepared
+## Cross-fitted power-ablation screen final: training chord gate rejected
 
-Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; fixed design: `docs/recovery/CODEX-M3-SPECTRAL-ABLATION-PLAN-20261121.md`. One bounded CPU GitHub screen under the recorded standing authorization. Thirty-nine synthetic checks pass; focused review found no remaining blocker. No dispatch yet.
+Active checkpoint: `docs/recovery/github-spectral-ablation-20261121.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-ABLATION-RESULT-20261121.md`. Run44953542438 final/success, source `6bfd3af5b47c9023d177f0396a0873ff03cfe595`, worker `e9672b14afc2a7c425c7b3075c4e963298258925`. Thirty-nine synthetic checks and source portable CI44953503086 passed. Small report collected once with verified server digest; bulk model/predictions remain remote. Do not poll, redownload or rerun this completed screen.
 
-Removing every template of one pitch and refitting competitors on held spectral coordinates replaces the failed strongest-pitch-relative activity. All original source rows and labels remain. Training complete-chord gates must pass before both held-out source roles; all must pass before continuous ordinary/middle replay. No tuning or automatic rerun after rejection, no installation or default change.
+Training recovered3,625/11,489 expected pitches (31.55%) with36 false pitches; complete sets951/4,096 (23.22%). Complete3/4/5-pitch sets24/799,2/889,0/635 fail the70% gates. Training failure stopped both held-out roles and continuous replay. No installed/default, source label or scoreboard change; source-consistency metadata did not filter fitting or scoring.
 
-Saved provenance does not establish an indexing or pitch-shift fault for the eight non-octave discrepancies. `source-consistency-20261121.json` records examined and unresolved takes without relabeling or exclusion. Claude is paused; no fresh Claude review claimed. Earlier eight-hour interval complete; broader live-readiness goal open. Prior entries below are historical.
+Next: one report-only diagnosis of saved training pitch rankings versus component level and polyphony, to distinguish a conservative cutoff from false pitches outranking weak true pitches. Keep the rejection fixed; no refit, threshold change or repeated screen. Native/live-device and cross-corpus quality gates remain open. Claude is paused; no fresh Claude review claimed. Earlier eight-hour interval complete; broader goal active. Prior entries below are historical.
 
 ## Targeted source verification final: sustained disagreement, labels preserved
 

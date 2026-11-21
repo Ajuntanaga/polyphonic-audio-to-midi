@@ -1,21 +1,21 @@
 {
   "schema": 1,
-  "state": "reviewed_ready",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-21T21:46:15.279299+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "0c8a1a7a300f661ac583baa9a42facb517af99c3",
-  "source_commit": null,
+  "source_commit": "6bfd3af5b47c9023d177f0396a0873ff03cfe595",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
-  "worker_commit": null,
+  "worker_commit": "e9672b14afc2a7c425c7b3075c4e963298258925",
   "workflow": "spectral-ablation.yml",
   "specification": "docs/recovery/spectral-ablation-20261121.json",
   "specification_sha256": "ddf8293751ec4a0f4a2cb631ad3db8e7c0dc94f1a2244f754a81e013f832407f",
   "design": "docs/recovery/CODEX-M3-SPECTRAL-ABLATION-PLAN-20261121.md",
   "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
-  "run_id": null,
+  "run_id": 44953542438,
   "protocol": "Averaged-power whole-pitch ablation with cross-fitted spectral coordinates; one train-only cutoff and complete-chord train/held-out gates before continuous replay.",
   "validation": {
     "synthetic_tests_passed": 39,
@@ -26,19 +26,311 @@
       "reviewer": "dictionary_review",
       "finding": "Frozen specification workflow name matched the new spectral-ablation.yml before publication; earlier stale spectral-dictionary.yml was corrected before the final review arrived.",
       "checked": "Ridge NNLS reduction, whole-pitch exclusion, swapped held-coordinate evaluation, train-only cutoff, no held-out fitting."
-    }
+    },
+    "github_synthetic_checks": "passed"
   },
-  "small_report_collection": "not available",
+  "small_report_collection": {
+    "collected_at": "2026-11-21T21:54:38.999332+00:00",
+    "artifact_id": 14727245180,
+    "name": "m3-spectral-ablation-report-44953542438-1",
+    "bytes": 11807,
+    "sha256": "74f77a5cf77728291029c5eb4f4f51b87fde5637a57a3918eef6db000f0f2f8b",
+    "server_digest": "sha256:74f77a5cf77728291029c5eb4f4f51b87fde5637a57a3918eef6db000f0f2f8b",
+    "verified": true,
+    "bulk_downloaded": false
+  },
   "bulk_policy": "Retain remotely; collect only small report/log archive once with server digest.",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "next": "Publish scoped source/worker changes and dispatch one bounded CPU run; no repetition or tuning after rejection.",
+  "next": "Use the saved training activity and mixture plans for one report-only ranking diagnosis: distinguish weak true pitches ranked below false pitches from a conservative global cutoff, stratified by component level and 3/4/5-pitch mixtures. Preserve this rejection and all labels; no refit, cutoff change, held-out scoring or repeated screen. A future candidate needs complete-chord recovery without false-output growth before corpus or live work.",
   "limits": [
     "Original source/label discrepancies remain included and separately disclosed; no alternate label manifest.",
     "Spectral-coordinate folds are correlated; source passes share an instrument/session.",
     "Sustained mixtures do not establish note/string, MIDI lifecycle, native timing or live readiness."
   ],
   "dispatch_attempt": "build/recovery/m3-spectral-ablation-20261121/dispatch-attempt.json",
-  "updated_at": "2026-11-21T21:49:03.187543+00:00"
+  "updated_at": "2026-11-21T21:56:05.371306+00:00",
+  "dispatch_started_at": "2026-11-21T21:49:33.748267+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44953542438",
+  "output_directory": "build/github-results/spectral-ablation-44953542438",
+  "small_report_artifact": "m3-spectral-ablation-report-44953542438-1",
+  "bulk_artifact": "m3-spectral-ablation-evidence-44953542438-1",
+  "remote_observation": {
+    "conclusion": "success",
+    "createdAt": "2026-11-21T21:49:40Z",
+    "headSha": "e9672b14afc2a7c425c7b3075c4e963298258925",
+    "jobs": [
+      {
+        "completedAt": "2026-11-21T21:52:51Z",
+        "conclusion": "success",
+        "databaseId": 136996546216,
+        "name": "screen",
+        "startedAt": "2026-11-21T21:49:45Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-21T21:49:48Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-21T21:49:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:49:48Z",
+            "conclusion": "success",
+            "name": "Check bounded dispatch inputs",
+            "number": 2,
+            "startedAt": "2026-11-21T21:49:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:49:53Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-21T21:49:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:49:54Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-21T21:49:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:50:03Z",
+            "conclusion": "success",
+            "name": "Pin source and CPU dependencies",
+            "number": 5,
+            "startedAt": "2026-11-21T21:49:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:50:04Z",
+            "conclusion": "success",
+            "name": "Check synthetic source isolation, waveform, clock and scoring behavior",
+            "number": 6,
+            "startedAt": "2026-11-21T21:50:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:44Z",
+            "conclusion": "success",
+            "name": "Build and screen one frozen dictionary; continuous replay only after held-out pass",
+            "number": 7,
+            "startedAt": "2026-11-21T21:50:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:46Z",
+            "conclusion": "success",
+            "name": "Retain small report and logs",
+            "number": 8,
+            "startedAt": "2026-11-21T21:52:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:48Z",
+            "conclusion": "success",
+            "name": "Retain model and predictions remotely",
+            "number": 9,
+            "startedAt": "2026-11-21T21:52:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 17,
+            "startedAt": "2026-11-21T21:52:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "2026-11-21T21:52:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-21T21:52:48Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-21T21:52:48Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44953542438/job/136996546216"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-21T21:52:51Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44953542438"
+  },
+  "observed_at": "2026-11-21T21:56:05.371306+00:00",
+  "source_ci": [
+    {
+      "conclusion": "success",
+      "headSha": "6bfd3af5b47c9023d177f0396a0873ff03cfe595",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44953503086"
+    }
+  ],
+  "artifact_metadata_observation": {
+    "total_count": 2,
+    "artifacts": [
+      {
+        "id": 14727245180,
+        "node_id": "MDg6QXJ0aWZhY3QxNDcyNzI0NTE4MA==",
+        "name": "m3-spectral-ablation-report-44953542438-1",
+        "size_in_bytes": 11807,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14727245180",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14727245180/zip",
+        "expired": false,
+        "digest": "sha256:74f77a5cf77728291029c5eb4f4f51b87fde5637a57a3918eef6db000f0f2f8b",
+        "created_at": "2026-11-21T21:52:45Z",
+        "updated_at": "2026-11-21T21:52:45Z",
+        "expires_at": "2026-12-05T21:52:44Z",
+        "workflow_run": {
+          "id": 44953542438,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "e9672b14afc2a7c425c7b3075c4e963298258925"
+        }
+      },
+      {
+        "id": 14726114992,
+        "node_id": "MDg6QXJ0aWZhY3QxNDcyNjExNDk5Mg==",
+        "name": "m3-spectral-ablation-evidence-44953542438-1",
+        "size_in_bytes": 5029034,
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14726114992",
+        "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14726114992/zip",
+        "expired": false,
+        "digest": "sha256:85e1269bafbf992764a47fbd5bfa89d998dd1cda900f92e3f506a892993d5893",
+        "created_at": "2026-11-21T21:52:48Z",
+        "updated_at": "2026-11-21T21:52:48Z",
+        "expires_at": "2026-12-05T21:52:46Z",
+        "workflow_run": {
+          "id": 44953542438,
+          "repository_id": 1450767070,
+          "head_repository_id": 1450767070,
+          "head_branch": "main",
+          "head_sha": "e9672b14afc2a7c425c7b3075c4e963298258925"
+        }
+      }
+    ]
+  },
+  "workflow_conclusion": "success",
+  "decision": "rejected at training identifiability",
+  "report": "build/github-results/spectral-ablation-44953542438/artifact/spectral-ablation-result/report/report.json",
+  "report_sha256": "d49cf77b9357d54d12ed1cec52c13fc8f18affa0ccb3c1b05abe791f466f78b5",
+  "summary": "docs/recovery/spectral-ablation-summary-20261121.json",
+  "result_note": "docs/recovery/CODEX-M3-SPECTRAL-ABLATION-RESULT-20261121.md",
+  "bulk_artifact_metadata": {
+    "id": 14726114992,
+    "node_id": "MDg6QXJ0aWZhY3QxNDcyNjExNDk5Mg==",
+    "name": "m3-spectral-ablation-evidence-44953542438-1",
+    "size_in_bytes": 5029034,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14726114992",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14726114992/zip",
+    "expired": false,
+    "digest": "sha256:85e1269bafbf992764a47fbd5bfa89d998dd1cda900f92e3f506a892993d5893",
+    "created_at": "2026-11-21T21:52:48Z",
+    "updated_at": "2026-11-21T21:52:48Z",
+    "expires_at": "2026-12-05T21:52:46Z",
+    "workflow_run": {
+      "id": 44953542438,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "e9672b14afc2a7c425c7b3075c4e963298258925"
+    }
+  },
+  "bulk_collected": false,
+  "gates": {
+    "train_complete_chord_identifiability": false
+  },
+  "training_result": {
+    "overall": {
+      "examples": 4096,
+      "true_positive": 3625,
+      "false_positive": 36,
+      "false_negative": 7864,
+      "precision_percent": 99.01666211417646,
+      "recall_percent": 31.551919227086778,
+      "exact_set_percent": 23.2177734375
+    },
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 205,
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision_percent": 0.0,
+        "recall_percent": null,
+        "exact_set_percent": 100.0
+      },
+      "1": {
+        "examples": 775,
+        "true_positive": 585,
+        "false_positive": 8,
+        "false_negative": 190,
+        "precision_percent": 98.65092748735245,
+        "recall_percent": 75.48387096774194,
+        "exact_set_percent": 74.83870967741936
+      },
+      "2": {
+        "examples": 793,
+        "true_positive": 746,
+        "false_positive": 10,
+        "false_negative": 840,
+        "precision_percent": 98.67724867724868,
+        "recall_percent": 47.03656998738966,
+        "exact_set_percent": 17.654476670870114
+      },
+      "3": {
+        "examples": 799,
+        "true_positive": 789,
+        "false_positive": 7,
+        "false_negative": 1608,
+        "precision_percent": 99.12060301507537,
+        "recall_percent": 32.91614518147684,
+        "exact_set_percent": 3.0037546933667083
+      },
+      "4": {
+        "examples": 889,
+        "true_positive": 872,
+        "false_positive": 8,
+        "false_negative": 2684,
+        "precision_percent": 99.0909090909091,
+        "recall_percent": 24.52193475815523,
+        "exact_set_percent": 0.22497187851518563
+      },
+      "5": {
+        "examples": 635,
+        "true_positive": 633,
+        "false_positive": 3,
+        "false_negative": 2542,
+        "precision_percent": 99.52830188679245,
+        "recall_percent": 19.937007874015748,
+        "exact_set_percent": 0.0
+      }
+    },
+    "silence_false_predictions": 0
+  },
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training identifiability failed; held-out data not evaluated."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  }
 }

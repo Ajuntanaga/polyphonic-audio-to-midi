@@ -1,0 +1,233 @@
+{
+  "schema": "m3_spectral_ablation_summary_v1",
+  "run_id": 44953542438,
+  "source_commit": "6bfd3af5b47c9023d177f0396a0873ff03cfe595",
+  "worker_commit": "e9672b14afc2a7c425c7b3075c4e963298258925",
+  "report_path": "build/github-results/spectral-ablation-44953542438/artifact/spectral-ablation-result/report/report.json",
+  "report_sha256": "d49cf77b9357d54d12ed1cec52c13fc8f18affa0ccb3c1b05abe791f466f78b5",
+  "decision": "rejected at training identifiability",
+  "cutoff_fit": {
+    "cutoff": 0.8386819553485484,
+    "feasible": true,
+    "true_positive": 3625,
+    "false_positive": 36,
+    "training_only": true,
+    "selection": "maximum train TP at >=99% precision; stricter tie"
+  },
+  "train": {
+    "overall": {
+      "examples": 4096,
+      "true_positive": 3625,
+      "false_positive": 36,
+      "false_negative": 7864,
+      "precision_percent": 99.01666211417646,
+      "recall_percent": 31.551919227086778,
+      "exact_set_percent": 23.2177734375
+    },
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 205,
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision_percent": 0.0,
+        "recall_percent": null,
+        "exact_set_percent": 100.0
+      },
+      "1": {
+        "examples": 775,
+        "true_positive": 585,
+        "false_positive": 8,
+        "false_negative": 190,
+        "precision_percent": 98.65092748735245,
+        "recall_percent": 75.48387096774194,
+        "exact_set_percent": 74.83870967741936
+      },
+      "2": {
+        "examples": 793,
+        "true_positive": 746,
+        "false_positive": 10,
+        "false_negative": 840,
+        "precision_percent": 98.67724867724868,
+        "recall_percent": 47.03656998738966,
+        "exact_set_percent": 17.654476670870114
+      },
+      "3": {
+        "examples": 799,
+        "true_positive": 789,
+        "false_positive": 7,
+        "false_negative": 1608,
+        "precision_percent": 99.12060301507537,
+        "recall_percent": 32.91614518147684,
+        "exact_set_percent": 3.0037546933667083
+      },
+      "4": {
+        "examples": 889,
+        "true_positive": 872,
+        "false_positive": 8,
+        "false_negative": 2684,
+        "precision_percent": 99.0909090909091,
+        "recall_percent": 24.52193475815523,
+        "exact_set_percent": 0.22497187851518563
+      },
+      "5": {
+        "examples": 635,
+        "true_positive": 633,
+        "false_positive": 3,
+        "false_negative": 2542,
+        "precision_percent": 99.52830188679245,
+        "recall_percent": 19.937007874015748,
+        "exact_set_percent": 0.0
+      }
+    },
+    "silence_false_predictions": 0
+  },
+  "harmonic_relation_strata": {
+    "related": {
+      "overall": {
+        "examples": 1305,
+        "true_positive": 1296,
+        "false_positive": 14,
+        "false_negative": 3960,
+        "precision_percent": 98.93129770992367,
+        "recall_percent": 24.65753424657534,
+        "exact_set_percent": 2.0689655172413794
+      },
+      "by_distinct_pitch_count": {
+        "2": {
+          "examples": 93,
+          "true_positive": 88,
+          "false_positive": 3,
+          "false_negative": 98,
+          "precision_percent": 96.7032967032967,
+          "recall_percent": 47.31182795698925,
+          "exact_set_percent": 19.35483870967742
+        },
+        "3": {
+          "examples": 264,
+          "true_positive": 260,
+          "false_positive": 4,
+          "false_negative": 532,
+          "precision_percent": 98.48484848484848,
+          "recall_percent": 32.82828282828283,
+          "exact_set_percent": 3.0303030303030303
+        },
+        "4": {
+          "examples": 462,
+          "true_positive": 454,
+          "false_positive": 4,
+          "false_negative": 1394,
+          "precision_percent": 99.12663755458516,
+          "recall_percent": 24.567099567099568,
+          "exact_set_percent": 0.21645021645021645
+        },
+        "5": {
+          "examples": 486,
+          "true_positive": 494,
+          "false_positive": 3,
+          "false_negative": 1936,
+          "precision_percent": 99.3963782696177,
+          "recall_percent": 20.329218106995885,
+          "exact_set_percent": 0.0
+        }
+      },
+      "silence_false_predictions": 0
+    },
+    "not_related": {
+      "overall": {
+        "examples": 2791,
+        "true_positive": 2329,
+        "false_positive": 22,
+        "false_negative": 3904,
+        "precision_percent": 99.06422798809018,
+        "recall_percent": 37.36563452591048,
+        "exact_set_percent": 33.10641347187388
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0
+        },
+        "1": {
+          "examples": 775,
+          "true_positive": 585,
+          "false_positive": 8,
+          "false_negative": 190,
+          "precision_percent": 98.65092748735245,
+          "recall_percent": 75.48387096774194,
+          "exact_set_percent": 74.83870967741936
+        },
+        "2": {
+          "examples": 700,
+          "true_positive": 658,
+          "false_positive": 7,
+          "false_negative": 742,
+          "precision_percent": 98.94736842105263,
+          "recall_percent": 47.0,
+          "exact_set_percent": 17.42857142857143
+        },
+        "3": {
+          "examples": 535,
+          "true_positive": 529,
+          "false_positive": 3,
+          "false_negative": 1076,
+          "precision_percent": 99.43609022556392,
+          "recall_percent": 32.9595015576324,
+          "exact_set_percent": 2.990654205607477
+        },
+        "4": {
+          "examples": 427,
+          "true_positive": 418,
+          "false_positive": 4,
+          "false_negative": 1290,
+          "precision_percent": 99.0521327014218,
+          "recall_percent": 24.473067915690866,
+          "exact_set_percent": 0.234192037470726
+        },
+        "5": {
+          "examples": 149,
+          "true_positive": 139,
+          "false_positive": 0,
+          "false_negative": 606,
+          "precision_percent": 100.0,
+          "recall_percent": 18.65771812080537,
+          "exact_set_percent": 0.0
+        }
+      },
+      "silence_false_predictions": 0
+    }
+  },
+  "gates": {
+    "train_complete_chord_identifiability": false
+  },
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training identifiability failed; held-out data not evaluated."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "nnls_calls": 69598,
+  "train_fit_seconds": 137.126981315,
+  "source_roles": {
+    "counts": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "cross_role_original_overlap": false,
+    "all_original_labels_retained": true,
+    "source_consistency_metadata_used_to_filter": false,
+    "held_out_unit": "Recording pass/source excerpt, same instrument/session"
+  },
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured"
+}
