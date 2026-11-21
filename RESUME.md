@@ -1,3 +1,11 @@
+## Shared harmonic learning prepared: one frozen CPU screen
+
+Active checkpoint: `docs/recovery/github-shared-harmonic-learning-20261121.json`; design: `docs/recovery/CODEX-M3-SHARED-HARMONIC-PLAN-20261121.md`. One shared binary classifier across candidate pitches tests harmonic-pattern transfer between recording passes. Frozen source-disjoint train/calibration/test roles, all555 original source labels retained; no cutoff retune, relabeling or installed/default change.
+
+Local synthetic checks:46pass, one real-sklearn API check deferred to GitHub;47 total. Focused review found no blocking issue. Training must reach99% precision,80% recall,70% complete sets overall and separately for3/4/5 pitches, with zero silence extras, before held-out scoring. Both held-out roles must pass95/80/70 and silence gates before continuous ordinary/middle safety and benefit checks. Full protocol and existing private input pins are frozen in the specification.
+
+Next: publish the scoped source and workflow and dispatch exactly once under standing authorization; record both SHAs and run id here. No run launched yet. Claude is paused; no fresh Claude review claimed. Earlier entries below are historical.
+
 ## Pitch-local residual screen final: training chord gate rejected
 
 Active checkpoint: `docs/recovery/github-pitch-local-residual-20261121.json`; result: `docs/recovery/CODEX-M3-PITCH-LOCAL-RESIDUAL-RESULT-20261121.md`. Run44956322150 final/success, source `bd8017ffcab2b41649fb347ee1cbd18aa4172d86`, worker `e16a4294413cba341ff8282d11c3cc340714bdf0`. Source CI44956304105 and47 worker synthetic checks pass. Small report collected once with verified server digest; bulk remains remote. Do not poll, redownload or rerun this completed screen.

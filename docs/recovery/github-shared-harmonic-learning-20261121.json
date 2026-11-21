@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T22:46:28.560623+00:00",
+  "updated_at": "2026-11-21T22:48:43.919955+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "b2421d91a3929158cc855d730ea3b03ccb88b39d",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "shared-harmonic-learning.yml",
+  "specification": "docs/recovery/shared-harmonic-learning-20261121.json",
+  "specification_sha256": "bcc27b2bfd36d74cdf55228f3bfb970937759683e5b9e3681649281eb86e37e2",
+  "design": "docs/recovery/CODEX-M3-SHARED-HARMONIC-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "One shared binary MLP over candidate-relative harmonic features; training-only pooled scaling and cutoff; complete-chord training and both source-disjoint role gates before continuous safety/benefit screen.",
+  "validation": {
+    "local_synthetic_tests": 47,
+    "local_passed": 46,
+    "local_skipped": 1,
+    "skip_reason": "Real sklearn API synthetic check runs on GitHub; no local installation.",
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "state": "complete",
+      "reviewer": "shared_harmonic_review",
+      "verdict": "no blocking finding",
+      "scope": "Candidate alignment, training-only fit/cutoff, held-out gating, API and provenance"
+    }
+  },
+  "small_report_collection": null,
+  "bulk_policy": "Collect small report once with server digest verification; retain bulk model and predictions remotely.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "Publish scoped source and workflow, then dispatch one frozen CPU screen. Do not repeat earlier completed screens.",
+  "limits": [
+    "Known source-content disagreements remain in the original labels and denominator.",
+    "Recording pass is confounded with ascending, descending and checkpoint protocol.",
+    "Shared harmonic coordinates at fixed FFT resolution are not exact pitch-shift equivariance.",
+    "Sustained-mixture feasibility is separate from continuous note/string, MIDI lifecycle, native deadline and live readiness.",
+    "Claude is paused; no fresh Claude review claimed."
+  ]
+}
