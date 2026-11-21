@@ -1,0 +1,1178 @@
+{
+  "schema": 1,
+  "state": "completed",
+  "final": true,
+  "created_at": "2026-11-21T18:35:14.152742+00:00",
+  "updated_at": "2026-11-21T18:42:58.227244+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_commit": "e794ed373d78ad6520b67721a6c6cb5c5b8bc6b6",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": "49d6de1db7a82cf47e10004a306f21a7f8db8881",
+  "workflow": "basic-pitch-recent-normalization.yml",
+  "run_id": 44936401812,
+  "specification": "docs/recovery/basic-pitch-recent-normalization-20261121.json",
+  "specification_sha256": "edbcb4d21cd0a903088af2cff43de59796fad559b5656c6ecbb308f5c4dbfcf7",
+  "design": "docs/recovery/CODEX-M3-RECENT-NORMALIZATION-20261121.md",
+  "authorization": "docs/recovery/CODEX-M3-STANDING-APPROVAL-20261121.md",
+  "protocol": "One fixed paired CPU comparison; reference0:172 versus candidate144:172 normalization time support, unchanged crop164/165 and decoder; ordinary and extended-middle once each.",
+  "validation": {
+    "synthetic_mechanics_tests": 4,
+    "synthetic_mechanics_passed": true,
+    "python_compile_passed": true,
+    "workflow_yaml_parsed": true,
+    "graph_tests": "Passed on GitHub before recordings",
+    "github_synthetic_checks_passed": true,
+    "github_synthetic_tests_passed": 29
+  },
+  "pre_dispatch_run_inventory": "build/recovery/m3-recent-normalization-20261121/pre-dispatch-runs.stdout",
+  "active_worker_runs_before_dispatch": [],
+  "small_report_collection": "collected once; server archive digest verified",
+  "bulk_policy": "Remote only",
+  "next": "No retry or tuning of this rejected policy. Reconcile Claude-owned rolling upstream U/D2 saved-data analysis before the next joint design; installed output unchanged.",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "dispatch_requested_at": "2026-11-21T18:35:51.784064+00:00",
+  "dispatch_exit_code": 0,
+  "dispatch_output": "build/recovery/m3-recent-normalization-20261121/dispatch.stdout",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44936401812",
+  "github_conclusion": "success",
+  "run_created_at": "2026-11-21T18:35:53Z",
+  "output_directory": "build/github-results/basic-pitch-recent-normalization-44936401812",
+  "small_report_artifact": "m3-basic-pitch-recent-normalization-report-44936401812-1",
+  "bulk_artifact": "m3-basic-pitch-recent-normalization-evidence-44936401812-1",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 44936366484,
+      "headSha": "e794ed373d78ad6520b67721a6c6cb5c5b8bc6b6",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44936366484"
+    }
+  ],
+  "last_observed_stage": [],
+  "artifact_metadata": "build/github-results/basic-pitch-recent-normalization-44936401812/artifacts.json",
+  "small_report_artifact_id": 14720105441,
+  "small_report_server_bytes": 422790,
+  "small_report_server_digest": "sha256:f3597158cbc797d643f6c902dc191ff499a391a1cb1dcc1843eafbbc79d2f972",
+  "bulk_artifact_id": 14719768505,
+  "bulk_server_bytes": 15035929,
+  "bulk_server_digest": "sha256:444b73df1932ff4e795360956e475a6b648d5ffe691dd058405bb96128320445",
+  "acceptance": "rejected",
+  "collection_receipt": "build/github-results/basic-pitch-recent-normalization-44936401812/collection-receipt.json",
+  "report": "build/github-results/basic-pitch-recent-normalization-44936401812/artifact/basic-pitch-recent-normalization-result/report/report.json",
+  "report_sha256": "1951da0e2c1a83ad8ba7f244c5f860a30e651f731ae3d4fd37d3017289f0d461",
+  "result": {
+    "screen": {
+      "ordinary_gain_pp": 2.8162398521474596,
+      "incremental_screen_pass": false,
+      "current_noninferiority_pass": false,
+      "promotion_accepted": false,
+      "installed_output_changed": false
+    },
+    "metric": "Distinct-pitch sample occupancy, not tuner labeled-frame/string matches or live-device delivery",
+    "primary_clock": "Shared measured serial paired FIFO completion; both model calls included",
+    "datasets": {
+      "ordinary": {
+        "reference_identity": {
+          "pass_": true,
+          "maximum_absolute_error": {
+            "notes": 2.682209014892578e-07,
+            "onsets": 4.76837158203125e-07
+          },
+          "frame_mapping_identical": true,
+          "event_sequence_identical": true,
+          "eof_state_identical": true
+        },
+        "normalization": {
+          "windows": 4792,
+          "minimum_changed_windows": 2492,
+          "range_changed_windows": 4523,
+          "reference_zero_range_windows": 0,
+          "candidate_zero_range_windows": 0,
+          "candidate_minus_reference_minimum": {
+            "min": 0.0,
+            "p50": 0.00014495849609375,
+            "p90": 0.0080718994140625,
+            "max": 0.05023956298828125
+          },
+          "candidate_over_reference_range": {
+            "min": 0.7273415268952559,
+            "p50": 0.9781231205270571,
+            "p90": 0.9999692791166804,
+            "max": 1.0
+          }
+        },
+        "arms": {
+          "reference": {
+            "serviced": {
+              "measurement": {
+                "annotated_samples": 8914836,
+                "expected_pitch_samples": 33819101,
+                "present_pitch_samples": 18476930,
+                "all_expected_pitches_samples": 1348691,
+                "exact_pitch_set_samples": 879215,
+                "one_voice_per_pitch_samples": 879215,
+                "extra_pitch_voice_samples": 3041457,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 3643984,
+                "pitch_coverage_percent": 54.63459835907525,
+                "exact_pitch_set_percent": 9.862379969749304
+              },
+              "event_audit": {
+                "event_count": 1192,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 54.63459835907525,
+                "model_pitch_coverage_percent": 54.63459835907525,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 9.862379969749304,
+                "model_exact_pitch_set_percent": 9.862379969749304,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": 0,
+                  "one_voice_per_pitch_samples": 0,
+                  "extra_pitch_voice_samples": 0,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 0,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 4982619,
+                    "model_present_label_samples": 4982619,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 5175126,
+                    "model_present_label_samples": 5175126,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 5382851,
+                    "model_present_label_samples": 5382851,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 2936334,
+                    "model_present_label_samples": 2936334,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": true,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 39.993212711360954,
+                "model_pitch_coverage_percent": 54.63459835907525,
+                "pitch_coverage_gain_pp": 14.64138564771429,
+                "current_exact_pitch_set_percent": 0.597307679019558,
+                "model_exact_pitch_set_percent": 9.862379969749304,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 4951585,
+                  "all_expected_pitches_samples": 1295442,
+                  "exact_pitch_set_samples": 825966,
+                  "one_voice_per_pitch_samples": 825966,
+                  "extra_pitch_voice_samples": -4766852,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 14821,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 6690873,
+                    "model_present_label_samples": 4982619,
+                    "lost_labels": 99
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 6292681,
+                    "model_present_label_samples": 5175126,
+                    "lost_labels": 95
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 541791,
+                    "model_present_label_samples": 5382851,
+                    "lost_labels": 5
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 2936334,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 224,
+                  "present_lost": 199,
+                  "longest_lost": 197,
+                  "new_zero": 33
+                }
+              }
+            },
+            "zero_compute": {
+              "measurement": {
+                "annotated_samples": 8914836,
+                "expected_pitch_samples": 33819101,
+                "present_pitch_samples": 18873206,
+                "all_expected_pitches_samples": 1366078,
+                "exact_pitch_set_samples": 889925,
+                "one_voice_per_pitch_samples": 889925,
+                "extra_pitch_voice_samples": 2947982,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 3341707,
+                "pitch_coverage_percent": 55.806350381697015,
+                "exact_pitch_set_percent": 9.982516784380554
+              },
+              "event_audit": {
+                "event_count": 1192,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 55.806350381697015,
+                "model_pitch_coverage_percent": 55.806350381697015,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 9.982516784380554,
+                "model_exact_pitch_set_percent": 9.982516784380554,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": 0,
+                  "one_voice_per_pitch_samples": 0,
+                  "extra_pitch_voice_samples": 0,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 0,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 5109170,
+                    "model_present_label_samples": 5109170,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 5300131,
+                    "model_present_label_samples": 5300131,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 5478976,
+                    "model_present_label_samples": 5478976,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 2984929,
+                    "model_present_label_samples": 2984929,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": true,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 39.993212711360954,
+                "model_pitch_coverage_percent": 55.806350381697015,
+                "pitch_coverage_gain_pp": 15.813137670336063,
+                "current_exact_pitch_set_percent": 0.597307679019558,
+                "model_exact_pitch_set_percent": 9.982516784380554,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 5347861,
+                  "all_expected_pitches_samples": 1312829,
+                  "exact_pitch_set_samples": 836676,
+                  "one_voice_per_pitch_samples": 836676,
+                  "extra_pitch_voice_samples": -4860327,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": -287456,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 6690873,
+                    "model_present_label_samples": 5109170,
+                    "lost_labels": 94
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 6292681,
+                    "model_present_label_samples": 5300131,
+                    "lost_labels": 90
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 541791,
+                    "model_present_label_samples": 5478976,
+                    "lost_labels": 5
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 2984929,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 234,
+                  "present_lost": 189,
+                  "longest_lost": 187,
+                  "new_zero": 34
+                }
+              }
+            }
+          },
+          "candidate": {
+            "serviced": {
+              "measurement": {
+                "annotated_samples": 8914836,
+                "expected_pitch_samples": 33819101,
+                "present_pitch_samples": 19429357,
+                "all_expected_pitches_samples": 1572336,
+                "exact_pitch_set_samples": 1042116,
+                "one_voice_per_pitch_samples": 1042116,
+                "extra_pitch_voice_samples": 3818253,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 4076252,
+                "pitch_coverage_percent": 57.4508382112227,
+                "exact_pitch_set_percent": 11.689682233077535
+              },
+              "event_audit": {
+                "event_count": 1318,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 54.63459835907525,
+                "model_pitch_coverage_percent": 57.4508382112227,
+                "pitch_coverage_gain_pp": 2.8162398521474596,
+                "current_exact_pitch_set_percent": 9.862379969749304,
+                "model_exact_pitch_set_percent": 11.689682233077535,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 952427,
+                  "all_expected_pitches_samples": 223645,
+                  "exact_pitch_set_samples": 162901,
+                  "one_voice_per_pitch_samples": 162901,
+                  "extra_pitch_voice_samples": 776796,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 432268,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 4982619,
+                    "model_present_label_samples": 5322409,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 5175126,
+                    "model_present_label_samples": 5467060,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 5382851,
+                    "model_present_label_samples": 5552497,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 2936334,
+                    "model_present_label_samples": 3087391,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 141,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 39.993212711360954,
+                "model_pitch_coverage_percent": 57.4508382112227,
+                "pitch_coverage_gain_pp": 17.45762549986175,
+                "current_exact_pitch_set_percent": 0.597307679019558,
+                "model_exact_pitch_set_percent": 11.689682233077535,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 5904012,
+                  "all_expected_pitches_samples": 1519087,
+                  "exact_pitch_set_samples": 988867,
+                  "one_voice_per_pitch_samples": 988867,
+                  "extra_pitch_voice_samples": -3990056,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 447089,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 6690873,
+                    "model_present_label_samples": 5322409,
+                    "lost_labels": 96
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 6292681,
+                    "model_present_label_samples": 5467060,
+                    "lost_labels": 94
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 541791,
+                    "model_present_label_samples": 5552497,
+                    "lost_labels": 5
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 3087391,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 233,
+                  "present_lost": 195,
+                  "longest_lost": 194,
+                  "new_zero": 30
+                }
+              }
+            },
+            "zero_compute": {
+              "measurement": {
+                "annotated_samples": 8914836,
+                "expected_pitch_samples": 33819101,
+                "present_pitch_samples": 19853476,
+                "all_expected_pitches_samples": 1596532,
+                "exact_pitch_set_samples": 1058888,
+                "one_voice_per_pitch_samples": 1058888,
+                "extra_pitch_voice_samples": 3697656,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 3773028,
+                "pitch_coverage_percent": 58.704919447740494,
+                "exact_pitch_set_percent": 11.877818055205951
+              },
+              "event_audit": {
+                "event_count": 1318,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 55.806350381697015,
+                "model_pitch_coverage_percent": 58.704919447740494,
+                "pitch_coverage_gain_pp": 2.8985690660434766,
+                "current_exact_pitch_set_percent": 9.982516784380554,
+                "model_exact_pitch_set_percent": 11.877818055205951,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 980270,
+                  "all_expected_pitches_samples": 230454,
+                  "exact_pitch_set_samples": 168963,
+                  "one_voice_per_pitch_samples": 168963,
+                  "extra_pitch_voice_samples": 749674,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 431321,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 5109170,
+                    "model_present_label_samples": 5455724,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 5300131,
+                    "model_present_label_samples": 5601805,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 5478976,
+                    "model_present_label_samples": 5656411,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 2984929,
+                    "model_present_label_samples": 3139536,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 141,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 39.993212711360954,
+                "model_pitch_coverage_percent": 58.704919447740494,
+                "pitch_coverage_gain_pp": 18.71170673637954,
+                "current_exact_pitch_set_percent": 0.597307679019558,
+                "model_exact_pitch_set_percent": 11.877818055205951,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 6328131,
+                  "all_expected_pitches_samples": 1543283,
+                  "exact_pitch_set_samples": 1005639,
+                  "one_voice_per_pitch_samples": 1005639,
+                  "extra_pitch_voice_samples": -4110653,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 143865,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 9561144,
+                    "current_present_label_samples": 6690873,
+                    "model_present_label_samples": 5455724,
+                    "lost_labels": 88
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 9852087,
+                    "current_present_label_samples": 6292681,
+                    "model_present_label_samples": 5601805,
+                    "lost_labels": 89
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 9319146,
+                    "current_present_label_samples": 541791,
+                    "model_present_label_samples": 5656411,
+                    "lost_labels": 5
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 5086724,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 3139536,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 499,
+                  "present_gained": 246,
+                  "present_lost": 182,
+                  "longest_lost": 181,
+                  "new_zero": 31
+                }
+              }
+            }
+          }
+        }
+      },
+      "extended-middle": {
+        "reference_identity": {
+          "pass_": true,
+          "maximum_absolute_error": {
+            "notes": 1.7881393432617188e-07,
+            "onsets": 5.662441253662109e-07
+          },
+          "frame_mapping_identical": true,
+          "event_sequence_identical": true,
+          "eof_state_identical": true
+        },
+        "normalization": {
+          "windows": 1002,
+          "minimum_changed_windows": 793,
+          "range_changed_windows": 952,
+          "reference_zero_range_windows": 8,
+          "candidate_zero_range_windows": 8,
+          "candidate_minus_reference_minimum": {
+            "min": 0.0,
+            "p50": 0.0035858154296875,
+            "p90": 0.0134124755859375,
+            "max": 0.0627899169921875
+          },
+          "candidate_over_reference_range": {
+            "min": 0.8582498284747119,
+            "p50": 0.9853794931124591,
+            "p90": 0.9999237336441031,
+            "max": 1.0
+          }
+        },
+        "arms": {
+          "reference": {
+            "serviced": {
+              "measurement": {
+                "annotated_samples": 2073600,
+                "expected_pitch_samples": 2073600,
+                "present_pitch_samples": 2029288,
+                "all_expected_pitches_samples": 2029288,
+                "exact_pitch_set_samples": 1768710,
+                "one_voice_per_pitch_samples": 1768710,
+                "extra_pitch_voice_samples": 260578,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 114589,
+                "pitch_coverage_percent": 97.86304012345678,
+                "exact_pitch_set_percent": 85.29658564814815
+              },
+              "event_audit": {
+                "event_count": 28,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 97.86304012345678,
+                "model_pitch_coverage_percent": 97.86304012345678,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 85.29658564814815,
+                "model_exact_pitch_set_percent": 85.29658564814815,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": 0,
+                  "one_voice_per_pitch_samples": 0,
+                  "extra_pitch_voice_samples": 0,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 0,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2029288,
+                    "model_present_label_samples": 2029288,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": true,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 97.4879436728395,
+                "model_pitch_coverage_percent": 97.86304012345678,
+                "pitch_coverage_gain_pp": 0.37509645061728397,
+                "current_exact_pitch_set_percent": 73.14520640432099,
+                "model_exact_pitch_set_percent": 85.29658564814815,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 7778,
+                  "all_expected_pitches_samples": 7778,
+                  "exact_pitch_set_samples": 251971,
+                  "one_voice_per_pitch_samples": 251971,
+                  "extra_pitch_voice_samples": -267681,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": -74586,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2021510,
+                    "model_present_label_samples": 2029288,
+                    "lost_labels": 5
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 1,
+                  "present_lost": 5,
+                  "longest_lost": 5,
+                  "new_zero": 0
+                }
+              }
+            },
+            "zero_compute": {
+              "measurement": {
+                "annotated_samples": 2073600,
+                "expected_pitch_samples": 2073600,
+                "present_pitch_samples": 2038076,
+                "all_expected_pitches_samples": 2038076,
+                "exact_pitch_set_samples": 1775996,
+                "one_voice_per_pitch_samples": 1775996,
+                "extra_pitch_voice_samples": 262080,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 104325,
+                "pitch_coverage_percent": 98.28684413580247,
+                "exact_pitch_set_percent": 85.64795524691358
+              },
+              "event_audit": {
+                "event_count": 28,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 98.28684413580247,
+                "model_pitch_coverage_percent": 98.28684413580247,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 85.64795524691358,
+                "model_exact_pitch_set_percent": 85.64795524691358,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": 0,
+                  "one_voice_per_pitch_samples": 0,
+                  "extra_pitch_voice_samples": 0,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 0,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2038076,
+                    "model_present_label_samples": 2038076,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": true,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 97.4879436728395,
+                "model_pitch_coverage_percent": 98.28684413580247,
+                "pitch_coverage_gain_pp": 0.7989004629629629,
+                "current_exact_pitch_set_percent": 73.14520640432099,
+                "model_exact_pitch_set_percent": 85.64795524691358,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 16566,
+                  "all_expected_pitches_samples": 16566,
+                  "exact_pitch_set_samples": 259257,
+                  "one_voice_per_pitch_samples": 259257,
+                  "extra_pitch_voice_samples": -266179,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": -84850,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2021510,
+                    "model_present_label_samples": 2038076,
+                    "lost_labels": 5
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 1,
+                  "present_lost": 5,
+                  "longest_lost": 5,
+                  "new_zero": 0
+                }
+              }
+            }
+          },
+          "candidate": {
+            "serviced": {
+              "measurement": {
+                "annotated_samples": 2073600,
+                "expected_pitch_samples": 2073600,
+                "present_pitch_samples": 2029288,
+                "all_expected_pitches_samples": 2029288,
+                "exact_pitch_set_samples": 1672706,
+                "one_voice_per_pitch_samples": 1672706,
+                "extra_pitch_voice_samples": 387946,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 116509,
+                "pitch_coverage_percent": 97.86304012345678,
+                "exact_pitch_set_percent": 80.66676311728395
+              },
+              "event_audit": {
+                "event_count": 38,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 97.86304012345678,
+                "model_pitch_coverage_percent": 97.86304012345678,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 85.29658564814815,
+                "model_exact_pitch_set_percent": 80.66676311728395,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": -96004,
+                  "one_voice_per_pitch_samples": -96004,
+                  "extra_pitch_voice_samples": 127368,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 1920,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2029288,
+                    "model_present_label_samples": 2029288,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 97.4879436728395,
+                "model_pitch_coverage_percent": 97.86304012345678,
+                "pitch_coverage_gain_pp": 0.37509645061728397,
+                "current_exact_pitch_set_percent": 73.14520640432099,
+                "model_exact_pitch_set_percent": 80.66676311728395,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 7778,
+                  "all_expected_pitches_samples": 7778,
+                  "exact_pitch_set_samples": 155967,
+                  "one_voice_per_pitch_samples": 155967,
+                  "extra_pitch_voice_samples": -140313,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": -72666,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2021510,
+                    "model_present_label_samples": 2029288,
+                    "lost_labels": 5
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 1,
+                  "present_lost": 5,
+                  "longest_lost": 5,
+                  "new_zero": 0
+                }
+              }
+            },
+            "zero_compute": {
+              "measurement": {
+                "annotated_samples": 2073600,
+                "expected_pitch_samples": 2073600,
+                "present_pitch_samples": 2038076,
+                "all_expected_pitches_samples": 2038076,
+                "exact_pitch_set_samples": 1679994,
+                "one_voice_per_pitch_samples": 1679994,
+                "extra_pitch_voice_samples": 389443,
+                "duplicate_expected_pitch_voice_samples": 0,
+                "extra_gap_pitch_samples": 106245,
+                "pitch_coverage_percent": 98.28684413580247,
+                "exact_pitch_set_percent": 81.01822916666667
+              },
+              "event_audit": {
+                "event_count": 38,
+                "events_at_or_after_eof": 0,
+                "pitches_active_at_recording_end": [],
+                "pairing_valid": true,
+                "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+              },
+              "comparison_to_reference": {
+                "current_pitch_coverage_percent": 98.28684413580247,
+                "model_pitch_coverage_percent": 98.28684413580247,
+                "pitch_coverage_gain_pp": 0.0,
+                "current_exact_pitch_set_percent": 85.64795524691358,
+                "model_exact_pitch_set_percent": 81.01822916666667,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 0,
+                  "all_expected_pitches_samples": 0,
+                  "exact_pitch_set_samples": -96002,
+                  "one_voice_per_pitch_samples": -96002,
+                  "extra_pitch_voice_samples": 127363,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": 1920,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2038076,
+                    "model_present_label_samples": 2038076,
+                    "lost_labels": 0
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 0,
+                  "present_lost": 0,
+                  "longest_lost": 0,
+                  "new_zero": 0
+                }
+              },
+              "comparison_to_current": {
+                "current_pitch_coverage_percent": 97.4879436728395,
+                "model_pitch_coverage_percent": 98.28684413580247,
+                "pitch_coverage_gain_pp": 0.7989004629629629,
+                "current_exact_pitch_set_percent": 73.14520640432099,
+                "model_exact_pitch_set_percent": 81.01822916666667,
+                "sample_deltas": {
+                  "annotated_samples": 0,
+                  "expected_pitch_samples": 0,
+                  "present_pitch_samples": 16566,
+                  "all_expected_pitches_samples": 16566,
+                  "exact_pitch_set_samples": 163255,
+                  "one_voice_per_pitch_samples": 163255,
+                  "extra_pitch_voice_samples": -138816,
+                  "duplicate_expected_pitch_voice_samples": 0
+                },
+                "extra_gap_pitch_samples_delta": -82930,
+                "label_bands": {
+                  "below48": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "48to59": {
+                    "annotated_label_samples": 2073600,
+                    "current_present_label_samples": 2021510,
+                    "model_present_label_samples": 2038076,
+                    "lost_labels": 5
+                  },
+                  "60to71": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  },
+                  "72plus": {
+                    "annotated_label_samples": 0,
+                    "current_present_label_samples": 0,
+                    "model_present_label_samples": 0,
+                    "lost_labels": 0
+                  }
+                },
+                "no_pitch_safety_regression": false,
+                "promotion_accepted": false,
+                "label_counts": {
+                  "total": 6,
+                  "present_gained": 1,
+                  "present_lost": 5,
+                  "longest_lost": 5,
+                  "new_zero": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "result_note": "docs/recovery/CODEX-M3-RECENT-NORMALIZATION-RESULT-20261121.md"
+}
