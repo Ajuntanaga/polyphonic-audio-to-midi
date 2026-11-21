@@ -1,3 +1,11 @@
+## Complete-set paired diagnosis final: chord gains with single-pitch extras
+
+Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-COMPLETE-SET-PAIRED-RESULT-20261121.md`. Run44962588969 remains rejected. Evidence14730172985 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Identical plans/targets, original counts and all200 pass-1 source uses reproduce; fourteen synthetic checks pass. No new fit, audio/model load, held-out scoring or remote job. Do not repeat collection or diagnosis.
+
+Across16384 training mixtures,937 become exact and336 lose exactness (net+601). Expected pitches gain925/lose372; false pitches add363/remove356 (433->440). All22 lost previously exact single-pitch mixtures retain their intended pitch and add extras; 24/26 new single-pitch false outputs have no fixed harmonic-interval relation. Five-pitch complete1759/2529=69.55%, TARGET1771, GAP12sets, unchanged. Remaining770 failures:666 missing-only,49 extra-only,55 both;405 ordering failures and365 separated but failing the frozen cutoff. All555labels, installed/default output and scoreboard unchanged.
+
+Design a distinct training constraint that preserves correct single-pitch rejection while improving weakest-true/strongest-false separation in chords. Freeze the design before fitting; preserve the existing training, held-out and continuous gates, source labels and rejected cutoffs. No cutoff retune, source exclusion, held-out tuning or repeated run. No next job queued. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Complete-set objective final: five-pitch gate short by twelve sets
 
 Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-COMPLETE-SET-RESULT-20261121.md`. Run44962588969 final/success, source `f6d3fb3e7796f1734a96597e8eda4aaeae7a50d1`, worker `953f3be4b5a5b98b19d5c59df761197fc0b9954c`. Source CI44962573168 and all60 GitHub synthetic checks passed. Small report collected once and server-digest verified; model/predictions remain remote. Do not poll, redownload, rerun or retune this completed screen.

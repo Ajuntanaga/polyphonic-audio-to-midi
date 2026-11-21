@@ -3,7 +3,7 @@
   "state": "completed",
   "final": true,
   "created_at": "2026-11-21T23:32:51.423545+00:00",
-  "updated_at": "2026-11-21T23:42:53.907133+00:00",
+  "updated_at": "2026-11-21T23:53:53.409022+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "77bce90b0096201674080fa46b8e58ff53aa0abe",
@@ -38,8 +38,8 @@
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "bulk_policy": "Keep new model and predictions remote; collect small report once.",
-  "next": "Compare the retained training errors against the baseline, including the eleven fewer complete single-pitch sets, before selecting a distinct design. Preserve this rejection, cutoff, source labels and all safety gates; no automatic rerun or held-out tuning. A later candidate still needs the 70% complete-set training gates, both untouched roles and continuous benefit without per-label or false-output regression. No next job queued.",
+  "bulk_policy": "Evidence archive collected once for saved training analysis; only pinned training predictions and plan extracted. Model remains unextracted/unopened.",
+  "next": "Design a distinct training constraint that preserves correct single-pitch rejection while improving weakest-true/strongest-false separation in chords. Freeze the design before fitting; preserve the existing training, held-out and continuous gates, source labels and rejected cutoffs. No cutoff retune, source exclusion, held-out tuning or repeated run. No next job queued.",
   "validation": {
     "local_synthetic_tests": 60,
     "local_passed": 51,
@@ -92,7 +92,7 @@
     "digest": "sha256:a23bc1cdf58e1d03b6d0ad8c6c90c05bafa6dd35dcd554c4c085975eb350f209",
     "expires_at": "2026-12-05T23:40:31Z"
   },
-  "bulk_collected": false,
+  "bulk_collected": true,
   "comparison": {
     "baseline_run": 44960075844,
     "current_run": 44962588969,
@@ -264,5 +264,159 @@
   "continuous_replay": {
     "executed": false,
     "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "bulk_collection_state": "collected_once_verified",
+  "bulk_collection_receipt": "build/github-results/harmonic-complete-set-learning-44962588969/training-evidence-collection-receipt.json",
+  "saved_training_diagnosis": {
+    "state": "completed",
+    "final": true,
+    "created_at": "2026-11-21T23:51:07.442800+00:00",
+    "plan": "docs/recovery/CODEX-M3-COMPLETE-SET-PAIRED-PLAN-20261121.md",
+    "result_note": "docs/recovery/CODEX-M3-COMPLETE-SET-PAIRED-RESULT-20261121.md",
+    "report": "build/recovery/m3-complete-set-paired-20261121/report.json",
+    "report_sha256": "5481b16a3d633d989091c97e143565740ac07d3fe4cbb2eb7e8fe6efe90216a3",
+    "identities_passed": true,
+    "synthetic_tests": {
+      "passed": 14,
+      "skipped": 0
+    },
+    "focused_review": "complete; no material blocker",
+    "overall": {
+      "examples": 16384,
+      "baseline_exact": 13865,
+      "current_exact": 14466,
+      "exact_gained": 937,
+      "exact_lost": 336,
+      "exact_both": 13529,
+      "exact_neither": 1582,
+      "genuine_gained": 925,
+      "genuine_lost": 372,
+      "false_new": 363,
+      "false_removed": 356,
+      "false_persistent": 77
+    },
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 820,
+        "baseline_exact": 820,
+        "current_exact": 820,
+        "exact_gained": 0,
+        "exact_lost": 0,
+        "exact_both": 820,
+        "exact_neither": 0,
+        "genuine_gained": 0,
+        "genuine_lost": 0,
+        "false_new": 0,
+        "false_removed": 0,
+        "false_persistent": 0
+      },
+      "1": {
+        "examples": 3132,
+        "baseline_exact": 3108,
+        "current_exact": 3097,
+        "exact_gained": 11,
+        "exact_lost": 22,
+        "exact_both": 3086,
+        "exact_neither": 13,
+        "genuine_gained": 2,
+        "genuine_lost": 1,
+        "false_new": 26,
+        "false_removed": 12,
+        "false_persistent": 6
+      },
+      "2": {
+        "examples": 3220,
+        "baseline_exact": 3043,
+        "current_exact": 3069,
+        "exact_gained": 78,
+        "exact_lost": 52,
+        "exact_both": 2991,
+        "exact_neither": 99,
+        "genuine_gained": 55,
+        "genuine_lost": 21,
+        "false_new": 53,
+        "false_removed": 39,
+        "false_persistent": 11
+      },
+      "3": {
+        "examples": 3251,
+        "baseline_exact": 2832,
+        "current_exact": 2946,
+        "exact_gained": 180,
+        "exact_lost": 66,
+        "exact_both": 2766,
+        "exact_neither": 239,
+        "genuine_gained": 162,
+        "genuine_lost": 40,
+        "false_new": 82,
+        "false_removed": 79,
+        "false_persistent": 19
+      },
+      "4": {
+        "examples": 3432,
+        "baseline_exact": 2515,
+        "current_exact": 2775,
+        "exact_gained": 365,
+        "exact_lost": 105,
+        "exact_both": 2410,
+        "exact_neither": 552,
+        "genuine_gained": 328,
+        "genuine_lost": 133,
+        "false_new": 113,
+        "false_removed": 128,
+        "false_persistent": 15
+      },
+      "5": {
+        "examples": 2529,
+        "baseline_exact": 1547,
+        "current_exact": 1759,
+        "exact_gained": 303,
+        "exact_lost": 91,
+        "exact_both": 1456,
+        "exact_neither": 679,
+        "genuine_gained": 378,
+        "genuine_lost": 177,
+        "false_new": 89,
+        "false_removed": 98,
+        "false_persistent": 26
+      }
+    },
+    "five_pitch_ordering": {
+      "examples": 2529,
+      "baseline_strict_separation": 2029,
+      "current_strict_separation": 2124,
+      "separation_gained": 187,
+      "separation_lost": 92,
+      "baseline_separated_but_incomplete": 482,
+      "current_separated_but_incomplete": 365,
+      "baseline_ordering_failure": 500,
+      "current_ordering_failure": 405
+    },
+    "five_pitch_errors": {
+      "examples": 2529,
+      "exact": 1759,
+      "missing_only": 666,
+      "extra_only": 49,
+      "both": 55,
+      "missing_pitches": 963,
+      "extra_pitches": 115
+    },
+    "single_pitch_exact_losses": 22,
+    "single_pitch_losses_all_retain_intended": true,
+    "single_pitch_new_false": 26,
+    "single_pitch_new_false_without_fixed_interval_relation": 24,
+    "held_out_opened": false,
+    "model_opened": false,
+    "audio_opened": false,
+    "outputs": {
+      "changed-examples.json.gz": {
+        "bytes": 249575,
+        "sha256": "b027b6a1e78497bc7054af1a87c1efe0d9152447730caadc7e006dc255fe3d1e"
+      },
+      "current-ranking-details.json.gz": {
+        "bytes": 1107575,
+        "sha256": "f1d365d88525838606293dc6b107c6c3f99aac3bd1b53d84f1e7727ebfd2cd5a"
+      }
+    }
   }
 }
