@@ -1,0 +1,8331 @@
+{
+  "source_run": 44949401574,
+  "source_report_sha256": "c9e8b8563810d74c63568f6e43eadede4931d7507f803b093e31e4279c2e0b3c",
+  "sources": [
+    {
+      "source_key": "string-01:0",
+      "role": "train",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 277,
+        "classes": {
+          "periodic_target": 277,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:1",
+      "role": "train",
+      "note": 61,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 258,
+        "classes": {
+          "periodic_target": 258,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:2",
+      "role": "train",
+      "note": 62,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 238,
+        "classes": {
+          "periodic_target": 238,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:3",
+      "role": "train",
+      "note": 63,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 221,
+        "classes": {
+          "periodic_target": 221,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:4",
+      "role": "train",
+      "note": 64,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:5",
+      "role": "train",
+      "note": 65,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 215,
+        "classes": {
+          "periodic_target": 201,
+          "periodic_other": 14,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:6",
+      "role": "train",
+      "note": 66,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 252,
+        "classes": {
+          "periodic_target": 252,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:7",
+      "role": "train",
+      "note": 67,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 228,
+        "classes": {
+          "periodic_target": 228,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:8",
+      "role": "train",
+      "note": 68,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 238,
+        "classes": {
+          "periodic_target": 238,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:9",
+      "role": "train",
+      "note": 69,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:10",
+      "role": "train",
+      "note": 70,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 250,
+        "classes": {
+          "periodic_target": 250,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:11",
+      "role": "train",
+      "note": 71,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 258,
+        "classes": {
+          "periodic_target": 258,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:12",
+      "role": "train",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 235,
+        "classes": {
+          "periodic_target": 235,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:13",
+      "role": "train",
+      "note": 73,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:14",
+      "role": "train",
+      "note": 74,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 238,
+        "classes": {
+          "periodic_target": 238,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:15",
+      "role": "train",
+      "note": 75,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 219,
+        "classes": {
+          "periodic_target": 219,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:16",
+      "role": "train",
+      "note": 76,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 243,
+        "classes": {
+          "periodic_target": 243,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:17",
+      "role": "train",
+      "note": 77,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 241,
+        "classes": {
+          "periodic_target": 241,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:18",
+      "role": "train",
+      "note": 78,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:19",
+      "role": "train",
+      "note": 79,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 218,
+        "classes": {
+          "periodic_target": 218,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:20",
+      "role": "train",
+      "note": 80,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 214,
+        "classes": {
+          "periodic_target": 214,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:21",
+      "role": "train",
+      "note": 81,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 243,
+        "classes": {
+          "periodic_target": 4,
+          "periodic_other": 0,
+          "unresolved_periodicity": 239,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:22",
+      "role": "train",
+      "note": 82,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 262,
+        "classes": {
+          "periodic_target": 146,
+          "periodic_other": 0,
+          "unresolved_periodicity": 116,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:23",
+      "role": "train",
+      "note": 83,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 236,
+        "classes": {
+          "periodic_target": 221,
+          "periodic_other": 0,
+          "unresolved_periodicity": 15,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:24",
+      "role": "train",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:25",
+      "role": "calibration",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:26",
+      "role": "calibration",
+      "note": 83,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:27",
+      "role": "calibration",
+      "note": 82,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:28",
+      "role": "calibration",
+      "note": 81,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:29",
+      "role": "calibration",
+      "note": 80,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:30",
+      "role": "calibration",
+      "note": 79,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:31",
+      "role": "calibration",
+      "note": 78,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 24,
+          "periodic_other": 11,
+          "unresolved_periodicity": 19,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:32",
+      "role": "calibration",
+      "note": 77,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 34,
+          "periodic_other": 0,
+          "unresolved_periodicity": 21,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:33",
+      "role": "calibration",
+      "note": 76,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:34",
+      "role": "calibration",
+      "note": 75,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:35",
+      "role": "calibration",
+      "note": 74,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:36",
+      "role": "calibration",
+      "note": 73,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:37",
+      "role": "calibration",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:38",
+      "role": "calibration",
+      "note": 71,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 43,
+        "classes": {
+          "periodic_target": 43,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:39",
+      "role": "calibration",
+      "note": 70,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:40",
+      "role": "calibration",
+      "note": 69,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 51,
+          "periodic_other": 0,
+          "unresolved_periodicity": 10,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:41",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:42",
+      "role": "calibration",
+      "note": 67,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:43",
+      "role": "calibration",
+      "note": 66,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:44",
+      "role": "calibration",
+      "note": 65,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 47,
+        "classes": {
+          "periodic_target": 47,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:45",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:46",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:47",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:48",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:49",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:50",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 73,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:51",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:52",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:53",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:54",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 73,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:55",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:56",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 75,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:57",
+      "role": "test",
+      "note": 64,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 69,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:58",
+      "role": "test",
+      "note": 68,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 65,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:59",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 60,
+          "unresolved_periodicity": 4,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:60",
+      "role": "test",
+      "note": 76,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 79,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:61",
+      "role": "test",
+      "note": 80,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 77,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:62",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:63",
+      "role": "test",
+      "note": 84,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:64",
+      "role": "test",
+      "note": 80,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:65",
+      "role": "test",
+      "note": 76,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:66",
+      "role": "test",
+      "note": 72,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:67",
+      "role": "test",
+      "note": 68,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:68",
+      "role": "test",
+      "note": 64,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 87,
+        "classes": {
+          "periodic_target": 87,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-01:69",
+      "role": "test",
+      "note": 60,
+      "string_mask": 128,
+      "unique_crops": {
+        "count": 93,
+        "classes": {
+          "periodic_target": 93,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:0",
+      "role": "train",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:1",
+      "role": "train",
+      "note": 57,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 229,
+        "classes": {
+          "periodic_target": 229,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:2",
+      "role": "train",
+      "note": 58,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 209,
+        "classes": {
+          "periodic_target": 209,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:3",
+      "role": "train",
+      "note": 59,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 247,
+        "classes": {
+          "periodic_target": 247,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:4",
+      "role": "train",
+      "note": 60,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 234,
+        "classes": {
+          "periodic_target": 234,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:5",
+      "role": "train",
+      "note": 61,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 263,
+        "classes": {
+          "periodic_target": 263,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:6",
+      "role": "train",
+      "note": 62,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 255,
+        "classes": {
+          "periodic_target": 126,
+          "periodic_other": 129,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:7",
+      "role": "train",
+      "note": 63,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 222,
+        "classes": {
+          "periodic_target": 161,
+          "periodic_other": 61,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:8",
+      "role": "train",
+      "note": 64,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 224,
+        "classes": {
+          "periodic_target": 224,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:9",
+      "role": "train",
+      "note": 65,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 267,
+        "classes": {
+          "periodic_target": 267,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:10",
+      "role": "train",
+      "note": 66,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:11",
+      "role": "train",
+      "note": 67,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 256,
+        "classes": {
+          "periodic_target": 256,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:12",
+      "role": "train",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:13",
+      "role": "train",
+      "note": 69,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:14",
+      "role": "train",
+      "note": 70,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 256,
+        "classes": {
+          "periodic_target": 256,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:15",
+      "role": "train",
+      "note": 71,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 222,
+        "classes": {
+          "periodic_target": 222,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:16",
+      "role": "train",
+      "note": 72,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 252,
+        "classes": {
+          "periodic_target": 252,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:17",
+      "role": "train",
+      "note": 73,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 264,
+        "classes": {
+          "periodic_target": 264,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:18",
+      "role": "train",
+      "note": 74,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:19",
+      "role": "train",
+      "note": 75,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 253,
+        "classes": {
+          "periodic_target": 253,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:20",
+      "role": "train",
+      "note": 76,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 234,
+        "classes": {
+          "periodic_target": 234,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:21",
+      "role": "train",
+      "note": 77,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 220,
+        "classes": {
+          "periodic_target": 220,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:22",
+      "role": "train",
+      "note": 78,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 212,
+        "classes": {
+          "periodic_target": 212,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:23",
+      "role": "train",
+      "note": 79,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:24",
+      "role": "train",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 259,
+        "classes": {
+          "periodic_target": 259,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:25",
+      "role": "calibration",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:26",
+      "role": "calibration",
+      "note": 79,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:27",
+      "role": "calibration",
+      "note": 78,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:28",
+      "role": "calibration",
+      "note": 77,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:29",
+      "role": "calibration",
+      "note": 76,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:30",
+      "role": "calibration",
+      "note": 75,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:31",
+      "role": "calibration",
+      "note": 74,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:32",
+      "role": "calibration",
+      "note": 73,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:33",
+      "role": "calibration",
+      "note": 72,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:34",
+      "role": "calibration",
+      "note": 71,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:35",
+      "role": "calibration",
+      "note": 70,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:36",
+      "role": "calibration",
+      "note": 69,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:37",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:38",
+      "role": "calibration",
+      "note": 67,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 78,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:39",
+      "role": "calibration",
+      "note": 66,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:40",
+      "role": "calibration",
+      "note": 65,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:41",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 73,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:42",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:43",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 27,
+          "periodic_other": 39,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:44",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:45",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 1,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:46",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:47",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:48",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:49",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 46,
+        "classes": {
+          "periodic_target": 46,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:50",
+      "role": "test",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 1,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:51",
+      "role": "test",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 4,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:52",
+      "role": "test",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:53",
+      "role": "test",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 92,
+        "classes": {
+          "periodic_target": 92,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:54",
+      "role": "test",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:55",
+      "role": "test",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:56",
+      "role": "test",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:57",
+      "role": "test",
+      "note": 60,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:58",
+      "role": "test",
+      "note": 64,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:59",
+      "role": "test",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 95,
+        "classes": {
+          "periodic_target": 95,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:60",
+      "role": "test",
+      "note": 72,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 89,
+        "classes": {
+          "periodic_target": 89,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:61",
+      "role": "test",
+      "note": 76,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 82,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:62",
+      "role": "test",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 7,
+          "periodic_other": 67,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:63",
+      "role": "test",
+      "note": 80,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 72,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:64",
+      "role": "test",
+      "note": 76,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:65",
+      "role": "test",
+      "note": 72,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:66",
+      "role": "test",
+      "note": 68,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:67",
+      "role": "test",
+      "note": 64,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:68",
+      "role": "test",
+      "note": 60,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 70,
+          "periodic_other": 3,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-02:69",
+      "role": "test",
+      "note": 56,
+      "string_mask": 64,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:0",
+      "role": "train",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:1",
+      "role": "train",
+      "note": 53,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 259,
+        "classes": {
+          "periodic_target": 259,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:2",
+      "role": "train",
+      "note": 54,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 235,
+        "classes": {
+          "periodic_target": 235,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:3",
+      "role": "train",
+      "note": 55,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 229,
+        "classes": {
+          "periodic_target": 229,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:4",
+      "role": "train",
+      "note": 56,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 256,
+        "classes": {
+          "periodic_target": 256,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:5",
+      "role": "train",
+      "note": 57,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 253,
+        "classes": {
+          "periodic_target": 249,
+          "periodic_other": 0,
+          "unresolved_periodicity": 4,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:6",
+      "role": "train",
+      "note": 58,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:7",
+      "role": "train",
+      "note": 59,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 264,
+        "classes": {
+          "periodic_target": 264,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:8",
+      "role": "train",
+      "note": 60,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 249,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:9",
+      "role": "train",
+      "note": 61,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:10",
+      "role": "train",
+      "note": 62,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 243,
+        "classes": {
+          "periodic_target": 243,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:11",
+      "role": "train",
+      "note": 63,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:12",
+      "role": "train",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:13",
+      "role": "train",
+      "note": 65,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:14",
+      "role": "train",
+      "note": 66,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:15",
+      "role": "train",
+      "note": 67,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 229,
+        "classes": {
+          "periodic_target": 229,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:16",
+      "role": "train",
+      "note": 68,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 247,
+        "classes": {
+          "periodic_target": 247,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:17",
+      "role": "train",
+      "note": 69,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 260,
+        "classes": {
+          "periodic_target": 260,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:18",
+      "role": "train",
+      "note": 70,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:19",
+      "role": "train",
+      "note": 71,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 226,
+        "classes": {
+          "periodic_target": 226,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:20",
+      "role": "train",
+      "note": 72,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 240,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:21",
+      "role": "train",
+      "note": 73,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 255,
+        "classes": {
+          "periodic_target": 255,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:22",
+      "role": "train",
+      "note": 74,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:23",
+      "role": "train",
+      "note": 75,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 244,
+        "classes": {
+          "periodic_target": 244,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:24",
+      "role": "train",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 218,
+        "classes": {
+          "periodic_target": 149,
+          "periodic_other": 0,
+          "unresolved_periodicity": 69,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:25",
+      "role": "calibration",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 6,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:26",
+      "role": "calibration",
+      "note": 75,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:27",
+      "role": "calibration",
+      "note": 74,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:28",
+      "role": "calibration",
+      "note": 73,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:29",
+      "role": "calibration",
+      "note": 72,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:30",
+      "role": "calibration",
+      "note": 71,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:31",
+      "role": "calibration",
+      "note": 70,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 47,
+        "classes": {
+          "periodic_target": 47,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:32",
+      "role": "calibration",
+      "note": 69,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 53,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:33",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:34",
+      "role": "calibration",
+      "note": 67,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 73,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:35",
+      "role": "calibration",
+      "note": 66,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:36",
+      "role": "calibration",
+      "note": 65,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:37",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 44,
+        "classes": {
+          "periodic_target": 44,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:38",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:39",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:40",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:41",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:42",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:43",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:44",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:45",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:46",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:47",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:48",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:49",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:50",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 5,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:51",
+      "role": "test",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 2,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:52",
+      "role": "test",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 10,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:53",
+      "role": "test",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:54",
+      "role": "test",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 87,
+        "classes": {
+          "periodic_target": 87,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:55",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:56",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:57",
+      "role": "test",
+      "note": 56,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 84,
+        "classes": {
+          "periodic_target": 84,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:58",
+      "role": "test",
+      "note": 60,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 1,
+          "unresolved_periodicity": 1,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:59",
+      "role": "test",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:60",
+      "role": "test",
+      "note": 68,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:61",
+      "role": "test",
+      "note": 72,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:62",
+      "role": "test",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:63",
+      "role": "test",
+      "note": 76,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:64",
+      "role": "test",
+      "note": 72,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:65",
+      "role": "test",
+      "note": 68,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:66",
+      "role": "test",
+      "note": 64,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:67",
+      "role": "test",
+      "note": 60,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:68",
+      "role": "test",
+      "note": 56,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-03:69",
+      "role": "test",
+      "note": 52,
+      "string_mask": 32,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:0",
+      "role": "train",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:1",
+      "role": "train",
+      "note": 49,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 262,
+        "classes": {
+          "periodic_target": 262,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:2",
+      "role": "train",
+      "note": 50,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 263,
+        "classes": {
+          "periodic_target": 263,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:3",
+      "role": "train",
+      "note": 51,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 249,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:4",
+      "role": "train",
+      "note": 52,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:5",
+      "role": "train",
+      "note": 53,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 258,
+        "classes": {
+          "periodic_target": 258,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:6",
+      "role": "train",
+      "note": 54,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 232,
+        "classes": {
+          "periodic_target": 232,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:7",
+      "role": "train",
+      "note": 55,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 239,
+        "classes": {
+          "periodic_target": 239,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:8",
+      "role": "train",
+      "note": 56,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:9",
+      "role": "train",
+      "note": 57,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 263,
+        "classes": {
+          "periodic_target": 263,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:10",
+      "role": "train",
+      "note": 58,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:11",
+      "role": "train",
+      "note": 59,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 249,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:12",
+      "role": "train",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 240,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:13",
+      "role": "train",
+      "note": 61,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 247,
+        "classes": {
+          "periodic_target": 247,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:14",
+      "role": "train",
+      "note": 62,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 220,
+        "classes": {
+          "periodic_target": 220,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:15",
+      "role": "train",
+      "note": 63,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 260,
+        "classes": {
+          "periodic_target": 260,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:16",
+      "role": "train",
+      "note": 64,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:17",
+      "role": "train",
+      "note": 65,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:18",
+      "role": "train",
+      "note": 66,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:19",
+      "role": "train",
+      "note": 67,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 221,
+        "classes": {
+          "periodic_target": 221,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:20",
+      "role": "train",
+      "note": 68,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 201,
+        "classes": {
+          "periodic_target": 201,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:21",
+      "role": "train",
+      "note": 69,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 271,
+        "classes": {
+          "periodic_target": 271,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:22",
+      "role": "train",
+      "note": 70,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 223,
+        "classes": {
+          "periodic_target": 223,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:23",
+      "role": "train",
+      "note": 71,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:24",
+      "role": "train",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 240,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:25",
+      "role": "calibration",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 72,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:26",
+      "role": "calibration",
+      "note": 71,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:27",
+      "role": "calibration",
+      "note": 70,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 45,
+        "classes": {
+          "periodic_target": 45,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:28",
+      "role": "calibration",
+      "note": 69,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:29",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:30",
+      "role": "calibration",
+      "note": 67,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:31",
+      "role": "calibration",
+      "note": 66,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:32",
+      "role": "calibration",
+      "note": 65,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:33",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:34",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:35",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:36",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:37",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:38",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:39",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:40",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:41",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 36,
+        "classes": {
+          "periodic_target": 36,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:42",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:43",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:44",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:45",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:46",
+      "role": "calibration",
+      "note": 51,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:47",
+      "role": "calibration",
+      "note": 50,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:48",
+      "role": "calibration",
+      "note": 49,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:49",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 53,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:50",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:51",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:52",
+      "role": "test",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 81,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 8,
+          "unresolved_periodicity": 18,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:53",
+      "role": "test",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 78,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:54",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:55",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 72,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:56",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:57",
+      "role": "test",
+      "note": 52,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 83,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:58",
+      "role": "test",
+      "note": 56,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:59",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 83,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:60",
+      "role": "test",
+      "note": 64,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:61",
+      "role": "test",
+      "note": 68,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:62",
+      "role": "test",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 68,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:63",
+      "role": "test",
+      "note": 72,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:64",
+      "role": "test",
+      "note": 68,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 84,
+        "classes": {
+          "periodic_target": 84,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:65",
+      "role": "test",
+      "note": 64,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:66",
+      "role": "test",
+      "note": 60,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 73,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:67",
+      "role": "test",
+      "note": 56,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:68",
+      "role": "test",
+      "note": 52,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-04:69",
+      "role": "test",
+      "note": 48,
+      "string_mask": 16,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 73,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:0",
+      "role": "train",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:1",
+      "role": "train",
+      "note": 45,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 252,
+        "classes": {
+          "periodic_target": 203,
+          "periodic_other": 49,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:2",
+      "role": "train",
+      "note": 46,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 263,
+        "classes": {
+          "periodic_target": 263,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:3",
+      "role": "train",
+      "note": 47,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 277,
+        "classes": {
+          "periodic_target": 277,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:4",
+      "role": "train",
+      "note": 48,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 221,
+        "classes": {
+          "periodic_target": 221,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:5",
+      "role": "train",
+      "note": 49,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 228,
+        "classes": {
+          "periodic_target": 228,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:6",
+      "role": "train",
+      "note": 50,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 250,
+        "classes": {
+          "periodic_target": 250,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:7",
+      "role": "train",
+      "note": 51,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 254,
+        "classes": {
+          "periodic_target": 254,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:8",
+      "role": "train",
+      "note": 52,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:9",
+      "role": "train",
+      "note": 53,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:10",
+      "role": "train",
+      "note": 54,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:11",
+      "role": "train",
+      "note": 55,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 259,
+        "classes": {
+          "periodic_target": 259,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:12",
+      "role": "train",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:13",
+      "role": "train",
+      "note": 57,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 273,
+        "classes": {
+          "periodic_target": 273,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:14",
+      "role": "train",
+      "note": 58,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 279,
+        "classes": {
+          "periodic_target": 279,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:15",
+      "role": "train",
+      "note": 59,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 219,
+        "classes": {
+          "periodic_target": 219,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:16",
+      "role": "train",
+      "note": 60,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 268,
+        "classes": {
+          "periodic_target": 261,
+          "periodic_other": 7,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:17",
+      "role": "train",
+      "note": 61,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 261,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 182,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:18",
+      "role": "train",
+      "note": 62,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:19",
+      "role": "train",
+      "note": 63,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 237,
+        "classes": {
+          "periodic_target": 146,
+          "periodic_other": 6,
+          "unresolved_periodicity": 85,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:20",
+      "role": "train",
+      "note": 64,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 134,
+          "periodic_other": 34,
+          "unresolved_periodicity": 83,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:21",
+      "role": "train",
+      "note": 65,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 151,
+          "periodic_other": 15,
+          "unresolved_periodicity": 74,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:22",
+      "role": "train",
+      "note": 66,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 266,
+        "classes": {
+          "periodic_target": 163,
+          "periodic_other": 20,
+          "unresolved_periodicity": 83,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:23",
+      "role": "train",
+      "note": 67,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 241,
+        "classes": {
+          "periodic_target": 99,
+          "periodic_other": 19,
+          "unresolved_periodicity": 123,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:24",
+      "role": "train",
+      "note": 68,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 244,
+        "classes": {
+          "periodic_target": 104,
+          "periodic_other": 28,
+          "unresolved_periodicity": 112,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:25",
+      "role": "calibration",
+      "note": 68,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 28,
+          "periodic_other": 5,
+          "unresolved_periodicity": 32,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:26",
+      "role": "calibration",
+      "note": 67,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 8,
+          "periodic_other": 9,
+          "unresolved_periodicity": 46,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:27",
+      "role": "calibration",
+      "note": 66,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 27,
+          "periodic_other": 2,
+          "unresolved_periodicity": 29,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:28",
+      "role": "calibration",
+      "note": 65,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 16,
+          "periodic_other": 4,
+          "unresolved_periodicity": 30,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:29",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 3,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:30",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:31",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 11,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:32",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:33",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 45,
+        "classes": {
+          "periodic_target": 45,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:34",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 70,
+        "classes": {
+          "periodic_target": 70,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:35",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 53,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:36",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:37",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:38",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:39",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:40",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:41",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:42",
+      "role": "calibration",
+      "note": 51,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:43",
+      "role": "calibration",
+      "note": 50,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:44",
+      "role": "calibration",
+      "note": 49,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 52,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:45",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:46",
+      "role": "calibration",
+      "note": 47,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:47",
+      "role": "calibration",
+      "note": 46,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:48",
+      "role": "calibration",
+      "note": 45,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 53,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:49",
+      "role": "calibration",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:50",
+      "role": "test",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 78,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:51",
+      "role": "test",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:52",
+      "role": "test",
+      "note": 68,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 7,
+          "periodic_other": 1,
+          "unresolved_periodicity": 67,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:53",
+      "role": "test",
+      "note": 68,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 13,
+          "periodic_other": 2,
+          "unresolved_periodicity": 58,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:54",
+      "role": "test",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 84,
+        "classes": {
+          "periodic_target": 84,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:55",
+      "role": "test",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 91,
+        "classes": {
+          "periodic_target": 91,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:56",
+      "role": "test",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:57",
+      "role": "test",
+      "note": 48,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:58",
+      "role": "test",
+      "note": 52,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 79,
+        "classes": {
+          "periodic_target": 79,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:59",
+      "role": "test",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:60",
+      "role": "test",
+      "note": 60,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:61",
+      "role": "test",
+      "note": 64,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 81,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 1,
+          "unresolved_periodicity": 3,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:62",
+      "role": "test",
+      "note": 68,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 83,
+        "classes": {
+          "periodic_target": 36,
+          "periodic_other": 4,
+          "unresolved_periodicity": 43,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:63",
+      "role": "test",
+      "note": 64,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 22,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:64",
+      "role": "test",
+      "note": 60,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:65",
+      "role": "test",
+      "note": 56,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 81,
+        "classes": {
+          "periodic_target": 81,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:66",
+      "role": "test",
+      "note": 52,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:67",
+      "role": "test",
+      "note": 48,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-05:68",
+      "role": "test",
+      "note": 44,
+      "string_mask": 8,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:0",
+      "role": "train",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:1",
+      "role": "train",
+      "note": 41,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 223,
+        "classes": {
+          "periodic_target": 223,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:2",
+      "role": "train",
+      "note": 42,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:3",
+      "role": "train",
+      "note": 43,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 213,
+        "classes": {
+          "periodic_target": 197,
+          "periodic_other": 16,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:4",
+      "role": "train",
+      "note": 44,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 244,
+        "classes": {
+          "periodic_target": 244,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:5",
+      "role": "train",
+      "note": 45,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 255,
+        "classes": {
+          "periodic_target": 255,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:6",
+      "role": "train",
+      "note": 46,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:7",
+      "role": "train",
+      "note": 47,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 269,
+        "classes": {
+          "periodic_target": 269,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:8",
+      "role": "train",
+      "note": 48,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 234,
+        "classes": {
+          "periodic_target": 234,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:9",
+      "role": "train",
+      "note": 49,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:10",
+      "role": "train",
+      "note": 50,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 223,
+        "classes": {
+          "periodic_target": 223,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:11",
+      "role": "train",
+      "note": 51,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 255,
+        "classes": {
+          "periodic_target": 255,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:12",
+      "role": "train",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:13",
+      "role": "train",
+      "note": 53,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:14",
+      "role": "train",
+      "note": 54,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 237,
+        "classes": {
+          "periodic_target": 237,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:15",
+      "role": "train",
+      "note": 55,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 222,
+        "classes": {
+          "periodic_target": 222,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:16",
+      "role": "train",
+      "note": 56,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 263,
+        "classes": {
+          "periodic_target": 263,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:17",
+      "role": "train",
+      "note": 57,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 231,
+        "classes": {
+          "periodic_target": 231,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:18",
+      "role": "train",
+      "note": 58,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 7,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:19",
+      "role": "train",
+      "note": 59,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 256,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 5,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:20",
+      "role": "train",
+      "note": 60,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 220,
+          "periodic_other": 21,
+          "unresolved_periodicity": 8,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:21",
+      "role": "train",
+      "note": 61,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 239,
+        "classes": {
+          "periodic_target": 115,
+          "periodic_other": 15,
+          "unresolved_periodicity": 109,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:22",
+      "role": "train",
+      "note": 62,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 272,
+        "classes": {
+          "periodic_target": 113,
+          "periodic_other": 15,
+          "unresolved_periodicity": 144,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:23",
+      "role": "train",
+      "note": 63,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 224,
+        "classes": {
+          "periodic_target": 36,
+          "periodic_other": 4,
+          "unresolved_periodicity": 184,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:24",
+      "role": "train",
+      "note": 64,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 231,
+        "classes": {
+          "periodic_target": 4,
+          "periodic_other": 41,
+          "unresolved_periodicity": 186,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:25",
+      "role": "calibration",
+      "note": 64,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 4,
+          "periodic_other": 5,
+          "unresolved_periodicity": 64,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:26",
+      "role": "calibration",
+      "note": 63,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 40,
+        "classes": {
+          "periodic_target": 4,
+          "periodic_other": 10,
+          "unresolved_periodicity": 26,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:27",
+      "role": "calibration",
+      "note": 62,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 24,
+          "periodic_other": 7,
+          "unresolved_periodicity": 42,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:28",
+      "role": "calibration",
+      "note": 61,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 9,
+          "periodic_other": 17,
+          "unresolved_periodicity": 30,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:29",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 31,
+          "periodic_other": 9,
+          "unresolved_periodicity": 28,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:30",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 9,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:31",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:32",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:33",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 51,
+        "classes": {
+          "periodic_target": 51,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:34",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:35",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:36",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:37",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 51,
+        "classes": {
+          "periodic_target": 51,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:38",
+      "role": "calibration",
+      "note": 51,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 48,
+        "classes": {
+          "periodic_target": 48,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:39",
+      "role": "calibration",
+      "note": 50,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:40",
+      "role": "calibration",
+      "note": 49,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:41",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:42",
+      "role": "calibration",
+      "note": 47,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 41,
+        "classes": {
+          "periodic_target": 41,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:43",
+      "role": "calibration",
+      "note": 46,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:44",
+      "role": "calibration",
+      "note": 45,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:45",
+      "role": "calibration",
+      "note": 44,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:46",
+      "role": "calibration",
+      "note": 43,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:47",
+      "role": "calibration",
+      "note": 42,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:48",
+      "role": "calibration",
+      "note": 41,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 64,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:49",
+      "role": "calibration",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:50",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:51",
+      "role": "test",
+      "note": 44,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:52",
+      "role": "test",
+      "note": 48,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:53",
+      "role": "test",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:54",
+      "role": "test",
+      "note": 56,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:55",
+      "role": "test",
+      "note": 60,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 5,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:56",
+      "role": "test",
+      "note": 64,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 68,
+        "classes": {
+          "periodic_target": 16,
+          "periodic_other": 4,
+          "unresolved_periodicity": 48,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:57",
+      "role": "test",
+      "note": 60,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:58",
+      "role": "test",
+      "note": 56,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:59",
+      "role": "test",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 70,
+        "classes": {
+          "periodic_target": 70,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:60",
+      "role": "test",
+      "note": 48,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:61",
+      "role": "test",
+      "note": 44,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:62",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 90,
+        "classes": {
+          "periodic_target": 90,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:63",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:64",
+      "role": "test",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 82,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:65",
+      "role": "test",
+      "note": 64,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 90,
+        "classes": {
+          "periodic_target": 24,
+          "periodic_other": 8,
+          "unresolved_periodicity": 58,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:66",
+      "role": "test",
+      "note": 64,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 6,
+          "periodic_other": 23,
+          "unresolved_periodicity": 37,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:67",
+      "role": "test",
+      "note": 52,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 43,
+          "unresolved_periodicity": 28,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-06:68",
+      "role": "test",
+      "note": 40,
+      "string_mask": 4,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 78,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:0",
+      "role": "train",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 235,
+        "classes": {
+          "periodic_target": 235,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:1",
+      "role": "train",
+      "note": 37,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 247,
+        "classes": {
+          "periodic_target": 247,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:2",
+      "role": "train",
+      "note": 38,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 240,
+        "classes": {
+          "periodic_target": 240,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:3",
+      "role": "train",
+      "note": 39,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:4",
+      "role": "train",
+      "note": 40,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 237,
+        "classes": {
+          "periodic_target": 237,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:5",
+      "role": "train",
+      "note": 41,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:6",
+      "role": "train",
+      "note": 42,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 261,
+        "classes": {
+          "periodic_target": 261,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:7",
+      "role": "train",
+      "note": 43,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 246,
+        "classes": {
+          "periodic_target": 246,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:8",
+      "role": "train",
+      "note": 44,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 242,
+        "classes": {
+          "periodic_target": 242,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:9",
+      "role": "train",
+      "note": 45,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 253,
+        "classes": {
+          "periodic_target": 253,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:10",
+      "role": "train",
+      "note": 46,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 235,
+        "classes": {
+          "periodic_target": 235,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:11",
+      "role": "train",
+      "note": 47,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 266,
+        "classes": {
+          "periodic_target": 266,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:12",
+      "role": "train",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 250,
+        "classes": {
+          "periodic_target": 250,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:13",
+      "role": "train",
+      "note": 49,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 258,
+        "classes": {
+          "periodic_target": 258,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:14",
+      "role": "train",
+      "note": 50,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 243,
+        "classes": {
+          "periodic_target": 243,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:15",
+      "role": "train",
+      "note": 51,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 234,
+        "classes": {
+          "periodic_target": 234,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:16",
+      "role": "train",
+      "note": 52,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 258,
+        "classes": {
+          "periodic_target": 258,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:17",
+      "role": "train",
+      "note": 53,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 266,
+        "classes": {
+          "periodic_target": 266,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:18",
+      "role": "train",
+      "note": 54,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 220,
+        "classes": {
+          "periodic_target": 220,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:19",
+      "role": "train",
+      "note": 55,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 244,
+        "classes": {
+          "periodic_target": 244,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:20",
+      "role": "train",
+      "note": 56,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:21",
+      "role": "train",
+      "note": 57,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:22",
+      "role": "train",
+      "note": 58,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 145,
+          "periodic_other": 17,
+          "unresolved_periodicity": 87,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:23",
+      "role": "train",
+      "note": 59,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 178,
+          "periodic_other": 8,
+          "unresolved_periodicity": 65,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:24",
+      "role": "train",
+      "note": 60,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 127,
+          "unresolved_periodicity": 65,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:25",
+      "role": "calibration",
+      "note": 60,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 23,
+          "periodic_other": 3,
+          "unresolved_periodicity": 23,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:26",
+      "role": "calibration",
+      "note": 59,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 6,
+          "unresolved_periodicity": 5,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:27",
+      "role": "calibration",
+      "note": 58,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 52,
+        "classes": {
+          "periodic_target": 43,
+          "periodic_other": 3,
+          "unresolved_periodicity": 6,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:28",
+      "role": "calibration",
+      "note": 57,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:29",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:30",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 46,
+          "periodic_other": 3,
+          "unresolved_periodicity": 5,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:31",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:32",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:33",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 41,
+        "classes": {
+          "periodic_target": 41,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:34",
+      "role": "calibration",
+      "note": 51,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:35",
+      "role": "calibration",
+      "note": 50,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:36",
+      "role": "calibration",
+      "note": 49,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:37",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:38",
+      "role": "calibration",
+      "note": 47,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:39",
+      "role": "calibration",
+      "note": 46,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 65,
+        "classes": {
+          "periodic_target": 65,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:40",
+      "role": "calibration",
+      "note": 45,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 62,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:41",
+      "role": "calibration",
+      "note": 44,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:42",
+      "role": "calibration",
+      "note": 43,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:43",
+      "role": "calibration",
+      "note": 42,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 50,
+        "classes": {
+          "periodic_target": 50,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:44",
+      "role": "calibration",
+      "note": 41,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 72,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:45",
+      "role": "calibration",
+      "note": 40,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:46",
+      "role": "calibration",
+      "note": 39,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 55,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:47",
+      "role": "calibration",
+      "note": 38,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 61,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:48",
+      "role": "calibration",
+      "note": 37,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 60,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:49",
+      "role": "calibration",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 53,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:50",
+      "role": "test",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 72,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:51",
+      "role": "test",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 87,
+        "classes": {
+          "periodic_target": 87,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:52",
+      "role": "test",
+      "note": 60,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 31,
+          "periodic_other": 0,
+          "unresolved_periodicity": 41,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:53",
+      "role": "test",
+      "note": 60,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 11,
+          "periodic_other": 0,
+          "unresolved_periodicity": 67,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:54",
+      "role": "test",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 71,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:55",
+      "role": "test",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 78,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:56",
+      "role": "test",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 75,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:57",
+      "role": "test",
+      "note": 40,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:58",
+      "role": "test",
+      "note": 44,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 70,
+        "classes": {
+          "periodic_target": 70,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:59",
+      "role": "test",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:60",
+      "role": "test",
+      "note": 52,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 71,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:61",
+      "role": "test",
+      "note": 56,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 74,
+        "classes": {
+          "periodic_target": 74,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:62",
+      "role": "test",
+      "note": 60,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 71,
+        "classes": {
+          "periodic_target": 33,
+          "periodic_other": 16,
+          "unresolved_periodicity": 22,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:63",
+      "role": "test",
+      "note": 56,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 78,
+        "classes": {
+          "periodic_target": 27,
+          "periodic_other": 0,
+          "unresolved_periodicity": 51,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:64",
+      "role": "test",
+      "note": 52,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 89,
+        "classes": {
+          "periodic_target": 23,
+          "periodic_other": 15,
+          "unresolved_periodicity": 51,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:65",
+      "role": "test",
+      "note": 48,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 76,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:66",
+      "role": "test",
+      "note": 44,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:67",
+      "role": "test",
+      "note": 40,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-07:68",
+      "role": "test",
+      "note": 36,
+      "string_mask": 2,
+      "unique_crops": {
+        "count": 91,
+        "classes": {
+          "periodic_target": 91,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:0",
+      "role": "train",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 251,
+        "classes": {
+          "periodic_target": 251,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:1",
+      "role": "train",
+      "note": 33,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 235,
+        "classes": {
+          "periodic_target": 235,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:2",
+      "role": "train",
+      "note": 34,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 220,
+        "classes": {
+          "periodic_target": 220,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:3",
+      "role": "train",
+      "note": 35,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 223,
+        "classes": {
+          "periodic_target": 223,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:4",
+      "role": "train",
+      "note": 36,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 265,
+        "classes": {
+          "periodic_target": 265,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:5",
+      "role": "train",
+      "note": 37,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:6",
+      "role": "train",
+      "note": 38,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 248,
+        "classes": {
+          "periodic_target": 248,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:7",
+      "role": "train",
+      "note": 39,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 228,
+        "classes": {
+          "periodic_target": 228,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:8",
+      "role": "train",
+      "note": 40,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 247,
+        "classes": {
+          "periodic_target": 247,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:9",
+      "role": "train",
+      "note": 41,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 252,
+        "classes": {
+          "periodic_target": 252,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:10",
+      "role": "train",
+      "note": 42,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:11",
+      "role": "train",
+      "note": 43,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:12",
+      "role": "train",
+      "note": 44,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 257,
+        "classes": {
+          "periodic_target": 257,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:13",
+      "role": "train",
+      "note": 45,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 221,
+        "classes": {
+          "periodic_target": 221,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:14",
+      "role": "train",
+      "note": 46,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 232,
+        "classes": {
+          "periodic_target": 232,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:15",
+      "role": "train",
+      "note": 47,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 238,
+        "classes": {
+          "periodic_target": 238,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:16",
+      "role": "train",
+      "note": 48,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 245,
+        "classes": {
+          "periodic_target": 245,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:17",
+      "role": "train",
+      "note": 49,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 233,
+        "classes": {
+          "periodic_target": 233,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:18",
+      "role": "train",
+      "note": 50,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 228,
+        "classes": {
+          "periodic_target": 159,
+          "periodic_other": 20,
+          "unresolved_periodicity": 49,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:19",
+      "role": "train",
+      "note": 51,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 256,
+        "classes": {
+          "periodic_target": 165,
+          "periodic_other": 0,
+          "unresolved_periodicity": 91,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:20",
+      "role": "train",
+      "note": 52,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 230,
+        "classes": {
+          "periodic_target": 230,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:21",
+      "role": "train",
+      "note": 53,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 249,
+        "classes": {
+          "periodic_target": 121,
+          "periodic_other": 0,
+          "unresolved_periodicity": 128,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:22",
+      "role": "train",
+      "note": 54,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 225,
+        "classes": {
+          "periodic_target": 64,
+          "periodic_other": 12,
+          "unresolved_periodicity": 149,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:23",
+      "role": "train",
+      "note": 55,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 255,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 6,
+          "unresolved_periodicity": 190,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:24",
+      "role": "train",
+      "note": 56,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 277,
+        "classes": {
+          "periodic_target": 107,
+          "periodic_other": 1,
+          "unresolved_periodicity": 169,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:25",
+      "role": "calibration",
+      "note": 56,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 53,
+        "classes": {
+          "periodic_target": 19,
+          "periodic_other": 0,
+          "unresolved_periodicity": 34,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:26",
+      "role": "calibration",
+      "note": 55,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 54,
+        "classes": {
+          "periodic_target": 22,
+          "periodic_other": 0,
+          "unresolved_periodicity": 32,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:27",
+      "role": "calibration",
+      "note": 54,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 61,
+        "classes": {
+          "periodic_target": 23,
+          "periodic_other": 0,
+          "unresolved_periodicity": 38,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:28",
+      "role": "calibration",
+      "note": 53,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 46,
+        "classes": {
+          "periodic_target": 22,
+          "periodic_other": 1,
+          "unresolved_periodicity": 23,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:29",
+      "role": "calibration",
+      "note": 52,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 43,
+        "classes": {
+          "periodic_target": 36,
+          "periodic_other": 0,
+          "unresolved_periodicity": 7,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:30",
+      "role": "calibration",
+      "note": 51,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 55,
+        "classes": {
+          "periodic_target": 38,
+          "periodic_other": 0,
+          "unresolved_periodicity": 17,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:31",
+      "role": "calibration",
+      "note": 50,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 62,
+        "classes": {
+          "periodic_target": 44,
+          "periodic_other": 8,
+          "unresolved_periodicity": 10,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:32",
+      "role": "calibration",
+      "note": 49,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:33",
+      "role": "calibration",
+      "note": 48,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 59,
+        "classes": {
+          "periodic_target": 59,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:34",
+      "role": "calibration",
+      "note": 47,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 63,
+        "classes": {
+          "periodic_target": 63,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:35",
+      "role": "calibration",
+      "note": 46,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:36",
+      "role": "calibration",
+      "note": 45,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 56,
+        "classes": {
+          "periodic_target": 56,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:37",
+      "role": "calibration",
+      "note": 44,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 49,
+        "classes": {
+          "periodic_target": 49,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:38",
+      "role": "calibration",
+      "note": 43,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 43,
+        "classes": {
+          "periodic_target": 43,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:39",
+      "role": "calibration",
+      "note": 42,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 58,
+        "classes": {
+          "periodic_target": 58,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:40",
+      "role": "calibration",
+      "note": 41,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:41",
+      "role": "calibration",
+      "note": 40,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:42",
+      "role": "calibration",
+      "note": 39,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:43",
+      "role": "calibration",
+      "note": 38,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 70,
+        "classes": {
+          "periodic_target": 70,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:44",
+      "role": "calibration",
+      "note": 37,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:45",
+      "role": "calibration",
+      "note": 36,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 67,
+        "classes": {
+          "periodic_target": 67,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:46",
+      "role": "calibration",
+      "note": 35,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:47",
+      "role": "calibration",
+      "note": 34,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 48,
+        "classes": {
+          "periodic_target": 48,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:48",
+      "role": "calibration",
+      "note": 33,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 57,
+        "classes": {
+          "periodic_target": 57,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:49",
+      "role": "calibration",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:50",
+      "role": "test",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 81,
+        "classes": {
+          "periodic_target": 81,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:51",
+      "role": "test",
+      "note": 44,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 96,
+        "classes": {
+          "periodic_target": 96,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:52",
+      "role": "test",
+      "note": 56,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 88,
+        "classes": {
+          "periodic_target": 60,
+          "periodic_other": 16,
+          "unresolved_periodicity": 12,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:53",
+      "role": "test",
+      "note": 56,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 92,
+        "classes": {
+          "periodic_target": 54,
+          "periodic_other": 27,
+          "unresolved_periodicity": 11,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:54",
+      "role": "test",
+      "note": 44,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 94,
+        "classes": {
+          "periodic_target": 94,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:55",
+      "role": "test",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 73,
+        "classes": {
+          "periodic_target": 73,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:56",
+      "role": "test",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 97,
+        "classes": {
+          "periodic_target": 97,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:57",
+      "role": "test",
+      "note": 36,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 77,
+        "classes": {
+          "periodic_target": 77,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:58",
+      "role": "test",
+      "note": 40,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 66,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:59",
+      "role": "test",
+      "note": 44,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 72,
+        "classes": {
+          "periodic_target": 72,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:60",
+      "role": "test",
+      "note": 48,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 80,
+        "classes": {
+          "periodic_target": 80,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:61",
+      "role": "test",
+      "note": 52,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 69,
+          "periodic_other": 0,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:62",
+      "role": "test",
+      "note": 56,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 69,
+        "classes": {
+          "periodic_target": 28,
+          "periodic_other": 1,
+          "unresolved_periodicity": 40,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:63",
+      "role": "test",
+      "note": 52,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:64",
+      "role": "test",
+      "note": 48,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 66,
+        "classes": {
+          "periodic_target": 1,
+          "periodic_other": 23,
+          "unresolved_periodicity": 42,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:65",
+      "role": "test",
+      "note": 40,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 76,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 25,
+          "unresolved_periodicity": 51,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:66",
+      "role": "test",
+      "note": 36,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 82,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 82,
+          "unresolved_periodicity": 0,
+          "silent": 0
+        }
+      }
+    },
+    {
+      "source_key": "string-08:67",
+      "role": "test",
+      "note": 32,
+      "string_mask": 1,
+      "unique_crops": {
+        "count": 75,
+        "classes": {
+          "periodic_target": 0,
+          "periodic_other": 0,
+          "unresolved_periodicity": 36,
+          "silent": 39
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "schema": "m3_source_pitch_verification_spec_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "parameters": {
+    "sample_rate": 96000,
+    "short_window": 16384,
+    "step": 8192,
+    "spectrum_window": 65536,
+    "fft_padding": 4,
+    "harmonics": 8,
+    "spectral_low_hz": 20.0,
+    "spectral_high_hz": 20000.0,
+    "band_native_bins": 2.0,
+    "band_cents": 50.0,
+    "top_peaks": 8
+  },
+  "sources": {
+    "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+    "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+  },
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    }
+  ],
+  "selection_basis": {
+    "path": "docs/recovery/source-pitch-verification-selection-20261121.json",
+    "sha256": "fa79a8a87c6b81fdd093e753292ca2c908cdf66460bbf7bbb3b349282997071b"
+  },
+  "selection": {
+    "pairs": [
+      {
+        "flagged": "string-01:50",
+        "controls": {
+          "train": "string-01:0",
+          "calibration": "string-01:49"
+        }
+      },
+      {
+        "flagged": "string-01:51",
+        "controls": {
+          "train": "string-01:12",
+          "calibration": "string-01:37"
+        }
+      },
+      {
+        "flagged": "string-01:53",
+        "controls": {
+          "train": "string-01:24",
+          "calibration": "string-01:25"
+        }
+      },
+      {
+        "flagged": "string-01:54",
+        "controls": {
+          "train": "string-01:12",
+          "calibration": "string-01:37"
+        }
+      },
+      {
+        "flagged": "string-01:56",
+        "controls": {
+          "train": "string-01:0",
+          "calibration": "string-01:49"
+        }
+      },
+      {
+        "flagged": "string-01:57",
+        "controls": {
+          "train": "string-01:4",
+          "calibration": "string-01:45"
+        }
+      },
+      {
+        "flagged": "string-01:58",
+        "controls": {
+          "train": "string-01:8",
+          "calibration": "string-01:41"
+        }
+      },
+      {
+        "flagged": "string-01:60",
+        "controls": {
+          "train": "string-01:16",
+          "calibration": "string-01:33"
+        }
+      },
+      {
+        "flagged": "string-01:61",
+        "controls": {
+          "train": "string-01:20",
+          "calibration": "string-01:29"
+        }
+      },
+      {
+        "flagged": "string-04:54",
+        "controls": {
+          "train": "string-04:12",
+          "calibration": "string-04:37"
+        }
+      },
+      {
+        "flagged": "string-04:55",
+        "controls": {
+          "train": "string-04:0",
+          "calibration": "string-04:49"
+        }
+      },
+      {
+        "flagged": "string-04:57",
+        "controls": {
+          "train": "string-04:4",
+          "calibration": "string-04:45"
+        }
+      },
+      {
+        "flagged": "string-06:68",
+        "controls": {
+          "train": "string-06:0",
+          "calibration": "string-06:49"
+        }
+      },
+      {
+        "flagged": "string-08:63",
+        "controls": {
+          "train": "string-08:20",
+          "calibration": null
+        }
+      },
+      {
+        "flagged": "string-08:66",
+        "controls": {
+          "train": "string-08:4",
+          "calibration": "string-08:45"
+        }
+      }
+    ],
+    "source_keys": [
+      "string-01:0",
+      "string-01:12",
+      "string-01:16",
+      "string-01:20",
+      "string-01:24",
+      "string-01:25",
+      "string-01:29",
+      "string-01:33",
+      "string-01:37",
+      "string-01:4",
+      "string-01:41",
+      "string-01:45",
+      "string-01:49",
+      "string-01:50",
+      "string-01:51",
+      "string-01:53",
+      "string-01:54",
+      "string-01:56",
+      "string-01:57",
+      "string-01:58",
+      "string-01:60",
+      "string-01:61",
+      "string-01:8",
+      "string-04:0",
+      "string-04:12",
+      "string-04:37",
+      "string-04:4",
+      "string-04:45",
+      "string-04:49",
+      "string-04:54",
+      "string-04:55",
+      "string-04:57",
+      "string-06:0",
+      "string-06:49",
+      "string-06:68",
+      "string-08:20",
+      "string-08:4",
+      "string-08:45",
+      "string-08:63",
+      "string-08:66"
+    ],
+    "flagged_count": 15,
+    "unique_control_count": 25
+  },
+  "unchanged_files": {
+    "tools/source_pitch_diagnostic.py": "2f985e4af2fe890ddb05c8e7d3d36d40cd48f7e6d61ef79d0f386b944eadcf8c",
+    "tools/direct_spectrum_learning.py": "b9dc06100e1963711e38f228f5a4b27adc996bfbd5708e2a307dc106d612d6ab",
+    "tools/portable_direct_spectrum_learning.py": "2177bca4a60c1d717b3a5bdcf4e28edea5329a879ec2807d9ab34869d8d051af",
+    "tools/portable_source_pitch_diagnostic.py": "7ce05e929dd5f0de69ea8921601ac7f3aa94c4ebdd3960006382c9593c62939e"
+  },
+  "decision_protocol": [
+    "Verify source/worker provenance, pinned input hashes, all 555 selection rows and unchanged labels before audio.",
+    "Use every 16384-sample short window on a fixed 8192-sample grid plus the last window. Measure each exactly once.",
+    "At each short-window center use a clamped 65536-sample Hann spectrum, or the full shorter take. No input normalization or pitch shift.",
+    "Report label-blind periodicity and strongest spectral peaks, with eight-harmonic energy bands at label, expected cents, plus/minus octave, open string, neighboring labels and periodic estimate.",
+    "Compare full trajectories with same-string/same-note controls; distinguish sustained non-octave disagreement, octave ambiguity and variable/weak observations. Describe evidence without automatic truth labels.",
+    "No retry, tuning, model/refit or source treatment follows automatically. Tracker acceptance remains the existing held-out, per-label and false-output gates."
+  ],
+  "limits": [
+    "This is a targeted diagnostic subset selected after the earlier result, not an unbiased performance test or a new held-out score.",
+    "The short-window estimator is unchanged. Independent long-window spectra expose harmonic ambiguity; agreement does not prove the intended pitch or played string.",
+    "An even-harmonics-only lower note and an upper octave can have indistinguishable waveforms. Do not infer a corrected label from that case.",
+    "Spectral windows are centered retrospective observations; no causal or latency claim. Short takes use their full available length and report native frequency resolution. Zero padding only interpolates.",
+    "Overlapping windows are correlated. Counts describe this take, not independent examples or unique audio duration.",
+    "All selected takes, silent/unresolved windows and missing controls retained. No relabeling, exclusion, model fit, threshold sweep, score update or installed change.",
+    "Metadata neighbors are labeled pitches, not verified sounding notes; selected excerpts do not include the full original performance between takes."
+  ]
+}

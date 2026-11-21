@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T21:23:10.478358+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "b1f4c2dc5517409d821e18e5cbdf6f14330b7890",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "source-pitch-verification.yml",
+  "specification": "docs/recovery/source-pitch-verification-20261121.json",
+  "specification_sha256": "1f36dcef33eab5b70de253ec7fdc75665afb9ca24babb070bdc353120960e0c1",
+  "design": "docs/recovery/CODEX-M3-SOURCE-PITCH-VERIFICATION-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "run_id": null,
+  "protocol": "Observation only: all 15 all-other held-out takes plus 25 unique same-string/same-note controls; systematic full-take periodicity trajectories and independent harmonic spectra, no model fit or relabeling.",
+  "selection": {
+    "flagged_takes": 15,
+    "unique_control_takes": 25,
+    "total_takes": 40
+  },
+  "validation": {
+    "synthetic_tests_passed": 8,
+    "workflow_yaml_parsed": true,
+    "focused_review": "passed; no material blocker; octave ambiguity, correlated contexts and targeted-selection limits retained"
+  },
+  "small_report_collection": "not_dispatched",
+  "bulk_policy": "Retain per-window harmonic evidence remotely; collect small report and all compact trajectories once with server digest verification.",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "Commit the scoped source and worker files, dispatch once, collect the report and distinguish sustained non-octave disagreement, octave ambiguity and weak/variable source evidence. Preserve all original labels and scores.",
+  "limits": [
+    "This is a targeted diagnostic subset selected after the earlier result, not an unbiased performance test or a new held-out score.",
+    "The short-window estimator is unchanged. Independent long-window spectra expose harmonic ambiguity; agreement does not prove the intended pitch or played string.",
+    "An even-harmonics-only lower note and an upper octave can have indistinguishable waveforms. Do not infer a corrected label from that case.",
+    "Spectral windows are centered retrospective observations; no causal or latency claim. Short takes use their full available length and report native frequency resolution. Zero padding only interpolates.",
+    "Overlapping windows are correlated. Counts describe this take, not independent examples or unique audio duration.",
+    "All selected takes, silent/unresolved windows and missing controls retained. No relabeling, exclusion, model fit, threshold sweep, score update or installed change.",
+    "Metadata neighbors are labeled pitches, not verified sounding notes; selected excerpts do not include the full original performance between takes."
+  ]
+}

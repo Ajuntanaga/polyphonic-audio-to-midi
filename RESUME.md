@@ -1,3 +1,9 @@
+## Targeted source verification prepared: 15 flagged takes and 25 controls
+
+Active checkpoint: `docs/recovery/github-source-pitch-verification-20261121.json`; frozen plan: `docs/recovery/CODEX-M3-SOURCE-PITCH-VERIFICATION-PLAN-20261121.md`. Systematic full-take periodicity trajectories and independent harmonic spectra on 40 selected takes, using existing pinned inputs. Eight synthetic checks and workflow YAML parsing pass; the focused review found no material blocker. No job dispatched yet.
+
+This resolves source-content uncertainty left by completed run44949401574, without changing any label, excluding a take, fitting a model or updating installed scores. A waveform with only even harmonics remains octave-ambiguous. One agreeing calibration control is unavailable and stays missing. Next: scoped commit/push, one bounded GitHub CPU observation and digest-verified small-report collection. No fresh Claude review is claimed. Earlier entries below are historical.
+
 ## Source-crop diagnostic final: held-out source disagreement concentrated
 
 Active checkpoint: `docs/recovery/github-source-pitch-diagnostic-20261121.json`; result: `docs/recovery/CODEX-M3-SOURCE-PITCH-DIAGNOSTIC-RESULT-20261121.md`. Run44949401574 final/success, source `565e7907d63d6535d248209619c9f117c1c8226e`, worker `fb0580f5ecc5d9fc1ca1bea5ba6a0ff9aa4b7367`. Eight synthetic checks, source CI44949372381 and all four saved-plan identities pass. Small report collected once and server-digest verified; per-crop evidence remains remote. Do not poll, redownload or rerun this completed diagnostic.
