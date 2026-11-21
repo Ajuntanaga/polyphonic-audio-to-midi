@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-21T19:39:45.445936+00:00",
+  "updated_at": "2026-11-21T19:39:45.445936+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "1e39a47a96cf92cf10d3e9edde2431356dfa043e",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": null,
+  "workflow": "basic-pitch-temporal-reliability.yml",
+  "run_id": null,
+  "specification": "docs/recovery/basic-pitch-temporal-reliability-20261121.json",
+  "specification_sha256": "562b0224eb2dde26a780e01b74ca369e80b098923a30759ba5f250d0d05975e5",
+  "design": "docs/recovery/CODEX-M3-TEMPORAL-RELIABILITY-20261121.md",
+  "authorization": "docs/recovery/CODEX-M3-STANDING-APPROVAL-20261121.md",
+  "protocol": "One fixed temporal classifier fit on saved dense activations, held-out calibration cutoff and test passages; extended-middle test-only; no audio or inference.",
+  "validation": {
+    "synthetic_tests_passed": 31,
+    "temporal_tests_passed": 9,
+    "workflow_yaml_parsed": true,
+    "review": "One independent read-only review: no blocking issue; source reuse and unmeasured classifier overhead disclosed."
+  },
+  "pre_dispatch_run_inventory": "build/recovery/m3-temporal-reliability-20261121/pre-dispatch-runs.stdout",
+  "active_worker_runs_before_dispatch": [],
+  "small_report_collection": "not dispatched",
+  "bulk_policy": "Model, predictions and event spans remain remote",
+  "limits": [
+    "Source takes recur across mixtures: not source-disjoint generalization.",
+    "Historical FIFO excludes new classifier overhead: causal-feature feasibility, not measured live delivery.",
+    "No string/unison, raw MIDI lifecycle, allocation, deadline or live-device acceptance."
+  ],
+  "next": "Finish the one review; commit/push scoped files and dispatch one CPU screen. No retuning or second fit.",
+  "installed_output_changed": false,
+  "promotion_accepted": false
+}

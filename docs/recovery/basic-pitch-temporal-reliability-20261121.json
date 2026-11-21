@@ -1,0 +1,107 @@
+{
+  "schema": "m3_temporal_reliability_spec_v1",
+  "frozen_at": "2026-11-21T19:35:17.857759+00:00",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "purpose": "One frozen temporal classifier on dense saved rolling activations; no audio or inference.",
+  "streaming_settings": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "references": {
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "stream": {
+      "path": "docs/recovery/basic-pitch-stream-reference-20261121.json",
+      "sha256": "3d1111758724d889e6fb23f615b66edff559e005bde7119b8b9b2faff130ead0"
+    }
+  },
+  "artifact": {
+    "run_id": 44889388628,
+    "id": 14701597272,
+    "bytes": 7451292,
+    "sha256": "62e729bcffca3fbc6ca8925559ce5c63e4c7347fafe24b4921051f42c3314548",
+    "files": {
+      "ordinary-stream.npz": {
+        "bytes": 6040965,
+        "sha256": "c363e9545b16b57b0f74ea756c1b80262bed12eb2b57eace189b3bfd840c548e"
+      },
+      "ordinary-events.json": {
+        "bytes": 166526,
+        "sha256": "b206fa06232c97fa6b0b6c97a60587b10f1655bbe33abf8e23d28760ea8153fc"
+      },
+      "extended-middle-stream.npz": {
+        "bytes": 1238848,
+        "sha256": "dda6f6018dd604240a474b7a1559fda6b14f05bd6e43001336222236ee41133c"
+      },
+      "extended-middle-events.json": {
+        "bytes": 4379,
+        "sha256": "120aa7ddeee4ff4e3d2099ffa9cce440d9f9eab2e35c36e060d9c35224c13adc"
+      }
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_count": 10689600,
+      "sample_rate": 96000
+    },
+    "extended-middle": {
+      "sample_count": 2241600,
+      "sample_rate": 96000
+    }
+  },
+  "model_parameters": {
+    "max_iter": 100,
+    "max_depth": 3,
+    "max_leaf_nodes": 8,
+    "learning_rate": 0.05,
+    "min_samples_leaf": 128,
+    "l2_regularization": 0.1,
+    "max_bins": 64,
+    "early_stopping": false,
+    "random_state": 0
+  },
+  "split": {
+    "train_passages": 79,
+    "calibration_end": 105,
+    "purge_seconds": 3
+  },
+  "features": "76 causal note/onset history, harmonic-neighbor and global features; no pitch ID, time, annotation or native trace features.",
+  "target": "Pitch annotated throughout the entire FIFO decision interval; partial intervals negative.",
+  "weighting": "Interval duration; equal total weight per class; mean weight 1.",
+  "cutoff": "nextafter(max probability among every negative calibration interval, +infinity); frozen before test evaluation.",
+  "output": "Occupancy from each measured FIFO completion to the next, union with all CURRENT spans; classifier overhead unmeasured.",
+  "gates": [
+    "ordinary test >=1 percentage point pitch-sample gain",
+    "ordinary test >=5 labels gain presence",
+    "ordinary test and middle: no per-label presence/longest-hold loss, no wrong/gap growth, no exact/all-expected set loss",
+    "calibration no false-output growth"
+  ],
+  "limits": [
+    "Passage-held-out, not source-take-disjoint; training takes recur in mixture corpus.",
+    "Feasibility only; a pass requires a new-recording test and cannot authorize promotion.",
+    "No cutoff/hyperparameter search, retuning, second fit, installed change or runtime claim."
+  ]
+}
