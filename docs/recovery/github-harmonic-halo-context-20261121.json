@@ -18,14 +18,14 @@
     "test_five_pitch_total": 327
   },
   "bulk_policy": "Collect small report once with server digest verification; model, predictions and mixture plans stay remote. No automatic rerun or cutoff tuning.",
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T02:59:57.395546+00:00",
-  "updated_at": "2026-11-22T03:00:10.202380+00:00",
+  "updated_at": "2026-11-22T03:08:50.800739+00:00",
   "source_base_commit": "ce5173ae2469fea18a492aba18166bbe8e635f08",
-  "source_commit": null,
+  "source_commit": "2c2ced6ac975a34288b0a1dfc26db4c2f100c1a5",
   "worker_base_commit": "7120da877f10022920cc2d3f7453c28ac7565094",
-  "worker_commit": null,
+  "worker_commit": "ca1fa82801caace567db76265d43c51157400fe8",
   "workflow": "harmonic-halo-context.yml",
   "specification": "docs/recovery/harmonic-halo-context-20261121.json",
   "specification_sha256": "a8398d57acd442b31a6bd12fa7f03f9123d6b340bb87fd453b2d649e3ac483c5",
@@ -54,11 +54,11 @@
     "file": "train-mixture-plan.json.gz",
     "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
     "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded",
-    "verified": false
+    "verified": true
   },
-  "run_id": null,
-  "stage": "Prepared; local checks and one read-only implementation review passed",
-  "collection_state": "not dispatched",
+  "run_id": 44978661693,
+  "stage": "Final: held-out calibration and test gates rejected; continuous replay skipped",
+  "collection_state": "small report collected once; server digest verified; bulk remains remote",
   "validation": {
     "local_synthetic_tests_passed": 5,
     "local_synthetic_seconds": 0.831,
@@ -66,7 +66,971 @@
     "git_diff_check": "passed",
     "local_recorded_audio_model_native_execution": false,
     "github_synthetic_tests_required": 111,
-    "independent_static_review": "Passed one focused read-only review: 125-to-53 alignment, valid residual crop, central-only normalization, fixed output targets, initialization/serialization and baseline-mode preservation; no blocker."
+    "independent_static_review": "Passed one focused read-only review: 125-to-53 alignment, valid residual crop, central-only normalization, fixed output targets, initialization/serialization and baseline-mode preservation; no blocker.",
+    "github_synthetic_tests_passed": 111,
+    "github_synthetic_seconds": 3.912,
+    "source_ci_passed": true
   },
-  "next": "Commit and push scoped source/workflow, dispatch exactly one CPU screen under standing authorization. Preserve all existing gates and installed output."
+  "next": "Choose a distinct evidence-supported source-transfer mechanism before another fit. Preserve all 555 labels, single-note rejection, complete chords and existing training/held-out/continuous/native/host gates. No next job queued; do not poll, redownload, rerun or tune this rejected screen. Claude remains paused.",
+  "pushed_at": "2026-11-22T03:00:30.137247+00:00",
+  "dispatch_registration_observation": {
+    "workflow": {
+      "id": 426481868,
+      "node_id": "W_kwDOVnjy3s4Za5jM",
+      "name": "Measured harmonic halo context screen",
+      "path": ".github/workflows/harmonic-halo-context.yml",
+      "state": "active",
+      "created_at": "2026-11-21T19:00:30.000-08:00",
+      "updated_at": "2026-11-21T19:00:30.000-08:00",
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/workflows/426481868",
+      "html_url": "https://github.com/Ajuntanaga/m3-offload/blob/main/.github/workflows/harmonic-halo-context.yml",
+      "badge_url": "https://github.com/Ajuntanaga/m3-offload/workflows/Measured%20harmonic%20halo%20context%20screen/badge.svg"
+    },
+    "active_worker_runs": [],
+    "matching_runs": [],
+    "observed_at": "2026-11-22T03:00:47.192586+00:00"
+  },
+  "source_ci": [
+    {
+      "id": 44978616060,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "2c2ced6ac975a34288b0a1dfc26db4c2f100c1a5",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44978616060"
+    }
+  ],
+  "dispatch_attempted_at": "2026-11-22T03:00:54.940869+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44978661693",
+  "output_directory": "build/github-results/harmonic-halo-context-44978661693",
+  "report_artifact": "m3-harmonic-halo-context-report-44978661693-1",
+  "small_artifact_name": "m3-harmonic-halo-context-report-44978661693-1",
+  "evidence_artifact": "m3-harmonic-halo-context-evidence-44978661693-1",
+  "last_observed_at": "2026-11-22T03:05:52.978461+00:00",
+  "last_jobs": [
+    {
+      "id": 137074112883,
+      "name": "screen",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-22T03:01:01Z",
+          "completed_at": "2026-11-22T03:01:03Z"
+        },
+        {
+          "name": "Check bounded dispatch inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-22T03:01:03Z",
+          "completed_at": "2026-11-22T03:01:04Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-22T03:01:04Z",
+          "completed_at": "2026-11-22T03:01:09Z"
+        },
+        {
+          "name": "Run actions/setup-python@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-22T03:01:09Z",
+          "completed_at": "2026-11-22T03:01:09Z"
+        },
+        {
+          "name": "Pin source and CPU dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-22T03:01:09Z",
+          "completed_at": "2026-11-22T03:01:33Z"
+        },
+        {
+          "name": "Check halo alignment, identity, normalization, geometry, gates and scoring",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-22T03:01:33Z",
+          "completed_at": "2026-11-22T03:01:38Z"
+        },
+        {
+          "name": "Fit one shared classifier; continuous replay only after held-out pass",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-22T03:01:38Z",
+          "completed_at": "2026-11-22T03:05:41Z"
+        },
+        {
+          "name": "Retain small report and logs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-22T03:05:41Z",
+          "completed_at": "2026-11-22T03:05:43Z"
+        },
+        {
+          "name": "Retain model and predictions remotely",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-22T03:05:43Z",
+          "completed_at": "2026-11-22T03:05:45Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-22T03:05:45Z",
+          "completed_at": "2026-11-22T03:05:45Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-22T03:05:45Z",
+          "completed_at": "2026-11-22T03:05:45Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-22T03:05:45Z",
+          "completed_at": "2026-11-22T03:05:45Z"
+        }
+      ]
+    }
+  ],
+  "workflow_status": "completed",
+  "workflow_conclusion": "success",
+  "decision": "rejected at source-disjoint held-out gates",
+  "representation_feasibility_passed": false,
+  "research_screen_passed": false,
+  "report": "build/github-results/harmonic-halo-context-44978661693/artifact/harmonic-halo-context-result/report/report.json",
+  "report_sha256": "0604b4c4b832e0c05912915d4654859c0a5d8e87ac24615c0fb5b8f782e51a8c",
+  "result_document": "docs/recovery/CODEX-M3-HARMONIC-HALO-RESULT-20261121.md",
+  "collection_receipt": "build/github-results/harmonic-halo-context-44978661693/collection-receipt.json",
+  "collected_at": "2026-11-22T03:06:15.329656+00:00",
+  "artifacts": [
+    {
+      "id": 14737002306,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczNzAwMjMwNg==",
+      "name": "m3-harmonic-halo-context-evidence-44978661693-1",
+      "size_in_bytes": 6878784,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737002306",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737002306/zip",
+      "expired": false,
+      "digest": "sha256:6a0bb83c4ef1394d0a919db0f35330411920cec69d4b51c680d9c5aabe50c4b8",
+      "created_at": "2026-11-22T03:05:45Z",
+      "updated_at": "2026-11-22T03:05:45Z",
+      "expires_at": "2026-12-06T03:05:43Z",
+      "workflow_run": {
+        "id": 44978661693,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "ca1fa82801caace567db76265d43c51157400fe8"
+      }
+    },
+    {
+      "id": 14736488772,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczNjQ4ODc3Mg==",
+      "name": "m3-harmonic-halo-context-report-44978661693-1",
+      "size_in_bytes": 26163,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14736488772",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14736488772/zip",
+      "expired": false,
+      "digest": "sha256:b84d98a5932439a54f30ada6f8dfa7083b37879358c09bb49a7207e99de64a1c",
+      "created_at": "2026-11-22T03:05:43Z",
+      "updated_at": "2026-11-22T03:05:43Z",
+      "expires_at": "2026-12-06T03:05:41Z",
+      "workflow_run": {
+        "id": 44978661693,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "ca1fa82801caace567db76265d43c51157400fe8"
+      }
+    }
+  ],
+  "result": {
+    "gates": {
+      "train_complete_chords": true,
+      "calibration_complete_chords": false,
+      "test_complete_chords": false
+    },
+    "roles": {
+      "train": {
+        "overall": {
+          "baseline": {
+            "examples": 16384,
+            "true_positive": 43827,
+            "false_positive": 439,
+            "false_negative": 1871,
+            "precision_percent": 99.00826819681019,
+            "recall_percent": 95.9057289159263,
+            "exact_set_percent": 89.093017578125,
+            "exact_sets": 14597,
+            "expected_pitches": 45698
+          },
+          "current": {
+            "examples": 16384,
+            "true_positive": 43646,
+            "false_positive": 440,
+            "false_negative": 2052,
+            "precision_percent": 99.0019507326589,
+            "recall_percent": 95.50965031292398,
+            "exact_set_percent": 88.37890625,
+            "exact_sets": 14480,
+            "expected_pitches": 45698
+          },
+          "delta": {
+            "true_positive": -181,
+            "false_positive": 1,
+            "false_negative": 181,
+            "exact_sets": -117,
+            "precision_percent": -0.006317464151294416,
+            "exact_set_percent": -0.714111328125
+          },
+          "recall_change_pp": -0.3960786030023229
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "baseline": {
+              "examples": 820,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 820,
+              "expected_pitches": 0
+            },
+            "current": {
+              "examples": 820,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 820,
+              "expected_pitches": 0
+            },
+            "delta": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "exact_sets": 0,
+              "precision_percent": 0.0,
+              "exact_set_percent": 0.0
+            },
+            "recall_change_pp": null
+          },
+          "1": {
+            "baseline": {
+              "examples": 3132,
+              "true_positive": 3127,
+              "false_positive": 13,
+              "false_negative": 5,
+              "precision_percent": 99.5859872611465,
+              "recall_percent": 99.84035759897829,
+              "exact_set_percent": 99.45721583652617,
+              "exact_sets": 3115,
+              "expected_pitches": 3132
+            },
+            "current": {
+              "examples": 3132,
+              "true_positive": 3119,
+              "false_positive": 19,
+              "false_negative": 13,
+              "precision_percent": 99.39451880178457,
+              "recall_percent": 99.58492975734355,
+              "exact_set_percent": 99.07407407407408,
+              "exact_sets": 3103,
+              "expected_pitches": 3132
+            },
+            "delta": {
+              "true_positive": -8,
+              "false_positive": 6,
+              "false_negative": 8,
+              "exact_sets": -12,
+              "precision_percent": -0.19146845936192847,
+              "exact_set_percent": -0.3831417624520981
+            },
+            "recall_change_pp": -0.2554278416347415
+          },
+          "2": {
+            "baseline": {
+              "examples": 3220,
+              "true_positive": 6347,
+              "false_positive": 55,
+              "false_negative": 93,
+              "precision_percent": 99.14089347079037,
+              "recall_percent": 98.55590062111801,
+              "exact_set_percent": 95.77639751552796,
+              "exact_sets": 3084,
+              "expected_pitches": 6440
+            },
+            "current": {
+              "examples": 3220,
+              "true_positive": 6318,
+              "false_positive": 69,
+              "false_negative": 122,
+              "precision_percent": 98.91968060122123,
+              "recall_percent": 98.1055900621118,
+              "exact_set_percent": 94.472049689441,
+              "exact_sets": 3042,
+              "expected_pitches": 6440
+            },
+            "delta": {
+              "true_positive": -29,
+              "false_positive": 14,
+              "false_negative": 29,
+              "exact_sets": -42,
+              "precision_percent": -0.22121286956914332,
+              "exact_set_percent": -1.3043478260869676
+            },
+            "recall_change_pp": -0.450310559006212
+          },
+          "3": {
+            "baseline": {
+              "examples": 3251,
+              "true_positive": 9498,
+              "false_positive": 102,
+              "false_negative": 255,
+              "precision_percent": 98.9375,
+              "recall_percent": 97.38541987080899,
+              "exact_set_percent": 90.86434943094433,
+              "exact_sets": 2954,
+              "expected_pitches": 9753
+            },
+            "current": {
+              "examples": 3251,
+              "true_positive": 9464,
+              "false_positive": 101,
+              "false_negative": 289,
+              "precision_percent": 98.94406691061161,
+              "recall_percent": 97.03680918691684,
+              "exact_set_percent": 90.06459550907412,
+              "exact_sets": 2928,
+              "expected_pitches": 9753
+            },
+            "delta": {
+              "true_positive": -34,
+              "false_positive": -1,
+              "false_negative": 34,
+              "exact_sets": -26,
+              "precision_percent": 0.00656691061161041,
+              "exact_set_percent": -0.7997539218702059
+            },
+            "recall_change_pp": -0.3486106838921472
+          },
+          "4": {
+            "baseline": {
+              "examples": 3432,
+              "true_positive": 13100,
+              "false_positive": 138,
+              "false_negative": 628,
+              "precision_percent": 98.95754645716876,
+              "recall_percent": 95.42540792540792,
+              "exact_set_percent": 81.75990675990677,
+              "exact_sets": 2806,
+              "expected_pitches": 13728
+            },
+            "current": {
+              "examples": 3432,
+              "true_positive": 13071,
+              "false_positive": 132,
+              "false_negative": 657,
+              "precision_percent": 99.00022722108612,
+              "recall_percent": 95.21416083916084,
+              "exact_set_percent": 81.46853146853147,
+              "exact_sets": 2796,
+              "expected_pitches": 13728
+            },
+            "delta": {
+              "true_positive": -29,
+              "false_positive": -6,
+              "false_negative": 29,
+              "exact_sets": -10,
+              "precision_percent": 0.04268076391736031,
+              "exact_set_percent": -0.29137529137530294
+            },
+            "recall_change_pp": -0.21124708624708433
+          },
+          "5": {
+            "baseline": {
+              "examples": 2529,
+              "true_positive": 11755,
+              "false_positive": 131,
+              "false_negative": 890,
+              "precision_percent": 98.89786303213864,
+              "recall_percent": 92.9616449189403,
+              "exact_set_percent": 71.88612099644128,
+              "exact_sets": 1818,
+              "expected_pitches": 12645
+            },
+            "current": {
+              "examples": 2529,
+              "true_positive": 11674,
+              "false_positive": 119,
+              "false_negative": 971,
+              "precision_percent": 98.99092682099551,
+              "recall_percent": 92.3210755239225,
+              "exact_set_percent": 70.8185053380783,
+              "exact_sets": 1791,
+              "expected_pitches": 12645
+            },
+            "delta": {
+              "true_positive": -81,
+              "false_positive": -12,
+              "false_negative": 81,
+              "exact_sets": -27,
+              "precision_percent": 0.09306378885686684,
+              "exact_set_percent": -1.067615658362982
+            },
+            "recall_change_pp": -0.640569395017792
+          }
+        }
+      },
+      "calibration": {
+        "overall": {
+          "baseline": {
+            "examples": 4096,
+            "true_positive": 10673,
+            "false_positive": 687,
+            "false_negative": 880,
+            "precision_percent": 93.9524647887324,
+            "recall_percent": 92.38293084047433,
+            "exact_set_percent": 73.1689453125,
+            "exact_sets": 2997,
+            "expected_pitches": 11553
+          },
+          "current": {
+            "examples": 4096,
+            "true_positive": 10587,
+            "false_positive": 644,
+            "false_negative": 966,
+            "precision_percent": 94.26587124922091,
+            "recall_percent": 91.63853544533887,
+            "exact_set_percent": 72.509765625,
+            "exact_sets": 2970,
+            "expected_pitches": 11553
+          },
+          "delta": {
+            "true_positive": -86,
+            "false_positive": -43,
+            "false_negative": 86,
+            "exact_sets": -27,
+            "precision_percent": 0.3134064604885083,
+            "exact_set_percent": -0.6591796875
+          },
+          "recall_change_pp": -0.7443953951354558
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "baseline": {
+              "examples": 205,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 205,
+              "expected_pitches": 0
+            },
+            "current": {
+              "examples": 205,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 205,
+              "expected_pitches": 0
+            },
+            "delta": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "exact_sets": 0,
+              "precision_percent": 0.0,
+              "exact_set_percent": 0.0
+            },
+            "recall_change_pp": null
+          },
+          "1": {
+            "baseline": {
+              "examples": 753,
+              "true_positive": 742,
+              "false_positive": 61,
+              "false_negative": 11,
+              "precision_percent": 92.40348692403487,
+              "recall_percent": 98.53917662682603,
+              "exact_set_percent": 91.76626826029216,
+              "exact_sets": 691,
+              "expected_pitches": 753
+            },
+            "current": {
+              "examples": 753,
+              "true_positive": 740,
+              "false_positive": 58,
+              "false_negative": 13,
+              "precision_percent": 92.73182957393483,
+              "recall_percent": 98.27357237715803,
+              "exact_set_percent": 91.63346613545816,
+              "exact_sets": 690,
+              "expected_pitches": 753
+            },
+            "delta": {
+              "true_positive": -2,
+              "false_positive": -3,
+              "false_negative": 2,
+              "exact_sets": -1,
+              "precision_percent": 0.328342649899966,
+              "exact_set_percent": -0.13280212483400078
+            },
+            "recall_change_pp": -0.26560424966800156
+          },
+          "2": {
+            "baseline": {
+              "examples": 777,
+              "true_positive": 1510,
+              "false_positive": 113,
+              "false_negative": 44,
+              "precision_percent": 93.03758471965496,
+              "recall_percent": 97.16859716859717,
+              "exact_set_percent": 83.91248391248392,
+              "exact_sets": 652,
+              "expected_pitches": 1554
+            },
+            "current": {
+              "examples": 777,
+              "true_positive": 1501,
+              "false_positive": 100,
+              "false_negative": 53,
+              "precision_percent": 93.75390381011867,
+              "recall_percent": 96.5894465894466,
+              "exact_set_percent": 84.42728442728443,
+              "exact_sets": 656,
+              "expected_pitches": 1554
+            },
+            "delta": {
+              "true_positive": -9,
+              "false_positive": -13,
+              "false_negative": 9,
+              "exact_sets": 4,
+              "precision_percent": 0.7163190904637133,
+              "exact_set_percent": 0.5148005148005126
+            },
+            "recall_change_pp": -0.5791505791505784
+          },
+          "3": {
+            "baseline": {
+              "examples": 837,
+              "true_positive": 2371,
+              "false_positive": 157,
+              "false_negative": 140,
+              "precision_percent": 93.78955696202532,
+              "recall_percent": 94.42453205894066,
+              "exact_set_percent": 74.67144563918757,
+              "exact_sets": 625,
+              "expected_pitches": 2511
+            },
+            "current": {
+              "examples": 837,
+              "true_positive": 2362,
+              "false_positive": 164,
+              "false_negative": 149,
+              "precision_percent": 93.50752177355503,
+              "recall_percent": 94.06610911987256,
+              "exact_set_percent": 72.64038231780168,
+              "exact_sets": 608,
+              "expected_pitches": 2511
+            },
+            "delta": {
+              "true_positive": -9,
+              "false_positive": 7,
+              "false_negative": 9,
+              "exact_sets": -17,
+              "precision_percent": -0.28203518847028874,
+              "exact_set_percent": -2.0310633213858864
+            },
+            "recall_change_pp": -0.35842293906809175
+          },
+          "4": {
+            "baseline": {
+              "examples": 885,
+              "true_positive": 3242,
+              "false_positive": 194,
+              "false_negative": 298,
+              "precision_percent": 94.35389988358557,
+              "recall_percent": 91.5819209039548,
+              "exact_set_percent": 61.12994350282486,
+              "exact_sets": 541,
+              "expected_pitches": 3540
+            },
+            "current": {
+              "examples": 885,
+              "true_positive": 3217,
+              "false_positive": 170,
+              "false_negative": 323,
+              "precision_percent": 94.98080897549454,
+              "recall_percent": 90.87570621468926,
+              "exact_set_percent": 60.564971751412436,
+              "exact_sets": 536,
+              "expected_pitches": 3540
+            },
+            "delta": {
+              "true_positive": -25,
+              "false_positive": -24,
+              "false_negative": 25,
+              "exact_sets": -5,
+              "precision_percent": 0.6269090919089706,
+              "exact_set_percent": -0.564971751412422
+            },
+            "recall_change_pp": -0.7062146892655363
+          },
+          "5": {
+            "baseline": {
+              "examples": 639,
+              "true_positive": 2808,
+              "false_positive": 162,
+              "false_negative": 387,
+              "precision_percent": 94.54545454545455,
+              "recall_percent": 87.88732394366197,
+              "exact_set_percent": 44.28794992175274,
+              "exact_sets": 283,
+              "expected_pitches": 3195
+            },
+            "current": {
+              "examples": 639,
+              "true_positive": 2767,
+              "false_positive": 152,
+              "false_negative": 428,
+              "precision_percent": 94.7927372387804,
+              "recall_percent": 86.60406885758998,
+              "exact_set_percent": 43.03599374021909,
+              "exact_sets": 275,
+              "expected_pitches": 3195
+            },
+            "delta": {
+              "true_positive": -41,
+              "false_positive": -10,
+              "false_negative": 41,
+              "exact_sets": -8,
+              "precision_percent": 0.2472826933258574,
+              "exact_set_percent": -1.2519561815336502
+            },
+            "recall_change_pp": -1.2832550860719891
+          }
+        }
+      },
+      "test": {
+        "overall": {
+          "baseline": {
+            "examples": 4096,
+            "true_positive": 8000,
+            "false_positive": 2705,
+            "false_negative": 2452,
+            "precision_percent": 74.73143390938813,
+            "recall_percent": 76.54037504783773,
+            "exact_set_percent": 42.7001953125,
+            "exact_sets": 1749,
+            "expected_pitches": 10452
+          },
+          "current": {
+            "examples": 4096,
+            "true_positive": 8028,
+            "false_positive": 2472,
+            "false_negative": 2424,
+            "precision_percent": 76.45714285714286,
+            "recall_percent": 76.80826636050517,
+            "exact_set_percent": 42.1142578125,
+            "exact_sets": 1725,
+            "expected_pitches": 10452
+          },
+          "delta": {
+            "true_positive": 28,
+            "false_positive": -233,
+            "false_negative": -28,
+            "exact_sets": -24,
+            "precision_percent": 1.7257089477547254,
+            "exact_set_percent": -0.5859375
+          },
+          "recall_change_pp": 0.2678913126674445
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "baseline": {
+              "examples": 205,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 205,
+              "expected_pitches": 0
+            },
+            "current": {
+              "examples": 205,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 205,
+              "expected_pitches": 0
+            },
+            "delta": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "exact_sets": 0,
+              "precision_percent": 0.0,
+              "exact_set_percent": 0.0
+            },
+            "recall_change_pp": null
+          },
+          "1": {
+            "baseline": {
+              "examples": 869,
+              "true_positive": 744,
+              "false_positive": 355,
+              "false_negative": 125,
+              "precision_percent": 67.69790718835304,
+              "recall_percent": 85.61565017261219,
+              "exact_set_percent": 69.85040276179517,
+              "exact_sets": 607,
+              "expected_pitches": 869
+            },
+            "current": {
+              "examples": 869,
+              "true_positive": 744,
+              "false_positive": 366,
+              "false_negative": 125,
+              "precision_percent": 67.02702702702703,
+              "recall_percent": 85.61565017261219,
+              "exact_set_percent": 65.47756041426928,
+              "exact_sets": 569,
+              "expected_pitches": 869
+            },
+            "delta": {
+              "true_positive": 0,
+              "false_positive": 11,
+              "false_negative": 0,
+              "exact_sets": -38,
+              "precision_percent": -0.6708801613260107,
+              "exact_set_percent": -4.372842347525889
+            },
+            "recall_change_pp": 0.0
+          },
+          "2": {
+            "baseline": {
+              "examples": 950,
+              "true_positive": 1567,
+              "false_positive": 612,
+              "false_negative": 333,
+              "precision_percent": 71.91372189077559,
+              "recall_percent": 82.47368421052632,
+              "exact_set_percent": 46.421052631578945,
+              "exact_sets": 441,
+              "expected_pitches": 1900
+            },
+            "current": {
+              "examples": 950,
+              "true_positive": 1569,
+              "false_positive": 577,
+              "false_negative": 331,
+              "precision_percent": 73.11276794035415,
+              "recall_percent": 82.57894736842105,
+              "exact_set_percent": 46.94736842105263,
+              "exact_sets": 446,
+              "expected_pitches": 1900
+            },
+            "delta": {
+              "true_positive": 2,
+              "false_positive": -35,
+              "false_negative": -2,
+              "exact_sets": 5,
+              "precision_percent": 1.1990460495785555,
+              "exact_set_percent": 0.526315789473685
+            },
+            "recall_change_pp": 0.10526315789473983
+          },
+          "3": {
+            "baseline": {
+              "examples": 932,
+              "true_positive": 2191,
+              "false_positive": 729,
+              "false_negative": 605,
+              "precision_percent": 75.03424657534246,
+              "recall_percent": 78.36194563662374,
+              "exact_set_percent": 34.763948497854074,
+              "exact_sets": 324,
+              "expected_pitches": 2796
+            },
+            "current": {
+              "examples": 932,
+              "true_positive": 2178,
+              "false_positive": 674,
+              "false_negative": 618,
+              "precision_percent": 76.36746143057503,
+              "recall_percent": 77.8969957081545,
+              "exact_set_percent": 33.047210300429185,
+              "exact_sets": 308,
+              "expected_pitches": 2796
+            },
+            "delta": {
+              "true_positive": -13,
+              "false_positive": -55,
+              "false_negative": 13,
+              "exact_sets": -16,
+              "precision_percent": 1.333214855232569,
+              "exact_set_percent": -1.7167381974248883
+            },
+            "recall_change_pp": -0.4649499284692382
+          },
+          "4": {
+            "baseline": {
+              "examples": 813,
+              "true_positive": 2387,
+              "false_positive": 697,
+              "false_negative": 865,
+              "precision_percent": 77.39948119325551,
+              "recall_percent": 73.4009840098401,
+              "exact_set_percent": 17.83517835178352,
+              "exact_sets": 145,
+              "expected_pitches": 3252
+            },
+            "current": {
+              "examples": 813,
+              "true_positive": 2422,
+              "false_positive": 619,
+              "false_negative": 830,
+              "precision_percent": 79.64485366655705,
+              "recall_percent": 74.47724477244772,
+              "exact_set_percent": 19.43419434194342,
+              "exact_sets": 158,
+              "expected_pitches": 3252
+            },
+            "delta": {
+              "true_positive": 35,
+              "false_positive": -78,
+              "false_negative": -35,
+              "exact_sets": 13,
+              "precision_percent": 2.2453724733015434,
+              "exact_set_percent": 1.5990159901599021
+            },
+            "recall_change_pp": 1.0762607626076175
+          },
+          "5": {
+            "baseline": {
+              "examples": 327,
+              "true_positive": 1111,
+              "false_positive": 312,
+              "false_negative": 524,
+              "precision_percent": 78.0744905130007,
+              "recall_percent": 67.95107033639144,
+              "exact_set_percent": 8.256880733944955,
+              "exact_sets": 27,
+              "expected_pitches": 1635
+            },
+            "current": {
+              "examples": 327,
+              "true_positive": 1115,
+              "false_positive": 236,
+              "false_negative": 520,
+              "precision_percent": 82.53145817912657,
+              "recall_percent": 68.19571865443424,
+              "exact_set_percent": 11.926605504587156,
+              "exact_sets": 39,
+              "expected_pitches": 1635
+            },
+            "delta": {
+              "true_positive": 4,
+              "false_positive": -76,
+              "false_negative": -4,
+              "exact_sets": 12,
+              "precision_percent": 4.456967666125877,
+              "exact_set_percent": 3.669724770642201
+            },
+            "recall_change_pp": 0.24464831804280607
+          }
+        }
+      }
+    },
+    "source_roles": {
+      "counts": {
+        "train": 200,
+        "calibration": 200,
+        "test": 155
+      },
+      "cross_role_original_overlap": false,
+      "all_original_labels_retained": true,
+      "source_consistency_metadata_used_to_filter": false,
+      "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+    },
+    "cutoff_baseline": {
+      "cutoff": 0.5343895554542542,
+      "feasible": true,
+      "true_positive": 43827,
+      "false_positive": 439,
+      "training_only": true,
+      "selection": "maximum train TP at >=99% precision; stricter tie"
+    },
+    "cutoff_current": {
+      "cutoff": 0.6624976396560669,
+      "feasible": true,
+      "true_positive": 43646,
+      "false_positive": 440,
+      "training_only": true,
+      "selection": "maximum train TP at >=99% precision; stricter tie"
+    },
+    "frozen_model": {
+      "sha256": "3db5569cfe51b433d8b608e88142f6a4aa1bbe9326b59d8d95b375db23fbbd01",
+      "cutoff": 0.6624976396560669,
+      "persisted_before_held_out_scoring": true,
+      "training_fits": 1
+    },
+    "continuous_replay": {
+      "executed": false,
+      "reason": "Training and both held-out complete-chord gates must pass first."
+    },
+    "fit": {
+      "seconds": 198.30691469099997,
+      "epochs": 80,
+      "mixtures": 16384,
+      "pooled_candidate_rows": 868352,
+      "input_note_count": 125,
+      "output_note_count": 53,
+      "normalization_rows": 868352,
+      "features_per_candidate": 62,
+      "shared_binary_outputs": 1,
+      "parameter_count": 14465,
+      "final_loss": 0.4731170248705894,
+      "held_out_used": false,
+      "fits": 1,
+      "objective": "mean_bce_plus_setwise_logsumexp_v1"
+    }
+  }
 }
