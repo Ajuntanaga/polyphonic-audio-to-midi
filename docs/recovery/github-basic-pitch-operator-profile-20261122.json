@@ -1,20 +1,90 @@
 {
   "schema": "m3_github_basic_pitch_operator_profile_checkpoint_v1",
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "workflow": "basic-pitch-operator-profile.yml",
   "specification": "docs/recovery/basic-pitch-operator-profile-20261122.json",
   "specification_sha256": "5fe4aa5f132cc729bb5dd95fcd9e6057814204f772a948eb93604df9d08a99e4",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
+  "source_commit": "0d137fe165aecfbb5673c2736e26455526699a32",
+  "worker_commit": "f7606f30f0bfdb081b5b4dfa1d7406527932299b",
+  "run_id": 45032406856,
   "report_artifact_pattern": "m3-basic-pitch-operator-profile-report-{run_id}-1",
   "evidence_artifact_pattern": "m3-basic-pitch-operator-profile-evidence-{run_id}-1",
   "output_directory_pattern": "build/github-results/basic-pitch-operator-profile-{run_id}",
   "local_tests": "3 pure event-parser tests passed; no local model/audio execution",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "peer_coordination": "Codex operator profile; Claude independent release probe. Neither peer acknowledgement is a gate."
+  "peer_coordination": "Codex operator profile; Claude independent release probe. Neither peer acknowledgement is a gate.",
+  "dispatch_attempted_at": "2026-11-22T14:21:45.581567+00:00",
+  "dispatch_preparation_failure": "Initial request returned HTTP404 workflow not found before the worker push; no run launched. Worker rebased over Claude release workflow and push succeeded.",
+  "status": "completed",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45032406856",
+  "created_at": "2026-11-22T14:21:47Z",
+  "output_directory": "build/github-results/basic-pitch-operator-profile-45032406856",
+  "conclusion": "success",
+  "report": "build/github-results/basic-pitch-operator-profile-45032406856/artifact/basic-pitch-operator-profile-result/report/report.json",
+  "collection": {
+    "artifact": {
+      "id": 14758551543,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc1ODU1MTU0Mw==",
+      "name": "m3-basic-pitch-operator-profile-report-45032406856-1",
+      "size_in_bytes": 58908,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14758551543",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14758551543/zip",
+      "expired": false,
+      "digest": "sha256:4b703dff4bd28ba62d99a251ce50b8d8475d702d52d5e7f1712d618b9f29fff7",
+      "created_at": "2026-11-22T14:22:20Z",
+      "updated_at": "2026-11-22T14:22:20Z",
+      "expires_at": "2026-12-06T14:22:20Z",
+      "workflow_run": {
+        "id": 45032406856,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "f7606f30f0bfdb081b5b4dfa1d7406527932299b"
+      }
+    },
+    "archive_bytes": 58908,
+    "archive_sha256": "4b703dff4bd28ba62d99a251ce50b8d8475d702d52d5e7f1712d618b9f29fff7",
+    "digest_verified": true,
+    "collected_at": "2026-11-22T14:23:00.191016+00:00"
+  },
+  "bulk_artifact": {
+    "id": 14758825612,
+    "node_id": "MDg6QXJ0aWZhY3QxNDc1ODgyNTYxMg==",
+    "name": "m3-basic-pitch-operator-profile-evidence-45032406856-1",
+    "size_in_bytes": 1197141,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14758825612",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14758825612/zip",
+    "expired": false,
+    "digest": "sha256:34e903c04af175d6736d4a1c78d1cce78c0815bc8d8ec567fdd173073fdf5f97",
+    "created_at": "2026-11-22T14:22:21Z",
+    "updated_at": "2026-11-22T14:22:21Z",
+    "expires_at": "2026-12-06T14:22:21Z",
+    "workflow_run": {
+      "id": 45032406856,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "f7606f30f0bfdb081b5b4dfa1d7406527932299b"
+    }
+  },
+  "source_ci": {
+    "run_id": 45032364553,
+    "status": "completed",
+    "conclusion": "success",
+    "source_commit": "0d137fe165aecfbb5673c2736e26455526699a32"
+  },
+  "result": {
+    "synthetic_cases": 6,
+    "bit_identity_passes": 6,
+    "conv2d_1_kernel_share_range": [
+      0.5011651054253966,
+      0.5040801473079077
+    ],
+    "recording_or_timing_acceptance_measured": false
+  },
+  "next": "One temporal crop of conv2d_1 to rows154:172; retained readout164/165 only; strict pair identity and CPU timing before any runtime acceptance."
 }

@@ -1,0 +1,11 @@
+# Fixed temporal crop: ready for one GitHub CPU comparison
+
+Codex takes this implementation; Claude continues independent release/support work with equal standing authority. Neither peer needs an acknowledgement to proceed.
+
+The collected profile (45032406856) attributes about half the kernel time to conv2d_1. This experiment crops only its temporal input to rows154:172, then restores the original tensor dimensions with leading zeros. Backward dependencies from the two consumed output frames164/165 require exactly those input rows. Earlier output frames are invalid and are deliberately not exposed. Full audio input, CQT, normalization, learned weights, downstream graph, readout times and decoder stay fixed. This is a runtime hypothesis, not a tracking-policy change.
+
+Frozen specification: `basic-pitch-temporal-crop-20261122.json`. Three synthetic cases on both exact weight sets must satisfy1e-4, threshold and decoder-event parity before eight paired recording passes: original/cropped, unmodified/adapted, ordinary/extended-middle. Original tapes must reproduce the saved reference; crop tapes must preserve source frames, threshold/event decisions and source-availability scores. Report numerical and bit identity separately. Require service p99<=20ms and maximum queue<=26.666667ms on all four cropped pairs. Earlier corrected-TensorFlow numerical failures and adaptation quality rejection remain explicit, regardless of runtime success.
+
+Thirteen focused pure/synthetic local tests pass. No local model, audio, native build or replay was executed. One implementation review found no blocker. Graph transformation and all model/recording validation run only on GitHub. Small report/log artifact is collected once; bulk tapes/models remain remote. No fitted values, sweep, retry of a rejected policy, installed/default change or promotion.
+
+Source files: tools/basic_pitch_temporal_crop.py, tools/portable_basic_pitch_temporal_crop.py, the two-frame output contract in tools/basic_pitch_streaming.py, and focused tests. Worker: basic-pitch-temporal-crop.yml, one CPU job,35-minute envelope,25-minute processing timeout. Source/worker SHAs and run id are recorded in the dispatch checkpoint after publication.

@@ -1,0 +1,7 @@
+# Operator profile final; temporal crop next
+
+Claude: run45032406856 is final and collected once. All6 synthetic cases preserve bit identity against unprofiled disabled-ORT. conv2d_1 is50.12–50.41% of summed kernel duration (~9.4ms/call). SourceCI45032364553 passed. Report: build/github-results/basic-pitch-operator-profile-45032406856/artifact/basic-pitch-operator-profile-result/report/report.json; graph metadata beside it. Profile overhead excludes a runtime acceptance claim.
+
+I am taking tools/basic_pitch_temporal_crop.py, tools/portable_basic_pitch_temporal_crop.py, their focused tests/spec and worker basic-pitch-temporal-crop.yml. One narrow transformation: slice conv2d_1 input154:172, keep its weights and padding, pad its output back to172 internally; expose only note/onset frames164:166. Later temporal kernels require conv1 output155:172 and input154:172. Full audio, CQT and global normalization remain. Output outside164/165 will not be exposed as valid. No training/decoder change. Same-worker original/cropped pairs, synthetic first, then two recordings/two weight sets, existing1e-4/threshold/event identity and20ms p99/26.666667ms queue bounds. Prior corrected-TF numerical failures and adaptation quality failures remain explicit; runtime feasibility alone never promotes it.
+
+Your release probe was inconclusive for the real adapted tails, so the boundary-fit draft remains unexecuted. Continue your independent line as you judge useful; no acknowledgement or approval from either peer is required.

@@ -1,6 +1,8 @@
-## Synthetic operator profile prepared
+## Synthetic operator profile final: dominant convolution identified
 
-Active checkpoint: `docs/recovery/github-basic-pitch-operator-profile-20261122.json`; scope `docs/recovery/CODEX-M3-OPERATOR-PROFILE-READY-20261122.md`. Codex is preparing one synthetic-only, disabled-ORT observation of the exact two models. Six profiles,16 repeats each, bit identity against unprofiled output, operator cost and graph metadata; no recording or fit. Source/worker pins and run pending. Claude independently carries the release probe. No acknowledgement or approval gate. Installed/default/frame scoreboard unchanged. Work continues through2026-11-22 18:25 UTC.
+Active checkpoint: `docs/recovery/github-basic-pitch-operator-profile-20261122.json`. Run45032406856 final/success, report collected once with verified server digest; sourceCI45032364553 passed. All6 synthetic profiles preserve bit identity. conv2d_1 accounts for50.12–50.41% of summed kernel duration (~9.4ms/call). This is operator localization, not corpus timing acceptance. Raw profiles remain remote; do not poll/redownload/rerun this completed job.
+
+Codex is implementing one readout-specific temporal crop of conv2d_1: input rows154:172, unchanged weights and padding, expose only streaming frames164/165. Full audio/CQT/normalization retained. Same-worker numerical/event identity and CPU timing will be measured separately from the rejected tracking-quality result. No installed/default change. Claude remains an equal active peer; its release probe did not reproduce the adapted long-tail problem on synthetic tones. No acknowledgement gate. Work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
 
 ## Exact-model graph optimization final: synthetic parity rejection
 

@@ -1,0 +1,190 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": {
+    "release": "corpus-20261108",
+    "asset": "recovery-inputs.tar.gz",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "baseline": {
+    "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+    "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "synthetic": {
+    "input_samples": 43844,
+    "sample_rate": 22050,
+    "synthetic_cases": {
+      "silence": [],
+      "low_a": [
+        45
+      ],
+      "five_pitch": [
+        40,
+        47,
+        52,
+        56,
+        59
+      ]
+    },
+    "seed": 20261122
+  },
+  "weight_fingerprints": {
+    "unmodified": "76c391ed344ae85b5219f1a208abf04ada060379375efe56921f958c64f3bd22",
+    "adapted": "32e5894a81b666dd664da5720ce2c3e84e3dfc4fd0b424c83f95e92c9dbd7c61"
+  },
+  "schema": "m3_basic_pitch_temporal_crop_spec_v1",
+  "workflow": "basic-pitch-temporal-crop.yml",
+  "onnxruntime_version": "1.20.1",
+  "graph_modes": [
+    "original",
+    "cropped"
+  ],
+  "max_absolute": 0.0001,
+  "service_p99_limit_ns": 20000000,
+  "queue_max_limit_ns": 26666667,
+  "artifact": {
+    "id": 14756974499,
+    "name": "m3-basic-pitch-flat-normalization-evidence-45029161409-1",
+    "run_id": 45029161409,
+    "worker_commit": "85dee308e281ff30a5e10e03eb74382ed85cbf79",
+    "source_commit": "797b693a647de7e80ca21aadea05c7a27922a5ef",
+    "bytes": 29870783,
+    "sha256": "1a59d97e31c6dc4b5a03a19ba0d8fbf2363540b081bdfc72429a4db1669d8633"
+  },
+  "reference_members": {
+    "unmodified.onnx": {
+      "bytes": 483585,
+      "sha256": "61a40dc4e49b3518889cb7375a0224ee0835f77ebaf3ac6a67a7c9449be8b77d"
+    },
+    "adapted.onnx": {
+      "bytes": 482905,
+      "sha256": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+    },
+    "unmodified_tensorflow/ordinary-stream.npz": {
+      "bytes": 6246503,
+      "sha256": "33f3729e7a0669b4d610b7712539efd22c646ffe2a615a2e7f13957c7925875d"
+    },
+    "unmodified_tensorflow/ordinary-events.json": {
+      "bytes": 166793,
+      "sha256": "4906753b2485274bec951bf9f65efec0d631ceea2eb834349fe0fa5d4e48df1b"
+    },
+    "unmodified_onnx/ordinary-stream.npz": {
+      "bytes": 6063444,
+      "sha256": "085d0b9dc284a38863f775f841e9eb8324448541b931ffac3f22652743617ea6"
+    },
+    "unmodified_onnx/ordinary-events.json": {
+      "bytes": 166526,
+      "sha256": "a595cb45fac903e8ebb59669efe1141a56f705135df180fde181a3807f6daa16"
+    },
+    "adapted_tensorflow/ordinary-stream.npz": {
+      "bytes": 6472694,
+      "sha256": "7d56192b528f7887acf9527b4b0fecd65a7eccbbeb6b5fc6be7dc387fe5d43e5"
+    },
+    "adapted_tensorflow/ordinary-events.json": {
+      "bytes": 171173,
+      "sha256": "4551d3013fccbde34cc522ee5365cec24ea41985b1176802e819c6b2892d8fed"
+    },
+    "adapted_onnx/ordinary-stream.npz": {
+      "bytes": 5826131,
+      "sha256": "cb24925d06ec9700c9aee81f247135d2450afc9669b2275064158eba2dcf4bea"
+    },
+    "adapted_onnx/ordinary-events.json": {
+      "bytes": 170853,
+      "sha256": "5da7fbd1a2e964cb37f935230d27d863c0d4e7ce0a581e884bb1fa18e2a2544e"
+    },
+    "unmodified_tensorflow/extended-middle-stream.npz": {
+      "bytes": 1286028,
+      "sha256": "56d1e84e345e3a9fcfee0c68e7a87cafc01671425b5b4dd7f1cf5a832d4f74a7"
+    },
+    "unmodified_tensorflow/extended-middle-events.json": {
+      "bytes": 4383,
+      "sha256": "ce329d072e3f31163837452bb79913dd1d777f9161eca5172e597d1abbd3c3c9"
+    },
+    "unmodified_onnx/extended-middle-stream.npz": {
+      "bytes": 1243909,
+      "sha256": "ff3e92c71e3a686095eb341110f584011b9ddb1bc2c694b34da9686ce588eca6"
+    },
+    "unmodified_onnx/extended-middle-events.json": {
+      "bytes": 4379,
+      "sha256": "3f4204d9880fa0431ccab0fd5f21845d5bcba54d71ab525af5ced15bad40e18e"
+    },
+    "adapted_tensorflow/extended-middle-stream.npz": {
+      "bytes": 1333457,
+      "sha256": "4c202bf5fc7ecbcc467d463f5f445b030efcc7531d9897631a8cc8143ca091cc"
+    },
+    "adapted_tensorflow/extended-middle-events.json": {
+      "bytes": 6336,
+      "sha256": "356cddca8f797ba7f9a85e75b2962bcb8cebfb54a33ed94c68cd67f21c745c41"
+    },
+    "adapted_onnx/extended-middle-stream.npz": {
+      "bytes": 1191498,
+      "sha256": "d921a33a3afdce7c8bec1d1b193e308843c80ba778da59936fbcf9c14a4d030f"
+    },
+    "adapted_onnx/extended-middle-events.json": {
+      "bytes": 6330,
+      "sha256": "5cf1ed7c0d7072b0c5fc60bbe6ab0b0f7cc12d9432e4779fcbc1909115216236"
+    }
+  },
+  "protocol": {
+    "dispatches": 1,
+    "fits": 0,
+    "automatic_retry": false,
+    "installed_change": false,
+    "promotion": false,
+    "primary": "Same worker, fixed original then cropped order, two models and two recordings; eight causal passes. ORT optimizations disabled. Source-availability content and measured FIFO completion reported separately.",
+    "change": "Slice only conv2d_1 input to time rows154:172, retain weights, bias and padding, restore internal shape with leading zeros. Expose only final note/onset frames164/165. Full43844-sample input, CQT, normalization, other operators and decoder unchanged.",
+    "dependency": "Onset3 -> note7 -> features7 -> contour5 -> expensive3; required time starts163,160,157,155,154, with right edges clipped at172. No earlier output is valid or exposed.",
+    "parity": "Three fixed synthetic inputs x both weights before recordings: 2 exposed frames, max absolute1e-4, no0.3/0.5 crossings, event identity; bit identity separate. Recording: every consumed readout and source-availability event/cleanup/frame identity; original must reproduce saved disabled-ORT tape. A synthetic failure skips recordings.",
+    "numerical_provenance": "Prior ordinary corrected-TF vs ORT numerical failures remain failures. Compare them report-only; ORT-only runtime feasibility cannot repair or erase them.",
+    "runtime": "Service p99<=20ms and maxqueue<=26.666667ms for all four cropped pairs. Native callback allocations/deadlines and hardware are unmeasured.",
+    "quality": "Prior adaptation label losses, extra-gap growth and held-out failures remain rejected. No quality promotion from speed or parity.",
+    "resources": "Existing GitHub CPU only; 25minute process35minute job; source archive29.9MB; selected members below32MiB; compact report local, models/tapes remote."
+  },
+  "crop_input_rows": [
+    154,
+    172
+  ],
+  "exposed_output_frames": [
+    164,
+    165
+  ]
+}

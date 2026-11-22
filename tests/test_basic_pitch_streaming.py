@@ -128,6 +128,45 @@ class CausalTests(unittest.TestCase):
             self.assertIn('requires GitHub Actions', result.stderr)
             self.assertFalse(output.exists())
 
+    def test_readout_only_contract_preserves_frames_events_and_input(self):
+        import numpy as np
+        source = np.arange(32000, dtype=np.float32)/64000
+
+        class Backend:
+            def __init__(self, start):
+                self.output_frame_start = start
+                self.windows = []
+
+            def predict(self, window):
+                self.windows.append(window.copy())
+                values = np.zeros((172,88), dtype=np.float32)
+                values[164:166,39] = .7
+                return ((values, values.copy()) if self.output_frame_start == 0
+                        else (values[164:166], values[164:166].copy()))
+
+        results, backends = [], []
+        for start in (0,164):
+            backend = Backend(start)
+            clock = iter(range(0,10000))
+            results.append(stream_blocks((source[i:i+640] for i in range(0,len(source),640)),
+                                         backend, clock_ns=lambda: next(clock)))
+            backends.append(backend)
+        self.assertGreater(results[0]['model_calls'], 0)
+        self.assertEqual(len(results[0]['events']), 1)
+        for key in ('events','frames','timing','open_decoder_pitches','model_calls'):
+            self.assertEqual(results[0][key], results[1][key])
+        for key in ('notes','onsets'):
+            np.testing.assert_array_equal(results[0][key], results[1][key])
+        np.testing.assert_array_equal(backends[0].windows, backends[1].windows)
+        with self.assertRaisesRegex(ValueError, 'earlier frame'):
+            stream_blocks(iter(()), Backend(164), additional_readout_start=160)
+        with self.assertRaisesRegex(ValueError, 'frame origin'):
+            stream_blocks(iter(()), Backend(162))
+        wrong = Backend(164)
+        wrong.predict = Backend(0).predict
+        with self.assertRaisesRegex(ValueError, 'output shape'):
+            stream_blocks((source[i:i+640] for i in range(0,len(source),640)), wrong)
+
 
 if __name__ == '__main__':
     unittest.main()

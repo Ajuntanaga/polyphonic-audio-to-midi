@@ -109,6 +109,12 @@ def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
             or not 0 <= additional_readout_start < 164
             or additional_readout_start % 2):
         raise ValueError('Additional readout must be an earlier even frame')
+    output_start = getattr(backend, 'output_frame_start', 0)
+    if type(output_start) is not int or output_start not in (0, 164):
+        raise ValueError('Unsupported model output frame origin')
+    if output_start and additional_readout_start is not None:
+        raise ValueError('Readout-only backend cannot supply an earlier frame')
+    output_frames = 172 if output_start == 0 else 2
     resampler, decoder, fifo = CausalResampler(), ForwardDecoder(), FifoClock()
     extra_decoder = ForwardDecoder() if additional_readout_start is not None else None
     extra_events, extra_frames, extra_notes, extra_onsets = [], [], [], []
@@ -139,10 +145,12 @@ def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
             model_started = clock_ns()
             notes, onsets = backend.predict(window)
             model_ns = clock_ns()-model_started
-            if notes.shape != (172, 88) or onsets.shape != (172, 88):
+            if notes.shape != (output_frames, 88) or onsets.shape != (output_frames, 88):
                 raise ValueError('Unexpected model output shape')
             decoded_at = clock_ns()
-            readout = notes[164:166].copy(), onsets[164:166].copy()
+            readout_start = 164-output_start
+            readout = (notes[readout_start:readout_start+2].copy(),
+                       onsets[readout_start:readout_start+2].copy())
             for j in range(2):
                 frame = decoder.next_frame
                 batch_events.extend(decoder.consume(readout[0][j], readout[1][j], frame))
