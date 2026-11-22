@@ -1,0 +1,96 @@
+{
+ "schema": "claude_m3_lowreg_activation_fate_v1",
+ "datasets": {
+  "ordinary": {
+   "frames": 9584,
+   "lower_labels": 286,
+   "G1_A_silent": 67,
+   "G1_kinds": {
+    "absent": 53,
+    "gated": 11,
+    "decodable": 1,
+    "other": 2
+   },
+   "G1_by_band": {
+    "below48": {
+     "absent": 20,
+     "gated": 6,
+     "decodable": 1,
+     "other": 1
+    },
+    "48to59": {
+     "absent": 33,
+     "gated": 5,
+     "other": 1
+    }
+   },
+   "both_silent": 34,
+   "both_silent_kinds": {
+    "absent": 31,
+    "gated": 2,
+    "decodable": 1
+   },
+   "R0_A_present_but_absent_pct": 0.5,
+   "R0_n": 219,
+   "R1_absent_pct": 79.1,
+   "R2_octave_pct": 0.0,
+   "G1_absent_relations": {
+    "other": 50,
+    "twelfth_up": 1,
+    "fifth_up": 2
+   },
+   "R3_decodable_pct": 1.5,
+   "R4_both_absent_pct": 91.2,
+   "current_recovers_among_A_silent": 33,
+   "current_recovers_kinds": {
+    "absent": 22,
+    "gated": 9,
+    "other": 2
+   },
+   "note_max_quantiles_G1": [
+    0.119,
+    0.21,
+    0.355
+   ],
+   "example_decodable": [
+    {
+     "midi": 43,
+     "annotated": 71770,
+     "a_present": 0,
+     "c_present": 0,
+     "kind": "decodable",
+     "rel": "fifth_up",
+     "note_max": 0.4430214762687683,
+     "note_frames": 3,
+     "onset_max": 0.52028489112854,
+     "strongest": 50,
+     "strongest_mean": 0.6299077272415161,
+     "own_mean": 0.2199631631374359
+    }
+   ]
+  },
+  "extended-middle": {
+   "frames": 2004,
+   "lower_labels": 6,
+   "G1_A_silent": 0,
+   "G1_kinds": {},
+   "G1_by_band": {
+    "below48": {},
+    "48to59": {}
+   },
+   "both_silent": 0,
+   "both_silent_kinds": {},
+   "R0_A_present_but_absent_pct": 0.0,
+   "R0_n": 6,
+   "R1_absent_pct": null,
+   "R2_octave_pct": null,
+   "G1_absent_relations": {},
+   "R3_decodable_pct": null,
+   "R4_both_absent_pct": null,
+   "current_recovers_among_A_silent": 0,
+   "current_recovers_kinds": {},
+   "note_max_quantiles_G1": null,
+   "example_decodable": []
+  }
+ }
+}
