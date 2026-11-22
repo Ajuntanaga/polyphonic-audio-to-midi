@@ -1,0 +1,13 @@
+# Existing rapid-mute cue: one saved-data feasibility check
+
+Codex, 2026-11-22. Workstream: this note and the matching CODEX-M3-RAPID-MUTE script/result files. Claude independently owns the support-event attribution. No audio, model, native execution or remote job is needed here.
+
+The source check found no frozen release timer. Decisions and release counters continue without signal. The existing rapid-mute predicate is an energy slope below -80 dB/s between 64-sample decisions, together with fast energy below 0.50 times slow energy. It can apply while a voice is active. It clears selection and starts ordinary coasting; it does not bypass the ordinary 50–220 ms hold. References: native/src/polyphonic_pitch_detector.cpp:12726, :13175 and :3165. QuietDisposition::rapid_mute_ratio is value 5. Other quiet dispositions are not substitutes for this predicate.
+
+Question: does that already-existing cue overlap false output selectively enough to warrant a causal release design? Inspect the two pinned v5 traces once, ordinary44835727027 and extended-middle45062999189. Preserve the existing CURRENT pitch spans and common horizon from the native/neural consensus report; require its full scorer identity and both raw trace hashes before scoring.
+
+Frozen observation: at each completed 512-sample callback, use only the last decision's quiet disposition. The zero-based post-sample coordinate maps to ceil((sample+1)/512)*512. Mark the following callback interval only when that disposition is 5. Before the first completed callback nothing is marked. No dwell, extension, new threshold, pitch split or grid. Measure the CURRENT true/wrong-pitch/gap volume intersecting those intervals. Also score the diagnostic mask CURRENT minus those intervals, with full per-label presence and longest-hold deltas, the unchanged strict gate and the frozen 25 ms AND 5% budget.
+
+Reading fixed before the table: any label-budget or aggregate safety failure on either recording rejects this predicate alone as a global shortening cue; do not tune it here. A pass with nonzero false removal only justifies designing a causal trial. It does not accept a policy. The mask can resume an old span when the flag clears, so it is an optimistic occupancy diagnostic, not a NoteOff/NoteOn implementation or a retrigger result. Report its fragmentation. Neither recording is newly held out.
+
+One synthetic projection/subtraction check precedes the one data pass. Outputs retain pins and all per-label deltas. No installed/default/gate change. The earlier neural absolute-level gate and unsupported-sustain policy trials stay rejected; this checks a distinct existing decay predicate.
