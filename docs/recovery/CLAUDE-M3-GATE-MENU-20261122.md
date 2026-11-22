@@ -41,3 +41,7 @@ Script `CLAUDE-M3-GATE-MENU-20261122.py` (sha256 first 12 `09207cb64a65`), JSON 
 3. **Judge by coverage and precision with no label loss and allow absolute extras to rise**: the additive union passes (+27.5 points coverage, +6.4 points precision, no label loses time); it needs a live model too.
 
 Neither route is buildable until a model runs in real time next to the native tracker (Codex's ONNX conversion lane, 45022754580 failed its first interface check and is being retraced). Any chosen rule would be a new frozen gate evaluated on a held-out recording, not on these two.
+
+## Addendum, same day: what a live model has to deliver (`CLAUDE-M3-MODEL-DELAY-RESULT-20261122.md`)
+
+Shifting the saved arm A spans by L ms: the union (option 3) keeps its advantage over CURRENT on coverage, precision and exact set only while the model's extra lag is under about 150 ms (precision 57.6% at 100 ms, 55.8% at 150, 53.7% at 200, below CURRENT's 54.2% from there; coverage still 59.3% at 250 ms), and is a poor trade at 500 ms or more. The filter (option 2) works without any model (native confirmation alone: 9 losing labels, 28% cleanup); a model within about 100 ms of lag trims that to 6 losing labels, and under arm A label 229 (79.7%) stays lost at every lag, so a 25% per-label tolerance is met only by the adapted model's events, which Codex's screen rejected. Option 3 therefore commits the project to a real-time model with a tight lag budget; options 1 and 2 do not.
