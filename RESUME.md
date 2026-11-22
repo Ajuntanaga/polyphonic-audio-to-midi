@@ -1,3 +1,9 @@
+## Coherent pitch transposition screen prepared: one frozen CPU fit
+
+Active checkpoint: `docs/recovery/github-harmonic-pitch-transposition-20261121.json`; design: `docs/recovery/CODEX-M3-PITCH-TRANSPOSITION-PLAN-20261121.md`. Training only: retain all original mixtures and add one companion with a shared legal integer pitch shift, preserving chord intervals, unisons, component gains and source roles. No shelf variation; setwise run44965135706 is the baseline. All555 source labels retained. Architecture, loss,80 epochs and clean/held-out/continuous gates unchanged; twice the training examples and optimizer steps is a stated confound. No installed/default change.
+
+Local synthetic selection:78 tests,63 passed and15 Torch-dependent skipped; all78 run on GitHub before fitting. Original plan and new metadata-only companion plan are pinned in the spec. No local recorded audio/model/native processing. Standing scoped CPU-job authorization applies. Next: commit/push only this screen, dispatch `harmonic-pitch-transposition.yml` once, record both SHAs/run, collect the small report once. Stop on any failed gate; no held-out tuning, automatic rerun or promotion. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Saved source-transfer diagnosis final: solo and mixed errors remain
 
 Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-SOURCE-TRANSFER-DIAGNOSIS-RESULT-20261121.md`. Completed run44966587324 remains rejected. Evidence14731592882 collected once, server digest verified; six prediction/plan files extracted, model unopened. All original counts/roles/source identities reproduce, all555 sources retained; five synthetic checks pass. No new fit, audio/model/native processing or remote job. Do not repeat collection or diagnosis.

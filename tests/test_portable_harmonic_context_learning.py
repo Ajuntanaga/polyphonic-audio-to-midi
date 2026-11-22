@@ -33,11 +33,11 @@ class PortableContextTests(unittest.TestCase):
             cutoff = None
             def activity(self, features):
                 return np.zeros((len(features), 53))
-        configs = [(p, False) for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.append((runner.SETWISE_PARAMS, True))
-        for (params, varied), sequence in product(configs,
+        configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'transpose'))
+        for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
-            with self.subTest(gates=sequence, loss=params['loss'], varied=varied), tempfile.TemporaryDirectory() as directory:
+            with self.subTest(gates=sequence, loss=params['loss'], mode=mode), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 refs = {}
                 for name in ('sources', 'baseline', 'source_consistency'):
@@ -52,9 +52,12 @@ class PortableContextTests(unittest.TestCase):
                 if params != runner.MODEL_PARAMS:
                     spec_data['training_plan_identity'] = dict(
                         decoded_sha256=hashlib.sha256(b'[]').hexdigest())
-                if varied:
+                if mode == 'shelf':
                     spec_data['training_source_variation'] = runner.VARIATION
                     spec_data['varied_plan_identity'] = dict(decoded_sha256='synthetic-varied-plan')
+                if mode == 'transpose':
+                    spec_data['training_pitch_transposition'] = runner.TRANSPOSITION
+                    spec_data['transposed_plan_identity'] = dict(decoded_sha256='synthetic-transposed-plan')
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
@@ -79,6 +82,9 @@ class PortableContextTests(unittest.TestCase):
                     augmentation = stack.enter_context(patch.object(runner, 'variation_examples', return_value=(
                         np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
                         dict(decoded_sha256='synthetic-varied-plan'))))
+                    transposition = stack.enter_context(patch.object(runner, 'transposition_examples', return_value=(
+                        np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
+                        dict(decoded_sha256='synthetic-transposed-plan'))))
                     activity = stack.enter_context(patch.object(Model, 'activity', autospec=True,
                         side_effect=lambda self, x: np.zeros((len(x), 53))))
                     stack.enter_context(patch.object(runner, 'save_model', side_effect=persist))
@@ -87,8 +93,13 @@ class PortableContextTests(unittest.TestCase):
                     replay = stack.enter_context(patch.object(runner, 'continuous_dataset', side_effect=replay_result))
                     result = runner.run(spec, root/'output')
                 self.assertEqual(fit.call_count, 1)
-                self.assertTrue(np.all(fit.call_args.args[0] == (1 if varied else 0)))
-                self.assertEqual(augmentation.call_count, int(varied))
+                fit_features = fit.call_args.args[0]
+                self.assertTrue(np.all(fit_features[:3] == (1 if mode == 'shelf' else 0)))
+                self.assertEqual(len(fit_features), 6 if mode == 'transpose' else 3)
+                if mode == 'transpose':
+                    self.assertTrue(np.all(fit_features[3:] == 1))
+                self.assertEqual(augmentation.call_count, int(mode == 'shelf'))
+                self.assertEqual(transposition.call_count, int(mode == 'transpose'))
                 self.assertTrue(all(np.all(c.args[1] == 0) for c in activity.call_args_list))
                 self.assertEqual(fit.call_args.kwargs['model_params'], params)
                 self.assertEqual(result['training_objective'], params['loss'])

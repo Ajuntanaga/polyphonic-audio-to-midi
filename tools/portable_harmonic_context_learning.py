@@ -22,6 +22,7 @@ from tools.portable_direct_spectrum_learning import (continuous_dataset, fetch_r
     role_examples, source_waves)
 from tools.pitch_detector_comparison import digest
 from tools.harmonic_source_variation import VARIATION, variation_examples
+from tools.harmonic_pitch_transposition import TRANSPOSITION, transposition_examples
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -119,8 +120,14 @@ def run(spec_path, output):
             raise ValueError('Unknown frozen training objective')
         loss_only = params['loss'] != MODEL_PARAMS['loss']
         variation = spec.get('training_source_variation')
+        transposition = spec.get('training_pitch_transposition')
+        if variation is not None and transposition is not None:
+            raise ValueError('Training augmentations cannot be combined in this screen')
         if variation is not None:
             require_identity(variation, VARIATION, 'fixed training-only source variation')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
+        if transposition is not None:
+            require_identity(transposition, TRANSPOSITION, 'fixed coherent training transposition')
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         require_identity(params, frozen_params[params['loss']],
                          'one fixed shared context classifier and objective')
@@ -131,6 +138,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_setwise_learning_v1'
         if variation is not None:
             report['schema'] = 'm3_harmonic_source_variation_v1'
+        if transposition is not None:
+            report['schema'] = 'm3_harmonic_pitch_transposition_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -157,7 +166,8 @@ def run(spec_path, output):
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction=('Only training component envelopes change versus the setwise model.' if variation is not None else
+            distinction=('Clean training plus transposed companions; same epochs, twice the optimizer steps.' if transposition is not None else
+                'Only training component envelopes change versus the setwise model.' if variation is not None else
                 'Only the training objective changes versus the frozen context baseline.' if loss_only else
                 'Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.'))
         report['stage'] = 'training mixtures; one shared fit and training-only cutoff'
@@ -175,6 +185,20 @@ def run(spec_path, output):
             if not np.array_equal(fit_y, y):
                 raise ValueError('Source variation changed training targets')
             model, report['fit'] = fit_model(fit_x, fit_y, model_params=params)
+            del fit_x, fit_y
+        elif transposition is not None:
+            augmented_x, augmented_y, report['training_pitch_transposition'] = transposition_examples(
+                folders['bulk']/'train-mixture-plan.json.gz', takes, waves, extractor, folders['bulk'])
+            require_identity(report['training_pitch_transposition']['decoded_sha256'],
+                spec['transposed_plan_identity']['decoded_sha256'], 'frozen transposed training plan')
+            if (augmented_x.shape != x.shape or augmented_y.shape != y.shape or
+                    not np.array_equal(augmented_y.sum(axis=1), y.sum(axis=1))):
+                raise ValueError('Transposition changed mixture count or chord completeness')
+            fit_x, fit_y = np.concatenate((x, augmented_x)), np.concatenate((y, augmented_y))
+            del augmented_x, augmented_y
+            model, report['fit'] = fit_model(fit_x, fit_y, model_params=params)
+            report['fit']['optimizer_steps'] = params['epochs']*((len(fit_x)+params['batch_size']-1)//params['batch_size'])
+            report['fit']['clean_and_companion_mixtures'] = len(fit_x)
             del fit_x, fit_y
         else:
             model, report['fit'] = fit_model(x, y, model_params=params)
@@ -235,7 +259,8 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Training envelopes vary on the same 200 sources; this supplies no independent recording content.' if variation is not None else
+                ('Training transposition shifts spectrum/formants and duration, using the same 200 sources; twice the optimizer steps confounds attribution. No independent recording content.' if transposition is not None else
+                 'Training envelopes vary on the same 200 sources; this supplies no independent recording content.' if variation is not None else
                  'Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else
                  'Model capacity and optimizer also change; this is not an isolated context ablation.'),
                 'Held-out roles are source-disjoint development checks already used in previous experiments, not a fresh final benchmark.',
