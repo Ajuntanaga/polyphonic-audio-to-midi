@@ -13,6 +13,8 @@ tracking result, and says nothing about native deadlines, strings or live delive
 Usage:
   python3 -P -E CLAUDE-M3-ADAPTED-SUPPORT-20261122.py --selftest
   python3 -P -E CLAUDE-M3-ADAPTED-SUPPORT-20261122.py ORD_ORIGINAL ORD_ADAPTED EXT_ORIGINAL EXT_ADAPTED   (events.json or .json.gz)
+  add `--clock available_ns` first for the zero-compute availability clock: POST HOC (the pre-registration fixed emitted_ns); it answers what the
+  content would give if the model kept up, and its checks are saved under post_hoc_same_checks_on_available_ns, not as predictions.
 """
 import gzip
 import hashlib
@@ -60,8 +62,8 @@ def read_events(path):
         return json.load(stream)['events']
 
 
-def spans_from_events(events, horizon):
-    spans, audit = emission_spans(events, 'emitted_ns', horizon)
+def spans_from_events(events, horizon, clock='emitted_ns'):
+    spans, audit = emission_spans(events, clock, horizon)
     return union_spans(spans, sample_count=horizon), audit
 
 
@@ -126,13 +128,13 @@ def score_filters(ctx, model_spans):
     return rows
 
 
-def run_dataset(dataset, original_path, adapted_path):
+def run_dataset(dataset, original_path, adapted_path, clock='emitted_ns'):
     ctx = dataset_context(dataset)
     horizon = ctx['horizon']
     out = dict(dataset=dataset, inputs={}, event_audit={}, sources={})
     sources = {'arm A': ctx['arm_a']}
     for tag, path in (('unchanged TF', original_path), ('adapted TF', adapted_path)):
-        spans, audit = spans_from_events(read_events(path), horizon)
+        spans, audit = spans_from_events(read_events(path), horizon, clock)
         sources[tag] = spans
         out['inputs'][tag] = dict(path=os.path.basename(path), sha256=sha256(path))
         out['event_audit'][tag] = audit
@@ -185,18 +187,19 @@ def selftest():
     return ok
 
 
-def main(argv, out_path=OUT):
+def main(argv, out_path=OUT, clock='emitted_ns'):
     ord_o, ord_a, ext_o, ext_a = argv
     results, ctxs = {}, {}
     for dataset, o, a in (('ordinary', ord_o, ord_a), ('extended-middle', ext_o, ext_a)):
-        results[dataset], ctxs[dataset] = run_dataset(dataset, o, a)
+        results[dataset], ctxs[dataset] = run_dataset(dataset, o, a, clock)
     base_229 = None
     cur = ctxs['ordinary']['current']
     for lab in cur.get('labels', []) if isinstance(cur, dict) else []:
         if lab.get('label_index') == LOSER:
             base_229 = lab.get('present_samples')
     preds = predictions(results, base_229)
-    results['predictions'] = preds
+    results['clock'] = clock
+    results['predictions' if clock == 'emitted_ns' else 'post_hoc_same_checks_on_' + clock] = preds
     with open(out_path, 'w') as stream:
         json.dump(results, stream, indent=1)
     for dataset in ('ordinary', 'extended-middle'):
@@ -211,6 +214,10 @@ def main(argv, out_path=OUT):
 if __name__ == '__main__':
     if sys.argv[1:] == ['--selftest']:
         sys.exit(0 if selftest() else 1)
-    if len(sys.argv) != 5:
+    args = sys.argv[1:]
+    clock = 'emitted_ns'
+    if args[:1] == ['--clock']:
+        clock, args = args[1], args[2:]
+    if len(args) != 4 or clock not in ('emitted_ns', 'available_ns'):
         raise SystemExit(__doc__)
-    main(sys.argv[1:])
+    main(args, out_path=OUT if clock == 'emitted_ns' else OUT.replace('.json', '-' + clock + '.json'), clock=clock)
