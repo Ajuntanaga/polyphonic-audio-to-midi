@@ -1,0 +1,278 @@
+{
+ "horizon": 10681922,
+ "current_false": 11429794,
+ "expected_pitch_samples": 33819101,
+ "lanes": {
+  "inf": {
+   "cut": "infinity (native-only)",
+   "coverage_pct": 45.2852,
+   "precision_pct": 56.94,
+   "present_delta": 1789705,
+   "present_delta_pp_of_expected": 5.292,
+   "wrong_delta": 42493,
+   "gap_delta": 110769,
+   "exact_set_delta": 243781,
+   "all_expected_delta": 385158,
+   "labels_losing_present_or_longest": 0,
+   "no_pitch_safety_regression": false,
+   "false_total": 11583056,
+   "false_change_pct_of_current": 1.34,
+   "added_genuine": 1789705,
+   "added_false": 153262,
+   "false_share": 0.0789,
+   "false_per_genuine": 0.0856,
+   "by_band": {
+    "60-71": {
+     "genuine": 1742281,
+     "false": 149998,
+     "false_share": 0.0793
+    },
+    "72+": {
+     "genuine": 47424,
+     "false": 3264,
+     "false_share": 0.0644
+    }
+   },
+   "tail_within_ms": {
+    "20": 0.431,
+    "50": 0.551,
+    "100": 0.597,
+    "220": 0.996
+   },
+   "gap_kind_share": {
+    "tail": 0.996,
+    "head": 0.004
+   },
+   "wrong_rel_share": {
+    "near": 0.036,
+    "other": 0.036,
+    "octave_up": 0.807,
+    "fifth": 0.12
+   },
+   "observed_callbacks": 20879
+  },
+  "1.0": {
+   "cut": 1.0,
+   "coverage_pct": 46.2061,
+   "precision_pct": 57.16,
+   "present_delta": 2101129,
+   "present_delta_pp_of_expected": 6.213,
+   "wrong_delta": 146439,
+   "gap_delta": 135207,
+   "exact_set_delta": 241221,
+   "all_expected_delta": 412551,
+   "labels_losing_present_or_longest": 0,
+   "no_pitch_safety_regression": false,
+   "false_total": 11711440,
+   "false_change_pct_of_current": 2.46,
+   "added_genuine": 2101129,
+   "added_false": 281646,
+   "false_share": 0.1182,
+   "false_per_genuine": 0.134,
+   "by_band": {
+    "60-71": {
+     "genuine": 2022473,
+     "false": 270702,
+     "false_share": 0.118
+    },
+    "72+": {
+     "genuine": 78656,
+     "false": 10944,
+     "false_share": 0.1221
+    }
+   },
+   "tail_within_ms": {
+    "20": 0.39,
+    "50": 0.488,
+    "100": 0.526,
+    "220": 0.853
+   },
+   "gap_kind_share": {
+    "head": 0.129,
+    "tail": 0.853,
+    "orphan": 0.018
+   },
+   "wrong_rel_share": {
+    "near": 0.014,
+    "other": 0.01,
+    "octave_up": 0.934,
+    "fifth": 0.035,
+    "octave_down": 0.007
+   },
+   "observed_callbacks": 20879,
+   "marginal_vs_previous": {
+    "genuine": 311424,
+    "false": 128384,
+    "false_per_genuine": 0.4122
+   }
+  },
+  "0.8": {
+   "cut": 0.8,
+   "coverage_pct": 47.2552,
+   "precision_pct": 57.29,
+   "present_delta": 2455945,
+   "present_delta_pp_of_expected": 7.262,
+   "wrong_delta": 309575,
+   "gap_delta": 174311,
+   "exact_set_delta": 243269,
+   "all_expected_delta": 454535,
+   "labels_losing_present_or_longest": 0,
+   "no_pitch_safety_regression": false,
+   "false_total": 11913680,
+   "false_change_pct_of_current": 4.23,
+   "added_genuine": 2455945,
+   "added_false": 483886,
+   "false_share": 0.1646,
+   "false_per_genuine": 0.197,
+   "by_band": {
+    "60-71": {
+     "genuine": 2335817,
+     "false": 442734,
+     "false_share": 0.1593
+    },
+    "72+": {
+     "genuine": 120128,
+     "false": 41152,
+     "false_share": 0.2552
+    }
+   },
+   "tail_within_ms": {
+    "20": 0.385,
+    "50": 0.443,
+    "100": 0.532,
+    "220": 0.602
+   },
+   "gap_kind_share": {
+    "head": 0.112,
+    "tail": 0.855,
+    "orphan": 0.033
+   },
+   "wrong_rel_share": {
+    "near": 0.013,
+    "other": 0.005,
+    "octave_up": 0.904,
+    "fifth": 0.018,
+    "octave_down": 0.06
+   },
+   "observed_callbacks": 20879,
+   "marginal_vs_previous": {
+    "genuine": 354816,
+    "false": 202240,
+    "false_per_genuine": 0.57
+   }
+  },
+  "0.5": {
+   "cut": 0.5,
+   "coverage_pct": 49.5619,
+   "precision_pct": 57.43,
+   "present_delta": 3236036,
+   "present_delta_pp_of_expected": 9.569,
+   "wrong_delta": 761031,
+   "gap_delta": 235052,
+   "exact_set_delta": 222595,
+   "all_expected_delta": 550860,
+   "labels_losing_present_or_longest": 0,
+   "no_pitch_safety_regression": false,
+   "false_total": 12425877,
+   "false_change_pct_of_current": 8.71,
+   "added_genuine": 3236036,
+   "added_false": 996083,
+   "false_share": 0.2354,
+   "false_per_genuine": 0.3078,
+   "by_band": {
+    "60-71": {
+     "genuine": 2994500,
+     "false": 820339,
+     "false_share": 0.215
+    },
+    "72+": {
+     "genuine": 241536,
+     "false": 175744,
+     "false_share": 0.4212
+    }
+   },
+   "tail_within_ms": {
+    "20": 0.34,
+    "50": 0.447,
+    "100": 0.532,
+    "220": 0.643
+   },
+   "gap_kind_share": {
+    "head": 0.098,
+    "tail": 0.827,
+    "orphan": 0.075
+   },
+   "wrong_rel_share": {
+    "near": 0.013,
+    "other": 0.004,
+    "octave_up": 0.863,
+    "fifth": 0.028,
+    "octave_down": 0.092
+   },
+   "observed_callbacks": 20879,
+   "marginal_vs_previous": {
+    "genuine": 780091,
+    "false": 512197,
+    "false_per_genuine": 0.6566
+   }
+  },
+  "0.25": {
+   "cut": 0.25,
+   "coverage_pct": 53.4705,
+   "precision_pct": 57.69,
+   "present_delta": 4557904,
+   "present_delta_pp_of_expected": 13.477,
+   "wrong_delta": 1450927,
+   "gap_delta": 381880,
+   "exact_set_delta": 331209,
+   "all_expected_delta": 818642,
+   "labels_losing_present_or_longest": 0,
+   "no_pitch_safety_regression": false,
+   "false_total": 13262601,
+   "false_change_pct_of_current": 16.04,
+   "added_genuine": 4557904,
+   "added_false": 1832807,
+   "false_share": 0.2868,
+   "false_per_genuine": 0.4021,
+   "by_band": {
+    "60-71": {
+     "genuine": 3992307,
+     "false": 1420484,
+     "false_share": 0.2624
+    },
+    "72+": {
+     "genuine": 565597,
+     "false": 412323,
+     "false_share": 0.4216
+    }
+   },
+   "tail_within_ms": {
+    "20": 0.246,
+    "50": 0.37,
+    "100": 0.378,
+    "220": 0.721
+   },
+   "gap_kind_share": {
+    "tail": 0.834,
+    "head": 0.087,
+    "orphan": 0.08
+   },
+   "wrong_rel_share": {
+    "near": 0.016,
+    "other": 0.007,
+    "octave_up": 0.84,
+    "fifth": 0.081,
+    "octave_down": 0.056
+   },
+   "observed_callbacks": 20879,
+   "marginal_vs_previous": {
+    "genuine": 1321868,
+    "false": 836724,
+    "false_per_genuine": 0.633
+   }
+  }
+ },
+ "identity": {
+  "native60_equals_saved": true
+ }
+}
