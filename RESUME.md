@@ -1,3 +1,9 @@
+# Release-context adaptation queued: 45037966575
+
+Active checkpoint: `docs/recovery/github-basic-pitch-release-adaptation-20261122.json`. Source `fc3ad86d5af286d1cfbf4aba5041d0fdc460d316`, worker `5eadbb3b0ee23b1e8c2255f7f275042bcaec7ad2`. One GitHub CPU fit, original4096 plus2048 component-ending windows; all555 takes and original evaluation plans retained. Prior/release paired at164/165 with unchanged strict safety/numerical/runtime gates. Small reports only; model/tape evidence remote. Installed/default unchanged. No duplicate dispatch.
+
+Claude independently owns the synthetic mixed-level probe; equal peers through2026-11-22 18:25 UTC. Shorter166 comparison is final and rejected as recorded below.
+
 # Shorter lookahead final: quality rejected
 
 Active checkpoint: `docs/recovery/github-basic-pitch-shorter-lookahead-20261122.json`. Run45036257574 final/success, small report collected once with verified digest. Integrity and cropped runtime pass;166 right-context reduction loses ordinary pitch presence70.688 ->66.110% despite fewer extras/gaps. Installed/default unchanged. Result: `docs/recovery/CODEX-M3-SHORTER-LOOKAHEAD-RESULT-20261122.md`. No repoll/redownload/unchanged rerun.

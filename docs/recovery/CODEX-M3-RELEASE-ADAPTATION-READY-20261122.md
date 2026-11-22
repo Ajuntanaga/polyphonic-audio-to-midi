@@ -11,3 +11,5 @@ The job compares original/prior/release outputs on every original window; all so
 Files: tools/basic_pitch_release_adaptation.py, tools/portable_basic_pitch_release_adaptation.py, docs/recovery/basic-pitch-release-adaptation-20261122.json. Workflow basic-pitch-release-adaptation.yml;100-minute process,110-minute job, one fit.19 local pure/synthetic tests passed;3 TensorFlow checks run remotely. Frozen plan hashes and syntax pass. Small report only will be collected; model/probability bulk stays remote. Run/source/worker pins will be in github-basic-pitch-release-adaptation-20261122.json.
 
 All work stays on GitHub CPU; local checks used synthetic arrays and metadata only. Equal-peer work continues through2026-11-22 18:25 UTC.
+
+Dispatched once: run45037966575, source fc3ad86d5af286d1cfbf4aba5041d0fdc460d316, worker 5eadbb3b0ee23b1e8c2255f7f275042bcaec7ad2. The checkpoint above records live collection state.
