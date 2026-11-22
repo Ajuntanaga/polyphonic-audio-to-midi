@@ -1,0 +1,579 @@
+{
+ "schema": "m3_level_conditioned_v1",
+ "ends_sha256": "3465031b7b6c90da94d658c933116b161550e87648330d70fc8d412b96df3784",
+ "tape_sha256": {
+  "unmodified": "085d0b9dc284a38863f775f841e9eb8324448541b931ffac3f22652743617ea6",
+  "adapted": "cb24925d06ec9700c9aee81f247135d2450afc9669b2275064158eba2dcf4bea",
+  "candidate166": "d23914d816a5c1352a8ecdb352ae86c2878eb6bf75b8b08a335b0727db0013b1"
+ },
+ "c0a_frame_clock": {
+  "unmodified": true,
+  "adapted": true,
+  "candidate166": true
+ },
+ "group_check": {
+  "ends": 428,
+  "mismatched": 0
+ },
+ "rows": 428,
+ "part_b": {
+  "adapted": {
+   "n_excluded_short_or_unmapped": 0,
+   "n": 428,
+   "early_detected": 367,
+   "present_given_early": {
+    "present": 266,
+    "absent": 101
+   },
+   "auc_unconditioned": 0.845,
+   "auc_conditioned": 0.817,
+   "auc_conditioned_bootstrap_95": [
+    0.766,
+    0.862
+   ],
+   "auc_unconditioned_bootstrap_95": [
+    0.805,
+    0.88
+   ],
+   "present_given_not_early": 0,
+   "not_early": 61,
+   "B1": {
+    "bar": 0.65,
+    "auc": 0.817,
+    "verdict": "pass"
+   },
+   "B2": {
+    "n_below": 100,
+    "share_not_early": 0.4,
+    "bar": 0.7,
+    "verdict": "miss"
+   },
+   "B3": {
+    "drop": 0.028,
+    "bar": 0.05,
+    "verdict": "miss"
+   },
+   "B4": {
+    "n": 60,
+    "share_present": 0.2,
+    "bar": 0.5,
+    "verdict": "pass"
+   },
+   "by_level": [
+    {
+     "pre_db": [
+      -200,
+      -70
+     ],
+     "n": 29,
+     "early_detected": 8,
+     "present_all": 0.0,
+     "present_given_early": 0.0,
+     "n_early": 8,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -70,
+      -60
+     ],
+     "n": 71,
+     "early_detected": 52,
+     "present_all": 0.169,
+     "present_given_early": 0.231,
+     "n_early": 52,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "n": 56,
+     "early_detected": 49,
+     "present_all": 0.607,
+     "present_given_early": 0.694,
+     "n_early": 49,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "n": 144,
+     "early_detected": 131,
+     "present_all": 0.701,
+     "present_given_early": 0.771,
+     "n_early": 131,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "n": 128,
+     "early_detected": 127,
+     "present_all": 0.93,
+     "present_given_early": 0.937,
+     "n_early": 127,
+     "present_given_not_early": 0.0
+    }
+   ],
+   "uncontested": {
+    "n": 67,
+    "early_detected": 60,
+    "auc_unconditioned": 0.919,
+    "auc_conditioned": 0.913
+   }
+  },
+  "unmodified": {
+   "n_excluded_short_or_unmapped": 0,
+   "n": 428,
+   "early_detected": 254,
+   "present_given_early": {
+    "present": 122,
+    "absent": 132
+   },
+   "auc_unconditioned": 0.745,
+   "auc_conditioned": 0.673,
+   "auc_conditioned_bootstrap_95": [
+    0.607,
+    0.738
+   ],
+   "auc_unconditioned_bootstrap_95": [
+    0.695,
+    0.789
+   ],
+   "present_given_not_early": 2,
+   "not_early": 174,
+   "B1": {
+    "bar": 0.65,
+    "auc": 0.673,
+    "verdict": "pass"
+   },
+   "B2": {
+    "n_below": 100,
+    "share_not_early": 0.77,
+    "bar": 0.7,
+    "verdict": "pass"
+   },
+   "B3": {
+    "drop": 0.072,
+    "bar": 0.05,
+    "verdict": "pass"
+   },
+   "B4": {
+    "n": 23,
+    "share_present": 0.043,
+    "bar": 0.5,
+    "verdict": "pass"
+   },
+   "by_level": [
+    {
+     "pre_db": [
+      -200,
+      -70
+     ],
+     "n": 29,
+     "early_detected": 2,
+     "present_all": 0.0,
+     "present_given_early": 0.0,
+     "n_early": 2,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -70,
+      -60
+     ],
+     "n": 71,
+     "early_detected": 21,
+     "present_all": 0.014,
+     "present_given_early": 0.048,
+     "n_early": 21,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "n": 56,
+     "early_detected": 34,
+     "present_all": 0.25,
+     "present_given_early": 0.412,
+     "n_early": 34,
+     "present_given_not_early": 0.0
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "n": 144,
+     "early_detected": 100,
+     "present_all": 0.326,
+     "present_given_early": 0.46,
+     "n_early": 100,
+     "present_given_not_early": 0.023
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "n": 128,
+     "early_detected": 97,
+     "present_all": 0.484,
+     "present_given_early": 0.629,
+     "n_early": 97,
+     "present_given_not_early": 0.032
+    }
+   ],
+   "uncontested": {
+    "n": 67,
+    "early_detected": 36,
+    "auc_unconditioned": 0.882,
+    "auc_conditioned": 0.759
+   }
+  }
+ },
+ "part_c": {
+  "adapted": {
+   "population": 367,
+   "spearman_pre_drop": -0.664,
+   "C3": {
+    "rho": -0.664,
+    "bar": 0.6,
+    "verdict": "miss"
+   },
+   "C1": {
+    "stratum_pre_db": [
+     -60.0,
+     -40.0
+    ],
+    "bar": 0.6,
+    "n": 180,
+    "present": 135,
+    "absent": 45,
+    "auc": 0.599,
+    "bootstrap_95": [
+     0.495,
+     0.699
+    ],
+    "verdict": "not_evaluable"
+   },
+   "C2": {
+    "stratum_drop_below_db": 6.0,
+    "bar": 0.7,
+    "n": 364,
+    "present": 266,
+    "absent": 98,
+    "auc": 0.813,
+    "bootstrap_95": [
+     0.763,
+     0.859
+    ],
+    "verdict": "not_evaluable"
+   },
+   "note": "C3 missed: the two quantities are too correlated to separate; C1 and C2 not evaluable",
+   "descriptive_by_drop": [
+    {
+     "drop_db": [
+      -100,
+      0
+     ],
+     "n": 27,
+     "median_pre": -38.9,
+     "present": 0.815
+    },
+    {
+     "drop_db": [
+      0,
+      6
+     ],
+     "n": 337,
+     "median_pre": -43.4,
+     "present": 0.724
+    },
+    {
+     "drop_db": [
+      6,
+      12
+     ],
+     "n": 2,
+     "median_pre": -51.2,
+     "present": 0.0
+    },
+    {
+     "drop_db": [
+      12,
+      20
+     ],
+     "n": 1,
+     "median_pre": -80.4,
+     "present": 0.0
+    },
+    {
+     "drop_db": [
+      20,
+      100
+     ],
+     "n": 0,
+     "median_pre": null,
+     "present": null
+    }
+   ],
+   "uncontested": {
+    "population": 60,
+    "C1_stratum": {
+     "n": 30,
+     "present": 28,
+     "absent": 2,
+     "auc": null
+    },
+    "C2_stratum": {
+     "n": 59,
+     "present": 38,
+     "absent": 21,
+     "auc": 0.909
+    }
+   }
+  },
+  "unmodified": {
+   "population": 254,
+   "spearman_pre_drop": -0.627,
+   "C3": {
+    "rho": -0.627,
+    "bar": 0.6,
+    "verdict": "miss"
+   },
+   "C1": {
+    "stratum_pre_db": [
+     -60.0,
+     -40.0
+    ],
+    "bar": 0.6,
+    "n": 134,
+    "present": 60,
+    "absent": 74,
+    "auc": 0.623,
+    "bootstrap_95": [
+     0.523,
+     0.718
+    ],
+    "verdict": "not_evaluable"
+   },
+   "C2": {
+    "stratum_drop_below_db": 6.0,
+    "bar": 0.7,
+    "n": 254,
+    "present": 122,
+    "absent": 132,
+    "auc": 0.673,
+    "bootstrap_95": [
+     0.607,
+     0.738
+    ],
+    "verdict": "not_evaluable"
+   },
+   "note": "C3 missed: the two quantities are too correlated to separate; C1 and C2 not evaluable",
+   "descriptive_by_drop": [
+    {
+     "drop_db": [
+      -100,
+      0
+     ],
+     "n": 18,
+     "median_pre": -38.9,
+     "present": 0.611
+    },
+    {
+     "drop_db": [
+      0,
+      6
+     ],
+     "n": 236,
+     "median_pre": -42.2,
+     "present": 0.47
+    },
+    {
+     "drop_db": [
+      6,
+      12
+     ],
+     "n": 0,
+     "median_pre": null,
+     "present": null
+    },
+    {
+     "drop_db": [
+      12,
+      20
+     ],
+     "n": 0,
+     "median_pre": null,
+     "present": null
+    },
+    {
+     "drop_db": [
+      20,
+      100
+     ],
+     "n": 0,
+     "median_pre": null,
+     "present": null
+    }
+   ],
+   "uncontested": {
+    "population": 36,
+    "C1_stratum": {
+     "n": 26,
+     "present": 14,
+     "absent": 12,
+     "auc": null
+    },
+    "C2_stratum": {
+     "n": 36,
+     "present": 16,
+     "absent": 20,
+     "auc": null
+    }
+   }
+  }
+ },
+ "part_a": {
+  "all": {
+   "n": 428,
+   "control_present": 266,
+   "candidate_present": 259,
+   "control_pct": 62.15,
+   "candidate_pct": 60.51,
+   "change_pp": -1.64,
+   "lost": 15,
+   "gained": 8
+  },
+  "silent_after": {
+   "n": 334,
+   "control_present": 199,
+   "candidate_present": 197,
+   "control_pct": 59.58,
+   "candidate_pct": 58.98,
+   "change_pp": -0.6,
+   "lost": 9,
+   "gained": 7
+  },
+  "other": {
+   "n": 94,
+   "control_present": 67,
+   "candidate_present": 62,
+   "control_pct": 71.28,
+   "candidate_pct": 65.96,
+   "change_pp": -5.32,
+   "lost": 6,
+   "gained": 1
+  },
+  "by_band": {
+   "0-48": {
+    "silent": {
+     "n": 103,
+     "control_present": 83,
+     "candidate_present": 85,
+     "control_pct": 80.58,
+     "candidate_pct": 82.52,
+     "change_pp": 1.94,
+     "lost": 3,
+     "gained": 5
+    },
+    "other": {
+     "n": 22,
+     "control_present": 20,
+     "candidate_present": 20,
+     "control_pct": 90.91,
+     "candidate_pct": 90.91,
+     "change_pp": 0.0,
+     "lost": 0,
+     "gained": 0
+    }
+   },
+   "48-60": {
+    "silent": {
+     "n": 104,
+     "control_present": 64,
+     "candidate_present": 61,
+     "control_pct": 61.54,
+     "candidate_pct": 58.65,
+     "change_pp": -2.88,
+     "lost": 5,
+     "gained": 2
+    },
+    "other": {
+     "n": 30,
+     "control_present": 24,
+     "candidate_present": 22,
+     "control_pct": 80.0,
+     "candidate_pct": 73.33,
+     "change_pp": -6.67,
+     "lost": 2,
+     "gained": 0
+    }
+   },
+   "60-72": {
+    "silent": {
+     "n": 87,
+     "control_present": 36,
+     "candidate_present": 35,
+     "control_pct": 41.38,
+     "candidate_pct": 40.23,
+     "change_pp": -1.15,
+     "lost": 1,
+     "gained": 0
+    },
+    "other": {
+     "n": 18,
+     "control_present": 12,
+     "candidate_present": 9,
+     "control_pct": 66.67,
+     "candidate_pct": 50.0,
+     "change_pp": -16.67,
+     "lost": 3,
+     "gained": 0
+    }
+   },
+   "72-100": {
+    "silent": {
+     "n": 40,
+     "control_present": 16,
+     "candidate_present": 16,
+     "control_pct": 40.0,
+     "candidate_pct": 40.0,
+     "change_pp": 0.0,
+     "lost": 0,
+     "gained": 0
+    },
+    "other": {
+     "n": 24,
+     "control_present": 11,
+     "candidate_present": 11,
+     "control_pct": 45.83,
+     "candidate_pct": 45.83,
+     "change_pp": 0.0,
+     "lost": 1,
+     "gained": 1
+    }
+   }
+  },
+  "A1": {
+   "bar_pp": 3.0,
+   "change_pp": -0.6,
+   "verdict": "pass"
+  },
+  "A2": {
+   "abs_change_silent_pp": 0.6,
+   "abs_change_other_pp": 5.32,
+   "verdict": "pass"
+  }
+ }
+}

@@ -1,0 +1,105 @@
+{
+ "note": "post hoc, descriptive; frames with posterior >= 0.3 at the label pitch; positions overlap for short labels",
+ "labels": 428,
+ "start": [
+  {
+   "bin_ms": [
+    0,
+    50
+   ],
+   "frames": 1828,
+   "control_pct": 56.78,
+   "candidate_pct": 39.28,
+   "change_pp": -17.51,
+   "frames_that_differ": 452
+  },
+  {
+   "bin_ms": [
+    50,
+    100
+   ],
+   "frames": 1858,
+   "control_pct": 80.25,
+   "candidate_pct": 69.91,
+   "change_pp": -10.33,
+   "frames_that_differ": 268
+  },
+  {
+   "bin_ms": [
+    100,
+    200
+   ],
+   "frames": 3680,
+   "control_pct": 86.25,
+   "candidate_pct": 80.08,
+   "change_pp": -6.17,
+   "frames_that_differ": 293
+  },
+  {
+   "bin_ms": [
+    200,
+    400
+   ],
+   "frames": 7278,
+   "control_pct": 86.47,
+   "candidate_pct": 80.37,
+   "change_pp": -6.1,
+   "frames_that_differ": 530
+  }
+ ],
+ "end": [
+  {
+   "bin_ms": [
+    0,
+    50
+   ],
+   "frames": 1857,
+   "control_pct": 64.08,
+   "candidate_pct": 61.34,
+   "change_pp": -2.75,
+   "frames_that_differ": 125
+  },
+  {
+   "bin_ms": [
+    50,
+    100
+   ],
+   "frames": 1838,
+   "control_pct": 81.23,
+   "candidate_pct": 74.37,
+   "change_pp": -6.86,
+   "frames_that_differ": 180
+  },
+  {
+   "bin_ms": [
+    100,
+    200
+   ],
+   "frames": 3685,
+   "control_pct": 84.45,
+   "candidate_pct": 76.93,
+   "change_pp": -7.52,
+   "frames_that_differ": 341
+  }
+ ],
+ "middle": [
+  {
+   "bin_ms": "all",
+   "frames": 4411,
+   "control_pct": 85.51,
+   "candidate_pct": 79.48,
+   "change_pp": -6.03,
+   "frames_that_differ": 338
+  }
+ ],
+ "whole": [
+  {
+   "bin_ms": "all",
+   "frames": 25805,
+   "control_pct": 81.62,
+   "candidate_pct": 74.46,
+   "change_pp": -7.16,
+   "frames_that_differ": 2453
+  }
+ ]
+}

@@ -1,0 +1,256 @@
+{
+ "note": "post hoc, descriptive; no verdicts",
+ "onset_grid_index": 22,
+ "arms": {
+  "adapted": {
+   "population": 367,
+   "spearman_pre_total_drop": -0.673,
+   "total_drop_db": {
+    "min": -62.8,
+    "p10": 2.1,
+    "median": 5.7,
+    "p90": 10.9,
+    "max": 19.0
+   },
+   "share_drop_above": {
+    "6.0": 0.466,
+    "12.0": 0.049
+   },
+   "by_pre_and_drop": [
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "drop<6",
+     "n": 8,
+     "present": 0.125
+    },
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "6<=drop<12",
+     "n": 41,
+     "present": 0.268
+    },
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "drop>=12",
+     "n": 11,
+     "present": 0.0
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "drop<6",
+     "n": 7,
+     "present": 0.857
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "6<=drop<12",
+     "n": 36,
+     "present": 0.722
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "drop>=12",
+     "n": 6,
+     "present": 0.333
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "drop<6",
+     "n": 64,
+     "present": 0.797
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "6<=drop<12",
+     "n": 66,
+     "present": 0.742
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "drop>=12",
+     "n": 1,
+     "present": 1.0
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "drop<6",
+     "n": 117,
+     "present": 0.949
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "6<=drop<12",
+     "n": 10,
+     "present": 0.8
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "drop>=12",
+     "n": 0,
+     "present": null
+    }
+   ]
+  },
+  "unmodified": {
+   "population": 254,
+   "spearman_pre_total_drop": -0.596,
+   "total_drop_db": {
+    "min": -62.8,
+    "p10": 2.0,
+    "median": 4.9,
+    "p90": 9.2,
+    "max": 11.7
+   },
+   "share_drop_above": {
+    "6.0": 0.354,
+    "12.0": 0.0
+   },
+   "by_pre_and_drop": [
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "drop<6",
+     "n": 7,
+     "present": 0.143
+    },
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "6<=drop<12",
+     "n": 16,
+     "present": 0.0
+    },
+    {
+     "pre_db": [
+      -200,
+      -60
+     ],
+     "drop": "drop>=12",
+     "n": 0,
+     "present": null
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "drop<6",
+     "n": 8,
+     "present": 0.625
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "6<=drop<12",
+     "n": 26,
+     "present": 0.346
+    },
+    {
+     "pre_db": [
+      -60,
+      -50
+     ],
+     "drop": "drop>=12",
+     "n": 0,
+     "present": null
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "drop<6",
+     "n": 55,
+     "present": 0.6
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "6<=drop<12",
+     "n": 45,
+     "present": 0.289
+    },
+    {
+     "pre_db": [
+      -50,
+      -40
+     ],
+     "drop": "drop>=12",
+     "n": 0,
+     "present": null
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "drop<6",
+     "n": 94,
+     "present": 0.638
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "6<=drop<12",
+     "n": 3,
+     "present": 0.333
+    },
+    {
+     "pre_db": [
+      -40,
+      0
+     ],
+     "drop": "drop>=12",
+     "n": 0,
+     "present": null
+    }
+   ]
+  }
+ }
+}
