@@ -1125,6 +1125,22 @@ void write_candidate_outcome_frame(
     if (!requested[note] && !emitted[note] && !t.active && t.rescue_mask == 0U && !weak_direct &&
         selection != SelectionDisposition::selected &&
         selection != SelectionDisposition::coasting) continue;
+    if (trace.cell_stream != nullptr) {
+      std::array<double, 6U> frequencies{};
+      std::array<std::complex<double>, 6U> cells{};
+      double input_power = 0.0, decay = 0.0;
+      const bool available = detector.demodulated_harmonic_tracks_for_diagnostics(
+          midi_note, frequencies, cells, input_power, decay);
+      std::fprintf(trace.cell_stream, "%llu\t%u\t%u\t%zu\t%u\t%.17g\t%.17g",
+          static_cast<unsigned long long>(sample_index), frame.decision_tick,
+          static_cast<unsigned>(detector.quiet_disposition()), note,
+          static_cast<unsigned>(available), input_power, decay);
+      for (std::size_t harmonic = 0U; harmonic < cells.size(); ++harmonic)
+        std::fprintf(trace.cell_stream, "\t%.17g\t%.17g\t%.17g",
+            frequencies[harmonic], cells[harmonic].real(), cells[harmonic].imag());
+      std::fputc('\n', trace.cell_stream);
+      ++trace.cell_rows;
+    }
     std::fprintf(trace.stream,
         "%s%zu:%u:%u:%u:%u:%u:%.8g:%.8g:%.8g:%.8g:%u:%u:%u:%u:%u:%u:"
         "%.8g:%.8g:%u:%.8g:%u:%.8g:%u:%u:%u:%u:%u:%u:%u:%u:%u:%d:%u:%u"
@@ -1169,7 +1185,8 @@ void write_candidate_outcome_frame(
     for (const double sum : band_sums) std::fprintf(trace.stream, ":%.17g", sum);
   }
   std::fputc('\n', trace.stream);
-  trace.failed = std::ferror(trace.stream) != 0;
+  trace.failed = std::ferror(trace.stream) != 0 ||
+      (trace.cell_stream != nullptr && std::ferror(trace.cell_stream) != 0);
   ++trace.frames;
 }
 
@@ -3242,18 +3259,29 @@ bool run_detector_replay(const WaveData& wave,
   }
   if (outcome_trace != nullptr) {
     auto& trace = *outcome_trace;
+    trace.cell_rows = 0U;
     trace.frames = 0U;
     trace.truncated = false;
     trace.failed = false;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     return false;
 #else
-    if (trace.stream == nullptr) return false;
+    if (trace.stream == nullptr ||
+        (trace.cell_stream != nullptr && !trace.include_annotation_candidates)) return false;
     trace.failed = std::fprintf(trace.stream,
         "# m3_candidate_outcome_v%u\n"
         "sample\ttick\tquiet\tsignal_samples\tlabels\tmatched_labels\tvoices\tcandidates%s\n",
         trace.include_annotation_candidates ? 5U : 4U,
         trace.include_annotation_candidates ? "\tinput_power\tfloor_stats" : "") < 0;
+    if (trace.cell_stream != nullptr) {
+      if (std::fprintf(trace.cell_stream,
+          "# m3_outcome_cells_v1\n"
+          "sample\ttick\tquiet\tnote\tavailable\tinput_power\tdecay"
+          "\th1_hz\th1_real\th1_imag\th2_hz\th2_real\th2_imag"
+          "\th3_hz\th3_real\th3_imag\th4_hz\th4_real\th4_imag"
+          "\th5_hz\th5_real\th5_imag\th6_hz\th6_real\th6_imag\n") < 0)
+        trace.failed = true;
+    }
 #endif
   }
   if (candidate_trace != nullptr) {

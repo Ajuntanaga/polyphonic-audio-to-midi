@@ -979,6 +979,73 @@ M3_TEST(offline_outcome_trace_reconciles_errors_and_preserves_partitioning) {
       }
     }
     M3_EXPECT_FALSE(static_cast<bool>(std::getline(legacy_lines, legacy_line)));
+    if (partition == 512U) {
+      // Raw cells remain observable in quiet decisions, without changing v5.
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> paired(std::tmpfile(), &std::fclose);
+      std::unique_ptr<std::FILE, int (*)(std::FILE*)> cells(std::tmpfile(), &std::fclose);
+      M3_EXPECT_TRUE(paired != nullptr && cells != nullptr);
+      if (!paired || !cells) return;
+      trace.stream = paired.get();
+      trace.cell_stream = cells.get();
+      M3_EXPECT_TRUE(run());
+      M3_EXPECT_EQ(observed->fingerprint, baseline->fingerprint);
+      M3_EXPECT_FALSE(trace.failed);
+      std::rewind(paired.get());
+      std::string paired_text;
+      while ((count = std::fread(chunk.data(), 1U, chunk.size(), paired.get())) != 0U)
+        paired_text.append(chunk.data(), count);
+      M3_EXPECT_EQ(paired_text, expanded_text);
+      std::rewind(cells.get());
+      std::string cells_text;
+      while ((count = std::fread(chunk.data(), 1U, chunk.size(), cells.get())) != 0U)
+        cells_text.append(chunk.data(), count);
+      std::istringstream cell_lines(cells_text), v5_lines(paired_text);
+      std::string cell_line;
+      std::getline(cell_lines, cell_line);
+      M3_EXPECT_EQ(cell_line, "# m3_outcome_cells_v1");
+      std::getline(cell_lines, cell_line);
+      M3_EXPECT_EQ(split(cell_line, '\t').size(), 25U);
+      std::getline(v5_lines, line);
+      std::getline(v5_lines, line);
+      std::size_t cell_rows = 0U;
+      bool quiet_positive_cells = false, unavailable_rows = false;
+      while (std::getline(v5_lines, line)) {
+        const auto fields = split(line, '\t');
+        if (fields.size() != 10U || fields[7].empty()) continue;
+        for (const auto& tuple : split(fields[7], ',')) {
+          M3_EXPECT_TRUE(static_cast<bool>(std::getline(cell_lines, cell_line)));
+          const auto cell = split(cell_line, '\t');
+          M3_EXPECT_EQ(cell.size(), 25U);
+          if (cell.size() != 25U) continue;
+          ++cell_rows;
+          for (std::size_t k = 0U; k < 3U; ++k) M3_EXPECT_EQ(cell[k], fields[k]);
+          M3_EXPECT_EQ(cell[3], split(tuple, ':')[0]);
+          M3_EXPECT_TRUE(cell[4] == "0" || cell[4] == "1");
+          bool nonzero = false;
+          for (std::size_t k = 5U; k < cell.size(); ++k) {
+            const double value = std::stod(cell[k]);
+            M3_EXPECT_TRUE(std::isfinite(value));
+            if (cell[4] == "0") M3_EXPECT_EQ(value, 0.0);
+            if (k >= 8U && (k - 7U) % 3U != 0U && value != 0.0) nonzero = true;
+          }
+          if (cell[4] == "1") {
+            M3_EXPECT_EQ(std::stod(cell[5]), std::stod(fields[8]));
+            M3_EXPECT_TRUE(std::stod(cell[6]) > 0.0 && std::stod(cell[6]) < 1.0);
+          } else {
+            unavailable_rows = true; // annotation+12 lies outside configured range
+          }
+          quiet_positive_cells |= cell[2] != "0" && nonzero;
+        }
+      }
+      M3_EXPECT_EQ(cell_rows, trace.cell_rows);
+      M3_EXPECT_TRUE(quiet_positive_cells);
+      M3_EXPECT_TRUE(unavailable_rows);
+      M3_EXPECT_FALSE(static_cast<bool>(std::getline(cell_lines, cell_line)));
+      trace.include_annotation_candidates = false;
+      M3_EXPECT_FALSE(run());
+      M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);
+      trace.cell_stream = nullptr;
+    }
     trace.stream = nullptr;
     M3_EXPECT_FALSE(run());
     M3_EXPECT_EQ(error, m3::offline::ReplayError::invalid_config);

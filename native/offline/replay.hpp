@@ -53,6 +53,9 @@ struct CandidateOutcomeTrace final {
   bool include_annotation_candidates{};
   static constexpr std::size_t kMaximumFrames = 2000000U;
   std::FILE* stream{};
+  // Optional v5 sidecar: one const raw-cell observation per serialized candidate.
+  std::FILE* cell_stream{};
+  std::size_t cell_rows{};
   std::size_t frames{};
   bool truncated{};
   bool failed{};

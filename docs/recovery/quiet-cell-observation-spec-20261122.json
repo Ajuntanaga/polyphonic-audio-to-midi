@@ -1,0 +1,19 @@
+{
+  "schema": "m3_quiet_cell_observation_spec_v1",
+  "datasets": {
+    "ordinary": {
+      "reference": "docs/recovery/ordinary-harmonic-fixed-competition-references-20261116.json",
+      "v5_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93"
+    },
+    "extended-middle": {
+      "reference": "docs/recovery/extended-middle-unfiltered-references-20261122.json",
+      "v5_sha256": "78929974b9cc914f71ef3fa58759728dda93f4a53fea16af17f3217adb6ac267"
+    }
+  },
+  "companions": ["untraced", "v5", "cells"],
+  "block_samples": 512,
+  "flags": ["--diagnostic-spectral-lane-collision"],
+  "policy_change": false,
+  "installed_output_changed": false,
+  "automatic_retry": false
+}

@@ -164,7 +164,8 @@ void usage(const char* program) {
       "[--spectral-shadow-templates FILE] "
       "[--candidate-trace FILE --candidate-trace-note 0..127 "
       "--candidate-trace-start SECONDS --candidate-trace-end SECONDS] "
-      "[--outcome-trace FILE] [--outcome-trace-annotations] [--residual-admission-trace FILE] [--assignment-trace FILE] "
+      "[--outcome-trace FILE] [--outcome-trace-annotations] [--outcome-cell-trace FILE] "
+      "[--residual-admission-trace FILE] [--assignment-trace FILE] "
       "  --residual-admission-note N --residual-admission-start SEC --residual-admission-end SEC (observation only)\n"
       "[--retained-assignment-trace FILE] "
       "[--assignment-trace-start SECONDS --assignment-trace-end SECONDS] "
@@ -247,6 +248,7 @@ int main(int argc, char** argv) {
   const char* candidate_trace_path = nullptr;
   m3::offline::CandidateDecisionTrace candidate_trace;
   const char* outcome_trace_path = nullptr;
+  const char* outcome_cell_trace_path = nullptr;
   m3::offline::CandidateOutcomeTrace outcome_trace;
   const char* midi_event_trace_path = nullptr;
   m3::offline::MidiEventTrace midi_event_trace;
@@ -784,6 +786,8 @@ int main(int argc, char** argv) {
       outcome_trace.include_annotation_candidates = true;
     } else if (std::strcmp(argv[index], "--outcome-trace") == 0 && has_value) {
       outcome_trace_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--outcome-cell-trace") == 0 && has_value) {
+      outcome_cell_trace_path = argv[++index];
     } else if (std::strcmp(argv[index], "--diagnostic-stable-note-identity") == 0) {
       midi_event_trace.continuation_tags = true;
     } else if (std::strcmp(argv[index], "--midi-event-trace") == 0 && has_value) {
@@ -1243,6 +1247,14 @@ int main(int argc, char** argv) {
     usage(argv[0]);
     return 2;
   }
+  if (outcome_cell_trace_path != nullptr &&
+      (outcome_trace_path == nullptr || !outcome_trace.include_annotation_candidates ||
+       std::strcmp(outcome_cell_trace_path, outcome_trace_path) == 0 ||
+       (midi_event_trace_path != nullptr &&
+        std::strcmp(outcome_cell_trace_path, midi_event_trace_path) == 0))) {
+    std::fprintf(stderr, "m3_replay: cell trace requires v5 outcome trace and a distinct path\n");
+    return 2;
+  }
   std::unique_ptr<std::FILE, int (*)(std::FILE*)> fine_window_stream(nullptr, &std::fclose);
   if (fine_window_dump_path != nullptr) {
     fine_window_stream.reset(std::fopen(fine_window_dump_path, "wb"));
@@ -1263,6 +1275,7 @@ int main(int argc, char** argv) {
     candidate_trace.stream = candidate_trace_stream.get();
   }
   std::unique_ptr<std::FILE, int (*)(std::FILE*)> outcome_trace_stream(nullptr, &std::fclose);
+  std::unique_ptr<std::FILE, int (*)(std::FILE*)> outcome_cell_trace_stream(nullptr, &std::fclose);
   std::unique_ptr<std::FILE, int (*)(std::FILE*)> midi_event_trace_stream(nullptr, &std::fclose);
   if (midi_event_trace_path != nullptr) {
     midi_event_trace_stream.reset(std::fopen(midi_event_trace_path, "wb"));
@@ -1279,6 +1292,14 @@ int main(int argc, char** argv) {
       return 1;
     }
     outcome_trace.stream = outcome_trace_stream.get();
+  }
+  if (outcome_cell_trace_path != nullptr) {
+    outcome_cell_trace_stream.reset(std::fopen(outcome_cell_trace_path, "wb"));
+    if (outcome_cell_trace_stream == nullptr) {
+      std::fprintf(stderr, "m3_replay: could not open outcome cell trace\n");
+      return 1;
+    }
+    outcome_trace.cell_stream = outcome_cell_trace_stream.get();
   }
   std::unique_ptr<std::FILE, int (*)(std::FILE*)> residual_admission_stream(nullptr, &std::fclose);
   if (residual_admission_trace_path != nullptr) {
@@ -1614,13 +1635,17 @@ int main(int argc, char** argv) {
     }
   }
   if (outcome_trace_stream != nullptr) {
-    if (outcome_trace.failed || std::fflush(outcome_trace_stream.get()) != 0) {
+    if (outcome_trace.failed || std::fflush(outcome_trace_stream.get()) != 0 ||
+        (outcome_cell_trace_stream != nullptr &&
+         std::fflush(outcome_cell_trace_stream.get()) != 0)) {
       std::fprintf(stderr, "m3_replay: outcome trace write failed\n");
       return 1;
     }
     std::fprintf(stderr, "m3_replay: outcome_trace frames=%zu cap=%zu truncated=%u\n",
         outcome_trace.frames, m3::offline::CandidateOutcomeTrace::kMaximumFrames,
         outcome_trace.truncated ? 1U : 0U);
+    if (outcome_cell_trace_stream != nullptr)
+      std::fprintf(stderr, "m3_replay: outcome_cell_trace rows=%zu\n", outcome_trace.cell_rows);
     if (outcome_trace.truncated) {
       std::fprintf(stderr, "m3_replay: refusing incomplete outcome trace\n");
       return 1;
