@@ -19,3 +19,11 @@ Dispatched once: **45027925089**, source `a2afce270d023d5aa04392dfb7aa6612a5350b
 ## Fixture correction after remote failure
 
 Run45027925089 is final/failure before model or recording inference. Seven remote tests pass; the graph guard fixture errors because a pruned TensorFlow function receives NumPy arrays. The caller contract requires Tensor inputs. The production comparison already converts its inputs. The correction converts only the fixture inputs; no graph, model, specification, decoder, numerical limit or acceptance gate changes. The small log artifact14756910759 was collected once,5761bytes, with server SHA2569044d07171dc1d4c22752a4f2918fad935c819940c3fd050eaa455e6c1f461fc. Local suite: six pass, two remote-only skips. A distinct corrected execution checkpoint will record the source pin and run.
+
+Corrected execution **45028513848**, source `c2965e388424001d200ba3d6593ab8d01aee7362`, same worker `85dee308e281ff30a5e10e03eb74382ed85cbf79`. Small report target `build/github-results/basic-pitch-flat-normalization-recovery-45028513848`; bulk `m3-basic-pitch-flat-normalization-evidence-45028513848-1` remains remote. Seven remote tests passed in the previous setup; the corrected TensorFlow fixture is checked first here.
+
+## Two-output adapter correction after preparation failure
+
+Run45028513848 is final/failure and collected once with verified server digest. All eight remote tests pass. The original-weight corrected graph passes all three synthetic TF/ORT comparisons (max absolute below1e-4, threshold and event identity), including the previously failing silence case. The next warmup wrongly reuses an adapter requiring a contour head; the corrected frozen interface intentionally contains only note and onset. No adapted export or recording inference occurred.
+
+The fix adds a dedicated two-output adapter with shape, finite-value and probability checks, and saves partial export evidence before warmup. Local contract checks: eight pass, three execution tests reserved for GitHub. One focused diff review completed. Scientific specification, weights, conversion, decoder and all gates are unchanged. A separately pinned execution follows this concrete implementation correction; no duplicate active job or unchanged failed rerun. The prior partial result is retained, not presented as full corpus acceptance.

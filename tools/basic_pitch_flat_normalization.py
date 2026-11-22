@@ -106,3 +106,29 @@ def corrected_model(model):
             return dict(zip(('note', 'onset'), call(signal)))
 
     return FrozenCorrected(), metadata
+
+
+def checked_pair(values):
+    """Validate the actual two-output corrected interface, without a contour head."""
+    import numpy as np
+    if set(values) != {'note', 'onset'}:
+        raise ValueError('Unexpected corrected model outputs')
+    for name, value in values.items():
+        if (value.shape != OUTPUT_SHAPE or not np.isfinite(value).all()
+                or np.any((value < 0) | (value > 1))):
+            raise ValueError('Invalid corrected model probabilities: '+name)
+    return values['note'][0], values['onset'][0]
+
+
+class CorrectedBackend:
+    """Causal streaming adapter for the corrected, frozen two-output model."""
+    def __init__(self, model, tf):
+        remote_only()
+        import numpy as np
+        import soundfile as sf
+        self.model, self.tf, self.np, self.sf = model, tf, np, sf
+        self.predict(np.zeros(INPUT_SHAPE[1], np.float32))
+
+    def predict(self, signal):
+        tensor = self.tf.convert_to_tensor(signal.reshape(INPUT_SHAPE))
+        return checked_pair({key: value.numpy() for key, value in self.model(tensor).items()})

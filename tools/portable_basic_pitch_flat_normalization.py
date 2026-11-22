@@ -12,12 +12,12 @@ import time
 
 import numpy as np
 
-from tools.basic_pitch_flat_normalization import corrected_model, CORRECTION
+from tools.basic_pitch_flat_normalization import corrected_model, CORRECTION, CorrectedBackend
 from tools.basic_pitch_onnx_export import (checked_weights, compare_outputs,
     compare_streams, export_model, variable_manifest, weight_fingerprint)
 from tools.basic_pitch_streaming import SETTINGS, emission_spans
 from tools.pitch_detector_comparison import compare, digest, read_labels, score
-from tools.portable_basic_pitch_adaptation import assign, Backend
+from tools.portable_basic_pitch_adaptation import assign
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import check_hash, remote_only, save_json
 from tools.portable_basic_pitch_onnx_export import collect_reference
@@ -117,8 +117,9 @@ def run(spec_path, output):
                 row['synthetic'][name] = compare_outputs(reference, converted, spec['max_absolute'])
             row['synthetic_parity_pass'] = all(case['parity_pass'] for case in row['synthetic'].values())
             report['exports'][arm] = row
+            save_json(report_path, report)
             # corrected_model holds frozen constants, so later assign/restore cannot alter it.
-            backends[arm] = {'tensorflow': Backend(corrected, tf), 'onnx': backend}
+            backends[arm] = {'tensorflow': CorrectedBackend(corrected, tf), 'onnx': backend}
             save_json(report_path, report)
         assign(variables, original)
         report['original_weights_restored'] = all(np.array_equal(v.numpy(), a) for v, a in zip(variables, original))
