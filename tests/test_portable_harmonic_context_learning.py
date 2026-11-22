@@ -35,6 +35,7 @@ class PortableContextTests(unittest.TestCase):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
         configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level', 'whiten'))
+        configs.append((runner.HALO_MODEL_PARAMS, 'halo'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
             with self.subTest(gates=sequence, loss=params['loss'], mode=mode), tempfile.TemporaryDirectory() as directory:
@@ -67,10 +68,12 @@ class PortableContextTests(unittest.TestCase):
                     spec_data['harmonic_level_suppression'] = runner.SUPPRESSION
                 if mode == 'whiten':
                     spec_data['harmonic_spectral_whitening'] = runner.WHITENING
+                if mode == 'halo':
+                    spec_data['harmonic_halo_context'] = runner.HALO_PARAMETERS
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
-                    return (np.zeros((3, runner.NOTE_COUNT*len(extractor.coordinate_names))),
+                    return (np.zeros((3, len(extractor.names))),
                             np.zeros((3, 53), bool), {})
                 def persist(path, model, extractor, model_params=None):
                     path.write_text(str(model.cutoff))
@@ -136,6 +139,15 @@ class PortableContextTests(unittest.TestCase):
                     self.assertTrue(all(isinstance(c.args[3], runner.HarmonicWhitenedFeatures)
                                         for c in examples.call_args_list))
                     self.assertTrue(all(isinstance(c.args[4], runner.HarmonicWhitenedFeatures)
+                                        for c in replay.call_args_list))
+                if mode == 'halo':
+                    self.assertEqual(result['schema'], 'm3_harmonic_halo_context_v1')
+                    self.assertEqual(result['features']['input_candidate_count'], 125)
+                    self.assertEqual(result['features']['candidate_count'], 53)
+                    self.assertEqual(fit_features.shape, (3, 125*62))
+                    self.assertTrue(all(isinstance(c.args[3], runner.HarmonicHaloFeatures)
+                                        for c in examples.call_args_list))
+                    self.assertTrue(all(isinstance(c.args[4], runner.HarmonicHaloFeatures)
                                         for c in replay.call_args_list))
                 if params != runner.MODEL_PARAMS:
                     self.assertTrue(result['training_plan_identity']['verified'])

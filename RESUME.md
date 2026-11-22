@@ -1,3 +1,9 @@
+## Measured pitch halo prepared: same targets, full measured context
+
+Active checkpoint: `docs/recovery/github-harmonic-halo-context-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-HALO-PLAN-20261121.md`. The four residual layers have a 73-position receptive field across only 53 baseline input rows. One bounded CPU screen replaces zero padding with 36 measured pitch rows on each side, keeping 53 targets and central-only training normalization. Same parameter count, seeded weights, labels, mixture plans, optimizer and gates. Context addition and boundary removal change together; neither is an established cause of the transfer failure.
+
+Five lightweight local synthetic/gate-flow checks and six-file AST check pass. Torch, fit/serialization and recorded processing run only on GitHub. No job dispatched yet; one read-only implementation review passed. Installed/default output and scoreboard unchanged. Next: scoped commits/pushes and exactly one CPU screen under existing authorization . All 555 labels retained, no cutoff tuning or automatic rerun. Claude remains paused. Broader live-readiness goal active; overall completion is not measured. Earlier entries are historical.
+
 ## Spectral whitening final: rejected at training gate
 
 Active checkpoint: `docs/recovery/github-harmonic-whitening-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-WHITENING-RESULT-20261121.md`. CPU run 44977024530 completed successfully at source `d7aee42e6c4c5155b2ba9dab4b765f1149992b85`, worker `7120da877f10022920cc2d3f7453c28ac7565094`. All 104 synthetic/unit tests and source CI 44976965511 passed. The small report was collected once and its server digest verified; bulk stays remote. Do not poll, redownload or rerun this final job.

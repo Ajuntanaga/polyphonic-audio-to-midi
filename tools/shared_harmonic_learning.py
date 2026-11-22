@@ -34,12 +34,17 @@ class HarmonicFeatures:
     Flatten order is candidate note, window, harmonic, offset, then window RMS.
     Fixed FFT resolution means this is not exactly shift-equivariant.
     """
-    def __init__(self):
-        notes = np.arange(SETTINGS['note_low'], SETTINGS['note_high']+1)
+    def __init__(self, *, note_low=SETTINGS['note_low'], note_high=SETTINGS['note_high']):
+        if not isinstance(note_low, int) or not isinstance(note_high, int) or note_high < note_low:
+            raise ValueError('Invalid harmonic context range')
+        notes = np.arange(note_low, note_high+1)
+        self.note_count = len(notes)
         fundamental = 440.0*2.0**((notes-69.0)/12.0)
         ratios = (np.asarray(PARAMETERS['harmonic_multipliers'])[:, None]*
                   2.0**(np.asarray(PARAMETERS['offsets_semitones'])[None, :]/12.0))
         self.frequency = fundamental[:, None, None]*ratios[None, :, :]
+        if not np.isfinite(self.frequency).all() or self.frequency.max() > SETTINGS['sample_rate']/2:
+            raise ValueError('Harmonic context exceeds Nyquist')
         self.windows = {n: np.hanning(n) for n in SETTINGS['windows']}
         self.fft_frequency = {n: np.fft.rfftfreq(n, 1/SETTINGS['sample_rate']) for n in self.windows}
         self.coordinate_names = [name for n in SETTINGS['windows'] for name in
@@ -59,21 +64,22 @@ class HarmonicFeatures:
             rms2 = float(np.mean(signal*signal))
             spectrum = np.fft.rfft(signal*window)/window.sum()
             power = np.interp(self.frequency.ravel(), self.fft_frequency[n],
-                              np.abs(spectrum)**2).reshape(NOTE_COUNT, -1)
+                              np.abs(spectrum)**2).reshape(self.note_count, -1)
             relative = 10*np.log10(np.maximum(power, PARAMETERS['power_floor'])/
                                   max(rms2, PARAMETERS['rms2_floor']))
             absolute = np.clip(10*math.log10(max(rms2, PARAMETERS['rms2_floor'])),
                                *PARAMETERS['rms_db_clip'])
             result.append(np.c_[np.clip(relative, *PARAMETERS['relative_db_clip']),
-                                np.full(NOTE_COUNT, absolute)])
+                                np.full(self.note_count, absolute)])
         return np.concatenate(result, axis=1).astype(np.float32).ravel()
 
 
-def candidate_rows(features, feature_count=FEATURE_COUNT):
+def candidate_rows(features, feature_count=FEATURE_COUNT, *, note_count=NOTE_COUNT):
     """Preserve mixture-major, pitch-minor alignment with truth.reshape(-1)."""
     values = np.asarray(features, dtype=np.float32)
     if (not isinstance(feature_count, int) or feature_count <= 0 or
-            values.ndim != 2 or values.shape[1] != NOTE_COUNT*feature_count
+            not isinstance(note_count, int) or note_count <= 0 or
+            values.ndim != 2 or values.shape[1] != note_count*feature_count
             or not np.isfinite(values).all()):
         raise ValueError('Invalid harmonic feature matrix')
     return values.reshape(-1, feature_count)
