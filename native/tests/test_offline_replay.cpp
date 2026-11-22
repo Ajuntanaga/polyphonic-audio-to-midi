@@ -16,11 +16,44 @@
 #include "m3/polyphonic_pitch_detector.hpp"
 #include "replay.hpp"
 #include "frozen_note_cues.hpp"
+#include "joint_release_support.hpp"
 #include "residual_recovery.hpp"
 #include "test_support.hpp"
 #include "unison_spectral_shadow.hpp"
 
 namespace {
+
+M3_TEST(joint_release_support_uses_delivery_samples_preserves_order_and_resets) {
+  m3::offline::JointReleaseSupport tape;
+  const std::string header = "m3_joint_release_support_v1\t96000\n";
+  M3_EXPECT_TRUE(tape.parse(header + "31\t1\t60\n64\t0\t60\n64\t1\t60\n"
+      "65\t0\t60\n", 96000U, 96U));
+  M3_EXPECT_TRUE(tape.matches(96000U, 96U));
+  M3_EXPECT_FALSE(tape.matches(48000U, 96U));
+  const auto allocations = m3::test::allocation_count();
+  M3_EXPECT_FALSE(tape.advance(30U));
+  M3_EXPECT_FALSE(tape.primed());
+  M3_EXPECT_TRUE(tape.advance(31U));
+  M3_EXPECT_TRUE(tape.primed());
+  M3_EXPECT_EQ(tape.mask()[0U], std::uint64_t{1U} << 60U);
+  M3_EXPECT_TRUE(tape.advance(64U));
+  M3_EXPECT_EQ(tape.mask()[0U], std::uint64_t{1U} << 60U);
+  M3_EXPECT_TRUE(tape.advance(65U));
+  M3_EXPECT_EQ(tape.mask()[0U], 0U);
+  M3_EXPECT_TRUE(tape.primed());
+  tape.reset();
+  M3_EXPECT_FALSE(tape.primed());
+  M3_EXPECT_FALSE(tape.advance(30U));
+  M3_EXPECT_TRUE(tape.advance(31U));
+  M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+  M3_EXPECT_FALSE(tape.parse(header + "1\t0\t60\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "1\t1\t60\n2\t1\t60\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "2\t1\t60\n1\t0\t60\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "96\t1\t60\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "1\t1\t128\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "1\t2\t60\n", 96000U, 96U));
+  M3_EXPECT_FALSE(tape.parse(header + "1\t1\t60", 96000U, 96U));
+}
 
 M3_TEST(offline_harmonic_cues_require_explicit_schema_and_complete_history) {
   using Cues = m3::offline::FrozenNoteCues;

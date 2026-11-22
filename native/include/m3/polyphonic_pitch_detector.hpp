@@ -790,6 +790,24 @@ class PolyphonicPitchDetector final {
     diagnostic_supported_sustain_renewal_ = enabled;
     unsupported_sustain_ticks_ = {};
   }
+  struct JointRapidReleaseStats final {
+    std::uint64_t eligible{}, warmup{}, model_veto{}, released{}, refused{}, reactivated{};
+  };
+  void set_joint_rapid_release_for_diagnostics(bool enabled) noexcept {
+    diagnostic_joint_rapid_release_ = enabled;
+    diagnostic_joint_support_primed_ = false;
+    diagnostic_joint_support_mask_ = {};
+    diagnostic_joint_released_ = {};
+    diagnostic_joint_release_stats_ = {};
+  }
+  void set_joint_release_support_for_diagnostics(
+      const std::array<std::uint64_t, 2U>& mask, bool primed) noexcept {
+    diagnostic_joint_support_mask_ = mask;
+    diagnostic_joint_support_primed_ = primed;
+  }
+  [[nodiscard]] JointRapidReleaseStats joint_rapid_release_stats() const noexcept {
+    return diagnostic_joint_release_stats_;
+  }
   void set_local_onset_evidence_for_diagnostics(bool enabled) noexcept {
     diagnostic_local_onset_evidence_ = enabled;
     local_onset_ticks_ = {};
@@ -1403,6 +1421,10 @@ class PolyphonicPitchDetector final {
       ) noexcept;
   [[nodiscard]] bool append_candidate_note_off(
       DetectorDecision& decision, std::size_t candidate) noexcept;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  [[nodiscard]] bool try_joint_rapid_release_for_diagnostics(
+      DetectorDecision& decision, std::size_t candidate) noexcept;
+#endif
   [[nodiscard]] bool append_atomic_candidate_handoff(
       DetectorDecision& decision, std::size_t incumbent,
       std::size_t target, std::uint8_t velocity) noexcept;
@@ -1926,6 +1948,11 @@ class PolyphonicPitchDetector final {
   std::uint64_t persistent_candidate_last_tick_{};
   bool diagnostic_supported_sustain_renewal_{};
   std::array<std::uint16_t, kMaxCandidates> unsupported_sustain_ticks_{};
+  bool diagnostic_joint_rapid_release_{};
+  bool diagnostic_joint_support_primed_{};
+  std::array<std::uint64_t, 2U> diagnostic_joint_support_mask_{};
+  std::array<bool, kMaxCandidates> diagnostic_joint_released_{};
+  JointRapidReleaseStats diagnostic_joint_release_stats_{};
   bool diagnostic_local_onset_evidence_{};
   std::array<std::uint8_t, kMaxCandidates> local_onset_ticks_{};
   std::array<std::uint8_t, kMaxCandidates> local_onset_masks_{};

@@ -19,6 +19,73 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void joint_rapid_release_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.midi_routing = MidiRouting::per_voice;
+    config.lowest_note = 52U;
+    config.highest_note = 52U;
+    M3_EXPECT_TRUE(detector.configure(96000.0, config));
+    auto& state = detector.candidate_states_[0U];
+    const auto arm = [&]() {
+      state = {};
+      state.active = true;
+      state.midi_voice_mask = 0x03U;
+      state.assigned_string_mask = 0x03U;
+      state.emitted_note = 52U;
+      state.dp_output_projection_note = 64U;
+      state.attack_ticks = 9U;
+      state.release_ticks = 7U;
+      detector.quiet_disposition_ = QuietDisposition::rapid_mute_ratio;
+    };
+    arm();
+    DetectorDecision decision;
+    M3_EXPECT_TRUE(!detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    detector.set_joint_rapid_release_for_diagnostics(true);
+    M3_EXPECT_TRUE(!detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    M3_EXPECT_EQ(detector.joint_rapid_release_stats().warmup, 1U);
+    std::array<std::uint64_t, 2U> support{};
+    support[1U] = 1U;  // The rendered MIDI pitch 64, not detector pitch 52.
+    detector.set_joint_release_support_for_diagnostics(support, true);
+    M3_EXPECT_TRUE(!detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    M3_EXPECT_TRUE(state.active);
+    M3_EXPECT_EQ(detector.joint_rapid_release_stats().model_veto, 1U);
+    support = {};
+    support[0U] = std::uint64_t{1U} << 52U;
+    detector.set_joint_release_support_for_diagnostics(support, true);
+    detector.quiet_disposition_ = QuietDisposition::not_quiet;
+    M3_EXPECT_TRUE(!detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    detector.quiet_disposition_ = QuietDisposition::rapid_mute_ratio;
+    const auto before = m3::test::allocation_count();
+    M3_EXPECT_TRUE(detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    M3_EXPECT_EQ(m3::test::allocation_count(), before);
+    M3_EXPECT_TRUE(!state.active);
+    M3_EXPECT_EQ(state.attack_ticks, 0U);
+    M3_EXPECT_EQ(state.release_ticks, 0U);
+    M3_EXPECT_EQ(decision.transitions.size(), 2U);
+    for (const auto& event : decision.transitions) {
+      M3_EXPECT_EQ(event.kind, TransitionKind::note_off);
+      M3_EXPECT_EQ(event.note, 64U);
+    }
+    M3_EXPECT_EQ(detector.joint_rapid_release_stats().released, 1U);
+    arm();
+    decision = {};
+    while (decision.transitions.size() < decision.transitions.capacity() - 1U)
+      static_cast<void>(decision.transitions.push_back(VoiceTransition{}));
+    const auto size = decision.transitions.size();
+    M3_EXPECT_TRUE(detector.try_joint_rapid_release_for_diagnostics(decision, 0U));
+    M3_EXPECT_TRUE(state.active);
+    M3_EXPECT_EQ(state.midi_voice_mask, 0x03U);
+    M3_EXPECT_EQ(state.release_ticks, 7U);
+    M3_EXPECT_EQ(decision.transitions.size(), size);
+    M3_EXPECT_EQ(detector.joint_rapid_release_stats().refused, 1U);
+    detector.reset();
+    M3_EXPECT_TRUE(detector.diagnostic_joint_rapid_release_);
+    M3_EXPECT_TRUE(!detector.diagnostic_joint_support_primed_);
+    M3_EXPECT_EQ(detector.diagnostic_joint_support_mask_[0U], 0U);
+    M3_EXPECT_EQ(detector.joint_rapid_release_stats().eligible, 0U);
+  }
   static void independent_phase_below_signal_floor_probe() {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -6877,6 +6944,10 @@ M3_TEST(native_detector_guard_updates_survive_reset_and_reconfiguration) {
     m3::PolyphonicPitchDetectorTestAccess::guard_updates_match_enabled_scan(
         detector, enabled[index]);
   }
+}
+
+M3_TEST(native_joint_rapid_release_is_guarded_and_transactional) {
+  m3::PolyphonicPitchDetectorTestAccess::joint_rapid_release_probe();
 }
 
 M3_TEST(native_detector_quiet_diagnostics_identify_the_first_causal_gate) {

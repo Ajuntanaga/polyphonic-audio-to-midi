@@ -17,6 +17,7 @@
 #include "replay.hpp"
 #include "frequency_refinement_shadow.hpp"
 #include "frozen_note_cues.hpp"
+#include "joint_release_support.hpp"
 #include "unison_spectral_shadow.hpp"
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)
 #include "test_support.hpp"
@@ -173,6 +174,7 @@ void usage(const char* program) {
       "[--diagnostic-direct-evidence-retention] "
       "[--diagnostic-contradicted-retention] "
       "[--diagnostic-upper-fretted-relief] "
+      "[--diagnostic-joint-rapid-release SUPPORT.tsv] "
       "[--diagnostic-persistent-candidate-admission] "
       "[--diagnostic-supported-sustain-renewal] "
       "[--diagnostic-local-onset-evidence] "
@@ -335,6 +337,7 @@ int main(int argc, char** argv) {
   bool diagnostic_provisional_open_retention_guard = false;
   bool diagnostic_common_assignment_confidence = false;
   bool diagnostic_upper_fretted_relief = false;
+  const char* diagnostic_joint_release_path = nullptr;
   bool diagnostic_calibrated_assignment_prior = false;
   bool diagnostic_joint_rescue_eligibility = false;
   bool diagnostic_pending_string_posterior = false;
@@ -719,6 +722,9 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index],
                            "--diagnostic-common-assignment-confidence") == 0) {
       diagnostic_common_assignment_confidence = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-joint-rapid-release") == 0) {
+      if (++index >= argc) { usage(argv[0]); return 2; }
+      diagnostic_joint_release_path = argv[index];
     } else if (std::strcmp(argv[index],
                            "--diagnostic-upper-fretted-relief") == 0) {
       diagnostic_upper_fretted_relief = true;
@@ -988,6 +994,17 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  m3::offline::JointReleaseSupport diagnostic_joint_release_support;
+  if (diagnostic_joint_release_path != nullptr) {
+    std::vector<std::uint8_t> support_bytes;
+    if (!read_file(diagnostic_joint_release_path, support_bytes) ||
+        !diagnostic_joint_release_support.parse(
+            std::string_view(reinterpret_cast<const char*>(support_bytes.data()), support_bytes.size()),
+            wave.sample_rate, wave.mono_samples.size())) {
+      std::fprintf(stderr, "m3_replay: invalid joint-release support tape\n");
+      return 1;
+    }
+  }
   m3::offline::FrozenNoteCues diagnostic_odd_partial_cues;
   if (diagnostic_cue_delay_explicit && diagnostic_odd_partial_cues_path == nullptr) {
     std::fprintf(stderr, "m3_replay: cue delay requires frozen odd-partial cues\n");
@@ -1350,7 +1367,8 @@ int main(int argc, char** argv) {
           diagnostic_persistent_candidate_admission,
           diagnostic_contradicted_retention,
           diagnostic_common_assignment_confidence,
-          diagnostic_upper_fretted_relief)) {
+          diagnostic_upper_fretted_relief,
+          diagnostic_joint_release_path != nullptr ? &diagnostic_joint_release_support : nullptr)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1514,6 +1532,15 @@ int main(int argc, char** argv) {
         "m3_replay: residual_recovery proposals=%u selected_ticks=%u note_ons=%u\n",
         result.residual_recovery_proposals, result.residual_recovery_selected_ticks,
         result.residual_recovery_note_ons);
+  }
+  if (diagnostic_joint_release_path != nullptr) {
+    const auto u = [](std::uint64_t value) { return static_cast<unsigned long long>(value); };
+    std::fprintf(stderr,
+        "m3_replay: joint_rapid_release eligible=%llu warmup=%llu model_veto=%llu "
+        "released=%llu refused=%llu reactivated=%llu\n",
+        u(result.joint_release_eligible), u(result.joint_release_warmup),
+        u(result.joint_release_model_veto), u(result.joint_release_released),
+        u(result.joint_release_refused), u(result.joint_release_reactivated));
   }
   if (diagnostic_upper_fretted_relief) {
     std::fprintf(stderr,

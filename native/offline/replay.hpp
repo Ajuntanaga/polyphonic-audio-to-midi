@@ -21,6 +21,7 @@ namespace m3::offline {
 
 class FrequencyWindowCapture;
 class FrozenNoteCues;
+class JointReleaseSupport;
 
 // Actual public detector transitions, independent of tuner snapshots/labels.
 struct MidiEventTrace final {
@@ -1818,6 +1819,8 @@ struct ReplayResult final {
   std::uint32_t residual_recovery_proposals{};
   std::uint32_t residual_recovery_selected_ticks{};
   std::uint32_t residual_recovery_note_ons{};
+  std::uint64_t joint_release_eligible{}, joint_release_warmup{}, joint_release_model_veto{};
+  std::uint64_t joint_release_released{}, joint_release_refused{}, joint_release_reactivated{};
   std::uint64_t upper_relief_evaluated{};
   std::uint64_t upper_relief_no_parent{};
   std::uint64_t upper_relief_related_blocked{};
@@ -2414,7 +2417,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_persistent_candidate_admission = false,
                          bool diagnostic_contradicted_retention = false,
                          bool diagnostic_common_assignment_confidence = false,
-                         bool diagnostic_upper_fretted_relief = false);
+                         bool diagnostic_upper_fretted_relief = false,
+                         JointReleaseSupport* diagnostic_joint_release_support = nullptr);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

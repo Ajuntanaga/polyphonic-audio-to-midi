@@ -1690,6 +1690,10 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_residual_recovery_lease_ = {};
   diagnostic_residual_recovery_stats_ = {};
   diagnostic_upper_fretted_relief_stats_ = {};
+  diagnostic_joint_support_primed_ = false;
+  diagnostic_joint_support_mask_ = {};
+  diagnostic_joint_released_ = {};
+  diagnostic_joint_release_stats_ = {};
   diagnostic_residual_recovery_owners_.fill(kMaxVoices);
   fine_history_reset_diagnostics_ = {};
   calibrated_output_diagnostics_ = {};
@@ -4341,6 +4345,10 @@ void PolyphonicPitchDetector::append_joint_candidate_attacks_for_diagnostics(
     if (!append_candidate_note_on(decision, candidate, dynamic_velocity())) {
       continue;
     }
+    if (diagnostic_joint_rapid_release_ && diagnostic_joint_released_[candidate]) {
+      ++diagnostic_joint_release_stats_.reactivated;
+      diagnostic_joint_released_[candidate] = false;
+    }
     if (diagnostic_residual_recovery_lease_.valid &&
         diagnostic_residual_recovery_lease_.note == lowest_note_ + candidate) {
       ++diagnostic_residual_recovery_stats_.note_ons;
@@ -4484,6 +4492,34 @@ bool PolyphonicPitchDetector::append_candidate_note_on(
   harmonic_memory_updates_[candidate] = 0U;
   return true;
 }
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+bool PolyphonicPitchDetector::try_joint_rapid_release_for_diagnostics(
+    DetectorDecision& decision, std::size_t candidate) noexcept {
+  if (!diagnostic_joint_rapid_release_ || profile_mode_ != ProfileMode::m3 ||
+      candidate >= static_cast<std::size_t>(candidate_count_) ||
+      !candidate_states_[candidate].active ||
+      quiet_disposition_ != QuietDisposition::rapid_mute_ratio) return false;
+  auto& stats = diagnostic_joint_release_stats_;
+  ++stats.eligible;
+  if (!diagnostic_joint_support_primed_) { ++stats.warmup; return false; }
+  const auto note = candidate_midi_output_note(candidate);
+  if ((diagnostic_joint_support_mask_[note / 64U] &
+       (std::uint64_t{1U} << (note % 64U))) != 0U) {
+    ++stats.model_veto;
+    return false;
+  }
+  if (append_candidate_note_off(decision, candidate)) {
+    candidate_states_[candidate] = {};
+    diagnostic_joint_released_[candidate] = true;
+    ++stats.released;
+  } else {
+    ++stats.refused;
+  }
+  // A refusal retains the owner, without a second release attempt this tick.
+  return true;
+}
+#endif
 
 bool PolyphonicPitchDetector::append_candidate_note_off(
     DetectorDecision& decision, std::size_t candidate) noexcept {
@@ -13140,6 +13176,12 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
     if (!state.active) {
       continue;
     }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    if (try_joint_rapid_release_for_diagnostics(decision, candidate)) {
+      if (state.active) ++active_count;
+      continue;
+    }
+#endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
     const bool joint_output_path = joint_residual_output_enabled_ ||
                                    state.joint_residual_output_suppressed;
@@ -13392,6 +13434,10 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       activation.gate = ActivationGate::activated;
+      if (diagnostic_joint_rapid_release_ && diagnostic_joint_released_[candidate]) {
+        ++diagnostic_joint_release_stats_.reactivated;
+        diagnostic_joint_released_[candidate] = false;
+      }
 #endif
       state.active = true;
       state.attack_ticks = 0U;

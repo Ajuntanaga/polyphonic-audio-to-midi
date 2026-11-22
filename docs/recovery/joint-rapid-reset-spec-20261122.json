@@ -1,0 +1,32 @@
+{
+  "schema": "m3_joint_rapid_reset_spec_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "artifact": {
+    "id": 14759705414,
+    "bytes": 28800182,
+    "sha256": "00abb2d4ba0a22cb9507e885bf62b193fcc53b3f0309c24cfbb19d44ca02f1fe"
+  },
+  "datasets": {
+    "ordinary": {
+      "reference": "docs/recovery/ordinary-harmonic-fixed-competition-references-20261116.json",
+      "support": {
+        "member": "adapted_cropped/ordinary-events.json",
+        "bytes": 170851,
+        "sha256": "4e0601c42dbdccffe32c245a74ce80a9ae24be825f0b21e010b37f33f8ac9e92"
+      }
+    },
+    "extended-middle": {
+      "reference": "docs/recovery/extended-middle-unfiltered-references-20261122.json",
+      "support": {
+        "member": "adapted_cropped/extended-middle-events.json",
+        "bytes": 6330,
+        "sha256": "1eea72fdc62b0d2e1f09f871d3a0f1b6cf8b4490cb4413f7862fa42986f688e3"
+      }
+    }
+  },
+  "budget": {
+    "maximum_loss_ms": 25,
+    "maximum_relative_loss": 0.05
+  },
+  "ordinary_gap_reduction_minimum": 0.2
+}

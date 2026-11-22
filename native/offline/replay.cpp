@@ -22,6 +22,7 @@
 #include "joint_pitch_residual.hpp"
 #include "frequency_refinement_shadow.hpp"
 #include "frozen_note_cues.hpp"
+#include "joint_release_support.hpp"
 #include "residual_recovery.hpp"
 #include "unison_spectral_shadow.hpp"
 #if defined(M3_OFFLINE_C_ALLOCATION_GUARD)
@@ -202,7 +203,8 @@ void hash_decision(std::uint64_t& hash, std::size_t sample,
 }
 
 DetectorDecision process_replay_sample(PolyphonicPitchDetector& detector,
-    FrozenNoteCues* cues, std::size_t sample_index, double raw, double sample) noexcept {
+    FrozenNoteCues* cues, JointReleaseSupport* support, std::size_t sample_index,
+    double raw, double sample) noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (cues != nullptr) {
 #if defined(M3_OFFLINE_STAGE_TIMING)
@@ -211,8 +213,10 @@ DetectorDecision process_replay_sample(PolyphonicPitchDetector& detector,
     if (cues->advance(sample_index)) detector.set_odd_partial_cue_mask_for_diagnostics(cues->mask());
     cues->observe(static_cast<float>(raw));
   }
+  if (support != nullptr && support->advance(sample_index))
+    detector.set_joint_release_support_for_diagnostics(support->mask(), support->primed());
 #else
-  (void)cues; (void)sample_index; (void)raw;
+  (void)cues; (void)support; (void)sample_index; (void)raw;
 #endif
   return detector.process_sample(sample);
 }
@@ -232,7 +236,7 @@ bool read_thread_cpu_ns(std::uint64_t& result) noexcept {
 }
 
 void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues,
-    const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output,
+    JointReleaseSupport* support, const WaveData& wave, double gain, std::size_t block, ReplayCoreTiming& output,
     bool thread_cpu,
     [[maybe_unused]] const std::vector<std::uint64_t>& stage_end_samples) {
   output = {};
@@ -255,6 +259,7 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
 #endif
   detector.reset();
   if (cues != nullptr) cues->reset();
+  if (support != nullptr) support->reset();
 #if defined(M3_OFFLINE_ALLOCATION_TRACE)
   m3::test::reset_allocation_trace();
 #endif
@@ -276,7 +281,7 @@ void measure_replay_core(PolyphonicPitchDetector& detector, FrozenNoteCues* cues
     const auto start = std::chrono::steady_clock::now();
     for (std::size_t index = 0U; index < count; ++index) {
       const double raw = wave.mono_samples[begin + index];
-      decisions[index] = process_replay_sample(detector, cues, begin + index, raw,
+      decisions[index] = process_replay_sample(detector, cues, support, begin + index, raw,
                                               raw * gain);
     }
     const auto elapsed = static_cast<std::uint64_t>(std::chrono::duration_cast<
@@ -3040,11 +3045,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_persistent_candidate_admission,
                          bool diagnostic_contradicted_retention,
                          bool diagnostic_common_assignment_confidence,
-                         bool diagnostic_upper_fretted_relief) {
+                         bool diagnostic_upper_fretted_relief,
+                         JointReleaseSupport* diagnostic_joint_release_support) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3084,6 +3090,12 @@ bool run_detector_replay(const WaveData& wave,
         assignment_trace != nullptr || midi_event_trace != nullptr || partial_motion_trace != nullptr)
       return false;
 #endif
+  }
+  if (diagnostic_joint_release_support != nullptr) {
+    if (config.profile_mode != ProfileMode::m3 ||
+        !diagnostic_joint_release_support->matches(wave.sample_rate, wave.mono_samples.size()))
+      return false;
+    diagnostic_joint_release_support->reset();
   }
   if (diagnostic_cue_free_lane_reassignment && diagnostic_odd_partial_cues == nullptr)
     return false;
@@ -3420,6 +3432,7 @@ bool run_detector_replay(const WaveData& wave,
       diagnostic_common_assignment_confidence);
   detector.set_upper_fretted_relief_for_diagnostics(
       diagnostic_upper_fretted_relief);
+  detector.set_joint_rapid_release_for_diagnostics(diagnostic_joint_release_support != nullptr);
   detector.set_calibrated_assignment_prior_for_diagnostics(
       diagnostic_calibrated_assignment_prior);
   detector.set_provisional_open_retention_guard_for_diagnostics(
@@ -3729,7 +3742,8 @@ bool run_detector_replay(const WaveData& wave,
       }
 #endif
       const DetectorDecision decision = process_replay_sample(detector,
-          diagnostic_odd_partial_cues, sample_index, wave.mono_samples[sample_index], sample);
+          diagnostic_odd_partial_cues, diagnostic_joint_release_support, sample_index,
+          wave.mono_samples[sample_index], sample);
       hash_decision(result.fingerprint, sample_index, decision);
       for (const VoiceTransition& transition : decision.transitions) {
         if (midi_event_trace != nullptr && !midi_event_trace->failed) {
@@ -9537,6 +9551,13 @@ bool run_detector_replay(const WaveData& wave,
   result.residual_recovery_proposals = recovery_stats.proposals;
   result.residual_recovery_selected_ticks = recovery_stats.selected_ticks;
   result.residual_recovery_note_ons = recovery_stats.note_ons;
+  const auto joint_stats = detector.joint_rapid_release_stats();
+  result.joint_release_eligible = joint_stats.eligible;
+  result.joint_release_warmup = joint_stats.warmup;
+  result.joint_release_model_veto = joint_stats.model_veto;
+  result.joint_release_released = joint_stats.released;
+  result.joint_release_refused = joint_stats.refused;
+  result.joint_release_reactivated = joint_stats.reactivated;
   const auto relief_stats = detector.upper_fretted_relief_stats();
   result.upper_relief_evaluated = relief_stats.evaluated;
   result.upper_relief_no_parent = relief_stats.no_parent;
@@ -9548,7 +9569,7 @@ bool run_detector_replay(const WaveData& wave,
 #endif
 #if defined(M3_FROZEN_CUE_COOPERATIVE)
   if (core_timing != nullptr) {
-    measure_replay_core(detector, diagnostic_odd_partial_cues, wave, input_gain,
+    measure_replay_core(detector, diagnostic_odd_partial_cues, diagnostic_joint_release_support, wave, input_gain,
                         input_partition, *core_timing, diagnostic_thread_cpu,
                         diagnostic_stage_end_samples);
     core_timing->fingerprint_identical = core_timing->fingerprint == result.fingerprint;
