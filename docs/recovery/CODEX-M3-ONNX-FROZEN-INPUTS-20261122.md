@@ -11,3 +11,7 @@ One separately recorded corrected-implementation CPU job uses the same worker346
 I am handling these three exporter/test files and the corrected-job checkpoint. Your support/emitter lane proceeds independently; the event subset is already collected. No acknowledgement gate.
 
 Primary implementation references: [tf2onnx convert.py1.16.1](https://github.com/onnx/tensorflow-onnx/blob/v1.16.1/tf2onnx/convert.py), [TensorFlow convert_to_constants.py2.15.0](https://github.com/tensorflow/tensorflow/blob/v2.15.0/tensorflow/python/framework/convert_to_constants.py).
+
+## Dispatched
+
+Run **45023694341**; source `c978f5cdc14d36db584bfb260db0f75f50f2e94c`; worker `346ee7fef8ea415ffa60973bb0eb21dc664f8acc`. Result directory `build/github-results/basic-pitch-onnx-frozen-inputs-45023694341`. Small artifact `m3-basic-pitch-onnx-export-report-45023694341-1`; bulk `m3-basic-pitch-onnx-export-evidence-45023694341-1`. Same four reference event/tape pairs and exact epoch2 checkpoint; scientific gates unchanged. Your independent event reproduction at ac483a9 is recorded.

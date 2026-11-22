@@ -1,0 +1,300 @@
+{
+  "schema": "m3_github_exact_weight_onnx_export_recovery_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_commit": "c978f5cdc14d36db584bfb260db0f75f50f2e94c",
+  "worker_commit": "346ee7fef8ea415ffa60973bb0eb21dc664f8acc",
+  "workflow": "basic-pitch-onnx-export.yml",
+  "specification": "docs/recovery/basic-pitch-onnx-export-20261122.json",
+  "previous_failed_run": 45022754580,
+  "implementation_change": "Select graph inputs after freezing captured constants and variables; retained signature diagnostics and remote captured-constant fixture",
+  "status": "completed",
+  "attempted_at": "2026-11-22T12:42:37.808688+00:00",
+  "dispatch_count": 1,
+  "collection": "collected_once_digest_verified",
+  "final": true,
+  "installed_output_changed": false,
+  "dispatch_output_directory": "build/github-results/basic-pitch-onnx-frozen-inputs-dispatch-20261122",
+  "dispatch_returncode": 0,
+  "run_id": 45023694341,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45023694341",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-22T12:49:05.356631+00:00",
+  "output_directory": "build/github-results/basic-pitch-onnx-frozen-inputs-45023694341",
+  "report_artifact_name": "m3-basic-pitch-onnx-export-report-45023694341-1",
+  "evidence_artifact_name": "m3-basic-pitch-onnx-export-evidence-45023694341-1",
+  "artifacts_metadata": "build/github-results/basic-pitch-onnx-frozen-inputs-45023694341/artifacts.json",
+  "result_verdict": "rejected_synthetic_numerical_parity",
+  "report_path": "build/github-results/basic-pitch-onnx-frozen-inputs-45023694341/collected/basic-pitch-onnx-export-result/report/report.json",
+  "report_sha256": "73e23c7bf6cd241770018b9b479630d7b353f2b099a09036b803c8485ac682a5",
+  "collection_receipt": {
+    "artifact_id": 14754424794,
+    "name": "m3-basic-pitch-onnx-export-report-45023694341-1",
+    "archive_file": "report-read-after-log-recovery.zip",
+    "archive_bytes": 12337,
+    "sha256": "404f363f7af84a7bbf83eb0839b4829a2d300d8294081b628c1ae0f8de1c16b6",
+    "server_digest_verified": true,
+    "collected_at": "2026-11-22T12:49:38.157235+00:00",
+    "prior_read_attempts_failed_zero_bytes": 2
+  },
+  "screen": {
+    "accepted": false,
+    "reason": "Synthetic backend parity failed; no corpus inference"
+  },
+  "exports": {
+    "unmodified": {
+      "weight_fingerprint": "76c391ed344ae85b5219f1a208abf04ada060379375efe56921f958c64f3bd22",
+      "model": {
+        "bytes": 250841,
+        "sha256": "64b16bbe2b99db1d23ff2527ca6b7aeabe88b9036049ef1d282f6d860c2ded4d",
+        "opset": 17,
+        "variables_preserved": true,
+        "conversion": "Freeze captured tensors and variables before choosing graph inputs",
+        "inputs": {
+          "serving_default_input_2:0": [
+            1,
+            43844,
+            1
+          ]
+        },
+        "outputs": {
+          "StatefulPartitionedCall:1": [
+            1,
+            172,
+            88
+          ],
+          "StatefulPartitionedCall:2": [
+            1,
+            172,
+            88
+          ]
+        }
+      },
+      "synthetic": {
+        "silence": {
+          "outputs": {
+            "note": {
+              "max_absolute": 0.002317652106285095,
+              "mean_absolute": 8.220451118042555e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 0.049156755208969116,
+              "mean_absolute": 6.001811261912985e-05,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": false,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 0,
+          "converted_event_count": 0,
+          "parity_pass": false
+        },
+        "low_a": {
+          "outputs": {
+            "note": {
+              "max_absolute": 9.936094284057617e-05,
+              "mean_absolute": 1.3887712901288813e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 8.977949619293213e-05,
+              "mean_absolute": 5.175836530000161e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": true,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 5,
+          "converted_event_count": 5,
+          "parity_pass": true
+        },
+        "five_pitch": {
+          "outputs": {
+            "note": {
+              "max_absolute": 5.2809715270996094e-05,
+              "mean_absolute": 8.063880139942149e-07,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 4.887580871582031e-05,
+              "mean_absolute": 2.197929644212914e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": true,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 11,
+          "converted_event_count": 11,
+          "parity_pass": true
+        }
+      },
+      "backend": {
+        "onnxruntime_version": "1.20.1",
+        "numpy_version": "1.26.4",
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "warmup": "One all-zero window; excluded from service",
+        "warmup_ns": 25063223,
+        "intra_op_threads": 2,
+        "inter_op_threads": 1,
+        "execution_mode": "sequential",
+        "input_name": "serving_default_input_2:0",
+        "note_output": "StatefulPartitionedCall:1",
+        "onset_output": "StatefulPartitionedCall:2"
+      },
+      "synthetic_parity_pass": false
+    },
+    "adapted": {
+      "weight_fingerprint": "32e5894a81b666dd664da5720ce2c3e84e3dfc4fd0b424c83f95e92c9dbd7c61",
+      "model": {
+        "bytes": 250098,
+        "sha256": "14144b7f80d950d5e5586629a637819a36659fe7ac6077ab42b317484f2dc374",
+        "opset": 17,
+        "variables_preserved": true,
+        "conversion": "Freeze captured tensors and variables before choosing graph inputs",
+        "inputs": {
+          "serving_default_input_2:0": [
+            1,
+            43844,
+            1
+          ]
+        },
+        "outputs": {
+          "StatefulPartitionedCall:1": [
+            1,
+            172,
+            88
+          ],
+          "StatefulPartitionedCall:2": [
+            1,
+            172,
+            88
+          ]
+        }
+      },
+      "synthetic": {
+        "silence": {
+          "outputs": {
+            "note": {
+              "max_absolute": 0.00012152642011642456,
+              "mean_absolute": 1.588430516139986e-07,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 0.052518799901008606,
+              "mean_absolute": 6.0201828856804814e-05,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": false,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 0,
+          "converted_event_count": 0,
+          "parity_pass": false
+        },
+        "low_a": {
+          "outputs": {
+            "note": {
+              "max_absolute": 4.9680471420288086e-05,
+              "mean_absolute": 2.7137762877005243e-07,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 0.0001119077205657959,
+              "mean_absolute": 5.386344104981637e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": false,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 4,
+          "converted_event_count": 4,
+          "parity_pass": false
+        },
+        "five_pitch": {
+          "outputs": {
+            "note": {
+              "max_absolute": 9.72449779510498e-05,
+              "mean_absolute": 6.766754431468159e-07,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            },
+            "onset": {
+              "max_absolute": 5.266070365905762e-05,
+              "mean_absolute": 2.194381991881743e-06,
+              "threshold_crossings": {
+                "0.3": 0,
+                "0.5": 0
+              }
+            }
+          },
+          "numerical_pass": true,
+          "thresholds_identical": true,
+          "decoder_events_identical": true,
+          "reference_event_count": 16,
+          "converted_event_count": 16,
+          "parity_pass": true
+        }
+      },
+      "backend": {
+        "onnxruntime_version": "1.20.1",
+        "numpy_version": "1.26.4",
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "warmup": "One all-zero window; excluded from service",
+        "warmup_ns": 25864774,
+        "intra_op_threads": 2,
+        "inter_op_threads": 1,
+        "execution_mode": "sequential",
+        "input_name": "serving_default_input_2:0",
+        "note_output": "StatefulPartitionedCall:1",
+        "onset_output": "StatefulPartitionedCall:2"
+      },
+      "synthetic_parity_pass": false
+    }
+  },
+  "original_weights_restored": true,
+  "corpus_inference_performed": false,
+  "remote_tests_passed": 6,
+  "next_step": "Synthetic-only comparison of live TensorFlow, frozen TensorFlow and converted ONNX intermediates; no tolerance relaxation, fit or unchanged rerun"
+}

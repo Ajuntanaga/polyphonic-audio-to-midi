@@ -1,0 +1,54 @@
+{
+  "schema": "m3_basic_pitch_onnx_numerics_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-onnx-numerics.yml",
+  "upstream_commit": "fa5997af0a8210982619003269994a1be25eddf3",
+  "tensorflow_path": "basic_pitch/saved_models/icassp_2022/nmp",
+  "files": {
+    "basic_pitch/saved_models/icassp_2022/nmp/saved_model.pb": {
+      "bytes": 1084140,
+      "git_blob_sha1": "3a22fc986be8c436987debb7f899a2b0371166b3"
+    },
+    "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.data-00000-of-00001": {
+      "bytes": 219309,
+      "git_blob_sha1": "a473eb08150b66f7a3a02cdb6dbb84893024b875"
+    },
+    "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.index": {
+      "bytes": 4794,
+      "git_blob_sha1": "dba4ca40bf5d1b64a32a82c5a6ffd6a542650bbd"
+    }
+  },
+  "input_samples": 43844,
+  "sample_rate": 22050,
+  "synthetic_cases": {
+    "silence": [],
+    "low_a": [
+      45
+    ],
+    "five_pitch": [
+      40,
+      47,
+      52,
+      56,
+      59
+    ]
+  },
+  "seed": 20261122,
+  "maximum_absolute": 0.0001,
+  "maximum_probe_count": 256,
+  "maximum_probe_elements": 20000000,
+  "protocol": {
+    "dispatches": 1,
+    "fits": 0,
+    "recording_inputs": 0,
+    "installed_change": false,
+    "promotion": false,
+    "automatic_retry": false,
+    "models": "Original pinned TensorFlow variables only. No checkpoint update or numerical tolerance change.",
+    "comparisons": "Callable vs frozen TensorFlow; frozen vs exposed TF; optimized and unoptimized ONNX, ordinary and intermediate-exposed. Exact-name, same-shape intermediate comparison, layout mismatch explicitly unavailable.",
+    "observation_effect": "Exposing outputs may change backend fusion. Compare observed and regular final outputs separately; do not infer unobserved parity from an observed pass.",
+    "resources": "Existing GitHub CPU only. Fifteen-minute process, twenty-minute job. At most256 observed tensors and20M scalar values per backend per synthetic case. Small report collected once; graph and intermediate arrays stay remote.",
+    "acceptance": "Numerical localization only. No model, pitch, timing, corpus or live acceptance claim."
+  }
+}
