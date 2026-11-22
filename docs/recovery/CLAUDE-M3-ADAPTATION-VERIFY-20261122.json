@@ -1,0 +1,184 @@
+{
+ "ordinary/emitted_ns": {
+  "recomputed": {
+   "original_coverage_percent": 6.429609113500681,
+   "adapted_coverage_percent": 8.09242090734464,
+   "original_exact_set_percent": 0.0,
+   "adapted_exact_set_percent": 0.0,
+   "present_delta": 562348,
+   "all_expected_delta": 18209,
+   "exact_set_delta": 0,
+   "extra_voice_delta": 5227949,
+   "gap_voice_delta": 1274700,
+   "labels_losing_present": 21,
+   "labels_losing_longest": 21,
+   "labels_changed": 58,
+   "lost_labels_by_band": {
+    "below48": 7,
+    "48to59": 6,
+    "60to71": 7,
+    "72plus": 1
+   },
+   "no_pitch_safety_regression": false
+  },
+  "reported": {
+   "original_coverage_percent": 6.429609113500681,
+   "adapted_coverage_percent": 8.09242090734464,
+   "original_exact_set_percent": 0.0,
+   "adapted_exact_set_percent": 0.0,
+   "present_delta": 562348,
+   "all_expected_delta": 18209,
+   "exact_set_delta": 0,
+   "extra_voice_delta": 5227949,
+   "gap_voice_delta": 1274700,
+   "labels_losing_present": 21,
+   "labels_losing_longest": 21,
+   "labels_changed": 58,
+   "lost_labels_by_band": {
+    "below48": 7,
+    "48to59": 6,
+    "60to71": 7,
+    "72plus": 1
+   },
+   "no_pitch_safety_regression": false
+  },
+  "differences": {}
+ },
+ "ordinary/available_ns": {
+  "recomputed": {
+   "original_coverage_percent": 55.81392006842524,
+   "adapted_coverage_percent": 71.87721222985792,
+   "original_exact_set_percent": 9.982516784380554,
+   "adapted_exact_set_percent": 37.58584005359156,
+   "present_delta": 5432461,
+   "all_expected_delta": 2574525,
+   "exact_set_delta": 2460791,
+   "extra_voice_delta": -713262,
+   "gap_voice_delta": 1811058,
+   "labels_losing_present": 120,
+   "labels_losing_longest": 122,
+   "labels_changed": 352,
+   "lost_labels_by_band": {
+    "below48": 21,
+    "48to59": 33,
+    "60to71": 45,
+    "72plus": 21
+   },
+   "no_pitch_safety_regression": false
+  },
+  "reported": {
+   "original_coverage_percent": 55.81392006842524,
+   "adapted_coverage_percent": 71.87721222985792,
+   "original_exact_set_percent": 9.982516784380554,
+   "adapted_exact_set_percent": 37.58584005359156,
+   "present_delta": 5432461,
+   "all_expected_delta": 2574525,
+   "exact_set_delta": 2460791,
+   "extra_voice_delta": -713262,
+   "gap_voice_delta": 1811058,
+   "labels_losing_present": 120,
+   "labels_losing_longest": 122,
+   "labels_changed": 352,
+   "lost_labels_by_band": {
+    "below48": 21,
+    "48to59": 33,
+    "60to71": 45,
+    "72plus": 21
+   },
+   "no_pitch_safety_regression": false
+  },
+  "differences": {}
+ },
+ "extended-middle/emitted_ns": {
+  "recomputed": {
+   "original_coverage_percent": 96.19545717592592,
+   "adapted_coverage_percent": 97.06254822530865,
+   "original_exact_set_percent": 95.8422550154321,
+   "adapted_exact_set_percent": 77.0516975308642,
+   "present_delta": 17980,
+   "all_expected_delta": 17980,
+   "exact_set_delta": -389641,
+   "extra_voice_delta": 407621,
+   "gap_voice_delta": 46026,
+   "labels_losing_present": 1,
+   "labels_losing_longest": 2,
+   "labels_changed": 4,
+   "lost_labels_by_band": {
+    "below48": 0,
+    "48to59": 1,
+    "60to71": 0,
+    "72plus": 0
+   },
+   "no_pitch_safety_regression": false
+  },
+  "reported": {
+   "original_coverage_percent": 96.19545717592592,
+   "adapted_coverage_percent": 97.06254822530865,
+   "original_exact_set_percent": 95.8422550154321,
+   "adapted_exact_set_percent": 77.0516975308642,
+   "present_delta": 17980,
+   "all_expected_delta": 17980,
+   "exact_set_delta": -389641,
+   "extra_voice_delta": 407621,
+   "gap_voice_delta": 46026,
+   "labels_losing_present": 1,
+   "labels_losing_longest": 2,
+   "labels_changed": 4,
+   "lost_labels_by_band": {
+    "below48": 0,
+    "48to59": 1,
+    "60to71": 0,
+    "72plus": 0
+   },
+   "no_pitch_safety_regression": false
+  },
+  "differences": {}
+ },
+ "extended-middle/available_ns": {
+  "recomputed": {
+   "original_coverage_percent": 98.28684413580247,
+   "adapted_coverage_percent": 98.16343557098766,
+   "original_exact_set_percent": 85.64795524691358,
+   "adapted_exact_set_percent": 66.28076774691358,
+   "present_delta": -2559,
+   "all_expected_delta": -2559,
+   "exact_set_delta": -401598,
+   "extra_voice_delta": 426560,
+   "gap_voice_delta": 20161,
+   "labels_losing_present": 1,
+   "labels_losing_longest": 1,
+   "labels_changed": 1,
+   "lost_labels_by_band": {
+    "below48": 0,
+    "48to59": 1,
+    "60to71": 0,
+    "72plus": 0
+   },
+   "no_pitch_safety_regression": false
+  },
+  "reported": {
+   "original_coverage_percent": 98.28684413580247,
+   "adapted_coverage_percent": 98.16343557098766,
+   "original_exact_set_percent": 85.64795524691358,
+   "adapted_exact_set_percent": 66.28076774691358,
+   "present_delta": -2559,
+   "all_expected_delta": -2559,
+   "exact_set_delta": -401598,
+   "extra_voice_delta": 426560,
+   "gap_voice_delta": 20161,
+   "labels_losing_present": 1,
+   "labels_losing_longest": 1,
+   "labels_changed": 1,
+   "lost_labels_by_band": {
+    "below48": 0,
+    "48to59": 1,
+    "60to71": 0,
+    "72plus": 0
+   },
+   "no_pitch_safety_regression": false
+  },
+  "differences": {}
+ },
+ "all_match": true,
+ "mismatches": []
+}
