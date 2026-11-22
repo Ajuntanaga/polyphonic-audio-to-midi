@@ -1,8 +1,10 @@
-## Harmonic peak contrast frozen: one CPU comparison prepared
+## Harmonic peak contrast final: training gain, held-out safety rejected
 
-Active checkpoint: `docs/recovery/github-harmonic-peak-contrast-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-PEAK-CONTRAST-PLAN-20261121.md`. Adds local peak position, prominence and cross-partial offset agreement to the original bit-identical 62-feature prefix (106 total). Comparator is unaugmented setwise run44965135706; no augmentation, threshold change or hard harmonic rejection. Training plan, all555 sources/roles, objective and acceptance gates remain fixed.
+Active checkpoint: `docs/recovery/github-harmonic-peak-contrast-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-PEAK-CONTRAST-RESULT-20261121.md`. CPU run 44971653845 is final/success, source `5cf22b108649b43493ab5b360847104d27d3115e`, worker `d1413dfc4f988f42ed676a96e9a9b88f310097e7`. All 87 GitHub checks and source CI 44971615865 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Local synthetic suite87 checks:71 passed,16 torch-dependent skipped for GitHub. One independent read-only implementation review found no material blocker. Single CPU workflow `harmonic-peak-contrast.yml` prepared but not dispatched. Complete recorded validation on GitHub; collect small report once and keep bulk remote. Installed/default output and scoreboard unchanged. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+Training five-pitch exact: 1818 -> 2086/2529 (71.89 -> 82.48%), TARGET 1771, headroom 315. Calibration: 283 -> 278/639 (44.29 -> 43.51%); test: 27 -> 33/327 (8.26 -> 10.09%). Both held-out gates fail. Test expected pitches found: 8000 -> 8203, but extras: 2705 -> 3176; complete sets: 1749 -> 1711/4096 (42.70 -> 41.77%). Screen REJECTED; continuous replay skipped. These are sustained sampled pitch sets, not installed frame/string gains. Original training plan identity verified; all 555 labels/roles, installed/default output and scoreboard unchanged.
+
+Next: choose a distinct source-transfer mechanism before another fit; the extra peak features improve training without safe held-out transfer. Preserve labels, original gates and rejection; no new cutoff, repeated survey or automatic rerun. No next job queued. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
 
 ## Coherent pitch transposition final: held-out transfer rejected
 
