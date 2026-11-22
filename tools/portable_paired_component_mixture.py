@@ -26,23 +26,36 @@ ROLES = ('train', 'calibration', 'test')
 BATCH = 128
 
 
+def validate_model_metadata(saved, cutoff, extractor):
+    expected = dict(settings=SETTINGS, feature_parameters=PARAMETERS,
+        coordinate_names=extractor.coordinate_names, model_parameters=SETWISE_PARAMS,
+        cutoff=cutoff)
+    for key, value in expected.items():
+        if saved.get(key) != value:
+            raise ValueError('Frozen model metadata differs: ' + key)
+    # Source 7481905 saved this fixed 62-coordinate/53-pitch architecture
+    # before these redundant fields were added. Accept that exact legacy
+    # schema; normalization and strict state_dict loading still check tensors.
+    dimensions = dict(feature_count=62, input_note_count=53, output_note_count=53)
+    present = dimensions.keys() & saved.keys()
+    if present and present != dimensions.keys():
+        raise ValueError('Incomplete frozen model dimension metadata')
+    for key in present:
+        if saved[key] != dimensions[key]:
+            raise ValueError('Frozen model metadata differs: ' + key)
+    if any(saved.get(key) is not None for key in (
+            'contrast_parameters', 'suppression_parameters', 'whitening_parameters',
+            'halo_parameters', 'training_grid_consistency')):
+        raise ValueError('Unexpected model variant')
+
+
 def load_model(path, cutoff, extractor):
     remote_only()
     import torch
     torch.set_num_threads(1)
     torch.use_deterministic_algorithms(True)
     saved = torch.load(path, map_location='cpu', weights_only=True)
-    expected = dict(settings=SETTINGS, feature_parameters=PARAMETERS,
-        feature_count=62, input_note_count=53, output_note_count=53,
-        coordinate_names=extractor.coordinate_names, model_parameters=SETWISE_PARAMS,
-        cutoff=cutoff)
-    for key, value in expected.items():
-        if saved.get(key) != value:
-            raise ValueError('Frozen model metadata differs: ' + key)
-    if any(saved.get(key) is not None for key in (
-            'contrast_parameters', 'suppression_parameters', 'whitening_parameters',
-            'halo_parameters', 'training_grid_consistency')):
-        raise ValueError('Unexpected model variant')
+    validate_model_metadata(saved, cutoff, extractor)
     mean, scale = saved['mean'].numpy(), saved['scale'].numpy()
     if (mean.shape != (62,) or scale.shape != (62,) or not np.isfinite(mean).all()
             or not np.isfinite(scale).all() or (scale <= 0).any()):

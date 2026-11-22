@@ -102,6 +102,26 @@ class PairedComponentTests(unittest.TestCase):
 
 
 class PairedRunnerTests(unittest.TestCase):
+    def test_legacy_metadata_requires_original_fields_and_rejects_partial_dimensions(self):
+        extractor = runner.HarmonicFeatures()
+        legacy = dict(settings=runner.SETTINGS, feature_parameters=runner.PARAMETERS,
+            coordinate_names=extractor.coordinate_names,
+            model_parameters=runner.SETWISE_PARAMS, cutoff=.6)
+        runner.validate_model_metadata(legacy, .6, extractor)
+        current = dict(legacy, feature_count=62, input_note_count=53, output_note_count=53)
+        runner.validate_model_metadata(current, .6, extractor)
+        for key in legacy:
+            broken = dict(legacy)
+            del broken[key]
+            with self.subTest(missing=key), self.assertRaisesRegex(ValueError, 'metadata differs'):
+                runner.validate_model_metadata(broken, .6, extractor)
+        with self.assertRaisesRegex(ValueError, 'Incomplete'):
+            runner.validate_model_metadata(dict(legacy, feature_count=62), .6, extractor)
+        with self.assertRaisesRegex(ValueError, 'input_note_count'):
+            runner.validate_model_metadata(dict(current, input_note_count=77), .6, extractor)
+        with self.assertRaisesRegex(ValueError, 'Unexpected model variant'):
+            runner.validate_model_metadata(dict(legacy, halo_parameters={}), .6, extractor)
+
     @unittest.skipUnless(os.environ.get('GITHUB_ACTIONS') == 'true', 'Model execution stays on GitHub')
     def test_synthetic_model_save_load_preserves_outputs_and_rejects_metadata_change(self):
         import torch
@@ -118,6 +138,16 @@ class PairedRunnerTests(unittest.TestCase):
             require_reproduction(loaded.activity(features), original.activity(features), .6)
             with self.assertRaisesRegex(ValueError, 'metadata differs: cutoff'):
                 runner.load_model(path, .5, extractor)
+            # Match the actual reference run's historical save_model schema,
+            # not only the current writer used above.
+            saved = torch.load(path, map_location='cpu', weights_only=True)
+            for key in ('feature_count', 'input_note_count', 'output_note_count',
+                        'contrast_parameters', 'suppression_parameters',
+                        'whitening_parameters', 'halo_parameters'):
+                saved.pop(key, None)
+            torch.save(saved, path)
+            legacy = runner.load_model(path, .6, extractor)
+            require_reproduction(legacy.activity(features), original.activity(features), .6)
 
     def test_reference_plan_regeneration_and_cutoff_fail_closed(self):
         takes, _ = validate_manifest(manifest())
