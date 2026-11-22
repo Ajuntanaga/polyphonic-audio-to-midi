@@ -1,7 +1,7 @@
 {
   "schema": "m3_github_basic_pitch_shorter_lookahead_checkpoint_v1",
-  "state": "in_progress",
-  "final": false,
+  "state": "complete",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "workflow": "basic-pitch-shorter-lookahead.yml",
@@ -18,17 +18,99 @@
   "dispatch_attempted_at": "2026-11-22T15:04:21.424063+00:00",
   "dispatch_returncode": 0,
   "run_id": 45036257574,
-  "status": "in_progress",
-  "conclusion": "",
+  "status": "completed",
+  "conclusion": "success",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45036257574",
   "output_directory": "build/github-results/basic-pitch-shorter-lookahead-45036257574",
-  "last_observed_at": "2026-11-22T15:07:49.183114+00:00",
-  "stage": "Protocol tests passed; six causal inference passes in progress",
+  "last_observed_at": "2026-11-22T15:13:36.475887+00:00",
+  "stage": "Final: paired quality rejected; identity and cropped runtime pass",
   "source_ci": {
     "run_id": 45036209976,
     "workflow": "Portable offline replay",
     "status": "completed",
     "conclusion": "success",
     "source_commit": "7a2a84902c581bede12711febfda5792408842f2"
+  },
+  "report_path": "build/github-results/basic-pitch-shorter-lookahead-45036257574/artifact/basic-pitch-shorter-lookahead-result/report/report.json",
+  "report_sha256": "54b957622866e0b50ef216cfa5f3655e61813ade7cc46b7a4d2ed21924d979d4",
+  "small_report_collection": "build/github-results/basic-pitch-shorter-lookahead-45036257574/small-report-collection.json",
+  "collection_state": "collected_once_digest_verified",
+  "screen": {
+    "reference_and_crop_integrity_pass": true,
+    "cropped_cpu_feasibility_pass": true,
+    "paired_quality_noninferiority_pass": false,
+    "shorter_lookahead_screen_pass": false,
+    "prior_adaptation_quality_pass": false,
+    "promotion_accepted": false,
+    "installed_output_changed": false,
+    "interpretation": "Paired context experiment on reused ordinary audio and held-out middle; not an installed gain. Prior adaptation and TensorFlow parity failures persist. No native allocations, host delivery, string identity or hardware proof."
+  },
+  "summary": {
+    "ordinary": {
+      "before": {
+        "annotated_samples": 8914836,
+        "expected_pitch_samples": 33819101,
+        "present_pitch_samples": 23905958,
+        "all_expected_pitches_samples": 3870890,
+        "exact_pitch_set_samples": 3288475,
+        "one_voice_per_pitch_samples": 3288475,
+        "extra_pitch_voice_samples": 2458721,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "after": {
+        "annotated_samples": 8914836,
+        "expected_pitch_samples": 33819101,
+        "present_pitch_samples": 22357848,
+        "all_expected_pitches_samples": 3126634,
+        "exact_pitch_set_samples": 2745684,
+        "one_voice_per_pitch_samples": 2745684,
+        "extra_pitch_voice_samples": 1634450,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "gap_delta": -861480,
+      "coverage_before_percent": 70.68773945232903,
+      "coverage_after_percent": 66.11011924888246,
+      "labels_losing_presence": 270,
+      "labels_losing_longest_hold": 251,
+      "labels_gaining_presence": 178,
+      "candidate_service_p99_ns": 11222902,
+      "candidate_queue_max_ns": 8341299
+    },
+    "extended-middle": {
+      "before": {
+        "annotated_samples": 2073600,
+        "expected_pitch_samples": 2073600,
+        "present_pitch_samples": 2029410,
+        "all_expected_pitches_samples": 2029410,
+        "exact_pitch_set_samples": 1370394,
+        "one_voice_per_pitch_samples": 1370394,
+        "extra_pitch_voice_samples": 686537,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "after": {
+        "annotated_samples": 2073600,
+        "expected_pitch_samples": 2073600,
+        "present_pitch_samples": 2024964,
+        "all_expected_pitches_samples": 2024964,
+        "exact_pitch_set_samples": 1520064,
+        "one_voice_per_pitch_samples": 1520064,
+        "extra_pitch_voice_samples": 511946,
+        "duplicate_expected_pitch_voice_samples": 0
+      },
+      "gap_delta": -21664,
+      "coverage_before_percent": 97.86892361111111,
+      "coverage_after_percent": 97.65451388888889,
+      "labels_losing_presence": 3,
+      "labels_losing_longest_hold": 3,
+      "labels_gaining_presence": 3,
+      "candidate_service_p99_ns": 11448871,
+      "candidate_queue_max_ns": 9257907
+    }
+  },
+  "bulk_evidence": {
+    "artifact_id": 14759539384,
+    "bytes": 21242771,
+    "sha256": "daee380c2c5d9ffacd8cfbef2805102eca10df75eea0d31215071ab9b813d881",
+    "state": "remote"
   }
 }

@@ -1,0 +1,257 @@
+{
+  "schema": "m3_basic_pitch_release_adaptation_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-release-adaptation.yml",
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    },
+    {
+      "release": "corpus-20261108",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    }
+  ],
+  "references": {
+    "sources": {
+      "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+      "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+    },
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "settings": {
+    "model_rate": 22050,
+    "input_samples": 43844,
+    "frames": 172,
+    "frame_hop": 256,
+    "first_note": 21,
+    "notes": 88,
+    "source_rate": 96000,
+    "resample_up": 147,
+    "resample_down": 640,
+    "train_examples": 4096,
+    "calibration_examples": 1024,
+    "test_examples": 1024,
+    "train_seed": 2026112201,
+    "calibration_seed": 2026112202,
+    "test_seed": 2026112203,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "edge_taper_samples": 110,
+    "silence_every": 20,
+    "max_components": 5,
+    "cutoff": 0.3,
+    "batch_size": 4,
+    "epochs": 2,
+    "learning_rate": 0.0001,
+    "clip_global_norm": 1.0,
+    "optimizer": "Adam",
+    "beta_1": 0.9,
+    "beta_2": 0.999,
+    "epsilon": 1e-07,
+    "shuffle_seed": 2026112204
+  },
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "model": {
+    "upstream_commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "tensorflow_path": "basic_pitch/saved_models/icassp_2022/nmp",
+    "files": {
+      "basic_pitch/saved_models/icassp_2022/nmp/saved_model.pb": {
+        "bytes": 1084140,
+        "git_blob_sha1": "3a22fc986be8c436987debb7f899a2b0371166b3"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.data-00000-of-00001": {
+        "bytes": 219309,
+        "git_blob_sha1": "a473eb08150b66f7a3a02cdb6dbb84893024b875"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.index": {
+        "bytes": 4794,
+        "git_blob_sha1": "dba4ca40bf5d1b64a32a82c5a6ffd6a542650bbd"
+      }
+    }
+  },
+  "protocol": {
+    "dispatches": 1,
+    "fits": 1,
+    "threshold_selection": false,
+    "automatic_retry": false,
+    "early_stopping": false,
+    "installed_change": false,
+    "promotion": false,
+    "training": "One fresh fit from pinned original weights, two epochs on original4096 plus2048 fixed single-component release views; same Adam/BCE/batch4/seed. Prior epoch2 is a comparator only. More optimizer steps confound attribution to release data alone.",
+    "data": "All555 takes retained with their original intended labels: pass1 train200, pass2 calibration200, pass3 test155; all roles anchor every take before random mixtures. Source-disjoint intervals, same instrument/session; previously inspected evidence, not a new blind test.",
+    "windows": "Original4096 windows retained verbatim. Each added view uses one distinct parent window; one selected component ends at fixed offset0/1/2/4/8/16 frames before readout164 with110sample taper, original full-crop RMS/gain unchanged. Other components remain exact. Artificial labels end at that boundary. No acoustic-offset labels or original label edits.",
+    "onsets": "Original captures start within sustain, so no onset labels are invented. Shared-weight onset changes are measured with the unchanged causal decoder.",
+    "final_model": "Epoch2 only; no selection using calibration/test.",
+    "representation": "Train precision>=99%, calibration and test>=95%; recall>=80%, exact_set>=70% overall and separately for3/4/5 distinct pitches, silence extras0. Distinct pitch frames, not installed note/string matching.",
+    "source_preservation": "Every original source occurrence preserves present frames and longest correct run against both original and prior model; all deltas retained.",
+    "continuous": "Prior and release weights, each corrected TensorFlow and cropped ORT at164/165, ordinary and extended-middle once: eight causal passes. Frozen decoder, all88 pitches, original recording level.",
+    "continuous_primary": "Measured FIFO worker completion including model, buffer/resample and decoder; source availability is diagnostic only. Sequential paired measurement includes machine timing noise.",
+    "research_acceptance": "All representation/source gates; corrected TF versus cropped ORT parity1e-4 for new weights; unchanged per-label presence/hold, false/gap, exact/all-expected gates against saved CURRENT and paired prior model; ordinary gain>=5pp versus CURRENT; cropped service p99<=20ms, queue max<=26.666667ms. No promotion.",
+    "backend": "Exact constant-power normalization guard and ORT disabled optimization, opset17,164/165 crop. Three synthetic inputs first, all172 TF/full ONNX frames and bit-identical full/cropped readouts. Synthetic failure skips corpus. Prior numerical/quality failures stay separate.",
+    "limitations": "Ordinary reuses source takes and is descriptive, not independent generalization. No strings, equal-pitch unison multiplicity, bend/repluck, native allocation/deadline or DAW/device claim.",
+    "resource": "Existing GitHub CPU only;100minute process110minute job; checkpoint every epoch; prior625.9MB artifact extracted on worker only; small reports local, checkpoints and tapes remote.",
+    "evaluation": "Original train4096, calibration1024 and test1024 plans unchanged. Evaluate original, prior epoch2 and release epoch2 on every original window; retain all source-occurrence deltas and probabilities. No threshold/model selection."
+  },
+  "artifact": {
+    "id": 14754355554,
+    "name": "m3-basic-pitch-adaptation-evidence-45016827324-1",
+    "run_id": 45016827324,
+    "worker_commit": "5e693618863578f2d1e14aa2cffa6e0b149d51c9",
+    "source_commit": "7e91d692cf9ed3a89ddc50a6427b7c68d04e10f0",
+    "bytes": 625910204,
+    "sha256": "64b82052c1b100d8d87750409ae1e9bc4f38d979a5919fb0a686372a2f9092ae"
+  },
+  "variable_names": [
+    "batch_normalization/gamma:0",
+    "batch_normalization/beta:0",
+    "batch_normalization/moving_mean:0",
+    "batch_normalization/moving_variance:0",
+    "conv2d_1/kernel:0",
+    "conv2d_1/bias:0",
+    "batch_normalization_2/gamma:0",
+    "batch_normalization_2/beta:0",
+    "batch_normalization_2/moving_mean:0",
+    "batch_normalization_2/moving_variance:0",
+    "contours-reduced/kernel:0",
+    "contours-reduced/bias:0",
+    "conv2d_2/kernel:0",
+    "conv2d_2/bias:0",
+    "conv2d_4/kernel:0",
+    "conv2d_4/bias:0",
+    "batch_normalization_3/gamma:0",
+    "batch_normalization_3/beta:0",
+    "batch_normalization_3/moving_mean:0",
+    "batch_normalization_3/moving_variance:0",
+    "conv2d_3/kernel:0",
+    "conv2d_3/bias:0",
+    "conv2d_5/kernel:0",
+    "conv2d_5/bias:0"
+  ],
+  "normalization": {
+    "predicate": "Exact minimum(power)==maximum(power) across axes1,2",
+    "constant_output": 0,
+    "nonconstant": "Original calculation unchanged",
+    "epsilon_added": false,
+    "weights_changed": false,
+    "decoder_changed": false
+  },
+  "opset": 17,
+  "max_absolute": 0.0001,
+  "synthetic": {
+    "input_samples": 43844,
+    "sample_rate": 22050,
+    "synthetic_cases": {
+      "silence": [],
+      "low_a": [
+        45
+      ],
+      "five_pitch": [
+        40,
+        47,
+        52,
+        56,
+        59
+      ]
+    },
+    "seed": 20261122
+  },
+  "weight_fingerprints": {
+    "unmodified": "76c391ed344ae85b5219f1a208abf04ada060379375efe56921f958c64f3bd22",
+    "adapted": "32e5894a81b666dd664da5720ce2c3e84e3dfc4fd0b424c83f95e92c9dbd7c61"
+  },
+  "ort_optimizations": "disabled",
+  "release": {
+    "additional_train_examples": 2048,
+    "seed": 2026112205,
+    "readout_frame": 164,
+    "end_offsets_frames": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "minimum_prefix_frames": 8
+  },
+  "onnxruntime_version": "1.20.1",
+  "reference_members": {
+    "epoch-2.npz": {
+      "bytes": 142856,
+      "sha256": "b7e5ec1e63d4d16f88fa4c936ffaddcc6ac7b051e6e235d76273e99d1609a81b"
+    }
+  },
+  "training_plan_sha256": {
+    "original": "c6211af8c2627741a06d2bc539e51a45b85fa62aaaf248601cffd0b954e4dc67",
+    "additional": "edcd7eef1657c717c736128f329474e1b847a8fad4f57571f8ca1c5a4b00b46f",
+    "combined": "b2ff99867fe50f324a96d1ff94d8c0a928803a7f0c981c478567c013ce5c786e"
+  }
+}

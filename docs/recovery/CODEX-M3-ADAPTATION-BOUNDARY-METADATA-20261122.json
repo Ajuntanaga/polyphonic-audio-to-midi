@@ -1,0 +1,50 @@
+{
+  "method": "Metadata-only reconstruction of the original fixed window plans; no audio, prediction, fitting or labels changed. A boundary here is an artificial crop end, not an observed acoustic release.",
+  "manifest_sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c",
+  "source_counts": {
+    "train": 200,
+    "calibration": 200,
+    "test": 155
+  },
+  "roles": {
+    "train": {
+      "windows": 4096,
+      "components": 11358,
+      "explicit_silence_windows": 205,
+      "components_cover_full_window": 8986,
+      "components_end_before_readout164": 1872,
+      "components_end_between_readout164_165": 53,
+      "components_end_after_readout165": 9433,
+      "components_end_in_100ms_before_readout164": 363,
+      "components_end_in_100ms_before_readout165": 392,
+      "nonempty_windows_with_no_internal_end": 2017,
+      "windows_with_zero_target_at_readout164": 148
+    },
+    "calibration": {
+      "windows": 1024,
+      "components": 2455,
+      "explicit_silence_windows": 52,
+      "components_cover_full_window": 1906,
+      "components_end_before_readout164": 406,
+      "components_end_between_readout164_165": 10,
+      "components_end_after_readout165": 2039,
+      "components_end_in_100ms_before_readout164": 75,
+      "components_end_in_100ms_before_readout165": 77,
+      "nonempty_windows_with_no_internal_end": 520,
+      "windows_with_zero_target_at_readout164": 61
+    },
+    "test": {
+      "windows": 1024,
+      "components": 2638,
+      "explicit_silence_windows": 52,
+      "components_cover_full_window": 2013,
+      "components_end_before_readout164": 527,
+      "components_end_between_readout164_165": 8,
+      "components_end_after_readout165": 2103,
+      "components_end_in_100ms_before_readout164": 67,
+      "components_end_in_100ms_before_readout165": 66,
+      "nonempty_windows_with_no_internal_end": 484,
+      "windows_with_zero_target_at_readout164": 79
+    }
+  }
+}

@@ -1,3 +1,9 @@
+# Shorter lookahead final: quality rejected
+
+Active checkpoint: `docs/recovery/github-basic-pitch-shorter-lookahead-20261122.json`. Run45036257574 final/success, small report collected once with verified digest. Integrity and cropped runtime pass;166 right-context reduction loses ordinary pitch presence70.688 ->66.110% despite fewer extras/gaps. Installed/default unchanged. Result: `docs/recovery/CODEX-M3-SHORTER-LOOKAHEAD-RESULT-20261122.md`. No repoll/redownload/unchanged rerun.
+
+Codex is preparing one release-context adaptation at164, preserving all original windows and adding2048 deterministic component-ending views. No fit dispatched yet. Claude's level probe continues independently. Equal peers through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
 # Shorter-lookahead comparison queued: 45036257574
 
 Active checkpoint: `docs/recovery/github-basic-pitch-shorter-lookahead-20261122.json`. One GitHub CPU job; source `7a2a84902c581bede12711febfda5792408842f2`, worker `38bd4cf2179bf5b6834d4b12fd4cc259f90beb55`. Fixed adapted164 cropped control versus166 full/cropped, ordinary and extended-middle, six causal passes.18 pure/synthetic tests passed. Require crop/reference identity, no paired quality loss and CPU timing gates. Prior adaptation and TensorFlow/ORT failures remain open; installed/default unchanged. Compact reports only; no duplicate dispatch.

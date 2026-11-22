@@ -1,0 +1,41 @@
+{
+  "schema": "m3_release_plan_metadata_v1",
+  "source_manifest_sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c",
+  "original_examples": 4096,
+  "additional_examples": 2048,
+  "original_plan_sha256": "c6211af8c2627741a06d2bc539e51a45b85fa62aaaf248601cffd0b954e4dc67",
+  "additional_plan_sha256": "edcd7eef1657c717c736128f329474e1b847a8fad4f57571f8ca1c5a4b00b46f",
+  "combined_plan_sha256": "b2ff99867fe50f324a96d1ff94d8c0a928803a7f0c981c478567c013ce5c786e",
+  "settings": {
+    "additional_train_examples": 2048,
+    "seed": 2026112205,
+    "readout_frame": 164,
+    "end_offsets_frames": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "minimum_prefix_frames": 8
+  },
+  "distinct_parent_examples": 2048,
+  "end_frames": {
+    "156": 377,
+    "162": 324,
+    "164": 314,
+    "163": 335,
+    "160": 334,
+    "148": 364
+  },
+  "by_components": {
+    "5": 403,
+    "3": 435,
+    "2": 386,
+    "4": 388,
+    "1": 436
+  },
+  "source_keys_ended": 197,
+  "unit": "Metadata only. Known artificial component ends, not acoustic offsets. No audio/model execution."
+}
