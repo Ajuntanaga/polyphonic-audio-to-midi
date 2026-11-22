@@ -21,20 +21,21 @@
     "baseline_run_id": 44960075844,
     "file": "train-mixture-plan.json.gz",
     "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
-    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded",
+    "verified": true
   },
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Collect small report once with server digest verification; model, predictions and mixture plans stay remote. No automatic rerun or cutoff tuning.",
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T02:37:16.348340+00:00",
-  "updated_at": "2026-11-22T02:37:16.348340+00:00",
+  "updated_at": "2026-11-22T02:46:02.132695+00:00",
   "source_base_commit": "f8954fb43123a6c18e205684b4dd9c56afab51a2",
-  "source_commit": null,
+  "source_commit": "d7aee42e6c4c5155b2ba9dab4b765f1149992b85",
   "worker_base_commit": "f99030043abaae2edeaca9af5580058cbf9a494e",
-  "worker_commit": null,
+  "worker_commit": "7120da877f10022920cc2d3f7453c28ac7565094",
   "workflow": "harmonic-whitening.yml",
   "specification": "docs/recovery/harmonic-whitening-20261121.json",
   "specification_sha256": "b83d4f1afec01439f61054f16694b84799b3b75a56f634e2f8d0d68f6c704747",
@@ -56,9 +57,9 @@
     "rms_coordinates": "unchanged original waveform RMS",
     "scope": "same frame-local operation for training, held-out and continuous inputs"
   },
-  "run_id": null,
-  "stage": "Prepared: focused review passed; source and worker publication next",
-  "collection_state": "not dispatched",
+  "run_id": 44977024530,
+  "stage": "Final: rejected at training five-pitch complete-set gate; held-out and continuous stages skipped",
+  "collection_state": "small report collected once; archive size and server digest verified; bulk retained remotely",
   "validation": {
     "local_synthetic_tests": 8,
     "passed": 7,
@@ -67,7 +68,292 @@
     "git_diff_check": "passed",
     "local_recorded_audio_model_native_execution": false,
     "github_synthetic_tests_required": 104,
-    "independent_static_review": "One focused read-only review passed: amplitude/power math, causality, same extractor across roles, serialization and unchanged gates; no material blocker."
+    "independent_static_review": "One focused read-only review passed: amplitude/power math, causality, same extractor across roles, serialization and unchanged gates; no material blocker.",
+    "github_synthetic_step": "passed: 104 tests in 3.665 seconds, including Torch architecture/serialization and fail-closed gate flow",
+    "github_synthetic_tests_passed": 104
   },
-  "next": "Pin source and worker SHAs, then dispatch this one frozen CPU screen. Preserve all labels, cutoffs and gates; no automatic rerun."
+  "next": "Choose a distinct evidence-supported source-transfer mechanism before another fit; do not retune or rerun this rejected whitening screen. Preserve all 555 labels and existing training, held-out, continuous and native/host gates. No new job queued.",
+  "pushed_at": "2026-11-22T02:38:17.982833+00:00",
+  "source_ci": [
+    {
+      "id": 44976965511,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "d7aee42e6c4c5155b2ba9dab4b765f1149992b85",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44976965511"
+    }
+  ],
+  "dispatch_registration_observation": {
+    "matching_workflows": [
+      {
+        "id": 426471290,
+        "node_id": "W_kwDOVnjy3s4Za296",
+        "name": "Harmonic spectral whitening screen",
+        "path": ".github/workflows/harmonic-whitening.yml",
+        "state": "active",
+        "created_at": "2026-11-21T18:37:43.000-08:00",
+        "updated_at": "2026-11-21T18:37:43.000-08:00",
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/workflows/426471290",
+        "html_url": "https://github.com/Ajuntanaga/m3-offload/blob/main/.github/workflows/harmonic-whitening.yml",
+        "badge_url": "https://github.com/Ajuntanaga/m3-offload/workflows/Harmonic%20spectral%20whitening%20screen/badge.svg"
+      }
+    ],
+    "matching_runs": [],
+    "active_worker_runs": []
+  },
+  "dispatch_attempted_at": "2026-11-22T02:38:17.982833+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44977024530",
+  "output_directory": "build/github-results/harmonic-whitening-44977024530",
+  "report_artifact": "m3-harmonic-whitening-report-44977024530-1",
+  "small_artifact_name": "m3-harmonic-whitening-report-44977024530-1",
+  "evidence_artifact": "m3-harmonic-whitening-evidence-44977024530-1",
+  "workflow_conclusion": "success",
+  "decision": "rejected at training complete-chord gate",
+  "representation_feasibility_passed": false,
+  "research_screen_passed": false,
+  "report": "build/github-results/harmonic-whitening-44977024530/artifact/harmonic-whitening-result/report/report.json",
+  "report_sha256": "2790401c3b8230b481509ec75dccdcb001492bbc65e4913ab7ac05fce857be2f",
+  "result_document": "docs/recovery/CODEX-M3-HARMONIC-WHITENING-RESULT-20261121.md",
+  "collection_receipt": "build/github-results/harmonic-whitening-44977024530/collection-receipt.json",
+  "collected_at": "2026-11-22T02:43:27.094332+00:00",
+  "artifacts": {
+    "small_report": {
+      "collected_at": "2026-11-22T02:43:27.094332+00:00",
+      "artifact_id": 14736108870,
+      "artifact_name": "m3-harmonic-whitening-report-44977024530-1",
+      "archive": "build/github-results/harmonic-whitening-44977024530/report-artifact.zip",
+      "bytes": 17689,
+      "sha256": "d5616ff9bfc2b1971a816e31de7e1c63ec78fc9c9e9d78ce915e7f1fac70d309",
+      "server_digest": "sha256:d5616ff9bfc2b1971a816e31de7e1c63ec78fc9c9e9d78ce915e7f1fac70d309",
+      "server_digest_verified": true,
+      "members": [
+        "harmonic-whitening-result/report/report.json",
+        "harmonic-whitening-result/logs/corpus-20261108.stderr",
+        "harmonic-whitening-result/logs/corpus-20261108.stdout",
+        "harmonic-whitening-result/logs/mixture-component-20261120.stderr",
+        "harmonic-whitening-result/logs/mixture-component-20261120.stdout",
+        "harmonic-whitening-result/logs/octave-parent-inputs-20261120.stderr",
+        "harmonic-whitening-result/logs/octave-parent-inputs-20261120.stdout",
+        "harmonic-whitening-result/logs/runtime-profile-multipitch-20261120.stderr",
+        "harmonic-whitening-result/logs/runtime-profile-multipitch-20261120.stdout",
+        "harmonic-whitening-logs/dependencies.log",
+        "harmonic-whitening-logs/environment.txt",
+        "harmonic-whitening-logs/screen.log",
+        "harmonic-whitening-logs/source-sha.txt",
+        "harmonic-whitening-logs/tests.log",
+        "harmonic-whitening-logs/torch-dependencies.log"
+      ],
+      "bulk_collected": false
+    },
+    "bulk": {
+      "id": 14736073835,
+      "name": "m3-harmonic-whitening-evidence-44977024530-1",
+      "size_in_bytes": 4652653,
+      "digest": "sha256:0146751470275ecca6b929c4c8aeb124843235e7313f04c3721ea4a1abee23e5",
+      "expires_at": "2026-12-06T02:42:15Z",
+      "collected": false
+    }
+  },
+  "result": {
+    "baseline_run_id": 44965135706,
+    "comparison": "build/github-results/harmonic-whitening-44977024530/baseline-comparison.json",
+    "training_overall": {
+      "baseline": {
+        "examples": 16384,
+        "true_positive": 43827,
+        "false_positive": 439,
+        "false_negative": 1871,
+        "precision_percent": 99.00826819681019,
+        "recall_percent": 95.9057289159263,
+        "exact_set_percent": 89.093017578125,
+        "exact_sets": 14597
+      },
+      "current": {
+        "examples": 16384,
+        "true_positive": 43594,
+        "false_positive": 440,
+        "false_negative": 2104,
+        "precision_percent": 99.00077213062633,
+        "recall_percent": 95.39585977504485,
+        "exact_set_percent": 87.823486328125,
+        "exact_sets": 14389
+      }
+    },
+    "training_by_pitch_count": {
+      "baseline": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3127,
+          "false_positive": 13,
+          "false_negative": 5,
+          "precision_percent": 99.5859872611465,
+          "recall_percent": 99.84035759897829,
+          "exact_set_percent": 99.45721583652617,
+          "exact_sets": 3115
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6347,
+          "false_positive": 55,
+          "false_negative": 93,
+          "precision_percent": 99.14089347079037,
+          "recall_percent": 98.55590062111801,
+          "exact_set_percent": 95.77639751552796,
+          "exact_sets": 3084
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9498,
+          "false_positive": 102,
+          "false_negative": 255,
+          "precision_percent": 98.9375,
+          "recall_percent": 97.38541987080899,
+          "exact_set_percent": 90.86434943094433,
+          "exact_sets": 2954
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13100,
+          "false_positive": 138,
+          "false_negative": 628,
+          "precision_percent": 98.95754645716876,
+          "recall_percent": 95.42540792540792,
+          "exact_set_percent": 81.75990675990677,
+          "exact_sets": 2806
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11755,
+          "false_positive": 131,
+          "false_negative": 890,
+          "precision_percent": 98.89786303213864,
+          "recall_percent": 92.9616449189403,
+          "exact_set_percent": 71.88612099644128,
+          "exact_sets": 1818
+        }
+      },
+      "current": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3123,
+          "false_positive": 17,
+          "false_negative": 9,
+          "precision_percent": 99.45859872611464,
+          "recall_percent": 99.71264367816092,
+          "exact_set_percent": 99.20178799489145,
+          "exact_sets": 3107
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6332,
+          "false_positive": 37,
+          "false_negative": 108,
+          "precision_percent": 99.41906107709217,
+          "recall_percent": 98.32298136645963,
+          "exact_set_percent": 95.59006211180125,
+          "exact_sets": 3078
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9473,
+          "false_positive": 107,
+          "false_negative": 280,
+          "precision_percent": 98.8830897703549,
+          "recall_percent": 97.12908848559418,
+          "exact_set_percent": 89.5724392494617,
+          "exact_sets": 2912
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 12980,
+          "false_positive": 151,
+          "false_negative": 748,
+          "precision_percent": 98.85004950118041,
+          "recall_percent": 94.55128205128206,
+          "exact_set_percent": 78.93356643356644,
+          "exact_sets": 2709
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11686,
+          "false_positive": 128,
+          "false_negative": 959,
+          "precision_percent": 98.9165396986626,
+          "recall_percent": 92.41597469355476,
+          "exact_set_percent": 69.7113483590352,
+          "exact_sets": 1763
+        }
+      }
+    },
+    "five_pitch_gate": {
+      "current": 1763,
+      "total": 2529,
+      "current_percent": 69.71134835903518,
+      "target": 1771,
+      "target_percent": 70.02767892447608,
+      "progress_current_divided_by_target_percent": 99.54827780914738,
+      "gap_sets": 8,
+      "gap_percentage_points_to_count_target": 0.3163305654408857,
+      "change_since_baseline_sets": -55
+    },
+    "source_roles": {
+      "counts": {
+        "train": 200,
+        "calibration": 200,
+        "test": 155
+      },
+      "cross_role_original_overlap": false,
+      "all_original_labels_retained": true,
+      "source_consistency_metadata_used_to_filter": false,
+      "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+    },
+    "silence_false": 0,
+    "silence_examples": 820,
+    "cutoff_fit": {
+      "cutoff": 0.6791843771934509,
+      "feasible": true,
+      "true_positive": 43594,
+      "false_positive": 440,
+      "training_only": true,
+      "selection": "maximum train TP at >=99% precision; stricter tie"
+    },
+    "frozen_model": {
+      "sha256": "96fc49eb97bac76a05804640365493e8bed843f7c0bda82524f5b4a7828aa6be",
+      "cutoff": 0.6791843771934509,
+      "persisted_before_held_out_scoring": true,
+      "training_fits": 1
+    },
+    "held_out_scoring": {
+      "executed": false,
+      "reason": "Training complete-chord gate failed."
+    },
+    "continuous_replay": {
+      "executed": false,
+      "reason": "Training and both held-out complete-chord gates must pass first."
+    },
+    "native_performance": "not measured by this offline training screen",
+    "live_readiness": "not measured"
+  }
 }

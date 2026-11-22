@@ -1,8 +1,10 @@
-## Spectral whitening prepared: one source-transfer screen
+## Spectral whitening final: rejected at training gate
 
-Active checkpoint: `docs/recovery/github-harmonic-whitening-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-WHITENING-PLAN-20261121.md`. One frame-local critical-band partial whitening operation will precede the same62 harmonic features for every role. The model, original mixture plans, all555 source labels, training-only cutoff and all acceptance gates remain fixed. Source-pipeline review found no material construction bug. Seven local synthetic checks pass; one Torch-dependent check is deferred to GitHub. Focused static review passed. No job dispatched yet.
+Active checkpoint: `docs/recovery/github-harmonic-whitening-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-WHITENING-RESULT-20261121.md`. CPU run 44977024530 completed successfully at source `d7aee42e6c4c5155b2ba9dab4b765f1149992b85`, worker `7120da877f10022920cc2d3f7453c28ac7565094`. All 104 synthetic/unit tests and source CI 44976965511 passed. The small report was collected once and its server digest verified; bulk stays remote. Do not poll, redownload or rerun this final job.
 
-Next: pin source/worker SHAs and dispatch one bounded CPU job under standing authorization. Require training five-pitch>=1771/2529 and every other unchanged gate before held-out and continuous work. No automatic rerun, tuning, installed/default change or new provider. Claude remains paused. Broader live-readiness goal remains active. Earlier entries below are historical.
+Offline training five-pitch exact sets fell 1818->1763/2529 (71.89%->69.71%), below TARGET 1771; GAP 8 sets. Expected pitches found fell 43827->43594/45698, missing rose 1871->2104 and extra rose 439->440. Held-out and continuous stages were skipped because the frozen training gate failed. All 555 original labels and the original mixture plan remain intact. Installed/default output and scoreboard are unchanged.
+
+Next: choose a distinct evidence-supported source-transfer mechanism before another fit, preserving all labels and existing training, held-out, continuous and native/host gates. No new job queued, no cutoff tuning. Claude remains paused. The broader live-readiness goal remains active; overall completion is not measured. Earlier entries below are historical.
 
 ## Independent partial variation final: training gate rejected
 
