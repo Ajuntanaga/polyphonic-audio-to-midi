@@ -1,17 +1,17 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T01:04:33.454624+00:00",
-  "updated_at": "2026-11-22T01:04:33.454624+00:00",
+  "updated_at": "2026-11-22T01:13:14.230610+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "52c2ec11b97b5b56f6a6bdffa9bad5cd463f1bf2",
-  "source_commit": null,
+  "source_commit": "c671c282e67beb29f266b208f4338ceac47f1c07",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_base_commit": "99e7422982c1394977977bf73ccb8dfb7e40367d",
-  "worker_commit": null,
+  "worker_commit": "5511019683c1f339b8cb9ff5baf6ae8513bf84d7",
   "workflow": "harmonic-pitch-transposition.yml",
   "specification": "docs/recovery/harmonic-pitch-transposition-20261121.json",
   "specification_sha256": "7594771882b75286eebcdbcca1e0f4db004adeda33856e557d4053a88aa20a07",
@@ -76,13 +76,13 @@
     "cutoff_and_training_gates": "original unaugmented training plan",
     "held_out": "unchanged, never augmented"
   },
-  "run_id": null,
-  "stage": "frozen, synthetic checks complete; not dispatched",
+  "run_id": 44969797809,
+  "stage": "Final collected report: training passed; both held-out gates failed",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Keep model, predictions and plans remote unless a separately frozen saved-result diagnosis needs named evidence. Collect the small report once with server digest verification.",
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once; server digest verified; bulk retained remote",
   "validation": {
     "local_synthetic_tests": 78,
     "passed": 63,
@@ -90,7 +90,345 @@
     "git_diff_check": "passed",
     "local_recorded_audio_model_native_execution": false,
     "github_synthetic_tests_required": 78,
-    "read_only_design_consult": "coherent shift preserves intervals; finite-window features are not exactly equivariant; time/formant/exposure confounds recorded"
+    "read_only_design_consult": "coherent shift preserves intervals; finite-window features are not exactly equivariant; time/formant/exposure confounds recorded",
+    "github_synthetic_check_step": "78 passed, zero skipped; collected tests.log",
+    "github_synthetic_tests_passed": 78,
+    "github_synthetic_tests_skipped": 0,
+    "github_synthetic_test_seconds": 3.098,
+    "original_training_plan_identity": true,
+    "transposed_plan_identity": true
   },
-  "next": "Scoped source/worker commits and pushes, one CPU dispatch with source SHA, then collect small report once. Preserve failed gates; no automatic rerun, held-out tuning or promotion."
+  "next": "Compare retained baseline/current error summaries, separating reduced extras from lost expected pitches, before freezing a distinct transfer design. No new job queued or cutoff tuning. Require unchanged training and both held-out precision/recall/complete-set gates before continuous per-label, native deadline/allocation and host gates.",
+  "pushed_at": "2026-11-22T01:05:25.317145+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44969797809",
+  "last_observed_at": "2026-11-22T01:11:42.737793+00:00",
+  "output_directory": "build/github-results/harmonic-pitch-transposition-44969797809",
+  "report_artifact": "m3-harmonic-pitch-transposition-report-44969797809-1",
+  "evidence_artifact": "m3-harmonic-pitch-transposition-evidence-44969797809-1",
+  "source_ci": {
+    "run_id": 44969734602,
+    "status": "completed",
+    "conclusion": "success",
+    "source_commit": "c671c282e67beb29f266b208f4338ceac47f1c07",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44969734602"
+  },
+  "workflow_conclusion": "success",
+  "decision": "rejected at source-disjoint held-out gates",
+  "research_screen_passed": false,
+  "result_document": "docs/recovery/CODEX-M3-PITCH-TRANSPOSITION-RESULT-20261121.md",
+  "report_path": "build/github-results/harmonic-pitch-transposition-44969797809/artifact/harmonic-pitch-transposition-result/report/report.json",
+  "report_sha256": "04cfb5fde459fa4cd63819029857d4509b8a3907c1ac8a5e1138a4fd4205d57b",
+  "collection_receipt": "build/github-results/harmonic-pitch-transposition-44969797809/collection-receipt.json",
+  "small_artifact_id": 14733541008,
+  "small_artifact_bytes": 26852,
+  "small_archive_sha256": "da2dc387d180e271b5407f5fa872f2ce9fa5cceb02ba50ac75ceece310c2af06",
+  "collected_at": "2026-11-22T01:11:47.011919+00:00",
+  "bulk_artifact": {
+    "id": 14733615543,
+    "name": "m3-harmonic-pitch-transposition-evidence-44969797809-1",
+    "bytes": 8347806,
+    "sha256": "9c785297e8ec42c50b766adf69a5110cffe045531b62015a935561624485c163",
+    "expires_at": "2026-12-06T01:10:55Z",
+    "collection_state": "retained remote"
+  },
+  "gates": {
+    "train_complete_chords": true,
+    "calibration_complete_chords": false,
+    "test_complete_chords": false
+  },
+  "fit": {
+    "seconds": 210.95425428200002,
+    "epochs": 80,
+    "mixtures": 32768,
+    "pooled_candidate_rows": 1736704,
+    "features_per_candidate": 62,
+    "shared_binary_outputs": 1,
+    "parameter_count": 14465,
+    "final_loss": 0.44828238809714094,
+    "held_out_used": false,
+    "fits": 1,
+    "objective": "mean_bce_plus_setwise_logsumexp_v1",
+    "optimizer_steps": 20480,
+    "clean_and_companion_mixtures": 32768
+  },
+  "cutoff_fit": {
+    "cutoff": 0.5962355136871338,
+    "feasible": true,
+    "true_positive": 43945,
+    "false_positive": 442,
+    "training_only": true,
+    "selection": "maximum train TP at >=99% precision; stricter tie"
+  },
+  "frozen_model": {
+    "sha256": "c2d0956f734ec4f1958e3fd28b1bb97dec5da1e2afa39698b8eea5e8fc5d1637",
+    "cutoff": 0.5962355136871338,
+    "persisted_before_held_out_scoring": true,
+    "training_fits": 1
+  },
+  "metrics": {
+    "train": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 43945,
+        "false_positive": 442,
+        "false_negative": 1753,
+        "precision_percent": 99.00421294523171,
+        "recall_percent": 96.16394590572892,
+        "exact_set_percent": 89.373779296875,
+        "exact_sets": 14643
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3131,
+          "false_positive": 18,
+          "false_negative": 1,
+          "precision_percent": 99.42838996506828,
+          "recall_percent": 99.96807151979566,
+          "exact_set_percent": 99.45721583652617,
+          "exact_sets": 3115
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6358,
+          "false_positive": 65,
+          "false_negative": 82,
+          "precision_percent": 98.98801183247704,
+          "recall_percent": 98.72670807453416,
+          "exact_set_percent": 95.80745341614907,
+          "exact_sets": 3085
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9514,
+          "false_positive": 107,
+          "false_negative": 239,
+          "precision_percent": 98.8878494958944,
+          "recall_percent": 97.54947195734646,
+          "exact_set_percent": 90.64903106736388,
+          "exact_sets": 2947
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13136,
+          "false_positive": 135,
+          "false_negative": 592,
+          "precision_percent": 98.98274432974154,
+          "recall_percent": 95.68764568764568,
+          "exact_set_percent": 82.83799533799534,
+          "exact_sets": 2843
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11806,
+          "false_positive": 117,
+          "false_negative": 839,
+          "precision_percent": 99.0187033464732,
+          "recall_percent": 93.36496638987742,
+          "exact_set_percent": 72.47924080664293,
+          "exact_sets": 1833
+        }
+      },
+      "silence_false_predictions": 0,
+      "five_pitch_target": 1771,
+      "five_pitch_progress_percent": 103.50084697910785,
+      "five_pitch_gap_sets": 0,
+      "five_pitch_headroom_sets": 62,
+      "change_from_baseline": {
+        "true_positive": 118,
+        "false_positive": 3,
+        "false_negative": -118,
+        "exact_set_percent": 0.28076171875
+      }
+    },
+    "calibration": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 10659,
+        "false_positive": 695,
+        "false_negative": 894,
+        "precision_percent": 93.87880923022723,
+        "recall_percent": 92.26175019475461,
+        "exact_set_percent": 73.3642578125,
+        "exact_sets": 3005
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 205
+        },
+        "1": {
+          "examples": 753,
+          "true_positive": 741,
+          "false_positive": 62,
+          "false_negative": 12,
+          "precision_percent": 92.27895392278954,
+          "recall_percent": 98.40637450199203,
+          "exact_set_percent": 91.50066401062416,
+          "exact_sets": 689
+        },
+        "2": {
+          "examples": 777,
+          "true_positive": 1506,
+          "false_positive": 131,
+          "false_negative": 48,
+          "precision_percent": 91.9975565058033,
+          "recall_percent": 96.91119691119691,
+          "exact_set_percent": 82.62548262548263,
+          "exact_sets": 642
+        },
+        "3": {
+          "examples": 837,
+          "true_positive": 2383,
+          "false_positive": 158,
+          "false_negative": 128,
+          "precision_percent": 93.78197560015742,
+          "recall_percent": 94.90242931103145,
+          "exact_set_percent": 75.26881720430107,
+          "exact_sets": 630
+        },
+        "4": {
+          "examples": 885,
+          "true_positive": 3242,
+          "false_positive": 177,
+          "false_negative": 298,
+          "precision_percent": 94.8230476747587,
+          "recall_percent": 91.5819209039548,
+          "exact_set_percent": 62.485875706214685,
+          "exact_sets": 553
+        },
+        "5": {
+          "examples": 639,
+          "true_positive": 2787,
+          "false_positive": 167,
+          "false_negative": 408,
+          "precision_percent": 94.34664861205145,
+          "recall_percent": 87.2300469483568,
+          "exact_set_percent": 44.75743348982786,
+          "exact_sets": 286
+        }
+      },
+      "silence_false_predictions": 0,
+      "five_pitch_target": 448,
+      "five_pitch_progress_percent": 63.83928571428571,
+      "five_pitch_gap_sets": 162,
+      "five_pitch_headroom_sets": 0,
+      "change_from_baseline": {
+        "true_positive": -14,
+        "false_positive": 8,
+        "false_negative": 14,
+        "exact_set_percent": 0.1953125
+      }
+    },
+    "test": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 7995,
+        "false_positive": 2561,
+        "false_negative": 2457,
+        "precision_percent": 75.73891625615764,
+        "recall_percent": 76.49253731343283,
+        "exact_set_percent": 42.9931640625,
+        "exact_sets": 1761
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 205
+        },
+        "1": {
+          "examples": 869,
+          "true_positive": 749,
+          "false_positive": 340,
+          "false_negative": 120,
+          "precision_percent": 68.77869605142332,
+          "recall_percent": 86.19102416570772,
+          "exact_set_percent": 68.23935558112774,
+          "exact_sets": 593
+        },
+        "2": {
+          "examples": 950,
+          "true_positive": 1564,
+          "false_positive": 584,
+          "false_negative": 336,
+          "precision_percent": 72.8119180633147,
+          "recall_percent": 82.3157894736842,
+          "exact_set_percent": 48.0,
+          "exact_sets": 456
+        },
+        "3": {
+          "examples": 932,
+          "true_positive": 2170,
+          "false_positive": 694,
+          "false_negative": 626,
+          "precision_percent": 75.76815642458101,
+          "recall_percent": 77.61087267525036,
+          "exact_set_percent": 32.61802575107296,
+          "exact_sets": 304
+        },
+        "4": {
+          "examples": 813,
+          "true_positive": 2425,
+          "false_positive": 666,
+          "false_negative": 827,
+          "precision_percent": 78.45357489485603,
+          "recall_percent": 74.56949569495696,
+          "exact_set_percent": 20.418204182041823,
+          "exact_sets": 166
+        },
+        "5": {
+          "examples": 327,
+          "true_positive": 1087,
+          "false_positive": 277,
+          "false_negative": 548,
+          "precision_percent": 79.69208211143695,
+          "recall_percent": 66.48318042813456,
+          "exact_set_percent": 11.314984709480122,
+          "exact_sets": 37
+        }
+      },
+      "silence_false_predictions": 0,
+      "five_pitch_target": 229,
+      "five_pitch_progress_percent": 16.157205240174672,
+      "five_pitch_gap_sets": 192,
+      "five_pitch_headroom_sets": 0,
+      "change_from_baseline": {
+        "true_positive": -5,
+        "false_positive": -144,
+        "false_negative": 5,
+        "exact_set_percent": 0.29296875
+      }
+    }
+  },
+  "held_out_scoring": {
+    "executed": true,
+    "reason": "Training passed; both roles scored without refitting."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  }
 }
