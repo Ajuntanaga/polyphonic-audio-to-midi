@@ -134,7 +134,7 @@ def trailing_context(wave, end):
     return result
 
 
-def render_mixture(row, waves):
+def render_mixture(row, waves, *, component_transform=None):
     n = max(SETTINGS['windows'])
     result = np.zeros(n, dtype=np.float64)
     target = np.zeros(SETTINGS['note_high']-SETTINGS['note_low']+1, dtype=bool)
@@ -142,6 +142,10 @@ def render_mixture(row, waves):
         clip = waves[component['stem']][component['crop_begin']:component['crop_end']]
         if clip.shape != (n,) or not np.isfinite(clip).all():
             raise ValueError('Invalid mixture crop')
+        if component_transform is not None:
+            clip = component_transform(clip, component)
+            if clip.shape != (n,) or not np.isfinite(clip).all():
+                raise ValueError('Invalid transformed mixture crop')
         rms = float(np.sqrt(np.mean(np.square(clip, dtype=np.float64))))
         gain = SETTINGS['component_rms']/max(rms, SETTINGS['normalization_floor'])
         result += clip * gain * 10**(component['gain_db']/20)

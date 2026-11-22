@@ -21,6 +21,7 @@ from tools.spectral_dictionary import IdentityTransform, fit_training_cutoff
 from tools.portable_direct_spectrum_learning import (continuous_dataset, fetch_release,
     role_examples, source_waves)
 from tools.pitch_detector_comparison import digest
+from tools.harmonic_source_variation import VARIATION, variation_examples
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -117,6 +118,10 @@ def run(spec_path, output):
         if params.get('loss') not in frozen_params:
             raise ValueError('Unknown frozen training objective')
         loss_only = params['loss'] != MODEL_PARAMS['loss']
+        variation = spec.get('training_source_variation')
+        if variation is not None:
+            require_identity(variation, VARIATION, 'fixed training-only source variation')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         require_identity(params, frozen_params[params['loss']],
                          'one fixed shared context classifier and objective')
         report['training_objective'] = params['loss']
@@ -124,6 +129,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_complete_set_learning_v1'
         elif params['loss'] == SETWISE_PARAMS['loss']:
             report['schema'] = 'm3_harmonic_setwise_learning_v1'
+        if variation is not None:
+            report['schema'] = 'm3_harmonic_source_variation_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -150,7 +157,8 @@ def run(spec_path, output):
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction=('Only the training objective changes versus the frozen context baseline.' if loss_only else
+            distinction=('Only training component envelopes change versus the setwise model.' if variation is not None else
+                'Only the training objective changes versus the frozen context baseline.' if loss_only else
                 'Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.'))
         report['stage'] = 'training mixtures; one shared fit and training-only cutoff'
         save_json(report_path, report)
@@ -159,7 +167,17 @@ def run(spec_path, output):
             actual = hashlib.sha256(gzip.decompress((folders['bulk']/'train-mixture-plan.json.gz').read_bytes())).hexdigest()
             require_identity(actual, spec['training_plan_identity']['decoded_sha256'], 'unchanged training mixture plan')
             report['training_plan_identity'] = dict(spec['training_plan_identity'], verified=True)
-        model, report['fit'] = fit_model(x, y, model_params=params)
+        if variation is not None:
+            fit_x, fit_y, report['training_source_variation'] = variation_examples(
+                folders['bulk']/'train-mixture-plan.json.gz', waves, extractor, folders['bulk'])
+            require_identity(report['training_source_variation']['decoded_sha256'],
+                spec['varied_plan_identity']['decoded_sha256'], 'frozen varied training plan')
+            if not np.array_equal(fit_y, y):
+                raise ValueError('Source variation changed training targets')
+            model, report['fit'] = fit_model(fit_x, fit_y, model_params=params)
+            del fit_x, fit_y
+        else:
+            model, report['fit'] = fit_model(x, y, model_params=params)
         probability = model.activity(x)
         report['cutoff_fit'] = fit_training_cutoff(probability, y)
         model.cutoff = report['cutoff_fit']['cutoff']
@@ -217,8 +235,10 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else
+                ('Training envelopes vary on the same 200 sources; this supplies no independent recording content.' if variation is not None else
+                 'Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else
                  'Model capacity and optimizer also change; this is not an isolated context ablation.'),
+                'Held-out roles are source-disjoint development checks already used in previous experiments, not a fresh final benchmark.',
                 'Zero padding and finite FFT resolution break exact pitch-shift equivariance.',
                 'The longer trailing context spans 170.67ms; measured callback cost is not pluck-to-MIDI latency.',
                 'Ordinary reuses source takes and is descriptive; no delivered-MIDI, native realtime or live-device proof.',

@@ -33,9 +33,11 @@ class PortableContextTests(unittest.TestCase):
             cutoff = None
             def activity(self, features):
                 return np.zeros((len(features), 53))
-        for params, sequence in product((runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS),
+        configs = [(p, False) for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
+        configs.append((runner.SETWISE_PARAMS, True))
+        for (params, varied), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
-            with self.subTest(gates=sequence, loss=params['loss']), tempfile.TemporaryDirectory() as directory:
+            with self.subTest(gates=sequence, loss=params['loss'], varied=varied), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 refs = {}
                 for name in ('sources', 'baseline', 'source_consistency'):
@@ -50,6 +52,9 @@ class PortableContextTests(unittest.TestCase):
                 if params != runner.MODEL_PARAMS:
                     spec_data['training_plan_identity'] = dict(
                         decoded_sha256=hashlib.sha256(b'[]').hexdigest())
+                if varied:
+                    spec_data['training_source_variation'] = runner.VARIATION
+                    spec_data['varied_plan_identity'] = dict(decoded_sha256='synthetic-varied-plan')
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
@@ -71,12 +76,20 @@ class PortableContextTests(unittest.TestCase):
                     stack.enter_context(patch.object(runner, 'source_waves', return_value={}))
                     examples = stack.enter_context(patch.object(runner, 'role_examples', side_effect=synthetic_examples))
                     fit = stack.enter_context(patch.object(runner, 'fit_model', return_value=(Model(), {})))
+                    augmentation = stack.enter_context(patch.object(runner, 'variation_examples', return_value=(
+                        np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
+                        dict(decoded_sha256='synthetic-varied-plan'))))
+                    activity = stack.enter_context(patch.object(Model, 'activity', autospec=True,
+                        side_effect=lambda self, x: np.zeros((len(x), 53))))
                     stack.enter_context(patch.object(runner, 'save_model', side_effect=persist))
                     stack.enter_context(patch.object(runner, 'fit_training_cutoff', return_value=dict(cutoff=.5, feasible=True)))
                     stack.enter_context(patch.object(runner, 'acceptance_gate', side_effect=sequence))
                     replay = stack.enter_context(patch.object(runner, 'continuous_dataset', side_effect=replay_result))
                     result = runner.run(spec, root/'output')
                 self.assertEqual(fit.call_count, 1)
+                self.assertTrue(np.all(fit.call_args.args[0] == (1 if varied else 0)))
+                self.assertEqual(augmentation.call_count, int(varied))
+                self.assertTrue(all(np.all(c.args[1] == 0) for c in activity.call_args_list))
                 self.assertEqual(fit.call_args.kwargs['model_params'], params)
                 self.assertEqual(result['training_objective'], params['loss'])
                 if params != runner.MODEL_PARAMS:

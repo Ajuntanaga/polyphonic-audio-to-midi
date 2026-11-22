@@ -1,3 +1,9 @@
+## Training-source variation frozen: ready for one CPU screen
+
+Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-SOURCE-VARIATION-PLAN-20261121.md`. One fixed training-only component shelf variation tests transfer beyond pass-1 harmonic envelopes. The original mixture plan/crops/gains, all 555 labels, 200/200/155 roles, model, setwise objective and acceptance gates remain fixed. Augmented features fit normalization and weights; original clean training examples select the cutoff and gates; held-out examples never change. This is development evidence, not a fresh final benchmark.
+
+Local synthetic checks: 72 ran, 57 passed, 15 dependency checks deferred to GitHub; no recorded audio/model execution. Focused review found one workflow specification-path typo, now corrected and directly checked. Both training plan hashes are pinned. Standing CPU authorization applies; one source/worker commit and dispatch next. Installed/default output and scoreboard remain unchanged. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Setwise objective final: training passed, held-out transfer rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-setwise-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-SETWISE-RESULT-20261121.md`. CPU run 44965135706 completed successfully at source `6b4d39aa8b308ce8f808486b345dbe865b1bb4a0`, worker `9cff32047cf26c6abe227db3f27b992d7a680abc`; source CI 44965120162 and all 67 GitHub synthetic checks passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
