@@ -1,0 +1,11 @@
+# Exact-weight conversion and paired causal screen
+
+Claude — adaptation 45016827324 is final and rejected. Its completed result and the event-subset collection are recorded separately. I am dispatching one bounded CPU conversion/comparison under the standing authorization; no model is retrained or promoted.
+
+The frozen specification is `docs/recovery/basic-pitch-onnx-export-20261122.json`. It pins the original TensorFlow SavedModel and the completed epoch-2 NPZ, all 24 variable names, the source artifact and nine member hashes, the two recordings and baseline. It exports both weight sets through tf2onnx opset 17 into the existing experimental Neural Lab note/onset tensor contract. The distributed upstream ONNX model is not the paired control.
+
+First: all 172 note/onset frames on three fixed synthetic signals must agree within 1e-4, cross neither decoder threshold, and retain identical events. Second: both entire recordings use the existing causal resampler, readouts 164/165, thresholds 0.3/0.5 and attack/release 3/3. Every consumed frame is compared with the saved same-weight TensorFlow tape, including source-availability clocks, decoder decisions and cleanup pitch sets. Measured processing completion is deliberately allowed to change.
+
+Primary measurements use actual FIFO completion. Zero-compute availability is diagnostic. Each arm reports every label's presence and longest hold, wrong-pitch/gap output and queue/service time. The CPU feasibility bars are service p99 <=20 ms and queue maximum <=26.666667 ms. The strict quality comparison retains all existing per-label and false-output clauses and ordinary gain >=5 percentage points. Earlier adaptation representation/source-preservation failures remain recorded even if conversion and continuous inference pass. This is neither native callback acceptance nor a live-device result.
+
+No local model/audio processing. Five focused manifest/numerical/event-clock tests passed; wrapper syntax checked. The small report is collected once. Models, tensors and the 625.9 MB source artifact stay on the GitHub runner/remote artifact service. Workflow: `basic-pitch-onnx-export.yml`; source and worker SHAs and run ID are recorded at dispatch. You can continue the support/filter lane independently; this comparison has no ownership claim on your emitter design.

@@ -1,0 +1,182 @@
+{
+  "schema": "m3_basic_pitch_exact_onnx_export_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-onnx-export.yml",
+  "artifact": {
+    "id": 14754355554,
+    "name": "m3-basic-pitch-adaptation-evidence-45016827324-1",
+    "run_id": 45016827324,
+    "worker_commit": "5e693618863578f2d1e14aa2cffa6e0b149d51c9",
+    "source_commit": "7e91d692cf9ed3a89ddc50a6427b7c68d04e10f0",
+    "bytes": 625910204,
+    "sha256": "64b82052c1b100d8d87750409ae1e9bc4f38d979a5919fb0a686372a2f9092ae"
+  },
+  "reference_members": {
+    "epoch-2.npz": {
+      "bytes": 142856,
+      "sha256": "b7e5ec1e63d4d16f88fa4c936ffaddcc6ac7b051e6e235d76273e99d1609a81b"
+    },
+    "unmodified_tensorflow/ordinary-stream.npz": {
+      "bytes": 6249915,
+      "sha256": "6fda137135a2d3a0dd79ccf6d21a9b8cc22d2a1a449931ddb6672ccc6f11ed65"
+    },
+    "unmodified_tensorflow/ordinary-events.json": {
+      "bytes": 166961,
+      "sha256": "ca4d2ce4553f2e8ddaed76a5b967afb8881bb30ec73432f8a14891b9eb9fe1cb"
+    },
+    "adapted_tensorflow/ordinary-stream.npz": {
+      "bytes": 6474603,
+      "sha256": "28413d96865ddd535066fb901eba61c18086d6d0012526e06ee1ae40a4b5ab58"
+    },
+    "adapted_tensorflow/ordinary-events.json": {
+      "bytes": 171292,
+      "sha256": "c602b950c76d850b82dad1b89e4549f213f21210d22438e37299b0454873f864"
+    },
+    "unmodified_tensorflow/extended-middle-stream.npz": {
+      "bytes": 1286103,
+      "sha256": "be465d5dcb3567c377e1e0a7a4ae6c69a928f06e1b4815de4acdf73479873729"
+    },
+    "unmodified_tensorflow/extended-middle-events.json": {
+      "bytes": 4383,
+      "sha256": "6b0f30d48202f7744bfa125ce4cee83afb3184406ebf7d9fc7535cd5c65085ca"
+    },
+    "adapted_tensorflow/extended-middle-stream.npz": {
+      "bytes": 1333755,
+      "sha256": "d43b7291b39059a3d663f999d83e43c8083962001fd78dfa07381be19f39b241"
+    },
+    "adapted_tensorflow/extended-middle-events.json": {
+      "bytes": 6336,
+      "sha256": "662f7c273ea6eea9d5e500028956ea66f2e2d929d064b4fa9b1050c263000699"
+    }
+  },
+  "variable_names": [
+    "batch_normalization/gamma:0",
+    "batch_normalization/beta:0",
+    "batch_normalization/moving_mean:0",
+    "batch_normalization/moving_variance:0",
+    "conv2d_1/kernel:0",
+    "conv2d_1/bias:0",
+    "batch_normalization_2/gamma:0",
+    "batch_normalization_2/beta:0",
+    "batch_normalization_2/moving_mean:0",
+    "batch_normalization_2/moving_variance:0",
+    "contours-reduced/kernel:0",
+    "contours-reduced/bias:0",
+    "conv2d_2/kernel:0",
+    "conv2d_2/bias:0",
+    "conv2d_4/kernel:0",
+    "conv2d_4/bias:0",
+    "batch_normalization_3/gamma:0",
+    "batch_normalization_3/beta:0",
+    "batch_normalization_3/moving_mean:0",
+    "batch_normalization_3/moving_variance:0",
+    "conv2d_3/kernel:0",
+    "conv2d_3/bias:0",
+    "conv2d_5/kernel:0",
+    "conv2d_5/bias:0"
+  ],
+  "model": {
+    "upstream_commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "tensorflow_path": "basic_pitch/saved_models/icassp_2022/nmp",
+    "files": {
+      "basic_pitch/saved_models/icassp_2022/nmp/saved_model.pb": {
+        "bytes": 1084140,
+        "git_blob_sha1": "3a22fc986be8c436987debb7f899a2b0371166b3"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.data-00000-of-00001": {
+        "bytes": 219309,
+        "git_blob_sha1": "a473eb08150b66f7a3a02cdb6dbb84893024b875"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.index": {
+        "bytes": 4794,
+        "git_blob_sha1": "dba4ca40bf5d1b64a32a82c5a6ffd6a542650bbd"
+      }
+    }
+  },
+  "input_release": {
+    "release": "corpus-20261108",
+    "asset": "recovery-inputs.tar.gz",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "baseline": {
+    "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+    "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "opset": 17,
+  "max_absolute": 0.0001,
+  "synthetic": {
+    "input_samples": 43844,
+    "sample_rate": 22050,
+    "synthetic_cases": {
+      "silence": [],
+      "low_a": [
+        45
+      ],
+      "five_pitch": [
+        40,
+        47,
+        52,
+        56,
+        59
+      ]
+    },
+    "seed": 20261122
+  },
+  "protocol": {
+    "dispatches": 1,
+    "fits": 0,
+    "automatic_retry": false,
+    "threshold_selection": false,
+    "installed_change": false,
+    "promotion": false,
+    "weights": "Original pinned TensorFlow and completed epoch-2 only, exact ordered variable names and full checkpoint hash; no training or weight edit.",
+    "conversion": "tf2onnx opset17, two outputs ordered note/onset renamed to the existing experimental Neural Lab contract; variables verified unchanged after conversion and original restored.",
+    "parity": "All172 output frames on three fixed synthetic inputs first. Then every consumed readout frame at164/165 over both complete recordings: max absolute1e-4, zero relevant threshold crossings, identical decision frames, source-availability events and cleanup pitch sets. Measured CPU time intentionally differs.",
+    "streaming": "Same640-source-sample block, readouts164/165, causal resampler and frozen decoder; original/adapted ONNX each run once on ordinary and extended-middle. ONNX CPU2threads; original TensorFlow1thread saved tapes are parity controls, not new quality baselines.",
+    "primary": "Measured FIFO completion including resampling/buffer/model/decoder; zero-compute source availability is diagnostic. All per-label presence/longest-hold and wrong/gap gates retained against CURRENT and paired unchanged model. Ordinary gain>=5pp.",
+    "runtime": "Python worker feasibility only: inference-block service p99<=20ms and maximum queue<=26.666667ms on both models/corpora. Native allocation, callback deadline, external DAW/device remain unmeasured.",
+    "prior_result": "Adaptation45016827324 failed representation/source-preservation gates. Successful conversion or a faster worker cannot erase those failures.",
+    "limits": "One reused corpus pair, distinct pitches only. No string assignment, same-pitch unison multiplicity, bends/replucks, installed/default changes or live readiness.",
+    "resources": "Existing GitHub CPU only;40minute process50minute job; source625.9MB archive remains on runner; selected references<32MiB; small report local, models/tapes remote."
+  }
+}

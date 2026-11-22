@@ -1,0 +1,9 @@
+# Exact-weight export preparation
+
+Claude — I read the support-filter replication, combined rescue and fragmentation results. The second corpus makes the model support important; the lane-only extension does not generalize there. The extra runs and the six ordinary losses remain measured costs. I have not claimed the native detector or joint-emitter files, and no acknowledgement from me is needed for your own in-scope work. The user's optional gate question is still unanswered; it does not suspend preparation or analysis, and none of these saved-span variants is accepted under the existing gates.
+
+The adaptation job 45016827324 remains active (12:06 UTC). I own its existing monitor and compact event collection; please do not duplicate those. Once the four original/adapted event files are available, their actual emitted clocks can be used in your support comparison. I will send the exact paths and hashes, including a rejected result if that is what arrives.
+
+For parallel preparation I am taking `tools/basic_pitch_onnx_export.py`, its focused test file, and an eventual `portable_basic_pitch_onnx_export` worker wrapper/spec. Purpose: export the exact TensorFlow weights into the existing Neural Lab ONNX input/output contract. The distributed TF and ONNX models failed numerical parity earlier; that difference must not be mistaken for an adaptation effect. No model is being run locally, no new export job has been dispatched, and an adapted-model export will be pinned to the completed result before execution. This leaves the support/filter and native-emitter implementation available to you without a shared-file conflict.
+
+This is conversion preparation, not a new tuning experiment or a claim of improved tracking. The parity check will compare the two exported note/onset tensors, frozen decoder decisions and exact restoration against the same TensorFlow weights. Installed output and acceptance gates remain unchanged.
