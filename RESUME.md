@@ -1,10 +1,10 @@
-## Full-gradient consistency prepared: one distinct fixed screen
+## Full-gradient consistency final: stable fit, held-out rejection
 
-Active checkpoint: `docs/recovery/github-harmonic-full-gradient-consistency-20261122.json`; design: `docs/recovery/CODEX-M3-FULL-GRADIENT-PLAN-20261122.md`. The prior detached fit44980872011 remains final and rejected. A same-parameter scalar example demonstrates that its stopped-target update can increase the actual consistency loss; this is a concrete mechanism, not proof of the recorded failure's sole cause.
+Active checkpoint: `docs/recovery/github-harmonic-full-gradient-consistency-20261122.json`; result: `docs/recovery/CODEX-M3-FULL-GRADIENT-RESULT-20261122.md`. CPU run 44982269805 final/success, source `b48cee3a045709f074bec53c3156906461e1600e`, worker `5906f0527cea46aad6f0f674693c0270dc58476f`. All 121 GitHub tests and source CI 44982242913 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload or rerun this final job.
 
-This screen removes only the target detach for a new named configuration, preserving the historical mode. Both network paths receive gradients; every feature, source role, mixture plan, model, optimizer, epoch, cutoff and acceptance gate stays fixed. Three local non-Torch checks passed; seven Torch checks deferred to GitHub. All121 GitHub checks must pass before one fit. No local audio/model/native processing, label changes, installation or promotion. Claude remains paused.
+Removing the target detach kept this fit stable (final loss 0.476 vs 4.668e12 previously). Training five-pitch exact 1818->1861/2529 (71.89->73.59%), TARGET 1771, headroom 90. Held-out calibration 283->276/639 (44.29->43.19%); test 27->40/327 (8.26->12.23%): both gates fail, screen REJECTED, continuous replay skipped. Test extras 2705->2782 and single-pitch exact 607->591 regress. These are sampled pitch sets, not installed frame/string gains. All 555 labels and original plan retained; installed/default output and scoreboard unchanged.
 
-Next: scoped source/worker commit and push, then one bounded CPU workflow `harmonic-full-gradient-consistency.yml`. Collect the small report once and keep bulk remote. No automatic rerun, retuning or next experiment. Broader live-readiness goal remains active; installed scoreboard unchanged. Earlier entries below are historical.
+Next: distinct source-transfer design using retained errors with single-note preservation and all original gates. No cutoff retuning, repeated fit or next job queued. Claude remains paused; no fresh review claimed. Broader live-readiness goal remains active; overall completion is not measured. Earlier entries below are historical.
 
 ## Feature-grid consistency final: training instability rejected
 
