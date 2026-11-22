@@ -22,6 +22,32 @@ MODEL_PARAMS = dict(channels=32, dilations=[1, 4, 12, 19], kernel_size=3,
     normalization='training-only mean/std per shared coordinate over mixtures and pitches')
 COMPLETE_SET_PARAMS = dict(MODEL_PARAMS,
     loss='mean_bce_plus_worst_polarity_logistic_v1')
+SETWISE_PARAMS = dict(MODEL_PARAMS,
+    loss='mean_bce_plus_setwise_logsumexp_v1')
+
+
+def setwise_loss(logits, targets):
+    """Mean pitch BCE plus all-positive/all-negative zero-bounded logsumexp.
+
+    The two set terms are summed per mixture, then averaged across mixtures.
+    A zero sentinel gives empty polarities zero loss and keeps extreme finite
+    logits stable. This trains set separation without using cardinality at
+    inference; it does not guarantee preservation of individual examples.
+    """
+    import torch
+    from torch.nn import functional as F
+    if logits.ndim != 2 or logits.shape != targets.shape or not logits.numel():
+        raise ValueError('Expected nonempty aligned mixture/pitch matrices')
+    if not torch.all((targets == 0) | (targets == 1)):
+        raise ValueError('Expected binary complete-set targets')
+    positive = targets.bool()
+    zero = logits.new_zeros((len(logits), 1))
+    true_term = torch.logsumexp(torch.cat((zero,
+        (-logits).masked_fill(~positive, -torch.inf)), dim=1), dim=1)
+    false_term = torch.logsumexp(torch.cat((zero,
+        logits.masked_fill(positive, -torch.inf)), dim=1), dim=1)
+    return (F.binary_cross_entropy_with_logits(logits, targets.to(logits.dtype))
+            + (true_term + false_term).mean())
 
 
 def complete_set_loss(logits, targets):

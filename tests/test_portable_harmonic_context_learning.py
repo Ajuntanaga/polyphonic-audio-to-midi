@@ -33,7 +33,7 @@ class PortableContextTests(unittest.TestCase):
             cutoff = None
             def activity(self, features):
                 return np.zeros((len(features), 53))
-        for params, sequence in product((runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS),
+        for params, sequence in product((runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS),
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
             with self.subTest(gates=sequence, loss=params['loss']), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
@@ -47,7 +47,7 @@ class PortableContextTests(unittest.TestCase):
                     mixture_and_clock_settings=runner.SETTINGS, harmonic_parameters=runner.PARAMETERS,
                     model_parameters=params, references=refs, input_releases=[],
                     datasets=dict(ordinary={}, middle={}))
-                if params == runner.COMPLETE_SET_PARAMS:
+                if params != runner.MODEL_PARAMS:
                     spec_data['training_plan_identity'] = dict(
                         decoded_sha256=hashlib.sha256(b'[]').hexdigest())
                 spec.write_text(json.dumps(spec_data))
@@ -79,7 +79,7 @@ class PortableContextTests(unittest.TestCase):
                 self.assertEqual(fit.call_count, 1)
                 self.assertEqual(fit.call_args.kwargs['model_params'], params)
                 self.assertEqual(result['training_objective'], params['loss'])
-                if params == runner.COMPLETE_SET_PARAMS:
+                if params != runner.MODEL_PARAMS:
                     self.assertTrue(result['training_plan_identity']['verified'])
                 self.assertEqual(examples.call_count, len(sequence))
                 self.assertEqual(replay.call_count, 2 if all(sequence) else 0)

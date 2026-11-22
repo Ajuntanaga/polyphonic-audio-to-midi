@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-22T00:05:11.177577+00:00",
+  "updated_at": "2026-11-22T00:07:36.294681+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "8cd9ab63fe7891760aa98178d52ef37d551e9cca",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_base_commit": "953f3be4b5a5b98b19d5c59df761197fc0b9954c",
+  "worker_commit": null,
+  "workflow": "harmonic-setwise-learning.yml",
+  "specification": "docs/recovery/harmonic-setwise-learning-20261121.json",
+  "specification_sha256": "4e732fc01f20e2b8a0b5cb6d4d3e746890878dc448c1f0bc87417340e9dcecb8",
+  "design": "docs/recovery/CODEX-M3-HARMONIC-SETWISE-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "protocol": "One loss-only replacement on the unchanged context network and training plan: mean pitch BCE plus the sum of zero-bounded log-sum-exp over all true and all false pitches, then batch mean. Coefficient 1; no sweeps or refits. All existing gates and cutoff selection remain unchanged.",
+  "baseline": {
+    "run_id": 44960075844,
+    "source_commit": "a5f46bab45be9cf87126f21426857358c6f75b2d",
+    "report_sha256": "f50c9ed75951c50a4191c47e1af2dcf63835bff34994b8693822bd68019ecb79",
+    "five_pitch_exact": 1547,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771
+  },
+  "prospective_comparison": {
+    "reference_run_id": 44960075844,
+    "single_pitch_exact": 3108,
+    "single_pitch_total": 3132,
+    "single_pitch_false": 18,
+    "single_pitch_missing": 8,
+    "previous_objective_run_id": 44962588969,
+    "previous_single_pitch_exact": 3097,
+    "previous_single_pitch_false": 32,
+    "previous_five_pitch_exact": 1759,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771,
+    "interpretation": "Report exact, false and missing counts separately. Any single-pitch regression means the preservation objective is not achieved even if aggregate research gates pass. These comparisons do not relax or replace the existing gates."
+  },
+  "training_plan_identity": {
+    "baseline_run_id": 44960075844,
+    "file": "train-mixture-plan.json.gz",
+    "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+  },
+  "run_id": null,
+  "stage": "review passed; scoped commits and one dispatch next",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "bulk_policy": "Collect small report once with server digest verified. Keep model and bulk predictions remote unless a named later diagnosis requires them.",
+  "collection_state": "not_dispatched",
+  "validation": {
+    "local_synthetic_tests": 67,
+    "local_passed": 52,
+    "local_skipped": 15,
+    "skip_reason": "Fourteen Torch checks and one sklearn check run on GitHub before recorded fitting; no local installation.",
+    "workflow_yaml_parsed": true,
+    "reference_pins_verified": true,
+    "focused_review": {
+      "state": "complete",
+      "reviewer": "setwise_objective_review",
+      "scope": "Setwise loss, edge cases, unchanged previous objectives and stage gates, source isolation, bounded CPU workflow",
+      "result": "No material blockers. Record worker SHA and verify report GITHUB_SHA. Single-pitch preservation remains a separately reported acceptance condition."
+    }
+  },
+  "next": "Commit/push scoped source and worker, record exact SHAs, then dispatch once. Collect the small report only; preserve existing gates and report isolated-note preservation separately."
+}

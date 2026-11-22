@@ -1,3 +1,9 @@
+## Setwise objective prepared: chord recovery with isolated-note preservation check
+
+Active checkpoint: `docs/recovery/github-harmonic-setwise-learning-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-SETWISE-PLAN-20261121.md`. One loss-only CPU experiment: mean pitch BCE plus summed true/false log-sum-exp penalties. Same network, source roles, mixtures, seed,80epochs and acceptance gates. Training cutoff uses the unchanged99%-precision rule. No recorded processing yet; focused review completed without material blockers before one dispatch. Local synthetic checks67:52passed,15dependency skips to run on GitHub. Claude is paused; no fresh Claude review claimed.
+
+Report single-pitch complete sets against3108/3132, false18 and missing8; any regression leaves preservation unmet. Five-pitch target1771/2529 remains separate. Failed training gates stop held-out and continuous scoring. Installed/default output, labels and scoreboard unchanged. No cutoff retune, install or promotion. Earlier entries below are historical.
+
 ## Complete-set paired diagnosis final: chord gains with single-pitch extras
 
 Active checkpoint: `docs/recovery/github-harmonic-complete-set-learning-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-COMPLETE-SET-PAIRED-RESULT-20261121.md`. Run44962588969 remains rejected. Evidence14730172985 collected once and server-digest verified; only training predictions/plan extracted, model unopened. Identical plans/targets, original counts and all200 pass-1 source uses reproduce; fourteen synthetic checks pass. No new fit, audio/model load, held-out scoring or remote job. Do not repeat collection or diagnosis.

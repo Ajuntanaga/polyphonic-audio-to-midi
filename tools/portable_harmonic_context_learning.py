@@ -14,9 +14,9 @@ import time
 import numpy as np
 
 from tools.direct_spectrum_learning import SETTINGS, validate_manifest
-from tools.harmonic_context_learning import (PARAMETERS, MODEL_PARAMS, COMPLETE_SET_PARAMS, FEATURE_COUNT,
+from tools.harmonic_context_learning import (PARAMETERS, MODEL_PARAMS, COMPLETE_SET_PARAMS, SETWISE_PARAMS, FEATURE_COUNT,
     NOTE_COUNT, HarmonicFeatures, HarmonicContextModel, fit_normalization, normalized_context,
-    make_network, complete_set_loss, acceptance_gate, summarize)
+    make_network, complete_set_loss, setwise_loss, acceptance_gate, summarize)
 from tools.spectral_dictionary import IdentityTransform, fit_training_cutoff
 from tools.portable_direct_spectrum_learning import (continuous_dataset, fetch_release,
     role_examples, source_waves)
@@ -53,6 +53,8 @@ def fit_model(features, truth, model_params=None):
         criterion = torch.nn.BCEWithLogitsLoss()
     elif params['loss'] == COMPLETE_SET_PARAMS['loss']:
         criterion = complete_set_loss
+    elif params['loss'] == SETWISE_PARAMS['loss']:
+        criterion = setwise_loss
     else:
         raise ValueError('Unknown frozen training objective')
     generator = torch.Generator().manual_seed(params['seed'])
@@ -111,12 +113,17 @@ def run(spec_path, output):
         require_identity(spec['mixture_and_clock_settings'], SETTINGS, 'unchanged mixtures, context and clocks')
         require_identity(spec['harmonic_parameters'], PARAMETERS, 'fixed relative harmonic coordinates')
         params = spec['model_parameters']
-        complete_set = params.get('loss') == COMPLETE_SET_PARAMS['loss']
-        require_identity(params, COMPLETE_SET_PARAMS if complete_set else MODEL_PARAMS,
+        frozen_params = {p['loss']: p for p in (MODEL_PARAMS, COMPLETE_SET_PARAMS, SETWISE_PARAMS)}
+        if params.get('loss') not in frozen_params:
+            raise ValueError('Unknown frozen training objective')
+        loss_only = params['loss'] != MODEL_PARAMS['loss']
+        require_identity(params, frozen_params[params['loss']],
                          'one fixed shared context classifier and objective')
         report['training_objective'] = params['loss']
-        if complete_set:
+        if params['loss'] == COMPLETE_SET_PARAMS['loss']:
             report['schema'] = 'm3_harmonic_complete_set_learning_v1'
+        elif params['loss'] == SETWISE_PARAMS['loss']:
+            report['schema'] = 'm3_harmonic_setwise_learning_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -143,7 +150,7 @@ def run(spec_path, output):
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction=('Only the training objective changes versus the frozen context baseline.' if complete_set else
+            distinction=('Only the training objective changes versus the frozen context baseline.' if loss_only else
                 'Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.'))
         report['stage'] = 'training mixtures; one shared fit and training-only cutoff'
         save_json(report_path, report)
@@ -210,7 +217,7 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if complete_set else
+                ('Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else
                  'Model capacity and optimizer also change; this is not an isolated context ablation.'),
                 'Zero padding and finite FFT resolution break exact pitch-shift equivariance.',
                 'The longer trailing context spans 170.67ms; measured callback cost is not pluck-to-MIDI latency.',
