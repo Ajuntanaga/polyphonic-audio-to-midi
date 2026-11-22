@@ -3,7 +3,7 @@
   "state": "completed",
   "final": true,
   "created_at": "2026-11-22T00:22:54.439116+00:00",
-  "updated_at": "2026-11-22T00:35:02.097639+00:00",
+  "updated_at": "2026-11-22T00:49:53.827087+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "81fbfd6bfde2e3b20e6b7e8e188686ad789d1a4e",
@@ -46,8 +46,8 @@
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
-  "bulk_policy": "Collect small report once with server digest verified; model and predictions remain remote.",
-  "collection_state": "small report collected once; server digest and byte count verified; bulk remains remote",
+  "bulk_policy": "Evidence archive collected once with server digest verified; only six prediction/plan files extracted. Model remains unextracted and unloaded. Do not redownload.",
+  "collection_state": "small report and prediction evidence collected once with digest/byte verification; saved-array diagnosis final",
   "validation": {
     "local_checks": {
       "tests_ran": 72,
@@ -77,7 +77,7 @@
       "scope": "synthetic implementation checks; not native audio timing or external MIDI delivery"
     }
   },
-  "next": "Use retained predictions and mixture metadata to separate held-out errors already present in single-note examples from mixture-specific losses before choosing a distinct transfer design. Preserve every source, role, cutoff and rejection; no refit or new job queued.",
+  "next": "Design a distinct single-source transfer and false-pitch rejection change that also preserves complete chords, before another fit. Keep all 555 sources, original roles, labels, cutoff protocol and safety gates. The saved clean-solo/mixed contrast is unpaired and does not establish interference. No refit, exclusion, cutoff retune or new job queued.",
   "pushed_at": "2026-11-22T00:25:51.979762+00:00",
   "dispatch_exit_code": 0,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44966587324",
@@ -568,5 +568,467 @@
     "One configuration and train-only cutoff; no held-out tuning, promotion or installed change."
   ],
   "live_readiness": "not verified by this experiment",
-  "new_job_queued": false
+  "new_job_queued": false,
+  "prediction_evidence_receipt": "build/github-results/harmonic-source-variation-44966587324/prediction-evidence-collection-receipt.json",
+  "prediction_evidence_collection": {
+    "started_at": "2026-11-22T00:44:08.632775+00:00",
+    "collected_at": "2026-11-22T00:46:29.055109+00:00",
+    "artifact_id": 14731592882,
+    "name": "m3-harmonic-source-variation-evidence-44966587324-1",
+    "bytes": 8013695,
+    "sha256": "cccd31450089b1ac3e49cc0c390144123e9311ab4ff99540285695fefa6d6db5",
+    "server_digest": "sha256:cccd31450089b1ac3e49cc0c390144123e9311ab4ff99540285695fefa6d6db5",
+    "verified": true,
+    "archive": "build/github-results/harmonic-source-variation-44966587324/prediction-evidence-complete.zip",
+    "output_directory": "build/github-results/harmonic-source-variation-44966587324/prediction-evidence",
+    "extracted": {
+      "train-predictions.npz": {
+        "archive_path": "train-predictions.npz",
+        "bytes": 3841674,
+        "sha256": "a8ed47ae74aac1280de9398ea688bf85ba8108aaee9be0479d83d04d6c536a35"
+      },
+      "train-mixture-plan.json.gz": {
+        "archive_path": "train-mixture-plan.json.gz",
+        "bytes": 750676,
+        "sha256": "b20241de70b0621534e44b0e6e8ef1d444eb793eb4252d2b9f39aa3bcce3d9ba"
+      },
+      "calibration-predictions.npz": {
+        "archive_path": "calibration-predictions.npz",
+        "bytes": 964057,
+        "sha256": "d23a9583d87b61455bb51577f5b3eecf3a36ac0f10b968ab6d5d195766c554df"
+      },
+      "calibration-mixture-plan.json.gz": {
+        "archive_path": "calibration-mixture-plan.json.gz",
+        "bytes": 193017,
+        "sha256": "e21ef49df5e43e33b0291b9b53e60033d0e9ee826356101cfe1cf1b31c8709b5"
+      },
+      "test-predictions.npz": {
+        "archive_path": "test-predictions.npz",
+        "bytes": 964826,
+        "sha256": "6d253ce5ccc0ac6b3e842bab123dfc2ea9e00ab7b3672fca3b98c81889845ad8"
+      },
+      "test-mixture-plan.json.gz": {
+        "archive_path": "test-mixture-plan.json.gz",
+        "bytes": 176896,
+        "sha256": "045e42c8d53b03f1a62661d4e759a61ea0708a5d1fbc270a178a6b6490bc8cec"
+      }
+    },
+    "archive_members": [
+      {
+        "name": "calibration-mixture-plan.json.gz",
+        "bytes": 193017
+      },
+      {
+        "name": "calibration-predictions.npz",
+        "bytes": 964057
+      },
+      {
+        "name": "frozen-harmonic-context-model.pt",
+        "bytes": 67832
+      },
+      {
+        "name": "test-mixture-plan.json.gz",
+        "bytes": 176896
+      },
+      {
+        "name": "test-predictions.npz",
+        "bytes": 964826
+      },
+      {
+        "name": "train-mixture-plan.json.gz",
+        "bytes": 750676
+      },
+      {
+        "name": "train-predictions.npz",
+        "bytes": 3841674
+      },
+      {
+        "name": "train-varied-mixture-plan.json.gz",
+        "bytes": 1053527
+      }
+    ],
+    "model_extracted": false,
+    "model_loaded": false,
+    "initial_transfer_timeout_seconds": 90,
+    "initial_partial_bytes": 3062730,
+    "resume_received_bytes": 4950965,
+    "resume_response_mode": "range remainder",
+    "download_attempts": 2,
+    "purpose": "Frozen saved source-transfer diagnosis, all original roles; no model/audio load",
+    "retained_bytes": 14904841
+  },
+  "source_transfer_diagnosis": {
+    "final": true,
+    "created_at": "2026-11-22T00:46:36.190827+00:00",
+    "result": "docs/recovery/CODEX-M3-SOURCE-TRANSFER-DIAGNOSIS-RESULT-20261121.md",
+    "plan": "docs/recovery/CODEX-M3-SOURCE-TRANSFER-DIAGNOSIS-PLAN-20261121.md",
+    "report": "build/recovery/m3-source-transfer-diagnosis-20261121/report.json",
+    "report_sha256": "650a1bbef3e0e25679eee6b430186e508a45960a22421a14e4a9a8f578566466",
+    "sources_table": "build/recovery/m3-source-transfer-diagnosis-20261121/sources.json",
+    "sources_table_sha256": "25a210e2cc084fc0e4d83544030f3c2752afda77570a8d4f9bd4108a9c17f95e",
+    "analysis_script": "tools/saved_source_transfer.py",
+    "analysis_script_sha256": "af08739ab7a26b9b4bdb3d1f611baaebcd23caa384aba2ed3f70c13124a2f44b",
+    "synthetic_tests_passed": 5,
+    "saved_analysis_runs": 1,
+    "identities_passed": true,
+    "all_555_sources_retained": true,
+    "source_consistency_filters_applied": false,
+    "roles": {
+      "train": {
+        "singleton": {
+          "examples": 3052,
+          "expected": 3052,
+          "true_positive": 3048,
+          "false_positive": 17,
+          "false_negative": 4,
+          "complete_sets": 3033,
+          "missing_only": 3,
+          "extra_only": 15,
+          "both": 1
+        },
+        "mixed": {
+          "examples": 12512,
+          "expected": 42646,
+          "true_positive": 40750,
+          "false_positive": 425,
+          "false_negative": 1896,
+          "complete_sets": 10689,
+          "missing_only": 1428,
+          "extra_only": 254,
+          "both": 141
+        },
+        "sources_by_singleton_status": {
+          "unknown": {
+            "sources": 0,
+            "singleton_n": 0,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          },
+          "never_exact": {
+            "sources": 0,
+            "singleton_n": 0,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          },
+          "sometimes_exact": {
+            "sources": 13,
+            "singleton_n": 210,
+            "singleton_target_miss_n": 4,
+            "singleton_exact_fail_n": 19,
+            "singleton_fp_cells": 17
+          },
+          "always_exact_observed": {
+            "sources": 187,
+            "singleton_n": 2842,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          }
+        },
+        "mixed_example_groups": {
+          "all_sources_exact_alone": {
+            "examples": 10022,
+            "expected": 33479,
+            "true_positive": 32327,
+            "false_positive": 270,
+            "false_negative": 1152,
+            "complete_sets": 8852,
+            "missing_only": 916,
+            "extra_only": 179,
+            "both": 75
+          },
+          "some_singleton_error": {
+            "examples": 2490,
+            "expected": 9167,
+            "true_positive": 8423,
+            "false_positive": 155,
+            "false_negative": 744,
+            "complete_sets": 1837,
+            "missing_only": 512,
+            "extra_only": 75,
+            "both": 66
+          },
+          "otherwise_unknown": {
+            "examples": 0,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 0,
+            "missing_only": 0,
+            "extra_only": 0,
+            "both": 0
+          }
+        },
+        "scheduled_crop_level_matches": {
+          "mixed_unique_pitch_targets": 41361,
+          "matching_singleton_observations": 0,
+          "targets_with_match": 0,
+          "mixed_misses_with_match": 0,
+          "mixed_missing_despite_all_matched_singletons_found": 0
+        }
+      },
+      "calibration": {
+        "singleton": {
+          "examples": 740,
+          "expected": 740,
+          "true_positive": 729,
+          "false_positive": 55,
+          "false_negative": 11,
+          "complete_sets": 685,
+          "missing_only": 4,
+          "extra_only": 44,
+          "both": 7
+        },
+        "mixed": {
+          "examples": 3151,
+          "expected": 10813,
+          "true_positive": 9935,
+          "false_positive": 675,
+          "false_negative": 878,
+          "complete_sets": 2076,
+          "missing_only": 509,
+          "extra_only": 360,
+          "both": 206
+        },
+        "sources_by_singleton_status": {
+          "unknown": {
+            "sources": 6,
+            "singleton_n": 0,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          },
+          "never_exact": {
+            "sources": 6,
+            "singleton_n": 14,
+            "singleton_target_miss_n": 2,
+            "singleton_exact_fail_n": 14,
+            "singleton_fp_cells": 15
+          },
+          "sometimes_exact": {
+            "sources": 22,
+            "singleton_n": 111,
+            "singleton_target_miss_n": 9,
+            "singleton_exact_fail_n": 41,
+            "singleton_fp_cells": 40
+          },
+          "always_exact_observed": {
+            "sources": 166,
+            "singleton_n": 615,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          }
+        },
+        "mixed_example_groups": {
+          "all_sources_exact_alone": {
+            "examples": 1676,
+            "expected": 5346,
+            "true_positive": 5053,
+            "false_positive": 210,
+            "false_negative": 293,
+            "complete_sets": 1282,
+            "missing_only": 208,
+            "extra_only": 133,
+            "both": 53
+          },
+          "some_singleton_error": {
+            "examples": 1252,
+            "expected": 4653,
+            "true_positive": 4127,
+            "false_positive": 407,
+            "false_negative": 526,
+            "complete_sets": 646,
+            "missing_only": 270,
+            "extra_only": 200,
+            "both": 136
+          },
+          "otherwise_unknown": {
+            "examples": 223,
+            "expected": 814,
+            "true_positive": 755,
+            "false_positive": 58,
+            "false_negative": 59,
+            "complete_sets": 148,
+            "missing_only": 31,
+            "extra_only": 27,
+            "both": 17
+          }
+        },
+        "scheduled_crop_level_matches": {
+          "mixed_unique_pitch_targets": 10521,
+          "matching_singleton_observations": 0,
+          "targets_with_match": 0,
+          "mixed_misses_with_match": 0,
+          "mixed_missing_despite_all_matched_singletons_found": 0
+        }
+      },
+      "test": {
+        "singleton": {
+          "examples": 809,
+          "expected": 809,
+          "true_positive": 687,
+          "false_positive": 315,
+          "false_negative": 122,
+          "complete_sets": 570,
+          "missing_only": 5,
+          "extra_only": 117,
+          "both": 117
+        },
+        "mixed": {
+          "examples": 3082,
+          "expected": 9643,
+          "true_positive": 7307,
+          "false_positive": 2341,
+          "false_negative": 2336,
+          "complete_sets": 981,
+          "missing_only": 526,
+          "extra_only": 404,
+          "both": 1171
+        },
+        "sources_by_singleton_status": {
+          "unknown": {
+            "sources": 0,
+            "singleton_n": 0,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          },
+          "never_exact": {
+            "sources": 31,
+            "singleton_n": 150,
+            "singleton_target_miss_n": 112,
+            "singleton_exact_fail_n": 150,
+            "singleton_fp_cells": 192
+          },
+          "sometimes_exact": {
+            "sources": 38,
+            "singleton_n": 219,
+            "singleton_target_miss_n": 10,
+            "singleton_exact_fail_n": 89,
+            "singleton_fp_cells": 123
+          },
+          "always_exact_observed": {
+            "sources": 86,
+            "singleton_n": 440,
+            "singleton_target_miss_n": 0,
+            "singleton_exact_fail_n": 0,
+            "singleton_fp_cells": 0
+          }
+        },
+        "mixed_example_groups": {
+          "all_sources_exact_alone": {
+            "examples": 478,
+            "expected": 1247,
+            "true_positive": 1153,
+            "false_positive": 38,
+            "false_negative": 94,
+            "complete_sets": 367,
+            "missing_only": 76,
+            "extra_only": 23,
+            "both": 12
+          },
+          "some_singleton_error": {
+            "examples": 2604,
+            "expected": 8396,
+            "true_positive": 6154,
+            "false_positive": 2303,
+            "false_negative": 2242,
+            "complete_sets": 614,
+            "missing_only": 450,
+            "extra_only": 381,
+            "both": 1159
+          },
+          "otherwise_unknown": {
+            "examples": 0,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 0,
+            "missing_only": 0,
+            "extra_only": 0,
+            "both": 0
+          }
+        },
+        "scheduled_crop_level_matches": {
+          "mixed_unique_pitch_targets": 8619,
+          "matching_singleton_observations": 0,
+          "targets_with_match": 0,
+          "mixed_misses_with_match": 0,
+          "mixed_missing_despite_all_matched_singletons_found": 0
+        }
+      }
+    },
+    "consistency_strata": {
+      "train": {
+        "observed_agreement_in_selected_windows": {
+          "sources": 13,
+          "singleton_examples": 192,
+          "misses": 0,
+          "extras": 1,
+          "exact_failures": 1
+        },
+        "not_examined_by_targeted_verification": {
+          "sources": 187,
+          "singleton_examples": 2860,
+          "misses": 4,
+          "extras": 16,
+          "exact_failures": 18
+        }
+      },
+      "calibration": {
+        "observed_agreement_in_selected_windows": {
+          "sources": 12,
+          "singleton_examples": 58,
+          "misses": 0,
+          "extras": 5,
+          "exact_failures": 5
+        },
+        "not_examined_by_targeted_verification": {
+          "sources": 188,
+          "singleton_examples": 682,
+          "misses": 11,
+          "extras": 50,
+          "exact_failures": 50
+        }
+      },
+      "test": {
+        "octave_related_disagreement_ambiguous": {
+          "sources": 7,
+          "singleton_examples": 35,
+          "misses": 35,
+          "extras": 36,
+          "exact_failures": 35
+        },
+        "not_examined_by_targeted_verification": {
+          "sources": 140,
+          "singleton_examples": 724,
+          "misses": 37,
+          "extras": 228,
+          "exact_failures": 154
+        },
+        "sustained_non_octave_disagreement_unresolved": {
+          "sources": 8,
+          "singleton_examples": 50,
+          "misses": 50,
+          "extras": 51,
+          "exact_failures": 50
+        }
+      }
+    },
+    "limits": [
+      "Singleton status describes sampled crops/levels only; no causal mixture attribution.",
+      "Missing singleton coverage is unknown. Multi-component unisons are separate.",
+      "Mixed exact-failure exposures are non-additive and cannot attribute extra pitches.",
+      "Source-consistency status never filters any example or score.",
+      "Roles have been used for development; pass/protocol/content remain confounded.",
+      "No audio/model/fit, timing, host, string assignment or installed-output measurement."
+    ],
+    "decision": "diagnosis complete; original screen rejection unchanged",
+    "next": "Design a distinct single-source transfer and false-pitch rejection change that also preserves complete chords, before another fit. Keep all 555 sources, original roles, labels, cutoff protocol and safety gates. The saved clean-solo/mixed contrast is unpaired and does not establish interference. No refit, exclusion, cutoff retune or new job queued."
+  }
 }

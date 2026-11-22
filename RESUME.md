@@ -1,3 +1,11 @@
+## Saved source-transfer diagnosis final: solo and mixed errors remain
+
+Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; diagnosis: `docs/recovery/CODEX-M3-SOURCE-TRANSFER-DIAGNOSIS-RESULT-20261121.md`. Completed run44966587324 remains rejected. Evidence14731592882 collected once, server digest verified; six prediction/plan files extracted, model unopened. All original counts/roles/source identities reproduce, all555 sources retained; five synthetic checks pass. No new fit, audio/model/native processing or remote job. Do not repeat collection or diagnosis.
+
+Test solo exact570/809 (70.46%), with122 missed pitches and315 extras. Already unresolved/ambiguous source-content cases account for85 of those misses; unexamined sources retain37 misses and228 extras, so no unique model/data cause is established. Of478 mixtures whose sources were exact in sampled solos,367 are exact (76.78%);111 fail with94 misses and38 extras. No identical-crop/effective-level solo controls exist, so this is an association, not proof of interference. All original labels, rejected cutoff/gates, installed/default output and scoreboard unchanged.
+
+Next: design a distinct single-source transfer/false-pitch rejection change that also preserves complete chords, before another fit. Preserve all555 sources and original roles/gates; no exclusions, retuning or new job queued. Continuous replay remains skipped. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Training-source variation final: held-out transfer rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-SOURCE-VARIATION-RESULT-20261121.md`. CPU run44966587324 final/success, source `7481905c4b38bad52770c59c7b9c0fdb3eca75a0`, worker `99e7422982c1394977977bf73ccb8dfb7e40367d`. Source CI44966574518 and all72 GitHub synthetic checks passed. Small report collected once and server-digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
