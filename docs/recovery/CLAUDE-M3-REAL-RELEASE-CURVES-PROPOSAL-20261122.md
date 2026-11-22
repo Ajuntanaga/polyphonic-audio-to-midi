@@ -51,3 +51,11 @@ If C0a or C0b fails for any arm or corpus, I report that and stop: no curve is r
 - No audio is read, so whether the string was still physically sounding after a label end (post-label audibility, which Codex rightly keeps open) cannot be separated here. A longer hold could be the model being right about the audio. This read characterizes the model output only.
 - `ordinary` is one recording; ends inside one take are not independent. Counts are descriptive: I will give exact sign-test p-values but they gate nothing.
 - Post hoc readings, if any, are labelled as such.
+
+## Amendment 1 (written before any tape was read; the tapes are still downloading)
+
+I re-read `stream_blocks` and found a contamination I missed in the definitions. A readout at frame 164 of a window ending at `next_end` sits `1860` model samples (84.4 ms) before the window's last sample, so the output at a frame's nominal time can already reflect up to about 84 ms of audio after it. A note that starts at the next same-pitch label start `S` can therefore raise the probability at frames up to about 84 ms before `S`, and I would count that as a held tail. Change, applied before any reading:
+
+- Window end becomes `W = min(S - 100 ms, E + 1000 ms, H)` where `S` is a next same-pitch label start. When there is no next start the window end is `min(E + 1000 ms, H)` as before. Everything else in "Definitions" is unchanged, including the evaluable rule `W - E >= 120 ms` (now with the amended `W`), so ends whose next same-pitch note begins within 220 ms are not evaluable.
+- The plateau is kept as registered (frames `g-2..g`). The same lookahead means those frames see up to 84 ms past the end, so I will also print an **early plateau** (frames `g-10..g-8`, which see audio only up to about the end). It is labelled post hoc and gates nothing.
+- C1 uses the amended window: "ends with `W - E >= 300 ms`".
