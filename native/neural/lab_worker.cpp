@@ -10,6 +10,9 @@ ModelOptions worker_model_options() {
 #ifdef M3_NEURAL_CROPPED_READOUT
   options.cropped_readout=true;
 #endif
+#ifdef M3_NEURAL_TEMPORAL_READOUT
+  options.layout=ModelLayout::TemporalReadout;
+#endif
   return options;
 }
 std::array<double,kTaps> load_filter(const std::string& path) {

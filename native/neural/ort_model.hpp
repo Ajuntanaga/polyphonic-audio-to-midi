@@ -6,26 +6,33 @@
 #include <string>
 #include <vector>
 namespace m3::neural {
+enum class ModelLayout { Legacy, CorrectedFull, TemporalReadout };
 struct ModelOptions {
   int intra_threads=2;
   const char* profile_prefix=nullptr;
   bool cropped_readout=false;
+  ModelLayout layout=ModelLayout::Legacy;
 };
 class Model {
  public:
   explicit Model(const char* path,const ModelOptions& config={}):env_(ORT_LOGGING_LEVEL_WARNING,"m3-neural"),session_(nullptr),
       memory_(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator,OrtMemTypeDefault)),tensor_(nullptr),
-      cropped_readout_(config.cropped_readout) {
+      cropped_readout_(config.cropped_readout || config.layout==ModelLayout::TemporalReadout) {
     if(std::string(OrtGetApiBase()->GetVersionString())!="1.20.1") throw std::runtime_error("ORT version mismatch");
+    if(config.cropped_readout && config.layout!=ModelLayout::Legacy)
+      throw std::runtime_error("legacy and corrected model layouts cannot be combined");
+    if(config.layout==ModelLayout::TemporalReadout)
+      output_names_={"m3_readout_note","m3_readout_onset"};
     Ort::SessionOptions options;
     if(config.intra_threads<1 || config.intra_threads>4) throw std::runtime_error("invalid worker thread count");
     options.SetIntraOpNumThreads(config.intra_threads);options.SetInterOpNumThreads(1);
     options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
-    options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+    options.SetGraphOptimizationLevel(config.layout==ModelLayout::Legacy ?
+        GraphOptimizationLevel::ORT_ENABLE_ALL : GraphOptimizationLevel::ORT_DISABLE_ALL);
     if(config.profile_prefix) options.EnableProfiling(config.profile_prefix);
     session_=Ort::Session(env_,path,options);
     Ort::AllocatorWithDefaultOptions allocator;
-    if(cropped_readout_) {
+    if(config.cropped_readout) {
       auto metadata=session_.GetModelMetadata();
       auto schema=metadata.LookupCustomMetadataMapAllocated("m3.crop.schema",allocator);
       auto parent=metadata.LookupCustomMetadataMapAllocated("m3.crop.parent_sha256",allocator);
@@ -35,6 +42,13 @@ class Model {
     }
     if(session_.GetInputCount()!=1 || std::string(session_.GetInputNameAllocated(0,allocator).get())!=input_names_[0])
       throw std::runtime_error("model input name mismatch");
+    const auto input_info=session_.GetInputTypeInfo(0);
+    const auto input_tensor=input_info.GetTensorTypeAndShapeInfo();
+    if(input_tensor.GetElementType()!=ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+        input_tensor.GetShape()!=std::vector<std::int64_t>{1,43844,1})
+      throw std::runtime_error("model input shape/type mismatch");
+    if(config.layout!=ModelLayout::Legacy && session_.GetOutputCount()!=2)
+      throw std::runtime_error("corrected model must expose exactly two outputs");
     std::array<bool,2> found{};
     for(std::size_t i=0;i<session_.GetOutputCount();++i) {
       const std::string name=session_.GetOutputNameAllocated(i,allocator).get();
@@ -70,6 +84,6 @@ class Model {
   Ort::Env env_;Ort::Session session_;Ort::MemoryInfo memory_;Ort::Value tensor_;
   bool cropped_readout_;
   const std::array<const char*,1> input_names_{"serving_default_input_2:0"};
-  const std::array<const char*,2> output_names_{"StatefulPartitionedCall:1","StatefulPartitionedCall:2"};
+  std::array<const char*,2> output_names_{"StatefulPartitionedCall:1","StatefulPartitionedCall:2"};
 };
 } // namespace m3::neural

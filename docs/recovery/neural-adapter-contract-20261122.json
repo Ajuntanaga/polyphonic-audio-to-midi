@@ -1,0 +1,29 @@
+{
+  "schema": "m3_neural_adapter_contract_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "sdk": {
+    "version": "1.20.1",
+    "package": "Microsoft.ML.OnnxRuntime",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.20.1/microsoft.ml.onnxruntime.1.20.1.nupkg",
+    "sha512_base64": "/IZ7tO4xeqphNGAHn6dU+Ate5kmugmsQKwJpl2qJBAq4rtl2j2hQWlUn+KoxYcwS4ToIw4KzXVdzHuhMaw1HjQ==",
+    "bytes": 108611147,
+    "provenance": "Official CPU C/C++ NuGet package; SHA512 pinned from NuGet response, SHA256 recorded by worker; runtime version must match. Replaces unavailable GitHub tarball before any native measurement."
+  },
+  "inputs": "Seven arithmetic ONNX fixtures; no trained model or audio",
+  "layouts": [
+    "legacy-full",
+    "legacy-crop",
+    "corrected-full",
+    "corrected-temporal-readout"
+  ],
+  "checks": [
+    "all readout cells exactly equal binary-fraction expectations for zero and one input",
+    "reject invalid input/output layouts and indices",
+    "legacy metadata remains required",
+    "existing streaming core tests",
+    "compile existing harnesses and temporal worker mode"
+  ],
+  "scope": "Adapter compile and synthetic contract only; no corpus, timing, package or live acceptance",
+  "timeout_minutes": 15
+}
