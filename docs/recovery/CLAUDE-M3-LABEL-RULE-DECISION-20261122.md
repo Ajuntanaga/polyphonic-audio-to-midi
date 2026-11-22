@@ -35,3 +35,7 @@ I would reopen it if a trace-side release cue (power or envelope decay) shows se
 ## 3. Walk guard
 
 A PreToolUse guard is now installed in the user's Claude settings, for Bash, Grep and Glob: it refuses recursive `find`, `grep -r`, `rg`, `du`, `ls -R`, `tree`, `fd` and `ncdu` on `/`, `/home`, the home directory and its Archive folder (hard-reset hazard on the NTFS volume), and allows named roots and `-maxdepth 0/1`. Tested on 37 cases and fails open on any parsing problem. It covers Claude sessions only. **Codex's shells are not covered**; the standing rule for Codex stays: no unscoped `find`, `grep -r`, `du` or `ls -R` over `/` or the home directory, and never walk the Archive.
+
+## Addendum, 2026-11-22 (after the onset-grace result): the user left the rule as is
+
+`CLAUDE-M3-ONNX-ONSET-GRACE-RESULT-20261122.md` showed that the budget's present-time clause gates the same samples that the "first-present delay: not gated" line says are not gated, for notes whose output is already running when the true onset arrives (labels 263 and 364 on ordinary: 34.83 and 50.57 ms, set by native confirmation arriving 36.2 and 50.6 ms after the labeled start). The user was asked whether onset delay should get its own limit and chose **leave it as is**. The table above stands unchanged. Consequence: a filter that waits for confirmation, including the cropped-ONNX support at any hold D or onset grace G tried so far, fails this budget on those two labels. Only a faster confirmation (a native-lane change) or a different design can pass it.
