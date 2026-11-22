@@ -1,10 +1,10 @@
-## Feature-grid consistency screen: prepared
+## Feature-grid consistency final: training instability rejected
 
-Active checkpoint: `docs/recovery/github-harmonic-grid-consistency-20261121.json`; design: `docs/recovery/CODEX-M3-GRID-CONSISTENCY-PLAN-20261121.md`. One training-only consistency term compares original logits with a one-row translated feature grid. Original setwise supervision, 53x62 inputs, 14,465 parameters, training plan, optimizer steps, cutoff rule, labels and gates are fixed. No physical transposition; feature/source signatures move with rows.
+Active checkpoint: `docs/recovery/github-harmonic-grid-consistency-20261121.json`; result: `docs/recovery/CODEX-M3-GRID-CONSISTENCY-RESULT-20261121.md`. CPU run44980872011 final/success, source `78e9d130ec448f3d1c414695f4b91ef7126a1ca1`, worker `268505117e48da91a29d602aecbe8229a452e107`. All116 GitHub tests and source CI44980841745 passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload or rerun this final job.
 
-Finish the focused static review, commit/push the scoped implementation/workflow and dispatch once under standing CPU research authority. Checkpoint owns the exact source/worker revisions and run ID when registered. Three local synthetic/spec checks passed; four Torch checks deferred to GitHub. No local recorded audio/model/native execution. Reject any original gate failure; no automatic rerun or cutoff tuning. Compare against setwise44965135706, including isolated-note exact/extra/missing changes.
+Training loss rose sharply at epoch23 and ended at4.668e12. No cutoff met99% pitch precision. The existing infeasible-cutoff fallback emits no pitches: five-pitch exact1818->0/2529 (71.89->0%), TARGET1771, GAP1771 sets/70.03pp; complete sets14597->820/16384, all820 silence. This is a failed offline fit, not installed tracking performance or a safety gain. Held-out calibration/test and continuous replay skipped. All555 labels and original plan retained; installed/default output and scoreboard unchanged.
 
-Installed/default output and scoreboard unchanged. Claude remains paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+Next: diagnose optimization instability from retained loss/configuration before a distinct new fit. Cause not isolated. Preserve original gates; no cutoff tuning, best-epoch rescue, automatic rerun or next job queued. Claude remains paused; no fresh review claimed. Broader live-readiness goal remains active; overall completion is not measured. Earlier entries below are historical.
 
 ## Measured pitch halo final: held-out transfer rejected
 

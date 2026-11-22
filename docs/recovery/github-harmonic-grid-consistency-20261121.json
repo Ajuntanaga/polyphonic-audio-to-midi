@@ -18,14 +18,14 @@
     "test_five_pitch_total": 327
   },
   "bulk_policy": "Collect small report once with server digest verification; model, predictions and mixture plans stay remote. No automatic rerun or cutoff tuning.",
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T03:25:35.525517+00:00",
-  "updated_at": "2026-11-22T03:28:46.098411+00:00",
+  "updated_at": "2026-11-22T03:38:55.737680+00:00",
   "source_base_commit": "4c88666aa1e4de05875ac5f8dc6d2eab96e09d84",
-  "source_commit": null,
+  "source_commit": "78e9d130ec448f3d1c414695f4b91ef7126a1ca1",
   "worker_base_commit": "ca1fa82801caace567db76265d43c51157400fe8",
-  "worker_commit": null,
+  "worker_commit": "268505117e48da91a29d602aecbe8229a452e107",
   "workflow": "harmonic-grid-consistency.yml",
   "specification": "docs/recovery/harmonic-grid-consistency-20261121.json",
   "specification_sha256": "e97317ff026bfdf12ad44aef2941ab734fa19cb33b430ff1cafbb4a7f79a353b",
@@ -52,11 +52,12 @@
     "baseline_run_id": 44960075844,
     "file": "train-mixture-plan.json.gz",
     "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
-    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded",
+    "verified": true
   },
-  "run_id": null,
-  "stage": "Frozen implementation reviewed; ready for scoped commits and one dispatch",
-  "collection_state": "not dispatched",
+  "run_id": 44980872011,
+  "stage": "Final: training instability and infeasible precision cutoff; held-out and continuous stages skipped",
+  "collection_state": "small report collected once; server digest verified; bulk remains remote",
   "validation": {
     "local_tests_passed": 3,
     "local_torch_tests_skipped": 4,
@@ -71,7 +72,523 @@
       "material_blockers": 0,
       "executed_tests": false,
       "reviewed_at": "2026-11-22T03:28:46.098387+00:00"
-    }
+    },
+    "github_synthetic_tests_passed": 116,
+    "github_synthetic_seconds": 4.167,
+    "source_ci_passed": true
   },
-  "next": "Finish one focused review; commit/push frozen screen and dispatch once. Preserve every gate, all labels and installed output. No automatic rerun. Claude remains paused."
+  "next": "Diagnose optimization instability from retained loss/configuration before a distinct new fit. Preserve all555 labels and original gates. No cutoff tuning, best-epoch rescue, automatic rerun or next job queued. Do not poll or redownload this final job. Claude remains paused.",
+  "source_pushed": true,
+  "worker_pushed": true,
+  "dispatch_registration_observation": {
+    "workflow": {
+      "id": 426494928,
+      "node_id": "W_kwDOVnjy3s4Za8vQ",
+      "name": "Harmonic feature-grid consistency screen",
+      "path": ".github/workflows/harmonic-grid-consistency.yml",
+      "state": "active",
+      "created_at": "2026-11-21T19:29:14.000-08:00",
+      "updated_at": "2026-11-21T19:29:14.000-08:00",
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/workflows/426494928",
+      "html_url": "https://github.com/Ajuntanaga/m3-offload/blob/main/.github/workflows/harmonic-grid-consistency.yml",
+      "badge_url": "https://github.com/Ajuntanaga/m3-offload/workflows/Harmonic%20feature-grid%20consistency%20screen/badge.svg"
+    },
+    "active_worker_runs": [],
+    "matching_runs": [],
+    "observed_at": "2026-11-22T03:29:27.364773+00:00"
+  },
+  "source_ci": [
+    {
+      "id": 44980841745,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "78e9d130ec448f3d1c414695f4b91ef7126a1ca1",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44980841745"
+    }
+  ],
+  "dispatch_attempted_at": "2026-11-22T03:29:27.396430+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44980872011",
+  "output_directory": "build/github-results/harmonic-grid-consistency-44980872011",
+  "small_artifact_name": "m3-harmonic-grid-consistency-report-44980872011-1",
+  "bulk_artifact_name": "m3-harmonic-grid-consistency-evidence-44980872011-1",
+  "workflow_status": "completed",
+  "workflow_conclusion": "success",
+  "last_observed_at": "2026-11-22T03:36:00.387191+00:00",
+  "last_jobs": [
+    {
+      "id": 137080873689,
+      "name": "screen",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-22T03:29:39Z",
+          "completed_at": "2026-11-22T03:29:41Z"
+        },
+        {
+          "name": "Check bounded dispatch inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-22T03:29:41Z",
+          "completed_at": "2026-11-22T03:29:42Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-22T03:29:42Z",
+          "completed_at": "2026-11-22T03:29:47Z"
+        },
+        {
+          "name": "Run actions/setup-python@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-22T03:29:47Z",
+          "completed_at": "2026-11-22T03:29:47Z"
+        },
+        {
+          "name": "Pin source and CPU dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-22T03:29:47Z",
+          "completed_at": "2026-11-22T03:30:11Z"
+        },
+        {
+          "name": "Check grid alignment, stopped gradients, persistence, gates and scoring",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-22T03:30:11Z",
+          "completed_at": "2026-11-22T03:30:16Z"
+        },
+        {
+          "name": "Fit one shared classifier; continuous replay only after held-out pass",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-22T03:30:16Z",
+          "completed_at": "2026-11-22T03:34:14Z"
+        },
+        {
+          "name": "Retain small report and logs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-22T03:34:14Z",
+          "completed_at": "2026-11-22T03:34:16Z"
+        },
+        {
+          "name": "Retain model and predictions remotely",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-22T03:34:16Z",
+          "completed_at": "2026-11-22T03:34:18Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-22T03:34:18Z",
+          "completed_at": "2026-11-22T03:34:18Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-22T03:34:18Z",
+          "completed_at": "2026-11-22T03:34:18Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-22T03:34:18Z",
+          "completed_at": "2026-11-22T03:34:18Z"
+        }
+      ]
+    }
+  ],
+  "decision": "rejected at training complete-chord gate",
+  "research_screen_passed": false,
+  "report": "build/github-results/harmonic-grid-consistency-44980872011/artifact/harmonic-grid-consistency-result/report/report.json",
+  "report_sha256": "45445998418da70fc4f009d40b481cbcc166633658ccf02bbd6ee6975fd1814c",
+  "result_document": "docs/recovery/CODEX-M3-GRID-CONSISTENCY-RESULT-20261121.md",
+  "collection_receipt": "build/github-results/harmonic-grid-consistency-44980872011/collection-receipt.json",
+  "collected_at": "2026-11-22T03:36:24.603571+00:00",
+  "artifacts": [
+    {
+      "id": 14737862275,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczNzg2MjI3NQ==",
+      "name": "m3-harmonic-grid-consistency-evidence-44980872011-1",
+      "size_in_bytes": 950905,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737862275",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737862275/zip",
+      "expired": false,
+      "digest": "sha256:b460f97413e2943b7a26dfbbff26bbe52ba3d901180cb19bdb11510648297c9c",
+      "created_at": "2026-11-22T03:34:18Z",
+      "updated_at": "2026-11-22T03:34:18Z",
+      "expires_at": "2026-12-06T03:34:16Z",
+      "workflow_run": {
+        "id": 44980872011,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "268505117e48da91a29d602aecbe8229a452e107"
+      }
+    },
+    {
+      "id": 14737862271,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczNzg2MjI3MQ==",
+      "name": "m3-harmonic-grid-consistency-report-44980872011-1",
+      "size_in_bytes": 18001,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737862271",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14737862271/zip",
+      "expired": false,
+      "digest": "sha256:93d8a2391f13ee2fd8b9038fde4d55b66a0fe4003149abeb24e0cf08146a107c",
+      "created_at": "2026-11-22T03:34:16Z",
+      "updated_at": "2026-11-22T03:34:16Z",
+      "expires_at": "2026-12-06T03:34:14Z",
+      "workflow_run": {
+        "id": 44980872011,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "268505117e48da91a29d602aecbe8229a452e107"
+      }
+    }
+  ],
+  "result": {
+    "gates": {
+      "train_complete_chords": false
+    },
+    "roles": {
+      "train": {
+        "overall": {
+          "baseline": {
+            "examples": 16384,
+            "true_positive": 43827,
+            "false_positive": 439,
+            "false_negative": 1871,
+            "precision_percent": 99.00826819681019,
+            "recall_percent": 95.9057289159263,
+            "exact_set_percent": 89.093017578125,
+            "exact_sets": 14597,
+            "expected_pitches": 45698
+          },
+          "current": {
+            "examples": 16384,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 45698,
+            "precision_percent": 0.0,
+            "recall_percent": 0.0,
+            "exact_set_percent": 5.0048828125,
+            "exact_sets": 820,
+            "expected_pitches": 45698
+          },
+          "delta": {
+            "true_positive": -43827,
+            "false_positive": -439,
+            "false_negative": 43827,
+            "exact_sets": -13777,
+            "precision_percent": -99.00826819681019,
+            "exact_set_percent": -84.088134765625
+          },
+          "recall_change_pp": -95.9057289159263
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "baseline": {
+              "examples": 820,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 820,
+              "expected_pitches": 0
+            },
+            "current": {
+              "examples": 820,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "precision_percent": 0.0,
+              "recall_percent": null,
+              "exact_set_percent": 100.0,
+              "exact_sets": 820,
+              "expected_pitches": 0
+            },
+            "delta": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 0,
+              "exact_sets": 0,
+              "precision_percent": 0.0,
+              "exact_set_percent": 0.0
+            },
+            "recall_change_pp": null
+          },
+          "1": {
+            "baseline": {
+              "examples": 3132,
+              "true_positive": 3127,
+              "false_positive": 13,
+              "false_negative": 5,
+              "precision_percent": 99.5859872611465,
+              "recall_percent": 99.84035759897829,
+              "exact_set_percent": 99.45721583652617,
+              "exact_sets": 3115,
+              "expected_pitches": 3132
+            },
+            "current": {
+              "examples": 3132,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 3132,
+              "precision_percent": 0.0,
+              "recall_percent": 0.0,
+              "exact_set_percent": 0.0,
+              "exact_sets": 0,
+              "expected_pitches": 3132
+            },
+            "delta": {
+              "true_positive": -3127,
+              "false_positive": -13,
+              "false_negative": 3127,
+              "exact_sets": -3115,
+              "precision_percent": -99.5859872611465,
+              "exact_set_percent": -99.45721583652617
+            },
+            "recall_change_pp": -99.84035759897829
+          },
+          "2": {
+            "baseline": {
+              "examples": 3220,
+              "true_positive": 6347,
+              "false_positive": 55,
+              "false_negative": 93,
+              "precision_percent": 99.14089347079037,
+              "recall_percent": 98.55590062111801,
+              "exact_set_percent": 95.77639751552796,
+              "exact_sets": 3084,
+              "expected_pitches": 6440
+            },
+            "current": {
+              "examples": 3220,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 6440,
+              "precision_percent": 0.0,
+              "recall_percent": 0.0,
+              "exact_set_percent": 0.0,
+              "exact_sets": 0,
+              "expected_pitches": 6440
+            },
+            "delta": {
+              "true_positive": -6347,
+              "false_positive": -55,
+              "false_negative": 6347,
+              "exact_sets": -3084,
+              "precision_percent": -99.14089347079037,
+              "exact_set_percent": -95.77639751552796
+            },
+            "recall_change_pp": -98.55590062111801
+          },
+          "3": {
+            "baseline": {
+              "examples": 3251,
+              "true_positive": 9498,
+              "false_positive": 102,
+              "false_negative": 255,
+              "precision_percent": 98.9375,
+              "recall_percent": 97.38541987080899,
+              "exact_set_percent": 90.86434943094433,
+              "exact_sets": 2954,
+              "expected_pitches": 9753
+            },
+            "current": {
+              "examples": 3251,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 9753,
+              "precision_percent": 0.0,
+              "recall_percent": 0.0,
+              "exact_set_percent": 0.0,
+              "exact_sets": 0,
+              "expected_pitches": 9753
+            },
+            "delta": {
+              "true_positive": -9498,
+              "false_positive": -102,
+              "false_negative": 9498,
+              "exact_sets": -2954,
+              "precision_percent": -98.9375,
+              "exact_set_percent": -90.86434943094433
+            },
+            "recall_change_pp": -97.38541987080899
+          },
+          "4": {
+            "baseline": {
+              "examples": 3432,
+              "true_positive": 13100,
+              "false_positive": 138,
+              "false_negative": 628,
+              "precision_percent": 98.95754645716876,
+              "recall_percent": 95.42540792540792,
+              "exact_set_percent": 81.75990675990677,
+              "exact_sets": 2806,
+              "expected_pitches": 13728
+            },
+            "current": {
+              "examples": 3432,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 13728,
+              "precision_percent": 0.0,
+              "recall_percent": 0.0,
+              "exact_set_percent": 0.0,
+              "exact_sets": 0,
+              "expected_pitches": 13728
+            },
+            "delta": {
+              "true_positive": -13100,
+              "false_positive": -138,
+              "false_negative": 13100,
+              "exact_sets": -2806,
+              "precision_percent": -98.95754645716876,
+              "exact_set_percent": -81.75990675990677
+            },
+            "recall_change_pp": -95.42540792540792
+          },
+          "5": {
+            "baseline": {
+              "examples": 2529,
+              "true_positive": 11755,
+              "false_positive": 131,
+              "false_negative": 890,
+              "precision_percent": 98.89786303213864,
+              "recall_percent": 92.9616449189403,
+              "exact_set_percent": 71.88612099644128,
+              "exact_sets": 1818,
+              "expected_pitches": 12645
+            },
+            "current": {
+              "examples": 2529,
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 12645,
+              "precision_percent": 0.0,
+              "recall_percent": 0.0,
+              "exact_set_percent": 0.0,
+              "exact_sets": 0,
+              "expected_pitches": 12645
+            },
+            "delta": {
+              "true_positive": -11755,
+              "false_positive": -131,
+              "false_negative": 11755,
+              "exact_sets": -1818,
+              "precision_percent": -98.89786303213864,
+              "exact_set_percent": -71.88612099644128
+            },
+            "recall_change_pp": -92.9616449189403
+          }
+        }
+      }
+    },
+    "source_roles": {
+      "counts": {
+        "train": 200,
+        "calibration": 200,
+        "test": 155
+      },
+      "cross_role_original_overlap": false,
+      "all_original_labels_retained": true,
+      "source_consistency_metadata_used_to_filter": false,
+      "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+    },
+    "cutoff_baseline": {
+      "cutoff": 0.5343895554542542,
+      "feasible": true,
+      "true_positive": 43827,
+      "false_positive": 439,
+      "training_only": true,
+      "selection": "maximum train TP at >=99% precision; stricter tie"
+    },
+    "cutoff_current": {
+      "cutoff": 1.0000000000000002,
+      "feasible": false,
+      "true_positive": 0,
+      "false_positive": 0,
+      "training_only": true
+    },
+    "frozen_model": {
+      "sha256": "d99e4e55ce157299edfd54c76da0b1aabf8bd8a20f2f7b0e16dd9a5d02a62311",
+      "cutoff": 1.0000000000000002,
+      "persisted_before_held_out_scoring": true,
+      "training_fits": 1
+    },
+    "continuous_replay": {
+      "executed": false,
+      "reason": "Training and both held-out complete-chord gates must pass first."
+    },
+    "fit": {
+      "seconds": 206.71896595400003,
+      "epochs": 80,
+      "mixtures": 16384,
+      "pooled_candidate_rows": 868352,
+      "input_note_count": 53,
+      "output_note_count": 53,
+      "normalization_rows": 868352,
+      "features_per_candidate": 62,
+      "shared_binary_outputs": 1,
+      "parameter_count": 14465,
+      "final_loss": 4668089708544.0,
+      "held_out_used": false,
+      "fits": 1,
+      "objective": "mean_bce_plus_setwise_logsumexp_v1",
+      "training_grid_consistency": {
+        "name": "one_row_training_grid_consistency_v1",
+        "shift_rows": 1,
+        "input_note_count": 53,
+        "overlap_rows": 52,
+        "fill": "zero after training-only normalization; no wrap",
+        "teacher": "original logits detached; same network, no separate teacher",
+        "loss": "mean Huber over batch and overlapping rows",
+        "delta": 1.0,
+        "weight": 1.0,
+        "optimizer_steps_changed": false,
+        "supervised_targets_changed": false,
+        "inference_changed": false
+      },
+      "optimizer_steps": 10240,
+      "training_forwards_per_step": 2,
+      "inference_forwards_per_batch": 1
+    },
+    "optimization_observation": {
+      "epoch_22_total_loss": 1.2245650091208518,
+      "epoch_23_total_loss": 234.72507148236036,
+      "final_supervised_loss": 1667754949832.0,
+      "final_consistency_loss": 3000334753792.0,
+      "cause_isolated": false,
+      "zero_outputs_are_infeasible_cutoff_fallback": true,
+      "held_out_scoring_executed": false
+    }
+  }
 }
