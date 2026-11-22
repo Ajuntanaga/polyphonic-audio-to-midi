@@ -20,7 +20,7 @@ from typing import Iterator
 
 PROJECT = Path(__file__).absolute().parent.parent
 BWRAP = "/usr/bin/bwrap"
-RG_HOST = "/home/ajuntanaga/.local/share/researchos/tools/rg/15.1.0/rg"
+RG_HOST = str(Path.home() / ".local/share/researchos/tools/rg/15.1.0/rg")
 RG = "/rg"
 
 
@@ -108,7 +108,7 @@ def search_options(args: argparse.Namespace) -> list[str]:
     options = [
         "--no-config", "--no-follow", "--one-file-system", "--hidden",
         "--threads", "1", "--max-depth", str(args.depth),
-        "--max-filesize", "2M", "--color", "never",
+        "--color", "never",
     ]
     for glob in args.glob:
         options += ["--glob", glob]
@@ -121,7 +121,8 @@ def search_options(args: argparse.Namespace) -> list[str]:
     if args.mode == "files":
         options += ["--files", "."]
     else:
-        options += ["--line-number", "--with-filename", "--max-count", "200",
+        options += ["--max-filesize", "2M",
+                    "--line-number", "--with-filename", "--max-count", "200",
                     "-e", args.pattern, "."]
     return options
 

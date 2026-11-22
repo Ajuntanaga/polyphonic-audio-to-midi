@@ -10,7 +10,7 @@ from tools import project_search as guard
 class ProjectSearchTests(unittest.TestCase):
     def test_rejects_broad_and_protected_roots_before_filesystem_access(self):
         project = Path("/safe/project")
-        for requested in ("/", "/home", "/home/ajuntanaga", "../sibling",
+        for requested in ("/", "/home", "/home/test-user", "../sibling",
                           "/safe/project-other", "Windows.old", " DO NOT ENTER. ",
                           "a/Do Not Enter/b", "a/../b"):
             with self.subTest(root=requested), mock.patch.object(guard.os, "open") as opened:
