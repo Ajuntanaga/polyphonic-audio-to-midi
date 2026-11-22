@@ -1,0 +1,77 @@
+{
+  "schema": "m3_github_job_checkpoint_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-onnx-numerics.yml",
+  "source_commit": "58d995eb84f1943641e86c22810555290cd6ad4b",
+  "worker_commit": "84d5e7e7a1d4748fa4b1fc3159ed813dd6230556",
+  "status": "completed",
+  "final": true,
+  "dispatches": 1,
+  "specification": "docs/recovery/basic-pitch-onnx-numerics-20261122.json",
+  "scope": "Synthetic-only numerical localization; no recording, fit, gate or installed change",
+  "prepared_at": "2026-11-22T13:01:20.980697+00:00",
+  "dispatch_attempt_at": "2026-11-22T13:01:31.048238+00:00",
+  "dispatch_command": [
+    "gh",
+    "workflow",
+    "run",
+    "basic-pitch-onnx-numerics.yml",
+    "--repo",
+    "Ajuntanaga/m3-offload",
+    "--ref",
+    "main",
+    "-f",
+    "source_sha=58d995eb84f1943641e86c22810555290cd6ad4b"
+  ],
+  "dispatch_output": "build/recovery/onnx-numerics-dispatch-20261122.txt",
+  "dispatch_exit_code": 1,
+  "dispatch_reconciliation": {
+    "observed_at": "2026-11-22T13:04:04.281145+00:00",
+    "result": "No accepted workflow run: successful workflow list and workflow-specific API both report zero runs after the connection failure",
+    "capture": "build/recovery/onnx-numerics-dispatch-reconcile-20261122.txt",
+    "accepted_runs": 0
+  },
+  "submission_attempts": 2,
+  "second_submission": {
+    "at": "2026-11-22T13:04:12.057989+00:00",
+    "exit_code": 0,
+    "output": "build/recovery/onnx-numerics-dispatch-confirmed-20261122.txt"
+  },
+  "run_id": 45025527360,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45025527360",
+  "output_directory": "build/github-results/basic-pitch-onnx-numerics-45025527360",
+  "report_artifact": "m3-basic-pitch-onnx-numerics-report-45025527360-1",
+  "evidence_artifact": "m3-basic-pitch-onnx-numerics-evidence-45025527360-1",
+  "conclusion": "failure",
+  "collected": true,
+  "report": "build/github-results/basic-pitch-onnx-numerics-45025527360/artifact/basic-pitch-onnx-numerics-result/report/report.json",
+  "report_sha256": "f333f550a35a9b1fa1c9f785af37cf0e11e71723097ad3ab095b2f623a1e8def",
+  "collection": {
+    "artifact_id": 14755323821,
+    "artifact_name": "m3-basic-pitch-onnx-numerics-report-45025527360-1",
+    "server_digest": "sha256:9f6350cfa6a9f84b84028beae01d553829466e312e1e32fdddb3f12574bf181a",
+    "download_sha256": "9f6350cfa6a9f84b84028beae01d553829466e312e1e32fdddb3f12574bf181a",
+    "download_bytes": 10478,
+    "collected_at": "2026-11-22T13:08:12.408116+00:00",
+    "destination": "build/github-results/basic-pitch-onnx-numerics-45025527360/artifact",
+    "files": [
+      "basic-pitch-onnx-numerics-logs/conversion.log",
+      "basic-pitch-onnx-numerics-logs/dependencies.log",
+      "basic-pitch-onnx-numerics-result/report/report.json",
+      "basic-pitch-onnx-numerics-logs/environment.txt",
+      "basic-pitch-onnx-numerics-logs/source-sha.txt",
+      "basic-pitch-onnx-numerics-logs/tests.log"
+    ],
+    "bulk_downloaded": false
+  },
+  "finished_at": "2026-11-22T13:05:09.582921+00:00",
+  "result": {
+    "state": "error",
+    "error": "ValueError('Empty or nonfinite intermediate tensor')",
+    "remote_tests_passed": 8,
+    "cases_saved": 0,
+    "interpretation": "Diagnostic recorder aborted on an empty or nonfinite intermediate; no backend localization result saved",
+    "installed_output_changed": false
+  }
+}

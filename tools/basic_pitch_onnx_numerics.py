@@ -26,8 +26,27 @@ def array_difference(left, right):
                   reference_dtype=str(a.dtype), converted_dtype=str(b.dtype))
     if a.shape != b.shape:
         return dict(result, comparable=False, reason='Different tensor layouts/shapes; no inferred permutation')
-    if not np.isfinite(a).all() or not np.isfinite(b).all() or not a.size:
-        raise ValueError('Empty or nonfinite intermediate tensor')
+    if not a.size:
+        return dict(result, comparable=False, reason='Empty intermediate tensor')
+    if not np.isfinite(a).all() or not np.isfinite(b).all():
+        # A masked division can contain NaNs internally even when its selected
+        # output is finite. Retain the observation; never call it a finite
+        # parity pass or abort before recording the final-output comparisons.
+        def counts(value):
+            return dict(finite=int(np.isfinite(value).sum()),
+                        nan=int(np.isnan(value).sum()),
+                        positive_infinity=int(np.isposinf(value).sum()),
+                        negative_infinity=int(np.isneginf(value).sum()))
+        common = np.isfinite(a) & np.isfinite(b)
+        same_kind = ((np.isnan(a) & np.isnan(b))
+                     | (np.isposinf(a) & np.isposinf(b))
+                     | (np.isneginf(a) & np.isneginf(b)))
+        finite_delta = np.abs(a[common].astype(np.float64) - b[common].astype(np.float64))
+        return dict(result, comparable=False, reason='Nonfinite intermediate tensor',
+                    reference_nonfinite=counts(a), converted_nonfinite=counts(b),
+                    nonfinite_kind_mismatches=int((~common & ~same_kind).sum()),
+                    common_finite_elements=int(common.sum()),
+                    common_finite_max_absolute=float(finite_delta.max()) if finite_delta.size else None)
     delta = np.abs(a.astype(np.float64) - b.astype(np.float64))
     index = int(delta.argmax())
     return dict(result, comparable=True, max_absolute=float(delta.flat[index]),
@@ -135,6 +154,8 @@ def probe(spec, model_root, output, report, report_path):
         row = dict(callable_vs_frozen=compare_outputs(live, fixed, spec['maximum_absolute']),
                    frozen_vs_observed=compare_outputs(fixed, dict(zip(('note', 'onset'),
                        [tf_observed[name] for name in outputs])), spec['maximum_absolute']), backends={})
+        report['cases'][case] = row
+        save_report(report_path, report)
         all_values = {}
         for name, runtime in sessions.items():
             all_values[name] = dict(zip([v.name for v in runtime.get_outputs()],
@@ -148,7 +169,7 @@ def probe(spec, model_root, output, report, report_path):
                     key: array_difference(base[value], values[value]) for key, value in zip(('note', 'onset'), outputs)}
                 row['backends'][name]['intermediates'] = [dict(name=r['name'], op=r['op'],
                     **array_difference(tf_observed[r['name']], values[r['name']])) for r in selected]
-        report['cases'][case] = row
+            save_report(report_path, report)
         # Retain the bounded intermediate values remotely so a causal follow-up
         # can use the exact observation without repeating model execution.
         saved = {'tensorflow/' + name: value for name, value in tf_observed.items()}

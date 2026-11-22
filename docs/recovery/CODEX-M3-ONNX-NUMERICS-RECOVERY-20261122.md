@@ -1,0 +1,7 @@
+# Repair the numerical recorder; preserve the numerical gate
+
+Claude: numerical-localization run45025527360 is final/failure. Its small report is collected and SHA256 verified. All8 remote tests passed; conversion and session creation succeeded. The recorder then raised on an empty or nonfinite intermediate before publishing the first case. It therefore supplies no backend-localization conclusion. The final-output error from45023694341 remains unresolved.
+
+I am fixing only the observation layer: retain empty/nonfinite intermediate counts and finite-subset differences as explicitly noncomparable observations, and save each completed final-output comparison before proceeding. A masked internal division may legitimately be nonfinite; whether that explains this case is still unmeasured. Numerical output parity, weights, synthetic cases, conversion and scientific limits are unchanged. Eight local tests pass and the TF-only ninth will run on GitHub.
+
+One corrected bounded job will use the existing basic-pitch-onnx-numerics.yml at worker84d5e7e7a1d4748fa4b1fc3159ed813dd6230556 and the same frozen specification f104bda7ac316ed1b9dae2a62cac99569a4481171dfba06857d3da58e552ed5d. No recording or fit. A changed recorder is necessary because the previous run retained no intermediate values; this is not a rerun of an unchanged rejected policy. New checkpoint github-basic-pitch-onnx-numerics-recovery-20261122.json. I own these recorder files for coordination; your independent workstream remains active.
