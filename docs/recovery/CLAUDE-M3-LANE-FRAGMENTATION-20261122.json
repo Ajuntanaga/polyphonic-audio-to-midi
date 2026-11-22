@@ -1,0 +1,166 @@
+{
+ "horizon": 10681922,
+ "current_runs": 528,
+ "current_short_share_50ms": 0.4053,
+ "current_short_share_100ms": 0.4413,
+ "lane_spans_runs": {
+  "inf": {
+   "runs": 278,
+   "short_share_50ms": 0.795
+  },
+  "1.0": {
+   "runs": 363,
+   "short_share_50ms": 0.8182
+  },
+  "0.5": {
+   "runs": 568,
+   "short_share_50ms": 0.8187
+  },
+  "0.25": {
+   "runs": 1025,
+   "short_share_50ms": 0.8644
+  },
+  "supported c=0.5 D=220 (lane only)": {
+   "runs": 387,
+   "short_share_50ms": 0.7726
+  }
+ },
+ "variants": {
+  "a: D220 supported c=0.5, lane hold 0 ms": {
+   "coverage_pct": 48.797,
+   "precision_pct": 62.59,
+   "wrong_delta": -1495713,
+   "gap_delta": -70981,
+   "exact_set_delta": 338690,
+   "all_expected_delta": 547849,
+   "false_change_pct_of_current": -13.71,
+   "labels_losing_present_or_longest": 6,
+   "runs": 843,
+   "runs_vs_current_pct": 59.66,
+   "runs_under_50ms": 461,
+   "runs_under_100ms": 498,
+   "short50_share": 0.5469,
+   "short100_share": 0.5907,
+   "no_pitch_safety_regression": false
+  },
+  "a: D220 supported c=0.5, lane hold 30 ms": {
+   "coverage_pct": 49.8921,
+   "precision_pct": 62.49,
+   "wrong_delta": -1370501,
+   "gap_delta": 68934,
+   "exact_set_delta": 380290,
+   "all_expected_delta": 609865,
+   "false_change_pct_of_current": -11.39,
+   "labels_losing_present_or_longest": 6,
+   "runs": 619,
+   "runs_vs_current_pct": 17.23,
+   "runs_under_50ms": 221,
+   "runs_under_100ms": 262,
+   "short50_share": 0.357,
+   "short100_share": 0.4233,
+   "no_pitch_safety_regression": false
+  },
+  "a: D220 supported c=0.5, lane hold 60 ms": {
+   "coverage_pct": 50.2947,
+   "precision_pct": 62.16,
+   "wrong_delta": -1281697,
+   "gap_delta": 208389,
+   "exact_set_delta": 405250,
+   "all_expected_delta": 642890,
+   "false_change_pct_of_current": -9.39,
+   "labels_losing_present_or_longest": 6,
+   "runs": 596,
+   "runs_vs_current_pct": 12.88,
+   "runs_under_50ms": 169,
+   "runs_under_100ms": 233,
+   "short50_share": 0.2836,
+   "short100_share": 0.3909,
+   "no_pitch_safety_regression": false
+  },
+  "a: D220 supported c=0.5, lane hold 120 ms": {
+   "coverage_pct": 50.9969,
+   "precision_pct": 61.58,
+   "wrong_delta": -980594,
+   "gap_delta": 312175,
+   "exact_set_delta": 444675,
+   "all_expected_delta": 695689,
+   "false_change_pct_of_current": -5.85,
+   "labels_losing_present_or_longest": 6,
+   "runs": 583,
+   "runs_vs_current_pct": 10.42,
+   "runs_under_50ms": 169,
+   "runs_under_100ms": 193,
+   "short50_share": 0.2899,
+   "short100_share": 0.331,
+   "no_pitch_safety_regression": false
+  },
+  "b: D50 supported c=0.25, lane hold 0 ms": {
+   "coverage_pct": 51.2595,
+   "precision_pct": 71.11,
+   "wrong_delta": -4143848,
+   "gap_delta": -243993,
+   "exact_set_delta": 582844,
+   "all_expected_delta": 757229,
+   "false_change_pct_of_current": -38.39,
+   "labels_losing_present_or_longest": 28,
+   "runs": 1057,
+   "runs_vs_current_pct": 100.19,
+   "runs_under_50ms": 590,
+   "runs_under_100ms": 693,
+   "short50_share": 0.5582,
+   "short100_share": 0.6556,
+   "no_pitch_safety_regression": false
+  },
+  "b: D50 supported c=0.25, lane hold 30 ms": {
+   "coverage_pct": 52.7071,
+   "precision_pct": 70.65,
+   "wrong_delta": -3969651,
+   "gap_delta": -55065,
+   "exact_set_delta": 653072,
+   "all_expected_delta": 833203,
+   "false_change_pct_of_current": -35.21,
+   "labels_losing_present_or_longest": 28,
+   "runs": 746,
+   "runs_vs_current_pct": 41.29,
+   "runs_under_50ms": 249,
+   "runs_under_100ms": 358,
+   "short50_share": 0.3338,
+   "short100_share": 0.4799,
+   "no_pitch_safety_regression": false
+  },
+  "b: D50 supported c=0.25, lane hold 60 ms": {
+   "coverage_pct": 53.1851,
+   "precision_pct": 69.97,
+   "wrong_delta": -3842561,
+   "gap_delta": 130812,
+   "exact_set_delta": 684439,
+   "all_expected_delta": 871660,
+   "false_change_pct_of_current": -32.47,
+   "labels_losing_present_or_longest": 28,
+   "runs": 701,
+   "runs_vs_current_pct": 32.77,
+   "runs_under_50ms": 175,
+   "runs_under_100ms": 313,
+   "short50_share": 0.2496,
+   "short100_share": 0.4465,
+   "no_pitch_safety_regression": false
+  },
+  "b: D50 supported c=0.25, lane hold 120 ms": {
+   "coverage_pct": 53.8581,
+   "precision_pct": 68.83,
+   "wrong_delta": -3481738,
+   "gap_delta": 299855,
+   "exact_set_delta": 729550,
+   "all_expected_delta": 928355,
+   "false_change_pct_of_current": -27.84,
+   "labels_losing_present_or_longest": 28,
+   "runs": 664,
+   "runs_vs_current_pct": 25.76,
+   "runs_under_50ms": 175,
+   "runs_under_100ms": 262,
+   "short50_share": 0.2636,
+   "short100_share": 0.3946,
+   "no_pitch_safety_regression": false
+  }
+ }
+}

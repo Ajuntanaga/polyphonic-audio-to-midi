@@ -133,6 +133,30 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
       stronger lane (+48% to +92% at D = 220, supported), which would be extra note-ons in a real emitter.
     - **Not replicated, and probably not replicable here.** The trace exists for ordinary only, so this combination cannot be scored on
       extended-middle. There, an unsupported ≥ 60 lane added only false; whether a supported lane stays clean is unknown.
+11. **The lane's extra runs are mostly flicker, and a short forward hold of the lane merges most of it, at the price of gap output
+    (`CLAUDE-M3-LANE-FRAGMENTATION-20261122.py`, ordinary only, saved trace).** CURRENT has 528 runs. The supported lane
+    spans at c = 0.5, D = 220 are 387 runs of which 77.3% are shorter than 50 ms (CURRENT's own runs: 40.5% shorter than 50 ms, so short
+    runs are not by themselves spurious on this recording of short struck notes). Holding only the *lane* forward h ms (never CURRENT's
+    own spans), grid h ∈ {0, 30, 60, 120} ms fixed before the run:
+
+    | variant | h = 0 | 30 ms | 60 ms | 120 ms |
+    |---|---|---|---|---|
+    | (a) D = 220, c = 0.5: runs vs CURRENT | +59.7% | +17.2% | +12.9% | +10.4% |
+    | (a) coverage / precision | 48.80 / 62.59% | 49.89 / 62.49% | 50.30 / 62.16% | 51.00 / 61.58% |
+    | (a) wrong Δ / gap Δ | −1,495,713 / −70,981 | −1,370,501 / **+68,934** | −1,281,697 / +208,389 | −980,594 / +312,175 |
+    | (a) exact-set Δ | +338,690 | +380,290 | +405,250 | +444,675 |
+    | (b) D = 50, c = 0.25: runs vs CURRENT | +100.2% | +41.3% | +32.8% | +25.8% |
+    | (b) coverage / precision | 51.26 / 71.11% | 52.71 / 70.65% | 53.19 / 69.97% | 53.86 / 68.83% |
+    | (b) wrong Δ / gap Δ | −4,143,848 / −243,993 | −3,969,651 / −55,065 | −3,842,561 / +130,812 | −3,481,738 / +299,855 |
+    | (b) false vs CURRENT | −38.4% | −35.2% | −32.5% | −27.8% |
+
+    A 30 ms hold removes most of the extra runs (a: +59.7% → +17.2%; b: +100% → +41%) and raises coverage and exact-set, but it
+    extends lane notes past their ends, so the gap-voice clause (which counted −70,981 at h = 0 for variant a) turns positive at 30 ms
+    for variant (a) and at 60 ms for variant (b); variant (b) at 30 ms still passes the extras clauses (wrong −3.97M, gap −55k) with
+    runs +41%. Labels losing stay 6 (a) and 28 (b) at every hold. It is the same trade as the support hold, now between note count and
+    gap output.
+    - Predictions H4 (gap and wrong both still ≤ 0 at h = 120 for variant a) and H6 (coverage rises less than 1.5 pp from h = 0 to 120)
+      failed; H0–H3, H5 and H7 passed.
 
 ## Predictions
 
@@ -194,6 +218,14 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
 | C6 | supported rescue c = 0.25, D = 220 reaches coverage of at least 47.0% | **pass** (51.93%) |
 | C7 | supported rescue c = 0.25, D = 220 has higher precision than the unsupported lane | **pass** (63.50% vs 61.64%) |
 | C8 | at D = 50 no rescue lane brings label losses below 20 | **pass** (28 at every lane) |
+| H0 | h = 0 reproduces the combined result (a: 48.797%, +59.66%; b: 51.260%, +100.19%) | **pass** |
+| H1 | output runs fall as the lane hold h grows (both variants) | **pass** (a 843, 619, 596, 583; b 1,057, 746, 701, 664) |
+| H2 | at h = 120 variant (a) has runs below +30% over CURRENT | **pass** (+10.4%) |
+| H3 | precision falls as h grows (both variants) | **pass** (a 62.59 → 61.58; b 71.11 → 68.83) |
+| H4 | at h = 120 variant (a) keeps gap Δ ≤ 0 and wrong Δ ≤ 0 | **FAILED** (wrong −980,594 but gap **+312,175**) |
+| H5 | the lane's own short-run (< 50 ms) share exceeds CURRENT's | **pass** (77.3% vs 40.5%) |
+| H6 | coverage rises less than 1.5 pp from h = 0 to 120 | **FAILED** (+2.20 pp for a, +2.60 pp for b) |
+| H7 | labels losing present or longest are unchanged by h | **pass** (6 and 28) |
 
 ## 1. The support filter (S0–S6)
 
@@ -314,7 +346,8 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 - The native confirmation is read from a saved diagnostic trace at the 512-sample callback grid (`confirmation_spans`); a real gate
   would change which spans exist (voice slots, retrigger, release), and a changed CURRENT would change what the filter sees.
 - Intersection and the forward hold are span arithmetic. The extra runs are not scored as note-ons; fragmentation (runs +39% to +227%
-  at the strongest filter) is real MIDI cost I have not priced.
+  at the strongest filter) is real MIDI cost. Answer 11 shows what a short lane hold does to the run count, but no variant here is
+  scored as note-ons (merge rules, minimum note length and same-pitch retrigger would change the count), so it is still unpriced as MIDI.
 - The rescue-lane spans are scored but not saved. The filter-plus-rescue combination (answer 10) was run on ordinary only, because the
   rescue spans need the v5 trace and no trace exists for extended-middle; the lane grid (c) and the hold grid were fixed before the
   run, but the filter and lane were each designed on ordinary's numbers, so it is in-sample.
@@ -339,7 +372,9 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | consensus `report.json` / `ordinary-consensus-spans.json.gz` | `6a80b45e7f7b` / `0d0dc2973a0d` |
 | `ordinary-bridge-events.json.gz` (arm A) | `acd64c358819` |
 | `CLAUDE-M3-SUPPORT-RESCUE-COMBINED-20261122.py` / `.json` | `d1dbda43ed38` / `9424aa78759a` |
-| `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier and rescue-combined scripts only) | `cd905b2f5c2d` |
+| `CLAUDE-M3-LANE-FRAGMENTATION-20261122.py` / `.json` | `33243af5d6e2` / `82ce270fb09c` |
+| `build/recovery/m3-rescue-spans-20261122/ordinary-rescue-spans.json.gz` (cache of the four rescue span sets, 14 KB, not committed) | `d185f8a328ed` |
+| `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier, rescue-combined and fragmentation scripts only) | `cd905b2f5c2d` |
 
 The filter, dilation, losers and native-only scripts import `CLAUDE-M3-UNION-FRONTIER-20261122.py` and
 `CLAUDE-M3-CONSENSUS-EXTRAS-20261122.py` for helpers (committed earlier).
