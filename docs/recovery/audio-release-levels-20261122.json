@@ -1,0 +1,45 @@
+{
+  "schema": "m3_audio_release_levels_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "audio-release-levels.yml",
+  "proposal": "docs/recovery/CLAUDE-M3-AUDIO-RELEASE-PROPOSAL-20261122.md",
+  "input_release": {
+    "release": "corpus-20261108",
+    "asset": "recovery-inputs.tar.gz",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "ends": {
+    "path": "docs/recovery/CLAUDE-M3-AUDIO-RELEASE-ENDS-20261122.json",
+    "sha256": "3465031b7b6c90da94d658c933116b161550e87648330d70fc8d412b96df3784"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a"
+    }
+  },
+  "measurement": {
+    "sample_rate": 96000,
+    "window_ms": 80,
+    "hop_ms": 10,
+    "harmonics": 4,
+    "max_harmonic_hz": 2000.0,
+    "end_grid": [
+      -20,
+      30
+    ],
+    "start_grid": [
+      -20,
+      20
+    ]
+  },
+  "scope": "Level curves of the labelled pitch around evaluable label ends and starts from the two corpus recordings. CPU numpy and soundfile only; no model, no weights; nothing is scored, promoted or changed."
+}

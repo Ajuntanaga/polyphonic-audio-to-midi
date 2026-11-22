@@ -1,10 +1,20 @@
 """Checks of the narrow-band level measurement used by the audio-level read of label ends (pure numpy, synthetic signals only)."""
+import hashlib
+import json
 import math
+import os
+from pathlib import Path
+import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 
 from tools import audio_release_levels as lv
+from tools import portable_audio_release_levels as runner
+
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = ROOT / 'docs' / 'recovery' / 'audio-release-levels-20261122.json'
 
 RATE = lv.SOURCE_RATE
 
@@ -95,6 +105,46 @@ class LevelMeasurement(unittest.TestCase):
         self.assertAlmostEqual(starts[lv.grid_index(lv.START_GRID, 0)], lv.window_levels(x, midi, 40000, 1, 1)[0], places=9)
         early = lv.end_curve(x, midi, 5000)                       # grid starts before the signal: early entries are NaN
         self.assertTrue(np.isnan(early[0]) and np.isfinite(early[-1]))
+
+
+class Runner(unittest.TestCase):
+    def test_recording_access_needs_github_actions(self):
+        with mock.patch.dict(os.environ, {'GITHUB_ACTIONS': 'false'}):
+            with self.assertRaises(RuntimeError):
+                runner.remote_only()
+            with tempfile.TemporaryDirectory() as directory:
+                with self.assertRaises(RuntimeError):
+                    runner.run(SPEC, Path(directory), Path(directory) / 'out')
+                self.assertFalse((Path(directory) / 'out').exists())          # nothing is created before the guard
+
+    def test_specification_matches_the_implementation_and_the_pinned_ends(self):
+        spec = json.loads(SPEC.read_text())
+        self.assertEqual(spec['measurement'], runner.measurement())
+        ends_path = ROOT / spec['ends']['path']
+        self.assertEqual(hashlib.sha256(ends_path.read_bytes()).hexdigest(), spec['ends']['sha256'])
+        ends = json.loads(ends_path.read_text())
+        self.assertEqual(set(ends['corpora']), set(spec['datasets']))
+        for name, block in ends['corpora'].items():
+            rows = block['ends']
+            self.assertEqual([e['idx'] for e in rows], list(range(len(rows))))
+            self.assertTrue(all(0 <= e['start'] < e['end'] < spec['datasets'][name]['sample_count'] for e in rows))
+            self.assertTrue(all(e['group'] in ('both', 'adapted_only', 'original_only', 'neither') for e in rows))
+            self.assertTrue(all(e['start'] <= e['end'] <= e['window'] for e in rows))
+        self.assertEqual(len(ends['corpora']['ordinary']['ends']), 428)
+        self.assertEqual(len(ends['corpora']['extended-middle']['ends']), 6)
+
+    def test_curves_follow_the_ends_in_order(self):
+        x = tone(60, 2.0, amplitude=0.4)
+        ends = [dict(idx=0, midi_note=60, start=30000, end=90000), dict(idx=1, midi_note=60, start=100, end=7000)]
+        rows = runner.curves_for(x, ends)
+        self.assertEqual([r['idx'] for r in rows], [0, 1])
+        self.assertEqual(len(rows[0]['end_levels']), 51)
+        self.assertEqual(len(rows[0]['start_levels']), 41)
+        self.assertIsNone(rows[1]['end_levels'][0])                     # window start before the recording
+        self.assertAlmostEqual(rows[0]['end_levels'][20], 20 * math.log10(0.4), delta=0.3)
+        with self.assertRaises(ValueError):
+            runner.curves_for(x[:50000], ends[:1])                       # an end beyond the signal
+        json.dumps(rows, allow_nan=False)                                # nothing non-finite reaches the report
 
 
 if __name__ == '__main__':
