@@ -1,0 +1,162 @@
+{
+  "schema": "m3_basic_pitch_adaptation_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-adaptation.yml",
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    },
+    {
+      "release": "corpus-20261108",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    }
+  ],
+  "references": {
+    "sources": {
+      "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+      "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+    },
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "settings": {
+    "model_rate": 22050,
+    "input_samples": 43844,
+    "frames": 172,
+    "frame_hop": 256,
+    "first_note": 21,
+    "notes": 88,
+    "source_rate": 96000,
+    "resample_up": 147,
+    "resample_down": 640,
+    "train_examples": 4096,
+    "calibration_examples": 1024,
+    "test_examples": 1024,
+    "train_seed": 2026112201,
+    "calibration_seed": 2026112202,
+    "test_seed": 2026112203,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "edge_taper_samples": 110,
+    "silence_every": 20,
+    "max_components": 5,
+    "cutoff": 0.3,
+    "batch_size": 4,
+    "epochs": 2,
+    "learning_rate": 0.0001,
+    "clip_global_norm": 1.0,
+    "optimizer": "Adam",
+    "beta_1": 0.9,
+    "beta_2": 0.999,
+    "epsilon": 1e-07,
+    "shuffle_seed": 2026112204
+  },
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "model": {
+    "upstream_commit": "fa5997af0a8210982619003269994a1be25eddf3",
+    "tensorflow_path": "basic_pitch/saved_models/icassp_2022/nmp",
+    "files": {
+      "basic_pitch/saved_models/icassp_2022/nmp/saved_model.pb": {
+        "bytes": 1084140,
+        "git_blob_sha1": "3a22fc986be8c436987debb7f899a2b0371166b3"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.data-00000-of-00001": {
+        "bytes": 219309,
+        "git_blob_sha1": "a473eb08150b66f7a3a02cdb6dbb84893024b875"
+      },
+      "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.index": {
+        "bytes": 4794,
+        "git_blob_sha1": "dba4ca40bf5d1b64a32a82c5a6ffd6a542650bbd"
+      }
+    }
+  },
+  "protocol": {
+    "dispatches": 1,
+    "fits": 1,
+    "threshold_selection": false,
+    "automatic_retry": false,
+    "early_stopping": false,
+    "installed_change": false,
+    "promotion": false,
+    "training": "Two fixed epochs, batch4, Adam1e-4, all18 trainable variables through the inference graph; batch-normalization statistics fixed; note BCE only, no artificial onset or contour targets.",
+    "data": "All555 takes retained with their original intended labels: pass1 train200, pass2 calibration200, pass3 test155; all roles anchor every take before random mixtures. Source-disjoint intervals, same instrument/session; previously inspected evidence, not a new blind test.",
+    "windows": "Offline Kaiser5 resample147/640 of each complete take, then fixed uniform crop or zero placement, 110-sample edge taper, RMS normalization and fixed gain grid. No time stretch, pitch shift, exclusion, relabeling or repeated short takes. Nominal frame centers256*i carry the original pitch within the retained crop, including taper.",
+    "onsets": "Original captures start within sustain, so no onset labels are invented. Shared-weight onset changes are measured with the unchanged causal decoder.",
+    "final_model": "Epoch2 only; no selection using calibration/test.",
+    "representation": "Train precision>=99%, calibration and test>=95%; recall>=80%, exact_set>=70% overall and separately for3/4/5 distinct pitches, silence extras0. Distinct pitch frames, not installed note/string matching.",
+    "source_preservation": "Every source occurrence must preserve present frames and longest correct run against unmodified TensorFlow, with all per-occurrence deltas retained.",
+    "continuous": "Always score ordinary and extended-middle after a completed fit, even if a representation gate fails; both unchanged TensorFlow and adapted TensorFlow use the same causal streaming code, raw recording amplitude (no additional input trim), one CPU thread, and all88 output pitches.",
+    "continuous_primary": "Measured FIFO worker completion including model, buffer/resample and decoder; source availability is diagnostic only. Sequential paired measurement includes machine timing noise.",
+    "research_acceptance": "All representation/source gates, plus every existing per-label hold/presence, wrong/gap, exact-set/all-expected nonregression clause against both unmodified TensorFlow and saved CURRENT on both recordings; ordinary gain>=5pp against CURRENT. Does not promote.",
+    "backend": "TensorFlow versus ONNX parity failed the prior synthetic probe. The unchanged TensorFlow model is the adaptation control; backend differences cannot be reported as adaptation gains.",
+    "limitations": "Ordinary reuses source takes and is descriptive, not independent generalization. No strings, equal-pitch unison multiplicity, bend/repluck, native allocation/deadline or DAW/device claim.",
+    "resource": "Existing GitHub CPU route only, no local model/audio execution,105-minute process limit120-minute job, one thread, epochs saved atomically, bulk evidence remote."
+  }
+}
