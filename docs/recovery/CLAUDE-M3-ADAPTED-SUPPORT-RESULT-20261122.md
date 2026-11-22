@@ -57,7 +57,7 @@ Ordinary:
 | unchanged TF | 50 | 39.584 | 67.86 | 57.44% | -605,292 | 28 | 1.02% |
 | adapted TF | 50 | 39.793 | 66.16 | 52.02% | -484,276 | 20 | 0.50% |
 
-- The unchanged TF events on this clock reproduce arm A (596 runs each, the same six D = 220 losers), so the TF/ONNX backend difference does not matter for this use.
+- The unchanged TF events on this clock reproduce arm A's run structure (596 runs each at the same pitches, the same six D = 220 losers), so the TF/ONNX backend difference does not matter for this use. Correction added later: the spans are not sample-identical, the saved arm A is later by a constant 11.09 ms (`CLAUDE-M3-ADAPTED-GAP-EXTRAS-RESULT-20261122.md`); the counts and losers do not depend on it.
 - The adapted events as support lose fewer labels (D = 220: 5 vs 6, label 229, pitch 42, is restored and the other five losers, labels 42, 263, 364, 389, 398 at pitches 60, 33, 42, 33, 34, are lost under all three; D = 50: 20 vs 28, 11 labels fixed (19, 91, 174, 229, 239, 349, 355, 459, 470, 472, 477) and 3 new (179, 200, 202)) and less genuine presence (0.07% vs 0.18%; 0.50% vs 1.02%), and clean a little less (D = 50: 52.0% vs 57.4% of wrong-pitch output).
 - Extended-middle, D = 220: all supports keep 0 labels and 26.0% wrong removed; the adapted support removes less gap voice (-6,013 vs -21,374, precision 78.07 vs 78.53%). At D = 50 the adapted support removes less wrong-pitch output (29.5% vs 32.2%).
 - The same R0 to R7 checks on this clock: R4 fails (label 229 is restored); the other seven pass. Post hoc, not scored as predictions.

@@ -2,7 +2,7 @@
 
 Claude, 2026-11-22. Saved data only: the saved arm A spans shifted by L ms, CURRENT, the native confirmation. No audio, model run, job or native edit; nothing promoted. Plan and eight predictions: `CLAUDE-M3-MODEL-DELAY-PREREGISTRATION-20261122.md` (commit 3134560, written before any shifted span was scored). Script `CLAUDE-M3-MODEL-DELAY-20261122.py` sha256 3bedc5a0f50f, output `.json` 9ed7148c0324. It uses the committed gate-menu evaluator, and L = 0 reproduces the gate menu's numbers exactly.
 
-What L means here: arm A is the saved ONNX offline causal run, and the unchanged-TF events on the zero-compute availability clock reproduce it exactly (596 runs, same six losers; see the adapted-support result). So L is the extra lag a live model adds after the moment its content is available, which is the same quantity as emitted time minus available time in Codex's event files.
+What L means here: arm A is the saved ONNX offline causal run, and the unchanged-TF events on the zero-compute availability clock reproduce its run structure (596 runs at the same pitches, same six losers; see the adapted-support result; the saved arm A is later than the event-file spans by a constant 11.09 ms, measured afterwards in `CLAUDE-M3-ADAPTED-GAP-EXTRAS-RESULT-20261122.md`, so a live lag measured as emitted minus available corresponds to L = lag - 11.09 ms in this table: the budgets quoted in L terms are about 11 ms tighter than the same budgets in per-event lag terms). So L is the extra lag a live model adds after the moment its content is available, which is the same quantity as emitted time minus available time in Codex's event files.
 
 ## Ordinary corpus (CURRENT: coverage 39.99%, precision 54.20%, exact set 0.60% of annotated, 528 runs)
 
