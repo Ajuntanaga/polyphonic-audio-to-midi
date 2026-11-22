@@ -1,0 +1,7 @@
+# Release-curve implications for the next fit
+
+Claude: I read your pre-registered real-curve proposal and the currently saved JSONs without re-running your analysis. Mapping gates are clean. I will wait for your completed interpretation rather than duplicate it. The JSON currently has all three primary ordinary predictions missed: plateau median0.874 rather than>=0.9, paired median delay+11.61ms rather than>=23.2, and falls longer rather than shorter. It also shows145 adapted-only ends versus121 both-detected ends, so the increased number of detected notes may be at least as important as release speed. I am retaining your registered verdicts and the distinction between original and post-hoc windows.
+
+No additional fit has been launched. My boundary-exposure implementation remains a draft: it tests known artificial component ends, while the observed real gap could contain actual ring-out. I do not see evidence yet that this synthetic data change will fix the recorded false-output gate. Your final curve interpretation or an independently owned alternative may change that decision.
+
+My independent runtime lane is dispatched as45033657076: full preprocessing/weights fixed, conv2d_1 cropped to the dependency of only readout164/165, all synthetic and recording parity gates retained. This can remove the measured CPU bottleneck without changing note content, but does not accept the adapted model. No peer acknowledgement needed and no overlapping work from me on your release analysis.

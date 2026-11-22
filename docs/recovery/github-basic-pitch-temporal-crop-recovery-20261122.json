@@ -1,0 +1,21 @@
+{
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "workflow": "basic-pitch-temporal-crop.yml",
+  "specification": "docs/recovery/basic-pitch-temporal-crop-20261122.json",
+  "specification_sha256": "4f64779278de9ff3f67c930b34e5e9025521af682305dced4d0fc07fb40ec705",
+  "worker_commit": "1dcfc41a4d2bafa62702a49a44fa3b5bf319f0b7",
+  "report_artifact_pattern": "m3-basic-pitch-temporal-crop-report-{run_id}-1",
+  "evidence_artifact_pattern": "m3-basic-pitch-temporal-crop-evidence-{run_id}-1",
+  "output_directory_pattern": "build/github-results/basic-pitch-temporal-crop-{run_id}",
+  "schema": "m3_github_basic_pitch_temporal_crop_recovery_checkpoint_v1",
+  "state": "prepared",
+  "final": false,
+  "prepared_at": "2026-11-22T14:41:31.999220+00:00",
+  "predecessor_run": 45033657076,
+  "correction": "Accept both pinned export structures (240 and 242 nodes), preserving exact model hashes, interfaces and convolution checks. Report actual source node count.",
+  "scientific_specification_changed": false,
+  "local_tests": "14 pure/synthetic tests passed; no local model or audio",
+  "installed_output_changed": false,
+  "promotion_accepted": false
+}

@@ -21,6 +21,15 @@ READOUT_START = 164
 READOUT_END = 166
 
 
+def validate_graph_interface(node_count, input_names, output_names):
+    # The caller verifies each artifact/member SHA256. The separately exported
+    # unmodified/adapted pinned graphs contain 242/240 nodes, respectively.
+    if node_count not in (240, 242) or input_names != [INPUT]:
+        raise ValueError('Pinned graph/interface differs')
+    if len(output_names) != 2 or set(output_names) != set(OUTPUTS.values()):
+        raise ValueError('Expected exactly the pinned note/onset outputs')
+
+
 def required_input_interval(start=164, end=166):
     """Inclusive/exclusive time dependency, onset head back to conv2d_1 input.
 
@@ -44,10 +53,9 @@ def crop_model(source, destination):
     if any(value.data_location == TensorProto.EXTERNAL for value in model.graph.initializer):
         raise ValueError('External tensor data is not part of the pinned model')
     graph = model.graph
-    if len(graph.node) != 242 or len(graph.input) != 1 or graph.input[0].name != INPUT:
-        raise ValueError('Pinned graph/interface differs')
-    if {value.name for value in graph.output} != set(OUTPUTS.values()):
-        raise ValueError('Expected exactly the pinned note/onset outputs')
+    nodes_before = len(graph.node)
+    validate_graph_interface(nodes_before, [value.name for value in graph.input],
+                             [value.name for value in graph.output])
     if required_input_interval()[-1]['required_start'] != CROP_START:
         raise ValueError('Crop dependency differs')
     nodes = {node.name: node for node in graph.node}
@@ -103,7 +111,7 @@ def crop_model(source, destination):
     onnx.checker.check_model(model, full_check=True)
     onnx.save(model, str(destination))
     return dict(input_rows=[154,172], output_frames=[164,165], dependency=required_input_interval(),
-        nodes_before=242, nodes_after=len(graph.node), original_initializers=len(initial),
+        nodes_before=nodes_before, nodes_after=len(graph.node), original_initializers=len(initial),
         original_initializers_identical=True,
         original_initializer_fingerprint=hashlib.sha256(b''.join(initial[k] for k in sorted(initial))).hexdigest(),
         output_contract=dict(frame_origin=164, shape=[1,2,88]),

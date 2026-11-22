@@ -6,11 +6,24 @@ from unittest.mock import patch
 
 import numpy as np
 
-from tools.basic_pitch_temporal_crop import compare_readout, crop_model, required_input_interval
+from tools.basic_pitch_temporal_crop import (compare_readout, crop_model, required_input_interval,
+    validate_graph_interface, INPUT, OUTPUTS)
 from tools.portable_basic_pitch_temporal_crop import assess, run, validate_spec
 
 
 class TemporalCropTest(unittest.TestCase):
+    def test_both_pinned_export_interfaces_are_allowed(self):
+        for count in (240, 242):
+            validate_graph_interface(count, [INPUT], list(OUTPUTS.values()))
+        for count, inputs, outputs in (
+                (241, [INPUT], list(OUTPUTS.values())),
+                (240, ['wrong'], list(OUTPUTS.values())),
+                (242, [INPUT, INPUT], list(OUTPUTS.values())),
+                (240, [INPUT], [OUTPUTS['note'], OUTPUTS['note']]),
+                (242, [INPUT], list(OUTPUTS.values()) + ['contour'])):
+            with self.assertRaises(ValueError):
+                validate_graph_interface(count, inputs, outputs)
+
     def test_dependency_includes_onset_note_path_and_right_padding(self):
         self.assertEqual([(r['required_start'],r['required_end']) for r in required_input_interval()],
                          [(163,167),(160,170),(157,172),(155,172),(154,172)])

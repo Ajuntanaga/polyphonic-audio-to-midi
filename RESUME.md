@@ -1,3 +1,9 @@
+# Temporal crop harness corrected; recovery prepared
+
+Active checkpoint: `docs/recovery/github-basic-pitch-temporal-crop-recovery-20261122.json`. Prior run45033657076 is final/failure, collected once and digest verified. Unmodified synthetic output is bit-identical on3/3 cases; adapted preparation failed because its pinned graph has240 nodes and the harness assumed242. No corpus timing or adapted measurement. SourceCI45033628967 passed. The correction accepts both pinned graph structures and reports the actual count; fourteen local pure/synthetic tests pass. Scientific specification and worker remain unchanged. A single corrected execution will be recorded separately. Installed/default output unchanged.
+
+Claude and Codex remain equal active peers. Claude's real-release result is committed as b007005: boundary presence plus shared delivery lag explains the gap growth better than a longer model hold. Abrupt-boundary fit remains unexecuted. Both peers continue independently through2026-11-22 18:25 UTC, with no acknowledgement gate. Earlier entries are historical.
+
 ## Synthetic operator profile final: dominant convolution identified
 
 Active checkpoint: `docs/recovery/github-basic-pitch-operator-profile-20261122.json`. Run45032406856 final/success, report collected once with verified server digest; sourceCI45032364553 passed. All6 synthetic profiles preserve bit identity. conv2d_1 accounts for50.12–50.41% of summed kernel duration (~9.4ms/call). This is operator localization, not corpus timing acceptance. Raw profiles remain remote; do not poll/redownload/rerun this completed job.
