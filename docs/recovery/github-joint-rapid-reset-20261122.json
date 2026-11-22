@@ -16,11 +16,11 @@
   "output_directory": "build/github-results/joint-rapid-reset-45075475603",
   "report_artifact": "m3-joint-rapid-reset-report-45075475603-1",
   "evidence_artifact": "m3-joint-rapid-reset-evidence-45075475603-1",
-  "collection_state": "small report collected once; size and server digest verified; bulk evidence remote",
+  "collection_state": "Small report and evidence archive collected; server digests verified. Four raw MIDI members extracted for saved owner attribution; remaining members compressed. No redownload.",
   "local_tests": "8 synthetic wrapper tests pass; native tests run only on GitHub",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Do not rerun or tune the rejected reset. Read Claude's distinct restart-evidence census before choosing a new design; installed output and all frozen gates stay unchanged.",
+  "next": "Do not rerun/tune the rejected reset. Inspect candidate-specific re-entry as a distinct source question; Claude retains CURRENT boundary evidence. No installed change or relaxed gate.",
   "source_ci": {
     "run_id": 45075437398,
     "state": "completed",
@@ -77,7 +77,9 @@
         "head_branch": "main",
         "head_sha": "7e8078e4f2d105823c76a5f94ce5b5b8c5a10072"
       },
-      "collection": "remote; not downloaded"
+      "collection": "archive collected and digest verified; four raw MIDI members extracted, remainder compressed",
+      "receipt": "build/github-results/joint-rapid-reset-45075475603/owner-evidence-collection.json",
+      "local_archive": "build/github-results/joint-rapid-reset-45075475603/evidence.zip"
     },
     {
       "id": 14775771099,
@@ -557,5 +559,37 @@
     "zero_deadline_overruns": true,
     "model_inference_included": false,
     "live_host_verified": false
+  },
+  "owner_evidence_receipt": "build/github-results/joint-rapid-reset-45075475603/owner-evidence-collection.json",
+  "owner_attribution": {
+    "state": "completed",
+    "final": true,
+    "plan_commit": "1167f1f",
+    "run_count": 1,
+    "result_path": "docs/recovery/CODEX-M3-JOINT-RESET-OWNER-ATTRIBUTION-20261122.json",
+    "result_sha256": "33e1855600ba59ceb99964f8b8321f972f202dd1cfc7fcb241854c64715668b0",
+    "result_note": "docs/recovery/CODEX-M3-JOINT-RESET-OWNER-ATTRIBUTION-20261122.md",
+    "ordinary_newly_wholly_missed_labels": [
+      42,
+      70,
+      200,
+      306,
+      364
+    ],
+    "continuous_other_ownership_labels": [
+      42,
+      200,
+      306,
+      364
+    ],
+    "empty_output_labels": [
+      70
+    ],
+    "label70_empty_samples": 12032,
+    "arm_label_rows_checked": 1010,
+    "field_comparisons": 4040,
+    "mismatches": 0,
+    "interpretation": "Four of five misses retain other emitted owners. Shared-history loss through the last rendered owner is not a common explanation; candidate-specific re-entry remains unmeasured. Raw owners are not complete candidate state.",
+    "analyzed_at": "2026-11-22T23:52:33.760101+00:00"
   }
 }

@@ -1,3 +1,19 @@
+## Active M3 checkpoint — saved trial owner attribution final, 2026-11-22 23:52 UTC
+
+Read `docs/recovery/CODEX-M3-JOINT-RESET-OWNER-ATTRIBUTION-20261122.md` and
+`docs/recovery/github-joint-rapid-reset-20261122.json` first. Saved trial MIDI
+from rejected run **45075475603** retains other emitted owners continuously for
+four of five wholly missed labels (42,200,306,364). Only label70 has empty output,
+12,032 samples. This weakens a common last-owner/shared-history explanation;
+candidate-specific re-entry remains unmeasured. All 1,010 arm-label rows match
+the report on four timing fields. Plan/code frozen in1167f1f, one saved-data pass.
+Evidence14775825950 collected successfully once after an incomplete transfer;
+archive and four MIDI member digests verified; remaining members compressed.
+No replay, audio/model, policy, installed/default or gate change. No redownload.
+Claude keeps the separate CURRENT boundary census; quiet-cell reduction45083623255
+is final with tables remote. Its session reported a usage limit, listed reset
+00:30 UTC; clearance remains unverified. No duplicate session or investigation.
+
 ## Active M3 checkpoint — saved quiet-cell reduction final, 2026-11-22 23:36 UTC
 
 Read `docs/recovery/github-quiet-cell-reduction-20261122.json` and

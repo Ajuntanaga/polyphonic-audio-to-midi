@@ -1,0 +1,571 @@
+{
+  "schema": "m3_joint_reset_owner_attribution_v1",
+  "run_id": 45075475603,
+  "report_sha256": "3bedd04bd9b1cccc60faed718fcbdbf15e855d86a8d968b6aeb6fe3237773b8a",
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "inputs": {
+        "current": {
+          "path": "build/github-results/joint-rapid-reset-45075475603/owner-evidence/ordinary-current-512-midi.tsv",
+          "sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+          "events": 11851
+        },
+        "trial": {
+          "path": "build/github-results/joint-rapid-reset-45075475603/owner-evidence/ordinary-trial-512-midi.tsv",
+          "sha256": "56ddaa5a105447cd5b993b09accfbfd10201f7267b7210d6525821daf5f05878",
+          "events": 12675
+        }
+      },
+      "label_identity": {
+        "current": {
+          "labels": 499,
+          "compared_fields": 4,
+          "mismatches": 0,
+          "raw_conflict_counts": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          }
+        },
+        "trial": {
+          "labels": 499,
+          "compared_fields": 4,
+          "mismatches": 0,
+          "raw_conflict_counts": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          }
+        }
+      },
+      "newly_wholly_missed_labels": [
+        42,
+        70,
+        200,
+        306,
+        364
+      ],
+      "targets": [
+        {
+          "label_index": 42,
+          "midi_note": 60,
+          "start_sample": 653030,
+          "end_sample": 724800,
+          "arms": {
+            "current": {
+              "target_metrics": {
+                "present_samples": 45785,
+                "longest_present_samples": 45785,
+                "present_segments": 1,
+                "first_present_delay_samples": 0
+              },
+              "target_present_at_label_start": true,
+              "last_target_disappearance_sample": null,
+              "analysis_start_sample": 0,
+              "next_target_appearance_sample": 2131519,
+              "owners_after_anchor": [],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 2,
+                  "note": 49
+                },
+                {
+                  "voice_id": 5,
+                  "note": 57
+                },
+                {
+                  "voice_id": 7,
+                  "note": 60
+                }
+              ],
+              "minimum_other_owner_count_during_label": 1,
+              "empty_output_intervals_since_anchor": [
+                [
+                  0,
+                  5567
+                ]
+              ],
+              "empty_output_samples_since_anchor": 5567,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": false
+            },
+            "trial": {
+              "target_metrics": {
+                "present_samples": 0,
+                "longest_present_samples": 0,
+                "present_segments": 0,
+                "first_present_delay_samples": null
+              },
+              "target_present_at_label_start": false,
+              "last_target_disappearance_sample": 647999,
+              "analysis_start_sample": 647999,
+              "next_target_appearance_sample": 2131519,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 2,
+                  "note": 49
+                },
+                {
+                  "voice_id": 5,
+                  "note": 57
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 2,
+                  "note": 49
+                }
+              ],
+              "minimum_other_owner_count_during_label": 1,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            }
+          }
+        },
+        {
+          "label_index": 70,
+          "midi_note": 48,
+          "start_sample": 1224217,
+          "end_sample": 1296000,
+          "arms": {
+            "current": {
+              "target_metrics": {
+                "present_samples": 3494,
+                "longest_present_samples": 3494,
+                "present_segments": 1,
+                "first_present_delay_samples": 0
+              },
+              "target_present_at_label_start": true,
+              "last_target_disappearance_sample": 753855,
+              "analysis_start_sample": 753855,
+              "next_target_appearance_sample": 1884287,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 0,
+                  "note": 38
+                },
+                {
+                  "voice_id": 1,
+                  "note": 44
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 1,
+                  "note": 36
+                },
+                {
+                  "voice_id": 2,
+                  "note": 46
+                },
+                {
+                  "voice_id": 4,
+                  "note": 48
+                }
+              ],
+              "minimum_other_owner_count_during_label": 0,
+              "empty_output_intervals_since_anchor": [
+                [
+                  1235199,
+                  1238911
+                ]
+              ],
+              "empty_output_samples_since_anchor": 3712,
+              "empty_output_intervals_during_label": [
+                [
+                  1235199,
+                  1238911
+                ]
+              ],
+              "empty_output_samples_during_label": 3712,
+              "uninterrupted_rendered_ownership_since_anchor": false
+            },
+            "trial": {
+              "target_metrics": {
+                "present_samples": 0,
+                "longest_present_samples": 0,
+                "present_segments": 0,
+                "first_present_delay_samples": null
+              },
+              "target_present_at_label_start": false,
+              "last_target_disappearance_sample": 1218175,
+              "analysis_start_sample": 1218175,
+              "next_target_appearance_sample": 1884287,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 2,
+                  "note": 46
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 2,
+                  "note": 46
+                }
+              ],
+              "minimum_other_owner_count_during_label": 0,
+              "empty_output_intervals_since_anchor": [
+                [
+                  1226879,
+                  1238911
+                ]
+              ],
+              "empty_output_samples_since_anchor": 12032,
+              "empty_output_intervals_during_label": [
+                [
+                  1226879,
+                  1238911
+                ]
+              ],
+              "empty_output_samples_during_label": 12032,
+              "uninterrupted_rendered_ownership_since_anchor": false
+            }
+          }
+        },
+        {
+          "label_index": 200,
+          "midi_note": 50,
+          "start_sample": 3590630,
+          "end_sample": 3662400,
+          "arms": {
+            "current": {
+              "target_metrics": {
+                "present_samples": 27801,
+                "longest_present_samples": 27801,
+                "present_segments": 1,
+                "first_present_delay_samples": 0
+              },
+              "target_present_at_label_start": true,
+              "last_target_disappearance_sample": 2147455,
+              "analysis_start_sample": 2147455,
+              "next_target_appearance_sample": 3766463,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 0,
+                  "note": 37
+                },
+                {
+                  "voice_id": 2,
+                  "note": 41
+                },
+                {
+                  "voice_id": 5,
+                  "note": 53
+                },
+                {
+                  "voice_id": 7,
+                  "note": 60
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 1,
+                  "note": 38
+                },
+                {
+                  "voice_id": 2,
+                  "note": 42
+                },
+                {
+                  "voice_id": 3,
+                  "note": 50
+                },
+                {
+                  "voice_id": 5,
+                  "note": 57
+                }
+              ],
+              "minimum_other_owner_count_during_label": 3,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            },
+            "trial": {
+              "target_metrics": {
+                "present_samples": 0,
+                "longest_present_samples": 0,
+                "present_segments": 0,
+                "first_present_delay_samples": null
+              },
+              "target_present_at_label_start": false,
+              "last_target_disappearance_sample": 3586943,
+              "analysis_start_sample": 3586943,
+              "next_target_appearance_sample": 3766463,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 2,
+                  "note": 42
+                },
+                {
+                  "voice_id": 5,
+                  "note": 57
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 2,
+                  "note": 42
+                }
+              ],
+              "minimum_other_owner_count_during_label": 1,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            }
+          }
+        },
+        {
+          "label_index": 306,
+          "midi_note": 42,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "arms": {
+            "current": {
+              "target_metrics": {
+                "present_samples": 71783,
+                "longest_present_samples": 71783,
+                "present_segments": 1,
+                "first_present_delay_samples": 0
+              },
+              "target_present_at_label_start": true,
+              "last_target_disappearance_sample": 5403199,
+              "analysis_start_sample": 5403199,
+              "next_target_appearance_sample": 5967359,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 1,
+                  "note": 48
+                },
+                {
+                  "voice_id": 3,
+                  "note": 54
+                },
+                {
+                  "voice_id": 5,
+                  "note": 59
+                },
+                {
+                  "voice_id": 6,
+                  "note": 66
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 0,
+                  "note": 43
+                },
+                {
+                  "voice_id": 1,
+                  "note": 41
+                },
+                {
+                  "voice_id": 2,
+                  "note": 42
+                },
+                {
+                  "voice_id": 3,
+                  "note": 54
+                }
+              ],
+              "minimum_other_owner_count_during_label": 1,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            },
+            "trial": {
+              "target_metrics": {
+                "present_samples": 0,
+                "longest_present_samples": 0,
+                "present_segments": 0,
+                "first_present_delay_samples": null
+              },
+              "target_present_at_label_start": false,
+              "last_target_disappearance_sample": 5629183,
+              "analysis_start_sample": 5629183,
+              "next_target_appearance_sample": 5967359,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 0,
+                  "note": 43
+                },
+                {
+                  "voice_id": 3,
+                  "note": 54
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 0,
+                  "note": 43
+                },
+                {
+                  "voice_id": 3,
+                  "note": 54
+                }
+              ],
+              "minimum_other_owner_count_during_label": 2,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            }
+          }
+        },
+        {
+          "label_index": 364,
+          "midi_note": 42,
+          "start_sample": 7017737,
+          "end_sample": 7089600,
+          "arms": {
+            "current": {
+              "target_metrics": {
+                "present_samples": 71863,
+                "longest_present_samples": 71863,
+                "present_segments": 1,
+                "first_present_delay_samples": 0
+              },
+              "target_present_at_label_start": true,
+              "last_target_disappearance_sample": 6971071,
+              "analysis_start_sample": 6971071,
+              "next_target_appearance_sample": 8163903,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 0,
+                  "note": 33
+                },
+                {
+                  "voice_id": 1,
+                  "note": 43
+                },
+                {
+                  "voice_id": 3,
+                  "note": 45
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 0,
+                  "note": 33
+                },
+                {
+                  "voice_id": 1,
+                  "note": 43
+                },
+                {
+                  "voice_id": 2,
+                  "note": 42
+                },
+                {
+                  "voice_id": 3,
+                  "note": 45
+                }
+              ],
+              "minimum_other_owner_count_during_label": 2,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            },
+            "trial": {
+              "target_metrics": {
+                "present_samples": 0,
+                "longest_present_samples": 0,
+                "present_segments": 0,
+                "first_present_delay_samples": null
+              },
+              "target_present_at_label_start": false,
+              "last_target_disappearance_sample": 6930175,
+              "analysis_start_sample": 6930175,
+              "next_target_appearance_sample": 8163903,
+              "owners_after_anchor": [
+                {
+                  "voice_id": 2,
+                  "note": 44
+                }
+              ],
+              "owners_at_label_start": [
+                {
+                  "voice_id": 0,
+                  "note": 33
+                },
+                {
+                  "voice_id": 2,
+                  "note": 43
+                }
+              ],
+              "minimum_other_owner_count_during_label": 2,
+              "empty_output_intervals_since_anchor": [],
+              "empty_output_samples_since_anchor": 0,
+              "empty_output_intervals_during_label": [],
+              "empty_output_samples_during_label": 0,
+              "uninterrupted_rendered_ownership_since_anchor": true
+            }
+          }
+        }
+      ],
+      "uninterrupted_trial_ownership_since_target_disappearance": 4
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "inputs": {
+        "current": {
+          "path": "build/github-results/joint-rapid-reset-45075475603/owner-evidence/extended-middle-current-512-midi.tsv",
+          "sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+          "events": 906
+        },
+        "trial": {
+          "path": "build/github-results/joint-rapid-reset-45075475603/owner-evidence/extended-middle-trial-512-midi.tsv",
+          "sha256": "5162065e74715b364ca15ab86ebb500cee6e3e3ad4899d323a5385963fe6529f",
+          "events": 906
+        }
+      },
+      "label_identity": {
+        "current": {
+          "labels": 6,
+          "compared_fields": 4,
+          "mismatches": 0,
+          "raw_conflict_counts": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          }
+        },
+        "trial": {
+          "labels": 6,
+          "compared_fields": 4,
+          "mismatches": 0,
+          "raw_conflict_counts": {
+            "cross_pitch_on_before_release": 0,
+            "repeated_pitch_on_before_release": 0,
+            "off_without_raw_on": 0,
+            "zero_velocity_on": 0,
+            "unassigned_on": 0
+          }
+        }
+      },
+      "newly_wholly_missed_labels": [],
+      "targets": [],
+      "uninterrupted_trial_ownership_since_target_disappearance": 0
+    }
+  },
+  "interpretation": "Raw MIDI ownership is not complete candidate activity or signal history. An empty owner interval is only a reset opportunity, not proof; continued owners contradict only the simple last-rendered-owner explanation. Diagnostic releases are not separately marked. No policy or acceptance claim."
+}
