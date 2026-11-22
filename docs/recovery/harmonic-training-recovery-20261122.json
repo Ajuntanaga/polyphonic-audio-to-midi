@@ -1,0 +1,13 @@
+{
+  "schema": "m3_harmonic_training_recovery_v1",
+  "scientific_specification": "docs/recovery/harmonic-spectral-patches-20261122.json",
+  "scientific_specification_sha256": "dde4de4739f7c72945ef6c07c8b838e30914671b33de2fba9dc0f161936e6479",
+  "prior_run_id": 45006866083,
+  "prior_run_weights_available": false,
+  "max_worker_minutes": 120,
+  "max_processing_minutes": 105,
+  "checkpoint_interval": "each completed epoch",
+  "resume_identity": "same source, specification, dependencies, inputs, normalization and optimizer settings",
+  "automatic_redispatch": false,
+  "scientific_gates_changed": false
+}

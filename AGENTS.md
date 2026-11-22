@@ -3,6 +3,27 @@
 Read the top of `RESUME.md` for the active checkpoint before continuing work.
 Preserve unrelated working-tree changes and the installed plugin.
 
+## Codex and Claude are peers
+
+The user explicitly authorized both collaborators to advance this project.
+Either may design, implement, analyze, commit, push, collect artifacts and
+dispatch jobs within the existing user-authorized scope. Neither needs the
+other's approval, and neither is restricted to proposing work for the other.
+The standing CPU-job authorization applies to both; it does not appoint an
+exclusive execution or integration owner.
+
+- Record the intended files/workstream and check the current checkpoint before
+  editing shared code or dispatching, to avoid conflicting writes or duplicate
+  jobs. Ownership is temporary coordination, not authority over the other peer.
+- Each peer may carry its own work through implementation, verification and
+  publication. A message or acknowledgement from the other is not a gate.
+- Do not mark the other peer paused unless that peer or the user explicitly
+  says so. A watcher expiring or a missing reply is not a pause instruction.
+- User resource, filesystem, installed-output and scientific constraints apply
+  equally. Keep the existing GitHub route for recorded-input processing.
+- Current coordination: `docs/recovery/CODEX-M3-PEER-COLLABORATION-20261122.md`.
+  Its correction supersedes older Codex-exclusive or "Claude paused" statements.
+
 ## Filesystem boundary — applies to every agent and helper
 
 The user has forbidden access to `Windows.old` and its containing

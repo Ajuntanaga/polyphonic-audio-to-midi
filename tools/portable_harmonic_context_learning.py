@@ -38,6 +38,8 @@ from tools.harmonic_grid_consistency import (GRID_CONSISTENCY, FULL_GRADIENT_CON
     validate_consistency, shifted_grid, grid_consistency_loss)
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
+from tools.harmonic_training_checkpoint import (training_identity, save_training_checkpoint,
+    restore_training_checkpoint)
 
 
 DEPENDENCIES = {'numpy': '1.26.4', 'scipy': '1.13.1', 'scikit-learn': '1.7.2',
@@ -48,10 +50,14 @@ def dependency_versions():
     return {name: version(name) for name in DEPENDENCIES}
 
 
-def fit_model(features, truth, model_params=None, grid_consistency=None, spectral_patches=None):
+def fit_model(features, truth, model_params=None, grid_consistency=None, spectral_patches=None,
+              *, checkpoint_path=None, resume_checkpoint=None, checkpoint_context=None):
     remote_only()
     import torch
     params = MODEL_PARAMS if model_params is None else model_params
+    if (checkpoint_path is not None or resume_checkpoint is not None) and (
+            spectral_patches is None or checkpoint_path is None):
+        raise ValueError('Epoch recovery requires the patch experiment and an output checkpoint')
     if spectral_patches is not None:
         require_identity(spectral_patches, SPECTRAL_PATCHES, 'fixed spectral patch encoder')
         require_identity(params, SETWISE_PARAMS, 'fixed patch optimizer and pitch context')
@@ -100,8 +106,27 @@ def fit_model(features, truth, model_params=None, grid_consistency=None, spectra
     generator = torch.Generator().manual_seed(params['seed'])
     losses = []
     supervised_losses, consistency_losses = [], []
+    first_epoch, previous_seconds = 0, 0.0
+    identity = None
+    if checkpoint_path is not None:
+        if not isinstance(checkpoint_context, dict) or not checkpoint_context:
+            raise ValueError('Checkpoint execution identity is required')
+        identity = training_identity(features, truth, mean, scale, params, spectral_patches,
+            dict(execution=checkpoint_context, torch=str(torch.__version__), numpy=np.__version__))
+        if resume_checkpoint is not None:
+            first_epoch, losses, previous_seconds = restore_training_checkpoint(
+                resume_checkpoint, network, optimizer, generator, mean, scale, identity)
+            print(f'resumed completed epoch {first_epoch}/{params["epochs"]}', flush=True)
     started = time.perf_counter()
-    for epoch in range(params['epochs']):
+    def persist_progress():
+        save_training_checkpoint(checkpoint_path, network, optimizer, generator, mean, scale,
+            identity, losses, previous_seconds+time.perf_counter()-started)
+        save_json(Path(checkpoint_path).with_suffix('.json'), dict(
+            completed_epochs=len(losses), planned_epochs=params['epochs'],
+            last_training_loss=losses[-1], training_loss_is_tracking_score=False,
+            checkpoint_sha256=digest(checkpoint_path), checkpoint_bytes=Path(checkpoint_path).stat().st_size,
+            resumed_from_epoch=first_epoch, updated_at=datetime.now(timezone.utc).isoformat()))
+    for epoch in range(first_epoch, params['epochs']):
         order = torch.randperm(len(features), generator=generator)
         total_loss = 0.0
         supervised_total = consistency_total = 0.0
@@ -126,9 +151,13 @@ def fit_model(features, truth, model_params=None, grid_consistency=None, spectra
         if grid_consistency is not None:
             supervised_losses.append(supervised_total/len(inputs))
             consistency_losses.append(consistency_total/len(inputs))
+        if checkpoint_path is not None:
+            persist_progress()
         print(f'epoch {epoch+1}/{params["epochs"]}: loss={losses[-1]:.9g}', flush=True)
+    if checkpoint_path is not None and first_epoch == params['epochs']:
+        persist_progress()
     network.eval()
-    fit = dict(seconds=time.perf_counter()-started,
+    fit = dict(seconds=previous_seconds+time.perf_counter()-started,
         epochs=len(losses), mixtures=len(features), pooled_candidate_rows=len(features)*NOTE_COUNT,
         input_note_count=input_note_count, output_note_count=NOTE_COUNT,
         normalization_rows=len(features)*NOTE_COUNT,
@@ -136,6 +165,11 @@ def fit_model(features, truth, model_params=None, grid_consistency=None, spectra
         parameter_count=sum(p.numel() for p in network.parameters()),
         final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1,
         objective=params['loss'])
+    if checkpoint_path is not None:
+        fit['recovery'] = dict(resumed_from_epoch=first_epoch,
+            epochs_executed_this_invocation=params['epochs']-first_epoch,
+            checkpoint_sha256=digest(checkpoint_path), identity=identity,
+            checkpoint_interval='each completed epoch', mid_epoch_work_repeated_after_interruption=True)
     if spectral_patches is not None:
         fit.update(spectral_patch_parameters=SPECTRAL_PATCHES,
             feature_storage_dtype=str(features.dtype), normalized_batch_storage=True,
@@ -177,7 +211,7 @@ def save_model(path, model, extractor, model_params=None, grid_consistency=None)
     torch.save(saved, path)
 
 
-def run(spec_path, output):
+def run(spec_path, output, *, training_recovery=None, resume_checkpoint=None):
     remote_only()  # Before dependencies, file reads, recorded inputs, output or fitting.
     output.mkdir(parents=True, exist_ok=False)
     folders = {name: output/name for name in ('report', 'logs', 'cache', 'inputs', 'bulk')}
@@ -209,6 +243,10 @@ def run(spec_path, output):
         phase = spec.get('harmonic_phase_motion')
         pitch_scaled = spec.get('harmonic_pitch_scaled_windows')
         spectral_patches = spec.get('harmonic_spectral_patches')
+        if training_recovery is not None and spectral_patches is None:
+            raise ValueError('Training recovery is scoped to the frozen patch experiment')
+        if resume_checkpoint is not None and training_recovery is None:
+            raise ValueError('Resume requires the pinned training recovery envelope')
         suppression = spec.get('harmonic_level_suppression')
         whitening = spec.get('harmonic_spectral_whitening')
         halo = spec.get('harmonic_halo_context')
@@ -285,6 +323,12 @@ def run(spec_path, output):
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
             platform=platform.platform(), dependencies=versions)
+        if training_recovery is not None:
+            folders['checkpoint'] = output/'checkpoint'
+            folders['checkpoint'].mkdir()
+            report['execution_recovery'] = dict(envelope=training_recovery,
+                resume_checkpoint_sha256=None if resume_checkpoint is None else digest(resume_checkpoint),
+                scientific_specification_unchanged=True, original_timeout_run_weights_available=False)
         references = {}
         for name, pin in spec['references'].items():
             path = root/pin['path']
@@ -376,7 +420,14 @@ def run(spec_path, output):
         elif grid_consistency is not None:
             model, report['fit'] = fit_model(x, y, model_params=params, grid_consistency=grid_consistency)
         elif spectral_patches is not None:
-            model, report['fit'] = fit_model(x, y, model_params=params, spectral_patches=spectral_patches)
+            recovery = {} if training_recovery is None else dict(
+                checkpoint_path=folders['checkpoint']/'training-state.pt',
+                resume_checkpoint=resume_checkpoint,
+                checkpoint_context=dict(source_commit=source,
+                    specification_sha256=digest(spec_path), dependencies=versions,
+                    recovery_envelope=training_recovery))
+            model, report['fit'] = fit_model(x, y, model_params=params,
+                spectral_patches=spectral_patches, **recovery)
         else:
             model, report['fit'] = fit_model(x, y, model_params=params)
         probability = model.activity(x)
