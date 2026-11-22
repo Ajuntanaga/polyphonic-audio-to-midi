@@ -34,7 +34,7 @@ class PortableContextTests(unittest.TestCase):
             def activity(self, features):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'transpose', 'contrast', 'level'))
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
             with self.subTest(gates=sequence, loss=params['loss'], mode=mode), tempfile.TemporaryDirectory() as directory:
@@ -55,6 +55,9 @@ class PortableContextTests(unittest.TestCase):
                 if mode == 'shelf':
                     spec_data['training_source_variation'] = runner.VARIATION
                     spec_data['varied_plan_identity'] = dict(decoded_sha256='synthetic-varied-plan')
+                if mode == 'partial':
+                    spec_data['training_partial_variation'] = runner.PARTIAL_VARIATION
+                    spec_data['partial_plan_identity'] = dict(decoded_sha256='synthetic-partial-plan')
                 if mode == 'transpose':
                     spec_data['training_pitch_transposition'] = runner.TRANSPOSITION
                     spec_data['transposed_plan_identity'] = dict(decoded_sha256='synthetic-transposed-plan')
@@ -86,6 +89,9 @@ class PortableContextTests(unittest.TestCase):
                     augmentation = stack.enter_context(patch.object(runner, 'variation_examples', return_value=(
                         np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
                         dict(decoded_sha256='synthetic-varied-plan'))))
+                    partial = stack.enter_context(patch.object(runner, 'partial_examples', return_value=(
+                        np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
+                        dict(decoded_sha256='synthetic-partial-plan'))))
                     transposition = stack.enter_context(patch.object(runner, 'transposition_examples', return_value=(
                         np.ones((3, runner.NOTE_COUNT*runner.FEATURE_COUNT)), np.zeros((3, 53), bool),
                         dict(decoded_sha256='synthetic-transposed-plan'))))
@@ -98,15 +104,19 @@ class PortableContextTests(unittest.TestCase):
                     result = runner.run(spec, root/'output')
                 self.assertEqual(fit.call_count, 1)
                 fit_features = fit.call_args.args[0]
-                self.assertTrue(np.all(fit_features[:3] == (1 if mode == 'shelf' else 0)))
+                self.assertTrue(np.all(fit_features[:3] == (1 if mode in ('shelf', 'partial') else 0)))
                 self.assertEqual(len(fit_features), 6 if mode == 'transpose' else 3)
                 if mode == 'transpose':
                     self.assertTrue(np.all(fit_features[3:] == 1))
                 self.assertEqual(augmentation.call_count, int(mode == 'shelf'))
+                self.assertEqual(partial.call_count, int(mode == 'partial'))
                 self.assertEqual(transposition.call_count, int(mode == 'transpose'))
                 self.assertTrue(all(np.all(c.args[1] == 0) for c in activity.call_args_list))
                 self.assertEqual(fit.call_args.kwargs['model_params'], params)
                 self.assertEqual(result['training_objective'], params['loss'])
+                if mode == 'partial':
+                    self.assertEqual(result['schema'], 'm3_harmonic_partial_variation_v1')
+                    self.assertEqual(result['features']['per_candidate'], 62)
                 if mode == 'contrast':
                     self.assertEqual(result['features']['per_candidate'], 106)
                     self.assertEqual(set(result['contrast_diagnostics']),

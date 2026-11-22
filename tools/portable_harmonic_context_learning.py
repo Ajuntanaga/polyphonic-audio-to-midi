@@ -22,6 +22,7 @@ from tools.portable_direct_spectrum_learning import (continuous_dataset, fetch_r
     role_examples, source_waves)
 from tools.pitch_detector_comparison import digest
 from tools.harmonic_source_variation import VARIATION, variation_examples
+from tools.harmonic_partial_variation import PARTIAL_VARIATION, partial_examples
 from tools.harmonic_pitch_transposition import TRANSPOSITION, transposition_examples
 from tools.harmonic_peak_contrast import CONTRAST, HarmonicContrastFeatures, contrast_summary
 from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeatures
@@ -128,11 +129,15 @@ def run(spec_path, output):
             raise ValueError('Unknown frozen training objective')
         loss_only = params['loss'] != MODEL_PARAMS['loss']
         variation = spec.get('training_source_variation')
+        partial = spec.get('training_partial_variation')
         transposition = spec.get('training_pitch_transposition')
         contrast = spec.get('harmonic_peak_contrast')
         suppression = spec.get('harmonic_level_suppression')
-        if sum(value is not None for value in (variation, transposition, contrast, suppression)) > 1:
+        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if partial is not None:
+            require_identity(partial, PARTIAL_VARIATION, 'fixed independent partial envelopes')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         if suppression is not None:
             require_identity(suppression, SUPPRESSION, 'fixed absolute-level suppression')
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
@@ -154,6 +159,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_setwise_learning_v1'
         if variation is not None:
             report['schema'] = 'm3_harmonic_source_variation_v1'
+        if partial is not None:
+            report['schema'] = 'm3_harmonic_partial_variation_v1'
         if transposition is not None:
             report['schema'] = 'm3_harmonic_pitch_transposition_v1'
         if contrast is not None:
@@ -190,6 +197,7 @@ def run(spec_path, output):
             distinction=('Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
                 'Original 62 coordinates plus 44 peak-contrast coordinates; input layer gains 1408 parameters, no augmentation.' if contrast is not None else
                 'Clean training plus transposed companions; same epochs, twice the optimizer steps.' if transposition is not None else
+                'Only training component partial envelopes change; same 62 features, model, examples and optimizer steps.' if partial is not None else
                 'Only training component envelopes change versus the setwise model.' if variation is not None else
                 'Only the training objective changes versus the frozen context baseline.' if loss_only else
                 'Unchanged harmonic rows feed shared convolutions across pitches, then a shared binary readout; capacity also changes.'))
@@ -200,7 +208,16 @@ def run(spec_path, output):
             actual = hashlib.sha256(gzip.decompress((folders['bulk']/'train-mixture-plan.json.gz').read_bytes())).hexdigest()
             require_identity(actual, spec['training_plan_identity']['decoded_sha256'], 'unchanged training mixture plan')
             report['training_plan_identity'] = dict(spec['training_plan_identity'], verified=True)
-        if variation is not None:
+        if partial is not None:
+            fit_x, fit_y, report['training_partial_variation'] = partial_examples(
+                folders['bulk']/'train-mixture-plan.json.gz', waves, extractor, folders['bulk'])
+            require_identity(report['training_partial_variation']['decoded_sha256'],
+                spec['partial_plan_identity']['decoded_sha256'], 'frozen partial-varied training plan')
+            if fit_x.shape != x.shape or not np.array_equal(fit_y, y):
+                raise ValueError('Partial variation changed training shape or targets')
+            model, report['fit'] = fit_model(fit_x, fit_y, model_params=params)
+            del fit_x, fit_y
+        elif variation is not None:
             fit_x, fit_y, report['training_source_variation'] = variation_examples(
                 folders['bulk']/'train-mixture-plan.json.gz', waves, extractor, folders['bulk'])
             require_identity(report['training_source_variation']['decoded_sha256'],
@@ -289,6 +306,7 @@ def run(spec_path, output):
                 ('Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
                  'Peak contrast is learned evidence, with no hard harmonicity rejection; vibrato, inharmonicity and overlapping peaks can weaken it. Input capacity also increases.' if contrast is not None else
                  'Training transposition shifts spectrum/formants and duration, using the same 200 sources; twice the optimizer steps confounds attribution. No independent recording content.' if transposition is not None else
+                 'Independent partial envelopes use the intended training note, not verified pitch; crop-periodic spectral shaping is training-only and supplies no independent recording content. It can alter transients or suppress an already weak partial.' if partial is not None else
                  'Training envelopes vary on the same 200 sources; this supplies no independent recording content.' if variation is not None else
                  'Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else
                  'Model capacity and optimizer also change; this is not an isolated context ablation.'),

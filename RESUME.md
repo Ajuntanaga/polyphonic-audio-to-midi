@@ -1,3 +1,9 @@
+## Independent partial variation: training-only CPU screen prepared
+
+Active checkpoint: `docs/recovery/github-harmonic-partial-variation-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-PARTIAL-VARIATION-PLAN-20261121.md`. One fixed training-only h1..h5 envelope variation, +/-6 dB with 50% exact component bypass, keeps the original source roles, labels, model, example count and optimizer steps. Original clean training selects the cutoff and gates; held-out/continuous audio stays clean. Eight synthetic checks pass; focused review found no material blocker. Ready for one dispatch.
+
+This tests dependence on take-specific harmonic balance after prior shelf, transposition, peak-contrast and level screens failed transfer. The unchanged five-pitch targets are 1771/2529 training, 448/639 calibration and 229/327 test, alongside all precision, recall, silence and continuous safety gates. All 555 sources remain. No installed/default output or scoreboard change. Standing authorization covers this one bounded CPU job; bulk evidence remains remote, no automatic rerun or tuning. Claude remains paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Harmonic level suppression final: held-out transfer rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-level-suppression-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-LEVEL-SUPPRESSION-RESULT-20261121.md`. CPU run44973355304 final/success, source `706e9bca1a71dba803a57ea402a0a1b6cdfe4f8b`, worker `2aa201a38d8e5a31eae925834fb8b87041776811`. All92 GitHub checks and source CI44973305584 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
