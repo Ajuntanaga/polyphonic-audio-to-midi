@@ -1,0 +1,138 @@
+{
+ "ordinary": {
+  "all": {
+   "both": {
+    "n": 121,
+    "silent": 85,
+    "ring": 33,
+    "between": 3
+   },
+   "adapted_only": {
+    "n": 145,
+    "silent": 114,
+    "ring": 21,
+    "between": 10
+   },
+   "original_only": {
+    "n": 3,
+    "silent": 3,
+    "ring": 0,
+    "between": 0
+   },
+   "neither": {
+    "n": 159,
+    "silent": 132,
+    "ring": 12,
+    "between": 15
+   },
+   "fisher_ring_adapted_only_over_neither": {
+    "adapted_only": [
+     21,
+     145
+    ],
+    "neither": [
+     12,
+     159
+    ],
+    "p_one_sided": 0.0392
+   }
+  },
+  "uncontested": {
+   "both": {
+    "n": 16,
+    "silent": 7,
+    "ring": 8,
+    "between": 1
+   },
+   "adapted_only": {
+    "n": 22,
+    "silent": 9,
+    "ring": 7,
+    "between": 6
+   },
+   "original_only": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   },
+   "neither": {
+    "n": 29,
+    "silent": 17,
+    "ring": 2,
+    "between": 10
+   },
+   "fisher_ring_adapted_only_over_neither": {
+    "adapted_only": [
+     7,
+     22
+    ],
+    "neither": [
+     2,
+     29
+    ],
+    "p_one_sided": 0.026
+   }
+  },
+  "first_silent_window_start_j_counts": {
+   "0": 334
+  }
+ },
+ "extended-middle": {
+  "all": {
+   "both": {
+    "n": 6,
+    "silent": 6,
+    "ring": 0,
+    "between": 0
+   },
+   "adapted_only": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   },
+   "original_only": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   },
+   "neither": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   }
+  },
+  "uncontested": {
+   "both": {
+    "n": 6,
+    "silent": 6,
+    "ring": 0,
+    "between": 0
+   },
+   "adapted_only": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   },
+   "original_only": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   },
+   "neither": {
+    "n": 0,
+    "silent": 0,
+    "ring": 0,
+    "between": 0
+   }
+  },
+  "first_silent_window_start_j_counts": {
+   "0": 6
+  }
+ }
+}
