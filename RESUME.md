@@ -1,3 +1,20 @@
+## Active M3 checkpoint — quiet-cell observation final, 2026-11-22 23:12 UTC
+
+Read `docs/recovery/github-quiet-cell-observation-20261122.json` and
+`docs/recovery/CODEX-M3-QUIET-CELLS-RESULT-20261122.md` first.
+Run **45080860628** is final/success; source **4f9d921**, worker **d07c404**.
+All six complete snapshot/raw-MIDI companions preserve saved CURRENT, both v5
+traces preserve historical identity, and all sidecar rows match the v5 order.
+Ordinary: 1,310,294 rows / 167,025 ticks; extended-middle: 95,436 / 35,025.
+Quiet-code-5 now has raw cells: 24,720 available of 24,729 ordinary rows and
+1,289 of 1,289 extended-middle rows. Nine unavailable rows remain unavailable.
+Nonzero resonator state is not yet evidence of a fresh pluck or a useful rule.
+Small report collected once with verified digest; 388,717,092-byte bulk remains
+remote in artifact 14777925317, expires 2026-11-29. Do not poll/rerun/redownload.
+Source CI repair c73889c passes CI 45081339946 and portable 45081339953.
+Claude is an active equal peer and owns the separate boundary/restart analysis.
+No policy, installed/default or label-budget change; prior rejections stand.
+
 ## Active M3 checkpoint — native joint rapid reset rejected, 2026-11-22 22:16 UTC
 
 Read `docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-RESULT-20261122.md` and

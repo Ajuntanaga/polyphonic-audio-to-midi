@@ -5,17 +5,17 @@
   "workflow": "quiet-cell-observation.yml",
   "source_sha": "4f9d921f049c69b81b7e8599e36f7a88bf58c651",
   "worker_sha": "d07c4043c87cc2ded99d3c628f4a1ac01780171f",
-  "state": "in_progress",
+  "state": "completed",
   "dispatch_count": 1,
-  "final": false,
+  "final": true,
   "plan": "docs/recovery/CODEX-M3-QUIET-CELLS-PLAN-20261122.md",
   "spec": "docs/recovery/quiet-cell-observation-spec-20261122.json",
   "local_tests": "7 generated-text contract tests pass; native tests remote only",
   "policy_change": false,
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "collection_state": "not started",
-  "next": "Read existing run; collect small report once; no duplicate dispatch.",
+  "collection_state": "small report collected once; server digest verified; bulk remote",
+  "next": "Claude owns the distinct boundary/restart analysis. Use the preserved cells to distinguish a fresh attack from decaying resonator state; keep large evidence remote and return compact results. No repeat replay or duplicate census.",
   "dispatch_returncode": 0,
   "dispatch_output": "build/recovery/quiet-cell-observation-20261122/dispatch.stdout",
   "run_id": 45080860628,
@@ -24,15 +24,13 @@
   "output_directory": "build/github-results/quiet-cell-observation-45080860628",
   "report_artifact": "m3-quiet-cell-observation-report-45080860628-1",
   "evidence_artifact": "m3-quiet-cell-observation-evidence-45080860628-1",
-  "conclusion": "",
-  "last_observed_at": "2026-11-22T23:05:31.649464+00:00",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-22T23:12:05.813548+00:00",
   "worker_stage": [
     {
       "name": "observation",
-      "status": "in_progress",
-      "steps": [
-        "Run the six frozen identity companions"
-      ]
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "source_runs": [
@@ -60,6 +58,176 @@
     "local_reproduction": "unapproved dependency token onnx: native/neural/ort_contract_test.cpp",
     "fix": "Add only the already-authorized standalone adapter-test path to the ONNX exception and existing dependency-boundary test. No runtime code change.",
     "validation": "Both source validators and the focused dependency-boundary Python test pass locally.",
-    "fix_commit": "pending"
+    "fix_commit": "c73889c14bfbed74bda10e0e0c5bb7b583ecc348",
+    "fix_source_runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 45081339946,
+        "headSha": "c73889c14bfbed74bda10e0e0c5bb7b583ecc348",
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45081339946",
+        "workflowName": "CI"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 45081339953,
+        "headSha": "c73889c14bfbed74bda10e0e0c5bb7b583ecc348",
+        "status": "completed",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45081339953",
+        "workflowName": "Portable offline replay"
+      }
+    ],
+    "fix_runs_observed_at": "2026-11-22T23:12:05.813548+00:00"
+  },
+  "report_completed_at": "2026-11-22T23:08:32.521323+00:00",
+  "stage": "snapshot/MIDI/v5 identity and cell coverage passed; analysis pending",
+  "collection_receipt": "build/github-results/quiet-cell-observation-45080860628/collection.json",
+  "report_path": "build/github-results/quiet-cell-observation-45080860628/report/quiet-cell-observation/report/report.json",
+  "report_sha256": "49f328bdc1821cf9cdd6a587661cc1e1f21a536a8a9957623ec2ab5c80609e44",
+  "result_note": "docs/recovery/CODEX-M3-QUIET-CELLS-RESULT-20261122.md",
+  "artifacts": [
+    {
+      "id": 14777925317,
+      "name": "m3-quiet-cell-observation-evidence-45080860628-1",
+      "size_in_bytes": 388717092,
+      "digest": "sha256:11d52807b731af3bfbb98a2a4f8696e61e82921e8e13a6b8837e1c6fe74a9728",
+      "expires_at": "2026-11-29T23:08:33Z",
+      "collected": false
+    },
+    {
+      "id": 14777422047,
+      "name": "m3-quiet-cell-observation-report-45080860628-1",
+      "size_in_bytes": 8777,
+      "digest": "sha256:98f2cb3cd7b28ba29817ac2eedbb416f3715785703d81e796e3d7bd82985a09e",
+      "expires_at": "2026-12-06T23:08:32Z",
+      "collected": true
+    }
+  ],
+  "results": {
+    "ordinary": {
+      "saved_snapshot_and_midi_identity": true,
+      "companions": 3,
+      "snapshot_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+      "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+      "historical_v5_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93",
+      "historical_v5_identity": true,
+      "coverage": {
+        "frames": 167025,
+        "rows": 1310294,
+        "exact_coverage": true,
+        "quiet_counts": {
+          "0": {
+            "ticks": 150917,
+            "rows": 1254060,
+            "available": 1186391,
+            "nonzero_cells": 1186391
+          },
+          "1": {
+            "ticks": 62,
+            "rows": 590,
+            "available": 531,
+            "nonzero_cells": 531
+          },
+          "2": {
+            "ticks": 4783,
+            "rows": 27685,
+            "available": 25359,
+            "nonzero_cells": 25359
+          },
+          "5": {
+            "ticks": 10949,
+            "rows": 24729,
+            "available": 24720,
+            "nonzero_cells": 24720
+          },
+          "7": {
+            "ticks": 314,
+            "rows": 3230,
+            "available": 3033,
+            "nonzero_cells": 3033
+          }
+        }
+      },
+      "raw_cells": {
+        "path": "ordinary-current-on-512-cells-raw-cells.tsv.gz",
+        "raw_bytes": 469969482,
+        "raw_sha256": "d74f110c5adaa94c2e903c46cb6f0f7be4c17899d5ee22afe567d83271f324a3",
+        "bytes": 132487577,
+        "sha256": "7389b95e5364e99a35914b2dd6523581ce43984466648bd2604051b586be4872"
+      }
+    },
+    "extended-middle": {
+      "saved_snapshot_and_midi_identity": true,
+      "companions": 3,
+      "snapshot_sha256": "826fac40de309ff0838e68a7f301e146291b6197eab2493847ddee853bdf66c3",
+      "midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+      "historical_v5_sha256": "78929974b9cc914f71ef3fa58759728dda93f4a53fea16af17f3217adb6ac267",
+      "historical_v5_identity": true,
+      "coverage": {
+        "frames": 35025,
+        "rows": 95436,
+        "exact_coverage": true,
+        "quiet_counts": {
+          "0": {
+            "ticks": 32470,
+            "rows": 91958,
+            "available": 91958,
+            "nonzero_cells": 91958
+          },
+          "1": {
+            "ticks": 435,
+            "rows": 120,
+            "available": 120,
+            "nonzero_cells": 120
+          },
+          "2": {
+            "ticks": 817,
+            "rows": 1415,
+            "available": 1415,
+            "nonzero_cells": 1415
+          },
+          "3": {
+            "ticks": 60,
+            "rows": 120,
+            "available": 120,
+            "nonzero_cells": 120
+          },
+          "4": {
+            "ticks": 342,
+            "rows": 472,
+            "available": 472,
+            "nonzero_cells": 472
+          },
+          "5": {
+            "ticks": 888,
+            "rows": 1289,
+            "available": 1289,
+            "nonzero_cells": 1289
+          },
+          "7": {
+            "ticks": 13,
+            "rows": 62,
+            "available": 62,
+            "nonzero_cells": 62
+          }
+        }
+      },
+      "raw_cells": {
+        "path": "extended-middle-current-on-512-cells-raw-cells.tsv.gz",
+        "raw_bytes": 36036364,
+        "raw_sha256": "1b6903765acc26428f952b1e5c460f4808dfdca8ec50dba8d4923b49b96b48c7",
+        "bytes": 9769279,
+        "sha256": "769148c773ab754b69ed5e2c41485efdbce9d4953a45b77d49420e5f9262e260"
+      }
+    }
+  },
+  "verification": {
+    "native_test_targets_passed": 2,
+    "native_test_targets_total": 2,
+    "generated_contract_tests_passed": 7,
+    "snapshot_midi_companions_identical": 6,
+    "snapshot_midi_companions_total": 6,
+    "datasets_with_exact_cell_coverage": 2,
+    "interpretation": "Observation identity and coverage only; no new timing, allocation, scientific policy or live-host acceptance."
   }
 }
