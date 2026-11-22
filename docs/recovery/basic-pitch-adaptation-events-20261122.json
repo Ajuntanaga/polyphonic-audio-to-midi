@@ -1,0 +1,29 @@
+{
+  "schema": "m3_artifact_subset_spec_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "artifact_id": 14754355554,
+  "artifact_name": "m3-basic-pitch-adaptation-evidence-45016827324-1",
+  "producer_run_id": 45016827324,
+  "producer_worker_commit": "5e693618863578f2d1e14aa2cffa6e0b149d51c9",
+  "producer_source_commit": "7e91d692cf9ed3a89ddc50a6427b7c68d04e10f0",
+  "archive_sha256": "64b82052c1b100d8d87750409ae1e9bc4f38d979a5919fb0a686372a2f9092ae",
+  "files": {
+    "unmodified_tensorflow/ordinary-events.json": {
+      "bytes": 166961,
+      "sha256": "ca4d2ce4553f2e8ddaed76a5b967afb8881bb30ec73432f8a14891b9eb9fe1cb"
+    },
+    "adapted_tensorflow/ordinary-events.json": {
+      "bytes": 171292,
+      "sha256": "c602b950c76d850b82dad1b89e4549f213f21210d22438e37299b0454873f864"
+    },
+    "unmodified_tensorflow/extended-middle-events.json": {
+      "bytes": 4383,
+      "sha256": "6b0f30d48202f7744bfa125ce4cee83afb3184406ebf7d9fc7535cd5c65085ca"
+    },
+    "adapted_tensorflow/extended-middle-events.json": {
+      "bytes": 6336,
+      "sha256": "662f7c273ea6eea9d5e500028956ea66f2e2d929d064b4fa9b1050c263000699"
+    }
+  },
+  "purpose": "Collect four existing event JSONs unchanged for independent saved-output analysis; no replay or model execution."
+}

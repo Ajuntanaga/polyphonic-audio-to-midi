@@ -1,5 +1,5 @@
 {
-  "state": "running",
+  "state": "completed_rejected",
   "prepared_at": "2026-11-22T11:20:03.449377+00:00",
   "source_commit": "7e91d692cf9ed3a89ddc50a6427b7c68d04e10f0",
   "worker_commit": "5e693618863578f2d1e14aa2cffa6e0b149d51c9",
@@ -15,16 +15,16 @@
   "dispatch_exit_code": 0,
   "run_id": 45016827324,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45016827324",
-  "github_status": "in_progress",
-  "github_conclusion": null,
-  "observed_at": "2026-11-22T11:23:45.390593+00:00",
+  "github_status": "completed",
+  "github_conclusion": "success",
+  "observed_at": "2026-11-22T12:16:55.321501+00:00",
   "checkpoint": "docs/recovery/github-basic-pitch-adaptation-20261122.json",
   "local_output_directory": "build/github-results/basic-pitch-adaptation-45016827324",
   "report_artifact": "m3-basic-pitch-adaptation-report-45016827324-1",
   "evidence_artifact": "m3-basic-pitch-adaptation-evidence-45016827324-1",
-  "collection_state": "pending",
-  "result_final": false,
-  "stage": "Fit once and compare both causal models",
+  "collection_state": "collected_once_digest_verified",
+  "result_final": true,
+  "stage": "fixed fit and both paired recordings scored",
   "remote_setup_tests": "passed",
   "source_portable_run": 45016795250,
   "source_portable_conclusion": "success",
@@ -33,5 +33,75 @@
     "scope": "read-only status and small named report collection once; no bulk or workflow mutations",
     "first_observation_at": "2026-11-22T11:30:00Z",
     "interval_seconds": 300
+  },
+  "report_path": "build/github-results/basic-pitch-adaptation-45016827324/collected/basic-pitch-adaptation-result/report/report.json",
+  "report_sha256": "703b24e83a5353c0be0fbbd20db7746cbd6c8e0d4354f8f3ffe108a6617e3ccf",
+  "receipt": {
+    "observed_at": "2026-11-22T12:16:55.321501+00:00",
+    "run_id": 45016827324,
+    "worker_commit": "5e693618863578f2d1e14aa2cffa6e0b149d51c9",
+    "status": "completed",
+    "conclusion": "success",
+    "collection": "collected_once_digest_verified",
+    "artifact_id": 14754151355,
+    "artifact_name": "m3-basic-pitch-adaptation-report-45016827324-1",
+    "archive_bytes": 257731,
+    "sha256": "e65b3a3cacaf693d39a5cf173839e2d54dd5143fff86501a97d14b54c0ef6ad3",
+    "archive_path": "build/github-results/basic-pitch-adaptation-45016827324/report-archive.raw",
+    "extracted_directory": "build/github-results/basic-pitch-adaptation-45016827324/collected"
+  },
+  "evidence_metadata": {
+    "id": 14754355554,
+    "node_id": "MDg6QXJ0aWZhY3QxNDc1NDM1NTU1NA==",
+    "name": "m3-basic-pitch-adaptation-evidence-45016827324-1",
+    "size_in_bytes": 625910204,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14754355554",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14754355554/zip",
+    "expired": false,
+    "digest": "sha256:64b82052c1b100d8d87750409ae1e9bc4f38d979a5919fb0a686372a2f9092ae",
+    "created_at": "2026-11-22T12:15:00Z",
+    "updated_at": "2026-11-22T12:15:00Z",
+    "expires_at": "2026-12-06T12:14:41Z",
+    "workflow_run": {
+      "id": 45016827324,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "5e693618863578f2d1e14aa2cffa6e0b149d51c9"
+    }
+  },
+  "screen": {
+    "representation_pass": false,
+    "all_source_occurrences_preserved": false,
+    "no_regression_against_unmodified_tensorflow": false,
+    "no_regression_against_current": false,
+    "ordinary_gain_pp": -31.900791804016315,
+    "research_screen_pass": false,
+    "promotion_accepted": false,
+    "native_allocation_and_deadlines": "not measured",
+    "host_and_device": "not measured"
+  },
+  "compact_result": {
+    "ordinary_zero_compute_pitch_coverage_percent": [
+      55.81392006842524,
+      71.87721222985792
+    ],
+    "ordinary_zero_compute_exact_pitch_sets_percent": [
+      9.982516784380554,
+      37.58584005359156
+    ],
+    "ordinary_zero_compute_wrong_pitch_delta": -713262,
+    "ordinary_zero_compute_gap_extra_delta": 1811058,
+    "ordinary_zero_compute_labels_losing_presence": 120,
+    "ordinary_zero_compute_labels_losing_hold": 122,
+    "ordinary_measured_completion_pitch_coverage_percent": [
+      6.4296091135,
+      8.09242090734464
+    ],
+    "ordinary_max_fifo_backlog_seconds": [
+      72.272998571,
+      72.067182579
+    ],
+    "interpretation": "Adaptation improves compute-free causal pitch coverage but fails safety and per-label gates; actual TensorFlow processing is slower than arrival. Neither diagnostic is an installed tuner score or live acceptance."
   }
 }
