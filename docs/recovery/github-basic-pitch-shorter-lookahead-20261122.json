@@ -111,6 +111,7 @@
     "artifact_id": 14759539384,
     "bytes": 21242771,
     "sha256": "daee380c2c5d9ffacd8cfbef2805102eca10df75eea0d31215071ab9b813d881",
-    "state": "remote"
+    "state": "collected_once_by_claude",
+    "analysis": "docs/recovery/CLAUDE-M3-LEVEL-CONDITIONED-RESULT-20261122.md"
   }
 }

@@ -1,3 +1,11 @@
+# Release-context final: fit complete, quality rejected, export interrupted
+
+Active checkpoint: `docs/recovery/github-basic-pitch-release-adaptation-20261122.json`; result: `docs/recovery/CODEX-M3-RELEASE-ADAPTATION-RESULT-20261122.md`. Run45037966575 final/failure, small report collected once with verified digest. Both epochs and all window evaluations completed. Test nominal pitch presence247210→263782/359633 (68.740→73.348%), but extras73075→100436; exact sets82643→79995/176128 and35/36 occurrences lose presence/longest hold. Every split fails the window gate. These are constructed-window model measurements, not tuner frames or delivered MIDI.
+
+The prior graph/interface crop then failed; continuous recording evaluation did not run. Both epoch weights remain remote in artifact14763113098 (expiry2026-12-06), including142881-byte epoch2; do not retrain to recover export evaluation. No repoll/redownload/unchanged rerun. The prepared native temporal runner032834e passed source CI45041538501 but is not dispatched because this model already fails quality. Temporal-crop45034216124 retains its separate10.88–11.20ms p99/bit-identical-output runtime result. Installed/default scores unchanged.
+
+The eight-hour window ended2026-11-22 18:25 UTC; final report collection followed at19:32 after a turn interruption. Broader project remains incomplete. Next development must address the measured false-output/held-note tradeoff; any export-only diagnosis must reuse the saved weights and record actual graph metadata. Claude and Codex remain equal peers, with no acknowledgement or approval gate; this window closeout does not pause Claude. Earlier entries below are historical.
+
 # Release-context adaptation queued: 45037966575
 
 Active checkpoint: `docs/recovery/github-basic-pitch-release-adaptation-20261122.json`. Source `fc3ad86d5af286d1cfbf4aba5041d0fdc460d316`, worker `5eadbb3b0ee23b1e8c2255f7f275042bcaec7ad2`. One GitHub CPU fit, original4096 plus2048 component-ending windows; all555 takes and original evaluation plans retained. Prior/release paired at164/165 with unchanged strict safety/numerical/runtime gates. Small reports only; model/tape evidence remote. Installed/default unchanged. No duplicate dispatch.

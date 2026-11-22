@@ -1,7 +1,7 @@
 {
   "schema": "m3_github_basic_pitch_release_adaptation_checkpoint_v1",
-  "state": "in_progress",
-  "final": false,
+  "state": "failed",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "workflow": "basic-pitch-release-adaptation.yml",
@@ -18,11 +18,11 @@
   "dispatch_attempted_at": "2026-11-22T15:22:32.970879+00:00",
   "dispatch_returncode": 0,
   "run_id": 45037966575,
-  "status": "in_progress",
-  "conclusion": "",
+  "status": "completed",
+  "conclusion": "failure",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45037966575",
   "output_directory": "build/github-results/basic-pitch-release-adaptation-45037966575",
-  "stage": "Fixed fresh release-context fit running",
+  "stage": "Fit and window evaluation complete; window gate rejected; prior graph/interface crop failed",
   "source_ci": {
     "run_id": 45037917689,
     "state": "completed",
@@ -30,5 +30,212 @@
     "source_commit": "fc3ad86d5af286d1cfbf4aba5041d0fdc460d316",
     "observation": "build/recovery/basic-pitch-release-adaptation-observations/source_ci-1529.stdout"
   },
-  "last_observed_at": "2026-11-22T15:39:50.649000+00:00"
+  "last_observed_at": "2026-11-22T19:35:26.955692+00:00",
+  "finished_at": "2026-11-22T16:35:31Z",
+  "report": "build/github-results/basic-pitch-release-adaptation-45037966575/artifact/basic-pitch-release-adaptation-result/report/report.json",
+  "report_sha256": "94497b5632ec0cdf03548a87cf5d44708a556d7b7f1ef493ddff2c73d2669d9b",
+  "collection_state": "collected_once_digest_verified",
+  "collection": {
+    "artifact_id": 14763063007,
+    "artifact_name": "m3-basic-pitch-release-adaptation-report-45037966575-1",
+    "server_digest": "sha256:fb73f0d93f81748c4a23d87d136ea1b04427d44e96fdd84ae23bf8b48b970518",
+    "download_sha256": "fb73f0d93f81748c4a23d87d136ea1b04427d44e96fdd84ae23bf8b48b970518",
+    "download_bytes": 53034,
+    "collected_at": "2026-11-22T19:32:08.203296+00:00",
+    "destination": "build/github-results/basic-pitch-release-adaptation-45037966575/artifact",
+    "files": [
+      "basic-pitch-release-adaptation-result/report/prior-signature.json",
+      "basic-pitch-release-adaptation-logs/dependencies.log",
+      "basic-pitch-release-adaptation-result/report/report.json",
+      "basic-pitch-release-adaptation-logs/environment.txt",
+      "basic-pitch-release-adaptation-logs/release-adaptation.log",
+      "basic-pitch-release-adaptation-logs/source-sha.txt",
+      "basic-pitch-release-adaptation-logs/tests.log"
+    ],
+    "bulk_downloaded": false
+  },
+  "error": "ValueError: Pinned graph/interface differs",
+  "training": {
+    "epochs": [
+      {
+        "epoch": 1,
+        "batches": 1536,
+        "mean_note_bce": 0.030612897935346457,
+        "global_gradient_norm_mean": 0.2960147122260726,
+        "batch_seconds": {
+          "first": 5.234965298000006,
+          "median": 1.1247463380000227,
+          "maximum": 5.234965298000006,
+          "total": 1732.660653466998
+        },
+        "checkpoint": {
+          "file": "epoch-1.npz",
+          "sha256": "df13284480186ee6767cbe46adffe6bb9a1a77e2078e88e4e5ed1ba1274ef257",
+          "bytes": 142637
+        }
+      },
+      {
+        "epoch": 2,
+        "batches": 1536,
+        "mean_note_bce": 0.020768883039863795,
+        "global_gradient_norm_mean": 0.30118511998443864,
+        "batch_seconds": {
+          "first": 1.1258420070000739,
+          "median": 1.1250038599999925,
+          "maximum": 1.2305116249999628,
+          "total": 1728.988547010996
+        },
+        "checkpoint": {
+          "file": "epoch-2.npz",
+          "sha256": "e64ce16066e746bb386cadbef8d9efcce6430812a4907586c5647d63b7ef02b0",
+          "bytes": 142881
+        }
+      }
+    ],
+    "optimizer": "Adam",
+    "batch_size": 4,
+    "note_loss": "Unweighted binary cross entropy over all 172x88 bins",
+    "batch_normalization": "SavedModel inference graph; original statistics remain fixed",
+    "onset_and_contour": "No synthetic onset/contour targets; shared-weight effects are measured later"
+  },
+  "retained_takes": {
+    "train": 200,
+    "calibration": 200,
+    "test": 155
+  },
+  "release_weight_fingerprint": "d6b01e8927d31377ce05734404f60a4c33f23c737f03ebd7605fbd36cb2f189f",
+  "original_restore_output_identity": {
+    "contour": true,
+    "note": true,
+    "onset": true
+  },
+  "window_summary": {
+    "train": {
+      "unit": "nominal model-frame distinct-pitch occupancy in constructed windows",
+      "prior": {
+        "frames": 704512,
+        "expected_note_frames": 1742377,
+        "found_note_frames": 1500247,
+        "extra_note_frames": 154829,
+        "missing_note_frames": 242130,
+        "exact_frames": 434254,
+        "precision_percent": 90.6452029997414,
+        "recall_percent": 86.10346670094934,
+        "exact_set_percent": 61.63897847020349
+      },
+      "release": {
+        "frames": 704512,
+        "expected_note_frames": 1742377,
+        "found_note_frames": 1560054,
+        "extra_note_frames": 234932,
+        "missing_note_frames": 182323,
+        "exact_frames": 426090,
+        "precision_percent": 86.91176421431699,
+        "recall_percent": 89.53596150546065,
+        "exact_set_percent": 60.48016215479651
+      },
+      "prior_silence_extras": 1478,
+      "release_silence_extras": 2559,
+      "vs_prior": {
+        "occurrence_count": 11358,
+        "occurrences_losing_presence": 177,
+        "occurrences_losing_longest": 179,
+        "no_occurrence_loss": false,
+        "caveat": "A same-pitch mixture counts presence once; these labels do not measure unison multiplicity."
+      },
+      "representation_pass": false
+    },
+    "calibration": {
+      "unit": "nominal model-frame distinct-pitch occupancy in constructed windows",
+      "prior": {
+        "frames": 176128,
+        "expected_note_frames": 375035,
+        "found_note_frames": 327835,
+        "extra_note_frames": 32016,
+        "missing_note_frames": 47200,
+        "exact_frames": 120046,
+        "precision_percent": 91.10298429072033,
+        "recall_percent": 87.41450797925528,
+        "exact_set_percent": 68.15838481104652
+      },
+      "release": {
+        "frames": 176128,
+        "expected_note_frames": 375035,
+        "found_note_frames": 338577,
+        "extra_note_frames": 48524,
+        "missing_note_frames": 36458,
+        "exact_frames": 116988,
+        "precision_percent": 87.46477017625891,
+        "recall_percent": 90.2787739810951,
+        "exact_set_percent": 66.42214752906976
+      },
+      "prior_silence_extras": 588,
+      "release_silence_extras": 907,
+      "vs_prior": {
+        "occurrence_count": 2455,
+        "occurrences_losing_presence": 33,
+        "occurrences_losing_longest": 34,
+        "no_occurrence_loss": false,
+        "caveat": "A same-pitch mixture counts presence once; these labels do not measure unison multiplicity."
+      },
+      "representation_pass": false
+    },
+    "test": {
+      "unit": "nominal model-frame distinct-pitch occupancy in constructed windows",
+      "prior": {
+        "frames": 176128,
+        "expected_note_frames": 359633,
+        "found_note_frames": 247210,
+        "extra_note_frames": 73075,
+        "missing_note_frames": 112423,
+        "exact_frames": 82643,
+        "precision_percent": 77.18438265919416,
+        "recall_percent": 68.73952056680004,
+        "exact_set_percent": 46.922124818313954
+      },
+      "release": {
+        "frames": 176128,
+        "expected_note_frames": 359633,
+        "found_note_frames": 263782,
+        "extra_note_frames": 100436,
+        "missing_note_frames": 95851,
+        "exact_frames": 79995,
+        "precision_percent": 72.42420748013552,
+        "recall_percent": 73.34755153170038,
+        "exact_set_percent": 45.41867278343023
+      },
+      "prior_silence_extras": 527,
+      "release_silence_extras": 1163,
+      "vs_prior": {
+        "occurrence_count": 2638,
+        "occurrences_losing_presence": 35,
+        "occurrences_losing_longest": 36,
+        "no_occurrence_loss": false,
+        "caveat": "A same-pitch mixture counts presence once; these labels do not measure unison multiplicity."
+      },
+      "representation_pass": false
+    }
+  },
+  "result_note": "docs/recovery/CODEX-M3-RELEASE-ADAPTATION-RESULT-20261122.md",
+  "bulk_evidence": {
+    "artifact_id": 14763113098,
+    "name": "m3-basic-pitch-release-adaptation-evidence-45037966575-1",
+    "bytes": 929456809,
+    "sha256": "39d612cd004f3fd7be0f26e79874eba649e54b64a1657947eeea018aff71e344",
+    "expires_at": "2026-12-06T16:35:00Z",
+    "state": "remote; not downloaded",
+    "contents": "Complete epoch weights, window predictions/plans, prior export; no continuous-recording tapes"
+  },
+  "screen": {
+    "window_representation_pass": false,
+    "window_no_occurrence_loss_vs_prior_pass": false,
+    "corpus_tracking_measured": false,
+    "export_crop_pass": false,
+    "numerical_parity_measured": false,
+    "runtime_measured": false,
+    "promotion_accepted": false,
+    "installed_output_changed": false,
+    "remote_tests_passed": 22
+  },
+  "next": "Keep this quality rejection. Do not repeat training or advance the native comparison merely to repeat a known rejection. Any justified export-only diagnosis can reuse the saved epoch-2 checkpoint and must retain actual graph count/names before crop failure; no new run dispatched."
 }

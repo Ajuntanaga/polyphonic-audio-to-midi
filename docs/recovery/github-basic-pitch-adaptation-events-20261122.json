@@ -1,0 +1,63 @@
+{
+  "schema": "m3_github_artifact_subset_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "artifact-subset.yml",
+  "source_commit": "71b8e00bb13a0da2c4ce7b253e8ae0e487f1908d",
+  "worker_commit": "c375f77d352524af03183bff93dd8ecf20d67c33",
+  "specification": "docs/recovery/basic-pitch-adaptation-events-20261122.json",
+  "status": "completed",
+  "requested_at": "2026-11-22T12:24:39.401341+00:00",
+  "run_id": 45022134487,
+  "local_output": "build/github-results/basic-pitch-adaptation-events-45022134487",
+  "purpose": "Four pinned existing event logs only; no audio or model processing",
+  "installed_output_changed": false,
+  "dispatch_returncode": 0,
+  "conclusion": "success",
+  "observed_at": "2026-11-22T12:25:03.415018+00:00",
+  "artifact_name": "m3-artifact-subset-45022134487-1",
+  "collection_state": "collected_once_hash_verified",
+  "final": true,
+  "collection": "collected_once_hash_verified",
+  "collection_receipt": "build/github-results/basic-pitch-adaptation-events-45022134487/collection-receipt.json",
+  "selected_directory": "build/github-results/basic-pitch-adaptation-events-45022134487/collected/selected",
+  "selected_bytes": 348972,
+  "artifact": {
+    "id": 14753777727,
+    "node_id": "MDg6QXJ0aWZhY3QxNDc1Mzc3NzcyNw==",
+    "name": "m3-artifact-subset-45022134487-1",
+    "size_in_bytes": 41837,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14753777727",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14753777727/zip",
+    "expired": false,
+    "digest": "sha256:009d9405db9b70d157455ab651a26a20e90b154dd5a3332294fa7a36e4c5eaae",
+    "created_at": "2026-11-22T12:25:19Z",
+    "updated_at": "2026-11-22T12:25:19Z",
+    "expires_at": "2026-12-06T12:25:17Z",
+    "workflow_run": {
+      "id": 45022134487,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "c375f77d352524af03183bff93dd8ecf20d67c33"
+    }
+  },
+  "selected_files": {
+    "unmodified_tensorflow/ordinary-events.json": {
+      "bytes": 166961,
+      "sha256": "ca4d2ce4553f2e8ddaed76a5b967afb8881bb30ec73432f8a14891b9eb9fe1cb"
+    },
+    "adapted_tensorflow/ordinary-events.json": {
+      "bytes": 171292,
+      "sha256": "c602b950c76d850b82dad1b89e4549f213f21210d22438e37299b0454873f864"
+    },
+    "unmodified_tensorflow/extended-middle-events.json": {
+      "bytes": 4383,
+      "sha256": "6b0f30d48202f7744bfa125ce4cee83afb3184406ebf7d9fc7535cd5c65085ca"
+    },
+    "adapted_tensorflow/extended-middle-events.json": {
+      "bytes": 6336,
+      "sha256": "662f7c273ea6eea9d5e500028956ea66f2e2d929d064b4fa9b1050c263000699"
+    }
+  },
+  "collected_at": "2026-11-22T12:30:48.098116+00:00"
+}
