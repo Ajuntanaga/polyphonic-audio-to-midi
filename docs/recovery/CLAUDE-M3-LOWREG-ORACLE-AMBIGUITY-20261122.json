@@ -1,0 +1,139 @@
+{
+ "schema": "claude_m3_oracle_ambiguity_v1",
+ "datasets": {
+  "ordinary": {
+   "current": {
+    "present": 13525345,
+    "expected": 33819101,
+    "coverage_percent": 39.9932,
+    "exact_pitch_set": 53249,
+    "wrong_pitch": 7808309,
+    "gap": 3621485
+   },
+   "samples_by_uncovered_related_count": {
+    "0": 463789,
+    "1": 1720168,
+    "2": 545129,
+    "3": 205194
+   },
+   "share_exactly_one_among_with_uncovered": 0.696,
+   "available_samples_by_class": {
+    "octave": 1574151,
+    "fifth": 1064850,
+    "near": 1758282
+   },
+   "chosen_samples_by_class": {
+    "octave": 1171286,
+    "fifth": 599457,
+    "near": 699748
+   },
+   "share_by_class": {
+    "octave": 0.744,
+    "fifth": 0.563,
+    "near": 0.398
+   },
+   "modes": {
+    "all": {
+     "present": 15236311,
+     "coverage_percent": 45.0524,
+     "coverage_gain_points": 5.06,
+     "exact_pitch_set": 136578,
+     "exact_set_ratio": 2.56,
+     "wrong_pitch_delta": -2470491,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    },
+    "unique": {
+     "present": 14736324,
+     "coverage_percent": 43.574,
+     "coverage_gain_points": 3.58,
+     "exact_pitch_set": 114434,
+     "exact_set_ratio": 2.15,
+     "wrong_pitch_delta": -1720168,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    },
+    "octave_unique": {
+     "present": 13932877,
+     "coverage_percent": 41.1982,
+     "coverage_gain_points": 1.2,
+     "exact_pitch_set": 112578,
+     "exact_set_ratio": 2.11,
+     "wrong_pitch_delta": -554900,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    }
+   }
+  },
+  "extended-middle": {
+   "current": {
+    "present": 2021510,
+    "expected": 2073600,
+    "coverage_percent": 97.4879,
+    "exact_pitch_set": 1516739,
+    "wrong_pitch": 528259,
+    "gap": 183006
+   },
+   "samples_by_uncovered_related_count": {
+    "0": 187010,
+    "1": 0,
+    "2": 0,
+    "3": 0
+   },
+   "share_exactly_one_among_with_uncovered": null,
+   "available_samples_by_class": {
+    "octave": 0,
+    "fifth": 52992,
+    "near": 134018
+   },
+   "chosen_samples_by_class": {
+    "octave": 0,
+    "fifth": 0,
+    "near": 0
+   },
+   "share_by_class": {
+    "octave": null,
+    "fifth": 0.0,
+    "near": 0.0
+   },
+   "modes": {
+    "all": {
+     "present": 2021510,
+     "coverage_percent": 97.4879,
+     "coverage_gain_points": 0.0,
+     "exact_pitch_set": 1516739,
+     "exact_set_ratio": 1.0,
+     "wrong_pitch_delta": 0,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    },
+    "unique": {
+     "present": 2021510,
+     "coverage_percent": 97.4879,
+     "coverage_gain_points": 0.0,
+     "exact_pitch_set": 1516739,
+     "exact_set_ratio": 1.0,
+     "wrong_pitch_delta": 0,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    },
+    "octave_unique": {
+     "present": 2021510,
+     "coverage_percent": 97.4879,
+     "coverage_gain_points": 0.0,
+     "exact_pitch_set": 1516739,
+     "exact_set_ratio": 1.0,
+     "wrong_pitch_delta": 0,
+     "gap_delta": 0,
+     "strict_gate": true,
+     "lower_labels_lost": 0
+    }
+   }
+  }
+ }
+}

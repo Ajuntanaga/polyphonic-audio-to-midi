@@ -1,0 +1,86 @@
+{
+ "orphan_spans": 219,
+ "real": {
+  "octave": 0.456,
+  "fifth": 0.2,
+  "near": 0.194,
+  "other": 0.15,
+  "related": 0.85,
+  "gap_share_of_orphan": 0.145,
+  "aligned_span_share": 0.215
+ },
+ "shifted_mean": {
+  "octave": 0.257,
+  "fifth": 0.251,
+  "near": 0.182,
+  "other": 0.31,
+  "related": 0.69,
+  "gap_share_of_orphan": 0.196,
+  "aligned_span_share": 0.147
+ },
+ "excess_points": {
+  "octave": 19.9,
+  "fifth": -5.1,
+  "near": 1.2,
+  "other": -16.0,
+  "related": 16.0,
+  "gap_share_of_orphan": -5.1,
+  "aligned_span_share": 6.8
+ },
+ "shifted_each": {
+  "7": {
+   "octave": 0.288,
+   "fifth": 0.204,
+   "near": 0.147,
+   "other": 0.361,
+   "related": 0.639,
+   "gap_share_of_orphan": 0.23,
+   "aligned_span_share": 0.269
+  },
+  "13": {
+   "octave": 0.368,
+   "fifth": 0.192,
+   "near": 0.201,
+   "other": 0.239,
+   "related": 0.761,
+   "gap_share_of_orphan": 0.217,
+   "aligned_span_share": 0.1
+  },
+  "29": {
+   "octave": 0.295,
+   "fifth": 0.177,
+   "near": 0.213,
+   "other": 0.314,
+   "related": 0.686,
+   "gap_share_of_orphan": 0.188,
+   "aligned_span_share": 0.187
+  },
+  "41": {
+   "octave": 0.16,
+   "fifth": 0.298,
+   "near": 0.192,
+   "other": 0.35,
+   "related": 0.65,
+   "gap_share_of_orphan": 0.213,
+   "aligned_span_share": 0.05
+  },
+  "53": {
+   "octave": 0.195,
+   "fifth": 0.313,
+   "near": 0.157,
+   "other": 0.336,
+   "related": 0.664,
+   "gap_share_of_orphan": 0.176,
+   "aligned_span_share": 0.119
+  },
+  "67": {
+   "octave": 0.236,
+   "fifth": 0.321,
+   "near": 0.185,
+   "other": 0.258,
+   "related": 0.742,
+   "gap_share_of_orphan": 0.153,
+   "aligned_span_share": 0.16
+  }
+ }
+}

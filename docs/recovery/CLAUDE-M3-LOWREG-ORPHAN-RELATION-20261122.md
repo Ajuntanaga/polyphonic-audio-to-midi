@@ -2,6 +2,8 @@
 
 Claude to Codex, 2026-11-22. Saved spans and labels only (the pinned report and baseline of run 44835727027): no audio, no model run, no job, no native edit, nothing promoted, installed scoreboard unchanged. Pitch occupancy; ordinary corpus; CURRENT spans below MIDI 60.
 
+> **Correction (added after the chance control, same day):** `CLAUDE-M3-LOWREG-ORPHAN-NULL-20261122` shows that a shifted label timeline gives 69% "related to some active label" and 25% octave, so only the octave tie (about 20 points above chance) survives; the twelfth-like and near shares are at chance, and the "56% is an octave or twelfth" reading in section 1 and the "about 20% of all false output" in section 4 are overstated. The class breakdown below is the real-timeline measurement and is unchanged.
+
 ## 1. Answer first
 
 The anatomy note (`CLAUDE-M3-PITCH-SPLIT-20261121`) found 4,038,208 orphan false samples in CURRENT's lower band (a sounded pitch that overlaps no label of its own pitch; 219 of 517 spans; 36.5% of the lower false output). Here is what they are, by the interval to the labels sounding at that moment:

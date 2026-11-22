@@ -1,0 +1,83 @@
+{
+ "schema": "claude_m3_oracle_substitution_v1",
+ "datasets": {
+  "ordinary": {
+   "orphan_samples_with_related_label": {
+    "octave": 1574151,
+    "fifth": 690250,
+    "near": 669879
+   },
+   "substituted_samples": {
+    "octave": 1171286,
+    "fifth": 599457,
+    "near": 699748
+   },
+   "substituted_share": {
+    "octave": 0.744,
+    "fifth": 0.868,
+    "near": 1.045
+   },
+   "current": {
+    "present": 13525345,
+    "expected": 33819101,
+    "coverage_percent": 39.9932,
+    "exact_pitch_set": 53249,
+    "wrong_pitch": 7808309,
+    "gap": 3621485
+   },
+   "oracle": {
+    "present": 15236311,
+    "expected": 33819101,
+    "coverage_percent": 45.0524,
+    "exact_pitch_set": 136578,
+    "wrong_pitch": 5337818,
+    "gap": 3621485
+   },
+   "coverage_gain_points": 5.06,
+   "exact_set_ratio": 2.56,
+   "wrong_pitch_delta": -2470491,
+   "gap_delta": 0,
+   "strict_gate": true,
+   "lower_labels_lost": 0
+  },
+  "extended-middle": {
+   "orphan_samples_with_related_label": {
+    "octave": 0,
+    "fifth": 52992,
+    "near": 134018
+   },
+   "substituted_samples": {
+    "octave": 0,
+    "fifth": 0,
+    "near": 0
+   },
+   "substituted_share": {
+    "octave": null,
+    "fifth": 0.0,
+    "near": 0.0
+   },
+   "current": {
+    "present": 2021510,
+    "expected": 2073600,
+    "coverage_percent": 97.4879,
+    "exact_pitch_set": 1516739,
+    "wrong_pitch": 528259,
+    "gap": 183006
+   },
+   "oracle": {
+    "present": 2021510,
+    "expected": 2073600,
+    "coverage_percent": 97.4879,
+    "exact_pitch_set": 1516739,
+    "wrong_pitch": 528259,
+    "gap": 183006
+   },
+   "coverage_gain_points": 0.0,
+   "exact_set_ratio": 1.0,
+   "wrong_pitch_delta": 0,
+   "gap_delta": 0,
+   "strict_gate": true,
+   "lower_labels_lost": 0
+  }
+ }
+}
