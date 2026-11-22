@@ -108,7 +108,7 @@ def search_options(args: argparse.Namespace) -> list[str]:
     options = [
         "--no-config", "--no-follow", "--one-file-system", "--hidden",
         "--threads", "1", "--max-depth", str(args.depth),
-        "--color", "never",
+        "--max-filesize", "2M", "--color", "never",
     ]
     for glob in args.glob:
         options += ["--glob", glob]
@@ -121,8 +121,7 @@ def search_options(args: argparse.Namespace) -> list[str]:
     if args.mode == "files":
         options += ["--files", "."]
     else:
-        options += ["--max-filesize", "2M",
-                    "--line-number", "--with-filename", "--max-count", "200",
+        options += ["--line-number", "--with-filename", "--max-count", "200",
                     "-e", args.pattern, "."]
     return options
 
