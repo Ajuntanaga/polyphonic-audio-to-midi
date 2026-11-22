@@ -197,6 +197,21 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
     This is a reading of a saved table on a recording already used in design, not a gate and not a pass: the strict clause still fails,
     and the adapted events are TF output from a model Codex's own frozen screen rejected, on the availability clock.
 
+14. **A register-split veto cannot work on ordinary: CURRENT's false output lives where the losers are (`CLAUDE-M3-FALSE-OUTPUT-BANDS-20261122.py`,
+    descriptive, saved data, no filter).** The idea was to filter only notes at or above a boundary pitch and pass CURRENT through
+    below it, which would remove every lower-register loser. Splitting CURRENT's spans into pitch bands (band sums equal CURRENT's totals):
+
+    | ordinary band (MIDI) | 32–39 | 40–44 | 45–52 | 53–56 | 57–59 | 60 | 61–63 | 64–71 |
+    |---|---|---|---|---|---|---|---|---|
+    | present (M samples) | 1.88 | 2.80 | 4.99 | 2.24 | 1.09 | 0.24 | 0.11 | 0.19 |
+    | wrong-pitch (M) | 1.88 | 2.37 | 2.29 | 0.60 | 0.41 | 0.23 | 0 | 0.03 |
+    | gap voice (M) | 0.59 | 0.94 | 1.22 | 0.46 | 0.31 | 0.07 | 0 | 0.03 |
+
+    96.6% of CURRENT's wrong-pitch output and 97.3% of its gap voice sit below pitch 60, in the same register as the five losers
+    (pitches 33, 33, 34, 42, 42). Exempting the lower register would leave about 3% of the false output to remove. Extended-middle
+    is the other way round: all six labels are pitch 52, the false output is above or around it (extra 0.53 M, of which 0.34 M at pitches 64–71 and 0.19 M at 53–59; gap 0.18 M).
+    So the cleanup the filter provides is the same lower-register cleanup that costs the confirm-delay losses; no register boundary separates them.
+
 ## Predictions
 
 | id | prediction | outcome |
@@ -422,6 +437,7 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | `CLAUDE-M3-LANE-FRAGMENTATION-20261122.py` / `.json` | `33243af5d6e2` / `82ce270fb09c` |
 | `CLAUDE-M3-PERSISTENCE-CONFIRM-20261122.py` / `.json` | `119b87127d89` / `6efb9226aa3f` |
 | `CLAUDE-M3-ADAPTED-SUPPORT-LOSERS-20261122.py` / `.json` (answer 13, post hoc) | `a9d4c44c1cc6` / `8fe8fc49e89f` |
+| `CLAUDE-M3-FALSE-OUTPUT-BANDS-20261122.py` / `.json` (answer 14, descriptive) | `5f98c06aca79` / `5d9ca222c2f4` |
 | `build/recovery/m3-rescue-spans-20261122/ordinary-rescue-spans.json.gz` (cache of the four rescue span sets, 14 KB, not committed) | `d185f8a328ed` |
 | `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier, rescue-combined and fragmentation scripts only) | `cd905b2f5c2d` |
 

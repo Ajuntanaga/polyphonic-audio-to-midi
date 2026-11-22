@@ -1,0 +1,268 @@
+{
+ "ordinary": {
+  "label_pitches": [
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   72,
+   73,
+   74,
+   75,
+   76,
+   77,
+   78,
+   79,
+   80,
+   81,
+   82,
+   83,
+   84
+  ],
+  "current": {
+   "present": 13525345,
+   "extra": 7808309,
+   "gap": 3621485
+  },
+  "bands": [
+   {
+    "band": [
+     0,
+     40
+    ],
+    "spans": 119,
+    "present": 1876605,
+    "extra": 1882551,
+    "gap": 589004
+   },
+   {
+    "band": [
+     40,
+     45
+    ],
+    "spans": 205,
+    "present": 2797810,
+    "extra": 2365114,
+    "gap": 943831
+   },
+   {
+    "band": [
+     45,
+     53
+    ],
+    "spans": 135,
+    "present": 4986783,
+    "extra": 2290319,
+    "gap": 1219026
+   },
+   {
+    "band": [
+     53,
+     57
+    ],
+    "spans": 37,
+    "present": 2235451,
+    "extra": 597319,
+    "gap": 460862
+   },
+   {
+    "band": [
+     57,
+     60
+    ],
+    "spans": 21,
+    "present": 1086905,
+    "extra": 409377,
+    "gap": 310374
+   },
+   {
+    "band": [
+     60,
+     61
+    ],
+    "spans": 6,
+    "present": 241308,
+    "extra": 231495,
+    "gap": 68893
+   },
+   {
+    "band": [
+     61,
+     64
+    ],
+    "spans": 2,
+    "present": 110784,
+    "extra": 0,
+    "gap": 0
+   },
+   {
+    "band": [
+     64,
+     72
+    ],
+    "spans": 3,
+    "present": 189699,
+    "extra": 32134,
+    "gap": 29495
+   },
+   {
+    "band": [
+     72,
+     200
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   }
+  ],
+  "share_below_60": {
+   "extra": 0.9662,
+   "gap": 0.9728
+  },
+  "band_sums_equal_current": true
+ },
+ "extended-middle": {
+  "label_pitches": [
+   52
+  ],
+  "current": {
+   "present": 2021510,
+   "extra": 528259,
+   "gap": 183006
+  },
+  "bands": [
+   {
+    "band": [
+     0,
+     40
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   },
+   {
+    "band": [
+     40,
+     45
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   },
+   {
+    "band": [
+     45,
+     53
+    ],
+    "spans": 7,
+    "present": 2021510,
+    "extra": 0,
+    "gap": 125473
+   },
+   {
+    "band": [
+     53,
+     57
+    ],
+    "spans": 2,
+    "present": 0,
+    "extra": 134018,
+    "gap": 38334
+   },
+   {
+    "band": [
+     57,
+     60
+    ],
+    "spans": 1,
+    "present": 0,
+    "extra": 52992,
+    "gap": 0
+   },
+   {
+    "band": [
+     60,
+     61
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   },
+   {
+    "band": [
+     61,
+     64
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   },
+   {
+    "band": [
+     64,
+     72
+    ],
+    "spans": 4,
+    "present": 0,
+    "extra": 341249,
+    "gap": 19199
+   },
+   {
+    "band": [
+     72,
+     200
+    ],
+    "spans": 0,
+    "present": 0,
+    "extra": 0,
+    "gap": 0
+   }
+  ],
+  "share_below_60": {
+   "extra": 0.354,
+   "gap": 0.8951
+  },
+  "band_sums_equal_current": true
+ }
+}
