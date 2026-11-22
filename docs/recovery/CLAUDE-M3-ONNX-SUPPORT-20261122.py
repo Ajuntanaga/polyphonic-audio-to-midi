@@ -77,7 +77,7 @@ def predictions(res):
     base = o['arm A']['by_d'][220]
     ok_counts = all(res[ds]['event_counts'][t] == n for ds, pair in EXPECTED_EVENTS.items()
                     for t, n in zip(('cropped unmodified', 'cropped adapted'), pair))
-    pairing = all(res[ds]['event_audit'][t]['pairing_valid'] for ds in res for t in ('cropped unmodified', 'cropped adapted'))
+    pairing = all(res[ds]['event_audit'][t]['pairing_valid'] for ds in ('ordinary', 'extended-middle') for t in ('cropped unmodified', 'cropped adapted'))
     return {
         'S0 all four files pair-valid and event counts equal Codex 1192/1223/28/42': bool(ok_counts and pairing),
         'S1 unmodified: 5-7 labels losing, wrong removed 21-24% (D220 ordinary)':

@@ -1,0 +1,1838 @@
+{
+ "ordinary": {
+  "sources": {
+   "arm A": {
+    "runs": 596,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 39.586,
+       "precision_pct": 67.45,
+       "present_delta": -137703,
+       "wrong_delta": -4383437,
+       "wrong_removed_share": 0.5614,
+       "gap_delta": -586065,
+       "false_change_pct_of_current": -43.48,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 28,
+       "lost_share_of_current_present": 0.0102,
+       "label_229_present_delta": -18304,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 28,
+       "median_loss_ms": 47.45,
+       "max_loss_ms": 421.59,
+       "median_share": 0.0993,
+       "over_5_10_25_50": [
+        19,
+        13,
+        5,
+        4
+       ]
+      },
+      "losers": [
+       {
+        "label": 12,
+        "pitch": 48,
+        "current_present_ms": 668.0,
+        "lost_ms": 105.57,
+        "lost_share": 0.158,
+        "longest_lost_ms": 398.92,
+        "longest_lost_share": 0.5972
+       },
+       {
+        "label": 19,
+        "pitch": 54,
+        "current_present_ms": 747.8,
+        "lost_ms": 21.83,
+        "lost_share": 0.0292,
+        "longest_lost_ms": 21.83,
+        "longest_lost_share": 0.0292
+       },
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 310.93,
+        "lost_share": 0.6519,
+        "longest_lost_ms": 421.59,
+        "longest_lost_share": 0.884
+       },
+       {
+        "label": 70,
+        "pitch": 48,
+        "current_present_ms": 36.4,
+        "lost_ms": 36.4,
+        "lost_share": 1.0,
+        "longest_lost_ms": 36.4,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 85,
+        "pitch": 44,
+        "current_present_ms": 516.0,
+        "lost_ms": 0.66,
+        "lost_share": 0.0013,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 91,
+        "pitch": 44,
+        "current_present_ms": 746.9,
+        "lost_ms": 76.21,
+        "lost_share": 0.102,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 123,
+        "pitch": 37,
+        "current_present_ms": 747.7,
+        "lost_ms": 7.74,
+        "lost_share": 0.0104,
+        "longest_lost_ms": 7.74,
+        "longest_lost_share": 0.0104
+       },
+       {
+        "label": 128,
+        "pitch": 45,
+        "current_present_ms": 438.5,
+        "lost_ms": 16.22,
+        "lost_share": 0.037,
+        "longest_lost_ms": 48.5,
+        "longest_lost_share": 0.1353
+       },
+       {
+        "label": 150,
+        "pitch": 43,
+        "current_present_ms": 702.0,
+        "lost_ms": 35.82,
+        "lost_share": 0.051,
+        "longest_lost_ms": 99.83,
+        "longest_lost_share": 0.1422
+       },
+       {
+        "label": 159,
+        "pitch": 47,
+        "current_present_ms": 398.7,
+        "lost_ms": 39.6,
+        "lost_share": 0.0993,
+        "longest_lost_ms": 39.6,
+        "longest_lost_share": 0.0993
+       },
+       {
+        "label": 174,
+        "pitch": 44,
+        "current_present_ms": 747.6,
+        "lost_ms": 14.0,
+        "lost_share": 0.0187,
+        "longest_lost_ms": 76.27,
+        "longest_lost_share": 0.102
+       },
+       {
+        "label": 178,
+        "pitch": 44,
+        "current_present_ms": 682.4,
+        "lost_ms": 67.73,
+        "lost_share": 0.0993,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 179,
+        "pitch": 33,
+        "current_present_ms": 536.7,
+        "lost_ms": 7.77,
+        "lost_share": 0.0145,
+        "longest_lost_ms": 7.77,
+        "longest_lost_share": 0.0145
+       },
+       {
+        "label": 229,
+        "pitch": 42,
+        "current_present_ms": 190.7,
+        "lost_ms": 190.67,
+        "lost_share": 1.0,
+        "longest_lost_ms": 30.0,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 270,
+        "pitch": 51,
+        "current_present_ms": 630.7,
+        "lost_ms": 17.33,
+        "lost_share": 0.0275,
+        "longest_lost_ms": 116.68,
+        "longest_lost_share": 0.185
+       },
+       {
+        "label": 306,
+        "pitch": 42,
+        "current_present_ms": 747.7,
+        "lost_ms": 46.41,
+        "lost_share": 0.0621,
+        "longest_lost_ms": 46.41,
+        "longest_lost_share": 0.0621
+       },
+       {
+        "label": 341,
+        "pitch": 57,
+        "current_present_ms": 294.2,
+        "lost_ms": 90.12,
+        "lost_share": 0.3064,
+        "longest_lost_ms": 145.46,
+        "longest_lost_share": 0.4945
+       },
+       {
+        "label": 349,
+        "pitch": 54,
+        "current_present_ms": 747.5,
+        "lost_ms": 13.68,
+        "lost_share": 0.0183,
+        "longest_lost_ms": 52.18,
+        "longest_lost_share": 0.0698
+       },
+       {
+        "label": 355,
+        "pitch": 39,
+        "current_present_ms": 747.9,
+        "lost_ms": 2.59,
+        "lost_share": 0.0035,
+        "longest_lost_ms": 2.59,
+        "longest_lost_share": 0.0035
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       },
+       {
+        "label": 456,
+        "pitch": 47,
+        "current_present_ms": 747.7,
+        "lost_ms": 95.07,
+        "lost_share": 0.1271,
+        "longest_lost_ms": 95.07,
+        "longest_lost_share": 0.1271
+       },
+       {
+        "label": 459,
+        "pitch": 45,
+        "current_present_ms": 749.1,
+        "lost_ms": 19.79,
+        "lost_share": 0.0264,
+        "longest_lost_ms": 19.79,
+        "longest_lost_share": 0.0264
+       },
+       {
+        "label": 470,
+        "pitch": 44,
+        "current_present_ms": 549.0,
+        "lost_ms": 42.27,
+        "lost_share": 0.077,
+        "longest_lost_ms": 42.27,
+        "longest_lost_share": 0.077
+       },
+       {
+        "label": 472,
+        "pitch": 53,
+        "current_present_ms": 566.7,
+        "lost_ms": 63.23,
+        "lost_share": 0.1116,
+        "longest_lost_ms": 74.75,
+        "longest_lost_share": 0.1319
+       },
+       {
+        "label": 477,
+        "pitch": 52,
+        "current_present_ms": 679.3,
+        "lost_ms": 21.33,
+        "lost_share": 0.0314,
+        "longest_lost_ms": 21.33,
+        "longest_lost_share": 0.0314
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        12,
+        42,
+        70,
+        91,
+        128,
+        150,
+        159,
+        174,
+        178,
+        229,
+        263,
+        270,
+        306,
+        341,
+        349,
+        364,
+        456,
+        470,
+        472
+       ],
+       "newly_missed_labels": [
+        70,
+        229
+       ],
+       "wrong_delta": -4383437,
+       "gap_delta": -586065,
+       "passes": false
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 39.9232,
+       "precision_pct": 58.93,
+       "present_delta": -23687,
+       "wrong_delta": -1729894,
+       "wrong_removed_share": 0.2215,
+       "gap_delta": -291474,
+       "false_change_pct_of_current": -17.69,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 6,
+       "lost_share_of_current_present": 0.0018,
+       "label_229_present_delta": -14591,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 6,
+       "median_loss_ms": 20.09,
+       "max_loss_ms": 151.99,
+       "median_share": 0.0376,
+       "over_5_10_25_50": [
+        3,
+        2,
+        1,
+        1
+       ]
+      },
+      "losers": [
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 3.32,
+        "lost_share": 0.007,
+        "longest_lost_ms": 3.32,
+        "longest_lost_share": 0.007
+       },
+       {
+        "label": 229,
+        "pitch": 42,
+        "current_present_ms": 190.7,
+        "lost_ms": 151.99,
+        "lost_share": 0.7971,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        229,
+        263,
+        364
+       ],
+       "newly_missed_labels": [],
+       "wrong_delta": -1729894,
+       "gap_delta": -291474,
+       "passes": false
+      }
+     }
+    }
+   },
+   "cropped unmodified": {
+    "runs": 596,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 39.586,
+       "precision_pct": 67.48,
+       "present_delta": -137713,
+       "wrong_delta": -4391282,
+       "wrong_removed_share": 0.5624,
+       "gap_delta": -587337,
+       "false_change_pct_of_current": -43.56,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 28,
+       "lost_share_of_current_present": 0.0102,
+       "label_229_present_delta": -18304,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 28,
+       "median_loss_ms": 47.45,
+       "max_loss_ms": 421.59,
+       "median_share": 0.0993,
+       "over_5_10_25_50": [
+        19,
+        13,
+        5,
+        4
+       ]
+      },
+      "losers": [
+       {
+        "label": 12,
+        "pitch": 48,
+        "current_present_ms": 668.0,
+        "lost_ms": 105.88,
+        "lost_share": 0.1585,
+        "longest_lost_ms": 399.34,
+        "longest_lost_share": 0.5978
+       },
+       {
+        "label": 19,
+        "pitch": 54,
+        "current_present_ms": 747.8,
+        "lost_ms": 21.83,
+        "lost_share": 0.0292,
+        "longest_lost_ms": 21.83,
+        "longest_lost_share": 0.0292
+       },
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 310.93,
+        "lost_share": 0.6519,
+        "longest_lost_ms": 421.59,
+        "longest_lost_share": 0.884
+       },
+       {
+        "label": 70,
+        "pitch": 48,
+        "current_present_ms": 36.4,
+        "lost_ms": 36.4,
+        "lost_share": 1.0,
+        "longest_lost_ms": 36.4,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 85,
+        "pitch": 44,
+        "current_present_ms": 516.0,
+        "lost_ms": 0.66,
+        "lost_share": 0.0013,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 91,
+        "pitch": 44,
+        "current_present_ms": 746.9,
+        "lost_ms": 77.04,
+        "lost_share": 0.1031,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 123,
+        "pitch": 37,
+        "current_present_ms": 747.7,
+        "lost_ms": 7.74,
+        "lost_share": 0.0104,
+        "longest_lost_ms": 7.74,
+        "longest_lost_share": 0.0104
+       },
+       {
+        "label": 128,
+        "pitch": 45,
+        "current_present_ms": 438.5,
+        "lost_ms": 16.66,
+        "lost_share": 0.038,
+        "longest_lost_ms": 48.5,
+        "longest_lost_share": 0.1353
+       },
+       {
+        "label": 150,
+        "pitch": 43,
+        "current_present_ms": 702.0,
+        "lost_ms": 35.01,
+        "lost_share": 0.0499,
+        "longest_lost_ms": 99.02,
+        "longest_lost_share": 0.1411
+       },
+       {
+        "label": 159,
+        "pitch": 47,
+        "current_present_ms": 398.7,
+        "lost_ms": 39.6,
+        "lost_share": 0.0993,
+        "longest_lost_ms": 39.6,
+        "longest_lost_share": 0.0993
+       },
+       {
+        "label": 174,
+        "pitch": 44,
+        "current_present_ms": 747.6,
+        "lost_ms": 14.0,
+        "lost_share": 0.0187,
+        "longest_lost_ms": 76.27,
+        "longest_lost_share": 0.102
+       },
+       {
+        "label": 178,
+        "pitch": 44,
+        "current_present_ms": 682.4,
+        "lost_ms": 67.73,
+        "lost_share": 0.0993,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 179,
+        "pitch": 33,
+        "current_present_ms": 536.7,
+        "lost_ms": 7.19,
+        "lost_share": 0.0134,
+        "longest_lost_ms": 7.19,
+        "longest_lost_share": 0.0134
+       },
+       {
+        "label": 229,
+        "pitch": 42,
+        "current_present_ms": 190.7,
+        "lost_ms": 190.67,
+        "lost_share": 1.0,
+        "longest_lost_ms": 30.0,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 270,
+        "pitch": 51,
+        "current_present_ms": 630.7,
+        "lost_ms": 17.33,
+        "lost_share": 0.0275,
+        "longest_lost_ms": 116.68,
+        "longest_lost_share": 0.185
+       },
+       {
+        "label": 306,
+        "pitch": 42,
+        "current_present_ms": 747.7,
+        "lost_ms": 46.41,
+        "lost_share": 0.0621,
+        "longest_lost_ms": 46.41,
+        "longest_lost_share": 0.0621
+       },
+       {
+        "label": 341,
+        "pitch": 57,
+        "current_present_ms": 294.2,
+        "lost_ms": 89.34,
+        "lost_share": 0.3037,
+        "longest_lost_ms": 144.68,
+        "longest_lost_share": 0.4918
+       },
+       {
+        "label": 349,
+        "pitch": 54,
+        "current_present_ms": 747.5,
+        "lost_ms": 14.23,
+        "lost_share": 0.019,
+        "longest_lost_ms": 52.18,
+        "longest_lost_share": 0.0698
+       },
+       {
+        "label": 355,
+        "pitch": 39,
+        "current_present_ms": 747.9,
+        "lost_ms": 2.59,
+        "lost_share": 0.0035,
+        "longest_lost_ms": 2.59,
+        "longest_lost_share": 0.0035
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       },
+       {
+        "label": 456,
+        "pitch": 47,
+        "current_present_ms": 747.7,
+        "lost_ms": 95.07,
+        "lost_share": 0.1271,
+        "longest_lost_ms": 95.07,
+        "longest_lost_share": 0.1271
+       },
+       {
+        "label": 459,
+        "pitch": 45,
+        "current_present_ms": 749.1,
+        "lost_ms": 19.79,
+        "lost_share": 0.0264,
+        "longest_lost_ms": 19.79,
+        "longest_lost_share": 0.0264
+       },
+       {
+        "label": 470,
+        "pitch": 44,
+        "current_present_ms": 549.0,
+        "lost_ms": 42.27,
+        "lost_share": 0.077,
+        "longest_lost_ms": 42.27,
+        "longest_lost_share": 0.077
+       },
+       {
+        "label": 472,
+        "pitch": 53,
+        "current_present_ms": 566.7,
+        "lost_ms": 63.39,
+        "lost_share": 0.1119,
+        "longest_lost_ms": 75.7,
+        "longest_lost_share": 0.1336
+       },
+       {
+        "label": 477,
+        "pitch": 52,
+        "current_present_ms": 679.3,
+        "lost_ms": 21.33,
+        "lost_share": 0.0314,
+        "longest_lost_ms": 21.33,
+        "longest_lost_share": 0.0314
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        12,
+        42,
+        70,
+        91,
+        128,
+        150,
+        159,
+        174,
+        178,
+        229,
+        263,
+        270,
+        306,
+        341,
+        349,
+        364,
+        456,
+        470,
+        472
+       ],
+       "newly_missed_labels": [
+        70,
+        229
+       ],
+       "wrong_delta": -4391282,
+       "gap_delta": -587337,
+       "passes": false
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 39.9232,
+       "precision_pct": 58.94,
+       "present_delta": -23687,
+       "wrong_delta": -1731250,
+       "wrong_removed_share": 0.2217,
+       "gap_delta": -291595,
+       "false_change_pct_of_current": -17.7,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 6,
+       "lost_share_of_current_present": 0.0018,
+       "label_229_present_delta": -14591,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 6,
+       "median_loss_ms": 20.09,
+       "max_loss_ms": 151.99,
+       "median_share": 0.0376,
+       "over_5_10_25_50": [
+        3,
+        2,
+        1,
+        1
+       ]
+      },
+      "losers": [
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 3.32,
+        "lost_share": 0.007,
+        "longest_lost_ms": 3.32,
+        "longest_lost_share": 0.007
+       },
+       {
+        "label": 229,
+        "pitch": 42,
+        "current_present_ms": 190.7,
+        "lost_ms": 151.99,
+        "lost_share": 0.7971,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        229,
+        263,
+        364
+       ],
+       "newly_missed_labels": [],
+       "wrong_delta": -1731250,
+       "gap_delta": -291595,
+       "passes": false
+      }
+     }
+    }
+   },
+   "cropped adapted": {
+    "runs": 611,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 39.7996,
+       "precision_pct": 65.67,
+       "present_delta": -65471,
+       "wrong_delta": -3917326,
+       "wrong_removed_share": 0.5017,
+       "gap_delta": -476853,
+       "false_change_pct_of_current": -38.44,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 17,
+       "lost_share_of_current_present": 0.0048,
+       "label_229_present_delta": 0,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 17,
+       "median_loss_ms": 39.34,
+       "max_loss_ms": 421.59,
+       "median_share": 0.0733,
+       "over_5_10_25_50": [
+        12,
+        8,
+        3,
+        2
+       ]
+      },
+      "losers": [
+       {
+        "label": 12,
+        "pitch": 48,
+        "current_present_ms": 668.0,
+        "lost_ms": 16.36,
+        "lost_share": 0.0245,
+        "longest_lost_ms": 96.0,
+        "longest_lost_share": 0.1437
+       },
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 310.93,
+        "lost_share": 0.6519,
+        "longest_lost_ms": 421.59,
+        "longest_lost_share": 0.884
+       },
+       {
+        "label": 70,
+        "pitch": 48,
+        "current_present_ms": 36.4,
+        "lost_ms": 36.4,
+        "lost_share": 1.0,
+        "longest_lost_ms": 36.4,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 85,
+        "pitch": 44,
+        "current_present_ms": 516.0,
+        "lost_ms": 0.66,
+        "lost_share": 0.0013,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 123,
+        "pitch": 37,
+        "current_present_ms": 747.7,
+        "lost_ms": 7.74,
+        "lost_share": 0.0104,
+        "longest_lost_ms": 7.74,
+        "longest_lost_share": 0.0104
+       },
+       {
+        "label": 150,
+        "pitch": 43,
+        "current_present_ms": 702.0,
+        "lost_ms": 81.93,
+        "lost_share": 0.1167,
+        "longest_lost_ms": 145.94,
+        "longest_lost_share": 0.2079
+       },
+       {
+        "label": 178,
+        "pitch": 44,
+        "current_present_ms": 682.4,
+        "lost_ms": 6.39,
+        "lost_share": 0.0094,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 179,
+        "pitch": 33,
+        "current_present_ms": 536.7,
+        "lost_ms": 39.34,
+        "lost_share": 0.0733,
+        "longest_lost_ms": 39.34,
+        "longest_lost_share": 0.0733
+       },
+       {
+        "label": 202,
+        "pitch": 54,
+        "current_present_ms": 616.0,
+        "lost_ms": 3.33,
+        "lost_share": 0.0054,
+        "longest_lost_ms": 36.0,
+        "longest_lost_share": 0.0584
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 270,
+        "pitch": 51,
+        "current_present_ms": 630.7,
+        "lost_ms": 17.33,
+        "lost_share": 0.0275,
+        "longest_lost_ms": 116.68,
+        "longest_lost_share": 0.185
+       },
+       {
+        "label": 306,
+        "pitch": 42,
+        "current_present_ms": 747.7,
+        "lost_ms": 11.59,
+        "lost_share": 0.0155,
+        "longest_lost_ms": 46.41,
+        "longest_lost_share": 0.0621
+       },
+       {
+        "label": 341,
+        "pitch": 57,
+        "current_present_ms": 294.2,
+        "lost_ms": 34.91,
+        "lost_share": 0.1187,
+        "longest_lost_ms": 144.78,
+        "longest_lost_share": 0.4922
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       },
+       {
+        "label": 456,
+        "pitch": 47,
+        "current_present_ms": 747.7,
+        "lost_ms": 23.66,
+        "lost_share": 0.0316,
+        "longest_lost_ms": 95.07,
+        "longest_lost_share": 0.1271
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        12,
+        42,
+        70,
+        150,
+        179,
+        202,
+        263,
+        270,
+        306,
+        341,
+        364,
+        456
+       ],
+       "newly_missed_labels": [
+        70
+       ],
+       "wrong_delta": -3917326,
+       "gap_delta": -476853,
+       "passes": false
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 39.9663,
+       "precision_pct": 59.12,
+       "present_delta": -9096,
+       "wrong_delta": -1739305,
+       "wrong_removed_share": 0.2228,
+       "gap_delta": -344176,
+       "false_change_pct_of_current": -18.23,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 5,
+       "lost_share_of_current_present": 0.0007,
+       "label_229_present_delta": 0,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 5,
+       "median_loss_ms": 5.34,
+       "max_loss_ms": 50.57,
+       "median_share": 0.0075,
+       "over_5_10_25_50": [
+        2,
+        1,
+        0,
+        0
+       ]
+      },
+      "losers": [
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 3.32,
+        "lost_share": 0.007,
+        "longest_lost_ms": 3.32,
+        "longest_lost_share": 0.007
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        263,
+        364
+       ],
+       "newly_missed_labels": [],
+       "wrong_delta": -1739305,
+       "gap_delta": -344176,
+       "passes": false
+      }
+     }
+    }
+   },
+   "arm A union cropped adapted": {
+    "runs": 702,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 39.8227,
+       "precision_pct": 64.76,
+       "present_delta": -57653,
+       "wrong_delta": -3704489,
+       "wrong_removed_share": 0.4744,
+       "gap_delta": -397622,
+       "false_change_pct_of_current": -35.89,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 16,
+       "lost_share_of_current_present": 0.0043,
+       "label_229_present_delta": 0,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 16,
+       "median_loss_ms": 41.41,
+       "max_loss_ms": 421.59,
+       "median_share": 0.0847,
+       "over_5_10_25_50": [
+        10,
+        8,
+        3,
+        2
+       ]
+      },
+      "losers": [
+       {
+        "label": 12,
+        "pitch": 48,
+        "current_present_ms": 668.0,
+        "lost_ms": 15.94,
+        "lost_share": 0.0239,
+        "longest_lost_ms": 95.57,
+        "longest_lost_share": 0.1431
+       },
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 310.93,
+        "lost_share": 0.6519,
+        "longest_lost_ms": 421.59,
+        "longest_lost_share": 0.884
+       },
+       {
+        "label": 70,
+        "pitch": 48,
+        "current_present_ms": 36.4,
+        "lost_ms": 36.4,
+        "lost_share": 1.0,
+        "longest_lost_ms": 36.4,
+        "longest_lost_share": 1.0
+       },
+       {
+        "label": 85,
+        "pitch": 44,
+        "current_present_ms": 516.0,
+        "lost_ms": 0.66,
+        "lost_share": 0.0013,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 123,
+        "pitch": 37,
+        "current_present_ms": 747.7,
+        "lost_ms": 7.74,
+        "lost_share": 0.0104,
+        "longest_lost_ms": 7.74,
+        "longest_lost_share": 0.0104
+       },
+       {
+        "label": 150,
+        "pitch": 43,
+        "current_present_ms": 702.0,
+        "lost_ms": 35.82,
+        "lost_share": 0.051,
+        "longest_lost_ms": 99.83,
+        "longest_lost_share": 0.1422
+       },
+       {
+        "label": 178,
+        "pitch": 44,
+        "current_present_ms": 682.4,
+        "lost_ms": 6.39,
+        "lost_share": 0.0094,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 179,
+        "pitch": 33,
+        "current_present_ms": 536.7,
+        "lost_ms": 7.77,
+        "lost_share": 0.0145,
+        "longest_lost_ms": 7.77,
+        "longest_lost_share": 0.0145
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 270,
+        "pitch": 51,
+        "current_present_ms": 630.7,
+        "lost_ms": 17.33,
+        "lost_share": 0.0275,
+        "longest_lost_ms": 116.68,
+        "longest_lost_share": 0.185
+       },
+       {
+        "label": 306,
+        "pitch": 42,
+        "current_present_ms": 747.7,
+        "lost_ms": 11.59,
+        "lost_share": 0.0155,
+        "longest_lost_ms": 46.41,
+        "longest_lost_share": 0.0621
+       },
+       {
+        "label": 341,
+        "pitch": 57,
+        "current_present_ms": 294.2,
+        "lost_ms": 34.91,
+        "lost_share": 0.1187,
+        "longest_lost_ms": 144.78,
+        "longest_lost_share": 0.4922
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       },
+       {
+        "label": 456,
+        "pitch": 47,
+        "current_present_ms": 747.7,
+        "lost_ms": 23.66,
+        "lost_share": 0.0316,
+        "longest_lost_ms": 95.07,
+        "longest_lost_share": 0.1271
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        12,
+        42,
+        70,
+        150,
+        263,
+        270,
+        306,
+        341,
+        364,
+        456
+       ],
+       "newly_missed_labels": [
+        70
+       ],
+       "wrong_delta": -3704489,
+       "gap_delta": -397622,
+       "passes": false
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 39.9663,
+       "precision_pct": 58.49,
+       "present_delta": -9096,
+       "wrong_delta": -1545144,
+       "wrong_removed_share": 0.1979,
+       "gap_delta": -291218,
+       "false_change_pct_of_current": -16.07,
+       "exact_set_delta": 0,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 5,
+       "lost_share_of_current_present": 0.0007,
+       "label_229_present_delta": 0,
+       "no_pitch_safety_regression": false
+      },
+      "loss_summary": {
+       "labels_losing": 5,
+       "median_loss_ms": 5.34,
+       "max_loss_ms": 50.57,
+       "median_share": 0.0075,
+       "over_5_10_25_50": [
+        2,
+        1,
+        0,
+        0
+       ]
+      },
+      "losers": [
+       {
+        "label": 42,
+        "pitch": 60,
+        "current_present_ms": 476.9,
+        "lost_ms": 3.32,
+        "lost_share": 0.007,
+        "longest_lost_ms": 3.32,
+        "longest_lost_share": 0.007
+       },
+       {
+        "label": 263,
+        "pitch": 33,
+        "current_present_ms": 342.1,
+        "lost_ms": 34.83,
+        "lost_share": 0.1018,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 364,
+        "pitch": 42,
+        "current_present_ms": 748.6,
+        "lost_ms": 50.57,
+        "lost_share": 0.0676,
+        "longest_lost_ms": 50.57,
+        "longest_lost_share": 0.0676
+       },
+       {
+        "label": 389,
+        "pitch": 33,
+        "current_present_ms": 140.7,
+        "lost_ms": 0.68,
+        "lost_share": 0.0048,
+        "longest_lost_ms": 0.0,
+        "longest_lost_share": 0.0
+       },
+       {
+        "label": 398,
+        "pitch": 34,
+        "current_present_ms": 709.3,
+        "lost_ms": 5.34,
+        "lost_share": 0.0075,
+        "longest_lost_ms": 5.34,
+        "longest_lost_share": 0.0075
+       }
+      ],
+      "budget": {
+       "over_budget_labels": [
+        263,
+        364
+       ],
+       "newly_missed_labels": [],
+       "wrong_delta": -1545144,
+       "gap_delta": -291218,
+       "passes": false
+      }
+     }
+    }
+   }
+  },
+  "event_audit": {
+   "cropped unmodified": {
+    "event_count": 1192,
+    "events_at_or_after_eof": 0,
+    "pitches_active_at_recording_end": [],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   },
+   "cropped adapted": {
+    "event_count": 1223,
+    "events_at_or_after_eof": 1,
+    "pitches_active_at_recording_end": [
+     44,
+     66
+    ],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   }
+  },
+  "event_counts": {
+   "cropped unmodified": 1192,
+   "cropped adapted": 1223
+  },
+  "inputs": {
+   "cropped unmodified": {
+    "path": "unmodified_cropped__ordinary-events.json",
+    "sha256": "c1c48293b6c9b8e10d2ae5c51ae565b50b6987ac0bc9de54180f6de837ab3c32"
+   },
+   "cropped adapted": {
+    "path": "adapted_cropped__ordinary-events.json",
+    "sha256": "4e0601c42dbdccffe32c245a74ce80a9ae24be825f0b21e010b37f33f8ac9e92"
+   }
+  },
+  "current": {
+   "coverage_pct": 39.9932
+  }
+ },
+ "extended-middle": {
+  "sources": {
+   "arm A": {
+    "runs": 14,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 80.22,
+       "present_delta": 0,
+       "wrong_delta": -170047,
+       "wrong_removed_share": 0.3219,
+       "gap_delta": -42821,
+       "false_change_pct_of_current": -29.93,
+       "exact_set_delta": 170047,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -170047,
+       "gap_delta": -42821,
+       "passes": true
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 78.53,
+       "present_delta": 0,
+       "wrong_delta": -137344,
+       "wrong_removed_share": 0.26,
+       "gap_delta": -21374,
+       "false_change_pct_of_current": -22.31,
+       "exact_set_delta": 137344,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -137344,
+       "gap_delta": -21374,
+       "passes": true
+      }
+     }
+    }
+   },
+   "cropped unmodified": {
+    "runs": 14,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 80.24,
+       "present_delta": 0,
+       "wrong_delta": -170047,
+       "wrong_removed_share": 0.3219,
+       "gap_delta": -43266,
+       "false_change_pct_of_current": -29.99,
+       "exact_set_delta": 170047,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -170047,
+       "gap_delta": -43266,
+       "passes": true
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 78.53,
+       "present_delta": 0,
+       "wrong_delta": -137344,
+       "wrong_removed_share": 0.26,
+       "gap_delta": -21374,
+       "false_change_pct_of_current": -22.31,
+       "exact_set_delta": 137344,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -137344,
+       "gap_delta": -21374,
+       "passes": true
+      }
+     }
+    }
+   },
+   "cropped adapted": {
+    "runs": 21,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 79.85,
+       "present_delta": 0,
+       "wrong_delta": -154638,
+       "wrong_removed_share": 0.2927,
+       "gap_delta": -46366,
+       "false_change_pct_of_current": -28.26,
+       "exact_set_delta": 154638,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -154638,
+       "gap_delta": -46366,
+       "passes": true
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 78.01,
+       "present_delta": 0,
+       "wrong_delta": -137344,
+       "wrong_removed_share": 0.26,
+       "gap_delta": -4014,
+       "false_change_pct_of_current": -19.87,
+       "exact_set_delta": 137344,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -137344,
+       "gap_delta": -4014,
+       "passes": true
+      }
+     }
+    }
+   },
+   "arm A union cropped adapted": {
+    "runs": 29,
+    "by_d": {
+     "50": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 79.54,
+       "present_delta": 0,
+       "wrong_delta": -154638,
+       "wrong_removed_share": 0.2927,
+       "gap_delta": -36604,
+       "false_change_pct_of_current": -26.89,
+       "exact_set_delta": 154638,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -154638,
+       "gap_delta": -36604,
+       "passes": true
+      }
+     },
+     "220": {
+      "filter": {
+       "coverage_pct": 97.4879,
+       "precision_pct": 78.01,
+       "present_delta": 0,
+       "wrong_delta": -137344,
+       "wrong_removed_share": 0.26,
+       "gap_delta": -4014,
+       "false_change_pct_of_current": -19.87,
+       "exact_set_delta": 137344,
+       "all_expected_delta": 0,
+       "labels_losing_present_or_longest": 0,
+       "lost_share_of_current_present": 0.0,
+       "label_229_present_delta": null,
+       "no_pitch_safety_regression": true
+      },
+      "loss_summary": {
+       "labels_losing": 0,
+       "median_loss_ms": 0.0,
+       "max_loss_ms": 0.0,
+       "median_share": 0.0,
+       "over_5_10_25_50": [
+        0,
+        0,
+        0,
+        0
+       ]
+      },
+      "losers": [],
+      "budget": {
+       "over_budget_labels": [],
+       "newly_missed_labels": [],
+       "wrong_delta": -137344,
+       "gap_delta": -4014,
+       "passes": true
+      }
+     }
+    }
+   }
+  },
+  "event_audit": {
+   "cropped unmodified": {
+    "event_count": 28,
+    "events_at_or_after_eof": 1,
+    "pitches_active_at_recording_end": [
+     52
+    ],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   },
+   "cropped adapted": {
+    "event_count": 42,
+    "events_at_or_after_eof": 1,
+    "pitches_active_at_recording_end": [
+     52
+    ],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   }
+  },
+  "event_counts": {
+   "cropped unmodified": 28,
+   "cropped adapted": 42
+  },
+  "inputs": {
+   "cropped unmodified": {
+    "path": "unmodified_cropped__extended-middle-events.json",
+    "sha256": "18b235815be231085a0afac432d5874e5c7264803b977229109c89d5cc9eb6c9"
+   },
+   "cropped adapted": {
+    "path": "adapted_cropped__extended-middle-events.json",
+    "sha256": "1eea72fdc62b0d2e1f09f871d3a0f1b6cf8b4490cb4413f7862fa42986f688e3"
+   }
+  },
+  "current": {
+   "coverage_pct": 97.4879
+  }
+ },
+ "clock": "emitted_ns",
+ "predictions": {
+  "S0 all four files pair-valid and event counts equal Codex 1192/1223/28/42": true,
+  "S1 unmodified: 5-7 labels losing, wrong removed 21-24% (D220 ordinary)": true,
+  "S2 adapted loses no more labels than unmodified (D220 ordinary)": true,
+  "S3 adapted removes at least as much wrong output as unmodified (D220 ordinary)": true,
+  "S4 the model has a say: both lose at most 34 labels at D50 ordinary": true,
+  "S5 emitted lag costs: adapted loses at least 5 labels at D220 ordinary": true,
+  "S6 extended-middle D220: both cropped supports 0 labels losing and the safety flag True": true,
+  "S7 both cropped supports fail the frozen label budget at D220 ordinary": true,
+  "S8 adapted D220 ordinary coverage within 39.946-39.986 and precision >= 59.0": true
+ },
+ "reading": {
+  "cropped unmodified": {
+   "retained": true,
+   "coverage_loss_pts": 0.07,
+   "wrong_removed_share": 0.2217,
+   "gap_delta": -291595,
+   "extended_middle_safe": true
+  },
+  "cropped adapted": {
+   "retained": true,
+   "coverage_loss_pts": 0.0269,
+   "wrong_removed_share": 0.2228,
+   "gap_delta": -344176,
+   "extended_middle_safe": true
+  }
+ }
+}
