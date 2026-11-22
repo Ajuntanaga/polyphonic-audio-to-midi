@@ -1,0 +1,262 @@
+{
+ "clock": "available_ns",
+ "events_dir": "build/github-results/basic-pitch-adaptation-events-45022134487/collected/selected",
+ "ordinary": {
+  "gap_voice_adapted": 5139008,
+  "gap_voice_unmodified": 3341707,
+  "added": 2161571,
+  "removed": 364270,
+  "net_change_pct": 53.8,
+  "classes": {
+   "born_in_gap_other|adapted_only_note": {
+    "segments": 10,
+    "samples": 60295
+   },
+   "born_in_gap_other|unmodified_also_has_note": {
+    "segments": 3,
+    "samples": 12615
+   },
+   "carried_in_other_pitch|adapted_only_note": {
+    "segments": 8,
+    "samples": 24325
+   },
+   "carried_in_other_pitch|unmodified_also_has_note": {
+    "segments": 5,
+    "samples": 41652
+   },
+   "carried_in_same_pitch_tail|adapted_only_note": {
+    "segments": 54,
+    "samples": 538678
+   },
+   "carried_in_same_pitch_tail|unmodified_also_has_note": {
+    "segments": 246,
+    "samples": 1484006
+   }
+  },
+  "tail_added_ms": {
+   "count": 300,
+   "median_ms": 58.9,
+   "p90_ms": 102.5,
+   "max_ms": 420.0
+  },
+  "tail_full_gap_segment_ms": {
+   "count": 300,
+   "median_ms": 102.1,
+   "p90_ms": 221.5,
+   "max_ms": 513.1
+  },
+  "g0": {
+   "unmodified_equals_arm_a": false,
+   "same_run_count_and_pitches": true,
+   "arm_a_later_by_samples": 1065,
+   "arm_a_later_by_ms": 11.09,
+   "scorer_gap_voice": {
+    "unmodified": 3341707,
+    "adapted": 5139008
+   },
+   "recomputed_gap_voice": {
+    "unmodified": 3341707,
+    "adapted": 5139008
+   }
+  },
+  "shares": {
+   "by_kind_pct": {
+    "born_in_gap_other": 3.4,
+    "carried_in_other_pitch": 3.1,
+    "carried_in_same_pitch_tail": 93.6
+   },
+   "carried_in_pct": 96.6,
+   "born_in_gap_pct": 3.4,
+   "carried_with_unmodified_note_pct": 73.0,
+   "overlap_by_kind_samples": {
+    "carried_in_same_pitch_tail": {
+     "unmodified_also_has_note": 1484006,
+     "adapted_only_note": 538678
+    },
+    "carried_in_other_pitch": {
+     "adapted_only_note": 24325,
+     "unmodified_also_has_note": 41652
+    },
+    "born_in_gap_other": {
+     "unmodified_also_has_note": 12615,
+     "adapted_only_note": 60295
+    }
+   }
+  },
+  "post_hoc_aligned_to_arm_a_clock": {
+   "gap_voice_adapted": 5320636,
+   "gap_voice_unmodified": 3566320,
+   "added": 2145344,
+   "removed": 391028,
+   "net_change_pct": 49.2,
+   "classes": {
+    "born_in_gap_other|adapted_only_note": {
+     "segments": 12,
+     "samples": 72578
+    },
+    "born_in_gap_other|unmodified_also_has_note": {
+     "segments": 3,
+     "samples": 10485
+    },
+    "carried_in_other_pitch|adapted_only_note": {
+     "segments": 7,
+     "samples": 21941
+    },
+    "carried_in_other_pitch|unmodified_also_has_note": {
+     "segments": 5,
+     "samples": 40587
+    },
+    "carried_in_same_pitch_tail|adapted_only_note": {
+     "segments": 54,
+     "samples": 563026
+    },
+    "carried_in_same_pitch_tail|unmodified_also_has_note": {
+     "segments": 223,
+     "samples": 1436727
+    }
+   },
+   "tail_added_ms": {
+    "count": 277,
+    "median_ms": 67.8,
+    "p90_ms": 105.4,
+    "max_ms": 420.0
+   },
+   "tail_full_gap_segment_ms": {
+    "count": 277,
+    "median_ms": 102.3,
+    "p90_ms": 206.5,
+    "max_ms": 513.1
+   },
+   "shares": {
+    "by_kind_pct": {
+     "born_in_gap_other": 3.9,
+     "carried_in_other_pitch": 2.9,
+     "carried_in_same_pitch_tail": 93.2
+    },
+    "carried_in_pct": 96.1,
+    "born_in_gap_pct": 3.9,
+    "carried_with_unmodified_note_pct": 71.6,
+    "overlap_by_kind_samples": {
+     "carried_in_same_pitch_tail": {
+      "unmodified_also_has_note": 1436727,
+      "adapted_only_note": 563026
+     },
+     "carried_in_other_pitch": {
+      "adapted_only_note": 21941,
+      "unmodified_also_has_note": 40587
+     },
+     "born_in_gap_other": {
+      "unmodified_also_has_note": 10485,
+      "adapted_only_note": 72578
+     }
+    }
+   }
+  }
+ },
+ "extended-middle": {
+  "gap_voice_adapted": 120619,
+  "gap_voice_unmodified": 104325,
+  "added": 29415,
+  "removed": 13121,
+  "net_change_pct": 15.6,
+  "classes": {
+   "carried_in_other_pitch|adapted_only_note": {
+    "segments": 2,
+    "samples": 14081
+   },
+   "carried_in_same_pitch_tail|unmodified_also_has_note": {
+    "segments": 6,
+    "samples": 15334
+   }
+  },
+  "tail_added_ms": {
+   "count": 6,
+   "median_ms": 20.0,
+   "p90_ms": 46.7,
+   "max_ms": 46.7
+  },
+  "tail_full_gap_segment_ms": {
+   "count": 6,
+   "median_ms": 186.7,
+   "p90_ms": 200.0,
+   "max_ms": 200.0
+  },
+  "g0": {
+   "unmodified_equals_arm_a": false,
+   "same_run_count_and_pitches": true,
+   "arm_a_later_by_samples": 1064,
+   "arm_a_later_by_ms": 11.08,
+   "scorer_gap_voice": {
+    "unmodified": 104325,
+    "adapted": 120619
+   },
+   "recomputed_gap_voice": {
+    "unmodified": 104325,
+    "adapted": 120619
+   }
+  },
+  "shares": {
+   "by_kind_pct": {
+    "carried_in_other_pitch": 47.9,
+    "carried_in_same_pitch_tail": 52.1
+   },
+   "carried_in_pct": 100.0,
+   "born_in_gap_pct": 0.0,
+   "carried_with_unmodified_note_pct": 52.1,
+   "overlap_by_kind_samples": {
+    "carried_in_same_pitch_tail": {
+     "unmodified_also_has_note": 15334
+    },
+    "carried_in_other_pitch": {
+     "adapted_only_note": 14081
+    }
+   }
+  },
+  "post_hoc_aligned_to_arm_a_clock": {
+   "gap_voice_adapted": 128067,
+   "gap_voice_unmodified": 111323,
+   "added": 30929,
+   "removed": 14185,
+   "net_change_pct": 15.0,
+   "classes": {
+    "carried_in_other_pitch|adapted_only_note": {
+     "segments": 2,
+     "samples": 16209
+    },
+    "carried_in_same_pitch_tail|unmodified_also_has_note": {
+     "segments": 5,
+     "samples": 14720
+    }
+   },
+   "tail_added_ms": {
+    "count": 5,
+    "median_ms": 20.0,
+    "p90_ms": 46.7,
+    "max_ms": 46.7
+   },
+   "tail_full_gap_segment_ms": {
+    "count": 5,
+    "median_ms": 197.8,
+    "p90_ms": 211.1,
+    "max_ms": 211.1
+   },
+   "shares": {
+    "by_kind_pct": {
+     "carried_in_other_pitch": 52.4,
+     "carried_in_same_pitch_tail": 47.6
+    },
+    "carried_in_pct": 100.0,
+    "born_in_gap_pct": 0.0,
+    "carried_with_unmodified_note_pct": 47.6,
+    "overlap_by_kind_samples": {
+     "carried_in_same_pitch_tail": {
+      "unmodified_also_has_note": 14720
+     },
+     "carried_in_other_pitch": {
+      "adapted_only_note": 16209
+     }
+    }
+   }
+  }
+ }
+}
