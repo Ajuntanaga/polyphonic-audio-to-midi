@@ -73,8 +73,8 @@ def complete_set_loss(logits, targets):
     return F.binary_cross_entropy_with_logits(logits, targets.to(logits.dtype)) + worst
 
 
-def fit_normalization(features):
-    rows = candidate_rows(features)
+def fit_normalization(features, feature_count=FEATURE_COUNT):
+    rows = candidate_rows(features, feature_count)
     if not len(rows):
         raise ValueError('Empty training features')
     mean = rows.mean(axis=0, dtype=np.float64)
@@ -83,27 +83,29 @@ def fit_normalization(features):
     return mean.astype(np.float32), scale.astype(np.float32)
 
 
-def normalized_context(features, mean, scale):
-    rows = candidate_rows(features)
+def normalized_context(features, mean, scale, feature_count=FEATURE_COUNT):
+    rows = candidate_rows(features, feature_count)
     mean, scale = np.asarray(mean), np.asarray(scale)
-    if (mean.shape != (FEATURE_COUNT,) or scale.shape != (FEATURE_COUNT,)
+    if (mean.shape != (feature_count,) or scale.shape != (feature_count,)
             or not np.isfinite(mean).all() or not np.isfinite(scale).all()
             or (scale <= 0).any()):
         raise ValueError('Invalid frozen normalization')
     normalized = ((rows-mean)/scale).astype(np.float32)
     if not np.isfinite(normalized).all():
         raise ValueError('Nonfinite normalized input')
-    return np.ascontiguousarray(normalized.reshape(-1, NOTE_COUNT, FEATURE_COUNT).transpose(0, 2, 1))
+    return np.ascontiguousarray(normalized.reshape(-1, NOTE_COUNT, feature_count).transpose(0, 2, 1))
 
 
-def make_network():
+def make_network(feature_count=FEATURE_COUNT):
     import torch
+    if not isinstance(feature_count, int) or feature_count <= 0:
+        raise ValueError('Invalid feature count')
 
     class PitchContext(torch.nn.Module):
         def __init__(self):
             super().__init__()
             width = MODEL_PARAMS['channels']
-            self.input = torch.nn.Conv1d(FEATURE_COUNT, width, 1)
+            self.input = torch.nn.Conv1d(feature_count, width, 1)
             self.context = torch.nn.ModuleList(torch.nn.Conv1d(width, width,
                 MODEL_PARAMS['kernel_size'], dilation=d, padding=d)
                 for d in MODEL_PARAMS['dilations'])
@@ -124,15 +126,17 @@ class HarmonicContextModel:
 
     def activity(self, features):
         import torch
+        feature_count = len(self.mean)
         # Validate the entire shape even when an empty prediction batch is supplied.
-        rows = candidate_rows(features)
+        rows = candidate_rows(features, feature_count)
         mixtures = len(rows)//NOTE_COUNT
-        values = rows.reshape(mixtures, NOTE_COUNT*FEATURE_COUNT)
+        values = rows.reshape(mixtures, NOTE_COUNT*feature_count)
         result = np.empty((mixtures, NOTE_COUNT), dtype=np.float64)
         self.network.eval()
         with torch.inference_mode():
             for start in range(0, mixtures, MODEL_PARAMS['batch_size']):
-                batch = normalized_context(values[start:start+MODEL_PARAMS['batch_size']], self.mean, self.scale)
+                batch = normalized_context(values[start:start+MODEL_PARAMS['batch_size']], self.mean, self.scale,
+                                           feature_count)
                 probability = torch.sigmoid(self.network(torch.from_numpy(batch))).cpu().numpy()
                 if (probability.shape != (len(batch), NOTE_COUNT)
                         or not np.isfinite(probability).all()

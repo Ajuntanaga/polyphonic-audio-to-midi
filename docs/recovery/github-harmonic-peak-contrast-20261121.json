@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "state": "prepared",
+  "final": false,
+  "created_at": "2026-11-22T01:27:32.637227+00:00",
+  "updated_at": "2026-11-22T01:27:58.984960+00:00",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_base_commit": "b4d74a99e8e1e1d18cf1cdfe26854dc943d281da",
+  "source_commit": null,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_base_commit": "5511019683c1f339b8cb9ff5baf6ae8513bf84d7",
+  "worker_commit": null,
+  "workflow": "harmonic-peak-contrast.yml",
+  "specification": "docs/recovery/harmonic-peak-contrast-20261121.json",
+  "specification_sha256": "3635862c87b80cb8bbe1e16cf7a9aa08a8d6ffd837d3a920a2a46c6406495c3e",
+  "design": "docs/recovery/CODEX-M3-HARMONIC-PEAK-CONTRAST-PLAN-20261121.md",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "protocol": "One CPU fit on the original unaugmented setwise mixtures. Add trailing local-peak contrast, detuning and cross-partial coherence to the unchanged 62-coordinate prefix. Training-only cutoff, original roles, objective, optimizer, epochs and all acceptance gates remain fixed.",
+  "baseline": {
+    "run_id": 44965135706,
+    "source_commit": "6b4d39aa8b308ce8f808486b345dbe865b1bb4a0",
+    "report_sha256": "43b65016f2073661540499843adf12137645e59ed79a62e408c0a8c7449834b9",
+    "five_pitch_exact": 1818,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771,
+    "calibration_five_pitch_exact": 283,
+    "calibration_five_pitch_total": 639,
+    "test_five_pitch_exact": 27,
+    "test_five_pitch_total": 327
+  },
+  "training_plan_identity": {
+    "baseline_run_id": 44960075844,
+    "file": "train-mixture-plan.json.gz",
+    "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+  },
+  "harmonic_peak_contrast": {
+    "name": "harmonic_peak_contrast_v1",
+    "harmonics": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "search_radius_cents": 40.0,
+    "zero_padding_factor": 8,
+    "flank_native_bins": 3.0,
+    "prominence_db_clip": [
+      -60.0,
+      60.0
+    ],
+    "interpolation": "three-bin log-power parabola",
+    "peak_rule": "largest local maximum with interpolated frequency within the fixed neighborhood",
+    "no_peak": "nominal-frequency power and flank contrast; offset=0, valid=0",
+    "coherence": "power-weighted standard deviation of valid partial offsets in cents; zero for fewer than two",
+    "flank_rule": "mean linear power at peak +/- three native FFT bins; negative frequency reflected",
+    "normalization": "original trailing-window RMS; training-only coordinate scaling",
+    "hard_rejection": false
+  },
+  "run_id": null,
+  "stage": "Frozen implementation and one independent static review passed; ready for one CPU dispatch",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "bulk_policy": "Collect the small report once with server digest verification; retain model, predictions and mixture plans remote. No automatic rerun or cutoff tuning.",
+  "collection_state": "not dispatched",
+  "validation": {
+    "local_synthetic_tests": 87,
+    "passed": 71,
+    "torch_dependent_skipped": 16,
+    "git_diff_check": "passed",
+    "local_recorded_audio_model_native_execution": false,
+    "github_synthetic_tests_required": 87,
+    "independent_static_review": "No material blocker; peak math/layout, train-only fitting, unchanged gates and workflow checked. Torch execution and CPU budget pending GitHub."
+  },
+  "next": "Commit/push scoped changes and dispatch exactly one CPU job; collect small report once. Continuous and live gates unchanged."
+}

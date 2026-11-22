@@ -1,3 +1,9 @@
+## Harmonic peak contrast frozen: one CPU comparison prepared
+
+Active checkpoint: `docs/recovery/github-harmonic-peak-contrast-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-PEAK-CONTRAST-PLAN-20261121.md`. Adds local peak position, prominence and cross-partial offset agreement to the original bit-identical 62-feature prefix (106 total). Comparator is unaugmented setwise run44965135706; no augmentation, threshold change or hard harmonic rejection. Training plan, all555 sources/roles, objective and acceptance gates remain fixed.
+
+Local synthetic suite87 checks:71 passed,16 torch-dependent skipped for GitHub. One independent read-only implementation review found no material blocker. Single CPU workflow `harmonic-peak-contrast.yml` prepared but not dispatched. Complete recorded validation on GitHub; collect small report once and keep bulk remote. Installed/default output and scoreboard unchanged. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Coherent pitch transposition final: held-out transfer rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-pitch-transposition-20261121.json`; result: `docs/recovery/CODEX-M3-PITCH-TRANSPOSITION-RESULT-20261121.md`. CPU run44969797809 final/success, source `c671c282e67beb29f266b208f4338ceac47f1c07`, worker `5511019683c1f339b8cb9ff5baf6ae8513bf84d7`. All78 GitHub checks and source CI44969734602 passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload, rerun or retune this completed screen.

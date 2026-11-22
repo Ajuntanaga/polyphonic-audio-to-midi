@@ -69,13 +69,14 @@ class HarmonicFeatures:
         return np.concatenate(result, axis=1).astype(np.float32).ravel()
 
 
-def candidate_rows(features):
+def candidate_rows(features, feature_count=FEATURE_COUNT):
     """Preserve mixture-major, pitch-minor alignment with truth.reshape(-1)."""
     values = np.asarray(features, dtype=np.float32)
-    if (values.ndim != 2 or values.shape[1] != NOTE_COUNT*FEATURE_COUNT
+    if (not isinstance(feature_count, int) or feature_count <= 0 or
+            values.ndim != 2 or values.shape[1] != NOTE_COUNT*feature_count
             or not np.isfinite(values).all()):
         raise ValueError('Invalid harmonic feature matrix')
-    return values.reshape(-1, FEATURE_COUNT)
+    return values.reshape(-1, feature_count)
 
 
 class SharedHarmonicModel:
