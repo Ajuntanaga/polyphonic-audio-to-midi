@@ -35,12 +35,14 @@ class FlatNormalizationTest(unittest.TestCase):
         call = wrapped.prune([wrapped.graph.get_tensor_by_name(t.name) for t in (power, normalized)],
                              wrapped.graph.get_tensor_by_name(output.name))
         values = np.linspace(-1, 1, np.prod(SPECTRAL_SHAPE), dtype=np.float32).reshape(SPECTRAL_SHAPE)
+        values_tensor = tf.convert_to_tensor(values)
         for level in (0., 1e-12, 1., 100.):
             p = np.full(SPECTRAL_SHAPE, level, np.float32)
-            np.testing.assert_array_equal(call(p, values).numpy(), np.zeros_like(values))
+            np.testing.assert_array_equal(call(tf.convert_to_tensor(p), values_tensor).numpy(),
+                                          np.zeros_like(values))
             p.flat[-1] = (np.finfo(np.float32).tiny if level == 0.
                           else np.nextafter(p.flat[-1], np.float32(np.inf)))
-            np.testing.assert_array_equal(call(p, values).numpy(), values)
+            np.testing.assert_array_equal(call(tf.convert_to_tensor(p), values_tensor).numpy(), values)
         with self.assertRaisesRegex(ValueError, 'collision'):
             guard_graph(updated, power.op.name, normalized.op.name)
 

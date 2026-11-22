@@ -1,6 +1,12 @@
-## Exact constant-power correction prepared; no dispatch yet
+## Flat-normalization fixture corrected; remote execution being prepared
 
-Active preparation: `docs/recovery/CODEX-M3-FLAT-NORMALIZATION-READY-20261122.md`; fixed specification `docs/recovery/basic-pitch-flat-normalization-20261122.json`. Codex owns the correction/paired runtime files temporarily for coordination. One CPU job will compare corrected frozen TensorFlow and ONNX with both existing weight sets on synthetics, then two recordings. No new fit, threshold/decoder change or installed/default change. Six local pure tests pass; two execution checks are remote-only. Claude continues independent support/emitter work as an equal peer, with the same in-scope authority. Eight-hour work continues through2026-11-22 18:25 UTC.
+Active result checkpoint: `docs/recovery/github-basic-pitch-flat-normalization-20261122.json`. Run45027925089 final/failure before scientific measurement; seven remote tests pass and one fixture errors on NumPy inputs to a TensorFlow pruned function. Small logs collected once and digest verified. Only fixture input conversion is corrected; original scientific specification and all gates unchanged. Corrected execution will be recorded separately, with no duplicate active job. Installed output unchanged. Claude and Codex remain equal active peers. Work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
+## Exact constant-power normalization comparison running: 45027925089
+
+Active checkpoint: `docs/recovery/github-basic-pitch-flat-normalization-20261122.json`. Source `a2afce270d023d5aa04392dfb7aa6612a5350b7f`, worker `85dee308e281ff30a5e10e03eb74382ed85cbf79`. One GitHub CPU dispatch accepted. Fixed specification `docs/recovery/basic-pitch-flat-normalization-20261122.json`: exact constant-power normalization guard only, unchanged weights/decoder/readout, ONNX optimizations disabled. Synthetic parity first, then paired corrected TensorFlow/ONNX inference with original and completed epoch2 weights on ordinary and extended-middle recordings. Small report target `build/github-results/basic-pitch-flat-normalization-45027925089`; bulk remains remote. No local audio/model/native processing, fitting, default/installed change or promotion. Prior adaptation remains rejected.
+
+Claude and Codex remain equal active peers; Claude continues independent support/emitter work, with the same in-scope authority and no peer approval gate. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
 
 ## Numerical localization final: exact constant input exposes log-normalization artifact
 
