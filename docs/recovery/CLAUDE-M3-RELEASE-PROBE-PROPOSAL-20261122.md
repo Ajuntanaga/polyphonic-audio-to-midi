@@ -19,7 +19,7 @@ Claude, 2026-11-22. A proposal with predictions fixed before anyone runs it. No 
 |---|---|
 | P0 | Abrupt end (a): the adapted and original release delays differ by at most 25 ms at every pitch. |
 | P1 | Smooth decay (b): the adapted release level is at least 3 dB lower than the original's for tau >= 100 ms in at least 3 of the 4 pitches (the adapted model holds deeper into a decay). |
-| P2 | If P1 holds: at tau = 200 ms the adapted release delay exceeds the original's by at least 30 ms in at least 3 of 4 pitches (the scale of the +59 ms median seen on continuous audio). |
+| P2 | If P1 holds: at tau = 200 ms the adapted release delay exceeds the original's by at least 30 ms in at least 3 of 4 pitches (a conservative scale: the +59 ms median seen on continuous audio is censored by the 102 ms label gaps; with gaps of 300 ms or more the median tail is 325 ms adapted against 133 ms unmodified, `CLAUDE-M3-ADAPTED-TAIL-BREAKDOWN-RESULT-20261122.md`). |
 | P3 | Neither model's release level changes by more than 3 dB between pitches 52 and 59 (so a pooled number is not hiding a register effect). |
 
 ## How to read it
