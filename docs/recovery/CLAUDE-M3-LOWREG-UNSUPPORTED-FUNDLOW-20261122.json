@@ -1,0 +1,61 @@
+{
+ "base_ticks": {
+  "true": 230176,
+  "other": 97485,
+  "tail": 124433
+ },
+ "labels_with_a_lower_voice": 260,
+ "curve": {
+  "50": {
+   "tail_suppressed_ticks": 8124,
+   "tail_suppressed_share": 0.065,
+   "other_suppressed_ticks": 4318,
+   "true_suppressed_ticks": 18,
+   "true_suppressed_ms": 12.0,
+   "removed_per_true_lost": 691.22,
+   "labels_with_loss": 1,
+   "labels_losing_over_100ms": 0,
+   "worst_labels": [
+    {
+     "label_index": 150,
+     "midi": 43,
+     "lost_ms": 12.0,
+     "label_ms_with_voice": 736.0
+    }
+   ]
+  },
+  "100": {
+   "tail_suppressed_ticks": 5976,
+   "tail_suppressed_share": 0.048,
+   "other_suppressed_ticks": 3095,
+   "true_suppressed_ticks": 0,
+   "true_suppressed_ms": 0.0,
+   "removed_per_true_lost": null,
+   "labels_with_loss": 0,
+   "labels_losing_over_100ms": 0,
+   "worst_labels": []
+  },
+  "200": {
+   "tail_suppressed_ticks": 2682,
+   "tail_suppressed_share": 0.022,
+   "other_suppressed_ticks": 1802,
+   "true_suppressed_ticks": 0,
+   "true_suppressed_ms": 0.0,
+   "removed_per_true_lost": null,
+   "labels_with_loss": 0,
+   "labels_losing_over_100ms": 0,
+   "worst_labels": []
+  },
+  "400": {
+   "tail_suppressed_ticks": 1229,
+   "tail_suppressed_share": 0.01,
+   "other_suppressed_ticks": 1149,
+   "true_suppressed_ticks": 0,
+   "true_suppressed_ms": 0.0,
+   "removed_per_true_lost": null,
+   "labels_with_loss": 0,
+   "labels_losing_over_100ms": 0,
+   "worst_labels": []
+  }
+ }
+}
