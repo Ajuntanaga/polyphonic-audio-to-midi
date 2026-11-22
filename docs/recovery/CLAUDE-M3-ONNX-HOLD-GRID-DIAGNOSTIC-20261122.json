@@ -1,0 +1,214 @@
+{
+ "cropped unmodified": {
+  "D220": [
+   {
+    "label": 42,
+    "pitch": 60,
+    "scorer_lost_ms": 3.32,
+    "head_ms": 0.0,
+    "middle_ms": 0.0,
+    "tail_ms": 3.32,
+    "onset_offset_ms": 0.0,
+    "reconciles": true
+   },
+   {
+    "label": 229,
+    "pitch": 42,
+    "scorer_lost_ms": 151.99,
+    "head_ms": 0.0,
+    "middle_ms": 0.0,
+    "tail_ms": 151.99,
+    "onset_offset_ms": 0.0,
+    "reconciles": true
+   },
+   {
+    "label": 263,
+    "pitch": 33,
+    "scorer_lost_ms": 34.83,
+    "head_ms": 34.83,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 40.83,
+    "reconciles": true
+   },
+   {
+    "label": 364,
+    "pitch": 42,
+    "scorer_lost_ms": 50.57,
+    "head_ms": 50.57,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 50.57,
+    "reconciles": true
+   },
+   {
+    "label": 389,
+    "pitch": 33,
+    "scorer_lost_ms": 0.68,
+    "head_ms": 0.68,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 0.68,
+    "reconciles": true
+   },
+   {
+    "label": 398,
+    "pitch": 34,
+    "scorer_lost_ms": 5.34,
+    "head_ms": 5.34,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 5.34,
+    "reconciles": true
+   }
+  ],
+  "D600": [
+   {
+    "label": 229,
+    "pitch": 42,
+    "scorer_lost_ms": 36.67,
+    "head_ms": 0.0,
+    "middle_ms": 0.0,
+    "tail_ms": 36.67,
+    "onset_offset_ms": 0.0,
+    "reconciles": true
+   },
+   {
+    "label": 263,
+    "pitch": 33,
+    "scorer_lost_ms": 34.83,
+    "head_ms": 34.83,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 40.83,
+    "reconciles": true
+   },
+   {
+    "label": 364,
+    "pitch": 42,
+    "scorer_lost_ms": 50.57,
+    "head_ms": 50.57,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 50.57,
+    "reconciles": true
+   },
+   {
+    "label": 389,
+    "pitch": 33,
+    "scorer_lost_ms": 0.68,
+    "head_ms": 0.68,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 0.68,
+    "reconciles": true
+   },
+   {
+    "label": 398,
+    "pitch": 34,
+    "scorer_lost_ms": 5.34,
+    "head_ms": 5.34,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 5.34,
+    "reconciles": true
+   }
+  ]
+ },
+ "cropped adapted": {
+  "D220": [
+   {
+    "label": 42,
+    "pitch": 60,
+    "scorer_lost_ms": 3.32,
+    "head_ms": 0.0,
+    "middle_ms": 0.0,
+    "tail_ms": 3.32,
+    "onset_offset_ms": 0.0,
+    "reconciles": true
+   },
+   {
+    "label": 263,
+    "pitch": 33,
+    "scorer_lost_ms": 34.83,
+    "head_ms": 34.83,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 40.83,
+    "reconciles": true
+   },
+   {
+    "label": 364,
+    "pitch": 42,
+    "scorer_lost_ms": 50.57,
+    "head_ms": 50.57,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 50.57,
+    "reconciles": true
+   },
+   {
+    "label": 389,
+    "pitch": 33,
+    "scorer_lost_ms": 0.68,
+    "head_ms": 0.68,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 0.68,
+    "reconciles": true
+   },
+   {
+    "label": 398,
+    "pitch": 34,
+    "scorer_lost_ms": 5.34,
+    "head_ms": 5.34,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 5.34,
+    "reconciles": true
+   }
+  ],
+  "D600": [
+   {
+    "label": 263,
+    "pitch": 33,
+    "scorer_lost_ms": 34.83,
+    "head_ms": 34.83,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 40.83,
+    "reconciles": true
+   },
+   {
+    "label": 364,
+    "pitch": 42,
+    "scorer_lost_ms": 50.57,
+    "head_ms": 50.57,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 50.57,
+    "reconciles": true
+   },
+   {
+    "label": 389,
+    "pitch": 33,
+    "scorer_lost_ms": 0.68,
+    "head_ms": 0.68,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 0.68,
+    "reconciles": true
+   },
+   {
+    "label": 398,
+    "pitch": 34,
+    "scorer_lost_ms": 5.34,
+    "head_ms": 5.34,
+    "middle_ms": 0.0,
+    "tail_ms": 0.0,
+    "onset_offset_ms": 5.34,
+    "reconciles": true
+   }
+  ]
+ }
+}
