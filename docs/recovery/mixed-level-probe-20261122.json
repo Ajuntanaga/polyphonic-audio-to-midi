@@ -1,0 +1,86 @@
+{
+  "schema": "m3_mixed_level_probe_spec_v1",
+  "workflow": "mixed-level-probe.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "onnxruntime_version": "1.20.1",
+  "artifact": {
+    "id": 14756974499,
+    "name": "m3-basic-pitch-flat-normalization-evidence-45029161409-1",
+    "run_id": 45029161409,
+    "worker_commit": "85dee308e281ff30a5e10e03eb74382ed85cbf79",
+    "source_commit": "797b693a647de7e80ca21aadea05c7a27922a5ef",
+    "bytes": 29870783,
+    "sha256": "1a59d97e31c6dc4b5a03a19ba0d8fbf2363540b081bdfc72429a4db1669d8633"
+  },
+  "reference_members": {
+    "unmodified.onnx": {
+      "bytes": 483585,
+      "sha256": "61a40dc4e49b3518889cb7375a0224ee0835f77ebaf3ac6a67a7c9449be8b77d"
+    },
+    "adapted.onnx": {
+      "bytes": 482905,
+      "sha256": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+    }
+  },
+  "weight_fingerprints": {
+    "unmodified": "76c391ed344ae85b5219f1a208abf04ada060379375efe56921f958c64f3bd22",
+    "adapted": "32e5894a81b666dd664da5720ce2c3e84e3dfc4fd0b424c83f95e92c9dbd7c61"
+  },
+  "probe": {
+    "floors": [
+      "zero",
+      "dither"
+    ],
+    "forms": [
+      "sustained",
+      "cut"
+    ],
+    "pitches": [
+      52,
+      64,
+      76
+    ],
+    "levels": [
+      -80,
+      -70,
+      -60,
+      -50,
+      -40,
+      -30
+    ],
+    "deltas": [
+      10,
+      20,
+      35
+    ],
+    "timings": [
+      "through",
+      "ended"
+    ],
+    "companion_cap": -10,
+    "companion_midi": 43,
+    "reference_companion_levels": [
+      -60,
+      -40,
+      -20,
+      -10
+    ],
+    "dither_db": -96.0,
+    "noise_seed": 20261122,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "cut_sample": 41984,
+    "ended_sample": 22050,
+    "window_samples": 43844,
+    "sample_rate": 22050,
+    "expected_windows": 474
+  },
+  "identity_tolerance": 1e-06,
+  "models": [
+    "unmodified",
+    "adapted"
+  ]
+}
