@@ -1,17 +1,17 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T00:05:11.177577+00:00",
-  "updated_at": "2026-11-22T00:07:36.294681+00:00",
+  "updated_at": "2026-11-22T00:15:01.639487+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "8cd9ab63fe7891760aa98178d52ef37d551e9cca",
-  "source_commit": null,
+  "source_commit": "6b4d39aa8b308ce8f808486b345dbe865b1bb4a0",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_base_commit": "953f3be4b5a5b98b19d5c59df761197fc0b9954c",
-  "worker_commit": null,
+  "worker_commit": "9cff32047cf26c6abe227db3f27b992d7a680abc",
   "workflow": "harmonic-setwise-learning.yml",
   "specification": "docs/recovery/harmonic-setwise-learning-20261121.json",
   "specification_sha256": "4e732fc01f20e2b8a0b5cb6d4d3e746890878dc448c1f0bc87417340e9dcecb8",
@@ -38,21 +38,35 @@
     "previous_five_pitch_exact": 1759,
     "five_pitch_total": 2529,
     "five_pitch_target": 1771,
-    "interpretation": "Report exact, false and missing counts separately. Any single-pitch regression means the preservation objective is not achieved even if aggregate research gates pass. These comparisons do not relax or replace the existing gates."
+    "interpretation": "Report exact, false and missing counts separately. Any single-pitch regression means the preservation objective is not achieved even if aggregate research gates pass. These comparisons do not relax or replace the existing gates.",
+    "observed": {
+      "single_pitch_exact": 3115,
+      "single_pitch_total": 3132,
+      "single_pitch_false": 13,
+      "single_pitch_missing": 5,
+      "single_pitch_aggregate_preservation_met": true,
+      "per_mixture_preservation": "not measured in compact report",
+      "five_pitch_exact": 1818,
+      "five_pitch_total": 2529,
+      "five_pitch_target": 1771,
+      "five_pitch_headroom": 47,
+      "interpretation": "Training-only aggregates; no held-out or installed preservation claim."
+    }
   },
   "training_plan_identity": {
     "baseline_run_id": 44960075844,
     "file": "train-mixture-plan.json.gz",
     "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
-    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded",
+    "verified": true
   },
-  "run_id": null,
-  "stage": "review passed; scoped commits and one dispatch next",
+  "run_id": 44965135706,
+  "stage": "Final: training passed; both held-out complete-chord gates failed; continuous replay skipped",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Collect small report once with server digest verified. Keep model and bulk predictions remote unless a named later diagnosis requires them.",
-  "collection_state": "not_dispatched",
+  "collection_state": "small report collected once; server digest verified; bulk remains remote",
   "validation": {
     "local_synthetic_tests": 67,
     "local_passed": 52,
@@ -65,7 +79,316 @@
       "reviewer": "setwise_objective_review",
       "scope": "Setwise loss, edge cases, unchanged previous objectives and stage gates, source isolation, bounded CPU workflow",
       "result": "No material blockers. Record worker SHA and verify report GITHUB_SHA. Single-pitch preservation remains a separately reported acceptance condition."
+    },
+    "github_synthetic_tests": 67,
+    "github_passed": 67,
+    "github_skipped": 0,
+    "source_pin_matches_report": true,
+    "worker_pin_matches_report": true,
+    "specification_pin_matches_report": true
+  },
+  "next": "Freeze a source-variation training design using training sources only. Preserve both held-out roles, all labels, the cutoff rule and every acceptance gate. Do not rerun or retune this rejected model; no next job queued.",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44965135706",
+  "output_directory": "build/github-results/harmonic-setwise-learning-44965135706",
+  "report_artifact": "m3-harmonic-setwise-report-44965135706-1",
+  "evidence_artifact": "m3-harmonic-setwise-evidence-44965135706-1",
+  "source_ci_runs": [
+    {
+      "id": 44965120162,
+      "name": "Portable offline replay",
+      "head_sha": "6b4d39aa8b308ce8f808486b345dbe865b1bb4a0",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "workflow_conclusion": "success",
+  "last_observed_at": "2026-11-22T00:15:01.639487+00:00",
+  "report": "build/github-results/harmonic-setwise-learning-44965135706/artifact/harmonic-setwise-result/report/report.json",
+  "report_sha256": "43b65016f2073661540499843adf12137645e59ed79a62e408c0a8c7449834b9",
+  "collection_receipt": {
+    "artifact_id": 14730923720,
+    "name": "m3-harmonic-setwise-report-44965135706-1",
+    "bytes": 25729,
+    "sha256": "2b9b7b1a96a3c487e15b76ff1140272b103e7218b8da5e4084718a6979b20c63",
+    "server_digest_verified": true,
+    "collected_at": "2026-11-22T00:12:37.851866+00:00",
+    "bulk_retained_remote": true
+  },
+  "result_note": "docs/recovery/CODEX-M3-HARMONIC-SETWISE-RESULT-20261121.md",
+  "finished_at": "2026-11-22T00:11:05.333633+00:00",
+  "decision": "rejected at source-disjoint held-out gates",
+  "research_screen_passed": false,
+  "representation_feasibility_passed": false,
+  "held_out_scoring": {
+    "executed": true,
+    "reason": "Training passed; both roles scored without refitting."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "gates": {
+    "train_complete_chords": true,
+    "calibration_complete_chords": false,
+    "test_complete_chords": false
+  },
+  "cutoff_fit": {
+    "cutoff": 0.5343895554542542,
+    "feasible": true,
+    "true_positive": 43827,
+    "false_positive": 439,
+    "training_only": true,
+    "selection": "maximum train TP at >=99% precision; stricter tie"
+  },
+  "source_roles": {
+    "counts": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "cross_role_original_overlap": false,
+    "all_original_labels_retained": true,
+    "source_consistency_metadata_used_to_filter": false,
+    "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+  },
+  "mixture_summaries": {
+    "train": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 43827,
+        "false_positive": 439,
+        "false_negative": 1871,
+        "precision_percent": 99.00826819681019,
+        "recall_percent": 95.9057289159263,
+        "exact_set_percent": 89.093017578125,
+        "exact_set_count": 14597
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_set_count": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3127,
+          "false_positive": 13,
+          "false_negative": 5,
+          "precision_percent": 99.5859872611465,
+          "recall_percent": 99.84035759897829,
+          "exact_set_percent": 99.45721583652617,
+          "exact_set_count": 3115
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6347,
+          "false_positive": 55,
+          "false_negative": 93,
+          "precision_percent": 99.14089347079037,
+          "recall_percent": 98.55590062111801,
+          "exact_set_percent": 95.77639751552796,
+          "exact_set_count": 3084
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9498,
+          "false_positive": 102,
+          "false_negative": 255,
+          "precision_percent": 98.9375,
+          "recall_percent": 97.38541987080899,
+          "exact_set_percent": 90.86434943094433,
+          "exact_set_count": 2954
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13100,
+          "false_positive": 138,
+          "false_negative": 628,
+          "precision_percent": 98.95754645716876,
+          "recall_percent": 95.42540792540792,
+          "exact_set_percent": 81.75990675990677,
+          "exact_set_count": 2806
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11755,
+          "false_positive": 131,
+          "false_negative": 890,
+          "precision_percent": 98.89786303213864,
+          "recall_percent": 92.9616449189403,
+          "exact_set_percent": 71.88612099644128,
+          "exact_set_count": 1818
+        }
+      },
+      "silence_false_predictions": 0,
+      "representation_gate": true
+    },
+    "calibration": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 10673,
+        "false_positive": 687,
+        "false_negative": 880,
+        "precision_percent": 93.9524647887324,
+        "recall_percent": 92.38293084047433,
+        "exact_set_percent": 73.1689453125,
+        "exact_set_count": 2997
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_set_count": 205
+        },
+        "1": {
+          "examples": 753,
+          "true_positive": 742,
+          "false_positive": 61,
+          "false_negative": 11,
+          "precision_percent": 92.40348692403487,
+          "recall_percent": 98.53917662682603,
+          "exact_set_percent": 91.76626826029216,
+          "exact_set_count": 691
+        },
+        "2": {
+          "examples": 777,
+          "true_positive": 1510,
+          "false_positive": 113,
+          "false_negative": 44,
+          "precision_percent": 93.03758471965496,
+          "recall_percent": 97.16859716859717,
+          "exact_set_percent": 83.91248391248392,
+          "exact_set_count": 652
+        },
+        "3": {
+          "examples": 837,
+          "true_positive": 2371,
+          "false_positive": 157,
+          "false_negative": 140,
+          "precision_percent": 93.78955696202532,
+          "recall_percent": 94.42453205894066,
+          "exact_set_percent": 74.67144563918757,
+          "exact_set_count": 625
+        },
+        "4": {
+          "examples": 885,
+          "true_positive": 3242,
+          "false_positive": 194,
+          "false_negative": 298,
+          "precision_percent": 94.35389988358557,
+          "recall_percent": 91.5819209039548,
+          "exact_set_percent": 61.12994350282486,
+          "exact_set_count": 541
+        },
+        "5": {
+          "examples": 639,
+          "true_positive": 2808,
+          "false_positive": 162,
+          "false_negative": 387,
+          "precision_percent": 94.54545454545455,
+          "recall_percent": 87.88732394366197,
+          "exact_set_percent": 44.28794992175274,
+          "exact_set_count": 283
+        }
+      },
+      "silence_false_predictions": 0,
+      "representation_gate": false
+    },
+    "test": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 8000,
+        "false_positive": 2705,
+        "false_negative": 2452,
+        "precision_percent": 74.73143390938813,
+        "recall_percent": 76.54037504783773,
+        "exact_set_percent": 42.7001953125,
+        "exact_set_count": 1749
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_set_count": 205
+        },
+        "1": {
+          "examples": 869,
+          "true_positive": 744,
+          "false_positive": 355,
+          "false_negative": 125,
+          "precision_percent": 67.69790718835304,
+          "recall_percent": 85.61565017261219,
+          "exact_set_percent": 69.85040276179517,
+          "exact_set_count": 607
+        },
+        "2": {
+          "examples": 950,
+          "true_positive": 1567,
+          "false_positive": 612,
+          "false_negative": 333,
+          "precision_percent": 71.91372189077559,
+          "recall_percent": 82.47368421052632,
+          "exact_set_percent": 46.421052631578945,
+          "exact_set_count": 441
+        },
+        "3": {
+          "examples": 932,
+          "true_positive": 2191,
+          "false_positive": 729,
+          "false_negative": 605,
+          "precision_percent": 75.03424657534246,
+          "recall_percent": 78.36194563662374,
+          "exact_set_percent": 34.763948497854074,
+          "exact_set_count": 324
+        },
+        "4": {
+          "examples": 813,
+          "true_positive": 2387,
+          "false_positive": 697,
+          "false_negative": 865,
+          "precision_percent": 77.39948119325551,
+          "recall_percent": 73.4009840098401,
+          "exact_set_percent": 17.83517835178352,
+          "exact_set_count": 145
+        },
+        "5": {
+          "examples": 327,
+          "true_positive": 1111,
+          "false_positive": 312,
+          "false_negative": 524,
+          "precision_percent": 78.0744905130007,
+          "recall_percent": 67.95107033639144,
+          "exact_set_percent": 8.256880733944955,
+          "exact_set_count": 27
+        }
+      },
+      "silence_false_predictions": 0,
+      "representation_gate": false
     }
   },
-  "next": "Commit/push scoped source and worker, record exact SHAs, then dispatch once. Collect the small report only; preserve existing gates and report isolated-note preservation separately."
+  "live_readiness": "not measured",
+  "evidence_artifact_metadata": {
+    "id": 14731416978,
+    "name": "m3-harmonic-setwise-evidence-44965135706-1",
+    "bytes": 6951749,
+    "sha256": "20d386fd383e75585987ee82548c466ea3e4d5c21ece8282c0f57d26b89cc750",
+    "expires_at": "2026-12-06T00:11:06Z",
+    "collected": false
+  }
 }

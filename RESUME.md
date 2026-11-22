@@ -1,8 +1,10 @@
-## Setwise objective prepared: chord recovery with isolated-note preservation check
+## Setwise objective final: training passed, held-out transfer rejected
 
-Active checkpoint: `docs/recovery/github-harmonic-setwise-learning-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-SETWISE-PLAN-20261121.md`. One loss-only CPU experiment: mean pitch BCE plus summed true/false log-sum-exp penalties. Same network, source roles, mixtures, seed,80epochs and acceptance gates. Training cutoff uses the unchanged99%-precision rule. No recorded processing yet; focused review completed without material blockers before one dispatch. Local synthetic checks67:52passed,15dependency skips to run on GitHub. Claude is paused; no fresh Claude review claimed.
+Active checkpoint: `docs/recovery/github-harmonic-setwise-learning-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-SETWISE-RESULT-20261121.md`. CPU run 44965135706 completed successfully at source `6b4d39aa8b308ce8f808486b345dbe865b1bb4a0`, worker `9cff32047cf26c6abe227db3f27b992d7a680abc`; source CI 44965120162 and all 67 GitHub synthetic checks passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Report single-pitch complete sets against3108/3132, false18 and missing8; any regression leaves preservation unmet. Five-pitch target1771/2529 remains separate. Failed training gates stop held-out and continuous scoring. Installed/default output, labels and scoreboard unchanged. No cutoff retune, install or promotion. Earlier entries below are historical.
+Training five-pitch complete sets 1759->1818/2529 (69.55->71.89%), above TARGET 1771 by 47. Against BCE, single-pitch exact 3108->3115/3132; extra pitches 18->13, missing 8->5. Training aggregate preservation passes. Held-out calibration/test five-pitch exact 283/639 (44.29%)/27/327 (8.26%); both held-out gates fail, so screen REJECTED and continuous replay skipped. These are sampled pitch-set counts, not installed labeled-frame gains. All 555 labels, installed/default output and scoreboard unchanged.
+
+Next: freeze a training-source variation design while preserving both held-out roles, all labels, cutoff selection and every acceptance gate. No held-out tuning, source exclusion, promotion or next job queued. Protocol and source-content differences remain confounded; no unique failure cause is established. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
 
 ## Complete-set paired diagnosis final: chord gains with single-pitch extras
 
