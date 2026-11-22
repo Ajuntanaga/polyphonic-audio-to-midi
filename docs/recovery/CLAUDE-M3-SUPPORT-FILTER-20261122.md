@@ -157,6 +157,29 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
     gap output.
     - Predictions H4 (gap and wrong both still ≤ 0 at h = 120 for variant a) and H6 (coverage rises less than 1.5 pp from h = 0 to 120)
       failed; H0–H3, H5 and H7 passed.
+12. **Confirming by persistence does not rescue the labels without giving the removal back (`CLAUDE-M3-PERSISTENCE-CONFIRM-20261122.py`,
+    both corpora, filter only).** Rule: emit a CURRENT note when the support (arm A ∪ native, held D ms) reports it, or after it has
+    lasted L ms unsupported. It is causal and replaces "never emit unsupported notes" with "emit them L ms late". Grid fixed before the
+    run: L ∈ {∞, 500, 220, 100, 50} ms, D ∈ {50, 220} ms.
+
+    | ordinary | L = ∞ | 500 | 220 | 100 | 50 |
+    |---|---|---|---|---|---|
+    | D = 220: labels losing | 6 | 4 | 3 | 3 | 3 |
+    | D = 220: wrong-pitch removed | 22.1% | 9.3% | 4.4% | 2.0% | 1.0% |
+    | D = 220: precision (CURRENT 54.2%) | 58.93% | 55.91% | 55.01% | 54.54% | 54.35% |
+    | D = 220: false vs CURRENT | −17.7% | −6.8% | −3.3% | −1.5% | −0.7% |
+    | D = 50: labels losing | 28 | 10 | 8 | 7 | 4 |
+    | D = 50: wrong-pitch removed | 56.1% | 15.2% | 8.2% | 3.6% | 1.7% |
+    | D = 50: precision | 67.45% | 57.03% | 55.71% | 54.82% | 54.47% |
+
+    The false notes CURRENT emits are mostly long-lived: a persistence rule of 500 ms already gives back 58% (D = 220) to 73% (D = 50)
+    of the removal while cutting label losses by only a third (6 → 4) to two thirds (28 → 10), and never reaches zero (3 labels still
+    lose at L = 50: with a delay of L ms, any label whose CURRENT note is shorter than L or whose first L ms are unsupported loses
+    time). On extended-middle every L keeps 0 labels losing and the safety flag True, but the removal also falls (D = 220: 26.0 /
+    14.1 / 4.0 / 1.8 / 0.9%; precision 78.53% → 74.10%). So the filter's gain is rejecting *sustained* unsupported notes, which is exactly
+    what a persistence rule re-admits; a gate with persistence is a different trade (fewer lost labels, far less cleanup), not a
+    free repair. Persistence is measured on CURRENT's saved spans, not on a live emitter.
+    - Prediction Q5 (removal above 20% at L = 220) failed (4.4%); Q0–Q4, Q6 and Q7 passed.
 
 ## Predictions
 
@@ -226,6 +249,14 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
 | H5 | the lane's own short-run (< 50 ms) share exceeds CURRENT's | **pass** (77.3% vs 40.5%) |
 | H6 | coverage rises less than 1.5 pp from h = 0 to 120 | **FAILED** (+2.20 pp for a, +2.60 pp for b) |
 | H7 | labels losing present or longest are unchanged by h | **pass** (6 and 28) |
+| Q0 | L = ∞ reproduces the filter-only numbers (ordinary D = 220: present −23,687, 6 labels) | **pass** |
+| Q1 | ordinary D = 220, L = 100: fewer than 6 labels lose | **pass** (3) |
+| Q2 | ordinary D = 220, L = 100: wrong-pitch removal below 15% | **pass** (2.0%) |
+| Q3 | ordinary D = 220: labels losing non-increasing as L falls | **pass** (6, 4, 3, 3, 3) |
+| Q4 | ordinary D = 220: precision non-increasing as L falls | **pass** (58.93 → 54.35%) |
+| Q5 | ordinary D = 220, L = 220: wrong-pitch removal stays above 20% | **FAILED** (4.4%) |
+| Q6 | extended-middle D = 220: 0 labels lose and safety True at every L, removal at L = 100 below 26.0% | **pass** (1.8%) |
+| Q7 | ordinary D = 50, L = 100: labels losing at most 13 | **pass** (7) |
 
 ## 1. The support filter (S0–S6)
 
@@ -373,6 +404,7 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | `ordinary-bridge-events.json.gz` (arm A) | `acd64c358819` |
 | `CLAUDE-M3-SUPPORT-RESCUE-COMBINED-20261122.py` / `.json` | `d1dbda43ed38` / `9424aa78759a` |
 | `CLAUDE-M3-LANE-FRAGMENTATION-20261122.py` / `.json` | `33243af5d6e2` / `82ce270fb09c` |
+| `CLAUDE-M3-PERSISTENCE-CONFIRM-20261122.py` / `.json` | `119b87127d89` / `6efb9226aa3f` |
 | `build/recovery/m3-rescue-spans-20261122/ordinary-rescue-spans.json.gz` (cache of the four rescue span sets, 14 KB, not committed) | `d185f8a328ed` |
 | `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier, rescue-combined and fragmentation scripts only) | `cd905b2f5c2d` |
 
