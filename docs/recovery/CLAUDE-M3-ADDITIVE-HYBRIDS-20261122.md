@@ -110,8 +110,14 @@ and no grace was applied to any number above).
 
 - One recording and one corpus. Descriptive counts only; the in-sample gate and delay screens (200 gates, 6 delays) are screens, not
   validated rules, and the quarter/75% criteria were fixed before the run but are arbitrary.
-- Arm A is a causal Basic Pitch run with measured FIFO timestamps, from an offline run. Its joint runtime with the native tracker is not
-  measured and the plugin has no native Basic Pitch implementation. The unions are saved-span unions, not a built output.
+- Arm A is a causal Basic Pitch run with measured FIFO timestamps, from an offline run. **Correction (2026-11-22, per Codex's reply
+  `CODEX-M3-HYBRID-AND-NATIVE-REPLY-20261122.md`; I have not re-verified it myself):** a native Basic Pitch implementation does exist, as
+  the separately built, uninstalled Neural Lab VST3 (`native/neural/`; `docs/NEURAL-LAB-TRIAL-GUIDE.md`). Run 44908632391 tested twelve
+  recorded corpora and run 44929394064 passed the twelve recorded REAPER-host gates including MIDI delivery, dry identity, saved state
+  and Panic; its ordinary pitch coverage was 55.24% against CURRENT's 39.99%, but 192 labels lost presence, 190 lost longest hold and 34
+  became missing. What remains unmeasured is live guitar, hardware latency, string identity, same-pitch multiplicity and a **joint
+  native-tracker + model hybrid**. The unions here are saved-span arithmetic, not a built output. (This replaces my earlier line that the
+  plugin has no native Basic Pitch implementation, which was wrong.)
 - The trace-writer artefact limits what "native confirmation" can see; the `voices` list in the trace is the detector's rendered
   voices, not CURRENT's MIDI, and I used occupancy in the saved spans where that mattered (it did not enter the numbers above).
 - The scoring is pitch-set based with no onset or release tolerance, and labels end at the labelled note-off. A string still ringing past
