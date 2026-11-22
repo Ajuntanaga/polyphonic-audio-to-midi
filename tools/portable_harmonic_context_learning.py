@@ -25,6 +25,8 @@ from tools.harmonic_source_variation import VARIATION, variation_examples
 from tools.harmonic_partial_variation import PARTIAL_VARIATION, partial_examples
 from tools.harmonic_pitch_transposition import TRANSPOSITION, transposition_examples
 from tools.harmonic_peak_contrast import CONTRAST, HarmonicContrastFeatures, contrast_summary
+from tools.harmonic_phase_motion import (PHASE_MOTION, SINGLE_PITCH_BASELINE,
+    HarmonicPhaseFeatures, single_pitch_preservation)
 from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeatures
 from tools.harmonic_spectral_whitening import WHITENING, HarmonicWhitenedFeatures
 from tools.harmonic_halo_context import (HALO_PARAMETERS, HALO_MODEL_PARAMS, INPUT_NOTE_COUNT,
@@ -138,6 +140,8 @@ def save_model(path, model, extractor, model_params=None, grid_consistency=None)
         halo_parameters=getattr(extractor, 'halo_parameters', None),
         input_note_count=model.input_note_count, output_note_count=NOTE_COUNT,
         model_parameters=MODEL_PARAMS if model_params is None else model_params)
+    if isinstance(extractor, HarmonicPhaseFeatures):
+        saved['phase_parameters'] = PHASE_MOTION
     if grid_consistency is not None:
         validate_consistency(grid_consistency)
         saved['training_grid_consistency'] = dict(grid_consistency)
@@ -173,12 +177,17 @@ def run(spec_path, output):
         partial = spec.get('training_partial_variation')
         transposition = spec.get('training_pitch_transposition')
         contrast = spec.get('harmonic_peak_contrast')
+        phase = spec.get('harmonic_phase_motion')
         suppression = spec.get('harmonic_level_suppression')
         whitening = spec.get('harmonic_spectral_whitening')
         halo = spec.get('harmonic_halo_context')
         grid_consistency = spec.get('training_grid_consistency')
-        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression, whitening, halo, grid_consistency)) > 1:
+        if sum(value is not None for value in (variation, partial, transposition, contrast, phase, suppression, whitening, halo, grid_consistency)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if phase is not None:
+            require_identity(phase, PHASE_MOTION, 'fixed trailing harmonic phase motion')
+            require_identity(spec['single_pitch_baseline'], SINGLE_PITCH_BASELINE, 'frozen single-pitch preservation')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         if grid_consistency is not None:
             validate_consistency(grid_consistency)
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise architecture and supervised objective')
@@ -218,6 +227,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_pitch_transposition_v1'
         if contrast is not None:
             report['schema'] = 'm3_harmonic_peak_contrast_v1'
+        if phase is not None:
+            report['schema'] = 'm3_harmonic_phase_motion_v1'
         if suppression is not None:
             report['schema'] = 'm3_harmonic_level_suppression_v1'
         if whitening is not None:
@@ -246,7 +257,8 @@ def run(spec_path, output):
         report['inputs'] = [fetch_release(spec['worker_repository'], pin, folders['cache'],
             folders['inputs'], folders['logs']) for pin in spec['input_releases']]
         waves = source_waves(references['sources'], folders['inputs'])
-        extractor = (HarmonicHaloFeatures() if halo is not None else
+        extractor = (HarmonicPhaseFeatures() if phase is not None else
+                     HarmonicHaloFeatures() if halo is not None else
                      HarmonicWhitenedFeatures() if whitening is not None else
                      HarmonicLevelBlindFeatures() if suppression is not None else
                      HarmonicContrastFeatures() if contrast is not None else HarmonicFeatures())
@@ -260,6 +272,7 @@ def run(spec_path, output):
             boundary_context=('Measured 36-pitch halo each side; valid convolutions, no padded boundary in any output receptive field.' if halo is not None
                               else 'Zero padding supplies incomplete context and can encode boundary position.'),
             distinction=('Training-only one-row feature-grid consistency; same features, network, scaler, plans, optimizer steps and inference as setwise baseline.' if grid_consistency is not None else
+                'Original 62 coordinates plus 12 past-only phase-motion values; input layer gains 384 parameters, no augmentation.' if phase is not None else
                 'Measured context replaces all padding; same central features, scaler rows, 14465 parameters and initialization. Added context and boundary removal change together.' if halo is not None else
                 'Only the current-frame spectral envelope is partially whitened; original RMS, 62 slots, network, plans and initialization are unchanged versus setwise baseline.' if whitening is not None else
                 'Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
@@ -327,6 +340,9 @@ def run(spec_path, output):
             report['contrast_diagnostics'] = dict(train=contrast_summary(x, y, probability, model.cutoff))
         np.savez_compressed(folders['bulk']/'train-predictions.npz', probability=probability, targets=y, cutoff=model.cutoff)
         gates = dict(train_complete_chords=train_gate)
+        if phase is not None:
+            report['single_pitch_preservation'] = single_pitch_preservation(probability, y, model.cutoff)
+            gates['train_single_pitch_noninferiority'] = report['single_pitch_preservation']['passed']
         report['held_out_scoring'] = dict(executed=False, reason='Training complete-chord gate failed.')
         save_json(report_path, report)
         if train_gate:
@@ -348,7 +364,7 @@ def run(spec_path, output):
         represented = train_gate and all(gates.values())
         report['datasets'] = {}
         report['continuous_replay'] = dict(executed=False,
-            reason='Training and both held-out complete-chord gates must pass first.')
+            reason='Training, both held-out complete-chord gates and any recorded preservation gate must pass first.')
         if represented:
             report['stage'] = 'one continuous replay per recording on measured FIFO clock'
             save_json(report_path, report)
@@ -367,6 +383,7 @@ def run(spec_path, output):
             representation_feasibility_passed=represented, research_screen_passed=passed,
             decision=('exploratory pass; independent recordings and implementation gates remain' if passed
                       else 'rejected at training complete-chord gate' if not train_gate
+                      else 'rejected by single-pitch preservation' if not gates.get('train_single_pitch_noninferiority', True)
                       else 'rejected at source-disjoint held-out gates' if not represented
                       else 'rejected by continuous safety or benefit gates'),
             limits=['All 555 intended-label excerpts retained, including known unresolved source-content disagreements.',
@@ -375,6 +392,7 @@ def run(spec_path, output):
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
                 ('Feature rows move together, retaining FFT and source signatures. This is not physical transposition or proof of source invariance. Consistency may propagate errors or remove useful position evidence; one seed and weight only.' if grid_consistency is not None else
+                 'Phase increments overlap and are not independent. Shared harmonics, leakage, noise and bends can confound them; no source ownership or hard phase gate. Added capacity and changed initialization also affect the comparison.' if phase is not None else
                  'Measured halo adds spectral context and removes boundary cues together; no unique attribution to either. Very low halo pitches are FFT-unresolved; high probes may be weak.' if halo is not None else
                  'Whitening can amplify leakage/noise and alter relative note strengths or remove useful timbre evidence. It uses only the present trailing frame, with no new silence or pitch gate.' if whitening is not None else
                  'Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
