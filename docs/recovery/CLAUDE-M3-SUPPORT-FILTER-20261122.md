@@ -104,6 +104,35 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
      extended-middle strict-gate clean; ordinary 28 / 17 / 6 labels losing small amounts of time with extras reduced (wrong
      −4.38M / −3.37M / −1.73M, gap −586k / −338k / −291k) and no exact-set regression. That variant needs Basic Pitch arm A running
      live (the Neural Lab worker path exists but joint use with the native tracker is unbuilt).
+10. **Filter plus rescue lane, ordinary only (`CLAUDE-M3-SUPPORT-RESCUE-COMBINED-20261122.py`; the rescue spans need the v5 trace, which
+    exists for ordinary only).** The two sides had only been scored apart. Combined: the filtered CURRENT (A ∪ native support held D ms)
+    plus a lane at pitch ≥ 60. Two lanes, grid fixed before the run (D ∈ {50, 220}, c ∈ {∞, 1.0, 0.5, 0.25}): the *unsupported* rescue
+    lane of answer 6, and a *supported* one, the native ≥ 60 confirmation plus the rescue candidates that arm A also reports (the rescue
+    spans intersected with arm A held forward D ms).
+    - **Supporting the rescue lane with the model cuts the false it brings in, by half or more at c = 0.5 and 0.25.** False per added
+      genuine pitch-sample (over the filter alone, D = 220): unsupported c = 1.0 / 0.5 / 0.25 = 0.134 / 0.308 / 0.402; supported =
+      0.105 / 0.152 / 0.170 (native-only lane 0.086). It costs coverage: supported gives up 0.12 / 0.70 / 1.47 pp against unsupported at
+      c = 1.0 / 0.5 / 0.25 (51.93% against 53.40% at c = 0.25).
+    - **D = 220, supported lane** (CURRENT: coverage 39.99%, precision 54.2%, false 11,429,794):
+
+      | c | coverage | precision | wrong Δ | gap Δ | exact-set Δ | all-expected Δ | false vs CURRENT | runs vs CURRENT | labels losing |
+      |---|---|---|---|---|---|---|---|---|---|
+      | 1.0 | 46.02% | 61.79% | −1,644,139 | −160,394 | +271,299 | +412,551 | −15.8% | +47.5% | 6 (0.18% of present) |
+      | 0.5 | 48.80% | 62.59% | −1,495,713 | −70,981 | +338,690 | +547,849 | −13.7% | +59.7% | 6 (0.18%) |
+      | 0.25 | 51.93% | 63.50% | −1,393,655 | **+60,454** | +475,250 | +775,185 | −11.7% | +91.9% | 6 (0.18%) |
+
+      At c = 1.0 and 0.5 every extras clause and the exact-set and all-expected clauses pass in aggregate; the label clause is the one
+      that fails (the same 6 labels as without any lane). At c = 0.25 the gap clause also fails (+60,454).
+    - **D = 50, supported lane.** Coverage 45.62 / 48.26 / 51.26% (c = 1.0 / 0.5 / 0.25), precision 69.87 / 70.44 / 71.11%, wrong
+      −4.32M / −4.21M / −4.14M, gap −456k / −372k / −244k, exact-set +339k / +434k / +583k, all-expected +411k / +546k / +757k, false
+      −41.8 / −40.1 / −38.4% of CURRENT's, runs +60 / +71 / +100%. All three pass the extras clauses; 28 labels lose 1.02% of CURRENT's
+      present time. So at 50 ms the lane takes coverage from 39.99% to 51.26% and precision from 54.2% to 71.1% together, for 28 labels'
+      small losses.
+    - **The label losers do not change.** Adding any lane leaves the loser count at 28 (D = 50) and 6 (D = 220) because the lanes only
+      add pitches ≥ 60 and the losses are at the confirm delay and at pitches the support never reports. Run count rises with a
+      stronger lane (+48% to +92% at D = 220, supported), which would be extra note-ons in a real emitter.
+    - **Not replicated, and probably not replicable here.** The trace exists for ordinary only, so this combination cannot be scored on
+      extended-middle. There, an unsupported ≥ 60 lane added only false; whether a supported lane stays clean is unknown.
 
 ## Predictions
 
@@ -156,6 +185,15 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
 | X6 | the same variant's exact-set and all-expected deltas ≥ 0 | **FAILED** (−342,909; −500,991) |
 | X7 | the same variant's coverage is not below CURRENT's | **FAILED** (73.33% vs 97.49%) |
 | X8 | the same variant's total false is below CURRENT's | **FAILED** (+4.09%) |
+| C0 | c = ∞ lane equals the saved native ≥ 60 spans; filter D = 220 + that lane reproduces the dilation run | **pass** (45.215%, −1,687,401, 6 labels) |
+| C1 | filter D = 220 + unsupported rescue c = 0.5 has coverage above 48.0% | **pass** (49.49%) |
+| C2 | filter D = 220 + unsupported rescue c = 0.25: precision above 55% and wrong ≤ 0 and gap ≤ 0 | **FAILED** (precision 61.64%, wrong −278,967, but gap **+90,406**) |
+| C3 | the same variant's exact-set delta exceeds +256,962 | **pass** (+446,728) |
+| C4 | labels losing fall below 6 once a rescue lane is added | **FAILED** (6 at every lane) |
+| C5 | supported rescue c = 0.25, D = 220 has lower false per added genuine than the unsupported lane | **pass** (0.170 vs 0.402) |
+| C6 | supported rescue c = 0.25, D = 220 reaches coverage of at least 47.0% | **pass** (51.93%) |
+| C7 | supported rescue c = 0.25, D = 220 has higher precision than the unsupported lane | **pass** (63.50% vs 61.64%) |
+| C8 | at D = 50 no rescue lane brings label losses below 20 | **pass** (28 at every lane) |
 
 ## 1. The support filter (S0–S6)
 
@@ -245,6 +283,11 @@ The six losers at D = 220 (label, pitch, label length, CURRENT's present time in
   ordinary corpus only: coverage +5.22 pp, false −16.3%, precision 54.2% → 61.5%, runs +39% (a real emitter would turn extra runs
   into extra note-ons, so that is not a free quantity). On extended-middle the lane fails (exact-set −77,630), so any lane would need
   its own condition. The filter alone at 50–220 ms is the part that held on both corpora.
+- Once the rescue lane must also be reported by the model (answer 10), the ordinary recording's best saved-data variants move a lot.
+  D = 220, c = 0.5: coverage 39.99% → 48.80%, precision 54.2% → 62.6%, false −13.7%, exact-set +338,690, the extras clauses pass, 6
+  labels lose 0.18% of present time. D = 50, c = 0.25: coverage → 51.26%, precision → 71.1%, false −38.4%, exact-set +582,844, extras
+  clauses pass, 28 labels lose 1.02%. Both are ordinary-only, in-sample, and carry +60% to +100% more note runs, so they show a
+  direction (a model-supported lane is much cheaper in false than an unsupported one), not a result to promote.
 
 ## The gate question (the user's call, unchanged in kind from the earlier note)
 
@@ -272,7 +315,9 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
   would change which spans exist (voice slots, retrigger, release), and a changed CURRENT would change what the filter sees.
 - Intersection and the forward hold are span arithmetic. The extra runs are not scored as note-ons; fragmentation (runs +39% to +227%
   at the strongest filter) is real MIDI cost I have not priced.
-- The rescue-lane spans are scored but not saved; the filter-plus-rescue combination was not run.
+- The rescue-lane spans are scored but not saved. The filter-plus-rescue combination (answer 10) was run on ordinary only, because the
+  rescue spans need the v5 trace and no trace exists for extended-middle; the lane grid (c) and the hold grid were fixed before the
+  run, but the filter and lane were each designed on ordinary's numbers, so it is in-sample.
 - The native-only gate is the selector's own confirmation delayed: its precision gain may partly reflect the confirmation excluding
   coasting and tail states that CURRENT keeps, which would be a property of this recording's note endings. I have not separated the two.
 - The saved confirmation is a diagnostic trace projected to callbacks; the native lifecycle must be able to reproduce it online
@@ -293,7 +338,8 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | `basic-pitch-baseline-20261121.json` (CURRENT, run 44835727027) | `da173e1940fb` |
 | consensus `report.json` / `ordinary-consensus-spans.json.gz` | `6a80b45e7f7b` / `0d0dc2973a0d` |
 | `ordinary-bridge-events.json.gz` (arm A) | `acd64c358819` |
-| `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier script only) | `cd905b2f5c2d` |
+| `CLAUDE-M3-SUPPORT-RESCUE-COMBINED-20261122.py` / `.json` | `d1dbda43ed38` / `9424aa78759a` |
+| `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier and rescue-combined scripts only) | `cd905b2f5c2d` |
 
 The filter, dilation, losers and native-only scripts import `CLAUDE-M3-UNION-FRONTIER-20261122.py` and
 `CLAUDE-M3-CONSENSUS-EXTRAS-20261122.py` for helpers (committed earlier).
@@ -315,7 +361,12 @@ gate is only worth building if the user's gate answer accepts a per-label tolera
 report pitch presence separately from string assignment, merge same-pitch duplicates and price the extra note-ons. If you are already
 building the uninstalled joint build, tell me which file and I will stay out of it. (5) The supports that drive
 the filter are reproducible from the saved files named below; when the adaptation spans from run 45016827324 arrive, the same
-scripts can score them as an additional support without changes except the support input.
+scripts can score them as an additional support without changes except the support input. (6) New since the earlier message: the
+filter and the rescue lane are now scored together (answer 10, ordinary only). A rescue lane that the model also reports
+(arm A held forward D ms) brings in roughly half the false per genuine of the unsupported lane at c = 0.5 and 0.25 and passes the
+extras, exact-set and all-expected clauses at D = 220 for c = 1.0 and 0.5 (c = 0.25 fails the gap clause by +60,454) and at D = 50 for every c tried; only the label clause fails (6 labels
+at D = 220, 28 at D = 50). It cannot be checked on extended-middle without a trace for that corpus; if a trace job for it is
+already planned, I would run this script on it.
 
 Saved inputs used: `docs/recovery/basic-pitch-baseline-20261121.json`, the saved consensus report and spans
 (`ordinary-consensus-spans.json.gz`), `ordinary-bridge-events.json.gz` (arm A), and the v5 trace for the rescue-frontier script only.

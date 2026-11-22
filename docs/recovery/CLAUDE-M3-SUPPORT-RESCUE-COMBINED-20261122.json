@@ -1,0 +1,341 @@
+{
+ "horizon": 10681922,
+ "identity": {
+  "native60_equals_saved": true
+ },
+ "current": {
+  "present": 13525345,
+  "expected": 33819101,
+  "false": 11429794,
+  "wrong": 7808309,
+  "gap": 3621485
+ },
+ "variants": {
+  "D50 filter only (A union native)": {
+   "coverage_pct": 39.586,
+   "precision_pct": 67.45,
+   "present_delta": -137703,
+   "wrong_delta": -4383437,
+   "gap_delta": -586065,
+   "false_total": 6460292,
+   "false_change_pct_of_current": -43.48,
+   "exact_set_delta": 0,
+   "all_expected_delta": 0,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 5.11,
+   "no_pitch_safety_regression": false
+  },
+  "D50 filter + unsupported native lane (c=inf)": {
+   "coverage_pct": 44.878,
+   "precision_pct": 69.65,
+   "present_delta": 1652002,
+   "wrong_delta": -4340944,
+   "gap_delta": -475296,
+   "false_total": 6613554,
+   "false_change_pct_of_current": -42.14,
+   "exact_set_delta": 315375,
+   "all_expected_delta": 385158,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 53.22,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 1789705,
+    "false": 153262,
+    "false_per_genuine": 0.0856
+   }
+  },
+  "D50 filter + unsupported rescue c=1.0": {
+   "coverage_pct": 45.7989,
+   "precision_pct": 69.67,
+   "present_delta": 1963426,
+   "wrong_delta": -4236998,
+   "gap_delta": -450858,
+   "false_total": 6741938,
+   "false_change_pct_of_current": -41.01,
+   "exact_set_delta": 331972,
+   "all_expected_delta": 412551,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 69.32,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 2101129,
+    "false": 281646,
+    "false_per_genuine": 0.134
+   }
+  },
+  "D50 filter + supported rescue c=1.0": {
+   "coverage_pct": 45.6222,
+   "precision_pct": 69.87,
+   "present_delta": 1903687,
+   "wrong_delta": -4319403,
+   "gap_delta": -456393,
+   "false_total": 6653998,
+   "false_change_pct_of_current": -41.78,
+   "exact_set_delta": 338756,
+   "all_expected_delta": 411270,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 60.42,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 2041390,
+    "false": 193706,
+    "false_per_genuine": 0.0949
+   }
+  },
+  "D50 filter + unsupported rescue c=0.5": {
+   "coverage_pct": 49.1547,
+   "precision_pct": 69.04,
+   "present_delta": 3098333,
+   "wrong_delta": -3622406,
+   "gap_delta": -351013,
+   "false_total": 7456375,
+   "false_change_pct_of_current": -34.76,
+   "exact_set_delta": 371844,
+   "all_expected_delta": 550411,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 108.14,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 3236036,
+    "false": 996083,
+    "false_per_genuine": 0.3078
+   }
+  },
+  "D50 filter + supported rescue c=0.5": {
+   "coverage_pct": 48.257,
+   "precision_pct": 70.44,
+   "present_delta": 2794723,
+   "wrong_delta": -4208933,
+   "gap_delta": -371716,
+   "false_total": 6849145,
+   "false_change_pct_of_current": -40.08,
+   "exact_set_delta": 433551,
+   "all_expected_delta": 545701,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 71.02,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 2932426,
+    "false": 388853,
+    "false_per_genuine": 0.1326
+   }
+  },
+  "D50 filter + unsupported rescue c=0.25": {
+   "coverage_pct": 53.0633,
+   "precision_pct": 68.39,
+   "present_delta": 4420201,
+   "wrong_delta": -2932510,
+   "gap_delta": -204185,
+   "false_total": 8293099,
+   "false_change_pct_of_current": -27.44,
+   "exact_set_delta": 549515,
+   "all_expected_delta": 804817,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 194.7,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 4557904,
+    "false": 1832807,
+    "false_per_genuine": 0.4021
+   }
+  },
+  "D50 filter + supported rescue c=0.25": {
+   "coverage_pct": 51.2595,
+   "precision_pct": 71.11,
+   "present_delta": 3810173,
+   "wrong_delta": -4143848,
+   "gap_delta": -243993,
+   "false_total": 7041953,
+   "false_change_pct_of_current": -38.39,
+   "exact_set_delta": 582844,
+   "all_expected_delta": 757229,
+   "labels_losing_present_or_longest": 28,
+   "lost_pitch_samples": 137703,
+   "lost_share_of_current_present": 0.0102,
+   "runs_vs_current_pct": 100.19,
+   "no_pitch_safety_regression": false,
+   "added_vs_D50 filter only (A union": {
+    "genuine": 3947876,
+    "false": 581661,
+    "false_per_genuine": 0.1473
+   }
+  },
+  "D220 filter only (A union native)": {
+   "coverage_pct": 39.9232,
+   "precision_pct": 58.93,
+   "present_delta": -23687,
+   "wrong_delta": -1729894,
+   "gap_delta": -291474,
+   "false_total": 9408426,
+   "false_change_pct_of_current": -17.69,
+   "exact_set_delta": 0,
+   "all_expected_delta": 0,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": -9.09,
+   "no_pitch_safety_regression": false
+  },
+  "D220 filter + unsupported native lane (c=inf)": {
+   "coverage_pct": 45.2152,
+   "precision_pct": 61.53,
+   "present_delta": 1766018,
+   "wrong_delta": -1687401,
+   "gap_delta": -180705,
+   "false_total": 9561688,
+   "false_change_pct_of_current": -16.34,
+   "exact_set_delta": 256962,
+   "all_expected_delta": 385158,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 39.02,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 1789705,
+    "false": 153262,
+    "false_per_genuine": 0.0856
+   }
+  },
+  "D220 filter + unsupported rescue c=1.0": {
+   "coverage_pct": 46.136,
+   "precision_pct": 61.69,
+   "present_delta": 2077442,
+   "wrong_delta": -1583455,
+   "gap_delta": -156267,
+   "false_total": 9690072,
+   "false_change_pct_of_current": -15.22,
+   "exact_set_delta": 264515,
+   "all_expected_delta": 412551,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 55.11,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 2101129,
+    "false": 281646,
+    "false_per_genuine": 0.134
+   }
+  },
+  "D220 filter + supported rescue c=1.0": {
+   "coverage_pct": 46.0156,
+   "precision_pct": 61.79,
+   "present_delta": 2036727,
+   "wrong_delta": -1644139,
+   "gap_delta": -160394,
+   "false_total": 9625261,
+   "false_change_pct_of_current": -15.79,
+   "exact_set_delta": 271299,
+   "all_expected_delta": 412551,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 47.54,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 2060414,
+    "false": 216835,
+    "false_per_genuine": 0.1052
+   }
+  },
+  "D220 filter + unsupported rescue c=0.5": {
+   "coverage_pct": 49.4918,
+   "precision_pct": 61.67,
+   "present_delta": 3212349,
+   "wrong_delta": -968863,
+   "gap_delta": -56422,
+   "false_total": 10404509,
+   "false_change_pct_of_current": -8.97,
+   "exact_set_delta": 288131,
+   "all_expected_delta": 550860,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 93.94,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 3236036,
+    "false": 996083,
+    "false_per_genuine": 0.3078
+   }
+  },
+  "D220 filter + supported rescue c=0.5": {
+   "coverage_pct": 48.797,
+   "precision_pct": 62.59,
+   "present_delta": 2977378,
+   "wrong_delta": -1495713,
+   "gap_delta": -70981,
+   "false_total": 9863100,
+   "false_change_pct_of_current": -13.71,
+   "exact_set_delta": 338690,
+   "all_expected_delta": 547849,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 59.66,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 3001065,
+    "false": 454674,
+    "false_per_genuine": 0.1515
+   }
+  },
+  "D220 filter + unsupported rescue c=0.25": {
+   "coverage_pct": 53.4005,
+   "precision_pct": 61.64,
+   "present_delta": 4534217,
+   "wrong_delta": -278967,
+   "gap_delta": 90406,
+   "false_total": 11241233,
+   "false_change_pct_of_current": -1.65,
+   "exact_set_delta": 446728,
+   "all_expected_delta": 818642,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 180.49,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 4557904,
+    "false": 1832807,
+    "false_per_genuine": 0.4021
+   }
+  },
+  "D220 filter + supported rescue c=0.25": {
+   "coverage_pct": 51.9313,
+   "precision_pct": 63.5,
+   "present_delta": 4037342,
+   "wrong_delta": -1393655,
+   "gap_delta": 60454,
+   "false_total": 10096593,
+   "false_change_pct_of_current": -11.66,
+   "exact_set_delta": 475250,
+   "all_expected_delta": 775185,
+   "labels_losing_present_or_longest": 6,
+   "lost_pitch_samples": 23687,
+   "lost_share_of_current_present": 0.0018,
+   "runs_vs_current_pct": 91.86,
+   "no_pitch_safety_regression": false,
+   "added_vs_D220 filter only (A unio": {
+    "genuine": 4061029,
+    "false": 688167,
+    "false_per_genuine": 0.1695
+   }
+  }
+ }
+}
