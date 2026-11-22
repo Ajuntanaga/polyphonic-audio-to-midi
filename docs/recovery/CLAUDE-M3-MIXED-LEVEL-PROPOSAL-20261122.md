@@ -72,3 +72,13 @@ Joint odds that F1, F2 and F3 all pass: about 35%. Misses will be reported as mi
 ## Protocol
 
 One worker job, one run, no retry: unit tests on the worker first, then both models over all windows on CPU with graph optimisation disabled (the same session as the operator profile), report and per-window records saved, analysed once by `python3 -m tools.mixed_level_analysis analyse REPORT SPEC OUT`. Cost: 948 inferences of a 2 s window per graph, a few minutes.
+
+## Erratum, 2026-11-22, after the first dispatch failed and before any window was scored
+
+The first dispatch (worker run 45037221708, source `728dc65f4f9443533af3bc3a1cb4255e83ba35c9`, worker commit `8f2b8f3`) **failed in 5 seconds at the exposure step, before any model ran a single window**. All 28 worker unit tests passed and all 474 windows were built (digest `b813011d…bff0c`), but the report's state is `failed` with `ValueError: Both normalization reductions are required` and no window record exists. Cause, my error: I called Codex's `rewrite_normalization`, which looks for the node names `model_1/normalized_log_1/Min;…` of the TFLite-derived graph, while the pinned artifact members `unmodified.onnx` and `adapted.onnx` are tf2onnx exports whose reductions are named `StatefulPartitionedCall/StatefulPartitionedCall/StatefulPartitionedCall/StatefulPartitionedCall/normalized_log_1/PartitionedCall/Min` and `…/Max` (same names in both members).
+
+Fix: `expose_normalization` in `tools/portable_mixed_level_probe.py`, strict like Codex's helper (exact node names, op types, input tensors, `axes=[1,2]`, `keepdims=0`; refuses if already exposed; no node, weight or initialiser changes; ONNX checker). Codex's helper is untouched. The two exposed tensors are the outputs of the `ReduceMin` over the log power and the `ReduceMax` over (log power − minimum), exactly the quantities the registered `min_db` and `range_db` name.
+
+Read from the two pinned graphs while fixing this, with no window run: the log-power scale constant is 4.342944… = 10/ln 10 and the additive floor is 1e-10, so `min_db` and `range_db` are dB of power and the −100 dB floor in F1 is the right constant. Both members also contain a `flat_guard` (if the window's CQT power is constant over all cells, the graph outputs zeros), which affects only windows that are exactly flat, i.e. the silence references; it is the same in both members and does not touch any registered verdict, grid, threshold or odds.
+
+Nothing registered above changed: grid, spec, thresholds, verdict definitions, odds and reading rules are as written before the first dispatch. The rerun is the second and last planned dispatch of the same frozen specification; the failed run saw no data, so no choice below was informed by results.

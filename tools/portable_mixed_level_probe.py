@@ -1,9 +1,10 @@
 """Synthetic mixed-level probe of the two pinned Basic Pitch graphs; GitHub Actions CPU only.
 
 No recording, no corpus, no decoder, no policy and no fitting.  Each synthetic window (tools/mixed_level_probe.py) goes through the unmodified
-pinned graph and through the same graph with the two normalization scalars added as outputs (Codex's rewrite_normalization with recent=False, which
-changes no node, weight or initialiser); note/onset must agree between them or the decision verdicts are withheld.  Plan and registered
-verdicts: docs/recovery/CLAUDE-M3-MIXED-LEVEL-PROPOSAL-20261122.md.
+pinned graph and through the same graph with the two normalization scalars added as outputs (expose_normalization below, which changes no node,
+weight or initialiser); note/onset must agree between them or the decision verdicts are withheld.  Plan and registered
+verdicts: docs/recovery/CLAUDE-M3-MIXED-LEVEL-PROPOSAL-20261122.md (see its erratum for why this module does not reuse Codex's
+rewrite_normalization: that helper expects the node names of the TFLite-derived graph, the pinned artifact members are tf2onnx exports).
 """
 import argparse
 from datetime import datetime, timezone
@@ -18,7 +19,6 @@ import time
 
 import numpy as np
 
-from tools.basic_pitch_recent_normalization import MINIMUM, RANGE, rewrite_normalization
 from tools.mixed_level_probe import build_windows, identity, run_windows, windows_digest
 from tools.pitch_detector_comparison import digest
 from tools.portable_basic_pitch_comparison import remote_only, save_json
@@ -28,6 +28,13 @@ from tools.portable_basic_pitch_operator_profile import session
 INPUT = 'serving_default_input_2:0'
 NOTE = 'StatefulPartitionedCall:1'
 ONSET = 'StatefulPartitionedCall:2'
+# The two window-wide reductions of the normalisation in the pinned tf2onnx exports (identical names in both members, read from the graphs):
+# MINIMUM = ReduceMin(log power in dB, axes 1 and 2), RANGE = ReduceMax(log power - minimum, axes 1 and 2); log power = 4.3429 * ln(power + 1e-10).
+FRONT = ('StatefulPartitionedCall/StatefulPartitionedCall/StatefulPartitionedCall/StatefulPartitionedCall/'
+         'normalized_log_1/PartitionedCall/')
+MINIMUM = FRONT + 'Min:0'
+RANGE = FRONT + 'Max:0'
+REDUCTIONS = {FRONT + 'Min': ('ReduceMin', FRONT + 'mul:0'), FRONT + 'Max': ('ReduceMax', FRONT + 'sub:0')}
 FROZEN_PROBE = dict(
     floors=['zero', 'dither'], forms=['sustained', 'cut'], pitches=[52, 64, 76], levels=[-80, -70, -60, -50, -40, -30],
     deltas=[10, 20, 35], timings=['through', 'ended'], companion_cap=-10, companion_midi=43,
@@ -41,6 +48,35 @@ def validate_spec(spec):
             or spec['onnxruntime_version'] != '1.20.1'
             or set(spec['reference_members']) != {'unmodified.onnx', 'adapted.onnx'}):
         raise ValueError('Frozen mixed-level probe specification differs')
+
+
+def expose_normalization(original):
+    """Return a copy of the graph with the two normalisation scalars added as outputs; no node, weight or initialiser changes."""
+    import copy
+    import onnx
+    from onnx import helper
+    model = copy.deepcopy(original)
+    nodes = {n.name: n for n in model.graph.node}
+    if len(nodes) != len(model.graph.node):
+        raise ValueError('Ambiguous graph node names')
+    for name, (op_type, source) in REDUCTIONS.items():
+        node = nodes.get(name)
+        if node is None or node.op_type != op_type or list(node.input) != [source] or list(node.output) != [name + ':0']:
+            raise ValueError('Unexpected normalization reduction: ' + name)
+        attributes = {a.name: helper.get_attribute_value(a) for a in node.attribute}
+        if attributes != dict(axes=[1, 2], keepdims=0):
+            raise ValueError('Unexpected normalization reduction attributes: ' + name)
+    if {o.name for o in model.graph.output} & {MINIMUM, RANGE}:
+        raise ValueError('Normalization statistics already exposed')
+    nodes_before = [n.SerializeToString() for n in model.graph.node]
+    weights_before = [v.SerializeToString() for v in model.graph.initializer]
+    for name in (MINIMUM, RANGE):
+        model.graph.output.append(helper.make_tensor_value_info(name, onnx.TensorProto.FLOAT, [None]))
+    if ([n.SerializeToString() for n in model.graph.node] != nodes_before
+            or [v.SerializeToString() for v in model.graph.initializer] != weights_before):
+        raise ValueError('Graph changed beyond the two added outputs')
+    onnx.checker.check_model(model)       # structural check; numerics are gated by the identity comparison against the plain graph
+    return model
 
 
 def stats_runner(exposed):
@@ -105,7 +141,7 @@ def run(spec_path, output):
             report['stage'] = arm
             source_path = references[arm + '.onnx']
             exposed_path = folders['bulk'] / (arm + '-normalization-exposed.onnx')
-            onnx.save_model(rewrite_normalization(onnx.load(str(source_path)), False), str(exposed_path))
+            onnx.save_model(expose_normalization(onnx.load(str(source_path))), str(exposed_path))
             plain, exposed = session(source_path), session(exposed_path)
             check_interface(plain, [NOTE, ONSET])
             check_interface(exposed, [NOTE, ONSET, MINIMUM, RANGE])

@@ -90,7 +90,7 @@ class DryRun(unittest.TestCase):
                 mock.patch.dict(sys.modules, {'onnx': fake_onnx, 'onnxruntime': fake_ort}), \
                 mock.patch.object(runner, 'remote_only'), \
                 mock.patch.object(runner, 'collect_reference', fake_collect), \
-                mock.patch.object(runner, 'rewrite_normalization', lambda model, recent: model), \
+                mock.patch.object(runner, 'expose_normalization', lambda model: model), \
                 mock.patch.object(runner, 'session', lambda path: FakeSession(str(path).endswith('exposed.onnx'))):
             output = Path(folder) / 'result'
             report = runner.run(SPEC_PATH, output)
@@ -130,7 +130,7 @@ class DryRun(unittest.TestCase):
                 mock.patch.dict(sys.modules, {'onnx': fake_onnx, 'onnxruntime': types.SimpleNamespace(__version__='1.20.1')}), \
                 mock.patch.object(runner, 'remote_only'), \
                 mock.patch.object(runner, 'collect_reference', fake_collect), \
-                mock.patch.object(runner, 'rewrite_normalization', lambda model, recent: model), \
+                mock.patch.object(runner, 'expose_normalization', lambda model: model), \
                 mock.patch.object(runner, 'session', lambda path: Drifting(str(path).endswith('exposed.onnx'))):
             report = runner.run(SPEC_PATH, Path(folder) / 'result')
             self.assertFalse(report['models']['adapted']['identity']['passed'])
@@ -145,6 +145,66 @@ class DryRun(unittest.TestCase):
             runner.check_interface(Wrong(False), [runner.NOTE, runner.ONSET])
         with self.assertRaises(ValueError):
             runner.check_interface(FakeSession(False), [runner.NOTE, runner.ONSET, runner.MINIMUM])
+
+
+class ExposeNormalization(unittest.TestCase):
+    """The exposure function on a miniature graph carrying the pinned tf2onnx node names; skipped where the onnx package is absent."""
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import onnx
+            from onnx import helper, numpy_helper
+        except ImportError:
+            raise unittest.SkipTest('onnx is not installed here; the worker runs this test')
+        cls.onnx, cls.helper, cls.numpy_helper = onnx, helper, numpy_helper
+
+    def graph(self, minimum_keepdims=0, minimum_name=None):
+        helper, onnx = self.helper, self.onnx
+        front = runner.FRONT
+        nodes = [
+            helper.make_node('Mul', ['x', 'scale'], [front + 'mul:0'], name=front + 'mul'),
+            helper.make_node('ReduceMin', [front + 'mul:0'], [front + 'Min:0'], name=minimum_name or front + 'Min',
+                             axes=[1, 2], keepdims=minimum_keepdims),
+            helper.make_node('Sub', [front + 'mul:0', front + 'Min:0'], [front + 'sub:0'], name=front + 'sub'),
+            helper.make_node('ReduceMax', [front + 'sub:0'], [front + 'Max:0'], name=front + 'Max', axes=[1, 2], keepdims=0),
+            helper.make_node('Div', [front + 'sub:0', front + 'Max:0'], ['y'], name='div')]
+        scale = self.numpy_helper.from_array(np.array([4.0], dtype=np.float32), 'scale')
+        graph = helper.make_graph(nodes, 'mini', [helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [1, 4, 3])],
+                                  [helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [1, 4, 3])], [scale])
+        return helper.make_model(graph, opset_imports=[helper.make_opsetid('', 13)])
+
+    def test_two_outputs_are_added_and_nothing_else_changes(self):
+        original = self.graph()
+        before = [n.SerializeToString() for n in original.graph.node]
+        exposed = runner.expose_normalization(original)
+        self.assertEqual([o.name for o in exposed.graph.output], ['y', runner.MINIMUM, runner.RANGE])
+        self.assertEqual([n.SerializeToString() for n in exposed.graph.node], before)
+        self.assertEqual([o.name for o in original.graph.output], ['y'])
+
+    def test_exposed_scalars_match_the_reductions_when_onnxruntime_is_present(self):
+        try:
+            import onnxruntime as ort
+            ort.InferenceSession
+        except (ImportError, AttributeError):
+            self.skipTest('onnxruntime is not installed here')
+        rng = np.random.default_rng(1)
+        x = rng.normal(size=(1, 4, 3)).astype(np.float32)
+        session = ort.InferenceSession(runner.expose_normalization(self.graph()).SerializeToString(),
+                                       providers=['CPUExecutionProvider'])
+        y, minimum, range_ = session.run(['y', runner.MINIMUM, runner.RANGE], {'x': x})
+        scaled = 4.0 * x
+        self.assertAlmostEqual(float(minimum.reshape(-1)[0]), float(scaled.min()), places=5)
+        self.assertAlmostEqual(float(range_.reshape(-1)[0]), float((scaled - scaled.min()).max()), places=5)
+
+    def test_a_graph_with_other_names_or_attributes_is_refused(self):
+        with self.assertRaises(ValueError):
+            runner.expose_normalization(self.graph(minimum_name='renamed'))
+        with self.assertRaises(ValueError):
+            runner.expose_normalization(self.graph(minimum_keepdims=1))
+
+    def test_an_already_exposed_graph_is_refused(self):
+        with self.assertRaises(ValueError):
+            runner.expose_normalization(runner.expose_normalization(self.graph()))
 
 
 if __name__ == '__main__':
