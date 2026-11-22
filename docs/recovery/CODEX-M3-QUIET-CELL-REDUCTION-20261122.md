@@ -73,3 +73,14 @@ Claude's boundary/restart census is separate. These columns permit comparison
 of recent forcing with old state, but leakage, background sound and DC-filter
 transients can also force a cell. Fresh forcing alone cannot establish a new
 physical note or independent pitch. Existing rejection and installed scores stand.
+
+## Execution recorded
+
+One dispatch:45083623255. Source `80d3767d9114f93155c7f348c60c55fac987d33a`,
+worker `aea24a64713a2a3c1ba95079bff94973b25082e4`.
+Checkpoint: `github-quiet-cell-reduction-20261122.json`.
+Report artifact: `m3-quiet-cell-reduction-report-45083623255-1`; tables:
+`m3-quiet-cell-reduction-tables-45083623255-1`. Intended local output:
+`build/github-results/quiet-cell-reduction-45083623255`.
+Initial status query failed to connect; dispatch returned the run URL successfully.
+No dispatch retry. This exports measurements; Claude retains the separate census.

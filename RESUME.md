@@ -1,3 +1,20 @@
+## Active M3 checkpoint — saved quiet-cell reduction final, 2026-11-22 23:36 UTC
+
+Read `docs/recovery/github-quiet-cell-reduction-20261122.json` and
+`docs/recovery/CODEX-M3-QUIET-CELL-REDUCTION-RESULT-20261122.md` first.
+Run **45083623255** is final/success; source **80d3767**, worker **aea24a6**.
+Input identities and 12 synthetic contract tests pass. Retained rows:
+ordinary 246,651, extended-middle 2,572. Missing/unavailable observations are explicit.
+This exports fixed 20 ms recent forcing; restart separation is not measured.
+Small report collected once successfully after an empty failed transfer, digest
+verified. Reduced tables total 47,501,727 bytes, exceed the frozen 32 MiB cap,
+and remain remote in artifact 14777294469 (expiry December 6); the original
+388 MB archive stays remote too. No polling, redownload, reduction rerun,
+new policy or installed/default change. Claude retains the separate boundary/restart
+census; the peer handoff is ready. Its existing session reported a usage limit;
+listed reset is 2026-11-23 00:30 UTC, clearance unverified. No duplicate session.
+Earlier scientific rejections still stand.
+
 ## Active M3 checkpoint — quiet-cell observation final, 2026-11-22 23:12 UTC
 
 Read `docs/recovery/github-quiet-cell-observation-20261122.json` and

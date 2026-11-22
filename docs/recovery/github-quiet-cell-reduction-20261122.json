@@ -1,0 +1,161 @@
+{
+  "schema": "m3_quiet_cell_reduction_checkpoint_v1",
+  "created_at": "2026-11-22T23:30:28.985608+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "quiet-cell-reduction.yml",
+  "source_sha": "80d3767d9114f93155c7f348c60c55fac987d33a",
+  "worker_sha": "aea24a64713a2a3c1ba95079bff94973b25082e4",
+  "state": "completed",
+  "final": true,
+  "dispatch_count": 1,
+  "plan": "docs/recovery/CODEX-M3-QUIET-CELL-REDUCTION-20261122.md",
+  "spec": "docs/recovery/quiet-cell-reduction-spec-20261122.json",
+  "spec_sha256": "9fb664a9559dc97d3e085e6273aa20d1303192e61509177d4af70be327f40edf",
+  "input_run": 45080860628,
+  "input_artifact_id": 14777925317,
+  "operation": "Saved-cell reduction only; no replay, audio, model, native build, fitting or policy trial",
+  "local_tests": "12 pure synthetic contract tests passed",
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "Compact report collected successfully once after an empty failed transfer; reduced tables exceed frozen 32MiB cap and remain remote",
+  "next": "Claude's separately owned boundary/restart census may use the pinned tables on GitHub; no duplicate analysis, reduction retry, corpus replay or policy trial.",
+  "dispatch_returncode": 0,
+  "dispatch_output": "build/recovery/quiet-cell-reduction-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/quiet-cell-reduction-20261122/dispatch.stderr",
+  "dispatch_returned_at": "2026-11-22T23:30:36.129176+00:00",
+  "run_id": 45083623255,
+  "run_attempt": 1,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45083623255",
+  "output_directory": "build/github-results/quiet-cell-reduction-45083623255",
+  "report_artifact": "m3-quiet-cell-reduction-report-45083623255-1",
+  "evidence_artifact": "m3-quiet-cell-reduction-tables-45083623255-1",
+  "last_read_error": "gh run view: error connecting to api.github.com",
+  "last_read_attempt_at": "2026-11-22T23:31:11.695567+00:00",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-22T23:31:35.781271+00:00",
+  "worker_stage": [
+    {
+      "name": "reduction",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "stage": "fixed interval export complete; scientific separation unmeasured",
+  "finished_at": "2026-11-22T23:31:22.340047+00:00",
+  "collection_receipt": "build/github-results/quiet-cell-reduction-45083623255/collection.json",
+  "report_path": "build/github-results/quiet-cell-reduction-45083623255/report/quiet-cell-reduction/report/report.json",
+  "report_sha256": "528132128243d45194587a2c85fce24ae1492b4c4b8c274eed6515b94eb89c3f",
+  "artifacts": {
+    "m3-quiet-cell-reduction-tables-45083623255-1": {
+      "id": 14777294469,
+      "name": "m3-quiet-cell-reduction-tables-45083623255-1",
+      "size_in_bytes": 47502091,
+      "digest": "sha256:f9ce49a12f0e66e02d2a790b7933c2e641b02af2161c041be2bd905ac6e86a35",
+      "expires_at": "2026-12-06T23:31:23Z",
+      "expired": false
+    },
+    "m3-quiet-cell-reduction-report-45083623255-1": {
+      "id": 14777234677,
+      "name": "m3-quiet-cell-reduction-report-45083623255-1",
+      "size_in_bytes": 6997,
+      "digest": "sha256:5e7e7853e207190bc5ec0716693f5139ec01354c912bfbddebf70385cfb05fd7",
+      "expires_at": "2026-12-06T23:31:22Z",
+      "expired": false
+    }
+  },
+  "table_bytes": 47501727,
+  "local_collection_within_32MiB": false,
+  "input_archive_verified": true,
+  "remote_tests": "12 synthetic contract tests passed",
+  "datasets": {
+    "ordinary": {
+      "input_rows": 1310294,
+      "retained_rows": 246651,
+      "interval_samples": 1920,
+      "status_counts": {
+        "ok": 181406,
+        "missing_anchor": 55835,
+        "unavailable_current": 9410
+      },
+      "quiet_status_counts": {
+        "0:ok": 146819,
+        "5:ok": 24532,
+        "0:missing_anchor": 47640,
+        "0:unavailable_current": 8156,
+        "2:ok": 8134,
+        "2:missing_anchor": 7769,
+        "2:unavailable_current": 1082,
+        "7:missing_anchor": 302,
+        "7:ok": 1921,
+        "7:unavailable_current": 163,
+        "5:missing_anchor": 124,
+        "5:unavailable_current": 9
+      },
+      "max_history_rows": 575,
+      "row_selection_uses_labels": false,
+      "interpretation": "Interval forcing of a cell is not proof of a new note or independent pitch",
+      "input_verified": true,
+      "table": {
+        "path": "ordinary-quiet-cell-intervals.tsv.gz",
+        "bytes": 46839854,
+        "sha256": "642cedf3a521d181f848447251f6f7d2730be4c3dacffecdc94cb7371523553b"
+      },
+      "window_count": 127
+    },
+    "extended-middle": {
+      "input_rows": 95436,
+      "retained_rows": 2572,
+      "interval_samples": 1920,
+      "status_counts": {
+        "ok": 2107,
+        "negative_power": 369,
+        "missing_anchor": 96
+      },
+      "quiet_status_counts": {
+        "0:ok": 316,
+        "5:ok": 1224,
+        "4:ok": 252,
+        "4:negative_power": 220,
+        "5:negative_power": 15,
+        "2:missing_anchor": 50,
+        "3:missing_anchor": 46,
+        "3:ok": 8,
+        "2:ok": 307,
+        "2:negative_power": 134
+      },
+      "max_history_rows": 183,
+      "row_selection_uses_labels": false,
+      "interpretation": "Interval forcing of a cell is not proof of a new note or independent pitch",
+      "input_verified": true,
+      "table": {
+        "path": "extended-middle-quiet-cell-intervals.tsv.gz",
+        "bytes": 661873,
+        "sha256": "ce3b28d9b96c859e28baa97190a61e1f021f18b3aadbd600569623938bff348c"
+      },
+      "window_count": 6
+    }
+  },
+  "source_portable_run": {
+    "run_id": 45083439150,
+    "conclusion": "success",
+    "source_sha": "80d3767d9114f93155c7f348c60c55fac987d33a"
+  },
+  "collection_attempts": [
+    {
+      "attempt": 1,
+      "received_bytes": 0,
+      "result": "Connection failed to productionresultssa11.blob.core.windows.net",
+      "stderr": "build/github-results/quiet-cell-reduction-45083623255/report-download.stderr"
+    },
+    {
+      "attempt": 2,
+      "received_bytes": 6997,
+      "result": "Collected; server digest verified",
+      "receipt": "build/github-results/quiet-cell-reduction-45083623255/collection.json"
+    }
+  ],
+  "initial_status_error_resolved": true,
+  "result_note": "docs/recovery/CODEX-M3-QUIET-CELL-REDUCTION-RESULT-20261122.md",
+  "updated_at": "2026-11-22T23:35:20.699213+00:00"
+}
