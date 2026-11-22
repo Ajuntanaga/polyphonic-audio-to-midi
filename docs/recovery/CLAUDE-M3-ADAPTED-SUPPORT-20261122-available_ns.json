@@ -1,0 +1,360 @@
+{
+ "ordinary": {
+  "dataset": "ordinary",
+  "inputs": {
+   "unchanged TF": {
+    "path": "ordinary-events.json",
+    "sha256": "ca4d2ce4553f2e8ddaed76a5b967afb8881bb30ec73432f8a14891b9eb9fe1cb"
+   },
+   "adapted TF": {
+    "path": "ordinary-events.json",
+    "sha256": "c602b950c76d850b82dad1b89e4549f213f21210d22438e37299b0454873f864"
+   }
+  },
+  "event_audit": {
+   "unchanged TF": {
+    "event_count": 1192,
+    "events_at_or_after_eof": 0,
+    "pitches_active_at_recording_end": [],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   },
+   "adapted TF": {
+    "event_count": 1223,
+    "events_at_or_after_eof": 1,
+    "pitches_active_at_recording_end": [
+     44,
+     66
+    ],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   }
+  },
+  "sources": {
+   "arm A": {
+    "runs": 596,
+    "filters": {
+     "50": {
+      "coverage_pct": 39.586,
+      "precision_pct": 67.45,
+      "present_delta": -137703,
+      "wrong_delta": -4383437,
+      "wrong_removed_share": 0.5614,
+      "gap_delta": -586065,
+      "false_change_pct_of_current": -43.48,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 28,
+      "lost_share_of_current_present": 0.0102,
+      "label_229_present_delta": -18304,
+      "no_pitch_safety_regression": false
+     },
+     "220": {
+      "coverage_pct": 39.9232,
+      "precision_pct": 58.93,
+      "present_delta": -23687,
+      "wrong_delta": -1729894,
+      "wrong_removed_share": 0.2215,
+      "gap_delta": -291474,
+      "false_change_pct_of_current": -17.69,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 6,
+      "lost_share_of_current_present": 0.0018,
+      "label_229_present_delta": -14591,
+      "no_pitch_safety_regression": false
+     }
+    }
+   },
+   "unchanged TF": {
+    "runs": 596,
+    "filters": {
+     "50": {
+      "coverage_pct": 39.5841,
+      "precision_pct": 67.86,
+      "present_delta": -138363,
+      "wrong_delta": -4484852,
+      "wrong_removed_share": 0.5744,
+      "gap_delta": -605292,
+      "false_change_pct_of_current": -44.53,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 28,
+      "lost_share_of_current_present": 0.0102,
+      "label_229_present_delta": -18304,
+      "no_pitch_safety_regression": false
+     },
+     "220": {
+      "coverage_pct": 39.9232,
+      "precision_pct": 58.99,
+      "present_delta": -23687,
+      "wrong_delta": -1749025,
+      "wrong_removed_share": 0.224,
+      "gap_delta": -292630,
+      "false_change_pct_of_current": -17.86,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 6,
+      "lost_share_of_current_present": 0.0018,
+      "label_229_present_delta": -14591,
+      "no_pitch_safety_regression": false
+     }
+    }
+   },
+   "adapted TF": {
+    "runs": 611,
+    "filters": {
+     "50": {
+      "coverage_pct": 39.7925,
+      "precision_pct": 66.16,
+      "present_delta": -67881,
+      "wrong_delta": -4061866,
+      "wrong_removed_share": 0.5202,
+      "gap_delta": -484276,
+      "false_change_pct_of_current": -39.77,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 20,
+      "lost_share_of_current_present": 0.005,
+      "label_229_present_delta": 0,
+      "no_pitch_safety_regression": false
+     },
+     "220": {
+      "coverage_pct": 39.9663,
+      "precision_pct": 59.19,
+      "present_delta": -9096,
+      "wrong_delta": -1768335,
+      "wrong_removed_share": 0.2265,
+      "gap_delta": -344176,
+      "false_change_pct_of_current": -18.48,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 5,
+      "lost_share_of_current_present": 0.0007,
+      "label_229_present_delta": 0,
+      "no_pitch_safety_regression": false
+     }
+    }
+   },
+   "arm A union adapted TF": {
+    "runs": 702,
+    "filters": {
+     "50": {
+      "coverage_pct": 39.8141,
+      "precision_pct": 65.14,
+      "present_delta": -60568,
+      "wrong_delta": -3822149,
+      "wrong_removed_share": 0.4895,
+      "gap_delta": -402960,
+      "false_change_pct_of_current": -36.97,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 18,
+      "lost_share_of_current_present": 0.0045,
+      "label_229_present_delta": 0,
+      "no_pitch_safety_regression": false
+     },
+     "220": {
+      "coverage_pct": 39.9663,
+      "precision_pct": 58.54,
+      "present_delta": -9096,
+      "wrong_delta": -1566794,
+      "wrong_removed_share": 0.2007,
+      "gap_delta": -291218,
+      "false_change_pct_of_current": -16.26,
+      "exact_set_delta": 0,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 5,
+      "lost_share_of_current_present": 0.0007,
+      "label_229_present_delta": 0,
+      "no_pitch_safety_regression": false
+     }
+    }
+   }
+  }
+ },
+ "extended-middle": {
+  "dataset": "extended-middle",
+  "inputs": {
+   "unchanged TF": {
+    "path": "extended-middle-events.json",
+    "sha256": "6b0f30d48202f7744bfa125ce4cee83afb3184406ebf7d9fc7535cd5c65085ca"
+   },
+   "adapted TF": {
+    "path": "extended-middle-events.json",
+    "sha256": "662f7c273ea6eea9d5e500028956ea66f2e2d929d064b4fa9b1050c263000699"
+   }
+  },
+  "event_audit": {
+   "unchanged TF": {
+    "event_count": 28,
+    "events_at_or_after_eof": 0,
+    "pitches_active_at_recording_end": [],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   },
+   "adapted TF": {
+    "event_count": 42,
+    "events_at_or_after_eof": 1,
+    "pitches_active_at_recording_end": [
+     52
+    ],
+    "pairing_valid": true,
+    "eof_policy": "Open occupancy clipped at EOF for scoring; explicit worker cleanup is separate."
+   }
+  },
+  "sources": {
+   "arm A": {
+    "runs": 14,
+    "filters": {
+     "50": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 80.22,
+      "present_delta": 0,
+      "wrong_delta": -170047,
+      "wrong_removed_share": 0.3219,
+      "gap_delta": -42821,
+      "false_change_pct_of_current": -29.93,
+      "exact_set_delta": 170047,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     },
+     "220": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 78.53,
+      "present_delta": 0,
+      "wrong_delta": -137344,
+      "wrong_removed_share": 0.26,
+      "gap_delta": -21374,
+      "false_change_pct_of_current": -22.31,
+      "exact_set_delta": 137344,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     }
+    }
+   },
+   "unchanged TF": {
+    "runs": 14,
+    "filters": {
+     "50": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 80.43,
+      "present_delta": 0,
+      "wrong_delta": -170047,
+      "wrong_removed_share": 0.3219,
+      "gap_delta": -49267,
+      "false_change_pct_of_current": -30.83,
+      "exact_set_delta": 170047,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     },
+     "220": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 78.53,
+      "present_delta": 0,
+      "wrong_delta": -137344,
+      "wrong_removed_share": 0.26,
+      "gap_delta": -21374,
+      "false_change_pct_of_current": -22.31,
+      "exact_set_delta": 137344,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     }
+    }
+   },
+   "adapted TF": {
+    "runs": 21,
+    "filters": {
+     "50": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 79.91,
+      "present_delta": 0,
+      "wrong_delta": -155646,
+      "wrong_removed_share": 0.2946,
+      "gap_delta": -47357,
+      "false_change_pct_of_current": -28.54,
+      "exact_set_delta": 155646,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     },
+     "220": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 78.07,
+      "present_delta": 0,
+      "wrong_delta": -137344,
+      "wrong_removed_share": 0.26,
+      "gap_delta": -6013,
+      "false_change_pct_of_current": -20.16,
+      "exact_set_delta": 137344,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     }
+    }
+   },
+   "arm A union adapted TF": {
+    "runs": 29,
+    "filters": {
+     "50": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 79.6,
+      "present_delta": 0,
+      "wrong_delta": -155646,
+      "wrong_removed_share": 0.2946,
+      "gap_delta": -37595,
+      "false_change_pct_of_current": -27.17,
+      "exact_set_delta": 155646,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     },
+     "220": {
+      "coverage_pct": 97.4879,
+      "precision_pct": 78.07,
+      "present_delta": 0,
+      "wrong_delta": -137344,
+      "wrong_removed_share": 0.26,
+      "gap_delta": -6013,
+      "false_change_pct_of_current": -20.16,
+      "exact_set_delta": 137344,
+      "all_expected_delta": 0,
+      "labels_losing_present_or_longest": 0,
+      "lost_share_of_current_present": 0.0,
+      "label_229_present_delta": null,
+      "no_pitch_safety_regression": true
+     }
+    }
+   }
+  }
+ },
+ "clock": "available_ns",
+ "post_hoc_same_checks_on_available_ns": {
+  "R0 unchanged TF within a few labels of arm A": true,
+  "R1 adapted labels <= unchanged": true,
+  "R2 adapted lost share <= unchanged": true,
+  "R3 adapted removal >= unchanged": true,
+  "R4 label 229 stays lost under both": false,
+  "R5 extended-middle D220 both safe, 0 labels": true,
+  "R6 adapted precision >= unchanged": true,
+  "R7 arm A union adapted loses fewer labels than arm A": true
+ }
+}

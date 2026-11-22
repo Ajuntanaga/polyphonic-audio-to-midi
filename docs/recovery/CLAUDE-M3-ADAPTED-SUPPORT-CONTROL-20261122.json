@@ -1,0 +1,231 @@
+{
+ "native_only_control": {
+  "ordinary": {
+   "50": {
+    "coverage_pct": 39.0815,
+    "precision_pct": 71.23,
+    "present_delta": -308341,
+    "wrong_delta": -5159438,
+    "wrong_removed_share": 0.6608,
+    "gap_delta": -930974,
+    "false_change_pct_of_current": -53.29,
+    "exact_set_delta": 0,
+    "all_expected_delta": 0,
+    "labels_losing_present_or_longest": 39,
+    "lost_share_of_current_present": 0.0228,
+    "label_229_present_delta": -18304,
+    "no_pitch_safety_regression": false
+   },
+   "220": {
+    "coverage_pct": 39.7726,
+    "precision_pct": 60.22,
+    "present_delta": -74605,
+    "wrong_delta": -2186897,
+    "wrong_removed_share": 0.2801,
+    "gap_delta": -357368,
+    "false_change_pct_of_current": -22.26,
+    "exact_set_delta": 0,
+    "all_expected_delta": 0,
+    "labels_losing_present_or_longest": 9,
+    "lost_share_of_current_present": 0.0055,
+    "label_229_present_delta": -14591,
+    "no_pitch_safety_regression": false
+   }
+  },
+  "extended-middle": {
+   "50": {
+    "coverage_pct": 57.4942,
+    "precision_pct": 75.76,
+    "present_delta": -829311,
+    "wrong_delta": -170047,
+    "wrong_removed_share": 0.3219,
+    "gap_delta": -159710,
+    "false_change_pct_of_current": -46.36,
+    "exact_set_delta": -505280,
+    "all_expected_delta": -829311,
+    "labels_losing_present_or_longest": 5,
+    "lost_share_of_current_present": 0.4102,
+    "label_229_present_delta": null,
+    "no_pitch_safety_regression": false
+   },
+   "220": {
+    "coverage_pct": 73.3275,
+    "precision_pct": 75.93,
+    "present_delta": -500991,
+    "wrong_delta": -137344,
+    "wrong_removed_share": 0.26,
+    "gap_delta": -91936,
+    "false_change_pct_of_current": -32.24,
+    "exact_set_delta": -269375,
+    "all_expected_delta": -500991,
+    "labels_losing_present_or_longest": 4,
+    "lost_share_of_current_present": 0.2478,
+    "label_229_present_delta": null,
+    "no_pitch_safety_regression": false
+   }
+  }
+ },
+ "losers": {
+  "D220": {
+   "by_view": {
+    "arm A": {
+     "42": 60,
+     "229": 42,
+     "263": 33,
+     "364": 42,
+     "389": 33,
+     "398": 34
+    },
+    "unchanged TF (available_ns)": {
+     "42": 60,
+     "229": 42,
+     "263": 33,
+     "364": 42,
+     "389": 33,
+     "398": 34
+    },
+    "adapted TF (available_ns)": {
+     "42": 60,
+     "263": 33,
+     "364": 42,
+     "389": 33,
+     "398": 34
+    }
+   },
+   "in_all_three": [
+    42,
+    263,
+    364,
+    389,
+    398
+   ],
+   "fixed_by_adapted_vs_unchanged": [
+    229
+   ],
+   "new_under_adapted_vs_unchanged": []
+  },
+  "D50": {
+   "by_view": {
+    "arm A": {
+     "12": 48,
+     "19": 54,
+     "42": 60,
+     "70": 48,
+     "85": 44,
+     "91": 44,
+     "123": 37,
+     "128": 45,
+     "150": 43,
+     "159": 47,
+     "174": 44,
+     "178": 44,
+     "179": 33,
+     "229": 42,
+     "263": 33,
+     "270": 51,
+     "306": 42,
+     "341": 57,
+     "349": 54,
+     "355": 39,
+     "364": 42,
+     "389": 33,
+     "398": 34,
+     "456": 47,
+     "459": 45,
+     "470": 44,
+     "472": 53,
+     "477": 52
+    },
+    "unchanged TF (available_ns)": {
+     "12": 48,
+     "19": 54,
+     "42": 60,
+     "70": 48,
+     "85": 44,
+     "91": 44,
+     "123": 37,
+     "128": 45,
+     "150": 43,
+     "159": 47,
+     "174": 44,
+     "178": 44,
+     "229": 42,
+     "239": 48,
+     "263": 33,
+     "270": 51,
+     "306": 42,
+     "341": 57,
+     "349": 54,
+     "355": 39,
+     "364": 42,
+     "389": 33,
+     "398": 34,
+     "456": 47,
+     "459": 45,
+     "470": 44,
+     "472": 53,
+     "477": 52
+    },
+    "adapted TF (available_ns)": {
+     "12": 48,
+     "42": 60,
+     "70": 48,
+     "85": 44,
+     "123": 37,
+     "128": 45,
+     "150": 43,
+     "159": 47,
+     "178": 44,
+     "179": 33,
+     "200": 50,
+     "202": 54,
+     "263": 33,
+     "270": 51,
+     "306": 42,
+     "341": 57,
+     "364": 42,
+     "389": 33,
+     "398": 34,
+     "456": 47
+    }
+   },
+   "in_all_three": [
+    12,
+    42,
+    70,
+    85,
+    123,
+    128,
+    150,
+    159,
+    178,
+    263,
+    270,
+    306,
+    341,
+    364,
+    389,
+    398,
+    456
+   ],
+   "fixed_by_adapted_vs_unchanged": [
+    19,
+    91,
+    174,
+    229,
+    239,
+    349,
+    355,
+    459,
+    470,
+    472,
+    477
+   ],
+   "new_under_adapted_vs_unchanged": [
+    179,
+    200,
+    202
+   ]
+  }
+ }
+}
