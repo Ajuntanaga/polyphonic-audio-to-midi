@@ -1,3 +1,9 @@
+# Joint native/model release final: latch rejected
+
+Active checkpoint: `docs/recovery/CODEX-M3-JOINT-RELEASE-RESULT-20261122.md`; full result `CODEX-M3-JOINT-RELEASE-20261122.json`. Plan/code frozen in4e101b4 before one saved-data pass; CURRENT, trace and measured-event identities pass. Ordinary wrong-pitch output falls20.83% and gap output14.53%, but nine labels exceed the fixed budget and seven become completely missed. Extended-middle retains all labels and removes23.25% of gap output. The latch avoids added occupancy starts but can suppress later genuine notes inside a long CURRENT pitch span. Rejected; no tuning, native implementation, new job, installed/default change or gate change. These are saved pitch spans, not tuner-frame or live-host gains.
+
+Next work must distinguish a sustained detector pitch from a new physical note; neither another duration cutoff nor a repeated release mask is supported. Both peers remain active with equal authority. Claude's independent L/E/A verification is complete and must not be repeated. App activity-monitor scheduling remains unconfirmed; manual activity checks continue while this task runs. Historical checkpoints follow.
+
 # Existing rapid-mute cue final: bare mask rejected
 
 Active checkpoint: `docs/recovery/CODEX-M3-RAPID-MUTE-RESULT-20261122.md`; full result `CODEX-M3-RAPID-MUTE-20261122.json`. Plan/code frozen in bc72dc7, one saved-data pass on both pinned v5 traces; CURRENT and trace identities pass. Ordinary affected output is 99.720% false and gap output falls 1,519,037 samples (41.95%), but labels31/70 exceed the fixed relative-loss budget. Occupancy fragments increase528→806. Extended-middle retains all labels and removes79,078 gap samples. The diagnostic mask is rejected; no tuning or native implementation, new job, installed/default or gate change. These are saved pitch spans on design recordings, not live MIDI or tuner-frame gains.
