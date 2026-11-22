@@ -29,7 +29,8 @@ from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeat
 from tools.harmonic_spectral_whitening import WHITENING, HarmonicWhitenedFeatures
 from tools.harmonic_halo_context import (HALO_PARAMETERS, HALO_MODEL_PARAMS, INPUT_NOTE_COUNT,
     HarmonicHaloFeatures, central_features)
-from tools.harmonic_grid_consistency import GRID_CONSISTENCY, shifted_grid, grid_consistency_loss
+from tools.harmonic_grid_consistency import (GRID_CONSISTENCY, FULL_GRADIENT_CONSISTENCY,
+    validate_consistency, shifted_grid, grid_consistency_loss)
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -47,7 +48,7 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
     import torch
     params = MODEL_PARAMS if model_params is None else model_params
     if grid_consistency is not None:
-        require_identity(grid_consistency, GRID_CONSISTENCY, 'fixed training grid consistency')
+        validate_consistency(grid_consistency)
         if params['padding'] != 'zero' or params['loss'] != SETWISE_PARAMS['loss']:
             raise ValueError('Grid consistency requires the original zero-padded setwise network')
     torch.set_num_threads(params['torch_threads'])
@@ -92,10 +93,11 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
             logits = network(inputs[indices])
             loss = criterion(logits, targets[indices])
             if grid_consistency is not None:
-                consistency = grid_consistency_loss(logits, network(shifted_grid(inputs[indices])))
+                consistency = grid_consistency_loss(logits, network(shifted_grid(inputs[indices])),
+                    full_gradient=grid_consistency == FULL_GRADIENT_CONSISTENCY)
                 supervised_total += float(loss.detach())*len(indices)
                 consistency_total += float(consistency.detach())*len(indices)
-                loss = loss + GRID_CONSISTENCY['weight']*consistency
+                loss = loss + grid_consistency['weight']*consistency
             if not torch.isfinite(loss):
                 raise ValueError('Nonfinite training loss')
             loss.backward()
@@ -116,7 +118,7 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
         final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1,
         objective=params['loss'])
     if grid_consistency is not None:
-        fit.update(training_grid_consistency=dict(GRID_CONSISTENCY),
+        fit.update(training_grid_consistency=dict(grid_consistency),
             supervised_loss_curve=supervised_losses, consistency_loss_curve=consistency_losses,
             optimizer_steps=params['epochs']*((len(inputs)+params['batch_size']-1)//params['batch_size']),
             training_forwards_per_step=2, inference_forwards_per_batch=1)
@@ -137,8 +139,8 @@ def save_model(path, model, extractor, model_params=None, grid_consistency=None)
         input_note_count=model.input_note_count, output_note_count=NOTE_COUNT,
         model_parameters=MODEL_PARAMS if model_params is None else model_params)
     if grid_consistency is not None:
-        require_identity(grid_consistency, GRID_CONSISTENCY, 'persisted training grid consistency')
-        saved['training_grid_consistency'] = dict(GRID_CONSISTENCY)
+        validate_consistency(grid_consistency)
+        saved['training_grid_consistency'] = dict(grid_consistency)
     torch.save(saved, path)
 
 
@@ -178,7 +180,7 @@ def run(spec_path, output):
         if sum(value is not None for value in (variation, partial, transposition, contrast, suppression, whitening, halo, grid_consistency)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
         if grid_consistency is not None:
-            require_identity(grid_consistency, GRID_CONSISTENCY, 'fixed training-only grid consistency')
+            validate_consistency(grid_consistency)
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise architecture and supervised objective')
         if halo is not None:
             require_identity(halo, HALO_PARAMETERS, 'fixed measured halo and central output range')
@@ -223,7 +225,8 @@ def run(spec_path, output):
         if halo is not None:
             report['schema'] = 'm3_harmonic_halo_context_v1'
         if grid_consistency is not None:
-            report['schema'] = 'm3_harmonic_grid_consistency_v1'
+            report['schema'] = ('m3_harmonic_full_gradient_consistency_v1'
+                if grid_consistency == FULL_GRADIENT_CONSISTENCY else 'm3_harmonic_grid_consistency_v1')
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,

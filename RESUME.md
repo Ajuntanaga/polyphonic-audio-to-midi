@@ -1,3 +1,11 @@
+## Full-gradient consistency prepared: one distinct fixed screen
+
+Active checkpoint: `docs/recovery/github-harmonic-full-gradient-consistency-20261122.json`; design: `docs/recovery/CODEX-M3-FULL-GRADIENT-PLAN-20261122.md`. The prior detached fit44980872011 remains final and rejected. A same-parameter scalar example demonstrates that its stopped-target update can increase the actual consistency loss; this is a concrete mechanism, not proof of the recorded failure's sole cause.
+
+This screen removes only the target detach for a new named configuration, preserving the historical mode. Both network paths receive gradients; every feature, source role, mixture plan, model, optimizer, epoch, cutoff and acceptance gate stays fixed. Three local non-Torch checks passed; seven Torch checks deferred to GitHub. All121 GitHub checks must pass before one fit. No local audio/model/native processing, label changes, installation or promotion. Claude remains paused.
+
+Next: scoped source/worker commit and push, then one bounded CPU workflow `harmonic-full-gradient-consistency.yml`. Collect the small report once and keep bulk remote. No automatic rerun, retuning or next experiment. Broader live-readiness goal remains active; installed scoreboard unchanged. Earlier entries below are historical.
+
 ## Feature-grid consistency final: training instability rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-grid-consistency-20261121.json`; result: `docs/recovery/CODEX-M3-GRID-CONSISTENCY-RESULT-20261121.md`. CPU run44980872011 final/success, source `78e9d130ec448f3d1c414695f4b91ef7126a1ca1`, worker `268505117e48da91a29d602aecbe8229a452e107`. All116 GitHub tests and source CI44980841745 passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload or rerun this final job.
