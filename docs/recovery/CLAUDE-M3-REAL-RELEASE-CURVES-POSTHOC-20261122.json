@@ -1,0 +1,303 @@
+{
+ "ordinary": {
+  "evaluable": 428,
+  "groups": {
+   "both": 121,
+   "adapted_only": 145,
+   "unmodified_only": 3,
+   "neither": 159
+  },
+  "event_clock_crosscheck": {
+   "unmodified": {
+    "detected_alive": 104,
+    "detected_not_alive": 20,
+    "undetected_alive": 2,
+    "undetected_not_alive": 302,
+    "alive_share": 0.248,
+    "tape_detected_share": 0.29,
+    "agreement_share": 0.949
+   },
+   "adapted": {
+    "detected_alive": 248,
+    "detected_not_alive": 18,
+    "undetected_alive": 1,
+    "undetected_not_alive": 161,
+    "alive_share": 0.582,
+    "tape_detected_share": 0.621,
+    "agreement_share": 0.956
+   }
+  },
+  "unmodified": {
+   "detected": 124,
+   "censored": 1,
+   "delay_ms": {
+    "10": 2.8,
+    "25": 7.7,
+    "50": 16.2,
+    "75": 43.5,
+    "90": 208.3
+   },
+   "share_delay_ge_gap": 0.211,
+   "share_delay_ge_gap_minus_confirm": 0.236,
+   "plateau": {
+    "10": 0.3,
+    "25": 0.3,
+    "50": 0.4,
+    "75": 0.5,
+    "90": 0.6
+   },
+   "early_plateau": {
+    "10": 0.4,
+    "25": 0.5,
+    "50": 0.6,
+    "75": 0.7,
+    "90": 0.8
+   }
+  },
+  "adapted": {
+   "detected": 266,
+   "censored": 1,
+   "delay_ms": {
+    "10": 4.8,
+    "25": 11.3,
+    "50": 31.4,
+    "75": 58.1,
+    "90": 233.1
+   },
+   "share_delay_ge_gap": 0.177,
+   "share_delay_ge_gap_minus_confirm": 0.204,
+   "plateau": {
+    "10": 0.4,
+    "25": 0.5,
+    "50": 0.7,
+    "75": 0.9,
+    "90": 1.0
+   },
+   "early_plateau": {
+    "10": 0.7,
+    "25": 0.9,
+    "50": 1.0,
+    "75": 1.0,
+    "90": 1.0
+   }
+  },
+  "adapted_only": {
+   "n": 145,
+   "delay_ms": {
+    "10": 3.7,
+    "25": 7.8,
+    "50": 30.6,
+    "75": 48.9,
+    "90": 126.7
+   },
+   "plateau": {
+    "10": 0.4,
+    "25": 0.5,
+    "50": 0.6,
+    "75": 0.8,
+    "90": 0.9
+   },
+   "unmodified_plateau": {
+    "10": 0.1,
+    "25": 0.2,
+    "50": 0.2,
+    "75": 0.2,
+    "90": 0.3
+   },
+   "unmodified_early_plateau": {
+    "10": 0.1,
+    "25": 0.2,
+    "50": 0.3,
+    "75": 0.4,
+    "90": 0.5
+   },
+   "share_delay_ge_gap": 0.124
+  },
+  "polyphony_inclusive_paired": {
+   "0": {
+    "pairs": 0,
+    "median_ms": null
+   },
+   "1-2": {
+    "pairs": 37,
+    "median_ms": 11.6
+   },
+   "3+": {
+    "pairs": 83,
+    "median_ms": 11.6
+   }
+  },
+  "polyphony_distribution_evaluable": {
+   "0": 0,
+   "1-2": 118,
+   "3+": 310
+  },
+  "detected_share_by_polyphony": {
+   "0": {
+    "n": 0,
+    "unmodified": 0,
+    "adapted": 0
+   },
+   "1-2": {
+    "n": 118,
+    "unmodified": 37,
+    "adapted": 83
+   },
+   "3+": {
+    "n": 310,
+    "unmodified": 87,
+    "adapted": 183
+   }
+  },
+  "by_note_length_short_half": {
+   "n": 210,
+   "detected_unmodified": 63,
+   "detected_adapted": 140
+  },
+  "by_note_length_long_half": {
+   "n": 218,
+   "detected_unmodified": 61,
+   "detected_adapted": 126
+  },
+  "note_length_median_ms": 747.7
+ },
+ "extended-middle": {
+  "evaluable": 6,
+  "groups": {
+   "both": 6,
+   "adapted_only": 0,
+   "unmodified_only": 0,
+   "neither": 0
+  },
+  "event_clock_crosscheck": {
+   "unmodified": {
+    "detected_alive": 6,
+    "detected_not_alive": 0,
+    "undetected_alive": 0,
+    "undetected_not_alive": 0,
+    "alive_share": 1.0,
+    "tape_detected_share": 1.0,
+    "agreement_share": 1.0
+   },
+   "adapted": {
+    "detected_alive": 6,
+    "detected_not_alive": 0,
+    "undetected_alive": 0,
+    "undetected_not_alive": 0,
+    "alive_share": 1.0,
+    "tape_detected_share": 1.0,
+    "agreement_share": 1.0
+   }
+  },
+  "unmodified": {
+   "detected": 6,
+   "censored": 0,
+   "delay_ms": {
+    "10": 47.1,
+    "25": 49.0,
+    "50": 51.9,
+    "75": 54.8,
+    "90": 58.7
+   },
+   "share_delay_ge_gap": 0.0,
+   "share_delay_ge_gap_minus_confirm": 0.0,
+   "plateau": {
+    "10": 0.6,
+    "25": 0.6,
+    "50": 0.6,
+    "75": 0.7,
+    "90": 0.7
+   },
+   "early_plateau": {
+    "10": 0.8,
+    "25": 0.8,
+    "50": 0.9,
+    "75": 0.9,
+    "90": 0.9
+   }
+  },
+  "adapted": {
+   "detected": 6,
+   "censored": 0,
+   "delay_ms": {
+    "10": 76.1,
+    "25": 83.8,
+    "50": 86.7,
+    "75": 89.6,
+    "90": 93.5
+   },
+   "share_delay_ge_gap": 0.0,
+   "share_delay_ge_gap_minus_confirm": 0.833,
+   "plateau": {
+    "10": 0.9,
+    "25": 1.0,
+    "50": 1.0,
+    "75": 1.0,
+    "90": 1.0
+   },
+   "early_plateau": {
+    "10": 1.0,
+    "25": 1.0,
+    "50": 1.0,
+    "75": 1.0,
+    "90": 1.0
+   }
+  },
+  "adapted_only": {
+   "n": 0,
+   "delay_ms": null,
+   "plateau": null,
+   "unmodified_plateau": null,
+   "unmodified_early_plateau": null,
+   "share_delay_ge_gap": null
+  },
+  "polyphony_inclusive_paired": {
+   "0": {
+    "pairs": 6,
+    "median_ms": 34.8
+   },
+   "1-2": {
+    "pairs": 0,
+    "median_ms": null
+   },
+   "3+": {
+    "pairs": 0,
+    "median_ms": null
+   }
+  },
+  "polyphony_distribution_evaluable": {
+   "0": 6,
+   "1-2": 0,
+   "3+": 0
+  },
+  "detected_share_by_polyphony": {
+   "0": {
+    "n": 6,
+    "unmodified": 6,
+    "adapted": 6
+   },
+   "1-2": {
+    "n": 0,
+    "unmodified": 0,
+    "adapted": 0
+   },
+   "3+": {
+    "n": 0,
+    "unmodified": 0,
+    "adapted": 0
+   }
+  },
+  "by_note_length_short_half": {
+   "n": 0,
+   "detected_unmodified": 0,
+   "detected_adapted": 0
+  },
+  "by_note_length_long_half": {
+   "n": 6,
+   "detected_unmodified": 6,
+   "detected_adapted": 6
+  },
+  "note_length_median_ms": 3600.0
+ },
+ "decoder_confirm_ms": 23.22
+}

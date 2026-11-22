@@ -1,0 +1,194 @@
+{
+ "pins": {
+  "unmodified/ordinary": {
+   "-stream.npz": "085d0b9dc284",
+   "-events.json": "a595cb45fac9"
+  },
+  "adapted/ordinary": {
+   "-stream.npz": "cb24925d06ec",
+   "-events.json": "5da7fbd1a2e9"
+  },
+  "unmodified/extended-middle": {
+   "-stream.npz": "ff3e92c71e3a",
+   "-events.json": "3f4204d9880f"
+  },
+  "adapted/extended-middle": {
+   "-stream.npz": "d921a33a3afd",
+   "-events.json": "5cf1ed7c0d70"
+  }
+ },
+ "mapping": {
+  "unmodified/ordinary": {
+   "c0a": true,
+   "c0b": true,
+   "frames": 9584,
+   "saved_events": 1192,
+   "replay_events": 1192
+  },
+  "adapted/ordinary": {
+   "c0a": true,
+   "c0b": true,
+   "frames": 9584,
+   "saved_events": 1223,
+   "replay_events": 1223
+  },
+  "unmodified/extended-middle": {
+   "c0a": true,
+   "c0b": true,
+   "frames": 2004,
+   "saved_events": 28,
+   "replay_events": 28
+  },
+  "adapted/extended-middle": {
+   "c0a": true,
+   "c0b": true,
+   "frames": 2004,
+   "saved_events": 42,
+   "replay_events": 42
+  }
+ },
+ "corpora": {
+  "ordinary": {
+   "ends_total": 499,
+   "evaluable": 428,
+   "paired": 121,
+   "detected_unmodified": 124,
+   "detected_adapted": 266,
+   "H1": {
+    "adapted_higher": 118,
+    "adapted_lower": 3,
+    "share_higher": 0.9752066115702479,
+    "sign_p": 2.222056719664464e-31,
+    "median_adapted": 0.8737325668334961,
+    "median_unmodified": 0.4106787145137787,
+    "early_median_adapted": 0.9757812023162842,
+    "early_median_unmodified": 0.6174144744873047,
+    "verdict": "miss"
+   },
+   "H2": {
+    "adapted_later": 79,
+    "adapted_earlier": 8,
+    "tied": 33,
+    "not_evaluable": 1,
+    "share_later": 0.9080459770114943,
+    "sign_p": 8.377941473730054e-16,
+    "uncensored_pairs": 120,
+    "median_difference_ms": 11.609977324262388,
+    "censored_adapted": 1,
+    "censored_unmodified": 1,
+    "verdict": "miss"
+   },
+   "H3": {
+    "pairs_with_fall": 120,
+    "adapted_shorter": 20,
+    "adapted_longer": 70,
+    "share_shorter": 0.2222222222222222,
+    "sign_p": 1.136356508423801e-07,
+    "median_fall_adapted": 2.0,
+    "median_fall_unmodified": 1.0,
+    "verdict": "miss"
+   },
+   "H4": {
+    "group_0": {
+     "pairs": 120,
+     "median_ms": 11.609977324262388
+    },
+    "group_1_2": {
+     "pairs": 0,
+     "median_ms": null
+    },
+    "group_3_plus": {
+     "pairs": 0,
+     "median_ms": null
+    },
+    "verdict": "not evaluated"
+   },
+   "C1": {
+    "ends": 422,
+    "censored_share_unmodified": 0.0,
+    "censored_share_adapted": 0.0,
+    "points": 0.0,
+    "paired_ends": 120,
+    "paired_censored_unmodified": 0.0,
+    "paired_censored_adapted": 0.0,
+    "verdict": "miss"
+   },
+   "tape_frames": {
+    "unmodified": 9584,
+    "adapted": 9584
+   },
+   "horizon_samples": 10681922
+  },
+  "extended-middle": {
+   "ends_total": 6,
+   "evaluable": 6,
+   "paired": 6,
+   "detected_unmodified": 6,
+   "detected_adapted": 6,
+   "H1": {
+    "adapted_higher": 6,
+    "adapted_lower": 0,
+    "share_higher": 1.0,
+    "sign_p": 0.03125,
+    "median_adapted": 0.9588358104228973,
+    "median_unmodified": 0.6137848496437073,
+    "early_median_adapted": 0.9860690832138062,
+    "early_median_unmodified": 0.8552486896514893,
+    "verdict": "pass"
+   },
+   "H2": {
+    "adapted_later": 6,
+    "adapted_earlier": 0,
+    "tied": 0,
+    "not_evaluable": 0,
+    "share_later": 1.0,
+    "sign_p": 0.03125,
+    "uncensored_pairs": 6,
+    "median_difference_ms": 34.82993197278894,
+    "censored_adapted": 0,
+    "censored_unmodified": 0,
+    "verdict": "pass"
+   },
+   "H3": {
+    "pairs_with_fall": 6,
+    "adapted_shorter": 0,
+    "adapted_longer": 6,
+    "share_shorter": 0.0,
+    "sign_p": 0.03125,
+    "median_fall_adapted": 6.0,
+    "median_fall_unmodified": 4.0,
+    "verdict": "miss"
+   },
+   "H4": {
+    "group_0": {
+     "pairs": 6,
+     "median_ms": 34.82993197278894
+    },
+    "group_1_2": {
+     "pairs": 0,
+     "median_ms": null
+    },
+    "group_3_plus": {
+     "pairs": 0,
+     "median_ms": null
+    },
+    "verdict": "not evaluated"
+   },
+   "C1": {
+    "ends": 0,
+    "censored_share_unmodified": null,
+    "censored_share_adapted": null,
+    "points": null,
+    "paired_ends": 0,
+    "paired_censored_unmodified": null,
+    "paired_censored_adapted": null,
+    "verdict": "miss"
+   },
+   "tape_frames": {
+    "unmodified": 2004,
+    "adapted": 2004
+   },
+   "horizon_samples": 2233574
+  }
+ }
+}
