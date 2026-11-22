@@ -1,0 +1,38 @@
+{
+  "schema": "m3_quiet_cell_observation_checkpoint_v1",
+  "created_at": "2026-11-22T23:00:46.469155+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "quiet-cell-observation.yml",
+  "source_sha": "4f9d921f049c69b81b7e8599e36f7a88bf58c651",
+  "worker_sha": "d07c4043c87cc2ded99d3c628f4a1ac01780171f",
+  "state": "in_progress",
+  "dispatch_count": 1,
+  "final": false,
+  "plan": "docs/recovery/CODEX-M3-QUIET-CELLS-PLAN-20261122.md",
+  "spec": "docs/recovery/quiet-cell-observation-spec-20261122.json",
+  "local_tests": "7 generated-text contract tests pass; native tests remote only",
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "not started",
+  "next": "Read existing run; collect small report once; no duplicate dispatch.",
+  "dispatch_returncode": 0,
+  "dispatch_output": "build/recovery/quiet-cell-observation-20261122/dispatch.stdout",
+  "run_id": 45080860628,
+  "run_attempt": 1,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45080860628",
+  "output_directory": "build/github-results/quiet-cell-observation-45080860628",
+  "report_artifact": "m3-quiet-cell-observation-report-45080860628-1",
+  "evidence_artifact": "m3-quiet-cell-observation-evidence-45080860628-1",
+  "conclusion": "",
+  "last_observed_at": "2026-11-22T23:01:05.603899+00:00",
+  "worker_stage": [
+    {
+      "name": "observation",
+      "status": "in_progress",
+      "steps": [
+        "Build portable native tests and replay"
+      ]
+    }
+  ]
+}

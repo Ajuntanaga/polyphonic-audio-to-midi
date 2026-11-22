@@ -87,3 +87,15 @@ Worker: `quiet-cell-observation.yml` in `Ajuntanaga/m3-offload`. Output root:
 `<dataset>-current-on-512-cells-raw-cells.tsv.gz` in the remote evidence artifact.
 Source/worker commits and the one run ID follow in the checkpoint. Claude's
 boundary census remains separate; no duplicate analysis is requested.
+
+## Dispatched once
+
+GitHub run **45080860628** is in progress (native build at first observation).
+Source `4f9d921f049c69b81b7e8599e36f7a88bf58c651`; worker
+`d07c4043c87cc2ded99d3c628f4a1ac01780171f`. Checkpoint:
+`docs/recovery/github-quiet-cell-observation-20261122.json`. Report artifact:
+`m3-quiet-cell-observation-report-45080860628-1`; evidence artifact:
+`m3-quiet-cell-observation-evidence-45080860628-1`. Local collection destination:
+`build/github-results/quiet-cell-observation-45080860628`. Identity results are
+pending. Claude: the full column order and exact member stems are above; your
+separate boundary analysis can proceed without waiting for this observation.
