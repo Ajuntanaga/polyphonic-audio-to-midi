@@ -1,10 +1,13 @@
 from pathlib import Path
+import json
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
 import numpy as np
 
-from tools.basic_pitch_onnx_export import (OUTPUT_SHAPE, checked_weights,
+from tools.basic_pitch_onnx_export import (INPUT, INPUT_SHAPE, OUTPUTS, OUTPUT_SHAPE, checked_weights,
     compare_outputs, compare_streams, export_model, weight_fingerprint)
 
 
@@ -47,6 +50,53 @@ class ExactExportTest(unittest.TestCase):
         with patch.dict('os.environ', {'GITHUB_ACTIONS': 'false'}):
             with self.assertRaises(RuntimeError):
                 export_model(None, Path('must-not-create.onnx'))
+
+    @unittest.skipUnless(os.environ.get('GITHUB_ACTIONS') == 'true'
+        and os.environ.get('GITHUB_REPOSITORY') == 'Ajuntanaga/m3-offload',
+        'TensorFlow conversion runs only in the authorized GitHub CPU worker')
+    def test_captured_constant_and_changed_weight_export_as_one_input(self):
+        import tensorflow as tf
+        import onnxruntime as ort
+
+        class CapturedModel(tf.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = tf.Variable(.2, dtype=tf.float32, name='weight')
+                self.spectral = tf.constant(np.linspace(-1, 1, np.prod(OUTPUT_SHAPE),
+                                                        dtype=np.float32).reshape(OUTPUT_SHAPE))
+
+            @tf.function(input_signature=[tf.TensorSpec(INPUT_SHAPE, tf.float32)], autograph=False)
+            def __call__(self, signal):
+                excitation = .01 * tf.reduce_mean(signal)
+                return dict(note=tf.sigmoid(self.spectral + self.weight + excitation),
+                            onset=tf.sigmoid(self.spectral - self.weight + excitation))
+
+        model = CapturedModel()
+        signal = np.full(INPUT_SHAPE, .125, dtype=np.float32)
+        hashes = []
+        with tempfile.TemporaryDirectory() as directory:
+            for i, weight in enumerate((.2, .6)):
+                model.weight.assign(weight)
+                before = model.weight.numpy().copy()
+                reference = {key: value.numpy() for key, value in model(signal).items()}
+                destination = Path(directory) / f'model-{i}.onnx'
+                diagnostic = Path(directory) / f'model-{i}.json'
+                result = export_model(model, destination, diagnostics_path=diagnostic)
+                options = ort.SessionOptions()
+                options.intra_op_num_threads = options.inter_op_num_threads = 1
+                session = ort.InferenceSession(str(destination), options,
+                                               providers=['CPUExecutionProvider'])
+                self.assertEqual([v.name for v in session.get_inputs()], [INPUT])
+                values = session.run(list(OUTPUTS.values()), {INPUT: signal})
+                for key, converted in zip(OUTPUTS, values):
+                    np.testing.assert_allclose(converted, reference[key], atol=1e-6, rtol=0)
+                np.testing.assert_array_equal(model.weight.numpy(), before)
+                detail = json.loads(diagnostic.read_text())
+                self.assertEqual(detail['stage'], 'complete')
+                self.assertGreaterEqual(len(detail['captures']), 2)
+                self.assertEqual(len(detail['frozen_inputs']), 1)
+                hashes.append(result['sha256'])
+        self.assertNotEqual(*hashes)
 
     def test_stream_comparison_ignores_cpu_time_but_not_source_clock_or_decisions(self):
         a = dict(note=np.zeros((4, 88), np.float32), onset=np.zeros((4, 88), np.float32),

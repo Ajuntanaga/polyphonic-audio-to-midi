@@ -133,7 +133,8 @@ def run(spec_path, output):
             save_json(report_path, report)
             path = folders['bulk']/(arm+'.onnx')
             row = dict(weight_fingerprint=weight_fingerprint(manifest, weights),
-                       model=export_model(model, path, spec['opset']), synthetic={})
+                       model=export_model(model, path, spec['opset'],
+                           folders['report']/(arm+'-export-signature.json')), synthetic={})
             backend = StreamingBackend(path)
             row['backend'] = backend.metadata
             for name, signal in cases.items():

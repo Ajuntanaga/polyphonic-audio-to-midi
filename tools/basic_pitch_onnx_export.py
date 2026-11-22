@@ -5,6 +5,7 @@ independent of those dependencies so malformed checkpoints fail before mutation.
 This module makes no tracking-quality or live-host acceptance decision.
 """
 import hashlib
+import json
 
 import numpy as np
 
@@ -42,7 +43,6 @@ def checked_weights(manifest, names, arrays):
 
 def weight_fingerprint(manifest, values):
     """Named, typed, ordered fingerprint; not just the NPZ container's digest."""
-    import json
     digest = hashlib.sha256()
     if len(manifest) != len(values):
         raise ValueError('Variable manifest/array length mismatch')
@@ -148,7 +148,9 @@ def rename_contract(proto):
     import onnx
     graph = proto.graph
     if len(graph.input) != 1 or len(graph.output) != 2:
-        raise ValueError('Expected one input and ordered note/onset outputs')
+        raise ValueError('Expected one input and ordered note/onset outputs; got inputs='
+                         + repr([v.name for v in graph.input]) + ', outputs='
+                         + repr([v.name for v in graph.output]))
     for node in graph.node:
         if any(a.type in (onnx.AttributeProto.GRAPH, onnx.AttributeProto.GRAPHS) for a in node.attribute):
             raise ValueError('Nested graph export requires an explicit scoped rename')
@@ -176,11 +178,12 @@ def rename_contract(proto):
     return proto
 
 
-def export_model(model, destination, opset=17):
+def export_model(model, destination, opset=17, diagnostics_path=None):
     remote_only()
     import onnx
     import tensorflow as tf
     import tf2onnx
+    from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
     if destination.exists():
         raise ValueError('Export destination already exists')
     before = [v.numpy().copy() for v in model.variables]
@@ -191,7 +194,45 @@ def export_model(model, destination, opset=17):
         values = model(signal)
         return tf.identity(values['note'], name='note'), tf.identity(values['onset'], name='onset')
 
-    proto, storage = tf2onnx.convert.from_function(serve, input_signature=signature, opset=opset)
+    # tf2onnx 1.16.1 from_function computes input_names before freezing. That
+    # includes non-resource captures (e.g. SavedModel spectral constants), which
+    # can then be exposed as graph inputs despite having become frozen constants.
+    # Select the input/output boundary after TF has frozen the exact weight set.
+    concrete = serve.get_concrete_function(*signature)
+    describe = lambda tensors: [dict(name=t.name, shape=t.shape.as_list(), dtype=t.dtype.name)
+                               for t in tensors]
+    diagnostic = dict(concrete_inputs=describe(concrete.inputs),
+        concrete_outputs=describe(concrete.outputs),
+        captures=[dict(index=i, shape=t.shape.as_list(), dtype=t.dtype.name)
+                  for i, t in enumerate(concrete.captured_inputs)], stage='freeze')
+
+    def record():
+        if diagnostics_path is not None:
+            diagnostics_path.write_text(json.dumps(diagnostic, indent=2)+'\n')
+
+    record()
+    frozen = convert_variables_to_constants_v2(concrete, lower_control_flow=False,
+                                               aggressive_inlining=True)
+    diagnostic.update(frozen_inputs=describe(frozen.inputs),
+                      frozen_outputs=describe(frozen.outputs), stage='frozen_signature')
+    record()
+    if (len(frozen.inputs) != 1 or len(frozen.outputs) != 2
+            or tuple(frozen.inputs[0].shape) != INPUT_SHAPE
+            or any(tuple(t.shape) != OUTPUT_SHAPE for t in frozen.outputs)):
+        raise ValueError('Frozen TensorFlow signature differs: '+json.dumps(diagnostic))
+    diagnostic['stage'] = 'onnx_conversion'
+    record()
+    proto, storage = tf2onnx.convert.from_graph_def(
+        frozen.graph.as_graph_def(add_shapes=True), name='basic_pitch_exact_weights',
+        input_names=[t.name for t in frozen.inputs],
+        output_names=[t.name for t in frozen.outputs], opset=opset)
+    describe_onnx = lambda values: [dict(name=v.name,
+        shape=[d.dim_value if d.HasField('dim_value') else d.dim_param
+               for d in v.type.tensor_type.shape.dim],
+        element_type=v.type.tensor_type.elem_type) for v in values]
+    diagnostic.update(onnx_inputs=describe_onnx(proto.graph.input),
+                      onnx_outputs=describe_onnx(proto.graph.output), stage='onnx_signature')
+    record()
     if storage:
         raise ValueError('Unexpected external tensor storage')
     if not all(np.array_equal(v.numpy(), original) for v, original in zip(model.variables, before)):
@@ -200,8 +241,11 @@ def export_model(model, destination, opset=17):
     temporary = destination.with_suffix('.tmp')
     onnx.save_model(proto, str(temporary))
     temporary.replace(destination)
+    diagnostic['stage'] = 'complete'
+    record()
     return dict(bytes=destination.stat().st_size,
                 sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
                 opset=opset, variables_preserved=True,
+                conversion='Freeze captured tensors and variables before choosing graph inputs',
                 inputs={INPUT: list(INPUT_SHAPE)},
                 outputs={name: list(OUTPUT_SHAPE) for name in OUTPUTS.values()})
