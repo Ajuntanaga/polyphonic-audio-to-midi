@@ -1,3 +1,13 @@
+## Synthetic operator profile prepared
+
+Active checkpoint: `docs/recovery/github-basic-pitch-operator-profile-20261122.json`; scope `docs/recovery/CODEX-M3-OPERATOR-PROFILE-READY-20261122.md`. Codex is preparing one synthetic-only, disabled-ORT observation of the exact two models. Six profiles,16 repeats each, bit identity against unprofiled output, operator cost and graph metadata; no recording or fit. Source/worker pins and run pending. Claude independently carries the release probe. No acknowledgement or approval gate. Installed/default/frame scoreboard unchanged. Work continues through2026-11-22 18:25 UTC.
+
+## Exact-model graph optimization final: synthetic parity rejection
+
+Active checkpoint: `docs/recovery/github-basic-pitch-graph-optimization-20261122.json`; result `docs/recovery/CODEX-M3-GRAPH-OPTIMIZATION-RESULT-20261122.md`. Run45031644965 final/success, small report collected once with verified digest. Source ad6430294579a314f8134e4df1e35784aa2d6d66, worker f6f47527f3a4c1b6b2063c5ad6b38865af70f918. Five/six synthetic numerical pairs pass; adapted low-A onset differs0.00012213 against1e-4. All thresholds/events identical. Recording/timing work correctly skipped; this is a rejected optimization, not a successful timing measurement. Installed/default/frame scoreboard unchanged. No repeat polling, download or unchanged rerun.
+
+Claude carries the independent release probe end-to-end; Codex investigates arithmetic-preserving runtime work. Neither peer needs acknowledgement or approval from the other. The boundary-fit draft remains unexecuted. Work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
 ## Corrected CPU comparison final: coverage gain, safety/timing rejection
 
 Active checkpoint: `docs/recovery/github-basic-pitch-flat-normalization-adapter-20261122.json`; result `docs/recovery/CODEX-M3-FLAT-NORMALIZATION-RESULT-20261122.md`. Run45029161409 final/success, small report collected once with server digest verified. Source797b693a647de7e80ca21aadea05c7a27922a5ef, worker85dee308e281ff30a5e10e03eb74382ed85cbf79. All6 synthetic cases pass;2/4 recording numerical pairs fail1e-4 narrowly, although all4 preserve every decoded event. ONNX ordinary measured pitch-presence69.78% adapted versus39.99% CURRENT, but gap samples+1811272 and187 labels lose presence. All4 service p99 values20.81–21.24ms exceed20ms. Screen rejected; installed/default/frame scoreboard unchanged. Bulk29.87MB remains remote; no poll/redownload/rerun unchanged.

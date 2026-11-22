@@ -1,0 +1,56 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "synthetic": {
+    "input_samples": 43844,
+    "sample_rate": 22050,
+    "synthetic_cases": {
+      "silence": [],
+      "low_a": [
+        45
+      ],
+      "five_pitch": [
+        40,
+        47,
+        52,
+        56,
+        59
+      ]
+    },
+    "seed": 20261122
+  },
+  "artifact": {
+    "id": 14756974499,
+    "name": "m3-basic-pitch-flat-normalization-evidence-45029161409-1",
+    "run_id": 45029161409,
+    "worker_commit": "85dee308e281ff30a5e10e03eb74382ed85cbf79",
+    "source_commit": "797b693a647de7e80ca21aadea05c7a27922a5ef",
+    "bytes": 29870783,
+    "sha256": "1a59d97e31c6dc4b5a03a19ba0d8fbf2363540b081bdfc72429a4db1669d8633"
+  },
+  "schema": "m3_basic_pitch_operator_profile_spec_v1",
+  "workflow": "basic-pitch-operator-profile.yml",
+  "onnxruntime_version": "1.20.1",
+  "repeats": 16,
+  "reference_members": {
+    "unmodified.onnx": {
+      "bytes": 483585,
+      "sha256": "61a40dc4e49b3518889cb7375a0224ee0835f77ebaf3ac6a67a7c9449be8b77d"
+    },
+    "adapted.onnx": {
+      "bytes": 482905,
+      "sha256": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+    }
+  },
+  "protocol": {
+    "dispatches": 1,
+    "recording_passes": 0,
+    "fits": 0,
+    "graph_changes": 0,
+    "optimizations": "disabled",
+    "primary": "Six synthetic profiles: both exact weight sets, three fixed inputs, one excluded zero warmup plus16 repeats each; pair outputs with a fresh unprofiled session and require bit identity.",
+    "interpretation": "Operator localization only; profiling overhead means no corpus deadline or runtime acceptance. Main graph metadata and all node statistics retained. No policy selection, threshold change, install or promotion.",
+    "decision": "Use dominant operators and their tensor dependencies to choose an arithmetic-preserving runtime change; do not repeat rejected full graph optimization.",
+    "resources": "GitHub CPU only;10minute process15minute job;29.9MB reference archive remote;extract only two models<1MB;small report local,raw profiles remote."
+  }
+}

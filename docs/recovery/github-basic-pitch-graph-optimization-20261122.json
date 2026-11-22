@@ -1,15 +1,15 @@
 {
   "schema": "m3_github_basic_pitch_graph_optimization_checkpoint_v1",
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "workflow": "basic-pitch-graph-optimization.yml",
   "specification": "docs/recovery/basic-pitch-graph-optimization-20261122.json",
   "specification_sha256": "d756000685deb7484dc852aa8ce265594f6545c8176d16641194950aacc289fa",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
+  "source_commit": "ad6430294579a314f8134e4df1e35784aa2d6d66",
+  "worker_commit": "f6f47527f3a4c1b6b2063c5ad6b38865af70f918",
+  "run_id": 45031644965,
   "report_artifact_pattern": "m3-basic-pitch-graph-optimization-report-{run_id}-1",
   "evidence_artifact_pattern": "m3-basic-pitch-graph-optimization-evidence-{run_id}-1",
   "output_directory_pattern": "build/github-results/basic-pitch-graph-optimization-{run_id}",
@@ -18,5 +18,64 @@
   "promotion_accepted": false,
   "scope": "Exact existing models: disabled vs ALL graph optimization; fixed decoder and gates; one CPU job.",
   "prior_result": "45029161409 final and collected; numerical and timing gates fail. Prior adaptation quality still rejected.",
-  "peer_coordination": "Codex: graph timing runner/spec/workflow. Claude: independent synthetic release probe end to end; no acknowledgement or approval gate."
+  "peer_coordination": "Codex: graph timing runner/spec/workflow. Claude: independent synthetic release probe end to end; no acknowledgement or approval gate.",
+  "dispatch_started_at": "2026-11-22T14:13:18.562735+00:00",
+  "dispatch_exit_code": 0,
+  "dispatch_output": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45031644965\n",
+  "dispatch_error": "",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45031644965",
+  "output_directory": "build/github-results/basic-pitch-graph-optimization-45031644965",
+  "collection": {
+    "artifact": {
+      "id": 14757014670,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc1NzAxNDY3MA==",
+      "name": "m3-basic-pitch-graph-optimization-report-45031644965-1",
+      "size_in_bytes": 6671,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14757014670",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14757014670/zip",
+      "expired": false,
+      "digest": "sha256:ff9c3b591cd185f046a489e038a9153c1ded4c728019fe55e14774985cbf241c",
+      "created_at": "2026-11-22T14:13:53Z",
+      "updated_at": "2026-11-22T14:13:53Z",
+      "expires_at": "2026-12-06T14:13:52Z",
+      "workflow_run": {
+        "id": 45031644965,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "f6f47527f3a4c1b6b2063c5ad6b38865af70f918"
+      }
+    },
+    "archive_bytes": 6671,
+    "archive_sha256": "ff9c3b591cd185f046a489e038a9153c1ded4c728019fe55e14774985cbf241c",
+    "digest_verified": true,
+    "collected_at": "2026-11-22T14:15:29.047508+00:00"
+  },
+  "source_ci": [
+    {
+      "conclusion": "success",
+      "databaseId": 45031583706,
+      "headSha": "ad6430294579a314f8134e4df1e35784aa2d6d66",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45031583706",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "worker_run_sha_verified": true,
+  "report_path": "build/github-results/basic-pitch-graph-optimization-45031644965/artifact/basic-pitch-graph-optimization-result/report/report.json",
+  "result_note": "docs/recovery/CODEX-M3-GRAPH-OPTIMIZATION-RESULT-20261122.md",
+  "scientific_result": {
+    "accepted": false,
+    "synthetic_pairs_pass": 5,
+    "synthetic_pairs_total": 6,
+    "thresholds_and_events_identical": true,
+    "failing_case": "adapted/low_a/onset",
+    "max_absolute": 0.0001221299171447754,
+    "limit": 0.0001,
+    "recordings_executed": false,
+    "timing_measured": false
+  },
+  "next": "Claude release probe; Codex arithmetic-preserving runtime cost localization. No unchanged rerun."
 }
