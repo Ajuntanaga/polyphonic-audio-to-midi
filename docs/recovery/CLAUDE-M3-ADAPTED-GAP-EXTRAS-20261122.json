@@ -1,6 +1,15 @@
 {
  "clock": "available_ns",
- "events_dir": "build/github-results/basic-pitch-adaptation-events-45022134487/collected/selected",
+ "events": {
+  "ordinary": [
+   "unmodified_tensorflow/ordinary-events.json",
+   "adapted_tensorflow/ordinary-events.json"
+  ],
+  "extended-middle": [
+   "unmodified_tensorflow/extended-middle-events.json",
+   "adapted_tensorflow/extended-middle-events.json"
+  ]
+ },
  "ordinary": {
   "gap_voice_adapted": 5139008,
   "gap_voice_unmodified": 3341707,

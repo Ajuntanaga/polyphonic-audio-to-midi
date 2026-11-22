@@ -10,8 +10,10 @@ the same pitch ("added"), split by the adapted span that contains them into
   born in the gap (the span starts inside the gap) -> a post hoc sub-split: anticipation of the next label (same pitch, span reaches its start).
 Overlap with the unmodified run: an unmodified span of the same pitch overlaps the adapted span at all.
 
-Usage: python3 -P -E CLAUDE-M3-ADAPTED-GAP-EXTRAS-20261122.py [--selftest]   (no other arguments)
-Writes CLAUDE-M3-ADAPTED-GAP-EXTRAS-20261122.json next to this file.
+Usage: python3 -P -E CLAUDE-M3-ADAPTED-GAP-EXTRAS-20261122.py [--selftest]
+         (no arguments: the saved run 45022134487 files; writes CLAUDE-M3-ADAPTED-GAP-EXTRAS-20261122.json next to this file)
+       python3 -P -E CLAUDE-M3-ADAPTED-GAP-EXTRAS-20261122.py --out RESULT.json ORD_BASE ORD_CAND EXT_BASE EXT_CAND
+         (any four events files, .json or .json.gz: the baseline run and the candidate run on each corpus; the same classes and tail lengths)
 """
 import importlib.util
 import json
@@ -205,15 +207,16 @@ def finish(res):
     return res
 
 
-def main():
-    out = {'clock': 'available_ns', 'events_dir': 'build/github-results/basic-pitch-adaptation-events-45022134487/collected/selected'}
+def main(paths=None, out_path=OUT):
+    paths = paths or {ds: tuple(os.path.join(EVENTS, run + '_tensorflow', ds + '-events.json') for run in ('unmodified', 'adapted'))
+                      for ds in ('ordinary', 'extended-middle')}
+    out = {'clock': 'available_ns', 'events': {ds: [os.path.join(os.path.basename(os.path.dirname(x)), os.path.basename(x)) for x in v] for ds, v in paths.items()}}
     for dataset in ('ordinary', 'extended-middle'):
         ctx = ad.dataset_context(dataset)
         horizon, rate, labels = ctx['horizon'], ctx['rate'], ctx['labels']
         spans = {}
-        for run in ('unmodified', 'adapted'):
-            events = ad.read_events(os.path.join(EVENTS, run + '_tensorflow', dataset + '-events.json'))
-            spans[run], _ = ad.spans_from_events(events, horizon, 'available_ns')
+        for run, path in zip(('unmodified', 'adapted'), paths[dataset]):
+            spans[run], _ = ad.spans_from_events(ad.read_events(path), horizon, 'available_ns')
         res = analyse(spans['adapted'], spans['unmodified'], labels, horizon, rate)
         check = {run: score(spans[run], labels, **ctx['clock'])['pitch_sets']['unlabeled_gap_voice_samples'] for run in spans}
         offset = offset_to_arm_a(spans['unmodified'], ctx['arm_a'])
@@ -229,14 +232,17 @@ def main():
         print(dataset, json.dumps({k: v for k, v in out[dataset].items() if k != 'post_hoc_aligned_to_arm_a_clock'}, indent=1))
         if offset:
             print(dataset, 'POST HOC aligned', json.dumps(out[dataset]['post_hoc_aligned_to_arm_a_clock'], indent=1))
-    with open(OUT, 'w') as stream:
+    with open(out_path, 'w') as stream:
         json.dump(out, stream, indent=1)
 
 
 if __name__ == '__main__':
-    if sys.argv[1:] == ['--selftest']:
+    args = sys.argv[1:]
+    if args == ['--selftest']:
         selftest()
-    elif len(sys.argv) != 1:
-        raise SystemExit(__doc__)
-    else:
+    elif not args:
         main()
+    elif len(args) == 6 and args[0] == '--out':
+        main({'ordinary': (args[2], args[3]), 'extended-middle': (args[4], args[5])}, out_path=args[1])
+    else:
+        raise SystemExit(__doc__)
