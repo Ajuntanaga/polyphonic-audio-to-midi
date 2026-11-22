@@ -1,0 +1,46 @@
+{
+  "schema": "m3_quiet_cell_reduction_spec_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "producer_source_commit": "4f9d921f049c69b81b7e8599e36f7a88bf58c651",
+  "policy_change": false,
+  "automatic_retry": false,
+  "interval_samples": 1920,
+  "before_samples": 1920,
+  "after_samples": 9600,
+  "artifact": {
+    "id": 14777925317,
+    "name": "m3-quiet-cell-observation-evidence-45080860628-1",
+    "bytes": 388717092,
+    "sha256": "11d52807b731af3bfbb98a2a4f8696e61e82921e8e13a6b8837e1c6fe74a9728",
+    "run_id": 45080860628,
+    "worker_commit": "d07c4043c87cc2ded99d3c628f4a1ac01780171f"
+  },
+  "mask": {
+    "path": "docs/recovery/CODEX-M3-RAPID-MUTE-20261122.json",
+    "sha256": "c2008b8956223340d29aa0961f16cc0eba0e73dd648ac9c1894952a6f2c38369"
+  },
+  "datasets": {
+    "ordinary": {
+      "rows": 1310294,
+      "horizon": 10681922,
+      "member": {
+        "path": "ordinary-current-on-512-cells-raw-cells.tsv.gz",
+        "raw_bytes": 469969482,
+        "raw_sha256": "d74f110c5adaa94c2e903c46cb6f0f7be4c17899d5ee22afe567d83271f324a3",
+        "bytes": 132487577,
+        "sha256": "7389b95e5364e99a35914b2dd6523581ce43984466648bd2604051b586be4872"
+      }
+    },
+    "extended-middle": {
+      "rows": 95436,
+      "horizon": 2233574,
+      "member": {
+        "path": "extended-middle-current-on-512-cells-raw-cells.tsv.gz",
+        "raw_bytes": 36036364,
+        "raw_sha256": "1b6903765acc26428f952b1e5c460f4808dfdca8ec50dba8d4923b49b96b48c7",
+        "bytes": 9769279,
+        "sha256": "769148c773ab754b69ed5e2c41485efdbce9d4953a45b77d49420e5f9262e260"
+      }
+    }
+  }
+}
