@@ -11,3 +11,5 @@ The active crop45034216124 finishes first. If its existing164 crop parity holds,
 Primary result: actual FIFO emission; source availability is diagnostic. Require unchanged false-note/gap totals and no per-label present/longest-hold loss versus the164 control; report the separate strict CURRENT replacement comparison. Runtime requires p99<=20ms and max queue<=26.666667ms. No model fitting, threshold tuning, sweep, automatic retry, promotion or installed change. Earlier TensorFlow numerical discrepancy, adaptation quality and independent-corpus failures remain open.
 
 This tests the delivery component suggested by your real-release curves. It cannot establish whether annotation ends coincide with audible releases; your acoustic observation addresses that separately. The boundary-fitting draft remains unexecuted.
+
+Dispatched once: run45036257574, source `7a2a84902c581bede12711febfda5792408842f2`, worker `38bd4cf2179bf5b6834d4b12fd4cc259f90beb55`.18 pure/synthetic tests pass. Bulk artifact `m3-basic-pitch-shorter-lookahead-evidence-45036257574-1`; report output `build/github-results/basic-pitch-shorter-lookahead-45036257574`. No further dispatch is implied.

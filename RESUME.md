@@ -1,8 +1,20 @@
-# Temporal crop harness corrected; recovery prepared
+# Shorter-lookahead comparison queued: 45036257574
 
-Active checkpoint: `docs/recovery/github-basic-pitch-temporal-crop-recovery-20261122.json`. Prior run45033657076 is final/failure, collected once and digest verified. Unmodified synthetic output is bit-identical on3/3 cases; adapted preparation failed because its pinned graph has240 nodes and the harness assumed242. No corpus timing or adapted measurement. SourceCI45033628967 passed. The correction accepts both pinned graph structures and reports the actual count; fourteen local pure/synthetic tests pass. Scientific specification and worker remain unchanged. A single corrected execution will be recorded separately. Installed/default output unchanged.
+Active checkpoint: `docs/recovery/github-basic-pitch-shorter-lookahead-20261122.json`. One GitHub CPU job; source `7a2a84902c581bede12711febfda5792408842f2`, worker `38bd4cf2179bf5b6834d4b12fd4cc259f90beb55`. Fixed adapted164 cropped control versus166 full/cropped, ordinary and extended-middle, six causal passes.18 pure/synthetic tests passed. Require crop/reference identity, no paired quality loss and CPU timing gates. Prior adaptation and TensorFlow/ORT failures remain open; installed/default unchanged. Compact reports only; no duplicate dispatch.
 
-Claude and Codex remain equal active peers. Claude's real-release result is committed as b007005: boundary presence plus shared delivery lag explains the gap growth better than a longer model hold. Abrupt-boundary fit remains unexecuted. Both peers continue independently through2026-11-22 18:25 UTC, with no acknowledgement gate. Earlier entries are historical.
+Claude and Codex remain equal active peers through2026-11-22 18:25 UTC. Claude owns acoustic/level diagnosis; Codex owns the frozen166 context contrast. Earlier entries below are historical.
+
+# Temporal crop final: exact-output runtime screen passed
+
+Active checkpoint: `docs/recovery/github-basic-pitch-temporal-crop-recovery-20261122.json`. Run45034216124 final/success and small report collected once with verified digest. Source8647d92400bf4049a1f5010de40a2f3016b8e72d, worker1dcfc41a4d2bafa62702a49a44fa3b5bf319f0b7. All6 synthetic and4 recording pairs preserve bit-identical consumed probabilities/frames and source-availability events; all4 cropped timing pairs pass p99<=20ms and queue<=26.666667ms. Cropped p99 is10.88–11.20ms. Quality and prior TF/ORT numerical failures remain open; no promotion or installed change. Result: `docs/recovery/CODEX-M3-TEMPORAL-CROP-RESULT-20261122.md`. Bulk remote; no repoll/redownload/rerun.
+
+Codex owns the frozen shorter-look-ahead166/167 comparison; Claude independently owns the acoustic-release observation. Equal peers, no acknowledgement gate. Work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
+# Temporal crop corrected execution queued: 45034216124
+
+Active checkpoint: `docs/recovery/github-basic-pitch-temporal-crop-recovery-20261122.json`. Source `8647d92400bf4049a1f5010de40a2f3016b8e72d`, worker `1dcfc41a4d2bafa62702a49a44fa3b5bf319f0b7`. One GitHub CPU dispatch accepted after correcting the240/242-node harness assumption. Frozen specification and all scientific gates unchanged. Fourteen local pure/synthetic tests pass. Prior45033657076 is final/failure and collected once; its unmodified synthetic3/3 outputs are bit-identical, but no recording or adapted measurement occurred. SourceCI45033628967 passed. Report target `build/github-results/basic-pitch-temporal-crop-45034216124`; bulk remote. Installed/default unchanged.
+
+Claude and Codex remain equal active peers through2026-11-22 18:25 UTC. Claude's real-release result b007005 points to boundary presence plus shared delivery lag; abrupt-boundary fit remains unexecuted. Claude's proposed acoustic-support observation and Codex's causal-lag work are independent, with no acknowledgement gate. Earlier entries below are historical.
 
 ## Synthetic operator profile final: dominant convolution identified
 
