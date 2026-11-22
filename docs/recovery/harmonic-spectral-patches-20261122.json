@@ -1,0 +1,286 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    },
+    {
+      "release": "corpus-20261108",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+    }
+  ],
+  "references": {
+    "sources": {
+      "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+      "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+    },
+    "baseline": {
+      "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+      "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+    },
+    "source_consistency": {
+      "path": "docs/recovery/source-consistency-20261121.json",
+      "sha256": "2a2a252af3a1fb29669ded93bd9f3e41cf61f8e6e897798aa246c6da11588fda"
+    }
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "schema": "m3_harmonic_spectral_patches_spec_v1",
+  "workflow": "harmonic-spectral-patches.yml",
+  "mixture_and_clock_settings": {
+    "sample_rate": 96000,
+    "block": 512,
+    "windows": [
+      4096,
+      16384
+    ],
+    "grid_midi_low": 28,
+    "grid_midi_high": 120,
+    "bins_per_semitone": 3,
+    "note_low": 32,
+    "note_high": 84,
+    "cutoff": 0.5,
+    "input_trim_db": -9,
+    "train_examples": 16384,
+    "calibration_examples": 4096,
+    "test_examples": 4096,
+    "train_seed": 20261121,
+    "calibration_seed": 20261122,
+    "test_seed": 20261123,
+    "component_gains_db": [
+      0,
+      -6,
+      -12,
+      -18,
+      -24
+    ],
+    "mixture_gains_db": [
+      -12,
+      -6,
+      0,
+      6
+    ],
+    "component_rms": 0.05,
+    "normalization_floor": 1e-12,
+    "silence_every": 20,
+    "max_components": 5
+  },
+  "protocol": "One dense local harmonic-patch representation and shared shape encoder, retaining the original fixed FFT/RMS windows and setwise pitch-context network. Measurement density and model capacity change together; original source roles, mixtures, labels, loss, optimizer, epochs, seed, cutoff rule and acceptance gates stay fixed.",
+  "gates": {
+    "training": ">=99% precision cutoff; aggregate recall>=80%, exact sets>=70%; each 3/4/5 distinct-pitch exact sets>=70%; zero silence false outputs",
+    "calibration_and_test": "each: precision>=95%, recall>=80%, exact sets>=70%; each 3/4/5 distinct-pitch exact sets>=70%; zero silence false outputs",
+    "continuous": "only after all representation gates; existing full CURRENT identity, >=5pp ordinary gain; no per-label presence/longest-hold loss, wrong-pitch or extra-gap growth on either recording",
+    "training_single_pitch_preservation": "Before continuous replay: exactly 3132 training singleton examples; exact sets>=3115, false pitches<=13, missing pitches<=5. Original training complete-chord gate still controls whether both held-out roles are scored."
+  },
+  "scope": "One CPU GitHub job, no new uploads, no local recorded processing, no label changes, no installation or promotion.",
+  "max_worker_minutes": 45,
+  "effective_example_counts": "Inherited direct-spectrum generator: train 16384, calibration 4096, test 4096; same seeds, source roles, crop context, gains and clocks.",
+  "harmonic_parameters": {
+    "harmonic_multipliers": [
+      0.5,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0
+    ],
+    "offsets_semitones": [
+      -0.4,
+      -0.2,
+      0.0,
+      0.2,
+      0.4
+    ],
+    "relative_db_clip": [
+      -100.0,
+      20.0
+    ],
+    "rms_db_clip": [
+      -120.0,
+      20.0
+    ],
+    "power_floor": 1e-20,
+    "rms2_floor": 1e-12,
+    "feature_dtype": "float32",
+    "training_precision_percent": 99.0,
+    "prediction_batch_mixtures": 128,
+    "pooling": "training mixtures and pitches for one coordinate scaler; pitch-context convolutions with shared readout",
+    "identity_inputs": false,
+    "class_reweighting": false
+  },
+  "model_parameters": {
+    "channels": 32,
+    "dilations": [
+      1,
+      4,
+      12,
+      19
+    ],
+    "kernel_size": 3,
+    "activation": "relu",
+    "residual": true,
+    "padding": "zero",
+    "loss": "mean_bce_plus_setwise_logsumexp_v1",
+    "class_reweighting": false,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 128,
+    "epochs": 80,
+    "seed": 20261121,
+    "torch_threads": 1,
+    "deterministic": true,
+    "early_stopping": false,
+    "normalization": "training-only mean/std per shared coordinate over mixtures and pitches"
+  },
+  "hypothesis": "The sparse five-offset harmonic samples discard local peak shape. Wider, denser samples with a shared offset encoder may retain evidence that distinguishes a genuine pitch from interference by other notes. Original long windows are retained after the pitch-scaled-window screen regressed. This is a representation test, not a threshold relaxation or a claim of source separation.",
+  "limitations": [
+    "25 offsets from -2 to +2 semitones in steps of 1/6 around each of six multipliers (0.5,1,2,3,4,5), for each original 4096/16384 Hann window; two RMS values give 302 coordinates per candidate.",
+    "Two offset convolutions (2->4->4 channels, kernel3, zero padding1, ReLU) share weights across pitches and harmonics. All 25 positions are retained, giving 600 shape channels plus two RMS channels. The existing 32-channel pitch-context network receives 602 channels; total31825 parameters versus14465 baseline.",
+    "The original pitch-context receptive field is73 pitches and already spans the53 candidate pitches. This changes within-harmonic shape evidence and capacity, not access to previously absent neighboring pitch rows.",
+    "Feature matrices are float32 and normalized per shuffled batch to bound memory. Training-only normalization uses float64 two-pass moments in2048-candidate-row chunks. Arithmetic order and seeded initialization differ from the baseline; a gain cannot be uniquely attributed to denser measurements.",
+    "Native RFFT interpolation, finite windows, overlapping patches, zero padding, observed phase interference and weak sources remain. No exact pitch equivariance, phase feature, source separation, identity input, cardinality input or top-k inference.",
+    "All555 intended-label excerpts and original roles remain, including unresolved source-content disagreements. No exclusions, relabeling, augmentation, held-out fitting or cutoff retune.",
+    "Held-out roles are source-disjoint from fitting but have been examined in earlier research; they are not a fresh blind evaluation.",
+    "Sampled sustained pitch sets and Python timing do not establish string lanes, unison multiplicity, attacks, MIDI delivery, allocation, native deadlines or live readiness."
+  ],
+  "decision": "If the original training complete-chord gate fails, stop. If it passes, score both untouched roles. Continuous replay requires all original gates and training singleton non-inferiority. No tuning, rerun, promotion or installed/default change.",
+  "training_plan_identity": {
+    "baseline_run_id": 44960075844,
+    "file": "train-mixture-plan.json.gz",
+    "decoded_sha256": "7c5c676126082c3bae9fb68dc03cec20f583951c44b7e7de1c84b1ca7b72d25d",
+    "encoding": "SHA256 of decompressed JSON bytes; gzip timestamp excluded"
+  },
+  "baseline": {
+    "run_id": 44965135706,
+    "source_commit": "6b4d39aa8b308ce8f808486b345dbe865b1bb4a0",
+    "report_sha256": "43b65016f2073661540499843adf12137645e59ed79a62e408c0a8c7449834b9",
+    "five_pitch_exact": 1818,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771,
+    "calibration_five_pitch_exact": 283,
+    "calibration_five_pitch_total": 639,
+    "test_five_pitch_exact": 27,
+    "test_five_pitch_total": 327
+  },
+  "objective": {
+    "name": "mean_bce_plus_setwise_logsumexp_v1",
+    "base": "Mean BCEWithLogits over all mixture/pitch cells",
+    "positive": "log(1 + sum over true pitches exp(-logit))",
+    "negative": "log(1 + sum over false pitches exp(logit))",
+    "additional": "Sum of positive and negative terms per mixture, then batch mean; no division by polarity or pitch count",
+    "total": "base + additional; coefficient 1 fixed",
+    "silence": "Empty true set contributes zero; all false pitches remain in the negative term",
+    "inference": "Unchanged sigmoid outputs and train-only 99%-precision cutoff selection; not the paper's fixed zero-logit rule",
+    "reference": "https://arxiv.org/html/2208.02955v1#S1.E1"
+  },
+  "prospective_comparison": {
+    "reference_run_id": 44965135706,
+    "single_pitch_exact": 3115,
+    "single_pitch_total": 3132,
+    "single_pitch_false": 13,
+    "single_pitch_missing": 5,
+    "five_pitch_exact": 1818,
+    "five_pitch_total": 2529,
+    "five_pitch_target": 1771,
+    "calibration_five_pitch_exact": 283,
+    "calibration_five_pitch_total": 639,
+    "test_five_pitch_exact": 27,
+    "test_five_pitch_total": 327,
+    "interpretation": "Report presence, extras, misses and exact sets separately by cardinality against the fixed unaugmented setwise baseline. Training singleton non-inferiority is an additional gate; every original training, held-out and continuous gate remains."
+  },
+  "single_pitch_baseline": {
+    "run_id": 44965135706,
+    "examples": 3132,
+    "exact_sets": 3115,
+    "false_positive": 13,
+    "false_negative": 5
+  },
+  "harmonic_spectral_patches": {
+    "name": "harmonic_spectral_patches_v1",
+    "offsets_semitones": [
+      -2.0,
+      -1.8333333333333333,
+      -1.6666666666666667,
+      -1.5,
+      -1.3333333333333333,
+      -1.1666666666666667,
+      -1.0,
+      -0.8333333333333334,
+      -0.6666666666666666,
+      -0.5,
+      -0.3333333333333333,
+      -0.16666666666666666,
+      0.0,
+      0.16666666666666666,
+      0.3333333333333333,
+      0.5,
+      0.6666666666666666,
+      0.8333333333333334,
+      1.0,
+      1.1666666666666667,
+      1.3333333333333333,
+      1.5,
+      1.6666666666666667,
+      1.8333333333333333,
+      2.0
+    ],
+    "harmonic_multipliers": [
+      0.5,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0
+    ],
+    "windows": [
+      4096,
+      16384
+    ],
+    "feature_count": 302,
+    "encoder_channels": [
+      2,
+      4,
+      4
+    ],
+    "encoder_kernel_size": 3,
+    "encoder_padding": 1,
+    "encoder_activation": "relu",
+    "encoder_sharing": "same two offset convolutions for every candidate pitch and harmonic",
+    "encoder_readout": "retain all 25 positions; concatenate six 100-value patches and two RMS values",
+    "context_input_channels": 602,
+    "parameter_count": 31825,
+    "feature_storage_dtype": "float32",
+    "normalization": "training-only float64 two-pass moments in 2048-candidate-row chunks; float32 mean/std",
+    "normalization_chunk_rows": 2048,
+    "training_storage": "normalize each shuffled minibatch on demand; one optimizer step per original batch",
+    "identity_features": false,
+    "hard_rejection": false
+  }
+}

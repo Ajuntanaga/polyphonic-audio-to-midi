@@ -28,6 +28,8 @@ from tools.harmonic_peak_contrast import CONTRAST, HarmonicContrastFeatures, con
 from tools.harmonic_phase_motion import (PHASE_MOTION, SINGLE_PITCH_BASELINE,
     HarmonicPhaseFeatures, single_pitch_preservation)
 from tools.harmonic_pitch_scaled_windows import PITCH_SCALED_WINDOWS, HarmonicPitchScaledFeatures
+from tools.harmonic_spectral_patches import (SPECTRAL_PATCHES, HarmonicPatchFeatures,
+    fit_patch_normalization, make_patch_network)
 from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeatures
 from tools.harmonic_spectral_whitening import WHITENING, HarmonicWhitenedFeatures
 from tools.harmonic_halo_context import (HALO_PARAMETERS, HALO_MODEL_PARAMS, INPUT_NOTE_COUNT,
@@ -46,10 +48,15 @@ def dependency_versions():
     return {name: version(name) for name in DEPENDENCIES}
 
 
-def fit_model(features, truth, model_params=None, grid_consistency=None):
+def fit_model(features, truth, model_params=None, grid_consistency=None, spectral_patches=None):
     remote_only()
     import torch
     params = MODEL_PARAMS if model_params is None else model_params
+    if spectral_patches is not None:
+        require_identity(spectral_patches, SPECTRAL_PATCHES, 'fixed spectral patch encoder')
+        require_identity(params, SETWISE_PARAMS, 'fixed patch optimizer and pitch context')
+        if grid_consistency is not None:
+            raise ValueError('Patch encoder cannot be combined with grid consistency')
     if grid_consistency is not None:
         validate_consistency(grid_consistency)
         if params['padding'] != 'zero' or params['loss'] != SETWISE_PARAMS['loss']:
@@ -68,11 +75,18 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
     feature_count = features.shape[1]//input_note_count
     if truth.shape != (len(features), NOTE_COUNT) or set(np.unique(truth)) != {False, True}:
         raise ValueError('Expected aligned training targets with both binary classes')
-    mean, scale = fit_normalization(central_features(features) if halo else features, feature_count)
-    inputs = torch.from_numpy(normalized_context(features, mean, scale, feature_count,
-                                                note_count=input_note_count))
+    if spectral_patches is not None:
+        if feature_count != SPECTRAL_PATCHES['feature_count'] or features.dtype != np.float32:
+            raise ValueError('Expected float32 dense spectral patch features')
+        mean, scale = fit_patch_normalization(features)
+        inputs = None  # Normalize one shuffled batch at a time, without a second full feature matrix.
+        network = make_patch_network().train()
+    else:
+        mean, scale = fit_normalization(central_features(features) if halo else features, feature_count)
+        inputs = torch.from_numpy(normalized_context(features, mean, scale, feature_count,
+                                                    note_count=input_note_count))
+        network = make_network(feature_count, valid_context=halo).train()
     targets = torch.from_numpy(truth.astype(np.float32))
-    network = make_network(feature_count, valid_context=halo).train()
     optimizer = torch.optim.Adam(network.parameters(), lr=params['learning_rate'],
                                  weight_decay=params['weight_decay'])
     if params['loss'] == MODEL_PARAMS['loss']:
@@ -88,12 +102,14 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
     supervised_losses, consistency_losses = [], []
     started = time.perf_counter()
     for epoch in range(params['epochs']):
-        order = torch.randperm(len(inputs), generator=generator)
+        order = torch.randperm(len(features), generator=generator)
         total_loss = 0.0
         supervised_total = consistency_total = 0.0
         for indices in order.split(params['batch_size']):
             optimizer.zero_grad(set_to_none=True)
-            logits = network(inputs[indices])
+            batch = (torch.from_numpy(normalized_context(features[indices.numpy()], mean, scale,
+                       feature_count)) if spectral_patches is not None else inputs[indices])
+            logits = network(batch)
             loss = criterion(logits, targets[indices])
             if grid_consistency is not None:
                 consistency = grid_consistency_loss(logits, network(shifted_grid(inputs[indices])),
@@ -106,7 +122,7 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
             loss.backward()
             optimizer.step()
             total_loss += float(loss.detach())*len(indices)
-        losses.append(total_loss/len(inputs))
+        losses.append(total_loss/len(features))
         if grid_consistency is not None:
             supervised_losses.append(supervised_total/len(inputs))
             consistency_losses.append(consistency_total/len(inputs))
@@ -120,6 +136,13 @@ def fit_model(features, truth, model_params=None, grid_consistency=None):
         parameter_count=sum(p.numel() for p in network.parameters()),
         final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1,
         objective=params['loss'])
+    if spectral_patches is not None:
+        fit.update(spectral_patch_parameters=SPECTRAL_PATCHES,
+            feature_storage_dtype=str(features.dtype), normalized_batch_storage=True,
+            optimizer_steps=params['epochs']*((len(features)+params['batch_size']-1)//params['batch_size']),
+            training_forwards_per_step=1, inference_forwards_per_batch=1)
+        require_identity(fit['parameter_count'], SPECTRAL_PATCHES['parameter_count'],
+                         'frozen patch encoder parameter count')
     if grid_consistency is not None:
         fit.update(training_grid_consistency=dict(grid_consistency),
             supervised_loss_curve=supervised_losses, consistency_loss_curve=consistency_losses,
@@ -146,6 +169,8 @@ def save_model(path, model, extractor, model_params=None, grid_consistency=None)
     if isinstance(extractor, HarmonicPitchScaledFeatures):
         saved['pitch_scaled_window_parameters'] = PITCH_SCALED_WINDOWS
         saved['window_lengths_by_candidate'] = extractor.window_lengths.tolist()
+    if isinstance(extractor, HarmonicPatchFeatures):
+        saved['spectral_patch_parameters'] = SPECTRAL_PATCHES
     if grid_consistency is not None:
         validate_consistency(grid_consistency)
         saved['training_grid_consistency'] = dict(grid_consistency)
@@ -183,12 +208,17 @@ def run(spec_path, output):
         contrast = spec.get('harmonic_peak_contrast')
         phase = spec.get('harmonic_phase_motion')
         pitch_scaled = spec.get('harmonic_pitch_scaled_windows')
+        spectral_patches = spec.get('harmonic_spectral_patches')
         suppression = spec.get('harmonic_level_suppression')
         whitening = spec.get('harmonic_spectral_whitening')
         halo = spec.get('harmonic_halo_context')
         grid_consistency = spec.get('training_grid_consistency')
-        if sum(value is not None for value in (variation, partial, transposition, contrast, phase, pitch_scaled, suppression, whitening, halo, grid_consistency)) > 1:
+        if sum(value is not None for value in (variation, partial, transposition, contrast, phase, pitch_scaled, spectral_patches, suppression, whitening, halo, grid_consistency)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if spectral_patches is not None:
+            require_identity(spectral_patches, SPECTRAL_PATCHES, 'fixed dense spectral patch encoder')
+            require_identity(spec['single_pitch_baseline'], SINGLE_PITCH_BASELINE, 'frozen single-pitch preservation')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise objective and optimizer')
         if pitch_scaled is not None:
             require_identity(pitch_scaled, PITCH_SCALED_WINDOWS, 'fixed past-only pitch-scaled windows')
             require_identity(spec['single_pitch_baseline'], SINGLE_PITCH_BASELINE, 'frozen single-pitch preservation')
@@ -240,6 +270,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_phase_motion_v1'
         if pitch_scaled is not None:
             report['schema'] = 'm3_harmonic_pitch_scaled_windows_v1'
+        if spectral_patches is not None:
+            report['schema'] = 'm3_harmonic_spectral_patches_v1'
         if suppression is not None:
             report['schema'] = 'm3_harmonic_level_suppression_v1'
         if whitening is not None:
@@ -268,7 +300,8 @@ def run(spec_path, output):
         report['inputs'] = [fetch_release(spec['worker_repository'], pin, folders['cache'],
             folders['inputs'], folders['logs']) for pin in spec['input_releases']]
         waves = source_waves(references['sources'], folders['inputs'])
-        extractor = (HarmonicPitchScaledFeatures() if pitch_scaled is not None else
+        extractor = (HarmonicPatchFeatures() if spectral_patches is not None else
+                     HarmonicPitchScaledFeatures() if pitch_scaled is not None else
                      HarmonicPhaseFeatures() if phase is not None else
                      HarmonicHaloFeatures() if halo is not None else
                      HarmonicWhitenedFeatures() if whitening is not None else
@@ -284,6 +317,7 @@ def run(spec_path, output):
             boundary_context=('Measured 36-pitch halo each side; valid convolutions, no padded boundary in any output receptive field.' if halo is not None
                               else 'Zero padding supplies incomplete context and can encode boundary position.'),
             distinction=('Training-only one-row feature-grid consistency; same features, network, scaler, plans, optimizer steps and inference as setwise baseline.' if grid_consistency is not None else
+                '25 offsets per partial replace five; a shared two-layer local shape encoder feeds the original pitch-context layers. Original fixed windows and RMS; denser evidence and capacity change together.' if spectral_patches is not None else
                 'Only the harmonic/RMS window lengths scale inversely with candidate pitch. Same 62 coordinates, 14465 parameters, initialization, plans and training; no future context.' if pitch_scaled is not None else
                 'Original 62 coordinates plus 12 past-only phase-motion values; input layer gains 384 parameters, no augmentation.' if phase is not None else
                 'Measured context replaces all padding; same central features, scaler rows, 14465 parameters and initialization. Added context and boundary removal change together.' if halo is not None else
@@ -298,6 +332,8 @@ def run(spec_path, output):
         if pitch_scaled is not None:
             report['features']['pitch_scaled_window_parameters'] = PITCH_SCALED_WINDOWS
             report['features']['window_lengths_by_candidate'] = extractor.window_lengths.tolist()
+        if spectral_patches is not None:
+            report['features']['spectral_patch_parameters'] = SPECTRAL_PATCHES
         report['stage'] = 'training mixtures; one shared fit and training-only cutoff'
         save_json(report_path, report)
         x, y, usage = role_examples('train', takes, waves, extractor, folders['bulk'])
@@ -339,6 +375,8 @@ def run(spec_path, output):
             del fit_x, fit_y
         elif grid_consistency is not None:
             model, report['fit'] = fit_model(x, y, model_params=params, grid_consistency=grid_consistency)
+        elif spectral_patches is not None:
+            model, report['fit'] = fit_model(x, y, model_params=params, spectral_patches=spectral_patches)
         else:
             model, report['fit'] = fit_model(x, y, model_params=params)
         probability = model.activity(x)
@@ -356,7 +394,7 @@ def run(spec_path, output):
             report['contrast_diagnostics'] = dict(train=contrast_summary(x, y, probability, model.cutoff))
         np.savez_compressed(folders['bulk']/'train-predictions.npz', probability=probability, targets=y, cutoff=model.cutoff)
         gates = dict(train_complete_chords=train_gate)
-        if phase is not None or pitch_scaled is not None:
+        if phase is not None or pitch_scaled is not None or spectral_patches is not None:
             report['single_pitch_preservation'] = single_pitch_preservation(probability, y, model.cutoff)
             gates['train_single_pitch_noninferiority'] = report['single_pitch_preservation']['passed']
         report['held_out_scoring'] = dict(executed=False, reason='Training complete-chord gate failed.')
@@ -408,6 +446,7 @@ def run(spec_path, output):
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
                 ('Feature rows move together, retaining FFT and source signatures. This is not physical transposition or proof of source invariance. Consistency may propagate errors or remove useful position evidence; one seed and weight only.' if grid_consistency is not None else
+                 'Dense patches and encoder capacity change together, with float32 stored features and bounded normalization. They may overfit source timbre or leakage; no source separation, exact equivariance or unique causal attribution.' if spectral_patches is not None else
                  'Pitch-scaled windows shorten high-pitch averaging and reduce high-pitch frequency resolution. RMS context changes with them; nearby notes, noise and attack variation can regress. This is not a full constant-Q transform or exact pitch equivariance.' if pitch_scaled is not None else
                  'Phase increments overlap and are not independent. Shared harmonics, leakage, noise and bends can confound them; no source ownership or hard phase gate. Added capacity and changed initialization also affect the comparison.' if phase is not None else
                  'Measured halo adds spectral context and removes boundary cues together; no unique attribution to either. Very low halo pitches are FFT-unresolved; high probes may be weak.' if halo is not None else

@@ -84,7 +84,7 @@ def role_examples(role, takes, waves, extractor, bulk):
     plan = mixture_plan(takes, role=role, count=SETTINGS[role+'_examples'],
                         seed=SETTINGS[role+'_seed'])
     save_gzip_json(bulk/(role+'-mixture-plan.json.gz'), plan)
-    x = np.empty((len(plan), len(extractor.names)), dtype=np.float64)
+    x = np.empty((len(plan), len(extractor.names)), dtype=getattr(extractor, 'storage_dtype', np.float64))
     y = np.empty((len(plan), SETTINGS['note_high']-SETTINGS['note_low']+1), dtype=bool)
     for i, row in enumerate(plan):
         audio, target = render_mixture(row, waves)

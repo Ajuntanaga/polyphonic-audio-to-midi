@@ -14,6 +14,29 @@ from tools import portable_direct_spectrum_learning as runner
 
 
 class PortableSpectrumTests(unittest.TestCase):
+    def test_role_feature_storage_is_opt_in_and_keeps_source_coverage(self):
+        class Extractor:
+            names = ['coordinate_a', 'coordinate_b']
+            def __call__(self, audio):
+                return np.array([.25, -.5], np.float32)
+        plan = [dict(components=[dict(source_key='take')])]
+        takes = [dict(key='take', role='train')]
+        truth = np.zeros(53, bool)
+        truth[9] = True
+        with tempfile.TemporaryDirectory() as directory:
+            for requested in (None, np.float32):
+                extractor = Extractor()
+                if requested is not None:
+                    extractor.storage_dtype = requested
+                with patch.object(runner, 'remote_only'), \
+                     patch.object(runner, 'mixture_plan', return_value=plan), \
+                     patch.object(runner, 'render_mixture', return_value=(None, truth)):
+                    features, labels, counts = runner.role_examples('train', takes, {}, extractor, Path(directory))
+                self.assertEqual(features.dtype, np.float64 if requested is None else requested)
+                np.testing.assert_array_equal(features, [[.25, -.5]])
+                np.testing.assert_array_equal(labels, truth[None, :])
+                self.assertEqual(counts, {'take': 1})
+
     def test_remote_guard_precedes_dependencies_and_file_access(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)/'absent'
