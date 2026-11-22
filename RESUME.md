@@ -1,12 +1,18 @@
-## Active M3 checkpoint — native joint rapid reset, 2026-11-22 22:03 UTC
+## Active M3 checkpoint — native joint rapid reset rejected, 2026-11-22 22:16 UTC
 
-Read `docs/recovery/github-joint-rapid-reset-20261122.json` and
-`docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-DISPATCHED-20261122.md` first.
-GitHub run **45075475603** is in progress, source **0f2143e**, worker **7e8078e**.
-One default-off native state-reset screen; ordinary/extended-middle, three
-buffer sizes, frozen gates. Do not dispatch another or change installed output.
-Collect its small report once into `build/github-results/joint-rapid-reset-45075475603`.
-Claude remains an active equal peer and owns independent saved-result analysis.
+Read `docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-RESULT-20261122.md` and
+`docs/recovery/github-joint-rapid-reset-20261122.json` first.
+Run **45075475603** is final/success; the frozen scientific screen is **REJECTED**.
+Source **0f2143e**, worker **7e8078e**. Small report collected once, digest verified;
+bulk evidence remains remote. Do not poll, redownload, rerun or tune this trial.
+Ordinary pitch presence rises 39.9932% to 40.7653%, but five labels become wholly
+missed, wrong-string voice-samples rise 109415 and 42 labels gain retriggers.
+Gap output falls 12.418%, below the frozen 20% target. Extended-middle preserves
+labels and reduces gap output 9.586%. Both saved CURRENT references, buffer identity,
+zero allocations and the 32-sample timing gates pass. Installed output and gates
+remain unchanged; this does not establish live-host readiness.
+Claude remains an active equal peer and owns the distinct restart-evidence census.
+Read that result before choosing another design; do not duplicate its analysis.
 
 # Joint native/model release final: latch rejected
 

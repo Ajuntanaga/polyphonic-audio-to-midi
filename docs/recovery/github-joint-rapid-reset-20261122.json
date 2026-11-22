@@ -8,17 +8,554 @@
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45075475603",
   "source_sha": "0f2143e049e58a189ed082b2f6d49d85a7e2806a",
   "worker_sha": "7e8078e4f2d105823c76a5f94ce5b5b8c5a10072",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "dispatch_count": 1,
   "plan": "docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-PLAN-20261122.md",
   "spec": "docs/recovery/joint-rapid-reset-spec-20261122.json",
   "output_directory": "build/github-results/joint-rapid-reset-45075475603",
   "report_artifact": "m3-joint-rapid-reset-report-45075475603-1",
   "evidence_artifact": "m3-joint-rapid-reset-evidence-45075475603-1",
-  "collection_state": "awaiting report; collect once",
+  "collection_state": "small report collected once; size and server digest verified; bulk evidence remote",
   "local_tests": "8 synthetic wrapper tests pass; native tests run only on GitHub",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Read this existing run only; collect the small report once; apply frozen gates without tuning. No duplicate dispatch."
+  "next": "Do not rerun or tune the rejected reset. Read Claude's distinct restart-evidence census before choosing a new design; installed output and all frozen gates stay unchanged.",
+  "source_ci": {
+    "run_id": 45075437398,
+    "state": "completed",
+    "conclusion": "failure",
+    "failed_log": "build/recovery/joint-rapid-reset-20261122/source-ci-failed.log",
+    "diagnosis": "Source contract rejected two contributor home-path literals in the search helper/test. Portable path fix pushed in f1b8300; e253f3e preserves an unrelated search-listing edit as uncommitted. No DSP or frozen screen change.",
+    "fix_source_sha": "e253f3e17fc2fa45952b234ee43ae04db3a67e18",
+    "fix_validation": "7 relevant pure Python/search confinement checks passed locally; portable run 45076203902 passed at fix source e253f3e. Source CI status recorded separately."
+  },
+  "source_portable": {
+    "run_id": 45075437390,
+    "state": "completed",
+    "conclusion": "success"
+  },
+  "worker_stage": "final; all 16 replays complete; native processing gates pass; ordinary note-quality and usefulness gates fail",
+  "last_observed_at": "2026-11-22T22:25:31.845936+00:00",
+  "source_fix_portable": {
+    "run_id": 45076203902,
+    "source_sha": "e253f3e17fc2fa45952b234ee43ae04db3a67e18",
+    "state": "completed",
+    "conclusion": "success"
+  },
+  "last_remote_read": {
+    "at": "2026-11-22T22:20:57.447419+00:00",
+    "result": "completed/success; report and evidence artifact metadata available; small report collected and digest verified",
+    "effect": "Final result known; do not poll or redownload this run."
+  },
+  "conclusion": "success",
+  "verdict": "rejected",
+  "screen_accepted": false,
+  "utility_pass": false,
+  "completed_at": "2026-11-22T22:16:34Z",
+  "result_note": "docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-RESULT-20261122.md",
+  "report_path": "build/github-results/joint-rapid-reset-45075475603/report/joint-rapid-reset/report/report.json",
+  "report_sha256": "3bedd04bd9b1cccc60faed718fcbdbf15e855d86a8d968b6aeb6fe3237773b8a",
+  "collection_receipt": "build/github-results/joint-rapid-reset-45075475603/collection.json",
+  "artifacts": [
+    {
+      "id": 14775825950,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc3NTgyNTk1MA==",
+      "name": "m3-joint-rapid-reset-evidence-45075475603-1",
+      "size_in_bytes": 14516243,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14775825950",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14775825950/zip",
+      "expired": false,
+      "digest": "sha256:89bf2a5ee13e13aef7d890227997bd9ec24a4a1a98a4934a5d72ab76578d10dd",
+      "created_at": "2026-11-22T22:16:32Z",
+      "updated_at": "2026-11-22T22:16:32Z",
+      "expires_at": "2026-11-29T22:16:30Z",
+      "workflow_run": {
+        "id": 45075475603,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "7e8078e4f2d105823c76a5f94ce5b5b8c5a10072"
+      },
+      "collection": "remote; not downloaded"
+    },
+    {
+      "id": 14775771099,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc3NTc3MTA5OQ==",
+      "name": "m3-joint-rapid-reset-report-45075475603-1",
+      "size_in_bytes": 128798,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14775771099",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14775771099/zip",
+      "expired": false,
+      "digest": "sha256:6fd9e52b2dd1e899fdff91e9775851303babfa6bc712d1543afd4037b446ae00",
+      "created_at": "2026-11-22T22:16:30Z",
+      "updated_at": "2026-11-22T22:16:30Z",
+      "expires_at": "2026-12-06T22:16:29Z",
+      "workflow_run": {
+        "id": 45075475603,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "7e8078e4f2d105823c76a5f94ce5b5b8c5a10072"
+      },
+      "collection": "collected"
+    }
+  ],
+  "report_receipt": {
+    "artifact_id": 14775771099,
+    "name": "m3-joint-rapid-reset-report-45075475603-1",
+    "archive": "build/github-results/joint-rapid-reset-45075475603/report.zip",
+    "archive_sha256": "6fd9e52b2dd1e899fdff91e9775851303babfa6bc712d1543afd4037b446ae00",
+    "server_digest": "sha256:6fd9e52b2dd1e899fdff91e9775851303babfa6bc712d1543afd4037b446ae00",
+    "digest_verified": true,
+    "bytes": 128798,
+    "collected_at": "2026-11-22T22:20:57.447419+00:00"
+  },
+  "result": {
+    "ordinary": {
+      "saved_current_identity": true,
+      "mechanism_buffer_identity": true,
+      "processing_pass": true,
+      "gates": {
+        "label_budget": false,
+        "raw_false_nonincrease": false,
+        "snapshot_false_nonincrease": false,
+        "pitch_set_noninferiority": true,
+        "valid_pairing": true,
+        "retriggers_nonincrease": false,
+        "raw_conflicts_nonincrease": true
+      },
+      "gap_reduction_fraction": 0.12418452855176842,
+      "raw_deltas": {
+        "false_wrong_note_voice_samples": -1632730,
+        "false_wrong_string_voice_samples": 109415,
+        "false_gap_voice_samples": -467155,
+        "matched_voice_samples": 146310,
+        "emitted_voice_samples": -1844160,
+        "false_wrong_note_onsets": 94,
+        "false_wrong_string_onsets": 119,
+        "false_gap_onsets": 29,
+        "matched_onsets": 170,
+        "emitted_onsets": 412
+      },
+      "snapshot_deltas": {
+        "matched": 1419,
+        "false_wrong_note_voices": -23182,
+        "false_wrong_string_voices": 1012,
+        "false_gap_voices": -7432,
+        "false_positive_voices": -29602
+      },
+      "label_budgets": {
+        "pitch_present_samples": {
+          "passed": false,
+          "failures": 15,
+          "failure_ids": [
+            14,
+            19,
+            42,
+            70,
+            109,
+            123,
+            124,
+            200,
+            213,
+            217,
+            225,
+            228,
+            263,
+            306,
+            364
+          ],
+          "newly_completely_missed": [
+            42,
+            70,
+            200,
+            306,
+            364
+          ]
+        },
+        "pitch_longest_present_samples": {
+          "passed": false,
+          "failures": 16,
+          "failure_ids": [
+            14,
+            19,
+            42,
+            70,
+            101,
+            109,
+            123,
+            124,
+            200,
+            213,
+            217,
+            225,
+            228,
+            263,
+            306,
+            364
+          ],
+          "newly_completely_missed": [
+            42,
+            70,
+            200,
+            306,
+            364
+          ]
+        },
+        "exact_held_samples": {
+          "passed": false,
+          "failures": 26,
+          "failure_ids": [
+            16,
+            19,
+            42,
+            58,
+            109,
+            114,
+            123,
+            124,
+            128,
+            156,
+            159,
+            200,
+            213,
+            215,
+            217,
+            225,
+            251,
+            252,
+            263,
+            283,
+            306,
+            364,
+            367,
+            378,
+            437,
+            482
+          ],
+          "newly_completely_missed": [
+            42,
+            200,
+            306,
+            364,
+            482
+          ]
+        },
+        "longest_exact_hold_samples": {
+          "passed": false,
+          "failures": 25,
+          "failure_ids": [
+            14,
+            19,
+            42,
+            101,
+            109,
+            115,
+            123,
+            128,
+            141,
+            156,
+            159,
+            200,
+            213,
+            215,
+            217,
+            225,
+            251,
+            252,
+            256,
+            263,
+            306,
+            364,
+            367,
+            378,
+            482
+          ],
+          "newly_completely_missed": [
+            42,
+            200,
+            306,
+            364,
+            482
+          ]
+        }
+      },
+      "arms": {
+        "current": {
+          "snapshot": {
+            "labeled": 528632,
+            "matched": 145400,
+            "false_wrong_note_voices": 164263,
+            "false_wrong_string_voices": 92638,
+            "false_gap_voices": 62856,
+            "false_positive_voices": 319757,
+            "fingerprint": "002540bbc3759cd6"
+          },
+          "exact_held_samples": 8580917,
+          "annotated_hold_samples": 33819101,
+          "note_ons": 5926,
+          "raw_safety": {
+            "false_wrong_note_voice_samples": 8222039,
+            "false_wrong_string_voice_samples": 4953010,
+            "false_gap_voice_samples": 3761781,
+            "matched_voice_samples": 8721923,
+            "emitted_voice_samples": 25658753,
+            "false_wrong_note_onsets": 1200,
+            "false_wrong_string_onsets": 2597,
+            "false_gap_onsets": 517,
+            "matched_onsets": 1612,
+            "emitted_onsets": 5926
+          },
+          "pitch_totals": {
+            "annotated_samples": 8914836,
+            "expected_pitch_samples": 33819101,
+            "present_pitch_samples": 13525345,
+            "all_expected_pitches_samples": 53249,
+            "exact_pitch_set_samples": 53249,
+            "one_voice_per_pitch_samples": 53249,
+            "extra_pitch_voice_samples": 7808309,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "pitch_gap_samples": 3629163
+        },
+        "trial": {
+          "snapshot": {
+            "labeled": 528632,
+            "matched": 146819,
+            "false_wrong_note_voices": 141081,
+            "false_wrong_string_voices": 93650,
+            "false_gap_voices": 55424,
+            "false_positive_voices": 290155,
+            "fingerprint": "b9a72502e086c56e"
+          },
+          "exact_held_samples": 8731579,
+          "annotated_hold_samples": 33819101,
+          "note_ons": 6338,
+          "raw_safety": {
+            "false_wrong_note_voice_samples": 6589309,
+            "false_wrong_string_voice_samples": 5062425,
+            "false_gap_voice_samples": 3294626,
+            "matched_voice_samples": 8868233,
+            "emitted_voice_samples": 23814593,
+            "false_wrong_note_onsets": 1294,
+            "false_wrong_string_onsets": 2716,
+            "false_gap_onsets": 546,
+            "matched_onsets": 1782,
+            "emitted_onsets": 6338
+          },
+          "pitch_totals": {
+            "annotated_samples": 8914836,
+            "expected_pitch_samples": 33819101,
+            "present_pitch_samples": 13786446,
+            "all_expected_pitches_samples": 53249,
+            "exact_pitch_set_samples": 53249,
+            "one_voice_per_pitch_samples": 53249,
+            "extra_pitch_voice_samples": 6380158,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "pitch_gap_samples": 3189237
+        }
+      },
+      "labels_with_retrigger_increase": 42,
+      "trial_mechanism": {
+        "eligible": 18259,
+        "warmup": 0,
+        "model_veto": 18162,
+        "released": 97,
+        "refused": 0,
+        "reactivated": 92
+      },
+      "timing_32": {
+        "current": {
+          "block_samples": 32,
+          "p99_ns": 79105,
+          "maximum_ns": 147473,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "c_allocations": 0
+        },
+        "trial": {
+          "block_samples": 32,
+          "p99_ns": 80385,
+          "maximum_ns": 173797,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "c_allocations": 0
+        }
+      }
+    },
+    "extended_middle": {
+      "saved_current_identity": true,
+      "mechanism_buffer_identity": true,
+      "processing_pass": true,
+      "gates": {
+        "label_budget": true,
+        "raw_false_nonincrease": true,
+        "snapshot_false_nonincrease": true,
+        "pitch_set_noninferiority": true,
+        "valid_pairing": true,
+        "retriggers_nonincrease": true,
+        "raw_conflicts_nonincrease": true
+      },
+      "gap_reduction_fraction": 0.09586193336588232,
+      "raw_deltas": {
+        "false_wrong_note_voice_samples": 0,
+        "false_wrong_string_voice_samples": 0,
+        "false_gap_voice_samples": -43392,
+        "matched_voice_samples": 0,
+        "emitted_voice_samples": -43392,
+        "false_wrong_note_onsets": 0,
+        "false_wrong_string_onsets": 0,
+        "false_gap_onsets": 0,
+        "matched_onsets": 0,
+        "emitted_onsets": 0
+      },
+      "snapshot_deltas": {
+        "matched": 0,
+        "false_wrong_note_voices": 0,
+        "false_wrong_string_voices": 0,
+        "false_gap_voices": -678,
+        "false_positive_voices": -678
+      },
+      "label_budgets": {
+        "pitch_present_samples": {
+          "passed": true,
+          "failures": 0,
+          "failure_ids": [],
+          "newly_completely_missed": []
+        },
+        "pitch_longest_present_samples": {
+          "passed": true,
+          "failures": 0,
+          "failure_ids": [],
+          "newly_completely_missed": []
+        },
+        "exact_held_samples": {
+          "passed": true,
+          "failures": 0,
+          "failure_ids": [],
+          "newly_completely_missed": []
+        },
+        "longest_exact_hold_samples": {
+          "passed": true,
+          "failures": 0,
+          "failure_ids": [],
+          "newly_completely_missed": []
+        }
+      },
+      "arms": {
+        "current": {
+          "snapshot": {
+            "labeled": 32400,
+            "matched": 4511,
+            "false_wrong_note_voices": 9393,
+            "false_wrong_string_voices": 24725,
+            "false_gap_voices": 7052,
+            "false_positive_voices": 41170,
+            "fingerprint": "73d712146be4b1d2"
+          },
+          "exact_held_samples": 284866,
+          "annotated_hold_samples": 2073600,
+          "note_ons": 453,
+          "raw_safety": {
+            "false_wrong_note_voice_samples": 528259,
+            "false_wrong_string_voice_samples": 1546054,
+            "false_gap_voice_samples": 452651,
+            "matched_voice_samples": 3413708,
+            "emitted_voice_samples": 5940672,
+            "false_wrong_note_onsets": 45,
+            "false_wrong_string_onsets": 163,
+            "false_gap_onsets": 1,
+            "matched_onsets": 244,
+            "emitted_onsets": 453
+          },
+          "pitch_totals": {
+            "annotated_samples": 2073600,
+            "expected_pitch_samples": 2073600,
+            "present_pitch_samples": 2021510,
+            "all_expected_pitches_samples": 2021510,
+            "exact_pitch_set_samples": 1516739,
+            "one_voice_per_pitch_samples": 1516739,
+            "extra_pitch_voice_samples": 528259,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "pitch_gap_samples": 189175
+        },
+        "trial": {
+          "snapshot": {
+            "labeled": 32400,
+            "matched": 4511,
+            "false_wrong_note_voices": 9393,
+            "false_wrong_string_voices": 24725,
+            "false_gap_voices": 6374,
+            "false_positive_voices": 40492,
+            "fingerprint": "dac41f444a8e68ca"
+          },
+          "exact_held_samples": 284866,
+          "annotated_hold_samples": 2073600,
+          "note_ons": 453,
+          "raw_safety": {
+            "false_wrong_note_voice_samples": 528259,
+            "false_wrong_string_voice_samples": 1546054,
+            "false_gap_voice_samples": 409259,
+            "matched_voice_samples": 3413708,
+            "emitted_voice_samples": 5897280,
+            "false_wrong_note_onsets": 45,
+            "false_wrong_string_onsets": 163,
+            "false_gap_onsets": 1,
+            "matched_onsets": 244,
+            "emitted_onsets": 453
+          },
+          "pitch_totals": {
+            "annotated_samples": 2073600,
+            "expected_pitch_samples": 2073600,
+            "present_pitch_samples": 2021510,
+            "all_expected_pitches_samples": 2021510,
+            "exact_pitch_set_samples": 1516739,
+            "one_voice_per_pitch_samples": 1516739,
+            "extra_pitch_voice_samples": 528259,
+            "duplicate_expected_pitch_voice_samples": 0
+          },
+          "pitch_gap_samples": 145783
+        }
+      },
+      "labels_with_retrigger_increase": 0,
+      "trial_mechanism": {
+        "eligible": 891,
+        "warmup": 0,
+        "model_veto": 888,
+        "released": 3,
+        "refused": 0,
+        "reactivated": 1
+      },
+      "timing_32": {
+        "current": {
+          "block_samples": 32,
+          "p99_ns": 78161,
+          "maximum_ns": 176456,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "c_allocations": 0
+        },
+        "trial": {
+          "block_samples": 32,
+          "p99_ns": 78591,
+          "maximum_ns": 226487,
+          "deadline_overruns": 0,
+          "cpp_allocations": 0,
+          "c_allocations": 0
+        }
+      }
+    }
+  },
+  "validation": {
+    "native_tests": "m3_motion_tests and m3_detector_tests passed on GitHub",
+    "contracts": "8 wrapper tests passed on GitHub",
+    "timed_runs": 12,
+    "zero_processing_allocations": true,
+    "zero_deadline_overruns": true,
+    "model_inference_included": false,
+    "live_host_verified": false
+  }
 }
