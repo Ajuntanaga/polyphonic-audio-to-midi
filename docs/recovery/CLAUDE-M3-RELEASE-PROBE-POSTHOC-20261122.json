@@ -1,0 +1,258 @@
+{
+ "direction": {
+  "adapted_earlier": 13,
+  "adapted_later": 4,
+  "equal": 1,
+  "by_case": {
+   "abrupt": [
+    -34.8,
+    23.2,
+    11.6,
+    -11.6
+   ],
+   "decay_0.05": [
+    69.7,
+    0.0,
+    -23.2,
+    -23.2
+   ],
+   "decay_0.1": [
+    -23.2,
+    -58.0,
+    -69.7,
+    -81.3
+   ],
+   "decay_0.2": [
+    -46.4,
+    -23.2,
+    11.6,
+    -11.6
+   ],
+   "decay_0.4": [
+    -23.2,
+    -23.2
+   ]
+  },
+  "mean_difference_ms": -18.69
+ },
+ "plateau": {
+  "unmodified": {
+   "45": {
+    "frame78": 0.8,
+    "last_frame": 0.345
+   },
+   "52": {
+    "frame78": 0.799,
+    "last_frame": 0.393
+   },
+   "59": {
+    "frame78": 0.792,
+    "last_frame": 0.423
+   },
+   "66": {
+    "frame78": 0.799,
+    "last_frame": 0.425
+   }
+  },
+  "adapted": {
+   "45": {
+    "frame78": 0.989,
+    "last_frame": 0.337
+   },
+   "52": {
+    "frame78": 0.988,
+    "last_frame": 0.47
+   },
+   "59": {
+    "frame78": 0.99,
+    "last_frame": 0.838
+   },
+   "66": {
+    "frame78": 0.993,
+    "last_frame": 0.855
+   }
+  }
+ },
+ "fall": {
+  "unmodified": {
+   "0.05": {
+    "45": {
+     "start_frame": 93,
+     "release_frame": 110,
+     "fall_frames": 17
+    },
+    "52": {
+     "start_frame": 90,
+     "release_frame": 109,
+     "fall_frames": 19
+    },
+    "59": {
+     "start_frame": 88,
+     "release_frame": 109,
+     "fall_frames": 21
+    },
+    "66": {
+     "start_frame": 89,
+     "release_frame": 108,
+     "fall_frames": 19
+    }
+   },
+   "0.1": {
+    "45": {
+     "start_frame": 98,
+     "release_frame": 141,
+     "fall_frames": 43
+    },
+    "52": {
+     "start_frame": 97,
+     "release_frame": 141,
+     "fall_frames": 44
+    },
+    "59": {
+     "start_frame": 98,
+     "release_frame": 140,
+     "fall_frames": 42
+    },
+    "66": {
+     "start_frame": 101,
+     "release_frame": 140,
+     "fall_frames": 39
+    }
+   },
+   "0.2": {
+    "45": {
+     "start_frame": 108,
+     "release_frame": 167,
+     "fall_frames": 59
+    },
+    "52": {
+     "start_frame": 119,
+     "release_frame": 168,
+     "fall_frames": 49
+    },
+    "59": {
+     "start_frame": 121,
+     "release_frame": 170,
+     "fall_frames": 49
+    },
+    "66": {
+     "start_frame": 127,
+     "release_frame": 170,
+     "fall_frames": 43
+    }
+   },
+   "0.4": {
+    "45": {
+     "start_frame": 135,
+     "release_frame": 170,
+     "fall_frames": 35
+    },
+    "52": {
+     "start_frame": 158,
+     "release_frame": 171,
+     "fall_frames": 13
+    },
+    "59": {
+     "start_frame": 163,
+     "release_frame": null,
+     "fall_frames": null
+    },
+    "66": {
+     "start_frame": 159,
+     "release_frame": null,
+     "fall_frames": null
+    }
+   }
+  },
+  "adapted": {
+   "0.05": {
+    "45": {
+     "start_frame": 111,
+     "release_frame": 116,
+     "fall_frames": 5
+    },
+    "52": {
+     "start_frame": 104,
+     "release_frame": 109,
+     "fall_frames": 5
+    },
+    "59": {
+     "start_frame": 100,
+     "release_frame": 107,
+     "fall_frames": 7
+    },
+    "66": {
+     "start_frame": 99,
+     "release_frame": 106,
+     "fall_frames": 7
+    }
+   },
+   "0.1": {
+    "45": {
+     "start_frame": 123,
+     "release_frame": 139,
+     "fall_frames": 16
+    },
+    "52": {
+     "start_frame": 117,
+     "release_frame": 136,
+     "fall_frames": 19
+    },
+    "59": {
+     "start_frame": 120,
+     "release_frame": 134,
+     "fall_frames": 14
+    },
+    "66": {
+     "start_frame": 121,
+     "release_frame": 133,
+     "fall_frames": 12
+    }
+   },
+   "0.2": {
+    "45": {
+     "start_frame": 153,
+     "release_frame": 163,
+     "fall_frames": 10
+    },
+    "52": {
+     "start_frame": 159,
+     "release_frame": 166,
+     "fall_frames": 7
+    },
+    "59": {
+     "start_frame": 164,
+     "release_frame": 171,
+     "fall_frames": 7
+    },
+    "66": {
+     "start_frame": 163,
+     "release_frame": 169,
+     "fall_frames": 6
+    }
+   },
+   "0.4": {
+    "45": {
+     "start_frame": 160,
+     "release_frame": 168,
+     "fall_frames": 8
+    },
+    "52": {
+     "start_frame": 163,
+     "release_frame": 169,
+     "fall_frames": 6
+    },
+    "59": {
+     "start_frame": 169,
+     "release_frame": null,
+     "fall_frames": null
+    },
+    "66": {
+     "start_frame": 169,
+     "release_frame": null,
+     "fall_frames": null
+    }
+   }
+  }
+ }
+}

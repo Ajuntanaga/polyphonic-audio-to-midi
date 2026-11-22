@@ -1,0 +1,632 @@
+{
+  "schema": "m3_basic_pitch_release_probe_v1",
+  "state": "complete",
+  "final": true,
+  "started_at": "2026-11-22T14:16:03.312277+00:00",
+  "source_commit": "101cef2fdb9a36ada7c2e305a5e3de6a138251a9",
+  "worker_commit": "955e5721d726443e509823d5ce8ea3e613e1a186",
+  "run_id": "45031841272",
+  "run_attempt": "1",
+  "specification": {
+    "schema": "m3_basic_pitch_release_probe_spec_v1",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "evidence": {
+      "run_id": 45029161409,
+      "artifact": "m3-basic-pitch-flat-normalization-evidence-45029161409-1"
+    },
+    "models": {
+      "unmodified": {
+        "file": "unmodified.onnx",
+        "sha256": "61a40dc4e49b3518889cb7375a0224ee0835f77ebaf3ac6a67a7c9449be8b77d"
+      },
+      "adapted": {
+        "file": "adapted.onnx",
+        "sha256": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+      }
+    },
+    "signal": {
+      "onset": 4000,
+      "end": 20000,
+      "taper": 110,
+      "steady_rms": 0.05,
+      "harmonics": 6,
+      "pitches": [
+        45,
+        52,
+        59,
+        66
+      ],
+      "taus": [
+        0.05,
+        0.1,
+        0.2,
+        0.4
+      ],
+      "active_frames": [
+        75,
+        78
+      ],
+      "threshold": 0.3,
+      "frames": 172,
+      "samples": 43844,
+      "rate": 22050
+    },
+    "treatments": "docs/recovery/CLAUDE-M3-RELEASE-PROBE-TREATMENTS-20261122.md",
+    "proposal": "docs/recovery/CLAUDE-M3-RELEASE-PROBE-PROPOSAL-20261122.md",
+    "ort_optimizations": "disabled"
+  },
+  "specification_sha256": "2b54f550cf70f091e2739f24b95936391bee1c29d7ddfd6216dea5fbe4242d34",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "live_readiness": "not measured",
+  "environment": {
+    "python": "3.11.18 (main, Oct 26 2026, 02:48:34) [GCC 13.3.0]",
+    "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+    "numpy": "1.26.4",
+    "onnxruntime": "1.20.1"
+  },
+  "model_hashes": {
+    "unmodified": "61a40dc4e49b3518889cb7375a0224ee0835f77ebaf3ac6a67a7c9449be8b77d",
+    "adapted": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+  },
+  "stage": "inference",
+  "measurements": {
+    "unmodified": {
+      "abrupt": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 85,
+          "censored": false,
+          "delay_ms": 79.819,
+          "edge_affected": false,
+          "decoder_off_frame": 87
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 84,
+          "censored": false,
+          "delay_ms": 68.209,
+          "edge_affected": false,
+          "decoder_off_frame": 86
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 82,
+          "censored": false,
+          "delay_ms": 44.989,
+          "edge_affected": false,
+          "decoder_off_frame": 84
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 82,
+          "censored": false,
+          "delay_ms": 44.989,
+          "edge_affected": false,
+          "decoder_off_frame": 84
+        }
+      },
+      "decay_0.05": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 110,
+          "censored": false,
+          "delay_ms": 370.068,
+          "edge_affected": false,
+          "decoder_off_frame": 112,
+          "level_db": -64.287
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 109,
+          "censored": false,
+          "delay_ms": 358.458,
+          "edge_affected": false,
+          "decoder_off_frame": 111,
+          "level_db": -62.271
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 109,
+          "censored": false,
+          "delay_ms": 358.458,
+          "edge_affected": false,
+          "decoder_off_frame": 111,
+          "level_db": -62.271
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 108,
+          "censored": false,
+          "delay_ms": 346.848,
+          "edge_affected": false,
+          "decoder_off_frame": 110,
+          "level_db": -60.254
+        }
+      },
+      "decay_0.1": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 141,
+          "censored": false,
+          "delay_ms": 729.977,
+          "edge_affected": false,
+          "decoder_off_frame": 143,
+          "level_db": -63.405
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 141,
+          "censored": false,
+          "delay_ms": 729.977,
+          "edge_affected": false,
+          "decoder_off_frame": 143,
+          "level_db": -63.405
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 140,
+          "censored": false,
+          "delay_ms": 718.367,
+          "edge_affected": false,
+          "decoder_off_frame": 142,
+          "level_db": -62.397
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 140,
+          "censored": false,
+          "delay_ms": 718.367,
+          "edge_affected": false,
+          "decoder_off_frame": 142,
+          "level_db": -62.397
+        }
+      },
+      "decay_0.2": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 167,
+          "censored": false,
+          "delay_ms": 1031.837,
+          "edge_affected": true,
+          "decoder_off_frame": 169,
+          "level_db": -44.812
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 168,
+          "censored": false,
+          "delay_ms": 1043.447,
+          "edge_affected": true,
+          "decoder_off_frame": 170,
+          "level_db": -45.316
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 170,
+          "censored": false,
+          "delay_ms": 1066.667,
+          "edge_affected": true,
+          "decoder_off_frame": null,
+          "level_db": -46.325
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 170,
+          "censored": false,
+          "delay_ms": 1066.667,
+          "edge_affected": true,
+          "decoder_off_frame": null,
+          "level_db": -46.325
+        }
+      },
+      "decay_0.4": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 170,
+          "censored": false,
+          "delay_ms": 1066.667,
+          "edge_affected": true,
+          "decoder_off_frame": null,
+          "level_db": -23.162
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 171,
+          "censored": false,
+          "delay_ms": 1078.277,
+          "edge_affected": true,
+          "decoder_off_frame": null,
+          "level_db": -23.414
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": null,
+          "censored": true,
+          "delay_ms": 1078.277,
+          "edge_affected": false,
+          "decoder_off_frame": null,
+          "level_db": -23.414
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": null,
+          "censored": true,
+          "delay_ms": 1078.277,
+          "edge_affected": false,
+          "decoder_off_frame": null,
+          "level_db": -23.414
+        }
+      }
+    },
+    "adapted": {
+      "abrupt": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 82,
+          "censored": false,
+          "delay_ms": 44.989,
+          "edge_affected": false,
+          "decoder_off_frame": 84
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 86,
+          "censored": false,
+          "delay_ms": 91.429,
+          "edge_affected": false,
+          "decoder_off_frame": 88
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 83,
+          "censored": false,
+          "delay_ms": 56.599,
+          "edge_affected": false,
+          "decoder_off_frame": 85
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 81,
+          "censored": false,
+          "delay_ms": 33.379,
+          "edge_affected": false,
+          "decoder_off_frame": 83
+        }
+      },
+      "decay_0.05": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 116,
+          "censored": false,
+          "delay_ms": 439.728,
+          "edge_affected": false,
+          "decoder_off_frame": 118,
+          "level_db": -76.389
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 109,
+          "censored": false,
+          "delay_ms": 358.458,
+          "edge_affected": false,
+          "decoder_off_frame": 111,
+          "level_db": -62.271
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 107,
+          "censored": false,
+          "delay_ms": 335.238,
+          "edge_affected": false,
+          "decoder_off_frame": 109,
+          "level_db": -58.237
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 106,
+          "censored": false,
+          "delay_ms": 323.628,
+          "edge_affected": false,
+          "decoder_off_frame": 108,
+          "level_db": -56.22
+        }
+      },
+      "decay_0.1": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 139,
+          "censored": false,
+          "delay_ms": 706.757,
+          "edge_affected": false,
+          "decoder_off_frame": 141,
+          "level_db": -61.388
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 136,
+          "censored": false,
+          "delay_ms": 671.927,
+          "edge_affected": false,
+          "decoder_off_frame": 138,
+          "level_db": -58.363
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 134,
+          "censored": false,
+          "delay_ms": 648.707,
+          "edge_affected": false,
+          "decoder_off_frame": 136,
+          "level_db": -56.346
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 133,
+          "censored": false,
+          "delay_ms": 637.098,
+          "edge_affected": false,
+          "decoder_off_frame": 135,
+          "level_db": -55.338
+        }
+      },
+      "decay_0.2": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 163,
+          "censored": false,
+          "delay_ms": 985.397,
+          "edge_affected": false,
+          "decoder_off_frame": 165,
+          "level_db": -42.795
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 166,
+          "censored": false,
+          "delay_ms": 1020.227,
+          "edge_affected": true,
+          "decoder_off_frame": 168,
+          "level_db": -44.308
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": 171,
+          "censored": false,
+          "delay_ms": 1078.277,
+          "edge_affected": true,
+          "decoder_off_frame": null,
+          "level_db": -46.829
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": 169,
+          "censored": false,
+          "delay_ms": 1055.057,
+          "edge_affected": true,
+          "decoder_off_frame": 171,
+          "level_db": -45.821
+        }
+      },
+      "decay_0.4": {
+        "45": {
+          "midi": 45,
+          "active": true,
+          "release_frame": 168,
+          "censored": false,
+          "delay_ms": 1043.447,
+          "edge_affected": true,
+          "decoder_off_frame": 170,
+          "level_db": -22.658
+        },
+        "52": {
+          "midi": 52,
+          "active": true,
+          "release_frame": 169,
+          "censored": false,
+          "delay_ms": 1055.057,
+          "edge_affected": true,
+          "decoder_off_frame": 171,
+          "level_db": -22.91
+        },
+        "59": {
+          "midi": 59,
+          "active": true,
+          "release_frame": null,
+          "censored": true,
+          "delay_ms": 1078.277,
+          "edge_affected": false,
+          "decoder_off_frame": null,
+          "level_db": -23.414
+        },
+        "66": {
+          "midi": 66,
+          "active": true,
+          "release_frame": null,
+          "censored": true,
+          "delay_ms": 1078.277,
+          "edge_affected": false,
+          "decoder_off_frame": null,
+          "level_db": -23.414
+        }
+      }
+    }
+  },
+  "controls": {
+    "unmodified": {
+      "sustained": {
+        "45": {
+          "active_at_end": true,
+          "note_at_end": 0.34487900137901306
+        },
+        "52": {
+          "active_at_end": true,
+          "note_at_end": 0.39340531826019287
+        },
+        "59": {
+          "active_at_end": true,
+          "note_at_end": 0.4234846830368042
+        },
+        "66": {
+          "active_at_end": true,
+          "note_at_end": 0.4250110387802124
+        }
+      },
+      "silence_note_max": 0.16070738434791565,
+      "silence_onset_max": 0.16868069767951965
+    },
+    "adapted": {
+      "sustained": {
+        "45": {
+          "active_at_end": true,
+          "note_at_end": 0.33702436089515686
+        },
+        "52": {
+          "active_at_end": true,
+          "note_at_end": 0.47035884857177734
+        },
+        "59": {
+          "active_at_end": true,
+          "note_at_end": 0.8384072780609131
+        },
+        "66": {
+          "active_at_end": true,
+          "note_at_end": 0.8554472327232361
+        }
+      },
+      "silence_note_max": 0.025121718645095825,
+      "silence_onset_max": 0.1519903540611267
+    }
+  },
+  "verdicts": {
+    "P0": {
+      "verdict": "miss",
+      "evaluable_pitches": [
+        45,
+        52,
+        59,
+        66
+      ],
+      "by_pitch": {
+        "45": {
+          "difference_ms": -34.83,
+          "both_uncensored": true
+        },
+        "52": {
+          "difference_ms": 23.22,
+          "both_uncensored": true
+        },
+        "59": {
+          "difference_ms": 11.61,
+          "both_uncensored": true
+        },
+        "66": {
+          "difference_ms": -11.61,
+          "both_uncensored": true
+        }
+      }
+    },
+    "P1": {
+      "verdict": "miss",
+      "pitches_counted": 0,
+      "evaluable_pitches": 4,
+      "by_pitch": {
+        "45": {
+          "taus_compared": [
+            0.1,
+            0.2,
+            0.4
+          ],
+          "taus_proven": [],
+          "counts": false
+        },
+        "52": {
+          "taus_compared": [
+            0.1,
+            0.2,
+            0.4
+          ],
+          "taus_proven": [],
+          "counts": false
+        },
+        "59": {
+          "taus_compared": [
+            0.1,
+            0.2,
+            0.4
+          ],
+          "taus_proven": [],
+          "counts": false
+        },
+        "66": {
+          "taus_compared": [
+            0.1,
+            0.2,
+            0.4
+          ],
+          "taus_proven": [],
+          "counts": false
+        }
+      }
+    },
+    "P2": {
+      "verdict": "not_evaluated",
+      "reason": "P1 is not a pass"
+    },
+    "P3": {
+      "verdict": "miss",
+      "level_difference_db_52_minus_59": {
+        "unmodified": {
+          "0.05": 0.0,
+          "0.1": -1.008,
+          "0.2": 1.009
+        },
+        "adapted": {
+          "0.05": -4.034,
+          "0.1": -2.017,
+          "0.2": 2.521
+        }
+      }
+    }
+  },
+  "interpretation": "Synthetic controlled contrast on the corrected original and epoch-2 graphs. Not guitar audio, not a gate, not a fit choice; a tail past a label end can be real ring-out. Predictions P0-P3 are judged exactly as registered.",
+  "finished_at": "2026-11-22T14:16:04.677466+00:00",
+  "elapsed_seconds": 1.364959178999996,
+  "peak_resident_kib": 101592
+}
