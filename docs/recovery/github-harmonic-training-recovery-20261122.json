@@ -1,0 +1,352 @@
+{
+  "schema": 1,
+  "created_at": "2026-11-22T10:27:36.886933+00:00",
+  "updated_at": "2026-11-22T11:32:38.042824+00:00",
+  "state": "completed",
+  "final": true,
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "source_commit": "02948b1123888904ded806d0f957b80c234af55c",
+  "source_pushed": true,
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "worker_branch": "main",
+  "worker_commit": "b06510cd904fca80310f3813dfd60f755f3f3544",
+  "worker_pushed": true,
+  "workflow": "harmonic-training-recovery.yml",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "specification": "docs/recovery/harmonic-spectral-patches-20261122.json",
+  "execution_specification": "docs/recovery/harmonic-training-recovery-20261122.json",
+  "design": "docs/recovery/CODEX-M3-TRAINING-RECOVERY-READY-20261122.md",
+  "prior_run_id": 45006866083,
+  "prior_run_checkpoint_available": false,
+  "protocol": "Same frozen spectral-patch experiment, with exact model/optimizer/RNG checkpoints per completed epoch and a separate bounded execution envelope. No science or gates changed. No automatic redispatch.",
+  "run_id": 45012604509,
+  "stage": "Final report collected: scientific screen rejected; held-out and single-pitch preservation gates fail",
+  "collection_state": "collected_once_digest_verified",
+  "small_artifact_name_template": "m3-harmonic-training-recovery-report-{run_id}-1",
+  "checkpoint_artifact_name_template": "m3-harmonic-training-recovery-checkpoint-{run_id}-1",
+  "bulk_artifact_name_template": "m3-harmonic-training-recovery-evidence-{run_id}-1",
+  "bulk_policy": "Collect small report once with server digest verification; checkpoint and bulk remain remote unless needed for a separately recorded resume.",
+  "validation": {
+    "local_tests_run": 6,
+    "local_tests_passed": 5,
+    "local_model_tests_skipped": 1,
+    "review": "One independent read-only recovery review: no material blocker",
+    "workflow_yaml": "parsed",
+    "github_exact_resume_tests": "passed on GitHub before recorded fit",
+    "local_recorded_audio_model_native_execution": false,
+    "git_diff_check": "passed"
+  },
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "promotion_accepted": false,
+  "next": "No repeat or promotion of this frozen model. Continue the already-running separate pretrained adaptation45016827324; distinguish generalization from training fit. Checkpoint and bulk evidence remain remote.",
+  "specification_sha256": "dde4de4739f7c72945ef6c07c8b838e30914671b33de2fba9dc0f161936e6479",
+  "execution_specification_sha256": "e7f8c89915213bd69f3e3865581d4378d5c10003ad0707e5917130bf581f5ed5",
+  "dispatch_attempted_at": "2026-11-22T10:28:26.872379+00:00",
+  "dispatch_exit_code": 0,
+  "dispatch_output_directory": "build/recovery/harmonic-training-recovery-dispatch-20261122",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45012604509",
+  "output_directory": "build/github-results/harmonic-training-recovery-45012604509",
+  "small_artifact_name": "m3-harmonic-training-recovery-report-45012604509-1",
+  "checkpoint_artifact_name": "m3-harmonic-training-recovery-checkpoint-45012604509-1",
+  "bulk_artifact_name": "m3-harmonic-training-recovery-evidence-45012604509-1",
+  "last_job_observed_at": "2026-11-22T11:30:00.553588+00:00",
+  "job_id": 137178014127,
+  "job_status": "completed",
+  "job_conclusion": "success",
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 45012556135,
+      "headSha": "02948b1123888904ded806d0f957b80c234af55c",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45012556135",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "collection_monitor": {
+    "script": "build/recovery/m3-eight-hour-monitor-20261122.py",
+    "scope": "read-only status and small named report collection once; no bulk or workflow mutations",
+    "first_observation_at": "2026-11-22T11:30:00Z",
+    "interval_seconds": 300
+  },
+  "report_path": "build/github-results/harmonic-training-recovery-45012604509/collected/harmonic-training-recovery-result/report/report.json",
+  "report_sha256": "c366f48f29ab08f3671bc258a0406ae74a8d6a1404a9860d52289501c99eff1e",
+  "collection_receipt": {
+    "observed_at": "2026-11-22T11:30:00.553588+00:00",
+    "run_id": 45012604509,
+    "worker_commit": "b06510cd904fca80310f3813dfd60f755f3f3544",
+    "status": "completed",
+    "conclusion": "success",
+    "collection": "collected_once_digest_verified",
+    "artifact_id": 14752102055,
+    "artifact_name": "m3-harmonic-training-recovery-report-45012604509-1",
+    "archive_bytes": 31403,
+    "sha256": "1f27fcef37d7f85c18d88352681827400ebeab393b534f3e208c0e03314187eb",
+    "archive_path": "build/github-results/harmonic-training-recovery-45012604509/report-archive.raw",
+    "extracted_directory": "build/github-results/harmonic-training-recovery-45012604509/collected"
+  },
+  "result": {
+    "decision": "rejected by single-pitch preservation",
+    "research_screen_passed": false,
+    "representation_feasibility_passed": false,
+    "gates": {
+      "train_complete_chords": true,
+      "train_single_pitch_noninferiority": false,
+      "calibration_complete_chords": false,
+      "test_complete_chords": false
+    },
+    "mixtures": {
+      "train": {
+        "overall": {
+          "examples": 16384,
+          "true_positive": 44729,
+          "false_positive": 451,
+          "false_negative": 969,
+          "precision_percent": 99.00177069499779,
+          "recall_percent": 97.8795570922141,
+          "exact_set_percent": 92.96875
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "examples": 820,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 100.0
+          },
+          "1": {
+            "examples": 3132,
+            "true_positive": 3131,
+            "false_positive": 30,
+            "false_negative": 1,
+            "precision_percent": 99.05093324897184,
+            "recall_percent": 99.96807151979566,
+            "exact_set_percent": 99.04214559386973
+          },
+          "2": {
+            "examples": 3220,
+            "true_positive": 6396,
+            "false_positive": 79,
+            "false_negative": 44,
+            "precision_percent": 98.77992277992279,
+            "recall_percent": 99.3167701863354,
+            "exact_set_percent": 96.45962732919254
+          },
+          "3": {
+            "examples": 3251,
+            "true_positive": 9637,
+            "false_positive": 115,
+            "false_negative": 116,
+            "precision_percent": 98.82075471698113,
+            "recall_percent": 98.8106223726033,
+            "exact_set_percent": 93.57120885881267
+          },
+          "4": {
+            "examples": 3432,
+            "true_positive": 13408,
+            "false_positive": 117,
+            "false_negative": 320,
+            "precision_percent": 99.13493530499076,
+            "recall_percent": 97.66899766899768,
+            "exact_set_percent": 89.45221445221445
+          },
+          "5": {
+            "examples": 2529,
+            "true_positive": 12157,
+            "false_positive": 110,
+            "false_negative": 488,
+            "precision_percent": 99.10328523681422,
+            "recall_percent": 96.1407671016212,
+            "exact_set_percent": 82.72044286279161
+          }
+        },
+        "silence_false_predictions": 0,
+        "representation_gate": true
+      },
+      "calibration": {
+        "overall": {
+          "examples": 4096,
+          "true_positive": 10753,
+          "false_positive": 980,
+          "false_negative": 800,
+          "precision_percent": 91.64748998551096,
+          "recall_percent": 93.07539167315849,
+          "exact_set_percent": 71.4111328125
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "examples": 205,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 100.0
+          },
+          "1": {
+            "examples": 753,
+            "true_positive": 738,
+            "false_positive": 103,
+            "false_negative": 15,
+            "precision_percent": 87.75267538644471,
+            "recall_percent": 98.00796812749005,
+            "exact_set_percent": 89.11022576361222
+          },
+          "2": {
+            "examples": 777,
+            "true_positive": 1514,
+            "false_positive": 154,
+            "false_negative": 40,
+            "precision_percent": 90.7673860911271,
+            "recall_percent": 97.42599742599742,
+            "exact_set_percent": 81.85328185328186
+          },
+          "3": {
+            "examples": 837,
+            "true_positive": 2386,
+            "false_positive": 227,
+            "false_negative": 125,
+            "precision_percent": 91.31266743207041,
+            "recall_percent": 95.02190362405416,
+            "exact_set_percent": 70.96774193548387
+          },
+          "4": {
+            "examples": 885,
+            "true_positive": 3255,
+            "false_positive": 255,
+            "false_negative": 285,
+            "precision_percent": 92.73504273504274,
+            "recall_percent": 91.94915254237289,
+            "exact_set_percent": 60.790960451977405
+          },
+          "5": {
+            "examples": 639,
+            "true_positive": 2860,
+            "false_positive": 241,
+            "false_negative": 335,
+            "precision_percent": 92.22831344727507,
+            "recall_percent": 89.51486697965571,
+            "exact_set_percent": 43.97496087636933
+          }
+        },
+        "silence_false_predictions": 0,
+        "representation_gate": false
+      },
+      "test": {
+        "overall": {
+          "examples": 4096,
+          "true_positive": 8201,
+          "false_positive": 3245,
+          "false_negative": 2251,
+          "precision_percent": 71.64948453608247,
+          "recall_percent": 78.46345197091466,
+          "exact_set_percent": 40.625
+        },
+        "by_distinct_pitch_count": {
+          "0": {
+            "examples": 205,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 100.0
+          },
+          "1": {
+            "examples": 869,
+            "true_positive": 745,
+            "false_positive": 420,
+            "false_negative": 124,
+            "precision_percent": 63.94849785407725,
+            "recall_percent": 85.7307249712313,
+            "exact_set_percent": 65.59263521288837
+          },
+          "2": {
+            "examples": 950,
+            "true_positive": 1587,
+            "false_positive": 716,
+            "false_negative": 313,
+            "precision_percent": 68.91011723838471,
+            "recall_percent": 83.52631578947368,
+            "exact_set_percent": 43.78947368421053
+          },
+          "3": {
+            "examples": 932,
+            "true_positive": 2232,
+            "false_positive": 925,
+            "false_negative": 564,
+            "precision_percent": 70.70003167564143,
+            "recall_percent": 79.8283261802575,
+            "exact_set_percent": 30.5793991416309
+          },
+          "4": {
+            "examples": 813,
+            "true_positive": 2484,
+            "false_positive": 828,
+            "false_negative": 768,
+            "precision_percent": 75.0,
+            "recall_percent": 76.38376383763837,
+            "exact_set_percent": 19.06519065190652
+          },
+          "5": {
+            "examples": 327,
+            "true_positive": 1153,
+            "false_positive": 356,
+            "false_negative": 482,
+            "precision_percent": 76.40821736249171,
+            "recall_percent": 70.51987767584097,
+            "exact_set_percent": 10.091743119266056
+          }
+        },
+        "silence_false_predictions": 0,
+        "representation_gate": false
+      }
+    },
+    "single_pitch_preservation": {
+      "baseline": {
+        "run_id": 44965135706,
+        "examples": 3132,
+        "exact_sets": 3115,
+        "false_positive": 13,
+        "false_negative": 5
+      },
+      "current": {
+        "examples": 3132,
+        "exact_sets": 3102,
+        "false_positive": 30,
+        "false_negative": 1
+      },
+      "passed": false,
+      "scope": "Unaugmented setwise training singleton non-inferiority; held-out and continuous gates still required"
+    },
+    "continuous_replay": {
+      "executed": false,
+      "reason": "Training, both held-out complete-chord gates and any recorded preservation gate must pass first."
+    },
+    "fit_epochs": 80,
+    "fit_seconds": 3277.7626035969997,
+    "cutoff_fit": {
+      "cutoff": 0.5963748693466187,
+      "feasible": true,
+      "true_positive": 44729,
+      "false_positive": 451,
+      "training_only": true,
+      "selection": "maximum train TP at >=99% precision; stricter tie"
+    },
+    "source_roles": {
+      "counts": {
+        "train": 200,
+        "calibration": 200,
+        "test": 155
+      },
+      "cross_role_original_overlap": false,
+      "all_original_labels_retained": true,
+      "source_consistency_metadata_used_to_filter": false,
+      "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+    }
+  }
+}

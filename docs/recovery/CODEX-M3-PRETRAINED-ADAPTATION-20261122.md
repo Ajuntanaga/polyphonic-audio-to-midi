@@ -39,3 +39,5 @@ Primary upstream sources, all at fa5997af0a8210982619003269994a1be25eddf3:
 - https://github.com/spotify/basic-pitch/blob/fa5997af0a8210982619003269994a1be25eddf3/basic_pitch/models.py
 - https://github.com/spotify/basic-pitch/blob/fa5997af0a8210982619003269994a1be25eddf3/basic_pitch/train.py
 - https://github.com/spotify/basic-pitch/blob/fa5997af0a8210982619003269994a1be25eddf3/basic_pitch/inference.py
+
+Dispatched once at10:58UTC: GitHub45014937419; source c1229ab98a5fae9e538f845b57da978ebbe4b5a8, worker ec89b6df8693af4294203948abcb3c5a3bbe4c7e. Final/success, small report collected once and server digest verified. Gradient/update and exact restoration pass. TF/ONNX parity fails (largest onset difference0.04916 on synthetic silence); no tracking result or recordings in that feasibility job. See CODEX-M3-TRAINABILITY-RESULT-20261122.md. The separately frozen, already-running adaptation45016827324 therefore compares unchanged TF with adapted TF rather than treating a backend change as a gain.
