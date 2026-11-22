@@ -1,17 +1,17 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T00:22:54.439116+00:00",
-  "updated_at": "2026-11-22T00:25:13.589476+00:00",
+  "updated_at": "2026-11-22T00:35:02.097639+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "81fbfd6bfde2e3b20e6b7e8e188686ad789d1a4e",
-  "source_commit": null,
+  "source_commit": "7481905c4b38bad52770c59c7b9c0fdb3eca75a0",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_base_commit": "9cff32047cf26c6abe227db3f27b992d7a680abc",
-  "worker_commit": null,
+  "worker_commit": "99e7422982c1394977977bf73ccb8dfb7e40367d",
   "workflow": "harmonic-source-variation.yml",
   "specification": "docs/recovery/harmonic-source-variation-20261121.json",
   "specification_sha256": "c0b321745674a6ebf54e98056b5c4468fef55c64b1ffdc21d8666f7ab2749bb0",
@@ -41,13 +41,13 @@
     "decoded_sha256": "1ea90f1e190e889d59574d58683d72889b4725e8b26e5bf47b246274b07597f7",
     "encoding": "SHA256 of decompressed compact JSON bytes; metadata-only generation before recorded execution"
   },
-  "run_id": null,
-  "stage": "Synthetic validation and focused review complete; ready for one CPU dispatch",
+  "run_id": 44966587324,
+  "stage": "final: rejected at both source-disjoint held-out gates",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Collect small report once with server digest verified; model and predictions remain remote.",
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once; server digest and byte count verified; bulk remains remote",
   "validation": {
     "local_checks": {
       "tests_ran": 72,
@@ -67,7 +67,506 @@
       "identity": 23434,
       "nonidentity": 23571,
       "original_and_varied_hashes_verified": true
+    },
+    "github_checks": {
+      "tests_ran": 72,
+      "passed": 72,
+      "skipped": 0,
+      "elapsed_seconds": 6.411,
+      "log": "build/github-results/harmonic-source-variation-44966587324/artifact/harmonic-source-variation-logs/tests.log",
+      "scope": "synthetic implementation checks; not native audio timing or external MIDI delivery"
     }
   },
-  "next": "Commit and push the scoped source and worker changes, dispatch one harmonic-source-variation CPU job, collect its small report once; preserve all gates and installed output."
+  "next": "Use retained predictions and mixture metadata to separate held-out errors already present in single-note examples from mixture-specific losses before choosing a distinct transfer design. Preserve every source, role, cutoff and rejection; no refit or new job queued.",
+  "pushed_at": "2026-11-22T00:25:51.979762+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44966587324",
+  "last_observed_at": "2026-11-22T00:30:14.237631+00:00",
+  "output_directory": "build/github-results/harmonic-source-variation-44966587324",
+  "report_artifact": "m3-harmonic-source-variation-report-44966587324-1",
+  "evidence_artifact": "m3-harmonic-source-variation-evidence-44966587324-1",
+  "source_ci_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 44966574518,
+      "headSha": "7481905c4b38bad52770c59c7b9c0fdb3eca75a0",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44966574518"
+    }
+  ],
+  "workflow_conclusion": "success",
+  "result": "docs/recovery/CODEX-M3-HARMONIC-SOURCE-VARIATION-RESULT-20261121.md",
+  "report": "build/github-results/harmonic-source-variation-44966587324/artifact/harmonic-source-variation-result/report/report.json",
+  "report_sha256": "05ecd04c986395620b9635814eed3f41ea73462730d68c2a25511dfe92d65971",
+  "collection_receipt": "build/github-results/harmonic-source-variation-44966587324/collection-receipt.json",
+  "collection": {
+    "collected_at": "2026-11-22T00:31:59.757638+00:00",
+    "run_id": 44966587324,
+    "source_commit": "7481905c4b38bad52770c59c7b9c0fdb3eca75a0",
+    "worker_commit": "99e7422982c1394977977bf73ccb8dfb7e40367d",
+    "artifact": {
+      "id": 14731238625,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczMTIzODYyNQ==",
+      "name": "m3-harmonic-source-variation-report-44966587324-1",
+      "size_in_bytes": 26294,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731238625",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731238625/zip",
+      "expired": false,
+      "digest": "sha256:6aa02a247975b93a8de09394eeeae10854a8e0c53f2dc6c042e1284f457f8358",
+      "created_at": "2026-11-22T00:29:36Z",
+      "updated_at": "2026-11-22T00:29:36Z",
+      "expires_at": "2026-12-06T00:29:34Z",
+      "workflow_run": {
+        "id": 44966587324,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "99e7422982c1394977977bf73ccb8dfb7e40367d"
+      }
+    },
+    "archive_path": "build/github-results/harmonic-source-variation-44966587324/report.zip",
+    "archive_bytes": 26294,
+    "archive_sha256": "6aa02a247975b93a8de09394eeeae10854a8e0c53f2dc6c042e1284f457f8358",
+    "server_digest_verified": true,
+    "report_path": "build/github-results/harmonic-source-variation-44966587324/artifact/harmonic-source-variation-result/report/report.json",
+    "report_sha256": "05ecd04c986395620b9635814eed3f41ea73462730d68c2a25511dfe92d65971",
+    "bulk_artifact_retained_remote": 14731592882,
+    "extracted_files": [
+      "harmonic-source-variation-result/report/report.json",
+      "harmonic-source-variation-result/logs/corpus-20261108.stderr",
+      "harmonic-source-variation-result/logs/corpus-20261108.stdout",
+      "harmonic-source-variation-result/logs/mixture-component-20261120.stderr",
+      "harmonic-source-variation-result/logs/mixture-component-20261120.stdout",
+      "harmonic-source-variation-result/logs/octave-parent-inputs-20261120.stderr",
+      "harmonic-source-variation-result/logs/octave-parent-inputs-20261120.stdout",
+      "harmonic-source-variation-result/logs/runtime-profile-multipitch-20261120.stderr",
+      "harmonic-source-variation-result/logs/runtime-profile-multipitch-20261120.stdout",
+      "harmonic-source-variation-logs/dependencies.log",
+      "harmonic-source-variation-logs/environment.txt",
+      "harmonic-source-variation-logs/screen.log",
+      "harmonic-source-variation-logs/source-sha.txt",
+      "harmonic-source-variation-logs/tests.log",
+      "harmonic-source-variation-logs/torch-dependencies.log"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 14731592882,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczMTU5Mjg4Mg==",
+      "name": "m3-harmonic-source-variation-evidence-44966587324-1",
+      "size_in_bytes": 8013695,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731592882",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731592882/zip",
+      "expired": false,
+      "digest": "sha256:cccd31450089b1ac3e49cc0c390144123e9311ab4ff99540285695fefa6d6db5",
+      "created_at": "2026-11-22T00:29:38Z",
+      "updated_at": "2026-11-22T00:29:38Z",
+      "expires_at": "2026-12-06T00:29:36Z",
+      "workflow_run": {
+        "id": 44966587324,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "99e7422982c1394977977bf73ccb8dfb7e40367d"
+      }
+    },
+    {
+      "id": 14731238625,
+      "node_id": "MDg6QXJ0aWZhY3QxNDczMTIzODYyNQ==",
+      "name": "m3-harmonic-source-variation-report-44966587324-1",
+      "size_in_bytes": 26294,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731238625",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14731238625/zip",
+      "expired": false,
+      "digest": "sha256:6aa02a247975b93a8de09394eeeae10854a8e0c53f2dc6c042e1284f457f8358",
+      "created_at": "2026-11-22T00:29:36Z",
+      "updated_at": "2026-11-22T00:29:36Z",
+      "expires_at": "2026-12-06T00:29:34Z",
+      "workflow_run": {
+        "id": 44966587324,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "99e7422982c1394977977bf73ccb8dfb7e40367d"
+      }
+    }
+  ],
+  "research_screen_passed": false,
+  "decision": "rejected at source-disjoint held-out gates",
+  "gates": {
+    "train_complete_chords": true,
+    "calibration_complete_chords": false,
+    "test_complete_chords": false
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "measurements": {
+    "train": {
+      "overall": {
+        "examples": 16384,
+        "true_positive": 43798,
+        "false_positive": 442,
+        "false_negative": 1900,
+        "precision_percent": 99.000904159132,
+        "recall_percent": 95.84226880826294,
+        "exact_set_percent": 88.75732421875,
+        "exact_sets": 14542
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 820,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 820
+        },
+        "1": {
+          "examples": 3132,
+          "true_positive": 3128,
+          "false_positive": 17,
+          "false_negative": 4,
+          "precision_percent": 99.45945945945945,
+          "recall_percent": 99.87228607918263,
+          "exact_set_percent": 99.3933588761175,
+          "exact_sets": 3113
+        },
+        "2": {
+          "examples": 3220,
+          "true_positive": 6350,
+          "false_positive": 53,
+          "false_negative": 90,
+          "precision_percent": 99.17226300171795,
+          "recall_percent": 98.6024844720497,
+          "exact_set_percent": 95.80745341614907,
+          "exact_sets": 3085
+        },
+        "3": {
+          "examples": 3251,
+          "true_positive": 9495,
+          "false_positive": 108,
+          "false_negative": 258,
+          "precision_percent": 98.87535145267104,
+          "recall_percent": 97.3546601045832,
+          "exact_set_percent": 90.495232236235,
+          "exact_sets": 2942
+        },
+        "4": {
+          "examples": 3432,
+          "true_positive": 13088,
+          "false_positive": 123,
+          "false_negative": 640,
+          "precision_percent": 99.06895768677617,
+          "recall_percent": 95.33799533799534,
+          "exact_set_percent": 81.67249417249417,
+          "exact_sets": 2803
+        },
+        "5": {
+          "examples": 2529,
+          "true_positive": 11737,
+          "false_positive": 141,
+          "false_negative": 908,
+          "precision_percent": 98.81293146994443,
+          "recall_percent": 92.81929616449189,
+          "exact_set_percent": 70.34400948991696,
+          "exact_sets": 1779
+        }
+      },
+      "five_pitch_gate": {
+        "current": 1779,
+        "total": 2529,
+        "target_count": 1771,
+        "target_percent": 70,
+        "current_divided_by_target_percent": 100.45172219085262,
+        "signed_gap_sets": -8,
+        "signed_gap_percentage_points": -0.34400948991695657
+      },
+      "baseline_overall": {
+        "examples": 16384,
+        "true_positive": 43827,
+        "false_positive": 439,
+        "false_negative": 1871,
+        "precision_percent": 99.00826819681019,
+        "recall_percent": 95.9057289159263,
+        "exact_set_percent": 89.093017578125,
+        "exact_sets": 14597
+      },
+      "baseline_five_pitch": {
+        "examples": 2529,
+        "true_positive": 11755,
+        "false_positive": 131,
+        "false_negative": 890,
+        "precision_percent": 98.89786303213864,
+        "recall_percent": 92.9616449189403,
+        "exact_set_percent": 71.88612099644128,
+        "exact_sets": 1818
+      }
+    },
+    "calibration": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 10664,
+        "false_positive": 730,
+        "false_negative": 889,
+        "precision_percent": 93.59311918553625,
+        "recall_percent": 92.30502899679738,
+        "exact_set_percent": 72.412109375,
+        "exact_sets": 2966
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 205
+        },
+        "1": {
+          "examples": 753,
+          "true_positive": 742,
+          "false_positive": 55,
+          "false_negative": 11,
+          "precision_percent": 93.09912170639899,
+          "recall_percent": 98.53917662682603,
+          "exact_set_percent": 92.69588313413014,
+          "exact_sets": 698
+        },
+        "2": {
+          "examples": 777,
+          "true_positive": 1503,
+          "false_positive": 110,
+          "false_negative": 51,
+          "precision_percent": 93.18040917544947,
+          "recall_percent": 96.71814671814671,
+          "exact_set_percent": 83.78378378378379,
+          "exact_sets": 651
+        },
+        "3": {
+          "examples": 837,
+          "true_positive": 2374,
+          "false_positive": 171,
+          "false_negative": 137,
+          "precision_percent": 93.28094302554028,
+          "recall_percent": 94.54400637196336,
+          "exact_set_percent": 73.95459976105137,
+          "exact_sets": 619
+        },
+        "4": {
+          "examples": 885,
+          "true_positive": 3240,
+          "false_positive": 201,
+          "false_negative": 300,
+          "precision_percent": 94.15867480383609,
+          "recall_percent": 91.52542372881356,
+          "exact_set_percent": 59.2090395480226,
+          "exact_sets": 524
+        },
+        "5": {
+          "examples": 639,
+          "true_positive": 2805,
+          "false_positive": 193,
+          "false_negative": 390,
+          "precision_percent": 93.56237491661108,
+          "recall_percent": 87.79342723004694,
+          "exact_set_percent": 42.09702660406886,
+          "exact_sets": 269
+        }
+      },
+      "five_pitch_gate": {
+        "current": 269,
+        "total": 639,
+        "target_count": 448,
+        "target_percent": 70,
+        "current_divided_by_target_percent": 60.044642857142854,
+        "signed_gap_sets": 179,
+        "signed_gap_percentage_points": 27.90297339593114
+      },
+      "baseline_overall": {
+        "examples": 4096,
+        "true_positive": 10673,
+        "false_positive": 687,
+        "false_negative": 880,
+        "precision_percent": 93.9524647887324,
+        "recall_percent": 92.38293084047433,
+        "exact_set_percent": 73.1689453125,
+        "exact_sets": 2997
+      },
+      "baseline_five_pitch": {
+        "examples": 639,
+        "true_positive": 2808,
+        "false_positive": 162,
+        "false_negative": 387,
+        "precision_percent": 94.54545454545455,
+        "recall_percent": 87.88732394366197,
+        "exact_set_percent": 44.28794992175274,
+        "exact_sets": 283
+      }
+    },
+    "test": {
+      "overall": {
+        "examples": 4096,
+        "true_positive": 7994,
+        "false_positive": 2656,
+        "false_negative": 2458,
+        "precision_percent": 75.06103286384976,
+        "recall_percent": 76.48296976655186,
+        "exact_set_percent": 42.87109375,
+        "exact_sets": 1756
+      },
+      "by_distinct_pitch_count": {
+        "0": {
+          "examples": 205,
+          "true_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "precision_percent": 0.0,
+          "recall_percent": null,
+          "exact_set_percent": 100.0,
+          "exact_sets": 205
+        },
+        "1": {
+          "examples": 869,
+          "true_positive": 743,
+          "false_positive": 357,
+          "false_negative": 126,
+          "precision_percent": 67.54545454545455,
+          "recall_percent": 85.5005753739931,
+          "exact_set_percent": 69.27502876869966,
+          "exact_sets": 602
+        },
+        "2": {
+          "examples": 950,
+          "true_positive": 1556,
+          "false_positive": 576,
+          "false_negative": 344,
+          "precision_percent": 72.98311444652909,
+          "recall_percent": 81.89473684210526,
+          "exact_set_percent": 47.578947368421055,
+          "exact_sets": 452
+        },
+        "3": {
+          "examples": 932,
+          "true_positive": 2202,
+          "false_positive": 725,
+          "false_negative": 594,
+          "precision_percent": 75.23061154765972,
+          "recall_percent": 78.75536480686695,
+          "exact_set_percent": 34.227467811158796,
+          "exact_sets": 319
+        },
+        "4": {
+          "examples": 813,
+          "true_positive": 2395,
+          "false_positive": 700,
+          "false_negative": 857,
+          "precision_percent": 77.38287560581583,
+          "recall_percent": 73.6469864698647,
+          "exact_set_percent": 18.942189421894216,
+          "exact_sets": 154
+        },
+        "5": {
+          "examples": 327,
+          "true_positive": 1098,
+          "false_positive": 298,
+          "false_negative": 537,
+          "precision_percent": 78.65329512893983,
+          "recall_percent": 67.1559633027523,
+          "exact_set_percent": 7.339449541284404,
+          "exact_sets": 24
+        }
+      },
+      "five_pitch_gate": {
+        "current": 24,
+        "total": 327,
+        "target_count": 229,
+        "target_percent": 70,
+        "current_divided_by_target_percent": 10.480349344978166,
+        "signed_gap_sets": 205,
+        "signed_gap_percentage_points": 62.6605504587156
+      },
+      "baseline_overall": {
+        "examples": 4096,
+        "true_positive": 8000,
+        "false_positive": 2705,
+        "false_negative": 2452,
+        "precision_percent": 74.73143390938813,
+        "recall_percent": 76.54037504783773,
+        "exact_set_percent": 42.7001953125,
+        "exact_sets": 1749
+      },
+      "baseline_five_pitch": {
+        "examples": 327,
+        "true_positive": 1111,
+        "false_positive": 312,
+        "false_negative": 524,
+        "precision_percent": 78.0744905130007,
+        "recall_percent": 67.95107033639144,
+        "exact_set_percent": 8.256880733944955,
+        "exact_sets": 27
+      }
+    }
+  },
+  "source_roles": {
+    "counts": {
+      "train": 200,
+      "calibration": 200,
+      "test": 155
+    },
+    "cross_role_original_overlap": false,
+    "all_original_labels_retained": true,
+    "source_consistency_metadata_used_to_filter": false,
+    "held_out_unit": "Recording pass/source excerpt; protocol, instrument and session are not independent"
+  },
+  "training_source_variation": {
+    "parameters": {
+      "name": "component_shelf_v1",
+      "seed": 20261124,
+      "identity_probability": 0.5,
+      "gain_db_min": -6.0,
+      "gain_db_max": 6.0,
+      "corner_hz": 1000.0,
+      "filter": "g*x + (1-g)*one_pole_lowpass(x); pole=exp(-2*pi*corner/sample_rate); steady initial state",
+      "placement": "after crop, before component RMS normalization",
+      "cutoff_and_training_gates": "original unaugmented training plan",
+      "held_out": "unchanged, never augmented"
+    },
+    "plan_file": "train-varied-mixture-plan.json.gz",
+    "decoded_sha256": "1ea90f1e190e889d59574d58683d72889b4725e8b26e5bf47b246274b07597f7",
+    "components": 47005,
+    "identity_components": 23434,
+    "varied_components": 23571,
+    "gain_db_min": -5.999621495202776,
+    "gain_db_max": 5.9994447945420895,
+    "fitting": "varied training features only",
+    "cutoff_and_gates": "original clean training plan",
+    "held_out_augmented": false
+  },
+  "frozen_model": {
+    "sha256": "bf9a974f1cd6d2e6bb8461044a114e45017661a7276f5b9d759072c8da8b4dec",
+    "cutoff": 0.586877167224884,
+    "persisted_before_held_out_scoring": true,
+    "training_fits": 1
+  },
+  "limits": [
+    "All 555 intended-label excerpts retained, including known unresolved source-content disagreements.",
+    "Pass1 ascending, pass2 descending, pass3 checkpoint protocols differ; not a pure take-only generalization test.",
+    "Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.",
+    "RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.",
+    "Joint-context binary outputs still do not enforce a valid complete chord or string assignment.",
+    "Training envelopes vary on the same 200 sources; this supplies no independent recording content.",
+    "Held-out roles are source-disjoint development checks already used in previous experiments, not a fresh final benchmark.",
+    "Zero padding and finite FFT resolution break exact pitch-shift equivariance.",
+    "The longer trailing context spans 170.67ms; measured callback cost is not pluck-to-MIDI latency.",
+    "Ordinary reuses source takes and is descriptive; no delivered-MIDI, native realtime or live-device proof.",
+    "One configuration and train-only cutoff; no held-out tuning, promotion or installed change."
+  ],
+  "live_readiness": "not verified by this experiment",
+  "new_job_queued": false
 }

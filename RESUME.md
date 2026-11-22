@@ -1,8 +1,10 @@
-## Training-source variation frozen: ready for one CPU screen
+## Training-source variation final: held-out transfer rejected
 
-Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; design: `docs/recovery/CODEX-M3-HARMONIC-SOURCE-VARIATION-PLAN-20261121.md`. One fixed training-only component shelf variation tests transfer beyond pass-1 harmonic envelopes. The original mixture plan/crops/gains, all 555 labels, 200/200/155 roles, model, setwise objective and acceptance gates remain fixed. Augmented features fit normalization and weights; original clean training examples select the cutoff and gates; held-out examples never change. This is development evidence, not a fresh final benchmark.
+Active checkpoint: `docs/recovery/github-harmonic-source-variation-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-SOURCE-VARIATION-RESULT-20261121.md`. CPU run44966587324 final/success, source `7481905c4b38bad52770c59c7b9c0fdb3eca75a0`, worker `99e7422982c1394977977bf73ccb8dfb7e40367d`. Source CI44966574518 and all72 GitHub synthetic checks passed. Small report collected once and server-digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
 
-Local synthetic checks: 72 ran, 57 passed, 15 dependency checks deferred to GitHub; no recorded audio/model execution. Focused review found one workflow specification-path typo, now corrected and directly checked. Both training plan hashes are pinned. Standing CPU authorization applies; one source/worker commit and dispatch next. Installed/default output and scoreboard remain unchanged. Claude is paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+One fixed training-only shelf variation does not fix transfer. Training five-pitch exact1818->1779/2529 (71.89->70.34%), TARGET1771, headroom8. Held-out calibration283->269/639 (44.29->42.10%); test27->24/327 (8.26->7.34%). Both held-out gates fail; screen REJECTED and continuous replay skipped. Calibration extras687->730; test extras2705->2656 with true pitches8000->7994. These are sustained sampled pitch-set counts, not installed frame/string gains. All555 labels, original roles, installed/default output and scoreboard unchanged.
+
+Next: separate held-out single-note transfer errors from mixture-specific losses using retained predictions/metadata before a distinct design. No refit, cutoff retune, exclusions or new job queued. Claude is paused; no fresh review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
 
 ## Setwise objective final: training passed, held-out transfer rejected
 
