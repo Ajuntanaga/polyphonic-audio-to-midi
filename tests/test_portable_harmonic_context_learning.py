@@ -34,7 +34,7 @@ class PortableContextTests(unittest.TestCase):
             def activity(self, features):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'transpose', 'contrast'))
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'transpose', 'contrast', 'level'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
             with self.subTest(gates=sequence, loss=params['loss'], mode=mode), tempfile.TemporaryDirectory() as directory:
@@ -60,6 +60,8 @@ class PortableContextTests(unittest.TestCase):
                     spec_data['transposed_plan_identity'] = dict(decoded_sha256='synthetic-transposed-plan')
                 if mode == 'contrast':
                     spec_data['harmonic_peak_contrast'] = runner.CONTRAST
+                if mode == 'level':
+                    spec_data['harmonic_level_suppression'] = runner.SUPPRESSION
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
@@ -109,6 +111,13 @@ class PortableContextTests(unittest.TestCase):
                     self.assertEqual(result['features']['per_candidate'], 106)
                     self.assertEqual(set(result['contrast_diagnostics']),
                                      {'train', 'calibration', 'test'} if len(sequence) == 3 else {'train'})
+                if mode == 'level':
+                    self.assertEqual(result['schema'], 'm3_harmonic_level_suppression_v1')
+                    self.assertEqual(result['features']['per_candidate'], 62)
+                    self.assertTrue(all(isinstance(c.args[3], runner.HarmonicLevelBlindFeatures)
+                                        for c in examples.call_args_list))
+                    self.assertTrue(all(isinstance(c.args[4], runner.HarmonicLevelBlindFeatures)
+                                        for c in replay.call_args_list))
                 if params != runner.MODEL_PARAMS:
                     self.assertTrue(result['training_plan_identity']['verified'])
                 self.assertEqual(examples.call_count, len(sequence))

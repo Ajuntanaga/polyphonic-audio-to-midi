@@ -24,6 +24,7 @@ from tools.pitch_detector_comparison import digest
 from tools.harmonic_source_variation import VARIATION, variation_examples
 from tools.harmonic_pitch_transposition import TRANSPOSITION, transposition_examples
 from tools.harmonic_peak_contrast import CONTRAST, HarmonicContrastFeatures, contrast_summary
+from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeatures
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -97,6 +98,7 @@ def save_model(path, model, extractor, model_params=None):
         coordinate_names=extractor.coordinate_names, settings=SETTINGS,
         feature_parameters=PARAMETERS, feature_count=len(extractor.coordinate_names),
         contrast_parameters=getattr(extractor, 'contrast_parameters', None),
+        suppression_parameters=getattr(extractor, 'suppression_parameters', None),
         model_parameters=MODEL_PARAMS if model_params is None else model_params), path)
 
 
@@ -128,8 +130,12 @@ def run(spec_path, output):
         variation = spec.get('training_source_variation')
         transposition = spec.get('training_pitch_transposition')
         contrast = spec.get('harmonic_peak_contrast')
-        if sum(value is not None for value in (variation, transposition, contrast)) > 1:
+        suppression = spec.get('harmonic_level_suppression')
+        if sum(value is not None for value in (variation, transposition, contrast, suppression)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if suppression is not None:
+            require_identity(suppression, SUPPRESSION, 'fixed absolute-level suppression')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         if contrast is not None:
             require_identity(contrast, CONTRAST, 'fixed trailing harmonic peak contrast')
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
@@ -152,6 +158,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_pitch_transposition_v1'
         if contrast is not None:
             report['schema'] = 'm3_harmonic_peak_contrast_v1'
+        if suppression is not None:
+            report['schema'] = 'm3_harmonic_level_suppression_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -171,14 +179,16 @@ def run(spec_path, output):
         report['inputs'] = [fetch_release(spec['worker_repository'], pin, folders['cache'],
             folders['inputs'], folders['logs']) for pin in spec['input_releases']]
         waves = source_waves(references['sources'], folders['inputs'])
-        extractor = HarmonicContrastFeatures() if contrast is not None else HarmonicFeatures()
+        extractor = (HarmonicLevelBlindFeatures() if suppression is not None else
+                     HarmonicContrastFeatures() if contrast is not None else HarmonicFeatures())
         report['features'] = dict(coordinate_names=extractor.coordinate_names,
             per_candidate=len(extractor.coordinate_names), candidate_count=NOTE_COUNT,
             flatten_order='mixture, candidate MIDI32..84, shared coordinate',
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction=('Original 62 coordinates plus 44 peak-contrast coordinates; input layer gains 1408 parameters, no augmentation.' if contrast is not None else
+            distinction=('Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
+                'Original 62 coordinates plus 44 peak-contrast coordinates; input layer gains 1408 parameters, no augmentation.' if contrast is not None else
                 'Clean training plus transposed companions; same epochs, twice the optimizer steps.' if transposition is not None else
                 'Only training component envelopes change versus the setwise model.' if variation is not None else
                 'Only the training objective changes versus the frozen context baseline.' if loss_only else
@@ -276,7 +286,8 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Peak contrast is learned evidence, with no hard harmonicity rejection; vibrato, inharmonicity and overlapping peaks can weaken it. Input capacity also increases.' if contrast is not None else
+                ('Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
+                 'Peak contrast is learned evidence, with no hard harmonicity rejection; vibrato, inharmonicity and overlapping peaks can weaken it. Input capacity also increases.' if contrast is not None else
                  'Training transposition shifts spectrum/formants and duration, using the same 200 sources; twice the optimizer steps confounds attribution. No independent recording content.' if transposition is not None else
                  'Training envelopes vary on the same 200 sources; this supplies no independent recording content.' if variation is not None else
                  'Only the training objective changes versus the frozen context baseline; one seed/configuration is not a general result.' if loss_only else

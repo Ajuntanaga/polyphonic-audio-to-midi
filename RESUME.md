@@ -1,3 +1,9 @@
+## Harmonic level suppression: prepared bounded CPU screen
+
+Active checkpoint: `docs/recovery/github-harmonic-level-suppression-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-LEVEL-SUPPRESSION-PLAN-20261121.md`. One new default-off research screen tests whether the two absolute RMS inputs harm source transfer. Both slots become zero in every role; the other 60 features, all 62 input slots, network initialization, training plan, source roles, setwise loss and gates stay fixed. No augmentation or new silence gate. Training must pass before held-out scoring; both held-out roles must pass before continuous replay.
+
+Local synthetic checks: 16 passed, 5 Torch-dependent checks deferred to GitHub; one focused static review found no blockers. GitHub must execute all 92 checks before its one fit. Source and worker commits/run ID will be recorded in the active checkpoint. No dispatch has occurred at this checkpoint. All 555 labels/roles, installed/default output and scoreboard remain unchanged. Numeric floors retain some level dependence; extra quiet/noise outputs are a named rejection risk. Claude remains paused; no fresh Claude review claimed. Broader live-readiness goal stays active. Earlier entries below are historical.
+
 ## Harmonic peak contrast final: training gain, held-out safety rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-peak-contrast-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-PEAK-CONTRAST-RESULT-20261121.md`. CPU run 44971653845 is final/success, source `5cf22b108649b43493ab5b360847104d27d3115e`, worker `d1413dfc4f988f42ed676a96e9a9b88f310097e7`. All 87 GitHub checks and source CI 44971615865 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.
