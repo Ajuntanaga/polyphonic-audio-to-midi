@@ -1,0 +1,1178 @@
+{
+ "D220": {
+  "arm A": {
+   "summary": {
+    "labels_losing": 6,
+    "median_loss_ms": 20.09,
+    "max_loss_ms": 151.99,
+    "median_share": 0.0376,
+    "over_5_10_25_50": [
+     3,
+     2,
+     1,
+     1
+    ]
+   },
+   "losers": [
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 3.32,
+     "lost_share": 0.007,
+     "longest_lost_ms": 3.32,
+     "longest_lost_share": 0.007
+    },
+    {
+     "label": 229,
+     "pitch": 42,
+     "current_present_ms": 190.7,
+     "lost_ms": 151.99,
+     "lost_share": 0.7971,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    }
+   ]
+  },
+  "unchanged TF (available_ns)": {
+   "summary": {
+    "labels_losing": 6,
+    "median_loss_ms": 20.09,
+    "max_loss_ms": 151.99,
+    "median_share": 0.0376,
+    "over_5_10_25_50": [
+     3,
+     2,
+     1,
+     1
+    ]
+   },
+   "losers": [
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 3.32,
+     "lost_share": 0.007,
+     "longest_lost_ms": 3.32,
+     "longest_lost_share": 0.007
+    },
+    {
+     "label": 229,
+     "pitch": 42,
+     "current_present_ms": 190.7,
+     "lost_ms": 151.99,
+     "lost_share": 0.7971,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    }
+   ]
+  },
+  "adapted TF (available_ns)": {
+   "summary": {
+    "labels_losing": 5,
+    "median_loss_ms": 5.34,
+    "max_loss_ms": 50.57,
+    "median_share": 0.0075,
+    "over_5_10_25_50": [
+     2,
+     1,
+     0,
+     0
+    ]
+   },
+   "losers": [
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 3.32,
+     "lost_share": 0.007,
+     "longest_lost_ms": 3.32,
+     "longest_lost_share": 0.007
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    }
+   ]
+  },
+  "arm A union adapted (available_ns)": {
+   "summary": {
+    "labels_losing": 5,
+    "median_loss_ms": 5.34,
+    "max_loss_ms": 50.57,
+    "median_share": 0.0075,
+    "over_5_10_25_50": [
+     2,
+     1,
+     0,
+     0
+    ]
+   },
+   "losers": [
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 3.32,
+     "lost_share": 0.007,
+     "longest_lost_ms": 3.32,
+     "longest_lost_share": 0.007
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    }
+   ]
+  }
+ },
+ "D50": {
+  "arm A": {
+   "summary": {
+    "labels_losing": 28,
+    "median_loss_ms": 47.45,
+    "max_loss_ms": 421.59,
+    "median_share": 0.0993,
+    "over_5_10_25_50": [
+     19,
+     13,
+     5,
+     4
+    ]
+   },
+   "losers": [
+    {
+     "label": 12,
+     "pitch": 48,
+     "current_present_ms": 668.0,
+     "lost_ms": 105.57,
+     "lost_share": 0.158,
+     "longest_lost_ms": 398.92,
+     "longest_lost_share": 0.5972
+    },
+    {
+     "label": 19,
+     "pitch": 54,
+     "current_present_ms": 747.8,
+     "lost_ms": 21.83,
+     "lost_share": 0.0292,
+     "longest_lost_ms": 21.83,
+     "longest_lost_share": 0.0292
+    },
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 310.93,
+     "lost_share": 0.6519,
+     "longest_lost_ms": 421.59,
+     "longest_lost_share": 0.884
+    },
+    {
+     "label": 70,
+     "pitch": 48,
+     "current_present_ms": 36.4,
+     "lost_ms": 36.4,
+     "lost_share": 1.0,
+     "longest_lost_ms": 36.4,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 85,
+     "pitch": 44,
+     "current_present_ms": 516.0,
+     "lost_ms": 0.66,
+     "lost_share": 0.0013,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 91,
+     "pitch": 44,
+     "current_present_ms": 746.9,
+     "lost_ms": 76.21,
+     "lost_share": 0.102,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 123,
+     "pitch": 37,
+     "current_present_ms": 747.7,
+     "lost_ms": 7.74,
+     "lost_share": 0.0104,
+     "longest_lost_ms": 7.74,
+     "longest_lost_share": 0.0104
+    },
+    {
+     "label": 128,
+     "pitch": 45,
+     "current_present_ms": 438.5,
+     "lost_ms": 16.22,
+     "lost_share": 0.037,
+     "longest_lost_ms": 48.5,
+     "longest_lost_share": 0.1353
+    },
+    {
+     "label": 150,
+     "pitch": 43,
+     "current_present_ms": 702.0,
+     "lost_ms": 35.82,
+     "lost_share": 0.051,
+     "longest_lost_ms": 99.83,
+     "longest_lost_share": 0.1422
+    },
+    {
+     "label": 159,
+     "pitch": 47,
+     "current_present_ms": 398.7,
+     "lost_ms": 39.6,
+     "lost_share": 0.0993,
+     "longest_lost_ms": 39.6,
+     "longest_lost_share": 0.0993
+    },
+    {
+     "label": 174,
+     "pitch": 44,
+     "current_present_ms": 747.6,
+     "lost_ms": 14.0,
+     "lost_share": 0.0187,
+     "longest_lost_ms": 76.27,
+     "longest_lost_share": 0.102
+    },
+    {
+     "label": 178,
+     "pitch": 44,
+     "current_present_ms": 682.4,
+     "lost_ms": 67.73,
+     "lost_share": 0.0993,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 179,
+     "pitch": 33,
+     "current_present_ms": 536.7,
+     "lost_ms": 7.77,
+     "lost_share": 0.0145,
+     "longest_lost_ms": 7.77,
+     "longest_lost_share": 0.0145
+    },
+    {
+     "label": 229,
+     "pitch": 42,
+     "current_present_ms": 190.7,
+     "lost_ms": 190.67,
+     "lost_share": 1.0,
+     "longest_lost_ms": 30.0,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 270,
+     "pitch": 51,
+     "current_present_ms": 630.7,
+     "lost_ms": 17.33,
+     "lost_share": 0.0275,
+     "longest_lost_ms": 116.68,
+     "longest_lost_share": 0.185
+    },
+    {
+     "label": 306,
+     "pitch": 42,
+     "current_present_ms": 747.7,
+     "lost_ms": 46.41,
+     "lost_share": 0.0621,
+     "longest_lost_ms": 46.41,
+     "longest_lost_share": 0.0621
+    },
+    {
+     "label": 341,
+     "pitch": 57,
+     "current_present_ms": 294.2,
+     "lost_ms": 90.12,
+     "lost_share": 0.3064,
+     "longest_lost_ms": 145.46,
+     "longest_lost_share": 0.4945
+    },
+    {
+     "label": 349,
+     "pitch": 54,
+     "current_present_ms": 747.5,
+     "lost_ms": 13.68,
+     "lost_share": 0.0183,
+     "longest_lost_ms": 52.18,
+     "longest_lost_share": 0.0698
+    },
+    {
+     "label": 355,
+     "pitch": 39,
+     "current_present_ms": 747.9,
+     "lost_ms": 2.59,
+     "lost_share": 0.0035,
+     "longest_lost_ms": 2.59,
+     "longest_lost_share": 0.0035
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    },
+    {
+     "label": 456,
+     "pitch": 47,
+     "current_present_ms": 747.7,
+     "lost_ms": 95.07,
+     "lost_share": 0.1271,
+     "longest_lost_ms": 95.07,
+     "longest_lost_share": 0.1271
+    },
+    {
+     "label": 459,
+     "pitch": 45,
+     "current_present_ms": 749.1,
+     "lost_ms": 19.79,
+     "lost_share": 0.0264,
+     "longest_lost_ms": 19.79,
+     "longest_lost_share": 0.0264
+    },
+    {
+     "label": 470,
+     "pitch": 44,
+     "current_present_ms": 549.0,
+     "lost_ms": 42.27,
+     "lost_share": 0.077,
+     "longest_lost_ms": 42.27,
+     "longest_lost_share": 0.077
+    },
+    {
+     "label": 472,
+     "pitch": 53,
+     "current_present_ms": 566.7,
+     "lost_ms": 63.23,
+     "lost_share": 0.1116,
+     "longest_lost_ms": 74.75,
+     "longest_lost_share": 0.1319
+    },
+    {
+     "label": 477,
+     "pitch": 52,
+     "current_present_ms": 679.3,
+     "lost_ms": 21.33,
+     "lost_share": 0.0314,
+     "longest_lost_ms": 21.33,
+     "longest_lost_share": 0.0314
+    }
+   ]
+  },
+  "unchanged TF (available_ns)": {
+   "summary": {
+    "labels_losing": 28,
+    "median_loss_ms": 47.45,
+    "max_loss_ms": 523.34,
+    "median_share": 0.0993,
+    "over_5_10_25_50": [
+     20,
+     13,
+     5,
+     4
+    ]
+   },
+   "losers": [
+    {
+     "label": 12,
+     "pitch": 48,
+     "current_present_ms": 668.0,
+     "lost_ms": 105.33,
+     "lost_share": 0.1577,
+     "longest_lost_ms": 523.34,
+     "longest_lost_share": 0.7834
+    },
+    {
+     "label": 19,
+     "pitch": 54,
+     "current_present_ms": 747.8,
+     "lost_ms": 21.83,
+     "lost_share": 0.0292,
+     "longest_lost_ms": 21.83,
+     "longest_lost_share": 0.0292
+    },
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 310.93,
+     "lost_share": 0.6519,
+     "longest_lost_ms": 421.59,
+     "longest_lost_share": 0.884
+    },
+    {
+     "label": 70,
+     "pitch": 48,
+     "current_present_ms": 36.4,
+     "lost_ms": 36.4,
+     "lost_share": 1.0,
+     "longest_lost_ms": 36.4,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 85,
+     "pitch": 44,
+     "current_present_ms": 516.0,
+     "lost_ms": 0.66,
+     "lost_share": 0.0013,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 91,
+     "pitch": 44,
+     "current_present_ms": 746.9,
+     "lost_ms": 87.32,
+     "lost_share": 0.1169,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 123,
+     "pitch": 37,
+     "current_present_ms": 747.7,
+     "lost_ms": 7.74,
+     "lost_share": 0.0104,
+     "longest_lost_ms": 7.74,
+     "longest_lost_share": 0.0104
+    },
+    {
+     "label": 128,
+     "pitch": 45,
+     "current_present_ms": 438.5,
+     "lost_ms": 27.32,
+     "lost_share": 0.0623,
+     "longest_lost_ms": 48.5,
+     "longest_lost_share": 0.1353
+    },
+    {
+     "label": 150,
+     "pitch": 43,
+     "current_present_ms": 702.0,
+     "lost_ms": 24.68,
+     "lost_share": 0.0352,
+     "longest_lost_ms": 88.69,
+     "longest_lost_share": 0.1263
+    },
+    {
+     "label": 159,
+     "pitch": 47,
+     "current_present_ms": 398.7,
+     "lost_ms": 39.6,
+     "lost_share": 0.0993,
+     "longest_lost_ms": 39.6,
+     "longest_lost_share": 0.0993
+    },
+    {
+     "label": 174,
+     "pitch": 44,
+     "current_present_ms": 747.6,
+     "lost_ms": 14.0,
+     "lost_share": 0.0187,
+     "longest_lost_ms": 76.27,
+     "longest_lost_share": 0.102
+    },
+    {
+     "label": 178,
+     "pitch": 44,
+     "current_present_ms": 682.4,
+     "lost_ms": 67.73,
+     "lost_share": 0.0993,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 229,
+     "pitch": 42,
+     "current_present_ms": 190.7,
+     "lost_ms": 190.67,
+     "lost_share": 1.0,
+     "longest_lost_ms": 30.0,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 239,
+     "pitch": 48,
+     "current_present_ms": 574.0,
+     "lost_ms": 3.33,
+     "lost_share": 0.0058,
+     "longest_lost_ms": 41.26,
+     "longest_lost_share": 0.0719
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 270,
+     "pitch": 51,
+     "current_present_ms": 630.7,
+     "lost_ms": 17.33,
+     "lost_share": 0.0275,
+     "longest_lost_ms": 116.68,
+     "longest_lost_share": 0.185
+    },
+    {
+     "label": 306,
+     "pitch": 42,
+     "current_present_ms": 747.7,
+     "lost_ms": 46.41,
+     "lost_share": 0.0621,
+     "longest_lost_ms": 46.41,
+     "longest_lost_share": 0.0621
+    },
+    {
+     "label": 341,
+     "pitch": 57,
+     "current_present_ms": 294.2,
+     "lost_ms": 79.51,
+     "lost_share": 0.2703,
+     "longest_lost_ms": 79.51,
+     "longest_lost_share": 0.2703
+    },
+    {
+     "label": 349,
+     "pitch": 54,
+     "current_present_ms": 747.5,
+     "lost_ms": 24.67,
+     "lost_share": 0.033,
+     "longest_lost_ms": 52.18,
+     "longest_lost_share": 0.0698
+    },
+    {
+     "label": 355,
+     "pitch": 39,
+     "current_present_ms": 747.9,
+     "lost_ms": 2.59,
+     "lost_share": 0.0035,
+     "longest_lost_ms": 2.59,
+     "longest_lost_share": 0.0035
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    },
+    {
+     "label": 456,
+     "pitch": 47,
+     "current_present_ms": 747.7,
+     "lost_ms": 95.07,
+     "lost_share": 0.1271,
+     "longest_lost_ms": 95.07,
+     "longest_lost_share": 0.1271
+    },
+    {
+     "label": 459,
+     "pitch": 45,
+     "current_present_ms": 749.1,
+     "lost_ms": 19.79,
+     "lost_share": 0.0264,
+     "longest_lost_ms": 19.79,
+     "longest_lost_share": 0.0264
+    },
+    {
+     "label": 470,
+     "pitch": 44,
+     "current_present_ms": 549.0,
+     "lost_ms": 42.27,
+     "lost_share": 0.077,
+     "longest_lost_ms": 42.27,
+     "longest_lost_share": 0.077
+    },
+    {
+     "label": 472,
+     "pitch": 53,
+     "current_present_ms": 566.7,
+     "lost_ms": 63.33,
+     "lost_share": 0.1118,
+     "longest_lost_ms": 85.98,
+     "longest_lost_share": 0.1517
+    },
+    {
+     "label": 477,
+     "pitch": 52,
+     "current_present_ms": 679.3,
+     "lost_ms": 21.33,
+     "lost_share": 0.0314,
+     "longest_lost_ms": 21.33,
+     "longest_lost_share": 0.0314
+    }
+   ]
+  },
+  "adapted TF (available_ns)": {
+   "summary": {
+    "labels_losing": 20,
+    "median_loss_ms": 43.0,
+    "max_loss_ms": 421.59,
+    "median_share": 0.1006,
+    "over_5_10_25_50": [
+     14,
+     10,
+     3,
+     2
+    ]
+   },
+   "losers": [
+    {
+     "label": 12,
+     "pitch": 48,
+     "current_present_ms": 668.0,
+     "lost_ms": 6.0,
+     "lost_share": 0.009,
+     "longest_lost_ms": 96.0,
+     "longest_lost_share": 0.1437
+    },
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 310.93,
+     "lost_share": 0.6519,
+     "longest_lost_ms": 421.59,
+     "longest_lost_share": 0.884
+    },
+    {
+     "label": 70,
+     "pitch": 48,
+     "current_present_ms": 36.4,
+     "lost_ms": 36.4,
+     "lost_share": 1.0,
+     "longest_lost_ms": 36.4,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 85,
+     "pitch": 44,
+     "current_present_ms": 516.0,
+     "lost_ms": 0.66,
+     "lost_share": 0.0013,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 123,
+     "pitch": 37,
+     "current_present_ms": 747.7,
+     "lost_ms": 7.74,
+     "lost_share": 0.0104,
+     "longest_lost_ms": 7.74,
+     "longest_lost_share": 0.0104
+    },
+    {
+     "label": 128,
+     "pitch": 45,
+     "current_present_ms": 438.5,
+     "lost_ms": 7.32,
+     "lost_share": 0.0167,
+     "longest_lost_ms": 48.5,
+     "longest_lost_share": 0.1353
+    },
+    {
+     "label": 150,
+     "pitch": 43,
+     "current_present_ms": 702.0,
+     "lost_ms": 71.34,
+     "lost_share": 0.1016,
+     "longest_lost_ms": 135.35,
+     "longest_lost_share": 0.1928
+    },
+    {
+     "label": 159,
+     "pitch": 47,
+     "current_present_ms": 398.7,
+     "lost_ms": 2.0,
+     "lost_share": 0.005,
+     "longest_lost_ms": 39.6,
+     "longest_lost_share": 0.0993
+    },
+    {
+     "label": 178,
+     "pitch": 44,
+     "current_present_ms": 682.4,
+     "lost_ms": 16.65,
+     "lost_share": 0.0244,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 179,
+     "pitch": 33,
+     "current_present_ms": 536.7,
+     "lost_ms": 39.34,
+     "lost_share": 0.0733,
+     "longest_lost_ms": 39.34,
+     "longest_lost_share": 0.0733
+    },
+    {
+     "label": 200,
+     "pitch": 50,
+     "current_present_ms": 289.6,
+     "lost_ms": 4.66,
+     "lost_share": 0.0161,
+     "longest_lost_ms": 5.6,
+     "longest_lost_share": 0.0194
+    },
+    {
+     "label": 202,
+     "pitch": 54,
+     "current_present_ms": 616.0,
+     "lost_ms": 4.0,
+     "lost_share": 0.0065,
+     "longest_lost_ms": 140.0,
+     "longest_lost_share": 0.2273
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 270,
+     "pitch": 51,
+     "current_present_ms": 630.7,
+     "lost_ms": 17.33,
+     "lost_share": 0.0275,
+     "longest_lost_ms": 116.68,
+     "longest_lost_share": 0.185
+    },
+    {
+     "label": 306,
+     "pitch": 42,
+     "current_present_ms": 747.7,
+     "lost_ms": 21.99,
+     "lost_share": 0.0294,
+     "longest_lost_ms": 46.41,
+     "longest_lost_share": 0.0621
+    },
+    {
+     "label": 341,
+     "pitch": 57,
+     "current_present_ms": 294.2,
+     "lost_ms": 35.32,
+     "lost_share": 0.1201,
+     "longest_lost_ms": 79.51,
+     "longest_lost_share": 0.2703
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    },
+    {
+     "label": 456,
+     "pitch": 47,
+     "current_present_ms": 747.7,
+     "lost_ms": 33.99,
+     "lost_share": 0.0455,
+     "longest_lost_ms": 95.07,
+     "longest_lost_share": 0.1271
+    }
+   ]
+  },
+  "arm A union adapted (available_ns)": {
+   "summary": {
+    "labels_losing": 18,
+    "median_loss_ms": 43.0,
+    "max_loss_ms": 421.59,
+    "median_share": 0.1006,
+    "over_5_10_25_50": [
+     12,
+     9,
+     3,
+     2
+    ]
+   },
+   "losers": [
+    {
+     "label": 12,
+     "pitch": 48,
+     "current_present_ms": 668.0,
+     "lost_ms": 5.57,
+     "lost_share": 0.0083,
+     "longest_lost_ms": 95.57,
+     "longest_lost_share": 0.1431
+    },
+    {
+     "label": 42,
+     "pitch": 60,
+     "current_present_ms": 476.9,
+     "lost_ms": 310.93,
+     "lost_share": 0.6519,
+     "longest_lost_ms": 421.59,
+     "longest_lost_share": 0.884
+    },
+    {
+     "label": 70,
+     "pitch": 48,
+     "current_present_ms": 36.4,
+     "lost_ms": 36.4,
+     "lost_share": 1.0,
+     "longest_lost_ms": 36.4,
+     "longest_lost_share": 1.0
+    },
+    {
+     "label": 85,
+     "pitch": 44,
+     "current_present_ms": 516.0,
+     "lost_ms": 0.66,
+     "lost_share": 0.0013,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 123,
+     "pitch": 37,
+     "current_present_ms": 747.7,
+     "lost_ms": 7.74,
+     "lost_share": 0.0104,
+     "longest_lost_ms": 7.74,
+     "longest_lost_share": 0.0104
+    },
+    {
+     "label": 128,
+     "pitch": 45,
+     "current_present_ms": 438.5,
+     "lost_ms": 7.32,
+     "lost_share": 0.0167,
+     "longest_lost_ms": 48.5,
+     "longest_lost_share": 0.1353
+    },
+    {
+     "label": 150,
+     "pitch": 43,
+     "current_present_ms": 702.0,
+     "lost_ms": 35.82,
+     "lost_share": 0.051,
+     "longest_lost_ms": 99.83,
+     "longest_lost_share": 0.1422
+    },
+    {
+     "label": 159,
+     "pitch": 47,
+     "current_present_ms": 398.7,
+     "lost_ms": 2.0,
+     "lost_share": 0.005,
+     "longest_lost_ms": 39.6,
+     "longest_lost_share": 0.0993
+    },
+    {
+     "label": 178,
+     "pitch": 44,
+     "current_present_ms": 682.4,
+     "lost_ms": 16.65,
+     "lost_share": 0.0244,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 179,
+     "pitch": 33,
+     "current_present_ms": 536.7,
+     "lost_ms": 7.77,
+     "lost_share": 0.0145,
+     "longest_lost_ms": 7.77,
+     "longest_lost_share": 0.0145
+    },
+    {
+     "label": 263,
+     "pitch": 33,
+     "current_present_ms": 342.1,
+     "lost_ms": 34.83,
+     "lost_share": 0.1018,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 270,
+     "pitch": 51,
+     "current_present_ms": 630.7,
+     "lost_ms": 17.33,
+     "lost_share": 0.0275,
+     "longest_lost_ms": 116.68,
+     "longest_lost_share": 0.185
+    },
+    {
+     "label": 306,
+     "pitch": 42,
+     "current_present_ms": 747.7,
+     "lost_ms": 21.99,
+     "lost_share": 0.0294,
+     "longest_lost_ms": 46.41,
+     "longest_lost_share": 0.0621
+    },
+    {
+     "label": 341,
+     "pitch": 57,
+     "current_present_ms": 294.2,
+     "lost_ms": 35.32,
+     "lost_share": 0.1201,
+     "longest_lost_ms": 79.51,
+     "longest_lost_share": 0.2703
+    },
+    {
+     "label": 364,
+     "pitch": 42,
+     "current_present_ms": 748.6,
+     "lost_ms": 50.57,
+     "lost_share": 0.0676,
+     "longest_lost_ms": 50.57,
+     "longest_lost_share": 0.0676
+    },
+    {
+     "label": 389,
+     "pitch": 33,
+     "current_present_ms": 140.7,
+     "lost_ms": 0.68,
+     "lost_share": 0.0048,
+     "longest_lost_ms": 0.0,
+     "longest_lost_share": 0.0
+    },
+    {
+     "label": 398,
+     "pitch": 34,
+     "current_present_ms": 709.3,
+     "lost_ms": 5.34,
+     "lost_share": 0.0075,
+     "longest_lost_ms": 5.34,
+     "longest_lost_share": 0.0075
+    },
+    {
+     "label": 456,
+     "pitch": 47,
+     "current_present_ms": 747.7,
+     "lost_ms": 33.99,
+     "lost_share": 0.0455,
+     "longest_lost_ms": 95.07,
+     "longest_lost_share": 0.1271
+    }
+   ]
+  }
+ }
+}

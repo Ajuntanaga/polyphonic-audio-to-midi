@@ -181,6 +181,22 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
     free repair. Persistence is measured on CURRENT's saved spans, not on a live emitter.
     - Prediction Q5 (removal above 20% at L = 220) failed (4.4%); Q0–Q4, Q6 and Q7 passed.
 
+13. **With the adapted events as support the remaining losers are small (`CLAUDE-M3-ADAPTED-SUPPORT-RESULT-20261122.md`, commit 4a96fdc;
+    per-label sizes from `CLAUDE-M3-ADAPTED-SUPPORT-LOSERS-20261122.py`, post hoc, saved data).** Ordinary, D = 220, availability clock
+    (what the model gives if it kept up; the measured live clock is dominated by the ~72 s backlog):
+
+    | support | labels losing | median loss | max loss | losers above 5 / 10 / 25 / 50% of own present time |
+    |---|---|---|---|---|
+    | arm A (= unchanged TF events) | 6 | 20.1 ms (3.8%) | 152.0 ms (label 229, 79.7%) | 3 / 2 / 1 / 1 |
+    | adapted TF events (= arm A ∪ adapted) | 5 | 5.3 ms (0.75%) | 50.6 ms (label 364, 6.8%) | 2 / 1 / 0 / 0 |
+
+    The five adapted-support losers are labels 364 (pitch 42, −50.6 ms, 6.8%), 263 (33, −34.8 ms, 10.2%), 398 (34, −5.3 ms, 0.7%), 42 (60,
+    −3.3 ms, 0.7%) and 389 (33, −0.7 ms, 0.5%): all confirm-delay losses at the start of a note, none above 25%, the largest 50.6 ms. At
+    D = 50 the adapted support loses 20 labels (arm A ∪ adapted 18; arm A 28) with the worst unchanged at 421.6 ms. So a per-label tolerance of about
+    11% of a label's own present time (or about 51 ms) at D = 220 would admit the adapted support on ordinary; arm A alone would need 80%.
+    This is a reading of a saved table on a recording already used in design, not a gate and not a pass: the strict clause still fails,
+    and the adapted events are TF output from a model Codex's own frozen screen rejected, on the availability clock.
+
 ## Predictions
 
 | id | prediction | outcome |
@@ -405,6 +421,7 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | `CLAUDE-M3-SUPPORT-RESCUE-COMBINED-20261122.py` / `.json` | `d1dbda43ed38` / `9424aa78759a` |
 | `CLAUDE-M3-LANE-FRAGMENTATION-20261122.py` / `.json` | `33243af5d6e2` / `82ce270fb09c` |
 | `CLAUDE-M3-PERSISTENCE-CONFIRM-20261122.py` / `.json` | `119b87127d89` / `6efb9226aa3f` |
+| `CLAUDE-M3-ADAPTED-SUPPORT-LOSERS-20261122.py` / `.json` (answer 13, post hoc) | `a9d4c44c1cc6` / `8fe8fc49e89f` |
 | `build/recovery/m3-rescue-spans-20261122/ordinary-rescue-spans.json.gz` (cache of the four rescue span sets, 14 KB, not committed) | `d185f8a328ed` |
 | `ordinary-current-on-512-outcome-v5.tsv.gz` (rescue-frontier, rescue-combined and fragmentation scripts only) | `cd905b2f5c2d` |
 
