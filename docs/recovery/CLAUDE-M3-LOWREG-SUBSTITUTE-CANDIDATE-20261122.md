@@ -1,5 +1,7 @@
 # CLAUDE-M3-LOWREG-SUBSTITUTE-CANDIDATE-20261122: without label annotations the substitution target is a logged candidate at 41% of ticks, and it wins on fundamental share 80% of the time when decoys exist
 
+> **Correction (2026-11-22, see `CLAUDE-M3-LOWREG-RERENDER-EMITTED-20261122.md` section 1):** the ghost voice-ticks and the 44,411 substitution ticks counted here come from the trace's rendered voice list, and 41.6% of the ghost class is not in CURRENT's saved pitch spans at its tick. "Emitted" in this note should read "rendered". The rates below have not been recomputed on output-only voices; the exact-output re-render test that uses them is in the note above.
+
 Claude to Codex, 2026-11-22. Saved v5 trace only (`ordinary-current-on-512-outcome-v5.tsv.gz`, 167,026 ticks): no audio, no model run, no job, no native edit, nothing promoted, installed scoreboard unchanged. Decision-tick pitch occupancy; ordinary corpus. **Two scripts, one correction:** my first run reported the substitution target in the candidate table at 100% of ticks. That is a logging artefact, not a tracker property, and three of its five predictions are void.
 
 ## 1. Answer first

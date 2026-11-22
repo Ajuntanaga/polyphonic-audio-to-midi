@@ -1,0 +1,201 @@
+{
+ "voice_ticks_by_kind": {
+  "true": 229588,
+  "tail": 100374,
+  "ghost": 92957
+ },
+ "rule_table": {
+  "A1": {
+   "fired": 128732,
+   "fired_by_kind": {
+    "true": 69994,
+    "tail": 28141,
+    "ghost": 30597
+   },
+   "n_active_q_active": 21181,
+   "n_active_q_false": 48813,
+   "n_false_q_active": 25672,
+   "n_false_q_false": 33066,
+   "net_present_change_ticks": -23141,
+   "net_false_change_ticks": 23141,
+   "share_fires_on_true": 0.544,
+   "share_fires_q_false": 0.636
+  },
+  "A1.5": {
+   "fired": 36068,
+   "fired_by_kind": {
+    "true": 8340,
+    "tail": 9352,
+    "ghost": 18376
+   },
+   "n_active_q_active": 3973,
+   "n_active_q_false": 4367,
+   "n_false_q_active": 17316,
+   "n_false_q_false": 10412,
+   "net_present_change_ticks": 12949,
+   "net_false_change_ticks": -12949,
+   "share_fires_on_true": 0.231,
+   "share_fires_q_false": 0.41
+  },
+  "A2": {
+   "fired": 26316,
+   "fired_by_kind": {
+    "true": 3732,
+    "tail": 7129,
+    "ghost": 15455
+   },
+   "n_active_q_active": 2250,
+   "n_active_q_false": 1482,
+   "n_false_q_active": 14635,
+   "n_false_q_false": 7949,
+   "net_present_change_ticks": 13153,
+   "net_false_change_ticks": -13153,
+   "share_fires_on_true": 0.142,
+   "share_fires_q_false": 0.358
+  },
+  "A3": {
+   "fired": 16751,
+   "fired_by_kind": {
+    "true": 1362,
+    "tail": 5307,
+    "ghost": 10082
+   },
+   "n_active_q_active": 756,
+   "n_active_q_false": 606,
+   "n_false_q_active": 9763,
+   "n_false_q_false": 5626,
+   "net_present_change_ticks": 9157,
+   "net_false_change_ticks": -9157,
+   "share_fires_on_true": 0.081,
+   "share_fires_q_false": 0.372
+  },
+  "A5": {
+   "fired": 7734,
+   "fired_by_kind": {
+    "true": 139,
+    "tail": 3979,
+    "ghost": 3616
+   },
+   "n_active_q_active": 105,
+   "n_active_q_false": 34,
+   "n_false_q_active": 4801,
+   "n_false_q_false": 2794,
+   "net_present_change_ticks": 4767,
+   "net_false_change_ticks": -4767,
+   "share_fires_on_true": 0.018,
+   "share_fires_q_false": 0.366
+  },
+  "A10": {
+   "fired": 5329,
+   "fired_by_kind": {
+    "true": 51,
+    "tail": 2907,
+    "ghost": 2371
+   },
+   "n_active_q_active": 41,
+   "n_active_q_false": 10,
+   "n_false_q_active": 3525,
+   "n_false_q_false": 1753,
+   "net_present_change_ticks": 3515,
+   "net_false_change_ticks": -3515,
+   "share_fires_on_true": 0.01,
+   "share_fires_q_false": 0.331
+  },
+  "B1": {
+   "fired": 51146,
+   "fired_by_kind": {
+    "true": 8761,
+    "tail": 18780,
+    "ghost": 23605
+   },
+   "n_active_q_active": 1766,
+   "n_active_q_false": 6995,
+   "n_false_q_active": 22465,
+   "n_false_q_false": 19920,
+   "net_present_change_ticks": 15470,
+   "net_false_change_ticks": -15470,
+   "share_fires_on_true": 0.171,
+   "share_fires_q_false": 0.526
+  },
+  "B1.5": {
+   "fired": 26112,
+   "fired_by_kind": {
+    "true": 1805,
+    "tail": 8605,
+    "ghost": 15702
+   },
+   "n_active_q_active": 745,
+   "n_active_q_false": 1060,
+   "n_false_q_active": 15497,
+   "n_false_q_false": 8810,
+   "net_present_change_ticks": 14437,
+   "net_false_change_ticks": -14437,
+   "share_fires_on_true": 0.069,
+   "share_fires_q_false": 0.378
+  },
+  "B2": {
+   "fired": 21144,
+   "fired_by_kind": {
+    "true": 956,
+    "tail": 6836,
+    "ghost": 13352
+   },
+   "n_active_q_active": 473,
+   "n_active_q_false": 483,
+   "n_false_q_active": 13029,
+   "n_false_q_false": 7159,
+   "net_present_change_ticks": 12546,
+   "net_false_change_ticks": -12546,
+   "share_fires_on_true": 0.045,
+   "share_fires_q_false": 0.361
+  },
+  "B3": {
+   "fired": 15097,
+   "fired_by_kind": {
+    "true": 505,
+    "tail": 5216,
+    "ghost": 9376
+   },
+   "n_active_q_active": 277,
+   "n_active_q_false": 228,
+   "n_false_q_active": 9201,
+   "n_false_q_false": 5391,
+   "net_present_change_ticks": 8973,
+   "net_false_change_ticks": -8973,
+   "share_fires_on_true": 0.033,
+   "share_fires_q_false": 0.372
+  },
+  "B5": {
+   "fired": 7734,
+   "fired_by_kind": {
+    "true": 139,
+    "tail": 3979,
+    "ghost": 3616
+   },
+   "n_active_q_active": 105,
+   "n_active_q_false": 34,
+   "n_false_q_active": 4801,
+   "n_false_q_false": 2794,
+   "net_present_change_ticks": 4767,
+   "net_false_change_ticks": -4767,
+   "share_fires_on_true": 0.018,
+   "share_fires_q_false": 0.366
+  },
+  "B10": {
+   "fired": 5329,
+   "fired_by_kind": {
+    "true": 51,
+    "tail": 2907,
+    "ghost": 2371
+   },
+   "n_active_q_active": 41,
+   "n_active_q_false": 10,
+   "n_false_q_active": 3525,
+   "n_false_q_false": 1753,
+   "net_present_change_ticks": 3515,
+   "net_false_change_ticks": -3515,
+   "share_fires_on_true": 0.01,
+   "share_fires_q_false": 0.331
+  }
+ }
+}

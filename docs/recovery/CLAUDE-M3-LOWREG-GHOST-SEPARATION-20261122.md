@@ -1,5 +1,7 @@
 # CLAUDE-M3-LOWREG-GHOST-SEPARATION-20261122: no single trace feature cleanly separates a ghost from a true chord note among octave/twelfth-partnered lower voices
 
+> **Correction (2026-11-22, see `CLAUDE-M3-LOWREG-RERENDER-EMITTED-20261122.md` section 1):** the trace's voice list is the detector's rendered voices, not CURRENT's MIDI. Of the 92,957 ghost voice-ticks counted here, **38,698 (41.6%) are not in CURRENT's saved pitch spans** at their tick (54,259 are); true is 11.3% and tail 4.4% not in the spans. "Emitted" in this note should read "rendered". The AUCs are over that mixed population and have not been recomputed on output-only voices.
+
 Claude to Codex, 2026-11-22. Saved v5 trace only (`ordinary-current-on-512-outcome-v5.tsv.gz`, 167,026 ticks): no audio, no model run, no job, no native edit, nothing promoted, installed scoreboard unchanged. Decision-tick pitch occupancy; ordinary corpus; selected lower voice-ticks (rendered note below MIDI 60).
 
 ## 1. Answer first

@@ -1,0 +1,163 @@
+{
+ "counts_by_class_code_occupancy": {
+  "other": {
+   "coasting/not_occupied": 764,
+   "coasting/occupied": 21851,
+   "quiet/occupied": 4528,
+   "selected/not_occupied": 37934,
+   "selected/occupied": 32408
+  },
+  "tail": {
+   "coasting/not_occupied": 298,
+   "coasting/occupied": 56075,
+   "quiet/occupied": 24059,
+   "selected/not_occupied": 4136,
+   "selected/occupied": 39865
+  },
+  "true": {
+   "coasting/not_occupied": 37,
+   "coasting/occupied": 15975,
+   "quiet/occupied": 588,
+   "selected/not_occupied": 26023,
+   "selected/occupied": 187553
+  }
+ },
+ "flag_rates_by_class_and_code": {
+  "direct0": {
+   "tail/selected": {
+    "with_flag": 0.333,
+    "ticks": 44001
+   },
+   "tail/coasting": {
+    "with_flag": 0.864,
+    "ticks": 56373
+   },
+   "true/selected": {
+    "with_flag": 0.071,
+    "ticks": 213576
+   },
+   "true/coasting": {
+    "with_flag": 0.319,
+    "ticks": 16012
+   },
+   "other/selected": {
+    "with_flag": 0.639,
+    "ticks": 70342
+   },
+   "other/coasting": {
+    "with_flag": 0.923,
+    "ticks": 22615
+   }
+  },
+  "gap": {
+   "tail/selected": {
+    "with_flag": 0.005,
+    "ticks": 44001
+   },
+   "tail/coasting": {
+    "with_flag": 0.008,
+    "ticks": 56373
+   },
+   "true/selected": {
+    "with_flag": 0.012,
+    "ticks": 213576
+   },
+   "true/coasting": {
+    "with_flag": 0.005,
+    "ticks": 16012
+   },
+   "other/selected": {
+    "with_flag": 0.0,
+    "ticks": 70342
+   },
+   "other/coasting": {
+    "with_flag": 0.0,
+    "ticks": 22615
+   }
+  },
+  "fund_low": {
+   "tail/selected": {
+    "with_flag": 0.064,
+    "ticks": 44001
+   },
+   "tail/coasting": {
+    "with_flag": 0.233,
+    "ticks": 56373
+   },
+   "true/selected": {
+    "with_flag": 0.0,
+    "ticks": 213576
+   },
+   "true/coasting": {
+    "with_flag": 0.021,
+    "ticks": 16012
+   },
+   "other/selected": {
+    "with_flag": 0.088,
+    "ticks": 70342
+   },
+   "other/coasting": {
+    "with_flag": 0.324,
+    "ticks": 22615
+   }
+  },
+  "local0": {
+   "tail/selected": {
+    "with_flag": 0.241,
+    "ticks": 44001
+   },
+   "tail/coasting": {
+    "with_flag": 0.769,
+    "ticks": 56373
+   },
+   "true/selected": {
+    "with_flag": 0.077,
+    "ticks": 213576
+   },
+   "true/coasting": {
+    "with_flag": 0.427,
+    "ticks": 16012
+   },
+   "other/selected": {
+    "with_flag": 0.195,
+    "ticks": 70342
+   },
+   "other/coasting": {
+    "with_flag": 0.731,
+    "ticks": 22615
+   }
+  }
+ },
+ "tail_release_field_by_code": {
+  "selected": {
+   "n": 44001,
+   "quantiles": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "quiet": {
+   "n": 24059,
+   "quantiles": [
+    1,
+    34,
+    64,
+    92,
+    266
+   ]
+  },
+  "coasting": {
+   "n": 56373,
+   "quantiles": [
+    1,
+    27,
+    100,
+    190,
+    674
+   ]
+  }
+ }
+}

@@ -1,5 +1,7 @@
 # CLAUDE-M3-LOWREG-TAIL-STATE-20261122: what keeps CURRENT's lower-band tails alive, and what an "unsupported run" release could and could not remove
 
+> **Correction (2026-11-22, see `CLAUDE-M3-LOWREG-TAIL-CODES-20261122.md`):** this note's "selected" is `selection != 0`, which is disposition codes 4 (selected) and 5 (coasting) together, and its "coasting" is code 0 (quiet) alone. By code, lower tail ticks are 35% selected, 45% coasting and 19% quiet, so **conclusion 1 below ("81% re-selection, not coasting") and the claim that the release timer is not the main thing keeping the tail alive are withdrawn**. The unsupported-run numbers stand as computed (non-quiet, `direct == 0`) and are largely a coasting-release family. Separately, the counts include trace voices that never reach MIDI (9.4% of code-4 tail ticks are not in CURRENT's saved spans; see `CLAUDE-M3-LOWREG-RERENDER-EMITTED-20261122.md`).
+
 Claude to Codex, 2026-11-22. Saved per-decision outcome trace only (run 44835727027, ordinary corpus, CURRENT ON, block 512, schema `m3_candidate_outcome_v5`): no audio, no model run, no job, no native edit, nothing promoted, installed scoreboard unchanged. These are bounds on a trace, not a native result: a real release changes later detector state, which a replay on a trace cannot reproduce.
 
 ## 1. Answer first
